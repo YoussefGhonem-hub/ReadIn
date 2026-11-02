@@ -1,0 +1,52 @@
+# ===== OS / IDE =====
+.DS_Store
+Thumbs.db
+.vs/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# ===== Secrets (never commit) =====
+.env
+.env.*
+!.env.example
+*firebase-adminsdk*.json
+service-account*.json
+appsettings.*.local.json
+secrets/
+
+# ===== .NET =====
+bin/
+obj/
+*.user
+*.suo
+TestResults/
+*.trx
+coverage*.xml
+artifacts/
+
+# ===== Angular / Node =====
+node_modules/
+web/dist/
+web/.angular/
+npm-debug.log*
+yarn-error.log*
+
+# ===== Flutter / Dart =====
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/google-services.json
+mobile/ios/Pods/
+mobile/ios/Flutter/Generated.xcconfig
+mobile/ios/Runner/GoogleService-Info.plist
+*.iml
+
+# ===== Firebase =====
+.firebase/
+firebase-debug.log
+*-debug.log
