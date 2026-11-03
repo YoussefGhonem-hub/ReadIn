@@ -10,6 +10,7 @@ import '../../../../shared/rdoc/blocks/text_blocks.dart';
 import '../../../../shared/rdoc/rdoc_view.dart';
 import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../reading/presentation/tracking/reading_tracking.dart';
 import '../../../settings/domain/entities/app_settings.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/entities/article.dart';
@@ -28,7 +29,7 @@ class ArticlePage extends StatelessWidget {
     final preferred = context.read<SettingsCubit>().state.articleLanguage;
     return BlocProvider(
       create: (_) => getIt<ArticleCubit>()..load(slug, preferredLanguage: preferred),
-      child: const _ArticleView(),
+      child: const ReadingTracking(child: _ArticleView()),
     );
   }
 }

@@ -92,6 +92,17 @@ import '../../features/onboarding/domain/repositories/interests_repository.dart'
 import '../../features/onboarding/domain/usecases/save_interests.dart' as _i535;
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart'
     as _i807;
+import '../../features/reading/data/datasources/reading_api.dart' as _i597;
+import '../../features/reading/data/repositories/reading_repository_impl.dart'
+    as _i571;
+import '../../features/reading/domain/repositories/reading_repository.dart'
+    as _i634;
+import '../../features/reading/domain/usecases/reading_usecases.dart' as _i892;
+import '../../features/reading/presentation/cubit/reading_heatmap_cubit.dart'
+    as _i321;
+import '../../features/reading/presentation/cubit/reading_stats_cubit.dart'
+    as _i487;
+import '../../features/reading/presentation/cubit/streak_cubit.dart' as _i884;
 import '../../features/settings/data/datasources/preferences_api.dart' as _i741;
 import '../../features/settings/data/datasources/settings_local_data_source.dart'
     as _i599;
@@ -240,6 +251,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i227.InterestsApi>(
       () => _i227.InterestsApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i597.ReadingApi>(() => _i597.ReadingApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i741.PreferencesApi>(
       () => _i741.PreferencesApi(gh<_i361.Dio>()),
     );
@@ -274,6 +286,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i887.LiveConnector>(),
         gh<_i894.RealtimeTokenApi>(),
       ),
+    );
+    gh.lazySingleton<_i634.ReadingRepository>(
+      () => _i571.ReadingRepositoryImpl(gh<_i597.ReadingApi>()),
     );
     gh.lazySingleton<_i904.ArticleRepository>(
       () => _i473.ArticleRepositoryImpl(gh<_i462.ArticleApi>()),
@@ -354,6 +369,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i251.GetForYouFeed>(
       () => _i251.GetForYouFeed(gh<_i954.FeedRepository>()),
+    );
+    gh.factory<_i892.ReportReadingProgress>(
+      () => _i892.ReportReadingProgress(gh<_i634.ReadingRepository>()),
+    );
+    gh.factory<_i892.GetReadingStats>(
+      () => _i892.GetReadingStats(gh<_i634.ReadingRepository>()),
+    );
+    gh.factory<_i892.GetReadingHeatmap>(
+      () => _i892.GetReadingHeatmap(gh<_i634.ReadingRepository>()),
     );
     gh.factory<_i46.WatchSession>(
       () => _i46.WatchSession(gh<_i787.AuthRepository>()),
@@ -505,6 +529,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i115.PhoneCountryMemory>(),
       ),
     );
+    gh.factory<_i321.ReadingHeatmapCubit>(
+      () => _i321.ReadingHeatmapCubit(gh<_i892.GetReadingHeatmap>()),
+    );
     gh.factory<_i245.CompleteProfileCubit>(
       () => _i245.CompleteProfileCubit(
         gh<_i46.CompleteProfile>(),
@@ -519,6 +546,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i46.GetAuthConfig>(),
         gh<_i1026.CurrentLocale>(),
         gh<_i115.PhoneCountryMemory>(),
+      ),
+    );
+    gh.lazySingleton<_i884.StreakCubit>(
+      () => _i884.StreakCubit(
+        gh<_i892.GetReadingStats>(),
+        gh<_i371.SessionCubit>(),
       ),
     );
     gh.factory<_i571.AttachmentsCubit>(
@@ -567,6 +600,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i172.GetFields>(),
         gh<_i172.GetTopics>(),
         gh<_i535.SaveInterests>(),
+      ),
+    );
+    gh.factory<_i487.ReadingStatsCubit>(
+      () => _i487.ReadingStatsCubit(
+        gh<_i892.GetReadingStats>(),
+        gh<_i884.StreakCubit>(),
       ),
     );
     return this;

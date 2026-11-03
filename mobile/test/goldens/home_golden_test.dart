@@ -12,6 +12,8 @@ import 'package:readin/features/home/presentation/cubit/home_cubit.dart';
 import 'package:readin/features/home/presentation/cubit/live_feed_cubit.dart';
 import 'package:readin/features/home/presentation/pages/home_page.dart';
 import 'package:readin/features/notifications/presentation/cubit/unread_badge_cubit.dart';
+import 'package:readin/features/reading/domain/entities/reading.dart';
+import 'package:readin/features/reading/presentation/cubit/streak_cubit.dart';
 
 import '../helpers/fixtures.dart';
 import '../helpers/test_app.dart';
@@ -25,6 +27,8 @@ class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {
 class MockLiveFeedCubit extends MockCubit<LiveFeedState> implements LiveFeedCubit {}
 
 class MockUnreadBadgeCubit extends MockCubit<int> implements UnreadBadgeCubit {}
+
+class MockStreakCubit extends MockCubit<Streak?> implements StreakCubit {}
 
 /// Home ("النهارده") in the 4 mandatory variants: ar/en × light/dark (SPEC §8.2).
 void main() {
@@ -47,6 +51,8 @@ void main() {
     final badge = MockUnreadBadgeCubit();
     whenListen(liveFeed, const Stream<LiveFeedState>.empty(), initialState: live);
     whenListen(badge, const Stream<int>.empty(), initialState: unread);
+    final streak = MockStreakCubit(); // not loaded yet: the badge looks as it did before F08
+    whenListen(streak, const Stream<Streak?>.empty(), initialState: null);
 
     await tester.pumpWidget(testApp(
       MultiBlocProvider(
@@ -56,6 +62,7 @@ void main() {
           BlocProvider<FeedCubit>.value(value: feed),
           BlocProvider<LiveFeedCubit>.value(value: liveFeed),
           BlocProvider<UnreadBadgeCubit>.value(value: badge),
+          BlocProvider<StreakCubit>.value(value: streak),
         ],
         child: const HomeView(),
       ),

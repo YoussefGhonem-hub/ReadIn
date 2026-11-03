@@ -2347,6 +2347,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signing in with Google or Apple didn\'t finish. Try again.'**
   String get errExternalProviderFailed;
+
+  /// No description provided for @readingStreakNotReadTodaySemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading streak: {count} days. You haven\'t read today yet.'**
+  String readingStreakNotReadTodaySemantics(int count);
+
+  /// No description provided for @readingStreakFreezePendingSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading streak: {count} days. You missed yesterday: read today and a freeze keeps your streak.'**
+  String readingStreakFreezePendingSemantics(int count);
+
+  /// No description provided for @readingStatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading stats'**
+  String get readingStatsTitle;
+
+  /// No description provided for @readingCurrentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak'**
+  String get readingCurrentStreak;
+
+  /// No description provided for @readingLongestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest'**
+  String get readingLongestStreak;
+
+  /// No description provided for @readingDaysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String readingDaysCount(int count);
+
+  /// No description provided for @readingFreezeAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Freeze ready: miss a day and your streak stays.'**
+  String get readingFreezeAvailable;
+
+  /// No description provided for @readingFreezePending.
+  ///
+  /// In en, this message translates to:
+  /// **'You missed yesterday. Read today and a freeze keeps your streak.'**
+  String get readingFreezePending;
+
+  /// No description provided for @readingFreezeUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Freeze used. You get a new one within 7 days.'**
+  String get readingFreezeUsed;
+
+  /// No description provided for @readingLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get readingLast7Days;
+
+  /// No description provided for @readingLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get readingLast30Days;
+
+  /// No description provided for @readingAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get readingAllTime;
+
+  /// No description provided for @readingArticlesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 article} other{{count} articles}}'**
+  String readingArticlesCount(int count);
+
+  /// No description provided for @readingMinutesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 minute} other{{count} minutes}}'**
+  String readingMinutesCount(int count);
+
+  /// No description provided for @readingTopFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Top fields'**
+  String get readingTopFields;
+
+  /// No description provided for @readingTopFieldSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{field}: {articles}'**
+  String readingTopFieldSemantics(String field, String articles);
+
+  /// No description provided for @readingStatsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Read an article to the end to start your streak.'**
+  String get readingStatsEmpty;
+
+  /// No description provided for @readingActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading activity'**
+  String get readingActivity;
+
+  /// No description provided for @readingLast12Months.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 12 months'**
+  String get readingLast12Months;
+
+  /// No description provided for @readingHeatmapLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get readingHeatmapLess;
+
+  /// No description provided for @readingHeatmapMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get readingHeatmapMore;
+
+  /// No description provided for @readingHeatmapFreeze.
+  ///
+  /// In en, this message translates to:
+  /// **'Freeze'**
+  String get readingHeatmapFreeze;
+
+  /// No description provided for @readingHeatmapSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading activity in the last 12 months: {count, plural, =0{no reading days yet} =1{1 reading day} other{{count} reading days}}'**
+  String readingHeatmapSemantics(int count);
+
+  /// No description provided for @readingHeatmapDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {articles}'**
+  String readingHeatmapDay(String date, String articles);
+
+  /// No description provided for @readingHeatmapFrozenDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: a freeze kept your streak'**
+  String readingHeatmapFrozenDay(String date);
+
+  /// No description provided for @readingHeatmapEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day you finish an article shows up here.'**
+  String get readingHeatmapEmpty;
+
+  /// No description provided for @readingDaysInARow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{day in a row} other{days in a row}}'**
+  String readingDaysInARow(int count);
+
+  /// No description provided for @readingMilestoneWeekTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A full week!'**
+  String get readingMilestoneWeekTitle;
+
+  /// No description provided for @readingMilestoneWeekBody.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days of reading in a row. Keep it going.'**
+  String get readingMilestoneWeekBody;
+
+  /// No description provided for @readingMilestoneMonthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A month of reading!'**
+  String get readingMilestoneMonthTitle;
+
+  /// No description provided for @readingMilestoneMonthBody.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days in a row. That\'s a real habit now.'**
+  String get readingMilestoneMonthBody;
+
+  /// No description provided for @readingMilestoneHundredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'100 days!'**
+  String get readingMilestoneHundredTitle;
+
+  /// No description provided for @readingMilestoneHundredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'100 days in a row. Few readers get this far.'**
+  String get readingMilestoneHundredBody;
+
+  /// No description provided for @readingMilestoneYearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A whole year!'**
+  String get readingMilestoneYearTitle;
+
+  /// No description provided for @readingMilestoneYearBody.
+  ///
+  /// In en, this message translates to:
+  /// **'365 days of reading in a row. Legendary.'**
+  String get readingMilestoneYearBody;
+
+  /// No description provided for @readingMilestoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}-day streak!'**
+  String readingMilestoneTitle(int count);
+
+  /// No description provided for @readingMilestoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it going.'**
+  String get readingMilestoneBody;
+
+  /// No description provided for @readingShareCardSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'ReadIn card: {count} days of reading in a row'**
+  String readingShareCardSemantics(int count);
+
+  /// No description provided for @readingKeepReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep reading'**
+  String get readingKeepReading;
+
+  /// No description provided for @readingShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t share the card. Try again.'**
+  String get readingShareFailed;
 }
 
 class _AppLocalizationsDelegate

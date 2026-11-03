@@ -1293,4 +1293,200 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get errExternalProviderFailed =>
       'الدخول بـ Google أو Apple مكملش. جرّب تاني.';
+
+  @override
+  String readingStreakNotReadTodaySemantics(int count) {
+    return 'الـ streak بتاعك: $count يوم. لسه مقرتش النهارده.';
+  }
+
+  @override
+  String readingStreakFreezePendingSemantics(int count) {
+    return 'الـ streak بتاعك: $count يوم. فاتك امبارح: اقرا النهارده والـ freeze هيحافظ على الـ streak.';
+  }
+
+  @override
+  String get readingStatsTitle => 'إحصائيات القراءة';
+
+  @override
+  String get readingCurrentStreak => 'الـ streak الحالي';
+
+  @override
+  String get readingLongestStreak => 'أطول streak';
+
+  @override
+  String readingDaysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوم',
+      many: '$count يوم',
+      few: '$count أيام',
+      two: 'يومين',
+      one: 'يوم واحد',
+      zero: '0 يوم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get readingFreezeAvailable =>
+      'عندك freeze جاهز: لو فاتك يوم، الـ streak هيفضل زي ما هو.';
+
+  @override
+  String get readingFreezePending =>
+      'فاتك امبارح. اقرا النهارده والـ freeze هيحافظ على الـ streak بتاعك.';
+
+  @override
+  String get readingFreezeUsed =>
+      'استخدمت الـ freeze. هيجيلك واحد جديد خلال 7 أيام.';
+
+  @override
+  String get readingLast7Days => 'آخر 7 أيام';
+
+  @override
+  String get readingLast30Days => 'آخر 30 يوم';
+
+  @override
+  String get readingAllTime => 'من الأول';
+
+  @override
+  String readingArticlesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مقال',
+      many: '$count مقال',
+      few: '$count مقالات',
+      two: 'مقالين',
+      one: 'مقال واحد',
+      zero: '0 مقال',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String readingMinutesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count دقيقة',
+      many: '$count دقيقة',
+      few: '$count دقايق',
+      two: 'دقيقتين',
+      one: 'دقيقة واحدة',
+      zero: '0 دقيقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get readingTopFields => 'أكتر مجالات بتقراها';
+
+  @override
+  String readingTopFieldSemantics(String field, String articles) {
+    return '$field: $articles';
+  }
+
+  @override
+  String get readingStatsEmpty => 'خلّص أول مقال للآخر عشان تبدأ الـ streak.';
+
+  @override
+  String get readingActivity => 'نشاط القراءة';
+
+  @override
+  String get readingLast12Months => 'آخر 12 شهر';
+
+  @override
+  String get readingHeatmapLess => 'أقل';
+
+  @override
+  String get readingHeatmapMore => 'أكتر';
+
+  @override
+  String get readingHeatmapFreeze => 'يوم بـ freeze';
+
+  @override
+  String readingHeatmapSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوم قراءة',
+      many: '$count يوم قراءة',
+      few: '$count أيام قراءة',
+      two: 'يومين قراءة',
+      one: 'يوم قراءة واحد',
+      zero: 'مفيش أيام قراءة لسه',
+    );
+    return 'نشاط القراءة في آخر 12 شهر: $_temp0';
+  }
+
+  @override
+  String readingHeatmapDay(String date, String articles) {
+    return '$date: $articles';
+  }
+
+  @override
+  String readingHeatmapFrozenDay(String date) {
+    return '$date: الـ freeze حافظ على الـ streak';
+  }
+
+  @override
+  String get readingHeatmapEmpty => 'كل يوم تخلّص فيه مقال هيظهر هنا.';
+
+  @override
+  String readingDaysInARow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'يوم ورا بعض',
+      few: 'أيام ورا بعض',
+      two: 'يومين ورا بعض',
+      one: 'يوم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get readingMilestoneWeekTitle => 'أسبوع كامل!';
+
+  @override
+  String get readingMilestoneWeekBody => '7 أيام قراءة ورا بعض. كمّل كده!';
+
+  @override
+  String get readingMilestoneMonthTitle => 'شهر كامل من القراءة!';
+
+  @override
+  String get readingMilestoneMonthBody => '30 يوم ورا بعض. كده بقت عادة بجد.';
+
+  @override
+  String get readingMilestoneHundredTitle => '100 يوم!';
+
+  @override
+  String get readingMilestoneHundredBody =>
+      '100 يوم ورا بعض. قليلين اللي بيوصلوا لهنا.';
+
+  @override
+  String get readingMilestoneYearTitle => 'سنة كاملة!';
+
+  @override
+  String get readingMilestoneYearBody => '365 يوم قراءة ورا بعض. إنجاز أسطوري.';
+
+  @override
+  String readingMilestoneTitle(int count) {
+    return '$count يوم ورا بعض!';
+  }
+
+  @override
+  String get readingMilestoneBody => 'كمّل كده!';
+
+  @override
+  String readingShareCardSemantics(int count) {
+    return 'كارت ReadIn: $count يوم قراءة ورا بعض';
+  }
+
+  @override
+  String get readingKeepReading => 'كمّل قراءة';
+
+  @override
+  String get readingShareFailed => 'معرفناش نشارك الكارت. جرّب تاني.';
 }

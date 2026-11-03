@@ -6,26 +6,58 @@ import '../../core/theme/theme_x.dart';
 import '../../core/theme/tokens.g.dart';
 import 'app_network_image.dart';
 
-/// 🔥 streak pill (accent tokens). Streak data arrives with F08 (Phase 2).
+/// 🔥 streak pill (accent tokens, F08). Filled once today's reading counts; outlined while a live streak still waits
+/// for today ([notReadToday]), with a ❄ when yesterday was missed and reading today uses a freeze ([freezePending]).
 class StreakBadge extends StatelessWidget {
-  const StreakBadge({super.key, required this.days});
+  const StreakBadge({super.key, required this.days, this.notReadToday = false, this.freezePending = false, this.onTap});
 
   final int days;
+  final bool notReadToday;
+  final bool freezePending;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = context.l10n;
+    final outlined = notReadToday || freezePending;
+    final radius = BorderRadius.circular(ReadInRadius.chip);
+    final text = Text(
+      '🔥 ${l10n.streakDays(days)}',
+      style: context.textTheme.labelMedium?.copyWith(color: colors.textPrimary, fontWeight: FontWeight.w700),
+    );
+    Widget pill = Container(
+      padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s3, vertical: 6),
+      decoration: BoxDecoration(color: outlined ? colors.surface : colors.accentContainer, borderRadius: radius),
+      // A foreground border keeps the pill the same size in every state.
+      foregroundDecoration: outlined ? BoxDecoration(border: Border.all(color: colors.accent), borderRadius: radius) : null,
+      child: freezePending
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                text,
+                const SizedBox(width: ReadInSpace.s1),
+                Icon(Icons.ac_unit_rounded, size: 14, color: colors.calloutInfoAccent),
+              ],
+            )
+          : text,
+    );
+    if (onTap != null) {
+      pill = Material(
+        type: MaterialType.transparency,
+        child: InkWell(onTap: onTap, customBorder: const StadiumBorder(), child: pill),
+      );
+    }
     return Semantics(
-      label: context.l10n.streakSemantics(days),
+      label: freezePending
+          ? l10n.readingStreakFreezePendingSemantics(days)
+          : notReadToday
+              ? l10n.readingStreakNotReadTodaySemantics(days)
+              : l10n.streakSemantics(days),
+      button: onTap != null,
+      onTap: onTap,
       excludeSemantics: true,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s3, vertical: 6),
-        decoration: BoxDecoration(color: colors.accentContainer, borderRadius: BorderRadius.circular(ReadInRadius.chip)),
-        child: Text(
-          '🔥 ${context.l10n.streakDays(days)}',
-          style: context.textTheme.labelMedium?.copyWith(color: colors.textPrimary, fontWeight: FontWeight.w700),
-        ),
-      ),
+      child: pill,
     );
   }
 }

@@ -101,6 +101,9 @@ abstract final class FailureCodes {
   static const attachmentsAssetNotReady = 'attachments.asset_not_ready';
   static const attachmentsDuplicateAsset = 'attachments.duplicate_asset';
 
+  // Reading & streaks (ADR 0013): a parallel progress report; the reader sends it again.
+  static const readingConflict = 'reading.conflict';
+
   // Client-side
   static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';

@@ -8,13 +8,13 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
-import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/domain/entities/article.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../notifications/presentation/cubit/unread_badge_cubit.dart';
+import '../../../reading/presentation/widgets/home_streak_badge.dart';
 import '../cubit/feed_cubit.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/live_feed_cubit.dart';
@@ -168,7 +168,7 @@ class _HomeHeader extends StatelessWidget {
             ],
           ),
         ),
-        const StreakBadge(days: 0),
+        const HomeStreakBadge(),
         const SizedBox(width: ReadInSpace.s2),
         const _NotificationsButton(),
       ],

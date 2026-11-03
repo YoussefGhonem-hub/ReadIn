@@ -1302,4 +1302,188 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errExternalProviderFailed =>
       'Signing in with Google or Apple didn\'t finish. Try again.';
+
+  @override
+  String readingStreakNotReadTodaySemantics(int count) {
+    return 'Reading streak: $count days. You haven\'t read today yet.';
+  }
+
+  @override
+  String readingStreakFreezePendingSemantics(int count) {
+    return 'Reading streak: $count days. You missed yesterday: read today and a freeze keeps your streak.';
+  }
+
+  @override
+  String get readingStatsTitle => 'Reading stats';
+
+  @override
+  String get readingCurrentStreak => 'Current streak';
+
+  @override
+  String get readingLongestStreak => 'Longest';
+
+  @override
+  String readingDaysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get readingFreezeAvailable =>
+      'Freeze ready: miss a day and your streak stays.';
+
+  @override
+  String get readingFreezePending =>
+      'You missed yesterday. Read today and a freeze keeps your streak.';
+
+  @override
+  String get readingFreezeUsed =>
+      'Freeze used. You get a new one within 7 days.';
+
+  @override
+  String get readingLast7Days => 'Last 7 days';
+
+  @override
+  String get readingLast30Days => 'Last 30 days';
+
+  @override
+  String get readingAllTime => 'All time';
+
+  @override
+  String readingArticlesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles',
+      one: '1 article',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String readingMinutesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get readingTopFields => 'Top fields';
+
+  @override
+  String readingTopFieldSemantics(String field, String articles) {
+    return '$field: $articles';
+  }
+
+  @override
+  String get readingStatsEmpty =>
+      'Read an article to the end to start your streak.';
+
+  @override
+  String get readingActivity => 'Reading activity';
+
+  @override
+  String get readingLast12Months => 'Last 12 months';
+
+  @override
+  String get readingHeatmapLess => 'Less';
+
+  @override
+  String get readingHeatmapMore => 'More';
+
+  @override
+  String get readingHeatmapFreeze => 'Freeze';
+
+  @override
+  String readingHeatmapSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reading days',
+      one: '1 reading day',
+      zero: 'no reading days yet',
+    );
+    return 'Reading activity in the last 12 months: $_temp0';
+  }
+
+  @override
+  String readingHeatmapDay(String date, String articles) {
+    return '$date: $articles';
+  }
+
+  @override
+  String readingHeatmapFrozenDay(String date) {
+    return '$date: a freeze kept your streak';
+  }
+
+  @override
+  String get readingHeatmapEmpty =>
+      'Every day you finish an article shows up here.';
+
+  @override
+  String readingDaysInARow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'days in a row',
+      one: 'day in a row',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get readingMilestoneWeekTitle => 'A full week!';
+
+  @override
+  String get readingMilestoneWeekBody =>
+      '7 days of reading in a row. Keep it going.';
+
+  @override
+  String get readingMilestoneMonthTitle => 'A month of reading!';
+
+  @override
+  String get readingMilestoneMonthBody =>
+      '30 days in a row. That\'s a real habit now.';
+
+  @override
+  String get readingMilestoneHundredTitle => '100 days!';
+
+  @override
+  String get readingMilestoneHundredBody =>
+      '100 days in a row. Few readers get this far.';
+
+  @override
+  String get readingMilestoneYearTitle => 'A whole year!';
+
+  @override
+  String get readingMilestoneYearBody =>
+      '365 days of reading in a row. Legendary.';
+
+  @override
+  String readingMilestoneTitle(int count) {
+    return '$count-day streak!';
+  }
+
+  @override
+  String get readingMilestoneBody => 'Keep it going.';
+
+  @override
+  String readingShareCardSemantics(int count) {
+    return 'ReadIn card: $count days of reading in a row';
+  }
+
+  @override
+  String get readingKeepReading => 'Keep reading';
+
+  @override
+  String get readingShareFailed => 'Couldn\'t share the card. Try again.';
 }

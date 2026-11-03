@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/di/injection.dart';
 import '../core/l10n/l10n_x.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/presentation/session/session_cubit.dart';
+import '../features/reading/presentation/cubit/streak_cubit.dart';
 import '../features/settings/domain/entities/app_settings.dart';
 import '../features/settings/presentation/cubit/settings_cubit.dart';
 import 'router.dart';
@@ -48,6 +50,7 @@ class _ReadInAppState extends State<ReadInApp> {
       providers: [
         BlocProvider.value(value: widget.session),
         BlocProvider.value(value: widget.settings),
+        BlocProvider.value(value: getIt<StreakCubit>()), // follows the session itself (F08)
       ],
       child: BlocListener<SessionCubit, SessionState>(
         listenWhen: (a, b) => a.me != b.me,
