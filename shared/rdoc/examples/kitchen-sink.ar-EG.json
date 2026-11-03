@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "language": "ar-EG",
+  "blocks": [
+    { "id": "sum", "type": "summary", "content": [
+      { "type": "text", "text": "الخلاصة: الـ " },
+      { "type": "term", "termId": "dependency-injection", "text": "Dependency Injection" },
+      { "type": "text", "text": " بيخلّي الكود أسهل في الـ testing والصيانة." }
+    ]},
+    { "id": "p1", "type": "paragraph", "dir": "auto", "content": [
+      { "type": "text", "text": "لو انت شغال بـ " },
+      { "type": "text", "text": "ASP.NET Core", "marks": [{ "type": "bold" }] },
+      { "type": "text", "text": "، أكيد شفت الـ " },
+      { "type": "term", "termId": "dependency-injection", "text": "Dependency Injection" },
+      { "type": "text", "text": " في كل حتة. اقرا " },
+      { "type": "text", "text": "الدوكيومنتيشن الرسمية", "marks": [{ "type": "link", "href": "https://learn.microsoft.com/aspnet/core/fundamentals/dependency-injection" }] },
+      { "type": "text", "text": " (نسخة .NET 10)." }
+    ]},
+    { "id": "h1", "type": "heading", "level": 2, "content": [
+      { "type": "text", "text": "ليه أصلاً نستخدم " },
+      { "type": "text", "text": "DI", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": "؟" }
+    ]},
+    { "id": "ul", "type": "bulletList", "items": [
+      [{ "type": "text", "text": "تقدر تبدّل الـ implementation من غير ما تغيّر الـ consumer." }],
+      [{ "type": "text", "text": "الـ " }, { "type": "text", "text": "unit tests", "marks": [{ "type": "italic" }] }, { "type": "text", "text": " بتبقى أسهل بكتير." }],
+      [{ "type": "text", "text": "الـ lifetime (Singleton / Scoped / Transient) بيتدار في مكان واحد." }]
+    ]},
+    { "id": "ol", "type": "orderedList", "items": [
+      [{ "type": "text", "text": "اعمل interface." }],
+      [{ "type": "text", "text": "سجّله في " }, { "type": "text", "text": "Program.cs", "marks": [{ "type": "code" }] }, { "type": "text", "text": "." }]
+    ]},
+    { "id": "h2", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "تبدأ منين؟" }] },
+    { "id": "st", "type": "steps", "items": [
+      { "title": "اعمل الـ interface", "content": [{ "type": "text", "text": "مثلاً IOrderService." }] },
+      { "title": "اكتب الـ implementation", "content": [{ "type": "text", "text": "OrderService بيعمل implement للـ interface." }] },
+      { "title": "سجّل الـ service", "content": [{ "type": "text", "text": "باستخدام AddScoped." }] }
+    ]},
+    { "id": "c1", "type": "callout", "variant": "tip", "title": "نصيحة", "content": [
+      { "type": "text", "text": "استخدم " },
+      { "type": "text", "text": "AddScoped", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " لأي service بتتعامل مع DbContext." }
+    ]},
+    { "id": "c2", "type": "callout", "variant": "info", "content": [{ "type": "text", "text": "الـ container الافتراضي كفاية لـ 90% من المشاريع." }] },
+    { "id": "c3", "type": "callout", "variant": "warning", "content": [{ "type": "text", "text": "متحقنش Scoped service جوه Singleton (captive dependency)." }] },
+    { "id": "c4", "type": "callout", "variant": "danger", "content": [{ "type": "text", "text": "متستخدمش " }, { "type": "text", "text": "BuildServiceProvider()", "marks": [{ "type": "code" }] }, { "type": "text", "text": " جوه ConfigureServices." }] },
+    { "id": "code1", "type": "code", "lang": "csharp", "filename": "Program.cs", "highlightLines": [2],
+      "code": "var builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddScoped<IOrderService, OrderService>();\nvar app = builder.Build();" },
+    { "id": "tabs", "type": "codeTabs", "tabs": [
+      { "label": "C#", "lang": "csharp", "code": "public interface IClock { DateTime UtcNow { get; } }", "compile": false },
+      { "label": "TypeScript", "lang": "typescript", "code": "export interface Clock { now(): Date; }" },
+      { "label": "Dart", "lang": "dart", "code": "abstract interface class Clock { DateTime now(); }" }
+    ]},
+    { "id": "tbl", "type": "table", "header": [
+      [{ "type": "text", "text": "الـ Lifetime" }],
+      [{ "type": "text", "text": "بيتعمل امتى؟" }]
+    ], "rows": [
+      [[{ "type": "text", "text": "Singleton", "marks": [{ "type": "code" }] }], [{ "type": "text", "text": "مرة واحدة طول عمر الـ app." }]],
+      [[{ "type": "text", "text": "Scoped", "marks": [{ "type": "code" }] }], [{ "type": "text", "text": "مرة لكل request." }]],
+      [[{ "type": "text", "text": "Transient", "marks": [{ "type": "code" }] }], [{ "type": "text", "text": "كل مرة تطلبه." }]]
+    ]},
+    { "id": "q1", "type": "quote", "cite": "Martin Fowler", "content": [
+      { "type": "text", "text": "Inversion of Control is a common phenomenon that you come across when extending frameworks." }
+    ]},
+    { "id": "img", "type": "image", "src": "https://picsum.photos/seed/readin-di/1200/630", "darkSrc": "https://picsum.photos/seed/readin-di-dark/1200/630", "alt": "رسم توضيحي للـ DI container وهو بيحقن الـ services", "caption": "الـ container بيبني الـ object graph بالنيابة عنك." },
+    { "id": "div", "type": "divider" },
+    { "id": "emb", "type": "embed", "provider": "youtube", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+    { "id": "p2", "type": "paragraph", "content": [
+      { "type": "text", "text": "شكراً لـ " },
+      { "type": "mention", "userId": "0195f3a0-0000-7000-8000-000000000001", "text": "@editorial" },
+      { "type": "hardBreak" },
+      { "type": "text", "text": "وده نص فيه ", "marks": [] },
+      { "type": "text", "text": "highlight", "marks": [{ "type": "highlight" }] },
+      { "type": "text", "text": " و " },
+      { "type": "text", "text": "strike", "marks": [{ "type": "strike" }] },
+      { "type": "text", "text": "." }
+    ]}
+  ]
+}

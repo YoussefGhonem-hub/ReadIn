@@ -1,0 +1,23 @@
+{
+  "$description": "Shared mixed Arabic/English test fixtures (SPEC §14.2 rule 7). Used by backend text-extraction tests, web renderer tests and Flutter golden tests. `expectedDir` is the base direction resolved from the first strong character.",
+  "fixtures": [
+    { "id": "english-term-end-punctuation", "text": "أنا بستخدم ASP.NET Core.", "expectedDir": "rtl" },
+    { "id": "english-term-question", "text": "يعني إيه Dependency Injection؟", "expectedDir": "rtl" },
+    { "id": "parentheses-english", "text": "الـ lifetime (Scoped) مهم جداً.", "expectedDir": "rtl" },
+    { "id": "parentheses-arabic-in-english", "text": "Use DI (الحقن) everywhere.", "expectedDir": "ltr" },
+    { "id": "numbers", "text": "قريت 12 مقال في 30 يوم، بمعدل 0.4 مقال/يوم.", "expectedDir": "rtl" },
+    { "id": "version-numbers", "text": "اتعمل upgrade لـ .NET 10 و Angular 21.", "expectedDir": "rtl" },
+    { "id": "url", "text": "شوف https://learn.microsoft.com/dotnet/ للتفاصيل.", "expectedDir": "rtl" },
+    { "id": "mention", "text": "شكراً @youssef_dev على الشرح!", "expectedDir": "rtl" },
+    { "id": "mention-start", "text": "@youssef_dev شكراً على الشرح!", "expectedDir": "ltr", "note": "First strong char is Latin (the handle) → dir=auto resolves LTR. The mention itself must still be isolated so the '!' stays with the Arabic text." },
+    { "id": "code-inline", "text": "استخدم services.AddScoped<IFoo, Foo>() هنا.", "expectedDir": "rtl" },
+    { "id": "english-only", "text": "Read daily. Grow daily.", "expectedDir": "ltr" },
+    { "id": "arabic-only", "text": "مقال كل يوم يفرق معاك", "expectedDir": "rtl" },
+    { "id": "starts-with-english", "text": "React ولا Angular؟ الاتنين كويسين.", "expectedDir": "ltr", "note": "First strong char is Latin → dir=auto resolves LTR. Writers can override with explicit dir." },
+    { "id": "diacritics-tatweel", "text": "الـبـرمـجـة مُمتِعة", "expectedDir": "rtl", "normalized": "البرمجه ممتعه" },
+    { "id": "alef-variants", "text": "أحمد إبراهيم آمن ى ة", "expectedDir": "rtl", "normalized": "احمد ابراهيم امن ي ه" },
+    { "id": "emoji", "text": "مقال النهارده جاهز ☕ — Clean Architecture", "expectedDir": "rtl" },
+    { "id": "file-path", "text": "افتح backend/src/ReadIn.Api/Program.cs الأول.", "expectedDir": "rtl" },
+    { "id": "hashtag", "text": "#dotnet و #flutter أكتر حاجتين بقراهم.", "expectedDir": "ltr", "note": "'#' is neutral; first strong char is Latin." }
+  ]
+}
