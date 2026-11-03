@@ -1,0 +1,38 @@
+{
+  "slug": "cross-validation-estimates-not-builds",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "What Cross-Validation Is For: Estimating Performance, Not Picking a Fold's Model",
+      "subtitle": "The fold models are scaffolding and the best fold is the luckiest split. Report the mean and spread, then refit on all your training data."
+    },
+    "ar-EG": {
+      "title": "الـ Cross-Validation بيعمل إيه بالظبط؟ بيقدّر الأداء، مش بيبني الموديل النهائي",
+      "subtitle": "موديلات الـ folds سقالة مؤقتة، وأحسن fold هو أكتر split حظه حلو. اعرض المتوسط والانتشار، وبعدين درّب من جديد على كل داتا الـ training."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "evaluating-models", "order": 5 },
+  "tags": ["Model Evaluation", "Cross-Validation", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Cross-validation: evaluating estimator performance — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/cross_validation.html"
+    },
+    {
+      "title": "cross_val_score — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_val_score.html"
+    },
+    {
+      "title": "GridSearchCV — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

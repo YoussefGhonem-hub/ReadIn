@@ -353,3 +353,69 @@ terms:
     definitionAr: >-
       طريقة لدمج كذا list نتايج مترتبة من أكتر من بحث: كل list بتزوّد المستند بـ 1 / (k + rank)، وغالبًا k = 60،
       والمستندات بتترتب بالمجموع. بتستخدم الترتيب بس، فمش محتاج الـ scores بتاعة الـ lists تبقى قابلة للمقارنة.
+  - id: recall-at-k
+    term: Recall@k
+    definitionEn: >-
+      The share of relevant items that appear in a system's top k results, for example how often the passage that
+      answers a question is among the 20 chunks retrieval returns. It measures retrieval without calling the model.
+    definitionAr: >-
+      نسبة الحاجات المفيدة اللي بتظهر في أول k نتيجة من السيستم، زي إن الـ passage اللي بتجاوب على السؤال تبقى ضمن
+      الـ 20 chunk اللي الـ retrieval رجّعهم كام مرة. بتقيس الـ retrieval من غير ما تكلّم الموديل خالص.
+  - id: ai-agent
+    term: AI Agent
+    definitionEn: >-
+      A system where a language model directs its own process in a loop: it chooses which tool to call, reads the
+      result and decides the next step until it judges the task done. The path isn't fixed in code.
+    definitionAr: >-
+      سيستم الـ language model فيه بيوجّه شغله بنفسه في loop: بيختار أنهي أداة يطلبها، ويقرا النتيجة، ويقرر الخطوة
+      اللي بعدها لحد ما يحكم إن المهمة خلصت. والطريق مش متحدد في الكود.
+  - id: llm-workflow
+    term: LLM Workflow
+    definitionEn: >-
+      A system where your code fixes the steps and their order, and calls a model inside individual steps, for
+      example to classify, extract or write. Prompt chaining and routing are common workflow patterns.
+    definitionAr: >-
+      سيستم الكود بتاعك فيه بيحدد الخطوات وترتيبها، وبيكلّم الموديل جوه خطوات معيّنة، زي إنه يصنّف أو يستخرج أو
+      يكتب. والـ prompt chaining والـ routing من أشهر أشكال الـ workflows.
+  - id: data-contamination
+    term: Data Contamination
+    definitionEn: >-
+      Test examples from a benchmark appearing in a model's training data, so its score partly reflects memory of
+      those examples rather than the skill the benchmark is meant to measure.
+    definitionAr: >-
+      إن أمثلة الاختبار بتاعة benchmark تبقى موجودة في داتا الـ training بتاعة الموديل، فالـ score بتاعه يعكس جزئيًا
+      إنه فاكر الأمثلة دي، مش المهارة اللي الـ benchmark معمول يقيسها.
+  - id: test-time-compute
+    term: Test-Time Compute
+    definitionEn: >-
+      The computation a model spends while answering a request rather than during training, mostly the reasoning
+      tokens it generates before the final answer. More of it often helps on hard problems, but it costs tokens and
+      time.
+    definitionAr: >-
+      الحسابات اللي الموديل بيصرفها وهو بيجاوب على request، مش وقت الـ training، وأغلبها الـ reasoning tokens اللي بيولّدها
+      قبل الإجابة النهائية. الزيادة فيها غالبًا بتفيد في المسائل الصعبة، بس بتكلّف tokens ووقت.
+  - id: inverse-scaling
+    term: Inverse Scaling
+    definitionEn: >-
+      A pattern where a model does worse on a task, not better, as something usually expected to help grows, such as
+      its parameter count or the length of its reasoning.
+    definitionAr: >-
+      إن أداء الموديل في مهمة معيّنة يقل بدل ما يتحسن، كل ما حاجة المفروض إنها بتساعد تزيد، زي عدد الـ parameters
+      بتاعته أو طول الـ reasoning.
+  - id: context-engineering
+    term: Context Engineering
+    definitionEn: >-
+      Deciding, on every model call, which tokens go into the context: instructions, tool definitions, retrieved data
+      and history. The aim is the smallest set of high-signal tokens that gets the task done, not the most text that
+      fits.
+    definitionAr: >-
+      إنك تقرر، في كل call للموديل، أنهي tokens تدخل الـ context: التعليمات، وتعريفات الأدوات، والداتا اللي اتجابت،
+      والـ history. والهدف أصغر مجموعة tokens مفيدة تخلّص المهمة، مش أكبر كمية نص تساع.
+  - id: context-compaction
+    term: Compaction
+    definitionEn: >-
+      Replacing the older part of a long conversation or agent run with a summary, so the work can continue with a
+      smaller context. A summary that is too aggressive can drop details needed later.
+    definitionAr: >-
+      إنك تبدّل الجزء القديم من محادثة طويلة أو شغل agent بملخص، عشان الشغل يكمّل بـ context أصغر. والملخص اللي بيشيل
+      كتير ممكن يضيّع تفاصيل هتحتاجها بعدين.

@@ -1,0 +1,42 @@
+{
+  "slug": "clustering-does-not-find-true-groups",
+  "field": "machine-learning",
+  "topic": "unsupervised-learning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Clustering Doesn't Discover 'True' Groups: K-Means Assumptions Explained",
+      "subtitle": "Every clustering method returns groups, even from noise. What it returns follows its own idea of a group."
+    },
+    "ar-EG": {
+      "title": "هل الـ Clustering بيلاقي المجموعات الحقيقية؟ افتراضات الـ K-Means اللي محدش بيقولها",
+      "subtitle": "أي طريقة clustering بترجّع مجموعات، حتى من الـ noise. واللي بترجّعه ماشي على فكرتها هي عن يعني إيه مجموعة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "ml-foundations", "order": 12 },
+  "tags": ["Clustering", "K-Means", "Unsupervised Learning", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Demonstration of k-means assumptions — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_assumptions.html"
+    },
+    {
+      "title": "Clustering — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/clustering.html"
+    },
+    {
+      "title": "Comparing different clustering algorithms on toy datasets — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html"
+    },
+    {
+      "title": "Advantages and disadvantages of k-means — Google Machine Learning Clustering course",
+      "url": "https://developers.google.com/machine-learning/clustering/kmeans/advantages-disadvantages"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

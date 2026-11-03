@@ -1,0 +1,38 @@
+{
+  "slug": "precision-vs-recall",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Precision vs Recall: Choose the Error You Can Afford",
+      "subtitle": "They count different mistakes, and moving the threshold trades one for the other. Only a better model raises both."
+    },
+    "ar-EG": {
+      "title": "تختار Precision ولا Recall؟ على حسب الغلطة اللي تقدر تستحملها",
+      "subtitle": "كل واحد فيهم بيعدّ غلطة مختلفة، وتحريك الـ threshold بيبدّل واحدة بالتانية. الموديل الأحسن بس هو اللي بيرفع الاتنين."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "evaluating-models", "order": 3 },
+  "tags": ["Model Evaluation", "Precision", "Recall", "Classification"],
+  "sources": [
+    {
+      "title": "Classification: Accuracy, recall, precision, and related metrics — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall"
+    },
+    {
+      "title": "Precision-Recall — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html"
+    },
+    {
+      "title": "fbeta_score — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.fbeta_score.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

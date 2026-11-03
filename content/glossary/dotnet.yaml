@@ -167,3 +167,27 @@ terms:
     term: Cross-cutting concern
     definitionEn: Behavior that many parts of an app need but that belongs to none of them in particular, such as logging, error handling, authorization or input checks.
     definitionAr: سلوك أجزاء كتير من التطبيق محتاجاه بس مش تبع جزء واحد فيهم بالتحديد، زي الـ logging أو التعامل مع الأخطاء أو الـ authorization أو التشييك على الـ input.
+  - id: structured-logging
+    term: Structured logging
+    definitionEn: Writing each log entry as named values, such as OrderId = 81723, alongside the text, so a log store can filter, group and count entries by those values instead of searching the text.
+    definitionAr: إنك تكتب كل log entry على شكل قيم ليها أسماء، زي OrderId = 81723، جنب النص، عشان مكان تخزين الـ logs يقدر يفلتر ويجمّع ويعدّ الـ entries بالقيم دي بدل ما يدوّر في النص.
+  - id: message-template
+    term: Message template
+    definitionEn: A constant log message with named placeholders, such as "Payment declined for order {OrderId}". The logger keeps the template and the values separately and only builds the text when a provider needs it.
+    definitionAr: رسالة log ثابتة فيها placeholders ليها أسماء، زي "Payment declined for order {OrderId}". الـ logger بيحتفظ بالـ template والقيم كل واحد لوحده، ومش بيبني النص غير لما provider يحتاجه.
+  - id: polymorphic-serialization
+    term: Polymorphic serialization
+    definitionEn: Writing an object according to its runtime type rather than the type it's declared as, so a CardPayment stored in a Payment property keeps its extra properties in the JSON.
+    definitionAr: إنك تكتب الـ object حسب الـ type الحقيقي بتاعه وقت التشغيل، مش الـ type اللي متعرّف بيه، فـ CardPayment متخزن في property نوعها Payment يفضل محتفظ بالـ properties الزيادة بتاعته في الـ JSON.
+  - id: port-exhaustion
+    term: Port exhaustion
+    definitionEn: Running out of the local TCP ports the operating system hands to outgoing connections. Each closed connection keeps its port reserved for a while in the TIME-WAIT state, so opening and closing connections quickly can use them all up.
+    definitionAr: إن الـ TCP ports المحلية اللي نظام التشغيل بيديها للـ connections الخارجة تخلص. كل connection بتتقفل بتفضل حاجزة الـ port بتاعها شوية في حالة الـ TIME-WAIT، فلو فتحت وقفلت connections بسرعة ممكن تخلّصهم كلهم.
+  - id: shared-cache
+    term: Shared cache
+    definitionEn: An HTTP cache that stores responses for reuse by more than one user, such as a proxy, a CDN or the ASP.NET Core response caching middleware. A browser's own cache is a private cache, dedicated to one user.
+    definitionAr: HTTP cache بيخزّن الـ responses عشان يعيد استخدامها لأكتر من user، زي الـ proxy أو الـ CDN أو الـ response caching middleware في ASP.NET Core. أما الـ cache اللي جوه الـ browser فده private cache لـ user واحد بس.
+  - id: cache-stampede
+    term: Cache stampede
+    definitionEn: When a popular cache entry is missing or has just expired and many concurrent requests miss it at once, so each one rebuilds the same value and the database or API behind the cache takes the whole burst.
+    definitionAr: لما entry مشهور في الـ cache يبقى مش موجود أو مدته لسه خالصة، و requests كتير في نفس اللحظة متلاقيهوش، فكل واحد فيهم يبني نفس القيمة من الأول، والداتابيز أو الـ API اللي ورا الـ cache ياخد الضربة كلها.

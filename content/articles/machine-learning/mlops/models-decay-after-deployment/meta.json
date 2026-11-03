@@ -1,0 +1,42 @@
+{
+  "slug": "models-decay-after-deployment",
+  "field": "machine-learning",
+  "topic": "mlops",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "A Deployed Model Doesn't Stay Accurate: Drift and Training-Serving Skew",
+      "subtitle": "The model file never changes. The world it learned from, and the pipeline that feeds it, do."
+    },
+    "ar-EG": {
+      "title": "الموديل بعد الـ deployment مش هيفضل دقيق: الـ Drift والـ Training-Serving Skew",
+      "subtitle": "ملف الموديل عمره ما بيتغيّر. اللي بيتغيّر هو الدنيا اللي اتعلّم منها، والـ pipeline اللي بتأكّله."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "ml-foundations", "order": 15 },
+  "tags": ["MLOps", "Concept Drift", "Model Monitoring", "Training-Serving Skew"],
+  "sources": [
+    {
+      "title": "Production ML systems: Monitoring pipelines — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/production-ml-systems/monitoring"
+    },
+    {
+      "title": "Production ML systems: Static versus dynamic training — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/production-ml-systems/static-vs-dynamic-training"
+    },
+    {
+      "title": "Rules of Machine Learning (rules #8, #29, #32 and #37) — Google for Developers",
+      "url": "https://developers.google.com/machine-learning/guides/rules-of-ml"
+    },
+    {
+      "title": "Learning under Concept Drift: A Review — Lu et al. (arXiv)",
+      "url": "https://arxiv.org/abs/2004.05785"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

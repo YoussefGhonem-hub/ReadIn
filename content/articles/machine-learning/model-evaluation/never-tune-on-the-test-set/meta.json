@@ -1,0 +1,42 @@
+{
+  "slug": "never-tune-on-the-test-set",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why You Need a Test Set You Never Touch: Train, Validation and Test Splits",
+      "subtitle": "Picking the winner by its test score quietly turns the test set into training data. Choose on validation data, then test once."
+    },
+    "ar-EG": {
+      "title": "ليه محتاج test set متلمسهاش خالص؟ تقسيم الـ Train والـ Validation والـ Test",
+      "subtitle": "لما تختار الموديل الكسبان بالـ score بتاعه على الـ test set، بتحوّلها لداتا training من غير ما تحس. اختار على الـ validation، واختبر مرة واحدة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "evaluating-models", "order": 1 },
+  "tags": ["Model Evaluation", "Validation Set", "Hyperparameter Tuning", "Data Leakage"],
+  "sources": [
+    {
+      "title": "Datasets: Dividing the original dataset — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/overfitting/dividing-datasets"
+    },
+    {
+      "title": "Cross-validation: evaluating estimator performance — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/cross_validation.html"
+    },
+    {
+      "title": "Tuning the hyper-parameters of an estimator — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/grid_search.html"
+    },
+    {
+      "title": "Common pitfalls and recommended practices — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/common_pitfalls.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

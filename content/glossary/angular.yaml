@@ -1,0 +1,65 @@
+terms:
+  - id: standalone-component
+    term: Standalone component
+    definitionEn: >-
+      An Angular component that lists the components, directives and pipes its template uses in its own imports array,
+      instead of being declared in an NgModule. It's the default since Angular 19.
+    definitionAr: >-
+      component في Angular بتكتب الـ components والـ directives والـ pipes اللي الـ template بتاعها بيستخدمها في الـ
+      imports بتاعتها هي، من غير ما تتعمل declare في NgModule. ودي الحالة الافتراضية من أول Angular 19.
+  - id: lazy-loading
+    term: Lazy loading
+    definitionEn: >-
+      Splitting part of an app into a separate JavaScript chunk that the browser downloads only when it's first needed,
+      such as when the user opens a route.
+    definitionAr: >-
+      إنك تفصل جزء من التطبيق في chunk JavaScript لوحده، والـ browser مايحمّلوش غير أول ما يحتاجه، زي لما اليوزر يفتح
+      route معيّن.
+  - id: angular-signal
+    term: Signal
+    definitionEn: >-
+      A wrapper around a value that notifies Angular when the value changes. You read it by calling it, like count(),
+      and Angular records which templates and computed values read it so it knows what to update.
+    definitionAr: >-
+      wrapper حوالين قيمة بيبلّغ Angular لما القيمة تتغير. بتقراه بإنك تناديه زي count()، وAngular بيسجّل مين من الـ
+      templates والـ computed values قراه، عشان يعرف يحدّث إيه.
+  - id: pure-pipe
+    term: Pure pipe
+    definitionEn: >-
+      An Angular pipe whose transform runs again only when its input changes, either a different primitive value or a
+      new object reference. Pipes are pure by default, so Angular reuses the last result otherwise.
+    definitionAr: >-
+      pipe في Angular الـ transform بتاعها مابيشتغلش تاني غير لما الـ input بتاعها يتغير، يعني قيمة primitive مختلفة أو
+      reference جديد لـ object. الـ pipes بتبقى pure بشكل افتراضي، فـ Angular بيعيد استخدام آخر نتيجة في غير كده.
+  - id: lifecycle-hook
+    term: Lifecycle hook
+    definitionEn: >-
+      A method Angular calls at a fixed moment in a component's life, such as ngOnInit after the first inputs are set or
+      ngOnDestroy before the component is removed.
+    definitionAr: >-
+      method بيناديها Angular في لحظة محددة من عمر الـ component، زي ngOnInit بعد ما أول inputs تتحط، أو ngOnDestroy قبل
+      ما الـ component تتشال.
+  - id: injection-context
+    term: Injection context
+    definitionEn: >-
+      The places where Angular's inject() works: while the DI system constructs a class (its constructor and field
+      initializers), inside provider factory functions, and inside runInInjectionContext.
+    definitionAr: >-
+      الأماكن اللي inject() بتاعة Angular بتشتغل فيها: وقت ما الـ DI system بيعمل الـ class (الـ constructor والـ field
+      initializers بتوعها)، وجوه الـ factory functions بتاعة الـ providers، وجوه runInInjectionContext.
+  - id: change-detection
+    term: Change detection
+    definitionEn: >-
+      Angular's process for keeping the DOM in sync with your state. In each pass it walks the component tree,
+      re-evaluates the templates that need checking, and updates the DOM where a value differs from the last render.
+    definitionAr: >-
+      الطريقة اللي Angular بيخلّي بيها الـ DOM ماشي مع الـ state بتاعتك. في كل لفّة بيمشي على شجرة الـ components، ويعيد
+      تقييم الـ templates اللي محتاجة check، ويحدّث الـ DOM في الأماكن اللي القيمة فيها اختلفت عن آخر render.
+  - id: zoneless
+    term: Zoneless change detection
+    definitionEn: >-
+      Running Angular without zone.js. Angular schedules change detection only when it's notified, for example by a
+      signal read in a template, a template event listener or markForCheck(). It's the default since Angular 21.
+    definitionAr: >-
+      إنك تشغّل Angular من غير zone.js. ساعتها Angular مابيعملش change detection غير لما حاجة تنبّهه، زي signal بيتقري في
+      template، أو event listener في الـ template، أو markForCheck(). وده الافتراضي من أول Angular 21.

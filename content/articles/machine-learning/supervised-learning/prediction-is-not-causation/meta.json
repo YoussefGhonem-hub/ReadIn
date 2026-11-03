@@ -1,0 +1,42 @@
+{
+  "slug": "prediction-is-not-causation",
+  "field": "machine-learning",
+  "topic": "supervised-learning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Predictive Isn't Causal: Why a Model Can't Tell You What to Change",
+      "subtitle": "A feature can predict the outcome perfectly well and still do nothing when you change it."
+    },
+    "ar-EG": {
+      "title": "إن الموديل يتنبأ كويس مش معناه إنه عارف السبب: الـ Correlation مش Causation",
+      "subtitle": "الـ feature ممكن تتنبأ بالنتيجة كويس جدًا، ولما تغيّرها ماتغيّرش حاجة."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "ml-foundations", "order": 13 },
+  "tags": ["Causal Inference", "Confounding", "Model Interpretation", "A/B Testing"],
+  "sources": [
+    {
+      "title": "Failure of Machine Learning to infer causal effects — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/inspection/plot_causal_interpretation.html"
+    },
+    {
+      "title": "Common pitfalls in the interpretation of coefficients of linear models — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/inspection/plot_linear_model_coefficient_interpretation.html"
+    },
+    {
+      "title": "Permutation feature importance — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/permutation_importance.html"
+    },
+    {
+      "title": "Intelligible Models for HealthCare: Predicting Pneumonia Risk and Hospital 30-day Readmission — Caruana et al., KDD 2015 (PDF)",
+      "url": "https://people.dbmi.columbia.edu/noemie/papers/15kdd.pdf"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

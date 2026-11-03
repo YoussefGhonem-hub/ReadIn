@@ -1,0 +1,38 @@
+{
+  "slug": "accuracy-on-imbalanced-data",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "99% Accuracy Can Mean a Useless Model: Accuracy on Imbalanced Data",
+      "subtitle": "When one class is rare, accuracy mostly measures the common one. Check the baseline, read the confusion matrix, then pick a fairer number."
+    },
+    "ar-EG": {
+      "title": "دقة 99% ممكن تبقى موديل مالوش لازمة: الـ Accuracy مع البيانات غير المتوازنة",
+      "subtitle": "لما class تبقى نادرة، الـ accuracy بتقيس الـ class الشائعة في الأغلب. شوف الـ baseline، واقرا الـ confusion matrix، وبعدين اختار رقم أعدل."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "evaluating-models", "order": 2 },
+  "tags": ["Model Evaluation", "Accuracy", "Imbalanced Data", "Confusion Matrix"],
+  "sources": [
+    {
+      "title": "Classification: Accuracy, recall, precision, and related metrics — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall"
+    },
+    {
+      "title": "Metrics and scoring: quantifying the quality of predictions — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/model_evaluation.html"
+    },
+    {
+      "title": "DummyClassifier — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.dummy.DummyClassifier.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

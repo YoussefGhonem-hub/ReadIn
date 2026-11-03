@@ -1,0 +1,46 @@
+{
+  "slug": "pca-is-not-feature-selection",
+  "field": "machine-learning",
+  "topic": "unsupervised-learning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "PCA Isn't Feature Selection: High Variance Doesn't Mean Predictive",
+      "subtitle": "PCA ranks directions by variance without looking at the target, and every component still needs every column."
+    },
+    "ar-EG": {
+      "title": "ليه الـ PCA مش Feature Selection؟ التباين العالي مش معناه فايدة في التنبؤ",
+      "subtitle": "الـ PCA بيرتّب الاتجاهات حسب الـ variance من غير ما يبص على الـ target، وكل component لسه محتاج كل الأعمدة."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "ml-foundations", "order": 14 },
+  "tags": ["PCA", "Feature Selection", "Dimensionality Reduction", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Decomposing signals in components: Principal component analysis (PCA) — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/decomposition.html"
+    },
+    {
+      "title": "Principal Component Regression vs Partial Least Squares Regression — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/cross_decomposition/plot_pcr_vs_pls.html"
+    },
+    {
+      "title": "Cross decomposition (PLS) — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/cross_decomposition.html"
+    },
+    {
+      "title": "Feature selection — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/feature_selection.html"
+    },
+    {
+      "title": "Pipelines and composite estimators — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/compose.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

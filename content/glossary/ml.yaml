@@ -239,3 +239,68 @@ terms:
     definitionAr: >-
       فرق بين الداتا اللي الموديل اتدرّب عليها والداتا اللي بتوصله في الـ production، وغالبًا سببه إن كود الـ features أو
       الـ schema مختلفين بين pipeline الـ training وpipeline الـ serving.
+  - id: hyperparameter
+    term: Hyperparameter
+    definitionEn: >-
+      A setting you choose before training instead of the model learning it from the data, such as a tree's maximum
+      depth or a learning rate. You compare candidate values on validation data, never on the test set.
+    definitionAr: >-
+      إعداد إنت اللي بتختاره قبل الـ training بدل ما الموديل يتعلّمه من الداتا، زي أقصى عمق للـ tree أو الـ learning
+      rate. بتقارن القيم المرشّحة على داتا الـ validation، عمرك ما تقارنها على الـ test set.
+  - id: validation-set
+    term: Validation Set
+    definitionEn: >-
+      A part of the data held out from training and used to compare models and settings during development. Because
+      you choose by it, its score ends up optimistic, so a separate test set gives the final number.
+    definitionAr: >-
+      جزء من الداتا متشال من الـ training وبتستخدمه عشان تقارن الموديلات والإعدادات وإنت شغال. ولأنك بتختار على أساسه،
+      الـ score بتاعه بيطلع متفائل، فالرقم النهائي بييجي من test set منفصلة.
+  - id: confusion-matrix
+    term: Confusion Matrix
+    definitionEn: >-
+      A table that counts a classifier's predictions by true class and predicted class. For two classes it gives four
+      numbers: true positives, false positives, false negatives and true negatives, from which accuracy, precision and
+      recall are all computed.
+    definitionAr: >-
+      جدول بيعدّ توقعات الـ classifier حسب الـ class الحقيقية والـ class المتوقعة. مع classين بيطلّع أربع أرقام: true
+      positives وfalse positives وfalse negatives وtrue negatives، ومنهم بتتحسب الـ accuracy والـ precision والـ recall.
+  - id: balanced-accuracy
+    term: Balanced Accuracy
+    definitionEn: >-
+      The average of the recall of each class, so every class counts equally whatever its size. It equals accuracy on
+      balanced data and drops to chance level, 0.5 for two classes, for a model that just predicts the majority.
+    definitionAr: >-
+      متوسط الـ recall بتاع كل class، فكل class بتتحسب بنفس الوزن مهما كان حجمها. بتساوي الـ accuracy لما الداتا تبقى
+      متوازنة، وبتنزل لمستوى الصدفة، 0.5 مع classين، لموديل بيتوقع الـ class الأكبر على طول.
+  - id: precision
+    term: Precision
+    definitionEn: >-
+      Of everything a classifier flagged as positive, the share that really is positive: true positives divided by
+      true plus false positives. It ignores the positives the model missed.
+    definitionAr: >-
+      من كل اللي الـ classifier علّم عليه إنه positive، نسبة اللي هو positive فعلًا: الـ true positives مقسومة على الـ
+      true والـ false positives مع بعض. مابتشوفش الحالات الـ positive اللي الموديل فلّتها.
+  - id: recall
+    term: Recall
+    definitionEn: >-
+      Of all the real positives, the share the classifier found: true positives divided by true positives plus false
+      negatives. Also called sensitivity or true positive rate, it ignores false alarms.
+    definitionAr: >-
+      من كل الحالات الـ positive الحقيقية، نسبة اللي الـ classifier لقاها: الـ true positives مقسومة على الـ true
+      positives والـ false negatives مع بعض. اسمها كمان sensitivity أو true positive rate، ومابتشوفش الإنذارات الغلط.
+  - id: mean-absolute-error
+    term: Mean Absolute Error (MAE)
+    definitionEn: >-
+      The average size of a regression model's errors, ignoring their sign, in the same units as the target. An MAE of
+      4.8 minutes means a typical prediction is about 4.8 minutes off.
+    definitionAr: >-
+      متوسط حجم الغلط في موديل regression من غير ما تبص على الإشارة، وبنفس وحدات الـ target. يعني MAE قدّه 4.8 دقيقة
+      معناه إن التوقع العادي بيبعد حوالي 4.8 دقيقة.
+  - id: root-mean-squared-error
+    term: Root Mean Squared Error (RMSE)
+    definitionEn: >-
+      The square root of the average squared error of a regression model. It is in the target's units like MAE, but
+      squaring gives large errors more weight, so a few big misses can raise it well above the MAE.
+    definitionAr: >-
+      الجذر التربيعي لمتوسط مربعات الغلط في موديل regression. بيبقى بوحدات الـ target زي الـ MAE، بس التربيع بيدّي
+      الغلطات الكبيرة وزن أكبر، فكام غلطة كبيرة ممكن يرفعوه فوق الـ MAE بكتير.

@@ -1,0 +1,46 @@
+{
+  "slug": "trees-often-beat-deep-learning-on-tabular-data",
+  "field": "machine-learning",
+  "topic": "supervised-learning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Tree Ensembles Still Beat Deep Learning on Most Tabular Data",
+      "subtitle": "On rows and columns, gradient-boosted trees usually match or beat neural networks, with far less tuning."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Tree Ensembles بتكسب الـ Deep Learning غالبًا في البيانات الجدولية؟",
+      "subtitle": "على الداتا اللي صفوف وأعمدة، الـ gradient-boosted trees غالبًا بتساوي الـ neural networks أو بتغلبها، وبضبط أقل بكتير."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "ml-foundations", "order": 11 },
+  "tags": ["Gradient Boosting", "Deep Learning", "Tabular Data", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Why do tree-based models still outperform deep learning on tabular data? — Grinsztajn, Oyallon, Varoquaux (arXiv)",
+      "url": "https://arxiv.org/abs/2207.08815"
+    },
+    {
+      "title": "Tabular Data: Deep Learning is Not All You Need — Shwartz-Ziv, Armon (arXiv)",
+      "url": "https://arxiv.org/abs/2106.03253"
+    },
+    {
+      "title": "Ensembles: Gradient boosting, random forests, bagging — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/ensemble.html"
+    },
+    {
+      "title": "Decision Trees — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/tree.html"
+    },
+    {
+      "title": "Decision Forests — Google for Developers",
+      "url": "https://developers.google.com/machine-learning/decision-forests"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

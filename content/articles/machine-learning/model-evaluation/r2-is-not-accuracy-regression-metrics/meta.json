@@ -1,0 +1,38 @@
+{
+  "slug": "r2-is-not-accuracy-regression-metrics",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "R², MAE or RMSE? What Each Regression Metric Actually Tells You",
+      "subtitle": "R² compares your errors with the target's spread, so it isn't a share of correct predictions. MAE and RMSE say how far off you are, in real units."
+    },
+    "ar-EG": {
+      "title": "ليه الـ R² مش نسبة دقة؟ إزاي تختار بين MAE وRMSE وR² في الـ Regression",
+      "subtitle": "الـ R² بيقارن الغلط بتاعك بانتشار الـ target، فهو مش نسبة التوقعات الصح. الـ MAE والـ RMSE بيقولولك بعيد قد إيه، بوحدات حقيقية."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "evaluating-models", "order": 4 },
+  "tags": ["Model Evaluation", "Regression", "R²", "MAE", "RMSE"],
+  "sources": [
+    {
+      "title": "Metrics and scoring: quantifying the quality of predictions — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/model_evaluation.html"
+    },
+    {
+      "title": "r2_score — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html"
+    },
+    {
+      "title": "Linear regression: Loss — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/linear-regression/loss"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
