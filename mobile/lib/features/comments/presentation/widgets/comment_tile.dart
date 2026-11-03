@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/bidi/bidi.dart';
 import '../../../../core/l10n/l10n_x.dart';
@@ -6,6 +9,8 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../profile/presentation/profile_routes.dart';
+import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../domain/entities/comment.dart';
 import '../cubit/comments_cubit.dart';
 import 'comment_body.dart';
@@ -190,8 +195,25 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final author = comment.author;
-    return author == null ? GenericAvatar(size: size) : UserAvatar(name: author.displayName, url: author.avatarUrl, size: size);
+    if (author == null) return GenericAvatar(size: size);
+    return ProfileLink(
+      username: author.username,
+      beforeOpen: () => _closeSheet(context),
+      child: UserAvatar(name: author.displayName, url: author.avatarUrl, size: size),
+    );
   }
+}
+
+/// Comments open in a bottom sheet: close it first so the profile isn't pushed underneath, as "who reacted" does.
+void _closeSheet(BuildContext context) {
+  if (ModalRoute.of(context) is ModalBottomSheetRoute) unawaited(Navigator.of(context).maybePop());
+}
+
+void _openProfile(BuildContext context, String username) {
+  // Taken before closing the sheet, which takes this context out of the tree.
+  final router = GoRouter.maybeOf(context);
+  _closeSheet(context);
+  if (router != null) unawaited(router.push<void>(ProfileRoutes.of(username)));
 }
 
 /// The avatar of a deleted account or a placeholder: no initial, no photo.
@@ -290,7 +312,11 @@ class _Content extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.titleSmall?.copyWith(color: colors.textSecondary),
                     )
-                  : BidiText(author.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall),
+                  : ProfileLink(
+                      username: author.username,
+                      beforeOpen: () => _closeSheet(context),
+                      child: BidiText(author.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall),
+                    ),
             ),
             if (author?.isVerified ?? false) ...[const SizedBox(width: 4), const VerifiedMark()],
             if (comment.isArticleAuthor) ...[
@@ -305,7 +331,11 @@ class _Content extends StatelessWidget {
           _HiddenNotice(text: l10n.commentsHiddenNotice),
         ],
         const SizedBox(height: ReadInSpace.s1),
-        CommentBody(body: comment.body!, mentions: comment.mentions),
+        CommentBody(
+          body: comment.body!,
+          mentions: comment.mentions,
+          onMention: pending ? null : (mention) => _openProfile(context, mention.username),
+        ),
         _Actions(comment: comment, callbacks: callbacks, enabled: !pending),
       ],
     );

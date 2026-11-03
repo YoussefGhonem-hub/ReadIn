@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/bidi/bidi.dart';
@@ -10,16 +11,22 @@ import '../../domain/entities/comment_text.dart';
 /// [body] as spans for a comment of [direction]: only the handles the API resolved ([mentions]) get [mentionStyle];
 /// every other `@word` stays plain. Mentions are LTR isolates and plain runs in the opposite script are isolated too
 /// (SPEC §14.2), so "شكراً @mona_dev!" keeps its "!" with the Arabic text. Line breaks are kept.
+/// [recognizerFor] makes a mention tappable (it opens the profile, F14).
 List<InlineSpan> commentBodySpans(
   String body,
   List<CommentMention> mentions, {
   required TextDirection direction,
   required TextStyle mentionStyle,
+  GestureRecognizer? Function(CommentMention mention)? recognizerFor,
 }) =>
     [
       for (final segment in CommentText.segments(body, mentions))
         segment.isMention
-            ? TextSpan(text: Bidi.ltrIsolate(segment.text), style: mentionStyle)
+            ? TextSpan(
+                text: Bidi.ltrIsolate(segment.text),
+                style: mentionStyle,
+                recognizer: recognizerFor?.call(segment.mention!),
+              )
             : TextSpan(text: Bidi.isolateOppositeRuns(segment.text, direction)),
     ];
 
@@ -28,19 +35,44 @@ List<InlineSpan> commentBodySpans(
 TextDirection commentDirection(String body, {required TextDirection fallback}) =>
     Bidi.detect(CommentText.withoutMentions(body)) ?? Bidi.detect(body) ?? fallback;
 
-/// A comment's text, laid out in its own direction ([commentDirection]). Mentions are styled; they aren't links until
-/// public profiles exist (F14).
-class CommentBody extends StatelessWidget {
-  const CommentBody({super.key, required this.body, this.mentions = const [], this.style});
+/// A comment's text, laid out in its own direction ([commentDirection]). Mentions are styled, and tappable when
+/// [onMention] is set.
+class CommentBody extends StatefulWidget {
+  const CommentBody({super.key, required this.body, this.mentions = const [], this.style, this.onMention});
 
   final String body;
   final List<CommentMention> mentions;
   final TextStyle? style;
 
+  /// Tapping a resolved mention; null keeps mentions as styled text.
+  final ValueChanged<CommentMention>? onMention;
+
+  @override
+  State<CommentBody> createState() => _CommentBodyState();
+}
+
+class _CommentBodyState extends State<CommentBody> {
+  final _recognizers = <String, TapGestureRecognizer>{};
+
+  GestureRecognizer? _recognizerFor(CommentMention mention) {
+    final onMention = widget.onMention;
+    if (onMention == null) return null;
+    return _recognizers.putIfAbsent(mention.username, TapGestureRecognizer.new)..onTap = () => onMention(mention);
+  }
+
+  @override
+  void dispose() {
+    for (final recognizer in _recognizers.values) {
+      recognizer.dispose();
+    }
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final body = widget.body;
     final direction = commentDirection(body, fallback: Directionality.of(context));
-    final base = style ?? context.textTheme.bodyMedium!.copyWith(color: context.colors.textPrimary);
+    final base = widget.style ?? context.textTheme.bodyMedium!.copyWith(color: context.colors.textPrimary);
     // Full width, so a one-line Arabic comment in the English UI (and the other way round) starts on its own side.
     return SizedBox(
       width: double.infinity,
@@ -49,9 +81,10 @@ class CommentBody extends StatelessWidget {
           style: base,
           children: commentBodySpans(
             body,
-            mentions,
+            widget.mentions,
             direction: direction,
             mentionStyle: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w600),
+            recognizerFor: _recognizerFor,
           ),
         ),
         textDirection: direction,
