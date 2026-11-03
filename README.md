@@ -97,13 +97,12 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | Seeder: demo interactions (reactions, saves, follows, a collection; deterministic, local only) | ✅ comments join with F11 |
 | Seeders: glossary, learning paths | ⏳ arrive with F21 / F09 |
 | Outbox + Hangfire (immediate trigger + per-minute safety net), scheduled publishing | ✅ |
-| F27 Real-time: `POST /realtime/token` (Firebase custom tokens), RTDB publisher with retry + circuit breaker (article counters, comment events, feed, unread badge, PDF status), "new articles" signal on publish | ✅ backend · web + mobile listeners in place; counters, comment events and the badge go live as F10–F13 and F17 publish them |
+| F27 Real-time: `POST /realtime/token` (Firebase custom tokens), RTDB publisher with retry + circuit breaker (article counters, comment events, feed, unread badge, PDF status), "new articles" signal on publish | ✅ backend · web + mobile listeners in place; article counters are live with F10/F13, comment events and the badge go live as F11 and F17 publish them |
 | F07 Daily article: Hangfire job picks 30 min before each user's reminder time and sends one FCM push at it (ar/en); the tap opens the reader on web + mobile | ✅ |
 | Endpoints: auth sync, me, preferences, interests, devices, fields/topics, article by slug, create/publish, for-you feed, today's article | ✅ |
 | F01 Auth, F02 Onboarding, F03 Home, F04 Reader (subset), F18 Settings: web + mobile | ✅ first slice |
 | F08 Streaks & reading stats + the F04 "read" rule (≥ 70% and ≥ 30 s, [ADR 0013](docs/adr/0013-reading-days-and-streaks.md)): web + mobile + backend, demo reading history | ✅ |
-| F10 Reactions, F12 Follow, F13 Saved: endpoints, reactions/saves on every card, Following feed, suggested writers, collections, counters recomputed by the outbox and published as live signals (F27), admin counter rebuild | ✅ backend; mobile next |
-| F10 Reactions, F12 Follow, F13 Saved + live counters (F27): reader action bar, who reacted, Following tab, Saved page and collections | ✅ web |
+| F10 Reactions, F12 Follow, F13 Saved: reactions/saves on every card, reader action bar, who reacted, Following feed + suggested writers, Saved page with collections (offline copies on mobile), counters recomputed by the outbox and live (F27), admin counter rebuild, demo interactions | ✅ web + mobile + backend |
 | F05 Editor, F11 Comments, F14 Profile | ⏳ next |
 | ContentStudio `generate` (Claude), code-compile and live-link checks | ⏳ |
-| Full-text search index (needs FTS in the SQL image), SignalR, FCM sending | ⏳ Phase 2 |
+| Full-text search index (needs FTS in the SQL image), SignalR | ⏳ Phase 2 |
