@@ -121,6 +121,24 @@ Quotas: 50 uploads per user per day (`409 media.quota_daily`), 200 MB stored per
 
 Media error codes: `media.purpose_invalid`, `media.file_required`, `media.too_large`, `media.unsupported_type`, `media.dimensions_too_large`, `media.image_corrupted`, `media.pdf_encrypted`, `media.pdf_corrupted`, `media.pdf_too_many_pages`, `media.quota_daily`, `media.quota_storage`, `media.not_found`, `media.in_use`, `media.download_not_allowed`, `media.processing_failed`, `media.processing_timeout`, `attachments.mixed_kinds`, `attachments.too_many_images`, `attachments.single_document`, `attachments.alt_text_required`, `attachments.alt_text_too_long`, `attachments.caption_too_long`, `attachments.title_required`, `attachments.title_too_long`, `attachments.asset_not_found`, `attachments.asset_not_ready`, `attachments.duplicate_asset`.
 
+### Real-time (Bearer) — SPEC §21.2, [ADR 0008](../adr/0008-firebase-scope-fcm-and-rtdb.md)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| POST | `/realtime/token` | → `200 { token }`: a Firebase **custom token** whose `uid` is your user id (valid for one hour). Pass it to `signInWithCustomToken` on the client's own Firebase app (`readin-live`); it only lets you read `/live/users/{yourId}` and is **not** a ReadIn sign-in. Ask for one on every page load / app start and sign in; sign out of Firebase when you sign out of ReadIn. 10 a minute per user (`429 rate_limited`); `500 realtime.unavailable` when Firebase can't sign one (stay on REST and try again on the next start) |
+
+Live paths in the Firebase Realtime Database. Only the API writes them, after the SQL commit; clients only read. They
+carry signals, never content: fetch the data itself through REST. Times are epoch milliseconds. Anything can be missing
+(RTDB unavailable, or nothing published yet): keep the REST values then.
+
+| Path | Who reads | Value |
+|---|---|---|
+| `/live/articles/{articleId}` | 🌐 | `reactions: { insightful, love, fire, mindBlown }`, `commentCount`, `saveCount`, `updatedAt` (server time). Totals, not deltas. Listen to the three counter children rather than the node, so `events` isn't downloaded |
+| `/live/articles/{articleId}/events/{pushId}` | 🌐 | `{ type, commentId, parentId?, at }`: `type` is `comment.created` \| `comment.updated` \| `comment.deleted` \| `reply.created` \| `comment.liked` \| `comment.pinned`; `at` is server time, so query `orderByChild('at').startAt(serverNow)`. A retried write can repeat an event |
+| `/live/feed/latestPublishedAt` | 🌐 | Publish time of the newest article the feed can show. Higher than when the feed was loaded → show "مقالات جديدة ↑" |
+| `/live/users/{userId}` | that user (custom token) | `unreadNotifications`, `lastNotificationAt` |
+| `/live/users/{userId}/media/{assetId}` | that user (custom token) | `{ status: processing \| ready \| failed, pagesReady, pageCount, failureReason, updatedAt }` while a PDF renders. Polling `GET /uploads/{id}` stays the contract |
+
 ## DTOs (TypeScript notation)
 
 ```ts

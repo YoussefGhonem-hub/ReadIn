@@ -33,22 +33,22 @@ ReadIn is a bilingual (Arabic + English) knowledge platform that helps you read 
 | [`web/`](web) | Angular web app |
 | [`mobile/`](mobile) | Flutter mobile app |
 | [`content/`](content) | Taxonomy, glossary, learning paths and seeded articles |
-| [`firebase/`](firebase) | Storage rules (emulator config in `firebase.json` / `.firebaserc`) |
+| [`firebase/`](firebase) | Realtime Database rules (emulator config and the `live` database target in `firebase.json` / `.firebaserc`) |
 | [`.github/`](.github/workflows) | CI: backend, web, mobile, content |
 
 📄 **Start here:** [docs/SPEC.md](docs/SPEC.md). Section numbers (§) in the code and docs refer to it.
 
 ## Local setup
 
-**Prerequisites:** .NET SDK 10, Node 24, Flutter 3.44+, Docker, Firebase CLI (+ Java 17 for the emulators).
+**Prerequisites:** .NET SDK 10, Node 24, Flutter 3.44+, Docker, Firebase CLI (+ Java 21 for the Realtime Database emulator).
 
 ```bash
 # 1. SQL Server 2022 (host port 14333) + Seq (http://localhost:5341)
 docker compose up -d
 
-# 2. Optional: Firebase emulators for live updates and push (project "demo-readin", UI at http://127.0.0.1:4000).
+# 2. Optional: Firebase emulators for live updates (project "demo-readin", UI at http://127.0.0.1:4000; docs/setup/firebase.md §9).
 #    Sign in works without them.
-firebase emulators:start
+firebase emulators:start --only auth,database
 
 # 3. Demo user password (never committed, SPEC §18.1). Without it demo users can't sign in.
 dotnet user-secrets set "Seed:DemoPassword" "<choose-a-password>" --project backend/src/ReadIn.Api
@@ -96,6 +96,7 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | Seeders: roles & permissions, taxonomy, system accounts, demo users, articles | ✅ |
 | Seeders: glossary, learning paths, demo interactions | ⏳ arrive with F21 / F09 / F10–F13 |
 | Outbox + Hangfire (immediate trigger + per-minute safety net), scheduled publishing | ✅ |
+| F27 Real-time: `POST /realtime/token` (Firebase custom tokens), RTDB publisher with retry + circuit breaker (article counters, comment events, feed, unread badge, PDF status), "new articles" signal on publish | ✅ backend · web + mobile listeners in place; counters, comment events and the badge go live as F10–F13 and F17 publish them |
 | Endpoints: auth sync, me, preferences, interests, devices, fields/topics, article by slug, create/publish, for-you feed, today's article | ✅ |
 | F01 Auth, F02 Onboarding, F03 Home, F04 Reader (subset), F18 Settings: web + mobile | ✅ first slice |
 | F05 Editor, F10 Reactions, F11 Comments, F12 Follow, F13 Saved, F14 Profile | ⏳ next |

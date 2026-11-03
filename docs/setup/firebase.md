@@ -4,7 +4,8 @@ ReadIn uses **one** real Firebase project, `readin-cca78`, for the deployed app 
 Firebase has exactly two jobs there: **push notifications (FCM)** and **live updates (Realtime Database)** (SPEC §21).
 It is not used for sign-in (phone + password in the API), file storage (`wwwroot/uploads`, ADR 0010), Firestore or analytics.
 
-Local development, CI and all tests use the **Firebase Emulator Suite** (project `demo-readin`) and need none of the steps below.
+Local development, CI and all tests use the **Firebase Emulator Suite** (project `demo-readin`, [section 9](#9-local-development-the-emulator-suite))
+and need none of the other steps.
 
 > **Never commit:** the Admin SDK key (`*firebase-adminsdk*.json`), `google-services.json`, `GoogleService-Info.plist`, or any password.
 > All three file patterns are in `.gitignore`.
@@ -49,13 +50,20 @@ firebase use default     # back to the emulator project for daily work
 
 The database already exists in `europe-west1`. Its rules live in the repo (`firebase/database.rules.json`):
 `/live/articles` and `/live/feed` are public read, `/live/users/{id}` is readable only by that user, and **no client
-can write anywhere**. Only the API writes, with the Admin SDK key from step 6.
+can write anywhere**. Only the API writes, through the RTDB REST API with the Admin SDK service account from step 6
+(the .NET Admin SDK has no Realtime Database client). The API writes nothing until `Firebase:DatabaseUrl` is set
+(step 6.4): without it, live updates are off and the apps keep working through REST.
 
 Deploy the rules after every change to that file:
 
 ```bash
 firebase deploy --only database --project prod
 ```
+
+`firebase.json` deploys the rules to the database **target** `live`, which `.firebaserc` maps to
+`readin-cca78-default-rtdb` for `readin-cca78` and to the `demo-readin` namespace for the emulator (the namespace the
+API and the dev apps use). Without that mapping the emulator would load the rules into `demo-readin-default-rtdb` and
+leave the namespace in use wide open.
 
 ---
 
@@ -160,8 +168,23 @@ The API uses the Admin SDK key to send FCM pushes, write the Realtime Database a
    `--Firebase:UseEmulator=false`. Demo seeders never run against it.
 5. **Deployed API:** user-secrets exist only on a developer machine. On the server, set the same keys as environment
    variables from the host's secret store, using double underscores: `Firebase__ProjectId`, `Firebase__DatabaseUrl`,
-   `Firebase__ServiceAccountJson`. Alternatively, leave `ServiceAccountJson` unset and give the host a workload identity
-   (Application Default Credentials) with the **Firebase Admin** role.
+   `Firebase__ServiceAccountJson`.
+6. **What the key is used for.** With `Firebase:ServiceAccountJson` set, the API signs the custom tokens of
+   `POST /realtime/token` **locally** with that key and gets OAuth access tokens (scopes `firebase.database` +
+   `userinfo.email`) for the Realtime Database REST API. The generated Admin SDK account already has every role this
+   needs; nothing else to grant.
+7. **Keyless alternative (Application Default Credentials).** Leave `ServiceAccountJson` unset and run the API as a
+   service account (Google Cloud workload identity, or workload identity federation elsewhere). That identity needs:
+   - **Firebase Realtime Database Admin** (`roles/firebasedatabase.admin`), or **Firebase Admin**
+     (`roles/firebase.admin`), on `readin-cca78`, to write `/live/...`;
+   - **Service Account Token Creator** (`roles/iam.serviceAccountTokenCreator`) **on itself**
+     (`iam.serviceAccounts.signBlob`): without a private key the Admin SDK signs custom tokens through the IAM
+     Service Account Credentials API, which must be enabled (`iamcredentials.googleapis.com`);
+   - `Firebase:ServiceAccountId` = its email (`…@readin-cca78.iam.gserviceaccount.com`) when the host has no
+     metadata server to discover it from (anything outside Google Cloud).
+
+   If signing fails, `POST /realtime/token` answers `500 realtime.unavailable` and the API logs the cause; the apps
+   carry on without the live unread badge.
 
 ---
 
@@ -188,4 +211,35 @@ the production build locally).
 - [x] Android and iOS apps registered; `mobile/lib/firebase_options_prod.dart` committed
 - [ ] Browser API key restricted to `https://readin.app/*`
 - [ ] `Firebase:ServiceAccountJson`, `Firebase:ProjectId`, `Firebase:DatabaseUrl` stored with `dotnet user-secrets` (dev) / secret store (server); downloaded key file deleted
+- [ ] After deploying the API: `POST /api/v1/realtime/token` with a user's access token answers `200 { token }`, and publishing an article moves `/live/feed/latestPublishedAt` (Firebase console → Realtime Database → Data)
 - [ ] No `google-services.json`, `GoogleService-Info.plist` or `*firebase-adminsdk*.json` in `git status`
+
+---
+
+## 9. Local development: the Emulator Suite
+
+The API, the web app and the `dev` mobile flavor talk to the emulators of project `demo-readin`, never to `readin-cca78`.
+
+```bash
+# From the repository root. firebase-tools 15 needs Java 21+ for the Realtime Database emulator (JAVA_HOME).
+firebase emulators:start --only auth,database
+```
+
+| Emulator | Address | Used for |
+|---|---|---|
+| Realtime Database | `127.0.0.1:9000`, namespace `demo-readin` | Live signals; rules from `firebase/database.rules.json` (target `live`) |
+| Authentication | `127.0.0.1:9099` | Only to exchange the custom token of `POST /realtime/token` |
+| Emulator UI | `http://127.0.0.1:4000` | Browse `/live/...` and the custom-token users |
+
+`appsettings.Development.json` points the API at them: `Firebase:UseEmulator=true`, `Firebase:AuthEmulatorHost`
+(`127.0.0.1:9099`) and `Firebase:DatabaseEmulatorHost` (`127.0.0.1:9000`). With the emulator flag the API
+
+- sets `FIREBASE_AUTH_EMULATOR_HOST` for the Admin SDK, which then mints **unsigned** custom tokens that only the
+  Auth emulator accepts (no key needed);
+- writes `http://127.0.0.1:9000/live/...json?ns=demo-readin` with the emulator's admin token `owner`;
+- ignores `Firebase:DatabaseUrl`, so development signals can never reach the real database.
+
+The web (`environment.development.ts`) and mobile (`lib/firebase_options.dart`) dev configs use the database URL
+`https://demo-readin.firebaseio.com`, i.e. the same `demo-readin` namespace. Without the emulators running everything
+still works through REST: the API's writes fail fast once its circuit breaker opens, and the apps simply get no live
+updates. Tests never need the emulators (integration tests fake the token issuer and the publisher).

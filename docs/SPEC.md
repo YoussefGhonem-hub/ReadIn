@@ -1287,10 +1287,12 @@ The Realtime Database (RTDB) was chosen over Firestore because Firestore bills e
 /live/users/{userId}
     unreadNotifications, lastNotificationAt
 /live/users/{userId}/media/{assetId}
-    status
+    status, pagesReady, pageCount, failureReason, updatedAt
 ```
 
-- **Writes:** only the backend (`IRealtimePublisher` → `FirebaseRealtimePublisher`, Firebase Admin SDK), in outbox handlers **after** the SQL commit, with retry and backoff. If RTDB is down, the app keeps working through REST.
+Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
+
+- **Writes:** only the backend (`IRealtimePublisher` → `FirebaseRealtimePublisher`, the RTDB REST API with the Admin SDK service account, since the .NET Admin SDK has no RTDB client), in outbox handlers **after** the SQL commit, with retry, backoff and a circuit breaker. Counters are PATCHed so `events` is kept. If RTDB is down, the app keeps working through REST.
 - **Cleanup:** a Hangfire job keeps events for 24 hours and at most 100 per article. A rebuild command recalculates all counters from SQL Server.
 - **Access:** signed-in users get a Firebase **custom token** from `POST /realtime/token` and call `signInWithCustomToken` only to read RTDB (it is not a login method). Guests read public paths without a token. Signing out of ReadIn also signs out of Firebase.
 - **Security rules** (`firebase/database.rules.json`): `/live/articles` and `/live/feed` are public read; `/live/users/$uid` is readable only when `auth.uid === $uid`; **no client writes anywhere**; everything else is denied.
