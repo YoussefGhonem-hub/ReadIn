@@ -110,5 +110,19 @@ public sealed class DailyPick
     public Guid ArticleId { get; private set; }
     public DateTime? OpenedAt { get; private set; }
 
+    /// <summary>When the daily push for this pick was sent (claimed just before sending, so it goes out at most once).</summary>
+    public DateTime? NotifiedAt { get; private set; }
+
     public void MarkOpened(DateTime now) => OpenedAt ??= now;
+
+    /// <returns>false when the push was already claimed.</returns>
+    public bool MarkNotified(DateTime now)
+    {
+        if (NotifiedAt is not null) return false;
+        NotifiedAt = now;
+        return true;
+    }
+
+    /// <summary>Gives the claim back when no device could be reached, so the next job run tries again.</summary>
+    public void ReleaseNotification() => NotifiedAt = null;
 }

@@ -15,6 +15,7 @@ using ReadIn.Infrastructure.Persistence;
 using ReadIn.Infrastructure.Persistence.Interceptors;
 using ReadIn.Infrastructure.Persistence.Outbox;
 using ReadIn.Infrastructure.Persistence.Seeding;
+using ReadIn.Infrastructure.Push;
 using ReadIn.Infrastructure.Realtime;
 using ReadIn.Infrastructure.Storage;
 
@@ -56,6 +57,7 @@ public static class DependencyInjection
         services.AddSingleton<IFileStorage>(sp => sp.GetRequiredService<WwwrootFileStorage>());
         services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
         services.AddMedia(configuration, IsHangfireEnabled(configuration));
+        services.AddPush(configuration, environment);
 
         var connectionString = configuration.GetConnectionString(ConnectionStringName)
             ?? throw new InvalidOperationException($"Connection string '{ConnectionStringName}' is missing.");
@@ -137,6 +139,7 @@ public static class DependencyInjection
         jobs.AddOrUpdate<ScheduledPublishingJob>("publish-scheduled", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
         jobs.AddOrUpdate<OrphanedUploadsCleanupJob>("uploads-orphan-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3));
         jobs.AddOrUpdate<IdentityCleanupJob>("identity-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 30));
+        jobs.AddOrUpdate<DailyArticleJob>("daily-article", job => job.RunAsync(CancellationToken.None), DailyArticleJob.Schedule);
     }
 
     /// <summary>

@@ -37,6 +37,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.ArticleLanguagePref).HasMaxLength(5).IsRequired();
         builder.Property(u => u.ThemePref).HasConversion<string>().HasMaxLength(10);
         builder.Property(u => u.TimeZone).HasMaxLength(64).IsRequired();
+        builder.HasIndex(u => new { u.TimeZone, u.ReminderTime }); // the daily-article job's range query per time zone (F07)
 
         builder.Ignore(u => u.OnboardingCompleted);
         builder.Ignore(u => u.HasRecoveryPin);

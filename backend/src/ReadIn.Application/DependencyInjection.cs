@@ -47,6 +47,8 @@ public static class DependencyInjection
         services.AddScoped<PasswordConfirmation>();
         services.AddScoped<IdentityConfirmation>();
         services.AddScoped<PasswordSignIn>();
+        services.AddScoped<Features.Feed.DailyArticle.DailyArticlePicker>();
+        services.AddScoped<Features.Feed.DailyArticle.DailyArticleDelivery>();
         services.AddScoped<UploadReferences>();
         services.AddScoped<UploadCleanup>();
         services.AddScoped<Features.Uploads.IMediaQuota, Features.Uploads.MediaQuota>();
