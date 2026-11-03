@@ -16,7 +16,12 @@ import '../features/explore/presentation/pages/explore_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/notifications/presentation/pages/notifications_page.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
+import '../features/profile/domain/entities/profile.dart';
+import '../features/profile/presentation/cubit/follow_list_cubit.dart';
+import '../features/profile/presentation/pages/edit_profile_page.dart';
+import '../features/profile/presentation/pages/follow_lists_page.dart';
 import '../features/profile/presentation/pages/profile_page.dart';
+import '../features/profile/presentation/profile_routes.dart';
 import '../features/saved/presentation/pages/saved_page.dart';
 import '../features/settings/domain/entities/app_settings.dart';
 import '../features/settings/presentation/cubit/settings_cubit.dart';
@@ -45,9 +50,13 @@ abstract final class AppRoutes {
   static const profile = '/profile';
   static const settings = '/settings';
   static const notifications = '/notifications';
+  static const editProfile = ProfileRoutes.edit;
 
   /// Deep link `readin.app/a/{slug}` (SPEC §3.3, §8.2).
   static String article(String slug) => '/a/$slug';
+
+  /// Anyone's profile (F14).
+  static String user(String username) => ProfileRoutes.of(username);
 
   /// Where an [AccountGate] is handled.
   static String forGate(AccountGate gate) => switch (gate) {
@@ -73,8 +82,9 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
   final target = atSplash ? (uri.queryParameters['from'] ?? AppRoutes.home) : uri.toString();
   final targetPath = Uri.parse(target).path;
   final isAuthRoute = targetPath.startsWith('/auth/') || targetPath == AppRoutes.welcome;
-  final isAccountRoute = targetPath.startsWith('/account/');
-  final isArticle = targetPath.startsWith('/a/');
+  final isAccountRoute = targetPath.startsWith('/account/') || targetPath == AppRoutes.editProfile;
+  // Shared links open for first-time guests too, without Welcome first.
+  final isArticle = targetPath.startsWith('/a/') || targetPath.startsWith('/u/');
   String? stay() => atSplash ? target : null;
 
   if (session.isAuthenticated) {
@@ -126,6 +136,25 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.settings, builder: (_, _) => const SettingsPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
       GoRoute(path: '/a/:slug', builder: (_, state) => ArticlePage(slug: state.pathParameters['slug']!)),
+      GoRoute(
+        path: '/u/:username',
+        builder: (_, state) => ProfilePage(username: state.pathParameters['username']!),
+        routes: [
+          for (final kind in FollowListKind.values)
+            GoRoute(
+              path: kind.name,
+              builder: (_, state) => FollowListsPage(
+                username: state.pathParameters['username']!,
+                initialKind: kind,
+                profile: state.extra is UserProfile ? state.extra! as UserProfile : null,
+              ),
+            ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.editProfile,
+        builder: (_, state) => EditProfilePage(profile: state.extra is UserProfile ? state.extra! as UserProfile : null),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => MainShell(navigationShell: shell),
         branches: [

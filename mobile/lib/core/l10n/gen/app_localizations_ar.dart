@@ -395,6 +395,189 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileSyncFailed => 'معرفناش نحمّل حسابك.';
 
   @override
+  String get profileTabArticles => 'المقالات';
+
+  @override
+  String get profileTabSaved => 'المحفوظات';
+
+  @override
+  String get profileTabPaths => 'المسارات';
+
+  @override
+  String get profileTabAbout => 'عن الحساب';
+
+  @override
+  String get profileStatArticles => 'مقالات';
+
+  @override
+  String get profileStatFollowers => 'متابعين';
+
+  @override
+  String get profileStatFollowing => 'بيتابع';
+
+  @override
+  String get profileStatReads => 'قراءات';
+
+  @override
+  String profileStatSemantics(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
+  String get profileOpenHint => 'بيفتح الحساب';
+
+  @override
+  String profileOpenLink(String name) {
+    return 'افتح $name';
+  }
+
+  @override
+  String get profileGithub => 'GitHub';
+
+  @override
+  String get profileLinkedin => 'LinkedIn';
+
+  @override
+  String get profileWebsite => 'الموقع';
+
+  @override
+  String get profileLinks => 'اللينكات';
+
+  @override
+  String get profileExpertise => 'مجالات الخبرة';
+
+  @override
+  String get profileAboutBio => 'نبذة';
+
+  @override
+  String get profileAboutEmpty => 'مفيش تفاصيل لسه.';
+
+  @override
+  String get profileAboutEmptyOwn =>
+      'ضيف نبذة ولينكاتك والمجالات اللي بتكتب فيها عشان القرّاء يعرفوك.';
+
+  @override
+  String profileJoined(String date) {
+    return 'انضم في $date';
+  }
+
+  @override
+  String get profileArticlesEmptyTitle => 'مفيش مقالات لسه';
+
+  @override
+  String get profileArticlesEmptyBody => 'المقالات اللي هينشرها هتظهر هنا.';
+
+  @override
+  String get profileArticlesEmptyOwnTitle => 'لسه منشرتش مقالات';
+
+  @override
+  String get profileArticlesEmptyOwnBody =>
+      'شارك اللي تعرفه: مقالاتك المنشورة هتظهر هنا.';
+
+  @override
+  String get profileWriteFirst => 'اكتب مقال';
+
+  @override
+  String get profilePathsTitle => 'المسارات جاية قريب';
+
+  @override
+  String get profilePathsBody =>
+      'سلاسل مقالات متنقية تتعلم بيها موضوع خطوة بخطوة. بنجهزها دلوقتي.';
+
+  @override
+  String get profileNotFoundTitle => 'الحساب ده مش متاح';
+
+  @override
+  String get profileNotFoundBody => 'ممكن يكون اتمسح، أو اللينك غلط.';
+
+  @override
+  String get profileSaved => 'اتحفظت التعديلات';
+
+  @override
+  String get profilePrivacy => 'الخصوصية';
+
+  @override
+  String get profilePublicReadingStats =>
+      'اعرض إحصائيات القراءة في حسابي العام';
+
+  @override
+  String get profilePublicReadingStatsOn =>
+      'أي حد يقدر يشوف الـ streak بتاعك وإجمالي قرايتك ونشاطك.';
+
+  @override
+  String get profilePublicReadingStatsOff =>
+      'إنت بس اللي بتشوف إحصائيات قرايتك.';
+
+  @override
+  String get profileReadingStatsEmpty => 'لسه مخلّصش مقالات.';
+
+  @override
+  String get profileReadingHeatmapEmpty => 'مفيش أيام قراية لسه.';
+
+  @override
+  String get profileBioLabel => 'نبذة';
+
+  @override
+  String get profileBioHint => 'بتشتغل في إيه؟ وبتكتب عن إيه؟';
+
+  @override
+  String get profilePhotoGallery => 'اختار من صورك';
+
+  @override
+  String get profilePhotoCamera => 'صوّر صورة';
+
+  @override
+  String get profilePhotoPreview => 'صورة الحساب';
+
+  @override
+  String get profileExpertiseHint => 'اختار لحد 5 مجالات انت فاهم فيها كويس.';
+
+  @override
+  String get profileExpertiseFull => 'كده 5. شيل واحد عشان تختار غيره.';
+
+  @override
+  String profileExpertiseCountSemantics(int count, int max) {
+    return 'اخترت $count من $max';
+  }
+
+  @override
+  String get profileFollowSearchHint => 'دوّر بالاسم أو الـ username';
+
+  @override
+  String get profileFollowNoResultsTitle => 'مفيش حد بالاسم ده';
+
+  @override
+  String get profileFollowNoResultsBody => 'جرّب اسم أو username تاني.';
+
+  @override
+  String get profileFollowersEmptyTitle => 'مفيش متابعين لسه';
+
+  @override
+  String get profileFollowersEmptyOwnBody =>
+      'القرّاء اللي تعجبهم مقالاتك يقدروا يتابعوك.';
+
+  @override
+  String get profileFollowingEmptyTitle => 'مش بيتابع حد لسه';
+
+  @override
+  String get profileFollowingEmptyOwnBody =>
+      'تابع كتّاب عشان مقالاتهم الجديدة توصلك في النهارده.';
+
+  @override
+  String get profileErrStatsPrivate => 'إحصائيات القراءة دي خاصة.';
+
+  @override
+  String get profileErrAvatarInvalid =>
+      'الصورة دي مينفعش تتستخدم. ارفع صورة تانية.';
+
+  @override
+  String get profileErrExpertiseInvalid =>
+      'اختار لحد 5 من المجالات اللي في القايمة.';
+
+  @override
+  String get profileErrUrl => 'اكتب لينك كامل بيبدأ بـ https://';
+
+  @override
   String get errValidation => 'راجع الخانات المعلّمة.';
 
   @override

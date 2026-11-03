@@ -15,6 +15,16 @@ class PickImages {
   Future<List<PickedMediaFile>> call({required int limit}) => _picker.pickImages(limit: limit);
 }
 
+/// One photo from the camera (the profile avatar, F14).
+@injectable
+class TakePhoto {
+  const TakePhoto(this._picker);
+
+  final MediaPicker _picker;
+
+  Future<PickedMediaFile?> call() => _picker.takePhoto();
+}
+
 @injectable
 class PickPdf {
   const PickPdf(this._picker);

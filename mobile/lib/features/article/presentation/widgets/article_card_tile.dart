@@ -7,6 +7,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/app_network_image.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../domain/entities/article.dart';
 import 'article_attachments_view.dart';
 
@@ -87,10 +88,21 @@ class _Summary extends StatelessWidget {
               const SizedBox(height: ReadInSpace.s1),
               Row(
                 children: [
+                  // The author's name opens their profile (F14); the rest of the card opens the article.
                   Flexible(
-                    child: BidiText(article.author.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta),
+                    child: ProfileLink(
+                      username: article.author.username,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: BidiText(article.author.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta),
+                          ),
+                          if (article.author.isVerified) ...[const SizedBox(width: 3), const VerifiedMark(size: 12)],
+                        ],
+                      ),
+                    ),
                   ),
-                  if (article.author.isVerified) ...[const SizedBox(width: 3), const VerifiedMark(size: 12)],
                   Text('  ·  ${l10n.readingTime(article.readingTimeMinutes)}', style: meta),
                 ],
               ),

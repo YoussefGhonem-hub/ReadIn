@@ -19,9 +19,13 @@ class ReadingRepositoryImpl implements ReadingRepository {
           (await _api.reportProgress(articleId, ReadingProgressRequestModel.fromReport(report))).toEntity());
 
   @override
-  Future<Result<ReadingStats>> getStats() => guardApi(() async => (await _api.getStats()).toEntity());
+  Future<Result<ReadingStats>> getStats({String? username}) => guardApi(
+        () async => (username == null ? await _api.getStats() : await _api.getUserStats(username)).toEntity(),
+      );
 
   @override
-  Future<Result<ReadingHeatmapData>> getHeatmap({int days = 365}) =>
-      guardApi(() async => (await _api.getHeatmap(days)).toEntity());
+  Future<Result<ReadingHeatmapData>> getHeatmap({int days = 365, String? username}) => guardApi(
+        () async =>
+            (username == null ? await _api.getHeatmap(days) : await _api.getUserHeatmap(username, days)).toEntity(),
+      );
 }

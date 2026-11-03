@@ -40,6 +40,8 @@ abstract class MeModel with _$MeModel {
     @Default(<String>[]) List<String> roles,
     @Default(<String>[]) List<String> permissions,
     @Default(InterestsModel()) InterestsModel interests,
+    // F14; older APIs leave it out (reading stats stay private).
+    @Default(PrivacyModel()) PrivacyModel privacy,
   }) = _MeModel;
 
   factory MeModel.fromJson(Map<String, dynamic> json) => _$MeModelFromJson(json);
@@ -73,6 +75,7 @@ abstract class MeModel with _$MeModel {
         permissions: permissions,
         interestFieldIds: interests.fieldIds,
         interestTopicIds: interests.topicIds,
+        publicReadingStats: privacy.publicReadingStats,
       );
 }
 
@@ -96,6 +99,14 @@ abstract class InterestsModel with _$InterestsModel {
   }) = _InterestsModel;
 
   factory InterestsModel.fromJson(Map<String, dynamic> json) => _$InterestsModelFromJson(json);
+}
+
+/// `MeDto.privacy` (F14, F18). "Who can mention me" joins it later, with comments (F11).
+@freezed
+abstract class PrivacyModel with _$PrivacyModel {
+  const factory PrivacyModel({@Default(false) bool publicReadingStats}) = _PrivacyModel;
+
+  factory PrivacyModel.fromJson(Map<String, dynamic> json) => _$PrivacyModelFromJson(json);
 }
 
 /// `SessionDto`: the refresh token rotates on every refresh, so the newest one is always the one to keep.

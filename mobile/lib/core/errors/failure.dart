@@ -104,6 +104,12 @@ abstract final class FailureCodes {
   // Reading & streaks (ADR 0013): a parallel progress report; the reader sends it again.
   static const readingConflict = 'reading.conflict';
 
+  // Profile (F14 contract)
+  static const profileStatsPrivate = 'profile.stats_private';
+  static const profileAvatarInvalid = 'profile.avatar_invalid';
+  static const profileExpertiseInvalid = 'profile.expertise_invalid';
+  static const validationUrl = 'validation.url';
+
   // Reactions, saved and follow (wave 1 contract: F10, F12, F13)
   static const reactionInvalid = 'reaction.invalid';
   static const collectionNameTaken = 'collection.name_taken';

@@ -746,6 +746,336 @@ abstract class AppLocalizations {
   /// **'We couldn\'t load your profile.'**
   String get profileSyncFailed;
 
+  /// No description provided for @profileTabArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles'**
+  String get profileTabArticles;
+
+  /// No description provided for @profileTabSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get profileTabSaved;
+
+  /// No description provided for @profileTabPaths.
+  ///
+  /// In en, this message translates to:
+  /// **'Paths'**
+  String get profileTabPaths;
+
+  /// No description provided for @profileTabAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get profileTabAbout;
+
+  /// No description provided for @profileStatArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles'**
+  String get profileStatArticles;
+
+  /// No description provided for @profileStatFollowers.
+  ///
+  /// In en, this message translates to:
+  /// **'Followers'**
+  String get profileStatFollowers;
+
+  /// No description provided for @profileStatFollowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get profileStatFollowing;
+
+  /// No description provided for @profileStatReads.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads'**
+  String get profileStatReads;
+
+  /// No description provided for @profileStatSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: {value}'**
+  String profileStatSemantics(String label, String value);
+
+  /// No description provided for @profileOpenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the profile'**
+  String get profileOpenHint;
+
+  /// No description provided for @profileOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}'**
+  String profileOpenLink(String name);
+
+  /// No description provided for @profileGithub.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub'**
+  String get profileGithub;
+
+  /// No description provided for @profileLinkedin.
+  ///
+  /// In en, this message translates to:
+  /// **'LinkedIn'**
+  String get profileLinkedin;
+
+  /// No description provided for @profileWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get profileWebsite;
+
+  /// No description provided for @profileLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Links'**
+  String get profileLinks;
+
+  /// No description provided for @profileExpertise.
+  ///
+  /// In en, this message translates to:
+  /// **'Fields of expertise'**
+  String get profileExpertise;
+
+  /// No description provided for @profileAboutBio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get profileAboutBio;
+
+  /// No description provided for @profileAboutEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No details yet.'**
+  String get profileAboutEmpty;
+
+  /// No description provided for @profileAboutEmptyOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a bio, your links and the fields you write about so readers get to know you.'**
+  String get profileAboutEmptyOwn;
+
+  /// No description provided for @profileJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined {date}'**
+  String profileJoined(String date);
+
+  /// No description provided for @profileArticlesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No articles yet'**
+  String get profileArticlesEmptyTitle;
+
+  /// No description provided for @profileArticlesEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The articles they publish show up here.'**
+  String get profileArticlesEmptyBody;
+
+  /// No description provided for @profileArticlesEmptyOwnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t published yet'**
+  String get profileArticlesEmptyOwnTitle;
+
+  /// No description provided for @profileArticlesEmptyOwnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Share what you know: your published articles show up here.'**
+  String get profileArticlesEmptyOwnBody;
+
+  /// No description provided for @profileWriteFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Write an article'**
+  String get profileWriteFirst;
+
+  /// No description provided for @profilePathsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning paths are coming'**
+  String get profilePathsTitle;
+
+  /// No description provided for @profilePathsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand-picked series of articles to learn a topic step by step. We\'re building them now.'**
+  String get profilePathsBody;
+
+  /// No description provided for @profileNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This profile isn\'t available'**
+  String get profileNotFoundTitle;
+
+  /// No description provided for @profileNotFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The account may have been deleted, or the link is wrong.'**
+  String get profileNotFoundBody;
+
+  /// No description provided for @profileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved'**
+  String get profileSaved;
+
+  /// No description provided for @profilePrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get profilePrivacy;
+
+  /// No description provided for @profilePublicReadingStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Show reading stats on my public profile'**
+  String get profilePublicReadingStats;
+
+  /// No description provided for @profilePublicReadingStatsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone can see your streak, your totals and your reading activity.'**
+  String get profilePublicReadingStatsOn;
+
+  /// No description provided for @profilePublicReadingStatsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you can see your reading stats.'**
+  String get profilePublicReadingStatsOff;
+
+  /// No description provided for @profileReadingStatsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No finished articles yet.'**
+  String get profileReadingStatsEmpty;
+
+  /// No description provided for @profileReadingHeatmapEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No reading days yet.'**
+  String get profileReadingHeatmapEmpty;
+
+  /// No description provided for @profileBioLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get profileBioLabel;
+
+  /// No description provided for @profileBioHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you work on? What do you write about?'**
+  String get profileBioHint;
+
+  /// No description provided for @profilePhotoGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from your photos'**
+  String get profilePhotoGallery;
+
+  /// No description provided for @profilePhotoCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get profilePhotoCamera;
+
+  /// No description provided for @profilePhotoPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo'**
+  String get profilePhotoPreview;
+
+  /// No description provided for @profileExpertiseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up to 5 fields you know well.'**
+  String get profileExpertiseHint;
+
+  /// No description provided for @profileExpertiseFull.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s 5. Remove one to pick another.'**
+  String get profileExpertiseFull;
+
+  /// No description provided for @profileExpertiseCountSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {max} fields picked'**
+  String profileExpertiseCountSemantics(int count, int max);
+
+  /// No description provided for @profileFollowSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or username'**
+  String get profileFollowSearchHint;
+
+  /// No description provided for @profileFollowNoResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No one matches'**
+  String get profileFollowNoResultsTitle;
+
+  /// No description provided for @profileFollowNoResultsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name or username.'**
+  String get profileFollowNoResultsBody;
+
+  /// No description provided for @profileFollowersEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No followers yet'**
+  String get profileFollowersEmptyTitle;
+
+  /// No description provided for @profileFollowersEmptyOwnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Readers who like your articles can follow you.'**
+  String get profileFollowersEmptyOwnBody;
+
+  /// No description provided for @profileFollowingEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not following anyone yet'**
+  String get profileFollowingEmptyTitle;
+
+  /// No description provided for @profileFollowingEmptyOwnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow writers to get their new articles on Today.'**
+  String get profileFollowingEmptyOwnBody;
+
+  /// No description provided for @profileErrStatsPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'These reading stats are private.'**
+  String get profileErrStatsPrivate;
+
+  /// No description provided for @profileErrAvatarInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo can\'t be used. Upload another one.'**
+  String get profileErrAvatarInvalid;
+
+  /// No description provided for @profileErrExpertiseInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up to 5 of the listed fields.'**
+  String get profileErrExpertiseInvalid;
+
+  /// No description provided for @profileErrUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a full link that starts with https://'**
+  String get profileErrUrl;
+
   /// No description provided for @errValidation.
   ///
   /// In en, this message translates to:

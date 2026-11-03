@@ -21,7 +21,8 @@ class GetReadingStats {
 
   final ReadingRepository _repository;
 
-  Future<Result<ReadingStats>> call() => _repository.getStats();
+  /// The viewer's own stats, or with [username] that user's public stats (F14).
+  Future<Result<ReadingStats>> call({String? username}) => _repository.getStats(username: username);
 }
 
 @injectable
@@ -33,5 +34,5 @@ class GetReadingHeatmap {
   /// The last 12 months (SPEC F08).
   static const days = 365;
 
-  Future<Result<ReadingHeatmapData>> call() => _repository.getHeatmap(days: days);
+  Future<Result<ReadingHeatmapData>> call({String? username}) => _repository.getHeatmap(days: days, username: username);
 }

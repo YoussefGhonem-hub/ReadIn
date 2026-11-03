@@ -18,16 +18,17 @@ class ReadingHeatmapState extends Equatable {
   List<Object?> get props => [status, heatmap, failure];
 }
 
-/// The reading heatmap (F08, F14): `GET /me/stats/heatmap` for the last 12 months.
+/// The reading heatmap (F08, F14): `GET /me/stats/heatmap` for the last 12 months, or another user's public one.
 @injectable
 class ReadingHeatmapCubit extends Cubit<ReadingHeatmapState> {
   ReadingHeatmapCubit(this._getHeatmap) : super(const ReadingHeatmapState());
 
   final GetReadingHeatmap _getHeatmap;
 
-  Future<void> load() async {
+  /// [username] null: the viewer's own heatmap.
+  Future<void> load({String? username}) async {
     emit(const ReadingHeatmapState());
-    final result = await _getHeatmap();
+    final result = await _getHeatmap(username: username);
     if (isClosed) return;
     emit(result.fold(
       (failure) => ReadingHeatmapState(status: ReadingLoadStatus.failure, failure: failure),

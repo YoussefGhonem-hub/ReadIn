@@ -15,22 +15,30 @@ import '../cubit/reading_heatmap_cubit.dart';
 import '../cubit/reading_stats_cubit.dart';
 import 'heatmap_grid.dart';
 
-/// GitHub-style reading heatmap for the last 12 months (F08, F14). Loads its own data (`GET /me/stats/heatmap`).
+/// GitHub-style reading heatmap for the last 12 months (F08, F14). Loads its own data (`GET /me/stats/heatmap`); with
+/// [username] that user's public heatmap (`GET /users/{username}/stats/heatmap`).
 class ReadingHeatmap extends StatelessWidget {
-  const ReadingHeatmap({super.key});
+  const ReadingHeatmap({super.key, this.username});
+
+  /// Someone else's profile; null for the viewer's own heatmap.
+  final String? username;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-        create: (_) => getIt<ReadingHeatmapCubit>()..load(),
+        create: (_) => getIt<ReadingHeatmapCubit>()..load(username: username),
         child: BlocBuilder<ReadingHeatmapCubit, ReadingHeatmapState>(
           builder: (context, state) => switch (state.status) {
             ReadingLoadStatus.loading => const _HeatmapFrame(
                 child: SkeletonBox(height: _HeatmapLayout.labelHeight + 7 * _HeatmapLayout.step),
               ),
             ReadingLoadStatus.failure => Card(
-                child: ErrorView(failure: state.failure!, compact: true, onRetry: context.read<ReadingHeatmapCubit>().load),
+                child: ErrorView(
+                  failure: state.failure!,
+                  compact: true,
+                  onRetry: () => context.read<ReadingHeatmapCubit>().load(username: username),
+                ),
               ),
-            ReadingLoadStatus.ready => ReadingHeatmapView(heatmap: state.heatmap!),
+            ReadingLoadStatus.ready => ReadingHeatmapView(heatmap: state.heatmap!, own: username == null),
           },
         ),
       );
@@ -62,9 +70,12 @@ class _HeatmapPalette {
 }
 
 class ReadingHeatmapView extends StatelessWidget {
-  const ReadingHeatmapView({super.key, required this.heatmap});
+  const ReadingHeatmapView({super.key, required this.heatmap, this.own = true});
 
   final ReadingHeatmapData heatmap;
+
+  /// The viewer's own heatmap (the empty state speaks to them).
+  final bool own;
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +102,7 @@ class ReadingHeatmapView extends StatelessWidget {
           ),
           if (heatmap.days.isEmpty) ...[
             const SizedBox(height: ReadInSpace.s2),
-            Text(l10n.readingHeatmapEmpty, style: context.textTheme.bodySmall),
+            Text(own ? l10n.readingHeatmapEmpty : l10n.profileReadingHeatmapEmpty, style: context.textTheme.bodySmall),
           ],
           const SizedBox(height: ReadInSpace.s3),
           ExcludeSemantics(child: _Legend(palette: palette)),

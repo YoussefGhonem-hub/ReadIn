@@ -8,6 +8,7 @@ import '../../../../shared/widgets/app_network_image.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../article/domain/entities/article.dart';
+import '../../../profile/presentation/widgets/profile_link.dart';
 
 /// "مقال النهارده" hero card (F03/F07, mockup "hero-card").
 class TodayHeroCard extends StatelessWidget {
@@ -81,11 +82,20 @@ class TodayHeroCard extends StatelessWidget {
                   const SizedBox(height: ReadInSpace.s3),
                   Row(
                     children: [
-                      UserAvatar(name: article.author.displayName, url: article.author.avatarUrl, size: 26),
+                      // The author's avatar and name open their profile (F14); the rest of the card opens the article.
+                      ExcludeSemantics(
+                        child: ProfileLink(
+                          username: article.author.username,
+                          child: UserAvatar(name: article.author.displayName, url: article.author.avatarUrl, size: 26),
+                        ),
+                      ),
                       const SizedBox(width: ReadInSpace.s2),
                       Flexible(
-                        child: BidiText(article.author.displayName,
-                            style: context.textTheme.labelMedium, overflow: TextOverflow.ellipsis),
+                        child: ProfileLink(
+                          username: article.author.username,
+                          child: BidiText(article.author.displayName,
+                              style: context.textTheme.labelMedium, overflow: TextOverflow.ellipsis),
+                        ),
                       ),
                       if (article.author.isVerified) ...[const SizedBox(width: 4), const VerifiedMark(size: 13)],
                       const Spacer(),

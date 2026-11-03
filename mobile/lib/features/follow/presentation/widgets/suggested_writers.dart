@@ -10,6 +10,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../domain/entities/follow.dart';
 import '../cubit/suggested_writers_cubit.dart';
 import 'follow_button.dart';
@@ -58,7 +59,7 @@ class _SuggestedWritersListState extends State<SuggestedWritersList> {
   }
 }
 
-/// Avatar, name, @handle, a line of bio, "follows you" and the follow button.
+/// Avatar, name, @handle, a line of bio, "follows you" and the follow button. The person opens their profile (F14).
 class WriterTile extends StatelessWidget {
   const WriterTile({super.key, required this.user});
 
@@ -74,42 +75,57 @@ class WriterTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s2),
       child: Row(
         children: [
-          UserAvatar(name: user.displayName, url: user.avatarUrl, size: 44),
-          const SizedBox(width: ReadInSpace.s3),
           Expanded(
-            child: MergeSemantics(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: ProfileLink(
+              username: user.username,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: BidiText(user.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.labelLarge),
-                      ),
-                      if (user.isVerified) ...[const SizedBox(width: 4), const VerifiedMark()],
-                    ],
-                  ),
-                  Wrap(
-                    spacing: ReadInSpace.s2,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(Bidi.ltrIsolate('@${user.username}'), style: meta),
-                      if (user.followsYou)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                          decoration: BoxDecoration(color: colors.surfaceVariant, borderRadius: BorderRadius.circular(6)),
-                          child: Text(context.l10n.followsYou, style: context.textTheme.labelSmall?.copyWith(color: colors.textSecondary)),
+                  UserAvatar(name: user.displayName, url: user.avatarUrl, size: 44),
+                  const SizedBox(width: ReadInSpace.s3),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: BidiText(
+                                user.displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.textTheme.labelLarge,
+                              ),
+                            ),
+                            if (user.isVerified) ...[const SizedBox(width: 4), const VerifiedMark()],
+                          ],
                         ),
-                    ],
-                  ),
-                  if (bio.isNotEmpty)
-                    Text(
-                      Bidi.isolateOppositeRuns(bio, bioDir),
-                      textDirection: bioDir,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: meta,
+                        Wrap(
+                          spacing: ReadInSpace.s2,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(Bidi.ltrIsolate('@${user.username}'), style: meta),
+                            if (user.followsYou)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                decoration: BoxDecoration(color: colors.surfaceVariant, borderRadius: BorderRadius.circular(6)),
+                                child: Text(
+                                  context.l10n.followsYou,
+                                  style: context.textTheme.labelSmall?.copyWith(color: colors.textSecondary),
+                                ),
+                              ),
+                          ],
+                        ),
+                        if (bio.isNotEmpty)
+                          Text(
+                            Bidi.isolateOppositeRuns(bio, bioDir),
+                            textDirection: bioDir,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: meta,
+                          ),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),

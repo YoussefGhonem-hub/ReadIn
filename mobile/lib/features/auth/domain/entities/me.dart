@@ -30,6 +30,7 @@ class Me extends Equatable {
     this.permissions = const [],
     this.interestFieldIds = const [],
     this.interestTopicIds = const [],
+    this.publicReadingStats = false,
   });
 
   final String id;
@@ -69,6 +70,9 @@ class Me extends Equatable {
   final List<String> interestFieldIds;
   final List<String> interestTopicIds;
 
+  /// `privacy.publicReadingStats`: other people see the reading stats card and heatmap on the profile (F14, F18).
+  final bool publicReadingStats;
+
   bool can(String permission) => permissions.contains(permission);
 
   /// The linked Google / Apple sign-in of [provider], if any.
@@ -104,6 +108,7 @@ class Me extends Equatable {
         permissions,
         interestFieldIds,
         interestTopicIds,
+        publicReadingStats,
       ];
 }
 

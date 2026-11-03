@@ -17,7 +17,8 @@ mixin _$MeModel {
 
  String get id; String? get phoneNumber; String? get email; String get displayName; String get username; String? get avatarUrl; String? get bio;// The API writes nulls, e.g. `{ "gitHub": null }`.
  Map<String, String?> get links; String get uiLanguage; String get articleLanguage; String get theme; String get timeZone; String get reminderTime; bool get isVerified; bool get onboardingCompleted; bool get mustChangePassword; bool get mustSetRecoveryPin; bool get isProfileComplete; bool get hasRecoveryPin;// Added with Google/Apple sign in; older APIs leave them out.
- bool get hasPassword; List<ExternalLoginModel> get externalLogins; List<String> get roles; List<String> get permissions; InterestsModel get interests;
+ bool get hasPassword; List<ExternalLoginModel> get externalLogins; List<String> get roles; List<String> get permissions; InterestsModel get interests;// F14; older APIs leave it out (reading stats stay private).
+ PrivacyModel get privacy;
 /// Create a copy of MeModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,16 +31,16 @@ $MeModelCopyWith<MeModel> get copyWith => _$MeModelCopyWithImpl<MeModel>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MeModel&&(identical(other.id, id) || other.id == id)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bio, bio) || other.bio == bio)&&const DeepCollectionEquality().equals(other.links, links)&&(identical(other.uiLanguage, uiLanguage) || other.uiLanguage == uiLanguage)&&(identical(other.articleLanguage, articleLanguage) || other.articleLanguage == articleLanguage)&&(identical(other.theme, theme) || other.theme == theme)&&(identical(other.timeZone, timeZone) || other.timeZone == timeZone)&&(identical(other.reminderTime, reminderTime) || other.reminderTime == reminderTime)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.onboardingCompleted, onboardingCompleted) || other.onboardingCompleted == onboardingCompleted)&&(identical(other.mustChangePassword, mustChangePassword) || other.mustChangePassword == mustChangePassword)&&(identical(other.mustSetRecoveryPin, mustSetRecoveryPin) || other.mustSetRecoveryPin == mustSetRecoveryPin)&&(identical(other.isProfileComplete, isProfileComplete) || other.isProfileComplete == isProfileComplete)&&(identical(other.hasRecoveryPin, hasRecoveryPin) || other.hasRecoveryPin == hasRecoveryPin)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword)&&const DeepCollectionEquality().equals(other.externalLogins, externalLogins)&&const DeepCollectionEquality().equals(other.roles, roles)&&const DeepCollectionEquality().equals(other.permissions, permissions)&&(identical(other.interests, interests) || other.interests == interests));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MeModel&&(identical(other.id, id) || other.id == id)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bio, bio) || other.bio == bio)&&const DeepCollectionEquality().equals(other.links, links)&&(identical(other.uiLanguage, uiLanguage) || other.uiLanguage == uiLanguage)&&(identical(other.articleLanguage, articleLanguage) || other.articleLanguage == articleLanguage)&&(identical(other.theme, theme) || other.theme == theme)&&(identical(other.timeZone, timeZone) || other.timeZone == timeZone)&&(identical(other.reminderTime, reminderTime) || other.reminderTime == reminderTime)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.onboardingCompleted, onboardingCompleted) || other.onboardingCompleted == onboardingCompleted)&&(identical(other.mustChangePassword, mustChangePassword) || other.mustChangePassword == mustChangePassword)&&(identical(other.mustSetRecoveryPin, mustSetRecoveryPin) || other.mustSetRecoveryPin == mustSetRecoveryPin)&&(identical(other.isProfileComplete, isProfileComplete) || other.isProfileComplete == isProfileComplete)&&(identical(other.hasRecoveryPin, hasRecoveryPin) || other.hasRecoveryPin == hasRecoveryPin)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword)&&const DeepCollectionEquality().equals(other.externalLogins, externalLogins)&&const DeepCollectionEquality().equals(other.roles, roles)&&const DeepCollectionEquality().equals(other.permissions, permissions)&&(identical(other.interests, interests) || other.interests == interests)&&(identical(other.privacy, privacy) || other.privacy == privacy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,phoneNumber,email,displayName,username,avatarUrl,bio,const DeepCollectionEquality().hash(links),uiLanguage,articleLanguage,theme,timeZone,reminderTime,isVerified,onboardingCompleted,mustChangePassword,mustSetRecoveryPin,isProfileComplete,hasRecoveryPin,hasPassword,const DeepCollectionEquality().hash(externalLogins),const DeepCollectionEquality().hash(roles),const DeepCollectionEquality().hash(permissions),interests]);
+int get hashCode => Object.hashAll([runtimeType,id,phoneNumber,email,displayName,username,avatarUrl,bio,const DeepCollectionEquality().hash(links),uiLanguage,articleLanguage,theme,timeZone,reminderTime,isVerified,onboardingCompleted,mustChangePassword,mustSetRecoveryPin,isProfileComplete,hasRecoveryPin,hasPassword,const DeepCollectionEquality().hash(externalLogins),const DeepCollectionEquality().hash(roles),const DeepCollectionEquality().hash(permissions),interests,privacy]);
 
 @override
 String toString() {
-  return 'MeModel(id: $id, phoneNumber: $phoneNumber, email: $email, displayName: $displayName, username: $username, avatarUrl: $avatarUrl, bio: $bio, links: $links, uiLanguage: $uiLanguage, articleLanguage: $articleLanguage, theme: $theme, timeZone: $timeZone, reminderTime: $reminderTime, isVerified: $isVerified, onboardingCompleted: $onboardingCompleted, mustChangePassword: $mustChangePassword, mustSetRecoveryPin: $mustSetRecoveryPin, isProfileComplete: $isProfileComplete, hasRecoveryPin: $hasRecoveryPin, hasPassword: $hasPassword, externalLogins: $externalLogins, roles: $roles, permissions: $permissions, interests: $interests)';
+  return 'MeModel(id: $id, phoneNumber: $phoneNumber, email: $email, displayName: $displayName, username: $username, avatarUrl: $avatarUrl, bio: $bio, links: $links, uiLanguage: $uiLanguage, articleLanguage: $articleLanguage, theme: $theme, timeZone: $timeZone, reminderTime: $reminderTime, isVerified: $isVerified, onboardingCompleted: $onboardingCompleted, mustChangePassword: $mustChangePassword, mustSetRecoveryPin: $mustSetRecoveryPin, isProfileComplete: $isProfileComplete, hasRecoveryPin: $hasRecoveryPin, hasPassword: $hasPassword, externalLogins: $externalLogins, roles: $roles, permissions: $permissions, interests: $interests, privacy: $privacy)';
 }
 
 
@@ -50,11 +51,11 @@ abstract mixin class $MeModelCopyWith<$Res>  {
   factory $MeModelCopyWith(MeModel value, $Res Function(MeModel) _then) = _$MeModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String? phoneNumber, String? email, String displayName, String username, String? avatarUrl, String? bio, Map<String, String?> links, String uiLanguage, String articleLanguage, String theme, String timeZone, String reminderTime, bool isVerified, bool onboardingCompleted, bool mustChangePassword, bool mustSetRecoveryPin, bool isProfileComplete, bool hasRecoveryPin, bool hasPassword, List<ExternalLoginModel> externalLogins, List<String> roles, List<String> permissions, InterestsModel interests
+ String id, String? phoneNumber, String? email, String displayName, String username, String? avatarUrl, String? bio, Map<String, String?> links, String uiLanguage, String articleLanguage, String theme, String timeZone, String reminderTime, bool isVerified, bool onboardingCompleted, bool mustChangePassword, bool mustSetRecoveryPin, bool isProfileComplete, bool hasRecoveryPin, bool hasPassword, List<ExternalLoginModel> externalLogins, List<String> roles, List<String> permissions, InterestsModel interests, PrivacyModel privacy
 });
 
 
-$InterestsModelCopyWith<$Res> get interests;
+$InterestsModelCopyWith<$Res> get interests;$PrivacyModelCopyWith<$Res> get privacy;
 
 }
 /// @nodoc
@@ -67,7 +68,7 @@ class _$MeModelCopyWithImpl<$Res>
 
 /// Create a copy of MeModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? phoneNumber = freezed,Object? email = freezed,Object? displayName = null,Object? username = null,Object? avatarUrl = freezed,Object? bio = freezed,Object? links = null,Object? uiLanguage = null,Object? articleLanguage = null,Object? theme = null,Object? timeZone = null,Object? reminderTime = null,Object? isVerified = null,Object? onboardingCompleted = null,Object? mustChangePassword = null,Object? mustSetRecoveryPin = null,Object? isProfileComplete = null,Object? hasRecoveryPin = null,Object? hasPassword = null,Object? externalLogins = null,Object? roles = null,Object? permissions = null,Object? interests = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? phoneNumber = freezed,Object? email = freezed,Object? displayName = null,Object? username = null,Object? avatarUrl = freezed,Object? bio = freezed,Object? links = null,Object? uiLanguage = null,Object? articleLanguage = null,Object? theme = null,Object? timeZone = null,Object? reminderTime = null,Object? isVerified = null,Object? onboardingCompleted = null,Object? mustChangePassword = null,Object? mustSetRecoveryPin = null,Object? isProfileComplete = null,Object? hasRecoveryPin = null,Object? hasPassword = null,Object? externalLogins = null,Object? roles = null,Object? permissions = null,Object? interests = null,Object? privacy = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,phoneNumber: freezed == phoneNumber ? _self.phoneNumber : phoneNumber // ignore: cast_nullable_to_non_nullable
@@ -93,7 +94,8 @@ as bool,externalLogins: null == externalLogins ? _self.externalLogins : external
 as List<ExternalLoginModel>,roles: null == roles ? _self.roles : roles // ignore: cast_nullable_to_non_nullable
 as List<String>,permissions: null == permissions ? _self.permissions : permissions // ignore: cast_nullable_to_non_nullable
 as List<String>,interests: null == interests ? _self.interests : interests // ignore: cast_nullable_to_non_nullable
-as InterestsModel,
+as InterestsModel,privacy: null == privacy ? _self.privacy : privacy // ignore: cast_nullable_to_non_nullable
+as PrivacyModel,
   ));
 }
 /// Create a copy of MeModel
@@ -104,6 +106,15 @@ $InterestsModelCopyWith<$Res> get interests {
   
   return $InterestsModelCopyWith<$Res>(_self.interests, (value) {
     return _then(_self.copyWith(interests: value));
+  });
+}/// Create a copy of MeModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PrivacyModelCopyWith<$Res> get privacy {
+  
+  return $PrivacyModelCopyWith<$Res>(_self.privacy, (value) {
+    return _then(_self.copyWith(privacy: value));
   });
 }
 }
@@ -187,10 +198,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? phoneNumber,  String? email,  String displayName,  String username,  String? avatarUrl,  String? bio,  Map<String, String?> links,  String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime,  bool isVerified,  bool onboardingCompleted,  bool mustChangePassword,  bool mustSetRecoveryPin,  bool isProfileComplete,  bool hasRecoveryPin,  bool hasPassword,  List<ExternalLoginModel> externalLogins,  List<String> roles,  List<String> permissions,  InterestsModel interests)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? phoneNumber,  String? email,  String displayName,  String username,  String? avatarUrl,  String? bio,  Map<String, String?> links,  String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime,  bool isVerified,  bool onboardingCompleted,  bool mustChangePassword,  bool mustSetRecoveryPin,  bool isProfileComplete,  bool hasRecoveryPin,  bool hasPassword,  List<ExternalLoginModel> externalLogins,  List<String> roles,  List<String> permissions,  InterestsModel interests,  PrivacyModel privacy)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MeModel() when $default != null:
-return $default(_that.id,_that.phoneNumber,_that.email,_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.links,_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime,_that.isVerified,_that.onboardingCompleted,_that.mustChangePassword,_that.mustSetRecoveryPin,_that.isProfileComplete,_that.hasRecoveryPin,_that.hasPassword,_that.externalLogins,_that.roles,_that.permissions,_that.interests);case _:
+return $default(_that.id,_that.phoneNumber,_that.email,_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.links,_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime,_that.isVerified,_that.onboardingCompleted,_that.mustChangePassword,_that.mustSetRecoveryPin,_that.isProfileComplete,_that.hasRecoveryPin,_that.hasPassword,_that.externalLogins,_that.roles,_that.permissions,_that.interests,_that.privacy);case _:
   return orElse();
 
 }
@@ -208,10 +219,10 @@ return $default(_that.id,_that.phoneNumber,_that.email,_that.displayName,_that.u
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? phoneNumber,  String? email,  String displayName,  String username,  String? avatarUrl,  String? bio,  Map<String, String?> links,  String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime,  bool isVerified,  bool onboardingCompleted,  bool mustChangePassword,  bool mustSetRecoveryPin,  bool isProfileComplete,  bool hasRecoveryPin,  bool hasPassword,  List<ExternalLoginModel> externalLogins,  List<String> roles,  List<String> permissions,  InterestsModel interests)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? phoneNumber,  String? email,  String displayName,  String username,  String? avatarUrl,  String? bio,  Map<String, String?> links,  String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime,  bool isVerified,  bool onboardingCompleted,  bool mustChangePassword,  bool mustSetRecoveryPin,  bool isProfileComplete,  bool hasRecoveryPin,  bool hasPassword,  List<ExternalLoginModel> externalLogins,  List<String> roles,  List<String> permissions,  InterestsModel interests,  PrivacyModel privacy)  $default,) {final _that = this;
 switch (_that) {
 case _MeModel():
-return $default(_that.id,_that.phoneNumber,_that.email,_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.links,_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime,_that.isVerified,_that.onboardingCompleted,_that.mustChangePassword,_that.mustSetRecoveryPin,_that.isProfileComplete,_that.hasRecoveryPin,_that.hasPassword,_that.externalLogins,_that.roles,_that.permissions,_that.interests);case _:
+return $default(_that.id,_that.phoneNumber,_that.email,_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.links,_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime,_that.isVerified,_that.onboardingCompleted,_that.mustChangePassword,_that.mustSetRecoveryPin,_that.isProfileComplete,_that.hasRecoveryPin,_that.hasPassword,_that.externalLogins,_that.roles,_that.permissions,_that.interests,_that.privacy);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -228,10 +239,10 @@ return $default(_that.id,_that.phoneNumber,_that.email,_that.displayName,_that.u
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? phoneNumber,  String? email,  String displayName,  String username,  String? avatarUrl,  String? bio,  Map<String, String?> links,  String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime,  bool isVerified,  bool onboardingCompleted,  bool mustChangePassword,  bool mustSetRecoveryPin,  bool isProfileComplete,  bool hasRecoveryPin,  bool hasPassword,  List<ExternalLoginModel> externalLogins,  List<String> roles,  List<String> permissions,  InterestsModel interests)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? phoneNumber,  String? email,  String displayName,  String username,  String? avatarUrl,  String? bio,  Map<String, String?> links,  String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime,  bool isVerified,  bool onboardingCompleted,  bool mustChangePassword,  bool mustSetRecoveryPin,  bool isProfileComplete,  bool hasRecoveryPin,  bool hasPassword,  List<ExternalLoginModel> externalLogins,  List<String> roles,  List<String> permissions,  InterestsModel interests,  PrivacyModel privacy)?  $default,) {final _that = this;
 switch (_that) {
 case _MeModel() when $default != null:
-return $default(_that.id,_that.phoneNumber,_that.email,_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.links,_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime,_that.isVerified,_that.onboardingCompleted,_that.mustChangePassword,_that.mustSetRecoveryPin,_that.isProfileComplete,_that.hasRecoveryPin,_that.hasPassword,_that.externalLogins,_that.roles,_that.permissions,_that.interests);case _:
+return $default(_that.id,_that.phoneNumber,_that.email,_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.links,_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime,_that.isVerified,_that.onboardingCompleted,_that.mustChangePassword,_that.mustSetRecoveryPin,_that.isProfileComplete,_that.hasRecoveryPin,_that.hasPassword,_that.externalLogins,_that.roles,_that.permissions,_that.interests,_that.privacy);case _:
   return null;
 
 }
@@ -243,7 +254,7 @@ return $default(_that.id,_that.phoneNumber,_that.email,_that.displayName,_that.u
 @JsonSerializable()
 
 class _MeModel extends MeModel {
-  const _MeModel({required this.id, this.phoneNumber, this.email, required this.displayName, required this.username, this.avatarUrl, this.bio, final  Map<String, String?> links = const <String, String?>{}, this.uiLanguage = 'ar', this.articleLanguage = 'ar-EG', this.theme = 'system', this.timeZone = 'UTC', this.reminderTime = '08:00', this.isVerified = false, this.onboardingCompleted = false, this.mustChangePassword = false, this.mustSetRecoveryPin = false, this.isProfileComplete = true, this.hasRecoveryPin = true, this.hasPassword = true, final  List<ExternalLoginModel> externalLogins = const <ExternalLoginModel>[], final  List<String> roles = const <String>[], final  List<String> permissions = const <String>[], this.interests = const InterestsModel()}): _links = links,_externalLogins = externalLogins,_roles = roles,_permissions = permissions,super._();
+  const _MeModel({required this.id, this.phoneNumber, this.email, required this.displayName, required this.username, this.avatarUrl, this.bio, final  Map<String, String?> links = const <String, String?>{}, this.uiLanguage = 'ar', this.articleLanguage = 'ar-EG', this.theme = 'system', this.timeZone = 'UTC', this.reminderTime = '08:00', this.isVerified = false, this.onboardingCompleted = false, this.mustChangePassword = false, this.mustSetRecoveryPin = false, this.isProfileComplete = true, this.hasRecoveryPin = true, this.hasPassword = true, final  List<ExternalLoginModel> externalLogins = const <ExternalLoginModel>[], final  List<String> roles = const <String>[], final  List<String> permissions = const <String>[], this.interests = const InterestsModel(), this.privacy = const PrivacyModel()}): _links = links,_externalLogins = externalLogins,_roles = roles,_permissions = permissions,super._();
   factory _MeModel.fromJson(Map<String, dynamic> json) => _$MeModelFromJson(json);
 
 @override final  String id;
@@ -297,6 +308,8 @@ class _MeModel extends MeModel {
 }
 
 @override@JsonKey() final  InterestsModel interests;
+// F14; older APIs leave it out (reading stats stay private).
+@override@JsonKey() final  PrivacyModel privacy;
 
 /// Create a copy of MeModel
 /// with the given fields replaced by the non-null parameter values.
@@ -311,16 +324,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MeModel&&(identical(other.id, id) || other.id == id)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bio, bio) || other.bio == bio)&&const DeepCollectionEquality().equals(other._links, _links)&&(identical(other.uiLanguage, uiLanguage) || other.uiLanguage == uiLanguage)&&(identical(other.articleLanguage, articleLanguage) || other.articleLanguage == articleLanguage)&&(identical(other.theme, theme) || other.theme == theme)&&(identical(other.timeZone, timeZone) || other.timeZone == timeZone)&&(identical(other.reminderTime, reminderTime) || other.reminderTime == reminderTime)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.onboardingCompleted, onboardingCompleted) || other.onboardingCompleted == onboardingCompleted)&&(identical(other.mustChangePassword, mustChangePassword) || other.mustChangePassword == mustChangePassword)&&(identical(other.mustSetRecoveryPin, mustSetRecoveryPin) || other.mustSetRecoveryPin == mustSetRecoveryPin)&&(identical(other.isProfileComplete, isProfileComplete) || other.isProfileComplete == isProfileComplete)&&(identical(other.hasRecoveryPin, hasRecoveryPin) || other.hasRecoveryPin == hasRecoveryPin)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword)&&const DeepCollectionEquality().equals(other._externalLogins, _externalLogins)&&const DeepCollectionEquality().equals(other._roles, _roles)&&const DeepCollectionEquality().equals(other._permissions, _permissions)&&(identical(other.interests, interests) || other.interests == interests));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MeModel&&(identical(other.id, id) || other.id == id)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bio, bio) || other.bio == bio)&&const DeepCollectionEquality().equals(other._links, _links)&&(identical(other.uiLanguage, uiLanguage) || other.uiLanguage == uiLanguage)&&(identical(other.articleLanguage, articleLanguage) || other.articleLanguage == articleLanguage)&&(identical(other.theme, theme) || other.theme == theme)&&(identical(other.timeZone, timeZone) || other.timeZone == timeZone)&&(identical(other.reminderTime, reminderTime) || other.reminderTime == reminderTime)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.onboardingCompleted, onboardingCompleted) || other.onboardingCompleted == onboardingCompleted)&&(identical(other.mustChangePassword, mustChangePassword) || other.mustChangePassword == mustChangePassword)&&(identical(other.mustSetRecoveryPin, mustSetRecoveryPin) || other.mustSetRecoveryPin == mustSetRecoveryPin)&&(identical(other.isProfileComplete, isProfileComplete) || other.isProfileComplete == isProfileComplete)&&(identical(other.hasRecoveryPin, hasRecoveryPin) || other.hasRecoveryPin == hasRecoveryPin)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword)&&const DeepCollectionEquality().equals(other._externalLogins, _externalLogins)&&const DeepCollectionEquality().equals(other._roles, _roles)&&const DeepCollectionEquality().equals(other._permissions, _permissions)&&(identical(other.interests, interests) || other.interests == interests)&&(identical(other.privacy, privacy) || other.privacy == privacy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,phoneNumber,email,displayName,username,avatarUrl,bio,const DeepCollectionEquality().hash(_links),uiLanguage,articleLanguage,theme,timeZone,reminderTime,isVerified,onboardingCompleted,mustChangePassword,mustSetRecoveryPin,isProfileComplete,hasRecoveryPin,hasPassword,const DeepCollectionEquality().hash(_externalLogins),const DeepCollectionEquality().hash(_roles),const DeepCollectionEquality().hash(_permissions),interests]);
+int get hashCode => Object.hashAll([runtimeType,id,phoneNumber,email,displayName,username,avatarUrl,bio,const DeepCollectionEquality().hash(_links),uiLanguage,articleLanguage,theme,timeZone,reminderTime,isVerified,onboardingCompleted,mustChangePassword,mustSetRecoveryPin,isProfileComplete,hasRecoveryPin,hasPassword,const DeepCollectionEquality().hash(_externalLogins),const DeepCollectionEquality().hash(_roles),const DeepCollectionEquality().hash(_permissions),interests,privacy]);
 
 @override
 String toString() {
-  return 'MeModel(id: $id, phoneNumber: $phoneNumber, email: $email, displayName: $displayName, username: $username, avatarUrl: $avatarUrl, bio: $bio, links: $links, uiLanguage: $uiLanguage, articleLanguage: $articleLanguage, theme: $theme, timeZone: $timeZone, reminderTime: $reminderTime, isVerified: $isVerified, onboardingCompleted: $onboardingCompleted, mustChangePassword: $mustChangePassword, mustSetRecoveryPin: $mustSetRecoveryPin, isProfileComplete: $isProfileComplete, hasRecoveryPin: $hasRecoveryPin, hasPassword: $hasPassword, externalLogins: $externalLogins, roles: $roles, permissions: $permissions, interests: $interests)';
+  return 'MeModel(id: $id, phoneNumber: $phoneNumber, email: $email, displayName: $displayName, username: $username, avatarUrl: $avatarUrl, bio: $bio, links: $links, uiLanguage: $uiLanguage, articleLanguage: $articleLanguage, theme: $theme, timeZone: $timeZone, reminderTime: $reminderTime, isVerified: $isVerified, onboardingCompleted: $onboardingCompleted, mustChangePassword: $mustChangePassword, mustSetRecoveryPin: $mustSetRecoveryPin, isProfileComplete: $isProfileComplete, hasRecoveryPin: $hasRecoveryPin, hasPassword: $hasPassword, externalLogins: $externalLogins, roles: $roles, permissions: $permissions, interests: $interests, privacy: $privacy)';
 }
 
 
@@ -331,11 +344,11 @@ abstract mixin class _$MeModelCopyWith<$Res> implements $MeModelCopyWith<$Res> {
   factory _$MeModelCopyWith(_MeModel value, $Res Function(_MeModel) _then) = __$MeModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? phoneNumber, String? email, String displayName, String username, String? avatarUrl, String? bio, Map<String, String?> links, String uiLanguage, String articleLanguage, String theme, String timeZone, String reminderTime, bool isVerified, bool onboardingCompleted, bool mustChangePassword, bool mustSetRecoveryPin, bool isProfileComplete, bool hasRecoveryPin, bool hasPassword, List<ExternalLoginModel> externalLogins, List<String> roles, List<String> permissions, InterestsModel interests
+ String id, String? phoneNumber, String? email, String displayName, String username, String? avatarUrl, String? bio, Map<String, String?> links, String uiLanguage, String articleLanguage, String theme, String timeZone, String reminderTime, bool isVerified, bool onboardingCompleted, bool mustChangePassword, bool mustSetRecoveryPin, bool isProfileComplete, bool hasRecoveryPin, bool hasPassword, List<ExternalLoginModel> externalLogins, List<String> roles, List<String> permissions, InterestsModel interests, PrivacyModel privacy
 });
 
 
-@override $InterestsModelCopyWith<$Res> get interests;
+@override $InterestsModelCopyWith<$Res> get interests;@override $PrivacyModelCopyWith<$Res> get privacy;
 
 }
 /// @nodoc
@@ -348,7 +361,7 @@ class __$MeModelCopyWithImpl<$Res>
 
 /// Create a copy of MeModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? phoneNumber = freezed,Object? email = freezed,Object? displayName = null,Object? username = null,Object? avatarUrl = freezed,Object? bio = freezed,Object? links = null,Object? uiLanguage = null,Object? articleLanguage = null,Object? theme = null,Object? timeZone = null,Object? reminderTime = null,Object? isVerified = null,Object? onboardingCompleted = null,Object? mustChangePassword = null,Object? mustSetRecoveryPin = null,Object? isProfileComplete = null,Object? hasRecoveryPin = null,Object? hasPassword = null,Object? externalLogins = null,Object? roles = null,Object? permissions = null,Object? interests = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? phoneNumber = freezed,Object? email = freezed,Object? displayName = null,Object? username = null,Object? avatarUrl = freezed,Object? bio = freezed,Object? links = null,Object? uiLanguage = null,Object? articleLanguage = null,Object? theme = null,Object? timeZone = null,Object? reminderTime = null,Object? isVerified = null,Object? onboardingCompleted = null,Object? mustChangePassword = null,Object? mustSetRecoveryPin = null,Object? isProfileComplete = null,Object? hasRecoveryPin = null,Object? hasPassword = null,Object? externalLogins = null,Object? roles = null,Object? permissions = null,Object? interests = null,Object? privacy = null,}) {
   return _then(_MeModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,phoneNumber: freezed == phoneNumber ? _self.phoneNumber : phoneNumber // ignore: cast_nullable_to_non_nullable
@@ -374,7 +387,8 @@ as bool,externalLogins: null == externalLogins ? _self._externalLogins : externa
 as List<ExternalLoginModel>,roles: null == roles ? _self._roles : roles // ignore: cast_nullable_to_non_nullable
 as List<String>,permissions: null == permissions ? _self._permissions : permissions // ignore: cast_nullable_to_non_nullable
 as List<String>,interests: null == interests ? _self.interests : interests // ignore: cast_nullable_to_non_nullable
-as InterestsModel,
+as InterestsModel,privacy: null == privacy ? _self.privacy : privacy // ignore: cast_nullable_to_non_nullable
+as PrivacyModel,
   ));
 }
 
@@ -386,6 +400,15 @@ $InterestsModelCopyWith<$Res> get interests {
   
   return $InterestsModelCopyWith<$Res>(_self.interests, (value) {
     return _then(_self.copyWith(interests: value));
+  });
+}/// Create a copy of MeModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PrivacyModelCopyWith<$Res> get privacy {
+  
+  return $PrivacyModelCopyWith<$Res>(_self.privacy, (value) {
+    return _then(_self.copyWith(privacy: value));
   });
 }
 }
@@ -931,6 +954,269 @@ class __$InterestsModelCopyWithImpl<$Res>
 fieldIds: null == fieldIds ? _self._fieldIds : fieldIds // ignore: cast_nullable_to_non_nullable
 as List<String>,topicIds: null == topicIds ? _self._topicIds : topicIds // ignore: cast_nullable_to_non_nullable
 as List<String>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$PrivacyModel {
+
+ bool get publicReadingStats;
+/// Create a copy of PrivacyModel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PrivacyModelCopyWith<PrivacyModel> get copyWith => _$PrivacyModelCopyWithImpl<PrivacyModel>(this as PrivacyModel, _$identity);
+
+  /// Serializes this PrivacyModel to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrivacyModel&&(identical(other.publicReadingStats, publicReadingStats) || other.publicReadingStats == publicReadingStats));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,publicReadingStats);
+
+@override
+String toString() {
+  return 'PrivacyModel(publicReadingStats: $publicReadingStats)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PrivacyModelCopyWith<$Res>  {
+  factory $PrivacyModelCopyWith(PrivacyModel value, $Res Function(PrivacyModel) _then) = _$PrivacyModelCopyWithImpl;
+@useResult
+$Res call({
+ bool publicReadingStats
+});
+
+
+
+
+}
+/// @nodoc
+class _$PrivacyModelCopyWithImpl<$Res>
+    implements $PrivacyModelCopyWith<$Res> {
+  _$PrivacyModelCopyWithImpl(this._self, this._then);
+
+  final PrivacyModel _self;
+  final $Res Function(PrivacyModel) _then;
+
+/// Create a copy of PrivacyModel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? publicReadingStats = null,}) {
+  return _then(_self.copyWith(
+publicReadingStats: null == publicReadingStats ? _self.publicReadingStats : publicReadingStats // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [PrivacyModel].
+extension PrivacyModelPatterns on PrivacyModel {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PrivacyModel value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _PrivacyModel() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PrivacyModel value)  $default,){
+final _that = this;
+switch (_that) {
+case _PrivacyModel():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PrivacyModel value)?  $default,){
+final _that = this;
+switch (_that) {
+case _PrivacyModel() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool publicReadingStats)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _PrivacyModel() when $default != null:
+return $default(_that.publicReadingStats);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool publicReadingStats)  $default,) {final _that = this;
+switch (_that) {
+case _PrivacyModel():
+return $default(_that.publicReadingStats);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool publicReadingStats)?  $default,) {final _that = this;
+switch (_that) {
+case _PrivacyModel() when $default != null:
+return $default(_that.publicReadingStats);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _PrivacyModel implements PrivacyModel {
+  const _PrivacyModel({this.publicReadingStats = false});
+  factory _PrivacyModel.fromJson(Map<String, dynamic> json) => _$PrivacyModelFromJson(json);
+
+@override@JsonKey() final  bool publicReadingStats;
+
+/// Create a copy of PrivacyModel
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PrivacyModelCopyWith<_PrivacyModel> get copyWith => __$PrivacyModelCopyWithImpl<_PrivacyModel>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$PrivacyModelToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PrivacyModel&&(identical(other.publicReadingStats, publicReadingStats) || other.publicReadingStats == publicReadingStats));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,publicReadingStats);
+
+@override
+String toString() {
+  return 'PrivacyModel(publicReadingStats: $publicReadingStats)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PrivacyModelCopyWith<$Res> implements $PrivacyModelCopyWith<$Res> {
+  factory _$PrivacyModelCopyWith(_PrivacyModel value, $Res Function(_PrivacyModel) _then) = __$PrivacyModelCopyWithImpl;
+@override @useResult
+$Res call({
+ bool publicReadingStats
+});
+
+
+
+
+}
+/// @nodoc
+class __$PrivacyModelCopyWithImpl<$Res>
+    implements _$PrivacyModelCopyWith<$Res> {
+  __$PrivacyModelCopyWithImpl(this._self, this._then);
+
+  final _PrivacyModel _self;
+  final $Res Function(_PrivacyModel) _then;
+
+/// Create a copy of PrivacyModel
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? publicReadingStats = null,}) {
+  return _then(_PrivacyModel(
+publicReadingStats: null == publicReadingStats ? _self.publicReadingStats : publicReadingStats // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

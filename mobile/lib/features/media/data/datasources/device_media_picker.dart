@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../domain/entities/media.dart';
 import '../../domain/repositories/media_picker.dart';
 
-/// `image_picker` (photo library, multi-select) + `file_picker` (PDF only).
+/// `image_picker` (photo library, multi-select, camera) + `file_picker` (PDF only).
 @LazySingleton(as: MediaPicker)
 class DeviceMediaPicker implements MediaPicker {
   final _images = ImagePicker();
@@ -22,6 +22,13 @@ class DeviceMediaPicker implements MediaPicker {
     return [
       for (final f in files.take(limit)) PickedMediaFile(path: f.path, name: f.name, sizeBytes: await f.length()),
     ];
+  }
+
+  @override
+  Future<PickedMediaFile?> takePhoto() async {
+    final file = await _images.pickImage(source: ImageSource.camera, requestFullMetadata: false);
+    if (file == null) return null;
+    return PickedMediaFile(path: file.path, name: file.name, sizeBytes: await file.length());
   }
 
   @override

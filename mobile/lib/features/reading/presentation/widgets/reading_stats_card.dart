@@ -12,29 +12,40 @@ import '../../domain/entities/reading.dart';
 import '../cubit/reading_stats_cubit.dart';
 
 /// Reading stats (F08, F14): the streak, the last 7 and 30 days, all-time totals and top fields. Loads its own data
-/// (`GET /me/stats`), so it works in the stats sheet and on the Profile tab alike.
+/// (`GET /me/stats`), so it works in the stats sheet and on the Profile tab alike; with [username] it shows that
+/// user's public stats (`GET /users/{username}/stats`).
 class ReadingStatsCard extends StatelessWidget {
-  const ReadingStatsCard({super.key});
+  const ReadingStatsCard({super.key, this.username});
+
+  /// Someone else's profile; null for the viewer's own stats.
+  final String? username;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-        create: (_) => getIt<ReadingStatsCubit>()..load(),
+        create: (_) => getIt<ReadingStatsCubit>()..load(username: username),
         child: BlocBuilder<ReadingStatsCubit, ReadingStatsState>(
           builder: (context, state) => switch (state.status) {
             ReadingLoadStatus.loading => const _StatsSkeleton(),
             ReadingLoadStatus.failure => Card(
-                child: ErrorView(failure: state.failure!, compact: true, onRetry: context.read<ReadingStatsCubit>().load),
+                child: ErrorView(
+                  failure: state.failure!,
+                  compact: true,
+                  onRetry: () => context.read<ReadingStatsCubit>().load(username: username),
+                ),
               ),
-            ReadingLoadStatus.ready => ReadingStatsView(stats: state.stats!),
+            ReadingLoadStatus.ready => ReadingStatsView(stats: state.stats!, own: username == null),
           },
         ),
       );
 }
 
 class ReadingStatsView extends StatelessWidget {
-  const ReadingStatsView({super.key, required this.stats});
+  const ReadingStatsView({super.key, required this.stats, this.own = true});
 
   final ReadingStats stats;
+
+  /// The viewer's own stats. Someone else's leave out the freeze line, which is advice for the reader.
+  final bool own;
 
   @override
   Widget build(BuildContext context) {
@@ -47,8 +58,7 @@ class ReadingStatsView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _StreakHero(streak: stats.streak),
-            const SizedBox(height: ReadInSpace.s3),
-            _FreezeLine(streak: stats.streak),
+            if (own) ...[const SizedBox(height: ReadInSpace.s3), _FreezeLine(streak: stats.streak)],
             const Padding(padding: EdgeInsets.symmetric(vertical: ReadInSpace.s4), child: Divider()),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +83,7 @@ class ReadingStatsView extends StatelessWidget {
               ),
             ] else if (stats.totalArticles == 0) ...[
               const SizedBox(height: ReadInSpace.s4),
-              Text(l10n.readingStatsEmpty, style: context.textTheme.bodySmall),
+              Text(own ? l10n.readingStatsEmpty : l10n.profileReadingStatsEmpty, style: context.textTheme.bodySmall),
             ],
           ],
         ),

@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/bidi/bidi.dart';
 import '../../../../core/di/injection.dart';
@@ -10,6 +13,7 @@ import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/domain/entities/article.dart';
+import '../../../profile/presentation/profile_routes.dart';
 import '../../domain/entities/reactions.dart';
 import '../cubit/reactors_cubit.dart';
 import 'reaction_visuals.dart';
@@ -166,6 +170,12 @@ class ReactorTile extends StatelessWidget {
     return MergeSemantics(
       child: ListTile(
         minTileHeight: 56,
+        // Closes the sheet and opens the person's profile (F14).
+        onTap: () {
+          final router = GoRouter.maybeOf(context);
+          unawaited(Navigator.of(context).maybePop());
+          if (router != null) unawaited(router.push<void>(ProfileRoutes.of(user.username)));
+        },
         leading: UserAvatar(name: user.displayName, url: user.avatarUrl, size: 40),
         title: Row(
           children: [

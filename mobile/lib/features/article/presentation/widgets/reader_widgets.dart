@@ -7,6 +7,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../../settings/domain/entities/app_settings.dart';
 import '../../domain/entities/article.dart';
 
@@ -86,25 +87,37 @@ class ArticleHeader extends StatelessWidget {
         const SizedBox(height: ReadInSpace.s4),
         Row(
           children: [
-            UserAvatar(name: card.author.displayName, url: card.author.avatarUrl, size: 36),
-            const SizedBox(width: ReadInSpace.s2),
+            // Avatar and byline open the author's profile (F14).
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(child: BidiText(card.author.displayName, style: context.textTheme.labelLarge, overflow: TextOverflow.ellipsis)),
-                      if (card.author.isVerified) ...[const SizedBox(width: 4), const VerifiedMark()],
-                    ],
-                  ),
-                  Text(
-                    // Isolated handle: in RTL, a bare "@readin · 8" would show as "readin · 8@".
-                    '${Bidi.ltrIsolate('@${card.author.username}')} · ${formatDate(card.publishedAt, uiLang)}',
-                    style: meta,
-                    textDirection: Directionality.of(context),
-                  ),
-                ],
+              child: ProfileLink(
+                username: card.author.username,
+                child: Row(
+                  children: [
+                    UserAvatar(name: card.author.displayName, url: card.author.avatarUrl, size: 36),
+                    const SizedBox(width: ReadInSpace.s2),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: BidiText(card.author.displayName, style: context.textTheme.labelLarge, overflow: TextOverflow.ellipsis),
+                              ),
+                              if (card.author.isVerified) ...[const SizedBox(width: 4), const VerifiedMark()],
+                            ],
+                          ),
+                          Text(
+                            // Isolated handle: in RTL, a bare "@readin · 8" would show as "readin · 8@".
+                            '${Bidi.ltrIsolate('@${card.author.username}')} · ${formatDate(card.publishedAt, uiLang)}',
+                            style: meta,
+                            textDirection: Directionality.of(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             if (authorAction != null) ...[const SizedBox(width: ReadInSpace.s2), authorAction!],

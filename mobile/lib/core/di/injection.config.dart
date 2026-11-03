@@ -117,6 +117,20 @@ import '../../features/onboarding/domain/repositories/interests_repository.dart'
 import '../../features/onboarding/domain/usecases/save_interests.dart' as _i535;
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart'
     as _i807;
+import '../../features/profile/data/datasources/profile_api.dart' as _i191;
+import '../../features/profile/data/repositories/profile_repository_impl.dart'
+    as _i334;
+import '../../features/profile/domain/repositories/profile_repository.dart'
+    as _i894;
+import '../../features/profile/domain/usecases/profile_usecases.dart' as _i591;
+import '../../features/profile/presentation/cubit/edit_profile_cubit.dart'
+    as _i990;
+import '../../features/profile/presentation/cubit/follow_list_cubit.dart'
+    as _i632;
+import '../../features/profile/presentation/cubit/privacy_cubit.dart' as _i977;
+import '../../features/profile/presentation/cubit/profile_articles_cubit.dart'
+    as _i529;
+import '../../features/profile/presentation/cubit/profile_cubit.dart' as _i36;
 import '../../features/reactions/data/datasources/reactions_api.dart' as _i824;
 import '../../features/reactions/data/repositories/reactions_repository_impl.dart'
     as _i399;
@@ -222,6 +236,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i504.PickImages>(
       () => _i504.PickImages(gh<_i956.MediaPicker>()),
     );
+    gh.factory<_i504.TakePhoto>(() => _i504.TakePhoto(gh<_i956.MediaPicker>()));
     gh.factory<_i504.PickPdf>(() => _i504.PickPdf(gh<_i956.MediaPicker>()));
     gh.lazySingleton<_i115.PhoneCountryMemory>(
       () => _i115.PhoneCountryMemory(gh<_i892.KeyValueStore>()),
@@ -301,6 +316,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i227.InterestsApi>(
       () => _i227.InterestsApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i191.ProfileApi>(() => _i191.ProfileApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i824.ReactionsApi>(
       () => _i824.ReactionsApi(gh<_i361.Dio>()),
     );
@@ -324,6 +340,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i315.ReactionsRepository>(
       () => _i399.ReactionsRepositoryImpl(gh<_i824.ReactionsApi>()),
     );
+    gh.lazySingleton<_i894.ProfileRepository>(
+      () => _i334.ProfileRepositoryImpl(gh<_i191.ProfileApi>()),
+    );
     gh.lazySingleton<_i1040.PushService>(
       () =>
           _i1040.PushService(gh<_i709.PushPlatform>(), gh<_i455.DevicesApi>()),
@@ -343,6 +362,24 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i757.MediaApi>(),
         gh<_i221.ImageCompressor>(),
         gh<_i848.DocumentFileDataSource>(),
+      ),
+    );
+    gh.factory<_i591.GetProfile>(
+      () => _i591.GetProfile(gh<_i894.ProfileRepository>()),
+    );
+    gh.factory<_i591.GetUserArticles>(
+      () => _i591.GetUserArticles(gh<_i894.ProfileRepository>()),
+    );
+    gh.factory<_i591.UpdateProfile>(
+      () => _i591.UpdateProfile(
+        gh<_i894.ProfileRepository>(),
+        gh<_i787.AccountRepository>(),
+      ),
+    );
+    gh.factory<_i591.SetPublicReadingStats>(
+      () => _i591.SetPublicReadingStats(
+        gh<_i894.ProfileRepository>(),
+        gh<_i787.AccountRepository>(),
       ),
     );
     gh.lazySingleton<_i854.RealtimeService>(
@@ -484,6 +521,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i251.GetFollowingFeed>(
       () => _i251.GetFollowingFeed(gh<_i954.FeedRepository>()),
+    );
+    gh.factoryParam<_i529.ProfileArticlesCubit, String, dynamic>(
+      (username, _) =>
+          _i529.ProfileArticlesCubit(gh<_i591.GetUserArticles>(), username),
     );
     gh.factory<_i892.ReportReadingProgress>(
       () => _i892.ReportReadingProgress(gh<_i634.ReadingRepository>()),
@@ -745,6 +786,23 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i509.FollowsCubit>(
       () => _i509.FollowsCubit(gh<_i537.SetFollowing>()),
     );
+    gh.factory<_i977.PrivacyCubit>(
+      () => _i977.PrivacyCubit(
+        gh<_i591.SetPublicReadingStats>(),
+        gh<_i371.SessionCubit>(),
+      ),
+    );
+    gh.factory<_i990.EditProfileCubit>(
+      () => _i990.EditProfileCubit(
+        gh<_i591.GetProfile>(),
+        gh<_i172.GetFields>(),
+        gh<_i46.CheckUsername>(),
+        gh<_i504.PickImages>(),
+        gh<_i504.TakePhoto>(),
+        gh<_i504.UploadImage>(),
+        gh<_i591.UpdateProfile>(),
+      ),
+    );
     gh.factory<_i1021.ChangePasswordCubit>(
       () => _i1021.ChangePasswordCubit(
         gh<_i46.GetAuthConfig>(),
@@ -773,6 +831,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i226.EngagementCubit>(),
       ),
     );
+    gh.factoryParam<_i632.FollowListCubit, String, _i632.FollowListKind>(
+      (userId, kind) => _i632.FollowListCubit(
+        gh<_i537.GetFollowLists>(),
+        gh<_i509.FollowsCubit>(),
+        userId,
+        kind,
+      ),
+    );
     gh.factory<_i487.ReadingStatsCubit>(
       () => _i487.ReadingStatsCubit(
         gh<_i892.GetReadingStats>(),
@@ -792,6 +858,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i226.EngagementCubit>(),
         gh<_i272.CollectionsCubit>(),
       ),
+    );
+    gh.factory<_i36.ProfileCubit>(
+      () => _i36.ProfileCubit(gh<_i591.GetProfile>(), gh<_i509.FollowsCubit>()),
     );
     return this;
   }

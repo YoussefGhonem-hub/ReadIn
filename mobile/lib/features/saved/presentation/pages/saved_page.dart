@@ -65,7 +65,7 @@ class _SavedViewState extends State<SavedView> {
           automaticallyImplyLeading: false,
           bottom: TabBar(tabs: [Tab(text: l10n.savedTabArticles), Tab(text: l10n.collections)]),
         ),
-        body: const TabBarView(children: [_SavedArticlesTab(), _CollectionsTab()]),
+        body: const TabBarView(children: [SavedArticlesList(), _CollectionsTab()]),
       ),
     );
   }
@@ -97,14 +97,19 @@ class _SavedGuestView extends StatelessWidget {
 
 // ── Articles ────────────────────────────────────────────────────────────────
 
-class _SavedArticlesTab extends StatefulWidget {
-  const _SavedArticlesTab();
+/// Saved articles with search, field chips, the collection filter, paging and the offline copies. Needs a
+/// [SavedListCubit] above it; the Saved tab and the own profile's Saved tab (F14) share it.
+class SavedArticlesList extends StatefulWidget {
+  const SavedArticlesList({super.key, this.leading});
+
+  /// A first sliver, e.g. the room for a pinned tab bar above (the profile).
+  final Widget Function(BuildContext context)? leading;
 
   @override
-  State<_SavedArticlesTab> createState() => _SavedArticlesTabState();
+  State<SavedArticlesList> createState() => _SavedArticlesListState();
 }
 
-class _SavedArticlesTabState extends State<_SavedArticlesTab> with AutomaticKeepAliveClientMixin {
+class _SavedArticlesListState extends State<SavedArticlesList> with AutomaticKeepAliveClientMixin {
   late final _search = TextEditingController(text: context.read<SavedListCubit>().state.filter.query ?? '');
 
   @override
@@ -138,6 +143,7 @@ class _SavedArticlesTabState extends State<_SavedArticlesTab> with AutomaticKeep
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
+              ?widget.leading?.call(context),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, 0),
                 sliver: SliverToBoxAdapter(

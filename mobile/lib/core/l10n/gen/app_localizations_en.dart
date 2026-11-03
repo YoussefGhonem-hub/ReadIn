@@ -389,6 +389,190 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSyncFailed => 'We couldn\'t load your profile.';
 
   @override
+  String get profileTabArticles => 'Articles';
+
+  @override
+  String get profileTabSaved => 'Saved';
+
+  @override
+  String get profileTabPaths => 'Paths';
+
+  @override
+  String get profileTabAbout => 'About';
+
+  @override
+  String get profileStatArticles => 'Articles';
+
+  @override
+  String get profileStatFollowers => 'Followers';
+
+  @override
+  String get profileStatFollowing => 'Following';
+
+  @override
+  String get profileStatReads => 'Reads';
+
+  @override
+  String profileStatSemantics(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
+  String get profileOpenHint => 'Opens the profile';
+
+  @override
+  String profileOpenLink(String name) {
+    return 'Open $name';
+  }
+
+  @override
+  String get profileGithub => 'GitHub';
+
+  @override
+  String get profileLinkedin => 'LinkedIn';
+
+  @override
+  String get profileWebsite => 'Website';
+
+  @override
+  String get profileLinks => 'Links';
+
+  @override
+  String get profileExpertise => 'Fields of expertise';
+
+  @override
+  String get profileAboutBio => 'Bio';
+
+  @override
+  String get profileAboutEmpty => 'No details yet.';
+
+  @override
+  String get profileAboutEmptyOwn =>
+      'Add a bio, your links and the fields you write about so readers get to know you.';
+
+  @override
+  String profileJoined(String date) {
+    return 'Joined $date';
+  }
+
+  @override
+  String get profileArticlesEmptyTitle => 'No articles yet';
+
+  @override
+  String get profileArticlesEmptyBody =>
+      'The articles they publish show up here.';
+
+  @override
+  String get profileArticlesEmptyOwnTitle => 'You haven\'t published yet';
+
+  @override
+  String get profileArticlesEmptyOwnBody =>
+      'Share what you know: your published articles show up here.';
+
+  @override
+  String get profileWriteFirst => 'Write an article';
+
+  @override
+  String get profilePathsTitle => 'Learning paths are coming';
+
+  @override
+  String get profilePathsBody =>
+      'Hand-picked series of articles to learn a topic step by step. We\'re building them now.';
+
+  @override
+  String get profileNotFoundTitle => 'This profile isn\'t available';
+
+  @override
+  String get profileNotFoundBody =>
+      'The account may have been deleted, or the link is wrong.';
+
+  @override
+  String get profileSaved => 'Profile saved';
+
+  @override
+  String get profilePrivacy => 'Privacy';
+
+  @override
+  String get profilePublicReadingStats =>
+      'Show reading stats on my public profile';
+
+  @override
+  String get profilePublicReadingStatsOn =>
+      'Everyone can see your streak, your totals and your reading activity.';
+
+  @override
+  String get profilePublicReadingStatsOff =>
+      'Only you can see your reading stats.';
+
+  @override
+  String get profileReadingStatsEmpty => 'No finished articles yet.';
+
+  @override
+  String get profileReadingHeatmapEmpty => 'No reading days yet.';
+
+  @override
+  String get profileBioLabel => 'Bio';
+
+  @override
+  String get profileBioHint => 'What do you work on? What do you write about?';
+
+  @override
+  String get profilePhotoGallery => 'Choose from your photos';
+
+  @override
+  String get profilePhotoCamera => 'Take a photo';
+
+  @override
+  String get profilePhotoPreview => 'Profile photo';
+
+  @override
+  String get profileExpertiseHint => 'Pick up to 5 fields you know well.';
+
+  @override
+  String get profileExpertiseFull => 'That\'s 5. Remove one to pick another.';
+
+  @override
+  String profileExpertiseCountSemantics(int count, int max) {
+    return '$count of $max fields picked';
+  }
+
+  @override
+  String get profileFollowSearchHint => 'Search by name or username';
+
+  @override
+  String get profileFollowNoResultsTitle => 'No one matches';
+
+  @override
+  String get profileFollowNoResultsBody => 'Try another name or username.';
+
+  @override
+  String get profileFollowersEmptyTitle => 'No followers yet';
+
+  @override
+  String get profileFollowersEmptyOwnBody =>
+      'Readers who like your articles can follow you.';
+
+  @override
+  String get profileFollowingEmptyTitle => 'Not following anyone yet';
+
+  @override
+  String get profileFollowingEmptyOwnBody =>
+      'Follow writers to get their new articles on Today.';
+
+  @override
+  String get profileErrStatsPrivate => 'These reading stats are private.';
+
+  @override
+  String get profileErrAvatarInvalid =>
+      'This photo can\'t be used. Upload another one.';
+
+  @override
+  String get profileErrExpertiseInvalid => 'Pick up to 5 of the listed fields.';
+
+  @override
+  String get profileErrUrl => 'Enter a full link that starts with https://';
+
+  @override
   String get errValidation => 'Please check the highlighted fields.';
 
   @override

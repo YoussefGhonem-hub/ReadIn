@@ -15,7 +15,8 @@ String? pushDataLink(Map<String, dynamic> data) {
 
 /// Maps a push link to an in-app route (SPEC §21.1). Deep links
 /// (`readin://a/{slug}#comment-{id}`), App Links (`https://readin.app/a/{slug}`,
-/// `https://readin.app/ar/a/{slug}`) and app paths open the matching screen;
+/// `https://readin.app/ar/a/{slug}`), profiles (`readin://u/{username}`, `https://readin.app/@{username}`) and app
+/// paths open the matching screen;
 /// anything else returns null, so a push can never open an arbitrary location.
 String? pushLinkToPath(String? link) {
   final text = link?.trim() ?? '';
@@ -39,5 +40,14 @@ String? pushLinkToPath(String? link) {
   if (parts.length == 3 && (parts[0] == 'ar' || parts[0] == 'en') && parts[1] == 'a') parts = parts.sublist(1);
   if (parts.length == 2 && parts[0] == 'a') return '/a/${Uri.encodeComponent(parts[1])}';
   if (parts.length == 1 && parts[0] == 'notifications') return '/notifications';
+  // Profiles (F14): the app's /u/{username} and the web's /@{username} (e.g. a "new follower" push).
+  if (parts.length == 2 && parts[0] == 'u' && _isHandle(parts[1])) return '/u/${parts[1].toLowerCase()}';
+  if (parts.length == 1 && parts[0].startsWith('@') && _isHandle(parts[0].substring(1))) {
+    return '/u/${parts[0].substring(1).toLowerCase()}';
+  }
   return null;
 }
+
+final _handle = RegExp(r'^[A-Za-z0-9_.]{1,30}$');
+
+bool _isHandle(String value) => _handle.hasMatch(value);
