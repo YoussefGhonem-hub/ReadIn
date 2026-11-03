@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/bidi/bidi.dart';
@@ -436,8 +437,9 @@ class _ImageDetailsSheetState extends State<_ImageDetailsSheet> {
                   BidiTextField(
                     controller: _alt,
                     maxLength: AttachmentLimits.maxAltText,
+                    counterWithin: AttachmentLimits.counterWithin,
                     minLines: 1,
-                    maxLines: 3,
+                    maxLines: 6,
                     decoration: InputDecoration(
                       labelText: l10n.altTextLabel,
                       helperText: l10n.altTextHint,
@@ -449,6 +451,9 @@ class _ImageDetailsSheetState extends State<_ImageDetailsSheet> {
                   BidiTextField(
                     controller: _caption,
                     maxLength: AttachmentLimits.maxCaption,
+                    counterWithin: AttachmentLimits.counterWithin,
+                    minLines: 1,
+                    maxLines: 6,
                     decoration: InputDecoration(labelText: l10n.captionLabel),
                     onChanged: (v) => cubit.setCaption(widget.localId, v),
                   ),
@@ -585,6 +590,13 @@ class _DocumentCardState extends State<_DocumentCard> {
               controller: _title,
               enabled: widget.enabled,
               maxLength: AttachmentLimits.maxDocumentTitle,
+              counterWithin: AttachmentLimits.counterWithin,
+              // Long titles wrap, but a title is one line: Enter finishes instead of adding a line break.
+              maxLines: 3,
+              minLines: 1,
+              keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.done,
+              inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'[\r\n]'))],
               decoration: InputDecoration(labelText: l10n.pdfTitleLabel, errorText: doc.hasTitle ? null : l10n.attachNeedDocTitle),
               onChanged: cubit.setDocumentTitle,
             ),

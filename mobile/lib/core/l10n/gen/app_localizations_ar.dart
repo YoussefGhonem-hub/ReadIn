@@ -575,14 +575,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errAttachmentsAltTextRequired => 'كل صورة محتاجة وصف (Alt text).';
 
   @override
-  String get errAttachmentsAltTextTooLong => 'وصف الصورة لحد 250 حرف بس.';
+  String get errAttachmentsAltTextTooLong => 'وصف الصورة لحد 5000 حرف بس.';
 
   @override
   String get errAttachmentsCaptionTooLong =>
-      'التعليق على الصورة لحد 120 حرف بس.';
+      'التعليق على الصورة لحد 5000 حرف بس.';
 
   @override
-  String get errAttachmentsTitleTooLong => 'عنوان الملف لحد 150 حرف بس.';
+  String get errAttachmentsTitleTooLong => 'عنوان الملف لحد 5000 حرف بس.';
 
   @override
   String get errAttachmentsTitleRequired => 'الملف محتاج عنوان.';

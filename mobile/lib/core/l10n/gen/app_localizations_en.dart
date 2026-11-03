@@ -574,15 +574,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errAttachmentsAltTextTooLong =>
-      'Alt text can be up to 250 characters.';
+      'Alt text can be up to 5000 characters.';
 
   @override
   String get errAttachmentsCaptionTooLong =>
-      'Captions can be up to 120 characters.';
+      'Captions can be up to 5000 characters.';
 
   @override
   String get errAttachmentsTitleTooLong =>
-      'The document title can be up to 150 characters.';
+      'The document title can be up to 5000 characters.';
 
   @override
   String get errAttachmentsTitleRequired => 'The document needs a title.';

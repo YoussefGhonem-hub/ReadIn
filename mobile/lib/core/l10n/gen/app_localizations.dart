@@ -1085,19 +1085,19 @@ abstract class AppLocalizations {
   /// No description provided for @errAttachmentsAltTextTooLong.
   ///
   /// In en, this message translates to:
-  /// **'Alt text can be up to 250 characters.'**
+  /// **'Alt text can be up to 5000 characters.'**
   String get errAttachmentsAltTextTooLong;
 
   /// No description provided for @errAttachmentsCaptionTooLong.
   ///
   /// In en, this message translates to:
-  /// **'Captions can be up to 120 characters.'**
+  /// **'Captions can be up to 5000 characters.'**
   String get errAttachmentsCaptionTooLong;
 
   /// No description provided for @errAttachmentsTitleTooLong.
   ///
   /// In en, this message translates to:
-  /// **'The document title can be up to 150 characters.'**
+  /// **'The document title can be up to 5000 characters.'**
   String get errAttachmentsTitleTooLong;
 
   /// No description provided for @errAttachmentsTitleRequired.

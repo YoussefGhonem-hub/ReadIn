@@ -4,9 +4,13 @@ import 'package:equatable/equatable.dart';
 abstract final class AttachmentLimits {
   static const maxImages = 10;
   static const maxPdfBytes = 20 * 1024 * 1024;
-  static const maxCaption = 120;
-  static const maxAltText = 250;
-  static const maxDocumentTitle = 150;
+  // Same limits as the API (Article.MaxCaptionLength / MaxAltTextLength, MediaAsset.MaxTitleLength).
+  static const maxCaption = 5000;
+  static const maxAltText = 5000;
+  static const maxDocumentTitle = 5000;
+
+  /// The character counter of these fields appears only this close to the limit.
+  static const counterWithin = 500;
 }
 
 enum MediaKind { image, document }
@@ -132,7 +136,7 @@ class ImageAttachment extends Equatable {
   final String assetId;
   final int order;
 
-  /// ≤ 120 characters, rendered with `dir="auto"`.
+  /// ≤ 5000 characters, rendered with `dir="auto"`.
   final String? caption;
   final String altText;
   final int width;

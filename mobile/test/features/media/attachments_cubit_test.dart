@@ -175,6 +175,25 @@ void main() {
     );
 
     blocTest<AttachmentsCubit, AttachmentsState>(
+      'alt text and captions take up to 5000 characters',
+      setUp: () => stubImageUpload((file, _, _) async => Ok(imageAsset(file.name))),
+      build: build,
+      act: (cubit) async {
+        cubit.addImages([sampleImageFile]);
+        await Future<void>.delayed(Duration.zero);
+        cubit.setAltText('local-1', 'A' * 4000);
+        cubit.setCaption('local-1', 'C' * 6000);
+      },
+      verify: (cubit) {
+        expect(AttachmentLimits.maxAltText, 5000);
+        expect(AttachmentLimits.maxCaption, 5000);
+        expect(cubit.state.images.single.altText, hasLength(4000));
+        expect(cubit.state.images.single.caption, hasLength(5000));
+        expect(cubit.state.canPublish, isTrue);
+      },
+    );
+
+    blocTest<AttachmentsCubit, AttachmentsState>(
       'publishing is blocked while an image is uploading',
       setUp: () => stubImageUpload((_, _, _) => Completer<Result<MediaAsset>>().future),
       build: build,
@@ -437,7 +456,7 @@ void main() {
   test('the PDF title is pre-filled from the file name', () {
     expect(AttachmentsCubit.titleFromFileName('Clean_Architecture  notes.v2.pdf'), 'Clean Architecture notes.v2');
     expect(AttachmentsCubit.titleFromFileName('.pdf'), '.pdf');
-    expect(AttachmentsCubit.titleFromFileName('${'a' * 200}.pdf'), hasLength(AttachmentLimits.maxDocumentTitle));
+    expect(AttachmentsCubit.titleFromFileName('${'a' * 5200}.pdf'), hasLength(AttachmentLimits.maxDocumentTitle));
   });
 
   test('closing the composer cancels uploads and stops polling', () async {
