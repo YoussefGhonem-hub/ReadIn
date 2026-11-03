@@ -2,7 +2,7 @@ using ReadIn.Application.Common.Interfaces;
 
 namespace ReadIn.Infrastructure.Realtime;
 
-/// <summary>Placeholder until the Firebase publisher is registered (F27): live signals are optional, REST is the truth.</summary>
+/// <summary>Used when no Realtime Database is configured (F27): live signals are optional, REST is the truth.</summary>
 internal sealed class NullRealtimePublisher : IRealtimePublisher
 {
     public Task PublishArticleCountersAsync(Guid articleId, ArticleLiveCounters counters, CancellationToken cancellationToken = default) =>

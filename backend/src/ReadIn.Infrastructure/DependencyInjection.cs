@@ -15,6 +15,7 @@ using ReadIn.Infrastructure.Persistence;
 using ReadIn.Infrastructure.Persistence.Interceptors;
 using ReadIn.Infrastructure.Persistence.Outbox;
 using ReadIn.Infrastructure.Persistence.Seeding;
+using ReadIn.Infrastructure.Realtime;
 using ReadIn.Infrastructure.Storage;
 
 namespace ReadIn.Infrastructure;
@@ -46,7 +47,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddSingleton<IRecoveryPinHasher, PepperedPinHasher>();
         services.AddSingleton<IAttemptThrottle, MemoryAttemptThrottle>();
-        services.AddSingleton<IRealtimePublisher, Realtime.NullRealtimePublisher>();
+        services.AddRealtime(configuration);
         services.Configure<ExternalAuthOptions>(configuration.GetSection(ExternalAuthOptions.Section));
         services.AddSingleton<IExternalIdentityVerifier, OidcExternalIdentityVerifier>();
 

@@ -1,13 +1,8 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using Google.Apis.Auth.OAuth2;
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Domain.Media;
-using ReadIn.Infrastructure.Identity;
+using ReadIn.Infrastructure.Realtime;
 
 namespace ReadIn.Infrastructure.Media;
 
@@ -35,66 +30,19 @@ internal sealed class InlineMediaJobScheduler(IServiceScopeFactory scopes) : IMe
 }
 
 /// <summary>
-/// Writes <c>/live/users/{userId}/media/{assetId}</c> in the Firebase Realtime Database through its REST API (the .NET
-/// Admin SDK has no RTDB client), SPEC §21.2. database.rules.json lets only that user read it: the custom token from
-/// <c>POST /realtime/token</c> carries the ReadIn user id as its <c>uid</c>.
+/// Writes <c>{ status, pagesReady, pageCount, failureReason, updatedAt }</c> to <c>/live/users/{userId}/media/{assetId}</c>
+/// (ADR 0011, SPEC §21.2). database.rules.json lets only that user read it: the custom token from
+/// <c>POST /realtime/token</c> carries the ReadIn user id as its <c>uid</c>. Best effort, because clients also poll.
 /// </summary>
-internal sealed partial class FirebaseMediaStatusNotifier(
-    HttpClient http,
-    IOptions<FirebaseOptions> options,
-    ILogger<FirebaseMediaStatusNotifier> logger) : IMediaStatusNotifier
+internal sealed class FirebaseMediaStatusNotifier(RealtimeDatabaseClient database) : IMediaStatusNotifier
 {
-    private static readonly string[] Scopes =
-        ["https://www.googleapis.com/auth/firebase.database", "https://www.googleapis.com/auth/userinfo.email"];
-
-    private static GoogleCredential? _credential;
-
-    public async Task NotifyAsync(MediaAsset asset, CancellationToken cancellationToken)
-    {
-        var firebase = options.Value;
-        var baseUrl = firebase.UseEmulator
-            ? string.IsNullOrWhiteSpace(firebase.DatabaseEmulatorHost) ? null : $"http://{firebase.DatabaseEmulatorHost}"
-            : firebase.DatabaseUrl?.TrimEnd('/');
-        if (baseUrl is null) return;
-
-        try
+    public Task NotifyAsync(MediaAsset asset, CancellationToken cancellationToken) =>
+        database.PutAsync($"live/users/{asset.OwnerId}/media/{asset.Id}", new Dictionary<string, object?>
         {
-            var url = $"{baseUrl}/live/users/{asset.OwnerId}/media/{asset.Id}.json";
-            if (firebase.UseEmulator) url += $"?ns={Uri.EscapeDataString(firebase.ProjectId)}";
-
-            using var request = new HttpRequestMessage(HttpMethod.Put, url)
-            {
-                Content = JsonContent.Create(new Dictionary<string, object?>
-                {
-                    ["status"] = asset.Status.ToString().ToLowerInvariant(),
-                    ["pagesReady"] = asset.Pages.Count,
-                    ["pageCount"] = asset.PageCount,
-                    ["failureReason"] = asset.FailureReason,
-                    ["updatedAt"] = new Dictionary<string, string> { [".sv"] = "timestamp" },
-                }),
-            };
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", firebase.UseEmulator
-                ? "owner" // the emulator's admin token
-                : await AccessTokenAsync(firebase, cancellationToken));
-
-            using var response = await http.SendAsync(request, cancellationToken);
-            if (!response.IsSuccessStatusCode) LogSignalRejected(logger, asset.Id, (int)response.StatusCode);
-        }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or IOException)
-        {
-            LogSignalFailed(logger, ex, asset.Id);
-        }
-    }
-
-    private static async Task<string> AccessTokenAsync(FirebaseOptions firebase, CancellationToken cancellationToken)
-    {
-        _credential ??= FirebaseCredentials.Create(firebase).CreateScoped(Scopes);
-        return await ((ITokenAccess)_credential).GetAccessTokenForRequestAsync(cancellationToken: cancellationToken);
-    }
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "The live status of media {AssetId} was rejected with HTTP {Status}")]
-    private static partial void LogSignalRejected(ILogger logger, Guid assetId, int status);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Could not publish the live status of media {AssetId}; clients still poll")]
-    private static partial void LogSignalFailed(ILogger logger, Exception exception, Guid assetId);
+            ["status"] = asset.Status.ToString().ToLowerInvariant(),
+            ["pagesReady"] = asset.Pages.Count,
+            ["pageCount"] = asset.PageCount,
+            ["failureReason"] = asset.FailureReason,
+            ["updatedAt"] = RealtimeDatabaseClient.ServerTimestamp,
+        }, cancellationToken);
 }

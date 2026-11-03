@@ -15,11 +15,12 @@ public sealed class FirebaseOptions
     /// <summary>Development/Testing only: point the Admin SDK at the Emulator Suite.</summary>
     public bool UseEmulator { get; set; }
 
+    /// <summary>Auth emulator that accepts the unsigned custom tokens of <c>POST /realtime/token</c> when <see cref="UseEmulator"/> is on.</summary>
     public string AuthEmulatorHost { get; set; } = "127.0.0.1:9099";
 
     /// <summary>
-    /// Realtime Database URL of the real project (e.g. <c>https://readin-default-rtdb.europe-west1.firebasedatabase.app</c>),
-    /// used only for live media-processing signals (ADR 0011). Empty disables them; clients still poll.
+    /// Realtime Database URL of the real project (e.g. <c>https://readin-cca78-default-rtdb.europe-west1.firebasedatabase.app</c>)
+    /// that receives the live signals (SPEC §21.2, ADR 0011). Empty disables them; clients keep working through REST.
     /// </summary>
     public string? DatabaseUrl { get; set; }
 
@@ -32,6 +33,18 @@ public sealed class FirebaseOptions
     /// Credentials are used.
     /// </summary>
     public string? ServiceAccountJson { get; set; }
+
+    /// <summary>
+    /// Keyless Application Default Credentials only: the service-account email that signs custom tokens through the IAM
+    /// <c>signBlob</c> API, when the host can't discover it (e.g. workload identity federation outside Google Cloud).
+    /// Ignored when <see cref="ServiceAccountJson"/> is set, because that key signs locally.
+    /// </summary>
+    public string? ServiceAccountId { get; set; }
+
+    /// <summary>Base URL of the Realtime Database REST API, or null when live signals are off.</summary>
+    public string? RealtimeDatabaseBaseUrl => UseEmulator
+        ? string.IsNullOrWhiteSpace(DatabaseEmulatorHost) ? null : $"http://{DatabaseEmulatorHost.Trim()}"
+        : string.IsNullOrWhiteSpace(DatabaseUrl) ? null : DatabaseUrl.Trim().TrimEnd('/');
 }
 
 /// <summary>Builds the Admin SDK credential for the real Firebase project.</summary>

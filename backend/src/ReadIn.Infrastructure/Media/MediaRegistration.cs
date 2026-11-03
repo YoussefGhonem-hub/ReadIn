@@ -18,7 +18,7 @@ internal static class MediaRegistration
         services.AddSingleton<IPdfInspector, PdfInspector>();
         services.AddSingleton<PdfRenderer>();
         services.AddScoped<DocumentProcessingJob>();
-        services.AddHttpClient<IMediaStatusNotifier, FirebaseMediaStatusNotifier>(http => http.Timeout = TimeSpan.FromSeconds(5));
+        services.AddTransient<IMediaStatusNotifier, FirebaseMediaStatusNotifier>();
 
         if (hangfireEnabled)
         {

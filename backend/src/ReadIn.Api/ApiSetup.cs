@@ -114,6 +114,13 @@ public static class ApiSetup
                     PermitLimit = 20,
                     Window = TimeSpan.FromMinutes(1),
                 }));
+            // Per user: every call signs a token (locally, or through the IAM API when keyless).
+            options.AddPolicy(RateLimitPolicies.RealtimeToken, context =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromMinutes(1),
+                }));
         });
 
         services.AddResponseCompression(options =>

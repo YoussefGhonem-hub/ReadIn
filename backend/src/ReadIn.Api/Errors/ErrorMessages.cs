@@ -63,6 +63,7 @@ public static class ErrorMessages
         ["media.not_found"] = ("الملف مش موجود.", "File not found."),
         ["media.in_use"] = ("شيل الملف من البوست الأول قبل ما تمسحه.", "Remove this file from its post before deleting it."),
         ["media.download_not_allowed"] = ("الكاتب مش سامح بتحميل الملف ده.", "The author did not allow downloading this file."),
+        ["realtime.unavailable"] = ("التحديثات اللحظية مش متاحة دلوقتي.", "Live updates are unavailable right now."),
         ["attachments.mixed_kinds"] = ("البوست يا صور يا ملف PDF واحد، مش الاتنين.", "A post can have images or one PDF, not both."),
         ["attachments.too_many_images"] = ("أقصى حاجة 10 صور في البوست.", "A post can have at most 10 images."),
         ["attachments.single_document"] = ("البوست ينفع فيه ملف PDF واحد بس.", "A post can have only one PDF."),

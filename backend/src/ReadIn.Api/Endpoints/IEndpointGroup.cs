@@ -30,6 +30,9 @@ public static class RateLimitPolicies
     public const string UsernameCheck = "username-check";
     public const string Writes = "writes";
     public const string Uploads = "uploads";
+
+    /// <summary>Clients ask once per page load or app start and on every sign in, so a few a minute is plenty.</summary>
+    public const string RealtimeToken = "realtime-token";
 }
 
 /// <summary>Per-IP limits of the anonymous auth endpoints (SPEC §9.5); tests raise them.</summary>
