@@ -8,12 +8,14 @@ iOS builds run on GitHub Actions macOS runners (`.github/workflows/ios.yml`) and
 | Minimum iOS | 15.0 (required by the Firebase iOS SDK) |
 | Team ID | `7A25UFD8VC` |
 | Push | `Runner/Runner.entitlements` (`aps-environment`) + `UIBackgroundModes = remote-notification` in `Info.plist` |
+| Sign-in | Sign in with Apple: `com.apple.developer.applesignin` in `Runner/Runner.entitlements`. Google: the iOS OAuth client's reversed ID as a URL scheme (`CFBundleURLTypes`) in `Info.plist` |
 | Signing | Automatic, cloud-managed certificates through an App Store Connect API key (no `.p12` or provisioning profiles to manage) |
 | Build number | GitHub run number |
 | Dart config | `mobile/config/prod.json` (real Firebase project) |
 
 ## Already done
 - [x] App ID `app.readin.readin` with **Push Notifications** (Apple Developer → Identifiers).
+- [ ] **Sign in with Apple** enabled on the same App ID (Identifiers → `app.readin.readin` → Capabilities). Needed before the next TestFlight build, because the entitlements now ask for it.
 - [x] APNs key uploaded to Firebase (Development + Production) → Project settings → Cloud Messaging.
 - [x] `GoogleService-Info.plist` in `mobile/ios/Runner/` (git-ignored, local only). The app initializes Firebase from `lib/firebase_options_prod.dart`, so CI does not need the plist.
 
@@ -87,3 +89,4 @@ The repository is private, so macOS runner minutes count **10×** against the Gi
 | `No suitable application records were found` | Step 1. |
 | `The bundle version must be higher` | Re-run the workflow (each run gets a new build number). |
 | Provisioning profile doesn't include `aps-environment` | Make sure **Push Notifications** is enabled on the App ID, then re-run. |
+| Provisioning profile doesn't include `com.apple.developer.applesignin` | Enable **Sign in with Apple** on the App ID, then re-run. |

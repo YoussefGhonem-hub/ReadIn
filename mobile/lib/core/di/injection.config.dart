@@ -26,8 +26,12 @@ import '../../features/article/presentation/cubit/attachment_viewer_cubit.dart'
     as _i189;
 import '../../features/auth/data/auth_module.dart' as _i360;
 import '../../features/auth/data/datasources/account_api.dart' as _i506;
+import '../../features/auth/data/datasources/apple_sign_in_data_source.dart'
+    as _i815;
 import '../../features/auth/data/datasources/auth_api.dart' as _i367;
 import '../../features/auth/data/datasources/auth_session_store.dart' as _i348;
+import '../../features/auth/data/datasources/google_sign_in_data_source.dart'
+    as _i811;
 import '../../features/auth/data/repositories/auth_repository_impl.dart'
     as _i153;
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
@@ -136,6 +140,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1026.CurrentLocale>(() => _i1026.CurrentLocale());
     gh.lazySingleton<_i868.ShareService>(() => _i868.ShareService());
     gh.lazySingleton<_i878.TimeZoneService>(() => _i878.TimeZoneService());
+    gh.lazySingleton<_i815.AppleSignInDataSource>(
+      () => _i815.AppleSignInDataSource(),
+    );
+    gh.lazySingleton<_i811.GoogleSignInDataSource>(
+      () => _i811.GoogleSignInDataSource(),
+    );
     gh.lazySingleton<_i221.ImageCompressor>(() => _i221.ImageCompressor());
     gh.lazySingleton<_i194.DeviceNameProvider>(
       () => _i1018.DeviceNameService(),
