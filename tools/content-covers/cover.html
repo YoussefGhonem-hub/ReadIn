@@ -84,7 +84,7 @@
     const text = escape(trimmed);
     // Short runs never wrap, not even at a hyphen ("fire-and-forget").
     return `${trimmed.length <= 24 ? `<bdi class="nw">${text}</bdi>` : `<bdi>${text}</bdi>`}${escape(piece.slice(trimmed.length))}`;
-  }).replace(/ـ (?=<bdi)/g, "ـ&nbsp;");
+  }).replace(/(ـ|(?:^|\s)و) (?=<bdi)/g, "$1&nbsp;"); // "الـ" and a lone "و" stay with the English term after them
 
   window.renderCover = async (d) => {
     const cover = document.getElementById("cover");
