@@ -636,5 +636,73 @@
       "attachmentProblem": "Remove or retry the attachment that failed.",
       "documentTitle": "Give the document a title."
     }
+  },
+  "reading": {
+    "days": {
+      "one": "{{count}} day",
+      "other": "{{count}} days"
+    },
+    "articles": {
+      "one": "{{count}} article",
+      "other": "{{count}} articles"
+    },
+    "minutes": {
+      "one": "{{count}} min",
+      "other": "{{count}} min"
+    },
+    "badge": {
+      "label": "Reading streak: {{days}}",
+      "unknown": "Reading streak",
+      "notReadToday": "You haven't read today yet",
+      "freezePending": "Read today and a freeze keeps your streak"
+    },
+    "stats": {
+      "title": "Reading stats",
+      "currentStreak": "Current streak",
+      "longest": "Longest: {{days}}",
+      "readToday": "You read today. See you tomorrow!",
+      "keepStreak": "Read an article today to keep your streak.",
+      "startStreak": "Read an article today to start a streak.",
+      "freeze": {
+        "pending": "You missed yesterday. Read today and a freeze keeps your streak.",
+        "available": "A freeze is ready: one missed day won’t break your streak.",
+        "later": "Freeze used. A new one comes within 7 days."
+      },
+      "week": "Last 7 days",
+      "month": "Last 30 days",
+      "total": "All time",
+      "topFields": "Top fields",
+      "noReads": "Articles you finish will show up here.",
+      "loadError": "We couldn’t load your reading stats."
+    },
+    "heatmap": {
+      "title": "Reading activity",
+      "label": "Reading activity, last 12 months",
+      "cellRead": "{{date}}: {{articles}} · {{minutes}}",
+      "cellFrozen": "{{date}}: streak freeze",
+      "cellEmpty": "{{date}}: no reading",
+      "legend": "Articles a day",
+      "frozen": "Freeze",
+      "loadError": "We couldn’t load your reading activity."
+    },
+    "milestone": {
+      "title": {
+        "7": "A full week!",
+        "30": "30 days in a row!",
+        "100": "100 days of reading!",
+        "365": "A whole year of reading!"
+      },
+      "body": "You read every day for {{days}}. Keep it going!",
+      "cardHeadline": {
+        "one": "day in a row",
+        "other": "days in a row"
+      },
+      "cardAlt": "ReadIn card: a {{days}} reading streak",
+      "share": "Share",
+      "download": "Download image",
+      "shareText": "My reading streak on ReadIn: {{days}} 🔥",
+      "keepReading": "Keep reading",
+      "preparing": "Preparing your card…"
+    }
   }
 }

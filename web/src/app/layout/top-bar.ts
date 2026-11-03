@@ -4,6 +4,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { SessionStore } from '../core/auth/session.store';
 import { RealtimeService } from '../core/realtime/realtime.service';
+import { StreakStore } from '../features/reading/streak.store';
 import { Avatar } from '../shared/ui/avatar';
 import { StreakBadge } from '../shared/ui/streak-badge';
 import { Wordmark } from '../shared/ui/wordmark';
@@ -21,7 +22,7 @@ import { profilePath } from './nav-items';
       </a>
       <div class="ms-auto flex items-center gap-2">
         @if (session.isAuthenticated()) {
-          <rd-streak-badge />
+          <rd-streak-badge [streak]="streaks.streak()" />
         }
         <a routerLink="/search" class="rd-icon-btn hidden sm:inline-grid" [attr.aria-label]="'nav.search' | transloco">
           <svg lucideIcon="Search" [size]="18"></svg>
@@ -46,6 +47,7 @@ import { profilePath } from './nav-items';
 export class TopBar {
   protected readonly session = inject(SessionStore);
   protected readonly realtime = inject(RealtimeService);
+  protected readonly streaks = inject(StreakStore);
   protected profileLink(): string {
     return profilePath(this.session.username());
   }

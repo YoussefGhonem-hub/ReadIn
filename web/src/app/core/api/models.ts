@@ -378,6 +378,83 @@ export interface ArticleAttachmentsDto {
   document: DocumentAttachmentDto | null;
 }
 
+// ── Reading & streaks (ADR 0013) ────────────────────────────
+// Dates are the user's local dates ("yyyy-MM-dd") in their profile time zone.
+
+/** `PUT /articles/{id}/progress`. Readers report on open (delta 0), every 15 s while active, and when they leave. */
+export interface ReadingProgressRequest {
+  language: ArticleLanguage;
+  /** 0–100, the highest scroll position reached. */
+  percent: number;
+  /** ≤ 100 characters; restores the scroll position. */
+  lastPosition: string | null;
+  /** 0–3600, active seconds since the previous report. */
+  activeSecondsDelta: number;
+}
+
+export interface StreakDto {
+  /** 0 once broken. */
+  current: number;
+  longest: number;
+  readToday: boolean;
+  /** A freeze is ready for the next missed day (one per rolling 7 days). */
+  freezeAvailable: boolean;
+  /** Yesterday was missed; reading today uses a freeze and keeps the streak. */
+  freezePending: boolean;
+  today: string;
+}
+
+export type StreakMilestone = 7 | 30 | 100 | 365;
+
+export interface ReadingProgressResultDto {
+  percent: number;
+  completed: boolean;
+  /** This report made the article "read" (≥ 70% and ≥ 30 s, SPEC F04). */
+  completedNow: boolean;
+  /** Set when `completedNow`. */
+  streak: StreakDto | null;
+  /** Celebrate with a shareable card. */
+  milestone: StreakMilestone | null;
+}
+
+/** A field the user reads most. `name` is localized; `icon` is a Lucide name and `color` a design token name. */
+export interface TopFieldDto {
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+  color: string;
+  articles: number;
+}
+
+/** `GET /me/stats` (owner only). "This week" is the last 7 local days and "this month" the last 30. */
+export interface ReadingStatsDto {
+  streak: StreakDto;
+  totalArticles: number;
+  minutesRead: number;
+  articlesThisWeek: number;
+  minutesThisWeek: number;
+  articlesThisMonth: number;
+  /** ≤ 3. */
+  topFields: TopFieldDto[];
+}
+
+export interface HeatmapDayDto {
+  date: string;
+  articles: number;
+  minutes: number;
+  /** A missed day covered by a streak freeze. */
+  frozen: boolean;
+}
+
+/** `GET /me/stats/heatmap?days=`: only days with a read or a freeze, oldest first. */
+export interface ReadingHeatmapDto {
+  from: string;
+  /** The user's local today. */
+  to: string;
+  days: HeatmapDayDto[];
+}
+
 /** RFC 9457 ProblemDetails with ReadIn's stable `code` (SPEC §6.5, §17.1). */
 export interface ProblemDetails {
   type?: string;

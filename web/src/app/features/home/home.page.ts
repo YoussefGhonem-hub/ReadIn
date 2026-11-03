@@ -25,6 +25,7 @@ import { ArticleCard } from '../../shared/ui/article-card';
 import { ArticleCardSkeleton, HeroSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { StreakBadge } from '../../shared/ui/streak-badge';
+import { StreakStore } from '../reading/streak.store';
 import { HomeStore } from './home.store';
 import { TodayHero } from './today-hero';
 
@@ -50,7 +51,7 @@ type FeedTab = 'forYou' | 'following';
         <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'home.sub' | transloco }}</p>
       </div>
       @if (session.isAuthenticated()) {
-        <rd-streak-badge class="lg:hidden" />
+        <rd-streak-badge class="lg:hidden" [streak]="streaks.streak()" />
       }
     </header>
 
@@ -152,6 +153,7 @@ export class HomePage {
   private readonly appRef = inject(ApplicationRef);
   private readonly transloco = inject(TranslocoService);
   protected readonly lang = inject(LanguageService).lang;
+  protected readonly streaks = inject(StreakStore);
 
   protected readonly tabs: FeedTab[] = ['forYou', 'following'];
   protected readonly activeTab = signal<FeedTab>('forYou');

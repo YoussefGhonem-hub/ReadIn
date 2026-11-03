@@ -37,6 +37,7 @@ import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { ArticleActionBar } from './article-action-bar';
 import { ArticleSeoService } from './article-seo.service';
 import { ArticleToc } from './article-toc';
+import { injectReadingTracker } from './reading-tracker';
 
 /** Show the TOC once an article has this many headings ("long articles", F04). */
 const TOC_MIN_HEADINGS = 3;
@@ -287,6 +288,8 @@ export class ArticlePage {
   private readonly articleEl = viewChild<ElementRef<HTMLElement>>('articleEl');
 
   constructor() {
+    // Reading progress and active time for the "read" rule and streaks (F04, F08).
+    injectReadingTracker(this.article, this.progress, () => this.articleEl()?.nativeElement);
     effect(() => {
       const article = this.article();
       if (article) this.seo.apply(article);
