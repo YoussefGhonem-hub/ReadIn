@@ -2,7 +2,7 @@ name: mobile
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
     tags: ["v*"]
     paths: ["mobile/**", "design/tokens.json", "tools/tokens/**", "shared/**", ".github/workflows/mobile.yml"]
   pull_request:

@@ -2,7 +2,7 @@ name: backend
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
     paths: ["backend/**", "shared/rdoc/**", "content/**", ".github/workflows/backend.yml"]
   pull_request:
     paths: ["backend/**", "shared/rdoc/**", "content/**", ".github/workflows/backend.yml"]

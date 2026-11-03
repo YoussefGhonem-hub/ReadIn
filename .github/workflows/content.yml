@@ -2,7 +2,7 @@ name: content
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
     paths: ["content/**", "shared/rdoc/**", ".github/workflows/content.yml"]
   pull_request:
     paths: ["content/**", "shared/rdoc/**", ".github/workflows/content.yml"]
