@@ -1,9 +1,18 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ReadIn.Domain.Engagement;
 
 namespace ReadIn.Application.Features.Articles;
 
 public sealed record AuthorDto(Guid Id, string DisplayName, string Username, string? AvatarUrl, bool IsVerified);
+
+/// <summary>Reactions per type (SPEC F10); the same shape as <c>/live/articles/{id}/reactions</c> (F27).</summary>
+public sealed record ReactionCountsDto(int Insightful, int Love, int Fire, int MindBlown)
+{
+    public static readonly ReactionCountsDto None = new(0, 0, 0, 0);
+
+    public int Total() => Insightful + Love + Fire + MindBlown;
+}
 
 public sealed record FieldRefDto(Guid Id, string Slug, string Name, string NameAr, string NameEn);
 
@@ -29,8 +38,19 @@ public record ArticleCardDto
     public bool IsAiAssisted { get; init; }
     public string? VersionBadge { get; init; }
     public DateTime? PublishedAt { get; init; }
+
+    /// <summary>All reactions; always the sum of <see cref="Reactions"/>.</summary>
     public int ReactionCount { get; init; }
+
+    public ReactionCountsDto Reactions { get; init; } = ReactionCountsDto.None;
     public int CommentCount { get; init; }
+    public int SaveCount { get; init; }
+
+    /// <summary>The viewer's reaction; null for guests. Loaded after the projection by <see cref="ArticleViewerStateReader"/>.</summary>
+    public ReactionType? MyReaction { get; init; }
+
+    /// <summary>The viewer saved it; false for guests.</summary>
+    public bool IsSaved { get; init; }
 
     /// <summary>1–10 images or one PDF (ADR 0011). Loaded after the projection by <see cref="ArticleAttachmentsReader"/>.</summary>
     public ArticleAttachmentsDto? Attachments { get; init; }
@@ -75,8 +95,10 @@ public sealed record ArticleDetailsDto : ArticleCardDto
     public IReadOnlyList<SourceDto> Sources { get; init; } = [];
     public ReviewerDto? ReviewedBy { get; init; }
     public DateTime? LastReviewedAt { get; init; }
-    public int SaveCount { get; init; }
     public int ReadCount { get; init; }
+
+    /// <summary>The viewer follows the author; false for guests and on your own articles.</summary>
+    public bool IsFollowingAuthor { get; init; }
 
     /// <summary>Raw RDoc from the projection; parsed into <see cref="Content"/> by the handler.</summary>
     [JsonIgnore]

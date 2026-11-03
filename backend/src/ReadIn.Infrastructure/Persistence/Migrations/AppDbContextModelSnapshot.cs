@@ -54,6 +54,12 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("FieldId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("FireCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InsightfulCount")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsAiAssisted")
                         .HasColumnType("bit");
 
@@ -62,6 +68,12 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("LastReviewedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("LoveCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MindBlownCount")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("datetime2");
@@ -393,6 +405,141 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasIndex("PermissionId");
 
                     b.ToTable("RolePermissions", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.Collection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)")
+                        .UseCollation("Arabic_100_CI_AI");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Collections", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.CollectionItem", b =>
+                {
+                    b.Property<Guid>("CollectionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CollectionId", "ArticleId");
+
+                    b.HasIndex("ArticleId");
+
+                    b.ToTable("CollectionItems", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.Reaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ReactedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId", "ReactedAt")
+                        .IsDescending(false, true);
+
+                    b.HasIndex("UserId", "ArticleId")
+                        .IsUnique();
+
+                    b.HasIndex("ArticleId", "Type", "ReactedAt")
+                        .IsDescending(false, false, true);
+
+                    b.ToTable("Reactions", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.SavedArticle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SavedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId");
+
+                    b.HasIndex("UserId", "ArticleId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "SavedAt")
+                        .IsDescending(false, true);
+
+                    b.ToTable("SavedArticles", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.UserFollow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("FolloweeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FollowerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FolloweeId", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.HasIndex("FollowerId", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.HasIndex("FollowerId", "FolloweeId")
+                        .IsUnique();
+
+                    b.ToTable("UserFollows", (string)null);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Identity.AuditLog", b =>
@@ -1515,6 +1662,83 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Engagement.Collection", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.CollectionItem", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Articles.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Engagement.Collection", null)
+                        .WithMany("Items")
+                        .HasForeignKey("CollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.Reaction", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Articles.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.SavedArticle", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Articles.Article", "Article")
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Article");
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.UserFollow", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", "Followee")
+                        .WithMany()
+                        .HasForeignKey("FolloweeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Users.User", "Follower")
+                        .WithMany()
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Followee");
+
+                    b.Navigation("Follower");
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Identity.PasswordResetToken", b =>
                 {
                     b.HasOne("ReadIn.Domain.Users.User", null)
@@ -1723,6 +1947,11 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("ReadIn.Domain.Authorization.Role", b =>
                 {
                     b.Navigation("Permissions");
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.Collection", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Learning.LearningPath", b =>

@@ -4,6 +4,7 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Common;
+using ReadIn.Domain.Engagement;
 using ReadIn.Domain.Identity;
 using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
@@ -46,12 +47,19 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<UserStats> UserStats => Set<UserStats>();
     public DbSet<LearningPath> LearningPaths => Set<LearningPath>();
 
+    public DbSet<Reaction> Reactions => Set<Reaction>();
+    public DbSet<SavedArticle> SavedArticles => Set<SavedArticle>();
+    public DbSet<Collection> Collections => Set<Collection>();
+    public DbSet<CollectionItem> CollectionItems => Set<CollectionItem>();
+    public DbSet<UserFollow> UserFollows => Set<UserFollow>();
+
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<SeedHistory> SeedHistory => Set<SeedHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        SqlFunctions.Map(modelBuilder);
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

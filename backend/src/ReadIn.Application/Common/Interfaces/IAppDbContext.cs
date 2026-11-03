@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
+using ReadIn.Domain.Engagement;
 using ReadIn.Domain.Identity;
 using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
@@ -37,6 +38,12 @@ public interface IAppDbContext
     DbSet<ReadingDay> ReadingDays { get; }
     DbSet<UserStats> UserStats { get; }
     DbSet<LearningPath> LearningPaths { get; }
+
+    DbSet<Reaction> Reactions { get; }
+    DbSet<SavedArticle> SavedArticles { get; }
+    DbSet<Collection> Collections { get; }
+    DbSet<CollectionItem> CollectionItems { get; }
+    DbSet<UserFollow> UserFollows { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

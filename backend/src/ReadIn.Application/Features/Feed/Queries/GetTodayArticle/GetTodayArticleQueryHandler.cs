@@ -1,11 +1,9 @@
 using Mapster;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Mapping;
 using ReadIn.Application.Features.Articles;
-using ReadIn.Application.Features.Uploads;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Reading;
@@ -17,9 +15,7 @@ internal sealed class GetTodayArticleQueryHandler(
     ICurrentUser currentUser,
     TypeAdapterConfig mapping,
     TimeProvider clock,
-    IFileStorage storage,
-    ArticleAttachmentsReader attachmentsReader,
-    IOptions<MediaOptions> mediaOptions)
+    ArticleCards cards)
     : IQueryHandler<GetTodayArticleQuery, Result<ArticleCardDto?>>
 {
     private const int MinMinutes = 4;
@@ -158,8 +154,7 @@ internal sealed class GetTodayArticleQueryHandler(
             .FirstOrDefaultAsync(ct);
         if (card is null) return null;
 
-        var attachments = await attachmentsReader.LoadAsync([card.Id], mediaOptions.Value.FeedDocumentPages, currentUser, ct);
-        return new[] { card.WithPublicUrls(storage) }.WithAttachments(attachments)[0];
+        return (await cards.CompleteAsync([card], ct))[0];
     }
 
     private static DateOnly LocalDate(DateTime utcNow, string timeZone)

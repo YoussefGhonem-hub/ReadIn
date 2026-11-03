@@ -97,7 +97,7 @@ public static class DependencyInjection
 
         services.AddSingleton<ContentRepository>();
 
-        // Seeding order: SPEC §18.2. Glossary terms (F21) and demo interactions (F10–F13) arrive with those features.
+        // Seeding order: SPEC §18.2. Glossary terms arrive with F21; comments join the demo interactions with F11.
         services.AddScoped<ISeeder, RolesAndPermissionsSeeder>();
         services.AddScoped<ISeeder, TaxonomySeeder>();
         services.AddScoped<ISeeder, SystemAccountsSeeder>();
@@ -107,6 +107,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, LearningPathsSeeder>();
         services.AddScoped<ISeeder, DemoMediaSeeder>();
         services.AddScoped<ISeeder, DemoReadingSeeder>();
+        services.AddScoped<ISeeder, DemoInteractionsSeeder>();
         services.AddScoped<SeedRunner>();
 
         services.AddHealthChecks().AddDbContextCheck<AppDbContext>("sql");

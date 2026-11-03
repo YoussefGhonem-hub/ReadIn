@@ -52,6 +52,12 @@ public static class DependencyInjection
         services.AddScoped<Features.Uploads.IMediaQuota, Features.Uploads.MediaQuota>();
         services.AddScoped<Features.Uploads.MediaFiles>();
         services.AddScoped<Features.Articles.ArticleAttachmentsReader>();
+        services.AddScoped<Features.Articles.ArticleViewerStateReader>();
+        services.AddScoped<Features.Articles.ArticleCards>();
+        services.AddScoped<Features.Articles.Counters.ArticleCounters>();
+        services.AddScoped<
+            IQueryPersonalizer<Features.Articles.Queries.GetArticleBySlug.GetArticleBySlugQuery, Domain.Common.Result<Features.Articles.ArticleDetailsDto>>,
+            Features.Articles.Queries.GetArticleBySlug.ArticleDetailsPersonalizer>();
 
         AddDomainEventHandlers(services);
         return services;

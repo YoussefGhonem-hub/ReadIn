@@ -165,6 +165,14 @@ public sealed record AttachmentCandidate(
     string? Caption,
     string? AltText);
 
+/// <summary>Reactions on one article per type (SPEC F10).</summary>
+public sealed record ReactionCounts(int Insightful, int Love, int Fire, int MindBlown)
+{
+    public static readonly ReactionCounts None = new(0, 0, 0, 0);
+
+    public int Total => Insightful + Love + Fire + MindBlown;
+}
+
 public sealed record ArticlePublishedDomainEvent(Guid ArticleId, Guid AuthorId, Guid FieldId, string Slug) : DomainEvent;
 
 public sealed record ArticleSubmittedDomainEvent(Guid ArticleId, Guid FieldId) : DomainEvent;

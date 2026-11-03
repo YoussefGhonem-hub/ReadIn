@@ -129,26 +129,4 @@ public sealed class RealtimeTests(ApiFactory api)
         public Task<Result<string>> IssueAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(
             Unavailable.ContainsKey(userId) ? Result.Failure<string>(RealtimeErrors.Unavailable) : Result.Success(TokenFor(userId)));
     }
-
-    /// <summary>Records the signals; the outbox calls it from its own scope.</summary>
-    internal sealed class RecordingRealtimePublisher : IRealtimePublisher
-    {
-        public ConcurrentQueue<DateTime> FeedSignals { get; } = new();
-
-        public Task PublishArticleCountersAsync(Guid articleId, ArticleLiveCounters counters, CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
-
-        public Task PublishArticleEventAsync(Guid articleId, ArticleLiveEvent liveEvent, CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
-
-        public Task PublishFeedAsync(DateTime latestPublishedAt, CancellationToken cancellationToken = default)
-        {
-            FeedSignals.Enqueue(latestPublishedAt);
-            return Task.CompletedTask;
-        }
-
-        public Task PublishUserNotificationsAsync(
-            Guid userId, int unreadNotifications, DateTime? lastNotificationAt, CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
-    }
 }

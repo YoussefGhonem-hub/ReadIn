@@ -65,7 +65,14 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public DateTime? ScheduledAt { get; private set; }
     public double QualityScore { get; private set; }
 
+    // Denormalized counters (SPEC §16.1), recomputed from SQL by the outbox handlers after each change (F27).
+
+    /// <summary>All reactions: always the sum of the four per-type counts below.</summary>
     public int ReactionCount { get; private set; }
+    public int InsightfulCount { get; private set; }
+    public int LoveCount { get; private set; }
+    public int FireCount { get; private set; }
+    public int MindBlownCount { get; private set; }
     public int CommentCount { get; private set; }
     public int SaveCount { get; private set; }
     public int ReadCount { get; private set; }
@@ -312,9 +319,17 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
 
     public void SetQualityScore(double score) => QualityScore = score;
 
-    public void ApplyCounters(int reactions, int comments, int saves, int reads)
+    /// <summary>
+    /// Sets the denormalized counters. The outbox handlers update them in SQL instead (one statement, no rowversion
+    /// round trip); this keeps the same invariant for code that works on a loaded article.
+    /// </summary>
+    public void ApplyCounters(ReactionCounts reactions, int comments, int saves, int reads)
     {
-        ReactionCount = reactions;
+        InsightfulCount = reactions.Insightful;
+        LoveCount = reactions.Love;
+        FireCount = reactions.Fire;
+        MindBlownCount = reactions.MindBlown;
+        ReactionCount = reactions.Total;
         CommentCount = comments;
         SaveCount = saves;
         ReadCount = reads;

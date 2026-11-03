@@ -43,11 +43,18 @@ public static class ErrorMessages
         ["user.interests.unknown"] = ("فيه مجالات أو مواضيع مش موجودة.", "Some fields or topics don't exist."),
         ["field.not_found"] = ("المجال مش موجود.", "Field not found."),
         ["topic.not_in_field"] = ("الموضوع مش تابع للمجال ده.", "The topic doesn't belong to this field."),
+        ["topic.not_found"] = ("الموضوع مش موجود.", "Topic not found."),
         ["article.not_found"] = ("المقال مش موجود.", "Article not found."),
         ["article.not_owner"] = ("التعديل للكاتب بس.", "Only the author can change this article."),
         ["article.content_invalid"] = ("محتوى المقال مش مظبوط.", "The article content is not valid."),
         ["article.sources_required"] = ("لازم تضيف مصدر واحد على الأقل.", "Add at least one source."),
         ["article.review_required"] = ("المقال لازم يتراجع قبل النشر.", "This article must be reviewed before publishing."),
+        // Reactions, saved articles and follows (F10, F12, F13)
+        ["reaction.invalid"] = ("الرياكشن ده مش موجود.", "This reaction doesn't exist."),
+        ["collection.not_found"] = ("المجموعة مش موجودة.", "Collection not found."),
+        ["collection.name_taken"] = ("عندك مجموعة بنفس الاسم بالفعل.", "You already have a collection with this name."),
+        ["collection.limit"] = ("وصلت لأقصى عدد مجموعات (50).", "You can have at most 50 collections."),
+        ["follow.self"] = ("مينفعش تتابع نفسك.", "You can't follow yourself."),
         // Media (ADR 0010, ADR 0011)
         ["media.purpose_invalid"] = ("نوع الرفع لازم يكون image أو avatar أو cover.", "Purpose must be image, avatar or cover."),
         ["media.file_required"] = ("اختار ملف ترفعه.", "Choose a file to upload."),

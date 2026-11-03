@@ -87,8 +87,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         // Seed from fixture content so tests never depend on which of the real articles exist (content/).
         builder.UseSetting("Content:RootPath", Path.Combine(AppContext.BaseDirectory, "fixtures", "content"));
         builder.ConfigureTestServices(services =>
-            services.Replace(ServiceDescriptor.Singleton<IExternalIdentityVerifier, FakeExternalIdentityVerifier>()));
+        {
+            services.Replace(ServiceDescriptor.Singleton<IExternalIdentityVerifier, FakeExternalIdentityVerifier>());
+            services.Replace(ServiceDescriptor.Singleton<IRealtimePublisher>(Realtime));
+        });
     }
+
+    /// <summary>What the outbox handlers published to the Realtime Database (F27).</summary>
+    public RecordingRealtimePublisher Realtime { get; } = new();
 
     /// <summary>A valid, unused mobile number in the fictional range.</summary>
     public static string NewPhoneNumber()

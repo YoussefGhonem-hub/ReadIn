@@ -218,6 +218,35 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
         return Result.Success();
     }
 
+    // ---- Following fields and topics (SPEC F12): one interest at a time ----
+
+    /// <summary>Idempotent: following a field that is already an interest changes nothing.</summary>
+    public void FollowField(Guid fieldId)
+    {
+        if (_interests.Any(i => i.FieldId == fieldId)) return;
+        _interests.Add(UserInterest.ForField(Id, fieldId));
+    }
+
+    public void FollowTopic(Guid topicId)
+    {
+        if (_interests.Any(i => i.TopicId == topicId)) return;
+        _interests.Add(UserInterest.ForTopic(Id, topicId));
+    }
+
+    /// <summary>Idempotent, but never leaves fewer than <see cref="MinInterests"/> interests (SPEC F02).</summary>
+    public Result UnfollowField(Guid fieldId) => RemoveInterest(_interests.FirstOrDefault(i => i.FieldId == fieldId));
+
+    public Result UnfollowTopic(Guid topicId) => RemoveInterest(_interests.FirstOrDefault(i => i.TopicId == topicId));
+
+    private Result RemoveInterest(UserInterest? interest)
+    {
+        if (interest is null) return Result.Success();
+        if (_interests.Count - 1 < MinInterests) return UserErrors.InterestsMinThree;
+
+        _interests.Remove(interest);
+        return Result.Success();
+    }
+
     public void RegisterDevice(string token, DevicePlatform platform, DateTime now)
     {
         var existing = _devices.FirstOrDefault(d => d.Token == token);

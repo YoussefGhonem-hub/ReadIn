@@ -35,8 +35,13 @@ public sealed class ArticleMappings : IRegister
                 s.Author.Id, s.Author.DisplayName, s.Author.Username, s.Author.AvatarUrl,
                 s.Author.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)))
             .Map(d => d.IsReviewed, s => s.ReviewStatus == ReviewStatus.Approved)
-            // Loaded after the projection by ArticleAttachmentsReader (absolute URLs, page limits).
-            .Ignore(d => d.Attachments!);
+            // The denormalized counters on Articles (F27); ReactionCount and SaveCount map by name.
+            .Map(d => d.Reactions, s => new ReactionCountsDto(s.InsightfulCount, s.LoveCount, s.FireCount, s.MindBlownCount))
+            // Loaded after the projection: attachments by ArticleAttachmentsReader (absolute URLs, page limits), the
+            // viewer's own state by ArticleViewerStateReader (signed-in viewers only).
+            .Ignore(d => d.Attachments!)
+            .Ignore(d => d.MyReaction!)
+            .Ignore(d => d.IsSaved);
 
         config.NewConfig<Article, ArticleDetailsDto>()
             .Inherits<Article, ArticleCardDto>()
@@ -59,6 +64,7 @@ public sealed class ArticleMappings : IRegister
             .Map(d => d.ReviewedBy, s => s.ReviewStatus == ReviewStatus.Approved && s.ReviewedBy != null
                 ? new ReviewerDto(s.ReviewedBy.DisplayName, s.ReviewedBy.Username)
                 : null)
-            .Ignore(d => d.Content);
+            .Ignore(d => d.Content)
+            .Ignore(d => d.IsFollowingAuthor);
     }
 }
