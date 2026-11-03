@@ -115,6 +115,23 @@ void main() {
     await subscription.cancel();
   });
 
+  test("the reader seeds an article's collections in order, except while a change is in flight", () async {
+    await cubit.load();
+    cubit.seedArticle('art-0', ['c-2', 'c-1']);
+    expect(cubit.state.collectionsOf('art-0').toList(), ['c-2', 'c-1']);
+
+    final answer = Completer<Result<void>>();
+    when(() => repository.addToCollection('c-3', 'art-0')).thenAnswer((_) => answer.future);
+    final adding = cubit.add('c-3', 'art-0');
+    cubit.seedArticle('art-0', ['c-2', 'c-1']); // a reload that started before the add
+    expect(cubit.state.collectionsOf('art-0').toList(), ['c-2', 'c-1', 'c-3'], reason: 'the optimistic add stays, last');
+
+    answer.complete(const Err(Failure(FailureCodes.networkOffline)));
+    await adding;
+    expect(cubit.state.collectionsOf('art-0').toList(), ['c-2', 'c-1'], reason: 'rolled back');
+    expect(byId('c-3').articleCount, 0);
+  });
+
   test('collection.not_found: the collection leaves the list', () async {
     await cubit.load();
     when(() => repository.addToCollection('c-3', 'art-0')).thenAnswer((_) async => const Err(Failure(FailureCodes.collectionNotFound)));

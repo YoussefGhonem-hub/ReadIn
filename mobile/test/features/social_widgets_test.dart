@@ -358,12 +358,17 @@ void main() {
   });
 
   group('reader (F04, F25, F27)', () {
-    Future<StreamController<LiveArticleCounts?>> pumpReader(WidgetTester tester, {bool offline = false}) async {
+    Future<StreamController<LiveArticleCounts?>> pumpReader(
+      WidgetTester tester, {
+      bool offline = false,
+      List<String> collectionIds = const [],
+    }) async {
       final article = ArticleDetails(
-        card: engagedCard(1, language: 'en'),
+        card: engagedCard(1, language: 'en', isSaved: collectionIds.isNotEmpty),
         availableLanguages: const ['en'],
         content: RDocDocument.fromJson(detailsJson(1, language: 'en')['content'] as Map<String, dynamic>),
         isFollowingAuthor: true,
+        collectionIds: collectionIds,
         isOfflineCopy: offline,
       );
       final articleCubit = MockArticleCubit();
@@ -400,9 +405,39 @@ void main() {
     });
 
     testWidgets('an offline copy says so and seeds nothing', (tester) async {
-      await pumpReader(tester, offline: true);
+      await pumpReader(tester, offline: true, collectionIds: const ['c-1']);
       expect(find.text('Offline copy, saved on this device'), findsOneWidget);
       expect(engagement.state.overlays, isEmpty);
+      expect(collections.state.membership, isEmpty);
+    });
+
+    testWidgets("add to collection opens with the article's collections ticked and keeps them in step", (tester) async {
+      // textContaining: in the English UI the Arabic name is wrapped in bidi isolates.
+      bool ticked(String name) => tester
+          .widget<CheckboxListTile>(find.ancestor(of: find.textContaining(name), matching: find.byType(CheckboxListTile)))
+          .value!;
+      await pumpReader(tester, collectionIds: const ['c-2', 'c-1']);
+
+      await tester.tap(find.byTooltip('Add to collection'));
+      await tester.pumpAndSettle();
+      expect(ticked('تحضير الإنترفيو'), isTrue);
+      expect(ticked('Weekend reads'), isTrue);
+      expect(ticked('AI agents'), isFalse);
+
+      // Taking it out is refused: the tick comes back and the sheet says why.
+      when(() => saved.removeFromCollection('c-2', 'art-1')).thenAnswer((_) async => const Err(Failure(FailureCodes.networkOffline)));
+      await tester.tap(find.text('Weekend reads'));
+      await tester.pumpAndSettle();
+      expect(ticked('Weekend reads'), isTrue);
+      expect(find.text("You're offline. Check your connection."), findsOneWidget);
+
+      // Putting it in: already saved, so no save request; the new collection goes last.
+      when(() => saved.addToCollection('c-3', 'art-1')).thenAnswer((_) async => const Ok(null));
+      await tester.tap(find.text('AI agents'));
+      await tester.pumpAndSettle();
+      expect(ticked('AI agents'), isTrue);
+      expect(collections.state.collectionsOf('art-1').toList(), ['c-2', 'c-1', 'c-3']);
+      verifyNever(() => saved.save(any()));
     });
   });
 

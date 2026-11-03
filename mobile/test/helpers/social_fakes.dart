@@ -92,7 +92,13 @@ class FakeArticleOfflineStore implements ArticleOfflineStore {
 }
 
 /// `ArticleDetailsDto` JSON of [sampleCard] `i`, the way the API sends it.
-Map<String, dynamic> detailsJson(int i, {String language = 'ar-EG', bool isSaved = false, bool withWave1 = true}) {
+Map<String, dynamic> detailsJson(
+  int i, {
+  String language = 'ar-EG',
+  bool isSaved = false,
+  bool withWave1 = true,
+  List<String> collectionIds = const [],
+}) {
   final card = sampleCard(i, language: language);
   return {
     'id': card.id,
@@ -119,6 +125,7 @@ Map<String, dynamic> detailsJson(int i, {String language = 'ar-EG', bool isSaved
       'myReaction': 'love',
       'isSaved': isSaved,
       'isFollowingAuthor': true,
+      'collectionIds': collectionIds,
     },
   };
 }

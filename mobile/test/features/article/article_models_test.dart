@@ -27,6 +27,12 @@ void main() {
       expect(details.saveCount, 7);
     });
 
+    test("the viewer's collections come in the API order; none when absent", () {
+      final details = ArticleDetailsModel.fromJson(detailsJson(1, isSaved: true, collectionIds: ['c-2', 'c-1'])).toEntity();
+      expect(details.collectionIds, ['c-2', 'c-1']);
+      expect(ArticleDetailsModel.fromJson(detailsJson(1, withWave1: false)).toEntity().collectionIds, isEmpty);
+    });
+
     test('an unknown reaction type is no reaction', () {
       final json = {...detailsJson(1), 'myReaction': 'clap'};
       expect(ArticleDetailsModel.fromJson(json).toCard().myReaction, isNull);

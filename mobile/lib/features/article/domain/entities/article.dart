@@ -184,6 +184,7 @@ class ArticleDetails extends Equatable {
     this.lastReviewedAt,
     this.readCount = 0,
     this.isFollowingAuthor = false,
+    this.collectionIds = const [],
     this.isOfflineCopy = false,
   });
 
@@ -202,6 +203,10 @@ class ArticleDetails extends Equatable {
 
   /// The viewer follows the author (F12); false for guests and on your own articles.
   final bool isFollowingAuthor;
+
+  /// The viewer's collections that hold this article, oldest addition first (F13); empty for guests and for
+  /// articles that aren't saved.
+  final List<String> collectionIds;
 
   /// Served from the copy kept on this device for a saved article, because the API was unreachable (F13, F25).
   final bool isOfflineCopy;
@@ -224,6 +229,7 @@ class ArticleDetails extends Equatable {
         lastReviewedAt,
         readCount,
         isFollowingAuthor,
+        collectionIds,
         isOfflineCopy,
       ];
 }

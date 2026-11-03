@@ -100,12 +100,21 @@ class CollectionsCubit extends Cubit<CollectionsState> {
   }
 
   /// What the Saved list says about its articles.
-  void seedMembership(Iterable<SavedArticle> saved) {
+  void seedMembership(Iterable<SavedArticle> saved) =>
+      _seed({for (final item in saved) item.article.id: item.collectionIds});
+
+  /// What the reader loaded (`ArticleDetailsDto.collectionIds`), so "add to collection" opens with them ticked.
+  void seedArticle(String articleId, List<String> collectionIds) => _seed({articleId: collectionIds});
+
+  /// Fresh API values win, except for an article with an add or remove in flight (its optimistic state stays).
+  /// Sets keep insertion order, so the API's oldest-first order holds and new additions go last.
+  void _seed(Map<String, List<String>> byArticle) {
     if (isClosed) return;
     final next = {...state.membership};
-    for (final item in saved) {
-      next[item.article.id] = {...item.collectionIds};
-    }
+    byArticle.forEach((articleId, collectionIds) {
+      if (state.busy.any((key) => key.endsWith('|$articleId'))) return;
+      next[articleId] = {...collectionIds};
+    });
     emit(state.copyWith(membership: next));
   }
 

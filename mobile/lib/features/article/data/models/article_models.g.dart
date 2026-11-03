@@ -207,6 +207,11 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
       saveCount: (json['saveCount'] as num?)?.toInt() ?? 0,
       readCount: (json['readCount'] as num?)?.toInt() ?? 0,
       isFollowingAuthor: json['isFollowingAuthor'] as bool? ?? false,
+      collectionIds:
+          (json['collectionIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const <String>[],
     );
 
 Map<String, dynamic> _$ArticleDetailsModelToJson(
@@ -242,4 +247,5 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'saveCount': instance.saveCount,
   'readCount': instance.readCount,
   'isFollowingAuthor': instance.isFollowingAuthor,
+  'collectionIds': instance.collectionIds,
 };

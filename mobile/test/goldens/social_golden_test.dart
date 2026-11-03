@@ -327,6 +327,7 @@ void main() {
           BlocProvider<ArticleCubit>.value(value: articleCubit),
           BlocProvider<ArticleLiveCubit>.value(value: liveCubit),
           BlocProvider<SettingsCubit>.value(value: settings),
+          BlocProvider<CollectionsCubit>.value(value: collections(const CollectionsState())),
         ],
       );
       await expectLater(find.byType(ArticleView), matchesGoldenFile('goldens/reader_social_${variant.name}.png'));

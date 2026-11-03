@@ -177,6 +177,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     @Default(0) int saveCount,
     @Default(0) int readCount,
     @Default(false) bool isFollowingAuthor,
+    @Default(<String>[]) List<String> collectionIds,
   }) = _ArticleDetailsModel;
 
   factory ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
@@ -218,6 +219,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         lastReviewedAt: lastReviewedAt,
         readCount: readCount,
         isFollowingAuthor: isFollowingAuthor,
+        collectionIds: collectionIds,
         isOfflineCopy: offline,
       );
 }

@@ -16,6 +16,7 @@ import '../../../../shared/widgets/state_views.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../reading/presentation/tracking/reading_tracking.dart';
+import '../../../saved/presentation/cubit/collections_cubit.dart';
 import '../../../settings/domain/entities/app_settings.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/entities/article.dart';
@@ -45,8 +46,8 @@ class ArticlePage extends StatelessWidget {
   }
 }
 
-/// The reader once its cubits are provided ([ArticleCubit], [ArticleLiveCubit]; [EngagementCubit] and
-/// [FollowsCubit] come from the app).
+/// The reader once its cubits are provided ([ArticleCubit], [ArticleLiveCubit]; [EngagementCubit],
+/// [FollowsCubit] and [CollectionsCubit] come from the app).
 class ArticleView extends StatefulWidget {
   const ArticleView({super.key});
 
@@ -76,12 +77,14 @@ class _ArticleViewState extends State<ArticleView> {
     _progress.value = max <= 0 ? 1 : (position.pixels / max).clamp(0, 1);
   }
 
-  /// A loaded article is the newest state of its counters and of the author follow; then live counters follow it.
-  /// A device copy (offline) is older than anything the app knows, so it seeds nothing.
+  /// A loaded article is the newest state of its counters, the author follow and its collections ("add to
+  /// collection" opens with them ticked); then live counters follow it. A device copy (offline) is older than
+  /// anything the app knows, so it seeds nothing.
   void _onArticle(ArticleDetails article) {
     if (!article.isOfflineCopy) {
       context.read<EngagementCubit>().seed([article.card]);
       context.read<FollowsCubit>().seed({article.card.author.id: article.isFollowingAuthor});
+      context.read<CollectionsCubit>().seedArticle(article.card.id, article.collectionIds);
     }
     context.read<ArticleLiveCubit>().watch(article.card.id);
   }
