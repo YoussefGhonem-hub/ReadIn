@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddSingleton<IRecoveryPinHasher, PepperedPinHasher>();
         services.AddSingleton<IAttemptThrottle, MemoryAttemptThrottle>();
+        services.AddSingleton<IRealtimePublisher, Realtime.NullRealtimePublisher>();
         services.Configure<ExternalAuthOptions>(configuration.GetSection(ExternalAuthOptions.Section));
         services.AddSingleton<IExternalIdentityVerifier, OidcExternalIdentityVerifier>();
 
