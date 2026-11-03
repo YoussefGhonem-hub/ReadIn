@@ -130,6 +130,41 @@ public sealed class ArticleRevision
     public DateTime CreatedAt { get; private set; }
 }
 
+/// <summary>A media asset shown with the article: one of 1–10 images, or its single PDF document (ADR 0011).</summary>
+public sealed class ArticleAttachment
+{
+    private ArticleAttachment() { } // EF
+
+    internal ArticleAttachment(Guid articleId, Guid mediaAssetId, int order, string? caption, string? altText)
+    {
+        ArticleId = articleId;
+        MediaAssetId = mediaAssetId;
+        Order = order;
+        Caption = caption;
+        AltText = altText;
+    }
+
+    public Guid ArticleId { get; private set; }
+    public Guid MediaAssetId { get; private set; }
+    public int Order { get; private set; }
+    public string? Caption { get; private set; }
+
+    /// <summary>Required for images; documents are labelled by their title.</summary>
+    public string? AltText { get; private set; }
+
+    public Media.MediaAsset MediaAsset { get; private set; } = default!;
+}
+
+/// <summary>What <see cref="Article.SetAttachments"/> needs to know about each requested asset.</summary>
+public sealed record AttachmentCandidate(
+    Guid MediaAssetId,
+    Media.MediaKind Kind,
+    Media.MediaStatus Status,
+    Guid OwnerId,
+    int Order,
+    string? Caption,
+    string? AltText);
+
 public sealed record ArticlePublishedDomainEvent(Guid ArticleId, Guid AuthorId, Guid FieldId, string Slug) : DomainEvent;
 
 public sealed record ArticleSubmittedDomainEvent(Guid ArticleId, Guid FieldId) : DomainEvent;

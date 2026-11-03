@@ -1,26 +1,30 @@
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Domain.Common;
+using ReadIn.Infrastructure.Media;
 using SkiaSharp;
 
 namespace ReadIn.Infrastructure.Storage;
 
 /// <summary>
-/// SkiaSharp implementation of <see cref="IImageProcessor"/> (ADR 0010). The header is read before any pixel is
-/// decoded, so oversized images are rejected cheaply. Output is encoded from pixels only, so EXIF, XMP and ICC
-/// metadata never reach the stored file; EXIF orientation is applied first so photos stay upright.
+/// SkiaSharp implementation of <see cref="IImageProcessor"/> (ADR 0010, ADR 0011). The header is read before any pixel
+/// is decoded, so oversized images are rejected cheaply. Output is encoded from pixels only, so EXIF, XMP, GPS and ICC
+/// metadata never reach the stored file; EXIF orientation is applied first so photos stay upright. HEIC is decoded by
+/// <see cref="HeifDecoder"/> (Skia has no HEIF codec on servers) and then follows the same path.
 /// </summary>
 internal sealed class SkiaImageProcessor : IImageProcessor
 {
-    public const int WebpQuality = 80;
+    public const int WebpQuality = 78;
 
     private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.Linear);
 
     // An 8000 × 8000 decode needs 256 MB; cap how many run at once.
     private static readonly SemaphoreSlim Gate = new(Math.Max(2, Environment.ProcessorCount / 2));
 
-    public Result<IReadOnlyList<ProcessedImage>> Process(Stream content, ImageFormat format, UploadPurpose purpose)
+    public Result<ProcessedImageSet> Process(Stream content, ImageFormat format, UploadPurpose purpose)
     {
+        if (format == ImageFormat.Heic) return ProcessHeif(content, purpose);
+
         using var data = SKData.Create(content);
         using var codec = data is null ? null : SKCodec.Create(data);
         if (codec is null || codec.EncodedFormat != ToSkia(format)) return UploadErrors.InvalidImage;
@@ -35,13 +39,56 @@ internal sealed class SkiaImageProcessor : IImageProcessor
             using var upright = DecodeUpright(codec, purpose.Sizes[^1], purpose.Square);
             if (upright is null) return UploadErrors.InvalidImage;
 
-            var images = purpose.Sizes.Select(size => Encode(upright, size, purpose.Square)).ToList();
-            return Result.Success<IReadOnlyList<ProcessedImage>>(images);
+            var swapsAxes = codec.EncodedOrigin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom;
+            var (width, height) = swapsAxes ? (info.Height, info.Width) : (info.Width, info.Height);
+            return EncodeAll(upright, purpose, width, height);
         }
         finally
         {
             Gate.Release();
         }
+    }
+
+    private static Result<ProcessedImageSet> ProcessHeif(Stream content, UploadPurpose purpose)
+    {
+        using var buffer = new MemoryStream();
+        content.CopyTo(buffer);
+        var data = buffer.ToArray();
+
+        if (HeifDecoder.ReadSize(data) is not { } stored || stored.Width <= 0 || stored.Height <= 0) return UploadErrors.InvalidImage;
+        if (stored.Width > UploadLimits.MaxDimension || stored.Height > UploadLimits.MaxDimension) return UploadErrors.DimensionsTooLarge;
+
+        Gate.Wait();
+        try
+        {
+            using var bitmap = HeifDecoder.Decode(data);
+            if (bitmap is null) return UploadErrors.InvalidImage;
+
+            // Redrawn without a color space, like the Skia path, so no ICC profile is written.
+            using var surface = SKSurface.Create(new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
+            if (surface is null) return UploadErrors.InvalidImage;
+            using (var image = SKImage.FromBitmap(bitmap)) surface.Canvas.DrawImage(image, 0, 0, new SKSamplingOptions(SKFilterMode.Nearest), paint: null);
+            using var upright = surface.Snapshot();
+            return EncodeAll(upright, purpose, upright.Width, upright.Height);
+        }
+        finally
+        {
+            Gate.Release();
+        }
+    }
+
+    /// <summary>Every width of <see cref="UploadPurpose.WidthsFor"/> plus the BlurHash of the (cropped) image.</summary>
+    private static ProcessedImageSet EncodeAll(SKImage upright, UploadPurpose purpose, int originalWidth, int originalHeight)
+    {
+        var measure = purpose.Square ? Math.Min(upright.Width, upright.Height) : upright.Width;
+        var images = purpose.WidthsFor(measure).Select(size => Encode(upright, size, purpose.Square)).ToList();
+
+        using var placeholder = SKBitmap.Decode(images[0].Content);
+        var blurHash = BlurHashEncoder.Encode(placeholder);
+
+        return purpose.Square
+            ? new ProcessedImageSet(Math.Min(originalWidth, originalHeight), Math.Min(originalWidth, originalHeight), blurHash, images)
+            : new ProcessedImageSet(originalWidth, originalHeight, blurHash, images);
     }
 
     /// <summary>

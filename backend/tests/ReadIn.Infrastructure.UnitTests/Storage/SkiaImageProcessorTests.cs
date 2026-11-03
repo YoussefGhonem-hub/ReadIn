@@ -12,7 +12,10 @@ public sealed class SkiaImageProcessorTests
 
     private readonly SkiaImageProcessor _processor = new();
 
-    private IReadOnlyList<ProcessedImage> Process(byte[] bytes, ImageFormat format, UploadPurpose purpose)
+    private IReadOnlyList<ProcessedImage> Process(byte[] bytes, ImageFormat format, UploadPurpose purpose) =>
+        ProcessSet(bytes, format, purpose).Variants;
+
+    private ProcessedImageSet ProcessSet(byte[] bytes, ImageFormat format, UploadPurpose purpose)
     {
         var result = _processor.Process(new MemoryStream(bytes), format, purpose);
         result.IsSuccess.Should().BeTrue(result.Error?.Code);
@@ -27,39 +30,40 @@ public sealed class SkiaImageProcessorTests
     }
 
     [Fact]
-    public void Avatars_are_center_cropped_to_256_and_512_squares()
+    public void Avatars_are_center_cropped_to_64_128_256_and_512_squares()
     {
         var images = Process(TestImages.Encode(1000, 600, SKEncodedImageFormat.Jpeg), ImageFormat.Jpeg, UploadPurpose.Avatar);
 
-        images.Select(i => (i.Size, i.Width, i.Height)).Should().Equal((256, 256, 256), (512, 512, 512));
-        images.Select(DecodedSize).Should().Equal(new SKSizeI(256, 256), new SKSizeI(512, 512));
+        images.Select(i => (i.Size, i.Width, i.Height)).Should().Equal((64, 64, 64), (128, 128, 128), (256, 256, 256), (512, 512, 512));
+        images.Select(DecodedSize).Should().Equal(new SKSizeI(64, 64), new SKSizeI(128, 128), new SKSizeI(256, 256), new SKSizeI(512, 512));
     }
 
     [Fact]
-    public void Covers_keep_their_aspect_ratio_at_1200_wide()
+    public void Covers_keep_their_aspect_ratio_at_400_800_and_1200_wide()
     {
-        var image = Process(TestImages.Encode(3000, 1000, SKEncodedImageFormat.Png), ImageFormat.Png, UploadPurpose.Cover).Single();
+        var images = Process(TestImages.Encode(3000, 1000, SKEncodedImageFormat.Png), ImageFormat.Png, UploadPurpose.Cover);
 
-        (image.Size, image.Width, image.Height).Should().Be((1200, 1200, 400));
-        DecodedSize(image).Should().Be(new SKSizeI(1200, 400));
+        images.Select(i => (i.Size, i.Width, i.Height)).Should().Equal((400, 400, 133), (800, 800, 267), (1200, 1200, 400));
+        DecodedSize(images[^1]).Should().Be(new SKSizeI(1200, 400));
     }
 
     [Fact]
-    public void Article_images_are_limited_to_1600_wide()
+    public void Post_images_get_320_640_1080_and_1600_wide_variants()
     {
-        var image = Process(TestImages.Encode(4000, 3000, SKEncodedImageFormat.Webp), ImageFormat.Webp, UploadPurpose.ArticleImage).Single();
+        var set = ProcessSet(TestImages.Encode(4000, 3000, SKEncodedImageFormat.Webp), ImageFormat.Webp, UploadPurpose.ArticleImage);
 
-        (image.Width, image.Height).Should().Be((1600, 1200));
+        set.Variants.Select(i => (i.Width, i.Height)).Should().Equal((320, 240), (640, 480), (1080, 810), (1600, 1200));
+        (set.Width, set.Height).Should().Be((4000, 3000), "the original size is reported for the aspect ratio");
     }
 
     [Fact]
     public void Small_images_are_never_upscaled()
     {
-        var article = Process(TestImages.Encode(800, 600, SKEncodedImageFormat.Png), ImageFormat.Png, UploadPurpose.ArticleImage).Single();
+        var article = Process(TestImages.Encode(800, 600, SKEncodedImageFormat.Png), ImageFormat.Png, UploadPurpose.ArticleImage);
         var avatar = Process(TestImages.Encode(300, 200, SKEncodedImageFormat.Png), ImageFormat.Png, UploadPurpose.Avatar);
 
-        (article.Size, article.Width, article.Height).Should().Be((1600, 800, 600), "the bucket is a maximum");
-        avatar.Select(i => (i.Width, i.Height)).Should().Equal((200, 200), (200, 200));
+        article.Select(i => (i.Size, i.Width, i.Height)).Should().Equal([(320, 320, 240), (640, 640, 480), (800, 800, 600)], "800 px is the largest variant, named by its real width");
+        avatar.Select(i => (i.Width, i.Height)).Should().Equal((64, 64), (128, 128), (200, 200));
     }
 
     [Fact]

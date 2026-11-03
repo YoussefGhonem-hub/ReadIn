@@ -141,6 +141,31 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("Articles", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Articles.ArticleAttachment", b =>
+                {
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MediaAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AltText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Caption")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.HasKey("ArticleId", "MediaAssetId");
+
+                    b.HasIndex("MediaAssetId")
+                        .IsUnique();
+
+                    b.ToTable("ArticleAttachments", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Articles.ArticleRevision", b =>
                 {
                     b.Property<Guid>("Id")
@@ -365,6 +390,133 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasIndex("PermissionId");
 
                     b.ToTable("RolePermissions", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Media.MediaAsset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("AllowDownload")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BlurHash")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExtractedText")
+                        .HasColumnType("nvarchar(max)")
+                        .UseCollation("Arabic_100_CI_AI");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("OriginalPath")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<long>("OriginalSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("PageCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<long>("StoredBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)")
+                        .UseCollation("Arabic_100_CI_AI");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Variants")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("OwnerId", "CreatedAt");
+
+                    b.ToTable("MediaAssets", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_MediaAssets_Variants_IsJson", "ISJSON([Variants]) = 1");
+                        });
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Media.MediaAssetPage", b =>
+                {
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("PageNo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BlurHash")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<long>("Bytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ThumbPath")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("ViewPath")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("int");
+
+                    b.HasKey("AssetId", "PageNo");
+
+                    b.ToTable("MediaAssetPages", (string)null);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Reading.DailyPick", b =>
@@ -871,6 +1023,23 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Navigation("Topic");
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Articles.ArticleAttachment", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Articles.Article", null)
+                        .WithMany("Attachments")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Media.MediaAsset", "MediaAsset")
+                        .WithMany()
+                        .HasForeignKey("MediaAssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MediaAsset");
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Articles.ArticleRevision", b =>
                 {
                     b.HasOne("ReadIn.Domain.Articles.Article", null)
@@ -932,6 +1101,24 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasOne("ReadIn.Domain.Authorization.Role", null)
                         .WithMany("Permissions")
                         .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Media.MediaAsset", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Media.MediaAssetPage", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Media.MediaAsset", null)
+                        .WithMany("Pages")
+                        .HasForeignKey("AssetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -1035,6 +1222,8 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("ReadIn.Domain.Articles.Article", b =>
                 {
+                    b.Navigation("Attachments");
+
                     b.Navigation("Revisions");
 
                     b.Navigation("Sources");
@@ -1047,6 +1236,11 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("ReadIn.Domain.Authorization.Role", b =>
                 {
                     b.Navigation("Permissions");
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Media.MediaAsset", b =>
+                {
+                    b.Navigation("Pages");
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Taxonomy.Field", b =>

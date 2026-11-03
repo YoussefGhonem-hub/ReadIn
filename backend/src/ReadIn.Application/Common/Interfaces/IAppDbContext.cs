@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
+using ReadIn.Domain.Media;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
@@ -20,6 +21,9 @@ public interface IAppDbContext
 
     DbSet<Article> Articles { get; }
     DbSet<ArticleTranslation> ArticleTranslations { get; }
+    DbSet<ArticleAttachment> ArticleAttachments { get; }
+
+    DbSet<MediaAsset> MediaAssets { get; }
 
     DbSet<ReadingProgress> ReadingProgress { get; }
     DbSet<DailyPick> DailyPicks { get; }

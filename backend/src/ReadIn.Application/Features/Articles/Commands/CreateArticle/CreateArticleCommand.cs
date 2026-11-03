@@ -21,4 +21,7 @@ public sealed record CreateArticleCommand(
     IReadOnlyList<SourceInput>? Sources,
     string? CoverUrl,
     string? VersionBadge,
-    bool IsAiAssisted) : ICommand<Result<Guid>>;
+    bool IsAiAssisted) : ICommand<Result<CreatedArticle>>;
+
+/// <summary>The new draft: its id for further edits and its slug for the reader URL.</summary>
+public sealed record CreatedArticle(Guid Id, string Slug);

@@ -1,18 +1,23 @@
 using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ReadIn.Application.Common.Uploads;
+using ReadIn.Infrastructure.Persistence;
 using ReadIn.Infrastructure.Storage;
 
 namespace ReadIn.Infrastructure.Jobs;
 
 /// <summary>
-/// Daily: deletes uploads that are older than <see cref="UploadLimits.OrphanGracePeriod"/> and not referenced by any
-/// user, article, draft or revision (SPEC §24, ADR 0010). Catches abandoned uploads and failed deletes. Only files
-/// named <c>{id}_{size}.webp</c> in a known purpose folder are touched, plus stale <c>.tmp</c> leftovers.
+/// Daily: first deletes unused MediaAssets rows with their files, then uploads that are older than
+/// <see cref="UploadLimits.OrphanGracePeriod"/> and not referenced by any user, article, draft, revision or media asset
+/// (SPEC §24, ADR 0010, ADR 0011). Catches abandoned uploads and failed deletes. Only files named
+/// <c>{id}_{size}.webp</c> in a known purpose folder or inside a <c>documents/…/{id}/</c> folder are touched, plus stale
+/// <c>.tmp</c> leftovers.
 /// </summary>
 public sealed partial class OrphanedUploadsCleanupJob(
     WwwrootFileStorage storage,
     UploadReferences references,
+    AppDbContext db,
     TimeProvider clock,
     ILogger<OrphanedUploadsCleanupJob> logger)
 {
@@ -21,6 +26,8 @@ public sealed partial class OrphanedUploadsCleanupJob(
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {
         var cutoff = clock.GetUtcNow().UtcDateTime - UploadLimits.OrphanGracePeriod;
+        await DeleteUnusedMediaAsync(cutoff, cancellationToken);
+
         var stale = storage.EnumerateFiles().Where(f => f.LastWriteUtc < cutoff).ToList();
         if (stale.Count == 0) return 0;
 
@@ -53,14 +60,52 @@ public sealed partial class OrphanedUploadsCleanupJob(
         return deleted;
     }
 
-    /// <summary>The upload id of <c>/uploads/{known folder}/…/{id}_{size}.webp</c>; null for every other file.</summary>
+    /// <summary>
+    /// ADR 0011: MediaAssets rows older than the grace period that nothing uses (no article attachment, and for images
+    /// no avatar, cover or RDoc reference either) are deleted with all their files and pages. This also catches
+    /// documents whose processing failed and uploads abandoned in the composer.
+    /// </summary>
+    private async Task DeleteUnusedMediaAsync(DateTime cutoff, CancellationToken cancellationToken)
+    {
+        var candidates = await db.MediaAssets.Include(a => a.Pages)
+            .Where(a => a.CreatedAt < cutoff && !db.ArticleAttachments.Any(x => x.MediaAssetId == a.Id))
+            .OrderBy(a => a.CreatedAt)
+            .Take(500)
+            .ToListAsync(cancellationToken);
+
+        var deleted = 0;
+        foreach (var asset in candidates)
+        {
+            if (UploadPath.TryParse(asset.OriginalPath, out var image) && await references.IsReferencedAsync(image.Id, cancellationToken))
+                continue;
+
+            var files = asset.StoredPaths().ToList();
+            db.MediaAssets.Remove(asset);
+            await db.SaveChangesAsync(cancellationToken);
+            foreach (var file in files)
+                await storage.DeleteAsync(file, cancellationToken);
+            deleted++;
+        }
+
+        if (deleted > 0) LogMediaDeleted(logger, deleted);
+    }
+
+    /// <summary>
+    /// The upload id of <c>/uploads/{known folder}/…/{id}_{size}.webp</c> or of any file of
+    /// <c>/uploads/documents/{yyyy}/{MM}/{id}/…</c>; null for every other file.
+    /// </summary>
     private static string? UploadIdOf(string relativePath)
     {
+        if (DocumentPath.TryParse(relativePath, out var document)) return document.Id;
+
         var segments = relativePath.Split('/'); // "", "uploads", folder, ..., file name
         return segments.Length > 3 && UploadPurpose.FromFolder(segments[2]) is not null
             ? UploadPath.IdFromFileName(segments[^1])
             : null;
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Orphaned uploads cleanup deleted {Count} unused media assets")]
+    private static partial void LogMediaDeleted(ILogger logger, int count);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Orphaned uploads cleanup deleted {Count} files")]
     private static partial void LogDeleted(ILogger logger, int count);

@@ -9,6 +9,7 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Infrastructure.Content;
 using ReadIn.Infrastructure.Identity;
 using ReadIn.Infrastructure.Jobs;
+using ReadIn.Infrastructure.Media;
 using ReadIn.Infrastructure.Persistence;
 using ReadIn.Infrastructure.Persistence.Interceptors;
 using ReadIn.Infrastructure.Persistence.Outbox;
@@ -34,6 +35,7 @@ public static class DependencyInjection
         services.AddSingleton<WwwrootFileStorage>();
         services.AddSingleton<IFileStorage>(sp => sp.GetRequiredService<WwwrootFileStorage>());
         services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
+        services.AddMedia(configuration, IsHangfireEnabled(configuration));
 
         var connectionString = configuration.GetConnectionString(ConnectionStringName)
             ?? throw new InvalidOperationException($"Connection string '{ConnectionStringName}' is missing.");
@@ -81,6 +83,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, SystemAccountsSeeder>();
         services.AddScoped<ISeeder, DemoUsersSeeder>();
         services.AddScoped<ISeeder, ArticlesSeeder>();
+        services.AddScoped<ISeeder, DemoMediaSeeder>();
         services.AddScoped<SeedRunner>();
 
         services.AddHealthChecks().AddDbContextCheck<AppDbContext>("sql");

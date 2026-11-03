@@ -4,6 +4,7 @@ using ReadIn.Application.Common.Behaviors;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
+using ReadIn.Application.Features.Uploads;
 using ReadIn.Application.Features.Uploads.Commands.UploadImage;
 using ReadIn.Domain.Common;
 
@@ -15,6 +16,8 @@ public sealed class ImageSignatureTests
     [InlineData(new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0, 0x10, (byte)'J', (byte)'F', (byte)'I', (byte)'F', 0, 1 }, ImageFormat.Jpeg)]
     [InlineData(new byte[] { 0x89, (byte)'P', (byte)'N', (byte)'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0x0D }, ImageFormat.Png)]
     [InlineData(new byte[] { (byte)'R', (byte)'I', (byte)'F', (byte)'F', 1, 2, 3, 4, (byte)'W', (byte)'E', (byte)'B', (byte)'P' }, ImageFormat.Webp)]
+    [InlineData(new byte[] { 0, 0, 0, 0x18, (byte)'f', (byte)'t', (byte)'y', (byte)'p', (byte)'h', (byte)'e', (byte)'i', (byte)'c' }, ImageFormat.Heic)]
+    [InlineData(new byte[] { 0, 0, 0, 0x18, (byte)'f', (byte)'t', (byte)'y', (byte)'p', (byte)'m', (byte)'i', (byte)'f', (byte)'1' }, ImageFormat.Heic)]
     public void Supported_formats_are_recognized_by_their_magic_bytes(byte[] header, ImageFormat expected) =>
         ImageSignatures.Detect(header).Should().Be(expected);
 
@@ -49,6 +52,8 @@ public sealed class UploadPathTests
 
         path!.Purpose.Should().Be(UploadPurpose.Avatar);
         path.Variants.Select(v => v.Value).Should().Equal(
+            $"/uploads/avatars/2026/01/{Id}_64.webp",
+            $"/uploads/avatars/2026/01/{Id}_128.webp",
             $"/uploads/avatars/2026/01/{Id}_256.webp",
             $"/uploads/avatars/2026/01/{Id}_512.webp");
     }
@@ -71,7 +76,7 @@ public sealed class UploadPathTests
     public void Ids_are_found_in_paths_urls_and_rdoc_json()
     {
         var other = new string('f', 32);
-        var json = $$"""{"blocks":[{"type":"image","src":"rdoc-asset://uploads/articles/2026/11/{{Id}}_1600.webp"},{"type":"image","src":"https://api.readin.app/uploads/covers/2026/11/{{other}}_1200.webp"}]}""";
+        var json = $$"""{"blocks":[{"type":"image","src":"rdoc-asset://uploads/images/2026/11/{{Id}}_1600.webp"},{"type":"image","src":"https://api.readin.app/uploads/covers/2026/11/{{other}}_1200.webp"}]}""";
 
         UploadPath.FindIds(json).Should().BeEquivalentTo(Id, other);
         UploadPath.IdFromFileName($"{Id}_256.webp").Should().Be(Id);
@@ -83,7 +88,7 @@ public sealed class UploadPathTests
 public sealed class UploadUrlTests
 {
     private const string Base = "https://api.readin.app";
-    private const string Path = "/uploads/articles/2026/11/0123456789abcdef0123456789abcdef_1600.webp";
+    private const string Path = "/uploads/images/2026/11/0123456789abcdef0123456789abcdef_1600.webp";
 
     private static IFileStorage Storage()
     {
@@ -145,22 +150,27 @@ public sealed class UploadImageCommandHandlerTests
     private static readonly CancellationToken Ct = TestContext.Current.CancellationToken;
     private static readonly byte[] JpegHeader = [0xFF, 0xD8, 0xFF, 0xE0, 0, 0x10, (byte)'J', (byte)'F', (byte)'I', (byte)'F', 0, 1];
 
+    private readonly IAppDbContext _db = Substitute.For<IAppDbContext>();
     private readonly IFileStorage _storage = Substitute.For<IFileStorage>();
     private readonly IImageProcessor _images = Substitute.For<IImageProcessor>();
+    private readonly IMediaQuota _quota = Substitute.For<IMediaQuota>();
 
     public UploadImageCommandHandlerTests()
     {
         _storage.GetPublicUrl(Arg.Any<string>()).Returns(call => "https://api.readin.app" + call.Arg<string>());
         _images.Process(Arg.Any<Stream>(), Arg.Any<ImageFormat>(), Arg.Any<UploadPurpose>())
-            .Returns(call => Result.Success<IReadOnlyList<ProcessedImage>>(
-                [.. call.Arg<UploadPurpose>().Sizes.Select(size => new ProcessedImage(size, size, size, [1]))]));
+            .Returns(call => Result.Success(new ProcessedImageSet(4000, 3000, "LEHV6nWB2yk8",
+                [.. call.Arg<UploadPurpose>().Sizes.Select(size => new ProcessedImage(size, size, size, [1]))])));
+        _quota.CheckNewUploadAsync(Arg.Any<Guid>(), Arg.Any<long>(), Arg.Any<CancellationToken>()).Returns((Error?)null);
+        _quota.CheckStorageAsync(Arg.Any<Guid>(), Arg.Any<long>(), Arg.Any<CancellationToken>()).Returns((Error?)null);
     }
 
     private UploadImageCommandHandler Handler(params string[] permissions)
     {
         var user = Substitute.For<ICurrentUser>();
+        user.UserId.Returns(Guid.NewGuid());
         user.Permissions.Returns(permissions.ToHashSet());
-        return new UploadImageCommandHandler(_storage, _images, user, TimeProvider.System);
+        return new UploadImageCommandHandler(_db, _storage, _images, user, _quota, DependencyInjection.CreateMapperConfig(), TimeProvider.System);
     }
 
     private static UploadImageCommand Command(string purpose, byte[] bytes, long? declaredLength = null) =>
@@ -173,6 +183,11 @@ public sealed class UploadImageCommandHandlerTests
         return bytes;
     }
 
+    private List<string> SavedPaths() => _storage.ReceivedCalls()
+        .Where(c => c.GetMethodInfo().Name == nameof(IFileStorage.SaveAsync))
+        .Select(c => (string)c.GetArguments()[0]!)
+        .ToList();
+
     [Fact]
     public async Task A_renamed_executable_is_rejected_before_any_processing()
     {
@@ -181,16 +196,18 @@ public sealed class UploadImageCommandHandlerTests
         var result = await Handler().Handle(Command("avatar", exe), Ct);
 
         result.Error.Should().Be(UploadErrors.UnsupportedType);
+        result.Error!.Code.Should().Be("media.unsupported_type");
         _images.ReceivedCalls().Should().BeEmpty();
         _storage.ReceivedCalls().Should().BeEmpty();
     }
 
     [Fact]
-    public async Task Five_megabytes_is_the_limit_whatever_length_the_client_declares()
+    public async Task Ten_megabytes_is_the_limit_whatever_length_the_client_declares()
     {
         var atLimit = await Handler().Handle(Command("avatar", Jpeg(UploadLimits.MaxBytes)), Ct);
         var overLimit = await Handler().Handle(Command("avatar", Jpeg(UploadLimits.MaxBytes + 1), declaredLength: 1000), Ct);
 
+        UploadLimits.MaxBytes.Should().Be(10 * 1024 * 1024);
         atLimit.IsSuccess.Should().BeTrue();
         overLimit.Error.Should().Be(UploadErrors.TooLarge);
     }
@@ -207,36 +224,47 @@ public sealed class UploadImageCommandHandlerTests
         var result = await Handler().Handle(Command("avatar", Jpeg(100)), Ct);
 
         result.Error.Should().Be(UploadErrors.DimensionsTooLarge);
-        _storage.ReceivedCalls().Where(c => c.GetMethodInfo().Name == nameof(IFileStorage.SaveAsync)).Should().BeEmpty();
+        SavedPaths().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task A_full_quota_stops_the_upload_before_processing()
+    {
+        _quota.CheckNewUploadAsync(Arg.Any<Guid>(), Arg.Any<long>(), Arg.Any<CancellationToken>()).Returns(Domain.Media.MediaErrors.QuotaDaily);
+
+        var result = await Handler().Handle(Command("avatar", Jpeg(100)), Ct);
+
+        result.Error.Should().Be(Domain.Media.MediaErrors.QuotaDaily);
+        _images.ReceivedCalls().Should().BeEmpty();
     }
 
     [Theory]
     [InlineData("cover")]
+    [InlineData("image")]
     [InlineData("article-image")]
-    public async Task Covers_and_article_images_need_the_right_to_write_articles(string purpose)
+    public async Task Covers_and_post_images_need_the_right_to_write_articles(string purpose)
     {
         (await Handler().Handle(Command(purpose, Jpeg(100)), Ct)).Error.Should().Be(AuthErrors.Forbidden);
         (await Handler(Permissions.Articles.Create).Handle(Command(purpose, Jpeg(100)), Ct)).IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public async Task Every_size_is_saved_under_a_random_name_and_the_largest_is_returned()
+    public async Task Every_width_is_saved_under_one_random_id_and_recorded_as_a_ready_asset()
     {
         var result = await Handler().Handle(Command("avatar", Jpeg(100)), Ct);
 
-        var saved = _storage.ReceivedCalls()
-            .Where(c => c.GetMethodInfo().Name == nameof(IFileStorage.SaveAsync))
-            .Select(c => (string)c.GetArguments()[0]!)
-            .ToList();
-        saved.Should().HaveCount(2).And.AllSatisfy(p => UploadPath.TryParse(p, out _).Should().BeTrue());
-        saved.Select(p => p[..^"_256.webp".Length]).Distinct().Should().ContainSingle("both sizes share one id");
+        var saved = SavedPaths();
+        saved.Should().HaveCount(4).And.AllSatisfy(p => UploadPath.TryParse(p, out _).Should().BeTrue());
+        saved.Select(p => p[..p.LastIndexOf('_')]).Distinct().Should().ContainSingle("every width shares one id");
+        _db.MediaAssets.Received(1).Add(Arg.Is<Domain.Media.MediaAsset>(a => a.Status == Domain.Media.MediaStatus.Ready));
 
-        var upload = result.Value;
-        upload.Purpose.Should().Be("avatar");
-        upload.Path.Should().Be(saved[1]).And.EndWith("_512.webp");
-        upload.Url.Should().Be("https://api.readin.app" + upload.Path);
-        (upload.Width, upload.Height).Should().Be((512, 512));
-        upload.Variants.Select(v => v.Size).Should().Equal(256, 512);
+        var asset = result.Value;
+        asset.Kind.Should().Be(Domain.Media.MediaKind.Image);
+        asset.Purpose.Should().Be(Domain.Media.MediaPurpose.Avatar);
+        asset.Status.Should().Be(Domain.Media.MediaStatus.Ready);
+        asset.BlurHash.Should().Be("LEHV6nWB2yk8");
+        asset.Variants.Select(v => v.Width).Should().Equal(64, 128, 256, 512);
+        asset.Variants[^1].Url.Should().Be("https://api.readin.app" + saved[^1]).And.EndWith("_512.webp");
     }
 
     [Fact]
@@ -244,6 +272,29 @@ public sealed class UploadImageCommandHandlerTests
     {
         var result = new UploadImageCommandValidator().Validate(Command("banner", [1], declaredLength: UploadLimits.MaxBytes + 1));
 
-        result.Errors.Select(e => e.ErrorCode).Should().BeEquivalentTo("upload.purpose_invalid", "upload.too_large");
+        result.Errors.Select(e => e.ErrorCode).Should().BeEquivalentTo("media.purpose_invalid", "media.too_large");
+    }
+}
+
+public sealed class UploadPurposeWidthTests
+{
+    [Theory]
+    [InlineData(5000, new[] { 320, 640, 1080, 1600 })]
+    [InlineData(1600, new[] { 320, 640, 1080, 1600 })]
+    [InlineData(1000, new[] { 320, 640, 1000 })]
+    [InlineData(640, new[] { 320, 640 })]
+    [InlineData(200, new[] { 200 })]
+    public void Post_images_are_never_upscaled_and_never_duplicated(int width, int[] expected) =>
+        UploadPurpose.ArticleImage.WidthsFor(width).Should().Equal(expected);
+
+    [Fact]
+    public void Buckets_follow_adr_0011()
+    {
+        UploadPurpose.Avatar.Sizes.Should().Equal(64, 128, 256, 512);
+        UploadPurpose.Avatar.Square.Should().BeTrue();
+        UploadPurpose.Cover.Sizes.Should().Equal(400, 800, 1200);
+        UploadPurpose.ArticleImage.Sizes.Should().Equal(320, 640, 1080, 1600);
+        UploadPurpose.ArticleImage.Folder.Should().Be("images");
+        UploadPurpose.FromName("article-image").Should().Be(UploadPurpose.ArticleImage);
     }
 }

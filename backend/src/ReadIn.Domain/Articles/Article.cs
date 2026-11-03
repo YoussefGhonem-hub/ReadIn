@@ -1,4 +1,5 @@
 using ReadIn.Domain.Common;
+using ReadIn.Domain.Media;
 using ReadIn.Domain.Taxonomy;
 
 namespace ReadIn.Domain.Articles;
@@ -30,6 +31,9 @@ public enum ReviewStatus
 public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRowVersion
 {
     public const int MaxTags = 5;
+    public const int MaxImageAttachments = 10;
+    public const int MaxCaptionLength = 5000;
+    public const int MaxAltTextLength = 5000;
 
     /// <summary>Word-count change ratio above which an edit resets the "Reviewed" badge (SPEC §10.2).</summary>
     public const double SignificantChangeRatio = 0.15;
@@ -38,6 +42,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     private readonly List<ArticleTag> _tags = [];
     private readonly List<ArticleSource> _sources = [];
     private readonly List<ArticleRevision> _revisions = [];
+    private readonly List<ArticleAttachment> _attachments = [];
 
     private Article() { } // EF
 
@@ -72,6 +77,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public IReadOnlyCollection<ArticleTag> Tags => _tags.AsReadOnly();
     public IReadOnlyCollection<ArticleSource> Sources => _sources.AsReadOnly();
     public IReadOnlyCollection<ArticleRevision> Revisions => _revisions.AsReadOnly();
+    public IReadOnlyCollection<ArticleAttachment> Attachments => _attachments.AsReadOnly();
 
     public DateTime CreatedAt { get; private set; }
     public Guid? CreatedBy { get; private set; }
@@ -160,6 +166,45 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
             _sources.Add(new ArticleSource(Id, title.Trim(), url.Trim(), order++));
     }
 
+    /// <summary>
+    /// Replaces the attachment set, like LinkedIn: either 1–10 images (each with alt text) or exactly one PDF, never
+    /// both. Every asset must belong to the author and be ready. An empty list removes all attachments (ADR 0011).
+    /// </summary>
+    public Result SetAttachments(IReadOnlyList<AttachmentCandidate> items)
+    {
+        if (items.Select(i => i.MediaAssetId).Distinct().Count() != items.Count) return AttachmentErrors.DuplicateAsset;
+        if (items.Any(i => i.OwnerId != AuthorId)) return AttachmentErrors.AssetNotFound;
+        if (items.Select(i => i.Kind).Distinct().Count() > 1) return AttachmentErrors.MixedKinds;
+
+        var documents = items.Count(i => i.Kind == MediaKind.Document);
+        if (documents > 1) return AttachmentErrors.SingleDocument;
+        if (items.Count > MaxImageAttachments) return AttachmentErrors.TooManyImages;
+
+        foreach (var item in items.Where(i => i.Kind == MediaKind.Image))
+        {
+            if (string.IsNullOrWhiteSpace(item.AltText)) return AttachmentErrors.AltTextRequired;
+            if (item.AltText.Trim().Length > MaxAltTextLength) return AttachmentErrors.AltTextTooLong;
+        }
+        if (items.Any(i => i.Caption?.Trim().Length > MaxCaptionLength)) return AttachmentErrors.CaptionTooLong;
+        if (items.Any(i => i.Status != MediaStatus.Ready)) return AttachmentErrors.AssetNotReady;
+
+        _attachments.Clear();
+        var order = 0;
+        foreach (var item in items.Select((item, index) => (item, index)).OrderBy(x => x.item.Order).ThenBy(x => x.index).Select(x => x.item))
+        {
+            var isImage = item.Kind == MediaKind.Image;
+            _attachments.Add(new ArticleAttachment(
+                Id,
+                item.MediaAssetId,
+                order++,
+                isImage ? Clean(item.Caption) : null,
+                isImage ? Clean(item.AltText) : null));
+        }
+        return Result.Success();
+
+        static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
     public Result SubmitForReview()
     {
         if (Status is not (ArticleStatus.Draft or ArticleStatus.ChangesRequested or ArticleStatus.Published))
@@ -233,10 +278,14 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         return Result.Success();
     }
 
-    public void SoftDelete(DateTime now)
+    /// <summary>Soft-deletes the article and detaches its media; the caller deletes the detached assets (ADR 0011).</summary>
+    public IReadOnlyList<Guid> SoftDelete(DateTime now)
     {
         IsDeleted = true;
         DeletedAt = now;
+        var detached = _attachments.Select(a => a.MediaAssetId).ToList();
+        _attachments.Clear();
+        return detached;
     }
 
     /// <summary>Used by the content importer: editorial content arrives already reviewed (SPEC §19.2).</summary>

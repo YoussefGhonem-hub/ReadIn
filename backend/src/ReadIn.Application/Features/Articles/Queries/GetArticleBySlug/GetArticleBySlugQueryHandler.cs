@@ -9,7 +9,11 @@ using ReadIn.Domain.Common;
 
 namespace ReadIn.Application.Features.Articles.Queries.GetArticleBySlug;
 
-internal sealed class GetArticleBySlugQueryHandler(IAppDbContext db, TypeAdapterConfig mapping, IFileStorage storage)
+internal sealed class GetArticleBySlugQueryHandler(
+    IAppDbContext db,
+    TypeAdapterConfig mapping,
+    IFileStorage storage,
+    ArticleAttachmentsReader attachmentsReader)
     : IQueryHandler<GetArticleBySlugQuery, Result<ArticleDetailsDto>>
 {
     public async ValueTask<Result<ArticleDetailsDto>> Handle(GetArticleBySlugQuery query, CancellationToken cancellationToken)
@@ -23,6 +27,9 @@ internal sealed class GetArticleBySlugQueryHandler(IAppDbContext db, TypeAdapter
 
         if (article is null) return ArticleErrors.NotFound;
 
-        return article.WithPublicUrls(storage) with { Content = storage.ToPublicContent(article.ContentJson) };
+        // Cached for every reader, so canDownload is the author's switch here; the query personalizes it per caller.
+        var attachments = await attachmentsReader.LoadAsync([article.Id], pageLimit: null, viewer: null, cancellationToken);
+        var details = new[] { article.WithPublicUrls(storage) }.WithAttachments(attachments)[0];
+        return details with { Content = storage.ToPublicContent(article.ContentJson) };
     }
 }

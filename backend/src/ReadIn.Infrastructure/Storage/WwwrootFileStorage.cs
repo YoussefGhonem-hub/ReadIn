@@ -67,6 +67,13 @@ public sealed class WwwrootFileStorage : IFileStorage
         }
     }
 
+    public Task<Stream> OpenReadAsync(string relativePath, CancellationToken cancellationToken = default)
+    {
+        var target = Resolve(relativePath);
+        Stream stream = new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
+        return Task.FromResult(stream);
+    }
+
     public Task DeleteAsync(string relativePath, CancellationToken cancellationToken = default)
     {
         var target = Resolve(relativePath);

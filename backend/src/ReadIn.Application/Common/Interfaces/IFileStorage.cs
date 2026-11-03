@@ -10,6 +10,10 @@ public interface IFileStorage
     /// <summary>Writes <paramref name="content"/> to <paramref name="relativePath"/>. The file is visible only once fully written.</summary>
     Task SaveAsync(string relativePath, Stream content, CancellationToken cancellationToken = default);
 
+    /// <summary>Opens a stored file for reading (e.g. the original PDF for the rendering job or a download, ADR 0011).</summary>
+    /// <exception cref="FileNotFoundException">The file does not exist.</exception>
+    Task<Stream> OpenReadAsync(string relativePath, CancellationToken cancellationToken = default);
+
     /// <summary>Deletes the file. A missing file is not an error.</summary>
     Task DeleteAsync(string relativePath, CancellationToken cancellationToken = default);
 

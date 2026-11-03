@@ -10,12 +10,12 @@ using ReadIn.Domain.Taxonomy;
 namespace ReadIn.Application.Features.Articles.Commands.CreateArticle;
 
 internal sealed class CreateArticleCommandHandler(IAppDbContext db, ICurrentUser currentUser, IRDocProcessor rdoc, IFileStorage storage)
-    : ICommandHandler<CreateArticleCommand, Result<Guid>>
+    : ICommandHandler<CreateArticleCommand, Result<CreatedArticle>>
 {
     private static readonly Error FieldNotFound = Error.Validation("field.not_found", "Field not found.");
     private static readonly Error TopicNotInField = Error.Validation("topic.not_in_field", "The topic does not belong to this field.");
 
-    public async ValueTask<Result<Guid>> Handle(CreateArticleCommand cmd, CancellationToken ct)
+    public async ValueTask<Result<CreatedArticle>> Handle(CreateArticleCommand cmd, CancellationToken ct)
     {
         var field = await db.Fields.AsNoTracking().FirstOrDefaultAsync(f => f.Id == cmd.FieldId && f.IsEnabled, ct);
         if (field is null) return FieldNotFound;
@@ -40,7 +40,7 @@ internal sealed class CreateArticleCommandHandler(IAppDbContext db, ICurrentUser
 
         db.Articles.Add(article);
         await db.SaveChangesAsync(ct);
-        return article.Id;
+        return new CreatedArticle(article.Id, article.Slug);
     }
 
     private async Task<string> UniqueSlugAsync(string title, CancellationToken ct)

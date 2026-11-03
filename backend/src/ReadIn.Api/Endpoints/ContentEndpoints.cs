@@ -4,7 +4,9 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Models;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Articles.Commands.CreateArticle;
+using ReadIn.Application.Features.Articles.Commands.DeleteArticle;
 using ReadIn.Application.Features.Articles.Commands.PublishArticle;
+using ReadIn.Application.Features.Articles.Commands.SetArticleAttachments;
 using ReadIn.Application.Features.Articles.Queries.GetArticleBySlug;
 using ReadIn.Application.Features.Feed.Queries.GetForYouFeed;
 using ReadIn.Application.Features.Feed.Queries.GetTodayArticle;
@@ -48,12 +50,25 @@ internal sealed class ArticleEndpoints : IEndpointGroup
             {
                 var result = await sender.Send(body, ct);
                 return result.IsSuccess
-                    ? TypedResults.Created($"/api/v1/articles/{result.Value}", new { id = result.Value })
+                    ? TypedResults.Created($"/api/v1/articles/{result.Value.Id}", result.Value)
                     : result.Error!.ToProblem(http);
             })
             .RequireAuthorization()
             .RequireRateLimiting(RateLimitPolicies.Writes)
-            .WithSummary("Create a draft with its first language version (RDoc content)");
+            .WithSummary("Create a draft with its first language version (RDoc content); returns { id, slug }")
+            .Produces<CreatedArticle>(StatusCodes.Status201Created);
+
+        articles.MapPut("/{id:guid}/attachments", async (Guid id, SetAttachmentsRequest body, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new SetArticleAttachmentsCommand(id, body.Items ?? []), ct)).ToHttp(http))
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitPolicies.Writes)
+            .WithSummary("Replace the attachments: 1–10 images (alt text required) or one PDF; [] removes them (ADR 0011)");
+
+        articles.MapDelete("/{id:guid}", async (Guid id, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new DeleteArticleCommand(id), ct)).ToHttp(http))
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitPolicies.Writes)
+            .WithSummary("Delete an own article; its attachments are deleted with their files");
 
         articles.MapPost("/{id:guid}/publish", async (Guid id, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(new PublishArticleCommand(id), ct)).ToHttp(http))
@@ -62,6 +77,9 @@ internal sealed class ArticleEndpoints : IEndpointGroup
             .WithSummary("Publish an own article now");
     }
 }
+
+/// <summary>Body of PUT /articles/{id}/attachments.</summary>
+internal sealed record SetAttachmentsRequest(IReadOnlyList<AttachmentItemInput>? Items);
 
 internal sealed class FeedEndpoints : IEndpointGroup
 {

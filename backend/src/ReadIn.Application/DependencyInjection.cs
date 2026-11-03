@@ -20,12 +20,14 @@ public static class DependencyInjection
         {
             options.ServiceLifetime = ServiceLifetime.Scoped;
             options.GenerateTypesAsInternal = true;
-            // Order matters (SPEC §6.3): Logging → Authorization → Validation → Caching.
+            // Order matters (SPEC §6.3): Logging → Authorization → Validation → Caching. Personalization wraps the cache
+            // so caller-specific fields are never stored in it (ADR 0011).
             options.PipelineBehaviors =
             [
                 typeof(LoggingBehavior<,>),
                 typeof(AuthorizationBehavior<,>),
                 typeof(ValidationBehavior<,>),
+                typeof(PersonalizationBehavior<,>),
                 typeof(CachingBehavior<,>),
             ];
         });
@@ -41,6 +43,9 @@ public static class DependencyInjection
         services.AddScoped<MeReader>();
         services.AddScoped<UploadReferences>();
         services.AddScoped<UploadCleanup>();
+        services.AddScoped<Features.Uploads.IMediaQuota, Features.Uploads.MediaQuota>();
+        services.AddScoped<Features.Uploads.MediaFiles>();
+        services.AddScoped<Features.Articles.ArticleAttachmentsReader>();
 
         AddDomainEventHandlers(services);
         return services;

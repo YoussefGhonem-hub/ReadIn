@@ -31,6 +31,35 @@ public record ArticleCardDto
     public DateTime? PublishedAt { get; init; }
     public int ReactionCount { get; init; }
     public int CommentCount { get; init; }
+
+    /// <summary>1–10 images or one PDF (ADR 0011). Loaded after the projection by <see cref="ArticleAttachmentsReader"/>.</summary>
+    public ArticleAttachmentsDto? Attachments { get; init; }
+}
+
+public sealed record ImageAttachmentDto(
+    Guid AssetId,
+    int Order,
+    string? Caption,
+    string AltText,
+    int Width,
+    int Height,
+    string? BlurHash,
+    IReadOnlyList<Uploads.MediaVariantDto> Variants);
+
+public sealed record DocumentAttachmentDto(
+    Guid AssetId,
+    string Title,
+    int PageCount,
+    bool AllowDownload,
+    bool CanDownload,
+    string DownloadUrl,
+    IReadOnlyList<Uploads.MediaPageDto> Pages);
+
+/// <summary><see cref="Kind"/> is <c>images</c> or <c>document</c>; never both.</summary>
+public sealed record ArticleAttachmentsDto(string Kind, IReadOnlyList<ImageAttachmentDto> Images, DocumentAttachmentDto? Document)
+{
+    public const string ImagesKind = "images";
+    public const string DocumentKind = "document";
 }
 
 public sealed record ArticleDetailsDto : ArticleCardDto

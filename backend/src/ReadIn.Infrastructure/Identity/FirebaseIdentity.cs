@@ -20,6 +20,15 @@ public sealed class FirebaseOptions
     public string? StorageBucket { get; set; }
 
     /// <summary>
+    /// Realtime Database URL of the real project (e.g. <c>https://readin-default-rtdb.europe-west1.firebasedatabase.app</c>),
+    /// used only for live media-processing signals (ADR 0011). Empty disables them; clients still poll.
+    /// </summary>
+    public string? DatabaseUrl { get; set; }
+
+    /// <summary>Realtime Database emulator (<c>127.0.0.1:9000</c>) when <see cref="UseEmulator"/> is on. Empty disables the signals.</summary>
+    public string? DatabaseEmulatorHost { get; set; }
+
+    /// <summary>
     /// Admin SDK service-account key for the real project, as JSON or base64-encoded JSON. Kept in user-secrets locally and
     /// in the host's secret store on servers, never in the repo (docs/setup/firebase.md). When empty, Application Default
     /// Credentials are used.

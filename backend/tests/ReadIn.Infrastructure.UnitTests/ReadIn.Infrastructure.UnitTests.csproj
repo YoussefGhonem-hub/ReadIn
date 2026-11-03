@@ -18,4 +18,9 @@
     <Using Include="AwesomeAssertions" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Media fixtures (ADR 0011): real JPEG/PNG/WebP/HEIC images and normal, encrypted, corrupted and 101-page PDFs. -->
+    <None Include="../fixtures/media/**/*" LinkBase="fixtures/media" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

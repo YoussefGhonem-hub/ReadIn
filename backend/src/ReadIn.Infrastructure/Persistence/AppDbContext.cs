@@ -4,6 +4,7 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Common;
+using ReadIn.Domain.Media;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
@@ -28,6 +29,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<Article> Articles => Set<Article>();
     public DbSet<ArticleTranslation> ArticleTranslations => Set<ArticleTranslation>();
+    public DbSet<ArticleAttachment> ArticleAttachments => Set<ArticleAttachment>();
+
+    public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
 
     public DbSet<ReadingProgress> ReadingProgress => Set<ReadingProgress>();
     public DbSet<DailyPick> DailyPicks => Set<DailyPick>();

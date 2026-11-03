@@ -38,6 +38,15 @@
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.0" />
   </ItemGroup>
 
+  <ItemGroup Label="Media (ADR 0011)">
+    <!-- PDF pages rendered with PDFium + SkiaSharp (MIT; PDFium is BSD-3). -->
+    <PackageVersion Include="PDFtoImage" Version="5.4.0" />
+    <!-- PDF metadata, encryption checks and text extraction (Apache-2.0). -->
+    <PackageVersion Include="PdfPig" Version="0.1.16" />
+    <!-- HEIC decoding only: SkiaSharp has no HEIF codec on Windows/Linux (Apache-2.0, bundles libheif + libde265). -->
+    <PackageVersion Include="Magick.NET-Q8-AnyCPU" Version="14.17.2" />
+  </ItemGroup>
+
   <ItemGroup Label="Api">
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.14" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />

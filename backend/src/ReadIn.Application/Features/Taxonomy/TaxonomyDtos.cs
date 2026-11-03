@@ -10,6 +10,10 @@ public sealed record FieldDto
     public string Icon { get; init; } = default!;
     public string Color { get; init; } = default!;
     public bool IsSensitive { get; init; }
+
+    /// <summary>Publishing in this field needs at least one source; composers show the sources list as required.</summary>
+    public bool RequiresSources { get; init; }
+
     public int TopicCount { get; init; }
 }
 

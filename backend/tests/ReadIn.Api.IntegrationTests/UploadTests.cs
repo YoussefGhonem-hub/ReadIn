@@ -38,7 +38,7 @@ public sealed class UploadTests(ApiFactory api)
         var file = new ByteArrayContent(bytes);
         file.Headers.ContentType = new MediaTypeHeaderValue("image/png");
         form.Add(file, "file", fileName);
-        return await client.PostAsync("/api/v1/uploads", form, Ct);
+        return await client.PostAsync("/api/v1/uploads/images", form, Ct);
     }
 
     private static async Task<JsonObject> UploadAsync(HttpClient client, string purpose, byte[] bytes)
@@ -48,8 +48,14 @@ public sealed class UploadTests(ApiFactory api)
         return (await response.Content.ReadFromJsonAsync<JsonObject>(Ct))!;
     }
 
+    /// <summary>Relative paths of every stored width, smallest first (the DTO carries absolute URLs).</summary>
     private static IEnumerable<string> PathsOf(JsonObject upload) =>
-        upload["variants"]!.AsArray().Select(v => v!["path"]!.GetValue<string>());
+        upload["variants"]!.AsArray().Select(v => new Uri(v!["url"]!.GetValue<string>()).AbsolutePath);
+
+    /// <summary>The largest width: what avatarUrl / coverUrl / RDoc image sources point at.</summary>
+    private static string PathOf(JsonObject upload) => PathsOf(upload).Last();
+
+    private static string UrlOf(JsonObject upload) => upload["variants"]!.AsArray().Last()!["url"]!.GetValue<string>();
 
     private string OnDisk(string relativePath) =>
         Path.Combine(api.UploadsPath, relativePath["/uploads/".Length..].Replace('/', Path.DirectorySeparatorChar));
@@ -78,12 +84,13 @@ public sealed class UploadTests(ApiFactory api)
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var upload = (await response.Content.ReadFromJsonAsync<JsonObject>(Ct))!;
-        var path = upload["path"]!.GetValue<string>();
+        var path = PathOf(upload);
         path.Should().MatchRegex(@"^/uploads/avatars/\d{4}/\d{2}/[0-9a-f]{32}_512\.webp$", "a random name, never the client's");
-        upload["url"]!.GetValue<string>().Should().Be(ApiFactory.PublicBaseUrl + path);
-        (upload["width"]!.GetValue<int>(), upload["height"]!.GetValue<int>()).Should().Be((512, 512));
-        PathsOf(upload).Should().HaveCount(2).And.OnlyContain(p => File.Exists(OnDisk(p)));
-        response.Headers.Location!.ToString().Should().Be(ApiFactory.PublicBaseUrl + path);
+        UrlOf(upload).Should().Be(ApiFactory.PublicBaseUrl + path);
+        (upload["width"]!.GetValue<int>(), upload["height"]!.GetValue<int>()).Should().Be((600, 600), "the square crop of 800 × 600");
+        upload["status"]!.GetValue<string>().Should().Be("ready");
+        PathsOf(upload).Should().HaveCount(4).And.OnlyContain(p => File.Exists(OnDisk(p)));
+        response.Headers.Location!.ToString().Should().Be($"/api/v1/uploads/{upload["id"]}");
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         request.Headers.Add("Origin", "https://readin.app");
@@ -111,9 +118,9 @@ public sealed class UploadTests(ApiFactory api)
         var guest = await PostUploadAsync(api.GuestClient(), "avatar", Png(10, 10));
 
         renamedExe.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        (await TaxonomyAndContentTests.Problem(renamedExe))["code"]!.GetValue<string>().Should().Be("upload.unsupported_type");
+        (await TaxonomyAndContentTests.Problem(renamedExe))["code"]!.GetValue<string>().Should().Be("media.unsupported_type");
         badPurpose.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        (await TaxonomyAndContentTests.Problem(badPurpose))["errors"]!["purpose"]![0]!.GetValue<string>().Should().Be("upload.purpose_invalid");
+        (await TaxonomyAndContentTests.Problem(badPurpose))["errors"]!["purpose"]![0]!.GetValue<string>().Should().Be("media.purpose_invalid");
         guest.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         Directory.EnumerateFiles(api.UploadsPath, "*", SearchOption.AllDirectories).Should().HaveCount(filesBefore);
     }
@@ -123,24 +130,24 @@ public sealed class UploadTests(ApiFactory api)
     {
         var (client, me) = await SignedInAsync("it-avatar-swap");
         var first = await UploadAsync(client, "avatar", Png(300, 300));
-        await UpdateAvatarAsync(client, me, first["path"]!.GetValue<string>());
+        await UpdateAvatarAsync(client, me, PathOf(first));
 
         var afterFirst = await client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct);
         var served = afterFirst!["avatarUrl"]!.GetValue<string>();
-        served.Should().Be(first["url"]!.GetValue<string>(), "clients get the absolute URL");
+        served.Should().Be(UrlOf(first), "clients get the absolute URL");
 
         // Saving the profile with the URL it was given keeps the same avatar and deletes nothing.
         await UpdateAvatarAsync(client, me, served, bio: "Hello");
         PathsOf(first).Should().OnlyContain(p => File.Exists(OnDisk(p)));
 
         var second = await UploadAsync(client, "avatar", Png(400, 400));
-        await UpdateAvatarAsync(client, me, second["path"]!.GetValue<string>());
+        await UpdateAvatarAsync(client, me, PathOf(second));
 
         PathsOf(first).Should().OnlyContain(p => !File.Exists(OnDisk(p)), "both sizes of the replaced avatar are gone");
         PathsOf(second).Should().OnlyContain(p => File.Exists(OnDisk(p)));
         (await client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!["avatarUrl"]!.GetValue<string>()
-            .Should().Be(second["url"]!.GetValue<string>());
-        (await GetFileAsync(first["path"]!.GetValue<string>())).StatusCode.Should().Be(HttpStatusCode.NotFound);
+            .Should().Be(UrlOf(second));
+        (await GetFileAsync(PathOf(first))).StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -151,7 +158,7 @@ public sealed class UploadTests(ApiFactory api)
 
         var response = await client.PatchAsJsonAsync("/api/v1/me", new
         {
-            displayName = "Upload Tester", username = me["username"]!.GetValue<string>(), avatarUrl = cover["path"]!.GetValue<string>(),
+            displayName = "Upload Tester", username = me["username"]!.GetValue<string>(), avatarUrl = PathOf(cover),
         }, Ct);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -170,7 +177,7 @@ public sealed class UploadTests(ApiFactory api)
         var created = await client.PostAsJsonAsync("/api/v1/articles", new
         {
             fieldId = dotnet, language = "en", title = "Images live next to the API",
-            coverUrl = cover["path"]!.GetValue<string>(),
+            coverUrl = PathOf(cover),
             content = new
             {
                 version = 1, language = "en",
@@ -178,7 +185,7 @@ public sealed class UploadTests(ApiFactory api)
                 {
                     new { id = "p1", type = "paragraph", content = new[] { new { type = "text", text = "A diagram follows." } } },
                     // The absolute (http) URL from the upload response is accepted and stored as rdoc-asset://.
-                    new { id = "i1", type = "image", src = image["url"]!.GetValue<string>(), alt = "Diagram" },
+                    new { id = "i1", type = "image", src = UrlOf(image), alt = "Diagram" },
                 },
             },
             sources = new[] { new { title = "Static files", url = "https://learn.microsoft.com/aspnet/core/fundamentals/static-files" } },
@@ -192,13 +199,13 @@ public sealed class UploadTests(ApiFactory api)
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var stored = await db.Articles.AsNoTracking().Include(a => a.Translations).SingleAsync(a => a.Id == id, Ct);
-            stored.CoverUrl.Should().Be(cover["path"]!.GetValue<string>(), "the database keeps the relative path");
-            stored.Translations.Single().ContentJson.Should().Contain("rdoc-asset:/" + image["path"]!.GetValue<string>())
+            stored.CoverUrl.Should().Be(PathOf(cover), "the database keeps the relative path");
+            stored.Translations.Single().ContentJson.Should().Contain("rdoc-asset:/" + PathOf(image))
                 .And.NotContain(ApiFactory.PublicBaseUrl);
 
             var article = await api.GuestClient().GetFromJsonAsync<JsonObject>($"/api/v1/articles/{stored.Slug}", Ct);
-            article!["coverUrl"]!.GetValue<string>().Should().Be(cover["url"]!.GetValue<string>());
-            article["content"]!["blocks"]![1]!["src"]!.GetValue<string>().Should().Be(image["url"]!.GetValue<string>());
+            article!["coverUrl"]!.GetValue<string>().Should().Be(UrlOf(cover));
+            article["content"]!["blocks"]![1]!["src"]!.GetValue<string>().Should().Be(UrlOf(image));
         }
     }
 
@@ -210,7 +217,7 @@ public sealed class UploadTests(ApiFactory api)
         var inDraft = await UploadAsync(client, "article-image", Png(500, 300));
         var orphan = await UploadAsync(client, "avatar", Png(300, 300));
         var fresh = await UploadAsync(client, "cover", Png(1300, 500));
-        await UpdateAvatarAsync(client, me, avatar["path"]!.GetValue<string>());
+        await UpdateAvatarAsync(client, me, PathOf(avatar));
 
         var field = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))![0]!["id"]!.GetValue<Guid>();
         (await client.PostAsJsonAsync("/api/v1/articles", new
@@ -219,14 +226,14 @@ public sealed class UploadTests(ApiFactory api)
             content = new
             {
                 version = 1, language = "en",
-                blocks = new object[] { new { id = "i1", type = "image", src = "rdoc-asset:/" + inDraft["path"]!.GetValue<string>(), alt = "Kept" } },
+                blocks = new object[] { new { id = "i1", type = "image", src = "rdoc-asset:/" + PathOf(inDraft), alt = "Kept" } },
             },
             isAiAssisted = false,
         }, Ct)).StatusCode.Should().Be(HttpStatusCode.Created);
 
         var stray = Path.Combine(api.UploadsPath, "avatars", "notes.txt");
         await File.WriteAllTextAsync(stray, "not ours", Ct);
-        var leftoverTemp = OnDisk(orphan["path"]!.GetValue<string>()) + ".0123.tmp";
+        var leftoverTemp = OnDisk(PathOf(orphan)) + ".0123.tmp";
         await File.WriteAllBytesAsync(leftoverTemp, [1], Ct);
 
         var twoDaysAgo = DateTime.UtcNow.AddDays(-2);
@@ -234,7 +241,15 @@ public sealed class UploadTests(ApiFactory api)
             File.SetLastWriteTimeUtc(file, twoDaysAgo);
 
         using (var scope = api.Services.CreateScope())
+        {
+            // A live MediaAssets row protects its files (ADR 0011); age the rows too, so the media cleanup removes the unused one.
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var aged = new[] { avatar, inDraft, orphan }.Select(u => u["id"]!.GetValue<Guid>()).ToList();
+            await db.MediaAssets.Where(m => aged.Contains(m.Id)).ExecuteUpdateAsync(s => s.SetProperty(m => m.CreatedAt, twoDaysAgo), Ct);
+
             await scope.ServiceProvider.GetRequiredService<OrphanedUploadsCleanupJob>().RunAsync(Ct);
+            (await db.MediaAssets.AnyAsync(m => m.Id == orphan["id"]!.GetValue<Guid>(), Ct)).Should().BeFalse("its row goes with its files");
+        }
 
         PathsOf(orphan).Should().OnlyContain(p => !File.Exists(OnDisk(p)), "old and unreferenced");
         File.Exists(leftoverTemp).Should().BeFalse("an interrupted write is cleaned up too");

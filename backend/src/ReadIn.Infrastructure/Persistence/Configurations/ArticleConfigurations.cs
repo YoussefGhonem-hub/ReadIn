@@ -33,6 +33,7 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.HasMany(a => a.Tags).WithOne().HasForeignKey(t => t.ArticleId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(a => a.Sources).WithOne().HasForeignKey(s => s.ArticleId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(a => a.Revisions).WithOne().HasForeignKey(r => r.ArticleId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(a => a.Attachments).WithOne().HasForeignKey(x => x.ArticleId).OnDelete(DeleteBehavior.Cascade);
 
         // SPEC §16.3 key indexes
         builder.HasIndex(a => new { a.Status, a.PublishedAt }).IsDescending(false, true).HasFilter("[IsDeleted] = 0");

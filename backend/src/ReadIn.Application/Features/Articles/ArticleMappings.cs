@@ -34,7 +34,9 @@ public sealed class ArticleMappings : IRegister
             .Map(d => d.Author, s => new AuthorDto(
                 s.Author.Id, s.Author.DisplayName, s.Author.Username, s.Author.AvatarUrl,
                 s.Author.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)))
-            .Map(d => d.IsReviewed, s => s.ReviewStatus == ReviewStatus.Approved);
+            .Map(d => d.IsReviewed, s => s.ReviewStatus == ReviewStatus.Approved)
+            // Loaded after the projection by ArticleAttachmentsReader (absolute URLs, page limits).
+            .Ignore(d => d.Attachments!);
 
         config.NewConfig<Article, ArticleDetailsDto>()
             .Inherits<Article, ArticleCardDto>()

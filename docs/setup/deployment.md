@@ -133,6 +133,10 @@ same schedule, and restore them together. Restoring one without the other breaks
   extras after a restore (the orphan job removes them after 24 h). The opposite order can leave the database
   pointing at files the backup doesn't have.
 - Uploaded files never change after they are written, so a plain file copy of the folder is consistent.
+- The folder also holds the **original PDFs** of document attachments (`documents/{yyyy}/{MM}/{id}/original.pdf`,
+  ADR 0011) next to their rendered pages. They are the only copy of what authors uploaded (up to 200 MB per user),
+  so size the backup target for them. They are never served by the static-file middleware; only the download
+  endpoint reads them.
 - Keep backups **off the server** too (another disk, another machine, cloud storage). A backup on the same disk
   dies with it.
 
