@@ -19,7 +19,8 @@ import { ExternalSignIn } from './external-sign-in';
 /**
  * Sign in (SPEC §9.2): phone + password. One generic error for a wrong number or password (it never says whether
  * the number exists); lockout, suspended and rate-limit messages; after a reset, the number is pre-filled with a
- * banner. Then the account-setup guards apply (change password → PIN → profile → onboarding).
+ * banner, and after an account deletion a banner says it was deleted. Then the account-setup guards apply (change
+ * password → PIN → profile → onboarding).
  */
 @Component({
   selector: 'rd-sign-in-page',
@@ -27,10 +28,10 @@ import { ExternalSignIn } from './external-sign-in';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <rd-auth-card [title]="'auth.signIn.title' | transloco" [subtitle]="'auth.signIn.subtitle' | transloco">
-      @if (banner()) {
-        <p class="rd-alert rd-alert-success mb-5 flex items-start gap-2" role="status" data-banner>
+      @if (banner(); as banner) {
+        <p class="rd-alert rd-alert-success mb-5 flex items-start gap-2" role="status" [attr.data-banner]="banner">
           <svg lucideIcon="CircleCheck" [size]="18" class="mt-0.5 shrink-0 text-success" aria-hidden="true"></svg>
-          <span>{{ 'auth.signIn.passwordReset' | transloco }}</span>
+          <span>{{ (banner === 'accountDeleted' ? 'account.delete.done' : 'auth.signIn.passwordReset') | transloco }}</span>
         </p>
       }
       <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4" novalidate>
@@ -98,7 +99,8 @@ export class SignInPage {
     phone: [this.flow.phone() ?? '', Validators.required],
     password: ['', Validators.required],
   });
-  protected readonly banner = signal(this.flow.takeBanner() === 'passwordReset');
+  /** Shown once: after a password reset, or after the account was deleted. */
+  protected readonly banner = signal(this.flow.takeBanner());
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   private readonly submitted = signal(false);

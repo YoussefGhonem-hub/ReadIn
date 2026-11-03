@@ -38,7 +38,8 @@
     "comingSoonShort": "This is coming soon ✨",
     "readingTime": "{{count}} min read",
     "remove": "Remove",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "deletedUser": "Deleted user"
   },
   "errors": {
     "unknown": "Something went wrong. Please try again.",
@@ -70,7 +71,11 @@
       "last_sign_in_method": "You can't remove your only way to sign in.",
       "phone_sign_in_exists": "This account already signs in with a phone number.",
       "confirmation_required": "Confirm it's you with your password, or with Google or Apple.",
-      "external_mismatch": "Use the Google or Apple account that is linked to ReadIn."
+      "external_mismatch": "Use the Google or Apple account that is linked to ReadIn.",
+      "apple_confirmation_required": "This account is linked to Apple. Confirm with Apple to delete it."
+    },
+    "account": {
+      "deletion_unavailable": "We couldn't finish deleting your account, so nothing was deleted. Try again in a few minutes."
     },
     "user": {
       "suspended": "This account is suspended. Contact support.",
@@ -379,13 +384,43 @@
     },
     "delete": {
       "action": "Delete account",
-      "hint": "Closes your account right away.",
-      "title": "Delete your account?",
-      "body": "Your account closes now and your personal data is deleted after 30 days. Your articles and comments stay, shown as \"Deleted user\". This can’t be undone.",
-      "understand": "I understand that my account will be deleted.",
-      "confirm": "Delete my account",
-      "done": "Your account was deleted.",
-      "confirmProvider": "To delete it, confirm with your linked account:"
+      "byEmail": "Delete by email instead",
+      "title": "Delete your account",
+      "lead": "This permanently deletes your ReadIn account. You can't undo it, and we can't restore it.",
+      "deletedTitle": "We delete right away",
+      "deleted": {
+        "profile": "Your profile: name, @username, photo, bio and links",
+        "contact": "Your phone number, email, password and recovery PIN",
+        "signIn": "Your Google and Apple sign-in links. We also revoke ReadIn's access at Apple.",
+        "articles": "Your drafts and any article that isn't published, with their images and PDFs, and every other photo or file you uploaded",
+        "activity": "Your interests, reading progress, stats, reactions, saved articles and follows",
+        "devices": "Your devices and notification tokens, so no notification reaches you",
+        "security": "Your security log: sign-ins and account changes"
+      },
+      "keptTitle": "What we keep, and why",
+      "kept": {
+        "published": "Your published articles and comments stay up under “Deleted user”, with the images and PDFs they show: no name, @username or photo, and nothing that links them to you. That keeps links and discussions other readers rely on working. To take an article down, delete it before you delete your account.",
+        "record": "A record that this account was deleted: its internal ID and the time, nothing that identifies you. It proves the deletion happened.",
+        "backups": "Database backups may still hold your data for up to 14 days, until they're overwritten.",
+        "reviews": "Reviews and edits you made on other writers' articles stay with those articles, without your name."
+      },
+      "after": "Afterwards, this phone number, email, Google or Apple account can create a new ReadIn account, which starts empty.",
+      "confirmTitle": "Confirm it's you",
+      "confirmProvider": "Sign in again with the Google or Apple account linked to ReadIn.",
+      "confirmedWith": "Confirmed with {{provider}} ✓",
+      "confirmAgain": "Confirm another way",
+      "confirmFirst": "Confirm it's you first.",
+      "confirmApple": "Confirm with Apple",
+      "appleUnavailable": "This account is linked to Apple. Confirm with Apple from the ReadIn iPhone app, or email us to delete it.",
+      "emailUs": "Email us",
+      "understand": "I understand, delete my account",
+      "submit": "Delete my account",
+      "dialogTitle": "Delete your account forever?",
+      "dialogBody": "This can't be undone.",
+      "dialogConfirm": "Delete forever",
+      "deleting": "Deleting your account…",
+      "offline": "You're offline. Connect to the internet to delete your account.",
+      "done": "Your account was deleted."
     },
     "linked": {
       "title": "Linked accounts",

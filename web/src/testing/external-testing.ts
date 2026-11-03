@@ -28,7 +28,7 @@ export class FakeGoogle implements GoogleAccountsId {
 export class FakeApple implements AppleIdAuth {
   config: Parameters<AppleIdAuth['init']>[0] | null = null;
   next: Awaited<ReturnType<AppleIdAuth['signIn']>> | 'cancel' = {
-    authorization: { id_token: 'apple-id-token' },
+    authorization: { id_token: 'apple-id-token', code: 'apple-auth-code' },
     user: { name: { firstName: 'Mona', lastName: 'Adel' } },
   };
   readonly init = vi.fn((config: Parameters<AppleIdAuth['init']>[0]) => {

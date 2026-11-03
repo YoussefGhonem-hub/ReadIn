@@ -43,17 +43,25 @@ import { Avatar } from '../../shared/ui/avatar';
     </a>
     <!-- Outside the article link: the author opens their profile (F14). -->
     <div class="flex items-center justify-between gap-2 px-4 pb-2 text-xs text-text-secondary">
-      <a
-        [routerLink]="'/@' + article().author.username"
-        class="inline-flex min-h-11 items-center gap-2 font-semibold text-text-primary no-underline hover:underline"
-        data-hero-author
-      >
-        <rd-avatar [name]="article().author.displayName" [src]="article().author.avatarUrl" [size]="26" />
-        {{ article().author.displayName }}
-        @if (article().author.isVerified) {
-          <svg lucideIcon="BadgeCheck" [size]="14" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
-        }
-      </a>
+      @if (article().author; as author) {
+        <a
+          [routerLink]="'/@' + author.username"
+          class="inline-flex min-h-11 items-center gap-2 font-semibold text-text-primary no-underline hover:underline"
+          data-hero-author
+        >
+          <rd-avatar [name]="author.displayName" [src]="author.avatarUrl" [size]="26" />
+          {{ author.displayName }}
+          @if (author.isVerified) {
+            <svg lucideIcon="BadgeCheck" [size]="14" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+          }
+        </a>
+      } @else {
+        <!-- The author deleted their account (SPEC §9.6): no profile link. -->
+        <span class="inline-flex min-h-11 items-center gap-2 font-semibold" data-deleted-author>
+          <rd-avatar [generic]="true" [size]="26" />
+          {{ 'common.deletedUser' | transloco }}
+        </span>
+      }
       <span>{{ article().publishedAt | rdDate: lang() }}</span>
     </div>
   `,

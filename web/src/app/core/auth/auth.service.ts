@@ -8,6 +8,7 @@ import { AccountConfirmation, ExternalCredential, ExternalSignInRequest, MeDto, 
 import { LanguageService } from '../i18n/language.service';
 import { PushService } from '../push/push.service';
 import { ThemeService } from '../theme/theme.service';
+import { AuthFlowState } from './auth-flow';
 import { SessionStore } from './session.store';
 import { localTimeZone } from './time-zone';
 
@@ -36,6 +37,7 @@ export class AuthService {
   private readonly language = inject(LanguageService);
   private readonly theme = inject(ThemeService);
   private readonly push = inject(PushService);
+  private readonly flow = inject(AuthFlowState);
 
   private accessToken: string | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -156,11 +158,15 @@ export class AuthService {
   }
 
   /**
-   * Soft delete, confirmed with the password or (accounts without one) Google/Apple; the API ends every session, so
-   * this browser signs out too.
+   * Deletes the account for good (no grace period), confirmed with the password or a fresh Google/Apple sign in. A
+   * failure rejects with the API error and leaves everything as it was. On `204` the API has already ended every
+   * session, dropped the account's devices and cleared the refresh cookie; this browser then deletes its FCM token,
+   * forgets the number handed between auth screens and ends the session (the live connection signs out with it).
    */
   async deleteAccount(confirmation: AccountConfirmation): Promise<void> {
     await firstValueFrom(this.meApi.deleteAccount(confirmation));
+    await this.push.forgetDevice();
+    this.flow.phone.set(null);
     this.endLocalSession();
   }
 

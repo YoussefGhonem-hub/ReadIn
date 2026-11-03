@@ -1,20 +1,16 @@
 import { ChangeDetectionStrategy, Component, Directive, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { firstValueFrom } from 'rxjs';
 import { isApiError } from '../../../core/api/api.config';
 import { MeApi } from '../../../core/api/me.api';
-import { AccountConfirmation } from '../../../core/api/models';
 import { AuthConfigService } from '../../../core/auth/auth-config.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { ExternalResult } from '../../../core/auth/external-identity.service';
 import { SessionStore } from '../../../core/auth/session.store';
 import { ErrorMessages } from '../../../core/i18n/error-messages';
 import { BottomSheet } from '../../../shared/ui/bottom-sheet';
-import { ExternalButtons } from '../../../shared/ui/external/external-buttons';
 import { PasswordField } from '../../../shared/ui/password/password-field';
 import { passwordViolations } from '../../../shared/ui/password/password-rules';
 import { ConfirmPhoneDialog } from '../../../shared/ui/phone/confirm-phone-dialog';
@@ -456,108 +452,3 @@ export class SignOutEverywhereSheet extends AccountSheet {
   }
 }
 
-/**
- * Delete account (F01): an explicit confirmation plus the password, or (Google/Apple-only accounts, ADR 0012) a fresh
- * token of a linked provider. Soft delete; personal data goes after 30 days.
- */
-@Component({
-  selector: 'rd-delete-account-sheet',
-  imports: [ReactiveFormsModule, TranslocoPipe, LucideDynamicIcon, BottomSheet, PasswordField, ExternalButtons],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <rd-bottom-sheet [open]="open()" role="alertdialog" labelledBy="delete-account-title" describedBy="delete-account-body" [dismissible]="!busy()" (closed)="close()">
-      <form [formGroup]="form" (ngSubmit)="confirm()" class="flex flex-col gap-4 pt-1" novalidate data-delete-account>
-        <span class="grid h-12 w-12 place-items-center rounded-card bg-callout-danger text-error" aria-hidden="true">
-          <svg lucideIcon="Trash2" [size]="22"></svg>
-        </span>
-        <h2 id="delete-account-title" class="m-0 pe-10 text-xl font-semibold">{{ 'account.delete.title' | transloco }}</h2>
-        <p id="delete-account-body" class="m-0 text-sm text-text-secondary">{{ 'account.delete.body' | transloco }}</p>
-        @if (hasPassword()) {
-          <div>
-            <label class="rd-label" for="delete-account-password">{{ 'auth.password' | transloco }}</label>
-            <rd-password-field inputId="delete-account-password" autocomplete="current-password" formControlName="password" [invalid]="!!passwordError()" [describedBy]="passwordError() ? 'delete-account-password-error' : null" />
-            @if (passwordError()) {
-              <p id="delete-account-password-error" class="rd-field-error">{{ passwordError()! | transloco }}</p>
-            }
-          </div>
-        }
-        <label class="flex items-start gap-2 text-sm">
-          <input type="checkbox" formControlName="understood" class="mt-1 h-4 w-4 accent-error" data-understood />
-          <span>{{ 'account.delete.understand' | transloco }}</span>
-        </label>
-        @if (error()) {
-          <p class="rd-alert rd-alert-error" role="alert">{{ error() }}</p>
-        }
-        @if (hasPassword()) {
-          <div class="flex flex-col gap-2 sm:flex-row-reverse">
-            <button type="submit" class="rd-btn flex-1 bg-error text-on-error" [disabled]="busy() || !value().understood" [attr.aria-busy]="busy()" data-delete-confirm>
-              @if (busy()) {
-                <svg lucideIcon="LoaderCircle" [size]="18" class="animate-spin" aria-hidden="true"></svg>
-              }
-              {{ 'account.delete.confirm' | transloco }}
-            </button>
-            <button type="button" class="rd-btn rd-btn-outline flex-1" [disabled]="busy()" (click)="close()">{{ 'common.cancel' | transloco }}</button>
-          </div>
-        } @else {
-          <!-- Accounts without a password confirm with Google/Apple once they ticked the box. -->
-          <p class="m-0 text-sm font-semibold">{{ 'account.delete.confirmProvider' | transloco }}</p>
-          <rd-external-buttons [only]="linked()" [busy]="busy() || !value().understood" (credential)="deleteWith($event)" data-delete-external />
-          <button type="button" class="rd-btn rd-btn-outline w-full" [disabled]="busy()" (click)="close()">{{ 'common.cancel' | transloco }}</button>
-        }
-      </form>
-    </rd-bottom-sheet>
-  `,
-})
-export class DeleteAccountSheet extends AccountSheet {
-  private readonly router = inject(Router);
-  private readonly session = inject(SessionStore);
-  protected readonly form = inject(FormBuilder).nonNullable.group({ password: [''], understood: [false] });
-  protected readonly value = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
-  protected readonly hasPassword = computed(() => this.session.me()?.hasPassword ?? true);
-  protected readonly linked = computed(() => (this.session.me()?.externalLogins ?? []).map((l) => l.provider));
-
-  protected readonly passwordError = computed(() => {
-    if (this.wrongPassword()) return 'errors.auth.wrong_password';
-    return this.submitted() && !this.value().password ? 'auth.validation.required' : null;
-  });
-
-  constructor() {
-    super();
-    this.form.valueChanges.subscribe(() => {
-      this.wrongPassword.set(false);
-      this.error.set(null);
-    });
-  }
-
-  protected reset(): void {
-    this.form.reset();
-  }
-
-  protected async confirm(): Promise<void> {
-    if (this.busy() || !this.form.controls.understood.value || !this.hasPassword()) return;
-    this.submitted.set(true);
-    if (this.passwordError()) return;
-    await this.delete({ password: this.form.getRawValue().password });
-  }
-
-  protected deleteWith(result: ExternalResult): Promise<void> {
-    if (!this.form.controls.understood.value) return Promise.resolve();
-    return this.delete({ external: { provider: result.provider, idToken: result.idToken, ...(result.nonce ? { nonce: result.nonce } : {}) } });
-  }
-
-  private async delete(confirmation: AccountConfirmation): Promise<void> {
-    if (this.busy()) return;
-    this.busy.set(true);
-    try {
-      await this.auth.deleteAccount(confirmation);
-      this.busy.set(false);
-      this.closed.emit();
-      this.toasts.info(this.transloco.translate('account.delete.done'));
-      await this.router.navigateByUrl('/');
-    } catch (error) {
-      this.showError(error);
-    } finally {
-      this.busy.set(false);
-    }
-  }
-}

@@ -54,9 +54,22 @@ export interface AppleIdAuth {
 
 type ExternalWindow = Window & { google?: { accounts?: { id?: GoogleAccountsId } }; AppleID?: { auth?: AppleIdAuth } };
 
+/** Brand names, the same in every UI language. */
+export const PROVIDER_NAMES: Record<ExternalProvider, string> = { google: 'Google', apple: 'Apple' };
+
 /** What a provider returned: the credential for the API, plus Apple's one-time name. */
 export interface ExternalResult extends ExternalCredential {
   displayName?: string;
+}
+
+/** Only what the API needs to confirm an identity (Apple's one-time name isn't part of it); Apple keeps its code. */
+export function credentialOf(result: ExternalResult): ExternalCredential {
+  return {
+    provider: result.provider,
+    idToken: result.idToken,
+    ...(result.nonce ? { nonce: result.nonce } : {}),
+    ...(result.authorizationCode ? { authorizationCode: result.authorizationCode } : {}),
+  };
 }
 
 /** A random raw nonce and its SHA-256 (hex), which Apple puts in the token (ADR 0012). */
@@ -129,7 +142,8 @@ export class ExternalIdentityService {
 
   /**
    * Sign in with Apple in a popup, with a fresh nonce. Resolves null when the person closes it. The raw nonce goes to
-   * the API, which checks that the token carries its SHA-256.
+   * the API, which checks that the token carries its SHA-256, and so does Apple's one-time authorization code, which
+   * the API turns into a token it can revoke when the account is deleted.
    */
   async signInWithApple(): Promise<ExternalResult | null> {
     if (!this.isBrowser || !this.clientIds.apple) return null;
@@ -146,7 +160,14 @@ export class ExternalIdentityService {
       const response = await auth.signIn();
       const idToken = response?.authorization?.id_token;
       if (!idToken) return null;
-      return { provider: 'apple', idToken, nonce: nonce.raw, displayName: appleDisplayName(response.user?.name) };
+      const code = response.authorization.code;
+      return {
+        provider: 'apple',
+        idToken,
+        nonce: nonce.raw,
+        ...(code ? { authorizationCode: code } : {}),
+        displayName: appleDisplayName(response.user?.name),
+      };
     } catch {
       return null; // popup_closed_by_user / user_cancelled_authorize
     }

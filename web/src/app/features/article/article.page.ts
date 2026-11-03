@@ -143,28 +143,37 @@ const TOC_MIN_HEADINGS = 3;
         }
 
         <!-- Byline -->
-        <div class="mt-5 flex items-center gap-3">
-          <!-- The name below is the link for keyboards and screen readers; the photo is the same link for taps. -->
-          <a [routerLink]="'/@' + a.author.username" class="flex shrink-0 rounded-full" tabindex="-1" aria-hidden="true" data-author-avatar>
-            <rd-avatar [name]="a.author.displayName" [src]="a.author.avatarUrl" [size]="40" />
-          </a>
-          <div class="min-w-0">
-            <a [routerLink]="'/@' + a.author.username" class="inline-flex items-center gap-1 font-semibold text-text-primary no-underline">
-              {{ a.author.displayName }}
-              @if (a.author.isVerified) {
-                <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
-              }
+        <div class="mt-5 flex items-center gap-3" data-byline>
+          @if (a.author; as author) {
+            <!-- The name below is the link for keyboards and screen readers; the photo is the same link for taps. -->
+            <a [routerLink]="'/@' + author.username" class="flex shrink-0 rounded-full" tabindex="-1" aria-hidden="true" data-author-avatar>
+              <rd-avatar [name]="author.displayName" [src]="author.avatarUrl" [size]="40" />
             </a>
-            <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
-          </div>
-          <div class="ms-auto" data-author-follow>
-            <rd-follow-button [user]="a.author" [initial]="a.isFollowingAuthor" />
-          </div>
+            <div class="min-w-0">
+              <a [routerLink]="'/@' + author.username" class="inline-flex items-center gap-1 font-semibold text-text-primary no-underline">
+                {{ author.displayName }}
+                @if (author.isVerified) {
+                  <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                }
+              </a>
+              <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
+            </div>
+            <div class="ms-auto" data-author-follow>
+              <rd-follow-button [user]="author" [initial]="a.isFollowingAuthor" />
+            </div>
+          } @else {
+            <!-- The author deleted their account (SPEC §9.6): no name, photo, profile link or follow. -->
+            <rd-avatar [generic]="true" [size]="40" />
+            <div class="min-w-0">
+              <span class="font-semibold text-text-secondary" data-deleted-author>{{ 'common.deletedUser' | transloco }}</span>
+              <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
+            </div>
+          }
         </div>
 
         <!-- Trust row (SPEC §20) -->
         <ul class="my-5 flex list-none flex-wrap items-center gap-x-3 gap-y-2 border-y border-border p-0 py-3 text-xs text-text-secondary">
-          @if (a.author.isVerified) {
+          @if (a.author?.isVerified) {
             <li class="inline-flex items-center gap-1 font-semibold text-success">
               <svg lucideIcon="BadgeCheck" [size]="14" aria-hidden="true"></svg>{{ 'article.verifiedWriter' | transloco }}
             </li>
@@ -372,7 +381,8 @@ export class ArticlePage {
       // A fresh copy from the API is the truth for reactions, saves, following and collections (F10, F12, F13).
       untracked(() => {
         social.absorb([article]);
-        follows.absorb(article.author.id, article.isFollowingAuthor);
+        // A deleted author (null) can't be followed.
+        if (article.author) follows.absorb(article.author.id, article.isFollowingAuthor);
         // The copy served while hydrating is the anonymous SSR one: no collections yet.
         if (!hydration.isOpen) collections.learnArticle(article.id, article.collectionIds);
       });

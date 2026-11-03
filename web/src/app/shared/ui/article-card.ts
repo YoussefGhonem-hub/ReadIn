@@ -52,13 +52,18 @@ import { articleLink } from './article-link';
           <rd-bdi-text [text]="article().title" />
         </h3>
         <div class="mt-1.5 flex flex-wrap items-center gap-x-2 text-xs text-text-secondary">
-          <!-- Above the card link; its ::after box makes the tap target 44 px tall without moving anything. -->
-          <a [routerLink]="'/@' + article().author.username" class="author relative z-10 inline-flex items-center gap-1 text-text-primary no-underline hover:underline" data-card-author>
-            {{ article().author.displayName }}
-            @if (article().author.isVerified) {
-              <svg lucideIcon="BadgeCheck" [size]="14" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
-            }
-          </a>
+          @if (article().author; as author) {
+            <!-- Above the card link; its ::after box makes the tap target 44 px tall without moving anything. -->
+            <a [routerLink]="'/@' + author.username" class="author relative z-10 inline-flex items-center gap-1 text-text-primary no-underline hover:underline" data-card-author>
+              {{ author.displayName }}
+              @if (author.isVerified) {
+                <svg lucideIcon="BadgeCheck" [size]="14" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+              }
+            </a>
+          } @else {
+            <!-- The author deleted their account (SPEC §9.6): no profile link. -->
+            <span data-deleted-author>{{ 'common.deletedUser' | transloco }}</span>
+          }
           <span aria-hidden="true">·</span>
           <span>{{ article().readingTimeMinutes | rdReadingTime: lang() }}</span>
         </div>

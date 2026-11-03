@@ -121,27 +121,21 @@ describe('Settings → Account (F18)', () => {
     expect(root.querySelector('[data-linked-accounts] [data-unlink]')).not.toBeNull();
   });
 
-  it('a Google-only account deletes itself by confirming with Google', async () => {
-    const { root, fixture, http, session } = await setup(GOOGLE_ONLY);
-    root.querySelector<HTMLButtonElement>('[data-open="delete"]')!.click();
-    fixture.detectChanges();
-    await settle(10);
-    fixture.detectChanges();
-    expect(root.querySelector('#delete-account-password')).toBeNull();
-
-    sdks.google.pick('too-early'); // the box isn't ticked yet
-    await settle(5);
-    http.expectNone(`${TEST_API}/me`);
-
-    const understood = root.querySelector<HTMLInputElement>('[data-understood]')!;
-    understood.click();
-    fixture.detectChanges();
-    sdks.google.pick('google-token');
-    await settle(10);
-    const request = http.expectOne((r) => r.url === `${TEST_API}/me` && r.method === 'DELETE');
-    expect(request.request.body).toEqual({ external: { provider: 'google', idToken: 'google-token' } });
-    request.flush(null, { status: 204, statusText: 'No Content' });
-    await settle(10);
-    expect(session.isGuest()).toBe(true);
+  it('ends with a red "Delete account" row into the in-app flow, and the email route next to it', async () => {
+    for (const me of [testMe(), GOOGLE_ONLY]) {
+      TestBed.resetTestingModule();
+      const { root, http } = await setup(me);
+      const row = root.querySelector<HTMLAnchorElement>('[data-delete-account]')!;
+      expect(row.getAttribute('href')).toBe('/settings/delete-account');
+      expect(row.className).toContain('text-error');
+      expect(row.textContent).toContain('احذف الحساب');
+      // The last row of the Account card (the last section of Settings).
+      const links = [...root.querySelectorAll('[data-account] a, [data-account] button')];
+      expect(links.at(-2)).toBe(row);
+      const byEmail = root.querySelector<HTMLAnchorElement>('[data-delete-by-email]')!;
+      expect(byEmail.href).toBe('https://readin-cca78.firebaseapp.com/delete-account');
+      expect(byEmail.textContent).toContain('احذفه بالإيميل بدل كده');
+      http.expectNone((r) => r.url === `${TEST_API}/me` && r.method === 'DELETE');
+    }
   });
 });

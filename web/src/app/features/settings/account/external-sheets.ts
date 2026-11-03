@@ -9,7 +9,7 @@ import { MeApi } from '../../../core/api/me.api';
 import { AccountConfirmation, ExternalCredential, ExternalProvider } from '../../../core/api/models';
 import { AuthConfigService } from '../../../core/auth/auth-config.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { ExternalResult } from '../../../core/auth/external-identity.service';
+import { ExternalResult, PROVIDER_NAMES, credentialOf } from '../../../core/auth/external-identity.service';
 import { SessionStore } from '../../../core/auth/session.store';
 import { ErrorMessages } from '../../../core/i18n/error-messages';
 import { BottomSheet } from '../../../shared/ui/bottom-sheet';
@@ -23,13 +23,6 @@ import { PinInput } from '../../../shared/ui/pin/pin-input';
 import { normalizePin, pinViolations } from '../../../shared/ui/pin/pin-rules';
 import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { SubmitButton, fieldErrors } from '../../auth/auth-shared';
-
-export const PROVIDER_NAMES: Record<ExternalProvider, string> = { google: 'Google', apple: 'Apple' };
-
-/** Only what the API needs from a provider result (Apple's one-time name isn't sent here). */
-function credentialOf(result: ExternalResult): ExternalCredential {
-  return { provider: result.provider, idToken: result.idToken, ...(result.nonce ? { nonce: result.nonce } : {}) };
-}
 
 /**
  * Settings → Linked accounts → "اربط" (F18, ADR 0012): pick the Google/Apple account, then confirm it's you with the

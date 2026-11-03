@@ -61,8 +61,10 @@ export class MeApi {
   }
 
   /**
-   * Soft delete, confirmed with the password or (accounts without one) a fresh Google/Apple token; every session ends
-   * and the cookie is cleared.
+   * Deletes the account for good, confirmed with the password or a fresh Google/Apple sign in (Apple with its
+   * `authorizationCode`). `204` also answers a retry after the account is already gone; every session ends and the
+   * cookie is cleared. `400 auth.apple_confirmation_required` asks for an Apple confirmation; `503
+   * account.deletion_unavailable` means nothing was deleted.
    */
   deleteAccount(confirmation: AccountConfirmation): Observable<void> {
     return this.http.delete<void>(`${this.base}/me`, { ...webSessionOptions(), body: confirmation });

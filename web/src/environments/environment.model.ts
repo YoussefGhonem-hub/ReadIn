@@ -27,8 +27,10 @@ export interface AppEnvironment {
    * token for the Realtime Database (ADR 0008); it is never a ReadIn sign-in.
    */
   authEmulatorUrl: string | null;
-  /** Where "Forgot the PIN too?" sends people (ADR 0009: an Admin resets the account). */
+  /** Where "Forgot the PIN too?" sends people (ADR 0009: an Admin resets the account); also the email route to delete. */
   supportEmail: string;
+  /** The public "Delete your account" page (`public/delete-account.html`): what is deleted, and the email route. */
+  accountDeletionUrl: string;
   /**
    * Google Identity Services web client id (a public identifier, ADR 0012). Empty hides "Continue with Google"; the
    * button also needs the API to list `google` in `GET /auth/config` → `externalProviders`.
