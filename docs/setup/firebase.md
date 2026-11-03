@@ -91,9 +91,10 @@ The web app receives pushes in `web/public/firebase-messaging-sw.js`. It asks fo
 ## 5. Mobile apps: `flutterfire configure`
 
 The `dev` flavor keeps using `mobile/lib/firebase_options.dart` (emulator, `demo-readin`). The `prod` flavor uses
-`mobile/lib/firebase_options_prod.dart`, which is a committed placeholder until you generate it.
+`mobile/lib/firebase_options_prod.dart`, which already holds the `readin-cca78` values of the registered Android and iOS
+apps (`app.readin.readin`). Regenerate it only if those apps change (a new app, a new bundle ID).
 
-Start from a clean working tree (`git status` shows nothing), then:
+To regenerate, start from a clean working tree (`git status` shows nothing), then:
 
 ```bash
 cd mobile
@@ -183,8 +184,8 @@ the production build locally).
 - [x] Web app registered; config and VAPID key in `web/src/environments/environment.ts`
 - [ ] Database rules deployed from `firebase/database.rules.json`
 - [ ] Authentication switched on (no providers); `readin.app` in authorized domains
-- [ ] APNs key uploaded
-- [ ] `mobile/lib/firebase_options_prod.dart` generated and committed
+- [x] APNs key uploaded (development + production)
+- [x] Android and iOS apps registered; `mobile/lib/firebase_options_prod.dart` committed
 - [ ] Browser API key restricted to `https://readin.app/*`
 - [ ] `Firebase:ServiceAccountJson`, `Firebase:ProjectId`, `Firebase:DatabaseUrl` stored with `dotnet user-secrets` (dev) / secret store (server); downloaded key file deleted
 - [ ] No `google-services.json`, `GoogleService-Info.plist` or `*firebase-adminsdk*.json` in `git status`
