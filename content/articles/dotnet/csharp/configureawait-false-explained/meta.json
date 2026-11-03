@@ -1,0 +1,59 @@
+{
+  "slug": "configureawait-false-explained",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "ConfigureAwait(false) Explained: When You Need It and When You Don't",
+      "subtitle": "It changes one thing: whether the rest of the method goes back to a captured context. In ASP.NET Core there's none to go back to."
+    },
+    "ar-EG": {
+      "title": "إمتى تحتاج ConfigureAwait(false) وإمتى ملهاش لازمة؟",
+      "subtitle": "هي بتغيّر حاجة واحدة: باقي الـ method يرجع للـ context اللي اتمسك ولا لأ. وفي ASP.NET Core مفيش context ترجع له أصلًا."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": {
+    "slug": "csharp-under-the-hood",
+    "order": 10
+  },
+  "tags": [
+    "C#",
+    "async/await",
+    "ConfigureAwait",
+    "SynchronizationContext"
+  ],
+  "sources": [
+    {
+      "title": "ConfigureAwait FAQ — Stephen Toub, .NET Blog",
+      "url": "https://devblogs.microsoft.com/dotnet/configureawait-faq/"
+    },
+    {
+      "title": "Task.ConfigureAwait Method — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.configureawait"
+    },
+    {
+      "title": "CA2007: Do not directly await a Task — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007"
+    },
+    {
+      "title": "ConfigureAwaitOptions Enum — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.threading.tasks.configureawaitoptions"
+    },
+    {
+      "title": "How Async/Await Really Works in C# — Stephen Toub, .NET Blog",
+      "url": "https://devblogs.microsoft.com/dotnet/how-async-await-really-works/"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public record Order(int Id, decimal Total);"
+    }
+  }
+}

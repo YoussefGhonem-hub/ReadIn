@@ -1,0 +1,46 @@
+{
+  "slug": "cancellationtoken-is-cooperative",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "A CancellationToken Cancels Nothing by Itself: Cooperative Cancellation in .NET",
+      "subtitle": "Cancel() only raises a flag. Work stops when the code doing it checks the token or hands it to an API that does."
+    },
+    "ar-EG": {
+      "title": "الـ CancellationToken لوحده مش بيلغي حاجة: إزاي الـ cancellation بيشتغل في .NET",
+      "subtitle": "الـ Cancel() بيرفع علامة وبس. الشغل بيقف لما الكود اللي بيعمله يشيّك على الـ token أو يسلّمه لـ API بيشيّك عليه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 9 },
+  "tags": ["C#", "CancellationToken", "async/await", "ASP.NET Core"],
+  "sources": [
+    {
+      "title": "Cancellation in Managed Threads — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/threading/cancellation-in-managed-threads"
+    },
+    {
+      "title": "Task Cancellation — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/parallel-programming/task-cancellation"
+    },
+    {
+      "title": "CA2016: Forward the CancellationToken parameter to methods that take one — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2016"
+    },
+    {
+      "title": "Task.Run Method (System.Threading.Tasks) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.run"
+    },
+    {
+      "title": "Breaking change: Thread.Abort is obsolete — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/compatibility/core-libraries/5.0/thread-abort-obsolete"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

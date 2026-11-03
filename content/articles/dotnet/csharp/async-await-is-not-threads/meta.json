@@ -1,0 +1,46 @@
+{
+  "slug": "async-await-is-not-threads",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "async/await Doesn't Create Threads: What Really Happens",
+      "subtitle": "An async method runs on your thread until it has to wait. Where the waiting goes, and where the threads really come from."
+    },
+    "ar-EG": {
+      "title": "الـ async/await مش بيعمل threads: اللي بيحصل فعلًا",
+      "subtitle": "الـ async method بتشتغل على نفس الـ thread لحد ما تضطر تستنى. الانتظار بيروح فين، والـ threads بتيجي منين أصلًا."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 7 },
+  "tags": ["C#", "async/await", "Threads", "Thread pool"],
+  "sources": [
+    {
+      "title": "The Task Asynchronous Programming (TAP) model with async and await — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/asynchronous-programming/task-asynchronous-programming-model"
+    },
+    {
+      "title": "Asynchronous programming with async and await — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/asynchronous-programming/"
+    },
+    {
+      "title": "How Async/Await Really Works in C# — Stephen Toub, .NET Blog",
+      "url": "https://devblogs.microsoft.com/dotnet/how-async-await-really-works/"
+    },
+    {
+      "title": "ConfigureAwait FAQ — Stephen Toub, .NET Blog",
+      "url": "https://devblogs.microsoft.com/dotnet/configureawait-faq/"
+    },
+    {
+      "title": "ASP.NET Core Best Practices: Avoid blocking calls — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/best-practices"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

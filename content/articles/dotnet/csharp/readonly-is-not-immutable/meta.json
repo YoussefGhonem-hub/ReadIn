@@ -1,0 +1,49 @@
+{
+  "slug": "readonly-is-not-immutable",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "What readonly and IReadOnlyList Really Protect, and What They Leave Open",
+      "subtitle": "readonly freezes a variable and IReadOnlyList hides a few methods. Neither stops the data from changing under you."
+    },
+    "ar-EG": {
+      "title": "الـ readonly والـ IReadOnlyList بيحموا إيه بالظبط؟ وإيه اللي سايبينه مفتوح",
+      "subtitle": "الـ readonly بيثبّت متغير، والـ IReadOnlyList بيخبّي كام method. ولا واحد فيهم بيمنع الداتا إنها تتغير من وراك."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 3 },
+  "tags": ["C#", "readonly", "Collections", "Immutability"],
+  "sources": [
+    {
+      "title": "readonly keyword (C# reference) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/readonly"
+    },
+    {
+      "title": "IReadOnlyList<T> Interface — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1"
+    },
+    {
+      "title": "ReadOnlyCollection<T> Class — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.collections.objectmodel.readonlycollection-1"
+    },
+    {
+      "title": "System.Collections.Immutable Namespace — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.collections.immutable"
+    },
+    {
+      "title": "System.Collections.Frozen Namespace — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.collections.frozen"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": { "csharp": "public record Rate(string Currency, decimal Value);" }
+  }
+}

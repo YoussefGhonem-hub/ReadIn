@@ -1,0 +1,42 @@
+{
+  "slug": "linq-deferred-execution-and-multiple-enumeration",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Your IEnumerable Holds No Data: LINQ Deferred Execution and Multiple Enumeration",
+      "subtitle": "A LINQ query is a recipe, not a result. Every enumeration cooks it again, with fresh data and fresh side effects."
+    },
+    "ar-EG": {
+      "title": "الـ IEnumerable بتاعك مش شايل داتا: الـ deferred execution في LINQ وتكرار الـ enumeration",
+      "subtitle": "الـ LINQ query وصفة مش نتيجة. وكل enumeration بيطبخها من الأول، بداتا جديدة وآثار جانبية جديدة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 4 },
+  "tags": ["C#", "LINQ", "IEnumerable", "Performance"],
+  "sources": [
+    {
+      "title": "Introduction to LINQ Queries (C#) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/linq/get-started/introduction-to-linq-queries"
+    },
+    {
+      "title": "Deferred execution and lazy evaluation — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/linq/deferred-execution-lazy-evaluation"
+    },
+    {
+      "title": "CA1851: Possible multiple enumerations of IEnumerable collection — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1851"
+    },
+    {
+      "title": "How Queries Work (EF Core) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/how-query-works"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

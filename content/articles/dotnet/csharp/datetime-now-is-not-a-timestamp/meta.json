@@ -1,0 +1,46 @@
+{
+  "slug": "datetime-now-is-not-a-timestamp",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why DateTime.Now Is the Wrong Timestamp: DateTime, DateTimeOffset and TimeProvider",
+      "subtitle": "DateTime.Now is one machine's clock reading, not a moment in time. Record instants, and get the current time from TimeProvider."
+    },
+    "ar-EG": {
+      "title": "ليه DateTime.Now مش timestamp؟ الفرق بين DateTime و DateTimeOffset و TimeProvider",
+      "subtitle": "الـ DateTime.Now قراية ساعة جهاز واحد، مش لحظة محددة في الزمن. سجّل لحظات حقيقية، وخد الوقت الحالي من TimeProvider."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 2 },
+  "tags": ["C#", "DateTime", "DateTimeOffset", "TimeProvider", "Time zones"],
+  "sources": [
+    {
+      "title": "Compare types related to date and time — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/datetime/choosing-between-datetime"
+    },
+    {
+      "title": "Performing arithmetic operations with dates and times — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/datetime/performing-arithmetic-operations"
+    },
+    {
+      "title": "DateTime.Kind Property — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.datetime.kind"
+    },
+    {
+      "title": "What is the TimeProvider class — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/datetime/timeprovider-overview"
+    },
+    {
+      "title": "Banned API analyzers: how to use BannedSymbols.txt — dotnet/roslyn-analyzers",
+      "url": "https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.BannedApiAnalyzers/BannedApiAnalyzers.Help.md"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

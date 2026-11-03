@@ -1,0 +1,42 @@
+{
+  "slug": "async-void-is-not-async-task",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why async void Is Not Just async Task Without a Result",
+      "subtitle": "No Task means nobody can wait for it and nobody can catch its exceptions. Where async void sneaks in, and the one place it belongs."
+    },
+    "ar-EG": {
+      "title": "ليه الـ async void مش مجرد async Task من غير قيمة راجعة؟",
+      "subtitle": "من غير Task محدش يقدر يستناها ومحدش يقدر يمسك الـ exceptions بتاعتها. الـ async void بتتسرّب منين، والمكان الوحيد اللي ينفع فيه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 8 },
+  "tags": ["C#", "async/await", "Exceptions", "Event handlers"],
+  "sources": [
+    {
+      "title": "Async return types: Void return type — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/asynchronous-programming/async-return-types"
+    },
+    {
+      "title": "Async/Await: Best Practices in Asynchronous Programming — Stephen Cleary, MSDN Magazine (Microsoft Learn archive)",
+      "url": "https://learn.microsoft.com/archive/msdn-magazine/2013/march/async-await-best-practices-in-asynchronous-programming"
+    },
+    {
+      "title": "Asynchronous programming scenarios: Return async void only from event handlers — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/asynchronous-programming/async-scenarios"
+    },
+    {
+      "title": "ASP.NET Core Best Practices: Do not use the HttpContext after the request is complete — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/best-practices"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

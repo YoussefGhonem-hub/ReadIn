@@ -1,0 +1,38 @@
+{
+  "slug": "records-are-not-just-immutable-classes",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Records Beyond Immutability: Value Equality, with and Shallow Copies",
+      "subtitle": "A record is a class or struct with generated equality and copying. Know what they compare and copy, one level deep."
+    },
+    "ar-EG": {
+      "title": "الـ records أكتر من immutability: الـ value equality والـ with والـ shallow copy",
+      "subtitle": "الـ record عبارة عن class أو struct معاه equality ونسخ بيولّدهم الـ compiler. اعرف بيقارنوا وبينسخوا إيه، ولحد أنهي عمق."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 6 },
+  "tags": ["C#", "Records", "Equality", "Immutability"],
+  "sources": [
+    {
+      "title": "C# record types — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/fundamentals/types/records"
+    },
+    {
+      "title": "Records (C# reference) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/record"
+    },
+    {
+      "title": "The with expression (C# reference) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/operators/with-expression"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

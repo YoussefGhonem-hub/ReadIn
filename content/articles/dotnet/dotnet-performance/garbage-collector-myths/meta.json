@@ -1,0 +1,49 @@
+{
+  "slug": "garbage-collector-myths",
+  "field": "dotnet",
+  "topic": "dotnet-performance",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "GC.Collect and = null Won't Save You: How the .NET Garbage Collector Really Works",
+      "subtitle": "The GC reclaims what nothing can reach, when allocations call for it. Find the reference that keeps memory alive instead of forcing collections."
+    },
+    "ar-EG": {
+      "title": "الـ GC.Collect والـ = null مش هينقذوك: إزاي الـ Garbage Collector في .NET بيشتغل فعلًا",
+      "subtitle": "الـ GC بيرجّع اللي محدش يقدر يوصله، لما الـ allocations تحتاج. دوّر على الـ reference اللي ماسك الـ memory بدل ما تجبره يشتغل."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 11 },
+  "tags": ["C#", "Garbage collection", "Memory", "Performance"],
+  "sources": [
+    {
+      "title": "Fundamentals of garbage collection — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals"
+    },
+    {
+      "title": "Induced collections — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/garbage-collection/induced"
+    },
+    {
+      "title": "Workstation vs. server garbage collection — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/garbage-collection/workstation-server-gc"
+    },
+    {
+      "title": "Dynamic adaptation to application sizes (DATAS) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/garbage-collection/datas"
+    },
+    {
+      "title": "Memory management and patterns in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/performance/memory"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": { "csharp": "public record OrderRow(long Id, decimal Total);" }
+  }
+}

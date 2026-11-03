@@ -1,0 +1,46 @@
+{
+  "slug": "nullable-reference-types-are-not-runtime-checks",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Nullable Reference Types Still Let Nulls Through at Runtime",
+      "subtitle": "string versus string? is a compile-time promise, not a runtime check. Where nulls still get in, and how to close the doors."
+    },
+    "ar-EG": {
+      "title": "ليه الـ nullable reference types مش هتمنع الـ null وقت التشغيل؟",
+      "subtitle": "الفرق بين string و string? وعد وقت الـ compile، مش check وقت التشغيل. الـ null لسه بيدخل منين، وتقفل الأبواب دي إزاي."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 5 },
+  "tags": ["C#", "Nullable reference types", "Null safety", "System.Text.Json"],
+  "sources": [
+    {
+      "title": "Nullable reference types (C#) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/fundamentals/null-safety/nullable-reference-types"
+    },
+    {
+      "title": "Nullable migration strategies (C#) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/advanced-topics/update-applications/nullable-migration-strategies"
+    },
+    {
+      "title": "Attributes for nullable static analysis (C# reference) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/attributes/nullable-analysis"
+    },
+    {
+      "title": "Respect nullable annotations (System.Text.Json) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/serialization/system-text-json/nullable-annotations"
+    },
+    {
+      "title": "Require properties for deserialization (System.Text.Json) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/serialization/system-text-json/required-properties"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
