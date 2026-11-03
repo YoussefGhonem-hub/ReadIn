@@ -3,12 +3,16 @@ import { LucideDynamicIcon } from '@lucide/angular';
 import type { AppIconName } from './icons';
 
 /** Lucide names used by `FieldDto.icon` (content/taxonomy.yaml). Unknown names fall back to a book. */
-const FIELD_ICONS: Record<string, AppIconName> = {
+export const FIELD_ICONS: Readonly<Record<string, AppIconName>> = {
   binary: 'Binary',
   bot: 'Bot',
+  boxes: 'Boxes',
   brain: 'Brain',
+  'brain-circuit': 'BrainCircuit',
   cloud: 'Cloud',
   code: 'Code',
+  'code-xml': 'CodeXml',
+  cog: 'Cog',
   cpu: 'Cpu',
   database: 'Database',
   'flask-conical': 'FlaskConical',
@@ -16,10 +20,12 @@ const FIELD_ICONS: Record<string, AppIconName> = {
   'heart-pulse': 'HeartPulse',
   layers: 'Layers',
   'layout-dashboard': 'LayoutDashboard',
+  'layout-template': 'LayoutTemplate',
   monitor: 'Monitor',
   network: 'Network',
   server: 'Server',
   shield: 'Shield',
+  'shield-check': 'ShieldCheck',
   smartphone: 'Smartphone',
   sparkles: 'Sparkles',
   stethoscope: 'Stethoscope',

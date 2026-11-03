@@ -105,4 +105,20 @@ describe('CollectionsStore (F13)', () => {
     expect(store.collections().map((c) => c.id)).toEqual(['c2']);
     expect(store.collectionsOf('a1')?.size).toBe(0);
   });
+
+  it("learns an article's collections from the reader (ArticleDetailsDto.collectionIds), but not over a change on its way", async () => {
+    await loaded();
+    store.learnArticle('a1', undefined); // an older API without the field: still unknown
+    expect(store.collectionsOf('a1')).toBeNull();
+    store.learnArticle('a1', ['c1']);
+    expect([...store.collectionsOf('a1')!]).toEqual(['c1']);
+
+    const done = store.addArticle('c2', testCard());
+    store.learnArticle('a1', ['c1']); // a copy loaded before the add
+    expect([...store.collectionsOf('a1')!].sort()).toEqual(['c1', 'c2']);
+    http.expectOne(`${TEST_API}/me/collections/c2/articles/a1`).flush(null, { status: 204, statusText: 'No Content' });
+    await done;
+    store.learnArticle('a1', ['c1', 'c2']);
+    expect(store.collectionsOf('a1')?.size).toBe(2);
+  });
 });

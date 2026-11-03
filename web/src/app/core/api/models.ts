@@ -257,6 +257,8 @@ export interface ArticleDetailsDto extends ArticleCardDto {
   readCount: number;
   /** False for guests and on your own articles. */
   isFollowingAuthor: boolean;
+  /** The viewer's collections that contain the article; empty for guests. */
+  collectionIds: string[];
 }
 
 // ── Reactions (F10) ─────────────────────────────────────────

@@ -71,7 +71,7 @@ describe('collection sheets (F13)', () => {
       const input = root.querySelector<HTMLInputElement>('#new-collection-name')!;
       (root.querySelector('[data-create-collection]') as HTMLElement).click();
       await stable();
-      expect(root.querySelector('#new-collection-error')!.textContent).toBe('اكتب اسم.');
+      expect(root.querySelector('#new-collection-error')!.textContent).toBe('اكتب اسم للمجموعة.');
 
       input.value = 'Algorithms';
       input.dispatchEvent(new Event('input'));
@@ -99,6 +99,33 @@ describe('collection sheets (F13)', () => {
       fixture.detectChanges();
       expect(root.querySelector('#collection-name-error')!.textContent).toBe('عندك مجموعة بنفس الاسم.');
       expect(input.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it("shows the API's generic validation codes on the name as the collection-name messages", async () => {
+      const fixture = TestBed.createComponent(CollectionNameSheet);
+      fixture.componentRef.setInput('open', true);
+      fixture.detectChanges();
+      const root = fixture.nativeElement as HTMLElement;
+      const input = root.querySelector<HTMLInputElement>('#collection-name')!;
+      input.value = 'Interview prep';
+      input.dispatchEvent(new Event('input'));
+      (root.querySelector('[data-submit]') as HTMLElement).click();
+      http
+        .expectOne(`${TEST_API}/me/collections`)
+        .flush(problem(400, 'validation.failed', { name: ['validation.max_length'] }), { status: 400, statusText: 'Bad Request' });
+      await flushMicrotasks();
+      fixture.detectChanges();
+      expect(root.querySelector('#collection-name-error')!.textContent).toBe('اسم المجموعة 60 حرف بالكتير.');
+
+      input.value = 'Interview prep 2';
+      input.dispatchEvent(new Event('input'));
+      (root.querySelector('[data-submit]') as HTMLElement).click();
+      http
+        .expectOne(`${TEST_API}/me/collections`)
+        .flush(problem(400, 'validation.failed', { name: ['validation.required'] }), { status: 400, statusText: 'Bad Request' });
+      await flushMicrotasks();
+      fixture.detectChanges();
+      expect(root.querySelector('#collection-name-error')!.textContent).toBe('اكتب اسم للمجموعة.');
     });
 
     it('renames with the new name', async () => {

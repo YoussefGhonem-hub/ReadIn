@@ -275,6 +275,7 @@ function details(cardDto, paragraphs = ['A short post about the attached media.'
     lastReviewedAt: null,
     readCount: 0,
     isFollowingAuthor: false,
+    collectionIds: [],
   };
 }
 

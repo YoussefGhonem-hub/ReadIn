@@ -121,10 +121,15 @@ for (const variant of VARIANTS) {
     await expect(follow).toHaveAttribute('aria-pressed', 'true');
     await expect(follow).toContainText(lang === 'ar' ? 'بتتابعه' : 'Following');
 
-    // The server kept both.
+    // The server kept all of it: the sheet comes back ticked from ArticleDetailsDto.collectionIds.
     await openArticle(page, '/en/a/one-photo');
     await expect(save).toHaveAttribute('aria-pressed', 'true');
     await expect(follow).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('[data-add-to-collection]').click();
+    await expect(interview.locator('input')).toBeChecked();
+    await expect(deepWork.locator('input')).toBeChecked();
+    await expect(collections.locator('[data-collection="c-weekend"] input')).not.toBeChecked();
+    await collections.locator('[data-collections-done]').click();
 
     // Unfollow and unsave; unsaving also takes the article out of its collections.
     await follow.click();

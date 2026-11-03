@@ -21,8 +21,8 @@ function sorted(list: CollectionDto[]): CollectionDto[] {
 
 /**
  * The signed-in user's collections (F13) and which saved articles are in which, shared by the Saved page and the
- * "add to collection" sheet. Membership is known for articles the Saved list has loaded (`SavedArticleDto.collectionIds`)
- * and for changes made in this session; the API has no per-article lookup.
+ * "add to collection" sheet. Membership comes from the API (`SavedArticleDto.collectionIds` on the Saved list,
+ * `ArticleDetailsDto.collectionIds` in the reader) and from changes made in this session.
  */
 @Injectable({ providedIn: 'root' })
 export class CollectionsStore {
@@ -35,6 +35,7 @@ export class CollectionsStore {
   private readonly _collections = signal<CollectionDto[]>([]);
   private readonly _status = signal<CollectionsStatus>('idle');
   private readonly membership = signal<ReadonlyMap<string, ReadonlySet<string>>>(new Map());
+  private readonly pending = new Map<string, number>();
   private loading: Promise<void> | null = null;
 
   readonly collections = this._collections.asReadonly();
@@ -69,16 +70,26 @@ export class CollectionsStore {
     return this.loading;
   }
 
-  /** The collections `articleId` is in, or null when unknown (not loaded by the Saved list in this session). */
+  /** The collections `articleId` is in, or null when unknown (no API copy seen in this session). */
   collectionsOf(articleId: string): ReadonlySet<string> | null {
     return this.membership().get(articleId) ?? null;
   }
 
   /** Learns membership from a page of `GET /me/saved`. */
   learn(items: readonly SavedArticleDto[]): void {
-    if (!items.length) return;
+    this.learnMany(items.map((item) => [item.article.id, item.collectionIds]));
+  }
+
+  /** Learns one article's membership (`ArticleDetailsDto.collectionIds`), unless a change to it is on its way. */
+  learnArticle(articleId: string, collectionIds: readonly string[] | null | undefined): void {
+    if (collectionIds) this.learnMany([[articleId, collectionIds]]);
+  }
+
+  private learnMany(entries: readonly (readonly [string, readonly string[]])[]): void {
+    const fresh = entries.filter(([articleId]) => !this.pending.has(articleId));
+    if (!fresh.length) return;
     const next = new Map(this.membership());
-    for (const item of items) next.set(item.article.id, new Set(item.collectionIds));
+    for (const [articleId, ids] of fresh) next.set(articleId, new Set(ids));
     this.membership.set(next);
   }
 
@@ -108,6 +119,7 @@ export class CollectionsStore {
     if (this.collectionsOf(article.id)?.has(collectionId)) return true;
     const before = this.collectionsOf(article.id);
     const delta = this.setMembership(article.id, collectionId, true);
+    this.track(article.id, 1);
     try {
       await firstValueFrom(this.api.addToCollection(collectionId, article.id));
       this.social.confirmSaved(article);
@@ -116,6 +128,8 @@ export class CollectionsStore {
       this.restore(article.id, collectionId, before, delta);
       this.toasts.error(this.errors.forError(error));
       return false;
+    } finally {
+      this.track(article.id, -1);
     }
   }
 
@@ -123,6 +137,7 @@ export class CollectionsStore {
   async removeArticle(collectionId: string, articleId: string): Promise<boolean> {
     const before = this.collectionsOf(articleId);
     const delta = this.setMembership(articleId, collectionId, false);
+    this.track(articleId, 1);
     try {
       await firstValueFrom(this.api.removeFromCollection(collectionId, articleId));
       return true;
@@ -130,7 +145,16 @@ export class CollectionsStore {
       this.restore(articleId, collectionId, before, delta);
       this.toasts.error(this.errors.forError(error));
       return false;
+    } finally {
+      this.track(articleId, -1);
     }
+  }
+
+  /** Counts the membership changes on their way per article, so an older API copy can't undo them. */
+  private track(articleId: string, delta: 1 | -1): void {
+    const count = (this.pending.get(articleId) ?? 0) + delta;
+    if (count > 0) this.pending.set(articleId, count);
+    else this.pending.delete(articleId);
   }
 
   /** Returns the change made to the collection's article count. */

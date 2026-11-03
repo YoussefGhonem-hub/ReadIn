@@ -127,6 +127,11 @@ export function createSocial({ articles, writers, problem }) {
     if ('isFollowingAuthor' in dto) {
       result.isFollowingAuthor = !!viewer && viewer !== dto.author.id && stateOf(viewer).follows.has(dto.author.id);
     }
+    if ('collectionIds' in dto) {
+      // The viewer's collections containing the article (empty for guests and unsaved articles).
+      const state = viewer ? stateOf(viewer) : null;
+      result.collectionIds = state?.saved.has(dto.id) ? state.collections.filter((c) => c.articleIds.has(dto.id)).map((c) => c.id) : [];
+    }
     return result;
   }
 
@@ -180,8 +185,9 @@ export function createSocial({ articles, writers, problem }) {
 
   function checkName(state, body, exceptId = null) {
     const name = typeof body?.name === 'string' ? body.name.trim() : '';
-    if (!name) return { error: validation('name', 'collection.name_required') };
-    if (name.length > MAX_NAME) return { error: validation('name', 'collection.name_too_long') };
+    // The API's generic validation codes (FluentValidation), like every other form field.
+    if (!name) return { error: validation('name', 'validation.required') };
+    if (name.length > MAX_NAME) return { error: validation('name', 'validation.max_length') };
     const taken = state.collections.some((c) => c.id !== exceptId && c.name.toLowerCase() === name.toLowerCase());
     if (taken) return { error: [409, problem(409, 'collection.name_taken', 'You already have a collection with this name.')] };
     return { name };

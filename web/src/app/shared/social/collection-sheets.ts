@@ -20,10 +20,17 @@ export function collectionNameProblem(name: string): string | null {
   return null;
 }
 
+/** The API's generic validation codes on `name`, shown with the collection-name messages. */
+const NAME_CODES: Readonly<Record<string, string>> = {
+  'validation.required': 'collections.nameRequired',
+  'validation.max_length': 'collections.nameTooLong',
+};
+
 /** The translated message of a create/rename failure: the first validation code of `name`, else the error code. */
-export function collectionErrorMessage(error: unknown, errors: ErrorMessages): string {
+export function collectionErrorMessage(error: unknown, errors: ErrorMessages, transloco: TranslocoService): string {
   if (!isApiError(error)) return errors.forError(error);
   const [code] = error.validationErrors['name'] ?? error.validationErrors['Name'] ?? [];
+  if (code && NAME_CODES[code]) return transloco.translate(NAME_CODES[code]);
   return code ? errors.forCode(code, error.problem?.title) : errors.forCode(error.code, error.problem?.title);
 }
 
@@ -121,7 +128,7 @@ export class CollectionNameSheet {
       this.busy.set(false);
       this.done.emit(saved);
     } catch (error) {
-      this.error.set(collectionErrorMessage(error, this.errors));
+      this.error.set(collectionErrorMessage(error, this.errors, this.transloco));
     } finally {
       this.busy.set(false);
     }
@@ -370,7 +377,7 @@ export class CollectionPickerSheet {
       this.toasts.success(this.transloco.translate('collections.created'));
       await this.store.addArticle(created.id, article);
     } catch (error) {
-      this.error.set(collectionErrorMessage(error, this.errors));
+      this.error.set(collectionErrorMessage(error, this.errors, this.transloco));
     } finally {
       this.busy.set(false);
     }

@@ -148,9 +148,7 @@
     "collection": {
       "name_taken": "You already have a collection with this name.",
       "limit": "You've reached 50 collections. Delete one first.",
-      "not_found": "This collection doesn't exist anymore.",
-      "name_required": "Write a name for the collection.",
-      "name_too_long": "Collection names are up to 60 characters."
+      "not_found": "This collection doesn't exist anymore."
     },
     "follow": {
       "self": "You can't follow yourself."
@@ -692,8 +690,8 @@
       "one": "1 article",
       "other": "{{count}} articles"
     },
-    "nameRequired": "Write a name.",
-    "nameTooLong": "Up to 60 characters.",
+    "nameRequired": "Write a name for the collection.",
+    "nameTooLong": "Collection names are up to 60 characters.",
     "manage": "Collections",
     "done": "Done"
   },

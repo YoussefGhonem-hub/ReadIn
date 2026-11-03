@@ -27,6 +27,7 @@ import { SessionStore } from '../../core/auth/session.store';
 import { HydrationWindow } from '../../core/http/hydration-window';
 import { LanguageService } from '../../core/i18n/language.service';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
+import { CollectionsStore } from '../../core/social/collections.store';
 import { FollowStore } from '../../core/social/follow.store';
 import { bindLiveCounters } from '../../core/social/live-article';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
@@ -316,14 +317,18 @@ export class ArticlePage {
     injectReadingTracker(this.article, this.progress, () => this.articleEl()?.nativeElement);
     const social = inject(ArticleSocialStore);
     const follows = inject(FollowStore);
+    const collections = inject(CollectionsStore);
+    const hydration = inject(HydrationWindow);
     effect(() => {
       const article = this.article();
       if (!article) return;
       this.seo.apply(article);
-      // A fresh copy from the API is the truth for reactions, saves and following (F10, F12, F13).
+      // A fresh copy from the API is the truth for reactions, saves, following and collections (F10, F12, F13).
       untracked(() => {
         social.absorb([article]);
         follows.absorb(article.author.id, article.isFollowingAuthor);
+        // The copy served while hydrating is the anonymous SSR one: no collections yet.
+        if (!hydration.isOpen) collections.learnArticle(article.id, article.collectionIds);
       });
     });
     // Reaction, save and comment counts update live while the article is open (F27).
