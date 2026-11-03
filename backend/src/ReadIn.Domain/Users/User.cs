@@ -543,7 +543,11 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
         RotateSecurityStamp();
     }
 
-    public static bool IsValidUsername(string? username) => username is not null && UsernameRegex().IsMatch(username);
+    /// <summary>Handles that would clash with a fixed <c>/users/{segment}</c> route (<c>GET /users/suggested</c>).</summary>
+    private static readonly HashSet<string> ReservedUsernames = ["suggested"];
+
+    public static bool IsValidUsername(string? username) =>
+        username is not null && UsernameRegex().IsMatch(username) && !ReservedUsernames.Contains(username);
 
     private static string NewSecurityStamp() => Guid.NewGuid().ToString("N");
 

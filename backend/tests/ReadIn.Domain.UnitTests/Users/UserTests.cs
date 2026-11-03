@@ -230,6 +230,7 @@ public sealed class UserTests
     [InlineData("Reader", false)]
     [InlineData("قارئ", false)]
     [InlineData("a_very_long_username_that_exceeds_30", false)]
+    [InlineData("suggested", false)]
     public void Username_rules(string username, bool valid) => User.IsValidUsername(username).Should().Be(valid);
 
     [Fact]
