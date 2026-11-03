@@ -1,0 +1,55 @@
+{
+  "slug": "streaming-for-long-claude-requests",
+  "field": "claude-ai-tools",
+  "topic": "claude-api",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Long Claude API Requests Need Streaming, Not Just for the Typing Effect",
+      "subtitle": "A non-streaming call sends nothing until the whole answer is done. For long outputs that silence is what fails, and the SDK can stream for you without any UI."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Streaming مش مجرد شكل؟ الـ requests الطويلة في Claude API محتاجاه",
+      "subtitle": "الـ call العادي مبيرجّعش أي حاجة غير لما الإجابة كلها تخلص. ومع الـ outputs الطويلة السكوت ده هو اللي بيوقّعه، والـ SDK يقدر يعمل streaming بالنيابة عنك من غير أي UI."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude API",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 8
+  },
+  "tags": [
+    "Claude API",
+    "Streaming",
+    "Timeouts",
+    "Python"
+  ],
+  "sources": [
+    {
+      "title": "Streaming Messages — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/streaming"
+    },
+    {
+      "title": "Claude API errors: Long requests — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/api/errors"
+    },
+    {
+      "title": "Python SDK: Timeouts and long requests — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/python"
+    },
+    {
+      "title": "Building with thinking: Output limits and long requests — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/thinking"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nDIFF = \"diff --git a/orders/models.py b/orders/models.py\\n+status = OrderStatus(...)\"\n\n\nclass ReportTruncated(Exception):\n    pass\n\n\ndef _message():\n    return NS(\n        content=[NS(type=\"thinking\", thinking=\"\", signature=\"EosnCkYICxIM...\"),\n                 NS(type=\"text\", text=\"Migration report: orders.status becomes an enum.\")],\n        stop_reason=\"end_turn\", usage=NS(output_tokens=9120))\n\n\nclass _Stream:\n    def __enter__(self):\n        return self\n\n    def __exit__(self, *exc):\n        return False\n\n    def get_final_message(self):\n        return _message()\n\n\nclass _Messages:\n    def __init__(self, timeout):\n        self._timeout = timeout\n\n    def create(self, *, model, max_tokens, messages, **kwargs):\n        if max_tokens > 21333 and self._timeout is None:\n            raise ValueError(\"non-streaming request expected to take over ~10 minutes\")\n        return _message()\n\n    def stream(self, *, model, max_tokens, messages, **kwargs):\n        return _Stream()\n\n\nclass _Anthropic:\n    def __init__(self, timeout=None, **kwargs):\n        self.messages = _Messages(timeout)\n\n    def with_options(self, timeout=None, **kwargs):\n        return _Anthropic(timeout=timeout)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "slug": "claude-citations-vs-prompted-citations",
+  "field": "claude-ai-tools",
+  "topic": "claude-api",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "'Cite Your Sources' in a Prompt Isn't Grounding: Use Claude's Citations Feature",
+      "subtitle": "A citation Claude writes because you asked is just more text. The Citations feature returns exact, verifiable locations in your documents."
+    },
+    "ar-EG": {
+      "title": "إنك تكتب «اذكر المصادر» في الـ prompt مش grounding: استخدم الـ Citations في Claude",
+      "subtitle": "الـ citation اللي Claude بيكتبها عشان انت طلبتها مجرد نص زيادة. أما الـ Citations feature فبترجّعلك أماكن مضبوطة في مستنداتك تقدر تتأكد منها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude API",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 9
+  },
+  "tags": [
+    "Claude API",
+    "Citations",
+    "RAG",
+    "Hallucinations",
+    "Python"
+  ],
+  "sources": [
+    {
+      "title": "Citations — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/citations"
+    },
+    {
+      "title": "Search results — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/search-results"
+    },
+    {
+      "title": "Reduce hallucinations — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nHANDBOOK = (\"4.1 Annual bonus. The annual bonus is paid to employees only. \"\n            \"4.2 Parental leave. Employees get 16 weeks of paid parental leave.\")\nQUESTION = \"I'm a contractor with 12 months of service. Am I eligible for the annual bonus?\"\n\n\ndef _cite(text, start):\n    return NS(type=\"char_location\", cited_text=text, document_index=0,\n              document_title=\"Employee Handbook 2026\",\n              start_char_index=start, end_char_index=start + len(text))\n\n\ndef _create(*, model, max_tokens, messages, **kwargs):\n    content = messages[-1][\"content\"]\n    docs = [b for b in content if isinstance(b, dict) and b.get(\"type\") == \"document\"]\n    if not docs:\n        text = (\"Contractors with 12 months of service are eligible \"\n                \"[Handbook §4.2].\")\n        return NS(content=[NS(type=\"text\", text=text, citations=None)],\n                  stop_reason=\"end_turn\")\n    assert all(d.get(\"citations\", {}).get(\"enabled\") for d in docs)\n    return NS(content=[\n        NS(type=\"text\", text=\"No. \", citations=None),\n        NS(type=\"text\", text=\"The annual bonus is paid to employees only.\",\n           citations=[_cite(\"The annual bonus is paid to employees only. \", 18)]),\n        NS(type=\"text\", text=\" Contracts may differ, so check yours.\", citations=None),\n    ], stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

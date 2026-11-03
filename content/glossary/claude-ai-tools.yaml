@@ -190,3 +190,48 @@ terms:
     definitionAr: >-
       إن Claude ينادي كذا tool في response واحد، على شكل كذا tool_use block في نفس الـ assistant turn. والكود بتاعك هو اللي
       بيقرر يشغّلهم إزاي، وبيرجّع كل الـ tool_result مع بعض في الـ user message اللي بعدها.
+  - id: server-sent-events
+    term: Server-sent events (SSE)
+    definitionEn: >-
+      A standard way for a server to push a series of named text events to a client over one long-lived HTTP response.
+      The Claude API streams with it, sending events such as message_start, content_block_delta and message_stop.
+    definitionAr: >-
+      طريقة standard بيبعت بيها الـ server سلسلة events نصية ليها أسماء للـ client، على HTTP response واحد بيفضل مفتوح.
+      والـ Claude API بيعمل بيها الـ streaming، وبيبعت events زي message_start وcontent_block_delta وmessage_stop.
+  - id: grounding
+    term: Grounding (LLM)
+    definitionEn: >-
+      Tying a model's answer to source text it was given, such as documents or search results, so each claim can be
+      traced back to a passage. It reduces hallucinations, but on its own it doesn't prove that a claim is supported.
+    definitionAr: >-
+      إنك تربط إجابة الموديل بنص مصدر اتبعتله، زي مستندات أو نتايج بحث، عشان كل claim يبقى ليه passage ترجعله. ده بيقلل
+      الـ hallucinations، بس لوحده مش بيثبت إن الـ claim مدعوم فعلًا.
+  - id: message-batch
+    term: Message Batch (Claude API)
+    definitionEn: >-
+      A set of up to 100,000 Messages API requests submitted together and processed asynchronously at 50% of standard
+      prices. Each request carries a custom_id, and its result, which can arrive in any order, is available once the
+      whole batch ends or after 24 hours.
+    definitionAr: >-
+      مجموعة لحد 100,000 request للـ Messages API بتتبعت مرة واحدة وبتتعالج بشكل asynchronous بنص السعر العادي. كل request
+      معاه custom_id، والنتيجة بتاعته، اللي ممكن توصل بأي ترتيب، بتبقى متاحة لما الـ batch كله يخلص أو بعد 24 ساعة.
+  - id: agent-harness
+    term: Agent harness
+    definitionEn: >-
+      The code around a model that turns it into an agent: the loop that sends requests and runs tool calls, the tools
+      themselves, permissions, retries and context management. Claude's Tool Runner, Agent SDK and Managed Agents each
+      supply part or all of it.
+    definitionAr: >-
+      الكود اللي حوالين الموديل وبيحوّله لـ agent: الـ loop اللي بيبعت الـ requests ويشغّل الـ tool calls، والـ tools نفسها،
+      والـ permissions، والـ retries، وإدارة الـ context. والـ Tool Runner والـ Agent SDK والـ Managed Agents بتوع Claude كل
+      واحد فيهم بيقدّم جزء منه أو كله.
+  - id: thinking-block
+    term: Thinking block (Claude API)
+    definitionEn: >-
+      A content block of type thinking in a Claude response. Its thinking field holds a summary of Claude's reasoning,
+      or an empty string by default on newer models, and its signature carries the full reasoning, encrypted. In a
+      tool-use loop it must go back to the API unchanged.
+    definitionAr: >-
+      content block من نوع thinking في رد Claude. الـ field اللي اسمه thinking فيه ملخص لتفكير Claude، أو string فاضي
+      افتراضيًا في الموديلات الأحدث، والـ signature شايل التفكير كله متشفّر. وجوه الـ tool-use loop لازم يرجع للـ API زي
+      ما هو.

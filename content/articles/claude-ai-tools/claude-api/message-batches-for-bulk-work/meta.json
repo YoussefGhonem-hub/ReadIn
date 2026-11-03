@@ -1,0 +1,56 @@
+{
+  "slug": "message-batches-for-bulk-work",
+  "field": "claude-ai-tools",
+  "topic": "claude-api",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Thousands of Requests? Batch Them Instead of Racing the Rate Limit",
+      "subtitle": "Parallel calls pay full price and compete with production for the same limits. The Message Batches API halves the bill and runs on its own limits."
+    },
+    "ar-EG": {
+      "title": "عندك آلاف الـ requests؟ استخدم الـ Batches بدل ما تسابق الـ Rate Limit",
+      "subtitle": "الـ calls المتوازية بتدفع السعر كامل وبتزاحم الـ production على نفس الـ limits. والـ Message Batches API بيقسم الفاتورة على اتنين وليه limits لوحده."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude API",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 10
+  },
+  "tags": [
+    "Claude API",
+    "Message Batches",
+    "Rate Limits",
+    "Cost",
+    "Python"
+  ],
+  "sources": [
+    {
+      "title": "Batch processing — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+    },
+    {
+      "title": "Create a Message Batch — Claude API Reference",
+      "url": "https://platform.claude.com/docs/en/api/messages/batches/create"
+    },
+    {
+      "title": "Pricing: Batch processing — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/about-claude/pricing"
+    },
+    {
+      "title": "Rate limits — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/api/rate-limits"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nTICKETS = [{\"id\": 1042, \"text\": \"Charged twice for order 1042\"},\n           {\"id\": 1043, \"text\": \"Can't reset my password\"},\n           {\"id\": 1044, \"text\": \"Invoice shows the wrong VAT number\"}]\nBATCH_ID = \"msgbatch_01HkcTjaV5uDC8jWR4ZsDV8d\"\n\n\ndef prompt_for(ticket):\n    return f\"Label this ticket with one category from the taxonomy:\\n{ticket['text']}\"\n\n\ndef _text_message(text):\n    return NS(content=[NS(type=\"thinking\", thinking=\"\", signature=\"Eos...\"),\n                       NS(type=\"text\", text=text)], stop_reason=\"end_turn\")\n\n\nclass _AsyncMessages:\n    async def create(self, *, model, max_tokens, messages, **kwargs):\n        return _text_message(\"billing\")\n\n\nclass _Batches:\n    def create(self, *, requests):\n        ids = [r[\"custom_id\"] for r in requests]\n        assert len(ids) == len(set(ids)) and len(ids) <= 100_000\n        return NS(id=BATCH_ID, processing_status=\"in_progress\")\n\n    def results(self, batch_id):\n        def err(kind):\n            return NS(type=\"errored\", error=NS(type=\"error\", error=NS(type=kind)))\n        return iter([\n            NS(custom_id=\"ticket-1044\", result=NS(type=\"succeeded\",\n               message=_text_message(\"billing\"))),\n            NS(custom_id=\"ticket-1042\", result=NS(type=\"succeeded\",\n               message=_text_message(\"billing\"))),\n            NS(custom_id=\"ticket-1043\", result=err(\"api_error\")),\n        ])\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(batches=_Batches())\n\n\nclass _AsyncAnthropic:\n    def __init__(self, **kwargs):\n        self.messages = _AsyncMessages()\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic, AsyncAnthropic=_AsyncAnthropic)\nclient = _Anthropic()\n"
+    }
+  }
+}

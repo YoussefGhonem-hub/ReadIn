@@ -1,0 +1,56 @@
+{
+  "slug": "messages-api-tool-runner-or-agent-sdk",
+  "field": "claude-ai-tools",
+  "topic": "claude-api",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Messages API, Tool Runner, Agent SDK or Managed Agents: Picking the Right Layer",
+      "subtitle": "Four ways to build a Claude agent, from owning every line of the loop to letting Anthropic host it. Two questions tell you which one fits."
+    },
+    "ar-EG": {
+      "title": "تبني الـ Agent بإيه: Messages API ولا Tool Runner ولا Agent SDK ولا Managed Agents؟",
+      "subtitle": "أربع طرق تبني بيها agent على Claude، من إنك تكتب كل سطر في الـ loop لحد إن Anthropic تشغّله بالنيابة عنك. وسؤالين بيقولولك أنهي واحدة تناسبك."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Claude API",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 11
+  },
+  "tags": [
+    "Claude API",
+    "Agents",
+    "Agent SDK",
+    "Tool Use",
+    "Python"
+  ],
+  "sources": [
+    {
+      "title": "Agent SDK overview — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/agent-sdk/overview"
+    },
+    {
+      "title": "How the agent loop works — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/agent-sdk/agent-loop"
+    },
+    {
+      "title": "Tool runner — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-runner"
+    },
+    {
+      "title": "Claude Managed Agents overview — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/managed-agents/overview"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\n_LOG = \"test_checkout.py::test_total FAILED - AssertionError: 107.0 != 107.01\"\nTOOL_SCHEMAS = [{\"name\": \"read_build_log\", \"description\": \"Return a CI build log.\",\n                 \"input_schema\": {\"type\": \"object\",\n                                  \"properties\": {\"build_id\": {\"type\": \"integer\"}},\n                                  \"required\": [\"build_id\"]}}]\n\n\ndef fetch_log(build_id):\n    return _LOG\n\n\nHANDLERS = {\"read_build_log\": lambda build_id: fetch_log(build_id)}\n_ANSWER = \"Build 812 failed because test_total compares floats for money.\"\n\n\ndef _text(text):\n    return NS(type=\"text\", text=text)\n\n\ndef _create(*, model, max_tokens, messages, tools=None, **kwargs):\n    if messages[-1][\"role\"] == \"user\" and isinstance(messages[-1][\"content\"], str):\n        call = NS(type=\"tool_use\", id=\"toolu_01\", name=\"read_build_log\",\n                  input={\"build_id\": 812})\n        return NS(content=[call], stop_reason=\"tool_use\")\n    return NS(content=[_text(_ANSWER)], stop_reason=\"end_turn\")\n\n\nclass _Runner:\n    def __init__(self, tools):\n        self._tools = tools\n\n    def until_done(self):\n        self._tools[0](812)\n        return NS(content=[_text(_ANSWER)], stop_reason=\"end_turn\")\n\n\ndef _tool_runner(*, model, max_tokens, tools, messages, max_iterations=None, **kw):\n    return _Runner(tools)\n\n\ndef beta_tool(fn):\n    return fn\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n        self.beta = NS(messages=NS(tool_runner=_tool_runner))\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic, beta_tool=beta_tool)\n\n\nclass ClaudeAgentOptions:\n    def __init__(self, **kwargs):\n        self.__dict__.update(kwargs)\n\n\nclass ResultMessage:\n    def __init__(self, subtype):\n        self.subtype = subtype\n\n\nasync def query(*, prompt, options=None):\n    yield NS(content=[_text(\"Reading the build log.\")])\n    yield ResultMessage(\"success\")\n\n\nsys.modules[\"claude_agent_sdk\"] = NS(ClaudeAgentOptions=ClaudeAgentOptions,\n                                     ResultMessage=ResultMessage, query=query)\n"
+    }
+  }
+}

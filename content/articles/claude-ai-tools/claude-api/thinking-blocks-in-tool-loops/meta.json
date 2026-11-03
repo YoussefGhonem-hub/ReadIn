@@ -1,0 +1,59 @@
+{
+  "slug": "thinking-blocks-in-tool-loops",
+  "field": "claude-ai-tools",
+  "topic": "claude-api",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Don't Strip Thinking Blocks: Thinking Inside Tool-Use Loops",
+      "subtitle": "A thinking block is part of the response Claude is still building. Filter or edit it, or the history before it, and the next request fails."
+    },
+    "ar-EG": {
+      "title": "ليه مينفعش تشيل الـ Thinking Blocks من الـ history جوه الـ tool loop؟",
+      "subtitle": "الـ thinking block جزء من الرد اللي Claude لسه بيبنيه. لو فلترته أو عدّلته، أو عدّلت الـ history اللي قبله، الـ request الجاي هيفشل."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Claude API",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 12
+  },
+  "tags": [
+    "Claude API",
+    "Extended Thinking",
+    "Tool Use",
+    "Python"
+  ],
+  "sources": [
+    {
+      "title": "Thinking in tool and multi-turn workflows — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/thinking-tool-workflows"
+    },
+    {
+      "title": "Building with thinking — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/thinking"
+    },
+    {
+      "title": "Preserved thinking — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/preserved-thinking"
+    },
+    {
+      "title": "Troubleshooting thinking — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/thinking-troubleshooting"
+    },
+    {
+      "title": "Context editing — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/context-editing"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nINCIDENT = \"Checkout latency tripled at 14:05 UTC. Find the cause.\"\nTOOLS = [{\"name\": \"query_logs\", \"description\": \"Search service logs.\",\n          \"input_schema\": {\"type\": \"object\",\n                           \"properties\": {\"query\": {\"type\": \"string\"}},\n                           \"required\": [\"query\"]}}]\n_THINKING = NS(type=\"thinking\", thinking=\"\", signature=\"EqQBCgIYAhIM1gbcDa9GJwZA...\")\n_MODIFIED = (\"400 invalid_request_error: `thinking` or `redacted_thinking` blocks \"\n             \"in the latest assistant message cannot be modified\")\n\n\ndef run_tools(reply):\n    return [{\"type\": \"tool_result\", \"tool_use_id\": b.id, \"content\": \"p99 3.1s after deploy 4411\"}\n            for b in reply.content if b.type == \"tool_use\"]\n\n\ndef shorten_old_tool_results(messages, limit):\n    for message in messages:\n        if isinstance(message[\"content\"], list):\n            for block in message[\"content\"]:\n                if isinstance(block, dict) and block.get(\"type\") == \"tool_result\":\n                    block[\"content\"] = block[\"content\"][:limit]\n\n\ndef _create(*, model, max_tokens, tools, messages, **kwargs):\n    if len(messages) == 1:\n        call = NS(type=\"tool_use\", id=\"toolu_01\", name=\"query_logs\",\n                  input={\"query\": \"checkout latency 14:00-14:10\"})\n        return NS(content=[_THINKING, call], stop_reason=\"tool_use\")\n    if _THINKING not in messages[-2][\"content\"]:\n        print(_MODIFIED)\n        raise SystemExit(0)\n    answer = NS(type=\"text\", text=\"Deploy 4411 added a blocking call in checkout.\")\n    return NS(content=[NS(type=\"thinking\", thinking=\"\", signature=\"EosnCkYI...\"), answer],\n              stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

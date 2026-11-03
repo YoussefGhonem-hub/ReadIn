@@ -1525,7 +1525,7 @@ plannedArticles:
   - slug: thinking-blocks-in-tool-loops
     field: claude-ai-tools
     topic: claude-api
-    titleEn: "Don't Strip Thinking Blocks: Extended Thinking Inside Tool-Use Loops"
+    titleEn: "Don't Strip Thinking Blocks: Thinking Inside Tool-Use Loops"
     titleAr: ليه مينفعش تشيل الـ Thinking Blocks من الـ history جوه الـ tool loop؟
     misconception: Thinking blocks are disposable output, so you can drop or edit them in the history to save tokens during tool use.
     level: advanced
