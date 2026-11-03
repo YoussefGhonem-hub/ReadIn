@@ -21,6 +21,8 @@
   <ItemGroup>
     <!-- Media fixtures (ADR 0011): real JPEG/PNG/WebP/HEIC images and normal, encrypted, corrupted and 101-page PDFs. -->
     <None Include="../fixtures/media/**/*" LinkBase="fixtures/media" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Content root for the seeders: a copy of the taxonomy, two legacy articles and one pipeline article with a cover. -->
+    <None Include="../fixtures/content/**/*" LinkBase="fixtures/content" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

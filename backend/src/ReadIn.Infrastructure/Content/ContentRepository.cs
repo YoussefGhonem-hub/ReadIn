@@ -89,6 +89,21 @@ public sealed class TaxonomyFile
 {
     public int Version { get; set; }
     public List<FieldEntry> Fields { get; set; } = [];
+    public List<LearningPathEntry> LearningPaths { get; set; } = [];
+
+    /// <summary>The editorial plan (SPEC §19.1): every article the content pipeline writes, across all fields.</summary>
+    public List<PlannedArticleEntry> PlannedArticles { get; set; } = [];
+}
+
+/// <summary>A curated, ordered series of articles (F09). Its articles name it in the plan and in meta.json.</summary>
+public sealed class LearningPathEntry
+{
+    public string Slug { get; set; } = default!;
+    public string Field { get; set; } = default!;
+    public string TitleAr { get; set; } = default!;
+    public string TitleEn { get; set; } = default!;
+    public string? DescriptionAr { get; set; }
+    public string? DescriptionEn { get; set; }
 }
 
 public sealed class FieldEntry
@@ -103,7 +118,6 @@ public sealed class FieldEntry
     public bool Enabled { get; set; } = true;
     public int Target { get; set; }
     public List<TopicEntry> Topics { get; set; } = [];
-    public List<PlannedArticleEntry> PlannedArticles { get; set; } = [];
 }
 
 public sealed class TopicEntry
@@ -116,18 +130,22 @@ public sealed class TopicEntry
 public sealed class PlannedArticleEntry
 {
     public string Slug { get; set; } = default!;
+    public string Field { get; set; } = default!;
     public string Topic { get; set; } = default!;
+    public string TitleEn { get; set; } = default!;
+    public string TitleAr { get; set; } = default!;
+
+    /// <summary>The wrong belief the article corrects, in one line.</summary>
+    public string Misconception { get; set; } = default!;
+
     public string Level { get; set; } = "beginner";
-    public string? Version { get; set; }
-    public PathRef? Path { get; set; }
-    public List<string> Sources { get; set; } = [];
+    public string LearningPath { get; set; } = default!;
+    public int Order { get; set; }
+    public string? VersionBadge { get; set; }
+    public List<string> PlannedSources { get; set; } = [];
 }
 
-public sealed class PathRef
-{
-    public string Slug { get; set; } = default!;
-    public int Order { get; set; }
-}
+public sealed record PathRef(string Slug, int Order);
 
 public sealed record ArticleMeta
 {
@@ -152,10 +170,31 @@ public sealed record ArticleMeta
     public DateTime? ReviewedAt { get; init; }
     public DateTime? PublishAt { get; init; }
 
+    /// <summary><c>pending</c> = published and waiting for a human reviewer; a "Reviewed by" badge is never faked.</summary>
+    public string? ReviewStatus { get; init; }
+
+    public PathRef? LearningPath { get; init; }
+
+    /// <summary>When the content was generated or last re-verified by the pipeline (shown as "Last reviewed").</summary>
+    public DateTime? LastReviewedAt { get; init; }
+
+    public CodeMeta? Code { get; init; }
+
     public bool IsPublishable => Status is "approved" or "published";
     public bool IsReviewable => Status is "auto-checked";
 }
 
 public sealed record TranslationMeta(string Title, string? Subtitle);
+
+/// <summary>
+/// Compile-check settings (SPEC §19.3): hidden <c>stubs</c> per language that snippets compile against (e.g. a
+/// <c>record Order</c> the article doesn't show), and <c>skip</c> reasons keyed by block id (<c>b7</c>) or tab
+/// (<c>b7/1</c>) for snippets marked <c>"compile": false</c>.
+/// </summary>
+public sealed record CodeMeta
+{
+    public Dictionary<string, string> Stubs { get; init; } = [];
+    public Dictionary<string, string> Skip { get; init; } = [];
+}
 
 public sealed record SourceEntry(string Title, string Url);

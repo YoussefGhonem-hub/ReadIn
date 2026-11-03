@@ -77,12 +77,14 @@ public static class DependencyInjection
         services.AddSingleton<ContentRepository>();
         services.AddSingleton<IIdentityProvisioner, FirebaseIdentityProvisioner>();
 
-        // Seeding order: SPEC §18.2. Glossary (#5), paths (#7) and demo interactions (#8) arrive with F21/F09/F10–F13.
+        // Seeding order: SPEC §18.2. Glossary terms (F21) and demo interactions (F10–F13) arrive with those features.
         services.AddScoped<ISeeder, RolesAndPermissionsSeeder>();
         services.AddScoped<ISeeder, TaxonomySeeder>();
         services.AddScoped<ISeeder, SystemAccountsSeeder>();
         services.AddScoped<ISeeder, DemoUsersSeeder>();
+        services.AddScoped<ISeeder, OfficialAccountAvatarSeeder>();
         services.AddScoped<ISeeder, ArticlesSeeder>();
+        services.AddScoped<ISeeder, LearningPathsSeeder>();
         services.AddScoped<ISeeder, DemoMediaSeeder>();
         services.AddScoped<SeedRunner>();
 

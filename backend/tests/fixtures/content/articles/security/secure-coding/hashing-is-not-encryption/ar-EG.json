@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "language": "ar-EG",
+  "blocks": [
+    {"id":"tldr","type":"summary","dir":"rtl","content":[{"type":"text","text":"الـ hash بصمة في اتجاه واحد، والـ encryption قفل ليه مفتاح. خزّن الـ passwords كـ hash بطيء وعليه salt."}]},
+    {"id":"b1","type":"paragraph","dir":"rtl","content":[{"type":"text","text":"مقال تجريبي بتستخدمه الـ integration tests بتاعة الـ content seeder."}]},
+    {"id":"b2","type":"heading","dir":"rtl","level":2,"content":[{"type":"text","text":"الفكرة الغلط الشائعة"}]},
+    {"id":"b3","type":"paragraph","dir":"rtl","content":[{"type":"text","text":"الـ hashing مش بيعمل encryption للـ password، ومفيش حاجة تقدر ترجّعه."}]},
+    {"id":"b4","type":"callout","dir":"rtl","variant":"warning","content":[{"type":"text","text":"عمرك ما تخزّن الـ passwords بـ encryption ينفع يترجع."}]}
+  ]
+}

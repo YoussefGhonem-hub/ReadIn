@@ -57,6 +57,9 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public bool IsAiAssisted { get; private set; }
     public string? VersionBadge { get; private set; }
     public DateTime? LastReviewedAt { get; private set; }
+
+    /// <summary>When the content pipeline last validated this article (SPEC §19.3); Today's article falls back to these (F07).</summary>
+    public DateTime? AutoCheckedAt { get; private set; }
     public Guid? ReviewedById { get; private set; }
     public DateTime? PublishedAt { get; private set; }
     public DateTime? ScheduledAt { get; private set; }
@@ -295,6 +298,16 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         ReviewedById = reviewerId;
         LastReviewedAt = reviewedAt;
         if (Status is ArticleStatus.Draft or ArticleStatus.Submitted or ArticleStatus.InReview) Status = ArticleStatus.Approved;
+    }
+
+    /// <summary>
+    /// Content-pipeline articles passed every automatic check (SPEC §19.3) on <paramref name="checkedAt"/>, which also
+    /// becomes the "Last reviewed" date until a human reviews them. It never sets a reviewer: no badge is faked.
+    /// </summary>
+    public void MarkAutoChecked(DateTime checkedAt)
+    {
+        AutoCheckedAt = checkedAt;
+        if (ReviewStatus != ReviewStatus.Approved) LastReviewedAt = checkedAt;
     }
 
     public void SetQualityScore(double score) => QualityScore = score;

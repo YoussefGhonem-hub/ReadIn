@@ -50,6 +50,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Seed:RunOnStartup", "true");
         builder.UseSetting("Storage:UploadsPath", UploadsPath);
         builder.UseSetting("Storage:PublicBaseUrl", PublicBaseUrl);
+        // Seed from fixture content so tests never depend on which of the real articles exist (content/).
+        builder.UseSetting("Content:RootPath", Path.Combine(AppContext.BaseDirectory, "fixtures", "content"));
     }
 
     /// <summary>An unsigned Firebase-emulator-style ID token.</summary>

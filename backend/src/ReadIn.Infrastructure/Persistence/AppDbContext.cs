@@ -4,6 +4,7 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Common;
+using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Taxonomy;
@@ -35,6 +36,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<ReadingProgress> ReadingProgress => Set<ReadingProgress>();
     public DbSet<DailyPick> DailyPicks => Set<DailyPick>();
+    public DbSet<LearningPath> LearningPaths => Set<LearningPath>();
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<SeedHistory> SeedHistory => Set<SeedHistory>();

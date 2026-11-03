@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
+using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Taxonomy;
@@ -27,6 +28,7 @@ public interface IAppDbContext
 
     DbSet<ReadingProgress> ReadingProgress { get; }
     DbSet<DailyPick> DailyPicks { get; }
+    DbSet<LearningPath> LearningPaths { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

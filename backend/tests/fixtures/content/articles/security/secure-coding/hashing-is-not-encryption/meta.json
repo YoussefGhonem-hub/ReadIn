@@ -1,0 +1,22 @@
+{
+  "slug": "hashing-is-not-encryption",
+  "field": "security",
+  "topic": "secure-coding",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": { "title": "Hashing Is Not Encryption: Pick the Right Tool", "subtitle": "Fixture article for the integration tests" },
+    "ar-EG": { "title": "الـ Hashing مش Encryption: اختار الأداة الصح", "subtitle": "مقال تجريبي للـ integration tests" }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "secure-by-default", "order": 1 },
+  "tags": ["Security", "Hashing"],
+  "sources": [
+    { "title": "Password Storage Cheat Sheet — OWASP", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html" },
+    { "title": "Cryptographic Storage Cheat Sheet — OWASP", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

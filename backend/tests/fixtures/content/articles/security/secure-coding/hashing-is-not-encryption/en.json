@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "language": "en",
+  "blocks": [
+    {"id":"tldr","type":"summary","content":[{"type":"text","text":"A hash is a one-way fingerprint; encryption is a two-way lock. Store passwords as slow, salted hashes."}]},
+    {"id":"b1","type":"paragraph","content":[{"type":"text","text":"Fixture article used by the integration tests of the content seeder."}]},
+    {"id":"b2","type":"heading","level":2,"content":[{"type":"text","text":"The common misconception"}]},
+    {"id":"b3","type":"paragraph","content":[{"type":"text","text":"Hashing a password does not encrypt it, and nothing can decrypt it."}]},
+    {"id":"b4","type":"callout","variant":"warning","content":[{"type":"text","text":"Never store passwords with reversible encryption."}]}
+  ]
+}

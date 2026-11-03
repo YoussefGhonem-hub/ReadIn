@@ -27,12 +27,14 @@ public sealed class RDocProcessorTests
         result.Value.Content.Summary.Should().StartWith("الخلاصة");
     }
 
+    /// <summary>The seeded articles (content/articles) and the integration-test fixtures (backend/tests/fixtures/content).</summary>
     public static TheoryData<string, string> ContentArticles()
     {
         var data = new TheoryData<string, string>();
-        foreach (var file in Directory.EnumerateFiles(RepoPaths.Content("articles"), "*.json", SearchOption.AllDirectories)
+        string[] roots = [RepoPaths.Content("articles"), Path.Combine(RepoPaths.Root, "backend", "tests", "fixtures", "content", "articles")];
+        foreach (var file in roots.Where(Directory.Exists).SelectMany(r => Directory.EnumerateFiles(r, "*.json", SearchOption.AllDirectories))
                      .Where(f => Path.GetFileName(f) != "meta.json"))
-            data.Add(Path.GetRelativePath(RepoPaths.Content(), file), Path.GetFileNameWithoutExtension(file));
+            data.Add(Path.GetRelativePath(RepoPaths.Root, file).Replace('\\', '/'), Path.GetFileNameWithoutExtension(file));
         return data;
     }
 
@@ -40,7 +42,7 @@ public sealed class RDocProcessorTests
     [MemberData(nameof(ContentArticles))]
     public void Every_content_article_is_valid_RDoc(string relativePath, string language)
     {
-        var json = File.ReadAllText(RepoPaths.Content(relativePath));
+        var json = File.ReadAllText(Path.Combine(RepoPaths.Root, relativePath));
 
         var result = _processor.Process(Parse(json), language);
 
