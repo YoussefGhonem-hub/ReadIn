@@ -73,6 +73,29 @@ The **Run workflow** button only appears once `ios.yml` exists on the default br
 
 `ITSAppUsesNonExemptEncryption = false` is set in `Info.plist` (the app only uses standard HTTPS), so builds don't wait on the export-compliance question.
 
+## Sign in with Apple key for the API (account deletion)
+
+When someone deletes an account linked to Apple, the API revokes their Apple tokens through the Sign in with Apple REST
+API ([ADR 0014](../adr/0014-immediate-account-deletion.md)). It signs those calls with a Sign in with Apple private key.
+Without it, deleting an Apple-linked account answers `503 account.deletion_unavailable` instead of skipping revocation.
+
+1. [developer.apple.com](https://developer.apple.com/account/resources/authkeys/list) → **Keys** → **(+)** → name it
+   `ReadIn Sign in with Apple`, tick **Sign in with Apple** → **Configure** → primary App ID `app.readin.readin` → **Save**
+   → **Continue** → **Register**.
+2. **Download** `AuthKey_XXXXXXXXXX.p8` (it downloads **once**) and keep it outside the repo. Note the **Key ID**.
+3. The Team ID (`7A25UFD8VC`) is already in `appsettings.json` (`ExternalAuth:Apple:TeamId`). Set the Key ID there or as
+   `ExternalAuth__Apple__KeyId`; it isn't a secret.
+4. Give the API the key as `SIWA_KEY_BASE64` (the `.p8` file, base64-encoded), from the host's secret store on servers or
+   user-secrets locally:
+
+```powershell
+$key = [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\secrets\AuthKey_XXXXXXXXXX.p8"))
+dotnet user-secrets set "SIWA_KEY_BASE64" $key --project backend/src/ReadIn.Api
+```
+
+The same key lets the API exchange the authorization code from Apple sign in for the refresh token it keeps (encrypted)
+for that revocation. Rotate it like any secret: create a new key, deploy it, then revoke the old one.
+
 ## Push notifications checklist
 - Push only works on a **real iPhone** with the **prod** config. `lib/firebase_options_prod.dart` must contain the real project values (`flutterfire configure --project=<id> --out=lib/firebase_options_prod.dart`); placeholder values build fine but can't receive pushes.
 - The entitlements file says `development`; Xcode switches it to `production` automatically when exporting for App Store / TestFlight.

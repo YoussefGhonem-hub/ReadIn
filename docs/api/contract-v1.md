@@ -62,7 +62,7 @@ at a time (single-flight) and always keep the newest token.
 | GET | `/me` | → `200 MeDto` |
 | PATCH | `/me` | `UpdateProfileRequest` → `204`; refetch `GET /me`. `409 user.username_taken`, `400 profile.avatar_invalid`, `400 profile.expertise_invalid`, validation codes as before (`displayName`, `username`, `bio`, `links.*`, `avatarUrl`) |
 | PUT | `/me/privacy` | `{ publicReadingStats: boolean }` → `204` (Settings → Privacy, F18; shown in `MeDto.privacy`). `validation.required` when missing |
-| DELETE | `/me` | `{ password? , external?: ExternalCredential }` → `204`. Confirm with the password, or (accounts without one) a fresh Google/Apple token. Signed out everywhere, Google/Apple identities released at once, personal data removed after 30 days. `400 auth.wrong_password`, `400 auth.confirmation_required`, `400 auth.external_mismatch` |
+| DELETE | `/me` | `{ password? , external?: ExternalCredential }` → `204`. Confirm with the password or a fresh token of a linked Google/Apple identity (Apple: include `authorizationCode`). Deletes the account **immediately and for good** (SPEC §9.6): Apple tokens are revoked first, then everything goes in one transaction (published articles stay with `author: null`, shown as "Deleted user"); the phone, email and Google/Apple identities can sign up again at once. **Idempotent:** a retry whose token outlived the account also gets `204`. `400 auth.wrong_password`, `400 auth.confirmation_required`, `400 auth.external_mismatch`, `400 auth.apple_confirmation_required` (Apple-linked account without a revocable token: confirm with Apple), `503 account.deletion_unavailable` (Apple unreachable: nothing was deleted, retry) |
 | PUT | `/me/profile/complete` | `{ displayName, username, avatarUrl? }` → `200 MeDto`. `409 user.username_taken` |
 | PUT | `/me/password` | `{ currentPassword, newPassword }` → `200 SessionDto`; other sessions end. `400 auth.wrong_password` |
 | PUT | `/me/phone` | `{ newPhoneNumber, currentPassword }` → `200 SessionDto`; other sessions end. `409 auth.phone_taken`, `400 auth.phone_unchanged` |
@@ -302,6 +302,7 @@ interface ExternalCredential {
   provider: ExternalProvider;
   idToken: string;               // Google ID token / Apple identityToken (JWT from the provider SDK)
   nonce?: string;                // RAW nonce: required for Apple, which must have been given its SHA-256 (hex)
+  authorizationCode?: string;    // Apple only: the one-time code from the SDK, so the API can keep a revocable token (SPEC §9.6)
 }
 
 interface ExternalSignInRequest extends ExternalCredential {
@@ -409,7 +410,7 @@ interface ArticleCardDto {
   title: string; subtitle: string | null;
   coverUrl: string | null;
   field: FieldRefDto;
-  author: AuthorDto;
+  author: AuthorDto | null;      // null: the author deleted their account (SPEC §9.6); show "Deleted user", no profile link or follow
   readingTimeMinutes: number;
   isReviewed: boolean; isAiAssisted: boolean;
   versionBadge: string | null;   // e.g. ".NET 10"

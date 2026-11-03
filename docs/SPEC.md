@@ -571,13 +571,50 @@ Then **Complete profile** (display name, unique `@username` with live availabili
 | Recovery lockout | 5 wrong PINs → recovery locked 1 hour. 3 lockouts within 7 days → recovery disabled until an Admin reset. Rate limits: 10/hour per IP, 5/hour per phone. |
 | Anti-enumeration | Generic errors for login and recovery; a dummy hash runs for unknown numbers so timing stays the same. |
 | After reset / password change / phone change / sign out all | New `SecurityStamp`, all refresh tokens revoked, counters reset, audit log entry. |
-| Google / Apple tokens | Verified with the provider's OpenID Connect keys: RS256 signature, issuer, audience (`ExternalAuth:{Google,Apple}:ClientIds`), expiry. Apple tokens must carry the SHA-256 of the raw nonce the app sends (so a leaked token can't be replayed). Only the provider's `sub` and the email it reported are kept, in `UserExternalLogins`. |
+| Google / Apple tokens | Verified with the provider's OpenID Connect keys: RS256 signature, issuer, audience (`ExternalAuth:{Google,Apple}:ClientIds`), expiry. Apple tokens must carry the SHA-256 of the raw nonce the app sends (so a leaked token can't be replayed). Only the provider's `sub` and the email it reported are kept, in `UserExternalLogins`, plus, for Apple, the refresh token from exchanging the sign-in `authorizationCode` (AES-GCM encrypted) so it can be revoked when the account is deleted (§9.6). |
 | Linking | Automatic only for a provider-**verified** email matching `Users.Email`, which is itself only ever set from a provider-verified address (or seeding), never from user input. Linking from Settings needs the password or an already linked provider, so a stolen access token can't add a way in. One identity per provider per account; the last way to sign in can't be removed. |
 | Owner notifications (push + in-app) | Recovery lockout, password changed, PIN changed, phone number changed, Google/Apple linked or unlinked, phone sign in added. These ignore quiet hours. |
 | Admin reset | Permission `users.reset_password`: temporary password + `MustChangePassword`, PIN cleared + `MustSetRecoveryPin`, `RecoveryDisabled = false`, sessions revoked, audit log. |
 | PII | Phone numbers never appear in public DTOs (profiles, comments, articles); only in `GET /me` and admin endpoints with `users.read.pii`. Masked in logs (`+20******4567`). Passwords, PINs, hashes and tokens are never logged. |
 
 > Roles and credentials are stored in **SQL Server** (source of truth).
+
+### 9.6 Account Deletion & Data Map
+
+Delete account ([F01](#f01--authentication--account)) is **immediate and for good** ([ADR 0014](adr/0014-immediate-account-deletion.md)): no grace period, nothing to restore.
+
+**Flow (web + mobile, identical):** Settings → Account → **Delete account** (red; also the last row of Settings) → a screen stating what is deleted, what is kept and for how long, and that it can't be undone → confirm it's you (the password, or a fresh Google/Apple sign in; an Apple-linked account confirms with Apple when the server has no token to revoke) → tick "I understand, delete my account" → final dialog → `DELETE /me` with progress. Errors keep the account and offer Retry; offline is an error, never queued. On success the app deletes its local data and its push token, signs out and shows "Your account was deleted" on the sign-in screen. Deletion by email stays available ([/delete-account](../public/delete-account.html)).
+
+**Server:** confirm (password or fresh provider token) → revoke every Apple token of the account (the stored one and the one from a fresh code; retried; Apple unreachable or the key not configured → `503 account.deletion_unavailable` and nothing is deleted; no token → `400 auth.apple_confirmation_required`) → one transaction (`AccountEraser`) → delete uploaded files and the Realtime Database node, drop the cached details of the articles that stay and recompute the counters of the articles the account reacted to or saved → drop the cached access. A retry with a token that outlived the account gets `204`; any other request with it gets `401`. The phone number, email and Google/Apple identities can sign up again at once, as a new, empty account.
+
+**Data map.** Keep it in sync with `AccountEraser`, the deletion screens, `public/delete-account.html` and `public/privacy.html`. Any new table keyed by a user must appear here.
+
+| Data | Where | On deletion | Why / how long |
+|---|---|---|---|
+| Phone number, email, password hash, recovery PIN hash, name, @username, photo, bio, links, preferences and privacy settings, lockout counters, security stamp | `Users` | **Deleted** | |
+| Roles, reviewer fields, interests, fields of expertise | `UserRoles`, `ReviewerFields`, `UserInterests`, `UserExpertiseFields` | **Deleted** (cascade) | |
+| Devices and FCM push tokens | `UserDevices` | **Deleted** (cascade); the apps also delete the token on the device | No notification reaches a deleted account |
+| Google/Apple links and the encrypted Apple refresh token | `UserExternalLogins` | Apple tokens **revoked at Apple** first, then **deleted** | The same Google/Apple account can sign up again |
+| Sessions, password reset tokens | `RefreshTokens`, `PasswordResetTokens` | **Deleted** (cascade) | Every session ends |
+| Recovery attempts (phone hash, IP) | `RecoveryAttempts` | **Deleted** | |
+| Reading progress, reading days, streak and stats, daily picks | `ReadingProgress`, `ReadingDays`, `UserStats`, `DailyPicks` | **Deleted** (cascade) | |
+| Own drafts and every own article that isn't published (submitted, in review, scheduled, archived, deleted), with translations, revisions, tags, sources, attachments, and other people's reactions, saves and comments on them | `Articles` and children | **Deleted** | Unpublished work goes with the account |
+| Own **published** articles, with translations, revisions, tags, sources, attachments, and other people's reactions, saves and comments on them | `Articles` and children | **Anonymized**: `AuthorId`, `CreatedBy` and `UpdatedBy` set to null; readers see "Deleted user" (no name, @username, photo or profile link; `author` is `null` in the API) | Links, learning paths and discussions other readers rely on keep working. A writer who wants an article gone deletes it first |
+| Images and PDFs a kept article shows (attachments, cover, images in its content or revisions) | `MediaAssets`, `MediaAssetPages`, files under `/uploads` | **Anonymized**: `OwnerId`, `CreatedBy` and `UpdatedBy` set to null; files kept | They're part of the article that stays |
+| Every other upload: avatar, images and PDFs of deleted articles, unused uploads, with their page previews | `MediaAssets`, `MediaAssetPages`, files under `/uploads` | **Deleted**; files right after the commit (a failed file delete is finished by the daily orphaned-uploads job) | |
+| Live signals | Firebase RTDB `/live/users/{id}` | **Deleted** (best effort; they expire after 24 hours anyway) | |
+| The account's reactions, saved articles, collections, follows in both directions | `Reactions`, `SavedArticles`, `Collections`, `CollectionItems`, `UserFollows` | **Deleted** (cascade from `Users`; follows *of* the account deleted explicitly); the counters of the articles it reacted to or saved are recomputed right after | |
+| The account's comments (F11) | `Comments` | **Anonymized**: `AuthorId` set to null by the foreign key, `CreatedBy` and `UpdatedBy` cleared; shown as "Deleted user". Its comments that were already deleted (by it or a moderator) keep only the placeholder: their text is erased | Replies and discussions keep their context |
+| The account's comment likes, mentions of it | `CommentLikes`, `CommentMentions` | **Deleted** (cascade); the like counts of the comments it liked are recomputed in the same transaction | |
+| Reports it filed; reports about the account, its deleted articles and the comments on them | `Reports` | **Deleted** | Their target is gone |
+| Comments it hid and reports it resolved as a moderator | `Comments.HiddenById`, `Reports.ResolvedById` | **Anonymized**: the link to the account is removed | The moderation decision stays |
+| Security log entries about the account (sign ins, password, PIN and phone changes…) | `AuditLogs` | **Deleted** | They hold IP addresses |
+| Reviews of other writers' articles, revisions made on them | `Articles.ReviewedById`, `ArticleRevisions.CreatedBy` | **Anonymized**: the link to the account is removed; the article keeps its review and history | Other people's content stays intact |
+| Moderation actions the account took on other accounts | `AuditLogs` (actor) | **Anonymized**: kept without the IP address | Accountability for actions on other people's accounts |
+| `CreatedBy` / `UpdatedBy` on rows that stay (articles, comments, media, learning paths, fields, other accounts) | audit columns | **Anonymized**: set to null | Nothing links a kept row back to the account |
+| Deletion record: account id and time | `AuditLogs` (`account.deleted`) | **Retained**, no IP or other personal data | Proves the deletion happened and answers retried requests; kept with the security log |
+| Database and uploads backups | backup storage | **Retained up to 14 days**, then overwritten | Disaster recovery ([deployment](setup/deployment.md)) |
+| Server logs | Serilog sink | May hold the account id and masked phone numbers (§9.5) for the log store's retention | Operations |
 
 ---
 
@@ -636,7 +673,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Mandatory "set recovery PIN" screen for accounts without a PIN.
 - Complete profile after sign up: display name, unique `@username`, optional avatar.
 - Guest browsing with a soft prompt to sign in when trying to interact.
-- Sign out, sign out of all devices, delete account (requires the password, or Google/Apple for accounts without one; soft delete then hard delete after 30 days, content attributed to "Deleted user").
+- Sign out, sign out of all devices, delete account (the password, or Google/Apple for accounts without one): **immediate and for good**, Apple tokens revoked first, see [§9.6](#96-account-deletion--data-map).
 
 ### F02 — Onboarding (3 steps)
 1. Welcome + value proposition.
@@ -771,7 +808,7 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
   - "تغيير الـ PIN" (current password + new PIN + confirm).
   - "الحسابات المربوطة" (Linked accounts): Google and Apple with the linked email, "اربط" (confirmed with the password, or with an already linked provider) and "فك الربط" (refused if it is the only way to sign in).
   - Google/Apple-only accounts see "ضيف رقم تليفون وكلمة سر" (phone + password + recovery PIN, confirmed with Google/Apple) instead of the number, password and PIN items above.
-  - Sign out, sign out of all devices, delete account (requires the password, or Google/Apple for accounts without one).
+  - Sign out, sign out of all devices, and a red **Delete account** (also the last row of Settings): the flow and data map are in [§9.6](#96-account-deletion--data-map).
 
 ### F19 — Writer Verification
 - Request verification: field, job title, proof (LinkedIn/GitHub URL, certificate or syndicate card upload).
@@ -1060,12 +1097,12 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 ### 16.2 Tables
 | Area | Tables |
 |---|---|
-| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, Email (only from a provider-verified address; links Google/Apple sign in), AnonymizedAt, DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
+| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
-| Media | `MediaAssets` (OwnerId, Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
+| Media | `MediaAssets` (OwnerId (null once a deleted account's asset stays with its published article), Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
 | Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive, IsEnabled), `Topics`, `Tags`, `UserInterests` |
-| Articles | `Articles` (AuthorId, FieldId, TopicId, Slug, Status, ReviewStatus, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, LastReviewedAt, ReviewedById, PublishedAt, ScheduledAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleRevisions`, `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive), `ArticleReviews` (ReviewerId, Decision, Notes JSON) |
+| Articles | `Articles` (AuthorId (null: the author deleted their account, §9.6), FieldId, TopicId, Slug, Status, ReviewStatus, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, LastReviewedAt, ReviewedById, PublishedAt, ScheduledAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleRevisions`, `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive), `ArticleReviews` (ReviewerId, Decision, Notes JSON) |
 | Engagement | `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths`, `LearningPathItems` (Order), `PathEnrollments` |
