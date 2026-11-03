@@ -1,0 +1,29 @@
+{
+  "slug": "android-upload-key-vs-app-signing-key",
+  "field": "mobile",
+  "topic": "publishing",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Upload Key vs App Signing Key: What Really Happens When You Sign an Android App",
+      "subtitle": "With Play App Signing, the key on your machine only proves to Google that the upload is yours. Phones verify a different key, and that changes what you can lose."
+    },
+    "ar-EG": {
+      "title": "الفرق بين الـ upload key والـ app signing key: اللي بيحصل فعلًا لما تعمل sign لتطبيق Android",
+      "subtitle": "مع الـ Play App Signing، الـ key اللي على جهازك بيثبت لـ Google إن الـ upload ده بتاعك وبس. الموبايلات بتتحقق من key تاني، وده بيغيّر إيه اللي ممكن يضيع منك."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "mobile-app-engineering", "order": 9 },
+  "tags": ["Android", "Play App Signing", "Publishing", "Flutter"],
+  "sources": [
+    { "title": "Sign your app — Android Developers", "url": "https://developer.android.com/studio/publish/app-signing" },
+    { "title": "Use Play App Signing — Play Console Help", "url": "https://support.google.com/googleplay/android-developer/answer/9842756" },
+    { "title": "Build and release an Android app — Flutter docs", "url": "https://docs.flutter.dev/deployment/android" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

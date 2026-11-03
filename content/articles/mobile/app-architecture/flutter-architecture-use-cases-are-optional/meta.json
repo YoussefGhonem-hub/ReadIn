@@ -1,0 +1,35 @@
+{
+  "slug": "flutter-architecture-use-cases-are-optional",
+  "field": "mobile",
+  "topic": "app-architecture",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Use Cases Are Optional: What Flutter's Official Architecture Guide Actually Recommends",
+      "subtitle": "Flutter's guide strongly recommends two layers, views, view models and repositories. The domain layer is conditional: add a use case when the logic earns it."
+    },
+    "ar-EG": {
+      "title": "الـ use cases مش إجبارية: الـ architecture اللي Flutter بينصح بيه فعلًا",
+      "subtitle": "دليل Flutter بينصح بقوة بـ layers اتنين، وviews وview models وrepositories. أما الـ domain layer فمشروطة: ضيف use case لما الـ logic يستاهل."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "mobile-app-engineering", "order": 10 },
+  "tags": ["Flutter", "Architecture", "MVVM", "Use cases"],
+  "sources": [
+    { "title": "Guide to app architecture — Flutter docs", "url": "https://docs.flutter.dev/app-architecture/guide" },
+    { "title": "Architecture recommendations and resources — Flutter docs", "url": "https://docs.flutter.dev/app-architecture/recommendations" },
+    { "title": "Architecture case study — Flutter docs", "url": "https://docs.flutter.dev/app-architecture/case-study" },
+    { "title": "Domain layer — Android Developers", "url": "https://developer.android.com/topic/architecture/domain-layer" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\nabstract class SettingsRepository {\n  Future<ThemeMode> themeMode();\n}\nclass Receipt {}\nclass Trip {\n  Trip(this.price);\n  final int price;\n}\nabstract class TripRepository {\n  Future<void> confirm(Trip trip, Receipt receipt);\n}\nabstract class PaymentRepository {\n  Future<Receipt> charge(int amount);\n}"
+    }
+  }
+}

@@ -292,3 +292,86 @@ terms:
     definitionAr: >-
       check وقت الـ compile في Dart بيطلّع error لو فيه قيمة ممكن تدخل switch من غير ما تطابق أي case، زي switch على
       sealed class ناسي واحد من الـ subtypes بتوعها.
+  - id: doze-mode
+    term: Doze mode
+    definitionEn: >-
+      An Android power-saving state the device enters when it's unplugged, stationary and has its screen off for a
+      while. It suspends apps' network access and defers their jobs, syncs and alarms to short maintenance windows.
+    definitionAr: >-
+      وضع توفير طاقة في Android الجهاز بيدخله لما يفضل مش في الشاحن، وثابت، وشاشته مقفولة لفترة. بيوقف وصول التطبيقات
+      للـ network، وبيأجّل الـ jobs والـ syncs والـ alarms بتاعتها لفترات صيانة قصيرة.
+  - id: collapsible-message
+    term: Collapsible message
+    definitionEn: >-
+      A push message that a newer message with the same collapse key replaces while it's still waiting to be
+      delivered, so a device that comes back online gets only the latest one. It suits "sync now" pings, not chat
+      messages.
+    definitionAr: >-
+      رسالة push لو لسه مستنية تتوصّل، الرسالة الأحدث اللي ليها نفس الـ collapse key بتاخد مكانها، فالجهاز لما يرجع
+      online بياخد آخر واحدة بس. مناسبة لرسايل "اعمل sync دلوقتي"، مش لرسايل الشات.
+  - id: upload-key
+    term: Upload key
+    definitionEn: >-
+      The key a developer uses to sign an Android app bundle before uploading it to Google Play. Play uses it to verify
+      who uploaded the bundle; it never signs what users install, and Play can reset it if it's lost or leaked.
+    definitionAr: >-
+      الـ key اللي المطوّر بيعمل بيه sign للـ app bundle قبل ما يرفعه على Google Play. الـ Play بيستخدمه عشان يتأكد مين
+      اللي رفع الـ bundle، ومش بيوقّع بيه اللي المستخدمين بينزّلوه، والـ Play يقدر يعمله reset لو ضاع أو اتسرّب.
+  - id: app-signing-key
+    term: App signing key
+    definitionEn: >-
+      The key that signs the APKs installed on users' devices. Android accepts an update only if it's signed with the
+      same key, so with Play App Signing Google holds it and signs every APK it delivers.
+    definitionAr: >-
+      الـ key اللي بيوقّع الـ APKs اللي بتتسطّب على أجهزة المستخدمين. الـ Android مش بيقبل update إلا لو متوقّع بنفس
+      الـ key، وعشان كده مع الـ Play App Signing الـ Google هي اللي ماسكاه وبتوقّع بيه كل APK بتوصّله.
+  - id: certificate-fingerprint
+    term: Certificate fingerprint
+    definitionEn: >-
+      A short hash, such as SHA-1 or SHA-256, that uniquely identifies a signing certificate. Services like Google
+      Sign-In and Maps ask for it, together with the package name, to recognize your app.
+    definitionAr: >-
+      hash قصير، زي SHA-1 أو SHA-256، بيميّز signing certificate معيّنة. خدمات زي Google Sign-In والـ Maps بتطلبه
+      مع اسم الـ package عشان تتعرّف على تطبيقك.
+  - id: mvvm
+    term: MVVM (Model-View-ViewModel)
+    definitionEn: >-
+      An architectural pattern that splits a feature into a view that shows the UI, a view model that holds UI state
+      and logic, and a model that provides the data. Flutter's architecture guide maps the model to repositories and
+      services.
+    definitionAr: >-
+      pattern معماري بيقسم الـ feature لـ view بتعرض الواجهة، وview model شايل الـ UI state والـ logic، وmodel بيوفّر
+      الداتا. ودليل الـ architecture بتاع Flutter بيعتبر الـ repositories والـ services هما الـ model.
+  - id: use-case
+    term: Use case (interactor)
+    definitionEn: >-
+      A class in an optional domain layer that wraps one piece of business logic between view models and repositories,
+      usually because it combines several repositories, is complex, or is reused by several view models.
+    definitionAr: >-
+      class في domain layer اختيارية، بتلفّ حتة business logic واحدة بين الـ view models والـ repositories، وغالبًا
+      عشان بتجمع كذا repository، أو معقدة، أو بيستخدمها كذا view model.
+  - id: sync-queue
+    term: Sync queue (outbox)
+    definitionEn: >-
+      A table in an app's local database that records each change the server hasn't confirmed yet. Entries are written
+      in the same transaction as the change, survive restarts, and are sent in order when the network is available.
+    definitionAr: >-
+      table في الداتابيز المحلية بتاعة التطبيق بتسجّل كل تغيير السيرفر لسه ماأكدهوش. الـ entries بتتكتب في نفس الـ
+      transaction بتاعة التغيير، وبتعيش بعد الـ restart، وبتتبعت بالترتيب لما النت يبقى متاح.
+  - id: last-write-wins
+    term: Last write wins
+    definitionEn: >-
+      A conflict rule where each write carries a timestamp and the server keeps whichever write is newest, discarding
+      older ones. It's simple, but the losing edit disappears without anyone being told.
+    definitionAr: >-
+      قاعدة لحل الـ conflicts كل write فيها معاه timestamp، والسيرفر بيحتفظ بالأحدث ويرمي الأقدم. سهلة، بس التعديل اللي
+      خسر بيختفي من غير ما حد يعرف.
+  - id: message-codec
+    term: Message codec
+    definitionEn: >-
+      The object that turns values into bytes and back for a Flutter platform channel. The default
+      StandardMessageCodec handles null, bools, numbers, strings, typed data, lists and maps; anything else throws.
+    definitionAr: >-
+      الـ object اللي بيحوّل القيم لـ bytes والعكس في الـ platform channel بتاع Flutter. والـ default اللي اسمه
+      StandardMessageCodec بيتعامل مع null والـ bools والأرقام والـ strings والـ typed data والـ lists والـ maps، وأي حاجة
+      تانية بترمي exception.

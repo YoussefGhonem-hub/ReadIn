@@ -1,0 +1,36 @@
+{
+  "slug": "platform-channels-are-async-messages",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Platform Channels Are Async Messages, Not Function Calls",
+      "subtitle": "invokeMethod encodes your arguments, sends them to the platform's main thread and hands you a Future. Only codec values cross, and failures arrive later."
+    },
+    "ar-EG": {
+      "title": "الـ platform channels رسايل async مش function calls: إزاي Flutter بيكلم الكود الـ native",
+      "subtitle": "الـ invokeMethod بيعمل encode للـ arguments، ويبعتها للـ main thread بتاع المنصة، ويدّيك Future. مفيش غير قيم الـ codec اللي بتعدّي، والأخطاء بتوصل بعدين."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "mobile-app-engineering", "order": 12 },
+  "tags": ["Flutter", "Platform channels", "Native code", "Pigeon"],
+  "sources": [
+    { "title": "Writing custom platform-specific code — Flutter docs", "url": "https://docs.flutter.dev/platform-integration/platform-channels" },
+    { "title": "MethodChannel class — Flutter API", "url": "https://api.flutter.dev/flutter/services/MethodChannel-class.html" },
+    { "title": "MethodChannel.invokeMethod — Flutter API", "url": "https://api.flutter.dev/flutter/services/MethodChannel/invokeMethod.html" },
+    { "title": "StandardMessageCodec class — Flutter API", "url": "https://api.flutter.dev/flutter/services/StandardMessageCodec-class.html" },
+    { "title": "pigeon — pub.dev", "url": "https://pub.dev/packages/pigeon" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\nimport 'package:flutter/services.dart';\nclass Reminder {\n  Reminder(this.id, this.at);\n  final String id;\n  final DateTime at;\n}\nclass HostApi {\n  const HostApi();\n}\nconst Object async = Object();"
+    }
+  }
+}

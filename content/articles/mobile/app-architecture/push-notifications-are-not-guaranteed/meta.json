@@ -1,0 +1,36 @@
+{
+  "slug": "push-notifications-are-not-guaranteed",
+  "field": "mobile",
+  "topic": "app-architecture",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Push Notifications Aren't a Delivery Guarantee: Designing Around FCM and APNs",
+      "subtitle": "FCM and APNs accept your message, then deliver it when, and if, the device allows. Treat a push as a hint and let the app sync the truth."
+    },
+    "ar-EG": {
+      "title": "الـ push notifications مش مضمون وصولها: إزاي تصمم حوالين FCM و APNs",
+      "subtitle": "الـ FCM والـ APNs بيقبلوا رسالتك، وبعدين يوصّلوها لما الجهاز يسمح، ولو سمح. اعتبر الـ push تلميح، وخلّي التطبيق يعمل sync للحقيقة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "mobile-app-engineering", "order": 8 },
+  "tags": ["Push notifications", "FCM", "APNs", "Sync"],
+  "sources": [
+    { "title": "Set the lifespan of a message — Firebase Cloud Messaging", "url": "https://firebase.google.com/docs/cloud-messaging/customize-messages/setting-message-lifespan" },
+    { "title": "Set and manage Android message priority — Firebase Cloud Messaging", "url": "https://firebase.google.com/docs/cloud-messaging/android-message-priority" },
+    { "title": "Non-collapsible and collapsible messages — Firebase Cloud Messaging", "url": "https://firebase.google.com/docs/cloud-messaging/customize-messages/collapsible-message-types" },
+    { "title": "Pushing background updates to your App — Apple Developer Documentation", "url": "https://developer.apple.com/documentation/usernotifications/pushing-background-updates-to-your-app" },
+    { "title": "Sending notification requests to APNs — Apple Developer Documentation", "url": "https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "class RemoteMessage {\n  RemoteMessage(this.data);\n  final Map<String, dynamic> data;\n}\nclass Changes {\n  Changes(this.items, this.nextToken);\n  final List<Object> items;\n  final String nextToken;\n}\nabstract class Api {\n  Future<Changes> changesSince(String? token);\n}\nabstract class Db {\n  Future<void> saveAppointmentTime(String id, DateTime time);\n  Future<String?> lastSyncToken();\n  Future<void> applyChanges(List<Object> items, String nextToken);\n}\nlate final Api api;\nlate final Db db;"
+    }
+  }
+}
