@@ -1,0 +1,43 @@
+{
+  "slug": "centralized-error-handling-problem-details",
+  "field": "dotnet",
+  "topic": "aspnet-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Stop Wrapping Every Endpoint in try/catch: Centralized Errors with ProblemDetails",
+      "subtitle": "One exception handler at the top of the pipeline turns every failure into a standard RFC 9457 response, covers endpoints nobody wrapped, and keeps internals out of the body."
+    },
+    "ar-EG": {
+      "title": "بلاش try/catch في كل endpoint: إدارة الأخطاء في مكان واحد بالـ ProblemDetails",
+      "subtitle": "exception handler واحد في أول الـ pipeline بيحوّل أي فشل لـ response قياسي حسب RFC 9457، وبيغطي الـ endpoints اللي محدش لفّها، وبيخبّي التفاصيل الداخلية."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 5 },
+  "tags": ["ASP.NET Core", "Error handling", "ProblemDetails", "Minimal APIs"],
+  "sources": [
+    {
+      "title": "Handle errors in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/error-handling"
+    },
+    {
+      "title": "Handle errors in ASP.NET Core APIs — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/error-handling-api"
+    },
+    {
+      "title": "RFC 9457: Problem Details for HTTP APIs — RFC Editor",
+      "url": "https://www.rfc-editor.org/rfc/rfc9457.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public record Order(int Id, decimal Total);\npublic class OrderStore { public Task<Order?> FindAsync(int id) => Task.FromResult<Order?>(null); }"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "slug": "valuetask-is-not-a-faster-task",
+  "field": "dotnet",
+  "topic": "dotnet-performance",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Task vs ValueTask: Why the Cheaper-Looking One Is Not the Default",
+      "subtitle": "ValueTask saves an allocation only when the result is already there, and it asks a lot of its callers in return. When it pays off, and when it bites."
+    },
+    "ar-EG": {
+      "title": "تختار Task ولا ValueTask؟ ليه اللي شكله أرخص مش هو الـ default",
+      "subtitle": "الـ ValueTask بيوفّر allocation بس لما النتيجة تكون جاهزة، وفي المقابل بيطلب حاجات كتير من اللي بيستخدمه. إمتى يستاهل، وإمتى يعضّك."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 13 },
+  "tags": ["C#", "async/await", "ValueTask", "Performance"],
+  "sources": [
+    {
+      "title": "Understanding the Whys, Whats, and Whens of ValueTask — Stephen Toub, .NET Blog",
+      "url": "https://devblogs.microsoft.com/dotnet/understanding-the-whys-whats-and-whens-of-valuetask/"
+    },
+    {
+      "title": "ValueTask<TResult> Struct: Remarks — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.threading.tasks.valuetask-1"
+    },
+    {
+      "title": "CA2012: Use ValueTasks correctly — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2012"
+    },
+    {
+      "title": "Performance Improvements in .NET 6: Async (PoolingAsyncValueTaskMethodBuilder) — Stephen Toub, .NET Blog",
+      "url": "https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public interface IPriceStore { Task<decimal> LoadPriceAsync(string sku); }"
+    }
+  }
+}

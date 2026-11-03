@@ -1,0 +1,39 @@
+{
+  "slug": "options-pattern-ioptions-snapshot-monitor",
+  "field": "dotnet",
+  "topic": "aspnet-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "IOptions, IOptionsSnapshot or IOptionsMonitor? Config Changes Are Not Automatic",
+      "subtitle": "appsettings.json reloads by default, but IOptions binds your settings once. When each interface sees a change, which one a singleton can use, and what an invalid reload does."
+    },
+    "ar-EG": {
+      "title": "إمتى تستخدم IOptions وإمتى IOptionsSnapshot أو IOptionsMonitor؟ تغييرات الـ config مش بتوصل لوحدها",
+      "subtitle": "الـ appsettings.json بيتعمله reload لوحده، بس الـ IOptions بيعمل bind للـ settings مرة واحدة. كل interface بيشوف التغيير إمتى، وأنهي واحد ينفع في singleton، والـ reload الغلط بيعمل إيه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 6 },
+  "tags": ["ASP.NET Core", "Options pattern", "Configuration", "Dependency Injection"],
+  "sources": [
+    {
+      "title": "Options pattern in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/configuration/options"
+    },
+    {
+      "title": "Options pattern in .NET — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/extensions/options"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed class RecommendationOptions { public bool Enabled { get; set; } = true; [System.ComponentModel.DataAnnotations.Range(1, 50)] public int MaxItems { get; set; } = 10; }"
+    }
+  }
+}

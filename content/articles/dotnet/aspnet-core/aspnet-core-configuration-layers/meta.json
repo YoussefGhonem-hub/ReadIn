@@ -1,0 +1,38 @@
+{
+  "slug": "aspnet-core-configuration-layers",
+  "field": "dotnet",
+  "topic": "aspnet-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "How appsettings.Production.json Really Works: Configuration Layers, Not Replacements",
+      "subtitle": "Every configuration source is flattened into keys and stacked on the ones before it. Why a shorter array in production keeps the base file's extra entries, and how to see which file set each key."
+    },
+    "ar-EG": {
+      "title": "ليه appsettings.Production.json مش بيلغي appsettings.json؟ طبقات الـ configuration",
+      "subtitle": "كل مصدر configuration بيتحول لـ keys وبيتحط فوق اللي قبله. ليه الـ array الأقصر في الـ production بيسيب العناصر الزيادة اللي في الملف الأساسي، وإزاي تعرف كل key جه من أنهي ملف."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 4 },
+  "tags": ["ASP.NET Core", "Configuration", "appsettings.json", "Environments"],
+  "sources": [
+    {
+      "title": "Configuration in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/configuration/"
+    },
+    {
+      "title": "ASP.NET Core runtime environments — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/environments"
+    },
+    {
+      "title": "Configuration in .NET — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/extensions/configuration"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

@@ -1,0 +1,43 @@
+{
+  "slug": "middleware-order-matters",
+  "field": "dotnet",
+  "topic": "aspnet-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Middleware Order Matters: How the ASP.NET Core Pipeline Really Runs",
+      "subtitle": "Each app.Use call wraps everything registered after it. What a middleware can see, what it protects, and where your own middleware belongs."
+    },
+    "ar-EG": {
+      "title": "ليه ترتيب الـ middleware مهم؟ إزاي الـ pipeline في ASP.NET Core بيشتغل فعلًا",
+      "subtitle": "كل app.Use بيلف كل اللي متسجل بعده. الـ middleware يقدر يشوف إيه، وبيحمي إيه، والـ middleware بتاعك مكانه فين."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 1 },
+  "tags": ["ASP.NET Core", "Middleware", "Authentication", "Request pipeline"],
+  "sources": [
+    {
+      "title": "ASP.NET Core middleware: Middleware order — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/middleware/"
+    },
+    {
+      "title": "Routing in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/routing"
+    },
+    {
+      "title": "Write custom ASP.NET Core middleware — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/middleware/write"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "namespace Microsoft.Extensions.DependencyInjection { public static class JwtBearerExtensions { public static Microsoft.AspNetCore.Authentication.AuthenticationBuilder AddJwtBearer(this Microsoft.AspNetCore.Authentication.AuthenticationBuilder builder) => builder; } }"
+    }
+  }
+}

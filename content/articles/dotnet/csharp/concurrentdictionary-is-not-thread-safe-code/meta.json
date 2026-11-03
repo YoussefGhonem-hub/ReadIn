@@ -1,0 +1,51 @@
+{
+  "slug": "concurrentdictionary-is-not-thread-safe-code",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why ConcurrentDictionary Alone Won't Make Your Code Thread-Safe",
+      "subtitle": "Every call is safe, but your sequence of calls isn't, and GetOrAdd may run its factory more than once. Where the races hide and how to close them."
+    },
+    "ar-EG": {
+      "title": "ليه الـ ConcurrentDictionary مش بيخلّي الكود بتاعك thread-safe؟",
+      "subtitle": "كل call لوحدها آمنة، بس الترتيب اللي بتنادي بيه مش آمن، والـ GetOrAdd ممكن يشغّل الـ factory أكتر من مرة. الـ races مستخبية فين وتقفلها إزاي."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 15 },
+  "tags": ["C#", "Concurrency", "ConcurrentDictionary", "Thread safety"],
+  "sources": [
+    {
+      "title": "Thread-safe collections — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/collections/thread-safe/"
+    },
+    {
+      "title": "Add and remove items from a ConcurrentDictionary — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/collections/thread-safe/how-to-add-and-remove-items"
+    },
+    {
+      "title": "ConcurrentDictionary<TKey,TValue>.GetOrAdd: Remarks — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentdictionary-2.getoradd"
+    },
+    {
+      "title": "LazyThreadSafetyMode Enum — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.threading.lazythreadsafetymode"
+    },
+    {
+      "title": "The lock statement (C# reference) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/statements/lock"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public interface IRateApi { Task<decimal> GetRateAsync(string currency); }"
+    }
+  }
+}

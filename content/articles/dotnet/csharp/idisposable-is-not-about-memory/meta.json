@@ -1,0 +1,46 @@
+{
+  "slug": "idisposable-is-not-about-memory",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "What the Garbage Collector Won't Clean Up: IDisposable Explained",
+      "subtitle": "The GC frees memory, not files, connections or buffers. Why a forgotten Dispose is cleaned up late or never, and who owns the call."
+    },
+    "ar-EG": {
+      "title": "إيه اللي الـ Garbage Collector مش هينضّفه؟ شرح الـ IDisposable",
+      "subtitle": "الـ GC بيحرر الـ memory، مش الملفات ولا الـ connections ولا الـ buffers. ليه الـ Dispose اللي بتنساه بيتنضّف متأخر أو مابيتنضّفش خالص، ومين مسؤول عنه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 12 },
+  "tags": ["C#", "IDisposable", "Garbage collection", "Resource management"],
+  "sources": [
+    {
+      "title": "Cleaning up unmanaged resources — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/garbage-collection/unmanaged"
+    },
+    {
+      "title": "Implement a Dispose method — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/garbage-collection/implementing-dispose"
+    },
+    {
+      "title": "using statement: ensure the correct use of disposable objects — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/statements/using"
+    },
+    {
+      "title": "Finalizers (C# programming guide) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/programming-guide/classes-and-structs/finalizers"
+    },
+    {
+      "title": "SQL Server connection pooling with Microsoft.Data.SqlClient — Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/connect/ado-net/sql-server-connection-pooling"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

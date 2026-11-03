@@ -1,0 +1,48 @@
+{
+  "slug": "span-of-t-is-not-a-faster-array",
+  "field": "dotnet",
+  "topic": "dotnet-performance",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The Rules Behind Span<T>: Why It Can't Live on the Heap or Cross an await",
+      "subtitle": "A span is a view over memory it doesn't own, so the compiler keeps it on the stack. What that rules out, and how Memory<T> fills the gap."
+    },
+    "ar-EG": {
+      "title": "قواعد الـ Span<T>: ليه مينفعش يعيش على الـ heap أو يعدّي await",
+      "subtitle": "الـ span نافذة على memory مش بتاعته، فالـ compiler بيخلّيه على الـ stack بس. ده بيمنع إيه، وإزاي الـ Memory<T> بيكمّل الناقص."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 14 },
+  "tags": ["C#", "Span<T>", "Memory<T>", "Performance"],
+  "sources": [
+    {
+      "title": "Memory-related and span types — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/memory-and-spans/"
+    },
+    {
+      "title": "Memory<T> and Span<T> usage guidelines — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/memory-and-spans/memory-t-usage-guidelines"
+    },
+    {
+      "title": "ref struct types (C# reference) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/ref-struct"
+    },
+    {
+      "title": "All About Span: Exploring a New .NET Mainstay — Stephen Toub, MSDN Magazine (Microsoft Learn archive)",
+      "url": "https://learn.microsoft.com/archive/msdn-magazine/2018/january/csharp-all-about-span-exploring-a-new-net-mainstay"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public static class Audit { public static Task LogAsync(int bytes) => Task.CompletedTask; }"
+    },
+    "skip": { "b17/0": "Shows compiler error CS4007 on purpose: a Span<T> used after an await" }
+  }
+}

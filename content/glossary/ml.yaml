@@ -214,3 +214,12 @@ terms:
     definitionAr: >-
       تجربة بتوزّع المستخدمين عشوائيًا على نسختين أو أكتر، زي بالـ feature ومن غيرها، وبتقارن النتيجة. التوزيع العشوائي
       بيوازن كل العوامل التانية، سواء اتقاست أو لأ، فالفرق بيقدّر التأثير الحقيقي للنسخة.
+  - id: principal-component-analysis
+    term: Principal Component Analysis (PCA)
+    definitionEn: >-
+      A technique that rotates the data onto new axes, the principal components, ordered by how much variance each
+      captures, so you can keep only the first few. It ignores the target, and each component mixes all original
+      features.
+    definitionAr: >-
+      طريقة بتلف الداتا على محاور جديدة اسمها principal components، مترتبة حسب قد إيه كل واحد فيها شايل variance، عشان
+      تحتفظ بأول كام واحد بس. مابتبصش على الـ target، وكل component خليط من كل الـ features الأصلية.

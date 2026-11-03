@@ -1,0 +1,51 @@
+{
+  "slug": "minimal-apis-are-not-just-for-demos",
+  "field": "dotnet",
+  "topic": "minimal-apis",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Minimal APIs in Production: What They Can Do That People Assume They Can't",
+      "subtitle": "Route groups, endpoint filters, typed results and built-in validation in .NET 10, and the short list of things controllers still do better."
+    },
+    "ar-EG": {
+      "title": "الـ Minimal APIs مش للـ demos بس: تقدر تعمل بيها إيه في app حقيقي؟",
+      "subtitle": "الـ route groups والـ endpoint filters والـ typed results والـ validation الجاهز في .NET 10، والحاجات القليلة اللي الـ controllers لسه أحسن فيها."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 2 },
+  "tags": ["ASP.NET Core", "Minimal APIs", "Controllers", "Web API"],
+  "sources": [
+    {
+      "title": "APIs overview: Minimal APIs or controllers — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/apis"
+    },
+    {
+      "title": "Route handlers in Minimal API apps — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/route-handlers"
+    },
+    {
+      "title": "Minimal APIs quick reference — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis"
+    },
+    {
+      "title": "Create responses in Minimal API applications — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/responses"
+    },
+    {
+      "title": "Validation in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/validation"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "namespace Microsoft.Extensions.DependencyInjection { public static class JwtBearerExtensions { public static Microsoft.AspNetCore.Authentication.AuthenticationBuilder AddJwtBearer(this Microsoft.AspNetCore.Authentication.AuthenticationBuilder builder) => builder; } }\npublic record Order(int Id, [System.ComponentModel.DataAnnotations.Required] string Sku, [System.ComponentModel.DataAnnotations.Range(1, 100)] int Quantity);\npublic class OrderStore { public Order? Find(int id) => null; public void Add(Order order) { } }\npublic static class StubOrderEndpoints { public static RouteGroupBuilder MapOrders(this RouteGroupBuilder group) => group; }"
+    }
+  }
+}

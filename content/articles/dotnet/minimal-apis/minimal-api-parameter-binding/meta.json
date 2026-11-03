@@ -1,0 +1,38 @@
+{
+  "slug": "minimal-api-parameter-binding",
+  "field": "dotnet",
+  "topic": "minimal-apis",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Where Did That Parameter Come From? Parameter Binding in Minimal APIs",
+      "subtitle": "Minimal APIs choose each parameter's source from a fixed list of rules. Where those rules surprise you, and when FromHeader or AsParameters changes the result."
+    },
+    "ar-EG": {
+      "title": "الـ parameter ده جه منين؟ الـ parameter binding في Minimal APIs",
+      "subtitle": "الـ Minimal APIs بتختار مصدر كل parameter من لستة قواعد ثابتة. إمتى القواعد دي بتفاجئك، وإمتى الـ FromHeader أو الـ AsParameters بيغيّروا النتيجة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 3 },
+  "tags": ["ASP.NET Core", "Minimal APIs", "Parameter binding", "AsParameters"],
+  "sources": [
+    {
+      "title": "Parameter binding in Minimal API apps — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/parameter-binding"
+    },
+    {
+      "title": "Model binding in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/mvc/models/model-binding"
+    },
+    {
+      "title": "Filters in Minimal API apps: parameter binding failures — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/min-api-filters"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
