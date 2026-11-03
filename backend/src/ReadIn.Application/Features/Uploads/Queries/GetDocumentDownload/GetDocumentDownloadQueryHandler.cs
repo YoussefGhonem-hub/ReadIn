@@ -20,7 +20,7 @@ internal sealed class GetDocumentDownloadQueryHandler(IAppDbContext db, ICurrent
             .FirstOrDefaultAsync(cancellationToken);
         if (asset is null) return MediaErrors.NotFound;
 
-        var privileged = currentUser.UserId == asset.OwnerId || currentUser.Permissions.Contains(Permissions.Moderation.Manage);
+        var privileged = (asset.OwnerId is not null && currentUser.UserId == asset.OwnerId) || currentUser.Permissions.Contains(Permissions.Moderation.Manage);
         if (!privileged)
         {
             var published = await db.Articles.AsNoTracking().AnyAsync(a =>

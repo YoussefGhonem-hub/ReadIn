@@ -339,31 +339,6 @@ public sealed class AuthTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task Deleting_the_account_needs_the_password_and_signs_out()
-    {
-        var user = await api.SignUpAsync();
-
-        var wrong = await user.Client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "/api/v1/me")
-        {
-            Content = JsonContent.Create(new { password = "Not-mine-12" }),
-        }, Ct);
-        (await CodeOf(wrong)).Should().Be("auth.wrong_password");
-
-        var deleted = await user.Client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "/api/v1/me")
-        {
-            Content = JsonContent.Create(new { password = ApiFactory.TestPassword }),
-        }, Ct);
-        deleted.StatusCode.Should().Be(HttpStatusCode.NoContent);
-
-        (await user.Client.GetAsync("/api/v1/me", Ct)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-        (await RefreshAsync(user.RefreshToken)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-        (await CodeOf(await LoginAsync(user.PhoneNumber, ApiFactory.TestPassword))).Should().Be("auth.invalid_credentials");
-        var again = await api.GuestClient().PostAsJsonAsync("/api/v1/auth/register",
-            new { phoneNumber = user.PhoneNumber, password = ApiFactory.TestPassword, recoveryPin = ApiFactory.TestPin }, Ct);
-        (await CodeOf(again)).Should().Be("auth.phone_taken", "the number stays reserved until the account is anonymized");
-    }
-
-    [Fact]
     public async Task Devices_can_be_unregistered_on_sign_out()
     {
         var user = await api.SignUpAsync();

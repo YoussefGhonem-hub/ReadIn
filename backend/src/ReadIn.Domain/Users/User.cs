@@ -8,7 +8,6 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public const int MinInterests = 3;
     public static readonly TimeOnly DefaultReminderTime = new(8, 0);
     public const string DefaultTimeZone = "Africa/Cairo";
-    public const string DeletedDisplayName = "Deleted user";
     public const int MaxDisplayNameLength = 60;
 
     /// <summary>Fields of expertise shown on the profile (SPEC F14).</summary>
@@ -24,7 +23,7 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
 
     /// <summary>
     /// E.164 (<c>+201001234567</c>), the phone sign-in identifier (SPEC §9.1). Null for accounts that only sign in with
-    /// Google or Apple, and once a deleted account is anonymized.
+    /// Google or Apple.
     /// </summary>
     public string? PhoneNumber { get; private set; }
 
@@ -91,9 +90,6 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public Guid? UpdatedBy { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
-
-    /// <summary>When the personal data of a deleted account was removed (SPEC F01); null until then.</summary>
-    public DateTime? AnonymizedAt { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
     public bool OnboardingCompleted => _interests.Count >= MinInterests;
@@ -462,8 +458,13 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
 
     public void RecordExternalSignIn(string provider, DateTime now) => FindExternalLogin(provider)?.Touch(now);
 
-    /// <summary>On delete (SPEC F01): the Google/Apple identities can sign up again at once.</summary>
-    public void ReleaseExternalLogins() => _externalLogins.Clear();
+    /// <summary>Keeps the (encrypted) provider refresh token of a linked identity so it can be revoked later (SPEC F01).</summary>
+    public void StoreProviderToken(string provider, string clientId, string protectedRefreshToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(protectedRefreshToken);
+        FindExternalLogin(provider)?.StoreProviderToken(clientId, protectedRefreshToken);
+    }
 
     /// <summary>
     /// A Google/Apple account adds phone + password sign in (SPEC F18). The recovery PIN is set right after, like at sign
@@ -516,33 +517,6 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
 
     public bool IsSuspendedAt(DateTime now) => IsSuspended && (SuspendedUntil is null || SuspendedUntil > now);
 
-    // ---- Deletion (SPEC F01) ----
-
-    /// <summary>
-    /// Runs <see cref="AccountSecurity.DeletionGracePeriod"/> after the soft delete: personal data is removed, while articles
-    /// and comments stay attributed to "Deleted user". The phone number is released, so it can sign up again.
-    /// </summary>
-    public void Anonymize(DateTime now)
-    {
-        AnonymizedAt = now;
-        PhoneNumber = null;
-        Email = null;
-        PasswordHash = null;
-        RecoveryPinHash = null;
-        RecoveryPinSetAt = null;
-        DisplayName = DeletedDisplayName;
-        Username = $"deleted_{Id:N}"[..30];
-        AvatarUrl = null;
-        Bio = null;
-        Links = new UserLinks();
-        _devices.Clear();
-        _interests.Clear();
-        _expertise.Clear();
-        PublicReadingStats = false;
-        _externalLogins.Clear(); // the Google/Apple account can sign up again
-        RotateSecurityStamp();
-    }
-
     /// <summary>Handles that would clash with a fixed <c>/users/{segment}</c> route (<c>GET /users/suggested</c>).</summary>
     private static readonly HashSet<string> ReservedUsernames = ["suggested"];
 
@@ -565,9 +539,6 @@ public static class AccountSecurity
     public static readonly TimeSpan RecoveryLockout = TimeSpan.FromHours(1);
     public const int MaxRecoveryLockouts = 3;
     public static readonly TimeSpan RecoveryLockoutWindow = TimeSpan.FromDays(7);
-
-    /// <summary>Soft-deleted accounts are anonymized after this period (SPEC F01).</summary>
-    public static readonly TimeSpan DeletionGracePeriod = TimeSpan.FromDays(30);
 }
 
 public sealed record UserLinks

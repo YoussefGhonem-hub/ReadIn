@@ -37,7 +37,7 @@ internal sealed class InlineMediaJobScheduler(IServiceScopeFactory scopes) : IMe
 internal sealed class FirebaseMediaStatusNotifier(RealtimeDatabaseClient database) : IMediaStatusNotifier
 {
     public Task NotifyAsync(MediaAsset asset, CancellationToken cancellationToken) =>
-        database.PutAsync($"live/users/{asset.OwnerId}/media/{asset.Id}", new Dictionary<string, object?>
+        asset.OwnerId is null ? Task.CompletedTask : database.PutAsync($"live/users/{asset.OwnerId}/media/{asset.Id}", new Dictionary<string, object?>
         {
             ["status"] = asset.Status.ToString().ToLowerInvariant(),
             ["pagesReady"] = asset.Pages.Count,

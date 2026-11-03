@@ -127,5 +127,19 @@ public sealed class ExternalLogin
     public DateTime LinkedAt { get; private set; }
     public DateTime LastUsedAt { get; private set; }
 
+    /// <summary>
+    /// Apple only: the refresh token from exchanging the sign-in authorization code, encrypted, and the client id it was
+    /// issued to. Revoked when the account is deleted or the identity unlinked (Sign in with Apple REST API).
+    /// </summary>
+    public string? ProviderRefreshToken { get; private set; }
+
+    public string? ProviderClientId { get; private set; }
+
     internal void Touch(DateTime now) => LastUsedAt = now;
+
+    internal void StoreProviderToken(string clientId, string protectedRefreshToken)
+    {
+        ProviderClientId = clientId;
+        ProviderRefreshToken = protectedRefreshToken;
+    }
 }

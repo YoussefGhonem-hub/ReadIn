@@ -8,7 +8,7 @@ namespace ReadIn.Infrastructure.Persistence.Configurations;
 
 // Engagement (SPEC §16.2): reactions, saves, collections and follows. Deleting a user removes their rows through the
 // UserId cascades; deleting an article removes its rows through the ArticleId cascades. Articles.AuthorId → Users is
-// Restrict, so neither table is reached by two cascade paths.
+// Restrict (account deletion unlinks the articles that stay), so neither table is reached by two cascade paths.
 
 internal sealed class ReactionConfiguration : IEntityTypeConfiguration<Reaction>
 {

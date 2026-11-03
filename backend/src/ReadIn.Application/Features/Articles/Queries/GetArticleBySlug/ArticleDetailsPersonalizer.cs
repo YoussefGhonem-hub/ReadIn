@@ -33,7 +33,7 @@ internal sealed class ArticleDetailsPersonalizer(IAppDbContext db, ICurrentUser 
         return details.WithViewerState(states) with
         {
             // Your own articles never show "Following".
-            IsFollowingAuthor = state.IsFollowingAuthor && details.Author.Id != viewerId,
+            IsFollowingAuthor = state.IsFollowingAuthor && details.Author is { } author && author.Id != viewerId,
             CollectionIds = collectionIds,
         };
     }

@@ -65,7 +65,9 @@ public interface IAttemptThrottle
 /// <summary>What Google or Apple vouched for in a verified ID token (SPEC §9.1).</summary>
 /// <param name="Subject">The provider's stable user id (<c>sub</c>).</param>
 /// <param name="Name">Google's profile name; Apple never puts the name in its token.</param>
-public sealed record ExternalIdentity(string Provider, string Subject, string? Email, bool EmailVerified, string? Name);
+/// <param name="ClientId">The token's audience: which of our client ids (iOS bundle id, web Services ID) it was issued to.</param>
+public sealed record ExternalIdentity(
+    string Provider, string Subject, string? Email, bool EmailVerified, string? Name, string? ClientId = null);
 
 /// <summary>Checks Google and Apple ID tokens against the providers' published keys and our client ids (ADR 0012).</summary>
 public interface IExternalIdentityVerifier
@@ -75,4 +77,40 @@ public interface IExternalIdentityVerifier
 
     /// <param name="nonce">The raw nonce the client generated; required for Apple, whose token carries its SHA-256.</param>
     Task<Result<ExternalIdentity>> VerifyAsync(string provider, string idToken, string? nonce, CancellationToken ct);
+}
+
+/// <summary>
+/// Sign in with Apple REST API (SPEC F01): exchanges the one-time authorization code the app gets at sign in for a refresh
+/// token, and revokes tokens when the account is deleted or Apple is unlinked, as App Store guideline 5.1.1(v) requires.
+/// </summary>
+public interface IAppleTokenService
+{
+    /// <summary>False until the team id, key id and private key are configured; revocation then can't run.</summary>
+    bool IsConfigured { get; }
+
+    /// <param name="clientId">The audience of the ID token that came with the code (it must match).</param>
+    /// <returns>The refresh token, or a failure (an expired or reused code, Apple unreachable).</returns>
+    Task<Result<string>> ExchangeCodeAsync(string clientId, string authorizationCode, CancellationToken ct);
+
+    /// <summary>Succeeds when Apple answers 200, which it also does for a token that was already invalid.</summary>
+    Task<Result> RevokeRefreshTokenAsync(string clientId, string refreshToken, CancellationToken ct);
+}
+
+/// <summary>
+/// Hard-deletes an account and everything tied to it, in one transaction, following the data map in SPEC §9.6. Uploaded
+/// files and the Realtime Database node are removed right after the commit.
+/// </summary>
+public interface IAccountEraser
+{
+    /// <returns>False when the account no longer exists (deleted by an earlier request).</returns>
+    Task<bool> EraseAsync(Guid userId, CancellationToken cancellationToken);
+}
+
+/// <summary>Encrypts provider tokens kept in the database (authenticated encryption with a key from configuration).</summary>
+public interface IProviderTokenProtector
+{
+    string Protect(string token);
+
+    /// <returns>Null when the value can't be decrypted (tampered, or encrypted with another key).</returns>
+    string? Unprotect(string protectedToken);
 }

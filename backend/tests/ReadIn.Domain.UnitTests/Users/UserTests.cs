@@ -172,26 +172,6 @@ public sealed class UserTests
     }
 
     [Fact]
-    public void Anonymizing_removes_personal_data_and_releases_the_number()
-    {
-        var user = NewUser();
-        user.UpdateProfile("Reader One", "reader_one", "Bio", "/uploads/avatars/2026/11/x_512.webp", new UserLinks { GitHub = "https://github.com/x" });
-        user.RegisterDevice("token", DevicePlatform.Android, Now);
-
-        user.Anonymize(DateTime.UtcNow);
-
-        user.PhoneNumber.Should().BeNull();
-        user.PasswordHash.Should().BeNull();
-        user.CanSignIn.Should().BeFalse();
-        user.DisplayName.Should().Be(User.DeletedDisplayName);
-        User.IsValidUsername(user.Username).Should().BeTrue();
-        user.Username.Should().StartWith("deleted_");
-        user.AvatarUrl.Should().BeNull();
-        user.Bio.Should().BeNull();
-        user.Devices.Should().BeEmpty();
-    }
-
-    [Fact]
     public void Require_recovery_pin_only_flags_accounts_without_one()
     {
         var withPin = NewUser();

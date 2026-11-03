@@ -35,6 +35,8 @@ public static class ErrorMessages
         ["auth.phone_sign_in_exists"] = ("حسابك بيدخل برقم تليفون بالفعل.", "This account already signs in with a phone number."),
         ["auth.confirmation_required"] = ("أكّد إنه انت بكلمة السر أو بجوجل أو أبل.", "Confirm it's you with your password or with Google or Apple."),
         ["auth.external_mismatch"] = ("استخدم حساب جوجل أو أبل المربوط بـ ReadIn.", "Use the Google or Apple account that is linked to ReadIn."),
+        ["auth.apple_confirmation_required"] = ("حسابك مربوط بأبل. أكّد بأبل عشان تحذفه.", "This account is linked to Apple. Confirm with Apple to delete it."),
+        ["account.deletion_unavailable"] = ("معرفناش نكمّل حذف حسابك، فمفيش حاجة اتحذفت. جرّب تاني بعد شوية.", "We couldn't finish deleting your account, so nothing was deleted. Try again in a few minutes."),
         ["user.suspended"] = ("الحساب ده موقوف. تواصل مع الدعم.", "This account is suspended. Contact support."),
         ["user.device_not_found"] = ("الجهاز ده مش متسجل.", "This device is not registered."),
         ["user.not_found"] = ("المستخدم مش موجود.", "User not found."),

@@ -34,6 +34,7 @@ internal sealed class MediaAssetConfiguration : IEntityTypeConfiguration<MediaAs
 
         builder.Ignore(a => a.IsReady);
 
+        // Optional: account deletion unlinks the assets of the articles that stay and deletes the rest (SPEC §9.6).
         builder.HasOne<User>().WithMany().HasForeignKey(a => a.OwnerId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(a => a.Pages).WithOne().HasForeignKey(p => p.AssetId).OnDelete(DeleteBehavior.Cascade);
 

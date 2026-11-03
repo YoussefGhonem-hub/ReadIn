@@ -24,12 +24,28 @@ public sealed class ExternalAuthOptions
     public ExternalProviderOptions Google { get; init; } = new();
 
     /// <summary>The app's bundle id for native iOS sign in, and the Services ID for the web.</summary>
-    public ExternalProviderOptions Apple { get; init; } = new();
+    public AppleProviderOptions Apple { get; init; } = new();
 }
 
-public sealed class ExternalProviderOptions
+public class ExternalProviderOptions
 {
     public string[] ClientIds { get; init; } = [];
+}
+
+/// <summary>
+/// The Sign in with Apple REST API also needs a client secret: a JWT signed with the team's Sign in with Apple key (SPEC
+/// F01). Team and key ids are public; the key is a secret (<c>SIWA_KEY_BASE64</c>, never in the repo).
+/// </summary>
+public sealed class AppleProviderOptions : ExternalProviderOptions
+{
+    /// <summary>10-character Team ID, the client secret's <c>iss</c>.</summary>
+    public string? TeamId { get; set; }
+
+    /// <summary>10-character id of the Sign in with Apple private key, the client secret's <c>kid</c>.</summary>
+    public string? KeyId { get; set; }
+
+    /// <summary>The downloaded <c>.p8</c> key, base64-encoded (or its PEM text). Falls back to <c>SIWA_KEY_BASE64</c>.</summary>
+    public string? PrivateKeyBase64 { get; set; }
 }
 
 /// <summary>Where a provider publishes its signing keys, and what its tokens must contain.</summary>
@@ -124,7 +140,8 @@ internal sealed class OidcExternalIdentityVerifier : IExternalIdentityVerifier
             ? address.Trim().ToLowerInvariant()
             : null;
         var name = token.TryGetPayloadValue<string>("name", out var fullName) && !string.IsNullOrWhiteSpace(fullName) ? fullName : null;
-        return new ExternalIdentity(provider, token.Subject, email, email is not null && IsTrue(token, "email_verified"), name);
+        return new ExternalIdentity(
+            provider, token.Subject, email, email is not null && IsTrue(token, "email_verified"), name, token.Audiences.FirstOrDefault());
     }
 
     /// <summary>

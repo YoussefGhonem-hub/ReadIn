@@ -1,18 +1,16 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using ReadIn.Domain.Identity;
-using ReadIn.Domain.Users;
+using ReadIn.Application.Common.Interfaces;
 using ReadIn.Infrastructure.Persistence;
 
 namespace ReadIn.Infrastructure.Jobs;
 
 /// <summary>
-/// Daily: anonymizes accounts deleted more than 30 days ago (SPEC F01: their content stays as "Deleted user"; the
-/// orphaned avatar is removed by <see cref="OrphanedUploadsCleanupJob"/>), and drops expired refresh and reset tokens
-/// and old recovery attempts.
+/// Daily: drops expired refresh and reset tokens and old recovery attempts (SPEC §9.5). It also finishes any account left
+/// soft-deleted by the earlier 30-day deletion model: deletion is immediate now (SPEC F01), so those are erased for good.
 /// </summary>
-public sealed partial class IdentityCleanupJob(AppDbContext db, TimeProvider clock, ILogger<IdentityCleanupJob> logger)
+public sealed partial class IdentityCleanupJob(AppDbContext db, IAccountEraser eraser, TimeProvider clock, ILogger<IdentityCleanupJob> logger)
 {
     private static readonly TimeSpan TokenRetention = TimeSpan.FromDays(7);
     private static readonly TimeSpan AttemptRetention = TimeSpan.FromDays(30);
@@ -22,7 +20,6 @@ public sealed partial class IdentityCleanupJob(AppDbContext db, TimeProvider clo
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        var anonymized = await AnonymizeDeletedAccountsAsync(now, cancellationToken);
 
         var tokensBefore = now - TokenRetention;
         await db.RefreshTokens.Where(t => t.ExpiresAt < tokensBefore || t.RevokedAt < tokensBefore).ExecuteDeleteAsync(cancellationToken);
@@ -30,30 +27,13 @@ public sealed partial class IdentityCleanupJob(AppDbContext db, TimeProvider clo
         var attemptsBefore = now - AttemptRetention;
         await db.RecoveryAttempts.Where(a => a.CreatedAt < attemptsBefore).ExecuteDeleteAsync(cancellationToken);
 
-        if (anonymized > 0) LogAnonymized(logger, anonymized);
-        return anonymized;
+        var leftovers = await db.Users.IgnoreQueryFilters().Where(u => u.IsDeleted).Select(u => u.Id).Take(500).ToListAsync(cancellationToken);
+        foreach (var userId in leftovers) await eraser.EraseAsync(userId, cancellationToken);
+
+        if (leftovers.Count > 0) LogErased(logger, leftovers.Count);
+        return leftovers.Count;
     }
 
-    private async Task<int> AnonymizeDeletedAccountsAsync(DateTime now, CancellationToken ct)
-    {
-        var cutoff = now - AccountSecurity.DeletionGracePeriod;
-        var users = await db.Users.IgnoreQueryFilters()
-            .Include(u => u.Devices)
-            .Include(u => u.Interests)
-            .Include(u => u.ExternalLogins)
-            .Where(u => u.IsDeleted && u.DeletedAt < cutoff && u.AnonymizedAt == null)
-            .Take(500)
-            .ToListAsync(ct);
-
-        foreach (var user in users)
-        {
-            user.Anonymize(now);
-            db.AuditLogs.Add(AuditLog.Record(AuditActions.AccountAnonymized, actorId: null, user.Id, ip: null, now));
-        }
-        await db.SaveChangesAsync(ct);
-        return users.Count;
-    }
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Anonymized {Count} accounts deleted more than 30 days ago")]
-    private static partial void LogAnonymized(ILogger logger, int count);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Erased {Count} accounts left soft-deleted by the earlier deletion model")]
+    private static partial void LogErased(ILogger logger, int count);
 }

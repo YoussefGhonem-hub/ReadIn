@@ -27,7 +27,7 @@ public sealed class ArticleViewerStateReader(IAppDbContext db)
                 from reaction in reactions.DefaultIfEmpty()
                 join saved in db.SavedArticles.Where(s => s.UserId == viewer) on article.Id equals saved.ArticleId into saves
                 from saved in saves.DefaultIfEmpty()
-                join follow in db.UserFollows.Where(f => f.FollowerId == viewer) on article.AuthorId equals follow.FolloweeId into follows
+                join follow in db.UserFollows.Where(f => f.FollowerId == viewer) on article.AuthorId equals (Guid?)follow.FolloweeId into follows
                 from follow in follows.DefaultIfEmpty()
                 select new
                 {

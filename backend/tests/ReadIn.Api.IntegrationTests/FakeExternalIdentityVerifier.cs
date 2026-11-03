@@ -12,6 +12,7 @@ namespace ReadIn.Api.IntegrationTests;
 internal sealed class FakeExternalIdentityVerifier : IExternalIdentityVerifier
 {
     public const string AppleNonce = "test-nonce";
+    public const string AppleClientId = "app.readin.readin";
 
     public IReadOnlyList<string> EnabledProviders { get; } = ExternalProviders.All;
 
@@ -23,6 +24,7 @@ internal sealed class FakeExternalIdentityVerifier : IExternalIdentityVerifier
 
         var email = parts.Length > 1 ? parts[1] : null;
         var verified = email is not null && (parts.Length < 3 || parts[2] != "unverified");
-        return Task.FromResult<Result<ExternalIdentity>>(new ExternalIdentity(provider, parts[0], email, verified, Name: null));
+        return Task.FromResult<Result<ExternalIdentity>>(
+            new ExternalIdentity(provider, parts[0], email, verified, Name: null, ClientId: provider == ExternalProviders.Apple ? AppleClientId : "google-client"));
     }
 }

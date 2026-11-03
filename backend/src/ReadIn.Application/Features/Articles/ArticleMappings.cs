@@ -31,7 +31,7 @@ public sealed class ArticleMappings : IRegister
                 s.Field.Id, s.Field.Slug,
                 LocalizedProjection.Ui == "en" ? s.Field.NameEn : s.Field.NameAr,
                 s.Field.NameAr, s.Field.NameEn))
-            .Map(d => d.Author, s => new AuthorDto(
+            .Map(d => d.Author, s => s.Author == null ? null : new AuthorDto(
                 s.Author.Id, s.Author.DisplayName, s.Author.Username, s.Author.AvatarUrl,
                 s.Author.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)))
             .Map(d => d.IsReviewed, s => s.ReviewStatus == ReviewStatus.Approved)

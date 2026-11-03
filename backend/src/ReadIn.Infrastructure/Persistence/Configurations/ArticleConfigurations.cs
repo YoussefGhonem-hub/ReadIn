@@ -24,6 +24,8 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.Ignore(a => a.IsReviewed);
         builder.Ignore(a => a.IsPublished);
 
+        // Optional: account deletion unlinks published articles itself (SPEC §9.6). No SET NULL here, because SQL Server
+        // refuses a second cascade path from Articles to Users (ReviewedById).
         builder.HasOne(a => a.Author).WithMany().HasForeignKey(a => a.AuthorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(a => a.ReviewedBy).WithMany().HasForeignKey(a => a.ReviewedById).OnDelete(DeleteBehavior.NoAction);
         builder.HasOne(a => a.Field).WithMany().HasForeignKey(a => a.FieldId).OnDelete(DeleteBehavior.Restrict);
