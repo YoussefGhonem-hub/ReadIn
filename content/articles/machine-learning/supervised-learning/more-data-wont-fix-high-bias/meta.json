@@ -1,0 +1,42 @@
+{
+  "slug": "more-data-wont-fix-high-bias",
+  "field": "machine-learning",
+  "topic": "supervised-learning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "More Data Won't Fix Every Model: Reading Bias and Variance from Learning Curves",
+      "subtitle": "Extra rows shrink variance, not bias. A learning curve tells you which one you have before you pay for more labels."
+    },
+    "ar-EG": {
+      "title": "بيانات أكتر مش هتصلّح كل موديل: إزاي تقرا الـ Bias والـ Variance من الـ Learning Curves",
+      "subtitle": "الصفوف الزيادة بتقلّل الـ variance مش الـ bias. والـ learning curve بتقولك عندك أنهي واحدة قبل ما تدفع في labels أكتر."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "ml-foundations", "order": 7 },
+  "tags": ["Machine Learning", "Bias-Variance", "Learning Curves", "Model Evaluation"],
+  "sources": [
+    {
+      "title": "Validation curves: plotting scores to evaluate models — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/learning_curve.html"
+    },
+    {
+      "title": "Plotting Learning Curves and Checking Models' Scalability — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html"
+    },
+    {
+      "title": "Single estimator versus bagging: bias-variance decomposition — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/ensemble/plot_bias_variance.html"
+    },
+    {
+      "title": "make_friedman1 — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_friedman1.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

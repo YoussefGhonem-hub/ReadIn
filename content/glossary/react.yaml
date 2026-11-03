@@ -191,3 +191,36 @@ terms:
     definitionAr: >-
       field في form القيمة الحالية بتاعته محفوظة في الـ DOM بتاع المتصفح. React بيحط القيمة اللي بيبدأ بيها بس، عن
       طريق defaultValue أو defaultChecked، وانت بتقرا القيمة وقت ما تحتاجها، زي وقت الـ submit.
+  - id: race-condition
+    term: Race condition
+    definitionEn: >-
+      A bug where the result depends on which of several overlapping operations finishes first, such as two network
+      requests whose responses arrive in a different order than they were sent.
+    definitionAr: >-
+      bug النتيجة فيه بتعتمد على أنهي عملية من كذا عملية شغالين في نفس الوقت هتخلص الأول، زي اتنين requests على
+      الشبكة الردود بتاعتهم بتوصل بترتيب غير اللي اتبعتوا بيه.
+  - id: effect-cleanup
+    term: Effect cleanup
+    definitionEn: >-
+      The function an Effect's setup returns. React calls it before running the Effect again with new dependencies
+      and when the component is removed, so it can stop or undo what that setup started.
+    definitionAr: >-
+      الـ function اللي الـ setup بتاع الـ Effect بيرجّعها. React بيناديها قبل ما يشغّل الـ Effect تاني بـ dependencies
+      جديدة، ولما الـ component يتشال، عشان توقف أو تلغي اللي الـ setup ده بدأه.
+  - id: error-boundary
+    term: Error Boundary
+    definitionEn: >-
+      A class component with static getDerivedStateFromError that shows fallback UI when a component below it throws
+      while React renders it. It doesn't catch errors from event handlers or ordinary async code.
+    definitionAr: >-
+      class component فيه static getDerivedStateFromError، بيعرض UI بديلة لما component تحته يرمي error وReact بيعمله
+      render. مابيمسكش الـ errors اللي جاية من الـ event handlers أو الكود الـ async العادي.
+  - id: react-transition
+    term: Transition
+    definitionEn: >-
+      A state update that React treats as non-urgent, started with startTransition. In React 19 the function can be
+      async and React tracks its pending state. With useTransition, an error it throws reaches the nearest Error
+      Boundary.
+    definitionAr: >-
+      state update بيعتبره React مش مستعجل، وبتبدأه بـ startTransition. في React 19 الـ function دي ممكن تبقى async،
+      وReact بيتابع إنها لسه شغالة. ومع useTransition، لو رمت error بيوصل لأقرب Error Boundary.

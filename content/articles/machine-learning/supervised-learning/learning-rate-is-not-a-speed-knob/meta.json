@@ -1,0 +1,46 @@
+{
+  "slug": "learning-rate-is-not-a-speed-knob",
+  "field": "machine-learning",
+  "topic": "supervised-learning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The Learning Rate Isn't a Speed Knob: How Step Size Makes or Breaks Training",
+      "subtitle": "A bigger step can stop training sooner and land somewhere worse, or blow up without a single error."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Learning Rate مش زرار سرعة؟ حجم الخطوة ممكن يبوّظ التدريب",
+      "subtitle": "الخطوة الأكبر ممكن توقّف التدريب بدري وتوصل لنتيجة أوحش، أو تفرقع من غير ولا error."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "ml-foundations", "order": 4 },
+  "tags": ["Machine Learning", "Learning Rate", "Gradient Descent", "Hyperparameters"],
+  "sources": [
+    {
+      "title": "Linear regression: Hyperparameters — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/linear-regression/hyperparameters"
+    },
+    {
+      "title": "Linear regression: Gradient descent — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/linear-regression/gradient-descent"
+    },
+    {
+      "title": "Deep Learning Tuning Playbook: FAQs — Google for Developers",
+      "url": "https://developers.google.com/machine-learning/guides/deep-learning-tuning-playbook/faq"
+    },
+    {
+      "title": "Deep Learning Tuning Playbook: Guide for starting a new project — Google for Developers",
+      "url": "https://developers.google.com/machine-learning/guides/deep-learning-tuning-playbook/new-project"
+    },
+    {
+      "title": "Stochastic Gradient Descent — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/sgd.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

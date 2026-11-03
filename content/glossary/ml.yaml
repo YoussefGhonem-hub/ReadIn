@@ -149,3 +149,19 @@ terms:
     definitionAr: >-
       إنك تختار جزء من الـ features المتاحة تدرّب عليه، مثلًا بـ test إحصائي، أو بالـ weights أو الـ importances بتاعة
       موديل، أو بإنك تضيف وتشيل features تحت الـ cross-validation. بتشيل الأعمدة اللي بتزوّد noise مش معلومة.
+  - id: class-imbalance
+    term: Class Imbalance
+    definitionEn: >-
+      When one label is much rarer than the other, such as fraud among purchases. Accuracy becomes misleading, because
+      always predicting the common label already scores high.
+    definitionAr: >-
+      لما label واحد يبقى نادر جدًا مقارنة بالتاني، زي الـ fraud وسط عمليات الشراء. الـ accuracy ساعتها بتضلّل، لأن إنك
+      تتوقع الـ label الشائع على طول بيجيب score عالي لوحده.
+  - id: decision-threshold
+    term: Decision Threshold
+    definitionEn: >-
+      The probability cutoff that turns a classifier's score into a yes or no. Many libraries default to 0.5, but the
+      right value depends on the class balance and on what each kind of mistake costs.
+    definitionAr: >-
+      الحد اللي بيحوّل الاحتمال اللي طالع من الـ classifier لـ أيوه أو لأ. مكتبات كتير الـ default بتاعها 0.5، بس القيمة
+      الصح بتعتمد على توزيع الـ classes وعلى تكلفة كل نوع غلط.

@@ -1,0 +1,46 @@
+{
+  "slug": "more-features-can-hurt",
+  "field": "machine-learning",
+  "topic": "feature-engineering",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "More Features Can Make a Model Worse: Noise and the Curse of Dimensionality",
+      "subtitle": "Every column you add is one more thing the model must learn to ignore, from the same number of rows."
+    },
+    "ar-EG": {
+      "title": "ليه زيادة الـ features ممكن تخلّي الموديل أسوأ؟ الـ noise والـ Curse of Dimensionality",
+      "subtitle": "كل عمود بتضيفه حاجة زيادة الموديل لازم يتعلّم يتجاهلها، من نفس عدد الصفوف."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "ml-foundations", "order": 9 },
+  "tags": ["Feature Selection", "Curse of Dimensionality", "Feature Engineering", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Feature selection — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/feature_selection.html"
+    },
+    {
+      "title": "Univariate Feature Selection — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/feature_selection/plot_feature_selection.html"
+    },
+    {
+      "title": "Nearest Neighbors — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/neighbors.html"
+    },
+    {
+      "title": "Permutation Importance vs Random Forest Feature Importance (MDI) — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance.html"
+    },
+    {
+      "title": "Rules of Machine Learning (rules #21 and #22) — Google for Developers",
+      "url": "https://developers.google.com/machine-learning/guides/rules-of-ml"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

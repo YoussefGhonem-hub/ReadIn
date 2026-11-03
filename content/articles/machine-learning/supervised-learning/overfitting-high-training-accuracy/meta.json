@@ -1,0 +1,46 @@
+{
+  "slug": "overfitting-high-training-accuracy",
+  "field": "machine-learning",
+  "topic": "supervised-learning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Overfitting: Why 99% Training Accuracy Is a Warning, Not a Win",
+      "subtitle": "A model can score perfectly on labels that are pure noise. Only data it never trained on tells learning from memorizing."
+    },
+    "ar-EG": {
+      "title": "ليه دقة 99% على الـ training data إنذار مش إنجاز؟ يعني إيه Overfitting",
+      "subtitle": "الموديل ممكن يجيب الدرجة النهائية على labels عشوائية خالص. الداتا اللي ماتدرّبش عليها بس هي اللي بتفرّق بين الفهم والحفظ."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "ml-foundations", "order": 2 },
+  "tags": ["Machine Learning", "Overfitting", "Cross-Validation", "Model Evaluation"],
+  "sources": [
+    {
+      "title": "Overfitting — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/overfitting/overfitting"
+    },
+    {
+      "title": "Interpreting loss curves — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/overfitting/interpreting-loss-curves"
+    },
+    {
+      "title": "Cross-validation: evaluating estimator performance — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/cross_validation.html"
+    },
+    {
+      "title": "Underfitting vs. Overfitting — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/model_selection/plot_underfitting_overfitting.html"
+    },
+    {
+      "title": "Zhang et al., Understanding deep learning requires rethinking generalization (ICLR 2017)",
+      "url": "https://arxiv.org/abs/1611.03530"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

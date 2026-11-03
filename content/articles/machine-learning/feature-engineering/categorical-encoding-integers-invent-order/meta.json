@@ -1,0 +1,42 @@
+{
+  "slug": "categorical-encoding-integers-invent-order",
+  "field": "machine-learning",
+  "topic": "feature-engineering",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Encoding Categories as 1, 2, 3 Invents an Order That Isn't There",
+      "subtitle": "A model reads an integer code as a quantity. Give unordered categories one column each, or a model that understands categories."
+    },
+    "ar-EG": {
+      "title": "لما تحوّل الـ categories لـ 1 و2 و3 إنت بتخترع ترتيب مش موجود",
+      "subtitle": "الموديل بيقرا الـ integer code كأنه كمية. ادّي كل category عمود لوحدها، أو استخدم موديل بيفهم الـ categories."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "ml-foundations", "order": 6 },
+  "tags": ["Feature Engineering", "Categorical Data", "One-Hot Encoding", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Categorical data: One-hot encoding — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/categorical-data/one-hot-encoding"
+    },
+    {
+      "title": "Preprocessing data: Encoding categorical features — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/preprocessing.html#encoding-categorical-features"
+    },
+    {
+      "title": "Categorical Feature Support in Gradient Boosting — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_categorical.html"
+    },
+    {
+      "title": "OneHotEncoder — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

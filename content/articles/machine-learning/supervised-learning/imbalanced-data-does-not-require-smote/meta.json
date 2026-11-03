@@ -1,0 +1,46 @@
+{
+  "slug": "imbalanced-data-does-not-require-smote",
+  "field": "machine-learning",
+  "topic": "supervised-learning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Imbalanced Data Doesn't Automatically Need SMOTE: Fix the Evaluation First",
+      "subtitle": "Low recall at a 0.5 cutoff is usually a threshold problem, not a data problem. Measure the ranking, then choose the cutoff."
+    },
+    "ar-EG": {
+      "title": "هل الـ Imbalanced Data محتاجة SMOTE دايمًا؟ صلّح طريقة التقييم الأول",
+      "subtitle": "الـ recall الواطي عند cutoff قدّه 0.5 غالبًا مشكلة threshold مش مشكلة داتا. قيس الترتيب الأول، وبعدين اختار الـ cutoff."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "ml-foundations", "order": 10 },
+  "tags": ["Imbalanced Data", "SMOTE", "Model Evaluation", "Classification"],
+  "sources": [
+    {
+      "title": "Datasets: Class-imbalanced datasets — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/overfitting/imbalanced-datasets"
+    },
+    {
+      "title": "Classification: Accuracy, recall, precision, and related metrics — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall"
+    },
+    {
+      "title": "Elor and Averbuch-Elor, To SMOTE, or not to SMOTE? (2022)",
+      "url": "https://arxiv.org/abs/2201.08528"
+    },
+    {
+      "title": "Tuning the decision threshold for class prediction — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/classification_threshold.html"
+    },
+    {
+      "title": "Precision-Recall — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

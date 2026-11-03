@@ -1,0 +1,42 @@
+{
+  "slug": "feature-scaling-which-models-need-it",
+  "field": "machine-learning",
+  "topic": "feature-engineering",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "When Feature Scaling Changes Your Results, and When It Doesn't",
+      "subtitle": "Distances, penalties and gradient steps all depend on units; tree splits don't. Know which one your model uses."
+    },
+    "ar-EG": {
+      "title": "إمتى الـ Feature Scaling بيفرق فعلًا؟ موديلات محتاجاه وموديلات لأ",
+      "subtitle": "المسافات والـ penalties وخطوات الـ gradient كلها بتتأثر بالوحدات، وتقسيمات الـ trees لأ. اعرف موديلك بيستخدم أنهي واحدة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "ml-foundations", "order": 5 },
+  "tags": ["Feature Scaling", "Preprocessing", "scikit-learn", "Feature Engineering"],
+  "sources": [
+    {
+      "title": "Importance of Feature Scaling — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/preprocessing/plot_scaling_importance.html"
+    },
+    {
+      "title": "Preprocessing data: Standardization, or mean removal and variance scaling — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/preprocessing.html#standardization-or-mean-removal-and-variance-scaling"
+    },
+    {
+      "title": "Numerical data: Normalization — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/numerical-data/normalization"
+    },
+    {
+      "title": "Common pitfalls and recommended practices — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/common_pitfalls.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

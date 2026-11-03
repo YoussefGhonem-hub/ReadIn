@@ -99,3 +99,31 @@ terms:
     term: Connection pool
     definitionEn: A set of open database connections that a data provider keeps and reuses. Opening a connection borrows one from the pool; closing or disposing it returns it.
     definitionAr: مجموعة connections مفتوحة للداتابيز الـ data provider بيحتفظ بيها ويعيد استخدامها. لما تفتح connection بتستلف واحد من الـ pool، ولما تعمله Close أو Dispose بيرجع له.
+  - id: async-state-machine
+    term: Async state machine
+    definitionEn: The type the C# compiler generates for an async method. It stores the method's local variables and where it stopped, so the method can pause at an await and resume later.
+    definitionAr: الـ type اللي الـ C# compiler بيولّده لأي async method. بيخزّن الـ local variables بتاعتها والنقطة اللي وقفت عندها، عشان الـ method تقدر تقف عند await وتكمّل بعدين.
+  - id: object-pooling
+    term: Object pooling
+    definitionEn: Keeping objects after they're used and handing them out again for new work instead of allocating new ones. Once an object goes back to the pool, its previous user must not touch it again.
+    definitionAr: إنك تحتفظ بالـ objects بعد ما تخلص منها وتديها لشغل جديد بدل ما تعمل allocate لـ objects جديدة. وأول ما الـ object يرجع للـ pool، اللي كان بيستخدمه قبل كده مينفعش يلمسه تاني.
+  - id: ref-struct
+    term: ref struct
+    definitionEn: A struct declared with the ref modifier, such as Span<T>. The compiler keeps it on the stack, so it can't be a field of a class, an array element or boxed, can't be captured by a lambda and can't live across an await.
+    definitionAr: struct متعرّف بكلمة ref، زي Span<T>. الـ compiler بيخلّيه على الـ stack بس، فمينفعش يبقى field في class، ولا element في array، ولا يتعمله boxing، ولا يتمسك في lambda، ولا يعيش بعد await.
+  - id: interior-pointer
+    term: Interior pointer
+    definitionEn: A managed reference that points into the middle of an object, such as to one element of an array, rather than to the object's start. Span<T> holds one.
+    definitionAr: managed reference بيشاور على حتة جوه object، زي element واحد جوه array، مش على أول الـ object. والـ Span<T> ماسك واحد منهم.
+  - id: atomic-operation
+    term: Atomic operation
+    definitionEn: An operation that other threads see as a single step, either not started or fully done, never halfway. A sequence of atomic calls isn't atomic as a whole.
+    definitionAr: عملية الـ threads التانية بتشوفها كخطوة واحدة، يا إما لسه ما بدأتش يا إما خلصت كلها، عمرها ما بتبان في النص. ومجموعة calls كل واحد فيها atomic مش بتبقى atomic كلها على بعض.
+  - id: middleware
+    term: Middleware
+    definitionEn: A component in the ASP.NET Core request pipeline. It receives each request, can do work before and after calling the next component, or can end the request itself.
+    definitionAr: component في الـ request pipeline بتاع ASP.NET Core. بيستلم كل request، ويقدر يعمل شغل قبل وبعد ما ينادي الـ component اللي بعده، أو يقفل الـ request بنفسه.
+  - id: short-circuiting
+    term: Short-circuiting
+    definitionEn: When a middleware answers a request without calling the next one, so the rest of the pipeline never runs for that request.
+    definitionAr: إن middleware يرد على الـ request من غير ما ينادي اللي بعده، فباقي الـ pipeline مش بيشتغل خالص للـ request ده.

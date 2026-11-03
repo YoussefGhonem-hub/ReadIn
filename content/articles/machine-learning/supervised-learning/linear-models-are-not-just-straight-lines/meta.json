@@ -1,0 +1,42 @@
+{
+  "slug": "linear-models-are-not-just-straight-lines",
+  "field": "machine-learning",
+  "topic": "supervised-learning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Curved Data, Linear Model: Why Linear Regression Handles More Than Straight Lines",
+      "subtitle": "\"Linear\" describes the weights, not the shape. Give the same model curved features and it fits curves."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Linear Regression مش بيرسم خطوط مستقيمة بس؟ الخطية في الـ weights",
+      "subtitle": "كلمة \"linear\" بتوصف الـ weights، مش شكل المنحنى. ادّي نفس الموديل features منحنية، وهيرسم منحنيات."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "ml-foundations", "order": 3 },
+  "tags": ["Linear Regression", "Feature Engineering", "scikit-learn", "Splines"],
+  "sources": [
+    {
+      "title": "Linear Models: Polynomial regression, extending linear models with basis functions — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/linear_model.html#polynomial-regression-extending-linear-models-with-basis-functions"
+    },
+    {
+      "title": "Polynomial and Spline interpolation — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/linear_model/plot_polynomial_interpolation.html"
+    },
+    {
+      "title": "Preprocessing data: Generating polynomial features — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/preprocessing.html#generating-polynomial-features"
+    },
+    {
+      "title": "r2_score — scikit-learn API reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

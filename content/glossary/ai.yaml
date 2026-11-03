@@ -183,3 +183,75 @@ terms:
     definitionAr: >-
       موديل متدرّب على مقارنات بشرية بين الردود عشان يتوقع الناس هتفضّل أنهي رد. وبعدين طرق الـ post-training زي
       الـ RLHF بتوجّه الـ assistant للردود اللي بيدّيها score عالي.
+  - id: perplexity
+    term: Perplexity
+    definitionEn: >-
+      A measure of how surprised a language model is by a text: low when each next token is one the model expected,
+      high when the wording is unusual. It describes how predictable the text is, not who or what wrote it.
+    definitionAr: >-
+      مقياس لقد إيه الـ language model اتفاجئ بنص معيّن: بيبقى قليل لما كل token جاي يبقى متوقَّع للموديل، وعالي لما
+      الصياغة تبقى غير معتادة. بيوصف النص متوقَّع قد إيه، مش مين أو إيه اللي كتبه.
+  - id: text-watermarking
+    term: Text Watermarking
+    definitionEn: >-
+      Hiding a statistical pattern in generated text while the model writes it, for example by nudging sampling toward a
+      pseudo-random set of tokens, so a detector that knows the pattern can later recognize that model's output.
+    definitionAr: >-
+      إنك تخبّي pattern إحصائي في النص وهو بيتولّد، زي إنك تميّل الـ sampling ناحية مجموعة tokens مختارة بشكل
+      pseudo-random، عشان detector عارف الـ pattern ده يقدر بعدين يتعرّف على output الموديل ده.
+  - id: self-attention
+    term: Self-Attention
+    definitionEn: >-
+      The Transformer step that updates each token's vector with a weighted mix of the other tokens' value vectors.
+      The weights come from comparing that token's query with every token's key, and they always add up to 1.
+    definitionAr: >-
+      الخطوة في الـ Transformer اللي بتحدّث الـ vector بتاع كل token بخليط موزون من الـ value vectors بتاعة باقي
+      الـ tokens. الـ weights بتيجي من مقارنة الـ query بتاع الـ token ده بالـ key بتاع كل token، ومجموعها دايمًا 1.
+  - id: attention-sink
+    term: Attention Sink
+    definitionEn: >-
+      A token, usually one of the first in the sequence, that receives a large share of attention regardless of its
+      meaning, because softmax weights must add up to 1 and the model needs somewhere to put the spare weight.
+    definitionAr: >-
+      token، غالبًا من أول الـ tokens في السلسلة، بياخد نصيب كبير من الـ attention مهما كان معناه، لأن الـ weights بتاعة
+      الـ softmax لازم مجموعها يبقى 1 والموديل محتاج مكان يحط فيه الـ weight الزيادة.
+  - id: chain-of-thought
+    term: Chain-of-Thought (CoT)
+    definitionEn: >-
+      Intermediate reasoning steps a model writes before its final answer, either because the prompt asks for them or
+      because it was trained to reason first. It often improves accuracy on multi-step problems.
+    definitionAr: >-
+      خطوات تفكير وسيطة الموديل بيكتبها قبل الإجابة النهائية، يا إما عشان الـ prompt طلبها يا إما عشان اتدرّب إنه يفكر
+      الأول. وغالبًا بتحسّن الدقة في المسائل اللي محتاجة كذا خطوة.
+  - id: cot-faithfulness
+    term: Chain-of-Thought Faithfulness
+    definitionEn: >-
+      How accurately a model's written reasoning reflects the factors that actually produced its answer. Reasoning can
+      be plausible and still unfaithful, for example when it leaves out a hint the model followed.
+    definitionAr: >-
+      قد إيه التفكير اللي الموديل كتبه بيعكس فعلًا الحاجات اللي طلّعت إجابته. التفكير ممكن يبقى مقنع ومع ذلك مش أمين،
+      زي لما يسيب برّه تلميح الموديل مشي وراه.
+  - id: scaling-law
+    term: Scaling Law
+    definitionEn: >-
+      An empirical formula, usually a power law, that predicts how a model's training loss falls as its parameters,
+      training data or training compute grow. It describes smooth, diminishing gains, not sudden jumps.
+    definitionAr: >-
+      معادلة متطلّعة من التجارب، غالبًا power law، بتتوقع الـ loss بتاع الموديل هيقل إزاي لما الـ parameters أو داتا الـ
+      training أو الـ compute تزيد. بتوصف مكاسب سلسة بتقل مع الوقت، مش قفزات مفاجئة.
+  - id: emergent-ability
+    term: Emergent Ability
+    definitionEn: >-
+      A capability reported as absent in smaller models and present in larger ones, appearing as a sudden jump on a
+      scaling chart. Many reported jumps shrink to smooth trends when measured with partial-credit metrics.
+    definitionAr: >-
+      قدرة اتقال إنها مش موجودة في الموديلات الأصغر وموجودة في الأكبر، وبتظهر كقفزة مفاجئة في رسم الـ scaling. وقفزات
+      كتير من دي بتتحول لاتجاه سلس لما تتقاس بمقاييس بتدّي درجات جزئية.
+  - id: system-prompt
+    term: System Prompt
+    definitionEn: >-
+      Instructions an application sends with every request, separate from the user's messages, to set the model's task,
+      context, rules and output format for the whole conversation.
+    definitionAr: >-
+      تعليمات التطبيق بيبعتها مع كل request، منفصلة عن رسايل المستخدم، عشان يحدد للموديل المهمة والـ context والقواعد
+      وشكل الـ output طول المحادثة.

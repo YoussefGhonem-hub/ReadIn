@@ -1,0 +1,42 @@
+{
+  "slug": "when-not-to-use-machine-learning",
+  "field": "machine-learning",
+  "topic": "supervised-learning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Not Every Data Problem Needs Machine Learning: Start with Heuristics",
+      "subtitle": "When you can write the logic down, code is exact and a model only approximates it. Ship the rule first and make ML beat it."
+    },
+    "ar-EG": {
+      "title": "مش كل مشكلة فيها بيانات محتاجة Machine Learning: ابدأ بـ heuristics بسيطة",
+      "subtitle": "لما تقدر تكتب المنطق بإيدك، الكود بيبقى دقيق والموديل بيقرّب بس. اطلع بالـ rule الأول، وخلّي الـ ML يغلبها."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "ml-foundations", "order": 1 },
+  "tags": ["Machine Learning", "Heuristics", "Baselines", "Problem Framing"],
+  "sources": [
+    {
+      "title": "Rules of Machine Learning — Google for Developers",
+      "url": "https://developers.google.com/machine-learning/guides/rules-of-ml"
+    },
+    {
+      "title": "Understand the problem — Google for Developers, Introduction to ML Problem Framing",
+      "url": "https://developers.google.com/machine-learning/problem-framing/problem"
+    },
+    {
+      "title": "User Needs + Defining Success — Google People + AI Guidebook",
+      "url": "https://pair.withgoogle.com/chapter/user-needs/"
+    },
+    {
+      "title": "Decision Trees — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/tree.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
