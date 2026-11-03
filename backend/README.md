@@ -11,12 +11,15 @@ backend/
 │   ├── ReadIn.Infrastructure/  # EF Core + migrations, outbox, Hangfire jobs, Firebase Admin, seeders, content repository,
 │   │                           #   upload storage (wwwroot/uploads) + SkiaSharp image processing
 │   ├── ReadIn.Api/             # minimal-API endpoints (/api/v1), Firebase JWT auth, ProblemDetails, OpenAPI + Scalar
-│   └── ReadIn.ContentStudio/   # content pipeline CLI: validate / import / generate
+│   └── ReadIn.ContentStudio/   # content pipeline CLI: compose drafts, validate (schema, structure, parity, compile
+│                               #   and link checks), plan-status, import (content/AUTHORING.md)
 └── tests/
     ├── ReadIn.Domain.UnitTests/
     ├── ReadIn.Application.UnitTests/   # incl. Mapster config.Compile(), RDoc schema over all content
     ├── ReadIn.Infrastructure.UnitTests/ # image processing (magic bytes, limits, EXIF) and upload storage (path traversal)
-    ├── ReadIn.Api.IntegrationTests/    # real SQL Server via Testcontainers, emulator-style tokens, temp uploads folder
+    ├── ReadIn.Api.IntegrationTests/    # real SQL Server via Testcontainers, emulator-style tokens, temp uploads folder,
+    │                                   #   seeders over fixture content (tests/fixtures/content)
+    ├── ReadIn.ContentStudio.Tests/     # draft composer, editorial rules, Roslyn snippet checks
     └── ReadIn.ArchitectureTests/       # NetArchTest layer + naming rules
 ```
 
@@ -42,7 +45,7 @@ dotnet run --project src/ReadIn.Api        # http://localhost:5080 — migrates 
 - Pipeline: Logging → Authorization → Validation → Caching (`ICachedQuery` + tags).
 - Queries use `AsNoTracking()` + `ProjectToType<T>()`. Language-aware mapping reads `LocalizedProjection.Ui` / `.Lang`.
 - Entities change only through domain methods. Domain events go to the outbox in the same transaction and are dispatched to `IDomainEventHandler<T>`.
-- Seeders are idempotent and checksum-versioned (`SeedHistory`); demo users are never seeded in Production.
+- Seeders are idempotent and checksum-versioned (`SeedHistory`; articles per article); demo users are never seeded in Production. The official ReadIn account, its avatar, the pipeline articles (with covers) and the learning paths are seeded everywhere.
 
 ## Test
 

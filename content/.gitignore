@@ -1,0 +1,4 @@
+# Authoring drafts: `ContentStudio compose` turns them into en.json / ar-EG.json, which are what we commit.
+articles/**/*.md
+# Link-checker cache (ContentStudio validate).
+.cache/

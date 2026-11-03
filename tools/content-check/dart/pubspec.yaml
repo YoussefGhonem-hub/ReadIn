@@ -1,0 +1,11 @@
+# Compile checks for Dart/Flutter snippets in articles (ContentStudio validate, SPEC §19.3).
+# Snippets are written to lib/run-*/ during a check and analyzed with `dart analyze`.
+name: readin_content_check
+publish_to: none
+environment:
+  sdk: ^3.12.1
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.1.1
+  equatable: ^3.0.0

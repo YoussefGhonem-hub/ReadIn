@@ -632,7 +632,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 
 ### F03 — Home: "النهارده" (Today)
 - Greeting + **streak badge** 🔥 + notifications bell.
-- **Today's article (Hero card):** one reviewed article picked for the user (see [§11 F07](#f07--daily-article-مقال-النهارده)).
+- **Today's article (Hero card):** one reviewed article picked for the user (or, until enough are reviewed, an auto-checked one) (see [§11 F07](#f07--daily-article-مقال-النهارده)).
 - Continue reading (resume last unfinished article).
 - Learning path progress card.
 - Field filter chips + feed: **For you** (interests + popularity + freshness) and **Following** tabs.
@@ -676,11 +676,12 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
 ```
 - `Published` articles without review show no "Reviewed" badge but are visible.
 - Medicine / Public Health articles **must** be approved by a Reviewer before publishing.
-- Only reviewed articles are eligible for **Today's article**.
+- Reviewed articles come first for **Today's article**; published + auto-checked articles are the fallback ([F07](#f07--daily-article-مقال-النهارده)).
 
 ### F07 — Daily Article (مقال النهارده)
 - Picked per user daily by a Hangfire job at the user's local time minus 30 minutes.
 - **Algorithm:** reviewed + published, in user's interests, not read before, matches language preference, reading time 4–10 minutes, weighted by quality score (reactions, completion rate, freshness), not from the same field 3 days in a row, prefers the next item in the user's active learning path.
+- **Fallback:** when no reviewed article matches, the pick comes from **published + auto-checked** articles (passed every content-pipeline check, §19.3; `Articles.AutoCheckedAt`) with the same rules. Constraints relax in the same order (length, then interests), and at every step a reviewed article wins over an auto-checked one. Seeded articles wait for human review, so this keeps the hero card filled without faking a review: the card shows no "Reviewed" badge.
 - Push notification at the chosen time: *"مقال النهارده جاهز ☕ — {title}"*.
 - If the user doesn't open it, it stays as the hero card for the day.
 
@@ -1116,11 +1117,11 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 |---|---|---|
 | 1 | Roles & Permissions | All |
 | 2 | Fields, Topics, Tags (from `content/taxonomy.yaml`) | All |
-| 3 | System accounts (`ReadIn Editorial`, `SuperAdmin`) | All |
+| 3 | System accounts (the official `ReadIn` account, `SuperAdmin`) | All |
 | 4 | Demo users (SQL Server) | Local only |
-| 5 | Glossary terms | All |
-| 6 | Articles (from `content/articles/`, status-aware) | All |
-| 7 | Learning paths | All |
+| 5 | Official account avatar (`content/assets/readin-avatar.png` through the image pipeline). Glossary terms join with F21 | All |
+| 6 | Articles (from `content/articles/`, status-aware, covers through the image pipeline, re-imported per article when its files change) | All, Production included |
+| 7 | Learning paths (`learningPaths` in `taxonomy.yaml` + each article's `learningPath`) | All |
 | 8 | Demo interactions (follows, reactions, comments, saves, reading history, streaks, sample image/PDF attachments) | Local only |
 
 ### 18.3 Seed Users
@@ -1146,7 +1147,7 @@ Users are created in SQL Server only (no Firebase Auth). Phone numbers use the r
 
 Demo users get realistic profiles (bios mixing Arabic and English, interests, avatars), follow relationships, reading history with streaks (e.g. `reader1` has a 12-day streak), comments and replies, reactions and saved articles, so every screen looks real in development.
 
-> **No fake personas in production.** All seeded articles are published under **ReadIn Editorial** with the "AI-assisted" label.
+> **No fake personas in production.** All seeded articles are published under the official **ReadIn** account with the "AI-assisted" label, as `reviewStatus: pending` (no "Reviewed by" badge until a human reviews them).
 
 ---
 
@@ -1191,24 +1192,30 @@ dotnet run --project src/ReadIn.ContentStudio -- import --status approved
 ```
 
 ### 19.3 Automatic Validation
+`ContentStudio validate` runs every check below and fails on any error; the `content` CI workflow runs it with `--plan` and `--all`. The writing rules behind them are in [content/AUTHORING.md](../content/AUTHORING.md).
+
 | Check | How |
 |---|---|
-| Schema | Validate both files against `rdoc.schema.json` |
-| Structure parity | `en` and `ar-EG` have the same sections, code blocks and sources |
-| **Code compiles** | C# snippets compiled with Roslyn, TypeScript with `tsc`, Dart with `dart analyze` (snippets marked `"compile": false` are skipped intentionally) |
-| Sources alive | Every source URL returns HTTP 200, preferred domains are official docs (learn.microsoft.com, angular.dev, docs.flutter.dev, official Anthropic docs, etc.) |
-| Duplicates | Title + embedding similarity against existing articles |
-| Quality | Length (800–2,000 words), reading time 4–10 min, at least one callout or code/table, alt text on images |
-| Freshness | Version badge required for versioned technologies |
+| Plan | `validate --plan`: unique kebab-case slugs, known field/topic/learning path, path orders 1..N, 2–5 https sources, near-duplicate titles (error) and misconceptions (warning) by keyword similarity |
+| Schema | Both files pass `rdoc.schema.json` and the server-side sanitizer (§13.5) |
+| Structure | TL;DR summary first, hook paragraph, ≥ 3 H2, ≥ 1 `tip` and ≥ 1 `warning`/`danger` callout, a comparison table, code (or `steps` for non-code topics), and a final "Key takeaways" H2 with 3–5 bullets |
+| Structure parity | `en` and `ar-EG` have the same blocks in the same order: same ids and types, identical code (lang, filename, text), same table shapes, list/step counts and callout variants |
+| Length | 900–1,800 words per language, reading time 5–9 min (§13.5 formula) |
+| Text & BiDi | No emoji in body text (only the ❌/✅ tab labels), no raw HTML, alt text on images, Western digits and Arabic punctuation (، ؛ ؟) in `ar-EG`, no `ar-EG` block that would resolve LTR, glossary terms exist in `content/glossary/` |
+| **Code compiles** | C# with Roslyn (.NET 10, Web SDK implicit usings, ASP.NET Core/EF Core/Mapster/Mediator referenced), TypeScript/TSX with `tsc --noEmit` (React 19, Angular 22), Dart with `dart analyze`, Python byte-compiled **and run** with scikit-learn, JavaScript `node --check`, Bash `bash -n`, JSON/YAML parsed. `"compile": false` needs a reason in `meta.json`; other languages are listed as not compiled. A missing toolchain is an error |
+| Sources alive | Every source answers HTTP 200 after redirects (polite: 2 requests per host, retries with back-off; successes cached for a week) |
+| Duplicates | Unique slugs; titles compared by keyword similarity across all articles |
+| Trust & freshness | Matches the plan (field, topic, level, path, version badge, titles), `status: published`, `reviewStatus: pending`, no reviewer, `isAiAssisted: true`, `lastReviewedAt`, 2–5 sources, a 1200×630 `cover.webp` |
 
 ### 19.4 Publishing Strategy
+- **Seed set: 300 articles** by the official **ReadIn** account, planned in `content/taxonomy.yaml` (23 learning paths across AI, ML, Claude & AI tools, .NET, React, Angular, frontend, mobile, databases, architecture, DevOps and security). Each one corrects a misconception developers commonly hold. They are published with the AI-assisted label and `reviewStatus: pending`, with staggered publish dates over the last ~120 days, and wait in the reviewer queue; Today's article falls back to them until enough are reviewed (F07).
 - **Launch with ~200 reviewed articles** organized into learning paths.
 - **Drip publishing** of the rest (e.g. 10–15 per day) as reviews complete, until 1,000+.
 - Avoids "scaled content" SEO penalties and keeps quality high.
 - Fast-moving topics (Claude, AI tools, framework versions) get a **re-verification job** every 90 days: sources re-checked, `LastReviewedAt` updated or the article flagged "may be outdated".
 
 ### 19.5 Content Files in Git
-Approved content lives in `content/articles/` so it is versioned, reviewable in git history, and reproducible in every environment.
+Approved content lives in `content/articles/{field}/{topic}/{slug}/` so it is versioned, reviewable in git history, and reproducible in every environment: `meta.json`, `en.json` (source of truth), `ar-EG.json` and `cover.webp` (1200×630, rendered by `tools/content-covers`). Writers draft in `en.md` / `ar-EG.md` (git-ignored) and `ContentStudio compose` turns them into RDoc. Glossary terms live in `content/glossary/{field}.yaml`; the official account's avatar is `content/assets/readin-avatar.png`.
 
 ---
 

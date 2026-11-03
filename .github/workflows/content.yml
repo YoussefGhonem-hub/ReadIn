@@ -3,9 +3,22 @@ name: content
 on:
   push:
     branches: [main, dev]
-    paths: ["content/**", "shared/rdoc/**", ".github/workflows/content.yml"]
+    paths:
+      - "content/**"
+      - "shared/rdoc/**"
+      - "tools/content-check/**"
+      - "backend/src/ReadIn.ContentStudio/**"
+      - ".github/workflows/content.yml"
   pull_request:
-    paths: ["content/**", "shared/rdoc/**", ".github/workflows/content.yml"]
+    paths:
+      - "content/**"
+      - "shared/rdoc/**"
+      - "tools/content-check/**"
+      - "backend/src/ReadIn.ContentStudio/**"
+      - ".github/workflows/content.yml"
+
+env:
+  FLUTTER_VERSION: "3.44.1"
 
 jobs:
   validate:
@@ -17,8 +30,37 @@ jobs:
         with:
           global-json-file: backend/global.json
 
-      # Schema, en/ar-EG structure parity, sources, quality and freshness (SPEC §19.3).
-      # Still to come: code compile checks (Roslyn / tsc / dart analyze) and live link checks.
+      # Toolchains for the compile checks (content/AUTHORING.md): TypeScript, Dart/Flutter, Python via uv.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tools/content-check/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: tools/content-check
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: tools/content-check/dart
+
+      - uses: astral-sh/setup-uv@v6
+
+      # Successful link checks are cached for a week (the checker re-checks failures every run).
+      - uses: actions/cache@v4
+        with:
+          path: content/.cache
+          key: content-links-${{ github.run_id }}
+          restore-keys: content-links-
+
+      # SPEC §19.3: plan, schema, structure, en/ar-EG parity, length, text/BiDi lint, compile checks, links, duplicates.
+      - name: Validate the plan
+        working-directory: backend
+        run: dotnet run --project src/ReadIn.ContentStudio -c Release -- validate --plan
+
       - name: Validate articles
         working-directory: backend
         run: dotnet run --project src/ReadIn.ContentStudio -c Release -- validate --all

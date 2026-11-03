@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="ReadIn.ContentStudio.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ReadIn.Application\ReadIn.Application.csproj" />
     <ProjectReference Include="..\ReadIn.Infrastructure\ReadIn.Infrastructure.csproj" />
   </ItemGroup>
@@ -13,6 +17,8 @@
   <ItemGroup>
     <PackageReference Include="System.CommandLine" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 
 </Project>

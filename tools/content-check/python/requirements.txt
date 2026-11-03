@@ -1,0 +1,4 @@
+# Python snippets run against these (ContentStudio validate, SPEC §19.3).
+scikit-learn==1.9.1
+numpy
+pandas
