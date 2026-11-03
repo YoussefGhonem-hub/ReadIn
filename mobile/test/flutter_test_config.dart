@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -26,6 +27,7 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   ]);
   await _loadFont('JetBrains Mono', ['assets/fonts/JetBrainsMono-Regular.ttf', 'assets/fonts/JetBrainsMono-Medium.ttf']);
   await _loadFont('MaterialIcons', ['fonts/MaterialIcons-Regular.otf']);
+  await _loadEmojiFont();
   AppNetworkImage.providerFactory = NetworkImage.new;
   // Media: no disk cache, and a plain token-colored placeholder instead of
   // asynchronous BlurHash decoding. Goldens install FakeMedia on top.
@@ -40,4 +42,25 @@ Future<void> _loadFont(String family, List<String> assets) async {
     loader.addFont(rootBundle.load(asset));
   }
   await loader.load();
+}
+
+/// Color emoji (💡 ❤️ 🔥 💬 🔖) for text styles that list `emojiFontFallback`. The app doesn't bundle an emoji
+/// font: this Noto Color Emoji (SIL OFL, bitmap glyphs the test renderer can draw) is checked into the Flutter SDK
+/// that CI pins, so every machine draws the same pixels. It predates 🤯, which stays an empty box, as every emoji
+/// did before.
+Future<void> _loadEmojiFont() async {
+  final root = Platform.environment['FLUTTER_ROOT'] ?? _sdkRootOf(Platform.resolvedExecutable);
+  if (root == null) return;
+  final font = File(
+    [root, 'engine', 'src', 'flutter', 'txt', 'third_party', 'fonts', 'NotoColorEmoji.ttf'].join(Platform.pathSeparator),
+  );
+  if (!font.existsSync()) return;
+  await (FontLoader('Noto Color Emoji')..addFont(font.readAsBytes().then(ByteData.sublistView))).load();
+}
+
+/// `flutter_tester` runs from `<sdk>/bin/cache/artifacts/engine/<platform>/`.
+String? _sdkRootOf(String executable) {
+  final marker = '${Platform.pathSeparator}bin${Platform.pathSeparator}cache${Platform.pathSeparator}';
+  final at = executable.indexOf(marker);
+  return at < 0 ? null : executable.substring(0, at);
 }
