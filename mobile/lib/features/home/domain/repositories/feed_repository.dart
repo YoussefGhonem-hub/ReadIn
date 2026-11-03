@@ -8,4 +8,7 @@ abstract interface class FeedRepository {
 
   /// `GET /feed/for-you` — signed in: interests first; guest: latest published.
   Future<Result<CursorPage<ArticleCard>>> getForYou({String? fieldSlug, String? cursor, int limit = 20});
+
+  /// `GET /feed/following` — articles by the writers the viewer follows (F12).
+  Future<Result<CursorPage<ArticleCard>>> getFollowing({String? cursor, int limit = 20});
 }

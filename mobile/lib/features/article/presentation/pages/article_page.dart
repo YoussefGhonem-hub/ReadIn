@@ -1,21 +1,29 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
+import '../../../../core/realtime/realtime_service.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/rdoc/blocks/text_blocks.dart';
 import '../../../../shared/rdoc/rdoc_view.dart';
 import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../follow/presentation/cubit/follows_cubit.dart';
+import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../reading/presentation/tracking/reading_tracking.dart';
 import '../../../settings/domain/entities/app_settings.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/entities/article.dart';
 import '../cubit/article_cubit.dart';
+import '../cubit/article_live_cubit.dart';
+import '../cubit/engagement_cubit.dart';
 import '../widgets/article_attachments_view.dart';
+import '../widgets/reader_action_bar.dart';
 import '../widgets/reader_widgets.dart';
 
 /// Article reader (F04). Deep link: `readin.app/a/{slug}`.
@@ -27,28 +35,39 @@ class ArticlePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final preferred = context.read<SettingsCubit>().state.articleLanguage;
-    return BlocProvider(
-      create: (_) => getIt<ArticleCubit>()..load(slug, preferredLanguage: preferred),
-      child: const ReadingTracking(child: _ArticleView()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => getIt<ArticleCubit>()..load(slug, preferredLanguage: preferred)),
+        BlocProvider(create: (_) => getIt<ArticleLiveCubit>()),
+      ],
+      child: const ReadingTracking(child: ArticleView()),
     );
   }
 }
 
-class _ArticleView extends StatefulWidget {
-  const _ArticleView();
+/// The reader once its cubits are provided ([ArticleCubit], [ArticleLiveCubit]; [EngagementCubit] and
+/// [FollowsCubit] come from the app).
+class ArticleView extends StatefulWidget {
+  const ArticleView({super.key});
 
   @override
-  State<_ArticleView> createState() => _ArticleViewState();
+  State<ArticleView> createState() => _ArticleViewState();
 }
 
-class _ArticleViewState extends State<_ArticleView> {
+class _ArticleViewState extends State<ArticleView> {
   final _scroll = ScrollController();
   final _progress = ValueNotifier<double>(0);
+  late final AppLifecycleListener _lifecycle;
 
   @override
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
+    // Live counters pause in the background (SPEC §21.2); the socket itself goes offline too.
+    final live = context.read<ArticleLiveCubit>();
+    _lifecycle = AppLifecycleListener(onPause: () => unawaited(live.pause()), onResume: live.resume);
+    final loaded = context.read<ArticleCubit>().state.article;
+    if (loaded != null) _onArticle(loaded);
   }
 
   void _onScroll() {
@@ -57,8 +76,24 @@ class _ArticleViewState extends State<_ArticleView> {
     _progress.value = max <= 0 ? 1 : (position.pixels / max).clamp(0, 1);
   }
 
+  /// A loaded article is the newest state of its counters and of the author follow; then live counters follow it.
+  /// A device copy (offline) is older than anything the app knows, so it seeds nothing.
+  void _onArticle(ArticleDetails article) {
+    if (!article.isOfflineCopy) {
+      context.read<EngagementCubit>().seed([article.card]);
+      context.read<FollowsCubit>().seed({article.card.author.id: article.isFollowingAuthor});
+    }
+    context.read<ArticleLiveCubit>().watch(article.card.id);
+  }
+
+  void _onLive(LiveArticleCounts? counts) {
+    final article = context.read<ArticleCubit>().state.article;
+    if (counts != null && article != null) context.read<EngagementCubit>().applyLive(article.card.id, counts);
+  }
+
   @override
   void dispose() {
+    _lifecycle.dispose();
     _scroll.dispose();
     _progress.dispose();
     super.dispose();
@@ -98,38 +133,49 @@ class _ArticleViewState extends State<_ArticleView> {
     final settings = context.watch<SettingsCubit>();
     final fontSize = settings.state.fontSize;
 
-    return Scaffold(
-      body: SafeArea(
-        child: BlocBuilder<ArticleCubit, ArticleState>(
-          builder: (context, state) {
-            final article = state.article;
-            return Column(
-              children: [
-                ReadingProgressBar(progress: _progress),
-                _TopBar(
-                  article: article,
-                  switching: state.switchingLanguage,
-                  onLanguage: (lang) => context.read<ArticleCubit>().switchLanguage(lang),
-                  onFontSize: () => showFontSizeSheet(context, current: fontSize, onChanged: settings.setFontSize),
-                ),
-                Expanded(
-                  child: switch (state.status) {
-                    ArticleStatus.loading => const _ReaderSkeleton(),
-                    ArticleStatus.failure => ErrorView(
-                        failure: state.failure!,
-                        onRetry: () => context.read<ArticleCubit>().retry(settings.state.articleLanguage),
-                      ),
-                    ArticleStatus.ready => _ReaderBody(
-                        article: article!,
-                        controller: _scroll,
-                        bodyFontSize: _fontSizeFor(fontSize),
-                        onTerm: _showTerm,
-                      ),
-                  },
-                ),
-              ],
-            );
-          },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ArticleCubit, ArticleState>(
+          listenWhen: (previous, current) => current.article != null && previous.article != current.article,
+          listener: (_, state) => _onArticle(state.article!),
+        ),
+        BlocListener<ArticleLiveCubit, LiveArticleCounts?>(listener: (_, counts) => _onLive(counts)),
+      ],
+      child: Scaffold(
+        body: SafeArea(
+          child: BlocBuilder<ArticleCubit, ArticleState>(
+            builder: (context, state) {
+              final article = state.article;
+              return Column(
+                children: [
+                  ReadingProgressBar(progress: _progress),
+                  _TopBar(
+                    article: article,
+                    switching: state.switchingLanguage,
+                    onLanguage: (lang) => context.read<ArticleCubit>().switchLanguage(lang),
+                    onFontSize: () => showFontSizeSheet(context, current: fontSize, onChanged: settings.setFontSize),
+                  ),
+                  if (state.status == ArticleStatus.ready && article!.isOfflineCopy) const _OfflineCopyBanner(),
+                  Expanded(
+                    child: switch (state.status) {
+                      ArticleStatus.loading => const _ReaderSkeleton(),
+                      ArticleStatus.failure => ErrorView(
+                          failure: state.failure!,
+                          onRetry: () => context.read<ArticleCubit>().retry(settings.state.articleLanguage),
+                        ),
+                      ArticleStatus.ready => _ReaderBody(
+                          article: article!,
+                          controller: _scroll,
+                          bodyFontSize: _fontSizeFor(fontSize),
+                          onTerm: _showTerm,
+                        ),
+                    },
+                  ),
+                  if (state.status == ArticleStatus.ready) ReaderActionBar(article: article!.card),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -186,6 +232,33 @@ class _TopBar extends StatelessWidget {
   }
 }
 
+/// A saved article opened from its device copy because the API is unreachable (F13, F25).
+class _OfflineCopyBanner extends StatelessWidget {
+  const _OfflineCopyBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        width: double.infinity,
+        color: colors.surfaceVariant,
+        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s2),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 18, color: colors.textSecondary),
+            const SizedBox(width: ReadInSpace.s2),
+            Expanded(
+              child: Text(context.l10n.offlineCopy, style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ReaderBody extends StatelessWidget {
   const _ReaderBody({required this.article, required this.controller, required this.bodyFontSize, required this.onTerm});
 
@@ -199,6 +272,7 @@ class _ReaderBody extends StatelessWidget {
     final direction = RDocScope.directionForLanguage(article.card.language);
     final showSummary = article.summary != null && article.summary!.isNotEmpty && !article.content.hasSummaryBlock;
     const gutter = EdgeInsets.symmetric(horizontal: ReadInSpace.s5);
+    final author = article.card.author;
 
     return RDocScope(
       baseDirection: direction,
@@ -212,7 +286,16 @@ class _ReaderBody extends StatelessWidget {
             SliverPadding(
               padding: gutter.copyWith(top: ReadInSpace.s2),
               sliver: SliverToBoxAdapter(
-                child: ArticleHeader(article: article, titleScale: RDocScope.of(context).scale),
+                child: ArticleHeader(
+                  article: article,
+                  titleScale: RDocScope.of(context).scale,
+                  authorAction: FollowButton(
+                    userId: author.id,
+                    name: author.displayName,
+                    initiallyFollowing: article.isFollowingAuthor,
+                    dense: true,
+                  ),
+                ),
               ),
             ),
             SliverPadding(

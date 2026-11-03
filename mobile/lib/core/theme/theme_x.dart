@@ -13,6 +13,15 @@ extension ThemeX on BuildContext {
   bool get isRtl => Directionality.of(this) == TextDirection.rtl;
 }
 
+/// The platforms' color emoji fonts (Android, iOS, Windows). The system finds them anyway; naming them lets golden
+/// tests, which only see the fonts they load, draw the reactions 💡 ❤️ 🔥 🤯 instead of empty boxes.
+const emojiFontFallback = ['Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji'];
+
+extension EmojiTextStyle on TextStyle {
+  /// This style with the color emoji fonts after its own fallbacks.
+  TextStyle withEmoji() => copyWith(fontFamilyFallback: [...?fontFamilyFallback, ...emojiFontFallback]);
+}
+
 /// Code is always set in JetBrains Mono (SPEC §15.3).
 TextStyle codeTextStyle({double size = ReadInType.codeSize, Color? color}) => TextStyle(
       fontFamily: ReadInFonts.mono,

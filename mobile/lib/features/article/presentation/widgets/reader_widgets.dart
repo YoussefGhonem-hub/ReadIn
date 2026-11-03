@@ -37,10 +37,13 @@ class ReadingProgressBar extends StatelessWidget {
 
 /// Field tag, title, subtitle and byline.
 class ArticleHeader extends StatelessWidget {
-  const ArticleHeader({super.key, required this.article, required this.titleScale});
+  const ArticleHeader({super.key, required this.article, required this.titleScale, this.authorAction});
 
   final ArticleDetails article;
   final double titleScale;
+
+  /// At the end of the author row: the follow button (F12).
+  final Widget? authorAction;
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +107,7 @@ class ArticleHeader extends StatelessWidget {
                 ],
               ),
             ),
+            if (authorAction != null) ...[const SizedBox(width: ReadInSpace.s2), authorAction!],
           ],
         ),
       ],

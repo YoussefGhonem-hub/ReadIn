@@ -1,12 +1,577 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/di/injection.dart';
+import '../../../../core/errors/failure.dart';
 import '../../../../core/l10n/l10n_x.dart';
+import '../../../../core/theme/theme_x.dart';
+import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/widgets/action_feedback.dart';
+import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/bidi_text_field.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../article/presentation/cubit/engagement_cubit.dart';
+import '../../../article/presentation/widgets/article_card_tile.dart';
+import '../../../auth/presentation/session/session_cubit.dart';
+import '../../domain/entities/saved.dart';
+import '../cubit/collections_cubit.dart';
+import '../cubit/saved_list_cubit.dart';
+import '../widgets/add_to_collection_sheet.dart';
+import '../widgets/collection_dialogs.dart';
+import '../widgets/save_button.dart';
 
-/// Saved articles & collections (F13), with offline cache (F25).
+/// The Saved tab (F13): saved articles with field chips and search, and collections. Readable offline (F25).
 class SavedPage extends StatelessWidget {
   const SavedPage({super.key});
 
   @override
-  Widget build(BuildContext context) => ComingSoonPage(title: context.l10n.navSaved, icon: Icons.bookmark_border_rounded);
+  Widget build(BuildContext context) {
+    final signedIn = context.select((SessionCubit c) => c.state.isAuthenticated);
+    if (!signedIn) return const _SavedGuestView();
+    return BlocProvider(create: (_) => getIt<SavedListCubit>()..load(), child: const SavedView());
+  }
+}
+
+/// The Saved tab once its [SavedListCubit] is provided ([CollectionsCubit] and [EngagementCubit] come from the app).
+class SavedView extends StatefulWidget {
+  const SavedView({super.key, this.initialTab = 0});
+
+  /// 0 = articles, 1 = collections.
+  final int initialTab;
+
+  @override
+  State<SavedView> createState() => _SavedViewState();
+}
+
+class _SavedViewState extends State<SavedView> {
+  @override
+  void initState() {
+    super.initState();
+    unawaited(context.read<CollectionsCubit>().load());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return DefaultTabController(
+      length: 2,
+      initialIndex: widget.initialTab,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.navSaved),
+          automaticallyImplyLeading: false,
+          bottom: TabBar(tabs: [Tab(text: l10n.savedTabArticles), Tab(text: l10n.collections)]),
+        ),
+        body: const TabBarView(children: [_SavedArticlesTab(), _CollectionsTab()]),
+      ),
+    );
+  }
+}
+
+class _SavedGuestView extends StatelessWidget {
+  const _SavedGuestView();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.navSaved), automaticallyImplyLeading: false),
+      body: EmptyView(
+        icon: Icons.bookmark_border_rounded,
+        title: l10n.savedGuestTitle,
+        body: l10n.savedGuestBody,
+        action: Column(
+          children: [
+            FilledButton(onPressed: () => context.push('/auth/sign-up'), child: Text(l10n.signUp)),
+            const SizedBox(height: ReadInSpace.s2),
+            TextButton(onPressed: () => context.push('/auth/sign-in'), child: Text(l10n.signIn)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Articles ────────────────────────────────────────────────────────────────
+
+class _SavedArticlesTab extends StatefulWidget {
+  const _SavedArticlesTab();
+
+  @override
+  State<_SavedArticlesTab> createState() => _SavedArticlesTabState();
+}
+
+class _SavedArticlesTabState extends State<_SavedArticlesTab> with AutomaticKeepAliveClientMixin {
+  late final _search = TextEditingController(text: context.read<SavedListCubit>().state.filter.query ?? '');
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _clearSearch() {
+    _search.clear();
+    context.read<SavedListCubit>().search('');
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final l10n = context.l10n;
+    final cubit = context.read<SavedListCubit>();
+    return BlocBuilder<SavedListCubit, SavedListState>(
+      builder: (context, state) => RefreshIndicator(
+        onRefresh: cubit.refresh,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (n) {
+            if (n.metrics.axis == Axis.vertical && n.metrics.extentAfter < 600) unawaited(cubit.loadMore());
+            return false;
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, 0),
+                sliver: SliverToBoxAdapter(
+                  child: BidiTextField(
+                    controller: _search,
+                    textInputAction: TextInputAction.search,
+                    onChanged: (text) {
+                      cubit.search(text);
+                      setState(() {}); // the clear button
+                    },
+                    decoration: InputDecoration(
+                      hintText: l10n.savedSearchHint,
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      suffixIcon: _search.text.isEmpty
+                          ? null
+                          : IconButton(tooltip: l10n.clearSearch, icon: const Icon(Icons.close_rounded), onPressed: _clearSearch),
+                    ),
+                  ),
+                ),
+              ),
+              if (state.offline) const SliverToBoxAdapter(child: _OfflineBanner()),
+              if (state.filter.collectionId != null) SliverToBoxAdapter(child: _CollectionFilterChip(collectionId: state.filter.collectionId!)),
+              SliverToBoxAdapter(child: _FieldChips(state: state)),
+              ...switch (state.status) {
+                SavedListStatus.loading => [const SliverToBoxAdapter(child: _SavedSkeleton())],
+                SavedListStatus.failure => [
+                    SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: state.failure!, onRetry: cubit.load)),
+                  ],
+                SavedListStatus.ready when state.items.isEmpty => [
+                    SliverFillRemaining(hasScrollBody: false, child: _SavedEmpty(filter: state.filter)),
+                  ],
+                SavedListStatus.ready => [
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5),
+                      sliver: SliverList.builder(
+                        itemCount: state.items.length + 1,
+                        itemBuilder: (context, i) => i < state.items.length
+                            ? _SavedTile(item: state.items[i], collectionId: state.filter.collectionId)
+                            : _Footer(state: state),
+                      ),
+                    ),
+                  ],
+              },
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OfflineBanner extends StatelessWidget {
+  const _OfflineBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s3, ReadInSpace.s5, 0),
+        padding: const EdgeInsets.all(ReadInSpace.s3),
+        decoration: BoxDecoration(color: colors.calloutInfo, borderRadius: BorderRadius.circular(ReadInRadius.md)),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 20, color: colors.calloutInfoAccent),
+            const SizedBox(width: ReadInSpace.s2),
+            Expanded(child: Text(context.l10n.savedOfflineBanner, style: context.textTheme.bodySmall?.copyWith(color: colors.textPrimary))),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CollectionFilterChip extends StatelessWidget {
+  const _CollectionFilterChip({required this.collectionId});
+
+  final String collectionId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final name = context.select((CollectionsCubit c) => c.state.byId(collectionId)?.name) ?? '…';
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(ReadInSpace.s5, ReadInSpace.s3, ReadInSpace.s5, 0),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: InputChip(
+          avatar: const Icon(Icons.folder_rounded, size: 18),
+          label: BidiText(l10n.collectionFilter(name)),
+          deleteButtonTooltipMessage: l10n.clearFilter,
+          onDeleted: () => context.read<SavedListCubit>().selectCollection(null),
+        ),
+      ),
+    );
+  }
+}
+
+class _FieldChips extends StatelessWidget {
+  const _FieldChips({required this.state});
+
+  final SavedListState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+    final colors = context.colors;
+    final selected = state.filter.fieldSlug;
+
+    Widget chip(String label, String? slug) {
+      final isSelected = selected == slug;
+      return Padding(
+        padding: const EdgeInsetsDirectional.only(end: ReadInSpace.s2),
+        child: ChoiceChip(
+          label: BidiText(label),
+          selected: isSelected,
+          onSelected: (_) => context.read<SavedListCubit>().selectField(slug),
+          selectedColor: colors.primary,
+          labelStyle: context.textTheme.labelMedium?.copyWith(
+            color: isSelected ? colors.onPrimary : colors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+          side: BorderSide(color: isSelected ? colors.primary : colors.border),
+        ),
+      );
+    }
+
+    if (state.fields.isEmpty) return const SizedBox(height: ReadInSpace.s3);
+    return SizedBox(
+      height: 64,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s3),
+        children: [
+          chip(context.l10n.filterAll, null),
+          for (final field in state.fields) chip(field.nameFor(lang), field.slug),
+        ],
+      ),
+    );
+  }
+}
+
+/// A saved article: open, unsave (with undo), add to a collection or take it out of the one shown.
+class _SavedTile extends StatelessWidget {
+  const _SavedTile({required this.item, required this.collectionId});
+
+  final SavedArticle item;
+
+  /// The collection the list is filtered by.
+  final String? collectionId;
+
+  @override
+  Widget build(BuildContext context) {
+    final article = item.article;
+    final engagement = context.select((EngagementCubit c) => c.state.of(article));
+    return ArticleCardTile(
+      article: engagement.applyTo(article),
+      onTap: () => context.push('/a/${article.slug}'),
+      actions: [
+        SaveToggleButton(article: article),
+        _SavedTileMenu(item: item, collectionId: collectionId),
+      ],
+    );
+  }
+}
+
+enum _TileAction { addToCollection, removeFromCollection }
+
+class _SavedTileMenu extends StatelessWidget {
+  const _SavedTileMenu({required this.item, required this.collectionId});
+
+  final SavedArticle item;
+  final String? collectionId;
+
+  Future<void> _removeFromCollection(BuildContext context, String collectionId) async {
+    final l10n = context.l10n;
+    final collections = context.read<CollectionsCubit>();
+    final name = collections.state.byId(collectionId)?.name ?? '';
+    final failure = await collections.remove(collectionId, item.article.id);
+    if (!context.mounted) return;
+    if (failure != null) {
+      showActionFailure(context, failure);
+    } else {
+      showActionMessage(context, l10n.removedFromCollection(name));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return PopupMenuButton<_TileAction>(
+      tooltip: l10n.moreActions,
+      icon: const Icon(Icons.more_vert_rounded),
+      onSelected: (action) => switch (action) {
+        _TileAction.addToCollection => showAddToCollectionSheet(context, item.article),
+        _TileAction.removeFromCollection => _removeFromCollection(context, collectionId!),
+      },
+      itemBuilder: (_) => [
+        PopupMenuItem(
+          value: _TileAction.addToCollection,
+          child: ListTile(leading: const Icon(Icons.playlist_add_rounded), title: Text(l10n.addToCollection)),
+        ),
+        if (collectionId != null)
+          PopupMenuItem(
+            value: _TileAction.removeFromCollection,
+            child: ListTile(leading: const Icon(Icons.playlist_remove_rounded), title: Text(l10n.removeFromCollection)),
+          ),
+      ],
+    );
+  }
+}
+
+class _SavedEmpty extends StatelessWidget {
+  const _SavedEmpty({required this.filter});
+
+  final SavedFilter filter;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    if (filter.collectionId != null && filter.fieldSlug == null && (filter.query ?? '').isEmpty) {
+      return EmptyView(icon: Icons.folder_open_rounded, title: l10n.savedCollectionEmptyTitle, body: l10n.savedCollectionEmptyBody);
+    }
+    if (!filter.isEmpty) {
+      return EmptyView(icon: Icons.search_off_rounded, title: l10n.savedNoResultsTitle, body: l10n.savedNoResultsBody);
+    }
+    return EmptyView(icon: Icons.bookmark_border_rounded, title: l10n.savedEmptyTitle, body: l10n.savedEmptyBody);
+  }
+}
+
+class _Footer extends StatelessWidget {
+  const _Footer({required this.state});
+
+  final SavedListState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget child;
+    if (state.loadingMore) {
+      child = const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5));
+    } else if (state.loadMoreFailure != null) {
+      child = ErrorView(failure: state.loadMoreFailure!, compact: true, onRetry: context.read<SavedListCubit>().loadMore);
+    } else {
+      child = const SizedBox.shrink();
+    }
+    return Padding(padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s5), child: Center(child: child));
+  }
+}
+
+class _SavedSkeleton extends StatelessWidget {
+  const _SavedSkeleton();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5),
+        child: Column(
+          children: [
+            for (var i = 0; i < 4; i++)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: ReadInSpace.s3),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonBox(width: 64, height: 64, radius: ReadInRadius.md),
+                    SizedBox(width: ReadInSpace.s3),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [SkeletonBox(width: 70), SizedBox(height: ReadInSpace.s2), SkeletonBox(), SizedBox(height: ReadInSpace.s2), SkeletonBox(width: 140)],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      );
+}
+
+// ── Collections ─────────────────────────────────────────────────────────────
+
+class _CollectionsTab extends StatelessWidget {
+  const _CollectionsTab();
+
+  Future<void> _create(BuildContext context) async {
+    final l10n = context.l10n;
+    final collections = context.read<CollectionsCubit>();
+    await showCollectionNameDialog<ArticleCollection>(
+      context,
+      title: l10n.newCollection,
+      action: l10n.createAction,
+      submit: (name) async => (await collections.create(name)).fold((f) => (null, f), (c) => (c, null)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final collections = context.read<CollectionsCubit>();
+    return BlocBuilder<CollectionsCubit, CollectionsState>(
+      builder: (context, state) => switch (state.status) {
+        CollectionsStatus.idle || CollectionsStatus.loading => const _CollectionsSkeleton(),
+        CollectionsStatus.failure => ErrorView(failure: state.failure!, onRetry: () => collections.load(force: true)),
+        CollectionsStatus.ready => RefreshIndicator(
+            onRefresh: () => collections.load(force: true),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s3),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s2),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _create(context),
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text(l10n.newCollection),
+                    ),
+                  ),
+                ),
+                if (state.items.isEmpty)
+                  EmptyView(icon: Icons.folder_open_rounded, title: l10n.collectionsEmptyTitle, body: l10n.collectionsEmptyBody)
+                else
+                  for (final collection in state.items) _CollectionTile(collection: collection),
+              ],
+            ),
+          ),
+      },
+    );
+  }
+}
+
+enum _CollectionAction { rename, delete }
+
+class _CollectionTile extends StatelessWidget {
+  const _CollectionTile({required this.collection});
+
+  final ArticleCollection collection;
+
+  void _open(BuildContext context) {
+    unawaited(context.read<SavedListCubit>().selectCollection(collection.id));
+    DefaultTabController.of(context).animateTo(0);
+  }
+
+  Future<void> _rename(BuildContext context) async {
+    final l10n = context.l10n;
+    final collections = context.read<CollectionsCubit>();
+    await showCollectionNameDialog<bool>(
+      context,
+      title: l10n.renameCollection,
+      action: l10n.save,
+      initial: collection.name,
+      submit: (name) async {
+        final failure = await collections.rename(collection.id, name);
+        return (failure == null ? true : null, failure);
+      },
+    );
+  }
+
+  Future<void> _delete(BuildContext context) async {
+    final collections = context.read<CollectionsCubit>();
+    final list = context.read<SavedListCubit>();
+    if (!await confirmDeleteCollection(context, collection.name)) return;
+    final Failure? failure = await collections.delete(collection.id);
+    if (list.state.filter.collectionId == collection.id) unawaited(list.selectCollection(null));
+    if (context.mounted) showActionFailure(context, failure);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    return ListTile(
+      contentPadding: const EdgeInsetsDirectional.only(start: ReadInSpace.s5, end: ReadInSpace.s2),
+      minTileHeight: 64,
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(color: colors.primaryContainer, borderRadius: BorderRadius.circular(ReadInRadius.md)),
+        child: Icon(Icons.folder_rounded, color: colors.onPrimaryContainer),
+      ),
+      title: BidiText(collection.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(l10n.collectionArticles(collection.articleCount), style: context.textTheme.bodySmall),
+      onTap: () => _open(context),
+      trailing: PopupMenuButton<_CollectionAction>(
+        tooltip: l10n.moreActions,
+        icon: const Icon(Icons.more_vert_rounded),
+        onSelected: (action) => switch (action) {
+          _CollectionAction.rename => _rename(context),
+          _CollectionAction.delete => _delete(context),
+        },
+        itemBuilder: (_) => [
+          PopupMenuItem(
+            value: _CollectionAction.rename,
+            child: ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.renameAction)),
+          ),
+          PopupMenuItem(
+            value: _CollectionAction.delete,
+            child: ListTile(
+              leading: Icon(Icons.delete_outline_rounded, color: colors.error),
+              title: Text(l10n.deleteAction, style: TextStyle(color: colors.error)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CollectionsSkeleton extends StatelessWidget {
+  const _CollectionsSkeleton();
+
+  @override
+  Widget build(BuildContext context) => ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(ReadInSpace.s5),
+        children: [
+          for (var i = 0; i < 4; i++)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: ReadInSpace.s2),
+              child: Row(
+                children: [
+                  SkeletonBox(width: 44, height: 44, radius: ReadInRadius.md),
+                  SizedBox(width: ReadInSpace.s3),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [SkeletonBox(width: 150), SizedBox(height: ReadInSpace.s2), SkeletonBox(width: 70, height: 12)],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      );
 }

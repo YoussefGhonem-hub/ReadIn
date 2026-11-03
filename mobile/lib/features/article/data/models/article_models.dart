@@ -42,7 +42,25 @@ abstract class FieldRefModel with _$FieldRefModel {
   FieldRef toEntity() => FieldRef(id: id, slug: slug, nameAr: nameAr, nameEn: nameEn);
 }
 
-/// `ArticleCardDto`.
+/// `ReactionCountsDto` (F10).
+@freezed
+abstract class ReactionCountsModel with _$ReactionCountsModel {
+  const ReactionCountsModel._();
+
+  const factory ReactionCountsModel({
+    @Default(0) int insightful,
+    @Default(0) int love,
+    @Default(0) int fire,
+    @Default(0) int mindBlown,
+  }) = _ReactionCountsModel;
+
+  factory ReactionCountsModel.fromJson(Map<String, dynamic> json) => _$ReactionCountsModelFromJson(json);
+
+  ReactionCounts toEntity() => ReactionCounts(insightful: insightful, love: love, fire: fire, mindBlown: mindBlown);
+}
+
+/// `ArticleCardDto`. The wave 1 fields (`reactions`, `saveCount`, `myReaction`, `isSaved`) have defaults, so an API
+/// that doesn't send them yet still parses.
 @freezed
 abstract class ArticleCardModel with _$ArticleCardModel {
   const ArticleCardModel._();
@@ -64,6 +82,10 @@ abstract class ArticleCardModel with _$ArticleCardModel {
     @Default(0) int reactionCount,
     @Default(0) int commentCount,
     ArticleAttachmentsModel? attachments,
+    ReactionCountsModel? reactions,
+    @Default(0) int saveCount,
+    String? myReaction,
+    @Default(false) bool isSaved,
   }) = _ArticleCardModel;
 
   factory ArticleCardModel.fromJson(Map<String, dynamic> json) => _$ArticleCardModelFromJson(json);
@@ -82,9 +104,13 @@ abstract class ArticleCardModel with _$ArticleCardModel {
         isAiAssisted: isAiAssisted,
         versionBadge: versionBadge,
         publishedAt: publishedAt,
-        reactionCount: reactionCount,
+        reactionCount: reactions?.toEntity().total ?? reactionCount,
         commentCount: commentCount,
         attachments: attachments?.toEntity(),
+        reactions: reactions?.toEntity() ?? ReactionCounts.zero,
+        saveCount: saveCount,
+        myReaction: reactionTypeFromWire(myReaction),
+        isSaved: isSaved,
       );
 }
 
@@ -115,6 +141,7 @@ abstract class ReviewerModel with _$ReviewerModel {
 
 /// `ArticleDetailsDto` — card fields plus reader-only fields. `content` stays
 /// raw JSON here and is parsed into [RDocDocument] when mapping to the entity.
+/// [toJson] is what the offline copy of a saved article keeps (F13, F25).
 @freezed
 abstract class ArticleDetailsModel with _$ArticleDetailsModel {
   const ArticleDetailsModel._();
@@ -136,6 +163,9 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     @Default(0) int reactionCount,
     @Default(0) int commentCount,
     ArticleAttachmentsModel? attachments,
+    ReactionCountsModel? reactions,
+    String? myReaction,
+    @Default(false) bool isSaved,
     @Default(<String>[]) List<String> availableLanguages,
     String? summary,
     @Default(<String, dynamic>{}) Map<String, dynamic> content,
@@ -146,29 +176,36 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     DateTime? lastReviewedAt,
     @Default(0) int saveCount,
     @Default(0) int readCount,
+    @Default(false) bool isFollowingAuthor,
   }) = _ArticleDetailsModel;
 
   factory ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
 
-  ArticleDetails toEntity() => ArticleDetails(
-        card: ArticleCard(
-          id: id,
-          slug: slug,
-          language: language,
-          title: title,
-          subtitle: subtitle,
-          coverUrl: coverUrl,
-          field: field.toEntity(),
-          author: author.toEntity(),
-          readingTimeMinutes: readingTimeMinutes,
-          isReviewed: isReviewed,
-          isAiAssisted: isAiAssisted,
-          versionBadge: versionBadge,
-          publishedAt: publishedAt,
-          reactionCount: reactionCount,
-          commentCount: commentCount,
-          attachments: attachments?.toEntity(),
-        ),
+  ArticleCard toCard() => ArticleCard(
+        id: id,
+        slug: slug,
+        language: language,
+        title: title,
+        subtitle: subtitle,
+        coverUrl: coverUrl,
+        field: field.toEntity(),
+        author: author.toEntity(),
+        readingTimeMinutes: readingTimeMinutes,
+        isReviewed: isReviewed,
+        isAiAssisted: isAiAssisted,
+        versionBadge: versionBadge,
+        publishedAt: publishedAt,
+        reactionCount: reactions?.toEntity().total ?? reactionCount,
+        commentCount: commentCount,
+        attachments: attachments?.toEntity(),
+        reactions: reactions?.toEntity() ?? ReactionCounts.zero,
+        saveCount: saveCount,
+        myReaction: reactionTypeFromWire(myReaction),
+        isSaved: isSaved,
+      );
+
+  ArticleDetails toEntity({bool offline = false}) => ArticleDetails(
+        card: toCard(),
         availableLanguages: availableLanguages.isEmpty ? [language] : availableLanguages,
         summary: summary,
         content: content.isEmpty ? RDocDocument.empty : RDocDocument.fromJson(content),
@@ -179,7 +216,8 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
             ? null
             : ReviewerRef(displayName: reviewedBy!.displayName, username: reviewedBy!.username),
         lastReviewedAt: lastReviewedAt,
-        saveCount: saveCount,
         readCount: readCount,
+        isFollowingAuthor: isFollowingAuthor,
+        isOfflineCopy: offline,
       );
 }

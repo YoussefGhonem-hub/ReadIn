@@ -1,8 +1,11 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/failure.dart';
+import '../../../../core/errors/result.dart';
+import '../../../../core/models/cursor_page.dart';
 import '../../../article/domain/entities/article.dart';
 import '../../domain/usecases/feed_usecases.dart';
 
@@ -56,19 +59,50 @@ class FeedState extends Equatable {
 
 /// "For you" feed with cursor pagination and field filter (F03).
 @injectable
-class FeedCubit extends Cubit<FeedState> {
-  FeedCubit(this._getFeed) : super(const FeedState());
+class FeedCubit extends ArticleFeedCubit {
+  FeedCubit(this._getFeed);
 
   final GetForYouFeed _getFeed;
 
+  @override
+  Future<Result<CursorPage<ArticleCard>>> fetch({String? fieldSlug, String? cursor}) =>
+      _getFeed(fieldSlug: fieldSlug, cursor: cursor);
+}
+
+/// "Following" tab (F03, F12): articles by the writers the viewer follows. No field filter; loads the first time the
+/// tab is shown.
+@injectable
+class FollowingFeedCubit extends ArticleFeedCubit {
+  FollowingFeedCubit(this._getFeed);
+
+  final GetFollowingFeed _getFeed;
+
+  @override
+  Future<Result<CursorPage<ArticleCard>>> fetch({String? fieldSlug, String? cursor}) => _getFeed(cursor: cursor);
+}
+
+/// A paged article feed: first page, field filter, pull to refresh and infinite scroll.
+abstract class ArticleFeedCubit extends Cubit<FeedState> {
+  ArticleFeedCubit() : super(const FeedState());
+
   /// Incremented on every reset so responses for an older filter are dropped.
   int _generation = 0;
+  bool _started = false;
+
+  @protected
+  Future<Result<CursorPage<ArticleCard>>> fetch({String? fieldSlug, String? cursor});
+
+  /// Loads the first page unless a load already started (a tab shown for the first time).
+  Future<void> ensureLoaded() async {
+    if (!_started) await load();
+  }
 
   Future<void> load({String? fieldSlug}) async {
+    _started = true;
     final generation = ++_generation;
     emit(FeedState(fieldSlug: fieldSlug));
-    final result = await _getFeed(fieldSlug: fieldSlug);
-    if (generation != _generation) return;
+    final result = await fetch(fieldSlug: fieldSlug);
+    if (generation != _generation || isClosed) return;
     emit(result.fold(
       (failure) => FeedState(status: FeedStatus.failure, fieldSlug: fieldSlug, failure: failure),
       (page) => FeedState(status: FeedStatus.ready, fieldSlug: fieldSlug, items: page.items, nextCursor: page.nextCursor),
@@ -82,9 +116,10 @@ class FeedCubit extends Cubit<FeedState> {
 
   /// Pull-to-refresh: keeps the current items visible until the new page arrives.
   Future<void> refresh() async {
+    _started = true;
     final generation = ++_generation;
-    final result = await _getFeed(fieldSlug: state.fieldSlug);
-    if (generation != _generation) return;
+    final result = await fetch(fieldSlug: state.fieldSlug);
+    if (generation != _generation || isClosed) return;
     result.fold(
       (failure) => emit(state.items.isEmpty
           ? state.copyWith(status: FeedStatus.failure, failure: () => failure)
@@ -102,8 +137,8 @@ class FeedCubit extends Cubit<FeedState> {
     if (state.status != FeedStatus.ready || state.loadingMore || !state.hasMore) return;
     final generation = _generation;
     emit(state.copyWith(loadingMore: true, loadMoreFailure: () => null));
-    final result = await _getFeed(fieldSlug: state.fieldSlug, cursor: state.nextCursor);
-    if (generation != _generation) return;
+    final result = await fetch(fieldSlug: state.fieldSlug, cursor: state.nextCursor);
+    if (generation != _generation || isClosed) return;
     emit(result.fold(
       (failure) => state.copyWith(loadingMore: false, loadMoreFailure: () => failure),
       (page) => state.copyWith(

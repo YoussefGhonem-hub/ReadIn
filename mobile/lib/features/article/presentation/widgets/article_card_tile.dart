@@ -14,10 +14,13 @@ import 'article_attachments_view.dart';
 /// reading time, reaction/comment counts, then the post's images or PDF
 /// pages full width (F26).
 class ArticleCardTile extends StatelessWidget {
-  const ArticleCardTile({super.key, required this.article, required this.onTap});
+  const ArticleCardTile({super.key, required this.article, required this.onTap, this.actions = const []});
 
   final ArticleCard article;
   final VoidCallback onTap;
+
+  /// Buttons at the end of the counters line, e.g. save (F13).
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +31,11 @@ class ArticleCardTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s3),
         decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.border))),
         child: article.attachments == null
-            ? _Summary(article: article)
+            ? _Summary(article: article, actions: actions)
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _Summary(article: article),
+                  _Summary(article: article, actions: actions),
                   const SizedBox(height: ReadInSpace.s3),
                   ArticleAttachmentsView(article: article),
                 ],
@@ -43,9 +46,10 @@ class ArticleCardTile extends StatelessWidget {
 }
 
 class _Summary extends StatelessWidget {
-  const _Summary({required this.article});
+  const _Summary({required this.article, required this.actions});
 
   final ArticleCard article;
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -91,11 +95,31 @@ class _Summary extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: ReadInSpace.s1),
-              Text('💡 ${article.reactionCount}    💬 ${article.commentCount}', style: meta),
+              if (actions.isEmpty)
+                _Counts(article: article)
+              else
+                Row(children: [Expanded(child: _Counts(article: article)), ...actions]),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Reaction total and comment count (live on visible cards, F27).
+class _Counts extends StatelessWidget {
+  const _Counts({required this.article});
+
+  final ArticleCard article;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Semantics(
+      label: '${l10n.reactionsCount(article.reactionCount)}${l10n.listSeparator}${l10n.commentsCount(article.commentCount)}',
+      excludeSemantics: true,
+      child: Text('💡 ${article.reactionCount}    💬 ${article.commentCount}', style: context.textTheme.bodySmall?.withEmoji()),
     );
   }
 }

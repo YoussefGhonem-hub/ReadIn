@@ -41,6 +41,23 @@ Map<String, dynamic> _$FieldRefModelToJson(_FieldRefModel instance) =>
       'name': ?instance.name,
     };
 
+_ReactionCountsModel _$ReactionCountsModelFromJson(Map<String, dynamic> json) =>
+    _ReactionCountsModel(
+      insightful: (json['insightful'] as num?)?.toInt() ?? 0,
+      love: (json['love'] as num?)?.toInt() ?? 0,
+      fire: (json['fire'] as num?)?.toInt() ?? 0,
+      mindBlown: (json['mindBlown'] as num?)?.toInt() ?? 0,
+    );
+
+Map<String, dynamic> _$ReactionCountsModelToJson(
+  _ReactionCountsModel instance,
+) => <String, dynamic>{
+  'insightful': instance.insightful,
+  'love': instance.love,
+  'fire': instance.fire,
+  'mindBlown': instance.mindBlown,
+};
+
 _ArticleCardModel _$ArticleCardModelFromJson(Map<String, dynamic> json) =>
     _ArticleCardModel(
       id: json['id'] as String,
@@ -63,6 +80,14 @@ _ArticleCardModel _$ArticleCardModelFromJson(Map<String, dynamic> json) =>
           : ArticleAttachmentsModel.fromJson(
               json['attachments'] as Map<String, dynamic>,
             ),
+      reactions: json['reactions'] == null
+          ? null
+          : ReactionCountsModel.fromJson(
+              json['reactions'] as Map<String, dynamic>,
+            ),
+      saveCount: (json['saveCount'] as num?)?.toInt() ?? 0,
+      myReaction: json['myReaction'] as String?,
+      isSaved: json['isSaved'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
@@ -83,6 +108,10 @@ Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
       'reactionCount': instance.reactionCount,
       'commentCount': instance.commentCount,
       'attachments': ?instance.attachments?.toJson(),
+      'reactions': ?instance.reactions?.toJson(),
+      'saveCount': instance.saveCount,
+      'myReaction': ?instance.myReaction,
+      'isSaved': instance.isSaved,
     };
 
 _ArticleCardPageModel _$ArticleCardPageModelFromJson(
@@ -143,6 +172,13 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
           : ArticleAttachmentsModel.fromJson(
               json['attachments'] as Map<String, dynamic>,
             ),
+      reactions: json['reactions'] == null
+          ? null
+          : ReactionCountsModel.fromJson(
+              json['reactions'] as Map<String, dynamic>,
+            ),
+      myReaction: json['myReaction'] as String?,
+      isSaved: json['isSaved'] as bool? ?? false,
       availableLanguages:
           (json['availableLanguages'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -170,6 +206,7 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['lastReviewedAt'] as String),
       saveCount: (json['saveCount'] as num?)?.toInt() ?? 0,
       readCount: (json['readCount'] as num?)?.toInt() ?? 0,
+      isFollowingAuthor: json['isFollowingAuthor'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ArticleDetailsModelToJson(
@@ -191,6 +228,9 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'reactionCount': instance.reactionCount,
   'commentCount': instance.commentCount,
   'attachments': ?instance.attachments?.toJson(),
+  'reactions': ?instance.reactions?.toJson(),
+  'myReaction': ?instance.myReaction,
+  'isSaved': instance.isSaved,
   'availableLanguages': instance.availableLanguages,
   'summary': ?instance.summary,
   'content': instance.content,
@@ -201,4 +241,5 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'lastReviewedAt': ?instance.lastReviewedAt?.toIso8601String(),
   'saveCount': instance.saveCount,
   'readCount': instance.readCount,
+  'isFollowingAuthor': instance.isFollowingAuthor,
 };

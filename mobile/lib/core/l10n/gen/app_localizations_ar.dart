@@ -1489,4 +1489,286 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get readingShareFailed => 'معرفناش نشارك الكارت. جرّب تاني.';
+
+  @override
+  String get reactionInsightful => 'مفيد';
+
+  @override
+  String get reactionLove => 'حبيته';
+
+  @override
+  String get reactionFire => 'نار';
+
+  @override
+  String get reactionMindBlown => 'مبهر';
+
+  @override
+  String get reactAction => 'اتفاعل بـ 💡 مفيد';
+
+  @override
+  String removeReaction(String reaction) {
+    return 'شيل تفاعلك ($reaction)';
+  }
+
+  @override
+  String get chooseReaction => 'اختار تفاعل';
+
+  @override
+  String reactionCountSemantics(String reaction, int count) {
+    return '$reaction: $count';
+  }
+
+  @override
+  String reactionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تفاعل',
+      many: '$count تفاعل',
+      few: '$count تفاعلات',
+      two: 'تفاعلين',
+      one: 'تفاعل واحد',
+      zero: 'لسه مفيش تفاعلات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get whoReacted => 'التفاعلات';
+
+  @override
+  String get showWhoReacted => 'شوف مين اتفاعل';
+
+  @override
+  String get reactorsEmpty => 'لسه محدش اتفاعل';
+
+  @override
+  String reactorsEmptyType(String reaction) {
+    return 'لسه محدش اختار $reaction';
+  }
+
+  @override
+  String commentsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تعليق',
+      many: '$count تعليق',
+      few: '$count تعليقات',
+      two: 'تعليقين',
+      one: 'تعليق واحد',
+      zero: 'لسه مفيش تعليقات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get saveArticle => 'احفظ';
+
+  @override
+  String get unsaveArticle => 'شيله من المحفوظات';
+
+  @override
+  String get articleSaved => 'اتحفظ، وتقدر تقراه من غير نت كمان.';
+
+  @override
+  String get articleUnsaved => 'اتشال من المحفوظات';
+
+  @override
+  String get undo => 'تراجع';
+
+  @override
+  String get moreActions => 'اختيارات تانية';
+
+  @override
+  String get addToCollection => 'ضيفه لمجموعة';
+
+  @override
+  String get collections => 'المجموعات';
+
+  @override
+  String get newCollection => 'مجموعة جديدة';
+
+  @override
+  String get collectionName => 'اسم المجموعة';
+
+  @override
+  String get collectionNameHint => 'مثلاً: تحضير الإنترفيو';
+
+  @override
+  String get createAction => 'اعملها';
+
+  @override
+  String get renameAction => 'غيّر الاسم';
+
+  @override
+  String get renameCollection => 'غيّر اسم المجموعة';
+
+  @override
+  String get deleteAction => 'امسح';
+
+  @override
+  String deleteCollectionTitle(String name) {
+    return 'تمسح «$name»؟';
+  }
+
+  @override
+  String get deleteCollectionBody =>
+      'المجموعة بس هي اللي هتتمسح، والمقالات اللي فيها هتفضل محفوظة.';
+
+  @override
+  String collectionArticles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مقال',
+      many: '$count مقال',
+      few: '$count مقالات',
+      two: 'مقالين',
+      one: 'مقال واحد',
+      zero: 'مفيش مقالات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get collectionsEmptyTitle => 'مفيش مجموعات لسه';
+
+  @override
+  String get collectionsEmptyBody =>
+      'قسّم محفوظاتك لقوايم، زي «تحضير الإنترفيو».';
+
+  @override
+  String addedToCollection(String name) {
+    return 'اتضاف لـ $name';
+  }
+
+  @override
+  String removedFromCollection(String name) {
+    return 'اتشال من $name';
+  }
+
+  @override
+  String get removeFromCollection => 'شيله من المجموعة دي';
+
+  @override
+  String inCollection(String name) {
+    return 'في $name';
+  }
+
+  @override
+  String collectionFilter(String name) {
+    return 'المجموعة: $name';
+  }
+
+  @override
+  String get clearFilter => 'شيل الفلتر';
+
+  @override
+  String openCollection(String name) {
+    return 'اعرض مقالات $name';
+  }
+
+  @override
+  String get savedTabArticles => 'المقالات';
+
+  @override
+  String get savedSearchHint => 'دوّر في محفوظاتك';
+
+  @override
+  String get clearSearch => 'امسح البحث';
+
+  @override
+  String get savedEmptyTitle => 'لسه مفيش محفوظات';
+
+  @override
+  String get savedEmptyBody =>
+      'دوس على علامة الحفظ في أي مقال عشان يتحفظ هنا. المقالات المحفوظة بتفتح حتى من غير نت.';
+
+  @override
+  String get savedNoResultsTitle => 'مفيش محفوظات بالشكل ده';
+
+  @override
+  String get savedNoResultsBody => 'جرّب كلمة أو مجال تاني.';
+
+  @override
+  String get savedCollectionEmptyTitle => 'المجموعة دي فاضية';
+
+  @override
+  String get savedCollectionEmptyBody =>
+      'ضيف لها مقالات من صفحة المقال أو من محفوظاتك.';
+
+  @override
+  String get savedOfflineBanner =>
+      'انت أوفلاين. دي المقالات المحفوظة على الموبايل ده.';
+
+  @override
+  String get offlineCopy => 'نسخة أوفلاين محفوظة على الموبايل ده';
+
+  @override
+  String get savedGuestTitle => 'محفوظاتك';
+
+  @override
+  String get savedGuestBody =>
+      'سجّل دخول عشان تحفظ مقالات وتقراها بعدين، حتى من غير نت.';
+
+  @override
+  String get follow => 'تابع';
+
+  @override
+  String get followingState => 'بتتابعه';
+
+  @override
+  String followName(String name) {
+    return 'تابع $name';
+  }
+
+  @override
+  String unfollowName(String name) {
+    return 'الغي متابعة $name';
+  }
+
+  @override
+  String get followsYou => 'بيتابعك';
+
+  @override
+  String get feedFollowing => 'بتتابعهم';
+
+  @override
+  String get followingEmptyTitle => 'تابع كتّاب عشان الصفحة دي تتملي';
+
+  @override
+  String get followingEmptyBody =>
+      'المقالات الجديدة للكتّاب اللي بتتابعهم هتظهر هنا، الأحدث الأول.';
+
+  @override
+  String get suggestedWriters => 'كتّاب ممكن يعجبوك';
+
+  @override
+  String get suggestedWritersEmpty => 'مفيش اقتراحات دلوقتي. ارجع بعدين.';
+
+  @override
+  String get showFollowingArticles => 'اعرض مقالاتهم';
+
+  @override
+  String get followingGuestTitle => 'تابع الكتّاب اللي بتحبهم';
+
+  @override
+  String get followingGuestBody =>
+      'سجّل دخول عشان تتابع كتّاب وتقرا مقالاتهم الجديدة هنا.';
+
+  @override
+  String get errReactionInvalid => 'التفاعل ده مش متاح.';
+
+  @override
+  String get errCollectionNameTaken => 'عندك مجموعة بنفس الاسم.';
+
+  @override
+  String get errCollectionLimit => 'آخرك 50 مجموعة.';
+
+  @override
+  String get errCollectionNotFound => 'المجموعة دي مبقتش موجودة.';
+
+  @override
+  String get errFollowSelf => 'مينفعش تتابع نفسك.';
 }

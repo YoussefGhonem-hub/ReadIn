@@ -24,8 +24,12 @@ class FeedRepositoryImpl implements FeedRepository {
 
   @override
   Future<Result<CursorPage<ArticleCard>>> getForYou({String? fieldSlug, String? cursor, int limit = 20}) =>
-      guardApi(() async {
-        final page = await _api.getForYou(fieldSlug, cursor, limit);
-        return CursorPage(items: [for (final m in page.items) m.toEntity()], nextCursor: page.nextCursor);
-      });
+      guardApi(() async => _page(await _api.getForYou(fieldSlug, cursor, limit)));
+
+  @override
+  Future<Result<CursorPage<ArticleCard>>> getFollowing({String? cursor, int limit = 20}) =>
+      guardApi(() async => _page(await _api.getFollowing(cursor, limit)));
+
+  static CursorPage<ArticleCard> _page(ArticleCardPageModel page) =>
+      CursorPage(items: [for (final m in page.items) m.toEntity()], nextCursor: page.nextCursor);
 }

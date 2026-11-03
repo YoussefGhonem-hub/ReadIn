@@ -2587,6 +2587,438 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t share the card. Try again.'**
   String get readingShareFailed;
+
+  /// No description provided for @reactionInsightful.
+  ///
+  /// In en, this message translates to:
+  /// **'Insightful'**
+  String get reactionInsightful;
+
+  /// No description provided for @reactionLove.
+  ///
+  /// In en, this message translates to:
+  /// **'Love'**
+  String get reactionLove;
+
+  /// No description provided for @reactionFire.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire'**
+  String get reactionFire;
+
+  /// No description provided for @reactionMindBlown.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind-blown'**
+  String get reactionMindBlown;
+
+  /// No description provided for @reactAction.
+  ///
+  /// In en, this message translates to:
+  /// **'React with 💡 Insightful'**
+  String get reactAction;
+
+  /// No description provided for @removeReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove your reaction ({reaction})'**
+  String removeReaction(String reaction);
+
+  /// No description provided for @chooseReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a reaction'**
+  String get chooseReaction;
+
+  /// No description provided for @reactionCountSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{reaction}: {count}'**
+  String reactionCountSemantics(String reaction, int count);
+
+  /// No description provided for @reactionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No reactions yet} =1{1 reaction} other{{count} reactions}}'**
+  String reactionsCount(int count);
+
+  /// No description provided for @whoReacted.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get whoReacted;
+
+  /// No description provided for @showWhoReacted.
+  ///
+  /// In en, this message translates to:
+  /// **'See who reacted'**
+  String get showWhoReacted;
+
+  /// No description provided for @reactorsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No reactions yet'**
+  String get reactorsEmpty;
+
+  /// No description provided for @reactorsEmptyType.
+  ///
+  /// In en, this message translates to:
+  /// **'No one reacted with {reaction} yet'**
+  String reactorsEmptyType(String reaction);
+
+  /// No description provided for @commentsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No comments yet} =1{1 comment} other{{count} comments}}'**
+  String commentsCount(int count);
+
+  /// No description provided for @saveArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveArticle;
+
+  /// No description provided for @unsaveArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from saved'**
+  String get unsaveArticle;
+
+  /// No description provided for @articleSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. You can read it offline too.'**
+  String get articleSaved;
+
+  /// No description provided for @articleUnsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from saved'**
+  String get articleUnsaved;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @moreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get moreActions;
+
+  /// No description provided for @addToCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to collection'**
+  String get addToCollection;
+
+  /// No description provided for @collections.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections'**
+  String get collections;
+
+  /// No description provided for @newCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'New collection'**
+  String get newCollection;
+
+  /// No description provided for @collectionName.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection name'**
+  String get collectionName;
+
+  /// No description provided for @collectionNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Interview prep'**
+  String get collectionNameHint;
+
+  /// No description provided for @createAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get createAction;
+
+  /// No description provided for @renameAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get renameAction;
+
+  /// No description provided for @renameCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename collection'**
+  String get renameCollection;
+
+  /// No description provided for @deleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteAction;
+
+  /// No description provided for @deleteCollectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String deleteCollectionTitle(String name);
+
+  /// No description provided for @deleteCollectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the collection goes. Its articles stay saved.'**
+  String get deleteCollectionBody;
+
+  /// No description provided for @collectionArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No articles} =1{1 article} other{{count} articles}}'**
+  String collectionArticles(int count);
+
+  /// No description provided for @collectionsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No collections yet'**
+  String get collectionsEmptyTitle;
+
+  /// No description provided for @collectionsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Group saved articles into lists, like “Interview prep”.'**
+  String get collectionsEmptyBody;
+
+  /// No description provided for @addedToCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to {name}'**
+  String addedToCollection(String name);
+
+  /// No description provided for @removedFromCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from {name}'**
+  String removedFromCollection(String name);
+
+  /// No description provided for @removeFromCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from this collection'**
+  String get removeFromCollection;
+
+  /// No description provided for @inCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'In {name}'**
+  String inCollection(String name);
+
+  /// No description provided for @collectionFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection: {name}'**
+  String collectionFilter(String name);
+
+  /// No description provided for @clearFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filter'**
+  String get clearFilter;
+
+  /// No description provided for @openCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the articles in {name}'**
+  String openCollection(String name);
+
+  /// No description provided for @savedTabArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles'**
+  String get savedTabArticles;
+
+  /// No description provided for @savedSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search your saved articles'**
+  String get savedSearchHint;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
+  /// No description provided for @savedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing saved yet'**
+  String get savedEmptyTitle;
+
+  /// No description provided for @savedEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the bookmark on any article to keep it here. Saved articles open even without internet.'**
+  String get savedEmptyBody;
+
+  /// No description provided for @savedNoResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved articles match'**
+  String get savedNoResultsTitle;
+
+  /// No description provided for @savedNoResultsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another word or field.'**
+  String get savedNoResultsBody;
+
+  /// No description provided for @savedCollectionEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This collection is empty'**
+  String get savedCollectionEmptyTitle;
+
+  /// No description provided for @savedCollectionEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add articles to it from the reader or from your saved list.'**
+  String get savedCollectionEmptyBody;
+
+  /// No description provided for @savedOfflineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline. These are the articles saved on this device.'**
+  String get savedOfflineBanner;
+
+  /// No description provided for @offlineCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline copy, saved on this device'**
+  String get offlineCopy;
+
+  /// No description provided for @savedGuestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your saved articles'**
+  String get savedGuestTitle;
+
+  /// No description provided for @savedGuestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to save articles and read them later, even offline.'**
+  String get savedGuestBody;
+
+  /// No description provided for @follow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow'**
+  String get follow;
+
+  /// No description provided for @followingState.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get followingState;
+
+  /// No description provided for @followName.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow {name}'**
+  String followName(String name);
+
+  /// No description provided for @unfollowName.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfollow {name}'**
+  String unfollowName(String name);
+
+  /// No description provided for @followsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows you'**
+  String get followsYou;
+
+  /// No description provided for @feedFollowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get feedFollowing;
+
+  /// No description provided for @followingEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow writers to fill this tab'**
+  String get followingEmptyTitle;
+
+  /// No description provided for @followingEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New articles from the writers you follow show up here, newest first.'**
+  String get followingEmptyBody;
+
+  /// No description provided for @suggestedWriters.
+  ///
+  /// In en, this message translates to:
+  /// **'Writers you might like'**
+  String get suggestedWriters;
+
+  /// No description provided for @suggestedWritersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggestions right now. Check back later.'**
+  String get suggestedWritersEmpty;
+
+  /// No description provided for @showFollowingArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Show their articles'**
+  String get showFollowingArticles;
+
+  /// No description provided for @followingGuestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow the writers you like'**
+  String get followingGuestTitle;
+
+  /// No description provided for @followingGuestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to follow writers and read their new articles here.'**
+  String get followingGuestBody;
+
+  /// No description provided for @errReactionInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This reaction isn\'t available.'**
+  String get errReactionInvalid;
+
+  /// No description provided for @errCollectionNameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a collection with this name.'**
+  String get errCollectionNameTaken;
+
+  /// No description provided for @errCollectionLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can have up to 50 collections.'**
+  String get errCollectionLimit;
+
+  /// No description provided for @errCollectionNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This collection doesn\'t exist anymore.'**
+  String get errCollectionNotFound;
+
+  /// No description provided for @errFollowSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t follow yourself.'**
+  String get errFollowSelf;
 }
 
 class _AppLocalizationsDelegate

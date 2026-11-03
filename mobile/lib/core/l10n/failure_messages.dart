@@ -6,6 +6,19 @@ import 'gen/app_localizations.dart';
 /// the generic server error — raw server text is never shown to users.
 String localizeFailure(AppLocalizations l10n, Failure failure) => localizeErrorCode(l10n, failure.code);
 
+/// For actions without a form (react, save, follow, collections): a validation failure shows its first field error
+/// (e.g. `reaction.invalid`) instead of "check the highlighted fields".
+String localizeActionFailure(AppLocalizations l10n, Failure failure) {
+  if (failure.code == FailureCodes.validationFailed) {
+    final first = failure.fieldErrors.values.expand((codes) => codes).firstOrNull;
+    if (first != null) {
+      final message = localizeErrorCode(l10n, first);
+      return message == l10n.errServer ? l10n.errInvalidValue : message;
+    }
+  }
+  return localizeFailure(l10n, failure);
+}
+
 /// Same as [localizeFailure] for a bare error code, e.g. a media asset's
 /// `failureReason` (`media.processing_timeout`).
 String localizeErrorCode(AppLocalizations l10n, String code) => switch (code) {
@@ -88,6 +101,11 @@ String localizeErrorCode(AppLocalizations l10n, String code) => switch (code) {
       FailureCodes.attachmentsAssetNotFound => l10n.errAttachmentsAssetNotFound,
       FailureCodes.attachmentsAssetNotReady => l10n.errAttachmentsAssetNotReady,
       FailureCodes.attachmentsDuplicateAsset => l10n.errAttachmentsDuplicateAsset,
+      FailureCodes.reactionInvalid => l10n.errReactionInvalid,
+      FailureCodes.collectionNameTaken => l10n.errCollectionNameTaken,
+      FailureCodes.collectionLimit => l10n.errCollectionLimit,
+      FailureCodes.collectionNotFound => l10n.errCollectionNotFound,
+      FailureCodes.followSelf => l10n.errFollowSelf,
       FailureCodes.requestCancelled => l10n.errCancelled,
       FailureCodes.networkOffline => l10n.errOffline,
       FailureCodes.networkTimeout => l10n.errTimeout,

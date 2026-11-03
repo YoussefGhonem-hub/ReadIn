@@ -23,4 +23,8 @@ abstract class FeedApi {
     @Query('cursor') String? cursor,
     @Query('limit') int limit,
   );
+
+  /// Published articles by the people the viewer follows, newest first (F12; needs a session).
+  @GET('/feed/following')
+  Future<ArticleCardPageModel> getFollowing(@Query('cursor') String? cursor, @Query('limit') int limit);
 }

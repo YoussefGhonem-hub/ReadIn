@@ -1486,4 +1486,279 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readingShareFailed => 'Couldn\'t share the card. Try again.';
+
+  @override
+  String get reactionInsightful => 'Insightful';
+
+  @override
+  String get reactionLove => 'Love';
+
+  @override
+  String get reactionFire => 'Fire';
+
+  @override
+  String get reactionMindBlown => 'Mind-blown';
+
+  @override
+  String get reactAction => 'React with 💡 Insightful';
+
+  @override
+  String removeReaction(String reaction) {
+    return 'Remove your reaction ($reaction)';
+  }
+
+  @override
+  String get chooseReaction => 'Choose a reaction';
+
+  @override
+  String reactionCountSemantics(String reaction, int count) {
+    return '$reaction: $count';
+  }
+
+  @override
+  String reactionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reactions',
+      one: '1 reaction',
+      zero: 'No reactions yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get whoReacted => 'Reactions';
+
+  @override
+  String get showWhoReacted => 'See who reacted';
+
+  @override
+  String get reactorsEmpty => 'No reactions yet';
+
+  @override
+  String reactorsEmptyType(String reaction) {
+    return 'No one reacted with $reaction yet';
+  }
+
+  @override
+  String commentsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count comments',
+      one: '1 comment',
+      zero: 'No comments yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get saveArticle => 'Save';
+
+  @override
+  String get unsaveArticle => 'Remove from saved';
+
+  @override
+  String get articleSaved => 'Saved. You can read it offline too.';
+
+  @override
+  String get articleUnsaved => 'Removed from saved';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get moreActions => 'More actions';
+
+  @override
+  String get addToCollection => 'Add to collection';
+
+  @override
+  String get collections => 'Collections';
+
+  @override
+  String get newCollection => 'New collection';
+
+  @override
+  String get collectionName => 'Collection name';
+
+  @override
+  String get collectionNameHint => 'e.g. Interview prep';
+
+  @override
+  String get createAction => 'Create';
+
+  @override
+  String get renameAction => 'Rename';
+
+  @override
+  String get renameCollection => 'Rename collection';
+
+  @override
+  String get deleteAction => 'Delete';
+
+  @override
+  String deleteCollectionTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get deleteCollectionBody =>
+      'Only the collection goes. Its articles stay saved.';
+
+  @override
+  String collectionArticles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles',
+      one: '1 article',
+      zero: 'No articles',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get collectionsEmptyTitle => 'No collections yet';
+
+  @override
+  String get collectionsEmptyBody =>
+      'Group saved articles into lists, like “Interview prep”.';
+
+  @override
+  String addedToCollection(String name) {
+    return 'Added to $name';
+  }
+
+  @override
+  String removedFromCollection(String name) {
+    return 'Removed from $name';
+  }
+
+  @override
+  String get removeFromCollection => 'Remove from this collection';
+
+  @override
+  String inCollection(String name) {
+    return 'In $name';
+  }
+
+  @override
+  String collectionFilter(String name) {
+    return 'Collection: $name';
+  }
+
+  @override
+  String get clearFilter => 'Clear filter';
+
+  @override
+  String openCollection(String name) {
+    return 'Show the articles in $name';
+  }
+
+  @override
+  String get savedTabArticles => 'Articles';
+
+  @override
+  String get savedSearchHint => 'Search your saved articles';
+
+  @override
+  String get clearSearch => 'Clear search';
+
+  @override
+  String get savedEmptyTitle => 'Nothing saved yet';
+
+  @override
+  String get savedEmptyBody =>
+      'Tap the bookmark on any article to keep it here. Saved articles open even without internet.';
+
+  @override
+  String get savedNoResultsTitle => 'No saved articles match';
+
+  @override
+  String get savedNoResultsBody => 'Try another word or field.';
+
+  @override
+  String get savedCollectionEmptyTitle => 'This collection is empty';
+
+  @override
+  String get savedCollectionEmptyBody =>
+      'Add articles to it from the reader or from your saved list.';
+
+  @override
+  String get savedOfflineBanner =>
+      'You\'re offline. These are the articles saved on this device.';
+
+  @override
+  String get offlineCopy => 'Offline copy, saved on this device';
+
+  @override
+  String get savedGuestTitle => 'Your saved articles';
+
+  @override
+  String get savedGuestBody =>
+      'Sign in to save articles and read them later, even offline.';
+
+  @override
+  String get follow => 'Follow';
+
+  @override
+  String get followingState => 'Following';
+
+  @override
+  String followName(String name) {
+    return 'Follow $name';
+  }
+
+  @override
+  String unfollowName(String name) {
+    return 'Unfollow $name';
+  }
+
+  @override
+  String get followsYou => 'Follows you';
+
+  @override
+  String get feedFollowing => 'Following';
+
+  @override
+  String get followingEmptyTitle => 'Follow writers to fill this tab';
+
+  @override
+  String get followingEmptyBody =>
+      'New articles from the writers you follow show up here, newest first.';
+
+  @override
+  String get suggestedWriters => 'Writers you might like';
+
+  @override
+  String get suggestedWritersEmpty =>
+      'No suggestions right now. Check back later.';
+
+  @override
+  String get showFollowingArticles => 'Show their articles';
+
+  @override
+  String get followingGuestTitle => 'Follow the writers you like';
+
+  @override
+  String get followingGuestBody =>
+      'Sign in to follow writers and read their new articles here.';
+
+  @override
+  String get errReactionInvalid => 'This reaction isn\'t available.';
+
+  @override
+  String get errCollectionNameTaken =>
+      'You already have a collection with this name.';
+
+  @override
+  String get errCollectionLimit => 'You can have up to 50 collections.';
+
+  @override
+  String get errCollectionNotFound => 'This collection doesn\'t exist anymore.';
+
+  @override
+  String get errFollowSelf => 'You can\'t follow yourself.';
 }

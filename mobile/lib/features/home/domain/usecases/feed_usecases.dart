@@ -25,3 +25,15 @@ class GetForYouFeed {
   Future<Result<CursorPage<ArticleCard>>> call({String? fieldSlug, String? cursor}) =>
       _repository.getForYou(fieldSlug: fieldSlug, cursor: cursor, limit: pageSize);
 }
+
+/// The "Following" tab (F03, F12).
+@injectable
+class GetFollowingFeed {
+  const GetFollowingFeed(this._repository);
+
+  final FeedRepository _repository;
+
+  static const pageSize = 20;
+
+  Future<Result<CursorPage<ArticleCard>>> call({String? cursor}) => _repository.getFollowing(cursor: cursor, limit: pageSize);
+}

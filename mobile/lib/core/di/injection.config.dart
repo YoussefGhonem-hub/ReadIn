@@ -16,14 +16,20 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
 import '../../features/article/data/datasources/article_api.dart' as _i462;
+import '../../features/article/data/datasources/article_offline_store.dart'
+    as _i1010;
 import '../../features/article/data/repositories/article_repository_impl.dart'
     as _i473;
 import '../../features/article/domain/repositories/article_repository.dart'
     as _i904;
 import '../../features/article/domain/usecases/get_article.dart' as _i904;
 import '../../features/article/presentation/cubit/article_cubit.dart' as _i284;
+import '../../features/article/presentation/cubit/article_live_cubit.dart'
+    as _i172;
 import '../../features/article/presentation/cubit/attachment_viewer_cubit.dart'
     as _i189;
+import '../../features/article/presentation/cubit/engagement_cubit.dart'
+    as _i226;
 import '../../features/auth/data/auth_module.dart' as _i360;
 import '../../features/auth/data/datasources/account_api.dart' as _i506;
 import '../../features/auth/data/datasources/apple_sign_in_data_source.dart'
@@ -60,6 +66,15 @@ import '../../features/editor/domain/repositories/editor_repository.dart'
     as _i940;
 import '../../features/editor/domain/usecases/publish_usecases.dart' as _i1065;
 import '../../features/editor/presentation/cubit/composer_cubit.dart' as _i485;
+import '../../features/follow/data/datasources/follow_api.dart' as _i73;
+import '../../features/follow/data/repositories/follow_repository_impl.dart'
+    as _i299;
+import '../../features/follow/domain/repositories/follow_repository.dart'
+    as _i760;
+import '../../features/follow/domain/usecases/follow_usecases.dart' as _i537;
+import '../../features/follow/presentation/cubit/follows_cubit.dart' as _i509;
+import '../../features/follow/presentation/cubit/suggested_writers_cubit.dart'
+    as _i382;
 import '../../features/home/data/datasources/feed_api.dart' as _i931;
 import '../../features/home/data/repositories/feed_repository_impl.dart'
     as _i198;
@@ -92,6 +107,15 @@ import '../../features/onboarding/domain/repositories/interests_repository.dart'
 import '../../features/onboarding/domain/usecases/save_interests.dart' as _i535;
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart'
     as _i807;
+import '../../features/reactions/data/datasources/reactions_api.dart' as _i824;
+import '../../features/reactions/data/repositories/reactions_repository_impl.dart'
+    as _i399;
+import '../../features/reactions/domain/repositories/reactions_repository.dart'
+    as _i315;
+import '../../features/reactions/domain/usecases/reaction_usecases.dart'
+    as _i27;
+import '../../features/reactions/presentation/cubit/reactors_cubit.dart'
+    as _i55;
 import '../../features/reading/data/datasources/reading_api.dart' as _i597;
 import '../../features/reading/data/repositories/reading_repository_impl.dart'
     as _i571;
@@ -103,6 +127,15 @@ import '../../features/reading/presentation/cubit/reading_heatmap_cubit.dart'
 import '../../features/reading/presentation/cubit/reading_stats_cubit.dart'
     as _i487;
 import '../../features/reading/presentation/cubit/streak_cubit.dart' as _i884;
+import '../../features/saved/data/datasources/saved_api.dart' as _i693;
+import '../../features/saved/data/repositories/saved_repository_impl.dart'
+    as _i165;
+import '../../features/saved/domain/repositories/saved_repository.dart'
+    as _i105;
+import '../../features/saved/domain/usecases/saved_usecases.dart' as _i724;
+import '../../features/saved/presentation/cubit/collections_cubit.dart'
+    as _i272;
+import '../../features/saved/presentation/cubit/saved_list_cubit.dart' as _i339;
 import '../../features/settings/data/datasources/preferences_api.dart' as _i741;
 import '../../features/settings/data/datasources/settings_local_data_source.dart'
     as _i599;
@@ -168,6 +201,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i221.ImageCompressor>(() => _i221.ImageCompressor());
     gh.lazySingleton<_i194.DeviceNameProvider>(
       () => _i1018.DeviceNameService(),
+    );
+    gh.lazySingleton<_i1010.ArticleOfflineStore>(
+      () => _i1010.HiveArticleOfflineStore(),
     );
     gh.lazySingleton<_i271.SecureStore>(
       () => _i271.SecureStore(gh<_i558.FlutterSecureStorage>()),
@@ -246,12 +282,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i462.ArticleApi>(() => _i462.ArticleApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i506.AccountApi>(() => _i506.AccountApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i815.EditorApi>(() => _i815.EditorApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i73.FollowApi>(() => _i73.FollowApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i931.FeedApi>(() => _i931.FeedApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i757.MediaApi>(() => _i757.MediaApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i227.InterestsApi>(
       () => _i227.InterestsApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i824.ReactionsApi>(
+      () => _i824.ReactionsApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i597.ReadingApi>(() => _i597.ReadingApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i693.SavedApi>(() => _i693.SavedApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i741.PreferencesApi>(
       () => _i741.PreferencesApi(gh<_i361.Dio>()),
     );
@@ -267,12 +308,22 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i848.DocumentFileDataSource>(
       () => _i848.DocumentFileDataSource(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i315.ReactionsRepository>(
+      () => _i399.ReactionsRepositoryImpl(gh<_i824.ReactionsApi>()),
+    );
     gh.lazySingleton<_i1040.PushService>(
       () =>
           _i1040.PushService(gh<_i709.PushPlatform>(), gh<_i455.DevicesApi>()),
     );
     gh.lazySingleton<_i263.TaxonomyRepository>(
       () => _i551.TaxonomyRepositoryImpl(gh<_i421.TaxonomyApi>()),
+    );
+    gh.lazySingleton<_i105.SavedRepository>(
+      () => _i165.SavedRepositoryImpl(
+        gh<_i693.SavedApi>(),
+        gh<_i462.ArticleApi>(),
+        gh<_i1010.ArticleOfflineStore>(),
+      ),
     );
     gh.lazySingleton<_i459.MediaRepository>(
       () => _i110.MediaRepositoryImpl(
@@ -291,7 +342,10 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i571.ReadingRepositoryImpl(gh<_i597.ReadingApi>()),
     );
     gh.lazySingleton<_i904.ArticleRepository>(
-      () => _i473.ArticleRepositoryImpl(gh<_i462.ArticleApi>()),
+      () => _i473.ArticleRepositoryImpl(
+        gh<_i462.ArticleApi>(),
+        gh<_i1010.ArticleOfflineStore>(),
+      ),
     );
     gh.lazySingleton<_i954.FeedRepository>(
       () => _i198.FeedRepositoryImpl(gh<_i931.FeedApi>()),
@@ -327,6 +381,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i46.AddPhoneSignIn>(
       () => _i46.AddPhoneSignIn(gh<_i787.AccountRepository>()),
     );
+    gh.lazySingleton<_i760.FollowRepository>(
+      () => _i299.FollowRepositoryImpl(gh<_i73.FollowApi>()),
+    );
     gh.factory<_i904.GetArticle>(
       () => _i904.GetArticle(gh<_i904.ArticleRepository>()),
     );
@@ -341,6 +398,18 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i185.InterestsRepository>(
       () => _i1032.InterestsRepositoryImpl(gh<_i227.InterestsApi>()),
+    );
+    gh.factory<_i724.SetSaved>(
+      () => _i724.SetSaved(gh<_i105.SavedRepository>()),
+    );
+    gh.factory<_i724.GetSavedArticles>(
+      () => _i724.GetSavedArticles(gh<_i105.SavedRepository>()),
+    );
+    gh.factory<_i724.GetCollections>(
+      () => _i724.GetCollections(gh<_i105.SavedRepository>()),
+    );
+    gh.factory<_i724.ManageCollections>(
+      () => _i724.ManageCollections(gh<_i105.SavedRepository>()),
     );
     gh.lazySingleton<_i674.SettingsRepository>(
       () => _i955.SettingsRepositoryImpl(
@@ -369,6 +438,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i251.GetForYouFeed>(
       () => _i251.GetForYouFeed(gh<_i954.FeedRepository>()),
+    );
+    gh.factory<_i251.GetFollowingFeed>(
+      () => _i251.GetFollowingFeed(gh<_i954.FeedRepository>()),
     );
     gh.factory<_i892.ReportReadingProgress>(
       () => _i892.ReportReadingProgress(gh<_i634.ReadingRepository>()),
@@ -401,6 +473,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i46.SignInWithExternal>(
       () => _i46.SignInWithExternal(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i27.SetReaction>(
+      () => _i27.SetReaction(gh<_i315.ReactionsRepository>()),
+    );
+    gh.factory<_i27.GetReactors>(
+      () => _i27.GetReactors(gh<_i315.ReactionsRepository>()),
     );
     gh.factory<_i1021.DeleteAccountCubit>(
       () => _i1021.DeleteAccountCubit(
@@ -466,6 +544,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i46.SetRecoveryPin>(),
       ),
     );
+    gh.factory<_i172.ArticleLiveCubit>(
+      () => _i172.ArticleLiveCubit(gh<_i854.RealtimeService>()),
+    );
     gh.factory<_i136.LiveFeedCubit>(
       () => _i136.LiveFeedCubit(gh<_i854.RealtimeService>()),
     );
@@ -477,6 +558,21 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i535.SaveInterests>(
       () => _i535.SaveInterests(gh<_i185.InterestsRepository>()),
+    );
+    gh.factory<_i646.FollowingFeedCubit>(
+      () => _i646.FollowingFeedCubit(gh<_i251.GetFollowingFeed>()),
+    );
+    gh.factory<_i537.SetFollowing>(
+      () => _i537.SetFollowing(gh<_i760.FollowRepository>()),
+    );
+    gh.factory<_i537.GetSuggestedWriters>(
+      () => _i537.GetSuggestedWriters(gh<_i760.FollowRepository>()),
+    );
+    gh.factory<_i537.GetFollowLists>(
+      () => _i537.GetFollowLists(gh<_i760.FollowRepository>()),
+    );
+    gh.factory<_i537.SetInterestFollowed>(
+      () => _i537.SetInterestFollowed(gh<_i760.FollowRepository>()),
     );
     gh.factory<_i104.ForgotPasswordCubit>(
       () => _i104.ForgotPasswordCubit(
@@ -548,6 +644,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i115.PhoneCountryMemory>(),
       ),
     );
+    gh.lazySingleton<_i226.EngagementCubit>(
+      () => _i226.EngagementCubit(gh<_i27.SetReaction>(), gh<_i724.SetSaved>()),
+    );
     gh.lazySingleton<_i884.StreakCubit>(
       () => _i884.StreakCubit(
         gh<_i892.GetReadingStats>(),
@@ -581,6 +680,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i115.PhoneCountryMemory>(),
       ),
     );
+    gh.factory<_i55.ReactorsCubit>(
+      () => _i55.ReactorsCubit(gh<_i27.GetReactors>()),
+    );
+    gh.lazySingleton<_i509.FollowsCubit>(
+      () => _i509.FollowsCubit(gh<_i537.SetFollowing>()),
+    );
     gh.factory<_i1021.ChangePasswordCubit>(
       () => _i1021.ChangePasswordCubit(
         gh<_i46.GetAuthConfig>(),
@@ -602,10 +707,31 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i535.SaveInterests>(),
       ),
     );
+    gh.lazySingleton<_i272.CollectionsCubit>(
+      () => _i272.CollectionsCubit(
+        gh<_i724.GetCollections>(),
+        gh<_i724.ManageCollections>(),
+        gh<_i226.EngagementCubit>(),
+      ),
+    );
     gh.factory<_i487.ReadingStatsCubit>(
       () => _i487.ReadingStatsCubit(
         gh<_i892.GetReadingStats>(),
         gh<_i884.StreakCubit>(),
+      ),
+    );
+    gh.factory<_i382.SuggestedWritersCubit>(
+      () => _i382.SuggestedWritersCubit(
+        gh<_i537.GetSuggestedWriters>(),
+        gh<_i509.FollowsCubit>(),
+      ),
+    );
+    gh.factory<_i339.SavedListCubit>(
+      () => _i339.SavedListCubit(
+        gh<_i724.GetSavedArticles>(),
+        gh<_i172.GetFields>(),
+        gh<_i226.EngagementCubit>(),
+        gh<_i272.CollectionsCubit>(),
       ),
     );
     return this;

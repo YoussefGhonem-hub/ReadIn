@@ -2,6 +2,9 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../media/domain/entities/media.dart';
+import 'reaction_counts.dart';
+
+export 'reaction_counts.dart';
 
 class Author extends Equatable {
   const Author({required this.id, required this.displayName, required this.username, this.avatarUrl, this.isVerified = false});
@@ -49,6 +52,10 @@ class ArticleCard extends Equatable {
     this.reactionCount = 0,
     this.commentCount = 0,
     this.attachments,
+    this.reactions = ReactionCounts.zero,
+    this.saveCount = 0,
+    this.myReaction,
+    this.isSaved = false,
   });
 
   final String id;
@@ -68,6 +75,7 @@ class ArticleCard extends Equatable {
   /// e.g. `.NET 10`.
   final String? versionBadge;
   final DateTime publishedAt;
+  /// Sum of [reactions], kept as its own field: an API without per-type counts still sends it.
   final int reactionCount;
   final int commentCount;
 
@@ -75,8 +83,26 @@ class ArticleCard extends Equatable {
   /// carry at most the first 10 PDF pages.
   final ArticleAttachments? attachments;
 
-  /// The same card with live counters (F27); a null count keeps the feed value.
-  ArticleCard withCounts({int? reactionCount, int? commentCount}) => ArticleCard(
+  /// Per-type counts (F10); all zero when the API doesn't send them.
+  final ReactionCounts reactions;
+  final int saveCount;
+
+  /// The viewer's reaction; null for guests and when they haven't reacted.
+  final ReactionType? myReaction;
+
+  /// The viewer saved this article (F13); false for guests.
+  final bool isSaved;
+
+  /// The same card with newer counters or viewer state (optimistic actions, live counters F27).
+  ArticleCard copyWithEngagement({
+    ReactionCounts? reactions,
+    int? reactionCount,
+    int? commentCount,
+    int? saveCount,
+    ReactionType? Function()? myReaction,
+    bool? isSaved,
+  }) =>
+      ArticleCard(
         id: id,
         slug: slug,
         language: language,
@@ -93,6 +119,10 @@ class ArticleCard extends Equatable {
         reactionCount: reactionCount ?? this.reactionCount,
         commentCount: commentCount ?? this.commentCount,
         attachments: attachments,
+        reactions: reactions ?? this.reactions,
+        saveCount: saveCount ?? this.saveCount,
+        myReaction: myReaction != null ? myReaction() : this.myReaction,
+        isSaved: isSaved ?? this.isSaved,
       );
 
   @override
@@ -113,6 +143,10 @@ class ArticleCard extends Equatable {
         reactionCount,
         commentCount,
         attachments,
+        reactions,
+        saveCount,
+        myReaction,
+        isSaved,
       ];
 }
 
@@ -148,8 +182,9 @@ class ArticleDetails extends Equatable {
     this.sources = const [],
     this.reviewedBy,
     this.lastReviewedAt,
-    this.saveCount = 0,
     this.readCount = 0,
+    this.isFollowingAuthor = false,
+    this.isOfflineCopy = false,
   });
 
   final ArticleCard card;
@@ -163,8 +198,16 @@ class ArticleDetails extends Equatable {
   final List<ArticleSource> sources;
   final ReviewerRef? reviewedBy;
   final DateTime? lastReviewedAt;
-  final int saveCount;
   final int readCount;
+
+  /// The viewer follows the author (F12); false for guests and on your own articles.
+  final bool isFollowingAuthor;
+
+  /// Served from the copy kept on this device for a saved article, because the API was unreachable (F13, F25).
+  final bool isOfflineCopy;
+
+  /// `saveCount` moved up to the card in wave 1 (still on `ArticleDetailsDto` through inheritance).
+  int get saveCount => card.saveCount;
 
   bool get hasBothLanguages => availableLanguages.contains('ar-EG') && availableLanguages.contains('en');
 
@@ -179,7 +222,8 @@ class ArticleDetails extends Equatable {
         sources,
         reviewedBy,
         lastReviewedAt,
-        saveCount,
         readCount,
+        isFollowingAuthor,
+        isOfflineCopy,
       ];
 }
