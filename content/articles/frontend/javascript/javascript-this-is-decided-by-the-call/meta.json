@@ -1,0 +1,31 @@
+{
+  "slug": "javascript-this-is-decided-by-the-call",
+  "field": "frontend",
+  "topic": "javascript",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "this Depends on How a Function Is Called, Not Where It's Written",
+      "subtitle": "A method doesn't remember its object. The call site passes this in, every single time."
+    },
+    "ar-EG": {
+      "title": "قيمة this بتتحدد بطريقة استدعاء الـ function، مش بمكان كتابتها",
+      "subtitle": "الـ method مابتفتكرش الـ object بتاعها. سطر الاستدعاء هو اللي بيدّيها this في كل مرة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "ES2025",
+  "learningPath": { "slug": "javascript-under-the-hood", "order": 2 },
+  "tags": ["JavaScript", "this", "Arrow Functions", "bind"],
+  "sources": [
+    { "title": "this — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this" },
+    { "title": "Arrow function expressions — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions" },
+    { "title": "Function.prototype.bind() — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind" },
+    { "title": "Strict mode — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode" },
+    { "title": "EventTarget: removeEventListener() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

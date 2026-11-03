@@ -1,0 +1,31 @@
+{
+  "slug": "javascript-classes-are-prototypes",
+  "field": "frontend",
+  "topic": "javascript",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "JavaScript Classes Are Still Prototypes Underneath",
+      "subtitle": "Methods live once on the prototype, extends links objects, and only fields belong to each instance."
+    },
+    "ar-EG": {
+      "title": "ورا الـ class في JavaScript لسه فيه prototypes شغالة",
+      "subtitle": "الـ methods موجودة مرة واحدة على الـ prototype، والـ extends بيربط objects ببعض، والـ fields بس هي اللي بتاعة كل instance."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "ES2025",
+  "learningPath": { "slug": "javascript-under-the-hood", "order": 8 },
+  "tags": ["JavaScript", "Classes", "Prototypes", "Inheritance"],
+  "sources": [
+    { "title": "Inheritance and the prototype chain — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Inheritance_and_the_prototype_chain" },
+    { "title": "Classes — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes" },
+    { "title": "Public class fields — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Public_class_fields" },
+    { "title": "Using classes — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_classes" },
+    { "title": "Object.getPrototypeOf() — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getPrototypeOf" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

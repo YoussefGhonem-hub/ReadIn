@@ -1,0 +1,31 @@
+{
+  "slug": "javascript-equality-explained",
+  "field": "frontend",
+  "topic": "javascript",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "== vs === Isn't 'Value vs Type': How JavaScript Equality Really Works",
+      "subtitle": "When the types match, == is ===. When they don't, == runs a fixed list of conversions first."
+    },
+    "ar-EG": {
+      "title": "الفرق بين == و === مش 'قيمة ونوع' وبس: المساواة في JavaScript على حقيقتها",
+      "subtitle": "لو النوعين زي بعض، == هي ===. ولو مختلفين، == بتمشي على لستة تحويلات ثابتة الأول."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "ES2025",
+  "learningPath": { "slug": "javascript-under-the-hood", "order": 1 },
+  "tags": ["JavaScript", "Equality", "Type Coercion", "NaN"],
+  "sources": [
+    { "title": "Equality comparisons and sameness — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Equality_comparisons_and_sameness" },
+    { "title": "Equality (==) — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality" },
+    { "title": "Strict equality (===) — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality" },
+    { "title": "Object.is() — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is" },
+    { "title": "IsLooselyEqual (x, y) — ECMAScript Language Specification", "url": "https://tc39.es/ecma262/multipage/abstract-operations.html#sec-islooselyequal" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

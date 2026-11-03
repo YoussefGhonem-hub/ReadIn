@@ -1,0 +1,30 @@
+{
+  "slug": "javascript-event-loop-tasks-and-microtasks",
+  "field": "frontend",
+  "topic": "javascript",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "setTimeout(fn, 0) Isn't Immediate: The Event Loop, Tasks and Microtasks",
+      "subtitle": "A zero delay only queues a task, and every promise callback still runs before it."
+    },
+    "ar-EG": {
+      "title": "ليه setTimeout(fn, 0) مش بيشتغل فورًا؟ الـ event loop والـ tasks والـ microtasks",
+      "subtitle": "الـ delay بصفر بيحط task في الطابور وبس، وكل الـ promise callbacks بتشتغل قبلها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "javascript-under-the-hood", "order": 6 },
+  "tags": ["JavaScript", "Event Loop", "Promises", "setTimeout"],
+  "sources": [
+    { "title": "JavaScript execution model — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model" },
+    { "title": "In depth: Microtasks and the JavaScript runtime environment — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide/In_depth" },
+    { "title": "Window: setTimeout() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout" },
+    { "title": "HTML Standard: Event loops — WHATWG", "url": "https://html.spec.whatwg.org/multipage/webappapis.html#event-loops" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

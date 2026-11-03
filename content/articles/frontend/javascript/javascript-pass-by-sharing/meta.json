@@ -1,0 +1,31 @@
+{
+  "slug": "javascript-pass-by-sharing",
+  "field": "frontend",
+  "topic": "javascript",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "JavaScript Doesn't Pass Objects by Reference: Pass by Sharing Explained",
+      "subtitle": "A function gets a copy of the reference: it can change your object, but never your variable."
+    },
+    "ar-EG": {
+      "title": "هل JavaScript بتبعت الـ objects by reference؟ لأ، اسمها pass by sharing",
+      "subtitle": "الـ function بتاخد نسخة من الـ reference: تقدر تغيّر الـ object بتاعك، لكن عمرها ما تغيّر المتغير بتاعك."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "ES2025",
+  "learningPath": { "slug": "javascript-under-the-hood", "order": 5 },
+  "tags": ["JavaScript", "Functions", "Objects", "Immutability"],
+  "sources": [
+    { "title": "Functions: Passing arguments — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions" },
+    { "title": "const — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const" },
+    { "title": "Shallow copy — MDN Glossary", "url": "https://developer.mozilla.org/en-US/docs/Glossary/Shallow_copy" },
+    { "title": "Window: structuredClone() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone" },
+    { "title": "The structured clone algorithm — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

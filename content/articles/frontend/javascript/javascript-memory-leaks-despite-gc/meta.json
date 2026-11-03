@@ -1,0 +1,31 @@
+{
+  "slug": "javascript-memory-leaks-despite-gc",
+  "field": "frontend",
+  "topic": "javascript",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Garbage Collection Doesn't Prevent Memory Leaks",
+      "subtitle": "The collector frees what's unreachable, not what's unused, so a forgotten reference keeps memory alive."
+    },
+    "ar-EG": {
+      "title": "وجود garbage collector مش معناه إن مفيش memory leaks في JavaScript",
+      "subtitle": "الـ collector بيفضّي اللي مفيش طريق يوصله، مش اللي مابقاش مستخدم، فأي reference ناسيه بيفضل شايل الـ memory."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "ES2025",
+  "learningPath": { "slug": "javascript-under-the-hood", "order": 9 },
+  "tags": ["JavaScript", "Memory Leaks", "Garbage Collection", "WeakMap", "DevTools"],
+  "sources": [
+    { "title": "Memory management — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Memory_management" },
+    { "title": "Fix memory problems — Chrome DevTools", "url": "https://developer.chrome.com/docs/devtools/memory-problems" },
+    { "title": "EventTarget: addEventListener() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener" },
+    { "title": "WeakMap — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap" },
+    { "title": "WeakRef — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

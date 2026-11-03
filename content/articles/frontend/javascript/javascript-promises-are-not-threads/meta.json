@@ -1,0 +1,31 @@
+{
+  "slug": "javascript-promises-are-not-threads",
+  "field": "frontend",
+  "topic": "javascript",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Promises Don't Run Code in the Background: Async Isn't Parallel",
+      "subtitle": "A promise lets you wait without blocking, but your own loop still runs on the main thread."
+    },
+    "ar-EG": {
+      "title": "هل الـ Promise بيشغّل الكود في الخلفية؟ الفرق بين async و parallel",
+      "subtitle": "الـ promise بيخلّيك تستنى من غير ما توقف الصفحة، لكن الـ loop بتاعك لسه شغال على الـ main thread."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "ES2025",
+  "learningPath": { "slug": "javascript-under-the-hood", "order": 7 },
+  "tags": ["JavaScript", "Promises", "async/await", "Web Workers"],
+  "sources": [
+    { "title": "Promise() constructor — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/Promise" },
+    { "title": "async function — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function" },
+    { "title": "Promise: Promise concurrency — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" },
+    { "title": "Using promises — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises" },
+    { "title": "Using Web Workers — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

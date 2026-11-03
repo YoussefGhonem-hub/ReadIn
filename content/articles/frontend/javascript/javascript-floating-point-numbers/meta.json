@@ -1,0 +1,31 @@
+{
+  "slug": "javascript-floating-point-numbers",
+  "field": "frontend",
+  "topic": "javascript",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "0.1 + 0.2 !== 0.3 Isn't a JavaScript Bug: Floating-Point Numbers Explained",
+      "subtitle": "Binary numbers can't hold 0.1 exactly. toFixed hides that for display; integers fix it for money."
+    },
+    "ar-EG": {
+      "title": "ليه 0.1 + 0.2 مش بتساوي 0.3؟ ده مش bug في JavaScript",
+      "subtitle": "الأرقام الـ binary ماتقدرش تشيل 0.1 بالظبط. الـ toFixed بتداري ده في العرض، والـ integers بتحلّه في الفلوس."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "ES2025",
+  "learningPath": { "slug": "javascript-under-the-hood", "order": 4 },
+  "tags": ["JavaScript", "Numbers", "Floating Point", "Money"],
+  "sources": [
+    { "title": "Number — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number" },
+    { "title": "Number.EPSILON — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON" },
+    { "title": "Number.prototype.toFixed() — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed" },
+    { "title": "Intl.NumberFormat() constructor — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat" },
+    { "title": "The Number Type — ECMAScript Language Specification", "url": "https://tc39.es/ecma262/multipage/ecmascript-data-types-and-values.html#sec-ecmascript-language-types-number-type" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

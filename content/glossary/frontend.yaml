@@ -56,3 +56,99 @@ terms:
     definitionAr: >-
       الـ record اللي JavaScript بتعمله كل ما scope يشتغل (نداء function أو block أو لفة loop) عشان يشيل متغيرات الـ
       scope ده، ومربوط بالـ environment بتاع الـ scope اللي حواليه.
+  - id: ieee-754-double
+    term: IEEE 754 double
+    definitionEn: >-
+      The 64-bit binary floating-point format behind every JavaScript Number: 1 sign bit, 11 exponent bits and 52
+      fraction bits, giving about 15 to 17 significant decimal digits. Java and C# use it for double.
+    definitionAr: >-
+      الـ format الـ binary بتاع الـ floating-point اللي حجمه 64 bit، واللي ورا كل Number في JavaScript: bit للإشارة و11
+      bit للـ exponent و52 bit للكسر، وده بيدّيك حوالي 15 لـ 17 رقم عشري مهم. ونفسه اللي Java وC# بيستخدموه للـ double.
+  - id: minor-unit
+    term: Minor unit
+    definitionEn: >-
+      The smallest unit of a currency, such as the piastre for the Egyptian pound or the cent for the US dollar. ISO
+      4217 lists how many minor-unit digits each currency has.
+    definitionAr: >-
+      أصغر وحدة في العملة، زي القرش للجنيه المصري أو الـ cent للدولار. والـ ISO 4217 بيحدد كل عملة ليها كام رقم بعد
+      العلامة العشرية.
+  - id: pass-by-sharing
+    term: Pass by sharing
+    definitionEn: >-
+      How JavaScript passes objects to functions: the parameter receives a copy of the reference, so both sides share
+      one object. Mutating it is visible to the caller; assigning a new object to the parameter is not.
+    definitionAr: >-
+      الطريقة اللي JavaScript بتبعت بيها الـ objects للـ functions: الـ parameter بياخد نسخة من الـ reference، فالطرفين
+      بيشاركوا object واحد. أي تعديل فيه بيبان عند اللي نادى، لكن لو حطيت object جديد في الـ parameter مش هيبان.
+  - id: deep-copy
+    term: Deep copy
+    definitionEn: >-
+      A copy of an object that also copies every nested object, so the copy and the original share nothing and can
+      change independently. structuredClone makes one for plain data.
+    definitionAr: >-
+      نسخة من object بتنسخ كمان كل الـ objects اللي جواه، فالنسخة والأصل مابيشاركوش أي حاجة وكل واحد يتغير لوحده.
+      والـ structuredClone بتعمل نسخة زي دي للداتا العادية.
+  - id: event-loop
+    term: Event loop
+    definitionEn: >-
+      The loop that drives a JavaScript environment: it picks one task, runs it to completion, then runs every queued
+      microtask, and in a browser may update the rendering before it picks the next task.
+    definitionAr: >-
+      الـ loop اللي بيشغّل بيئة JavaScript: بياخد task واحدة ويشغّلها لحد ما تخلص، وبعدين يشغّل كل الـ microtasks اللي
+      مستنية، وفي المتصفح ممكن يحدّث الرسم على الشاشة قبل ما ياخد الـ task اللي بعدها.
+  - id: microtask
+    term: Microtask
+    definitionEn: >-
+      A short job queued by a promise reaction, the code after an await, or queueMicrotask(). Microtasks run as soon as
+      the call stack is empty, all of them, before the event loop picks the next task.
+    definitionAr: >-
+      شغلانة صغيرة بتتحط في الطابور بسبب promise اتحلّ، أو الكود اللي بعد await، أو queueMicrotask(). الـ microtasks
+      بتشتغل أول ما الـ call stack يفضى، كلها، قبل ما الـ event loop ياخد الـ task اللي بعدها.
+  - id: main-thread
+    term: Main thread
+    definitionEn: >-
+      The single thread where a page's JavaScript, event handlers, style calculation, layout and painting all take
+      turns. While one piece of JavaScript runs on it, nothing else on that list can.
+    definitionAr: >-
+      الـ thread الوحيد اللي الـ JavaScript بتاعة الصفحة والـ event handlers وحساب الـ styles والـ layout والرسم كلهم
+      بياخدوا دورهم عليه. وطول ما فيه كود JavaScript شغال عليه، مفيش أي حاجة من دول تقدر تشتغل.
+  - id: web-worker
+    term: Web Worker
+    definitionEn: >-
+      A script the browser runs on a background thread, created with new Worker(url). It can't touch the DOM and talks
+      to the page only through postMessage, so heavy work there doesn't block the main thread.
+    definitionAr: >-
+      script المتصفح بيشغّله على thread في الخلفية، وبتعمله بـ new Worker(url). مايقدرش يلمس الـ DOM وبيكلّم الصفحة بس عن
+      طريق postMessage، فالشغل التقيل اللي جواه مابيوقفش الـ main thread.
+  - id: prototype-chain
+    term: Prototype chain
+    definitionEn: >-
+      The linked series of objects JavaScript searches when you read a property: the object itself, then its
+      prototype, then that prototype's prototype, until the property is found or the chain ends at null.
+    definitionAr: >-
+      سلسلة الـ objects المربوطة ببعض اللي JavaScript بتدوّر فيها لما تقرا property: الـ object نفسه الأول، وبعدين الـ
+      prototype بتاعه، وبعدين الـ prototype بتاع الـ prototype، لحد ما تلاقيها أو السلسلة تخلص عند null.
+  - id: mark-and-sweep
+    term: Mark-and-sweep
+    definitionEn: >-
+      The garbage collection approach modern JavaScript engines use: starting from roots such as the global object and
+      the running code's variables, mark every object that can be reached, then free everything that wasn't marked.
+    definitionAr: >-
+      طريقة الـ garbage collection اللي الـ JavaScript engines الحديثة بتستخدمها: تبدأ من الـ roots زي الـ global object
+      ومتغيرات الكود الشغال، وتعلّم على كل object ممكن يتوصله، وبعدين تفضّي كل حاجة ماتعلّمش عليها.
+  - id: detached-dom-node
+    term: Detached DOM node
+    definitionEn: >-
+      An element that has been removed from the page's DOM tree but is still referenced from JavaScript, so it can't be
+      garbage collected. Chrome DevTools lists these as Detached in a heap snapshot.
+    definitionAr: >-
+      element اتشال من الـ DOM tree بتاع الصفحة بس لسه فيه JavaScript شايلة reference ليه، فمينفعش يتعمله garbage
+      collection. والـ Chrome DevTools بيعرضهم باسم Detached في الـ heap snapshot.
+  - id: live-binding
+    term: Live binding
+    definitionEn: >-
+      What an ES module import gives you: a read-only view of the exporting module's variable, not a copy. When the
+      exporter assigns a new value, every importer sees it; importers themselves can't reassign it.
+    definitionAr: >-
+      اللي الـ import في الـ ES modules بيدّيهولك: view للقراية بس على المتغير بتاع الـ module اللي عامل export، مش نسخة
+      منه. لما الـ module ده يحط قيمة جديدة، كل اللي عامل import بيشوفها؛ لكن اللي عامل import نفسه مايقدرش يغيّرها.

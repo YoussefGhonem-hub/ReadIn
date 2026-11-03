@@ -1,0 +1,31 @@
+{
+  "slug": "javascript-modules-live-bindings",
+  "field": "frontend",
+  "topic": "javascript",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Imports Are Live Bindings, Not Copies: How ES Modules Really Work",
+      "subtitle": "Every importer shares one evaluated module and reads its variables live, except through export default."
+    },
+    "ar-EG": {
+      "title": "هل الـ import بياخد نسخة من القيمة؟ إزاي الـ ES Modules بتشتغل فعلًا",
+      "subtitle": "كل اللي بيعمل import بيشارك نفس الـ module اللي اتشغّل مرة واحدة وبيقرا متغيراته live، إلا مع export default."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "ES2025",
+  "learningPath": { "slug": "javascript-under-the-hood", "order": 10 },
+  "tags": ["JavaScript", "ES Modules", "import/export", "Live Bindings"],
+  "sources": [
+    { "title": "JavaScript modules — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules" },
+    { "title": "import — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import" },
+    { "title": "export — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export" },
+    { "title": "ECMAScript Language Specification: Exports, Runtime Semantics: Evaluation — TC39", "url": "https://tc39.es/ecma262/multipage/ecmascript-language-scripts-and-modules.html#sec-exports-runtime-semantics-evaluation" },
+    { "title": "HTML Standard: Module map — WHATWG", "url": "https://html.spec.whatwg.org/multipage/webappapis.html#module-map" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

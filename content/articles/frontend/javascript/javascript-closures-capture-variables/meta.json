@@ -1,0 +1,30 @@
+{
+  "slug": "javascript-closures-capture-variables",
+  "field": "frontend",
+  "topic": "javascript",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Closures Capture Variables, Not Values",
+      "subtitle": "A closure reads its outer variables when it runs, so it sees every later assignment."
+    },
+    "ar-EG": {
+      "title": "ليه الـ closure بيشوف آخر قيمة؟ لأنه بيمسك الـ variable نفسه مش نسخة منه",
+      "subtitle": "الـ closure بيقرا المتغيرات اللي بره وقت ما يشتغل، فبيشوف أي تغيير حصل بعد ما اتعمل."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "ES2025",
+  "learningPath": { "slug": "javascript-under-the-hood", "order": 3 },
+  "tags": ["JavaScript", "Closures", "let", "Scope"],
+  "sources": [
+    { "title": "Closures — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Closures" },
+    { "title": "for: Lexical declarations in the initialization block — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for" },
+    { "title": "let — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let" },
+    { "title": "var — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/var" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
