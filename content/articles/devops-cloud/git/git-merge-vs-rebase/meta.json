@@ -1,0 +1,30 @@
+{
+  "slug": "git-merge-vs-rebase",
+  "field": "devops-cloud",
+  "topic": "git",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Merge vs Rebase: Same Code, Different History, and the Rule You Can't Break",
+      "subtitle": "Both can leave you with the same files. Rebase makes new commits, so never use it on commits someone else already has."
+    },
+    "ar-EG": {
+      "title": "إمتى تعمل merge وإمتى rebase؟ نفس الكود، history مختلف، وقاعدة متتكسرش",
+      "subtitle": "الاتنين ممكن يسيبولك نفس الملفات، بس الـ rebase بيعمل commits جديدة، فماتستخدموش على commits حد تاني عنده نسخة منها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 8 },
+  "tags": ["Git", "git rebase", "git merge", "Version Control"],
+  "sources": [
+    { "title": "Git Branching: Rebasing — Pro Git", "url": "https://git-scm.com/book/en/v2/Git-Branching-Rebasing" },
+    { "title": "git-rebase — Git reference", "url": "https://git-scm.com/docs/git-rebase" },
+    { "title": "git-merge — Git reference", "url": "https://git-scm.com/docs/git-merge" },
+    { "title": "git-push — Git reference", "url": "https://git-scm.com/docs/git-push" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

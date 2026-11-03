@@ -1,0 +1,31 @@
+{
+  "slug": "localhost-inside-a-container",
+  "field": "devops-cloud",
+  "topic": "docker",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "localhost Inside a Container Isn't Your Machine: Docker Networking Explained",
+      "subtitle": "Each container has its own localhost. Other containers are reached by name and container port, your machine through host.docker.internal."
+    },
+    "ar-EG": {
+      "title": "ليه الـ localhost جوه الـ container مش جهازك؟ شرح الـ networking في Docker",
+      "subtitle": "كل container ليه localhost خاص بيه. والـ containers التانية بتوصلها بالاسم والـ port بتاع الـ container، وجهازك بتوصله بـ host.docker.internal."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 10 },
+  "tags": ["Docker", "Networking", "Docker Compose", "localhost"],
+  "sources": [
+    { "title": "Networking overview — Docker Docs", "url": "https://docs.docker.com/engine/network/" },
+    { "title": "Networking in Compose — Docker Docs", "url": "https://docs.docker.com/compose/how-tos/networking/" },
+    { "title": "Port publishing and mapping — Docker Docs", "url": "https://docs.docker.com/engine/network/port-publishing/" },
+    { "title": "Explore networking how-tos on Docker Desktop — Docker Docs", "url": "https://docs.docker.com/desktop/features/networking/networking-how-tos/" },
+    { "title": "docker container run — Docker Docs", "url": "https://docs.docker.com/reference/cli/docker/container/run/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

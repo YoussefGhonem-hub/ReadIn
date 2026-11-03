@@ -1,0 +1,211 @@
+terms:
+  - id: git-commit
+    term: Commit (Git)
+    definitionEn: >-
+      A snapshot of every tracked file in the project, stored with its author, message and a pointer to the commit or
+      commits before it. Git names it by a hash of its content, so a commit never changes once written.
+    definitionAr: >-
+      snapshot لكل الملفات اللي Git متابعها في المشروع، متخزّنة مع اسم اللي عملها والرسالة و pointer للـ commit أو
+      الـ commits اللي قبلها. Git بيسمّيها بـ hash محسوب من محتواها، فالـ commit مابتتغيّرش بعد ما تتكتب.
+  - id: git-branch
+    term: Branch (Git)
+    definitionEn: >-
+      A name that points to one commit, stored as a tiny ref file. When you commit on a branch, Git moves that pointer
+      to the new commit; no project files are copied.
+    definitionAr: >-
+      اسم بيشاور على commit واحدة، ومتخزّن في ملف ref صغير جدًا. ولما تعمل commit وانت على branch، Git بيحرّك الـ
+      pointer ده للـ commit الجديدة، ومفيش ولا ملف من ملفات المشروع بيتنسخ.
+  - id: git-head
+    term: HEAD (Git)
+    definitionEn: >-
+      Git's pointer to what you have checked out. Usually it names a branch (ref: refs/heads/main), which is how Git
+      knows which branch a new commit should move. When it holds a commit hash directly, it's a "detached HEAD".
+    definitionAr: >-
+      الـ pointer اللي Git بيعرف بيه انت عامل checkout لإيه. غالبًا بيشاور على branch (ref: refs/heads/main)، وبكده
+      Git بيعرف أنهي branch تتحرك مع الـ commit الجديدة. ولو شايل hash بتاع commit على طول يبقى اسمه "detached HEAD".
+  - id: remote-tracking-branch
+    term: Remote-tracking branch
+    definitionEn: >-
+      A local bookmark such as origin/main that records where a branch on a remote was the last time you talked to it.
+      Git moves it when it talks to the remote, as in fetch and pull; you don't move it yourself, and moving it never
+      moves your own branches.
+    definitionAr: >-
+      علامة محلية زي origin/main بتسجّل الـ branch اللي على الـ remote كانت فين آخر مرة كلّمته. Git بيحرّكها لما يكلّم
+      الـ remote، زي في الـ fetch والـ pull، وانت مابتحرّكهاش بإيدك، وحركتها عمرها ما بتحرّك الـ branches بتاعتك.
+  - id: fast-forward
+    term: Fast-forward (Git)
+    definitionEn: >-
+      Updating a branch by moving its pointer ahead to a newer commit that already contains it. It's only possible when
+      the branch has no commits of its own that the other side lacks, and it creates no merge commit.
+    definitionAr: >-
+      إنك تحدّث branch بإنك تقدّم الـ pointer بتاعها لـ commit أحدث فيها كل اللي عندها. وده ممكن بس لما الـ branch
+      مايكونش فيها commits خاصة بيها مش موجودة عند الناحية التانية، ومش بيعمل merge commit.
+  - id: os-kernel
+    term: Kernel
+    definitionEn: >-
+      The core of an operating system. It runs every process, hands out memory and CPU time, talks to the hardware and
+      answers system calls. All containers on a Linux host run on that host's one kernel.
+    definitionAr: >-
+      قلب الـ operating system. هو اللي بيشغّل كل process، ويوزّع الـ memory ووقت الـ CPU، ويكلّم الـ hardware، ويرد على
+      الـ system calls. وكل الـ containers اللي على Linux host واحد بتشتغل على الـ kernel الواحد بتاعه.
+  - id: linux-namespace
+    term: Namespace (Linux)
+    definitionEn: >-
+      A Linux kernel feature that gives a group of processes their own view of a global resource, such as process IDs,
+      mount points, the network stack or the hostname. Containers are built from a set of namespaces.
+    definitionAr: >-
+      feature في الـ Linux kernel بتدّي مجموعة processes نظرة خاصة بيها لـ resource عام، زي الـ process IDs أو الـ mount
+      points أو الـ network stack أو الـ hostname. والـ containers معمولة من مجموعة namespaces.
+  - id: cgroup
+    term: cgroup (control group)
+    definitionEn: >-
+      A Linux kernel feature that puts processes into groups whose use of resources such as memory, CPU and disk I/O can
+      be limited and measured. Docker's --memory limit, for example, is enforced through a cgroup.
+    definitionAr: >-
+      feature في الـ Linux kernel بتحط الـ processes في مجموعات، وتقدر تحدّد وتقيس استهلاكها للـ resources زي الـ memory
+      والـ CPU والـ disk I/O. والـ limit بتاع --memory في Docker مثلًا بيتنفّذ عن طريق cgroup.
+  - id: container-image
+    term: Container image
+    definitionEn: >-
+      A read-only package of files, libraries and settings that containers start from, built as a stack of layers.
+      Running a container never changes its image; to change it, you build a new image.
+    definitionAr: >-
+      package للقراية بس فيها الملفات والـ libraries والـ settings اللي الـ containers بتبدأ منها، ومتبنية كـ layers فوق بعض.
+      وتشغيل container عمره ما بيغيّر الـ image بتاعته، ولو عايز تغيّرها بتعمل build لـ image جديدة.
+  - id: container-layer
+    term: Container layer (writable layer)
+    definitionEn: >-
+      The thin writable layer Docker adds on top of an image's read-only layers for each container. Every file the
+      container creates, changes or deletes is recorded there, and it's deleted together with the container.
+    definitionAr: >-
+      الـ layer الرفيعة اللي بتقبل الكتابة، و Docker بيحطها لكل container فوق الـ layers اللي للقراية بس بتاعة الـ image. أي
+      ملف الـ container بيعمله أو يعدّله أو يمسحه بيتسجّل فيها، وبتتمسح مع الـ container نفسه.
+  - id: docker-volume
+    term: Volume (Docker)
+    definitionEn: >-
+      Persistent storage created and managed by Docker and mounted into containers at a path. Its contents live outside
+      any container's lifecycle, so they survive removing and recreating the container.
+    definitionAr: >-
+      storage دايمة Docker بيعملها ويديرها، وبتتركّب جوه الـ containers على path معيّن. ومحتواها عايش بره دورة حياة أي
+      container، فبيفضل موجود لو مسحت الـ container وعملته من جديد.
+  - id: continuous-integration
+    term: Continuous Integration (CI)
+    definitionEn: >-
+      A team practice where everyone merges their work into the shared mainline at least daily, and every merge is
+      verified by an automated build with tests. A CI server helps, but running one on long-lived branches isn't CI.
+    definitionAr: >-
+      ممارسة بيعملها الفريق: كل واحد بيدمج شغله في الـ mainline المشتركة مرة في اليوم على الأقل، وكل دمج بيتأكد منه
+      automated build فيه tests. والـ CI server بيساعد، لكن تشغيله على branches بتعيش أسابيع مش CI.
+  - id: continuous-delivery
+    term: Continuous Delivery
+    definitionEn: >-
+      Building software so that it can be released to production at any time, on demand. Every change is kept
+      deployable and pushed through a deployment pipeline, but a person may still decide when to release.
+    definitionAr: >-
+      إنك تبني السوفتوير بطريقة تخلّيه جاهز يطلع production في أي وقت تطلبه. كل تغيير بيفضل قابل للـ deploy وبيعدّي على
+      deployment pipeline، بس ممكن لسه حد يقرر إمتى يعمل release.
+  - id: continuous-deployment
+    term: Continuous Deployment
+    definitionEn: >-
+      Going one step past continuous delivery: every change that passes the deployment pipeline goes to production
+      automatically, with no human decision in between. It requires continuous delivery first.
+    definitionAr: >-
+      خطوة بعد الـ continuous delivery: أي تغيير بيعدّي الـ deployment pipeline بيروح production لوحده، من غير قرار من حد
+      في النص. ولازم يكون قبله continuous delivery.
+  - id: deployment-pipeline
+    term: Deployment pipeline
+    definitionEn: >-
+      The automated path a change takes from commit to production, split into stages: a fast build and test first,
+      slower tests and checks after. Its job is to catch changes that would cause problems in production.
+    definitionAr: >-
+      الطريق الـ automated اللي أي تغيير بيمشيه من الـ commit لحد الـ production، ومقسوم stages: build و tests سريعة الأول،
+      وبعدها tests وchecks أبطأ. وشغلته إنه يمسك التغييرات اللي هتعمل مشاكل في الـ production.
+  - id: shared-responsibility-model
+    term: Shared responsibility model
+    definitionEn: >-
+      The split of duties between a cloud provider and its customers. The provider runs and protects the platform; the
+      customer chooses and configures the reliability and security features it offers, designs the application and
+      owns its data.
+    definitionAr: >-
+      تقسيم المسؤوليات بين الـ cloud provider والعميل. الـ provider بيشغّل الـ platform ويحميها، والعميل هو اللي بيختار
+      ويظبط features الـ reliability والأمان اللي بتقدّمها، وبيصمّم الـ application، والداتا بتاعته مسؤوليته.
+  - id: availability-zone
+    term: Availability zone
+    definitionEn: >-
+      A group of one or more datacenters inside a cloud region with its own power, cooling and networking, so a failure
+      in one zone leaves the others running. A resource survives a zone outage only when it runs in two or more zones.
+    definitionAr: >-
+      مجموعة فيها datacenter واحد أو أكتر جوه الـ region، ليها كهربا وتبريد و networking مستقلين، فلو zone وقعت الباقي
+      بيفضل شغال. والـ resource مابتعدّيش وقوع zone غير لو شغالة في zone اتنين أو أكتر.
+  - id: service-level-agreement
+    term: Service-level agreement (SLA)
+    definitionEn: >-
+      A provider's contractual uptime commitment for a service in a specific configuration. When it's missed, the
+      remedy it defines is a service credit on the bill, not compensation for the customer's losses.
+    definitionAr: >-
+      التزام تعاقدي من الـ provider بنسبة uptime لـ service بـ configuration معيّنة. ولو ماتحققش، التعويض اللي بيحدّده
+      هو service credit على الفاتورة، مش تعويض عن خسارة العميل.
+  - id: distributed-trace
+    term: Distributed trace
+    definitionEn: >-
+      The record of one request's path through a system, across every service it touches. It's a tree of spans that
+      share a trace ID, so you can see which step the request spent its time in.
+    definitionAr: >-
+      سجل الطريق اللي request واحد مشيه جوه السيستم، عبر كل service عدّى عليها. هو شجرة من الـ spans بتشترك في trace ID
+      واحد، فتقدر تشوف الـ request ضيّع وقته في أنهي خطوة.
+  - id: trace-span
+    term: Span
+    definitionEn: >-
+      One unit of work inside a trace, such as an HTTP call or a database query, with a name, a start time, a duration,
+      attributes and a link to its parent span. In .NET, spans are represented by System.Diagnostics.Activity.
+    definitionAr: >-
+      وحدة شغل واحدة جوه الـ trace، زي HTTP call أو database query، ليها اسم ووقت بداية ومدة و attributes ورابط للـ span
+      الأب بتاعها. وفي .NET الـ spans بيمثّلها System.Diagnostics.Activity.
+  - id: merge-commit
+    term: Merge commit
+    definitionEn: >-
+      A commit with two or more parents, created when Git joins lines of history that have diverged. It records the
+      combined snapshot and leaves every earlier commit, and its ID, unchanged.
+    definitionAr: >-
+      commit ليها اتنين parents أو أكتر، Git بيعملها لما يجمع خطين history اتفرقوا. بتسجّل الـ snapshot المجمّعة، وبتسيب
+      كل الـ commits اللي قبلها والـ IDs بتاعتها زي ما هي.
+  - id: force-push
+    term: Force push
+    definitionEn: >-
+      A push that replaces a remote branch even when the new commits don't contain the old ones (git push --force).
+      Commits that were only on the remote branch are no longer on it afterwards.
+    definitionAr: >-
+      push بيستبدل branch على الـ remote حتى لو الـ commits الجديدة مش شايلة القديمة جواها (git push --force). والـ
+      commits اللي كانت على الـ branch دي في الـ remote بس، بتختفي منها بعده.
+  - id: git-index
+    term: Index (Git staging area)
+    definitionEn: >-
+      The snapshot Git will use for your next commit. git add copies changes into it, git commit records it, and
+      git reset can make it match an older commit again.
+    definitionAr: >-
+      الـ snapshot اللي Git هيستخدمها في الـ commit الجاية. الـ git add بينسخ التغييرات فيها، والـ git commit بيسجّلها،
+      والـ git reset ممكن يرجّعها زي commit أقدم.
+  - id: git-reflog
+    term: Reflog
+    definitionEn: >-
+      A local log of where HEAD and each branch pointed over time. It lets you find and restore commits that no branch
+      points to any more, such as after a reset, until old entries expire.
+    definitionAr: >-
+      سجل محلي بيقول الـ HEAD وكل branch كانوا بيشاوروا على إيه على مدار الوقت. بيخلّيك تلاقي وترجّع commits مفيش branch
+      بيشاور عليها خلاص، زي بعد reset، لحد ما الـ entries القديمة تنتهي صلاحيتها.
+  - id: loopback-interface
+    term: Loopback interface (localhost)
+    definitionEn: >-
+      The network interface a system uses to talk to itself, at 127.0.0.1 and ::1, reached by the name localhost.
+      Every container has its own, so localhost inside a container means that container.
+    definitionAr: >-
+      الـ network interface اللي السيستم بيكلّم بيها نفسه، على 127.0.0.1 و ::1، وبتوصلها بالاسم localhost. وكل container
+      ليه واحدة خاصة بيه، فالـ localhost جوه الـ container معناها الـ container نفسه.
+  - id: published-port
+    term: Published port (Docker)
+    definitionEn: >-
+      A mapping from a port on the Docker host to a port inside a container, set with -p host:container. It lets
+      traffic from outside the container network in; containers on the same network don't need it.
+    definitionAr: >-
+      ربط بين port على الـ Docker host و port جوه الـ container، بيتعمل بـ -p host:container. بيدخّل الـ traffic اللي جاي
+      من بره الـ network بتاعة الـ containers، والـ containers اللي على نفس الـ network مش محتاجاه.

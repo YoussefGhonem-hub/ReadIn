@@ -1,0 +1,31 @@
+{
+  "slug": "git-branch-is-just-a-pointer",
+  "field": "devops-cloud",
+  "topic": "git",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "A Git Branch Is Just a Pointer: Commits, Snapshots and HEAD",
+      "subtitle": "Creating a branch writes one 41-byte file and switches nothing, which is why your next commit can land on main."
+    },
+    "ar-EG": {
+      "title": "الـ branch في Git مجرد pointer: الـ commits والـ snapshots والـ HEAD",
+      "subtitle": "عمل branch بيكتب ملف واحد حجمه 41 byte ومش بينقلك عليه، وعشان كده الـ commit الجاية ممكن تنزل على main."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 1 },
+  "tags": ["Git", "Branches", "HEAD", "Version Control"],
+  "sources": [
+    { "title": "Getting Started: What is Git? — Pro Git", "url": "https://git-scm.com/book/en/v2/Getting-Started-What-is-Git%3F" },
+    { "title": "Git Branching: Branches in a Nutshell — Pro Git", "url": "https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell" },
+    { "title": "Git Internals: Git References — Pro Git", "url": "https://git-scm.com/book/en/v2/Git-Internals-Git-References" },
+    { "title": "git-branch — Git reference", "url": "https://git-scm.com/docs/git-branch" },
+    { "title": "git-switch — Git reference", "url": "https://git-scm.com/docs/git-switch" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

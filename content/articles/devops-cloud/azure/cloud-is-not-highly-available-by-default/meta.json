@@ -1,0 +1,31 @@
+{
+  "slug": "cloud-is-not-highly-available-by-default",
+  "field": "devops-cloud",
+  "topic": "azure",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The Cloud Isn't Highly Available by Default: Zones, Regions and Shared Responsibility",
+      "subtitle": "Azure builds the zones, regions and backups, and turning them on is your job. A single VM's SLA is 99.9%, and an SLA only pays credits."
+    },
+    "ar-EG": {
+      "title": "الـ Cloud مش بيضمن الـ availability لوحده: الـ zones والـ regions والمسؤولية المشتركة",
+      "subtitle": "Azure بيبني الـ zones والـ regions والـ backups، وتشغيلها شغلتك انت. والـ SLA بتاع VM واحدة 99.9%، وآخر الـ SLA credit على الفاتورة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 6 },
+  "tags": ["Azure", "Availability zones", "Reliability", "SLA", "Backups"],
+  "sources": [
+    { "title": "Shared responsibility for reliability — Microsoft Learn", "url": "https://learn.microsoft.com/azure/reliability/concept-shared-responsibility" },
+    { "title": "What are Azure availability zones? — Microsoft Learn", "url": "https://learn.microsoft.com/azure/reliability/availability-zones-overview" },
+    { "title": "Shared responsibility in the cloud — Microsoft Learn", "url": "https://learn.microsoft.com/azure/security/fundamentals/shared-responsibility" },
+    { "title": "Service Level Agreements (SLA) for Online Services — Microsoft Licensing", "url": "https://www.microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services" },
+    { "title": "Architecture strategies for defining reliability targets — Azure Well-Architected Framework", "url": "https://learn.microsoft.com/azure/well-architected/reliability/metrics" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

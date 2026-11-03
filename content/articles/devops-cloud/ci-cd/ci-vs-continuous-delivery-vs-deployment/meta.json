@@ -1,0 +1,31 @@
+{
+  "slug": "ci-vs-continuous-delivery-vs-deployment",
+  "field": "devops-cloud",
+  "topic": "ci-cd",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "CI, Continuous Delivery, Continuous Deployment: Three Practices, Not One Pipeline",
+      "subtitle": "Each term answers a different question about how your team works, and a pipeline on its own answers none of them."
+    },
+    "ar-EG": {
+      "title": "الـ CI والـ Continuous Delivery والـ Continuous Deployment: 3 ممارسات مش pipeline واحدة",
+      "subtitle": "كل مصطلح بيجاوب على سؤال مختلف عن طريقة شغل الفريق، والـ pipeline لوحدها مابتجاوبش على ولا واحد فيهم."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 5 },
+  "tags": ["CI/CD", "Continuous Integration", "Continuous Delivery", "DevOps"],
+  "sources": [
+    { "title": "Continuous Integration — Martin Fowler", "url": "https://martinfowler.com/articles/continuousIntegration.html" },
+    { "title": "ContinuousDelivery — Martin Fowler (bliki)", "url": "https://martinfowler.com/bliki/ContinuousDelivery.html" },
+    { "title": "DeploymentPipeline — Martin Fowler (bliki)", "url": "https://martinfowler.com/bliki/DeploymentPipeline.html" },
+    { "title": "Capabilities: Continuous integration — DORA", "url": "https://dora.dev/capabilities/continuous-integration/" },
+    { "title": "Capabilities: Continuous delivery — DORA", "url": "https://dora.dev/capabilities/continuous-delivery/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

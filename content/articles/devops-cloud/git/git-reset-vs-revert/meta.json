@@ -1,0 +1,31 @@
+{
+  "slug": "git-reset-vs-revert",
+  "field": "devops-cloud",
+  "topic": "git",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Undoing Commits Safely: git reset Rewrites History, git revert Records It",
+      "subtitle": "Reset moves your branch back in your clone only, so a teammate's next push restores the commit. Revert undoes it with a new commit everyone gets."
+    },
+    "ar-EG": {
+      "title": "إزاي تلغي commit بأمان؟ الـ reset بيعيد كتابة الـ history والـ revert بيسجّل التراجع",
+      "subtitle": "الـ reset بيرجّع الـ branch لورا في الـ clone بتاعتك بس، فأول push من زميلك بيرجّع الـ commit تاني. أما الـ revert فبيلغيها بـ commit جديدة الكل بياخدها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 9 },
+  "tags": ["Git", "git reset", "git revert", "git reflog"],
+  "sources": [
+    { "title": "Git Tools: Reset Demystified — Pro Git", "url": "https://git-scm.com/book/en/v2/Git-Tools-Reset-Demystified" },
+    { "title": "git-revert — Git reference", "url": "https://git-scm.com/docs/git-revert" },
+    { "title": "git-reset — Git reference", "url": "https://git-scm.com/docs/git-reset" },
+    { "title": "git-reflog — Git reference", "url": "https://git-scm.com/docs/git-reflog" },
+    { "title": "git — Git reference (Reset, restore and revert)", "url": "https://git-scm.com/docs/git" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

@@ -1,0 +1,30 @@
+{
+  "slug": "docker-images-vs-containers-and-layers",
+  "field": "devops-cloud",
+  "topic": "docker",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Images vs Containers: Layers, the Writable Layer and Why Your Data Vanished",
+      "subtitle": "What a container writes lives in its own thin layer: it survives restarts, never reaches the image and is deleted on every redeploy."
+    },
+    "ar-EG": {
+      "title": "الفرق بين الـ image والـ container: الـ layers وليه الداتا بتاعتك اختفت",
+      "subtitle": "اللي الـ container بيكتبه عايش في layer رفيعة خاصة بيه: بتعدّي الـ restart، وعمرها ما بتوصل للـ image، وبتتمسح مع كل redeploy."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 4 },
+  "tags": ["Docker", "Images", "Volumes", "Storage"],
+  "sources": [
+    { "title": "What is an image? — Docker Docs", "url": "https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/" },
+    { "title": "Understanding the image layers — Docker Docs", "url": "https://docs.docker.com/get-started/docker-concepts/building-images/understanding-image-layers/" },
+    { "title": "Storage drivers — Docker Docs", "url": "https://docs.docker.com/engine/storage/drivers/" },
+    { "title": "Volumes — Docker Docs", "url": "https://docs.docker.com/engine/storage/volumes/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

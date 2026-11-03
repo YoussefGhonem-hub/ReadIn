@@ -1,0 +1,29 @@
+{
+  "slug": "git-pull-is-fetch-plus-merge",
+  "field": "devops-cloud",
+  "topic": "git",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "git pull Doesn't Just Download: It's fetch Plus merge (or rebase)",
+      "subtitle": "git fetch is the download. git pull also integrates into your branch, and that second step is where conflicts come from."
+    },
+    "ar-EG": {
+      "title": "الـ git pull مش بيعمل download وبس: ده fetch وبعده merge أو rebase",
+      "subtitle": "الـ download الحقيقي هو git fetch. أما git pull فبيدمج كمان في الـ branch بتاعتك، والخطوة التانية دي هي اللي بتجيب الـ conflicts."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 2 },
+  "tags": ["Git", "git pull", "git fetch", "Merge conflicts"],
+  "sources": [
+    { "title": "git-pull — Git reference", "url": "https://git-scm.com/docs/git-pull" },
+    { "title": "git-fetch — Git reference", "url": "https://git-scm.com/docs/git-fetch" },
+    { "title": "Git Branching: Remote Branches — Pro Git", "url": "https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

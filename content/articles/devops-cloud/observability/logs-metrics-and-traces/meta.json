@@ -1,0 +1,36 @@
+{
+  "slug": "logs-metrics-and-traces",
+  "field": "devops-cloud",
+  "topic": "observability",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Logs Aren't Observability: Logs, Metrics and Traces Answer Different Questions",
+      "subtitle": "Metrics tell you something is wrong, traces show where, and logs say what exactly happened. More log lines only help with the last one."
+    },
+    "ar-EG": {
+      "title": "الـ logs لوحدها مش observability: الـ logs والـ metrics والـ traces كل واحد بيجاوب على سؤال",
+      "subtitle": "الـ metrics بتقولك فيه مشكلة، والـ traces بتوريك فين، والـ logs بتقولك إيه اللي حصل بالظبط. وزيادة سطور الـ logs بتساعد في آخر سؤال بس."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 7 },
+  "tags": ["Observability", "OpenTelemetry", "Logging", "Tracing", "Metrics"],
+  "sources": [
+    { "title": "Observability primer — OpenTelemetry", "url": "https://opentelemetry.io/docs/concepts/observability-primer/" },
+    { "title": "Logs — OpenTelemetry", "url": "https://opentelemetry.io/docs/concepts/signals/logs/" },
+    { "title": "Metrics — OpenTelemetry", "url": "https://opentelemetry.io/docs/concepts/signals/metrics/" },
+    { "title": "Instrumentation (.NET) — OpenTelemetry", "url": "https://opentelemetry.io/docs/languages/dotnet/instrumentation/" },
+    { "title": "Monitoring Distributed Systems — Google SRE book", "url": "https://sre.google/sre-book/monitoring-distributed-systems/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public record Order(int Id, decimal Total);\npublic interface IPayments { Task<bool> ChargeAsync(Order order); }"
+    }
+  }
+}

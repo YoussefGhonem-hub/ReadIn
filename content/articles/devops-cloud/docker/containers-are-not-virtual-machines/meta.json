@@ -1,0 +1,31 @@
+{
+  "slug": "containers-are-not-virtual-machines",
+  "field": "devops-cloud",
+  "topic": "docker",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Docker Is Not a VM: Containers Share the Host Kernel",
+      "subtitle": "A container is a process with namespaces and cgroups on the host's kernel, so Ubuntu and Alpine containers report the same uname -r."
+    },
+    "ar-EG": {
+      "title": "ليه Docker مش virtual machine؟ الـ containers بتشارك الـ kernel بتاع الـ host",
+      "subtitle": "الـ container هو process عليه namespaces و cgroups فوق الـ kernel بتاع الـ host، فـ containers الـ Ubuntu والـ Alpine بيطلّعوا نفس uname -r."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 3 },
+  "tags": ["Docker", "Containers", "Linux kernel", "Virtual machines"],
+  "sources": [
+    { "title": "What is a container? — Docker Docs", "url": "https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/" },
+    { "title": "Docker Engine security — Docker Docs", "url": "https://docs.docker.com/engine/security/" },
+    { "title": "namespaces(7) — Linux manual page", "url": "https://man7.org/linux/man-pages/man7/namespaces.7.html" },
+    { "title": "Comparing WSL versions — Microsoft Learn", "url": "https://learn.microsoft.com/windows/wsl/compare-versions" },
+    { "title": "Isolation modes (Windows containers) — Microsoft Learn", "url": "https://learn.microsoft.com/virtualization/windowscontainers/manage-containers/hyperv-container" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
