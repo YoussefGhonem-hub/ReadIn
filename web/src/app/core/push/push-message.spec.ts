@@ -21,6 +21,26 @@ describe('push messages', () => {
       });
     });
 
+    it('opens the daily-article push in the article language the API sends (F07)', () => {
+      // docs/api/contract-v1.md, "Push payloads". The service worker builds the same path for background pushes.
+      const daily = {
+        notification: { title: 'مقال النهارده جاهز ☕', body: 'RAG ولا Fine-tuning؟' },
+        data: {
+          type: 'daily_article',
+          articleId: '0a1b2c3d-0000-0000-0000-000000000001',
+          slug: 'rag-vs-fine-tuning',
+          link: 'readin://a/rag-vs-fine-tuning',
+          lang: 'en',
+          tag: 'daily_article',
+        },
+      };
+      expect(toPushMessage(daily, ORIGIN, 'ar')).toEqual({
+        title: 'مقال النهارده جاهز ☕',
+        body: 'RAG ولا Fine-tuning؟',
+        path: '/en/a/rag-vs-fine-tuning',
+      });
+    });
+
     it('uses the FCM link option when the data has none', () => {
       expect(toPushMessage({ notification: { title: 'Hi' }, fcmOptions: { link: `${ORIGIN}/notifications` } }, ORIGIN, 'en')?.path).toBe(
         '/notifications',
