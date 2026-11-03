@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social and media codes below.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile and media codes below.
 
 ## Endpoints
 
@@ -60,7 +60,8 @@ at a time (single-flight) and always keep the newest token.
 | Method | Path | Body → Response |
 |---|---|---|
 | GET | `/me` | → `200 MeDto` |
-| PATCH | `/me` | `UpdateProfileRequest` → `204` |
+| PATCH | `/me` | `UpdateProfileRequest` → `204`; refetch `GET /me`. `409 user.username_taken`, `400 profile.avatar_invalid`, `400 profile.expertise_invalid`, validation codes as before (`displayName`, `username`, `bio`, `links.*`, `avatarUrl`) |
+| PUT | `/me/privacy` | `{ publicReadingStats: boolean }` → `204` (Settings → Privacy, F18; shown in `MeDto.privacy`). `validation.required` when missing |
 | DELETE | `/me` | `{ password? , external?: ExternalCredential }` → `204`. Confirm with the password, or (accounts without one) a fresh Google/Apple token. Signed out everywhere, Google/Apple identities released at once, personal data removed after 30 days. `400 auth.wrong_password`, `400 auth.confirmation_required`, `400 auth.external_mismatch` |
 | PUT | `/me/profile/complete` | `{ displayName, username, avatarUrl? }` → `200 MeDto`. `409 user.username_taken` |
 | PUT | `/me/password` | `{ currentPassword, newPassword }` → `200 SessionDto`; other sessions end. `400 auth.wrong_password` |
@@ -186,6 +187,35 @@ dedupe by `commentId`, and skip events for your own just-made change. Events are
 | POST | `/moderation/actions` | `{ action: hide\|unhide\|delete, targetType: "comment", targetId }` → `204`. Permission `moderation.manage` (Moderator, Admin, SuperAdmin). Hide and delete resolve the comment's open reports; every action is in the audit log. `404 comment.not_found` |
 
 The queue that lists and resolves reports comes with F22.
+
+### Profile (F14) 🌐 (Bearer optional)
+
+`{username}` is matched ignoring case and one leading `@` (`/users/@Mona` = `/users/mona`). Deleted and suspended
+accounts are `404 user.not_found` on all four; system accounts (the official `@readin`) are shown like everyone else.
+The phone number and e-mail are never in these responses (SPEC §9.5).
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/users/{username}` | `200 ProfileDto` |
+| GET | `/users/{username}/articles?cursor=&limit=` | `CursorPage<ArticleCardDto>`: published articles, newest first, with the caller's `myReaction` / `isSaved` like every feed. `limit` 1–50, default 20 |
+| GET | `/users/{username}/stats` | `200 ReadingStatsDto`, computed in **that user's** time zone. `403 profile.stats_private` unless it's your own profile or the user turned on `publicReadingStats` |
+| GET | `/users/{username}/stats/heatmap?days=` | `200 ReadingHeatmapDto` (as `/me/stats/heatmap`), same privacy rule |
+
+Editing (Bearer, `PATCH /me`, `UpdateProfileRequest`):
+- **Avatar.** Upload with `POST /uploads/images`, `purpose=avatar` (square, center-cropped WebP 64/128/256/512; show the
+  256 variant as the preview), then send its `id` as `avatarAssetId`. The server stores the 256 px variant in
+  `avatarUrl`, so every `AuthorDto` / `UserSummaryDto` shows it. **Omit** `avatarAssetId` (and `avatarUrl`) to keep the
+  current avatar; send `"avatarAssetId": null` to remove it. Anything but your own `avatar` upload (someone else's, a
+  cover, an unknown id) is `400 profile.avatar_invalid`, also listed in `errors.avatarAssetId`. `avatarUrl` is still
+  accepted from the previous release (an uploaded avatar's URL or an external https image; `null` removes); when both
+  are sent, a non-null `avatarAssetId` wins.
+- **Expertise.** `expertiseFieldIds`: 0–5 enabled field ids, kept in the order sent (a repeated id counts once); `[]`
+  clears them, omitted keeps them. More than 5 or an unknown/disabled id is `400 profile.expertise_invalid`, also listed
+  in `errors.expertiseFieldIds`.
+- `displayName`, `username`, `bio` and `links` replace the current values as before (an omitted `bio` or link clears it).
+
+Profile error codes: `user.not_found` (404), `profile.stats_private` (403), `profile.avatar_invalid` (400),
+`profile.expertise_invalid` (400).
 
 ### Live counters (F27, SPEC §21.2)
 
@@ -330,14 +360,18 @@ interface MeDto {
   roles: string[];               // e.g. ["Member", "VerifiedWriter"]
   permissions: string[];         // e.g. ["articles.read", "articles.create", ...]
   interests: { fieldIds: string[]; topicIds: string[] };
+  privacy: { publicReadingStats: boolean };  // Settings → Privacy (F18); default false. PUT /me/privacy
 }
 
 interface UpdateProfileRequest {
   displayName: string;           // 2..60
   username: string;              // ^[a-z0-9_]{3,30}$
   bio?: string | null;           // ≤ 300
+  links?: { github?: string | null; linkedin?: string | null; website?: string | null }; // https URLs
+  avatarAssetId?: string | null; // POST /uploads/images purpose=avatar → id. OMIT to keep the avatar; null removes it
+  expertiseFieldIds?: string[];  // 0–5 enabled field ids in display order; omit to keep, [] to clear
+  /** @deprecated previous release: an uploaded avatar's URL or an external https image; null removes. */
   avatarUrl?: string | null;
-  links?: { github?: string; linkedin?: string; website?: string };
 }
 
 interface UpdatePreferencesRequest {
@@ -409,6 +443,29 @@ interface UserSummaryDto {
 }
 
 interface InterestsDto { fieldIds: string[]; topicIds: string[] }  // as in MeDto.interests
+
+// ── Profile (F14) ─────────────────────────────────────────────────
+interface ProfileDto {
+  id: string;
+  displayName: string;
+  username: string;              // without "@"; render dir="ltr"
+  avatarUrl: string | null;      // the 256 px variant, the same URL AuthorDto / UserSummaryDto carry
+  /** Every key always present, one URL per avatar size: a small upload (never upscaled) repeats its largest variant.
+   *  null without an avatar or for an avatar that isn't an upload (e.g. a Google photo). */
+  avatarVariants: { '64': string; '128': string; '256': string; '512': string } | null;
+  isVerified: boolean;
+  bio: string | null;            // mixed ar/en: render dir="auto"
+  links: { github: string | null; linkedin: string | null; website: string | null };
+  expertise: ExpertiseFieldDto[]; // ≤ 5, in the user's order
+  joinedAt: string;
+  stats: { articles: number; followers: number; following: number; totalReads: number }; // published articles; sum of their readCount
+  isMe: boolean;
+  isFollowing: boolean;          // false for guests and on your own profile
+  followsYou: boolean;           // false for guests and on your own profile
+  readingStatsVisible: boolean;  // isMe, or the user turned on publicReadingStats: then /stats and /stats/heatmap answer 200
+}
+
+interface ExpertiseFieldDto { id: string; slug: string; name: string; icon: string; color: string } // name localized by Accept-Language
 
 // ── Media (ADR 0011) ──────────────────────────────────────────────
 type MediaKind = 'image' | 'document';
