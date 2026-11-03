@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ReadIn logo concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<!--
+  Logo concepts, rendered by render-logo-concepts.mjs:
+    logo-concepts.html?v=icon&c=1..6   one 1024×1024 icon (full-bleed square; iOS applies its own mask)
+    logo-concepts.html?v=sheet         comparison sheet with every concept, large + home-screen size, light + dark
+-->
+<style>
+  html, body { margin: 0; background: #F4F1EA; font-family: "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif; }
+  .icon svg { display: block; width: 1024px; height: 1024px; }
+  .sheet { width: 1800px; padding: 64px 72px 72px; box-sizing: border-box; }
+  .sheet h1 { margin: 0 0 6px; font: 700 44px "IBM Plex Sans", sans-serif; letter-spacing: -1.5px; color: #1A1A1A; }
+  .sheet h1 span { color: #0F5E52; }
+  .sheet .lead { margin: 0 0 40px; color: #6B6B6B; font-size: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .card { background: #fff; border: 1px solid #E6E1D7; border-radius: 28px; padding: 30px; display: flex; flex-direction: column; gap: 22px; }
+  .row { display: flex; align-items: center; gap: 26px; }
+  .big { width: 230px; height: 230px; border-radius: 52px; overflow: hidden; box-shadow: 0 14px 34px rgba(15,94,82,.18); flex: 0 0 auto; }
+  .big svg, .small svg { width: 100%; height: 100%; display: block; }
+  .meta { display: flex; flex-direction: column; gap: 6px; }
+  .num { font: 700 15px "IBM Plex Sans", sans-serif; color: #0F5E52; letter-spacing: 1px; }
+  .name { font: 700 26px "IBM Plex Sans", sans-serif; color: #1A1A1A; letter-spacing: -.5px; }
+  .name-ar { font-size: 20px; font-weight: 700; color: #1A1A1A; }
+  .idea { color: #5E5E5E; font-size: 16px; line-height: 1.6; direction: rtl; text-align: right; }
+  .homes { display: flex; gap: 14px; }
+  .home { flex: 1; border-radius: 18px; padding: 16px; display: flex; align-items: center; gap: 14px; }
+  .home.light { background: linear-gradient(135deg, #DDE7F0, #F3E7DA); }
+  .home.dark { background: linear-gradient(135deg, #1B1F26, #2B2420); }
+  .small { width: 62px; height: 62px; border-radius: 14px; overflow: hidden; box-shadow: 0 3px 8px rgba(0,0,0,.18); }
+  .home .label { font: 600 13px "IBM Plex Sans", sans-serif; }
+  .home.light .label { color: #1A1A1A; } .home.dark .label { color: #F2F1EC; }
+  .tiny { width: 36px; height: 36px; border-radius: 8px; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// Shared emerald background with a soft light source (top-left) and a faint ring.
+const BG = (id) => `
+  <defs>
+    <radialGradient id="bg${id}" cx="28%" cy="18%" r="95%">
+      <stop offset="0" stop-color="#1C806A"/><stop offset=".55" stop-color="#0F5E52"/><stop offset="1" stop-color="#083F36"/>
+    </radialGradient>
+    <linearGradient id="amber${id}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F7C062"/><stop offset="1" stop-color="#E8962A"/>
+    </linearGradient>
+    <linearGradient id="paper${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E9F2EE"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg${id})"/>
+  <circle cx="250" cy="170" r="430" fill="none" stroke="#fff" stroke-opacity=".07" stroke-width="3"/>`;
+
+const CONCEPTS = [
+  {
+    name: "R + ر", ar: "حرفين في حرف",
+    idea: "حرف R الإنجليزي وجنبه «ر» العربي بالبرتقالي، متداخلين في بعض. نفس فكرة المنصة: عربي وإنجليزي في مكان واحد.",
+    svg: (i) => `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">${BG(i)}
+      <text x="410" y="735" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="600" fill="#fff" letter-spacing="-10">R</text>
+      <text x="690" y="760" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-weight="700" font-size="470" fill="url(#amber${i})">ر</text>
+    </svg>`,
+  },
+  {
+    name: "Daily Page", ar: "صفحة كل صبح",
+    idea: "كتاب مفتوح والشمس طالعة من بين صفحاته. مقال جديد كل صبح، والصفحات بتشاور لفوق كأنها بتكبر.",
+    svg: (i) => `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">${BG(i)}
+      <circle cx="512" cy="430" r="150" fill="url(#amber${i})"/>
+      <g stroke="#F7C062" stroke-width="26" stroke-linecap="round" opacity=".9">
+        <line x1="512" y1="205" x2="512" y2="245"/><line x1="335" y1="285" x2="362" y2="312"/><line x1="689" y1="285" x2="662" y2="312"/>
+        <line x1="270" y1="440" x2="308" y2="440"/><line x1="754" y1="440" x2="716" y2="440"/>
+      </g>
+      <path d="M512 505 C430 455 300 440 190 470 V800 C300 770 430 785 512 835 Z" fill="url(#paper${i})"/>
+      <path d="M512 505 C594 455 724 440 834 470 V800 C724 770 594 785 512 835 Z" fill="#fff"/>
+      <path d="M512 505 V835" stroke="#0F5E52" stroke-opacity=".25" stroke-width="10"/>
+      <g stroke="#0F5E52" stroke-opacity=".28" stroke-width="16" stroke-linecap="round">
+        <path d="M260 560 C330 548 400 556 455 575"/><path d="M260 630 C330 618 400 626 455 645"/><path d="M260 700 C320 690 380 694 430 708"/>
+        <path d="M764 560 C694 548 624 556 569 575"/><path d="M764 630 C694 618 624 626 569 645"/><path d="M764 700 C704 690 644 694 594 708"/>
+      </g>
+    </svg>`,
+  },
+  {
+    name: "Bookmark", ar: "علامة القراءة",
+    idea: "علامة كتاب (Bookmark) مكتوب فيها R، مع ركن مطوي بالبرتقالي. بتقول «كمّل من مكان ما وقفت» وبتفكر بالحفظ.",
+    svg: (i) => `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">${BG(i)}
+      <path d="M318 170 H706 a40 40 0 0 1 40 40 V880 L512 730 L278 880 V210 a40 40 0 0 1 40 -40 Z" fill="#fff"/>
+      <path d="M626 170 H706 a40 40 0 0 1 40 40 V290 Z" fill="url(#amber${i})"/>
+      <text x="512" y="610" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="400" fill="#0F5E52" letter-spacing="-10">R</text>
+    </svg>`,
+  },
+  {
+    name: "Step In", ar: "ادخل واقرا",
+    idea: "صفحة فيها سطور، وسهم برتقالي داخل جواها. ترجمة حرفية لاسم ReadIn: ادخل جوه المعرفة.",
+    svg: (i) => `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">${BG(i)}
+      <rect x="330" y="200" width="470" height="620" rx="56" fill="#fff"/>
+      <g fill="#0F5E52" fill-opacity=".22">
+        <rect x="410" y="300" width="310" height="36" rx="18"/><rect x="410" y="380" width="250" height="36" rx="18"/>
+        <rect x="470" y="460" width="250" height="36" rx="18"/><rect x="470" y="540" width="200" height="36" rx="18"/>
+        <rect x="410" y="620" width="310" height="36" rx="18"/><rect x="410" y="700" width="180" height="36" rx="18"/>
+      </g>
+      <path d="M200 518 H470" stroke="url(#amber${i})" stroke-width="96" stroke-linecap="round"/>
+      <path d="M410 410 L540 518 L410 626" fill="none" stroke="url(#amber${i})" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+  },
+  {
+    name: "Spark of Insight", ar: "ومضة فهم",
+    idea: "كتاب مفتوح بيطلع منه شرارة/نجمة برتقالي. اللحظة اللي بتفهم فيها حاجة جديدة، وده الإحساس اللي المنصة عايزة توصله.",
+    svg: (i) => `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">${BG(i)}
+      <path d="M512 330 C540 420 570 450 660 478 C570 506 540 536 512 626 C484 536 454 506 364 478 C454 450 484 420 512 330 Z" fill="url(#amber${i})"/>
+      <path d="M690 250 C700 284 712 296 746 306 C712 316 700 328 690 362 C680 328 668 316 634 306 C668 296 680 284 690 250 Z" fill="#F7C062"/>
+      <path d="M512 690 C420 630 300 618 180 650 V800 C300 772 420 784 512 840 Z" fill="url(#paper${i})"/>
+      <path d="M512 690 C604 630 724 618 844 650 V800 C724 772 604 784 512 840 Z" fill="#fff"/>
+      <path d="M512 690 V840" stroke="#0F5E52" stroke-opacity=".25" stroke-width="10"/>
+    </svg>`,
+  },
+  {
+    name: "Morning Read", ar: "مقال مع القهوة",
+    idea: "فنجان قهوة والبخار طالع منه على شكل سطور مقال. «مقال 5 دقايق مع قهوة الصبح» في أيقونة واحدة.",
+    svg: (i) => `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">${BG(i)}
+      <g fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" opacity=".95">
+        <path d="M400 210 C360 260 440 300 400 350"/>
+        <path d="M512 180 C472 240 552 290 512 350"/>
+        <path d="M624 210 C584 260 664 300 624 350"/>
+      </g>
+      <path d="M250 430 H710 V560 C710 700 610 790 480 790 C350 790 250 700 250 560 Z" fill="#fff"/>
+      <path d="M710 470 H760 a90 90 0 0 1 0 180 H700" fill="none" stroke="#fff" stroke-width="46"/>
+      <g fill="#0F5E52" fill-opacity=".25"><rect x="330" y="500" width="300" height="30" rx="15"/><rect x="360" y="570" width="240" height="30" rx="15"/><rect x="400" y="640" width="160" height="30" rx="15"/></g>
+      <rect x="200" y="830" width="560" height="44" rx="22" fill="url(#amber${i})"/>
+    </svg>`,
+  },
+];
+
+const q = new URLSearchParams(location.search);
+const root = document.getElementById("root");
+if (q.get("v") === "icon") {
+  const c = Number(q.get("c") || 1);
+  root.innerHTML = `<div class="icon">${CONCEPTS[c - 1].svg("i")}</div>`;
+} else {
+  root.innerHTML = `<div class="sheet">
+    <h1>Read<span>In</span> · Logo concepts</h1>
+    <p class="lead" dir="rtl" style="text-align:left">6 أفكار للوجو. كل كارت فيه الأيقونة كبيرة، وبمقاسها على الشاشة الرئيسية في الوضع الفاتح والغامق.</p>
+    <div class="grid">${CONCEPTS.map((c, n) => `
+      <div class="card">
+        <div class="row">
+          <div class="big">${c.svg("b" + n)}</div>
+          <div class="meta"><span class="num">0${n + 1}</span><span class="name">${c.name}</span><span class="name-ar">${c.ar}</span></div>
+        </div>
+        <div class="idea">${c.idea}</div>
+        <div class="homes">
+          <div class="home light"><div class="small">${c.svg("l" + n)}</div><div class="tiny">${c.svg("t" + n)}</div><span class="label">ReadIn</span></div>
+          <div class="home dark"><div class="small">${c.svg("d" + n)}</div><div class="tiny">${c.svg("u" + n)}</div><span class="label">ReadIn</span></div>
+        </div>
+      </div>`).join("")}
+    </div></div>`;
+}
+</script>
+</body>
+</html>

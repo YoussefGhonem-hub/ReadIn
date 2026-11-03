@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ReadIn logo concepts, round 3</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<!--
+  Round 3: "R + ر" with a book. Rendered by render-logo-concepts.mjs 3:
+    logo-concepts-3.html?v=icon&c=1..3   one 1024×1024 icon
+    logo-concepts-3.html?v=sheet         identity sheet: icon + lockups on light/dark + home-screen sizes
+-->
+<style>
+  html, body { margin: 0; background: #EFEBE3; font-family: "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif; }
+  .icon svg { display: block; width: 1024px; height: 1024px; }
+  .sheet { width: 1800px; padding: 64px 72px 72px; box-sizing: border-box; }
+  .sheet h1 { margin: 0 0 6px; font: 700 44px "IBM Plex Sans", sans-serif; letter-spacing: -1.5px; color: #141615; }
+  .sheet h1 span { color: #0F5E52; }
+  .lead { margin: 0 0 38px; color: #6B6B6B; font-size: 20px; }
+  .list { display: flex; flex-direction: column; gap: 26px; }
+  .card { background: #fff; border: 1px solid #E3DED3; border-radius: 30px; padding: 30px 34px; display: grid; grid-template-columns: 250px 1fr 560px; gap: 36px; align-items: center; }
+  .big { width: 250px; height: 250px; border-radius: 56px; overflow: hidden; box-shadow: 0 16px 36px rgba(10,60,50,.2); }
+  .big svg, .small svg, .mark svg { width: 100%; height: 100%; display: block; }
+  .meta { display: flex; flex-direction: column; gap: 8px; }
+  .tag { align-self: flex-start; font: 700 13px "IBM Plex Sans", sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: #0F5E52; background: #E7F2EE; padding: 6px 10px; border-radius: 8px; }
+  .name { font: 700 34px "IBM Plex Sans", sans-serif; color: #141615; letter-spacing: -1px; }
+  .name small { font: 700 24px "IBM Plex Sans Arabic", sans-serif; color: #6B6B6B; margin-inline-start: 10px; }
+  .idea { color: #4A4A4A; font-size: 18px; line-height: 1.75; direction: rtl; text-align: right; }
+  .lockups { display: grid; grid-template-rows: 1fr 1fr; gap: 14px; }
+  .lockup { border-radius: 20px; padding: 18px 24px; display: flex; align-items: center; gap: 18px; }
+  .lockup.light { background: #FAF8F4; border: 1px solid #ECE7DD; }
+  .lockup.dark { background: #121413; }
+  .mark { width: 74px; height: 74px; border-radius: 18px; overflow: hidden; flex: 0 0 auto; }
+  .word { font: 700 46px "IBM Plex Sans", sans-serif; letter-spacing: -2px; line-height: 1; }
+  .light .word .r { color: #141615; } .light .word .i { color: #0F5E52; }
+  .dark .word .r { color: #F2F1EC; } .dark .word .i { color: #70B99B; }
+  .word-ar { font: 600 15px "IBM Plex Sans Arabic", sans-serif; margin-top: 6px; }
+  .light .word-ar { color: #6B6B6B; } .dark .word-ar { color: #A3A9A4; }
+  .homes { margin-inline-start: auto; display: flex; gap: 10px; align-items: center; }
+  .small { width: 46px; height: 46px; border-radius: 11px; overflow: hidden; }
+  .tiny { width: 28px; height: 28px; border-radius: 7px; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const defs = (id) => `
+  <defs>
+    <radialGradient id="bg${id}" cx="26%" cy="16%" r="100%">
+      <stop offset="0" stop-color="#1D8A71"/><stop offset=".5" stop-color="#0F5E52"/><stop offset="1" stop-color="#073A32"/>
+    </radialGradient>
+    <linearGradient id="am${id}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD37A"/><stop offset=".55" stop-color="#F2A93B"/><stop offset="1" stop-color="#DE8A1E"/>
+    </linearGradient>
+    <linearGradient id="wh${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4F0EB"/>
+    </linearGradient>
+    <linearGradient id="pg${id}" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DCEAE4"/>
+    </linearGradient>
+    <filter id="sh${id}" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#021F1A" flood-opacity=".35"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg${id})"/>`;
+
+const R = (x, y, size, fill) => `<text x="${x}" y="${y}" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="${size}" fill="${fill}" letter-spacing="-8">R</text>`;
+const RA = (x, y, size, fill) => `<text x="${x}" y="${y}" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-weight="700" font-size="${size}" fill="${fill}">ر</text>`;
+
+const CONCEPTS = [
+  {
+    tag: "R + ر · open book", name: "Rising Letters", ar: "حروف طالعة من كتاب",
+    idea: "كتاب مفتوح، وطالع منه حرف R الإنجليزي و«ر» العربي جنب بعض. المعرفة بتطلع من الكتاب باللغتين. نفس فكرة «R + ر» اللي عجبتك، بس بقت مرتبطة بالقراية.",
+    svg: (i) => `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">${defs(i)}
+      <g filter="url(#sh${i})">
+        ${R(430, 600, 440, `url(#wh${i})`)}
+        ${RA(690, 528, 340, `url(#am${i})`)}
+      </g>
+      <g filter="url(#sh${i})" transform="translate(0 30)">
+        <path d="M512 640 C430 596 316 586 206 612 V800 C316 776 430 786 512 832 Z" fill="url(#pg${i})"/>
+        <path d="M512 640 C594 596 708 586 818 612 V800 C708 776 594 786 512 832 Z" fill="#FFFFFF"/>
+      </g>
+      <g transform="translate(0 30)"><path d="M512 640 V832" stroke="#0F5E52" stroke-opacity=".28" stroke-width="10"/>
+      <g fill="#0F5E52" fill-opacity=".2"><rect x="262" y="668" width="170" height="18" rx="9"/><rect x="262" y="712" width="130" height="18" rx="9"/><rect x="592" y="668" width="170" height="18" rx="9"/><rect x="632" y="712" width="130" height="18" rx="9"/></g></g>
+    </svg>`,
+  },
+  {
+    tag: "R + ر · bilingual book", name: "Two-Language Book", ar: "كتاب بلغتين",
+    idea: "كتاب مفتوح: الصفحة الشمال فيها R (الإنجليزي بيتقري من الشمال)، والصفحة اليمين فيها «ر» (العربي بيتقري من اليمين)، وشريط Bookmark برتقالي في النص. أوضح ترجمة لفكرة ReadIn: كتاب واحد بلغتين.",
+    svg: (i) => `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">${defs(i)}
+      <g filter="url(#sh${i})">
+        <path d="M512 300 C426 248 300 236 176 266 V770 C300 742 426 752 512 804 Z" fill="url(#pg${i})"/>
+        <path d="M512 300 C598 248 724 236 848 266 V770 C724 742 598 752 512 804 Z" fill="#FFFFFF"/>
+      </g>
+      <path d="M512 300 V804" stroke="#0F5E52" stroke-opacity=".25" stroke-width="12"/>
+      ${R(350, 640, 330, "#0F5E52")}
+      ${RA(680, 612, 340, `url(#am${i})`)}
+      <path d="M494 276 H530 V420 L512 404 L494 420 Z" fill="url(#am${i})"/>
+    </svg>`,
+  },
+  {
+    tag: "R + ر · book cover", name: "The ReadIn Book", ar: "غلاف كتاب ReadIn",
+    idea: "كتاب مقفول واقف، وعلى غلافه R و«ر» متداخلين زي الفكرة الأصلية، وطرف الصفحات باين على الجنب، وشريط Bookmark نازل من تحت. الأيقونة نفسها بقت «كتاب ReadIn».",
+    svg: (i) => `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">${defs(i)}
+      <g filter="url(#sh${i})">
+        <rect x="318" y="206" width="430" height="600" rx="36" fill="#E3EFEA"/>
+        <g stroke="#0F5E52" stroke-opacity=".18" stroke-width="6"><line x1="728" y1="250" x2="728" y2="770"/><line x1="712" y1="250" x2="712" y2="770"/></g>
+        <path d="M600 790 H660 V900 L630 874 L600 900 Z" fill="url(#am${i})"/>
+        <rect x="276" y="184" width="430" height="600" rx="36" fill="url(#wh${i})"/>
+        <rect x="276" y="184" width="64" height="600" rx="32" fill="#CFE3DB"/>
+      </g>
+      ${R(500, 590, 380, "#0F5E52")}
+      ${RA(640, 612, 320, `url(#am${i})`)}
+    </svg>`,
+  },
+];
+
+const q = new URLSearchParams(location.search);
+const root = document.getElementById("root");
+const lockup = (c, n, mode) => `<div class="lockup ${mode}"><div class="mark">${c.svg(mode + n)}</div>
+  <div><div class="word"><span class="r">Read</span><span class="i">In</span></div><div class="word-ar">مقال كل يوم يفرق معاك</div></div>
+  <div class="homes"><div class="small">${c.svg(mode + "s" + n)}</div><div class="tiny">${c.svg(mode + "t" + n)}</div></div></div>`;
+if (q.get("v") === "icon") {
+  root.innerHTML = `<div class="icon">${CONCEPTS[Number(q.get("c") || 1) - 1].svg("i")}</div>`;
+} else {
+  root.innerHTML = `<div class="sheet">
+    <h1>Read<span>In</span> · R + ر with a book</h1>
+    <p class="lead" dir="rtl" style="text-align:left">3 طرق لدمج حرف R و«ر» مع كتاب. كل فكرة معروضة كهوية كاملة.</p>
+    <div class="list">${CONCEPTS.map((c, n) => `
+      <div class="card">
+        <div class="big">${c.svg("b" + n)}</div>
+        <div class="meta"><span class="tag">0${n + 1} · ${c.tag}</span><div class="name">${c.name}<small>${c.ar}</small></div><div class="idea">${c.idea}</div></div>
+        <div class="lockups">${lockup(c, n, "light")}${lockup(c, n, "dark")}</div>
+      </div>`).join("")}
+    </div></div>`;
+}
+</script>
+</body>
+</html>

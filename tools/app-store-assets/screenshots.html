@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ReadIn App Store screenshots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  App Store screenshot template. Renders one screenshot per page load:
+    screenshots.html?lang=ar|en&shot=1..6&w=402&h=874
+  The design canvas is 402×874 CSS px (iPhone 6.3"); render.mjs scales it to other sizes.
+  Phone screens are copied from the approved mockup (docs/design/readin-mockup.html).
+-->
+<style>
+  :root {
+    --paper: #FAF8F4; --surface: #FFFFFF; --surface-2: #F3F0EA; --ink: #1A1A1A; --muted: #6B6B6B;
+    --line: #EAE6DE; --green: #0F5E52; --green-dark: #0A493F; --green-soft: #EAF4EF;
+    --amber: #F2A93B; --amber-soft: #FFF3D9; --slate-soft: #EDF1F4;
+    --phone-shadow: 0 24px 70px rgba(29, 28, 22, .22), 0 4px 12px rgba(29, 28, 22, .1);
+  }
+  .dark {
+    --paper: #121413; --surface: #1B1F1D; --surface-2: #252A27; --ink: #F2F1EC;
+    --muted: #A3A9A4; --line: #303632; --green: #70B99B; --green-dark: #4F9A7C;
+    --green-soft: #1F342B; --amber: #F2B84B; --amber-soft: #3A3020; --slate-soft: #293034;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; overflow: hidden; background: #0F5E52; }
+  body { font-family: "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif; -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; }
+
+  /* ---------- Marketing frame ---------- */
+  .stage { position: absolute; top: 0; left: 0; transform-origin: top left; }
+  .shot { width: 402px; height: 874px; position: relative; overflow: hidden; }
+  .shot.bg-green { background: radial-gradient(120% 70% at 50% 0%, #17745F 0%, #0F5E52 45%, #0A493F 100%); color: #fff; }
+  .shot.bg-paper { background: radial-gradient(120% 70% at 50% 0%, #FFFFFF 0%, #FAF8F4 50%, #F1ECE2 100%); color: #1A1A1A; }
+  .shot.bg-night { background: radial-gradient(120% 70% at 50% 0%, #22302A 0%, #151917 50%, #0D0F0E 100%); color: #F2F1EC; }
+  .deco { position: absolute; border-radius: 50%; pointer-events: none; }
+  .deco.a { width: 420px; height: 420px; top: -250px; left: -170px; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 0 0 40px rgba(255,255,255,.035), 0 0 0 80px rgba(255,255,255,.025); }
+  .bg-paper .deco.a { border-color: rgba(15,94,82,.12); box-shadow: 0 0 0 40px rgba(15,94,82,.035), 0 0 0 80px rgba(15,94,82,.02); }
+  .deco.b { width: 160px; height: 160px; top: 120px; right: -70px; background: radial-gradient(circle, rgba(242,169,59,.35), rgba(242,169,59,0) 70%); }
+  .head { position: absolute; top: 46px; inset-inline: 26px; text-align: center; z-index: 3; }
+  .brand { display: inline-flex; align-items: center; gap: 7px; direction: ltr; margin-bottom: 14px; }
+  .brand .icon { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font: 700 15px "IBM Plex Sans", sans-serif; background: #fff; color: #0F5E52; }
+  .bg-paper .brand .icon { background: #0F5E52; color: #fff; }
+  .brand .word { font: 700 19px "IBM Plex Sans", sans-serif; letter-spacing: -1px; }
+  .brand .word .in { color: #F2A93B; }
+  .bg-paper .brand .word .in { color: #0F5E52; }
+  .headline { margin: 0; font-weight: 700; font-size: 27px; line-height: 1.32; letter-spacing: -.02em; }
+  [lang="en"] .headline { font-family: "IBM Plex Sans", sans-serif; letter-spacing: -.03em; font-size: 28px; line-height: 1.18; }
+  .headline .hl { color: #F2A93B; }
+  .bg-paper .headline .hl { color: #0F5E52; }
+  .sub { margin: 10px auto 0; max-width: 320px; font-size: 14px; line-height: 1.6; opacity: .82; }
+  [lang="en"] .sub { font-family: "IBM Plex Sans", sans-serif; }
+  .phone-wrap { position: absolute; left: 50%; top: 222px; transform: translateX(-50%) scale(.79); transform-origin: top center; z-index: 2; }
+
+  /* ---------- Phone (from the approved mockup) ---------- */
+  .phone {
+    width: 390px; height: 844px; position: relative; overflow: hidden; border-radius: 44px;
+    background: var(--paper); border: 9px solid #1E1F1C; box-shadow: var(--phone-shadow);
+    direction: rtl; color: var(--ink); isolation: isolate;
+  }
+  [lang="en"] .phone { direction: ltr; }
+  .dark .phone { border-color: #050606; }
+  .phone::before { content: ""; position: absolute; width: 104px; height: 28px; border-radius: 20px; background: #000; top: 9px; left: 50%; transform: translateX(-50%); z-index: 20; }
+  .phone-scroll { height: 100%; overflow: hidden; padding-bottom: 82px; }
+  .status { height: 46px; padding: 14px 24px 0; display: flex; justify-content: space-between; direction: ltr; font: 600 12px "IBM Plex Sans",sans-serif; }
+  .status-right { display: flex; gap: 5px; align-items: center; font-size: 10px; }
+  .screen-content { padding: 4px 19px 18px; }
+  [lang="en"] .screen-content, [lang="en"] .phone { font-family: "IBM Plex Sans", "IBM Plex Sans Arabic", sans-serif; }
+  .wordmark { display: inline-flex; align-items: center; direction: ltr; font-family: "IBM Plex Sans", sans-serif; font-weight: 700; letter-spacing: -1.5px; font-size: 31px; }
+  .wordmark .read { color: var(--ink); } .wordmark .in { color: var(--green); }
+  .app-icon { width: 43px; height: 43px; display: grid; place-items: center; border-radius: 14px; color: #fff; background: var(--green); font-family: "IBM Plex Sans", sans-serif; font-weight: 700; font-size: 23px; direction: ltr; }
+  .brand .icon, .app-icon { overflow: hidden; }
+  .brand .icon svg, .app-icon svg { width: 100%; height: 100%; display: block; }
+  .mini-brand { display: flex; justify-content: center; margin: 4px 0 24px; }
+  .mini-brand .wordmark { font-size: 23px; }
+  .mini-brand .app-icon { width: 29px; height: 29px; font-size: 16px; border-radius: 9px; margin-inline-start: 7px; }
+  .onboard-progress { display: flex; justify-content: center; gap: 6px; margin: 26px 0 0; direction: ltr; }
+  .onboard-progress i { width: 6px; height: 6px; border-radius: 10px; background: #D8D5CE; }
+  .onboard-progress i.active { width: 20px; background: var(--green); }
+  .onboard h2 { font-size: 25px; margin: 22px 0 5px; letter-spacing: -.04em; }
+  .onboard .subtitle { color: var(--muted); margin: 0 0 21px; font-size: 13px; }
+  .interest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .interest { display: flex; align-items: center; justify-content: flex-start; gap: 8px; height: 40px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 10px; font-size: 11px; white-space: nowrap; }
+  .interest.selected { background: var(--green-soft); color: var(--green); border-color: #A9CFC0; font-weight: 600; }
+  .interest .ico { font-size: 15px; }
+  .interest .chk { margin-inline-start: auto; }
+  .form-label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 7px; }
+  .language-box { margin-top: 20px; }
+  .segmented { display: flex; padding: 3px; background: var(--surface-2); border-radius: 11px; }
+  .segmented button { flex: 1; background: transparent; border: 0; border-radius: 8px; padding: 8px 4px; color: var(--muted); font-size: 10px; }
+  .segmented button.active { background: var(--surface); color: var(--green); box-shadow: 0 2px 6px rgba(0,0,0,.07); font-weight: 600; }
+  .reminder { margin-top: 17px; }
+  .time-picker { height: 42px; padding: 0 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); font-size: 13px; }
+  .time-picker strong { direction: ltr; }
+  .primary-btn { border: 0; color: white; background: var(--green); border-radius: 12px; height: 48px; font-weight: 600; font-size: 14px; width: 100%; margin-top: 21px; }
+  .home-header { display: flex; justify-content: space-between; align-items: center; margin: 3px 0 16px; }
+  .greeting { margin: 0; font-size: 18px; font-weight: 700; }
+  .greeting-sub { color: var(--muted); font-size: 10px; margin-top: 2px; }
+  .header-actions { display: flex; gap: 7px; align-items: center; }
+  .streak { color: #925A00; background: var(--amber-soft); border-radius: 99px; padding: 7px 9px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+  .dark .streak { color: #F2C77A; }
+  .icon-button { border: 1px solid var(--line); width: 33px; height: 33px; border-radius: 11px; background: var(--surface); display: grid; place-items: center; }
+  .hero-card { border-radius: 17px; background: var(--surface); overflow: hidden; border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(43,38,27,.05); }
+  .cover-art { height: 127px; position: relative; overflow: hidden; background: #E5EEE7; }
+  .cover-art::before { content: ""; position: absolute; width: 180px; height: 180px; border: 1px solid rgba(15,94,82,.23); border-radius: 50%; top: -87px; left: 46px; box-shadow: 0 0 0 18px rgba(255,255,255,.2), 0 0 0 38px rgba(15,94,82,.06); }
+  .cover-art::after { content: ""; position: absolute; width: 70px; height: 125px; background: linear-gradient(145deg,#F1BD67,#F3D69C); left: 91px; top: 24px; border-radius: 6px 28px 4px 25px; transform: rotate(28deg); box-shadow: 43px 10px 0 -12px #0F5E52; opacity: .9; }
+  .cover-stamp { position: absolute; top: 15px; inset-inline-start: 15px; z-index: 2; background: rgba(255,255,255,.85); color: var(--green); border-radius: 8px; padding: 5px 8px; font-size: 9px; font-weight: 700; }
+  .hero-body { padding: 13px 14px 14px; }
+  .tagline { display: flex; align-items: center; gap: 6px; color: var(--green); font-size: 10px; font-weight: 700; margin-bottom: 6px; }
+  .tag { border-radius: 6px; padding: 3px 7px; background: var(--green-soft); }
+  .review-tag { color: #47775E; background: #F0F6F1; }
+  .dark .review-tag { background: #23372D; color: #A4CDB3; }
+  .hero-title { margin: 0; font-size: 15px; line-height: 1.55; letter-spacing: -.02em; }
+  .meta-row { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 9px; margin-top: 11px; }
+  .writer { display: flex; align-items: center; gap: 6px; color: var(--ink); font-size: 10px; font-weight: 600; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex: 0 0 auto; color: #fff; font-size: 10px; font-weight: 700; background: linear-gradient(145deg,#D2A482,#76554A); }
+  .avatar.green { background: linear-gradient(145deg,#81AA95,#315E4A); }
+  .avatar.blue { background: linear-gradient(145deg,#9BBBC2,#41666A); }
+  .verified { display: inline-grid; place-items: center; width: 13px; height: 13px; border-radius: 50%; color: #fff; background: #4F9B7A; font: 700 9px "IBM Plex Sans",sans-serif; vertical-align: middle; }
+  .path-card { padding: 12px 13px; margin: 12px 0 13px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+  .path-top { display: flex; justify-content: space-between; align-items: center; font-size: 10px; }
+  .path-top strong { font-size: 11px; } .path-top span { color: var(--green); font-weight: 700; }
+  .progress-track { height: 5px; border-radius: 99px; background: var(--surface-2); margin-top: 9px; overflow: hidden; }
+  .progress-track i { display: block; height: 100%; width: 40%; border-radius: inherit; background: var(--green); }
+  .field-row { display: flex; gap: 7px; overflow: hidden; margin: 0 -19px 14px; padding: 0 19px; }
+  .filter-chip { flex: 0 0 auto; padding: 6px 11px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); font-size: 9px; color: var(--muted); }
+  .filter-chip.active { color: #fff; border-color: var(--green); background: var(--green); }
+  .feed-heading { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+  .feed-heading span { color: var(--green); font-size: 9px; }
+  .article-card { position: relative; display: flex; gap: 9px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .article-thumb { flex: 0 0 59px; height: 61px; border-radius: 10px; background: linear-gradient(135deg,#D6E4DC,#95B8A7); position: relative; overflow: hidden; }
+  .article-thumb::before { content: "</>"; position: absolute; inset: 0; display: grid; place-items: center; color: rgba(15,94,82,.65); font: 600 15px "IBM Plex Mono",monospace; }
+  .article-thumb.orange { background: linear-gradient(135deg,#F8E3B7,#E7AF58); }
+  .article-thumb.orange::before { content: "✳"; color: rgba(126,80,5,.65); font-size: 24px; }
+  .article-thumb.blue { background: linear-gradient(135deg,#DEE7EB,#9DB6C0); }
+  .article-thumb.blue::before { content: "01"; font: 600 19px "IBM Plex Mono",monospace; }
+  .article-info { min-width: 0; flex: 1; }
+  .article-info h4 { margin: 0 0 5px; font-size: 11px; line-height: 1.5; font-weight: 600; }
+  .article-info .small-meta { color: var(--muted); font-size: 8px; }
+  .article-stats { display: flex; gap: 10px; color: var(--muted); font-size: 8px; margin-top: 6px; }
+  .bookmark-small { font-size: 15px; color: var(--muted); padding: 2px; }
+  .bottom-nav { position: absolute; z-index: 5; bottom: 0; inset-inline: 0; height: 74px; display: flex; justify-content: space-around; align-items: center; background: var(--surface); border-top: 1px solid var(--line); padding: 5px 5px 15px; }
+  .nav-item { width: 58px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: #8A8983; font-size: 8px; }
+  .nav-item .nav-icon { font-size: 17px; line-height: 1; }
+  .nav-item.active { color: var(--green); font-weight: 700; }
+  .nav-create { margin-top: -19px; }
+  .create-circle { width: 43px; height: 43px; border-radius: 15px; background: var(--green); color: #fff; display: grid; place-items: center; font: 300 27px "IBM Plex Sans",sans-serif; box-shadow: 0 7px 15px rgba(15,94,82,.25); }
+  .reader-progress { position: absolute; z-index: 12; top: 0; left: 0; right: 0; height: 3px; background: #E8E4DA; direction: ltr; }
+  .dark .reader-progress { background: #2A2F2C; }
+  .reader-progress i { display: block; width: 36%; height: 100%; background: var(--amber); }
+  .reader-top { display: flex; justify-content: space-between; align-items: center; height: 38px; margin-bottom: 15px; }
+  .reader-controls { display: flex; gap: 6px; align-items: center; }
+  .reader-controls .icon-button { width: 31px; height: 31px; }
+  .language-toggle { border: 1px solid var(--line); border-radius: 99px; background: var(--surface); padding: 7px 9px; color: var(--green); font-size: 9px; font-weight: 600; }
+  .reader-title { font-size: 22px; line-height: 1.45; letter-spacing: -.035em; margin: 7px 0 13px; }
+  .reader-byline { display: flex; align-items: center; gap: 8px; }
+  .reader-byline .avatar { width: 35px; height: 35px; font-size: 12px; }
+  .reader-byline .name { font-size: 11px; font-weight: 700; }
+  .reader-byline .byline-sub { font-size: 9px; color: var(--muted); margin-top: 2px; }
+  .follow-btn { margin-inline-start: auto; padding: 6px 10px; border: 1px solid #B6D1C5; color: var(--green); background: var(--surface); border-radius: 9px; font-size: 9px; font-weight: 600; }
+  .dark .follow-btn { border-color: #3C5A4C; }
+  .trust-row { display: flex; flex-wrap: wrap; gap: 5px 8px; border-block: 1px solid var(--line); margin: 13px 0 15px; padding: 9px 0; color: var(--muted); font-size: 8px; align-items: center; }
+  .trust-row .trust-good { color: #47775E; font-weight: 600; }
+  .dark .trust-row .trust-good { color: #8CC5A8; }
+  .article-body { font-size: 12px; line-height: 1.9; }
+  [lang="en"] .article-body { line-height: 1.7; }
+  .article-body p { margin: 0 0 12px; }
+  .article-body h3 { margin: 15px 0 6px; font-size: 15px; line-height: 1.5; }
+  .callout { padding: 9px 11px; border-radius: 10px; margin: 10px 0; font-size: 10px; line-height: 1.7; }
+  .tip { background: var(--green-soft); border-inline-start: 3px solid #5E9A78; }
+  .warning { background: var(--amber-soft); border-inline-start: 3px solid var(--amber); }
+  .code-card { overflow: hidden; border-radius: 10px; margin: 11px 0; background: #202923; color: #E8F0E9; direction: ltr; text-align: left; }
+  .dark .code-card { background: #0C0F0D; border: 1px solid #263029; }
+  .code-head { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; color: #A8B6AA; border-bottom: 1px solid rgba(255,255,255,.1); font: 9px "IBM Plex Sans",sans-serif; }
+  .copy-btn { border: 0; color: #C4D0C6; background: transparent; font: 9px "IBM Plex Sans",sans-serif; }
+  pre { margin: 0; padding: 11px 12px 13px; white-space: pre-wrap; font: 10px/1.6 "IBM Plex Mono",monospace; }
+  .code-green { color: #A8D9A8; }
+  .compare { width: 100%; border-collapse: collapse; font-size: 8px; margin: 8px 0 11px; background: var(--surface); border-radius: 8px; overflow: hidden; }
+  .compare th { background: var(--surface-2); color: var(--green); font-weight: 700; }
+  .compare th, .compare td { text-align: start; padding: 6px 7px; border-bottom: 1px solid var(--line); }
+  .reaction-bar { position: absolute; z-index: 5; bottom: 0; inset-inline: 0; min-height: 68px; padding: 8px 9px 16px; display: flex; align-items: center; justify-content: space-between; gap: 4px; background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -5px 18px rgba(35,32,25,.05); }
+  .reaction { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--muted); font-size: 8px; border: 0; background: transparent; padding: 3px 4px; }
+  .reaction b { font-size: 14px; }
+  .reaction.active { color: var(--green); }
+  .comments-cta { border: 0; border-radius: 10px; padding: 9px 11px; color: var(--green); background: var(--green-soft); font-size: 10px; font-weight: 600; white-space: nowrap; }
+  .sheet-handle { width: 35px; height: 4px; border-radius: 99px; background: #D9D6CF; margin: 2px auto 15px; }
+  .comments-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+  .comments-header h2 { font-size: 18px; margin: 0; }
+  .comments-header span { color: var(--muted); font-size: 10px; }
+  .sort-tabs { display: flex; gap: 17px; border-bottom: 1px solid var(--line); margin: 0 -19px 4px; padding: 0 19px; }
+  .sort-tabs button { border: 0; background: transparent; color: var(--muted); padding: 0 0 9px; font-size: 11px; }
+  .sort-tabs button.active { color: var(--green); border-bottom: 2px solid var(--green); font-weight: 700; }
+  .live-pill { display: flex; justify-content: center; margin: 10px 0 2px; }
+  .live-pill span { background: var(--green); color: #fff; border-radius: 99px; padding: 5px 11px; font-size: 9px; font-weight: 600; box-shadow: 0 5px 12px rgba(15,94,82,.25); }
+  .comment { padding: 14px 0 11px; border-bottom: 1px solid var(--line); }
+  .comment.fresh { background: linear-gradient(90deg, rgba(242,169,59,.10), rgba(242,169,59,0)); margin: 0 -19px; padding-inline: 19px; }
+  .comment-head { display: flex; align-items: center; gap: 8px; }
+  .comment-head .avatar { width: 31px; height: 31px; }
+  .comment-author { font-size: 10px; font-weight: 700; }
+  .comment-time { color: var(--muted); font-size: 8px; margin-top: 2px; }
+  .author-badge { color: var(--green); background: var(--green-soft); padding: 3px 6px; border-radius: 5px; font-size: 8px; }
+  .comment-text { margin: 9px 0 8px; font-size: 11px; line-height: 1.8; }
+  [lang="en"] .comment-text { line-height: 1.6; }
+  .comment-actions { display: flex; gap: 15px; color: var(--muted); font-size: 9px; }
+  .replies { margin: 12px 0 0 0; margin-inline-start: 18px; padding-inline-start: 11px; border-inline-start: 1px solid #BDD3C8; }
+  .reply { display: flex; gap: 7px; margin-bottom: 10px; }
+  .reply .avatar { width: 24px; height: 24px; font-size: 8px; }
+  .reply p { font-size: 9px; line-height: 1.7; margin: 0; }
+  .reply strong { font-size: 9px; }
+  .more-replies { color: var(--green); font-size: 9px; font-weight: 600; padding: 2px 0; }
+  .comment-composer { position: absolute; z-index: 6; bottom: 0; inset-inline: 0; display: flex; gap: 8px; align-items: center; padding: 11px 13px 22px; background: var(--surface); border-top: 1px solid var(--line); }
+  .composer-avatar { width: 29px; height: 29px; border-radius: 50%; background: #DCE7DE; display: grid; place-items: center; font-size: 12px; }
+  .comment-input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 99px; height: 38px; padding: 0 13px; display: flex; align-items: center; background: var(--paper); font-size: 10px; color: var(--muted); }
+  .send-btn { width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--green); color: white; font-size: 15px; display: grid; place-items: center; }
+  .profile-top { text-align: center; padding-top: 10px; }
+  .profile-avatar { width: 72px; height: 72px; border-radius: 25px; margin: 0 auto 9px; display: grid; place-items: center; color: white; font-size: 24px; font-weight: 700; background: linear-gradient(145deg,#A9C7B4,#376451); box-shadow: 0 7px 17px rgba(15,94,82,.2); }
+  .profile-title { margin: 0; font-size: 19px; }
+  .profile-bio { margin: 7px auto 13px; max-width: 260px; color: var(--muted); font-size: 10px; line-height: 1.8; }
+  .profile-actions { position: absolute; top: 54px; inset-inline: 19px; display: flex; justify-content: space-between; }
+  .profile-actions span { width: 32px; height: 32px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; display: grid; place-items: center; }
+  .profile-stats { display: flex; justify-content: center; gap: 33px; margin: 13px 0 16px; }
+  .profile-stat { display: flex; flex-direction: column; align-items: center; font-size: 9px; color: var(--muted); }
+  .profile-stat strong { color: var(--ink); font-size: 14px; margin-bottom: 2px; }
+  .edit-btn { border: 1px solid #B7D0C4; color: var(--green); background: var(--surface); border-radius: 9px; padding: 7px 13px; font-size: 9px; font-weight: 600; }
+  .reading-card { padding: 13px; border-radius: 15px; background: var(--surface); border: 1px solid var(--line); margin-bottom: 16px; }
+  .reading-heading { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 11px; }
+  .reading-heading span { color: var(--muted); font-size: 8px; font-weight: 400; }
+  .reading-metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; text-align: center; }
+  .metric { padding: 8px 3px; border-radius: 9px; background: var(--paper); }
+  .metric strong { display: block; font-size: 14px; }
+  .metric span { color: var(--muted); font-size: 8px; }
+  .metric .fire { color: #D98919; }
+  .heatmap-label { display: flex; justify-content: space-between; margin: 12px 0 7px; font-size: 8px; color: var(--muted); }
+  .heatmap { display: grid; grid-template-columns: repeat(18,1fr); gap: 3px; direction: ltr; }
+  .heatmap i { aspect-ratio: 1; border-radius: 2px; background: #E9E7E1; }
+  .heatmap i.l1 { background: #C8DED1; } .heatmap i.l2 { background: #8DB99F; } .heatmap i.l3 { background: #43856A; } .heatmap i.l4 { background: #0F5E52; }
+  .profile-tabs { display: flex; justify-content: space-around; border-bottom: 1px solid var(--line); margin: 0 -19px 6px; }
+  .profile-tabs button { border: 0; background: transparent; color: var(--muted); font-size: 10px; padding: 9px 7px; }
+  .profile-tabs button.active { color: var(--green); border-bottom: 2px solid var(--green); font-weight: 700; }
+  .saved-label { display: flex; justify-content: space-between; margin: 10px 0 0; font-size: 10px; font-weight: 700; }
+  .saved-label span { color: var(--green); font-size: 9px; }
+  .profile-article { display: flex; gap: 9px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .profile-article .article-thumb { height: 55px; flex-basis: 55px; }
+  .profile-article h4 { font-size: 10px; margin: 1px 0 5px; line-height: 1.5; }
+  .profile-article p { color: var(--muted); margin: 0; font-size: 8px; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage"></div>
+<script>
+const params = new URLSearchParams(location.search);
+const lang = params.get("lang") === "en" ? "en" : "ar";
+const shot = Number(params.get("shot") || 1);
+const W = Number(params.get("w") || 402);
+const L = (s) => `<bdi dir="ltr">${s}</bdi>`;
+// Final ReadIn logo (same art as logo.html). Ids are suffixed so several copies can share the page.
+const LOGO = (id) => `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="lbg${id}" cx="28%" cy="18%" r="95%"><stop offset="0" stop-color="#1C806A"/><stop offset=".55" stop-color="#0F5E52"/><stop offset="1" stop-color="#083F36"/></radialGradient><linearGradient id="lam${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F7C062"/><stop offset="1" stop-color="#E8962A"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#lbg${id})"/><text x="410" y="675" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="600" fill="#fff" letter-spacing="-10">R</text><text x="690" y="700" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-weight="700" font-size="470" fill="url(#lam${id})">ر</text></svg>`;
+const STATUS = `<div class="status"><span>9:41</span><span class="status-right"><span>▮▮▮</span><span>◉</span><span>▰</span></span></div>`;
+
+// ---------- Copy (ar = Egyptian Arabic UI, en = English UI) ----------
+const T = {
+  ar: {
+    heads: [
+      { bg: "green", h: `مقال واحد <span class="hl">كل يوم</span><br>يفرق معاك`, s: "مختار ليك في المجال اللي بتحبه، وتقراه في 5 دقايق" },
+      { bg: "paper", h: `عربي و${L("English")}<br>في <span class="hl">نفس المقال</span>`, s: "من غير ما شكل الكلام يبوظ، والكود دايمًا بيظهر صح" },
+      { bg: "green", h: `اختار <span class="hl">اهتماماتك</span><br>في ثواني`, s: `${L("AI")} و ${L(".NET")} و ${L("Mobile")} والطب والهندسة، وأكتر` },
+      { bg: "paper", h: `نقاش مفيد<br>مع <span class="hl">الكتّاب والقراء</span>`, s: "تعليقات وردود بتظهر على طول، من غير ما تعمل Refresh" },
+      { bg: "green", h: `عادة قراءة<br><span class="hl">بتكبر كل يوم</span>`, s: "سلسلة أيام، وإحصائيات، ومحفوظاتك في مكان واحد" },
+      { bg: "night", h: `مريح لعينك<br><span class="hl">بالليل</span>`, s: `${L("Dark Mode")} كامل في كل الشاشات` },
+    ],
+  },
+  en: {
+    heads: [
+      { bg: "green", h: `One article <span class="hl">a day</span><br>that makes a difference`, s: "Picked for you, in the field you love. A 5-minute read." },
+      { bg: "paper", h: `Arabic and English<br><span class="hl">in one article</span>`, s: "Text never breaks, and code always reads right." },
+      { bg: "green", h: `Pick your <span class="hl">interests</span><br>in seconds`, s: "AI, .NET, Mobile, Medicine, Engineering and more." },
+      { bg: "paper", h: `Real discussions<br>with <span class="hl">writers</span>`, s: "Comments and replies appear instantly, no refresh needed." },
+      { bg: "green", h: `A reading habit<br><span class="hl">that grows daily</span>`, s: "Streaks, stats and your saved articles in one place." },
+      { bg: "night", h: `Easy on your eyes<br><span class="hl">at night</span>`, s: "Full Dark Mode on every screen." },
+    ],
+  },
+};
+
+// ---------- Screens ----------
+function onboarding() {
+  const ar = lang === "ar";
+  const chip = (ico, label, sel) => `<div class="interest${sel ? " selected" : ""}"><span class="ico">${ico}</span>${label}${sel ? '<span class="chk">✓</span>' : ""}</div>`;
+  return `${STATUS}<div class="screen-content onboard">
+    <div class="mini-brand"><div class="wordmark"><span class="read">Read</span><span class="in">In</span></div><div class="app-icon">${LOGO("o")}</div></div>
+    <div class="onboard-progress"><i></i><i class="active"></i><i></i></div>
+    <h2>${ar ? "إيه المجالات اللي بتحبها؟" : "What do you love to read about?"}</h2>
+    <p class="subtitle">${ar ? "هنختارلك كل يوم مقال على مزاجك" : "We'll pick one article for you every day"}</p>
+    <div class="interest-grid">
+      ${chip("✦", L("AI"), true)}${chip("◉", L("Machine Learning"), true)}${chip("⌘", L(".NET"), true)}${chip("⌁", L("Frontend"), false)}
+      ${chip("▣", L("Mobile"), false)}${chip("✺", L("Claude &amp; AI Tools"), true)}${chip("▤", L("Databases"), false)}${chip("⇄", L("DevOps"), false)}
+      ${chip("✚", ar ? "طب" : "Medicine", true)}${chip("⌂", ar ? "هندسة" : "Engineering", false)}${chip("♡", ar ? "صحة عامة" : "Public Health", false)}
+    </div>
+    <div class="language-box"><span class="form-label">${ar ? "لغة المقالات" : "Article language"}</span>
+      <div class="segmented">${ar ? '<button class="active">مصري + English</button><button>English only</button>' : '<button>Arabic + English</button><button class="active">English only</button>'}</div></div>
+    <div class="reminder"><span class="form-label">${ar ? "إمتى تحب يوصلك مقال اليوم؟" : "When should today's article arrive?"}</span>
+      <div class="time-picker"><span>🔔 ${ar ? "تذكير يومي" : "Daily reminder"}</span><strong>${ar ? "8:00 ص" : "8:00 AM"}　⌄</strong></div></div>
+    <button class="primary-btn">${ar ? "يلا نبدأ ←" : "Let's start →"}</button>
+  </div>`;
+}
+
+function home() {
+  const ar = lang === "ar";
+  const card = (cls, title, meta, a, c) => `<div class="article-card"><div class="article-thumb ${cls}"></div><div class="article-info"><h4 dir="auto">${title}</h4><div class="small-meta">${meta}</div><div class="article-stats"><span>💡 ${a}</span><span>💬 ${c}</span></div></div><span class="bookmark-small">♧</span></div>`;
+  return `<div class="phone-scroll">${STATUS}<div class="screen-content">
+    <div class="home-header"><div><h2 class="greeting">${ar ? "صباح الخير يا يوسف 👋" : "Good morning, Youssef 👋"}</h2><div class="greeting-sub">${ar ? "جاهز لجرعة معرفة صغيرة؟" : "Ready for a small dose of knowledge?"}</div></div>
+      <div class="header-actions"><span class="streak">🔥 ${ar ? "12 يوم" : "12 days"}</span><span class="icon-button">♧</span></div></div>
+    <div class="hero-card"><div class="cover-art"><span class="cover-stamp">${ar ? "اختيار النهارده ✦" : "Today's pick ✦"}</span></div>
+      <div class="hero-body"><div class="tagline"><span class="tag">${L(".NET")}</span><span class="tag review-tag">✓ ${ar ? "مراجَع" : "Reviewed"}</span><span>${ar ? "6 دقايق" : "6 min"}</span></div>
+      <h3 class="hero-title" dir="auto">${ar ? `يعني إيه ${L("Dependency Injection")} في ${L(".NET")}؟ وليه كل الناس بتتكلم عنه` : "What is Dependency Injection in .NET, and why does everyone talk about it?"}</h3>
+      <div class="meta-row"><div class="writer"><div class="avatar green">${ar ? "أ" : "A"}</div>${ar ? "أحمد سامي" : "Ahmed Samy"} <span class="verified">✓</span></div><span>${ar ? "مصادر موثوقة · 12 أكتوبر" : "Trusted sources · Oct 12"}</span></div></div></div>
+    <div class="path-card"><div class="path-top"><strong>${ar ? `مسار أساسيات ${L("ASP.NET Core")}` : "ASP.NET Core basics path"}</strong><span>${ar ? "4 من 10" : "4 of 10"}</span></div><div class="progress-track"><i></i></div></div>
+    <div class="field-row"><span class="filter-chip active">${ar ? "ليك" : "For you"}</span><span class="filter-chip">${L(".NET")}</span><span class="filter-chip">${L("AI")}</span><span class="filter-chip">${ar ? "طب" : "Medicine"}</span><span class="filter-chip">${ar ? "هندسة" : "Engineering"}</span></div>
+    <div class="feed-heading">${ar ? "مقالات ممكن تعجبك" : "You might like"} <span>${ar ? "عرض الكل ←" : "See all →"}</span></div>
+    ${ar ? card("", `إزاي تختار بين ${L("Transient")} و ${L("Scoped")} في مشروعك؟`, "منة عادل　·　5 دقايق", 126, 18) : card("", "Transient vs Scoped: which one fits your project?", "Menna Adel　·　5 min", 126, 18)}
+    ${ar ? card("orange", `الـ ${L("AI Agents")} هتغيّر طريقة شغلك إزاي؟`, "عمر فؤاد　·　7 دقايق", 94, 12) : card("orange", "How AI Agents will change the way you work", "Omar Fouad　·　7 min", 94, 12)}
+    ${ar ? card("blue", `3 مفاهيم في ${L("Public Health")} لازم تعرفها`, "د. سارة ناصر　·　4 دقايق", 67, 9) : card("blue", "3 Public Health concepts everyone should know", "Dr. Sara Nasser　·　4 min", 67, 9)}
+  </div></div>
+  <nav class="bottom-nav">
+    <div class="nav-item active"><span class="nav-icon">⌂</span><span>${ar ? "الرئيسية" : "Home"}</span></div>
+    <div class="nav-item"><span class="nav-icon">⌕</span><span>${ar ? "استكشف" : "Explore"}</span></div>
+    <div class="nav-item nav-create"><span class="create-circle">＋</span><span>${ar ? "اكتب" : "Write"}</span></div>
+    <div class="nav-item"><span class="nav-icon">♧</span><span>${ar ? "المحفوظات" : "Saved"}</span></div>
+    <div class="nav-item"><span class="nav-icon">◉</span><span>${ar ? "حسابي" : "Profile"}</span></div>
+  </nav>`;
+}
+
+function reader(content = lang) {
+  const ar = lang === "ar";
+  const arBody = content === "ar";
+  const body = arBody ? `
+    <p dir="auto">لو انت شغال بـ ${L("ASP.NET Core")}، أكيد شفت الـ ${L("Dependency Injection")} في كل حتة. الفكرة ببساطة إن الـ ${L("class")} ميعملش ${L("new")} للحاجات اللي محتاجها، لكن ياخدها جاهزة.</p>
+    <h3>ليه أصلاً نستخدمه؟</h3>
+    <p dir="auto">بدل ما كل جزء في التطبيق يبقى مربوط بتنفيذ محدد، بنخلي الاعتمادات واضحة وسهل نبدّلها أو نختبرها.</p>
+    <div class="callout tip" dir="auto">💡 <strong>نصيحة:</strong> استخدم ${L("AddScoped")} لأي ${L("service")} بتتعامل مع ${L("DbContext")}.</div>
+    <div class="code-card"><div class="code-head"><span>C# · Program.cs</span><span class="copy-btn">▢ Copy</span></div><pre><span class="code-green">builder</span>.Services.AddScoped&lt;IOrderService, OrderService&gt;();</pre></div>
+    <p dir="auto">اختيار الـ ${L("lifetime")} الصح بيفرق في استهلاك الموارد:</p>
+    <table class="compare" dir="rtl"><thead><tr><th>النوع</th><th>المدة</th><th>مناسب لـ</th></tr></thead><tbody><tr><td>${L("Transient")}</td><td>كل طلب</td><td>خدمات خفيفة</td></tr><tr><td>${L("Scoped")}</td><td>لكل request</td><td>${L("DbContext")}</td></tr><tr><td>${L("Singleton")}</td><td>عمر التطبيق</td><td>إعدادات ثابتة</td></tr></tbody></table>
+    <div class="callout warning" dir="auto">⚠️ متحطش ${L("Scoped service")} جوه ${L("Singleton")}، ده ممكن يسبب بيانات قديمة.</div>` : `
+    <p>If you work with ASP.NET Core, you've seen Dependency Injection everywhere. The idea is simple: a class doesn't create what it needs with <code>new</code>, it receives it ready to use.</p>
+    <h3>Why use it at all?</h3>
+    <p>Instead of tying every part of the app to one implementation, dependencies stay explicit and easy to swap or test.</p>
+    <div class="callout tip">💡 <strong>Tip:</strong> use AddScoped for any service that works with DbContext.</div>
+    <div class="code-card"><div class="code-head"><span>C# · Program.cs</span><span class="copy-btn">▢ Copy</span></div><pre><span class="code-green">builder</span>.Services.AddScoped&lt;IOrderService, OrderService&gt;();</pre></div>
+    <p>Picking the right lifetime affects resources and behavior:</p>
+    <table class="compare"><thead><tr><th>Lifetime</th><th>Lives for</th><th>Good for</th></tr></thead><tbody><tr><td>Transient</td><td>Each resolve</td><td>Light services</td></tr><tr><td>Scoped</td><td>Each request</td><td>DbContext</td></tr><tr><td>Singleton</td><td>App lifetime</td><td>Fixed settings</td></tr></tbody></table>
+    <div class="callout warning">⚠️ Don't inject a Scoped service into a Singleton. It can cause stale data.</div>`;
+  return `<div class="reader-progress"><i></i></div><div class="phone-scroll">${STATUS}<div class="screen-content">
+    <div class="reader-top"><span class="icon-button">${ar ? "→" : "←"}</span><div class="reader-controls"><span class="language-toggle">${arBody ? (ar ? "مصري + EN　⌄" : "AR + EN　⌄") : "EN　⌄"}</span><span class="icon-button">♧</span><span class="icon-button">↗</span></div></div>
+    <div class="tagline"><span class="tag">${L(".NET")}</span><span>${ar ? `${L("Backend")} · 6 دقايق` : "Backend · 6 min"}</span></div>
+    <h1 class="reader-title" dir="auto">${arBody ? `يعني إيه ${L("Dependency Injection")} في ${L(".NET")}؟ وليه كل الناس بتتكلم عنه` : "What is Dependency Injection in .NET, and why does everyone talk about it?"}</h1>
+    <div class="reader-byline"><div class="avatar green">${ar ? "أ" : "A"}</div><div><div class="name">${ar ? "أحمد سامي" : "Ahmed Samy"} <span class="verified">✓</span></div><div class="byline-sub">${ar ? "كاتب تقني · 12 مقال" : "Tech writer · 12 articles"}</div></div><span class="follow-btn">${ar ? "＋ متابعة" : "＋ Follow"}</span></div>
+    <div class="trust-row"><span>${ar ? "آخر مراجعة: أكتوبر 2026" : "Last reviewed: Oct 2026"}</span><span class="tag">${L(".NET 10")}</span><span class="trust-good">✓ ${ar ? "مراجَع ومعاه مصادر" : "Reviewed, with sources"}</span></div>
+    <div class="article-body">${body}</div>
+  </div></div>
+  <div class="reaction-bar"><span class="reaction active"><b>💡</b><span>${ar ? "مفيد" : "Insightful"} 126</span></span><span class="reaction"><b>❤️</b><span>38</span></span><span class="reaction"><b>🔥</b><span>24</span></span><span class="reaction"><b>🤯</b><span>9</span></span><span class="comments-cta">💬 48</span></div>`;
+}
+
+function comments() {
+  const ar = lang === "ar";
+  return `<div class="phone-scroll">${STATUS}<div class="screen-content">
+    <div class="sheet-handle"></div>
+    <div class="comments-header"><h2>${ar ? "التعليقات" : "Comments"} <span>(48)</span></h2><span class="icon-button">×</span></div>
+    <div class="sort-tabs"><button class="active">${ar ? "الأهم" : "Top"}</button><button>${ar ? "الأحدث" : "Newest"}</button></div>
+    <div class="live-pill"><span>↑ ${ar ? "2 تعليقات جديدة" : "2 new comments"}</span></div>
+    <div class="comment fresh"><div class="comment-head"><div class="avatar blue">${ar ? "م" : "M"}</div><div><div class="comment-author">${ar ? "مريم خالد" : "Mariam Khaled"} <span class="verified">✓</span></div><div class="comment-time">${ar ? "دلوقتي" : "Just now"}</div></div></div>
+      <p class="comment-text" dir="auto">${ar ? `شرح ممتاز! كنت محتارة أستخدم ${L("Scoped")} ولا ${L("Transient")} مع الـ ${L("DbContext")}، المثال وضّحلي الفرق جدًا 👏` : "Great explanation! I wasn't sure whether to use Scoped or Transient with DbContext. The example made it clear 👏"}</p>
+      <div class="comment-actions"><span>♡ 12</span><span>${ar ? "رد" : "Reply"}</span><span>⋯</span></div>
+      <div class="replies">
+        <div class="reply"><div class="avatar green">${ar ? "أ" : "A"}</div><p dir="auto"><strong>${ar ? "أحمد سامي" : "Ahmed Samy"} <span class="author-badge">${ar ? "الكاتب" : "Author"}</span></strong><br>${ar ? `بالظبط يا مريم! ${L("DbContext")} بيكون ${L("Scoped")} افتراضيًا في ${L("ASP.NET Core")}.` : "Exactly, Mariam! DbContext is Scoped by default in ASP.NET Core."}</p></div>
+        <div class="reply"><div class="avatar">${ar ? "ي" : "Y"}</div><p dir="auto"><strong>${ar ? "ياسين عادل" : "Yassin Adel"}</strong><br>${ar ? `وكمان ده بيسهّل الـ ${L("unit testing")} جدًا.` : "It makes unit testing much easier too."}</p></div>
+        <div class="more-replies">${ar ? "عرض 5 ردود تانية ←" : "Show 5 more replies →"}</div>
+      </div></div>
+    <div class="comment"><div class="comment-head"><div class="avatar" style="background:linear-gradient(145deg,#EBCB8A,#AF7840)">${ar ? "ك" : "K"}</div><div><div class="comment-author">${ar ? "كريم محمود" : "Karim Mahmoud"}</div><div class="comment-time">${ar ? "من 4 ساعات" : "4 hours ago"}</div></div></div>
+      <p class="comment-text" dir="auto">${ar ? `ممكن مقال بعد كده عن ${L("Keyed Services")} في ${L(".NET")}؟ حاسس إنها بتحل حالات كتير.` : "Could you write about Keyed Services in .NET next? They solve a lot of cases."}</p>
+      <div class="comment-actions"><span>♡ 8</span><span>${ar ? "رد" : "Reply"}</span><span>⋯</span></div></div>
+    <div class="comment"><div class="comment-head"><div class="avatar" style="background:linear-gradient(145deg,#BA9CBB,#745A83)">${ar ? "ن" : "N"}</div><div><div class="comment-author">${ar ? "نورهان علي" : "Nourhan Ali"}</div><div class="comment-time">${ar ? "امبارح" : "Yesterday"}</div></div></div>
+      <p class="comment-text" dir="auto">${ar ? "الجدول ده اتحفظ عندي. يا ريت كل المواضيع التقنية تتشرح بالطريقة دي 🙌" : "Saved that table. I wish every technical topic was explained like this 🙌"}</p>
+      <div class="comment-actions"><span>♡ 5</span><span>${ar ? "رد" : "Reply"}</span><span>⋯</span></div></div>
+  </div></div>
+  <div class="comment-composer"><div class="composer-avatar">${ar ? "ي" : "Y"}</div><div class="comment-input">${ar ? "اكتب تعليقك... عربي أو English" : "Write a comment... Arabic or English"}</div><span class="send-btn">↑</span></div>`;
+}
+
+function profile() {
+  const ar = lang === "ar";
+  const lv = ["","l1","l2","","l3","l1","l4","l2","","l1","l3","l2","l1","l4","l2","","l3","l1","l1","l2","","l3","l4","l1","l2","l3","l1","","l2","l4","l3","l1","","l2","l4","l1"];
+  const saved = (cls, t, m) => `<div class="profile-article"><div class="article-thumb ${cls}"></div><div><h4 dir="auto">${t}</h4><p>${m}</p></div></div>`;
+  return `<div class="phone-scroll">${STATUS}<div class="screen-content">
+    <div class="profile-actions"><span>⚙</span><span>⋯</span></div>
+    <div class="profile-top"><div class="profile-avatar">${ar ? "ي" : "Y"}</div>
+      <h2 class="profile-title">${ar ? "يوسف حسن" : "Youssef Hassan"} <span class="verified">✓</span></h2>
+      <p class="profile-bio" dir="auto">${ar ? `${L("Senior .NET Developer")} | بكتب عن الـ ${L("Backend")} والـ ${L("Clean Architecture")}` : "Senior .NET Developer | Writing about Backend and Clean Architecture"}</p>
+      <span class="edit-btn">${ar ? "تعديل الملف" : "Edit profile"}</span></div>
+    <div class="profile-stats"><div class="profile-stat"><strong>12</strong><span>${ar ? "مقالاتي" : "Articles"}</span></div><div class="profile-stat"><strong>2.4k</strong><span>${ar ? "متابعين" : "Followers"}</span></div><div class="profile-stat"><strong>186</strong><span>${ar ? "بتابع" : "Following"}</span></div></div>
+    <div class="reading-card"><div class="reading-heading">${ar ? "رحلة القراءة" : "Reading journey"} <span>${ar ? "كل يوم خطوة صغيرة ✦" : "A small step every day ✦"}</span></div>
+      <div class="reading-metrics"><div class="metric"><strong class="fire">🔥 12</strong><span>${ar ? "السلسلة الحالية" : "Current streak"}</span></div><div class="metric"><strong>${ar ? "23 يوم" : "23 days"}</strong><span>${ar ? "أطول سلسلة" : "Longest streak"}</span></div><div class="metric"><strong>18</strong><span>${ar ? "مقال الشهر ده" : "Read this month"}</span></div></div>
+      <div class="heatmap-label"><span>${ar ? "آخر 12 أسبوع" : "Last 12 weeks"}</span><span>${ar ? "أقل　▫ ▧ ▩　أكتر" : "Less　▫ ▧ ▩　More"}</span></div>
+      <div class="heatmap">${lv.map((c) => `<i class="${c}"></i>`).join("")}</div></div>
+    <div class="profile-tabs"><button>${ar ? "مقالاتي" : "My articles"}</button><button class="active">${ar ? "المحفوظات" : "Saved"}</button><button>${ar ? "المسارات" : "Paths"}</button></div>
+    <div class="saved-label">${ar ? "مقالات محفوظة" : "Saved articles"} <span>${ar ? "عرض الكل ←" : "See all →"}</span></div>
+    ${ar ? saved("", `إزاي تختار بين ${L("Transient")} و ${L("Scoped")}؟`, `منة عادل · ${L(".NET")} · 5 دقايق`) : saved("", "Transient vs Scoped: which one?", "Menna Adel · .NET · 5 min")}
+    ${ar ? saved("orange", `دليلك العملي لـ ${L("Clean Architecture")}`, "أحمد سامي · Backend · 8 دقايق") : saved("orange", "A practical guide to Clean Architecture", "Ahmed Samy · Backend · 8 min")}
+    ${ar ? saved("blue", `إمتى تستخدم ${L("Caching")} في تطبيقك؟`, `عمر فؤاد · ${L(".NET")} · 6 دقايق`) : saved("blue", "When should you use caching?", "Omar Fouad · .NET · 6 min")}
+  </div></div>`;
+}
+
+const SCREENS = [home, () => reader("ar"), onboarding, comments, profile, reader];
+const head = T[lang].heads[shot - 1];
+const darkPhone = shot === 6;
+document.documentElement.lang = lang;
+document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+document.getElementById("stage").innerHTML = `
+  <div class="shot bg-${head.bg}">
+    <div class="deco a"></div><div class="deco b"></div>
+    <div class="head">
+      <div class="brand"><span class="icon">${LOGO("h")}</span><span class="word">Read<span class="in">In</span></span></div>
+      <h1 class="headline">${head.h}</h1>
+      <p class="sub">${head.s}</p>
+    </div>
+    <div class="phone-wrap${darkPhone ? " dark" : ""}"><div class="phone">${SCREENS[shot - 1]()}</div></div>
+  </div>`;
+document.getElementById("stage").style.transform = `scale(${W / 402})`;
+</script>
+</body>
+</html>
