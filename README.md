@@ -94,7 +94,7 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | Backend skeleton (Domain / Application / Infrastructure / Api / ContentStudio) | ✅ |
 | Phone + password / Google / Apple auth (JWT, rotating refresh tokens, recovery PIN, account linking), SQL-backed roles & permissions | ✅ backend |
 | Seeders: roles & permissions, taxonomy, system accounts, demo users, articles | ✅ |
-| Seeder: demo interactions (reactions, saves, follows, a collection; deterministic, local only) | ✅ comments join with F11 |
+| Seeders: demo interactions (reactions, saves, follows, a collection) and demo comment threads (F11); deterministic, local only | ✅ |
 | Seeders: glossary, learning paths | ⏳ arrive with F21 / F09 |
 | Outbox + Hangfire (immediate trigger + per-minute safety net), scheduled publishing | ✅ |
 | F27 Real-time: `POST /realtime/token` (Firebase custom tokens), RTDB publisher with retry + circuit breaker (article counters, comment events, feed, unread badge, PDF status), "new articles" signal on publish | ✅ backend · web + mobile listeners in place; article counters are live with F10/F13, comment events and the badge go live as F11 and F17 publish them |
@@ -103,6 +103,8 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | F01 Auth, F02 Onboarding, F03 Home, F04 Reader (subset), F18 Settings: web + mobile | ✅ first slice |
 | F08 Streaks & reading stats + the F04 "read" rule (≥ 70% and ≥ 30 s, [ADR 0013](docs/adr/0013-reading-days-and-streaks.md)): web + mobile + backend, demo reading history | ✅ |
 | F10 Reactions, F12 Follow, F13 Saved: reactions/saves on every card, reader action bar, who reacted, Following feed + suggested writers, Saved page with collections (offline copies on mobile), counters recomputed by the outbox and live (F27), admin counter rebuild, demo interactions | ✅ web + mobile + backend |
-| F05 Editor, F11 Comments, F14 Profile | ⏳ next |
+| F14 Profile: `/@{username}` (web, server-rendered) and the Profile tab + `/u/{username}` (mobile) with Articles / Saved / Paths / About tabs, stats (articles, followers, following, total reads), reading stats card + heatmap when public, edit profile (square avatar upload 64–512, up to 5 fields of expertise), followers / following lists with search, Settings → Privacy, demo profiles | ✅ web + mobile + backend |
+| F11 Comments & replies: threads (one reply level), likes, @mentions, author pin, live updates, report + moderator hide/unhide/delete, flood limits, "Deleted user": web + mobile + backend, demo threads | ✅ |
+| F05 Editor | ⏳ next |
 | ContentStudio `generate` (Claude), code-compile and live-link checks | ⏳ |
 | Full-text search index (needs FTS in the SQL image), SignalR | ⏳ Phase 2 |
