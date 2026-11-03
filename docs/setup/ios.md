@@ -55,8 +55,13 @@ gh secret set APP_STORE_CONNECT_ISSUER_ID --repo YoussefGhonem-hub/ReadIn
 ```
 
 ## 4. Build and upload
-GitHub → **Actions** → **ios-testflight** → **Run workflow** → branch `dev` → **Run workflow**.
-A build takes about 20–30 minutes.
+Push a tag that starts with `ios-` from the commit you want to build (usually the tip of `dev`):
+```bash
+git tag ios-2 && git push origin ios-2
+```
+Use a new number each time. GitHub → **Actions** → **ios-testflight** shows the run. A build takes about 20–30 minutes.
+
+The **Run workflow** button only appears once `ios.yml` exists on the default branch (`main`), because GitHub only offers manual runs for workflows on the default branch.
 
 ## 5. Install on your iPhone (TestFlight)
 1. App Store Connect → ReadIn → **TestFlight**. The build appears after Apple finishes processing (5–30 minutes).
