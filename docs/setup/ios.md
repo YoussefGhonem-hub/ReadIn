@@ -5,6 +5,7 @@ iOS builds run on GitHub Actions macOS runners (`.github/workflows/ios.yml`) and
 | | |
 |---|---|
 | Bundle ID | `app.readin.readin` |
+| Minimum iOS | 15.0 (required by the Firebase iOS SDK) |
 | Team ID | `7A25UFD8VC` |
 | Push | `Runner/Runner.entitlements` (`aps-environment`) + `UIBackgroundModes = remote-notification` in `Info.plist` |
 | Signing | Automatic, cloud-managed certificates through an App Store Connect API key (no `.p12` or provisioning profiles to manage) |
