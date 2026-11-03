@@ -100,6 +100,27 @@ public sealed class AccountTests(ApiFactory api)
     private static readonly CancellationToken Ct = TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task Profile_links_use_the_contract_keys()
+    {
+        var user = await api.SignUpAsync();
+        var patch = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/me")
+        {
+            Content = JsonContent.Create(new
+            {
+                displayName = "Links Test",
+                username = user.Me["username"]!.GetValue<string>(),
+                links = new { github = "https://github.com/readin", linkedin = "https://www.linkedin.com/in/readin", website = "https://readin.app" },
+            }),
+        };
+        (await user.Client.SendAsync(patch, Ct)).EnsureSuccessStatusCode();
+
+        var links = (await user.Client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!["links"]!.AsObject();
+        links["github"]!.GetValue<string>().Should().Be("https://github.com/readin");
+        links["linkedin"]!.GetValue<string>().Should().Be("https://www.linkedin.com/in/readin");
+        links["website"]!.GetValue<string>().Should().Be("https://readin.app");
+    }
+
+    [Fact]
     public async Task Me_requires_a_token()
     {
         var response = await api.GuestClient().GetAsync("/api/v1/me", Ct);

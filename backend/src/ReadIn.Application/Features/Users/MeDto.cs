@@ -1,8 +1,13 @@
+using System.Text.Json.Serialization;
 using ReadIn.Domain.Common;
 
 namespace ReadIn.Application.Features.Users;
 
-public sealed record UserLinksDto(string? GitHub, string? LinkedIn, string? Website);
+/// <summary>JSON keys <c>github</c>, <c>linkedin</c>, <c>website</c> as in the API contract (camel case would give <c>gitHub</c>).</summary>
+public sealed record UserLinksDto(
+    [property: JsonPropertyName("github")] string? GitHub,
+    [property: JsonPropertyName("linkedin")] string? LinkedIn,
+    string? Website);
 
 public sealed record InterestsDto(IReadOnlyList<Guid> FieldIds, IReadOnlyList<Guid> TopicIds);
 
