@@ -1,0 +1,50 @@
+{
+  "slug": "give-claude-code-a-check-to-run",
+  "field": "claude-ai-tools",
+  "topic": "claude-code",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "'Looks Done' Isn't Done: Give Claude Code a Check to Run",
+      "subtitle": "Claude stops when the work looks done. A test, a typecheck or a Stop hook is what tells it the work is done."
+    },
+    "ar-EG": {
+      "title": "«شكله خلص» مش معناه إنه خلص: ادّي Claude Code حاجة يتحقق بيها",
+      "subtitle": "Claude بيقف لما الشغل يبان إنه خلص. الـ test أو الـ typecheck أو الـ Stop hook هو اللي بيقوله إنه خلص فعلًا."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 2
+  },
+  "tags": [
+    "Claude Code",
+    "Testing",
+    "Hooks",
+    "Verification"
+  ],
+  "sources": [
+    {
+      "title": "Best practices for Claude Code — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/best-practices"
+    },
+    {
+      "title": "Keep Claude working toward a goal — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/goal"
+    },
+    {
+      "title": "Hooks reference — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/hooks"
+    },
+    {
+      "title": "Automate actions with hooks — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/hooks-guide"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

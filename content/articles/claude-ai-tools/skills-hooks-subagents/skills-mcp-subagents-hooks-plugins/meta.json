@@ -1,0 +1,55 @@
+{
+  "slug": "skills-mcp-subagents-hooks-plugins",
+  "field": "claude-ai-tools",
+  "topic": "skills-hooks-subagents",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Skills, MCP, Subagents, Hooks or Plugins? Picking the Right Extension",
+      "subtitle": "Each one changes a different part of Claude Code's loop. Ask what you need: knowledge, reach, isolation, a guarantee or a package."
+    },
+    "ar-EG": {
+      "title": "تختار إيه: Skills ولا MCP ولا Subagents ولا Hooks ولا Plugins؟",
+      "subtitle": "كل واحد بيغيّر حتة مختلفة في الـ loop بتاع Claude Code. اسأل محتاج إيه: معرفة، ولا وصول، ولا عزل، ولا ضمان، ولا package."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 7
+  },
+  "tags": [
+    "Claude Code",
+    "Skills",
+    "MCP",
+    "Subagents",
+    "Plugins"
+  ],
+  "sources": [
+    {
+      "title": "Extend Claude Code — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/features-overview"
+    },
+    {
+      "title": "Plugins overview — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/plugins/overview"
+    },
+    {
+      "title": "Extend Claude with skills — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/skills"
+    },
+    {
+      "title": "Connect Claude Code to tools via MCP — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/mcp"
+    },
+    {
+      "title": "Anthropic's marketplaces — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/plugins/anthropic-marketplaces"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

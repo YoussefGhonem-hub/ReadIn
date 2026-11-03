@@ -1,0 +1,54 @@
+{
+  "slug": "claude-code-checkpoints-are-not-git",
+  "field": "claude-ai-tools",
+  "topic": "claude-code",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Checkpoints Aren't Git: What /rewind Can and Can't Undo",
+      "subtitle": "Rewind restores what Claude's file tools edited in this session. Shell commands, subagents and databases are on you."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Checkpoints مش بديل لـ Git؟ الـ /rewind بيرجّع إيه وإيه لأ",
+      "subtitle": "الـ rewind بيرجّع اللي أدوات الملفات بتاعة Claude عدّلته في الـ session دي. الـ shell commands والـ subagents والداتابيز عليك إنت."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 5
+  },
+  "tags": [
+    "Claude Code",
+    "Checkpoints",
+    "Git",
+    "Version Control"
+  ],
+  "sources": [
+    {
+      "title": "Checkpointing — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/checkpointing"
+    },
+    {
+      "title": "Commands — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/commands"
+    },
+    {
+      "title": "How Claude Code works — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/how-claude-code-works"
+    },
+    {
+      "title": "Best practices for Claude Code — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/best-practices"
+    },
+    {
+      "title": "Interactive mode — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/interactive-mode"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

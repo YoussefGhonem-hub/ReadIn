@@ -1,0 +1,46 @@
+{
+  "slug": "keep-claude-md-short",
+  "field": "claude-ai-tools",
+  "topic": "claude-md",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why a Shorter CLAUDE.md Works Better: Only Write What Claude Can't See",
+      "subtitle": "Every line loads into every session. Keep the commands, gotchas and decisions; let Claude read the rest from the code."
+    },
+    "ar-EG": {
+      "title": "ليه الـ CLAUDE.md القصير أحسن؟ اكتب بس اللي Claude مش هيعرفه من الكود",
+      "subtitle": "كل سطر بيتحمّل في كل session. سيب الـ commands والمطبات والقرارات، والباقي Claude هيقراه من الكود."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 3
+  },
+  "tags": [
+    "Claude Code",
+    "CLAUDE.md",
+    "Context Engineering",
+    "Prompting"
+  ],
+  "sources": [
+    {
+      "title": "How Claude remembers your project — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/memory"
+    },
+    {
+      "title": "Best practices for Claude Code — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/best-practices"
+    },
+    {
+      "title": "How Claude Code uses prompt caching — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/prompt-caching"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

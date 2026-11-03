@@ -1,0 +1,50 @@
+{
+  "slug": "effort-not-think-hard-in-claude-code",
+  "field": "claude-ai-tools",
+  "topic": "claude-code",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "'Think Harder' Isn't a Setting: Choosing Model and Effort in Claude Code",
+      "subtitle": "Prompt phrases only nudge Claude within its effort level. /effort, ultrathink and /model are the controls that change it."
+    },
+    "ar-EG": {
+      "title": "«فكّر أكتر» مش إعداد: إزاي تختار الموديل والـ Effort في Claude Code",
+      "subtitle": "الكلام اللي في الـ prompt بيزق Claude جوه الـ effort بتاعه وبس. الـ /effort والـ ultrathink والـ /model هما اللي بيغيّروه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 10
+  },
+  "tags": [
+    "Claude Code",
+    "Effort",
+    "Extended Thinking",
+    "Model Selection"
+  ],
+  "sources": [
+    {
+      "title": "Model configuration — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/model-config"
+    },
+    {
+      "title": "Best practices for Claude Code — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/best-practices"
+    },
+    {
+      "title": "How Claude Code uses prompt caching — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/prompt-caching"
+    },
+    {
+      "title": "Effort — Claude Platform Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/effort"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

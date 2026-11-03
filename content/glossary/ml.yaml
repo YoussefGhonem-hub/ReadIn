@@ -363,3 +363,21 @@ terms:
     definitionAr: >-
       رقم واحد بيلخّص منحنى الـ precision-recall: الـ precision عند كل threshold، موزونة بقد إيه الـ recall بيزيد
       عندها. الترتيب العشوائي بيجيب تقريبًا نسبة الـ positives، فالـ baseline بتاعه بيتحرك مع توزيع الـ classes.
+  - id: f1-score
+    term: F1 Score
+    definitionEn: >-
+      The harmonic mean of precision and recall for one class, so it is high only when both are. For more than two
+      classes it is computed per class and then averaged, and the averaging method decides how much each class counts.
+    definitionAr: >-
+      الـ harmonic mean بتاع الـ precision والـ recall لـ class واحدة، فمابيعلاش غير لما الاتنين يعلوا. ولو عندك أكتر من
+      classين، بيتحسب لكل class لوحدها وبعدين يتعمل average، وطريقة الـ average هي اللي بتحدد كل class هتتحسب بوزن قد إيه.
+  - id: macro-average
+    term: Macro Averaging
+    definitionEn: >-
+      Averaging a per-class metric with the same weight for every class, whatever its size. Micro averaging pools the
+      counts of all classes instead, and weighted averaging weights each class by its number of true examples, so both
+      follow the largest classes.
+    definitionAr: >-
+      إنك تعمل average لـ metric محسوبة لكل class، وكل class بنفس الوزن مهما كان حجمها. أما الـ micro averaging فبيجمّع
+      العدّ بتاع كل الـ classes مع بعض، والـ weighted بيدّي كل class وزن على قد عدد أمثلتها الحقيقية، فالاتنين بيمشوا ورا
+      أكبر classes.

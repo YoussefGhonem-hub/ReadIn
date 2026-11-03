@@ -1,0 +1,50 @@
+{
+  "slug": "claude-code-skills-load-on-demand",
+  "field": "claude-ai-tools",
+  "topic": "skills-hooks-subagents",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Skills Load on Demand: How Progressive Disclosure Keeps Context Lean",
+      "subtitle": "Claude sees a short listing up front, reads SKILL.md when it's needed, and opens bundled files only if the task calls for them."
+    },
+    "ar-EG": {
+      "title": "إزاي الـ Skills بتتحمّل بس وقت الحاجة؟ الـ Progressive Disclosure ببساطة",
+      "subtitle": "Claude بيشوف قايمة قصيرة من الأول، ويقرا الـ SKILL.md وقت ما يحتاجه، ويفتح الملفات اللي جواه بس لو المهمة طلبتها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 8
+  },
+  "tags": [
+    "Claude Code",
+    "Skills",
+    "Context Engineering",
+    "Progressive Disclosure"
+  ],
+  "sources": [
+    {
+      "title": "Extend Claude with skills — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/skills"
+    },
+    {
+      "title": "Agent Skills overview — Claude Platform Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview"
+    },
+    {
+      "title": "Equipping agents for the real world with Agent Skills — Anthropic Engineering",
+      "url": "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills"
+    },
+    {
+      "title": "Explore the context window — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/context-window"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

@@ -1,0 +1,54 @@
+{
+  "slug": "hooks-vs-claude-md-rules",
+  "field": "claude-ai-tools",
+  "topic": "skills-hooks-subagents",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Rules That Can't Bend Belong in Hooks, Not in Louder CLAUDE.md Lines",
+      "subtitle": "Claude reads CLAUDE.md and decides. Claude Code runs a hook before the action, every time, whatever Claude decided."
+    },
+    "ar-EG": {
+      "title": "القواعد اللي مينفعش تتكسر مكانها الـ Hooks، مش سطر بـ CAPS في الـ CLAUDE.md",
+      "subtitle": "Claude بيقرا الـ CLAUDE.md وبيقرر. أما الـ hook فـ Claude Code بيشغّله قبل الفعل، كل مرة، أيًا كان قرار Claude."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 6
+  },
+  "tags": [
+    "Claude Code",
+    "Hooks",
+    "CLAUDE.md",
+    "Permissions"
+  ],
+  "sources": [
+    {
+      "title": "Automate actions with hooks — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/hooks-guide"
+    },
+    {
+      "title": "Hooks reference — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/hooks"
+    },
+    {
+      "title": "Best practices for Claude Code — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/best-practices"
+    },
+    {
+      "title": "How Claude remembers your project — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/memory"
+    },
+    {
+      "title": "Configure permissions — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/permissions"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

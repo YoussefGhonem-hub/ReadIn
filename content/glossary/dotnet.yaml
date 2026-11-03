@@ -137,8 +137,8 @@ terms:
     definitionAr: كود بتربطه بـ endpoint أو route group في الـ Minimal APIs بـ AddEndpointFilter. بيشتغل قبل الـ handler وبعده، ويقدر يقرا الـ arguments بتاعته أو يغيّرها، ويقدر يرجّع response من غير ما يناديه أصلًا.
   - id: dependency-injection
     term: Dependency Injection
-    definitionEn: A technique where a class or handler receives the objects it depends on from a container, instead of creating them itself. ASP.NET Core registers services at startup and supplies them where they're asked for.
-    definitionAr: إن الـ class أو الـ handler يستلم الحاجات اللي محتاجها من container بدل ما يعملها بنفسه. ASP.NET Core بيسجّل الـ services وقت الـ startup ويديها لأي حد يطلبها.
+    definitionEn: A technique where a class or function receives the objects it depends on from the outside, usually from a container, instead of creating them itself. Frameworks such as ASP.NET Core and Angular register services and supply them wherever they're asked for.
+    definitionAr: إن الـ class أو الـ function تستلم الحاجات اللي محتاجاها من برّه، وغالبًا من container، بدل ما تعملها بنفسها. وframeworks زي ASP.NET Core و Angular بتسجّل الـ services وتديها لأي حد يطلبها.
   - id: parameter-binding
     term: Parameter binding
     definitionEn: How ASP.NET Core fills a handler's parameters before calling it, from the route, query string, headers, body or form, or from dependency injection.
@@ -219,3 +219,59 @@ terms:
     term: Client evaluation
     definitionEn: Running part of a LINQ query in your .NET process instead of in the database. EF Core does it on its own only in the final Select; anywhere else you opt in with AsEnumerable or ToList, and every operator after that works on rows already loaded.
     definitionAr: إن جزء من الـ LINQ query يتنفذ جوه الـ process بتاع .NET بدل الداتابيز. EF Core بيعمله لوحده في آخر Select بس، وفي أي مكان تاني انت اللي بتختاره بـ AsEnumerable أو ToList، وكل operator بعدها بيشتغل على rows اتحمّلت خلاص.
+  - id: change-tracker
+    term: Change tracker
+    definitionEn: The part of an EF Core DbContext that records every entity instance it has loaded or been given, with its state and original property values, so SaveChanges knows what to insert, update or delete.
+    definitionAr: الجزء من الـ DbContext في EF Core اللي بيسجّل كل entity حمّلها أو اتدّتله، ومعاها حالتها والقيم الأصلية بتاعة الـ properties، عشان الـ SaveChanges يعرف يعمل insert أو update أو delete لإيه.
+  - id: identity-resolution
+    term: Identity resolution
+    definitionEn: Keeping at most one instance per entity key in a DbContext. When a tracking query returns a row whose key is already tracked, EF Core returns the existing instance instead of building a new one from the row.
+    definitionAr: إن الـ DbContext يفضل ماسك instance واحدة بس لكل key. فلما tracking query ترجّع row الـ key بتاعه متتبّع أصلًا، EF Core بيرجّع الـ instance الموجودة بدل ما يبني واحدة جديدة من الـ row.
+  - id: unit-of-work
+    term: Unit of work
+    definitionEn: One business operation whose changes are collected and then written to the database together. An EF Core DbContext instance is designed to live for a single unit of work.
+    definitionAr: عملية business واحدة التغييرات بتاعتها بتتجمّع وبعدين تتكتب في الداتابيز مع بعض. والـ DbContext في EF Core معمول عشان يعيش لـ unit of work واحدة بس.
+  - id: execution-strategy
+    term: Execution strategy
+    definitionEn: The EF Core component that runs each database operation and, when configured to retry (for example with EnableRetryOnFailure), replays an operation that failed with a transient error such as a dropped connection.
+    definitionAr: الـ component في EF Core اللي بيشغّل كل عملية على الداتابيز، ولو متظبط إنه يعيد (زي بـ EnableRetryOnFailure) بيعيد تشغيل العملية اللي فشلت بسبب error مؤقت زي connection اتقطع.
+  - id: savepoint
+    term: Savepoint
+    definitionEn: A named point inside a database transaction that you can roll back to without abandoning the whole transaction, so the work done before it is kept.
+    definitionAr: نقطة ليها اسم جوه transaction في الداتابيز، تقدر ترجع لها بـ rollback من غير ما تلغي الـ transaction كلها، فالشغل اللي اتعمل قبلها بيفضل زي ما هو.
+  - id: dependency-rule
+    term: Dependency Rule
+    definitionEn: The core rule of Robert C. Martin's Clean Architecture. Source code dependencies point only inward, toward business policy, so inner code never names a class, function or data format that belongs to an outer layer such as the web, the database or a framework.
+    definitionAr: القاعدة الأساسية في الـ Clean Architecture بتاعة Robert C. Martin. الـ dependencies في الكود بتشاور لجوه بس، ناحية الـ business policy، فالكود اللي جوه عمره ما يذكر class أو function أو شكل داتا تبع layer برّه زي الـ web أو الداتابيز أو أي framework.
+  - id: dependency-inversion
+    term: Dependency inversion
+    definitionEn: Making high-level code depend on an abstraction it owns, such as an interface, while the low-level code implements that abstraction. The call still goes from high to low level at run time, but the compile-time dependency points the other way.
+    definitionAr: إنك تخلّي الكود الـ high-level يعتمد على abstraction هو اللي بيملكها، زي interface، والكود الـ low-level هو اللي يعملها implement. الـ call وقت التشغيل لسه رايح من الـ high للـ low، بس الـ dependency وقت الـ compile بتشاور في الاتجاه العكسي.
+  - id: composition-root
+    term: Composition root
+    definitionEn: The single place, usually Program.cs, where an app registers concrete implementations for the interfaces its code depends on, so the rest of the code never creates or names those implementations.
+    definitionAr: المكان الوحيد، وغالبًا بيبقى Program.cs، اللي التطبيق بيسجّل فيه الـ implementations الحقيقية للـ interfaces اللي الكود معتمد عليها، فباقي الكود عمره ما يعمل الـ implementations دي أو يذكرها بالاسم.
+  - id: cqrs
+    term: CQRS
+    definitionEn: Command Query Responsibility Segregation. Using one model for operations that change state (commands) and a separate model for operations that read it (queries), where a design would otherwise use one model for both.
+    definitionAr: اختصار Command Query Responsibility Segregation. إنك تستخدم model للعمليات اللي بتغيّر الحالة (commands) و model تاني منفصل للعمليات اللي بتقراها (queries)، بدل model واحد للاتنين.
+  - id: event-sourcing
+    term: Event sourcing
+    definitionEn: Storing an entity's state as the append-only sequence of events that changed it, instead of storing its current values. The current state is rebuilt by replaying the events.
+    definitionAr: إنك تخزّن حالة الـ entity على شكل سلسلة events بتتضاف بس ومش بتتعدّل، وكل event غيّر فيها حاجة، بدل ما تخزّن القيم الحالية بتاعتها. والحالة الحالية بتتبني من جديد بإعادة تشغيل الـ events دي.
+  - id: eventual-consistency
+    term: Eventual consistency
+    definitionEn: A guarantee that copies of the same data will agree once updates stop arriving, but not immediately. For a while after a write, a read from another copy can return older data.
+    definitionAr: ضمان إن النسخ المختلفة من نفس الداتا هتتطابق في الآخر لما التحديثات تقف، بس مش على طول. فلفترة بعد الكتابة، القراية من نسخة تانية ممكن ترجّع داتا أقدم.
+  - id: n-plus-one-problem
+    term: N+1 problem
+    definitionEn: Running one query to load a list and then one more query for each item to load its related data, so a page of N items costs N+1 database round trips. Lazy loading and queries inside loops are the usual causes.
+    definitionAr: إنك تشغّل query واحدة تجيب لستة، وبعدين query زيادة لكل item عشان تجيب الداتا المرتبطة بيه، فصفحة فيها N items تكلفك N+1 رحلة للداتابيز. والـ lazy loading والـ queries اللي جوه loops هما السبب المعتاد.
+  - id: cartesian-explosion
+    term: Cartesian explosion
+    definitionEn: The row multiplication you get when one SQL query joins a parent to two or more of its collections at the same level. Each row of one collection is paired with each row of the other, so 10 lines and 3 payments return 30 rows for one order.
+    definitionAr: تضاعف الـ rows اللي بيحصل لما query واحدة تعمل join للـ parent مع 2 collections أو أكتر في نفس المستوى. كل row من collection بيتجمع مع كل row من التانية، فـ 10 lines و 3 payments بيرجّعوا 30 row لـ order واحد.
+  - id: split-query
+    term: Split query
+    definitionEn: An EF Core query mode, turned on with AsSplitQuery, that loads each included or projected collection with its own SQL query instead of joining them all into one, which avoids a cartesian explosion at the cost of extra round trips.
+    definitionAr: mode في EF Core بيتشغّل بـ AsSplitQuery، وبيحمّل كل collection متضافة أو معمولها projection بـ SQL query لوحدها بدل ما يعمل join ليهم كلهم في query واحدة، وده بيمنع الـ cartesian explosion مقابل رحلات زيادة للداتابيز.

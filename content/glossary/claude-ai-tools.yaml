@@ -35,3 +35,62 @@ terms:
     definitionAr: >-
       snapshot للملفات اللي Claude عدّلها، بياخدها Claude Code قبل كل prompt بتبعته عشان تقدر ترجّع الكود أو المحادثة أو
       الاتنين. وبتغطي التعديلات اللي اتعملت بأدوات الملفات بتاعة Claude في الـ session، مش كل تغيير على الـ disk.
+  - id: permission-rule
+    term: Permission Rule (Claude Code)
+    definitionEn: >-
+      An allow, ask or deny entry in Claude Code's settings that matches tool calls, such as Bash(git push *) or
+      Read(./.env). Claude Code applies it before the call runs, and deny rules hold in every permission mode.
+    definitionAr: >-
+      قاعدة من نوع allow أو ask أو deny في إعدادات Claude Code، بتطابق الـ tool calls، زي Bash(git push *) أو
+      Read(./.env). وClaude Code بيطبقها قبل ما الـ call يشتغل، والـ deny rules بتفضل شغالة في كل permission mode.
+  - id: agent-skill
+    term: Skill (Claude Code)
+    definitionEn: >-
+      A folder with a SKILL.md file of instructions, and optionally scripts and reference files, that Claude Code adds to
+      Claude's toolkit. Claude sees its name and description up front and loads the full content only when you run it
+      with /name or Claude judges it relevant.
+    definitionAr: >-
+      فولدر فيه ملف SKILL.md بتعليمات، ولو حبيت scripts وملفات مرجعية، Claude Code بيضيفه لأدوات Claude. Claude بيشوف اسمه
+      ووصفه من الأول، ومش بيحمّل المحتوى كله غير لما تشغّله بـ /name أو Claude يحكم إنه ليه علاقة بالمهمة.
+  - id: model-context-protocol
+    term: MCP (Model Context Protocol)
+    definitionEn: >-
+      An open standard for connecting AI applications to external tools and data. An MCP server exposes tools, such as
+      querying an issue tracker, that a client like Claude Code can call, with the connection and authentication handled
+      by the server.
+    definitionAr: >-
+      standard مفتوح لتوصيل تطبيقات الـ AI بأدوات وداتا من برّه. الـ MCP server بيعرض tools، زي إنك تعمل query على issue
+      tracker، وclient زي Claude Code يقدر يناديها، والـ server هو اللي شايل الاتصال والـ authentication.
+  - id: claude-code-plugin
+    term: Plugin (Claude Code)
+    definitionEn: >-
+      A directory of skills, subagents, hooks, MCP servers or other components that Claude Code installs and loads as one
+      unit, usually from a marketplace. An enabled plugin is part of every session, and what it runs, it runs as you.
+    definitionAr: >-
+      فولدر فيه skills أو subagents أو hooks أو MCP servers أو حاجات تانية، Claude Code بيسطّبه ويحمّله كوحدة واحدة، غالبًا من
+      marketplace. والـ plugin المفعّل بيبقى جزء من كل session، وأي حاجة بيشغّلها بيشغّلها بصلاحياتك إنت.
+  - id: progressive-disclosure
+    term: Progressive Disclosure (Agent Skills)
+    definitionEn: >-
+      Loading a skill in stages instead of all at once: its name and description up front, the SKILL.md body when the
+      skill is used, and bundled files only when the task reads them. Scripts run without their code entering context.
+    definitionAr: >-
+      إن الـ skill تتحمّل على مراحل بدل مرة واحدة: الاسم والوصف من الأول، والـ SKILL.md لما الـ skill تتستخدم، والملفات اللي
+      معاها بس لما المهمة تقراها. والـ scripts بتشتغل من غير ما الكود بتاعها يدخل الـ context.
+  - id: forked-subagent
+    term: Fork (Claude Code)
+    definitionEn: >-
+      A subagent that inherits the whole conversation so far, with the same system prompt, tools and model as the main
+      session, instead of starting fresh. Its tool calls stay out of your conversation and only its result comes back.
+    definitionAr: >-
+      نوع من الـ subagent بيورث المحادثة كلها لحد اللحظة دي، بنفس الـ system prompt والأدوات والموديل بتوع الـ session الأساسية، بدل ما
+      يبدأ من الصفر. والـ tool calls بتاعته بتفضل برّه محادثتك، واللي بيرجع النتيجة بس.
+  - id: effort-level
+    term: Effort Level (Claude)
+    definitionEn: >-
+      A setting from low to max that controls how much work Claude puts into each response: how much it thinks, how
+      thoroughly it checks and how many tool calls it makes. Higher levels spend more tokens and time; in Claude Code
+      you set it with /effort.
+    definitionAr: >-
+      إعداد من low لحد max بيتحكم Claude هيبذل قد إيه في كل رد: هيفكر قد إيه، وهيراجع بدقة قد إيه، وهيعمل tool calls قد
+      إيه. المستويات الأعلى بتصرف tokens ووقت أكتر؛ وفي Claude Code بتظبطه بـ /effort.

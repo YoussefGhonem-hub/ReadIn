@@ -127,3 +127,44 @@ terms:
     definitionAr: >-
       callback بتسجّله بـ afterNextRender() أو afterEveryRender() أو afterRenderEffect()، وAngular بيشغّله بعد ما يحدّث
       الـ DOM، في الـ browser بس. وده المكان اللي تقرا فيه من الـ DOM أو تكتب فيه بإيدك.
+  - id: content-projection
+    term: Content projection
+    definitionEn: >-
+      Passing the elements written between a component's tags into that component's template, where <ng-content>
+      placeholders mark where they appear. The projected elements still belong to the component that wrote them.
+    definitionAr: >-
+      إنك تبعت العناصر اللي مكتوبة بين الـ tags بتاعة component جوه الـ template بتاعها، والـ <ng-content> بيحدد هتظهر
+      فين. والعناصر دي بتفضل ملك الـ component اللي كتبتها.
+  - id: template-fragment
+    term: Template fragment
+    definitionEn: >-
+      A piece of template declared with <ng-template> that Angular doesn't render where it's written. Code renders it on
+      demand, with NgTemplateOutlet or ViewContainerRef, and its bindings are evaluated against the component that
+      declared it.
+    definitionAr: >-
+      حتة template بتتعرّف بـ <ng-template>، وAngular مابيعرضهاش في المكان اللي اتكتبت فيه. الكود هو اللي بيعرضها وقت
+      ما يحتاجها، بـ NgTemplateOutlet أو ViewContainerRef، والـ bindings اللي فيها بتتحسب على الـ component اللي عرّفتها.
+  - id: barrel-file
+    term: Barrel file
+    definitionEn: >-
+      A file, usually index.ts, that re-exports what other files export so they can all be imported from one path.
+      Bundlers may treat it as a single module, which can pull every export into the same chunk.
+    definitionAr: >-
+      file، غالبًا index.ts، بيعمل re-export للي files تانية بتعمله export، عشان تعمل import لكله من path واحد. والـ
+      bundlers ممكن تتعامل معاه كـ module واحد، وده ممكن يسحب كل الـ exports بتاعته في نفس الـ chunk.
+  - id: cold-observable
+    term: Cold Observable
+    definitionEn: >-
+      An Observable that starts its work, such as sending an HTTP request, separately for each subscriber at the moment
+      it subscribes, instead of sharing one execution. Angular's HttpClient returns cold Observables.
+    definitionAr: >-
+      Observable بيبدأ شغله، زي إنه يبعت HTTP request، لكل subscriber لوحده في اللحظة اللي بيعمل فيها subscribe، بدل ما
+      يشاركهم في تنفيذ واحد. والـ HttpClient بتاع Angular بيرجّع cold Observables.
+  - id: memory-leak
+    term: Memory leak
+    definitionEn: >-
+      Memory that a program no longer needs but can't release, because something long-lived still references it. In
+      a browser app, a destroyed component stays in memory if a running subscription or listener still points to it.
+    definitionAr: >-
+      memory البرنامج مابقاش محتاجها بس مش قادر يفضّيها، لأن حاجة عايشة مدة طويلة لسه شايلة reference ليها. وفي تطبيق
+      browser، الـ component اللي اتشالت بتفضل في الـ memory لو subscription أو listener شغال لسه بيشاور عليها.

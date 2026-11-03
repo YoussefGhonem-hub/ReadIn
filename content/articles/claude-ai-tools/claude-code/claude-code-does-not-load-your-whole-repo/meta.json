@@ -1,0 +1,54 @@
+{
+  "slug": "claude-code-does-not-load-your-whole-repo",
+  "field": "claude-ai-tools",
+  "topic": "claude-code",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Claude Code Doesn't Load Your Whole Repo: How It Explores and Acts",
+      "subtitle": "It starts with a small set of context, then searches and reads only what the task needs. Every read costs context."
+    },
+    "ar-EG": {
+      "title": "إزاي Claude Code بيفهم مشروعك من غير ما يحمّل الـ repo كله؟",
+      "subtitle": "بيبدأ بشوية context ثابتين، وبعدين يدوّر ويقرا اللي المهمة محتاجاه بس. وكل ملف بيقراه ليه تمن في الـ context."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 1
+  },
+  "tags": [
+    "Claude Code",
+    "Context Window",
+    "Agents",
+    "Monorepos"
+  ],
+  "sources": [
+    {
+      "title": "How Claude Code works — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/how-claude-code-works"
+    },
+    {
+      "title": "Explore the context window — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/context-window"
+    },
+    {
+      "title": "Set up Claude Code in a monorepo or large codebase — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/large-codebases"
+    },
+    {
+      "title": "Tools reference — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/tools-reference"
+    },
+    {
+      "title": "Create custom subagents — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/sub-agents"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

@@ -1,0 +1,54 @@
+{
+  "slug": "compact-vs-clear-in-claude-code",
+  "field": "claude-ai-tools",
+  "topic": "context-management",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "/compact Isn't a Save Point: When to Compact, Clear or Rewind in Claude Code",
+      "subtitle": "Compaction swaps your history for a summary. Clear between tasks, compact within one, and rewind a wrong turn."
+    },
+    "ar-EG": {
+      "title": "إمتى تعمل /compact وإمتى /clear أو /rewind في Claude Code؟",
+      "subtitle": "الـ compaction بيبدّل المحادثة بملخص. اعمل clear بين المهام، وcompact جوه المهمة، وrewind للطريق الغلط."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 4
+  },
+  "tags": [
+    "Claude Code",
+    "Context Window",
+    "Compaction",
+    "Prompt Caching"
+  ],
+  "sources": [
+    {
+      "title": "Explore the context window — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/context-window"
+    },
+    {
+      "title": "How Claude Code uses prompt caching — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/prompt-caching"
+    },
+    {
+      "title": "Commands — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/commands"
+    },
+    {
+      "title": "Manage costs effectively — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/costs"
+    },
+    {
+      "title": "Checkpointing — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/checkpointing"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

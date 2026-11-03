@@ -1,0 +1,50 @@
+{
+  "slug": "subagents-start-without-your-conversation",
+  "field": "claude-ai-tools",
+  "topic": "skills-hooks-subagents",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Subagents Don't See Your Conversation: Brief Them Like a New Teammate",
+      "subtitle": "A subagent starts fresh, with only the task message Claude writes for it. Only a fork inherits what you discussed."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Subagent مش شايف محادثتك؟ اديله brief كأنه زميل جديد",
+      "subtitle": "الـ subagent بيبدأ من الصفر، ومعاه بس رسالة المهمة اللي Claude بيكتبهاله. الـ fork بس هو اللي بيورث اللي اتكلمتوا فيه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 9
+  },
+  "tags": [
+    "Claude Code",
+    "Subagents",
+    "Context Engineering",
+    "Delegation"
+  ],
+  "sources": [
+    {
+      "title": "Create custom subagents — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/sub-agents"
+    },
+    {
+      "title": "Explore the context window — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/context-window"
+    },
+    {
+      "title": "Best practices for Claude Code — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/best-practices"
+    },
+    {
+      "title": "Extend Claude with skills — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/skills"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
