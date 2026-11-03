@@ -1,0 +1,55 @@
+{
+  "slug": "react-stale-closures-and-useeffectevent",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Stale Closures in React: Why Your Interval Sees Old State",
+      "subtitle": "A function sees the render that created it. Pick an updater, a dependency or useEffectEvent to fix it."
+    },
+    "ar-EG": {
+      "title": "ليه الـ interval بيشوف state قديم؟ الـ stale closures في React والـ useEffectEvent",
+      "subtitle": "الـ function بتشوف الـ render اللي اتعملت فيه وبس. اختار updater أو dependency أو useEffectEvent."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-mental-models",
+    "order": 12
+  },
+  "tags": [
+    "React",
+    "useEffectEvent",
+    "useEffect",
+    "Closures"
+  ],
+  "sources": [
+    {
+      "title": "Separating Events from Effects — React",
+      "url": "https://react.dev/learn/separating-events-from-effects"
+    },
+    {
+      "title": "useEffectEvent — React API Reference",
+      "url": "https://react.dev/reference/react/useEffectEvent"
+    },
+    {
+      "title": "Removing Effect Dependencies — React",
+      "url": "https://react.dev/learn/removing-effect-dependencies"
+    },
+    {
+      "title": "React 19.2 — React Blog",
+      "url": "https://react.dev/blog/2025/10/01/react-19-2"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare function saveDraft(docId: string, text: string): void;"
+    }
+  }
+}

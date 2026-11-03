@@ -1,0 +1,59 @@
+{
+  "slug": "react-context-is-not-a-state-manager",
+  "field": "frontend",
+  "topic": "state-management",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Context Is Not a State Manager: How Context Updates Re-render Consumers",
+      "subtitle": "Context delivers one value to a subtree, and every reader re-renders when it changes. Split it by how it changes, or use a store with selectors."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Context مش state manager؟ وإزاي تحديثه بيعمل re-render للـ consumers",
+      "subtitle": "الـ Context بيوصّل قيمة واحدة لجزء من الشجرة، وكل اللي بيقروها بيعملوا re-render لما تتغير. قسّمها حسب بتتغير إزاي، أو استخدم store بـ selectors."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 6
+  },
+  "tags": [
+    "React",
+    "Context",
+    "State management",
+    "Performance"
+  ],
+  "sources": [
+    {
+      "title": "useContext — React API Reference",
+      "url": "https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions"
+    },
+    {
+      "title": "Scaling Up with Reducer and Context — React",
+      "url": "https://react.dev/learn/scaling-up-with-reducer-and-context"
+    },
+    {
+      "title": "useReducer — React API Reference",
+      "url": "https://react.dev/reference/react/useReducer"
+    },
+    {
+      "title": "useSyncExternalStore — React API Reference",
+      "url": "https://react.dev/reference/react/useSyncExternalStore"
+    },
+    {
+      "title": "Hooks: useSelector — React Redux",
+      "url": "https://redux.js.org/react-redux/api/hooks"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type CartItem = { id: string; qty: number };\ntype CartAction = { type: \"add\"; id: string } | { type: \"remove\"; id: string };\ntype CartDispatch = (action: CartAction) => void;\ntype CartValue = { items: CartItem[]; dispatch: CartDispatch };\ndeclare function cartReducer(items: CartItem[], action: CartAction): CartItem[];"
+    }
+  }
+}

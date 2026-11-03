@@ -1,0 +1,59 @@
+{
+  "slug": "react-strict-mode-runs-effects-twice",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Strict Mode Runs Your Effects Twice on Purpose",
+      "subtitle": "The extra setup and cleanup in development rehearses a remount your users will cause anyway. A has-run ref only hides what it found."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Strict Mode بيشغّل الـ Effect مرتين؟ ده مقصود ومش bug",
+      "subtitle": "الـ setup والـ cleanup الزيادة في الـ development بروفة لـ remount اليوزرز هيعملوه كده كده. والـ ref اللي بيمنع التشغيل التاني بيخبّي اللي لقاه بس."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 5
+  },
+  "tags": [
+    "React",
+    "Strict Mode",
+    "useEffect",
+    "Debugging"
+  ],
+  "sources": [
+    {
+      "title": "StrictMode — React API Reference",
+      "url": "https://react.dev/reference/react/StrictMode#fixing-bugs-found-by-re-running-effects-in-development"
+    },
+    {
+      "title": "Synchronizing with Effects — React",
+      "url": "https://react.dev/learn/synchronizing-with-effects"
+    },
+    {
+      "title": "useEffect — React API Reference",
+      "url": "https://react.dev/reference/react/useEffect"
+    },
+    {
+      "title": "Activity — React API Reference",
+      "url": "https://react.dev/reference/react/Activity"
+    },
+    {
+      "title": "Common components: ref callback function — React API Reference",
+      "url": "https://react.dev/reference/react-dom/components/common#ref-callback"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Order = { id: string };\ndeclare function subscribeToOrders(storeId: string, onOrder: (order: Order) => void): () => void;\ndeclare function showToast(message: string): void;"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "slug": "react-19-form-actions",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "React 19 Form Actions: Drop the isLoading Boilerplate",
+      "subtitle": "Pass a function to the form's action and let useActionState and useFormStatus track the result and the pending state for you."
+    },
+    "ar-EG": {
+      "title": "فورم React 19 مش محتاج كل الـ isLoading ده: الـ Actions و useActionState",
+      "subtitle": "ادّي الـ action بتاع الفورم function، وسيب useActionState وuseFormStatus يتابعوا النتيجة وحالة الـ pending بدالك."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 8
+  },
+  "tags": [
+    "React 19",
+    "Forms",
+    "useActionState",
+    "Actions"
+  ],
+  "sources": [
+    {
+      "title": "<form> — React DOM Components",
+      "url": "https://react.dev/reference/react-dom/components/form"
+    },
+    {
+      "title": "useActionState — React API Reference",
+      "url": "https://react.dev/reference/react/useActionState"
+    },
+    {
+      "title": "useFormStatus — React DOM Hooks",
+      "url": "https://react.dev/reference/react-dom/hooks/useFormStatus"
+    },
+    {
+      "title": "useOptimistic — React API Reference",
+      "url": "https://react.dev/reference/react/useOptimistic"
+    },
+    {
+      "title": "React v19 — React Blog",
+      "url": "https://react.dev/blog/2024/12/05/react-19"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare function sendInvite(email: string): Promise<{ error?: string }>;"
+    }
+  }
+}

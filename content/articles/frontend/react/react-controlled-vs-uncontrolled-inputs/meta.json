@@ -1,0 +1,51 @@
+{
+  "slug": "react-controlled-vs-uncontrolled-inputs",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Controlled vs Uncontrolled Inputs: Pick One Source of Truth per Field",
+      "subtitle": "value says what a field is now, defaultValue only what it starts as. Choose one owner per field."
+    },
+    "ar-EG": {
+      "title": "إمتى الـ input يبقى controlled وإمتى uncontrolled؟ مصدر حقيقة واحد لكل field",
+      "subtitle": "الـ value بيقول الـ field قيمته إيه دلوقتي، والـ defaultValue بيبدأ بإيه وبس. اختار صاحب واحد لكل field."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 1
+  },
+  "tags": [
+    "React",
+    "Forms",
+    "Inputs",
+    "State"
+  ],
+  "sources": [
+    {
+      "title": "<input> — React DOM Components",
+      "url": "https://react.dev/reference/react-dom/components/input#controlling-an-input-with-a-state-variable"
+    },
+    {
+      "title": "Sharing State Between Components — React",
+      "url": "https://react.dev/learn/sharing-state-between-components"
+    },
+    {
+      "title": "<form> — React DOM Components",
+      "url": "https://react.dev/reference/react-dom/components/form"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Profile = { id: string; name: string; bio: string };\ndeclare function saveProfile(changes: { name: string; bio: string }): Promise<void>;"
+    }
+  }
+}

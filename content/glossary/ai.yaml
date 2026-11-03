@@ -255,3 +255,60 @@ terms:
     definitionAr: >-
       تعليمات التطبيق بيبعتها مع كل request، منفصلة عن رسايل المستخدم، عشان يحدد للموديل المهمة والـ context والقواعد
       وشكل الـ output طول المحادثة.
+  - id: tool-use
+    term: Tool Use (Function Calling)
+    definitionEn: >-
+      Letting a model request an operation you defined, such as a database query, by returning the tool's name and
+      JSON arguments. Your application, or the provider's servers, runs the operation and sends the result back.
+    definitionAr: >-
+      إنك تخلّي الموديل يطلب عملية إنت معرّفها، زي query على الداتابيز، بإنه يرجّع اسم الأداة والـ arguments بتاعتها
+      كـ JSON. والتطبيق بتاعك، أو سيرفرات الـ provider، هو اللي بيشغّل العملية ويرجّع النتيجة.
+  - id: prompt-injection
+    term: Prompt Injection
+    definitionEn: >-
+      An attack where text the model reads, such as a web page, email or tool result, contains instructions meant to
+      override the developer's and make the model do something else.
+    definitionAr: >-
+      هجوم فيه نص الموديل بيقراه، زي صفحة ويب أو إيميل أو نتيجة أداة، بيبقى جواه تعليمات معمولة عشان تغلب تعليمات
+      الـ developer وتخلّي الموديل يعمل حاجة تانية.
+  - id: constrained-decoding
+    term: Constrained Decoding
+    definitionEn: >-
+      Restricting which tokens a model may pick at each step so the output must follow a grammar, such as one built
+      from a JSON schema. It guarantees the shape of the output, not that its values are true.
+    definitionAr: >-
+      إنك تحدد الـ tokens اللي الموديل مسموحله يختارها في كل خطوة، عشان الـ output يمشي غصب عنه على grammar معيّنة، زي
+      واحدة متبنية من JSON schema. بتضمن شكل الـ output، مش إن القيم اللي فيه صح.
+  - id: json-schema
+    term: JSON Schema
+    definitionEn: >-
+      A standard JSON format for describing what a JSON document must look like: its fields, their types, which are
+      required and which values are allowed.
+    definitionAr: >-
+      format قياسي مكتوب بالـ JSON بيوصف أي JSON document لازم يبقى شكله إزاي: الحقول، وأنواعها، وأنهي منها إجباري،
+      وأنهي قيم مسموحة.
+  - id: prompt-caching
+    term: Prompt Caching
+    definitionEn: >-
+      Reusing the already processed beginning of a prompt, such as the system prompt, tools and earlier turns, on a
+      later request that starts with exactly the same content. Cached tokens are billed at a fraction of the input
+      price.
+    definitionAr: >-
+      إنك تعيد استخدام أول جزء من الـ prompt اللي اتعالج قبل كده، زي الـ system prompt والأدوات والرسايل اللي فاتت، في
+      request جاي بيبدأ بنفس المحتوى بالظبط. والـ tokens اللي جاية من الـ cache بتتحاسب بجزء صغير من سعر الـ input.
+  - id: eval
+    term: Eval (Evaluation)
+    definitionEn: >-
+      An automated test for an AI feature: a set of inputs with success criteria, a grader that scores each output,
+      and a harness that runs them all and reports the results, so changes can be compared on the same cases.
+    definitionAr: >-
+      اختبار أوتوماتيك لـ feature معمولة بالـ AI: مجموعة inputs ليها معايير نجاح، وgrader بيدّي score لكل output، وharness
+      بيشغّلهم كلهم ويطلّع النتيجة، عشان تقارن أي تغيير على نفس الحالات.
+  - id: llm-as-a-judge
+    term: LLM-as-a-Judge
+    definitionEn: >-
+      Using a language model with a rubric to grade another model's outputs when simple code checks can't, for example
+      for tone or completeness. It needs checking against human judgments before you rely on it.
+    definitionAr: >-
+      إنك تستخدم language model ومعاه rubric عشان يقيّم outputs موديل تاني لما checks الكود البسيطة ماتنفعش، زي النبرة أو
+      إن الإجابة كاملة. ومحتاج تتأكد منه قصاد تقييم البشر قبل ما تعتمد عليه.

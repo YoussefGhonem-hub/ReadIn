@@ -1,0 +1,55 @@
+{
+  "slug": "not-all-state-belongs-in-a-global-store",
+  "field": "frontend",
+  "topic": "state-management",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Not All State Belongs in a Global Store",
+      "subtitle": "A store makes data easy to reach from anywhere. It also keeps it alive for the whole session, which local state never needed."
+    },
+    "ar-EG": {
+      "title": "مش كل الـ state مكانه الـ global store",
+      "subtitle": "الـ store بيخلّي الداتا سهل توصلها من أي حتة، بس كمان بيخلّيها عايشة طول الـ session، وده حاجة الـ state المحلي عمره ما احتاجها."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 4
+  },
+  "tags": [
+    "React",
+    "State management",
+    "useState",
+    "Global store"
+  ],
+  "sources": [
+    {
+      "title": "Choosing the State Structure — React",
+      "url": "https://react.dev/learn/choosing-the-state-structure"
+    },
+    {
+      "title": "Sharing State Between Components — React",
+      "url": "https://react.dev/learn/sharing-state-between-components"
+    },
+    {
+      "title": "Preserving and Resetting State — React",
+      "url": "https://react.dev/learn/preserving-and-resetting-state"
+    },
+    {
+      "title": "Redux FAQ: Organizing State — Redux",
+      "url": "https://redux.js.org/faq/organizing-state"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Product = { id: string; price: number };\ntype AppState = { priceDraft: string; setPriceDraft: (value: string) => void };\ndeclare function useAppStore<T>(select: (state: AppState) => T): T;\ndeclare function savePrice(productId: string, price: number): void;"
+    }
+  }
+}

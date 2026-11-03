@@ -1,0 +1,59 @@
+{
+  "slug": "react-memoization-and-the-compiler",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Memoizing Everything Won't Speed Up React: useMemo, useCallback and the Compiler",
+      "subtitle": "A cached value only helps when something compares it, and one new object breaks the whole chain."
+    },
+    "ar-EG": {
+      "title": "تغليف كل حاجة بـ useMemo و useCallback مش هيسرّع React: والـ Compiler بيعمل إيه",
+      "subtitle": "القيمة المتخزنة بتفيد بس لما حد يقارنها، وobject واحد جديد بيكسر السلسلة كلها."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-mental-models",
+    "order": 13
+  },
+  "tags": [
+    "React",
+    "Performance",
+    "useMemo",
+    "React Compiler"
+  ],
+  "sources": [
+    {
+      "title": "useMemo — React API Reference",
+      "url": "https://react.dev/reference/react/useMemo#should-you-add-usememo-everywhere"
+    },
+    {
+      "title": "useCallback — React API Reference",
+      "url": "https://react.dev/reference/react/useCallback"
+    },
+    {
+      "title": "memo — React API Reference",
+      "url": "https://react.dev/reference/react/memo"
+    },
+    {
+      "title": "Introduction to React Compiler — React",
+      "url": "https://react.dev/learn/react-compiler/introduction"
+    },
+    {
+      "title": "React Compiler v1.0 — React Blog",
+      "url": "https://react.dev/blog/2025/10/07/react-compiler-1"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Sale = { id: string; amount: number };\ntype Point = { id: string; x: number; y: number };\ntype Props = { sales: Sale[]; region: string };\ndeclare function toPoints(sales: Sale[]): Point[];\ndeclare function openSale(region: string, id: string): void;\ndeclare function ChartView(props: {\n  title: string;\n  points: Point[];\n  options: { animate: boolean };\n  onSelect: (id: string) => void;\n}): null;"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "slug": "server-state-is-not-client-state",
+  "field": "frontend",
+  "topic": "state-management",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Server Data Isn't Client State: Stop Hand-Rolling API Caches",
+      "subtitle": "Data from an API is a copy of something other people change. It needs keys, freshness and invalidation, not just useState and a loading flag."
+    },
+    "ar-EG": {
+      "title": "بيانات الـ API مش client state: بطّل تكتب cache بإيدك",
+      "subtitle": "الداتا اللي جاية من API نسخة من حاجة ناس تانية بتغيّرها. محتاجة keys وتحديث وinvalidation، مش useState وloading flag وبس."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 7
+  },
+  "tags": [
+    "React",
+    "State management",
+    "Data fetching",
+    "Caching"
+  ],
+  "sources": [
+    {
+      "title": "Overview — TanStack Query React Docs",
+      "url": "https://tanstack.com/query/latest/docs/framework/react/overview"
+    },
+    {
+      "title": "Important Defaults — TanStack Query React Docs",
+      "url": "https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults"
+    },
+    {
+      "title": "Query Invalidation — TanStack Query React Docs",
+      "url": "https://tanstack.com/query/latest/docs/framework/react/guides/query-invalidation"
+    },
+    {
+      "title": "RTK Query Overview — Redux Toolkit",
+      "url": "https://redux.js.org/toolkit/rtk-query/overview"
+    },
+    {
+      "title": "Synchronizing with Effects — React",
+      "url": "https://react.dev/learn/synchronizing-with-effects"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Order = { id: string; status: string };\ntype QueryResult<T> =\n  | { isPending: true; error: null; data: undefined }\n  | { isPending: false; error: Error; data: undefined }\n  | { isPending: false; error: null; data: T };\ndeclare function useQuery<T>(options: {\n  queryKey: readonly unknown[];\n  queryFn: () => Promise<T>;\n}): QueryResult<T>;\ndeclare function fetchOrders(status: string): Promise<Order[]>;\ndeclare function Spinner(): null;\ndeclare function ErrorView(props: { error: Error }): null;\ndeclare function OrderList(props: { orders: Order[] }): null;"
+    }
+  }
+}

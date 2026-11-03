@@ -1,0 +1,59 @@
+{
+  "slug": "react-error-boundaries-dont-catch-everything",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "What Error Boundaries Don't Catch: Event Handlers, Async Code and More",
+      "subtitle": "A boundary catches what breaks while React renders. Clicks, timers and promises need their own plan."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Error Boundary مش بيمسك أخطاء الـ event handlers والـ async code؟",
+      "subtitle": "الـ boundary بيمسك اللي بيقع وReact بيعمل render. الـ clicks والـ timers والـ promises محتاجين خطة تانية."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 3
+  },
+  "tags": [
+    "React",
+    "Error handling",
+    "Error Boundary",
+    "useTransition"
+  ],
+  "sources": [
+    {
+      "title": "Catching rendering errors with an Error Boundary — React",
+      "url": "https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary"
+    },
+    {
+      "title": "useTransition — React API Reference",
+      "url": "https://react.dev/reference/react/useTransition"
+    },
+    {
+      "title": "use — React API Reference",
+      "url": "https://react.dev/reference/react/use"
+    },
+    {
+      "title": "createRoot — React DOM API Reference",
+      "url": "https://react.dev/reference/react-dom/client/createRoot"
+    },
+    {
+      "title": "Window: unhandledrejection event — MDN Web Docs",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare function chargeCard(orderId: string): Promise<void>;"
+    }
+  }
+}

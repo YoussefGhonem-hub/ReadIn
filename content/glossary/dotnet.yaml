@@ -127,3 +127,23 @@ terms:
     term: Short-circuiting
     definitionEn: When a middleware answers a request without calling the next one, so the rest of the pipeline never runs for that request.
     definitionAr: إن middleware يرد على الـ request من غير ما ينادي اللي بعده، فباقي الـ pipeline مش بيشتغل خالص للـ request ده.
+  - id: route-group
+    term: Route group
+    definitionEn: A set of minimal API endpoints created with MapGroup that share a URL prefix. Authorization, filters or metadata added to the group apply to every endpoint in it.
+    definitionAr: مجموعة endpoints في الـ Minimal APIs بتتعمل بـ MapGroup وليها نفس الـ URL prefix. أي authorization أو filters أو metadata تضيفها على الـ group بتتطبق على كل endpoint جواها.
+  - id: endpoint-filter
+    term: Endpoint filter
+    definitionEn: Code attached to a minimal API endpoint or route group with AddEndpointFilter. It runs before and after the handler, can read or change its arguments, and can return a response without calling it.
+    definitionAr: كود بتربطه بـ endpoint أو route group في الـ Minimal APIs بـ AddEndpointFilter. بيشتغل قبل الـ handler وبعده، ويقدر يقرا الـ arguments بتاعته أو يغيّرها، ويقدر يرجّع response من غير ما يناديه أصلًا.
+  - id: dependency-injection
+    term: Dependency Injection
+    definitionEn: A technique where a class or handler receives the objects it depends on from a container, instead of creating them itself. ASP.NET Core registers services at startup and supplies them where they're asked for.
+    definitionAr: إن الـ class أو الـ handler يستلم الحاجات اللي محتاجها من container بدل ما يعملها بنفسه. ASP.NET Core بيسجّل الـ services وقت الـ startup ويديها لأي حد يطلبها.
+  - id: parameter-binding
+    term: Parameter binding
+    definitionEn: How ASP.NET Core fills a handler's parameters before calling it, from the route, query string, headers, body or form, or from dependency injection.
+    definitionAr: الطريقة اللي ASP.NET Core بيملا بيها الـ parameters بتاعة الـ handler قبل ما يناديه، من الـ route أو الـ query string أو الـ headers أو الـ body أو الـ form، أو من الـ dependency injection.
+  - id: configuration-provider
+    term: Configuration provider
+    definitionEn: A component that reads settings from one source, such as a JSON file, environment variables or command-line arguments, as flat key-value pairs. When several providers set the same key, the one added last wins.
+    definitionAr: component بيقرا الـ settings من مصدر واحد، زي ملف JSON أو environment variables أو command-line arguments، على شكل key وقيمته. ولو كذا provider حطوا نفس الـ key، اللي اتضاف الآخر هو اللي بيكسب.

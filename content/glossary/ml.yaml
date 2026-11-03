@@ -165,3 +165,35 @@ terms:
     definitionAr: >-
       الحد اللي بيحوّل الاحتمال اللي طالع من الـ classifier لـ أيوه أو لأ. مكتبات كتير الـ default بتاعها 0.5، بس القيمة
       الصح بتعتمد على توزيع الـ classes وعلى تكلفة كل نوع غلط.
+  - id: gradient-boosting
+    term: Gradient Boosting
+    definitionEn: >-
+      An ensemble method that builds decision trees one after another, each new tree correcting the errors left by the
+      trees before it. XGBoost and scikit-learn's HistGradientBoosting models are common implementations.
+    definitionAr: >-
+      طريقة ensemble بتبني decision trees ورا بعض، وكل tree جديدة بتصلّح الغلط اللي سابته الـ trees اللي قبلها. ومن أشهر
+      تطبيقاتها XGBoost وموديلات HistGradientBoosting في scikit-learn.
+  - id: inductive-bias
+    term: Inductive Bias
+    definitionEn: >-
+      The assumptions a learning method makes about which patterns are likely, which decide what it learns easily from
+      limited data. Trees favor axis-aligned, step-like rules; neural networks favor smooth functions.
+    definitionAr: >-
+      الافتراضات اللي طريقة التعلّم بتعملها عن أنهي patterns متوقعة أكتر، وهي اللي بتحدد إيه اللي تتعلّمه بسهولة من داتا
+      محدودة. الـ trees بتميل لـ rules على شكل سلالم على كل عمود لوحده، والـ neural networks بتميل للـ functions الناعمة.
+  - id: k-means
+    term: K-Means
+    definitionEn: >-
+      A clustering algorithm that places k centers and assigns each point to the nearest one, moving the centers to
+      minimize the sum of squared distances. You choose k, and it works best on round groups of similar spread.
+    definitionAr: >-
+      algorithm للـ clustering بيحط k مراكز ويضم كل نقطة لأقرب مركز ليها، وبيحرّك المراكز عشان يقلّل مجموع مربعات
+      المسافات. إنت اللي بتحدد k، وبيشتغل أحسن مع مجموعات مدوّرة وانتشارها متقارب.
+  - id: silhouette-coefficient
+    term: Silhouette Coefficient
+    definitionEn: >-
+      A score from -1 to 1 for a clustering, computed from how close each point is to its own cluster compared with the
+      next nearest one. It needs no labels, but it favors compact, convex clusters.
+    definitionAr: >-
+      score من -1 لـ 1 بيقيّم الـ clustering، بيتحسب من قد إيه كل نقطة قريبة من الـ cluster بتاعها مقارنةً بأقرب cluster
+      تاني. مش محتاج labels، بس بيفضّل الـ clusters المتماسكة والـ convex.

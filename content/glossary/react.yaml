@@ -224,3 +224,44 @@ terms:
     definitionAr: >-
       state update بيعتبره React مش مستعجل، وبتبدأه بـ startTransition. في React 19 الـ function دي ممكن تبقى async،
       وReact بيتابع إنها لسه شغالة. ومع useTransition، لو رمت error بيوصل لأقرب Error Boundary.
+  - id: single-source-of-truth
+    term: Single source of truth
+    definitionEn: >-
+      The rule that each piece of state has exactly one owner, a specific component or store, and everything else
+      reads it from there instead of keeping its own copy. It doesn't mean all state lives in one place.
+    definitionAr: >-
+      القاعدة اللي بتقول إن كل state ليه owner واحد بس، component معيّن أو store، وأي حد تاني بيقراه من عنده بدل ما
+      يحتفظ بنسخة لوحده. ومش معناها إن كل الـ state يعيش في مكان واحد.
+  - id: strict-mode
+    term: Strict Mode
+    definitionEn: >-
+      A development-only check you turn on with the StrictMode component. It renders components an extra time and runs
+      an extra setup and cleanup for Effects and ref callbacks, to expose impure rendering and missing cleanup.
+    definitionAr: >-
+      فحص بيشتغل في الـ development بس، بتشغّله بالـ component اللي اسمه StrictMode. بيعمل render للـ components مرة
+      زيادة، وبيشغّل setup وcleanup زيادة للـ Effects والـ ref callbacks، عشان يكشف الـ render اللي مش pure والـ cleanup
+      الناقص.
+  - id: react-context
+    term: Context
+    definitionEn: >-
+      A way for a component to make one value available to every component below it without passing props. Readers
+      get it with useContext and re-render whenever the nearest provider passes a different value.
+    definitionAr: >-
+      طريقة بيستخدمها component عشان يخلّي قيمة واحدة متاحة لكل الـ components اللي تحته من غير ما يعدّيها props.
+      اللي بيقروها بياخدوها بـ useContext، وبيعملوا re-render كل ما أقرب provider يبعت قيمة مختلفة.
+  - id: store-selector
+    term: Selector
+    definitionEn: >-
+      A function that picks the part of a store's state a component needs. The store compares its result after each
+      update and re-renders the component only when that part changed.
+    definitionAr: >-
+      function بتختار الجزء اللي الـ component محتاجه من الـ state بتاع الـ store. الـ store بيقارن نتيجتها بعد كل
+      update، ومابيعملش re-render للـ component غير لما الجزء ده يتغير.
+  - id: react-action
+    term: Action
+    definitionEn: >-
+      React's name for a function that runs in a Transition, such as one passed to a form's action prop or to
+      startTransition. React tracks whether it is pending and sends an error it throws to the nearest Error Boundary.
+    definitionAr: >-
+      الاسم اللي React بيطلقه على function بتشتغل جوه Transition، زي اللي بتديها للـ action بتاع فورم أو لـ
+      startTransition. React بيتابع هل لسه شغالة، ولو رمت error بيبعته لأقرب Error Boundary.

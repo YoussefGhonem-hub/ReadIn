@@ -1,0 +1,59 @@
+{
+  "slug": "react-fetching-in-effects-race-conditions",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Fetching in useEffect Has a Race Condition You Haven't Noticed",
+      "subtitle": "Responses can arrive in any order. A cleanup that aborts or ignores the old request keeps the screen right."
+    },
+    "ar-EG": {
+      "title": "فيه race condition في الـ fetch اللي جوه useEffect غالبًا مخدتش بالك منه",
+      "subtitle": "الردود ممكن توصل بأي ترتيب. والـ cleanup اللي بيلغي الـ request القديم أو يتجاهله بيخلّي الشاشة صح."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 2
+  },
+  "tags": [
+    "React",
+    "useEffect",
+    "Data fetching",
+    "AbortController"
+  ],
+  "sources": [
+    {
+      "title": "Synchronizing with Effects — React",
+      "url": "https://react.dev/learn/synchronizing-with-effects"
+    },
+    {
+      "title": "You Might Not Need an Effect — React",
+      "url": "https://react.dev/learn/you-might-not-need-an-effect"
+    },
+    {
+      "title": "useEffect — React API Reference",
+      "url": "https://react.dev/reference/react/useEffect"
+    },
+    {
+      "title": "AbortController — MDN Web Docs",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/AbortController"
+    },
+    {
+      "title": "Window: fetch() method — MDN Web Docs",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Ticket = { id: string; subject: string; customer: string };\ndeclare function showError(error: unknown): void;\ndeclare function TicketView(props: { ticket: Ticket }): null;\ndeclare function Spinner(): null;"
+    }
+  }
+}
