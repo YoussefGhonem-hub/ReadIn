@@ -1,0 +1,36 @@
+{
+  "slug": "angular-ssr-http-transfer-cache",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Not Every Server Request Is Reused in the Browser: The HttpClient Transfer Cache",
+      "subtitle": "Angular hands server responses to the browser only for eligible HttpClient requests made during the first render. Auth headers, POSTs, cache headers and mismatched URLs all mean a second fetch."
+    },
+    "ar-EG": {
+      "title": "مش كل request على الـ server بيتعاد استخدامه في المتصفح: الـ HttpClient transfer cache",
+      "subtitle": "Angular بيسلّم ردود الـ server للمتصفح بس للـ HttpClient requests اللي تنفع واللي بتحصل في أول render. الـ auth headers والـ POST والـ cache headers والـ URLs المختلفة معناها fetch تاني."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 11 },
+  "tags": ["Angular", "SSR", "HttpClient", "Caching"],
+  "sources": [
+    { "title": "Caching data when using HttpClient — Angular", "url": "https://angular.dev/guide/ssr#caching-data-when-using-httpclient" },
+    { "title": "withHttpTransferCacheOptions — Angular", "url": "https://angular.dev/api/platform-browser/withHttpTransferCacheOptions" },
+    { "title": "HttpTransferCacheOptions — Angular", "url": "https://angular.dev/api/common/http/HttpTransferCacheOptions" },
+    { "title": "HTTP_TRANSFER_CACHE_ORIGIN_MAP — Angular", "url": "https://angular.dev/api/common/http/HTTP_TRANSFER_CACHE_ORIGIN_MAP" },
+    { "title": "Caching resource data with SSR — Angular", "url": "https://angular.dev/guide/signals/resource#caching-resource-data-with-ssr" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "abstract class Session {\n  abstract token(): string | null;\n}"
+    }
+  }
+}

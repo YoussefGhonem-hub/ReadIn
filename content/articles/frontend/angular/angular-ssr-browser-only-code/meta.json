@@ -1,0 +1,30 @@
+{
+  "slug": "angular-ssr-browser-only-code",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "'window is not defined': Running Browser-Only Code Safely with SSR",
+      "subtitle": "With SSR, constructors, field initializers and ngOnInit run on the server too. Move browser-only work into render hooks and platform-specific services instead of guarding it line by line."
+    },
+    "ar-EG": {
+      "title": "إزاي تتعامل مع 'window is not defined' في SSR من غير isPlatformBrowser في كل حتة",
+      "subtitle": "مع الـ SSR، الـ constructors والـ field initializers والـ ngOnInit بيشتغلوا على الـ server كمان. انقل الشغل اللي للمتصفح بس للـ render hooks وللـ services الخاصة بكل platform، بدل ما تحرسه سطر سطر."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 10 },
+  "tags": ["Angular", "SSR", "afterNextRender", "isPlatformBrowser"],
+  "sources": [
+    { "title": "Authoring server-compatible components — Angular", "url": "https://angular.dev/guide/ssr#authoring-server-compatible-components" },
+    { "title": "afterNextRender — Angular", "url": "https://angular.dev/api/core/afterNextRender" },
+    { "title": "Component lifecycle — Angular", "url": "https://angular.dev/guide/components/lifecycle" },
+    { "title": "Hydration — Angular", "url": "https://angular.dev/guide/hydration" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

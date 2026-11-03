@@ -1,0 +1,36 @@
+{
+  "slug": "angular-incremental-hydration",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Incremental Hydration: Pages Don't Have to Hydrate All at Once",
+      "subtitle": "A @defer block with a hydrate trigger is rendered on the server, but its code loads and hydrates only when the trigger fires, and early clicks are replayed. In Angular 22 it's on by default."
+    },
+    "ar-EG": {
+      "title": "الصفحة مش لازم تعمل hydrate مرة واحدة: الـ Incremental Hydration في Angular",
+      "subtitle": "الـ @defer block اللي فيه hydrate trigger بيتعمله render على الـ server، بس الكود بتاعه بيحمّل ويعمل hydrate لما الـ trigger يشتغل بس، والضغطات البدري بتتعاد. وفي Angular 22 ده شغال افتراضيًا."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 12 },
+  "tags": ["Angular", "SSR", "Hydration", "@defer", "Performance"],
+  "sources": [
+    { "title": "Incremental Hydration — Angular", "url": "https://angular.dev/guide/incremental-hydration" },
+    { "title": "Deferred loading with @defer — Angular", "url": "https://angular.dev/guide/templates/defer" },
+    { "title": "Hydration: capturing and replaying events — Angular", "url": "https://angular.dev/guide/hydration#capturing-and-replaying-events" },
+    { "title": "withIncrementalHydration — Angular", "url": "https://angular.dev/api/platform-browser/withIncrementalHydration" },
+    { "title": "withEventReplay — Angular", "url": "https://angular.dev/api/platform-browser/withEventReplay" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "class ProductSummary {}\nclass ProductSpecs {}\nclass Reviews {}"
+    }
+  }
+}

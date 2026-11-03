@@ -1,0 +1,35 @@
+{
+  "slug": "angular-httpresource-is-for-reading",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "httpResource Is for Reading Data, Not Saving It",
+      "subtitle": "A resource sends its request on its own, again whenever a signal it reads changes, and cancels the one still pending. Right for loading, wrong for a save."
+    },
+    "ar-EG": {
+      "title": "ليه الـ httpResource مش مناسب للـ POST والـ PUT؟",
+      "subtitle": "الـ resource بيبعت الـ request لوحده، ويبعته تاني كل ما signal بيقراها تتغير، ويلغي اللي لسه شغال. ده صح للتحميل وغلط للـ save."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 8 },
+  "tags": ["Angular", "httpResource", "HttpClient", "Signals"],
+  "sources": [
+    { "title": "Reactive data fetching with httpResource — Angular", "url": "https://angular.dev/guide/http/http-resource" },
+    { "title": "Async reactivity with resources — Angular", "url": "https://angular.dev/guide/signals/resource" },
+    { "title": "Making HTTP requests — Angular", "url": "https://angular.dev/guide/http/making-requests" },
+    { "title": "HttpResourceRef — Angular", "url": "https://angular.dev/api/common/http/HttpResourceRef" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface Profile {\n  name: string;\n  bio: string;\n}"
+    }
+  }
+}

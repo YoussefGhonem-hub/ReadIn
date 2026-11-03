@@ -1,0 +1,30 @@
+{
+  "slug": "angular-hydration-is-not-rerendering",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Hydration Isn't Re-rendering: How Angular Reuses Server HTML",
+      "subtitle": "The browser runs your components again, but it adopts the DOM the server sent instead of rebuilding it. That only works while both sides produce the same DOM."
+    },
+    "ar-EG": {
+      "title": "هل المتصفح بيرمي الـ HTML اللي جاي من الـ server؟ الـ hydration في Angular",
+      "subtitle": "المتصفح بيشغّل الـ components بتاعتك تاني، بس بياخد الـ DOM اللي الـ server بعته بدل ما يبنيه من الأول. وده بيمشي بس طول ما الناحيتين بيطلّعوا نفس الـ DOM."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 9 },
+  "tags": ["Angular", "SSR", "Hydration", "Performance"],
+  "sources": [
+    { "title": "Hydration — Angular", "url": "https://angular.dev/guide/hydration" },
+    { "title": "Server and hybrid rendering — Angular", "url": "https://angular.dev/guide/ssr" },
+    { "title": "NG0500: Hydration Node Mismatch — Angular", "url": "https://angular.dev/errors/NG0500" },
+    { "title": "provideClientHydration — Angular", "url": "https://angular.dev/api/platform-browser/provideClientHydration" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
