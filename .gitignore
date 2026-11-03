@@ -18,6 +18,8 @@ service-account*.json
 *serviceAccount*.json
 appsettings.*.local.json
 secrets/
+# Seed articles have a "secrets" topic (content/articles/security/secrets/…): public article text, never credentials.
+!content/articles/*/secrets/
 
 # ===== .NET =====
 bin/
