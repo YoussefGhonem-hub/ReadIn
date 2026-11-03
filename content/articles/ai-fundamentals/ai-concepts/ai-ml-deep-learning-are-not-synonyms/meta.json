@@ -1,0 +1,46 @@
+{
+  "slug": "ai-ml-deep-learning-are-not-synonyms",
+  "field": "ai-fundamentals",
+  "topic": "ai-concepts",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "AI, Machine Learning, Deep Learning and LLMs: How They Actually Nest",
+      "subtitle": "Four nested circles, and one question that tells them apart: what does the system learn from data?"
+    },
+    "ar-EG": {
+      "title": "إيه الفرق بين الـ AI والـ Machine Learning والـ Deep Learning والـ LLMs؟",
+      "subtitle": "أربع دواير جوه بعض، وسؤال واحد بيفرّق بينهم: السيستم بيتعلّم إيه من الداتا؟"
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 1 },
+  "tags": ["AI", "Machine Learning", "Deep Learning", "LLMs"],
+  "sources": [
+    {
+      "title": "What is machine learning? — Google for Developers, Introduction to Machine Learning",
+      "url": "https://developers.google.com/machine-learning/intro-to-ml/what-is-ml"
+    },
+    {
+      "title": "Neural networks — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/neural-networks"
+    },
+    {
+      "title": "Machine Learning Glossary — Google for Developers",
+      "url": "https://developers.google.com/machine-learning/glossary"
+    },
+    {
+      "title": "Goodfellow, Bengio and Courville, Deep Learning (MIT Press), Chapter 1: Introduction",
+      "url": "https://www.deeplearningbook.org/contents/intro.html"
+    },
+    {
+      "title": "Rules of Machine Learning — Google for Developers",
+      "url": "https://developers.google.com/machine-learning/guides/rules-of-ml"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

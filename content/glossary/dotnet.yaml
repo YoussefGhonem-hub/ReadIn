@@ -1,0 +1,17 @@
+terms:
+  - id: value-type
+    term: Value type
+    definitionEn: A type (struct, enum, or a built-in like int) whose variables hold the data itself, so assigning or passing one copies the whole value.
+    definitionAr: نوع (struct أو enum أو حاجة زي int) المتغير بتاعه شايل الداتا نفسها، فلما تعمله assign أو تبعته لـ method بيتنسخ كله.
+  - id: boxing
+    term: Boxing
+    definitionEn: Converting a value type to object or to an interface it implements, which copies the value into a new object, normally on the managed heap.
+    definitionAr: تحويل value type لـ object أو لـ interface بيعمله implement، وده بينسخ القيمة جوه object جديد، غالبًا على الـ managed heap.
+  - id: escape-analysis
+    term: Escape analysis
+    definitionEn: A JIT check that proves an object can't outlive the method that creates it, so the object can be allocated on the stack instead of the heap.
+    definitionAr: فحص بيعمله الـ JIT عشان يتأكد إن الـ object مش هيعيش بعد ما الـ method اللي عملته تخلص، فيقدر يحطه على الـ stack بدل الـ heap.
+  - id: closure
+    term: Closure
+    definitionEn: A function, such as a C# lambda, together with the outer variables it captures. The C# compiler stores those variables as fields of a hidden class.
+    definitionAr: function زي الـ lambda في C# ومعاها المتغيرات اللي من برّه واللي بتستخدمها. الـ C# compiler بيخزّن المتغيرات دي كـ fields في class مخفية.

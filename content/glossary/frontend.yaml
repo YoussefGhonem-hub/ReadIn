@@ -1,0 +1,25 @@
+terms:
+  - id: render-phase
+    term: Render phase
+    definitionEn: >-
+      The step where React calls your components to compute what the UI should look like and works out what changed
+      since the previous render. It does not touch the DOM.
+    definitionAr: >-
+      المرحلة اللي React بينادي فيها الـ components بتاعتك عشان يحسب شكل الـ UI المفروض يبقى إيه، ويعرف إيه اللي
+      اتغير عن الـ render اللي قبله. مابتلمسش الـ DOM خالص.
+  - id: commit-phase
+    term: Commit phase
+    definitionEn: >-
+      The step after rendering where React applies only the differences it found to the DOM. Nodes that did not change
+      are left exactly as they are.
+    definitionAr: >-
+      المرحلة اللي بعد الـ render، واللي React بيطبّق فيها على الـ DOM الفروق اللي لقاها وبس. أي node ماتغيرتش بتفضل
+      زي ما هي بالظبط.
+  - id: reconciliation
+    term: Reconciliation
+    definitionEn: >-
+      How React compares the new render output with the previous one, position by position in the tree, to decide
+      which nodes and state to keep, update or recreate.
+    definitionAr: >-
+      الطريقة اللي React بيقارن بيها ناتج الـ render الجديد بالقديم، مكان بمكان في الـ tree، عشان يقرر هيحتفظ بأنهي
+      nodes وstate، وهيحدّث إيه، وهيعمل إيه من الأول.

@@ -1,0 +1,31 @@
+{
+  "slug": "react-rendering-is-not-rewriting-the-dom",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Re-rendering Isn't Rewriting the DOM: React's Render and Commit Phases",
+      "subtitle": "React calls your component again, compares the result and touches only the DOM nodes that changed."
+    },
+    "ar-EG": {
+      "title": "ليه الـ re-render مش معناه إن الـ DOM اتكتب من جديد؟ مرحلتي Render و Commit",
+      "subtitle": "مع كل re-render بينادي React الـ component تاني، يقارن النتيجة، ويلمس بس الـ DOM nodes اللي اتغيرت."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "React 19",
+  "learningPath": { "slug": "react-mental-models", "order": 1 },
+  "tags": ["React", "Rendering", "Performance", "DOM"],
+  "sources": [
+    { "title": "Render and Commit — React", "url": "https://react.dev/learn/render-and-commit" },
+    { "title": "Preserving and Resetting State — React", "url": "https://react.dev/learn/preserving-and-resetting-state" },
+    { "title": "memo — React API Reference", "url": "https://react.dev/reference/react/memo" },
+    { "title": "StrictMode — React API Reference", "url": "https://react.dev/reference/react/StrictMode" },
+    { "title": "useMemo — React API Reference", "url": "https://react.dev/reference/react/useMemo" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

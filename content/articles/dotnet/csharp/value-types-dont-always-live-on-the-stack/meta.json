@@ -1,0 +1,46 @@
+{
+  "slug": "value-types-dont-always-live-on-the-stack",
+  "field": "dotnet",
+  "topic": "csharp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Stack vs Heap Is the Wrong Question: What Really Separates Value and Reference Types",
+      "subtitle": "Value types are about copying, not about the stack. Where your structs really live, and why it rarely matters."
+    },
+    "ar-EG": {
+      "title": "ليه السؤال مش stack ولا heap؟ الفرق الحقيقي بين الـ value types والـ reference types",
+      "subtitle": "الـ value types حكايتها في النسخ مش في الـ stack. الـ struct بيتخزن فين فعلًا، وليه ده نادرًا ما بيفرق معاك."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "csharp-under-the-hood", "order": 1 },
+  "tags": ["C#", "Value types", "Structs", "Boxing", "Memory"],
+  "sources": [
+    {
+      "title": "Value types (C# reference) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/value-types"
+    },
+    {
+      "title": "Boxing and Unboxing (C# programming guide) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/programming-guide/types/boxing-and-unboxing"
+    },
+    {
+      "title": "Choosing Between Class and Struct (Framework Design Guidelines) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/design-guidelines/choosing-between-class-and-struct"
+    },
+    {
+      "title": "What's new in .NET 10 runtime: stack allocation and escape analysis — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/whats-new/dotnet-10/runtime"
+    },
+    {
+      "title": "The Stack Is An Implementation Detail, Part One — Eric Lippert (Microsoft Learn archive)",
+      "url": "https://learn.microsoft.com/archive/blogs/ericlippert/the-stack-is-an-implementation-detail-part-one"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
