@@ -658,7 +658,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Block-based rich editor producing **RDoc**: all block types in [§13](#13-article-content-format-rdoc), slash menu (`/`) to insert blocks, markdown shortcuts.
 - Per-block automatic direction (`dir="auto"`) with manual override, code blocks forced LTR.
 - Cover image upload (compressed on the device, processed by the backend, stored in `wwwroot/uploads`), field, topic, tags (max 5).
-- **Attachments:** 1–10 images **or** one PDF ([F26](#f26--post-attachments--media)).
+- **Attachments:** 1–10 images **or** one PDF ([F26](#f26--post-attachments--media)). The attachment bar is one reusable component (web) / widget (mobile). Until the block editor ships, `/write` is a **post composer** that hosts it: field, language, title, plain-text body (paragraphs become RDoc `paragraph` blocks), sources and attachments, then create → set attachments → publish.
 - **Sources** list (title + URL), required for Software, Medicine and Health fields.
 - Second language version: add `en` or `ar-EG` translation of the same article.
 - Autosave drafts every 10 seconds + local backup (offline-safe).
@@ -909,6 +909,8 @@ Powered by **Firebase Realtime Database**, written only by the backend ([§21.2]
 
 `dir` values: `auto` (default), `rtl`, `ltr`.
 
+**Attachments are not blocks.** A post's image carousel or PDF ([F26](#f26--post-attachments--media)) lives in `ArticleAttachments` and is rendered after the content, so RDoc stays a pure text format. If inline galleries inside an article are ever needed, they will be a new `gallery` block (`items: { src, alt, caption? }[]`, same `rdoc-asset://` sources and alt-text rule as `image`); the name is reserved and the schema rejects it until then ([ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md)).
+
 ### 13.3 Inline Nodes & Marks
 - Inline nodes: `text`, `term` (glossary term id + display text), `mention` (user id), `hardBreak`.
 - Marks: `bold`, `italic`, `code`, `link` (`href`, http/https only), `highlight`, `strike`.
@@ -1042,7 +1044,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, Email (optional, never used for login), DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, IsSuspended, SuspendedUntil), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
-| Media | `MediaAssets` (OwnerId, Kind Image/Document, Purpose, Status Uploading/Processing/Ready/Failed, FailureReason, OriginalPath, OriginalSizeBytes, Width, Height, BlurHash, Variants JSON, PageCount, Title, AllowDownload, ExtractedText), `MediaAssetPages` (AssetId, PageNo, ThumbPath, ViewPath, Width, Height, BlurHash), `ArticleAttachments` (ArticleId, MediaAssetId, Order, Caption, AltText) |
+| Media | `MediaAssets` (OwnerId, Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 120, AltText ≤ 250); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
 | Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive, IsEnabled), `Topics`, `Tags`, `UserInterests` |
 | Articles | `Articles` (AuthorId, FieldId, TopicId, Slug, Status, ReviewStatus, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, LastReviewedAt, ReviewedById, PublishedAt, ScheduledAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleRevisions`, `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive), `ArticleReviews` (ReviewerId, Decision, Notes JSON) |
 | Engagement | `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId, AuthorId, Body, IsPinned, LikeCount, EditedAt), `CommentLikes`, `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
@@ -1060,8 +1062,9 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 - `Comments(ArticleId, ParentId, CreatedAt)`.
 - `ReadingProgress(UserId, ArticleId)` unique.
 - `Reactions(ArticleId, Type)`, `UserFollows(FolloweeId)`.
-- Full-Text index on `ArticleTranslations(SearchText)`, `MediaAssets(ExtractedText)` and `Users(DisplayName, Username)`.
-- `Users(PhoneNumber)` unique, `RefreshTokens(TokenHash)` unique, `RefreshTokens(UserId, RevokedAt)`, `ArticleAttachments(ArticleId, Order)`.
+- Full-Text index on `ArticleTranslations(SearchText)`, `MediaAssets(ExtractedText)` and `Users(DisplayName, Username)` (created with F16 Search; the columns and their collation exist already).
+- `Users(PhoneNumber)` unique, `RefreshTokens(TokenHash)` unique, `RefreshTokens(UserId, RevokedAt)`.
+- `ArticleAttachments(MediaAssetId)` unique (an asset belongs to one post), `MediaAssets(OwnerId, CreatedAt)` (quotas), `MediaAssets(CreatedAt)` (orphan cleanup).
 - Media paths are stored **relative** (`/uploads/...`); absolute URLs are built from `Storage:PublicBaseUrl`, so a domain change never needs a data migration.
 
 ---
@@ -1093,7 +1096,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Search | `GET /search?q=&type=articles\|users\|topics&field=&lang=` |
 | Glossary | `GET /glossary/{slug}` · `GET /glossary?q=` |
 | Notifications | `GET /notifications` · `POST /notifications/read` · `GET/PUT /me/notification-preferences` |
-| Uploads & media | `POST /uploads/images` (purpose `avatar` \| `cover` \| `article-image`) · `POST /uploads/documents` (PDF) · `GET /uploads/{id}` (status, variants, pages) · `DELETE /uploads/{id}` · `PUT /articles/{id}/attachments` · `GET /documents/{assetId}/download` |
+| Uploads & media | `POST /uploads/images` (purpose `image` \| `avatar` \| `cover`; `article-image` is still accepted) · `POST /uploads/documents` (PDF, `202` + processing) · `GET /uploads/{id}` (status, variants, pages) · `DELETE /uploads/{id}` · `PUT /articles/{id}/attachments` · `GET /documents/{assetId}/download` — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) |
 | Trust | `POST /verification-requests` · `GET /reviews/queue` · `POST /articles/{id}/reviews` |
 | Moderation | `POST /reports` · `GET /moderation/reports` · `POST /moderation/actions` |
 | Admin | `/admin/users`, `POST /admin/users/{id}/reset-password`, `/admin/roles`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests`, `/admin/dashboard`, `/admin/content-pipeline` |
@@ -1276,6 +1279,7 @@ The Realtime Database (RTDB) was chosen over Firestore because Firestore bills e
 ## 22. Search
 
 - SQL Server **Full-Text Search** on `ArticleTranslations.SearchText` (Arabic word breaker for `ar-EG`, English for `en`), `MediaAssets.ExtractedText` (text of attached PDFs) + `Users`.
+- **Documents:** the PDF job extracts each page's text with PdfPig and stores it Arabic-normalized (same rules as below) in `MediaAssets.ExtractedText` (up to 1,000,000 characters). Search results for a document point to the post it is attached to; unattached or unpublished documents are never returned.
 - **Arabic normalization** into `SearchText` and on queries: remove diacritics (تشكيل) and tatweel (ـ), unify `أ إ آ → ا`, `ى → ي`, `ة → ه`.
 - Ranking: full-text rank × quality score × freshness.
 - Typo tolerance and suggestions in Phase 3 (or move to Azure AI Search / Elasticsearch if needed).
@@ -1301,10 +1305,11 @@ The Realtime Database (RTDB) was chosen over Firestore because Firestore bills e
 - Rate limiting per user/IP (login, register, recovery, refresh, comments, reactions, search, uploads).
 - **Uploads:**
   - Images up to 10 MB (jpeg/png/webp/heic), PDFs up to 20 MB / 100 pages, validated by **magic bytes** (never the extension or Content-Type), images over 8000×8000 rejected.
-  - Images re-encoded to WebP with metadata/GPS stripped; random GUID file names; path traversal blocked.
+  - Images re-encoded to WebP with metadata/GPS stripped; random GUID file names; path traversal blocked. HEIC is decoded by Magick.NET only when the magic bytes say HEIF, with the format forced and ImageMagick resource limits set; the pixels then go through the same SkiaSharp pipeline.
   - `/uploads` static files serve **only `.webp`** with `X-Content-Type-Options: nosniff`, `Cache-Control: public, max-age=31536000, immutable` and `Content-Security-Policy: default-src 'none'`. Everything else returns 404.
   - PDFs are **never** served as static files: only via `GET /documents/{assetId}/download` with permission checks (published post or owner; `AllowDownload` or owner/moderator), `Content-Disposition: attachment`, `nosniff` and `Content-Security-Policy: sandbox`.
-  - PDF processing runs in background jobs with timeouts, limited concurrency and capped DPI; encrypted/corrupted PDFs are rejected.
+  - PDF processing runs in background jobs on a dedicated Hangfire `media` queue: at most 2 jobs at a time, a 2-minute timeout per job (`media.processing_timeout`), PDFium calls serialized, and pages rendered at most 200 DPI and 1080 × 4320 px so a crafted page size can't exhaust memory. Encrypted (even owner-password-only) and corrupted PDFs are rejected in the request, before anything is stored.
+  - Quotas: 50 uploads per user per rolling day, 200 MB stored per user (`Media:*` settings), `409 media.quota_daily` / `media.quota_storage`.
 - **Firebase:** the Realtime Database rules allow no client writes; the service-account key lives only in secrets.
 - CORS restricted to app origins (with credentials for the web origin), HTTPS only, HSTS, security headers (CSP, X-Content-Type-Options, Referrer-Policy).
 - Secrets in user-secrets (dev) and a secret store (production), never in the repo: `Jwt:SigningKey`, `Security:RecoveryPinPepper`, seed passwords/PIN, the Firebase service-account JSON. `google-services.json` and `GoogleService-Info.plist` are git-ignored.
@@ -1320,6 +1325,7 @@ The Realtime Database (RTDB) was chosen over Firestore because Firestore bills e
 - Article details cached (`HybridCache`, tag-invalidated on update).
 - Denormalized counters updated asynchronously via outbox.
 - Images: compressed on the device before upload, served from `wwwroot/uploads` as WebP variants with `srcset`, lazy loading, BlurHash placeholders and immutable caching (see [F26](#f26--post-attachments--media) for budgets). A CDN can be put in front of `/uploads` later without code changes.
+- **Image budgets:** a typical feed image ≤ 150 KB (the 640 px variant of a photo at WebP quality 78), avatars ≤ 30 KB (the 128/256 px variants; 512 only on the profile page), PDF page thumbs (400 px) for the feed and 1080 px pages only in the viewer. Feed cards carry at most 10 page thumbs; carousels render about 3 slides around the current one. Every image has width/height (or an aspect ratio) reserved before it loads, so images never cause layout shift (CLS 0).
 - Real-time: counters and events through the Realtime Database instead of polling; subscriptions only for visible content.
 - API response compression (Brotli), HTTP/2.
 - Mobile: image caching, list virtualization, lazy RDoc rendering for long articles.

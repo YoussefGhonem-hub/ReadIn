@@ -8,3 +8,4 @@ One file per decision: `NNNN-short-title.md` (Context, Decision, Consequences).
 - [0004 — Firebase JS SDK directly on web (instead of `@angular/fire`)](0004-firebase-js-sdk-on-web.md)
 - [0005 — One real Firebase project; the Emulator Suite for everything else](0005-single-firebase-project.md)
 - [0006 — EF Core sequential GUIDs for primary keys (instead of `Guid.CreateVersion7()`)](0006-sequential-guids.md)
+- [0011 — Media pipeline: responsive images and PDF attachments with page previews](0011-media-pipeline-and-pdf-preview.md)
