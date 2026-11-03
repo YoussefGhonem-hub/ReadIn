@@ -933,6 +933,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
+                    b.Property<DateTime?>("NotifiedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("OpenedAt")
                         .HasColumnType("datetime2");
 
@@ -1406,6 +1409,8 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Username")
                         .IsUnique();
+
+                    b.HasIndex("TimeZone", "ReminderTime");
 
                     b.ToTable("Users", (string)null);
                 });
