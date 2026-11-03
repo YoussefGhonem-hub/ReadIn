@@ -1,0 +1,35 @@
+{
+  "slug": "initstate-runs-once-use-didupdatewidget",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "initState Runs Once: Handling New Parameters with didUpdateWidget",
+      "subtitle": "When the parent passes new values, your State gets didUpdateWidget, not a second initState."
+    },
+    "ar-EG": {
+      "title": "الـ initState بتتنفذ مرة واحدة بس: إزاي تتعامل مع parameters جديدة بـ didUpdateWidget",
+      "subtitle": "لما الـ parent يبعت قيم جديدة، الـ State بتاعك بيوصله didUpdateWidget، مش initState تانية."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 10 },
+  "tags": ["Flutter", "State", "Lifecycle", "Widgets"],
+  "sources": [
+    { "title": "State class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State-class.html" },
+    { "title": "State.initState — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/initState.html" },
+    { "title": "State.didUpdateWidget — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/didUpdateWidget.html" },
+    { "title": "State.dispose — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/dispose.html" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\n\nclass Customer {\n  const Customer(this.id, this.name);\n  final String id;\n  final String name;\n}\n\nclass NameField extends StatefulWidget {\n  const NameField({super.key, required this.customer});\n  final Customer customer;\n  @override\n  State<NameField> createState() => throw UnimplementedError();\n}"
+    }
+  }
+}

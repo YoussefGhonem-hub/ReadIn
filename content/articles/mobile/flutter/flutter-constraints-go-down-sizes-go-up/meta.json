@@ -1,0 +1,30 @@
+{
+  "slug": "flutter-constraints-go-down-sizes-go-up",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Your Container Ignores width: Constraints Go Down, Sizes Go Up",
+      "subtitle": "A width is a request, not an order: the parent's constraints always win, so fix the parent, not the number."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Container مش بيسمع كلام الـ width؟ الـ constraints بتنزل والـ sizes بتطلع",
+      "subtitle": "الـ width طلب مش أمر: الـ constraints بتاعة الـ parent هي اللي بتكسب دايمًا، فصلّح الـ parent مش الرقم."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 3 },
+  "tags": ["Flutter", "Layout", "Constraints", "Widgets"],
+  "sources": [
+    { "title": "Understanding constraints — Flutter docs", "url": "https://docs.flutter.dev/ui/layout/constraints" },
+    { "title": "BoxConstraints class — Flutter API", "url": "https://api.flutter.dev/flutter/rendering/BoxConstraints-class.html" },
+    { "title": "Container class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/Container-class.html" },
+    { "title": "Layouts in Flutter — Flutter docs", "url": "https://docs.flutter.dev/ui/layout" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

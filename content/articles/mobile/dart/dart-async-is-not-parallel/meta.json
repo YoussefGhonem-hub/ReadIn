@@ -1,0 +1,31 @@
+{
+  "slug": "dart-async-is-not-parallel",
+  "field": "mobile",
+  "topic": "dart",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "async Isn't a Background Thread: Dart's Event Loop and When You Need an Isolate",
+      "subtitle": "async lets Dart wait without blocking, but your code still runs on one isolate: heavy work needs another one."
+    },
+    "ar-EG": {
+      "title": "الـ async مش thread في الخلفية: الـ event loop في Dart وإمتى تحتاج isolate",
+      "subtitle": "الـ async بيخلّي Dart يستنى من غير ما يوقف، بس الكود بتاعك لسه شغال على isolate واحد: والشغل التقيل محتاج isolate تاني."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Dart 3",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 6 },
+  "tags": ["Dart", "Concurrency", "Isolates", "Performance"],
+  "sources": [
+    { "title": "Concurrency in Dart — Dart", "url": "https://dart.dev/language/concurrency" },
+    { "title": "Asynchronous programming: futures, async, await — Dart", "url": "https://dart.dev/libraries/async/async-await" },
+    { "title": "Isolates — Dart", "url": "https://dart.dev/language/isolates" },
+    { "title": "Concurrency and isolates — Flutter docs", "url": "https://docs.flutter.dev/perf/isolates" },
+    { "title": "Isolate.run — Dart API", "url": "https://api.dart.dev/dart-isolate/Isolate/run.html" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

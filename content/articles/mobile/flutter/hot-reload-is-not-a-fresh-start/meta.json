@@ -1,0 +1,35 @@
+{
+  "slug": "hot-reload-is-not-a-fresh-start",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Hot Reload Is Not a Fresh Start: What It Keeps and What It Skips",
+      "subtitle": "Hot reload runs new code against old state, so a screen that works after one hasn't been tested from a cold start."
+    },
+    "ar-EG": {
+      "title": "لما تعمل Hot Reload: إيه اللي بيفضل زي ما هو وإيه اللي مش بيتنفذ تاني",
+      "subtitle": "الـ hot reload بيشغّل كود جديد على state قديمة، فالشاشة اللي اشتغلت بعده لسه ماتجرّبتش من أول تشغيل."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 4 },
+  "tags": ["Flutter", "Hot reload", "Debugging", "Tooling"],
+  "sources": [
+    { "title": "Hot reload — Flutter docs", "url": "https://docs.flutter.dev/tools/hot-reload" },
+    { "title": "Flutter's build modes — Flutter docs", "url": "https://docs.flutter.dev/testing/build-modes" },
+    { "title": "State.initState — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/initState.html" },
+    { "title": "ChangeNotifier.addListener — Flutter API", "url": "https://api.flutter.dev/flutter/foundation/ChangeNotifier/addListener.html" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\n\nclass FeedScreen extends StatefulWidget {\n  const FeedScreen({super.key, required this.onNearEnd});\n\n  final VoidCallback onNearEnd;\n\n  @override\n  State<FeedScreen> createState() => throw UnimplementedError();\n}"
+    }
+  }
+}

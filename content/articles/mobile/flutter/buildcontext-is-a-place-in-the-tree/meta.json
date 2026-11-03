@@ -1,0 +1,36 @@
+{
+  "slug": "buildcontext-is-a-place-in-the-tree",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "BuildContext Is a Place in the Tree: Why context Breaks After await",
+      "subtitle": "context is the element where your widget sits; after an await, that place may no longer exist."
+    },
+    "ar-EG": {
+      "title": "الـ BuildContext مكان في الـ tree: ليه الـ context بيبوظ بعد الـ await",
+      "subtitle": "الـ context هو الـ element اللي الـ widget بتاعك قاعد فيه، وبعد الـ await ممكن المكان ده يكون اختفى."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 9 },
+  "tags": ["Flutter", "BuildContext", "Async", "Navigation"],
+  "sources": [
+    { "title": "BuildContext class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/BuildContext-class.html" },
+    { "title": "BuildContext.mounted — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/BuildContext/mounted.html" },
+    { "title": "State.context — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/context.html" },
+    { "title": "State.mounted — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/mounted.html" },
+    { "title": "use_build_context_synchronously — Dart linter rules", "url": "https://dart.dev/tools/linter-rules/use_build_context_synchronously" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\n\nclass ProfileApi {\n  Future<void> saveProfile(String name) async {}\n}\n\nclass EditProfile extends StatefulWidget {\n  const EditProfile({super.key, required this.api});\n  final ProfileApi api;\n  @override\n  State<EditProfile> createState() => throw UnimplementedError();\n}"
+    }
+  }
+}

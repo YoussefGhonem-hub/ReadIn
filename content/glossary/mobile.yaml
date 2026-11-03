@@ -1,0 +1,172 @@
+terms:
+  - id: impeller
+    term: Impeller
+    definitionEn: >-
+      Flutter's rendering engine. It turns the scene the framework paints into pixels on the GPU and compiles its
+      shaders when the engine is built, not while the app runs.
+    definitionAr: >-
+      الـ rendering engine بتاع Flutter. بيحوّل الـ scene اللي الـ framework رسمها لـ pixels على الـ GPU، وبيعمل
+      compile للـ shaders بتاعته وقت بناء الـ engine نفسه، مش وانت شغال في التطبيق.
+  - id: platform-view
+    term: Platform view
+    definitionEn: >-
+      A real native view (an Android View or an iOS UIView) embedded inside a Flutter UI through widgets such as
+      AndroidView and UiKitView. It costs extra synchronization work compared to a normal widget.
+    definitionAr: >-
+      view native حقيقية (Android View أو UIView على iOS) بتتحط جوه واجهة Flutter عن طريق widgets زي AndroidView
+      وUiKitView. ليها تمن زيادة في الـ synchronization مقارنةً بأي widget عادي.
+  - id: platform-channel
+    term: Platform channel
+    definitionEn: >-
+      The messaging mechanism between your Dart code and the platform-specific code of the host app, for example a
+      MethodChannel that calls Kotlin or Swift code and waits for its result.
+    definitionAr: >-
+      طريقة تبادل الرسايل بين كود Dart بتاعك والكود الخاص بالـ platform في التطبيق، زي MethodChannel بينادي كود
+      Kotlin أو Swift ويستنى النتيجة.
+  - id: element-tree
+    term: Element tree
+    definitionEn: >-
+      Flutter's tree of Element objects, one for each widget at a place in the UI. Elements survive rebuilds, keep the
+      State of stateful widgets and link each widget to its render object.
+    definitionAr: >-
+      الـ tree بتاعة الـ Element objects في Flutter، element لكل widget في مكانه في الواجهة. الـ elements بتعيش بعد
+      الـ rebuild، وبتحتفظ بالـ State بتاع الـ stateful widgets، وبتربط كل widget بالـ render object بتاعه.
+  - id: render-object
+    term: Render object
+    definitionEn: >-
+      An object in Flutter's render tree that does the real layout, painting and hit testing. Only render object
+      widgets such as Padding create one; the framework updates it in place across rebuilds.
+    definitionAr: >-
+      object في الـ render tree بتاعة Flutter بيعمل الشغل الحقيقي: الـ layout والرسم والـ hit testing. مفيش غير الـ
+      render object widgets زي Padding اللي بتعمله، والـ framework بيحدّثه في مكانه مع كل rebuild.
+  - id: box-constraints
+    term: Box constraints
+    definitionEn: >-
+      The four numbers a Flutter parent passes to its child during layout: a minimum and maximum width and a minimum
+      and maximum height. The child must pick a size inside them.
+    definitionAr: >-
+      الأربع أرقام اللي الـ parent في Flutter بيدّيها للـ child وقت الـ layout: أقل وأقصى width، وأقل وأقصى height.
+      والـ child لازم يختار حجمه جوه الحدود دي.
+  - id: tight-constraints
+    term: Tight constraints
+    definitionEn: >-
+      Box constraints whose minimum equals their maximum on an axis, so the child has exactly one allowed size there,
+      whatever width or height it asks for.
+    definitionAr: >-
+      constraints الـ minimum فيها بيساوي الـ maximum على محور معين، فالـ child ليه حجم واحد بس مسموح بيه على المحور
+      ده، مهما طلب width أو height.
+  - id: unbounded-constraints
+    term: Unbounded constraints
+    definitionEn: >-
+      Box constraints whose maximum on an axis is infinite, as inside a ListView's scroll direction or a Row's main
+      axis. A box that tries to be as big as possible can't work there and, in debug mode, throws an exception.
+    definitionAr: >-
+      constraints الـ maximum فيها على محور معين infinity، زي اتجاه الـ scroll جوه ListView أو المحور الأساسي في
+      Row. أي box بيحاول ياخد أكبر مساحة ممكنة مش هيشتغل هناك، وفي الـ debug mode بيرمي exception.
+  - id: hot-reload
+    term: Hot reload
+    definitionEn: >-
+      A Flutter debug-mode feature that injects changed Dart code into the running app and rebuilds the widget tree
+      while keeping the app's state. It doesn't run main() or initState() again.
+    definitionAr: >-
+      ميزة في الـ debug mode بتاع Flutter بتحقن كود Dart اللي اتغير جوه التطبيق وهو شغال، وتعمل rebuild للـ widget tree
+      من غير ما تمسح الـ state. مش بتشغّل main() ولا initState() تاني.
+  - id: hot-restart
+    term: Hot restart
+    definitionEn: >-
+      Loads the changed code and restarts the Flutter app from main(), discarding all app state, without rebuilding
+      the native app. Native code changes still need a full restart.
+    definitionAr: >-
+      بتحمّل الكود اللي اتغير وتشغّل تطبيق Flutter من أول main()، وبتمسح كل الـ state، من غير ما تبني الـ native app
+      من الأول. أي تغيير في الـ native code لسه محتاج full restart.
+  - id: sound-null-safety
+    term: Sound null safety
+    definitionEn: >-
+      Dart's guarantee that an expression whose static type is non-nullable can never evaluate to null at runtime.
+      Types are non-nullable unless you add ?, and Dart 3 always enforces it.
+    definitionAr: >-
+      ضمان في Dart إن أي expression نوعها non-nullable عمرها ما هتطلع null وقت التشغيل. الأنواع non-nullable إلا لو
+      ضفت ?، وDart 3 بيفرض ده دايمًا.
+  - id: null-assertion-operator
+    term: Null assertion operator
+    definitionEn: >-
+      Dart's postfix ! (the "bang" operator), as in email!.length. It casts a nullable expression to its non-nullable
+      type and is checked at runtime: it throws if the value is null.
+    definitionAr: >-
+      الـ ! اللي بيتكتب بعد الـ expression في Dart (الـ bang operator)، زي email!.length. بيحوّل expression نوعها
+      nullable للنوع الـ non-nullable، وبيتشيك وقت التشغيل: لو القيمة null بيرمي exception.
+  - id: type-promotion
+    term: Type promotion
+    definitionEn: >-
+      Dart's flow analysis narrowing a variable's type after a check, for example treating a String? as a String
+      after an if (x != null). It applies to local variables, parameters and private final fields.
+    definitionAr: >-
+      إن الـ flow analysis في Dart تضيّق نوع الـ variable بعد check، زي إنها تعامل String? كـ String بعد
+      if (x != null). بتشتغل مع الـ local variables والـ parameters والـ private final fields.
+  - id: isolate
+    term: Isolate
+    definitionEn: >-
+      The place where Dart code runs: like a thread or a process, but with its own memory and a single thread
+      running an event loop. Isolates share no state and communicate only by passing messages.
+    definitionAr: >-
+      المكان اللي كود Dart بيشتغل فيه: شبه الـ thread أو الـ process، بس ليه memory خاصة بيه وthread واحد بيشغّل
+      event loop. الـ isolates مش بتشارك أي state، وبتكلّم بعض عن طريق الرسايل وبس.
+  - id: jank
+    term: Jank
+    definitionEn: >-
+      Visible stutter in an app's UI when frames aren't produced in time, for example when a frame takes longer than
+      about 16 ms on a 60 Hz screen and the next one is late.
+    definitionAr: >-
+      تقطيع باين في واجهة التطبيق لما الـ frames ماتطلعش في وقتها، زي لما frame ياخد أكتر من حوالي 16 ms على شاشة
+      60 Hz فاللي بعده يتأخر.
+  - id: repaint-boundary
+    term: Repaint boundary
+    definitionEn: >-
+      A point in Flutter's render tree where the subtree gets its own layer, so a repaint on one side doesn't force
+      the other side to repaint. The RepaintBoundary widget creates one, and scrolling lists add one per item by
+      default.
+    definitionAr: >-
+      نقطة في الـ render tree بتاعة Flutter الـ subtree اللي تحتها بياخد layer لوحده، فالـ repaint في ناحية مش بيجبر
+      الناحية التانية تترسم من جديد. الـ RepaintBoundary widget بيعمل واحدة، والليستات اللي بتعمل scroll بتحط واحدة لكل
+      عنصر.
+  - id: widget-key
+    term: Key (Flutter)
+    definitionEn: >-
+      An optional identifier on a Flutter widget. When a parent rebuilds, an existing element is reused for a new
+      widget only if both have the same type and the same key, so the key decides which State the widget gets.
+    definitionAr: >-
+      identifier اختياري على الـ widget في Flutter. لما الـ parent يعمل rebuild، الـ element الموجود بياخد الـ widget
+      الجديد بس لو الاتنين ليهم نفس النوع ونفس الـ key، فالـ key هو اللي بيحدد الـ widget هياخد أنهي State.
+  - id: global-key
+    term: GlobalKey
+    definitionEn: >-
+      A Flutter key that must be unique across the whole app. It lets a subtree move to a new parent without losing its
+      state and gives access to its BuildContext and State. Reparenting with it is relatively expensive.
+    definitionAr: >-
+      key في Flutter لازم يبقى unique على مستوى التطبيق كله. بيخلّي الـ subtree يتنقل لـ parent تاني من غير ما يخسر الـ
+      state بتاعه، وبيدّيك وصول للـ BuildContext والـ State بتوعه. والنقل بيه تمنه عالي نسبيًا.
+  - id: build-context
+    term: BuildContext
+    definitionEn: >-
+      A handle to one widget's location in the Flutter tree; it is actually that widget's Element. Lookups such as
+      Navigator.of(context) search upward from that place, and the context is only valid while it's mounted.
+    definitionAr: >-
+      handle لمكان widget واحد في الـ tree بتاعة Flutter، وهو في الحقيقة الـ Element بتاع الـ widget ده. والـ lookups زي
+      Navigator.of(context) بتدوّر لفوق من المكان ده، والـ context صالح بس طول ما هو mounted.
+  - id: async-gap
+    term: Async gap
+    definitionEn: >-
+      The pause at an await in an async function. Before the function resumes, other code runs: frames are drawn,
+      taps are handled and screens can close, so anything checked before the await may no longer be true.
+    definitionAr: >-
+      الوقفة اللي عند الـ await في async function. وقبل ما الـ function تكمّل، كود تاني بيشتغل: frames بتترسم، وضغطات
+      بتتعالج، وشاشات ممكن تتقفل، فأي حاجة اتأكدت منها قبل الـ await ممكن ماتبقاش صح بعدها.
+  - id: state-lifecycle
+    term: State lifecycle
+    definitionEn: >-
+      The fixed order in which Flutter calls a State object's methods: initState once, build any number of times,
+      didUpdateWidget whenever the parent passes a new widget of the same type and key, and dispose once at the end.
+    definitionAr: >-
+      الترتيب الثابت اللي Flutter بينادي بيه الـ methods بتاعة الـ State object: الـ initState مرة واحدة، والـ build أي
+      عدد من المرات، والـ didUpdateWidget كل ما الـ parent يبعت widget جديد من نفس النوع وبنفس الـ key، والـ dispose مرة
+      واحدة في الآخر.

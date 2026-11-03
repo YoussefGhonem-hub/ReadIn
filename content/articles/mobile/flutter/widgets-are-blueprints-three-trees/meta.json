@@ -1,0 +1,31 @@
+{
+  "slug": "widgets-are-blueprints-three-trees",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Widgets Are Blueprints, Not Screen Objects: Flutter's Three Trees",
+      "subtitle": "Flutter throws your widgets away on every build; the element keeps your State and the render object does the drawing."
+    },
+    "ar-EG": {
+      "title": "الـ Widget وصف مش حاجة على الشاشة: حكاية الـ 3 trees في Flutter",
+      "subtitle": "مع كل build الـ Flutter بيرمي الـ widgets بتاعتك، والـ element هو اللي شايل الـ State والـ render object هو اللي بيرسم."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 2 },
+  "tags": ["Flutter", "Widgets", "Element tree", "Rendering"],
+  "sources": [
+    { "title": "Inside Flutter — Flutter docs", "url": "https://docs.flutter.dev/resources/inside-flutter" },
+    { "title": "Widget class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/Widget-class.html" },
+    { "title": "Element class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/Element-class.html" },
+    { "title": "RenderObject class — Flutter API", "url": "https://api.flutter.dev/flutter/rendering/RenderObject-class.html" },
+    { "title": "Introduction to widgets — Flutter docs", "url": "https://docs.flutter.dev/ui" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

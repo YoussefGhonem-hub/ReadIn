@@ -1,0 +1,30 @@
+{
+  "slug": "flutter-draws-every-pixel-itself",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Flutter Doesn't Wrap Native Widgets: It Draws Every Pixel Itself",
+      "subtitle": "Your Switch never becomes a UISwitch: Flutter paints the whole UI itself and only borrows a surface from the OS."
+    },
+    "ar-EG": {
+      "title": "ليه Flutter مش بيستخدم الـ native widgets؟ لأنه بيرسم كل pixel بنفسه",
+      "subtitle": "الـ Switch بتاعك عمره ما بيبقى UISwitch: الـ Flutter بيرسم الواجهة كلها بنفسه وبياخد من الـ OS مساحة يرسم عليها وبس."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 1 },
+  "tags": ["Flutter", "Rendering", "Impeller", "Platform views"],
+  "sources": [
+    { "title": "Flutter architectural overview — Flutter docs", "url": "https://docs.flutter.dev/resources/architectural-overview" },
+    { "title": "Impeller rendering engine — Flutter docs", "url": "https://docs.flutter.dev/perf/impeller" },
+    { "title": "Hosting native Android views in your Flutter app with platform views — Flutter docs", "url": "https://docs.flutter.dev/platform-integration/android/platform-views" },
+    { "title": "Automatic platform adaptations — Flutter docs", "url": "https://docs.flutter.dev/ui/adaptive-responsive/platform-adaptations" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

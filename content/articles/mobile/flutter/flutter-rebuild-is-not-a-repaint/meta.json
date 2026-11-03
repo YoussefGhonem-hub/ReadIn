@@ -1,0 +1,36 @@
+{
+  "slug": "flutter-rebuild-is-not-a-repaint",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "A Rebuild Is Not a Repaint: What build() Really Costs in Flutter",
+      "subtitle": "build() describes the UI and paint() draws it: they're separate phases, and fixing one doesn't fix the other."
+    },
+    "ar-EG": {
+      "title": "قد إيه الـ build() مكلفة فعلًا؟ الفرق بين الـ rebuild والـ repaint في Flutter",
+      "subtitle": "الـ build() بتوصف الواجهة والـ paint() بترسمها: مرحلتين منفصلين، وتظبيط واحدة مش بيظبط التانية."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 7 },
+  "tags": ["Flutter", "Performance", "Rendering", "RepaintBoundary"],
+  "sources": [
+    { "title": "Performance best practices — Flutter docs", "url": "https://docs.flutter.dev/perf/best-practices" },
+    { "title": "Inside Flutter — Flutter docs", "url": "https://docs.flutter.dev/resources/inside-flutter" },
+    { "title": "StatefulWidget class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/StatefulWidget-class.html" },
+    { "title": "RepaintBoundary class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/RepaintBoundary-class.html" },
+    { "title": "RenderRepaintBoundary.debugSymmetricPaintCount — Flutter API", "url": "https://api.flutter.dev/flutter/rendering/RenderRepaintBoundary/debugSymmetricPaintCount.html" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\n\nclass ChartPainter extends CustomPainter {\n  ChartPainter(this.points);\n  final List<double> points;\n  @override\n  void paint(Canvas canvas, Size size) {}\n  @override\n  bool shouldRepaint(ChartPainter oldDelegate) => oldDelegate.points != points;\n}\n\nclass Clock extends StatelessWidget {\n  const Clock({super.key});\n  @override\n  Widget build(BuildContext context) => const Text('0 s');\n}"
+    }
+  }
+}

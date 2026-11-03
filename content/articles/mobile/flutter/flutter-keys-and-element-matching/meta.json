@@ -1,0 +1,36 @@
+{
+  "slug": "flutter-keys-and-element-matching",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "When Keys Matter: How Flutter Matches Widgets to Their State",
+      "subtitle": "Without a key, state belongs to a position in the list, not to your data: remove one row and it moves to the next."
+    },
+    "ar-EG": {
+      "title": "إمتى تحتاج Key؟ إزاي Flutter بيربط الـ widgets بالـ state بتاعتها",
+      "subtitle": "من غير key، الـ state بتبقى ملك مكان في الليستة مش ملك الداتا: شيل صف واحد، تلاقيها نطّت للي بعده."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 8 },
+  "tags": ["Flutter", "Keys", "State", "Lists"],
+  "sources": [
+    { "title": "Introduction to widgets: Keys — Flutter docs", "url": "https://docs.flutter.dev/ui" },
+    { "title": "Key class — Flutter API", "url": "https://api.flutter.dev/flutter/foundation/Key-class.html" },
+    { "title": "Widget.key — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/Widget/key.html" },
+    { "title": "GlobalKey class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/GlobalKey-class.html" },
+    { "title": "ListView.builder constructor — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/ListView/ListView.builder.html" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\n\nclass Order {\n  const Order(this.id, this.summary);\n  final String id;\n  final String summary;\n}"
+    }
+  }
+}

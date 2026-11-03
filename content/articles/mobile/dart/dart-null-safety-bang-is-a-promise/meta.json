@@ -1,0 +1,35 @@
+{
+  "slug": "dart-null-safety-bang-is-a-promise",
+  "field": "mobile",
+  "topic": "dart",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The ! Operator Is a Promise, Not a Fix: Sound Null Safety in Dart",
+      "subtitle": "! and late don't remove a null: they move Dart's check from compile time to a runtime exception on that line."
+    },
+    "ar-EG": {
+      "title": "علامة الـ ! وعد مش حل: إزاي الـ Sound Null Safety في Dart بتشتغل",
+      "subtitle": "الـ ! والـ late مش بيشيلوا الـ null: بينقلوا الـ check بتاع Dart من وقت الـ compile لـ exception وقت التشغيل."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Dart 3",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 5 },
+  "tags": ["Dart", "Null safety", "Flutter", "Type system"],
+  "sources": [
+    { "title": "Sound null safety — Dart", "url": "https://dart.dev/null-safety" },
+    { "title": "Understanding null safety — Dart", "url": "https://dart.dev/null-safety/understanding-null-safety" },
+    { "title": "Variables — Dart", "url": "https://dart.dev/language/variables" },
+    { "title": "Fixing type promotion failures — Dart", "url": "https://dart.dev/tools/non-promotion-reasons" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\n\nclass User {\n  const User(this.name);\n  final String name;\n}\n\nFuture<User> loadUser() async => const User('Sara');\n\nclass ProfilePage extends StatefulWidget {\n  const ProfilePage({super.key});\n\n  @override\n  State<ProfilePage> createState() => throw UnimplementedError();\n}"
+    }
+  }
+}
