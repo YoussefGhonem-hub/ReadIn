@@ -28,4 +28,9 @@
     <InternalsVisibleTo Include="ReadIn.Api.IntegrationTests" />
   </ItemGroup>
 
+  <!-- User uploads live on the server, not in the build: a deploy must never ship or overwrite them (ADR 0010). -->
+  <ItemGroup>
+    <Content Update="wwwroot\uploads\**" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
 </Project>

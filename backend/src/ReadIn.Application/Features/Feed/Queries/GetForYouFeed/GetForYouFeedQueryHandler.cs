@@ -10,7 +10,7 @@ using ReadIn.Domain.Common;
 
 namespace ReadIn.Application.Features.Feed.Queries.GetForYouFeed;
 
-internal sealed class GetForYouFeedQueryHandler(IAppDbContext db, ICurrentUser currentUser, TypeAdapterConfig mapping)
+internal sealed class GetForYouFeedQueryHandler(IAppDbContext db, ICurrentUser currentUser, TypeAdapterConfig mapping, IFileStorage storage)
     : IQueryHandler<GetForYouFeedQuery, Result<CursorPage<ArticleCardDto>>>
 {
     public async ValueTask<Result<CursorPage<ArticleCardDto>>> Handle(GetForYouFeedQuery query, CancellationToken ct)
@@ -71,6 +71,6 @@ internal sealed class GetForYouFeedQueryHandler(IAppDbContext db, ICurrentUser c
             next = new TimeCursor(last.PublishedAt!.Value, last.Id).Encode();
         }
 
-        return new CursorPage<ArticleCardDto>(page, next);
+        return new CursorPage<ArticleCardDto>([.. page.Select(card => card.WithPublicUrls(storage))], next);
     }
 }

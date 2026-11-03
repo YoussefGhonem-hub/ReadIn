@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Infrastructure.Content;
 using ReadIn.Infrastructure.Identity;
@@ -12,6 +13,7 @@ using ReadIn.Infrastructure.Persistence;
 using ReadIn.Infrastructure.Persistence.Interceptors;
 using ReadIn.Infrastructure.Persistence.Outbox;
 using ReadIn.Infrastructure.Persistence.Seeding;
+using ReadIn.Infrastructure.Storage;
 
 namespace ReadIn.Infrastructure;
 
@@ -26,6 +28,12 @@ public static class DependencyInjection
         services.Configure<ContentOptions>(configuration.GetSection(ContentOptions.Section));
         services.Configure<FirebaseOptions>(configuration.GetSection(FirebaseOptions.Section));
         services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.Section));
+        services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.Section));
+
+        // Uploads live on this server's disk (ADR 0010); swap IFileStorage to move them to shared storage.
+        services.AddSingleton<WwwrootFileStorage>();
+        services.AddSingleton<IFileStorage>(sp => sp.GetRequiredService<WwwrootFileStorage>());
+        services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
 
         var connectionString = configuration.GetConnectionString(ConnectionStringName)
             ?? throw new InvalidOperationException($"Connection string '{ConnectionStringName}' is missing.");
@@ -42,6 +50,7 @@ public static class DependencyInjection
         services.AddScoped<OutboxProcessor>();
         services.AddScoped<OutboxJob>();
         services.AddScoped<ScheduledPublishingJob>();
+        services.AddScoped<OrphanedUploadsCleanupJob>();
 
         if (IsHangfireEnabled(configuration))
         {
@@ -99,5 +108,28 @@ public static class DependencyInjection
         var jobs = services.GetRequiredService<IRecurringJobManager>();
         jobs.AddOrUpdate<OutboxJob>("outbox", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
         jobs.AddOrUpdate<ScheduledPublishingJob>("publish-scheduled", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
+        jobs.AddOrUpdate<OrphanedUploadsCleanupJob>("uploads-orphan-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3));
+    }
+
+    /// <summary>
+    /// Creates the uploads folder (and one sub-folder per purpose) and checks that it is writable. Fails fast with a
+    /// clear message otherwise, so a server with a missing or read-only folder never starts (ADR 0010).
+    /// </summary>
+    /// <returns>The absolute path of the uploads folder.</returns>
+    public static string PrepareUploadsFolder(this IServiceProvider services)
+    {
+        var storage = services.GetRequiredService<WwwrootFileStorage>();
+        try
+        {
+            storage.EnsureWritable();
+            return storage.RootPath;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            var message = $"The uploads folder '{storage.RootPath}' is not writable. Create it and give the app's identity "
+                + "write permission (docs/setup/deployment.md), or point Storage:UploadsPath at a writable folder.";
+            services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(DependencyInjection)).LogCritical(ex, "{Message}", message);
+            throw new InvalidOperationException(message, ex);
+        }
     }
 }

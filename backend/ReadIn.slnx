@@ -11,5 +11,6 @@
     <Project Path="tests/ReadIn.Application.UnitTests/ReadIn.Application.UnitTests.csproj" />
     <Project Path="tests/ReadIn.ArchitectureTests/ReadIn.ArchitectureTests.csproj" />
     <Project Path="tests/ReadIn.Domain.UnitTests/ReadIn.Domain.UnitTests.csproj" />
+    <Project Path="tests/ReadIn.Infrastructure.UnitTests/ReadIn.Infrastructure.UnitTests.csproj" />
   </Folder>
 </Solution>

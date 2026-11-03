@@ -16,7 +16,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     public const string ProjectId = "demo-readin";
 
+    /// <summary>Matches the test server's address, so upload URLs point back at it.</summary>
+    public const string PublicBaseUrl = "http://localhost";
+
     private readonly MsSqlContainer _sql = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
+
+    /// <summary>A fresh uploads folder per test run, deleted afterwards.</summary>
+    public string UploadsPath { get; } = Path.Combine(Path.GetTempPath(), "readin-tests", $"uploads-{Guid.NewGuid():N}");
 
     public async ValueTask InitializeAsync()
     {
@@ -28,6 +34,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         await base.DisposeAsync();
         await _sql.DisposeAsync();
+        if (Directory.Exists(UploadsPath)) Directory.Delete(UploadsPath, recursive: true);
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -41,6 +48,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Hangfire:Enabled", "false");
         builder.UseSetting("Database:MigrateOnStartup", "true");
         builder.UseSetting("Seed:RunOnStartup", "true");
+        builder.UseSetting("Storage:UploadsPath", UploadsPath);
+        builder.UseSetting("Storage:PublicBaseUrl", PublicBaseUrl);
     }
 
     /// <summary>An unsigned Firebase-emulator-style ID token.</summary>

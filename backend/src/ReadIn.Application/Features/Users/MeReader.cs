@@ -2,13 +2,14 @@ using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
+using ReadIn.Application.Common.Uploads;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Users;
 
 /// <summary>Builds <see cref="MeDto"/>; shared by GET /me and POST /auth/sync.</summary>
-internal sealed class MeReader(IAppDbContext db, IUserAccessService access, IMapper mapper)
+internal sealed class MeReader(IAppDbContext db, IUserAccessService access, IMapper mapper, IFileStorage storage)
 {
     public async Task<Result<MeDto>> ReadAsync(string firebaseUid, CancellationToken ct)
     {
@@ -22,6 +23,7 @@ internal sealed class MeReader(IAppDbContext db, IUserAccessService access, IMap
 
         return mapper.Map<MeDto>(user) with
         {
+            AvatarUrl = storage.ToPublicUrl(user.AvatarUrl),
             Roles = roles,
             Permissions = userAccess?.Permissions ?? [],
             IsVerified = roles.Contains(RoleNames.VerifiedWriter),

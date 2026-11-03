@@ -8,6 +8,7 @@ using Microsoft.OpenApi;
 using ReadIn.Api.Auth;
 using ReadIn.Api.Endpoints;
 using ReadIn.Api.Errors;
+using ReadIn.Api.Uploads;
 using ReadIn.Application.Common.Interfaces;
 using Scalar.AspNetCore;
 
@@ -66,10 +67,12 @@ public static class ApiSetup
             return Task.CompletedTask;
         }));
 
-        services.AddCors(options => options.AddPolicy(CorsPolicy, policy => policy
-            .WithOrigins(configuration.GetSection("Cors:Origins").Get<string[]>() ?? [])
-            .AllowAnyHeader()
-            .AllowAnyMethod()));
+        var origins = configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
+        services.AddCors(options =>
+        {
+            options.AddPolicy(CorsPolicy, policy => policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod());
+            options.AddPolicy(UploadsStaticFiles.CorsPolicy, policy => policy.WithOrigins(origins).WithMethods("GET", "HEAD"));
+        });
 
         services.AddRateLimiter(options =>
         {
@@ -90,6 +93,12 @@ public static class ApiSetup
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = 30,
+                    Window = TimeSpan.FromMinutes(1),
+                }));
+            options.AddPolicy(RateLimitPolicies.Uploads, context =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 20,
                     Window = TimeSpan.FromMinutes(1),
                 }));
         });
@@ -117,6 +126,8 @@ public static class ApiSetup
 
         app.Use(SecurityHeaders);
         app.UseResponseCompression();
+        // Public images: their own CORS policy, no auth and no rate limiting (ADR 0010).
+        app.UseUploads();
         app.UseCors(CorsPolicy);
         app.UseAuthentication();
         app.Use(RejectSuspendedUsers);

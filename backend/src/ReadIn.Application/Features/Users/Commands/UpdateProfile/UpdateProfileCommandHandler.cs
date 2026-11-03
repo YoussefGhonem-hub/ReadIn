@@ -1,12 +1,13 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Common.Uploads;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Users.Commands.UpdateProfile;
 
-internal sealed class UpdateProfileCommandHandler(IAppDbContext db, ICurrentUser currentUser)
+internal sealed class UpdateProfileCommandHandler(IAppDbContext db, ICurrentUser currentUser, IFileStorage storage, UploadCleanup uploads)
     : ICommandHandler<UpdateProfileCommand, Result>
 {
     public async ValueTask<Result> Handle(UpdateProfileCommand command, CancellationToken cancellationToken)
@@ -25,10 +26,15 @@ internal sealed class UpdateProfileCommandHandler(IAppDbContext db, ICurrentUser
             Website = command.Links?.Website,
         };
 
-        var result = user.UpdateProfile(command.DisplayName, command.Username, command.Bio, command.AvatarUrl, links);
+        // Uploaded avatars are stored as relative paths; the absolute URL from GET /me maps back to the same path.
+        var previousAvatar = user.AvatarUrl;
+        var avatar = storage.ToStoredValue(command.AvatarUrl);
+
+        var result = user.UpdateProfile(command.DisplayName, command.Username, command.Bio, avatar, links);
         if (result.IsFailure) return result;
 
         await db.SaveChangesAsync(cancellationToken);
+        if (previousAvatar != avatar) await uploads.ReleaseAsync(previousAvatar, cancellationToken);
         return Result.Success();
     }
 }

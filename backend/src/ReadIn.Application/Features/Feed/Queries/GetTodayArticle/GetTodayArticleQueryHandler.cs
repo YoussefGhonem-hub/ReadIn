@@ -14,7 +14,8 @@ internal sealed class GetTodayArticleQueryHandler(
     IAppDbContext db,
     ICurrentUser currentUser,
     TypeAdapterConfig mapping,
-    TimeProvider clock)
+    TimeProvider clock,
+    IFileStorage storage)
     : IQueryHandler<GetTodayArticleQuery, Result<ArticleCardDto?>>
 {
     private const int MinMinutes = 4;
@@ -133,10 +134,11 @@ internal sealed class GetTodayArticleQueryHandler(
     private async Task<ArticleCardDto?> CardAsync(Guid articleId, string uiLanguage, string? articleLanguage, CancellationToken ct)
     {
         using var _ = LocalizedProjection.Begin(uiLanguage, articleLanguage);
-        return await db.Articles.AsNoTracking()
+        var card = await db.Articles.AsNoTracking()
             .Where(a => a.Id == articleId)
             .ProjectToType<ArticleCardDto>(mapping)
             .FirstOrDefaultAsync(ct);
+        return card?.WithPublicUrls(storage);
     }
 
     private static DateOnly LocalDate(DateTime utcNow, string timeZone)

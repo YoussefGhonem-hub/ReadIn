@@ -33,6 +33,9 @@
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
     <PackageVersion Include="System.CommandLine" Version="2.0.14" />
+    <!-- Image re-encoding for uploads (MIT). Linux servers and containers need the native assets package (ADR 0010). -->
+    <PackageVersion Include="SkiaSharp" Version="4.153.0" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.0" />
   </ItemGroup>
 
   <ItemGroup Label="Api">

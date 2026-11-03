@@ -1,5 +1,7 @@
 using System.Text.Json;
 using FluentValidation;
+using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Common.Uploads;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 
@@ -7,7 +9,7 @@ namespace ReadIn.Application.Features.Articles.Commands.CreateArticle;
 
 internal sealed class CreateArticleCommandValidator : AbstractValidator<CreateArticleCommand>
 {
-    public CreateArticleCommandValidator()
+    public CreateArticleCommandValidator(IFileStorage storage)
     {
         RuleFor(c => c.FieldId).NotEmpty();
         RuleFor(c => c.Language).Must(ArticleLanguages.IsValid).WithErrorCode("article.language_invalid");
@@ -23,7 +25,10 @@ internal sealed class CreateArticleCommandValidator : AbstractValidator<CreateAr
             source.RuleFor(s => s.Title).NotEmpty().MaximumLength(200);
             source.RuleFor(s => s.Url).Must(BeHttpUrl).WithErrorCode("validation.url");
         });
-        RuleFor(c => c.CoverUrl).Must(u => u is null || BeHttpUrl(u)).WithErrorCode("validation.url");
+        // An uploaded cover (relative path or its public URL), or an external http(s) image.
+        RuleFor(c => c.CoverUrl)
+            .Must(u => u is null || (storage.TryGetUploadPath(u, out var path) ? path.Purpose == UploadPurpose.Cover : BeHttpUrl(u)))
+            .WithErrorCode("validation.url");
         RuleFor(c => c.VersionBadge).MaximumLength(30);
     }
 

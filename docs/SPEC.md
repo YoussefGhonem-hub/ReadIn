@@ -1399,8 +1399,9 @@ Uploads live inside the API folder, so deployments must never delete them:
 - IIS / Windows Server: the app pool identity gets write permission on `wwwroot/uploads` only.
 - At startup the API creates the folder if missing and fails fast with a clear log message if it isn't writable.
 - **Backups:** back up `wwwroot/uploads` together with the SQL Server database; restoring one without the other breaks images.
+- Configuration: `Storage:UploadsPath` (default `wwwroot/uploads`; on servers it may point **outside** the app folder, which no deploy tool can touch) and `Storage:PublicBaseUrl` (e.g. `https://api.readin.app`).
 - **Limitation:** with more than one API server, uploads must move to shared or cloud storage by swapping the `IFileStorage` implementation (no Application code changes).
-- Details: `docs/setup/deployment.md`.
+- Details, per-tool exclusions (Web Deploy, robocopy/rsync, Docker, IIS, App Service) and a scheduled backup script: [`docs/setup/deployment.md`](setup/deployment.md). Decision, risks and migration path: [ADR 0010](adr/0010-uploads-in-wwwroot.md).
 
 ### 28.4 CI/CD (GitHub Actions)
 | Workflow | Trigger | Steps |
@@ -1422,7 +1423,7 @@ Deploy targets (suggested): API + SSR on a single server or container host (with
 - **Conventional Commits** with scope: `feat(backend): ...`, `feat(web): ...`, `feat(mobile): ...`, `fix(...)`, `test(...)`, `refactor(...)`, `content(dotnet): ...`, `docs: ...`, `chore(ci): ...`.
 - Each feature tracks `backend`, `web` and `mobile` parts (see [§12](#12-feature-parity-matrix-web--mobile)); it is done when all three are committed to `dev`.
 - Secrets are never committed: the Firebase service-account key, `google-services.json`, `GoogleService-Info.plist`, `Jwt:SigningKey`, `Security:RecoveryPinPepper`, passwords and PINs.
-- Architecture decisions recorded as ADRs in `docs/adr/`. Existing: 0001–0006. To add with the v1.1 changes: `0007-phone-password-authentication.md` (supersedes 0001 and the auth part of 0004), `0008-firebase-scope-fcm-and-rtdb.md`, `0009-recovery-pin.md`, `0010-uploads-in-wwwroot.md`, `0011-media-pipeline-and-pdf-preview.md`.
+- Architecture decisions recorded as ADRs in `docs/adr/`. Existing: 0001–0006, `0010-uploads-in-wwwroot.md`, `0011-media-pipeline-and-pdf-preview.md`. To add with the v1.1 changes: `0007-phone-password-authentication.md` (supersedes 0001 and the auth part of 0004), `0008-firebase-scope-fcm-and-rtdb.md`, `0009-recovery-pin.md`.
 
 ---
 

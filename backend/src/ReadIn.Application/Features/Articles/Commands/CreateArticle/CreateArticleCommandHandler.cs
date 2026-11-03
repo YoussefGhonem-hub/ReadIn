@@ -2,13 +2,14 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Content;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Common.Uploads;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Taxonomy;
 
 namespace ReadIn.Application.Features.Articles.Commands.CreateArticle;
 
-internal sealed class CreateArticleCommandHandler(IAppDbContext db, ICurrentUser currentUser, IRDocProcessor rdoc)
+internal sealed class CreateArticleCommandHandler(IAppDbContext db, ICurrentUser currentUser, IRDocProcessor rdoc, IFileStorage storage)
     : ICommandHandler<CreateArticleCommand, Result<Guid>>
 {
     private static readonly Error FieldNotFound = Error.Validation("field.not_found", "Field not found.");
@@ -21,7 +22,8 @@ internal sealed class CreateArticleCommandHandler(IAppDbContext db, ICurrentUser
         if (cmd.TopicId is { } topicId && !await db.Topics.AnyAsync(t => t.Id == topicId && t.FieldId == field.Id, ct))
             return TopicNotInField;
 
-        var content = rdoc.Process(cmd.Content, cmd.Language, cmd.Title); // validates + sanitizes
+        // Our own image URLs are stored as rdoc-asset:// paths so a domain change needs no content migration (ADR 0010).
+        var content = rdoc.Process(storage.ToStoredContent(cmd.Content), cmd.Language, cmd.Title); // validates + sanitizes
         if (content.IsFailure) return content.Error;
 
         var article = Article.CreateDraft(currentUser.RequireUserId(), cmd.FieldId, cmd.TopicId, await UniqueSlugAsync(cmd.Title, ct));
@@ -34,7 +36,7 @@ internal sealed class CreateArticleCommandHandler(IAppDbContext db, ICurrentUser
         if (tagged.IsFailure) return tagged.Error;
 
         article.SetSources((cmd.Sources ?? []).Select(s => (s.Title, s.Url)));
-        article.SetMetadata(cmd.CoverUrl, cmd.VersionBadge, cmd.IsAiAssisted);
+        article.SetMetadata(storage.ToStoredValue(cmd.CoverUrl), cmd.VersionBadge, cmd.IsAiAssisted);
 
         db.Articles.Add(article);
         await db.SaveChangesAsync(ct);

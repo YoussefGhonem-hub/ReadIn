@@ -1,15 +1,15 @@
-using System.Text.Json;
 using Mapster;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Mapping;
+using ReadIn.Application.Common.Uploads;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 
 namespace ReadIn.Application.Features.Articles.Queries.GetArticleBySlug;
 
-internal sealed class GetArticleBySlugQueryHandler(IAppDbContext db, TypeAdapterConfig mapping)
+internal sealed class GetArticleBySlugQueryHandler(IAppDbContext db, TypeAdapterConfig mapping, IFileStorage storage)
     : IQueryHandler<GetArticleBySlugQuery, Result<ArticleDetailsDto>>
 {
     public async ValueTask<Result<ArticleDetailsDto>> Handle(GetArticleBySlugQuery query, CancellationToken cancellationToken)
@@ -23,7 +23,6 @@ internal sealed class GetArticleBySlugQueryHandler(IAppDbContext db, TypeAdapter
 
         if (article is null) return ArticleErrors.NotFound;
 
-        using var content = JsonDocument.Parse(article.ContentJson);
-        return article with { Content = content.RootElement.Clone() };
+        return article.WithPublicUrls(storage) with { Content = storage.ToPublicContent(article.ContentJson) };
     }
 }

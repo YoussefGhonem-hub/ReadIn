@@ -63,3 +63,7 @@ emulator-data/
 
 # ===== Content pipeline scratch =====
 content/.cache/
+
+# ===== User uploads (ADR 0010): live on the server only; the folder is kept with .gitkeep =====
+backend/src/ReadIn.Api/wwwroot/uploads/*
+!backend/src/ReadIn.Api/wwwroot/uploads/.gitkeep

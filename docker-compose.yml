@@ -34,6 +34,41 @@ services:
     volumes:
       - seq-data:/data
 
+  # Optional: the API as a container, production-style (`docker compose --profile api up -d`, API on :5080).
+  # Build the image first: dotnet publish backend/src/ReadIn.Api -c Release /t:PublishContainer
+  #   -p:ContainerRepository=readin-api -p:ContainerImageTag=local
+  # Uploads live in the named volume `api-uploads`, so they survive rebuilds (ADR 0010, docs/setup/deployment.md).
+  # `docker compose down -v` deletes that volume and every uploaded image.
+  api-uploads-init:
+    image: busybox:1.37
+    profiles: ["api"]
+    # The .NET image runs as the non-root `app` user (UID 1654); a new named volume belongs to root.
+    command: ["chown", "-R", "1654:1654", "/uploads"]
+    volumes:
+      - api-uploads:/uploads
+
+  api:
+    image: ${READIN_API_IMAGE:-readin-api:local}
+    container_name: readin-api
+    profiles: ["api"]
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      api-uploads-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__ReadIn: "Server=sqlserver,1433;Database=ReadIn;User Id=sa;Password=${MSSQL_SA_PASSWORD:-ReadIn_Local_Dev_1};TrustServerCertificate=True;Encrypt=False"
+      Firebase__AuthEmulatorHost: host.docker.internal:9099
+      Storage__PublicBaseUrl: http://localhost:5080
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "5080:8080"
+    volumes:
+      - api-uploads:/app/wwwroot/uploads
+
 volumes:
   sqlserver-data:
   seq-data:
+  api-uploads:
