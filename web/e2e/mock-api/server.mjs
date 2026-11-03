@@ -3,14 +3,17 @@
  * SSR fetches data from Node where `page.route` can't intercept it, so this server answers both the SSR and the
  * browser calls on the API's dev address (http://localhost:5080/api/v1, from environment.development.ts).
  *
- * It is stateless: per-test flows (create post, uploads, polling, publish) are stubbed in the browser with
- * `page.route` (e2e/support). It also serves generated PNGs for every media URL and fixture builders under `/__mock`.
+ * Content is stateless: per-test flows (create post, uploads, polling, publish) are stubbed in the browser with
+ * `page.route` (e2e/support). Reactions, saved articles, collections and follows (social.mjs) keep state per signed-in
+ * viewer, so those flows run against it end to end. It also serves generated PNGs for every media URL and fixture
+ * builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
  */
 import { createServer } from 'node:http';
 import { crc32, deflateSync } from 'node:zlib';
 import { encode } from 'blurhash';
+import { createSocial } from './social.mjs';
 
 const PORT = Number(process.env.MOCK_API_PORT ?? 5080);
 const ORIGIN = `http://localhost:${PORT}`;
@@ -176,7 +179,19 @@ function documentAsset(seed, { pageCount = 12, pagesReady = pageCount, status = 
   };
 }
 
-const AUTHOR = { id: 'u-writer', displayName: 'Mona Adel', username: 'mona', avatarUrl: null, isVerified: true };
+/** Writers people can follow (F12); `followsEveryone` makes `followsYou` true for every viewer. */
+const WRITERS = [
+  { id: 'u-writer', displayName: 'Mona Adel', username: 'mona', avatarUrl: null, isVerified: true, followerCount: 1280, bio: 'Backend engineer. بكتب عن .NET والـ architecture.' },
+  { id: 'u-readin', displayName: 'ReadIn', username: 'readin', avatarUrl: null, isVerified: true, followerCount: 5400, bio: 'The official ReadIn account — مقال كل يوم يفرق معاك.' },
+  { id: 'u-karim', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true, followerCount: 860, bio: 'Frontend lead: React, Angular and web performance.' },
+  { id: 'u-salma', displayName: 'سلمى إبراهيم', username: 'salma', avatarUrl: null, isVerified: false, followerCount: 430, bio: 'ML engineer بتحب تبسّط الـ AI.', followsEveryone: true },
+  { id: 'u-omar', displayName: 'Omar Fathy', username: 'omar_dev', avatarUrl: null, isVerified: false, followerCount: 210, bio: 'Sleep, memory and learning, from a medical student.' },
+];
+const authorOf = (id) => {
+  const { displayName, username, avatarUrl, isVerified } = WRITERS.find((w) => w.id === id);
+  return { id, displayName, username, avatarUrl, isVerified };
+};
+const AUTHOR = authorOf('u-writer');
 const FIELDS = [
   { id: 'f-software', slug: 'software', name: 'Software', nameAr: 'البرمجيات', nameEn: 'Software', icon: 'code', color: 'primary', isSensitive: false, requiresSources: false, topicCount: 2 },
   { id: 'f-medicine', slug: 'medicine', name: 'Medicine', nameAr: 'الطب', nameEn: 'Medicine', icon: 'stethoscope', color: 'primary', isSensitive: true, requiresSources: true, topicCount: 0 },
@@ -205,7 +220,20 @@ function documentAttachment(asset, { canDownload = asset.allowDownload, maxPages
   };
 }
 
-function card({ slug, language = 'en', title, attachments = null, minutes = 4, reactions = 12, comments = 3 }) {
+/** A card as a guest sees it; `reactions` and `saves` are everyone else's (social.mjs adds the viewer's own). */
+function card({
+  slug,
+  language = 'en',
+  title,
+  attachments = null,
+  minutes = 4,
+  reactions = { insightful: 6, love: 3, fire: 2, mindBlown: 1 },
+  saves = 4,
+  comments = 3,
+  author = AUTHOR,
+  field = FIELDS[0],
+  publishedAt = '2026-11-02T08:00:00Z',
+}) {
   return {
     id: `a-${slug}`,
     slug,
@@ -213,15 +241,19 @@ function card({ slug, language = 'en', title, attachments = null, minutes = 4, r
     title,
     subtitle: null,
     coverUrl: null,
-    field: fieldRef(FIELDS[0]),
-    author: AUTHOR,
+    field: fieldRef(field),
+    author,
     readingTimeMinutes: minutes,
     isReviewed: true,
     isAiAssisted: false,
     versionBadge: null,
-    publishedAt: '2026-11-02T08:00:00Z',
-    reactionCount: reactions,
+    publishedAt,
+    reactionCount: Object.values(reactions).reduce((a, b) => a + b, 0),
+    reactions,
     commentCount: comments,
+    saveCount: saves,
+    myReaction: null,
+    isSaved: false,
     attachments,
   };
 }
@@ -241,8 +273,8 @@ function details(cardDto, paragraphs = ['A short post about the attached media.'
     sources: [{ title: 'Microsoft Learn', url: 'https://learn.microsoft.com/aspnet/core' }],
     reviewedBy: null,
     lastReviewedAt: null,
-    saveCount: 0,
     readCount: 0,
+    isFollowingAuthor: false,
   };
 }
 
@@ -264,21 +296,90 @@ const ARTICLES = [
       document: null,
     },
   }),
-  card({ slug: 'dependency-injection-ar', language: 'ar-EG', title: 'يعني إيه Dependency Injection في ASP.NET Core؟', minutes: 6 }),
+  card({
+    slug: 'dependency-injection-ar',
+    language: 'ar-EG',
+    title: 'يعني إيه Dependency Injection في ASP.NET Core؟',
+    minutes: 6,
+    reactions: { insightful: 5, love: 4, fire: 2, mindBlown: 1 },
+    saves: 9,
+  }),
   card({
     slug: 'aspnet-core-cheatsheet',
     title: 'ASP.NET Core cheat sheet (PDF)',
     attachments: { kind: 'document', images: [], document: documentAttachment(cheatSheet, { maxPages: 10 }) },
+    reactions: { insightful: 7, love: 2, fire: 3, mindBlown: 0 },
+    saves: 23,
   }),
   card({
     slug: 'one-photo',
     title: 'My desk setup for focused reading',
     attachments: { kind: 'images', images: [imageAttachment(portrait, 0, 'A tidy desk with a laptop and a notebook', 'Less is more')], document: null },
+    reactions: { insightful: 2, love: 7, fire: 2, mindBlown: 1 },
+    saves: 2,
   }),
 ];
 
+/** Published by the other writers: in the Following feed, Saved and the reader, never in For you (its baselines). */
+const MORE_ARTICLES = [
+  card({
+    slug: 'how-readin-picks-your-daily-article',
+    title: 'How ReadIn picks your daily article',
+    author: authorOf('u-readin'),
+    publishedAt: '2026-11-03T06:00:00Z',
+    minutes: 3,
+    reactions: { insightful: 31, love: 9, fire: 4, mindBlown: 1 },
+    saves: 57,
+    comments: 14,
+  }),
+  card({
+    slug: 'react-server-components-explained',
+    title: 'React Server Components, explained without the hype',
+    author: authorOf('u-karim'),
+    publishedAt: '2026-11-02T15:00:00Z',
+    minutes: 7,
+    reactions: { insightful: 8, love: 2, fire: 5, mindBlown: 3 },
+    saves: 31,
+    comments: 6,
+  }),
+  card({
+    slug: 'readin-streaks-ar',
+    language: 'ar-EG',
+    title: 'إزاي الـ streak بيساعدك تقرا كل يوم',
+    author: authorOf('u-readin'),
+    publishedAt: '2026-11-01T09:00:00Z',
+    minutes: 4,
+    reactions: { insightful: 4, love: 6, fire: 1, mindBlown: 0 },
+    saves: 12,
+    comments: 2,
+  }),
+  card({
+    slug: 'what-is-a-transformer-ar',
+    language: 'ar-EG',
+    title: 'يعني إيه Transformer في الـ AI؟',
+    author: authorOf('u-salma'),
+    publishedAt: '2026-10-31T11:00:00Z',
+    minutes: 8,
+    reactions: { insightful: 10, love: 3, fire: 2, mindBlown: 6 },
+    saves: 40,
+    comments: 9,
+  }),
+  card({
+    slug: 'sleep-and-memory',
+    title: 'How sleep turns reading into memory',
+    author: authorOf('u-omar'),
+    field: FIELDS[1],
+    publishedAt: '2026-10-29T19:00:00Z',
+    minutes: 5,
+    reactions: { insightful: 3, love: 1, fire: 0, mindBlown: 2 },
+    saves: 8,
+    comments: 1,
+  }),
+];
+const ALL_ARTICLES = [...ARTICLES, ...MORE_ARTICLES];
+
 const DETAILS = new Map(
-  ARTICLES.map((a) => {
+  ALL_ARTICLES.map((a) => {
     const full = a.attachments?.kind === 'document' ? { ...a, attachments: { ...a.attachments, document: documentAttachment(cheatSheet) } } : a;
     return [a.slug, details(full)];
   }),
@@ -380,7 +481,10 @@ const PDF = Buffer.from(
   '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n',
 );
 
+const social = createSocial({ articles: ALL_ARTICLES, writers: WRITERS, problem });
+
 const routes = [
+  ...social.routes,
   ['GET', /^\/__mock\/health$/, () => [200, { ok: true }]],
   ['GET', /^\/__mock\/asset\/image$/, (q) => [200, imageAsset(q.get('seed') ?? 'upload', Number(q.get('w') ?? 1600), Number(q.get('h') ?? 1200))]],
   [
@@ -410,11 +514,16 @@ const routes = [
   ['GET', new RegExp(`^${API}/fields$`), () => [200, FIELDS]],
   ['GET', new RegExp(`^${API}/fields/([^/]+)/topics$`), (_q, [, slug]) => [200, TOPICS[slug] ?? []]],
   ['GET', new RegExp(`^${API}/feed/today$`), () => [204, undefined]],
-  ['GET', new RegExp(`^${API}/feed/for-you$`), (q) => [200, { items: q.get('cursor') ? [] : ARTICLES, nextCursor: null }]],
+  [
+    'GET',
+    new RegExp(`^${API}/feed/for-you$`),
+    (q, _m, _body, req) => [200, { items: q.get('cursor') ? [] : ARTICLES.map((a) => social.personalize(a, social.viewerOf(req))), nextCursor: null }],
+  ],
   [
     'GET',
     new RegExp(`^${API}/articles/([^/]+)$`),
-    (_q, [, slug]) => (DETAILS.has(slug) ? [200, DETAILS.get(slug)] : [404, problem(404, 'article.not_found', 'Article not found')]),
+    (_q, [, slug], _body, req) =>
+      DETAILS.has(slug) ? [200, social.personalize(DETAILS.get(slug), social.viewerOf(req))] : [404, problem(404, 'article.not_found', 'Article not found')],
   ],
   // Phone + password sessions (docs/api/contract-v1.md → Auth). The cookie is the whole session: `readin_refresh=writer`.
   ['GET', new RegExp(`^${API}/auth/config$`), () => [200, { pinLength: 4, password: { minLength: 8, maxLength: 128, requireLetter: true, requireDigit: true }, externalProviders: [] }]],
