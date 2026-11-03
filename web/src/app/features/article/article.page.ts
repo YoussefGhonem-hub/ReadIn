@@ -24,6 +24,7 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir } from '../../shared/directives/bidi';
+import { ArticleAttachments } from '../../shared/media/article-attachments';
 import { LocalizedDatePipe, ReadingTimePipe } from '../../shared/pipes/format.pipes';
 import { RDocRenderer } from '../../shared/rdoc/rdoc-renderer';
 import { hasBlock, safeHttpUrl, tableOfContents } from '../../shared/rdoc/rdoc.utils';
@@ -42,7 +43,7 @@ const TOC_MIN_HEADINGS = 3;
 /** Article reader (F04). Route: `/:lang/a/:slug` where `lang` (ar|en) selects the article version (SPEC §23). */
 @Component({
   selector: 'rd-article-page',
-  imports: [RouterLink, TranslocoPipe, BdiText, Avatar, RDocRenderer, Segmented, LinesSkeleton, EmptyState, ErrorState, ArticleToc, ArticleActionBar, ReadingTimePipe, LocalizedDatePipe, LucideDynamicIcon],
+  imports: [RouterLink, TranslocoPipe, BdiText, Avatar, RDocRenderer, Segmented, LinesSkeleton, EmptyState, ErrorState, ArticleToc, ArticleActionBar, ArticleAttachments, ReadingTimePipe, LocalizedDatePipe, LucideDynamicIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -162,6 +163,11 @@ const TOC_MIN_HEADINGS = 3;
         }
 
         <rd-rdoc [doc]="a.content" [style.--rd-article-size]="prefs.cssSize()" />
+
+        <!-- Post attachments (F26): after the content, before the sources -->
+        @if (a.attachments; as attachments) {
+          <rd-article-attachments class="mt-8" [attachments]="attachments" [article]="a" />
+        }
 
         @if (a.tags.length) {
           <ul class="mt-8 flex list-none flex-wrap gap-2 p-0">

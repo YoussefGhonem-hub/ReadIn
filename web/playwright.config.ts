@@ -2,7 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * E2E + visual tests (SPEC §27): every screen is captured in ar/en × light/dark.
- * Run: `npm run e2e` (starts `ng serve`; point it at a running API on :5080 for real data).
+ * Run: `npm run e2e`. It starts the mock API (e2e/mock-api/server.mjs) on the API's dev address :5080, which answers
+ * SSR and browser calls with fixtures, and `ng serve`. Stop a local backend on :5080 first (the mock fails to bind).
  */
 export default defineConfig({
   testDir: './e2e',
@@ -22,5 +23,14 @@ export default defineConfig({
   ],
   webServer: process.env['E2E_BASE_URL']
     ? undefined
-    : { command: 'npm start', url: 'http://localhost:4200', reuseExistingServer: !process.env['CI'], timeout: 180_000 },
+    : [
+        {
+          command: 'node e2e/mock-api/server.mjs',
+          // A real API on :5080 answers 404 here, so Playwright never mistakes it for the mock.
+          url: 'http://localhost:5080/__mock/health',
+          reuseExistingServer: !process.env['CI'],
+          timeout: 30_000,
+        },
+        { command: 'npm start', url: 'http://localhost:4200', reuseExistingServer: !process.env['CI'], timeout: 180_000 },
+      ],
 });

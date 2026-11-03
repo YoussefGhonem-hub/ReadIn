@@ -1,0 +1,6 @@
+/* Element screenshots: the sticky top bar, the bottom nav and toasts would overlap the captured element. */
+rd-top-bar,
+rd-bottom-nav,
+rd-toast-host {
+  visibility: hidden !important;
+}

@@ -4,9 +4,7 @@ import { provideClientHydration, withEventReplay, withHttpTransferCacheOptions }
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling, withRouterConfig } from '@angular/router';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
-import { authInterceptor } from './core/http/auth.interceptor';
-import { errorInterceptor } from './core/http/error.interceptor';
-import { languageInterceptor } from './core/http/language.interceptor';
+import { API_INTERCEPTORS } from './core/http/api-interceptors';
 import { provideI18n } from './core/i18n/transloco.providers';
 import { provideAppIcons } from './shared/ui/icons';
 
@@ -19,7 +17,7 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
       withRouterConfig({ paramsInheritanceStrategy: 'always' }),
     ),
-    provideHttpClient(withFetch(), withInterceptors([languageInterceptor, authInterceptor, errorInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors(API_INTERCEPTORS)),
     // GETs made during SSR are replayed on hydration; requests carrying a user token always go to the network.
     provideClientHydration(withEventReplay(), withHttpTransferCacheOptions({ includeRequestsWithAuthHeaders: false })),
     ...provideI18n(),

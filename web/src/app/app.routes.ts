@@ -1,5 +1,5 @@
 import { Routes, UrlMatchResult, UrlSegment } from '@angular/router';
-import { authGuard, guestOnlyGuard, onboardingGuard } from './core/auth/guards';
+import { authGuard, guestOnlyGuard, onboardingGuard, permissionGuard } from './core/auth/guards';
 import { PLACEHOLDER_ROUTES } from './features/placeholders.routes';
 import { Shell } from './layout/shell';
 
@@ -49,6 +49,11 @@ export const routes: Routes = [
         data: { titleKey: 'nav.profile', phase: 1 },
       },
       { path: 'settings', loadComponent: () => import('./features/settings/settings.page').then((m) => m.SettingsPage) },
+      {
+        path: 'write',
+        canActivate: [permissionGuard('articles.create')],
+        loadComponent: () => import('./features/editor/composer.page').then((m) => m.ComposerPage),
+      },
       ...PLACEHOLDER_ROUTES,
       { path: '**', loadComponent: () => import('./shared/ui/not-found.page').then((m) => m.NotFoundPage) },
     ],

@@ -108,7 +108,7 @@ type FeedTab = 'forYou' | 'following';
           }
           @case ('loaded') {
             @for (article of store.items(); track article.id) {
-              <rd-article-card [article]="article" />
+              <rd-article-card [article]="article" [priorityMedia]="article.id === firstMediaId()" />
             } @empty {
               <rd-empty-state [title]="'home.empty.title' | transloco" [message]="'home.empty.body' | transloco" />
             }
@@ -148,6 +148,8 @@ export class HomePage {
   protected readonly activeTab = signal<FeedTab>('forYou');
   private readonly sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
 
+  /** The first card with attachments gets the eager, high-priority image (the rest lazy-load). */
+  protected readonly firstMediaId = computed(() => this.store.items().find((a) => a.attachments)?.id ?? null);
   protected readonly firstName = computed(() => this.session.displayName()?.split(' ')[0] ?? null);
   protected readonly greetingKey = computed(() => {
     const hour = new Date().getHours();

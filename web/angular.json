@@ -27,6 +27,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "browser-image-compression.js",
+                "input": "node_modules/browser-image-compression/dist",
+                "output": "vendor"
               }
             ],
             "styles": [

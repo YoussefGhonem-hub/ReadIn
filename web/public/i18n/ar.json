@@ -36,7 +36,9 @@
     "share": "مشاركة",
     "linkCopied": "اتنسخ اللينك",
     "comingSoonShort": "الميزة دي جاية قريب ✨",
-    "readingTime": "{{count}} دقايق"
+    "readingTime": "{{count}} دقايق",
+    "remove": "شيل",
+    "cancel": "إلغاء"
   },
   "errors": {
     "unknown": "حصلت مشكلة غير متوقعة. حاول تاني.",
@@ -63,10 +65,42 @@
       "not_found": "المجال ده مش موجود."
     },
     "article": {
-      "not_found": "المقال ده مش موجود"
+      "not_found": "المقال ده مش موجود",
+      "sources_required": "ضيف مصدر واحد على الأقل قبل ما تنشر."
     },
     "server": {
       "error": "السيرفر واجه مشكلة. حاول كمان شوية."
+    },
+    "media": {
+      "purpose_invalid": "نوع الرفع ده مش مدعوم.",
+      "file_required": "اختار ملف ترفعه.",
+      "too_large": "الملف ده حجمه كبير زيادة.",
+      "unsupported_type": "نوع الملف ده مش مدعوم.",
+      "dimensions_too_large": "أبعاد الصورة كبيرة زيادة (الحد 8000×8000 بكسل).",
+      "image_corrupted": "معرفناش نقرا الصورة دي. جرّب صورة تانية.",
+      "pdf_encrypted": "الملف ده عليه باسورد، ارفعه من غير باسورد.",
+      "pdf_corrupted": "معرفناش نقرا ملف الـ PDF ده، ممكن يكون بايظ.",
+      "pdf_too_many_pages": "الملف فيه أكتر من 100 صفحة.",
+      "quota_daily": "وصلت لحد الرفع النهارده (50 ملف). جرّب بكرة.",
+      "quota_storage": "مساحة التخزين بتاعتك خلصت (200 ميجا). امسح ملفات قديمة الأول.",
+      "not_found": "الملف ده مبقاش موجود.",
+      "in_use": "الملف ده متضاف لبوست.",
+      "download_not_allowed": "الكاتب مسمحش بتحميل الملف ده.",
+      "processing_failed": "معرفناش نجهز صفحات الملف ده.",
+      "processing_timeout": "تجهيز الصفحات خد وقت طويل. حاول تاني."
+    },
+    "attachments": {
+      "mixed_kinds": "البوست ممكن يكون فيه صور أو ملف PDF واحد، مش الاتنين.",
+      "too_many_images": "البوست ممكن يكون فيه 10 صور بالكتير.",
+      "single_document": "البوست ممكن يكون فيه ملف PDF واحد بس.",
+      "alt_text_required": "كل صورة محتاجة وصف.",
+      "alt_text_too_long": "وصف الصورة 250 حرف بالكتير.",
+      "caption_too_long": "التعليق على الصورة 120 حرف بالكتير.",
+      "title_required": "الملف محتاج عنوان.",
+      "title_too_long": "عنوان الملف 150 حرف بالكتير.",
+      "asset_not_found": "واحد من المرفقات مبقاش موجود. شيله وارفعه تاني.",
+      "asset_not_ready": "استنى لحد ما كل المرفقات تجهز.",
+      "duplicate_asset": "نفس الملف متضاف مرتين."
     }
   },
   "auth": {
@@ -268,5 +302,119 @@
   "notFound": {
     "title": "الصفحة دي مش موجودة",
     "body": "يمكن اللينك غلط، أو الصفحة اتنقلت."
+  },
+  "media": {
+    "imagesLabel": "صور البوست",
+    "documentLabel": "ملف: {{title}}",
+    "imageOf": "صورة {{current}} من {{total}}",
+    "pageOf": "صفحة {{current}} من {{total}}",
+    "previous": "السابق",
+    "next": "التالي",
+    "open": "افتح ملء الشاشة: {{label}}",
+    "pageCount": {
+      "zero": "{{count}} صفحة",
+      "one": "صفحة واحدة",
+      "two": "صفحتين",
+      "few": "{{count}} صفحات",
+      "many": "{{count}} صفحة",
+      "other": "{{count}} صفحة"
+    },
+    "morePages": {
+      "one": "+صفحة واحدة، افتح الملف",
+      "two": "+صفحتين، افتح الملف",
+      "few": "+{{count}} صفحات، افتح الملف",
+      "many": "+{{count}} صفحة، افتح الملف",
+      "other": "+{{count}} صفحة، افتح الملف"
+    },
+    "viewer": {
+      "label": "عارض الصور والملفات",
+      "download": "تحميل",
+      "downloading": "بننزل الملف…",
+      "share": "مشاركة",
+      "thumbnails": "الصفحات",
+      "zoomHint": "دوس مرتين أو قرّب بصباعين عشان تكبّر",
+      "loadingPage": "بنحمّل الصفحة…"
+    }
+  },
+  "attachments": {
+    "label": "المرفقات",
+    "images": "صور",
+    "pdf": "ملف PDF",
+    "imagesDisabled": "شيل ملف الـ PDF عشان تضيف صور.",
+    "pdfDisabled": "شيل الصور عشان تضيف ملف PDF.",
+    "imagesFull": "تقدر تضيف 10 صور بالكتير.",
+    "imageCount": "{{count}} / 10 صور",
+    "unsupportedImage": "{{name}} مش صورة مدعومة (JPG أو PNG أو WebP أو HEIC).",
+    "tooManyImages": "البوست بياخد 10 صور بس، فسيبنا {{count}}.",
+    "notPdf": "اختار ملف PDF.",
+    "pdfTooLarge": "ملف الـ PDF لازم يكون 20 ميجا أو أقل.",
+    "image": "صورة {{position}}",
+    "altLabel": "وصف الصورة",
+    "altPlaceholder": "اوصف الصورة للي مش هيقدر يشوفها",
+    "altRequired": "وصف الصورة مطلوب.",
+    "captionLabel": "تعليق على الصورة (اختياري)",
+    "removeImage": "شيل الصورة {{position}}",
+    "moveEarlier": "قدّم الصورة {{position}}",
+    "moveLater": "أخّر الصورة {{position}}",
+    "moved": "الصورة اتنقلت للمكان {{position}} من {{total}}.",
+    "dragHint": "اسحب الصور أو استخدم الأسهم عشان تغيّر ترتيبها.",
+    "preparing": "بنجهز الصورة…",
+    "uploading": "بنرفع {{percent}}%",
+    "canceled": "الرفع اتلغى",
+    "failed": "الرفع فشل",
+    "cancel": "إلغاء الرفع",
+    "retry": "حاول تاني",
+    "docTitle": "عنوان الملف",
+    "allowDownload": "السماح بتحميل الملف",
+    "allowDownloadHint": "القراء هيقدروا ينزلوا ملف الـ PDF الأصلي.",
+    "processing": "بنجهز الصفحات…",
+    "processingProgress": "{{ready}} من {{total}} صفحة جاهزين",
+    "removeDocument": "شيل الملف",
+    "docPreview": "معاينة أول الصفحات"
+  },
+  "editor": {
+    "title": "اكتب بوست",
+    "subtitle": "شارك حاجة مفيدة. ضيف صور أو ملف PDF لو هيساعدوا.",
+    "field": "المجال",
+    "fieldPlaceholder": "اختار المجال",
+    "topic": "الموضوع (اختياري)",
+    "topicNone": "من غير موضوع محدد",
+    "language": "لغة البوست",
+    "titleLabel": "العنوان",
+    "titlePlaceholder": "عنوان واضح للبوست",
+    "body": "النص",
+    "bodyPlaceholder": "اكتب البوست… سيب سطر فاضي بين كل فقرة والتانية.",
+    "sources": "المصادر",
+    "sourcesRequiredNote": "مطلوبة في المجال ده",
+    "sourcesOptionalNote": "اختيارية، بس بتزوّد الثقة",
+    "sourceTitle": "اسم المصدر",
+    "sourceUrl": "اللينك",
+    "addSource": "ضيف مصدر",
+    "removeSource": "شيل المصدر {{position}}",
+    "invalidUrl": "اكتب لينك كامل بيبدأ بـ https://",
+    "aiAssisted": "استخدمت AI في الكتابة",
+    "aiAssistedHint": "البوستات اللي اتكتبت بمساعدة AI بيظهر عليها علامة للقراء.",
+    "publish": "انشر",
+    "publishing": "بننشر…",
+    "published": "اتنشر ✓",
+    "fieldsError": "معرفناش نحمّل المجالات.",
+    "blockers": {
+      "title": "قبل ما تنشر:",
+      "field": "اختار المجال.",
+      "titleLength": "العنوان لازم يكون من 5 لـ 150 حرف.",
+      "body": "اكتب حاجة أو ضيف مرفق.",
+      "sources": "المجال ده محتاج مصدر واحد على الأقل بلينك صحيح.",
+      "invalidSources": "كمّل أو شيل المصادر الناقصة.",
+      "uploading": "استنى لحد ما الرفع وتجهيز الصفحات يخلصوا.",
+      "altMissing": {
+        "one": "اكتب وصف لصورة واحدة.",
+        "two": "اكتب وصف لصورتين.",
+        "few": "اكتب وصف لـ {{count}} صور.",
+        "many": "اكتب وصف لـ {{count}} صورة.",
+        "other": "اكتب وصف لـ {{count}} صورة."
+      },
+      "attachmentProblem": "شيل المرفق اللي فشل أو جرّب ترفعه تاني.",
+      "documentTitle": "اكتب عنوان للملف."
+    }
   }
 }

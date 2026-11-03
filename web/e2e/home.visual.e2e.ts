@@ -20,6 +20,8 @@ for (const { lang, theme, dir } of variants) {
       { name: 'theme', value: theme, domain: hostname, path: '/' },
     ]);
 
+    // The greeting depends on the hour ("Good morning" / "Good evening"); pin the browser clock so the baseline is stable.
+    await page.clock.setFixedTime(new Date('2026-11-03T09:00:00'));
     await page.goto('/');
 
     const html = page.locator('html');

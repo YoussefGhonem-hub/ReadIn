@@ -64,3 +64,31 @@ export class CompactNumberPipe implements PipeTransform {
     return new Intl.NumberFormat(intlLocale(lang), { notation: 'compact', maximumFractionDigits: 1 }).format(value ?? 0);
   }
 }
+
+/**
+ * Plural-aware translation with the CLDR categories of the UI language (Arabic has zero/one/two/few/many/other).
+ * Looks up `{key}.{category}` and falls back to `{key}.other`; `{{count}}` is always available to the string.
+ */
+export function translatePlural(
+  transloco: TranslocoService,
+  key: string,
+  count: number,
+  lang: UiLanguage,
+  params: Record<string, unknown> = {},
+): string {
+  const category = new Intl.PluralRules(intlLocale(lang)).select(count);
+  const values = { count, ...params };
+  const exact = `${key}.${category}`;
+  const text = transloco.translate(exact, values, lang);
+  return text && text !== exact ? text : transloco.translate(`${key}.other`, values, lang);
+}
+
+/** `{{ 12 | rdPlural: 'media.pageCount' : lang() }}` → "12 صفحة" / "12 pages". */
+@Pipe({ name: 'rdPlural' })
+export class PluralPipe implements PipeTransform {
+  private readonly transloco = inject(TranslocoService);
+
+  transform(count: number | null | undefined, key: string, lang: UiLanguage, params: Record<string, unknown> = {}): string {
+    return translatePlural(this.transloco, key, count ?? 0, lang, params);
+  }
+}

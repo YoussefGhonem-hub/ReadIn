@@ -36,7 +36,9 @@
     "share": "Share",
     "linkCopied": "Link copied",
     "comingSoonShort": "This is coming soon ✨",
-    "readingTime": "{{count}} min read"
+    "readingTime": "{{count}} min read",
+    "remove": "Remove",
+    "cancel": "Cancel"
   },
   "errors": {
     "unknown": "Something went wrong. Please try again.",
@@ -63,10 +65,42 @@
       "not_found": "This field doesn't exist."
     },
     "article": {
-      "not_found": "Article not found"
+      "not_found": "Article not found",
+      "sources_required": "Add at least one source before publishing."
     },
     "server": {
       "error": "The server ran into a problem. Please try again shortly."
+    },
+    "media": {
+      "purpose_invalid": "This kind of upload isn't supported.",
+      "file_required": "Choose a file to upload.",
+      "too_large": "This file is too large.",
+      "unsupported_type": "This file type isn't supported.",
+      "dimensions_too_large": "This image is too big (max 8000×8000 pixels).",
+      "image_corrupted": "We couldn't read this image. Try another one.",
+      "pdf_encrypted": "This file is password-protected. Upload it without a password.",
+      "pdf_corrupted": "We couldn't read this PDF. The file may be damaged.",
+      "pdf_too_many_pages": "The PDF has more than 100 pages.",
+      "quota_daily": "You've reached today's upload limit (50 files). Try again tomorrow.",
+      "quota_storage": "You've used all your storage (200 MB). Remove old uploads first.",
+      "not_found": "This file doesn't exist anymore.",
+      "in_use": "This file is attached to a post.",
+      "download_not_allowed": "The author didn't allow downloading this file.",
+      "processing_failed": "We couldn't prepare this file's pages.",
+      "processing_timeout": "Preparing the pages took too long. Try again."
+    },
+    "attachments": {
+      "mixed_kinds": "A post can have images or one PDF, not both.",
+      "too_many_images": "A post can have up to 10 images.",
+      "single_document": "A post can have only one PDF.",
+      "alt_text_required": "Every image needs alt text.",
+      "alt_text_too_long": "Alt text can be up to 250 characters.",
+      "caption_too_long": "Captions can be up to 120 characters.",
+      "title_required": "The document needs a title.",
+      "title_too_long": "The document title can be up to 150 characters.",
+      "asset_not_found": "One of the attachments doesn't exist anymore. Remove it and upload it again.",
+      "asset_not_ready": "Wait until every attachment is ready.",
+      "duplicate_asset": "The same file is attached twice."
     }
   },
   "auth": {
@@ -268,5 +302,109 @@
   "notFound": {
     "title": "This page doesn't exist",
     "body": "The link may be wrong, or the page has moved."
+  },
+  "media": {
+    "imagesLabel": "Post images",
+    "documentLabel": "Document: {{title}}",
+    "imageOf": "Image {{current}} of {{total}}",
+    "pageOf": "Page {{current}} of {{total}}",
+    "previous": "Previous",
+    "next": "Next",
+    "open": "Open full screen: {{label}}",
+    "pageCount": {
+      "one": "1 page",
+      "other": "{{count}} pages"
+    },
+    "morePages": {
+      "one": "+1 page, open document",
+      "other": "+{{count}} pages, open document"
+    },
+    "viewer": {
+      "label": "Media viewer",
+      "download": "Download",
+      "downloading": "Downloading…",
+      "share": "Share",
+      "thumbnails": "Pages",
+      "zoomHint": "Double-tap or pinch to zoom",
+      "loadingPage": "Loading page…"
+    }
+  },
+  "attachments": {
+    "label": "Attachments",
+    "images": "Images",
+    "pdf": "PDF document",
+    "imagesDisabled": "Remove the PDF to add images.",
+    "pdfDisabled": "Remove the images to add a PDF.",
+    "imagesFull": "You can add up to 10 images.",
+    "imageCount": "{{count}} / 10 images",
+    "unsupportedImage": "{{name}} isn't a supported image (JPG, PNG, WebP or HEIC).",
+    "tooManyImages": "Only 10 images fit in a post. We skipped {{count}}.",
+    "notPdf": "Choose a PDF file.",
+    "pdfTooLarge": "The PDF must be 20 MB or smaller.",
+    "image": "Image {{position}}",
+    "altLabel": "Alt text",
+    "altPlaceholder": "Describe the image for people who can't see it",
+    "altRequired": "Alt text is required.",
+    "captionLabel": "Caption (optional)",
+    "removeImage": "Remove image {{position}}",
+    "moveEarlier": "Move image {{position}} earlier",
+    "moveLater": "Move image {{position}} later",
+    "moved": "Image moved to position {{position}} of {{total}}.",
+    "dragHint": "Drag the images or use the arrow buttons to change their order.",
+    "preparing": "Preparing…",
+    "uploading": "Uploading {{percent}}%",
+    "canceled": "Upload canceled",
+    "failed": "Upload failed",
+    "cancel": "Cancel upload",
+    "retry": "Try again",
+    "docTitle": "Document title",
+    "allowDownload": "Allow download",
+    "allowDownloadHint": "Readers can download the original PDF.",
+    "processing": "Preparing pages…",
+    "processingProgress": "{{ready}} of {{total}} pages ready",
+    "removeDocument": "Remove document",
+    "docPreview": "Preview of the first pages"
+  },
+  "editor": {
+    "title": "Write a post",
+    "subtitle": "Share something useful. Add images or a PDF if they help.",
+    "field": "Field",
+    "fieldPlaceholder": "Choose a field",
+    "topic": "Topic (optional)",
+    "topicNone": "No specific topic",
+    "language": "Post language",
+    "titleLabel": "Title",
+    "titlePlaceholder": "A clear title for your post",
+    "body": "Text",
+    "bodyPlaceholder": "Write your post… Leave an empty line between paragraphs.",
+    "sources": "Sources",
+    "sourcesRequiredNote": "Required in this field",
+    "sourcesOptionalNote": "Optional, but they build trust",
+    "sourceTitle": "Source title",
+    "sourceUrl": "Link",
+    "addSource": "Add a source",
+    "removeSource": "Remove source {{position}}",
+    "invalidUrl": "Enter a full link that starts with https://",
+    "aiAssisted": "AI helped me write this",
+    "aiAssistedHint": "Posts written with AI help are labeled for readers.",
+    "publish": "Publish",
+    "publishing": "Publishing…",
+    "published": "Published ✓",
+    "fieldsError": "We couldn't load the fields.",
+    "blockers": {
+      "title": "Before you publish:",
+      "field": "Choose a field.",
+      "titleLength": "The title must be 5 to 150 characters.",
+      "body": "Write something or add an attachment.",
+      "sources": "This field needs at least one source with a valid link.",
+      "invalidSources": "Fix or remove the incomplete sources.",
+      "uploading": "Wait until uploads and page preparation finish.",
+      "altMissing": {
+        "one": "Add alt text to 1 image.",
+        "other": "Add alt text to {{count}} images."
+      },
+      "attachmentProblem": "Remove or retry the attachment that failed.",
+      "documentTitle": "Give the document a title."
+    }
   }
 }
