@@ -1,0 +1,46 @@
+/* GENERATED FILE — do not edit. Source: design/tokens.json, generator: tools/tokens/build.mjs */
+/* Import after `@import "tailwindcss";` so utilities like bg-surface / text-text-primary follow the active theme. */
+@theme inline {
+  --color-primary: var(--rd-color-primary);
+  --color-on-primary: var(--rd-color-on-primary);
+  --color-primary-container: var(--rd-color-primary-container);
+  --color-on-primary-container: var(--rd-color-on-primary-container);
+  --color-accent: var(--rd-color-accent);
+  --color-on-accent: var(--rd-color-on-accent);
+  --color-accent-container: var(--rd-color-accent-container);
+  --color-bg: var(--rd-color-bg);
+  --color-surface: var(--rd-color-surface);
+  --color-surface-variant: var(--rd-color-surface-variant);
+  --color-surface-raised: var(--rd-color-surface-raised);
+  --color-border: var(--rd-color-border);
+  --color-text-primary: var(--rd-color-text-primary);
+  --color-text-secondary: var(--rd-color-text-secondary);
+  --color-link: var(--rd-color-link);
+  --color-focus-ring: var(--rd-color-focus-ring);
+  --color-highlight: var(--rd-color-highlight);
+  --color-scrim: var(--rd-color-scrim);
+  --color-callout-tip: var(--rd-color-callout-tip);
+  --color-callout-tip-accent: var(--rd-color-callout-tip-accent);
+  --color-callout-info: var(--rd-color-callout-info);
+  --color-callout-info-accent: var(--rd-color-callout-info-accent);
+  --color-callout-warning: var(--rd-color-callout-warning);
+  --color-callout-warning-accent: var(--rd-color-callout-warning-accent);
+  --color-callout-danger: var(--rd-color-callout-danger);
+  --color-callout-danger-accent: var(--rd-color-callout-danger-accent);
+  --color-code-bg: var(--rd-color-code-bg);
+  --color-code-text: var(--rd-color-code-text);
+  --color-code-border: var(--rd-color-code-border);
+  --color-success: var(--rd-color-success);
+  --color-error: var(--rd-color-error);
+  --color-on-error: var(--rd-color-on-error);
+  --radius-sm: var(--rd-radius-sm);
+  --radius-md: var(--rd-radius-md);
+  --radius-card: var(--rd-radius-card);
+  --radius-sheet: var(--rd-radius-sheet);
+  --radius-chip: var(--rd-radius-chip);
+  --font-sans: var(--rd-font-ui);
+  --font-latin: var(--rd-font-latin);
+  --font-mono: var(--rd-font-mono);
+  --shadow-card: var(--rd-elevation-card);
+  --shadow-raised: var(--rd-elevation-raised);
+}

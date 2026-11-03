@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="system">
+<head>
+  <meta charset="utf-8">
+  <title>ReadIn — مقال كل يوم يفرق معاك</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="ReadIn — Read daily. Grow daily. مقال كل يوم يفرق معاك.">
+  <meta name="color-scheme" content="light dark">
+  <!-- theme-color mirrors design/tokens.json color.bg (light/dark) -->
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121413" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <!--
+    Resolve theme + UI language before first paint (SPEC §7.2, §15.5 rule 7).
+    SSR already renders these from the `theme`/`lang` cookies; this keeps CSR fallbacks flash-free too.
+  -->
+  <script>
+    (function () {
+      try {
+        var c = document.cookie, d = document.documentElement;
+        var t = /(?:^|;\s*)theme=(light|dark|system)/.exec(c);
+        d.setAttribute('data-theme', t ? t[1] : 'system');
+        var l = /(?:^|;\s*)lang=(ar|en)/.exec(c);
+        var lang = l ? l[1] : (d.getAttribute('lang') || 'ar');
+        d.setAttribute('lang', lang);
+        d.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <rd-root></rd-root>
+</body>
+</html>

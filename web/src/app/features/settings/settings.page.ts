@@ -1,0 +1,185 @@
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { Title } from '@angular/platform-browser';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LucideDynamicIcon } from '@lucide/angular';
+import { ArticleLanguage } from '../../core/api/models';
+import { AuthService } from '../../core/auth/auth.service';
+import { PreferencesService } from '../../core/auth/preferences.service';
+import { SessionStore } from '../../core/auth/session.store';
+import { ErrorMessages } from '../../core/i18n/error-messages';
+import { LanguageService, UiLanguage } from '../../core/i18n/language.service';
+import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
+import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
+import { Avatar } from '../../shared/ui/avatar';
+import { SegmentOption, Segmented } from '../../shared/ui/segmented';
+import { ToastService } from '../../shared/ui/toast/toast.service';
+
+/** Settings (F18): theme, UI language, article language, reminder time, font size, account. */
+@Component({
+  selector: 'rd-settings-page',
+  imports: [FormsModule, RouterLink, TranslocoPipe, Segmented, Avatar, LucideDynamicIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
+  template: `
+    <h1 class="mb-6 mt-0 text-2xl font-bold">{{ 'settings.title' | transloco }}</h1>
+
+    <!-- Appearance -->
+    <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="appearance">
+      <h2 id="appearance" class="m-0 mb-4 text-base font-semibold">{{ 'settings.appearance' | transloco }}</h2>
+      <span class="rd-label">{{ 'settings.theme.label' | transloco }}</span>
+      <div class="grid grid-cols-3 gap-2" role="radiogroup" [attr.aria-label]="'settings.theme.label' | transloco">
+        @for (option of themeOptions; track option) {
+          <button
+            type="button"
+            role="radio"
+            [attr.aria-checked]="theme.preference() === option"
+            class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-md border text-sm"
+            [class]="theme.preference() === option ? 'border-primary bg-primary-container font-semibold text-on-primary-container' : 'border-border bg-surface text-text-secondary'"
+            (click)="setTheme(option)"
+          >
+            @switch (option) {
+              @case ('light') {
+                <svg lucideIcon="Sun" [size]="20" aria-hidden="true"></svg>
+              }
+              @case ('dark') {
+                <svg lucideIcon="Moon" [size]="20" aria-hidden="true"></svg>
+              }
+              @default {
+                <svg lucideIcon="Monitor" [size]="20" aria-hidden="true"></svg>
+              }
+            }
+            {{ 'settings.theme.' + option | transloco }}
+          </button>
+        }
+      </div>
+
+      <span class="rd-label mt-5">{{ 'settings.uiLanguage' | transloco }}</span>
+      <rd-segmented [options]="uiLanguageOptions" [value]="language.lang()" (valueChange)="setUiLanguage($event)" [label]="'settings.uiLanguage' | transloco" />
+
+      <span class="rd-label mt-5">{{ 'settings.fontSize' | transloco }}</span>
+      <rd-segmented [options]="fontOptions()" [value]="readerPrefs.fontSize()" (valueChange)="readerPrefs.setFontSize($event)" [label]="'settings.fontSize' | transloco" />
+    </section>
+
+    <!-- Reading (profile-backed) -->
+    <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="reading">
+      <h2 id="reading" class="m-0 mb-1 text-base font-semibold">{{ 'settings.reading' | transloco }}</h2>
+      @if (!session.isAuthenticated()) {
+        <p class="m-0 mb-3 text-sm text-text-secondary">{{ 'settings.signInForSync' | transloco }}</p>
+      }
+      <fieldset [disabled]="!session.isAuthenticated() || saving()" class="m-0 border-0 p-0 disabled:opacity-60">
+        <span class="rd-label mt-3">{{ 'settings.articleLanguage' | transloco }}</span>
+        <rd-segmented
+          [options]="articleLanguageOptions()"
+          [value]="articleLanguage()"
+          (valueChange)="saveArticleLanguage($event)"
+          [disabled]="!session.isAuthenticated()"
+          [label]="'settings.articleLanguage' | transloco"
+        />
+        <label class="rd-label mt-5" for="reminder">{{ 'settings.reminderTime' | transloco }}</label>
+        <div class="flex gap-2">
+          <input id="reminder" type="time" class="rd-input" dir="ltr" step="900" [ngModel]="reminderTime()" (ngModelChange)="reminderDraft.set($event)" />
+          <button type="button" class="rd-btn rd-btn-outline" [disabled]="!reminderDraft() || reminderDraft() === reminderTime()" (click)="saveReminder()">
+            {{ 'common.save' | transloco }}
+          </button>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- Account -->
+    <section class="rd-card p-5 shadow-none" aria-labelledby="account">
+      <h2 id="account" class="m-0 mb-4 text-base font-semibold">{{ 'settings.account' | transloco }}</h2>
+      @if (session.isAuthenticated()) {
+        <div class="flex items-center gap-3">
+          <rd-avatar [name]="session.displayName()" [src]="session.avatarUrl()" [size]="44" />
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold">{{ session.displayName() }}</div>
+            <div class="truncate text-sm text-text-secondary" dir="ltr">{{ session.me()?.email ?? session.user()?.email }}</div>
+          </div>
+        </div>
+        <button type="button" class="rd-btn rd-btn-outline mt-5 w-full text-error" (click)="signOut()">
+          <svg lucideIcon="LogOut" [size]="16" class="rd-flip-rtl" aria-hidden="true"></svg>{{ 'auth.signOut' | transloco }}
+        </button>
+      } @else {
+        <p class="m-0 mb-4 text-sm text-text-secondary">{{ 'settings.guestHint' | transloco }}</p>
+        <a routerLink="/auth/sign-in" [queryParams]="{ returnUrl: '/settings' }" class="rd-btn rd-btn-primary w-full">{{ 'auth.signIn.submit' | transloco }}</a>
+      }
+    </section>
+  `,
+})
+export class SettingsPage {
+  protected readonly theme = inject(ThemeService);
+  protected readonly language = inject(LanguageService);
+  protected readonly readerPrefs = inject(ReaderPrefsService);
+  protected readonly session = inject(SessionStore);
+  private readonly preferences = inject(PreferencesService);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly toasts = inject(ToastService);
+  private readonly errors = inject(ErrorMessages);
+  private readonly transloco = inject(TranslocoService);
+
+  protected readonly themeOptions: ThemePreference[] = ['system', 'light', 'dark'];
+  /** Language names are shown in their own language. */
+  protected readonly uiLanguageOptions: SegmentOption<UiLanguage>[] = [
+    { value: 'ar', label: 'العربية' },
+    { value: 'en', label: 'English', ltr: true },
+  ];
+  protected readonly articleLanguageOptions = computed<SegmentOption<ArticleLanguage>[]>(() => {
+    this.language.lang();
+    return [
+      { value: 'ar-EG', label: this.transloco.translate('onboarding.prefs.arEG') },
+      { value: 'en', label: this.transloco.translate('onboarding.prefs.en'), ltr: true },
+    ];
+  });
+  protected readonly fontOptions = computed<SegmentOption<ArticleFontSize>[]>(() => {
+    this.language.lang();
+    return ARTICLE_FONT_SIZES.map((size) => ({ value: size, label: this.transloco.translate(`article.fontSizes.${size}`) }));
+  });
+
+  protected readonly articleLanguage = computed<ArticleLanguage>(() => this.session.me()?.articleLanguage ?? 'ar-EG');
+  protected readonly reminderTime = computed(() => this.session.me()?.reminderTime ?? '08:00');
+  protected readonly reminderDraft = signal<string | null>(null);
+  protected readonly saving = signal(false);
+
+  constructor() {
+    inject(Title).setTitle(`${this.transloco.translate('settings.title')} — ReadIn`);
+  }
+
+  protected setTheme(theme: ThemePreference): Promise<void> {
+    return this.persist(() => this.preferences.setTheme(theme));
+  }
+
+  protected setUiLanguage(lang: UiLanguage): Promise<void> {
+    return this.persist(() => this.preferences.setUiLanguage(lang));
+  }
+
+  protected saveArticleLanguage(articleLanguage: ArticleLanguage): Promise<void> {
+    return this.persist(() => this.preferences.save({ articleLanguage }), true);
+  }
+
+  protected async saveReminder(): Promise<void> {
+    const value = this.reminderDraft();
+    if (!value) return;
+    await this.persist(() => this.preferences.save({ reminderTime: value }), true);
+    this.reminderDraft.set(null);
+  }
+
+  protected async signOut(): Promise<void> {
+    await this.auth.signOut();
+    await this.router.navigateByUrl('/');
+  }
+
+  private async persist(action: () => Promise<unknown>, confirm = false): Promise<void> {
+    this.saving.set(true);
+    try {
+      await action();
+      if (confirm) this.toasts.success(this.transloco.translate('settings.saved'));
+    } catch (error) {
+      this.toasts.error(this.errors.forError(error));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+}

@@ -1,0 +1,272 @@
+{
+  "app": {
+    "name": "ReadIn",
+    "tagline": "Read daily. Grow daily."
+  },
+  "nav": {
+    "main": "Main navigation",
+    "skipToContent": "Skip to content",
+    "home": "Home",
+    "explore": "Explore",
+    "write": "Write",
+    "saved": "Saved",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "search": "Search",
+    "paths": "Paths",
+    "settings": "Settings",
+    "verification": "Writer verification",
+    "reviews": "Reviews",
+    "moderation": "Moderation",
+    "admin": "Admin console"
+  },
+  "topbar": {
+    "streakLabel": "Reading streak",
+    "streakDays": "{{count}} days"
+  },
+  "common": {
+    "close": "Close",
+    "retry": "Try again",
+    "loading": "One moment…",
+    "saving": "Saving…",
+    "save": "Save",
+    "continue": "Continue",
+    "back": "Back",
+    "or": "or",
+    "share": "Share",
+    "linkCopied": "Link copied",
+    "comingSoonShort": "This is coming soon ✨",
+    "readingTime": "{{count}} min read"
+  },
+  "errors": {
+    "unknown": "Something went wrong. Please try again.",
+    "network": "Can't reach the server. Check your connection and try again.",
+    "loadFailed": "We couldn't load this",
+    "syncFailed": "You're signed in, but we couldn't reach your ReadIn account right now.",
+    "validation": {
+      "failed": "Some details need fixing."
+    },
+    "auth": {
+      "unauthorized": "Please sign in first.",
+      "forbidden": "You're not allowed to do that."
+    },
+    "user": {
+      "suspended": "Your account is suspended.",
+      "not_synced": "Your account isn't ready yet. Please sign in again.",
+      "not_found": "This user doesn't exist.",
+      "username_taken": "That username is taken.",
+      "interests": {
+        "min_three": "Pick at least 3 interests."
+      }
+    },
+    "field": {
+      "not_found": "This field doesn't exist."
+    },
+    "article": {
+      "not_found": "Article not found"
+    },
+    "server": {
+      "error": "The server ran into a problem. Please try again shortly."
+    }
+  },
+  "auth": {
+    "google": "Continue with Google",
+    "email": "Email",
+    "password": "Password",
+    "displayName": "Your name",
+    "continueAsGuest": "Browse as a guest",
+    "signOut": "Sign out",
+    "signIn": {
+      "title": "Welcome back 👋",
+      "subtitle": "Sign in and keep your reading habit going.",
+      "submit": "Sign in",
+      "forgot": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create one"
+    },
+    "signUp": {
+      "title": "Start your ReadIn journey",
+      "subtitle": "One valuable article a day, in the field you love.",
+      "submit": "Create account",
+      "haveAccount": "Already have an account?",
+      "verifyNote": "We'll send you a verification email after signing up.",
+      "verifySent": "We sent you a verification email."
+    },
+    "forgot": {
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email and we'll send you a reset link.",
+      "submit": "Send reset link",
+      "sent": "If that email is registered, a reset link will arrive within a few minutes."
+    },
+    "validation": {
+      "required": "This field is required.",
+      "email": "Enter a valid email.",
+      "displayName": "Name must be 2 to 60 characters.",
+      "password": "At least 8 characters."
+    },
+    "errors": {
+      "invalidCredential": "Wrong email or password.",
+      "emailInUse": "That email already has an account. Try signing in.",
+      "weakPassword": "That password is too weak. Use at least 8 characters.",
+      "invalidEmail": "That email doesn't look right.",
+      "tooMany": "Too many attempts. Wait a bit and try again.",
+      "network": "No connection. Check your internet.",
+      "popupClosed": "The sign-in window was closed before finishing.",
+      "popupBlocked": "Your browser blocked the sign-in window. Allow pop-ups and try again.",
+      "generic": "We couldn't sign you in. Please try again."
+    },
+    "prompt": {
+      "title": "Sign in to join in",
+      "body": "Create a free account to save articles, react and build a daily reading streak.",
+      "signIn": "Sign in",
+      "signUp": "Create an account",
+      "later": "Not now"
+    }
+  },
+  "onboarding": {
+    "step": "Step {{current}} of {{total}}",
+    "welcome": {
+      "title": "Welcome to ReadIn",
+      "body": "One valuable article every day, in the field you love — in Egyptian Arabic with English terms, or English only.",
+      "point1": "Today's article, picked for you, at the time you choose.",
+      "point2": "A daily reading streak that keeps you going without pressure.",
+      "point3": "Verified writers, reviewed articles and clear sources.",
+      "start": "Let's start"
+    },
+    "interests": {
+      "title": "What are you into?",
+      "subtitle": "We'll pick an article for you every day.",
+      "topicsOf": "Topics in {{field}}",
+      "selected": "{{count}} selected — pick at least {{min}}"
+    },
+    "prefs": {
+      "title": "Last step",
+      "subtitle": "Tune your experience. You can change this later in Settings.",
+      "articleLanguage": "Article language",
+      "arEG": "مصري + English",
+      "en": "English only",
+      "reminder": "When should today's article arrive?",
+      "reminderHint": "In your local time.",
+      "notifications": "Notifications",
+      "notificationsState": {
+        "default": "Turn them on to get today's article.",
+        "granted": "Notifications are on ✓",
+        "denied": "Notifications are blocked in your browser.",
+        "unsupported": "This browser doesn't support notifications."
+      },
+      "enableNotifications": "Turn on",
+      "finish": "Let's start"
+    }
+  },
+  "home": {
+    "greeting": {
+      "morning": "Good morning",
+      "evening": "Good evening"
+    },
+    "greetingName": "{{greeting}}, {{name}} 👋",
+    "sub": "Ready for a small dose of knowledge?",
+    "todayPick": "Today's pick",
+    "filterByField": "Filter by field",
+    "allFields": "For you",
+    "tabs": {
+      "forYou": "For you",
+      "following": "Following"
+    },
+    "following": {
+      "title": "Follow writers and fields",
+      "body": "Articles from writers and fields you follow will show up here soon."
+    },
+    "feedTitle": "Articles you might like",
+    "feedError": "We couldn't load articles.",
+    "empty": {
+      "title": "No articles here yet",
+      "body": "Try another field or check back soon."
+    },
+    "endOfFeed": "You're all caught up 🎉 Come back tomorrow for more."
+  },
+  "article": {
+    "reviewed": "Reviewed",
+    "reviewedBy": "Reviewed by {{name}}",
+    "lastReviewed": "Last reviewed: {{date}}",
+    "aiAssisted": "AI-assisted",
+    "verifiedWriter": "Verified writer",
+    "toc": "In this article",
+    "sources": "Sources",
+    "noSources": "No sources were added to this article.",
+    "fontSize": "Font size",
+    "fontSizes": {
+      "s": "S",
+      "m": "M",
+      "l": "L",
+      "xl": "XL"
+    },
+    "languages": {
+      "arEG": "مصري + EN",
+      "en": "EN"
+    },
+    "languageToggle": "Article language",
+    "fallbackNotice": "This version isn't available in your chosen language, so we're showing the original.",
+    "notFoundBody": "The link may be wrong or the article was removed.",
+    "loadError": "We couldn't load this article.",
+    "follow": "Follow",
+    "save": "Save",
+    "comments": "Comments",
+    "reactions": {
+      "label": "Reactions",
+      "insightful": "Insightful",
+      "love": "Love",
+      "fire": "Fire",
+      "mindBlown": "Mind-blown"
+    }
+  },
+  "rdoc": {
+    "summary": "TL;DR",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyCode": "Copy code",
+    "callout": {
+      "tip": "Tip",
+      "info": "Info",
+      "warning": "Warning",
+      "danger": "Danger"
+    },
+    "embed": {
+      "youtube": "YouTube video",
+      "gist": "View the Gist on GitHub",
+      "open": "Open embedded content"
+    },
+    "term": {
+      "title": "Glossary",
+      "soon": "The full definition and related articles are coming soon to the glossary."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "theme": {
+      "label": "Theme",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "uiLanguage": "App language",
+    "fontSize": "Article font size",
+    "reading": "Reading",
+    "signInForSync": "Sign in to save these settings to your account.",
+    "articleLanguage": "Article language",
+    "reminderTime": "Daily article reminder",
+    "account": "Account",
+    "guestHint": "You're browsing as a guest.",
+    "saved": "Settings saved ✓"
+  },
+  "comingSoon": {
+    "title": "Coming soon",
+    "body": "We're building this right now. It'll be available soon on web and mobile.",
+    "phase": "Phase {{phase}}",
+    "backHome": "Back to home"
+  },
+  "notFound": {
+    "title": "This page doesn't exist",
+    "body": "The link may be wrong, or the page has moved."
+  }
+}

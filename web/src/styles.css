@@ -1,0 +1,21 @@
+/* Global styles. Colors come only from design tokens (SPEC §15) — never hex values here or in components. */
+@import 'tailwindcss';
+@import './styles/tokens.css';
+@import './styles/tokens.tailwind.css';
+@import './styles/base.css';
+@import './styles/rdoc.css';
+
+/* Tailwind v4 dark variant follows our data-theme / system resolution. */
+@custom-variant dark {
+  :root[data-theme='dark'] & {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) & {
+      @slot;
+    }
+  }
+}
+
+@custom-variant rtl (&:where([dir='rtl'], [dir='rtl'] *));
+@custom-variant ltr (&:where([dir='ltr'], [dir='ltr'] *));
