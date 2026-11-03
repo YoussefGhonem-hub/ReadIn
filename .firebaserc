@@ -2,5 +2,17 @@
   "projects": {
     "default": "demo-readin",
     "prod": "readin-cca78"
+  },
+  "targets": {
+    "demo-readin": {
+      "database": {
+        "live": ["demo-readin"]
+      }
+    },
+    "readin-cca78": {
+      "database": {
+        "live": ["readin-cca78-default-rtdb"]
+      }
+    }
   }
 }
