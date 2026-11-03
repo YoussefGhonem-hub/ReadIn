@@ -1,0 +1,54 @@
+{
+  "slug": "composite-index-column-order",
+  "field": "databases",
+  "topic": "indexing",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Column Order in a Composite Index Decides Which Queries It Helps",
+      "subtitle": "An index on (A, B) is sorted by A first, so it seeks on A, or on A and B, but a filter on B alone has to read the whole thing."
+    },
+    "ar-EG": {
+      "title": "ترتيب الأعمدة في الـ composite index بيحدد هيفيد أنهي queries",
+      "subtitle": "الـ index على (A, B) مترتب بـ A الأول، فبيعمل seek على A أو على A و B، لكن شرط على B لوحده لازم يقرا الـ index كله."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "sql-performance",
+    "order": 2
+  },
+  "tags": [
+    "Indexing",
+    "Composite Index",
+    "SQL Server",
+    "PostgreSQL"
+  ],
+  "sources": [
+    {
+      "title": "Multicolumn Indexes — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/indexes-multicolumn.html"
+    },
+    {
+      "title": "Index Architecture and Design Guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/sql-server-index-design-guide"
+    },
+    {
+      "title": "Indexes and ORDER BY — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/indexes-ordering.html"
+    },
+    {
+      "title": "Concatenated Indexes — Use The Index, Luke",
+      "url": "https://use-the-index-luke.com/sql/where-clause/the-equals-operator/concatenated-keys"
+    },
+    {
+      "title": "Greater, Less and BETWEEN — Use The Index, Luke",
+      "url": "https://use-the-index-luke.com/sql/where-clause/searching-for-ranges/greater-less-between-tuning-sql-access-filter-predicates"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

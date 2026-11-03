@@ -1,0 +1,54 @@
+{
+  "slug": "reading-execution-plans-without-myths",
+  "field": "databases",
+  "topic": "query-tuning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "How to Read an Execution Plan Without Trusting the Cost Percentages",
+      "subtitle": "Cost percentages are the optimizer's predictions, even in an actual plan. Where the time went is in the actual rows, times and reads."
+    },
+    "ar-EG": {
+      "title": "إزاي تقرا الـ execution plan من غير ما تصدّق نسب الـ cost",
+      "subtitle": "نسب الـ cost هي توقعات الـ optimizer، حتى في الـ actual plan. والوقت راح فين بتلاقيه في الـ rows والأوقات والـ reads الفعلية."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "sql-performance",
+    "order": 4
+  },
+  "tags": [
+    "Execution Plans",
+    "Query Tuning",
+    "SQL Server",
+    "PostgreSQL"
+  ],
+  "sources": [
+    {
+      "title": "Using EXPLAIN — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/using-explain.html"
+    },
+    {
+      "title": "Execution Plan Overview — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/performance/execution-plans"
+    },
+    {
+      "title": "Display an Actual Execution Plan — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/performance/display-an-actual-execution-plan"
+    },
+    {
+      "title": "Query Processing Architecture Guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/query-processing-architecture-guide"
+    },
+    {
+      "title": "Scalar UDF Inlining — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/user-defined-functions/scalar-udf-inlining"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

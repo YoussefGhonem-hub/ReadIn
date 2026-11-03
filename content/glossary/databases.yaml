@@ -1,0 +1,149 @@
+terms:
+  - id: selectivity
+    term: Selectivity
+    definitionEn: >-
+      The share of a table's rows that a filter matches. A filter matching 0.1% of rows is highly selective; one
+      matching 90% is not, and an ordinary index rarely helps it.
+    definitionAr: >-
+      نسبة الـ rows اللي الشرط بيطابقها من الجدول. شرط بيطابق 0.1% من الـ rows يبقى selective جدًا، وشرط بيطابق
+      90% مش selective، والـ index العادي نادرًا ما بيفيده.
+  - id: key-lookup
+    term: Key lookup
+    definitionEn: >-
+      In SQL Server, the extra step that fetches the rest of a row from the clustered index after a nonclustered
+      index found it, because the nonclustered index doesn't hold every column the query needs. PostgreSQL does the
+      same with a heap fetch.
+    definitionAr: >-
+      في SQL Server، الخطوة الزيادة اللي بتجيب باقي الـ row من الـ clustered index بعد ما الـ nonclustered index
+      لقاه، لأن الـ nonclustered index مش شايل كل الأعمدة اللي الـ query محتاجاها. والـ PostgreSQL بيعمل نفس
+      الحكاية بـ heap fetch.
+  - id: composite-index
+    term: Composite index
+    definitionEn: >-
+      An index on two or more columns, sorted by the first column, then by the second within each value of the
+      first, and so on. Also called a multicolumn or concatenated index.
+    definitionAr: >-
+      index على عمودين أو أكتر، مترتب بالعمود الأول، وبعدين بالتاني جوه كل قيمة من الأول، وهكذا. واسمه كمان
+      multicolumn أو concatenated index.
+  - id: index-seek
+    term: Index seek
+    definitionEn: >-
+      Navigating a B-tree index from its root straight to the first matching entry and reading only the matching
+      range, instead of reading every entry the way an index scan does.
+    definitionAr: >-
+      إن الـ engine ينزل في الـ B-tree من الـ root لحد أول entry مطابق على طول، ويقرا الجزء المطابق بس، بدل ما
+      يقرا كل الـ entries زي ما الـ index scan بيعمل.
+  - id: skip-scan
+    term: Skip scan
+    definitionEn: >-
+      A PostgreSQL 18 B-tree optimization that uses a composite index without a condition on its leading column by
+      running one search per distinct leading value. It pays off only when the leading column has few distinct values.
+    definitionAr: >-
+      optimization في B-tree بتاع PostgreSQL 18 بيستخدم الـ composite index من غير شرط على أول عمود فيه، عن طريق
+      search لكل قيمة مختلفة في العمود ده. وبيفرق بس لما أول عمود يكون فيه قيم مختلفة قليلة.
+  - id: round-trip
+    term: Round trip
+    definitionEn: >-
+      One request from the application to the database and its response: sending a statement, waiting while it runs,
+      and reading the result back. Its network and driver cost is paid per statement, however fast the statement is.
+    definitionAr: >-
+      رحلة واحدة من التطبيق للداتابيز ورجوعها: إنك تبعت statement، وتستنى لحد ما تتنفذ، وتقرا النتيجة. وتمنها في
+      الشبكة والـ driver بيتدفع مع كل statement، مهما كانت سريعة.
+  - id: query-store
+    term: Query Store
+    definitionEn: >-
+      A SQL Server and Azure SQL feature that records each query's text, plans and runtime statistics (executions,
+      duration, reads, rows) per time interval, inside the database. It's on by default for new databases starting
+      with SQL Server 2022.
+    definitionAr: >-
+      feature في SQL Server و Azure SQL بتسجّل لكل query الـ text والـ plans والـ runtime statistics بتاعتها (عدد
+      مرات التنفيذ والمدة والـ reads والـ rows) على فترات زمنية، جوه الداتابيز نفسها. وبتبقى شغالة default في
+      الداتابيز الجديدة من أول SQL Server 2022.
+  - id: execution-plan
+    term: Execution plan
+    definitionEn: >-
+      The tree of operators (scans, seeks, joins, sorts) the database chooses to run a query. An estimated plan shows
+      only the optimizer's predictions; an actual plan adds what happened at run time, such as actual rows and time.
+    definitionAr: >-
+      شجرة الـ operators (scans و seeks و joins و sorts) اللي الداتابيز بتختارها عشان تشغّل الـ query. الـ estimated
+      plan بيوريك توقعات الـ optimizer بس، والـ actual plan بيزوّد اللي حصل فعلًا وقت التشغيل، زي عدد الـ rows والوقت.
+  - id: cardinality-estimate
+    term: Cardinality estimate
+    definitionEn: >-
+      The optimizer's prediction of how many rows each step of a plan will produce, computed from statistics. Plan
+      costs are built on these estimates, so a wrong estimate makes every cost above it wrong too.
+    definitionAr: >-
+      توقع الـ optimizer لعدد الـ rows اللي كل خطوة في الـ plan هتطلّعها، ومحسوب من الـ statistics. وتكاليف الـ plan
+      مبنية على التوقعات دي، فلو التوقع غلط، كل cost فوقه بيبقى غلط برضه.
+  - id: sargable
+    term: Sargable
+    definitionEn: >-
+      Short for "search argument-able": a WHERE condition the database can answer by seeking in an index, because it
+      compares the indexed column as stored, such as CreatedAt >= @from, rather than a function or calculation on it.
+    definitionAr: >-
+      اختصار لـ "search argument-able": شرط في الـ WHERE الداتابيز تقدر تجاوبه بـ seek في index، لأنه بيقارن
+      العمود اللي عليه الـ index زي ما هو متخزّن، زي CreatedAt >= @from، مش function أو حسبة عليه.
+  - id: implicit-conversion
+    term: Implicit conversion
+    definitionEn: >-
+      A data type conversion the database adds on its own when a comparison mixes types. When the converted side is
+      the indexed column, as with a varchar column compared to an nvarchar parameter in SQL Server, the index can't
+      be used for a seek.
+    definitionAr: >-
+      تحويل type بتضيفه الداتابيز من نفسها لما مقارنة تخلط بين types مختلفة. ولو الناحية اللي اتحولت هي العمود
+      اللي عليه الـ index، زي عمود varchar بيتقارن بـ parameter نوعه nvarchar في SQL Server، الـ index مايتستخدمش
+      في seek.
+  - id: covering-index
+    term: Covering index
+    definitionEn: >-
+      An index that holds every column a query needs, as key or included columns, so the database answers the query
+      from the index alone, without fetching rows from the table. PostgreSQL runs such a query as an index-only scan.
+    definitionAr: >-
+      index شايل كل الأعمدة اللي الـ query محتاجاها، كـ key أو included columns، فالداتابيز تجاوب الـ query من الـ
+      index لوحده من غير ما تجيب rows من الجدول. والـ PostgreSQL بيشغّل الـ query دي كـ index-only scan.
+  - id: memory-grant
+    term: Memory grant
+    definitionEn: >-
+      The memory SQL Server reserves for a query's sorts and hash operations before it starts running, sized from
+      the estimated row count and row width. Too large wastes memory other queries could use; too small spills to
+      disk.
+    definitionAr: >-
+      الـ memory اللي SQL Server بيحجزها للـ sorts وعمليات الـ hash بتاعة الـ query قبل ما تبدأ، وحجمها محسوب من
+      عدد الـ rows وعرضها المتوقعين. لو كبيرة زيادة بتضيّع memory كانت queries تانية محتاجاها، ولو صغيرة بتعمل
+      spill على الـ disk.
+  - id: clustered-index
+    term: Clustered index
+    definitionEn: >-
+      In SQL Server, the index whose leaf level is the table itself: every row, stored in the order of the index key.
+      A table has at most one, and its key is also copied into every nonclustered index as the row locator.
+    definitionAr: >-
+      في SQL Server، الـ index اللي الـ leaf level بتاعه هو الجدول نفسه: كل الـ rows متخزّنة بترتيب الـ key بتاعه.
+      الجدول ليه واحد بس على الأكتر، والـ key بتاعه بيتنسخ كمان في كل nonclustered index كـ row locator.
+  - id: page-split
+    term: Page split
+    definitionEn: >-
+      What happens when a row must go into a full index page: the engine allocates a new page and moves about half
+      the rows to it. Inserts at random key positions cause many splits, leaving pages partly empty and out of order.
+    definitionAr: >-
+      اللي بيحصل لما row لازم يدخل page مليانة في الـ index: الـ engine بيحجز page جديدة وينقل لها حوالي نص الـ
+      rows. والـ inserts في أماكن عشوائية من الـ key بتعمل splits كتير، وتسيب pages نصها فاضي ومش مترتبة.
+  - id: statistics-histogram
+    term: Histogram (statistics)
+    definitionEn: >-
+      The summary of a column's value distribution that the optimizer reads to estimate row counts: in SQL Server, up
+      to 200 steps, each with an upper bound and row counts; in PostgreSQL, bucket bounds plus a list of the most
+      common values. It's built from a sample or a full scan and goes stale as data changes.
+    definitionAr: >-
+      ملخص توزيع القيم في عمود، والـ optimizer بيقراه عشان يتوقع عدد الـ rows: في SQL Server لحد 200 step، كل واحدة
+      ليها حد أعلى وعدد rows، وفي PostgreSQL حدود buckets ومعاها لستة بأكتر القيم تكرارًا. بيتبني من sample أو full
+      scan، وبيبقى قديم كل ما الداتا تتغيّر.
+  - id: parameter-sniffing
+    term: Parameter sniffing
+    definitionEn: >-
+      SQL Server's practice of compiling a parameterized query or stored procedure using the parameter values of the
+      call that triggers the compilation, then reusing that plan for later calls with any values. Microsoft also calls
+      it parameter sensitivity.
+    definitionAr: >-
+      إن SQL Server بيعمل compile للـ parameterized query أو الـ stored procedure بقيم الـ parameters بتاعة الـ call
+      اللي عمل الـ compile، وبعدين بيعيد استخدام الـ plan دي مع الـ calls اللي بعدها بأي قيم. و Microsoft بتسميها كمان
+      parameter sensitivity.

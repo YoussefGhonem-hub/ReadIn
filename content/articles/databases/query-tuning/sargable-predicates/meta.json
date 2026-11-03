@@ -1,0 +1,54 @@
+{
+  "slug": "sargable-predicates",
+  "field": "databases",
+  "topic": "query-tuning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why WHERE YEAR(CreatedAt) = 2026 Skips Your Index: Sargable Predicates",
+      "subtitle": "An index can seek only on the values it stores. Wrap the column in a function, a leading wildcard or a type conversion, and every entry has to be read."
+    },
+    "ar-EG": {
+      "title": "ليه WHERE YEAR(CreatedAt) = 2026 مش بيستخدم الـ index؟ الـ sargable predicates",
+      "subtitle": "الـ index يقدر يعمل seek بس على القيم اللي متخزّنة فيه. لو لفّيت العمود في function أو wildcard في الأول أو تحويل type، كل entry لازم يتقري."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "sql-performance",
+    "order": 5
+  },
+  "tags": [
+    "Sargable",
+    "Indexing",
+    "SQL Server",
+    "PostgreSQL"
+  ],
+  "sources": [
+    {
+      "title": "Index Architecture and Design Guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/sql-server-index-design-guide"
+    },
+    {
+      "title": "Data Type Precedence (Transact-SQL) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/t-sql/data-types/data-type-precedence-transact-sql"
+    },
+    {
+      "title": "Index Types — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/indexes-types.html"
+    },
+    {
+      "title": "Indexes on Expressions — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/indexes-expressional.html"
+    },
+    {
+      "title": "Indexes on Computed Columns — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/indexes/indexes-on-computed-columns"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

@@ -1,0 +1,46 @@
+{
+  "slug": "parameter-sniffing-and-plan-reuse",
+  "field": "databases",
+  "topic": "sql-server",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Same Query, Different Speed: Parameter Sniffing and Plan Reuse in SQL Server",
+      "subtitle": "A cached plan is built for the values of one call and reused for all of them. On skewed data, who calls first decides how fast everyone else runs."
+    },
+    "ar-EG": {
+      "title": "نفس الـ query بسرعات مختلفة: الـ parameter sniffing وإعادة استخدام الـ plan في SQL Server",
+      "subtitle": "الـ plan اللي في الـ cache بتتبني لقيم call واحدة وبتتستخدم مع الكل. وعلى داتا مايلة، اللي بينادي الأول بيحدد سرعة كل اللي بعده."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "SQL Server 2025",
+  "learningPath": {
+    "slug": "sql-performance",
+    "order": 10
+  },
+  "tags": [
+    "SQL Server",
+    "Parameter Sniffing",
+    "Execution Plans",
+    "Query Tuning"
+  ],
+  "sources": [
+    {
+      "title": "Query Processing Architecture Guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/query-processing-architecture-guide"
+    },
+    {
+      "title": "Parameter Sensitive Plan Optimization — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/performance/parameter-sensitive-plan-optimization"
+    },
+    {
+      "title": "Optional Parameter Plan Optimization — SQL Server 2025, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/performance/optional-parameter-optimization"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

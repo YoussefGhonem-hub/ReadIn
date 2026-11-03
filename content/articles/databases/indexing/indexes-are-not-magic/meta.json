@@ -1,0 +1,54 @@
+{
+  "slug": "indexes-are-not-magic",
+  "field": "databases",
+  "topic": "indexing",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Indexes Are Not Magic: The Write, Storage and Selectivity Costs of Every Index",
+      "subtitle": "Every index is a sorted copy the database keeps in sync on every write, and the optimizer skips it when the filter isn't selective enough."
+    },
+    "ar-EG": {
+      "title": "الـ indexes مش سحر: كل index بيكلّفك إيه في الـ writes والمساحة والـ selectivity",
+      "subtitle": "كل index نسخة مترتبة الداتابيز لازم تحدّثها مع كل write، والـ optimizer بيتجاهلها لو الشرط مش selective كفاية."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "sql-performance",
+    "order": 1
+  },
+  "tags": [
+    "Indexing",
+    "SQL Server",
+    "PostgreSQL",
+    "Performance"
+  ],
+  "sources": [
+    {
+      "title": "Index Architecture and Design Guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/sql-server-index-design-guide"
+    },
+    {
+      "title": "Indexes: Introduction — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/indexes-intro.html"
+    },
+    {
+      "title": "Examining Index Usage — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/indexes-examine.html"
+    },
+    {
+      "title": "sys.dm_db_index_usage_stats — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-db-index-usage-stats-transact-sql"
+    },
+    {
+      "title": "The Cumulative Statistics System — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/monitoring-stats.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

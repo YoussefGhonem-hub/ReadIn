@@ -1,0 +1,54 @@
+{
+  "slug": "guid-keys-and-clustered-indexes",
+  "field": "databases",
+  "topic": "sql-server",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why UUIDv7 Keys Still Fragment SQL Server Clustered Indexes",
+      "subtitle": "UUIDv7 is ordered from its first byte; SQL Server sorts uniqueidentifier values from the last six. To SQL Server, a UUIDv7 key arrives in random order."
+    },
+    "ar-EG": {
+      "title": "ليه الـ UUIDv7 مش sequential في SQL Server؟ الـ GUID keys والـ clustered indexes",
+      "subtitle": "الـ UUIDv7 مترتب من أول byte، و SQL Server بيرتّب قيم الـ uniqueidentifier من آخر 6. فبالنسبة لـ SQL Server، الـ key ده بيوصل بترتيب عشوائي."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "SQL Server 2025",
+  "learningPath": {
+    "slug": "sql-performance",
+    "order": 8
+  },
+  "tags": [
+    "SQL Server",
+    "GUID",
+    "UUIDv7",
+    "Clustered Index"
+  ],
+  "sources": [
+    {
+      "title": "Comparing GUID and uniqueidentifier Values — ADO.NET, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/connect/ado-net/sql/compare-guid-uniqueidentifier-values"
+    },
+    {
+      "title": "NEWSEQUENTIALID (Transact-SQL) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/t-sql/functions/newsequentialid-transact-sql"
+    },
+    {
+      "title": "Guid.CreateVersion7 Method — .NET API, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.guid.createversion7"
+    },
+    {
+      "title": "RFC 9562: Universally Unique IDentifiers (UUIDs) — RFC Editor",
+      "url": "https://www.rfc-editor.org/rfc/rfc9562.html"
+    },
+    {
+      "title": "SQL Server Provider: Value Generation — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/providers/sql-server/value-generation"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

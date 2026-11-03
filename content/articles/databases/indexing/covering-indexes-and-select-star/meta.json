@@ -1,0 +1,50 @@
+{
+  "slug": "covering-indexes-and-select-star",
+  "field": "databases",
+  "topic": "indexing",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "SELECT * Costs More Than Bandwidth: Covering Indexes and Key Lookups",
+      "subtitle": "Every column outside the index costs a lookup per row, and past a few thousand rows a full table scan. Name the columns, then cover the queries that matter."
+    },
+    "ar-EG": {
+      "title": "الـ SELECT * بيكلّف أكتر من الـ bandwidth: الـ covering indexes والـ key lookups",
+      "subtitle": "كل عمود برّه الـ index بيكلّف lookup لكل row، وبعد كام ألف row بيكلّف scan للجدول كله. سمّي الأعمدة، وبعدين غطّي الـ queries المهمة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "sql-performance",
+    "order": 6
+  },
+  "tags": [
+    "Covering Indexes",
+    "Indexing",
+    "SQL Server",
+    "PostgreSQL"
+  ],
+  "sources": [
+    {
+      "title": "Create Indexes with Included Columns — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/indexes/create-indexes-with-included-columns"
+    },
+    {
+      "title": "Index-Only Scans and Covering Indexes — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/indexes-index-only-scans.html"
+    },
+    {
+      "title": "Index Architecture and Design Guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/sql-server-index-design-guide"
+    },
+    {
+      "title": "Memory Grant Feedback — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/performance/intelligent-query-processing-memory-grant-feedback"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

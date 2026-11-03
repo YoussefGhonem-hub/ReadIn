@@ -1,0 +1,50 @@
+{
+  "slug": "statistics-and-cardinality-estimates",
+  "field": "databases",
+  "topic": "query-tuning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The Optimizer Is Guessing: Statistics, Cardinality Estimates and Bad Plans",
+      "subtitle": "Row counts in a plan are predictions from sampled, aging statistics and fixed assumptions. When they're wrong, so is every choice built on them."
+    },
+    "ar-EG": {
+      "title": "الـ optimizer بيخمّن: الـ statistics والـ cardinality estimates والـ plans الوحشة",
+      "subtitle": "عدد الـ rows في الـ plan توقع من statistics معمولة من sample وبتقدم، ومن assumptions ثابتة. ولما يغلط، كل قرار مبني عليه بيغلط معاه."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "sql-performance",
+    "order": 9
+  },
+  "tags": [
+    "Statistics",
+    "Cardinality Estimation",
+    "SQL Server",
+    "PostgreSQL"
+  ],
+  "sources": [
+    {
+      "title": "Statistics — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/statistics/statistics"
+    },
+    {
+      "title": "Cardinality Estimation (SQL Server) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/performance/cardinality-estimation-sql-server"
+    },
+    {
+      "title": "Statistics Used by the Planner — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/planner-stats.html"
+    },
+    {
+      "title": "Row Estimation Examples — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/row-estimation-examples.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

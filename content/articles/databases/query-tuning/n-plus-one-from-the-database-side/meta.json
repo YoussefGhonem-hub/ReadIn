@@ -1,0 +1,54 @@
+{
+  "slug": "n-plus-one-from-the-database-side",
+  "field": "databases",
+  "topic": "query-tuning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Every Query Is Fast but the Page Is Slow: Spotting N+1 from the Database Side",
+      "subtitle": "N+1 never shows up as a slow query. It shows up as a cheap one that runs thousands of times, and you find it by sorting on executions, not on average duration."
+    },
+    "ar-EG": {
+      "title": "كل query سريعة بس الصفحة بطيئة: إزاي تكتشف الـ N+1 من ناحية الـ database",
+      "subtitle": "الـ N+1 عمره ما بيظهر كـ query بطيئة. بيظهر كـ query رخيصة بتتنفذ آلاف المرات، وبتلاقيه لما ترتّب بعدد مرات التنفيذ، مش بمتوسط المدة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "sql-performance",
+    "order": 3
+  },
+  "tags": [
+    "N+1",
+    "Query Store",
+    "pg_stat_statements",
+    "Performance"
+  ],
+  "sources": [
+    {
+      "title": "pg_stat_statements — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/pgstatstatements.html"
+    },
+    {
+      "title": "Monitor Performance by Using the Query Store — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/performance/monitoring-performance-by-using-the-query-store"
+    },
+    {
+      "title": "sys.dm_exec_query_stats — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-objects/sys-dm-exec-query-stats-transact-sql"
+    },
+    {
+      "title": "sys.query_store_runtime_stats — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-query-store-runtime-stats-transact-sql"
+    },
+    {
+      "title": "Error Reporting and Logging: log_min_duration_statement — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/runtime-config-logging.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

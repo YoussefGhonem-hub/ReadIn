@@ -1,0 +1,54 @@
+{
+  "slug": "offset-vs-keyset-pagination",
+  "field": "databases",
+  "topic": "query-tuning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Page 1,000 Is Slower Than Page 1: OFFSET vs Keyset Pagination",
+      "subtitle": "OFFSET reads and throws away every row before the page you asked for. Keyset pagination seeks past the last row you saw, at the same cost on any page."
+    },
+    "ar-EG": {
+      "title": "ليه الصفحة رقم 1000 أبطأ من الصفحة الأولى؟ الـ OFFSET والـ keyset pagination",
+      "subtitle": "الـ OFFSET بيقرا ويرمي كل row قبل الصفحة اللي طلبتها. والـ keyset pagination بتعمل seek بعد آخر row شفته، بنفس التمن في أي صفحة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "sql-performance",
+    "order": 7
+  },
+  "tags": [
+    "Pagination",
+    "Keyset Pagination",
+    "SQL Server",
+    "PostgreSQL"
+  ],
+  "sources": [
+    {
+      "title": "LIMIT and OFFSET — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/queries-limit.html"
+    },
+    {
+      "title": "ORDER BY Clause (Transact-SQL): OFFSET and FETCH — Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/t-sql/queries/select-order-by-clause-transact-sql"
+    },
+    {
+      "title": "Pagination — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/pagination"
+    },
+    {
+      "title": "Fetching the Next Page: the Seek Method — Use The Index, Luke",
+      "url": "https://use-the-index-luke.com/sql/partial-results/fetch-next-page"
+    },
+    {
+      "title": "Row Constructor Comparison — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/functions-comparisons.html#ROW-WISE-COMPARISON"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
