@@ -1,0 +1,42 @@
+{
+  "slug": "preprocessing-leakage-use-pipelines",
+  "field": "machine-learning",
+  "topic": "scikit-learn",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Scaling Before Splitting Leaks the Test Set: Why Pipelines Matter",
+      "subtitle": "Every preprocessing step learns from the rows it is fitted on. Fit it before the split and the test rows help train the model."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Scaling قبل تقسيم البيانات بيسرّب الـ test set؟ أهمية الـ Pipelines",
+      "subtitle": "كل خطوة preprocessing بتتعلّم من الصفوف اللي بتعملها fit عليها. لو عملتها قبل التقسيم، صفوف الـ test بتشارك في تدريب الموديل."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "evaluating-models", "order": 6 },
+  "tags": ["Data Leakage", "Pipelines", "scikit-learn", "Model Evaluation"],
+  "sources": [
+    {
+      "title": "Common pitfalls and recommended practices — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/common_pitfalls.html"
+    },
+    {
+      "title": "Pipelines and composite estimators — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/compose.html"
+    },
+    {
+      "title": "Kapoor and Narayanan, Leakage and the Reproducibility Crisis in ML-based Science (2022)",
+      "url": "https://arxiv.org/abs/2207.07048"
+    },
+    {
+      "title": "Moscovich and Rosset, On the cross-validation bias due to unsupervised pre-processing (2022)",
+      "url": "https://arxiv.org/abs/1901.08974"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

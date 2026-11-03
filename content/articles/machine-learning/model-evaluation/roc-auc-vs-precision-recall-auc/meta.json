@@ -1,0 +1,46 @@
+{
+  "slug": "roc-auc-vs-precision-recall-auc",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "ROC AUC Can Look Great on Rare Positives: When to Use Precision-Recall Curves",
+      "subtitle": "ROC AUC barely notices how rare the positives are, so it can't tell you how many false alarms come with each catch. Precision can."
+    },
+    "ar-EG": {
+      "title": "إمتى الـ ROC AUC يخدعك؟ ولما الـ positives نادرة تستخدم Precision-Recall",
+      "subtitle": "الـ ROC AUC بالعافية بياخد باله الـ positives نادرة قد إيه، فمايقدرش يقولك كل حالة بتمسكها جاية معاها كام إنذار غلط. الـ precision يقدر."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "evaluating-models", "order": 10 },
+  "tags": ["Model Evaluation", "ROC AUC", "Precision", "Imbalanced Data"],
+  "sources": [
+    {
+      "title": "Classification: ROC and AUC — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc"
+    },
+    {
+      "title": "Saito and Rehmsmeier, The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets (PLOS ONE, 2015)",
+      "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118432"
+    },
+    {
+      "title": "McDermott et al., A Closer Look at AUROC and AUPRC under Class Imbalance (2024)",
+      "url": "https://arxiv.org/abs/2401.06091"
+    },
+    {
+      "title": "Precision-Recall — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html"
+    },
+    {
+      "title": "Metrics and scoring: quantifying the quality of predictions — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/model_evaluation.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

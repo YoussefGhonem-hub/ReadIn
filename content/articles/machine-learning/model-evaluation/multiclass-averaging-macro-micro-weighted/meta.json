@@ -1,0 +1,42 @@
+{
+  "slug": "multiclass-averaging-macro-micro-weighted",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Macro, Micro or Weighted? How Averaging Hides Your Worst Class",
+      "subtitle": "Each average decides how much every class counts. Micro F1 is accuracy, weighted F1 follows the biggest class, and only per-class scores show the one that's failing."
+    },
+    "ar-EG": {
+      "title": "إزاي الـ averaging بيخبّي أسوأ class عندك؟ الفرق بين Macro وMicro وWeighted",
+      "subtitle": "كل average بيقرّر كل class هتتحسب بوزن قد إيه. الـ micro F1 هو الـ accuracy، والـ weighted بيمشي ورا أكبر class، والأرقام لكل class بس هي اللي بتبيّن مين اللي واقع."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "evaluating-models", "order": 11 },
+  "tags": ["Model Evaluation", "F1 Score", "Multiclass Classification", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Metrics and scoring: quantifying the quality of predictions — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/model_evaluation.html"
+    },
+    {
+      "title": "f1_score — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html"
+    },
+    {
+      "title": "classification_report — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html"
+    },
+    {
+      "title": "Opitz and Burst, Macro F1 and Macro F1 (arXiv 2019)",
+      "url": "https://arxiv.org/abs/1911.03347"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

@@ -1,0 +1,46 @@
+{
+  "slug": "predict-proba-is-not-a-probability",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "What predict_proba Really Means: Probability Calibration Explained",
+      "subtitle": "A score between 0 and 1 is only a probability if the model is calibrated. Check it with a calibration curve and fix it with CalibratedClassifierCV."
+    },
+    "ar-EG": {
+      "title": "ليه الـ predict_proba مش احتمال حقيقي؟ يعني إيه Calibration",
+      "subtitle": "الـ score اللي بين 0 و1 مابيبقاش احتمال غير لو الموديل calibrated. اكشف عليه بـ calibration curve، وصلّحه بـ CalibratedClassifierCV."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "evaluating-models", "order": 14 },
+  "tags": ["Model Evaluation", "Probability Calibration", "Classification", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Probability calibration — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/calibration.html"
+    },
+    {
+      "title": "Probability Calibration curves — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/calibration/plot_calibration_curve.html"
+    },
+    {
+      "title": "CalibratedClassifierCV — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.calibration.CalibratedClassifierCV.html"
+    },
+    {
+      "title": "Niculescu-Mizil and Caruana, Predicting Good Probabilities With Supervised Learning (ICML 2005)",
+      "url": "https://www.cs.cornell.edu/~alexn/papers/calibration.icml05.crc.rev3.pdf"
+    },
+    {
+      "title": "Guo et al., On Calibration of Modern Neural Networks (ICML 2017)",
+      "url": "https://arxiv.org/abs/1706.04599"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

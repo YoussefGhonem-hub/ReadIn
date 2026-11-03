@@ -129,3 +129,21 @@ terms:
       الـ field اللي اسمه stop_reason في كل response ناجح من Claude API، وبيقول Claude وقف ليه: end_turn أو max_tokens أو
       stop_sequence أو tool_use أو pause_turn أو refusal أو model_context_window_exceeded. والـ end_turn بس معناها إن Claude
       خلّص إجابته لوحده.
+  - id: exponential-backoff
+    term: Exponential backoff
+    definitionEn: >-
+      A retry strategy that waits longer after each failed attempt, typically doubling the delay, so clients that
+      failed together don't all retry at the same moment. The official Claude SDKs use it for their automatic retries.
+    definitionAr: >-
+      طريقة retry بتستنى وقت أطول بعد كل محاولة فاشلة، غالبًا ضعف اللي قبله، عشان الـ clients اللي فشلوا مع بعض ميرجعوش
+      كلهم في نفس اللحظة. والـ SDKs الرسمية بتاعة Claude بتستخدمها في الـ retries الأوتوماتيك بتاعتها.
+  - id: rate-limit
+    term: Rate limit (Claude API)
+    definitionEn: >-
+      A cap on how much an organization can use the Claude API over time, measured per model class in requests, input
+      tokens and output tokens per minute. Going over it returns a 429 rate_limit_error, usually with a retry-after
+      header that says how many seconds to wait.
+    definitionAr: >-
+      حد أقصى للاستخدام اللي الـ organization تقدر تعمله على Claude API في فترة زمنية، بيتقاس لكل نوع موديل بالـ requests
+      والـ input tokens والـ output tokens في الدقيقة. ولو عديته بيرجع 429 rate_limit_error، وغالبًا معاه header اسمه
+      retry-after بيقولك تستنى كام ثانية.

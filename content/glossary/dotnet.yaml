@@ -295,3 +295,11 @@ terms:
     term: Migration bundle
     definitionEn: A single-file executable, built with dotnet ef migrations bundle, that applies an app's EF Core migrations to a database. It runs without the .NET SDK, the EF tools or the source code, which makes it a deployment artifact you build in CI and run in the deploy step.
     definitionAr: ملف تنفيذي واحد بيتعمل بـ dotnet ef migrations bundle، وبيطبّق الـ EF Core migrations بتاعة التطبيق على الداتابيز. بيشتغل من غير الـ .NET SDK ولا الـ EF tools ولا الـ source code، فبيبقى deployment artifact بتبنيه في الـ CI وتشغّله في خطوة الـ deploy.
+  - id: collation
+    term: Collation
+    definitionEn: The rules a database uses to compare and sort text, including whether 'Ana' equals 'ana' and how accents are treated. SQL Server compares strings case-insensitively by default, while SQLite and C# compare them case-sensitively.
+    definitionAr: القواعد اللي الداتابيز بتستخدمها عشان تقارن النصوص وترتّبها، زي هل 'Ana' تساوي 'ana' وبتتعامل مع التشكيل والـ accents إزاي. الـ SQL Server بيقارن النصوص من غير ما يفرّق بين الـ capital والـ small كـ default، أما SQLite و C# فبيفرّقوا.
+  - id: test-double
+    term: Test double
+    definitionEn: Any object that replaces a real dependency in a test, such as a fake with a simplified working implementation, a stub that returns canned answers, or a mock that checks how it was called.
+    definitionAr: أي object بياخد مكان dependency حقيقية في الـ test، زي fake فيه implementation مبسّطة شغالة، أو stub بيرجّع إجابات جاهزة، أو mock بيتأكد اتنادى إزاي.

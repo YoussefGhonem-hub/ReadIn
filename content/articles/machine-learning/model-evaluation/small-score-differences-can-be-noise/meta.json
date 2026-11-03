@@ -1,0 +1,42 @@
+{
+  "slug": "small-score-differences-can-be-noise",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "A 0.5% Better Score Might Be Noise: Comparing Models Properly",
+      "subtitle": "One split is one draw. Compare candidates on the same repeated splits, correct for overlapping folds, and a small win often turns into a tie."
+    },
+    "ar-EG": {
+      "title": "تحسّن 0.5% في الـ score ممكن يكون صدفة: إزاي تقارن الموديلات صح",
+      "subtitle": "الـ split الواحد سحبة واحدة. قارن الموديلات على نفس الـ splits المتكررة، وصحّح لتداخل الـ folds، وساعتها مكسب صغير كتير بيطلع تعادل."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "evaluating-models", "order": 12 },
+  "tags": ["Model Evaluation", "Model Comparison", "Cross-Validation", "Statistics"],
+  "sources": [
+    {
+      "title": "Statistical comparison of models using grid search — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/model_selection/plot_grid_search_stats.html"
+    },
+    {
+      "title": "Common pitfalls and recommended practices: controlling randomness — scikit-learn",
+      "url": "https://scikit-learn.org/stable/common_pitfalls.html"
+    },
+    {
+      "title": "Nadeau and Bengio, Inference for the Generalization Error (NeurIPS 1999)",
+      "url": "https://papers.nips.cc/paper_files/paper/1999/hash/7d12b66d3df6af8d429c1a357d8b9e1a-Abstract.html"
+    },
+    {
+      "title": "Bouthillier et al., Accounting for Variance in Machine Learning Benchmarks (arXiv 2021)",
+      "url": "https://arxiv.org/abs/2103.03098"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

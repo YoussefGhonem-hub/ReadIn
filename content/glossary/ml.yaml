@@ -425,3 +425,20 @@ terms:
     definitionAr: >-
       متوسط مربع الفرق بين الاحتمالات المتوقعة والنتايج الحقيقية، متسجّلة 1 و0. الأقل أحسن. بيكافئ الـ calibration
       وقدرة الموديل يفصل بين الـ classes مع بعض، فمايقدرش يحكم على الـ calibration لوحده.
+  - id: impurity-importance
+    term: Impurity-Based Feature Importance (MDI)
+    definitionEn: >-
+      A tree ensemble's built-in feature score: how much each feature's splits reduced impurity, such as Gini, summed
+      over all trees. It is computed on the training data and favors features with many distinct values.
+    definitionAr: >-
+      الـ score الجاهز اللي بيطلّعه الـ tree ensemble لكل feature: قد إيه الـ splits بتاعتها قلّلت الـ impurity، زي الـ
+      Gini، متجمّعة على كل الـ trees. بيتحسب على داتا الـ training، وبيحابي الـ features اللي قيمها المختلفة كتير.
+  - id: permutation-importance
+    term: Permutation Importance
+    definitionEn: >-
+      A feature's importance measured as the drop in a model's score when that feature's values are randomly shuffled,
+      usually on held-out data. It shows how much this model relies on the feature, and correlated features can mask
+      each other.
+    definitionAr: >-
+      أهمية الـ feature متقاسة بقد إيه الـ score بتاع الموديل بينزل لما قيمها تتلخبط عشوائيًا، وغالبًا على داتا held-out.
+      بتوضّح الموديل ده معتمد على الـ feature قد إيه، والـ features المرتبطة ببعض ممكن تخبّي بعض.

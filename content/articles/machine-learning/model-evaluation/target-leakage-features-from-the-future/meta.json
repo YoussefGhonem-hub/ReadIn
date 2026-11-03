@@ -1,0 +1,42 @@
+{
+  "slug": "target-leakage-features-from-the-future",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Target Leakage: When a Feature Secretly Contains the Answer",
+      "subtitle": "A column can be true in your historical table and still be unknown when the model has to decide. Cross-validation won't catch it."
+    },
+    "ar-EG": {
+      "title": "لما feature تبقى شايلة الإجابة من غير ما تاخد بالك: يعني إيه Target Leakage",
+      "subtitle": "العمود ممكن يكون صح في الجدول التاريخي، ومع ذلك مايبقاش معروف لحظة ما الموديل لازم يقرر. والـ cross-validation مش هيمسكه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "evaluating-models", "order": 7 },
+  "tags": ["Data Leakage", "Feature Engineering", "Model Evaluation", "MLOps"],
+  "sources": [
+    {
+      "title": "Production ML systems: Monitoring pipelines — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/production-ml-systems/monitoring"
+    },
+    {
+      "title": "Kapoor and Narayanan, Leakage and the Reproducibility Crisis in ML-based Science (2022)",
+      "url": "https://arxiv.org/abs/2207.07048"
+    },
+    {
+      "title": "Rules of Machine Learning — Google for Developers",
+      "url": "https://developers.google.com/machine-learning/guides/rules-of-ml"
+    },
+    {
+      "title": "Common pitfalls and recommended practices — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/common_pitfalls.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

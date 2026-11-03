@@ -1,0 +1,46 @@
+{
+  "slug": "random-splits-fail-on-time-and-groups",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Random Splits Lie on Time Series and Grouped Data",
+      "subtitle": "Shuffled K-fold assumes independent rows. With repeated patients or time-ordered data, split the way production will see new data."
+    },
+    "ar-EG": {
+      "title": "التقسيم العشوائي بيكدب مع الـ Time Series والبيانات المتجمّعة",
+      "subtitle": "الـ K-fold المتلخبط بيفترض إن الصفوف مستقلة. لو عندك نفس المرضى متكررين أو داتا مترتبة بالوقت، قسّم بالطريقة اللي الـ production هيشوف بيها الداتا الجديدة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "evaluating-models", "order": 8 },
+  "tags": ["Model Evaluation", "Cross-Validation", "Time Series", "Data Leakage"],
+  "sources": [
+    {
+      "title": "Cross-validation: evaluating estimator performance — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/cross_validation.html"
+    },
+    {
+      "title": "TimeSeriesSplit — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html"
+    },
+    {
+      "title": "Visualizing cross-validation behavior in scikit-learn — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/model_selection/plot_cv_indices.html"
+    },
+    {
+      "title": "Kapoor and Narayanan, Leakage and the Reproducibility Crisis in ML-based Science (2022)",
+      "url": "https://arxiv.org/abs/2207.07048"
+    },
+    {
+      "title": "Rules of Machine Learning — Google for Developers",
+      "url": "https://developers.google.com/machine-learning/guides/rules-of-ml"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

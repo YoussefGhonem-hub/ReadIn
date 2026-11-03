@@ -1,0 +1,46 @@
+{
+  "slug": "decision-threshold-is-not-fixed",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The 0.5 Threshold Isn't Part of the Model: Tuning the Decision Cut-Off",
+      "subtitle": "A classifier learns probabilities; the cut-off is a business decision applied afterward. Set it from what each mistake costs, without retraining."
+    },
+    "ar-EG": {
+      "title": "ليه الـ 0.5 مش جزء من الموديل؟ إزاي تظبط الـ Decision Threshold",
+      "subtitle": "الـ classifier بيتعلّم احتمالات؛ والـ cutoff قرار business بيتطبّق بعدها. حدّده من تكلفة كل غلطة، من غير ما تعيد الـ training."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "evaluating-models", "order": 9 },
+  "tags": ["Model Evaluation", "Decision Threshold", "Classification", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Tuning the decision threshold for class prediction — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/classification_threshold.html"
+    },
+    {
+      "title": "Post-tuning the decision threshold for cost-sensitive learning — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/model_selection/plot_cost_sensitive_learning.html"
+    },
+    {
+      "title": "Classification: Thresholds and the confusion matrix — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/classification/thresholding"
+    },
+    {
+      "title": "Elkan, The Foundations of Cost-Sensitive Learning (IJCAI 2001)",
+      "url": "https://cseweb.ucsd.edu/~elkan/rescale.pdf"
+    },
+    {
+      "title": "Probability calibration — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/calibration.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

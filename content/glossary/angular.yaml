@@ -223,3 +223,13 @@ terms:
       operator في RxJS زي switchMap أو concatMap أو mergeMap أو exhaustMap، بيحوّل كل قيمة جاية من الـ source لـ inner
       Observable، زي HTTP request، ويعمل عليه subscribe. وكل واحد فيهم بيتعامل بطريقته مع القيمة اللي توصل والـ inner
       Observable اللي قبلها لسه شغال: يلغيه، أو يستناه، أو يشغّلهم مع بعض، أو يتجاهل الجديدة.
+  - id: angular-resource
+    term: Resource (Angular)
+    definitionEn: >-
+      An Angular object, created with resource(), rxResource() or httpResource(), that loads async data from params
+      computed from signals and exposes its value, status, error and loading state as signals. When the params change,
+      it aborts the pending load and starts a new one.
+    definitionAr: >-
+      object في Angular بيتعمل بـ resource() أو rxResource() أو httpResource()، بيحمّل داتا async من params بتتحسب من
+      signals، ويعرض القيمة والـ status والـ error وحالة التحميل كـ signals. ولما الـ params تتغير، بيلغي التحميل اللي
+      لسه شغال ويبدأ واحد جديد.

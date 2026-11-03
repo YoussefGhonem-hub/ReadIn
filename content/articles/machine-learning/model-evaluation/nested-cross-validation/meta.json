@@ -1,0 +1,46 @@
+{
+  "slug": "nested-cross-validation",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Your Tuned CV Score Is Optimistic: Nested Cross-Validation Explained",
+      "subtitle": "best_score_ is the score of the luckiest of many candidates. Nested cross-validation puts the whole search inside an outer loop and scores it on rows it never saw."
+    },
+    "ar-EG": {
+      "title": "ليه الـ score بعد الـ tuning متفائل زيادة؟ الـ Nested Cross-Validation ببساطة",
+      "subtitle": "الـ best_score_ هو score أكتر واحد محظوظ وسط مرشّحين كتير. والـ nested cross-validation بيحط الـ search كله جوه loop برّاني ويقيّمه على صفوف عمره ما شافها."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "evaluating-models", "order": 13 },
+  "tags": ["Model Evaluation", "Cross-Validation", "Hyperparameter Tuning", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Nested versus non-nested cross-validation — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/model_selection/plot_nested_cross_validation_iris.html"
+    },
+    {
+      "title": "Tuning the hyper-parameters of an estimator — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/grid_search.html"
+    },
+    {
+      "title": "GridSearchCV — scikit-learn API Reference",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html"
+    },
+    {
+      "title": "Cross-validation: evaluating estimator performance — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/cross_validation.html"
+    },
+    {
+      "title": "Cawley and Talbot, On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation (JMLR 2010)",
+      "url": "https://jmlr.org/papers/v11/cawley10a.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

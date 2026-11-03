@@ -1,0 +1,42 @@
+{
+  "slug": "feature-importance-can-mislead",
+  "field": "machine-learning",
+  "topic": "model-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Feature Importance Can Mislead: Impurity vs Permutation Importance",
+      "subtitle": "feature_importances_ favors columns with many distinct values and is computed on training data. Permutation importance on held-out data is closer to the truth, until correlated features share the credit."
+    },
+    "ar-EG": {
+      "title": "إزاي الـ Feature Importance ممكن تضلّلك؟ Impurity مقابل Permutation Importance",
+      "subtitle": "الـ feature_importances_ بتحابي الأعمدة اللي قيمها كتير ومتحسوبة على داتا الـ training. والـ permutation importance على داتا held-out أقرب للحقيقة، لحد ما features مرتبطة ببعض تقسم الفضل بينها."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "scikit-learn 1.9",
+  "learningPath": { "slug": "evaluating-models", "order": 15 },
+  "tags": ["Model Evaluation", "Feature Importance", "Random Forest", "scikit-learn"],
+  "sources": [
+    {
+      "title": "Permutation feature importance — scikit-learn User Guide",
+      "url": "https://scikit-learn.org/stable/modules/permutation_importance.html"
+    },
+    {
+      "title": "Permutation Importance vs Random Forest Feature Importance (MDI) — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance.html"
+    },
+    {
+      "title": "Permutation Importance with Multicollinear or Correlated Features — scikit-learn examples",
+      "url": "https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance_multicollinear.html"
+    },
+    {
+      "title": "Strobl et al., Bias in random forest variable importance measures: Illustrations, sources and a solution (BMC Bioinformatics 2007)",
+      "url": "https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-8-25"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
