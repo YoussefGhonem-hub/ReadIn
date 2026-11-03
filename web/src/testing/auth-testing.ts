@@ -1,4 +1,4 @@
-import { PLATFORM_ID, signal } from '@angular/core';
+import { PLATFORM_ID, computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -36,6 +36,8 @@ export function testMe(patch: Partial<MeDto> = {}): MeDto {
     mustSetRecoveryPin: false,
     isProfileComplete: true,
     hasRecoveryPin: true,
+    hasPassword: true,
+    externalLogins: [],
     roles: ['Member'],
     permissions: ['articles.read', 'articles.create'],
     interests: { fieldIds: [], topicIds: [] },
@@ -71,10 +73,11 @@ export function tokenTag(authorization: string | null): string | null {
  * The real AuthService + interceptor chain against HttpTestingController, in the browser. Push, theme and language
  * are fakes, so the tests see exactly which HTTP calls the session makes.
  */
-export function setupAuthTesting(options: { platform?: 'browser' | 'server' } = {}) {
+export function setupAuthTesting(options: { platform?: 'browser' | 'server'; providers?: unknown[] } = {}) {
   const push = { unregisterDevice: vi.fn(async () => undefined) };
-  const theme = { setPreference: vi.fn() };
-  const language = { lang: signal<'ar' | 'en'>('ar'), setLanguage: vi.fn(async () => undefined) };
+  const theme = { setPreference: vi.fn(), resolved: signal<'light' | 'dark'>('light') };
+  const lang = signal<'ar' | 'en'>('ar');
+  const language = { lang, setLanguage: vi.fn(async () => undefined), dir: computed(() => (lang() === 'ar' ? 'rtl' : 'ltr')) };
   TestBed.configureTestingModule({
     imports: [translocoTesting()],
     providers: [
@@ -85,6 +88,7 @@ export function setupAuthTesting(options: { platform?: 'browser' | 'server' } = 
       { provide: PushService, useValue: push },
       { provide: ThemeService, useValue: theme },
       { provide: LanguageService, useValue: language },
+      ...((options.providers ?? []) as never[]),
     ],
   });
   return {

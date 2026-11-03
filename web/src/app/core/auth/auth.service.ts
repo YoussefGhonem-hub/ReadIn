@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { isApiError } from '../api/api.config';
 import { AuthApi } from '../api/auth.api';
 import { MeApi } from '../api/me.api';
-import { MeDto, RegisterRequest, SessionDto } from '../api/models';
+import { AccountConfirmation, ExternalCredential, ExternalSignInRequest, MeDto, RegisterRequest, SessionDto } from '../api/models';
 import { LanguageService } from '../i18n/language.service';
 import { PushService } from '../push/push.service';
 import { ThemeService } from '../theme/theme.service';
@@ -106,6 +106,25 @@ export class AuthService {
   }
 
   /**
+   * Continue with Google / Apple (ADR 0012). Rejects with `auth.external_not_linked` when the identity belongs to no
+   * account yet; the caller then asks again with `createAccount` or `link`. A new account keeps the local theme.
+   */
+  async signInExternal(request: ExternalSignInRequest): Promise<MeDto> {
+    const session = await firstValueFrom(
+      this.api.external({ ...request, uiLanguage: this.language.lang(), timeZone: localTimeZone() }),
+    );
+    await this.applySession(session, { profilePreferences: !request.createAccount });
+    return session.user;
+  }
+
+  /** Google/Apple-only accounts add phone + password + PIN, confirmed with a linked provider; tokens are replaced. */
+  async addPhoneSignIn(request: { phoneNumber: string; password: string; recoveryPin: string; external: ExternalCredential }): Promise<MeDto> {
+    const session = await firstValueFrom(this.meApi.addPhoneSignIn(request));
+    await this.applySession(session);
+    return session.user;
+  }
+
+  /**
    * Signs out this browser: unregisters web push while the token still works, ends the session on the API (which
    * clears the cookie), then forgets everything locally. The live app signs out of Firebase when the session ends.
    */
@@ -136,9 +155,12 @@ export class AuthService {
     return session.user;
   }
 
-  /** Soft delete (requires the password); the API ends every session, so this browser signs out too. */
-  async deleteAccount(password: string): Promise<void> {
-    await firstValueFrom(this.meApi.deleteAccount(password));
+  /**
+   * Soft delete, confirmed with the password or (accounts without one) Google/Apple; the API ends every session, so
+   * this browser signs out too.
+   */
+  async deleteAccount(confirmation: AccountConfirmation): Promise<void> {
+    await firstValueFrom(this.meApi.deleteAccount(confirmation));
     this.endLocalSession();
   }
 

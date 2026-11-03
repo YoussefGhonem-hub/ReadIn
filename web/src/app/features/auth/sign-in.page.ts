@@ -14,6 +14,7 @@ import { rememberCountry } from '../../shared/ui/phone/countries';
 import { PhoneField } from '../../shared/ui/phone/phone-field';
 import { AuthCard, SubmitButton, fieldErrors } from './auth-shared';
 import { DEV_LOGIN_PANEL } from './dev/dev-login';
+import { ExternalSignIn } from './external-sign-in';
 
 /**
  * Sign in (SPEC §9.2): phone + password. One generic error for a wrong number or password (it never says whether
@@ -22,7 +23,7 @@ import { DEV_LOGIN_PANEL } from './dev/dev-login';
  */
 @Component({
   selector: 'rd-sign-in-page',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LucideDynamicIcon, NgComponentOutlet, AuthCard, SubmitButton, PhoneField, PasswordField],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LucideDynamicIcon, NgComponentOutlet, AuthCard, SubmitButton, PhoneField, PasswordField, ExternalSignIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <rd-auth-card [title]="'auth.signIn.title' | transloco" [subtitle]="'auth.signIn.subtitle' | transloco">
@@ -73,6 +74,7 @@ import { DEV_LOGIN_PANEL } from './dev/dev-login';
         {{ 'auth.signIn.noAccount' | transloco }}
         <a routerLink="/auth/sign-up" [queryParams]="returnParams()" class="font-semibold text-primary">{{ 'auth.signIn.createAccount' | transloco }}</a>
       </p>
+      <rd-external-sign-in [returnUrl]="returnUrl()" [divider]="true" />
       <p class="mt-2 text-center text-sm">
         <a [routerLink]="guestUrl()" class="text-text-secondary">{{ 'auth.continueAsGuest' | transloco }}</a>
       </p>

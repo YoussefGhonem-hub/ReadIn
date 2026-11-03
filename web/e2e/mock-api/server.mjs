@@ -309,6 +309,8 @@ function me({ uiLanguage = 'ar', theme = 'system' } = {}) {
     mustSetRecoveryPin: false,
     isProfileComplete: true,
     hasRecoveryPin: true,
+    hasPassword: true,
+    externalLogins: [],
     roles: ['Member', 'VerifiedWriter'],
     permissions: ['articles.read', 'articles.create'],
     interests: { fieldIds: ['f-software'], topicIds: [] },
@@ -415,7 +417,7 @@ const routes = [
     (_q, [, slug]) => (DETAILS.has(slug) ? [200, DETAILS.get(slug)] : [404, problem(404, 'article.not_found', 'Article not found')]),
   ],
   // Phone + password sessions (docs/api/contract-v1.md → Auth). The cookie is the whole session: `readin_refresh=writer`.
-  ['GET', new RegExp(`^${API}/auth/config$`), () => [200, { pinLength: 4, password: { minLength: 8, maxLength: 128, requireLetter: true, requireDigit: true } }]],
+  ['GET', new RegExp(`^${API}/auth/config$`), () => [200, { pinLength: 4, password: { minLength: 8, maxLength: 128, requireLetter: true, requireDigit: true }, externalProviders: [] }]],
   [
     'POST',
     new RegExp(`^${API}/auth/login$`),

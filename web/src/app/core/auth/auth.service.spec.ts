@@ -235,7 +235,7 @@ describe('AuthService (SPEC §9.3, ADR 0007)', () => {
 
     it('delete account ends the session locally', async () => {
       const { auth, http, session } = await signedIn();
-      const done = auth.deleteAccount('pass-1234');
+      const done = auth.deleteAccount({ password: 'pass-1234' });
       await settle();
       const call = http.expectOne(`${TEST_API}/me`);
       expect(call.request.method).toBe('DELETE');

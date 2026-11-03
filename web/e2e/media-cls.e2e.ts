@@ -12,6 +12,9 @@ interface ShiftLog {
  * ones arrive while scrolling, and the cumulative layout-shift score from `PerformanceObserver('layout-shift')`
  * must stay under 0.01.
  */
+// Scrolling the whole feed takes a while when the full suite shares the dev server; the CLS score doesn't depend on it.
+test.describe.configure({ timeout: 60_000 });
+
 for (const variant of [VARIANTS[0], VARIANTS[3]]) {
   test(`feed with image attachments has CLS < 0.01 — ${variant.lang}/${variant.theme}`, async ({ page, context, baseURL }) => {
     await useVariant(context, baseURL!, variant);

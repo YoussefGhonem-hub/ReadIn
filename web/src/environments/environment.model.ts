@@ -29,4 +29,11 @@ export interface AppEnvironment {
   authEmulatorUrl: string | null;
   /** Where "Forgot the PIN too?" sends people (ADR 0009: an Admin resets the account). */
   supportEmail: string;
+  /**
+   * Google Identity Services web client id (a public identifier, ADR 0012). Empty hides "Continue with Google"; the
+   * button also needs the API to list `google` in `GET /auth/config` → `externalProviders`.
+   */
+  googleWebClientId: string;
+  /** Sign in with Apple Services ID for the web. Empty (none created yet) hides "Continue with Apple". */
+  appleServicesId: string;
 }

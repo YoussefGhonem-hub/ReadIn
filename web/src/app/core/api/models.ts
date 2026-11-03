@@ -43,17 +43,56 @@ export interface MeDto {
   mustSetRecoveryPin: boolean;
   isProfileComplete: boolean;
   hasRecoveryPin: boolean;
+  /** False for Google/Apple-only accounts: no phone, password or PIN (they can add them later). */
+  hasPassword: boolean;
+  externalLogins: ExternalLoginDto[];
   roles: string[];
   permissions: string[];
   interests: { fieldIds: string[]; topicIds: string[] };
 }
 
-// ── Auth (SPEC §9, ADR 0007, ADR 0009) ──────────────────────────
+// ── Auth (SPEC §9, ADR 0007, ADR 0009, ADR 0012) ────────────────
+
+export type ExternalProvider = 'google' | 'apple';
+
+export interface ExternalLoginDto {
+  provider: ExternalProvider;
+  /** The email the provider reported (verified), if any. */
+  email: string | null;
+  linkedAt: string;
+}
 
 export interface AuthConfigDto {
   /** Number of PIN boxes (default 4). */
   pinLength: number;
   password: { minLength: number; maxLength: number; requireLetter: boolean; requireDigit: boolean };
+  /** Google/Apple sign in this server accepts; the other buttons stay hidden. */
+  externalProviders: ExternalProvider[];
+}
+
+/** A fresh ID token from Google Identity Services or Sign in with Apple. Never stored. */
+export interface ExternalCredential {
+  provider: ExternalProvider;
+  idToken: string;
+  /** The RAW nonce (Apple): Apple was given its SHA-256 hex. */
+  nonce?: string;
+}
+
+export interface ExternalSignInRequest extends ExternalCredential {
+  /** Apple sends the name only on the first authorization; used for a new account. */
+  displayName?: string;
+  uiLanguage?: UiLanguage;
+  timeZone?: string;
+  /** "I already have an account": the phone + password of the account to link. */
+  link?: { phoneNumber: string; password: string };
+  /** "Create a new account" (never together with `link`). */
+  createAccount?: boolean;
+}
+
+/** Confirms a sensitive action: the password, or (accounts without one) a fresh token of a linked provider. */
+export interface AccountConfirmation {
+  password?: string;
+  external?: ExternalCredential;
 }
 
 export interface RegisterRequest {

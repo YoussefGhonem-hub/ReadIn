@@ -6,7 +6,7 @@ import { AuthConfigDto } from '../api/models';
 import { DEFAULT_PASSWORD_POLICY } from '../../shared/ui/password/password-rules';
 import { DEFAULT_PIN_LENGTH } from '../../shared/ui/pin/pin-rules';
 
-export const DEFAULT_AUTH_CONFIG: AuthConfigDto = { pinLength: DEFAULT_PIN_LENGTH, password: DEFAULT_PASSWORD_POLICY };
+export const DEFAULT_AUTH_CONFIG: AuthConfigDto = { pinLength: DEFAULT_PIN_LENGTH, password: DEFAULT_PASSWORD_POLICY, externalProviders: [] };
 
 /**
  * `GET /auth/config` (PIN length, password rules) for the forms. Starts from the documented defaults, so forms work
@@ -25,7 +25,7 @@ export class AuthConfigService {
     if (!this.isBrowser) return Promise.resolve();
     this.loading ??= firstValueFrom(this.api.config()).then(
       (config) => {
-        if (config && config.pinLength > 0 && config.password) this._config.set(config);
+        if (config && config.pinLength > 0 && config.password) this._config.set({ ...config, externalProviders: config.externalProviders ?? [] });
       },
       () => {
         this.loading = null; // keep the defaults; try again next time a form opens

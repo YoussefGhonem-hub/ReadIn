@@ -2,17 +2,21 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
+import { ExternalProvider } from '../../../core/api/models';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ExternalIdentityService } from '../../../core/auth/external-identity.service';
 import { SessionStore } from '../../../core/auth/session.store';
 import { Avatar } from '../../../shared/ui/avatar';
 import { formatPhoneForDisplay } from '../../../shared/ui/phone/phone-number';
 import { ChangePasswordSheet, ChangePhoneSheet, ChangePinSheet, DeleteAccountSheet, SignOutEverywhereSheet } from './account-sheets';
+import { AddPhoneSignInSheet, LinkProviderSheet, PROVIDER_NAMES, UnlinkProviderSheet } from './external-sheets';
 
-type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'delete';
+type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'delete' | 'addPhone';
 
 /**
  * Settings → Account (F18): the phone number (shown to its owner only) with "change number", change password,
- * change PIN, sign out, sign out of all devices and delete account. Guests get a sign-in prompt.
+ * change PIN, linked Google/Apple accounts, sign out, sign out of all devices and delete account. Google/Apple-only
+ * accounts get "add phone + password" instead of the number, password and PIN rows. Guests get a sign-in prompt.
  */
 @Component({
   selector: 'rd-account-settings',
@@ -26,6 +30,9 @@ type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'delete';
     ChangePinSheet,
     SignOutEverywhereSheet,
     DeleteAccountSheet,
+    AddPhoneSignInSheet,
+    LinkProviderSheet,
+    UnlinkProviderSheet,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -42,6 +49,7 @@ type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'delete';
         </div>
 
         <ul class="m-0 mt-5 list-none divide-y divide-border border-y border-border p-0">
+          @if (hasPassword()) {
           <li class="flex flex-wrap items-center gap-3 py-3">
             <svg lucideIcon="Smartphone" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
             <div class="min-w-0 flex-1">
@@ -73,7 +81,57 @@ type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'delete';
               {{ 'account.changePin.action' | transloco }}
             </button>
           </li>
+          } @else {
+            <!-- Google/Apple-only accounts (ADR 0012): no number, password or PIN yet. -->
+            <li class="flex flex-wrap items-center gap-3 py-3" data-add-phone-row>
+              <svg lucideIcon="Smartphone" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+              <div class="min-w-0 flex-1">
+                <div class="text-sm font-semibold">{{ 'account.addPhone.action' | transloco }}</div>
+                <div class="text-xs text-text-secondary">{{ 'account.addPhone.hint' | transloco }}</div>
+              </div>
+              <button type="button" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" (click)="sheet.set('addPhone')" data-open="addPhone">
+                {{ 'account.addPhone.button' | transloco }}
+              </button>
+            </li>
+          }
         </ul>
+
+        @if (linkRows().length) {
+          <div class="mt-5" data-linked-accounts>
+            <h3 class="m-0 text-sm font-semibold">{{ 'account.linked.title' | transloco }}</h3>
+            <p class="m-0 mt-1 text-xs text-text-secondary">{{ 'account.linked.hint' | transloco }}</p>
+            <ul class="m-0 mt-2 list-none divide-y divide-border p-0">
+              @for (row of linkRows(); track row.provider) {
+                <li class="flex flex-wrap items-center gap-3 py-3" [attr.data-provider]="row.provider">
+                  <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border font-latin text-sm font-bold" aria-hidden="true">{{ row.initial }}</span>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-sm font-semibold">{{ row.name }}</div>
+                    <div class="truncate text-xs text-text-secondary" data-provider-status>
+                      @if (row.linked) {
+                        @if (row.email) {
+                          <span dir="ltr">{{ row.email }}</span>
+                        } @else {
+                          {{ 'account.linked.linked' | transloco }}
+                        }
+                      } @else {
+                        {{ 'account.linked.notLinked' | transloco }}
+                      }
+                    </div>
+                  </div>
+                  @if (row.linked) {
+                    <button type="button" class="rd-btn rd-btn-ghost min-h-9 px-3 text-sm" (click)="unlinkProvider.set(row.provider)" data-unlink>
+                      {{ 'account.linked.unlink' | transloco }}
+                    </button>
+                  } @else if (row.available) {
+                    <button type="button" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" (click)="linkProvider.set(row.provider)" data-link>
+                      {{ 'account.linked.link' | transloco }}
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        }
 
         <div class="mt-5 flex flex-col gap-2 sm:flex-row">
           <button type="button" class="rd-btn rd-btn-outline flex-1" [disabled]="signingOut()" (click)="signOut()" data-sign-out>
@@ -102,6 +160,9 @@ type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'delete';
     <rd-change-pin-sheet [open]="sheet() === 'pin'" (closed)="sheet.set(null)" />
     <rd-sign-out-everywhere-sheet [open]="sheet() === 'signOutEverywhere'" (closed)="sheet.set(null)" />
     <rd-delete-account-sheet [open]="sheet() === 'delete'" (closed)="sheet.set(null)" />
+    <rd-add-phone-sign-in-sheet [open]="sheet() === 'addPhone'" (closed)="sheet.set(null)" />
+    <rd-link-provider-sheet [provider]="linkProvider()" (closed)="linkProvider.set(null)" />
+    <rd-unlink-provider-sheet [provider]="unlinkProvider()" (closed)="unlinkProvider.set(null)" />
   `,
 })
 export class AccountSettings {
@@ -113,6 +174,33 @@ export class AccountSettings {
   protected readonly signingOut = signal(false);
   protected readonly phone = computed(() => formatPhoneForDisplay(this.session.phoneNumber()));
   protected readonly hasPin = computed(() => this.session.me()?.hasRecoveryPin ?? false);
+  protected readonly hasPassword = computed(() => this.session.me()?.hasPassword ?? true);
+  protected readonly linkProvider = signal<ExternalProvider | null>(null);
+  protected readonly unlinkProvider = signal<ExternalProvider | null>(null);
+  private readonly external = inject(ExternalIdentityService);
+
+  /** Google and Apple rows: the ones this web build offers, plus any already linked (so they can be unlinked). */
+  protected readonly linkRows = computed(() => {
+    const logins = this.session.me()?.externalLogins ?? [];
+    const available = this.external.providers();
+    return (['google', 'apple'] as const)
+      .filter((p) => available.includes(p) || logins.some((l) => l.provider === p))
+      .map((provider) => {
+        const login = logins.find((l) => l.provider === provider);
+        return {
+          provider,
+          name: PROVIDER_NAMES[provider],
+          initial: PROVIDER_NAMES[provider][0],
+          linked: !!login,
+          email: login?.email ?? null,
+          available: available.includes(provider),
+        };
+      });
+  });
+
+  constructor() {
+    void this.external.load();
+  }
 
   protected async signOut(): Promise<void> {
     if (this.signingOut()) return;

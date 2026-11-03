@@ -60,7 +60,17 @@
       "reset_token_invalid": "Time ran out. Start again.",
       "wrong_password": "Your current password is incorrect.",
       "pin_already_set": "You already have a PIN. Change it from Settings.",
-      "phone_unchanged": "This is already your number."
+      "phone_unchanged": "This is already your number.",
+      "external_invalid": "We couldn't verify this Google or Apple sign in. Try again.",
+      "provider_disabled": "This sign-in method is not available right now.",
+      "external_not_linked": "No ReadIn account is linked to this account yet.",
+      "external_in_use": "This Google or Apple account is linked to another ReadIn account.",
+      "external_conflict": "Another account of this kind is already linked.",
+      "external_login_not_found": "This sign-in method is not linked to your account.",
+      "last_sign_in_method": "You can't remove your only way to sign in.",
+      "phone_sign_in_exists": "This account already signs in with a phone number.",
+      "confirmation_required": "Confirm it's you with your password, or with Google or Apple.",
+      "external_mismatch": "Use the Google or Apple account that is linked to ReadIn."
     },
     "user": {
       "suspended": "This account is suspended. Contact support.",
@@ -128,6 +138,9 @@
       "length": "Enter all the PIN digits.",
       "digits_only": "Use digits only.",
       "weak": "This PIN is too easy to guess. Avoid repeated or consecutive digits, years and the end of your number."
+    },
+    "provider": {
+      "invalid": "This sign-in method is not supported."
     }
   },
   "auth": {
@@ -245,6 +258,19 @@
       "demoPassword": "Demo password",
       "pin": "Has a recovery PIN",
       "noPin": "No recovery PIN yet"
+    },
+    "external": {
+      "google": "Continue with Google",
+      "apple": "Continue with Apple",
+      "unavailable": "{{provider}} sign in couldn't load. Check your connection or use your phone number.",
+      "notLinked": {
+        "title": "No ReadIn account is linked to this account yet",
+        "body": "You can create a new ReadIn account with your {{provider}} account, or add it to the account you sign in to with your phone number.",
+        "create": "Create a new account",
+        "haveAccount": "I have an account with a phone number",
+        "linkHint": "Sign in with your phone number and password once; after that {{provider}} signs you in too.",
+        "linkSubmit": "Link and sign in"
+      }
     }
   },
   "password": {
@@ -320,7 +346,36 @@
       "body": "Your account closes now and your personal data is deleted after 30 days. Your articles and comments stay, shown as \"Deleted user\". This can’t be undone.",
       "understand": "I understand that my account will be deleted.",
       "confirm": "Delete my account",
-      "done": "Your account was deleted."
+      "done": "Your account was deleted.",
+      "confirmProvider": "To delete it, confirm with your linked account:"
+    },
+    "linked": {
+      "title": "Linked accounts",
+      "hint": "Sign in with Google or Apple too. You always keep at least one way to sign in.",
+      "linked": "Linked",
+      "notLinked": "Not linked",
+      "link": "Link",
+      "unlink": "Unlink",
+      "linkTitle": "Link your {{provider}} account",
+      "pick": "Choose the {{provider}} account you want to sign in with.",
+      "confirmPassword": "Confirm it's you with your password.",
+      "confirmProvider": "Confirm it's you with an account that's already linked.",
+      "done": "{{provider}} is linked ✓",
+      "unlinkTitle": "Unlink {{provider}}?",
+      "unlinkBody": "You won't be able to sign in with {{provider}} until you link it again.",
+      "lastMethodHint": "Add a phone number and password, or link another account first.",
+      "unlinked": "{{provider}} is unlinked ✓"
+    },
+    "addPhone": {
+      "action": "Add a phone number and password",
+      "hint": "Sign in with your number too, and recover your account with a PIN if you need to.",
+      "button": "Add",
+      "title": "Add a phone number and password",
+      "body": "You'll be able to sign in with your number and password as well. Every other device will be signed out.",
+      "confirm": "Yes, add this number",
+      "reauthTitle": "Confirm it's you",
+      "reauthBody": "Continue with your linked account to finish.",
+      "done": "You can now sign in with your phone number ✓"
     }
   },
   "onboarding": {

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL, webSessionOptions } from './api.config';
 import {
   AuthConfigDto,
+  ExternalSignInRequest,
   LoginRequest,
   PasswordResetTokenDto,
   RegisterRequest,
@@ -32,6 +33,14 @@ export class AuthApi {
 
   login(body: LoginRequest): Observable<SessionDto> {
     return this.http.post<SessionDto>(`${this.base}/auth/login`, body, webSessionOptions());
+  }
+
+  /**
+   * Continue with Google / Apple (ADR 0012): signs in a linked identity (or one whose verified email matches an
+   * account). `404 auth.external_not_linked` → ask again with `createAccount` or `link`.
+   */
+  external(body: ExternalSignInRequest): Observable<SessionDto> {
+    return this.http.post<SessionDto>(`${this.base}/auth/external`, body, webSessionOptions());
   }
 
   /** Rotates the cookie and returns a fresh access token. `401 auth.refresh_invalid` → sign out locally. */
