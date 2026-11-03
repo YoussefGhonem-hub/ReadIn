@@ -697,6 +697,7 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
 - **Fallback:** when no reviewed article matches, the pick comes from **published + auto-checked** articles (passed every content-pipeline check, §19.3; `Articles.AutoCheckedAt`) with the same rules. Constraints relax in the same order (length, then interests), and at every step a reviewed article wins over an auto-checked one. Seeded articles wait for human review, so this keeps the hero card filled without faking a review: the card shows no "Reviewed" badge.
 - Push notification at the chosen time: *"مقال النهارده جاهز ☕ — {title}"*.
 - If the user doesn't open it, it stays as the hero card for the day.
+- **Job details:** runs every 5 minutes, for users with at least one push device (others get the pick on demand from `GET /feed/today`; both store the same one pick per local date). Times are wall-clock in the user's time zone, so DST never moves a reminder. The push is sent once per day (`DailyPicks.NotifiedAt`), skipped when the user already read the article, and at most 2 hours late after a missed run; "read" is `ReadingProgress.CompletedAt` (F04), and "3 days in a row" means the picks of the two previous days. Payload: [`contract-v1.md`](api/contract-v1.md#push-payloads-fcm).
 
 ### F08 — Streaks & Reading Stats
 - Streak +1 per day the user completes at least one article (local date in the profile time zone, see [ADR 0013](adr/0013-reading-days-and-streaks.md)).

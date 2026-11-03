@@ -498,6 +498,39 @@ Validation codes (in `errors`) for this area: `reaction.invalid` (`type`), `vali
 `validation.max_length` (`name` of a collection, `q`). Error codes: `collection.not_found`, `collection.name_taken`,
 `collection.limit`, `follow.self`, `topic.not_found`.
 
+## Push payloads (FCM)
+
+Pushes come only from background jobs and outbox handlers (SPEC §21.1), to every token registered with `POST /me/devices`.
+Each has a visible `notification` (`title`, `body`, in the user's UI language) and a `data` map of strings. `data.link`
+is always the deep link to open (`readin://a/{slug}`); clients map it to their own route and drop anything else.
+Tokens FCM reports as unregistered or invalid are deleted by the API.
+
+### Daily article (`daily_article`, SPEC F07)
+
+Sent once a day at the user's `reminderTime`, in their `timeZone`, for the article `GET /feed/today` returns that day.
+
+```jsonc
+{
+  "notification": { "title": "مقال النهارده جاهز ☕", "body": "<article title>" }, // en: "Today's article is ready ☕"
+  "data": {
+    "type": "daily_article",
+    "articleId": "0a1b2c3d-…",
+    "slug": "rag-vs-fine-tuning",
+    "link": "readin://a/rag-vs-fine-tuning",
+    "lang": "ar"                 // the article version the body comes from: "ar" (ar-EG) | "en"; the web opens /{lang}/a/{slug}
+  }
+}
+```
+
+| Platform | Delivery |
+|---|---|
+| Android | channel `readin_default`, high priority, collapse key and tag `daily_article`, TTL until the user's midnight |
+| iOS | `apns-push-type: alert`, `apns-collapse-id: daily_article`, `thread-id: daily_article`, sound `default`, expires at the user's midnight |
+| Web | `TTL` header until the user's midnight; `data` also carries `tag: "daily_article"`, so a newer daily push replaces an unread one |
+
+No push when the user already read that day's article, when the account is suspended or has no device, or when the push
+would be more than 2 hours late (the article stays the hero card either way).
+
 ## Local development
 
 - API: `http://localhost:5080` (Scalar UI: `/docs`, OpenAPI: `/openapi/v1.json`)

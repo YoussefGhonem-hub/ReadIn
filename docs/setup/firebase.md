@@ -94,6 +94,25 @@ The FCM HTTP v1 API is enabled by default. The API sends pushes through the Admi
 The web app receives pushes in `web/public/firebase-messaging-sw.js`. It asks for permission only in context
 (onboarding reminder step, Settings → Notifications), then registers the browser with `POST /me/devices`.
 
+### What the API needs to send pushes
+
+The API sends with `FcmPushSender` (Admin SDK, FCM HTTP v1). The first push is the daily article (F07): the `daily-article`
+Hangfire job runs every 5 minutes, picks each user's article 30 minutes before their reminder time and sends the push
+at it (payload in [contract-v1.md](../api/contract-v1.md#push-payloads-fcm)).
+
+1. **Firebase Cloud Messaging API (V1)** enabled: Google Cloud console → **APIs & Services → Enabled APIs** →
+   `Firebase Cloud Messaging API`. It is on by default in Firebase projects; the legacy API is not used.
+2. **A service account allowed to send:** the Admin SDK key of step 6 (its account has the *Firebase Admin SDK
+   Administrator Service Agent* role, which includes `cloudmessaging.messages.create`), or, without a key, a host
+   identity (Application Default Credentials) with the **Firebase Cloud Messaging API Admin** or **Firebase Admin** role.
+3. **The API pointed at the real project:** `Firebase:ProjectId` set and `Firebase:UseEmulator` false (step 6).
+4. **Hangfire enabled** (`Hangfire:Enabled`, on by default): the job, not the request, sends pushes (SPEC §21.1).
+
+FCM has no emulator. With `Firebase:UseEmulator=true` (local development, tests), and in Development without
+`Firebase:ServiceAccountJson`, the API **logs** each push (`Push not sent (no FCM in this environment): …`) instead of
+sending it, so the job runs end to end without credentials. Tokens FCM reports as unregistered or invalid are deleted
+from `UserDevices`; other failures are logged and the push is retried on the next run, at most 2 hours late.
+
 ---
 
 ## 5. Mobile apps: `flutterfire configure`
@@ -207,6 +226,7 @@ the production build locally).
 - [x] Web app registered; config and VAPID key in `web/src/environments/environment.ts`
 - [ ] Database rules deployed from `firebase/database.rules.json`
 - [ ] Authentication switched on (no providers); `readin.app` in authorized domains
+- [ ] Firebase Cloud Messaging API (V1) enabled; the API's service account (or host identity) may send messages
 - [x] APNs key uploaded (development + production)
 - [x] Android and iOS apps registered; `mobile/lib/firebase_options_prod.dart` committed
 - [ ] Browser API key restricted to `https://readin.app/*`
