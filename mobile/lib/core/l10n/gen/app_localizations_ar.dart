@@ -1771,4 +1771,295 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errFollowSelf => 'مينفعش تتابع نفسك.';
+
+  @override
+  String get commentsOpen => 'افتح التعليقات';
+
+  @override
+  String get commentsTitle => 'التعليقات';
+
+  @override
+  String commentsTitleCount(int count) {
+    return 'التعليقات ($count)';
+  }
+
+  @override
+  String get commentsSortTop => 'الأهم';
+
+  @override
+  String get commentsSortNewest => 'الأحدث';
+
+  @override
+  String get commentsEmptyTitle => 'لسه مفيش تعليقات';
+
+  @override
+  String get commentsEmptyBody => 'خليك أول واحد يقول رأيه.';
+
+  @override
+  String get commentsAuthorBadge => 'الكاتب';
+
+  @override
+  String get commentsPinned => 'متثبّت';
+
+  @override
+  String get commentsEdited => 'متعدّل';
+
+  @override
+  String get commentsDeletedPlaceholder => 'التعليق ده اتمسح';
+
+  @override
+  String get commentsHiddenPlaceholder => 'المشرفين خبّوا التعليق ده';
+
+  @override
+  String get commentsHiddenNotice =>
+      'المشرفين خبّوا التعليق ده. انت والمشرفين بس اللي شايفينه.';
+
+  @override
+  String get commentsDeletedUser => 'مستخدم محذوف';
+
+  @override
+  String get commentsLike => 'عجبني';
+
+  @override
+  String get commentsUnlike => 'شيل الإعجاب';
+
+  @override
+  String commentsLikesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count إعجاب',
+      many: '$count إعجاب',
+      few: '$count إعجابات',
+      two: 'إعجابين',
+      one: 'إعجاب واحد',
+      zero: 'مفيش إعجابات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentsReply => 'رد';
+
+  @override
+  String commentsMoreReplies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'اعرض $count رد كمان',
+      many: 'اعرض $count رد كمان',
+      few: 'اعرض $count ردود كمان',
+      two: 'اعرض ردين كمان',
+      one: 'اعرض رد كمان',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentsMoreRepliesAny => 'اعرض ردود أكتر';
+
+  @override
+  String commentsNewPill(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تعليق جديد',
+      many: '$count تعليق جديد',
+      few: '$count تعليقات جديدة',
+      two: 'تعليقين جداد',
+      one: 'تعليق جديد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentsSending => 'بيتبعت…';
+
+  @override
+  String get commentsTimeNow => 'دلوقتي';
+
+  @override
+  String commentsTimeMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'من $count دقيقة',
+      many: 'من $count دقيقة',
+      few: 'من $count دقايق',
+      two: 'من دقيقتين',
+      one: 'من دقيقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commentsTimeHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'من $count ساعة',
+      many: 'من $count ساعة',
+      few: 'من $count ساعات',
+      two: 'من ساعتين',
+      one: 'من ساعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commentsTimeDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'من $count يوم',
+      many: 'من $count يوم',
+      few: 'من $count أيام',
+      two: 'من يومين',
+      one: 'امبارح',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentsComposerHint => 'اكتب تعليق…';
+
+  @override
+  String get commentsReplyHint => 'اكتب ردك…';
+
+  @override
+  String get commentsSend => 'ابعت';
+
+  @override
+  String commentsReplyingTo(String name) {
+    return 'بترد على $name';
+  }
+
+  @override
+  String get commentsEditing => 'بتعدّل تعليقك';
+
+  @override
+  String get commentsMentionSuggestions => 'ناس تقدر تعمل لهم منشن';
+
+  @override
+  String get commentsGuestPrompt => 'سجّل دخول عشان تشارك في النقاش.';
+
+  @override
+  String get commentsMenu => 'اختيارات التعليق';
+
+  @override
+  String get commentsDeleteTitle => 'تمسح التعليق ده؟';
+
+  @override
+  String get commentsDeleteBody =>
+      'مش هتقدر ترجّعه، والردود عليه هتفضل موجودة.';
+
+  @override
+  String get commentsDeleted => 'التعليق اتمسح';
+
+  @override
+  String get commentsPin => 'ثبّته';
+
+  @override
+  String get commentsUnpin => 'شيل التثبيت';
+
+  @override
+  String get commentsReport => 'بلّغ عنه';
+
+  @override
+  String get commentsModHide => 'خبّيه (مشرف)';
+
+  @override
+  String get commentsModUnhide => 'ظهّره (مشرف)';
+
+  @override
+  String get commentsModDelete => 'امسحه (مشرف)';
+
+  @override
+  String get commentsModDeleteTitle => 'تمسح التعليق ده عند الكل؟';
+
+  @override
+  String get commentsModDeleteBody =>
+      'هيتشال عند كل القرّاء وهيتسجّل في سجل المراجعة.';
+
+  @override
+  String get commentsHidden => 'التعليق اتخبّى';
+
+  @override
+  String get commentsUnhidden => 'التعليق ظهر تاني';
+
+  @override
+  String get commentsReportTitle => 'بلّغ عن تعليق';
+
+  @override
+  String get commentsReportBody => 'بتبلّغ عنه ليه؟ المشرفين هيراجعوه.';
+
+  @override
+  String get commentsReportSpam => 'سبام';
+
+  @override
+  String get commentsReportMisinformation => 'معلومات غلط';
+
+  @override
+  String get commentsReportHarassment => 'إساءة أو تنمّر';
+
+  @override
+  String get commentsReportCopyright => 'حقوق ملكية';
+
+  @override
+  String get commentsReportOther => 'حاجة تانية';
+
+  @override
+  String get commentsReportDetails => 'تفاصيل (اختياري)';
+
+  @override
+  String get commentsReportSubmit => 'ابعت البلاغ';
+
+  @override
+  String get commentsReportThanks => 'شكراً، هنراجعه.';
+
+  @override
+  String get commentsErrRateLimited =>
+      'انت بتعلّق بسرعة. استنى دقيقة وجرّب تاني.';
+
+  @override
+  String get commentsErrNotFound => 'التعليق ده مبقاش موجود.';
+
+  @override
+  String get commentsErrNotOwner => 'صاحب التعليق بس اللي يقدر يغيّره.';
+
+  @override
+  String get commentsErrNotAvailable => 'التعليق ده اتمسح أو اتخبّى.';
+
+  @override
+  String get commentsErrPinReply => 'التثبيت للتعليقات الأساسية بس، مش الردود.';
+
+  @override
+  String get commentsErrPinNotAuthor =>
+      'كاتب المقال بس اللي يقدر يثبّت تعليقات.';
+
+  @override
+  String get commentsErrPinConflict =>
+      'اتثبّت تعليق تاني في نفس الوقت. جرّب تاني.';
+
+  @override
+  String get commentsErrArticleLimit =>
+      'علّقت كتير على المقال ده. جرّب تاني بعدين.';
+
+  @override
+  String get commentsErrDuplicate => 'انت لسه باعت نفس التعليق.';
+
+  @override
+  String get commentsErrEmpty => 'اكتب حاجة الأول.';
+
+  @override
+  String get commentsErrTooLong => 'التعليق آخره 2000 حرف.';
+
+  @override
+  String get commentsErrReportOwnContent => 'مينفعش تبلّغ عن تعليقك.';
+
+  @override
+  String get commentsErrReportNotSupported => 'مينفعش تبلّغ عن ده لسه.';
+
+  @override
+  String get commentsErrReportReason => 'اختار سبب.';
 }

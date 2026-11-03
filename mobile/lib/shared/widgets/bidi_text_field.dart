@@ -22,6 +22,8 @@ class BidiTextField extends StatefulWidget {
     this.style,
     this.textCapitalization = TextCapitalization.sentences,
     this.inputFormatters,
+    this.focusNode,
+    this.directionOf,
   });
 
   final TextEditingController controller;
@@ -41,6 +43,11 @@ class BidiTextField extends StatefulWidget {
   final TextStyle? style;
   final TextCapitalization textCapitalization;
   final List<TextInputFormatter>? inputFormatters;
+  final FocusNode? focusNode;
+
+  /// The text whose first strong character decides the direction; defaults to the whole text. Comments pass their text
+  /// without @handles, so "@reader1 شكرًا" is laid out right to left.
+  final String Function(String text)? directionOf;
 
   @override
   State<BidiTextField> createState() => _BidiTextFieldState();
@@ -52,7 +59,7 @@ class _BidiTextFieldState extends State<BidiTextField> {
   @override
   void initState() {
     super.initState();
-    _direction = Bidi.detect(widget.controller.text);
+    _direction = _detect();
     widget.controller.addListener(_onText);
   }
 
@@ -72,8 +79,13 @@ class _BidiTextFieldState extends State<BidiTextField> {
     super.dispose();
   }
 
+  TextDirection? _detect() {
+    final text = widget.controller.text;
+    return Bidi.detect(widget.directionOf?.call(text) ?? text) ?? Bidi.detect(text);
+  }
+
   void _onText() {
-    final direction = Bidi.detect(widget.controller.text);
+    final direction = _detect();
     if (direction != _direction) setState(() => _direction = direction);
   }
 
@@ -85,6 +97,7 @@ class _BidiTextFieldState extends State<BidiTextField> {
   @override
   Widget build(BuildContext context) => TextField(
         controller: widget.controller,
+        focusNode: widget.focusNode,
         decoration: widget.decoration,
         onChanged: widget.onChanged,
         maxLength: widget.maxLength,

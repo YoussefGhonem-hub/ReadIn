@@ -59,6 +59,16 @@ import '../../features/auth/presentation/cubit/linked_accounts_cubit.dart'
 import '../../features/auth/presentation/cubit/sign_in_cubit.dart' as _i329;
 import '../../features/auth/presentation/cubit/sign_up_cubit.dart' as _i102;
 import '../../features/auth/presentation/session/session_cubit.dart' as _i371;
+import '../../features/comments/data/datasources/comments_api.dart' as _i1070;
+import '../../features/comments/data/repositories/comments_repository_impl.dart'
+    as _i589;
+import '../../features/comments/domain/repositories/comments_repository.dart'
+    as _i670;
+import '../../features/comments/domain/usecases/comment_usecases.dart' as _i788;
+import '../../features/comments/presentation/cubit/comments_cubit.dart'
+    as _i921;
+import '../../features/comments/presentation/cubit/mention_suggestions_cubit.dart'
+    as _i360;
 import '../../features/editor/data/datasources/editor_api.dart' as _i815;
 import '../../features/editor/data/repositories/editor_repository_impl.dart'
     as _i552;
@@ -281,6 +291,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i462.ArticleApi>(() => _i462.ArticleApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i506.AccountApi>(() => _i506.AccountApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i1070.CommentsApi>(
+      () => _i1070.CommentsApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i815.EditorApi>(() => _i815.EditorApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i73.FollowApi>(() => _i73.FollowApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i931.FeedApi>(() => _i931.FeedApi(gh<_i361.Dio>()));
@@ -346,6 +359,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i462.ArticleApi>(),
         gh<_i1010.ArticleOfflineStore>(),
       ),
+    );
+    gh.lazySingleton<_i670.CommentsRepository>(
+      () => _i589.CommentsRepositoryImpl(gh<_i1070.CommentsApi>()),
     );
     gh.lazySingleton<_i954.FeedRepository>(
       () => _i198.FeedRepositoryImpl(gh<_i931.FeedApi>()),
@@ -433,6 +449,33 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i62.ExternalIdentityRepository>(),
       ),
     );
+    gh.factory<_i788.GetComments>(
+      () => _i788.GetComments(gh<_i670.CommentsRepository>()),
+    );
+    gh.factory<_i788.PostComment>(
+      () => _i788.PostComment(gh<_i670.CommentsRepository>()),
+    );
+    gh.factory<_i788.EditComment>(
+      () => _i788.EditComment(gh<_i670.CommentsRepository>()),
+    );
+    gh.factory<_i788.DeleteComment>(
+      () => _i788.DeleteComment(gh<_i670.CommentsRepository>()),
+    );
+    gh.factory<_i788.SetCommentLiked>(
+      () => _i788.SetCommentLiked(gh<_i670.CommentsRepository>()),
+    );
+    gh.factory<_i788.SetCommentPinned>(
+      () => _i788.SetCommentPinned(gh<_i670.CommentsRepository>()),
+    );
+    gh.factory<_i788.SuggestMentions>(
+      () => _i788.SuggestMentions(gh<_i670.CommentsRepository>()),
+    );
+    gh.factory<_i788.ReportComment>(
+      () => _i788.ReportComment(gh<_i670.CommentsRepository>()),
+    );
+    gh.factory<_i788.ModerateComment>(
+      () => _i788.ModerateComment(gh<_i670.CommentsRepository>()),
+    );
     gh.factory<_i251.GetTodayArticle>(
       () => _i251.GetTodayArticle(gh<_i954.FeedRepository>()),
     );
@@ -486,6 +529,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i46.DeleteAccount>(),
         gh<_i46.ConfirmWithLinkedProvider>(),
       ),
+    );
+    gh.factory<_i360.MentionSuggestionsCubit>(
+      () => _i360.MentionSuggestionsCubit(gh<_i788.SuggestMentions>()),
     );
     gh.factory<_i172.GetFields>(
       () => _i172.GetFields(gh<_i263.TaxonomyRepository>()),
@@ -651,6 +697,19 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i884.StreakCubit(
         gh<_i892.GetReadingStats>(),
         gh<_i371.SessionCubit>(),
+      ),
+    );
+    gh.factory<_i921.CommentsCubit>(
+      () => _i921.CommentsCubit(
+        gh<_i788.GetComments>(),
+        gh<_i788.PostComment>(),
+        gh<_i788.EditComment>(),
+        gh<_i788.DeleteComment>(),
+        gh<_i788.SetCommentLiked>(),
+        gh<_i788.SetCommentPinned>(),
+        gh<_i788.ReportComment>(),
+        gh<_i788.ModerateComment>(),
+        gh<_i854.RealtimeService>(),
       ),
     );
     gh.factory<_i571.AttachmentsCubit>(

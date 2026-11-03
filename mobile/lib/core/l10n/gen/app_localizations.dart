@@ -3019,6 +3019,432 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can\'t follow yourself.'**
   String get errFollowSelf;
+
+  /// No description provided for @commentsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the comments'**
+  String get commentsOpen;
+
+  /// No description provided for @commentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get commentsTitle;
+
+  /// No description provided for @commentsTitleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments ({count})'**
+  String commentsTitleCount(int count);
+
+  /// No description provided for @commentsSortTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Top'**
+  String get commentsSortTop;
+
+  /// No description provided for @commentsSortNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get commentsSortNewest;
+
+  /// No description provided for @commentsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No comments yet'**
+  String get commentsEmptyTitle;
+
+  /// No description provided for @commentsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to share what you think.'**
+  String get commentsEmptyBody;
+
+  /// No description provided for @commentsAuthorBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Author'**
+  String get commentsAuthorBadge;
+
+  /// No description provided for @commentsPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get commentsPinned;
+
+  /// No description provided for @commentsEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'edited'**
+  String get commentsEdited;
+
+  /// No description provided for @commentsDeletedPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'This comment was deleted'**
+  String get commentsDeletedPlaceholder;
+
+  /// No description provided for @commentsHiddenPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden by moderators'**
+  String get commentsHiddenPlaceholder;
+
+  /// No description provided for @commentsHiddenNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden by moderators. Only you and the moderators can see it.'**
+  String get commentsHiddenNotice;
+
+  /// No description provided for @commentsDeletedUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted user'**
+  String get commentsDeletedUser;
+
+  /// No description provided for @commentsLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Like'**
+  String get commentsLike;
+
+  /// No description provided for @commentsUnlike.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove your like'**
+  String get commentsUnlike;
+
+  /// No description provided for @commentsLikesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No likes} =1{1 like} other{{count} likes}}'**
+  String commentsLikesCount(int count);
+
+  /// No description provided for @commentsReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get commentsReply;
+
+  /// No description provided for @commentsMoreReplies.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Show 1 more reply} other{Show {count} more replies}}'**
+  String commentsMoreReplies(int count);
+
+  /// No description provided for @commentsMoreRepliesAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more replies'**
+  String get commentsMoreRepliesAny;
+
+  /// No description provided for @commentsNewPill.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new comment} other{{count} new comments}}'**
+  String commentsNewPill(int count);
+
+  /// No description provided for @commentsSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get commentsSending;
+
+  /// No description provided for @commentsTimeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get commentsTimeNow;
+
+  /// No description provided for @commentsTimeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 min ago} other{{count} min ago}}'**
+  String commentsTimeMinutes(int count);
+
+  /// No description provided for @commentsTimeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hr ago} other{{count} hrs ago}}'**
+  String commentsTimeHours(int count);
+
+  /// No description provided for @commentsTimeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{yesterday} other{{count} days ago}}'**
+  String commentsTimeDays(int count);
+
+  /// No description provided for @commentsComposerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a comment…'**
+  String get commentsComposerHint;
+
+  /// No description provided for @commentsReplyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a reply…'**
+  String get commentsReplyHint;
+
+  /// No description provided for @commentsSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get commentsSend;
+
+  /// No description provided for @commentsReplyingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Replying to {name}'**
+  String commentsReplyingTo(String name);
+
+  /// No description provided for @commentsEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing your comment'**
+  String get commentsEditing;
+
+  /// No description provided for @commentsMentionSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'People to mention'**
+  String get commentsMentionSuggestions;
+
+  /// No description provided for @commentsGuestPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to join the conversation.'**
+  String get commentsGuestPrompt;
+
+  /// No description provided for @commentsMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment options'**
+  String get commentsMenu;
+
+  /// No description provided for @commentsDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this comment?'**
+  String get commentsDeleteTitle;
+
+  /// No description provided for @commentsDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone. Replies to it stay.'**
+  String get commentsDeleteBody;
+
+  /// No description provided for @commentsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment deleted'**
+  String get commentsDeleted;
+
+  /// No description provided for @commentsPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get commentsPin;
+
+  /// No description provided for @commentsUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get commentsUnpin;
+
+  /// No description provided for @commentsReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get commentsReport;
+
+  /// No description provided for @commentsModHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide (moderator)'**
+  String get commentsModHide;
+
+  /// No description provided for @commentsModUnhide.
+  ///
+  /// In en, this message translates to:
+  /// **'Unhide (moderator)'**
+  String get commentsModUnhide;
+
+  /// No description provided for @commentsModDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete (moderator)'**
+  String get commentsModDelete;
+
+  /// No description provided for @commentsModDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this comment for everyone?'**
+  String get commentsModDeleteTitle;
+
+  /// No description provided for @commentsModDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s removed for every reader and recorded in the audit log.'**
+  String get commentsModDeleteBody;
+
+  /// No description provided for @commentsHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment hidden'**
+  String get commentsHidden;
+
+  /// No description provided for @commentsUnhidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment visible again'**
+  String get commentsUnhidden;
+
+  /// No description provided for @commentsReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report comment'**
+  String get commentsReportTitle;
+
+  /// No description provided for @commentsReportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Why are you reporting it? Our moderators will review it.'**
+  String get commentsReportBody;
+
+  /// No description provided for @commentsReportSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam'**
+  String get commentsReportSpam;
+
+  /// No description provided for @commentsReportMisinformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Misinformation'**
+  String get commentsReportMisinformation;
+
+  /// No description provided for @commentsReportHarassment.
+  ///
+  /// In en, this message translates to:
+  /// **'Harassment'**
+  String get commentsReportHarassment;
+
+  /// No description provided for @commentsReportCopyright.
+  ///
+  /// In en, this message translates to:
+  /// **'Copyright'**
+  String get commentsReportCopyright;
+
+  /// No description provided for @commentsReportOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get commentsReportOther;
+
+  /// No description provided for @commentsReportDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details (optional)'**
+  String get commentsReportDetails;
+
+  /// No description provided for @commentsReportSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send report'**
+  String get commentsReportSubmit;
+
+  /// No description provided for @commentsReportThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks, we\'ll review it.'**
+  String get commentsReportThanks;
+
+  /// No description provided for @commentsErrRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re commenting too fast. Wait a minute and try again.'**
+  String get commentsErrRateLimited;
+
+  /// No description provided for @commentsErrNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This comment doesn\'t exist anymore.'**
+  String get commentsErrNotFound;
+
+  /// No description provided for @commentsErrNotOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the comment\'s author can change it.'**
+  String get commentsErrNotOwner;
+
+  /// No description provided for @commentsErrNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This comment was deleted or hidden.'**
+  String get commentsErrNotAvailable;
+
+  /// No description provided for @commentsErrPinReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Only top-level comments can be pinned.'**
+  String get commentsErrPinReply;
+
+  /// No description provided for @commentsErrPinNotAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the article\'s author can pin comments.'**
+  String get commentsErrPinNotAuthor;
+
+  /// No description provided for @commentsErrPinConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Another comment was pinned at the same time. Try again.'**
+  String get commentsErrPinConflict;
+
+  /// No description provided for @commentsErrArticleLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve commented a lot on this article. Try again later.'**
+  String get commentsErrArticleLimit;
+
+  /// No description provided for @commentsErrDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'You just posted the same comment.'**
+  String get commentsErrDuplicate;
+
+  /// No description provided for @commentsErrEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Write something first.'**
+  String get commentsErrEmpty;
+
+  /// No description provided for @commentsErrTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'A comment can have at most 2000 characters.'**
+  String get commentsErrTooLong;
+
+  /// No description provided for @commentsErrReportOwnContent.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t report your own comment.'**
+  String get commentsErrReportOwnContent;
+
+  /// No description provided for @commentsErrReportNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be reported yet.'**
+  String get commentsErrReportNotSupported;
+
+  /// No description provided for @commentsErrReportReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a reason.'**
+  String get commentsErrReportReason;
 }
 
 class _AppLocalizationsDelegate

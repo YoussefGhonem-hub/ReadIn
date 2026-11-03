@@ -19,6 +19,11 @@ String localizeActionFailure(AppLocalizations l10n, Failure failure) {
   return localizeFailure(l10n, failure);
 }
 
+/// For comment actions (F11): like [localizeActionFailure], but the `429` of the comments rate limit (10 a minute)
+/// says to slow down instead of the generic "too many requests".
+String localizeCommentFailure(AppLocalizations l10n, Failure failure) =>
+    failure.code == FailureCodes.rateLimited ? l10n.commentsErrRateLimited : localizeActionFailure(l10n, failure);
+
 /// Same as [localizeFailure] for a bare error code, e.g. a media asset's
 /// `failureReason` (`media.processing_timeout`).
 String localizeErrorCode(AppLocalizations l10n, String code) => switch (code) {
@@ -106,6 +111,20 @@ String localizeErrorCode(AppLocalizations l10n, String code) => switch (code) {
       FailureCodes.collectionLimit => l10n.errCollectionLimit,
       FailureCodes.collectionNotFound => l10n.errCollectionNotFound,
       FailureCodes.followSelf => l10n.errFollowSelf,
+      FailureCodes.commentNotFound => l10n.commentsErrNotFound,
+      FailureCodes.commentNotOwner => l10n.commentsErrNotOwner,
+      FailureCodes.commentNotAvailable => l10n.commentsErrNotAvailable,
+      FailureCodes.commentPinReply => l10n.commentsErrPinReply,
+      FailureCodes.commentPinNotAuthor => l10n.commentsErrPinNotAuthor,
+      FailureCodes.commentPinConflict => l10n.commentsErrPinConflict,
+      FailureCodes.commentArticleLimit => l10n.commentsErrArticleLimit,
+      FailureCodes.commentDuplicate => l10n.commentsErrDuplicate,
+      FailureCodes.commentEmpty => l10n.commentsErrEmpty,
+      FailureCodes.commentTooLong => l10n.commentsErrTooLong,
+      FailureCodes.reportOwnContent => l10n.commentsErrReportOwnContent,
+      FailureCodes.reportTargetNotSupported => l10n.commentsErrReportNotSupported,
+      FailureCodes.reportReasonInvalid => l10n.commentsErrReportReason,
+      FailureCodes.reportTargetNotFound => l10n.commentsErrNotFound,
       FailureCodes.requestCancelled => l10n.errCancelled,
       FailureCodes.networkOffline => l10n.errOffline,
       FailureCodes.networkTimeout => l10n.errTimeout,

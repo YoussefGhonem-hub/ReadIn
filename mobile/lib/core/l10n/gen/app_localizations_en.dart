@@ -1761,4 +1761,279 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errFollowSelf => 'You can\'t follow yourself.';
+
+  @override
+  String get commentsOpen => 'Open the comments';
+
+  @override
+  String get commentsTitle => 'Comments';
+
+  @override
+  String commentsTitleCount(int count) {
+    return 'Comments ($count)';
+  }
+
+  @override
+  String get commentsSortTop => 'Top';
+
+  @override
+  String get commentsSortNewest => 'Newest';
+
+  @override
+  String get commentsEmptyTitle => 'No comments yet';
+
+  @override
+  String get commentsEmptyBody => 'Be the first to share what you think.';
+
+  @override
+  String get commentsAuthorBadge => 'Author';
+
+  @override
+  String get commentsPinned => 'Pinned';
+
+  @override
+  String get commentsEdited => 'edited';
+
+  @override
+  String get commentsDeletedPlaceholder => 'This comment was deleted';
+
+  @override
+  String get commentsHiddenPlaceholder => 'Hidden by moderators';
+
+  @override
+  String get commentsHiddenNotice =>
+      'Hidden by moderators. Only you and the moderators can see it.';
+
+  @override
+  String get commentsDeletedUser => 'Deleted user';
+
+  @override
+  String get commentsLike => 'Like';
+
+  @override
+  String get commentsUnlike => 'Remove your like';
+
+  @override
+  String commentsLikesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count likes',
+      one: '1 like',
+      zero: 'No likes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentsReply => 'Reply';
+
+  @override
+  String commentsMoreReplies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Show $count more replies',
+      one: 'Show 1 more reply',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentsMoreRepliesAny => 'Show more replies';
+
+  @override
+  String commentsNewPill(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new comments',
+      one: '1 new comment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentsSending => 'Sending…';
+
+  @override
+  String get commentsTimeNow => 'now';
+
+  @override
+  String commentsTimeMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min ago',
+      one: '1 min ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commentsTimeHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hrs ago',
+      one: '1 hr ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commentsTimeDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: 'yesterday',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentsComposerHint => 'Write a comment…';
+
+  @override
+  String get commentsReplyHint => 'Write a reply…';
+
+  @override
+  String get commentsSend => 'Send';
+
+  @override
+  String commentsReplyingTo(String name) {
+    return 'Replying to $name';
+  }
+
+  @override
+  String get commentsEditing => 'Editing your comment';
+
+  @override
+  String get commentsMentionSuggestions => 'People to mention';
+
+  @override
+  String get commentsGuestPrompt => 'Sign in to join the conversation.';
+
+  @override
+  String get commentsMenu => 'Comment options';
+
+  @override
+  String get commentsDeleteTitle => 'Delete this comment?';
+
+  @override
+  String get commentsDeleteBody => 'This can\'t be undone. Replies to it stay.';
+
+  @override
+  String get commentsDeleted => 'Comment deleted';
+
+  @override
+  String get commentsPin => 'Pin';
+
+  @override
+  String get commentsUnpin => 'Unpin';
+
+  @override
+  String get commentsReport => 'Report';
+
+  @override
+  String get commentsModHide => 'Hide (moderator)';
+
+  @override
+  String get commentsModUnhide => 'Unhide (moderator)';
+
+  @override
+  String get commentsModDelete => 'Delete (moderator)';
+
+  @override
+  String get commentsModDeleteTitle => 'Delete this comment for everyone?';
+
+  @override
+  String get commentsModDeleteBody =>
+      'It\'s removed for every reader and recorded in the audit log.';
+
+  @override
+  String get commentsHidden => 'Comment hidden';
+
+  @override
+  String get commentsUnhidden => 'Comment visible again';
+
+  @override
+  String get commentsReportTitle => 'Report comment';
+
+  @override
+  String get commentsReportBody =>
+      'Why are you reporting it? Our moderators will review it.';
+
+  @override
+  String get commentsReportSpam => 'Spam';
+
+  @override
+  String get commentsReportMisinformation => 'Misinformation';
+
+  @override
+  String get commentsReportHarassment => 'Harassment';
+
+  @override
+  String get commentsReportCopyright => 'Copyright';
+
+  @override
+  String get commentsReportOther => 'Something else';
+
+  @override
+  String get commentsReportDetails => 'Details (optional)';
+
+  @override
+  String get commentsReportSubmit => 'Send report';
+
+  @override
+  String get commentsReportThanks => 'Thanks, we\'ll review it.';
+
+  @override
+  String get commentsErrRateLimited =>
+      'You\'re commenting too fast. Wait a minute and try again.';
+
+  @override
+  String get commentsErrNotFound => 'This comment doesn\'t exist anymore.';
+
+  @override
+  String get commentsErrNotOwner => 'Only the comment\'s author can change it.';
+
+  @override
+  String get commentsErrNotAvailable => 'This comment was deleted or hidden.';
+
+  @override
+  String get commentsErrPinReply => 'Only top-level comments can be pinned.';
+
+  @override
+  String get commentsErrPinNotAuthor =>
+      'Only the article\'s author can pin comments.';
+
+  @override
+  String get commentsErrPinConflict =>
+      'Another comment was pinned at the same time. Try again.';
+
+  @override
+  String get commentsErrArticleLimit =>
+      'You\'ve commented a lot on this article. Try again later.';
+
+  @override
+  String get commentsErrDuplicate => 'You just posted the same comment.';
+
+  @override
+  String get commentsErrEmpty => 'Write something first.';
+
+  @override
+  String get commentsErrTooLong =>
+      'A comment can have at most 2000 characters.';
+
+  @override
+  String get commentsErrReportOwnContent =>
+      'You can\'t report your own comment.';
+
+  @override
+  String get commentsErrReportNotSupported => 'This can\'t be reported yet.';
+
+  @override
+  String get commentsErrReportReason => 'Choose a reason.';
 }

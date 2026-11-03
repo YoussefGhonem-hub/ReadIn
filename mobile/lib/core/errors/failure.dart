@@ -111,6 +111,22 @@ abstract final class FailureCodes {
   static const collectionNotFound = 'collection.not_found';
   static const followSelf = 'follow.self';
 
+  // Comments, reports and moderation (F11, F22 hooks)
+  static const commentNotFound = 'comment.not_found';
+  static const commentNotOwner = 'comment.not_owner';
+  static const commentNotAvailable = 'comment.not_available';
+  static const commentPinReply = 'comment.pin_reply';
+  static const commentPinNotAuthor = 'comment.pin_not_author';
+  static const commentPinConflict = 'comment.pin_conflict';
+  static const commentArticleLimit = 'comment.article_limit';
+  static const commentDuplicate = 'comment.duplicate';
+  static const commentEmpty = 'comment.empty';
+  static const commentTooLong = 'comment.too_long';
+  static const reportOwnContent = 'report.own_content';
+  static const reportTargetNotSupported = 'report.target_not_supported';
+  static const reportReasonInvalid = 'report.reason_invalid';
+  static const reportTargetNotFound = 'report.target_not_found';
+
   // Client-side
   static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';

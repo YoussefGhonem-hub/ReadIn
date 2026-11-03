@@ -231,6 +231,11 @@ class EngagementCubit extends Cubit<EngagementState> {
     );
   }
 
+  /// The comments sheet's count (F11): the page's `total`, then the viewer's own posts and deletes. It replaces the
+  /// count, as live counters do.
+  void setCommentCount(String articleId, int count) =>
+      _update(articleId, (overlay) => overlay.merge(commentCount: math.max(0, count)));
+
   /// The reaction button: 💡 when the viewer hasn't reacted, otherwise removes their reaction.
   Future<Failure?> tapReaction(ArticleCard card) =>
       react(card, of(card).myReaction == null ? ReactionType.insightful : null);
