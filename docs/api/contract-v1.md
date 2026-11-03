@@ -100,7 +100,8 @@ A wrong `currentPassword` counts toward the same 15-minute lockout as sign in (`
 
 Every card (for you, today, following, saved) carries the article's counters and, for a signed-in caller, their own
 `myReaction` / `isSaved` (`null` / `false` for guests). `ArticleDetailsDto` adds `isFollowingAuthor` (`false` for guests
-and on your own articles).
+and on your own articles) and `collectionIds`, your collections that hold the article (`[]` for guests and unsaved
+articles), so "add to collection" can show its ticks.
 
 ### Reactions (F10; writes: Bearer, permission `reactions.create`, rate limit `writes`)
 
@@ -448,6 +449,7 @@ interface ArticleDetailsDto extends ArticleCardDto {
   lastReviewedAt: string | null;
   readCount: number;             // saveCount comes from ArticleCardDto
   isFollowingAuthor: boolean;    // false for guests and on your own articles
+  collectionIds: string[];       // the caller's collections that hold it, oldest entry first; [] for guests and unsaved articles
 }
 
 // Reading & streaks (ADR 0013). Dates are the user's local dates, "yyyy-MM-dd".

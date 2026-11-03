@@ -65,6 +65,7 @@ public sealed class ArticleMappings : IRegister
                 ? new ReviewerDto(s.ReviewedBy.DisplayName, s.ReviewedBy.Username)
                 : null)
             .Ignore(d => d.Content)
-            .Ignore(d => d.IsFollowingAuthor);
+            .Ignore(d => d.IsFollowingAuthor)
+            .Ignore(d => d.CollectionIds);
     }
 }

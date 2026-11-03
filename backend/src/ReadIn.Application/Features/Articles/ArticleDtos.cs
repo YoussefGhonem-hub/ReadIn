@@ -100,6 +100,9 @@ public sealed record ArticleDetailsDto : ArticleCardDto
     /// <summary>The viewer follows the author; false for guests and on your own articles.</summary>
     public bool IsFollowingAuthor { get; init; }
 
+    /// <summary>The viewer's collections that hold this article; empty for guests and unsaved articles.</summary>
+    public IReadOnlyList<Guid> CollectionIds { get; init; } = [];
+
     /// <summary>Raw RDoc from the projection; parsed into <see cref="Content"/> by the handler.</summary>
     [JsonIgnore]
     public string ContentJson { get; init; } = default!;

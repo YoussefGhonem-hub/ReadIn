@@ -164,6 +164,37 @@ public sealed class SavedTests(ApiFactory api)
             .ProblemAsync(HttpStatusCode.BadRequest, "collection.limit");
     }
 
+    [Fact]
+    public async Task Article_details_list_the_viewers_collections_that_hold_it()
+    {
+        var author = await api.UserAsync();
+        var (articleId, slug) = await author.Client.PublishAsync();
+        var reader = await api.UserAsync();
+        var client = reader.Client;
+        var first = await CreateCollectionAsync(client, "First");
+        var second = await CreateCollectionAsync(client, "Second");
+        await CreateCollectionAsync(client, "Unused");
+
+        async Task<List<Guid>> CollectionIdsAsync(HttpClient viewer) =>
+            [.. (await viewer.GetFromJsonAsync<JsonObject>($"/api/v1/articles/{slug}", Ct))!["collectionIds"]!.AsArray()
+                .Select(c => c!.GetValue<Guid>())];
+
+        (await CollectionIdsAsync(client)).Should().BeEmpty("not saved yet");
+        await client.PutEmptyAsync($"/api/v1/me/saved/{articleId}").OkJsonAsync();
+        (await CollectionIdsAsync(client)).Should().BeEmpty("saved, but in no collection");
+
+        (await client.PutEmptyAsync($"/api/v1/me/collections/{first}/articles/{articleId}")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await client.PutEmptyAsync($"/api/v1/me/collections/{second}/articles/{articleId}")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await CollectionIdsAsync(client)).Should().Equal([first, second], "the cached details are personalized on every request");
+        (await CollectionIdsAsync(api.GuestClient())).Should().BeEmpty("guests have no collections");
+        (await CollectionIdsAsync(author.Client)).Should().BeEmpty("only the viewer's own collections");
+
+        (await client.DeleteAsync($"/api/v1/me/collections/{first}/articles/{articleId}", Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await CollectionIdsAsync(client)).Should().Equal(second);
+        await client.DeleteAsync($"/api/v1/me/saved/{articleId}", Ct).OkJsonAsync();
+        (await CollectionIdsAsync(client)).Should().BeEmpty("unsaving removes it from every collection");
+    }
+
     private static async Task<Guid> CreateCollectionAsync(HttpClient client, string name)
     {
         var response = await client.PostAsJsonAsync("/api/v1/me/collections", new { name }, Ct);
