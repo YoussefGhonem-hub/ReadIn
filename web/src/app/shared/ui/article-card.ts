@@ -15,14 +15,22 @@ import { CompactNumberPipe, ReadingTimePipe } from '../pipes/format.pipes';
 import { articleLink } from './article-link';
 
 /**
- * Feed row (F03): thumbnail, title, author, reading time, live counts, save (F13); post attachments (F26) full width
- * below. Content marked `rdCardFooter` goes under the card, above its link (e.g. the Saved page's actions).
+ * Feed row (F03): thumbnail, title, author (opens the profile, F14), reading time, live counts, save (F13); post
+ * attachments (F26) full width below. Content marked `rdCardFooter` goes under the card, above its link (e.g. the
+ * Saved page's actions).
  */
 @Component({
   selector: 'rd-article-card',
   imports: [RouterLink, TranslocoPipe, BdiText, ReadingTimePipe, CompactNumberPipe, LucideDynamicIcon, ArticleAttachments],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative block border-t border-border py-4 first:border-t-0' },
+  styles: `
+    .author::after {
+      content: '';
+      position: absolute;
+      inset: -14px 0;
+    }
+  `,
   template: `
     <a [routerLink]="link()" class="absolute inset-0 z-0" [attr.aria-label]="article().title"></a>
     <div class="flex gap-3">
@@ -44,12 +52,13 @@ import { articleLink } from './article-link';
           <rd-bdi-text [text]="article().title" />
         </h3>
         <div class="mt-1.5 flex flex-wrap items-center gap-x-2 text-xs text-text-secondary">
-          <span class="inline-flex items-center gap-1 text-text-primary">
+          <!-- Above the card link; its ::after box makes the tap target 44 px tall without moving anything. -->
+          <a [routerLink]="'/@' + article().author.username" class="author relative z-10 inline-flex items-center gap-1 text-text-primary no-underline hover:underline" data-card-author>
             {{ article().author.displayName }}
             @if (article().author.isVerified) {
               <svg lucideIcon="BadgeCheck" [size]="14" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
             }
-          </span>
+          </a>
           <span aria-hidden="true">·</span>
           <span>{{ article().readingTimeMinutes | rdReadingTime: lang() }}</span>
         </div>

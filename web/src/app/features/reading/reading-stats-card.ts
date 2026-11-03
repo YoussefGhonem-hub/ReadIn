@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, PLATFORM_ID, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { firstValueFrom } from 'rxjs';
+import { isApiError } from '../../core/api/api.config';
 import { ReadingStatsDto, StreakDto } from '../../core/api/models';
+import { ProfilesApi } from '../../core/api/profiles.api';
 import { ReadingApi } from '../../core/api/reading.api';
 import { LanguageService } from '../../core/i18n/language.service';
 import { BdiText } from '../../shared/directives/bdi-text';
@@ -26,7 +28,8 @@ export function fieldColor(token: string): string {
 
 /**
  * Reading stats card (F08, F14): the streak with its freeze status, the last 7 and 30 days, totals and top fields.
- * Loads its own data (`GET /me/stats`, owner only), so it can sit on any page, and hands the fresh streak to the badge.
+ * Loads its own data, so it can sit on any page: yours (`GET /me/stats`, whose fresh streak goes to the badge), or
+ * someone's public stats on their profile (`username`), without the coaching lines meant for the owner.
  */
 @Component({
   selector: 'rd-reading-stats-card',
@@ -50,23 +53,26 @@ export function fieldColor(token: string): string {
               </p>
             </div>
           </div>
-          <ul class="m-0 mt-3 flex list-none flex-col gap-1.5 p-0 text-sm">
-            <li class="flex items-start gap-2">
-              @if (s.streak.readToday) {
-                <svg lucideIcon="CircleCheck" [size]="16" class="mt-0.5 shrink-0 text-success" aria-hidden="true"></svg>
-                {{ 'reading.stats.readToday' | transloco }}
-              } @else {
-                <svg lucideIcon="BookOpen" [size]="16" class="mt-0.5 shrink-0 text-text-secondary" aria-hidden="true"></svg>
-                {{ (s.streak.current > 0 ? 'reading.stats.keepStreak' : 'reading.stats.startStreak') | transloco }}
-              }
-            </li>
-            @if (s.streak.current > 0) {
-              <li class="flex items-start gap-2" [class.font-semibold]="freeze() === 'pending'">
-                <span class="mt-px w-4 shrink-0 text-center text-callout-info-accent" aria-hidden="true">❄</span>
-                {{ 'reading.stats.freeze.' + freeze() | transloco }}
+          <!-- Coaching for the owner only; someone else's profile shows the numbers. -->
+          @if (!username()) {
+            <ul class="m-0 mt-3 flex list-none flex-col gap-1.5 p-0 text-sm">
+              <li class="flex items-start gap-2">
+                @if (s.streak.readToday) {
+                  <svg lucideIcon="CircleCheck" [size]="16" class="mt-0.5 shrink-0 text-success" aria-hidden="true"></svg>
+                  {{ 'reading.stats.readToday' | transloco }}
+                } @else {
+                  <svg lucideIcon="BookOpen" [size]="16" class="mt-0.5 shrink-0 text-text-secondary" aria-hidden="true"></svg>
+                  {{ (s.streak.current > 0 ? 'reading.stats.keepStreak' : 'reading.stats.startStreak') | transloco }}
+                }
               </li>
-            }
-          </ul>
+              @if (s.streak.current > 0) {
+                <li class="flex items-start gap-2" [class.font-semibold]="freeze() === 'pending'">
+                  <span class="mt-px w-4 shrink-0 text-center text-callout-info-accent" aria-hidden="true">❄</span>
+                  {{ 'reading.stats.freeze.' + freeze() | transloco }}
+                </li>
+              }
+            </ul>
+          }
 
           <!-- Last 7 / 30 days and all time -->
           <dl class="m-0 mt-4 grid grid-cols-3 gap-2">
@@ -102,14 +108,20 @@ export function fieldColor(token: string): string {
               }
             </ul>
           } @else {
-            <p class="m-0 text-sm text-text-secondary">{{ 'reading.stats.noReads' | transloco }}</p>
+            <p class="m-0 text-sm text-text-secondary">{{ (username() ? 'reading.stats.others.noReads' : 'reading.stats.noReads') | transloco }}</p>
           }
         }
       }
+      @case ('private') {
+        <p class="m-0 flex items-center gap-2 rounded-md bg-surface-variant p-3 text-sm text-text-secondary" data-stats-private>
+          <svg lucideIcon="LockKeyhole" [size]="16" class="shrink-0" aria-hidden="true"></svg>
+          {{ 'reading.stats.others.private' | transloco }}
+        </p>
+      }
       @case ('error') {
         <div class="flex flex-wrap items-center gap-3 rounded-md bg-callout-danger p-3 text-sm" role="alert">
-          <span class="flex-1">{{ 'reading.stats.loadError' | transloco }}</span>
-          <button type="button" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" (click)="load()">
+          <span class="flex-1">{{ (username() ? 'reading.stats.others.loadError' : 'reading.stats.loadError') | transloco }}</span>
+          <button type="button" class="rd-btn rd-btn-outline min-h-11 px-3 text-sm" (click)="load()">
             <svg lucideIcon="RefreshCw" [size]="14" aria-hidden="true"></svg>
             {{ 'common.retry' | transloco }}
           </button>
@@ -131,30 +143,44 @@ export function fieldColor(token: string): string {
 })
 export class ReadingStatsCard {
   private readonly api = inject(ReadingApi);
+  private readonly profiles = inject(ProfilesApi);
   private readonly streaks = inject(StreakStore);
   protected readonly lang = inject(LanguageService).lang;
 
-  protected readonly status = signal<'loading' | 'loaded' | 'error'>('loading');
+  /** Whose stats: null = yours (`GET /me/stats`); a username = their public stats (`GET /users/{username}/stats`). */
+  readonly username = input<string | null>(null);
+
+  protected readonly status = signal<'loading' | 'loaded' | 'private' | 'error'>('loading');
   protected readonly stats = signal<ReadingStatsDto | null>(null);
   protected readonly freeze = computed(() => {
     const stats = this.stats();
     return stats ? freezeStatus(stats.streak) : 'later';
   });
   protected readonly color = fieldColor;
+  private generation = 0;
 
   constructor() {
-    if (isPlatformBrowser(inject(PLATFORM_ID))) void this.load();
+    if (!isPlatformBrowser(inject(PLATFORM_ID))) return;
+    effect(() => {
+      this.username();
+      untracked(() => void this.load());
+    });
   }
 
   protected async load(): Promise<void> {
+    const username = this.username();
+    const generation = ++this.generation;
     this.status.set('loading');
     try {
-      const stats = await firstValueFrom(this.api.stats());
+      const stats = await firstValueFrom(username ? this.profiles.stats(username) : this.api.stats());
+      if (generation !== this.generation) return;
       this.stats.set(stats);
       this.status.set('loaded');
-      this.streaks.setStreak(stats.streak);
-    } catch {
-      this.status.set('error');
+      // Only your own stats feed the 🔥 badge.
+      if (!username) this.streaks.setStreak(stats.streak);
+    } catch (error) {
+      if (generation !== this.generation) return;
+      this.status.set(isApiError(error) && error.code === 'profile.stats_private' ? 'private' : 'error');
     }
   }
 }

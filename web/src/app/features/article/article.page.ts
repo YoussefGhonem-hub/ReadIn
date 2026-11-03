@@ -144,7 +144,10 @@ const TOC_MIN_HEADINGS = 3;
 
         <!-- Byline -->
         <div class="mt-5 flex items-center gap-3">
-          <rd-avatar [name]="a.author.displayName" [src]="a.author.avatarUrl" [size]="40" />
+          <!-- The name below is the link for keyboards and screen readers; the photo is the same link for taps. -->
+          <a [routerLink]="'/@' + a.author.username" class="flex shrink-0 rounded-full" tabindex="-1" aria-hidden="true" data-author-avatar>
+            <rd-avatar [name]="a.author.displayName" [src]="a.author.avatarUrl" [size]="40" />
+          </a>
           <div class="min-w-0">
             <a [routerLink]="'/@' + a.author.username" class="inline-flex items-center gap-1 font-semibold text-text-primary no-underline">
               {{ a.author.displayName }}

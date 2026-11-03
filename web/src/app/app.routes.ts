@@ -12,11 +12,11 @@ export function articleMatcher(segments: UrlSegment[]): UrlMatchResult | null {
   return null;
 }
 
-/** `/@{username}` (SPEC §23). */
+/** `/@{username}` and the pages under it (SPEC §23); features/profile/profile.routes.ts matches the rest. */
 export function profileMatcher(segments: UrlSegment[]): UrlMatchResult | null {
   const [first] = segments;
-  if (segments.length === 1 && first.path.startsWith('@') && first.path.length > 1) {
-    return { consumed: segments, posParams: { username: new UrlSegment(first.path.slice(1), {}) } };
+  if (first?.path.startsWith('@') && first.path.length > 1) {
+    return { consumed: [first], posParams: { username: new UrlSegment(first.path.slice(1), {}) } };
   }
   return null;
 }
@@ -45,17 +45,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/article/article.page').then((m) => m.ArticlePage),
         data: { hideBottomNav: true },
       },
-      {
-        matcher: profileMatcher,
-        loadComponent: () => import('./shared/ui/coming-soon.page').then((m) => m.ComingSoonPage),
-        data: { titleKey: 'nav.profile', phase: 1 },
-      },
+      { matcher: profileMatcher, loadChildren: () => import('./features/profile/profile.routes') },
       {
         path: 'saved',
         canActivate: [authGuard],
         loadComponent: () => import('./features/saved/saved.page').then((m) => m.SavedPage),
       },
-      { path: 'settings', loadComponent: () => import('./features/settings/settings.page').then((m) => m.SettingsPage) },
+      { path: 'settings', loadChildren: () => import('./features/settings/settings.routes') },
       {
         path: 'write',
         canActivate: [permissionGuard('articles.create')],

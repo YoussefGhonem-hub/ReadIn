@@ -12,7 +12,6 @@ import {
   SessionDto,
   UpdateInterestsRequest,
   UpdatePreferencesRequest,
-  UpdateProfileRequest,
   UsernameAvailabilityDto,
 } from './models';
 
@@ -26,10 +25,6 @@ export class MeApi {
     return this.http.get<MeDto>(`${this.base}/me`, {
       context: new HttpContext().set(SILENT_ERRORS, options.silent ?? false),
     });
-  }
-
-  updateProfile(body: UpdateProfileRequest): Observable<void> {
-    return this.http.patch<void>(`${this.base}/me`, body);
   }
 
   /** After sign up: display name, unique @username and an optional avatar URL from `POST /uploads/images`. */

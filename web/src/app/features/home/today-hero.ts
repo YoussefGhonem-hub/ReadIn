@@ -10,7 +10,7 @@ import { LocalizedDatePipe, ReadingTimePipe } from '../../shared/pipes/format.pi
 import { articleLink } from '../../shared/ui/article-link';
 import { Avatar } from '../../shared/ui/avatar';
 
-/** "مقال النهارده" hero card (F03/F07). */
+/** "مقال النهارده" hero card (F03/F07); its author row opens the writer's profile (F14). */
 @Component({
   selector: 'rd-today-hero',
   imports: [RouterLink, TranslocoPipe, BdiText, Avatar, ReadingTimePipe, LocalizedDatePipe, LucideDynamicIcon],
@@ -30,7 +30,7 @@ import { Avatar } from '../../shared/ui/avatar';
           <svg lucideIcon="Sparkles" [size]="12" aria-hidden="true"></svg>
         </span>
       </div>
-      <div class="p-4">
+      <div class="px-4 pt-4">
         <div class="mb-2 flex flex-wrap items-center gap-2 text-xs">
           <span class="rd-tag"><rd-bdi-text [text]="fieldName()" /></span>
           @if (article().isReviewed) {
@@ -39,18 +39,23 @@ import { Avatar } from '../../shared/ui/avatar';
           <span class="font-semibold text-primary">{{ article().readingTimeMinutes | rdReadingTime: lang() }}</span>
         </div>
         <h2 class="m-0 text-lg font-semibold leading-relaxed" [attr.dir]="titleDir()"><rd-bdi-text [text]="article().title" /></h2>
-        <div class="mt-3 flex items-center justify-between gap-2 text-xs text-text-secondary">
-          <span class="inline-flex items-center gap-2 font-semibold text-text-primary">
-            <rd-avatar [name]="article().author.displayName" [src]="article().author.avatarUrl" [size]="26" />
-            {{ article().author.displayName }}
-            @if (article().author.isVerified) {
-              <svg lucideIcon="BadgeCheck" [size]="14" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
-            }
-          </span>
-          <span>{{ article().publishedAt | rdDate: lang() }}</span>
-        </div>
       </div>
     </a>
+    <!-- Outside the article link: the author opens their profile (F14). -->
+    <div class="flex items-center justify-between gap-2 px-4 pb-2 text-xs text-text-secondary">
+      <a
+        [routerLink]="'/@' + article().author.username"
+        class="inline-flex min-h-11 items-center gap-2 font-semibold text-text-primary no-underline hover:underline"
+        data-hero-author
+      >
+        <rd-avatar [name]="article().author.displayName" [src]="article().author.avatarUrl" [size]="26" />
+        {{ article().author.displayName }}
+        @if (article().author.isVerified) {
+          <svg lucideIcon="BadgeCheck" [size]="14" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+        }
+      </a>
+      <span>{{ article().publishedAt | rdDate: lang() }}</span>
+    </div>
   `,
 })
 export class TodayHero {

@@ -1,0 +1,160 @@
+import { TestBed } from '@angular/core/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
+import { Meta, Title } from '@angular/platform-browser';
+import { NEVER } from 'rxjs';
+import { testProfile } from '../../../testing/profile-testing';
+import { TEST_API, flushMicrotasks, problem, setupSocialTesting, testCard } from '../../../testing/social-testing';
+import { ProfileDto } from '../../core/api/models';
+import { ReadingApi } from '../../core/api/reading.api';
+import { ProfilesApi } from '../../core/api/profiles.api';
+import { profileAvatar } from './profile-header';
+import { ProfilePage } from './profile.page';
+
+const isProfile = (username: string) => (r: { url: string }) => r.url === `${TEST_API}/users/${username}`;
+const isArticles = (username: string) => (r: { url: string }) => r.url === `${TEST_API}/users/${username}/articles`;
+
+describe('ProfilePage (F14)', () => {
+  let http: HttpTestingController;
+
+  afterEach(() => http.verify());
+
+  async function render(profile: ProfileDto | { status: number; code: string }, options: { guest?: boolean; articles?: number } = {}) {
+    TestBed.resetTestingModule();
+    ({ http } = setupSocialTesting({
+      guest: options.guest,
+      // The stats views load their own data; here they get an empty answer.
+      providers: [
+        { provide: ReadingApi, useValue: { stats: () => NEVER, heatmap: () => NEVER } },
+        { provide: ProfilesApi, useFactory: () => stubStats(new ProfilesApi()) },
+      ],
+    }));
+    const username = 'username' in profile ? profile.username : 'ghost';
+    const fixture = TestBed.createComponent(ProfilePage);
+    fixture.componentRef.setInput('username', username);
+    fixture.detectChanges();
+    const articles = Array.from({ length: options.articles ?? 2 }, (_, i) => testCard({ id: `a${i}`, slug: `a${i}`, title: `Article ${i}` }));
+    http.expectOne(isArticles(username)).flush({ items: articles, nextCursor: null });
+    const req = http.expectOne(isProfile(username));
+    if ('status' in profile) req.flush(problem(profile.status, profile.code), { status: profile.status, statusText: 'Error' });
+    else req.flush(profile);
+    const root = fixture.nativeElement as HTMLElement;
+    const stable = async () => {
+      await flushMicrotasks();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+    await stable();
+    return { fixture, root, stable, tabs: () => [...root.querySelectorAll('[data-profile-tab]')].map((t) => t.getAttribute('data-profile-tab')) };
+  }
+
+  /** Reading stats never answer in these tests: the card and heatmap stay on their skeletons. */
+  function stubStats(api: ProfilesApi): ProfilesApi {
+    return Object.assign(api, { stats: () => NEVER, heatmap: () => NEVER });
+  }
+
+  it('someone else: name, verified, @handle LTR, Follows you, Follow, bio in its own direction, links, stats', async () => {
+    const { root } = await render(testProfile());
+    const header = root.querySelector('[data-profile-header]')!;
+    expect(header.querySelector('[data-profile-name]')!.textContent).toContain('Karim Hassan');
+    expect(header.querySelector('[data-profile-name] svg')!.getAttribute('aria-label')).toBe('كاتب موثّق');
+    expect(header.querySelector('[data-profile-username]')!.getAttribute('dir')).toBe('ltr');
+    expect(header.querySelector('[data-profile-username]')!.textContent).toBe('@karim');
+    expect(header.querySelector('[data-follows-you]')!.textContent).toContain('بيتابعك');
+    expect(header.querySelector('[data-profile-follow] [data-follow]')).not.toBeNull();
+    expect(header.querySelector('[data-edit-profile]')).toBeNull();
+    expect(header.querySelector('[data-profile-bio]')!.getAttribute('dir')).toBe('ltr');
+    const links = [...header.querySelectorAll<HTMLAnchorElement>('[data-profile-link]')];
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['https://github.com/karim', 'https://karim.dev/']);
+    expect(links.every((a) => a.target === '_blank' && a.rel.includes('noopener'))).toBe(true);
+    expect(links[1].textContent).toContain('karim.dev');
+    expect(header.querySelector('[data-stat="followers"]')!.getAttribute('href')).toBe('/@karim/followers');
+    expect(header.querySelector('[data-stat="following"]')!.getAttribute('href')).toBe('/@karim/following');
+    expect(header.querySelector('[data-stat="reads"]')!.textContent).toContain('5.1');
+    // Private stats: no reading section; no Saved tab.
+    expect(root.querySelector('[data-profile-reading]')).toBeNull();
+    expect(TestBed.inject(Title).getTitle()).toBe('Karim Hassan (@karim) — ReadIn');
+    expect(TestBed.inject(Meta).getTag('property="og:type"')!.content).toBe('profile');
+  });
+
+  it('following moves the followers count at once', async () => {
+    const { root, stable } = await render(testProfile());
+    (root.querySelector('[data-profile-follow] [data-follow]') as HTMLElement).click();
+    await stable();
+    expect(root.querySelector('[data-stat="followers"]')!.textContent).toContain('341');
+    http.expectOne(`${TEST_API}/users/writer-1/follow`).flush({ isFollowing: true, followerCount: 341 });
+    await stable();
+  });
+
+  it('tabs: Articles / Paths / About for someone else, with arrow keys mirrored in RTL', async () => {
+    const { root, tabs, stable } = await render(testProfile());
+    expect(tabs()).toEqual(['articles', 'paths', 'about']);
+    expect(root.querySelectorAll('[data-profile-articles] rd-article-card')).toHaveLength(2);
+
+    const articles = root.querySelector<HTMLElement>('[data-profile-tab="articles"]')!;
+    articles.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })); // RTL: the next tab
+    await stable();
+    expect(root.querySelector('[data-profile-tab="paths"]')!.getAttribute('aria-selected')).toBe('true');
+    expect(root.querySelector('[data-profile-paths]')!.textContent).toContain('المسارات جاية قريب');
+
+    (root.querySelector('[data-profile-tab="about"]') as HTMLElement).click();
+    await stable();
+    const about = root.querySelector('[data-profile-about]')!;
+    expect(about.querySelector('[data-profile-expertise]')!.textContent).toContain('البرمجيات');
+    expect(about.querySelector('[data-profile-joined]')!.textContent).toContain('2026');
+  });
+
+  it('your own profile: Edit profile, a Saved tab, reading stats with the public switch', async () => {
+    const { root, tabs, stable } = await render(testProfile({ id: 'user-1', username: 'mona', isMe: true, followsYou: false, readingStatsVisible: true }), { articles: 0 });
+    expect(root.querySelector('[data-edit-profile]')!.getAttribute('href')).toBe('/settings/profile');
+    expect(root.querySelector('[data-profile-follow]')).toBeNull();
+    expect(root.querySelector('[data-follows-you]')).toBeNull();
+    expect(tabs()).toEqual(['articles', 'saved', 'paths', 'about']);
+    expect(root.querySelector('[data-profile-reading] [data-public-stats] [role="switch"]')).not.toBeNull();
+    expect(root.querySelector('[data-articles-empty]')!.textContent).toContain('لسه منشرتش مقالات');
+
+    (root.querySelector('[data-profile-tab="saved"]') as HTMLElement).click();
+    await stable();
+    http.expectOne((r) => r.url === `${TEST_API}/me/saved`).flush({ items: [], nextCursor: null });
+    await stable();
+    expect(root.querySelector('[data-profile-saved] [data-saved-empty]')).not.toBeNull();
+  });
+
+  it('the session already knows it is you before the personalized copy arrives', async () => {
+    const { root } = await render(testProfile({ id: 'user-1', username: 'mona', isMe: false, readingStatsVisible: false }));
+    expect(root.querySelector('[data-edit-profile]')).not.toBeNull();
+    expect(root.querySelector('[data-profile-reading]')).not.toBeNull();
+  });
+
+  it('public reading stats show for guests, without the switch', async () => {
+    const { root } = await render(testProfile({ readingStatsVisible: true }), { guest: true });
+    expect(root.querySelector('[data-profile-reading] rd-reading-stats-card')).not.toBeNull();
+    expect(root.querySelector('[data-public-stats]')).toBeNull();
+    expect(root.querySelector('[data-follows-you]')).not.toBeNull(); // as the API said
+  });
+
+  it('an unknown user is a not-found state', async () => {
+    const { root } = await render({ status: 404, code: 'user.not_found' });
+    expect(root.querySelector('[data-profile-not-found]')!.textContent).toContain('المستخدم ده مش موجود');
+  });
+
+  it('a failed load offers a retry', async () => {
+    const { root, stable } = await render({ status: 500, code: 'server.error' });
+    (root.querySelector('rd-error-state button') as HTMLElement).click();
+    await flushMicrotasks();
+    TestBed.tick();
+    http.expectOne(isProfile('ghost')).flush(testProfile({ username: 'ghost' }));
+    await stable();
+    expect(root.querySelector('[data-profile-header]')).not.toBeNull();
+  });
+});
+
+describe('profileAvatar', () => {
+  it('uses the 256 px variant with a srcset up to 512, or the plain URL', () => {
+    expect(profileAvatar({ avatarUrl: null, avatarVariants: null })).toBeNull();
+    expect(profileAvatar({ avatarUrl: 'https://x/old.webp', avatarVariants: null })).toEqual({ src: 'https://x/old.webp', srcset: null });
+    expect(profileAvatar({ avatarUrl: 'https://x/a_256', avatarVariants: { '64': 'https://x/a_64', '128': 'https://x/a_128', '256': 'https://x/a_256', '512': 'https://x/a_512' } })).toEqual({
+      src: 'https://x/a_256',
+      srcset: 'https://x/a_128 128w, https://x/a_256 256w, https://x/a_512 512w',
+    });
+  });
+});

@@ -14,10 +14,17 @@ export interface CursorPage<T> {
   nextCursor: string | null;
 }
 
+/** https URLs (≤ 2048); null or missing when not set. */
 export interface ProfileLinks {
-  github?: string;
-  linkedin?: string;
-  website?: string;
+  github?: string | null;
+  linkedin?: string | null;
+  website?: string | null;
+}
+
+/** Settings → Privacy (F18). "Who can mention me" joins it with F11. */
+export interface PrivacySettingsDto {
+  /** Reading stats + heatmap on the public profile (F14). Off by default. */
+  publicReadingStats: boolean;
 }
 
 export interface MeDto {
@@ -49,6 +56,8 @@ export interface MeDto {
   roles: string[];
   permissions: string[];
   interests: { fieldIds: string[]; topicIds: string[] };
+  /** Missing from an API older than F14: every setting at its default. */
+  privacy?: PrivacySettingsDto;
 }
 
 // ── Auth (SPEC §9, ADR 0007, ADR 0009, ADR 0012) ────────────────
@@ -147,12 +156,22 @@ export interface UsernameAvailabilityDto {
   available: boolean;
 }
 
+/** `PATCH /me` (F14) → `204`; refetch `GET /me` afterwards. */
 export interface UpdateProfileRequest {
+  /** 2..60 */
   displayName: string;
+  /** ^[a-z0-9_]{3,30}$ */
   username: string;
+  /** ≤ 300 */
   bio?: string | null;
-  avatarUrl?: string | null;
   links?: ProfileLinks;
+  /**
+   * Left out: keep the current avatar. null: remove it. An image you uploaded with `purpose=avatar`: set it.
+   * `400 profile.avatar_invalid` (also for an unknown id), field `avatarAssetId`.
+   */
+  avatarAssetId?: string | null;
+  /** 0–5 enabled field ids, in order; left out = unchanged, [] clears. `400 profile.expertise_invalid` (field `expertiseFieldIds`). */
+  expertiseFieldIds?: string[];
 }
 
 export interface UpdatePreferencesRequest {
@@ -419,6 +438,55 @@ export interface ModerationActionRequest {
   action: ModerationAction;
   targetType: 'comment';
   targetId: string;
+}
+
+// ── Profile (F14) ───────────────────────────────────────────
+
+/** Square avatar renditions (WebP) by width. */
+export type AvatarVariantsDto = Partial<Record<'64' | '128' | '256' | '512', string>>;
+
+/** A field of expertise. `name` is in the request's UI language; `icon` is a Lucide name and `color` a token name. */
+export interface ExpertiseFieldDto {
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+export interface ProfileStatsDto {
+  /** Published articles. */
+  articles: number;
+  followers: number;
+  following: number;
+  /** Reads of the user's published articles. */
+  totalReads: number;
+}
+
+/** `GET /users/{username}` 🌐 — the public profile. Never carries the phone number (SPEC §9.5). */
+export interface ProfileDto {
+  id: string;
+  displayName: string;
+  username: string;
+  /** The variant of at least 256 px, else the largest (the same URL every AuthorDto carries), or null. */
+  avatarUrl: string | null;
+  /** Null without an avatar, or for an old avatar without variants; otherwise all four widths (absolute URLs). */
+  avatarVariants: AvatarVariantsDto | null;
+  isVerified: boolean;
+  /** Mixed text: rendered in the direction of its first strong character. */
+  bio: string | null;
+  links: ProfileLinks;
+  /** In the user's order, at most 5. */
+  expertise: ExpertiseFieldDto[];
+  joinedAt: string;
+  stats: ProfileStatsDto;
+  isMe: boolean;
+  /** False for guests and on your own profile. */
+  isFollowing: boolean;
+  /** False for guests and on your own profile. */
+  followsYou: boolean;
+  /** True on your own profile, or when the user made their reading stats public. */
+  readingStatsVisible: boolean;
 }
 
 // ── Writing ─────────────────────────────────────────────────

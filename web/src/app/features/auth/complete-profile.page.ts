@@ -5,37 +5,22 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
-import { Subscription, catchError, debounceTime, distinctUntilChanged, firstValueFrom, map, of, startWith, switchMap } from 'rxjs';
+import { Subscription, firstValueFrom, startWith } from 'rxjs';
 import { isApiError } from '../../core/api/api.config';
 import { MeApi } from '../../core/api/me.api';
 import { MediaApi } from '../../core/api/media.api';
-import { MediaAssetDto } from '../../core/api/models';
 import { postAuthUrl } from '../../core/auth/account-setup';
 import { AuthService } from '../../core/auth/auth.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { ErrorMessages } from '../../core/i18n/error-messages';
+import { AVATAR_TYPES, avatarUrlOf } from '../../shared/media/avatar-variant';
 import { ImageCompressor } from '../../shared/media/image-compressor';
 import { Avatar } from '../../shared/ui/avatar';
+import { UsernameStatus, normalizeUsername, usernameStatus } from '../../shared/utils/username';
 import { AuthCard, SubmitButton, fieldErrors } from './auth-shared';
 
-export const USERNAME_PATTERN = /^[a-z0-9_]{3,30}$/;
 /** Placeholder handles from sign up (`@reader_xxxxxxxxxx`) are not offered as the user's choice. */
 const PLACEHOLDER_USERNAME = /^reader_[a-z0-9]{10}$/;
-const USERNAME_DEBOUNCE_MS = 400;
-const AVATAR_TYPES = 'image/jpeg,image/png,image/webp,image/heic,image/heif';
-
-type UsernameStatus = 'idle' | 'invalid' | 'checking' | 'available' | 'taken' | 'error';
-
-/** Lower-cases and drops what a handle can't contain, so "Mona Adel" becomes "monaadel" as it's typed. */
-export function normalizeUsername(value: string): string {
-  return value.trim().replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30);
-}
-
-/** The avatar variant to store: 256 px when there is one (avatars are 64/128/256/512). */
-export function avatarUrlOf(asset: MediaAssetDto): string | null {
-  const variants = [...asset.variants].sort((a, b) => a.width - b.width);
-  return (variants.find((v) => v.width >= 256) ?? variants.at(-1))?.url ?? null;
-}
 
 /**
  * Complete profile (SPEC §9.2), right after Create account: display name, a unique @username with a live
@@ -171,16 +156,7 @@ export class CompleteProfilePage {
 
   private readonly value = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
   protected readonly usernameStatus = toSignal(
-    this.form.controls.username.valueChanges.pipe(
-      startWith(this.form.controls.username.value),
-      map((username) => username.trim()),
-      distinctUntilChanged(),
-      switchMap((username) => {
-        if (!username) return of<UsernameStatus>('idle');
-        if (!USERNAME_PATTERN.test(username)) return of<UsernameStatus>('invalid');
-        return this.check(username).pipe(startWith<UsernameStatus>('checking'));
-      }),
-    ),
+    usernameStatus(this.form.controls.username.valueChanges.pipe(startWith(this.form.controls.username.value)), (u) => this.meApi.usernameAvailable(u)),
     { initialValue: 'idle' as UsernameStatus },
   );
 
@@ -301,15 +277,5 @@ export class CompleteProfilePage {
     } finally {
       this.busy.set(false);
     }
-  }
-
-  /** `GET /users/username-available` after a pause in typing. */
-  private check(username: string) {
-    return of(username).pipe(
-      debounceTime(USERNAME_DEBOUNCE_MS),
-      switchMap((u) => this.meApi.usernameAvailable(u)),
-      map((result): UsernameStatus => (!result.valid ? 'invalid' : result.available ? 'available' : 'taken')),
-      catchError(() => of<UsernameStatus>('error')),
-    );
   }
 }

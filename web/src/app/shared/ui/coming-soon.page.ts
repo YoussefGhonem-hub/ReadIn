@@ -18,9 +18,6 @@ import { LucideDynamicIcon } from '@lucide/angular';
     </span>
     <h1 class="m-0 text-2xl font-semibold">{{ titleKey() | transloco }}</h1>
     <p class="m-0 max-w-md text-text-secondary">{{ 'comingSoon.body' | transloco }}</p>
-    @if (username()) {
-      <p class="m-0 text-sm text-text-secondary" dir="ltr">&#64;{{ username() }}</p>
-    }
     @if (phase()) {
       <span class="rd-tag rd-tag-accent">{{ 'comingSoon.phase' | transloco: { phase: phase() } }}</span>
     }
@@ -30,6 +27,4 @@ import { LucideDynamicIcon } from '@lucide/angular';
 export class ComingSoonPage {
   readonly titleKey = input('comingSoon.title');
   readonly phase = input<number | null>(null);
-  /** Present on the profile route (`/@username`). */
-  readonly username = input<string | null>(null);
 }

@@ -14,11 +14,15 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { AccountSettings } from './account/account-settings';
+import { ProfileSettings } from './profile-settings';
 
-/** Settings (F18): theme, UI language, article language, reminder time, push notifications, font size, account. */
+/**
+ * Settings (F18): theme, UI language, article language, reminder time, push notifications, font size, profile and
+ * privacy, account.
+ */
 @Component({
   selector: 'rd-settings-page',
-  imports: [FormsModule, TranslocoPipe, Segmented, LucideDynamicIcon, AccountSettings],
+  imports: [FormsModule, TranslocoPipe, Segmented, LucideDynamicIcon, AccountSettings, ProfileSettings],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
   template: `
@@ -96,6 +100,9 @@ import { AccountSettings } from './account/account-settings';
         </div>
       </fieldset>
     </section>
+
+    <!-- Profile and privacy (F14, F18) -->
+    <rd-profile-settings />
 
     <!-- Account (F18): phone, password, PIN, sign out, sign out everywhere, delete -->
     <rd-account-settings />

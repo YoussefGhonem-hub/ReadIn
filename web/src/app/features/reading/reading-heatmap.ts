@@ -5,15 +5,20 @@ import {
   PLATFORM_ID,
   afterRenderEffect,
   computed,
+  effect,
   inject,
+  input,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { firstValueFrom } from 'rxjs';
+import { isApiError } from '../../core/api/api.config';
 import { ReadingHeatmapDto } from '../../core/api/models';
+import { ProfilesApi } from '../../core/api/profiles.api';
 import { HEATMAP_DAYS, ReadingApi } from '../../core/api/reading.api';
 import { LanguageService } from '../../core/i18n/language.service';
 import { intlLocale, translatePlural } from '../../shared/pipes/format.pipes';
@@ -37,9 +42,9 @@ const LEVELS: { level: HeatmapLevel; label: string }[] = [
 let nextId = 0;
 
 /**
- * Reading heatmap (F08, F14): the last 12 months, GitHub-style, one column per week. Loads its own data
- * (`GET /me/stats/heatmap`, owner only), so it can sit on any page. The grid mirrors in RTL (time flows toward the
- * inline end) and opens scrolled to today.
+ * Reading heatmap (F08, F14): the last 12 months, GitHub-style, one column per week. Loads its own data, so it can
+ * sit on any page: yours (`GET /me/stats/heatmap`) or, with `username`, someone's public heatmap on their profile.
+ * The grid mirrors in RTL (time flows toward the inline end) and opens scrolled to today.
  */
 @Component({
   selector: 'rd-reading-heatmap',
@@ -103,10 +108,13 @@ let nextId = 0;
             </div>
           }
         }
+        @case ('private') {
+          <p class="m-0 rounded-md bg-surface-variant p-3 text-sm text-text-secondary">{{ 'reading.stats.others.private' | transloco }}</p>
+        }
         @case ('error') {
           <div class="flex flex-wrap items-center gap-3 rounded-md bg-callout-danger p-3 text-sm" role="alert">
-            <span class="flex-1">{{ 'reading.heatmap.loadError' | transloco }}</span>
-            <button type="button" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" (click)="load()">
+            <span class="flex-1">{{ (username() ? 'reading.heatmap.othersLoadError' : 'reading.heatmap.loadError') | transloco }}</span>
+            <button type="button" class="rd-btn rd-btn-outline min-h-11 px-3 text-sm" (click)="load()">
               <svg lucideIcon="RefreshCw" [size]="14" aria-hidden="true"></svg>
               {{ 'common.retry' | transloco }}
             </button>
@@ -121,6 +129,7 @@ let nextId = 0;
 })
 export class ReadingHeatmap {
   private readonly api = inject(ReadingApi);
+  private readonly profiles = inject(ProfilesApi);
   private readonly transloco = inject(TranslocoService);
   private readonly language = inject(LanguageService);
 
@@ -128,7 +137,11 @@ export class ReadingHeatmap {
   protected readonly levels = LEVELS;
   protected readonly levelClasses = LEVEL_CLASSES;
   protected readonly frozenClass = FROZEN_CLASS;
-  protected readonly status = signal<'loading' | 'loaded' | 'error'>('loading');
+  /** Whose heatmap: null = yours; a username = their public one (`GET /users/{username}/stats/heatmap`). */
+  readonly username = input<string | null>(null);
+
+  protected readonly status = signal<'loading' | 'loaded' | 'private' | 'error'>('loading');
+  private generation = 0;
   private readonly data = signal<ReadingHeatmapDto | null>(null);
   private readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');
 
@@ -167,7 +180,12 @@ export class ReadingHeatmap {
   });
 
   constructor() {
-    if (isPlatformBrowser(inject(PLATFORM_ID))) void this.load();
+    if (isPlatformBrowser(inject(PLATFORM_ID))) {
+      effect(() => {
+        this.username();
+        untracked(() => void this.load());
+      });
+    }
 
     // Open on the newest weeks. In RTL they are on the left, where scrollLeft is negative.
     let scrolledFor: HTMLElement | null = null;
@@ -180,12 +198,17 @@ export class ReadingHeatmap {
   }
 
   protected async load(): Promise<void> {
+    const username = this.username();
+    const generation = ++this.generation;
     this.status.set('loading');
     try {
-      this.data.set(await firstValueFrom(this.api.heatmap(HEATMAP_DAYS)));
+      const data = await firstValueFrom(username ? this.profiles.heatmap(username, HEATMAP_DAYS) : this.api.heatmap(HEATMAP_DAYS));
+      if (generation !== this.generation) return;
+      this.data.set(data);
       this.status.set('loaded');
-    } catch {
-      this.status.set('error');
+    } catch (error) {
+      if (generation !== this.generation) return;
+      this.status.set(isApiError(error) && error.code === 'profile.stats_private' ? 'private' : 'error');
     }
   }
 }

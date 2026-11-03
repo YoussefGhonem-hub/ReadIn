@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of, throwError } from 'rxjs';
 import { ApiError } from '../../core/api/api.config';
 import { ReadingHeatmapDto, ReadingStatsDto, StreakDto } from '../../core/api/models';
+import { ProfilesApi } from '../../core/api/profiles.api';
 import { ReadingApi } from '../../core/api/reading.api';
 import { SessionStore } from '../../core/auth/session.store';
 import { LanguageService, UiLanguage } from '../../core/i18n/language.service';
@@ -34,7 +35,15 @@ const HEATMAP: ReadingHeatmapDto = {
   ],
 };
 
-function configure(options: { lang?: UiLanguage; stats?: () => Observable<ReadingStatsDto>; sheets?: boolean } = {}): void {
+interface Options {
+  lang?: UiLanguage;
+  stats?: () => Observable<ReadingStatsDto>;
+  /** Someone else's stats (`GET /users/{username}/stats`). */
+  userStats?: () => Observable<ReadingStatsDto>;
+  sheets?: boolean;
+}
+
+function configure(options: Options = {}): void {
   const lang = options.lang ?? 'en';
   TestBed.configureTestingModule({
     // Transloco's active language and the UI language agree, as in the app.
@@ -44,6 +53,7 @@ function configure(options: { lang?: UiLanguage; stats?: () => Observable<Readin
       { provide: PLATFORM_ID, useValue: 'browser' },
       { provide: LanguageService, useValue: { lang: signal(lang), dir: signal(lang === 'ar' ? 'rtl' : 'ltr') } },
       { provide: ReadingApi, useValue: { stats: vi.fn(options.stats ?? (() => of(STATS))), heatmap: vi.fn(() => of(HEATMAP)) } },
+      { provide: ProfilesApi, useValue: { stats: vi.fn(options.userStats ?? (() => of(STATS))), heatmap: vi.fn(() => of(HEATMAP)) } },
       ...(options.sheets ? [] : [{ provide: ReadingSheetsService, useValue: { openStats: vi.fn() } }]),
     ],
   });
@@ -52,7 +62,7 @@ function configure(options: { lang?: UiLanguage; stats?: () => Observable<Readin
 
 async function render<T>(
   component: Type<T>,
-  options: { lang?: UiLanguage; stats?: () => Observable<ReadingStatsDto>; inputs?: Record<string, unknown> } = {},
+  options: Options & { inputs?: Record<string, unknown> } = {},
 ): Promise<{ fixture: ComponentFixture<T>; root: HTMLElement }> {
   configure(options);
   const fixture = TestBed.createComponent(component);
@@ -97,6 +107,32 @@ describe('reading stats views', () => {
     it('offers a retry when the stats fail to load', async () => {
       const { root } = await render(ReadingStatsCard, { stats: () => throwError(() => new ApiError(503, 'server.error', null)) });
       expect(root.querySelector('[role="alert"]')?.textContent).toContain('couldn’t load');
+    });
+  });
+
+  describe('on a profile (F14)', () => {
+    it('loads that user’s public stats, without the coaching meant for the owner', async () => {
+      const { root } = await render(ReadingStatsCard, { inputs: { username: 'karim' } });
+      expect(TestBed.inject(ProfilesApi).stats).toHaveBeenCalledWith('karim');
+      expect(text(root)).toContain('12 days');
+      expect(text(root)).toContain('48 articles');
+      expect(text(root)).not.toContain('You read today');
+      expect(text(root)).not.toContain('A freeze is ready');
+    });
+
+    it('says so when the stats turned private', async () => {
+      const { root } = await render(ReadingStatsCard, {
+        inputs: { username: 'karim' },
+        userStats: () => throwError(() => new ApiError(403, 'profile.stats_private', null)),
+      });
+      expect(root.querySelector('[data-stats-private]')?.textContent).toContain('These reading stats are private.');
+      expect(root.querySelector('[role="alert"]')).toBeNull();
+    });
+
+    it('the heatmap loads that user’s days', async () => {
+      const { root } = await render(ReadingHeatmap, { inputs: { username: 'karim' } });
+      expect(TestBed.inject(ProfilesApi).heatmap).toHaveBeenCalledWith('karim', 365);
+      expect(root.querySelectorAll('[role="img"]')).toHaveLength(365);
     });
   });
 

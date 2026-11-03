@@ -104,6 +104,10 @@ export const CONTRACT_ERROR_CODES = [
   'report.target_invalid',
   'report.reason_invalid',
   'moderation.action_invalid',
+  // Profile (F14)
+  'profile.stats_private',
+  'profile.avatar_invalid',
+  'profile.expertise_invalid',
 ] as const;
 
 /** Translates stable API error codes (e.g. `user.suspended`) into the active UI language. */

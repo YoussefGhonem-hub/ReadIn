@@ -174,6 +174,11 @@
     },
     "moderation": {
       "action_invalid": "Unknown moderation action."
+    },
+    "profile": {
+      "stats_private": "These reading stats are private.",
+      "avatar_invalid": "This photo can't be used. Upload it again.",
+      "expertise_invalid": "Pick up to 5 fields from the list."
     }
   },
   "auth": {
@@ -575,7 +580,18 @@
     },
     "account": "Account",
     "guestHint": "You're browsing as a guest.",
-    "saved": "Settings saved ✓"
+    "saved": "Settings saved ✓",
+    "profile": {
+      "title": "Profile",
+      "edit": "Edit profile",
+      "view": "View your profile"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "publicStats": "Show my reading stats on my public profile",
+      "publicStatsHint": "Your streak, reading activity and top fields. Your phone number is never shown.",
+      "signIn": "Sign in to change your privacy settings."
+    }
   },
   "comingSoon": {
     "title": "Coming soon",
@@ -742,6 +758,111 @@
     "loadError": "We couldn't load your saved articles.",
     "browse": "Browse articles"
   },
+  "profile": {
+    "editProfile": "Edit profile",
+    "followsYou": "Follows you",
+    "stats": {
+      "label": "Profile stats",
+      "articles": "Articles",
+      "followers": "Followers",
+      "following": "Following",
+      "reads": "Reads"
+    },
+    "links": {
+      "label": "Links",
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "website": "Website",
+      "newTab": "(opens in a new tab)"
+    },
+    "tabs": {
+      "label": "Profile sections",
+      "articles": "Articles",
+      "saved": "Saved",
+      "paths": "Paths",
+      "about": "About"
+    },
+    "articles": {
+      "emptyOwnTitle": "You haven’t published yet",
+      "emptyOwnBody": "Your published articles will show up here.",
+      "write": "Write an article",
+      "emptyTitle": "No articles yet",
+      "emptyBody": "Published articles will show up here.",
+      "loadError": "We couldn’t load the articles.",
+      "end": "That’s everything."
+    },
+    "saved": {
+      "onlyYou": "Only you can see this tab.",
+      "openAll": "Open Saved"
+    },
+    "paths": {
+      "title": "Learning paths are coming",
+      "body": "Curated series of articles, step by step. Paths will show up here once they launch."
+    },
+    "about": {
+      "bio": "Bio",
+      "links": "Links",
+      "expertise": "Fields of expertise",
+      "joined": "On ReadIn since {{date}}",
+      "emptyOwn": "Add a bio, links and your fields so readers get to know you.",
+      "empty": "Nothing here yet."
+    },
+    "readingStats": {
+      "title": "Reading stats",
+      "publicSwitch": "Show on my public profile",
+      "publicHint": "When it’s off, only you see your stats."
+    },
+    "notFound": {
+      "title": "This user doesn’t exist",
+      "body": "The link may be wrong, or the account was removed."
+    },
+    "loadError": "We couldn’t load this profile.",
+    "meta": {
+      "description": "Articles by {{name}} on ReadIn."
+    },
+    "people": {
+      "label": "Followers and following",
+      "followers": "Followers",
+      "following": "Following",
+      "titleFollowers": "People who follow {{name}}",
+      "titleFollowing": "People {{name}} follows",
+      "backToProfile": "Back to the profile",
+      "search": "Search by name or @username",
+      "emptyFollowers": "No followers yet",
+      "emptyFollowing": "Not following anyone yet",
+      "noResults": "No one matches “{{q}}”",
+      "noResultsBody": "Try another name or @username.",
+      "loadError": "We couldn’t load this list.",
+      "end": "That’s everyone."
+    },
+    "edit": {
+      "title": "Edit profile",
+      "subtitle": "This is what readers see on your profile.",
+      "avatar": "Profile photo",
+      "avatarAdd": "Add photo",
+      "avatarChange": "Change photo",
+      "avatarRemove": "Remove photo",
+      "avatarUploading": "Uploading {{percent}}%",
+      "avatarHint": "JPG, PNG, WebP or HEIC. It’s cropped to a square.",
+      "displayName": "Name",
+      "displayNameError": "Your name needs 2–60 characters.",
+      "username": "Username",
+      "bio": "Bio",
+      "bioPlaceholder": "What do you read and write about?",
+      "bioCount": "{{count}} / {{max}}",
+      "bioTooLong": "Keep your bio to {{max}} characters.",
+      "links": "Links",
+      "linkInvalid": "Enter a full link that starts with https://",
+      "expertise": "Fields of expertise",
+      "expertiseHint": "Pick up to 5. They show on your profile in the order you pick them.",
+      "expertiseCount": "{{count}} of 5",
+      "expertiseFull": "You picked 5. Remove one to pick another.",
+      "fieldsError": "We couldn’t load the fields.",
+      "save": "Save changes",
+      "saved": "Profile saved ✓",
+      "loadError": "We couldn’t load your profile."
+    }
+  },
   "reading": {
     "days": {
       "one": "{{count}} day",
@@ -778,7 +899,12 @@
       "total": "All time",
       "topFields": "Top fields",
       "noReads": "Articles you finish will show up here.",
-      "loadError": "We couldn’t load your reading stats."
+      "loadError": "We couldn’t load your reading stats.",
+      "others": {
+        "noReads": "No finished articles yet.",
+        "loadError": "We couldn’t load these reading stats.",
+        "private": "These reading stats are private."
+      }
     },
     "heatmap": {
       "title": "Reading activity",
@@ -788,7 +914,8 @@
       "cellEmpty": "{{date}}: no reading",
       "legend": "Articles a day",
       "frozen": "Freeze",
-      "loadError": "We couldn’t load your reading activity."
+      "loadError": "We couldn’t load your reading activity.",
+      "othersLoadError": "We couldn’t load this reading activity."
     },
     "milestone": {
       "title": {
