@@ -96,7 +96,8 @@ class ArticleHeader extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    '@${card.author.username} · ${formatDate(card.publishedAt, uiLang)}',
+                    // Isolated handle: in RTL, a bare "@readin · 8" would show as "readin · 8@".
+                    '${Bidi.ltrIsolate('@${card.author.username}')} · ${formatDate(card.publishedAt, uiLang)}',
                     style: meta,
                     textDirection: Directionality.of(context),
                   ),

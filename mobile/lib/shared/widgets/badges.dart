@@ -4,6 +4,7 @@ import '../../core/bidi/bidi.dart';
 import '../../core/l10n/l10n_x.dart';
 import '../../core/theme/theme_x.dart';
 import '../../core/theme/tokens.g.dart';
+import 'app_network_image.dart';
 
 /// 🔥 streak pill (accent tokens). Streak data arrives with F08 (Phase 2).
 class StreakBadge extends StatelessWidget {
@@ -98,7 +99,8 @@ class UserAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         color: colors.primaryContainer,
         border: context.isDark ? Border.all(color: colors.border) : null,
-        image: url == null ? null : DecorationImage(image: NetworkImage(url!), fit: BoxFit.cover),
+        // Same disk-cached provider (and test seam) as every other network image.
+        image: url == null ? null : DecorationImage(image: AppNetworkImage.providerFactory(url!), fit: BoxFit.cover),
       ),
       alignment: Alignment.center,
       child: url == null
