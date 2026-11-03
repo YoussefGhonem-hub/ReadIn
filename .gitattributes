@@ -4,7 +4,10 @@
 *.sln     text eol=crlf
 *.slnx    text
 *.csproj  text
+*.props   text
 *.ps1     text eol=crlf
+*.cmd     text eol=crlf
+*.bat     text eol=crlf
 *.sh      text eol=lf
 
 *.png     binary
@@ -16,3 +19,13 @@
 *.ttf     binary
 *.woff    binary
 *.woff2   binary
+*.jar     binary
+
+# Generated files: collapsed in diffs
+web/src/styles/tokens.css              linguist-generated=true
+web/src/styles/tokens.tailwind.css     linguist-generated=true
+mobile/lib/core/theme/tokens.g.dart    linguist-generated=true
+mobile/lib/**/*.g.dart                 linguist-generated=true
+mobile/lib/**/*.freezed.dart           linguist-generated=true
+**/Migrations/*.Designer.cs            linguist-generated=true
+**/Migrations/*ModelSnapshot.cs        linguist-generated=true

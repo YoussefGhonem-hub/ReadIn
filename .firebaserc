@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "demo-readin",
+    "staging": "readin-staging",
+    "production": "readin-prod"
+  }
+}

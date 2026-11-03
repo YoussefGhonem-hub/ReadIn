@@ -4,8 +4,10 @@ Thumbs.db
 .vs/
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea/
 *.swp
+*.iml
 
 # ===== Secrets (never commit) =====
 .env
@@ -13,6 +15,7 @@ Thumbs.db
 !.env.example
 *firebase-adminsdk*.json
 service-account*.json
+*serviceAccount*.json
 appsettings.*.local.json
 secrets/
 
@@ -24,12 +27,16 @@ obj/
 TestResults/
 *.trx
 coverage*.xml
+*.coverage
 artifacts/
 
 # ===== Angular / Node =====
 node_modules/
 web/dist/
 web/.angular/
+web/coverage/
+web/test-results/
+web/playwright-report/
 npm-debug.log*
 yarn-error.log*
 
@@ -38,15 +45,21 @@ mobile/.dart_tool/
 mobile/build/
 mobile/.flutter-plugins
 mobile/.flutter-plugins-dependencies
+mobile/coverage/
+mobile/**/failures/
 mobile/android/.gradle/
 mobile/android/local.properties
 mobile/android/app/google-services.json
 mobile/ios/Pods/
+mobile/ios/.symlinks/
 mobile/ios/Flutter/Generated.xcconfig
 mobile/ios/Runner/GoogleService-Info.plist
-*.iml
 
 # ===== Firebase =====
 .firebase/
 firebase-debug.log
 *-debug.log
+emulator-data/
+
+# ===== Content pipeline scratch =====
+content/.cache/
