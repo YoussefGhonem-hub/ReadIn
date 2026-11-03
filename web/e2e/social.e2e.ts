@@ -66,10 +66,12 @@ for (const variant of VARIANTS) {
     await expect(react).toHaveAttribute('data-my-reaction', 'fire');
     await expect(react).toBeFocused();
 
-    // Tapping your reaction removes it.
+    // Tapping your reaction removes it. The removal goes out once the 🔥 request ends, so who reacted waits for it.
+    const removed = page.waitForResponse((r) => r.request().method() === 'DELETE' && r.url().endsWith('/reaction'));
     await react.click();
     await expect(react).not.toHaveAttribute('data-my-reaction');
     await expect(total).toHaveText('18');
+    await removed;
 
     // Who reacted: everyone, and a tab per reaction with its count.
     await bar.locator('[data-reactions-summary]').click();
