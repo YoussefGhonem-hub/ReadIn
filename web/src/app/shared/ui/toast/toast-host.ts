@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
-import { ToastService } from './toast.service';
+import { Toast, ToastService } from './toast.service';
 
 @Component({
   selector: 'rd-toast-host',
@@ -28,7 +29,13 @@ import { ToastService } from './toast.service';
             <svg lucideIcon="Info" class="mt-0.5 shrink-0 text-primary" [size]="18"></svg>
           }
         }
-        <p class="m-0 flex-1" dir="auto">{{ toast.message }}</p>
+        @if (toast.link) {
+          <a class="m-0 flex-1 text-text-primary no-underline hover:underline" dir="auto" [href]="toast.link" (click)="open($event, toast)">{{
+            toast.message
+          }}</a>
+        } @else {
+          <p class="m-0 flex-1" dir="auto">{{ toast.message }}</p>
+        }
         <button
           type="button"
           class="text-text-secondary hover:text-text-primary"
@@ -43,4 +50,11 @@ import { ToastService } from './toast.service';
 })
 export class ToastHost {
   protected readonly toasts = inject(ToastService);
+  private readonly router = inject(Router);
+
+  protected open(event: MouseEvent, toast: Toast): void {
+    event.preventDefault();
+    this.toasts.dismiss(toast.id);
+    if (toast.link) void this.router.navigateByUrl(toast.link);
+  }
 }

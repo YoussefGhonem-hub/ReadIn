@@ -1,16 +1,24 @@
 import { AppEnvironment } from './environment.model';
 
-/** Production defaults. Firebase values are injected by the deploy pipeline (staging/prod Firebase projects). */
+/**
+ * Production build: the single real Firebase project `readin-cca78` (ADR 0005), used only for web push and the
+ * Realtime Database. These are public client identifiers, not secrets; access is enforced by
+ * `firebase/database.rules.json`.
+ */
 export const environment: AppEnvironment = {
   production: true,
   siteUrl: 'https://readin.app',
   apiBaseUrl: 'https://api.readin.app/api/v1',
-  assetsBaseUrl: 'https://storage.googleapis.com/readin-prod.appspot.com',
+  assetsBaseUrl: 'https://api.readin.app',
   firebase: {
-    apiKey: 'REPLACE_IN_CI',
-    authDomain: 'readin-prod.firebaseapp.com',
-    projectId: 'readin-prod',
-    appId: 'REPLACE_IN_CI',
+    apiKey: 'AIzaSyDBpEBFi3QewssqF-jftxgjd3G-5BqfnXs',
+    authDomain: 'readin-cca78.firebaseapp.com',
+    projectId: 'readin-cca78',
+    appId: '1:56680910112:web:7ca9692de24acca4ba9b45',
+    databaseURL: 'https://readin-cca78-default-rtdb.europe-west1.firebasedatabase.app',
+    messagingSenderId: '56680910112',
   },
+  firebaseVapidKey: 'BII3t6QLmXvySejsMKG9iz9lZpFqFRwDitQuTPq8RkukKfRCuoQ5_ChkH1zCdKlgF525LBs0yRtqUGEecNuN_YQ',
+  databaseEmulatorHost: null,
   authEmulatorUrl: null,
 };

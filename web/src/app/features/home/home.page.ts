@@ -19,6 +19,7 @@ import { SessionStore } from '../../core/auth/session.store';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { HydrationWindow } from '../../core/http/hydration-window';
 import { LanguageService } from '../../core/i18n/language.service';
+import { injectNewArticles } from '../../core/realtime/live-signals';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { ArticleCard } from '../../shared/ui/article-card';
 import { ArticleCardSkeleton, HeroSkeleton } from '../../shared/ui/skeletons';
@@ -98,6 +99,14 @@ type FeedTab = 'forYou' | 'following';
       }
     </div>
 
+    @if (newArticles.available()) {
+      <div class="pointer-events-none sticky top-20 z-20 flex justify-center py-2">
+        <button type="button" class="rd-btn rd-btn-primary pointer-events-auto min-h-9 px-4 text-sm shadow-raised" (click)="showNewArticles()">
+          {{ 'home.newArticles' | transloco }}
+        </button>
+      </div>
+    }
+
     @if (activeTab() === 'following') {
       <rd-empty-state [title]="'home.following.title' | transloco" [message]="'home.following.body' | transloco" />
     } @else {
@@ -147,6 +156,8 @@ export class HomePage {
   protected readonly tabs: FeedTab[] = ['forYou', 'following'];
   protected readonly activeTab = signal<FeedTab>('forYou');
   private readonly sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
+  /** "New articles ↑" once something is published after the feed was loaded (F27). */
+  protected readonly newArticles = injectNewArticles();
 
   /** The first card with attachments gets the eager, high-priority image (the rest lazy-load). */
   protected readonly firstMediaId = computed(() => this.store.items().find((a) => a.attachments)?.id ?? null);
@@ -203,5 +214,12 @@ export class HomePage {
     this.activeTab.set(tab);
     // The sentinel element is recreated when switching back to For you.
     afterNextRender(() => this.reobserve(), { injector: this.injector });
+  }
+
+  protected showNewArticles(): void {
+    this.newArticles.acknowledge();
+    this.activeTab.set('forYou');
+    void this.store.refresh();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }

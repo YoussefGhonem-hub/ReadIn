@@ -6,6 +6,8 @@ export interface Toast {
   id: number;
   kind: ToastKind;
   message: string;
+  /** In-app path the toast opens when tapped (e.g. a push received in the foreground). */
+  link: string | null;
 }
 
 const DURATION_MS = 4500;
@@ -16,27 +18,27 @@ export class ToastService {
   private readonly _toasts = signal<Toast[]>([]);
   readonly toasts = this._toasts.asReadonly();
 
-  info(message: string): void {
-    this.show('info', message);
+  info(message: string, link: string | null = null): void {
+    this.show('info', message, link);
   }
 
   success(message: string): void {
-    this.show('success', message);
+    this.show('success', message, null);
   }
 
   error(message: string): void {
-    this.show('error', message);
+    this.show('error', message, null);
   }
 
   dismiss(id: number): void {
     this._toasts.update((list) => list.filter((t) => t.id !== id));
   }
 
-  private show(kind: ToastKind, message: string): void {
+  private show(kind: ToastKind, message: string, link: string | null): void {
     const id = this.nextId++;
     // Same message twice in a row (e.g. parallel failing requests) shows once.
     if (this._toasts().some((t) => t.message === message)) return;
-    this._toasts.update((list) => [...list.slice(-2), { id, kind, message }]);
+    this._toasts.update((list) => [...list.slice(-2), { id, kind, message, link }]);
     setTimeout(() => this.dismiss(id), DURATION_MS);
   }
 }

@@ -5,6 +5,7 @@ import { LucideDynamicIcon } from '@lucide/angular';
 import { ArticleCardDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { LanguageService } from '../../core/i18n/language.service';
+import { injectInViewport, injectLiveCounts } from '../../core/realtime/live-signals';
 import { ToastService } from './toast/toast.service';
 import { BdiText } from '../directives/bdi-text';
 import { detectDir } from '../directives/bidi';
@@ -12,7 +13,7 @@ import { ArticleAttachments } from '../media/article-attachments';
 import { CompactNumberPipe, ReadingTimePipe } from '../pipes/format.pipes';
 import { articleLink } from './article-link';
 
-/** Feed row (F03): thumbnail, title, author, reading time, counts, save; post attachments (F26) full width below. */
+/** Feed row (F03): thumbnail, title, author, reading time, live counts, save; post attachments (F26) full width below. */
 @Component({
   selector: 'rd-article-card',
   imports: [RouterLink, TranslocoPipe, BdiText, ReadingTimePipe, CompactNumberPipe, LucideDynamicIcon, ArticleAttachments],
@@ -50,10 +51,10 @@ import { articleLink } from './article-link';
         </div>
         <div class="mt-1.5 flex gap-3 text-xs text-text-secondary">
           <span class="inline-flex items-center gap-1"
-            ><svg lucideIcon="Lightbulb" [size]="13" aria-hidden="true"></svg>{{ article().reactionCount | rdCompactNumber: lang() }}</span
+            ><svg lucideIcon="Lightbulb" [size]="13" aria-hidden="true"></svg>{{ reactionCount() | rdCompactNumber: lang() }}</span
           >
           <span class="inline-flex items-center gap-1"
-            ><svg lucideIcon="MessageCircle" [size]="13" aria-hidden="true"></svg>{{ article().commentCount | rdCompactNumber: lang() }}</span
+            ><svg lucideIcon="MessageCircle" [size]="13" aria-hidden="true"></svg>{{ commentCount() | rdCompactNumber: lang() }}</span
           >
         </div>
       </div>
@@ -86,6 +87,12 @@ export class ArticleCard {
   protected readonly link = computed(() => articleLink(this.article()));
   protected readonly titleDir = computed(() => detectDir(this.article().title) ?? 'auto');
   protected readonly fieldName = computed(() => (this.lang() === 'ar' ? this.article().field.nameAr : this.article().field.nameEn));
+
+  /** Live counters only while the card is on screen (F27), falling back to the feed values. */
+  private readonly inView = injectInViewport();
+  private readonly live = injectLiveCounts(() => (this.inView() ? this.article().id : null));
+  protected readonly reactionCount = computed(() => this.live()?.reactionCount ?? this.article().reactionCount);
+  protected readonly commentCount = computed(() => this.live()?.commentCount ?? this.article().commentCount);
 
   /** Saving ships with F13; guests get the sign-in prompt now. */
   protected save(): void {

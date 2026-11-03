@@ -216,7 +216,8 @@
       "title": "No articles here yet",
       "body": "Try another field or check back soon."
     },
-    "endOfFeed": "You're all caught up 🎉 Come back tomorrow for more."
+    "endOfFeed": "You're all caught up 🎉 Come back tomorrow for more.",
+    "newArticles": "New articles ↑"
   },
   "article": {
     "reviewed": "Reviewed",
@@ -289,6 +290,14 @@
     "signInForSync": "Sign in to save these settings to your account.",
     "articleLanguage": "Article language",
     "reminderTime": "Daily article reminder",
+    "push": {
+      "title": "Notifications",
+      "default": "Get today's article, replies and new followers.",
+      "granted": "Notifications are on in this browser ✓",
+      "denied": "Notifications are blocked. Allow them in your browser's site settings.",
+      "unsupported": "This browser can't receive notifications.",
+      "enable": "Turn on"
+    },
     "account": "Account",
     "guestHint": "You're browsing as a guest.",
     "saved": "Settings saved ✓"

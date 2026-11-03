@@ -177,7 +177,8 @@ export class AuthService {
     if (!this.isBrowser) return Promise.reject(new Error('Firebase Auth is browser-only'));
     this.firebasePromise ??= (async () => {
       const [{ initializeApp, getApps }, sdk] = await Promise.all([import('firebase/app'), import('firebase/auth')]);
-      const app = getApps()[0] ?? initializeApp(environment.firebase);
+      // The default app only: the live app (core/firebase/live-app.ts) has its own Auth for the Realtime Database.
+      const app = getApps().find((existing) => existing.name === '[DEFAULT]') ?? initializeApp(environment.firebase);
       const auth = sdk.getAuth(app);
       if (environment.authEmulatorUrl) sdk.connectAuthEmulator(auth, environment.authEmulatorUrl, { disableWarnings: true });
       auth.languageCode = this.language.lang();

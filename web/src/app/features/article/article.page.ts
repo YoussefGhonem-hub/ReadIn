@@ -21,6 +21,7 @@ import { ContentApi } from '../../core/api/content.api';
 import { ArticleDetailsDto, ArticleLanguage } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { LanguageService } from '../../core/i18n/language.service';
+import { injectLiveCounts } from '../../core/realtime/live-signals';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir } from '../../shared/directives/bidi';
@@ -213,7 +214,12 @@ const TOC_MIN_HEADINGS = 3;
     </article>
 
     @if (article(); as a) {
-      <rd-article-action-bar [title]="a.title" [url]="shareUrl()" [reactionCount]="a.reactionCount" [commentCount]="a.commentCount" />
+      <rd-article-action-bar
+        [title]="a.title"
+        [url]="shareUrl()"
+        [reactionCount]="live()?.reactionCount ?? a.reactionCount"
+        [commentCount]="live()?.commentCount ?? a.commentCount"
+      />
     }
   `,
 })
@@ -239,6 +245,8 @@ export class ArticlePage {
   }));
 
   protected readonly article = computed(() => (this.resource.hasValue() ? this.resource.value() : null));
+  /** Reaction and comment counts update live while the article is open (F27). */
+  protected readonly live = injectLiveCounts(() => this.article()?.id);
   protected readonly notFound = computed(() => {
     const error = this.resource.error();
     return isApiError(error) ? error.status === 404 : false;

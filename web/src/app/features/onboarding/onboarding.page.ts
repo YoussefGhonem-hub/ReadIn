@@ -1,5 +1,4 @@
-import { ChangeDetectionStrategy, Component, PLATFORM_ID, computed, inject, signal } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -13,6 +12,7 @@ import { PreferencesService } from '../../core/auth/preferences.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService } from '../../core/i18n/language.service';
+import { PushService } from '../../core/push/push.service';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { FieldIcon } from '../../shared/ui/field-icon';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
@@ -20,7 +20,6 @@ import { ErrorState } from '../../shared/ui/states';
 import { Wordmark } from '../../shared/ui/wordmark';
 
 type Step = 1 | 2 | 3;
-type NotificationState = 'default' | 'granted' | 'denied' | 'unsupported';
 const MIN_INTERESTS = 3;
 
 /** Onboarding (F02): welcome → interests (≥ 3) → preferences. */
@@ -177,7 +176,6 @@ export class OnboardingPage {
   private readonly router = inject(Router);
   private readonly errors = inject(ErrorMessages);
   private readonly transloco = inject(TranslocoService);
-  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   protected readonly lang = inject(LanguageService).lang;
   protected readonly minInterests = MIN_INTERESTS;
 
@@ -189,7 +187,8 @@ export class OnboardingPage {
   protected readonly topicIds = signal(new Set<string>(this.session.me()?.interests.topicIds ?? []));
   protected readonly articleLanguage = signal<ArticleLanguage>(this.session.me()?.articleLanguage ?? (this.lang() === 'ar' ? 'ar-EG' : 'en'));
   protected readonly reminderTime = signal(this.session.me()?.reminderTime ?? '08:00');
-  protected readonly notificationState = signal<NotificationState>(this.readNotificationState());
+  private readonly push = inject(PushService);
+  protected readonly notificationState = this.push.permission;
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
 
@@ -244,11 +243,9 @@ export class OnboardingPage {
     this.topicIds.set(next);
   }
 
+  /** In context, from the reminder step (SPEC §21.1); granting registers this browser for web push. */
   protected async enableNotifications(): Promise<void> {
-    if (!this.isBrowser || !('Notification' in window)) return;
-    // FCM web-push token registration (POST /me/devices) is wired with F17.
-    const result = await Notification.requestPermission();
-    this.notificationState.set(result === 'granted' ? 'granted' : result === 'denied' ? 'denied' : 'default');
+    await this.push.enable();
   }
 
   protected async finish(): Promise<void> {
@@ -276,10 +273,5 @@ export class OnboardingPage {
     } catch {
       /* topics are optional */
     }
-  }
-
-  private readNotificationState(): NotificationState {
-    if (!this.isBrowser || !('Notification' in window)) return 'unsupported';
-    return Notification.permission === 'granted' ? 'granted' : Notification.permission === 'denied' ? 'denied' : 'default';
   }
 }

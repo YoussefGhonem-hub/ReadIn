@@ -39,7 +39,9 @@ export class MeApi {
     return this.http.put<void>(`${this.base}/me/interests`, body);
   }
 
-  registerDevice(body: RegisterDeviceRequest): Observable<void> {
-    return this.http.post<void>(`${this.base}/me/devices`, body);
+  registerDevice(body: RegisterDeviceRequest, options: { silent?: boolean } = {}): Observable<void> {
+    return this.http.post<void>(`${this.base}/me/devices`, body, {
+      context: new HttpContext().set(SILENT_ERRORS, options.silent ?? false),
+    });
   }
 }

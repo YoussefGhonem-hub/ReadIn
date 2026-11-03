@@ -10,13 +10,14 @@ import { PreferencesService } from '../../core/auth/preferences.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService, UiLanguage } from '../../core/i18n/language.service';
+import { PushService } from '../../core/push/push.service';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 import { Avatar } from '../../shared/ui/avatar';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 
-/** Settings (F18): theme, UI language, article language, reminder time, font size, account. */
+/** Settings (F18): theme, UI language, article language, reminder time, push notifications, font size, account. */
 @Component({
   selector: 'rd-settings-page',
   imports: [FormsModule, RouterLink, TranslocoPipe, Segmented, Avatar, LucideDynamicIcon],
@@ -84,6 +85,17 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
             {{ 'common.save' | transloco }}
           </button>
         </div>
+        <div class="mt-5 flex items-center justify-between gap-3 text-sm">
+          <div>
+            <div class="font-semibold">{{ 'settings.push.title' | transloco }}</div>
+            <div class="text-text-secondary">{{ 'settings.push.' + push.permission() | transloco }}</div>
+          </div>
+          @if (push.permission() === 'default') {
+            <button type="button" class="rd-btn rd-btn-outline min-h-9 shrink-0 px-3 text-sm" (click)="push.enable()">
+              {{ 'settings.push.enable' | transloco }}
+            </button>
+          }
+        </div>
       </fieldset>
     </section>
 
@@ -113,6 +125,7 @@ export class SettingsPage {
   protected readonly language = inject(LanguageService);
   protected readonly readerPrefs = inject(ReaderPrefsService);
   protected readonly session = inject(SessionStore);
+  protected readonly push = inject(PushService);
   private readonly preferences = inject(PreferencesService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
