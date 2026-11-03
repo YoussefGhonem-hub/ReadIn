@@ -170,3 +170,125 @@ terms:
       الترتيب الثابت اللي Flutter بينادي بيه الـ methods بتاعة الـ State object: الـ initState مرة واحدة، والـ build أي
       عدد من المرات، والـ didUpdateWidget كل ما الـ parent يبعت widget جديد من نفس النوع وبنفس الـ key، والـ dispose مرة
       واحدة في الآخر.
+  - id: dart-future
+    term: Future (Dart)
+    definitionEn: >-
+      Dart's object for the result of an asynchronous computation. Calling an async function starts the work and
+      immediately returns a Future, which completes later with a value or an error.
+    definitionAr: >-
+      الـ object اللي Dart بيمثّل بيه نتيجة عملية asynchronous. لما تنادي async function الشغل بيبدأ على طول وبترجعلك
+      Future في ساعتها، والـ Future ده بيخلص بعدين بقيمة أو بـ error.
+  - id: inherited-widget
+    term: InheritedWidget
+    definitionEn: >-
+      A Flutter widget that makes data available to every widget below it. A descendant that reads it through
+      dependOnInheritedWidgetOfExactType, usually inside an of method, becomes a dependent and is rebuilt when it
+      changes.
+    definitionAr: >-
+      widget في Flutter بيخلّي داتا متاحة لكل الـ widgets اللي تحته. وأي widget تحته يقراه عن طريق
+      dependOnInheritedWidgetOfExactType، وعادةً ده بيحصل جوه method اسمها of، بيبقى dependent عليه وبيتعمل له
+      rebuild لما يتغير.
+  - id: raster-thread
+    term: Raster thread
+    definitionEn: >-
+      The Flutter engine thread that takes the layer tree built by the UI thread and turns it into work for the GPU.
+      Skia and Impeller run on it, and although it rasterizes for the GPU, the thread itself runs on the CPU.
+    definitionAr: >-
+      الـ thread في الـ engine بتاع Flutter اللي بياخد الـ layer tree اللي الـ UI thread بناها ويحوّلها لشغل للـ GPU.
+      الـ Skia والـ Impeller بيشتغلوا عليه، ومع إنه بيجهّز الرسم للـ GPU، الـ thread نفسه شغال على الـ CPU.
+  - id: save-layer
+    term: saveLayer
+    definitionEn: >-
+      A canvas operation that draws a group of commands into an offscreen buffer, so an effect such as opacity applies
+      to the group as a whole. Flutter's docs call it one of the most expensive operations in the framework.
+    definitionAr: >-
+      عملية على الـ canvas بترسم مجموعة أوامر في buffer برّه الشاشة، عشان effect زي الـ opacity يتطبق على المجموعة كلها
+      مرة واحدة. والـ docs بتاعة Flutter بتعتبرها من أغلى العمليات في الـ framework.
+  - id: aot-compilation
+    term: AOT compilation
+    definitionEn: >-
+      Ahead-of-time compilation: turning code into machine code before the app runs, as Flutter does for Dart in
+      release builds, instead of compiling it while the app runs (JIT), as debug builds do.
+    definitionAr: >-
+      الـ Ahead-of-time compilation: إنك تحوّل الكود لـ machine code قبل ما التطبيق يشتغل، زي ما Flutter بيعمل مع Dart في
+      الـ release builds، بدل ما يتعمله compile وهو شغال (JIT) زي الـ debug builds.
+  - id: ephemeral-state
+    term: Ephemeral state
+    definitionEn: >-
+      State you can neatly contain in a single widget, also called UI state or local state, such as the selected tab or
+      whether a password is visible. Flutter's docs say a StatefulWidget with setState is all it needs.
+    definitionAr: >-
+      state تقدر تحطه بالكامل جوه widget واحد، وبيتسمى كمان UI state أو local state، زي الـ tab المختار أو إن الباسورد
+      ظاهر ولا لأ. والـ docs بتاعة Flutter بتقول إن كل اللي محتاجه StatefulWidget وsetState.
+  - id: app-state
+    term: App state
+    definitionEn: >-
+      State that many parts of an app share and that you often keep between sessions, such as login info, user
+      preferences or a shopping cart. Also called shared state.
+    definitionAr: >-
+      state أجزاء كتير في التطبيق بتشاركه، وغالبًا بتحتفظ بيه بين الـ sessions، زي بيانات الـ login أو تفضيلات المستخدم
+      أو الـ shopping cart. وبيتسمى كمان shared state.
+  - id: app-lifecycle
+    term: App lifecycle
+    definitionEn: >-
+      The states a mobile app moves through as the user opens it, switches away and comes back. Flutter reports them
+      as AppLifecycleState values: resumed, inactive, hidden, paused and detached.
+    definitionAr: >-
+      الحالات اللي تطبيق الموبايل بيعدّي بيها لما المستخدم يفتحه ويسيبه ويرجعله. والـ Flutter بيبلّغ عنها كقيم
+      AppLifecycleState: الـ resumed والـ inactive والـ hidden والـ paused والـ detached.
+  - id: process-death
+    term: Process death
+    definitionEn: >-
+      When the operating system kills a backgrounded app's process to free memory. The app gets no callback, and
+      everything held only in memory is lost unless it was saved or handed to state restoration.
+    definitionAr: >-
+      لما نظام التشغيل يقتل الـ process بتاع تطبيق في الخلفية عشان يفضّي memory. التطبيق مش بياخد أي callback، وكل
+      حاجة كانت في الـ memory بس بتضيع، إلا لو كانت اتحفظت أو اتسلّمت للـ state restoration.
+  - id: state-restoration
+    term: State restoration
+    definitionEn: >-
+      A mechanism that hands small pieces of UI state to the operating system, so that after process death the app can
+      come back on the same screen with the same input. In Flutter it's driven by RestorationManager and RestorationMixin.
+    definitionAr: >-
+      آلية بتسلّم حتت صغيرة من الـ UI state لنظام التشغيل، عشان بعد الـ process death التطبيق يرجع على نفس الشاشة وبنفس
+      الكلام اللي اتكتب. وفي Flutter بيشغّلها RestorationManager وRestorationMixin.
+  - id: layout-mirroring
+    term: Layout mirroring
+    definitionEn: >-
+      Flipping a user interface horizontally for right-to-left languages such as Arabic: start and end swap sides and
+      arrows for back and forward point the other way, while numbers, logos and photos keep their orientation.
+    definitionAr: >-
+      إنك تقلب الواجهة أفقيًا للغات اللي بتتكتب من اليمين للشمال زي العربي: الـ start والـ end بيبدّلوا أماكنهم، وأسهم
+      الرجوع والتقدّم بتشاور للناحية التانية، لكن الأرقام والـ logos والصور بتفضل زي ما هي.
+  - id: code-obfuscation
+    term: Code obfuscation
+    definitionEn: >-
+      Transforming a compiled app so its code is harder for people to read, for example by replacing class and function
+      names with meaningless ones. It slows down reverse engineering but doesn't encrypt strings or resources.
+    definitionAr: >-
+      إنك تغيّر التطبيق بعد الـ compile عشان الكود بتاعه يبقى أصعب في القراية، زي إنك تبدّل أسامي الـ classes والـ
+      functions بأسامي ملهاش معنى. بيبطّأ الـ reverse engineering، بس مش بيعمل encryption للـ strings ولا للـ resources.
+  - id: bearer-credential
+    term: Bearer credential
+    definitionEn: >-
+      A credential that grants access to whoever presents it, such as an API key or an access token. The server can't
+      tell who is holding it, so a copied bearer credential works just as well as the original.
+    definitionAr: >-
+      credential بيدّي صلاحية لأي حد يقدّمه، زي الـ API key أو الـ access token. السيرفر مايقدرش يعرف مين اللي ماسكه،
+      فأي نسخة منه بتشتغل بالظبط زي الأصلي.
+  - id: sealed-class
+    term: Sealed class
+    definitionEn: >-
+      A Dart 3 class marked sealed: it's implicitly abstract and can only be extended or implemented inside its own
+      library, so the compiler knows every direct subtype and can check that a switch handles all of them.
+    definitionAr: >-
+      class في Dart 3 عليها sealed: بتبقى abstract من غير ما تقول، ومحدش يقدر يعمل لها extend أو implement غير جوه
+      الـ library بتاعتها، فالـ compiler بيعرف كل الـ subtypes المباشرة ويقدر يتأكد إن الـ switch غطّاهم كلهم.
+  - id: exhaustiveness-checking
+    term: Exhaustiveness checking
+    definitionEn: >-
+      A Dart compile-time check that reports an error when a value could enter a switch without matching any case,
+      for example when a switch over a sealed class leaves out one of its subtypes.
+    definitionAr: >-
+      check وقت الـ compile في Dart بيطلّع error لو فيه قيمة ممكن تدخل switch من غير ما تطابق أي case، زي switch على
+      sealed class ناسي واحد من الـ subtypes بتوعها.

@@ -1,0 +1,36 @@
+{
+  "slug": "inheritedwidget-behind-state-management",
+  "field": "mobile",
+  "topic": "mobile-state-management",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "No Magic in Provider or Bloc: InheritedWidget and How Rebuilds Reach Your Widget",
+      "subtitle": "Provider and Bloc reach your widgets through InheritedWidget and setState, so where you read the state decides what rebuilds."
+    },
+    "ar-EG": {
+      "title": "مفيش سحر في Provider ولا Bloc: الـ InheritedWidget وإزاي الـ rebuild بيوصل للـ widget",
+      "subtitle": "الـ Provider والـ Bloc بيوصلوا للـ widgets بتاعتك عن طريق InheritedWidget وsetState، فالمكان اللي بتقرا فيه الـ state هو اللي بيحدد إيه اللي يتعمل له rebuild."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 12 },
+  "tags": ["Flutter", "State management", "InheritedWidget", "Provider", "Bloc"],
+  "sources": [
+    { "title": "InheritedWidget class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/InheritedWidget-class.html" },
+    { "title": "BuildContext.dependOnInheritedWidgetOfExactType — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/BuildContext/dependOnInheritedWidgetOfExactType.html" },
+    { "title": "InheritedNotifier class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/InheritedNotifier-class.html" },
+    { "title": "provider package — pub.dev", "url": "https://pub.dev/packages/provider" },
+    { "title": "Flutter Bloc Concepts — Bloc library", "url": "https://bloclibrary.dev/flutter-bloc-concepts/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\nimport 'package:flutter_bloc/flutter_bloc.dart';\n\nclass Product {\n  const Product(this.name);\n  final String name;\n}\n\nclass ProductDetails extends StatelessWidget {\n  const ProductDetails({super.key, required this.product});\n  final Product product;\n  @override\n  Widget build(BuildContext context) => Text(product.name);\n}\n\nclass CartCubit extends Cubit<int> {\n  CartCubit() : super(0);\n  void add() => emit(state + 1);\n}"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "slug": "mobile-apps-cannot-keep-secrets",
+  "field": "mobile",
+  "topic": "app-architecture",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Your Mobile App Can't Keep a Secret: API Keys, Obfuscation and the Backend",
+      "subtitle": "Anything you ship in an APK or IPA belongs to whoever downloads it. Secret keys stay on your server; the app gets restricted keys and user tokens."
+    },
+    "ar-EG": {
+      "title": "تطبيق الموبايل مش بيعرف يشيل سر: الـ API keys والـ obfuscation ودور الـ backend",
+      "subtitle": "أي حاجة بتشحنها جوه الـ APK أو الـ IPA بقت ملك اللي نزّله. الـ secret keys مكانها السيرفر، والتطبيق ياخد keys مقيّدة وtokens للمستخدم."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "mobile-app-engineering", "order": 5 },
+  "tags": ["Security", "API keys", "Obfuscation", "Flutter"],
+  "sources": [
+    { "title": "Obfuscate Dart code — Flutter docs", "url": "https://docs.flutter.dev/deployment/obfuscate" },
+    { "title": "Security best practices: API key management — Android Developers", "url": "https://developer.android.com/privacy-and-security/security-tips" },
+    { "title": "MASWE-0004: Sensitive Data Hardcoded in the App Package — OWASP MAS", "url": "https://mas.owasp.org/MASWE/MASVS-STORAGE/MASWE-0004/" },
+    { "title": "Manage API keys: add restrictions — Google Cloud", "url": "https://docs.cloud.google.com/docs/authentication/api-keys" },
+    { "title": "Learn about using and managing API keys for Firebase — Firebase", "url": "https://firebase.google.com/docs/projects/api-keys" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'dart:convert';\nabstract class Http {\n  Future<String> post(Uri url, {Map<String, String>? headers, String? body});\n}\nclass Session {\n  Session(this.accessToken);\n  final String accessToken;\n}"
+    }
+  }
+}

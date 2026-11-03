@@ -1,0 +1,31 @@
+{
+  "slug": "native-vs-cross-platform-myths",
+  "field": "mobile",
+  "topic": "app-architecture",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Native vs Cross-Platform: The Performance Myths That Drive the Wrong Choice",
+      "subtitle": "Flutter, React Native and Kotlin Multiplatform work in very different ways. Compare what they actually do, then measure."
+    },
+    "ar-EG": {
+      "title": "قبل ما تختار بين Native و Cross-Platform: خرافات الـ performance اللي بتضللك",
+      "subtitle": "الـ Flutter والـ React Native والـ Kotlin Multiplatform بيشتغلوا بطرق مختلفة جدًا. قارن اللي بيعملوه فعلًا، وبعدين قيس."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "mobile-app-engineering", "order": 1 },
+  "tags": ["Mobile", "Cross-platform", "Flutter", "Performance"],
+  "sources": [
+    { "title": "FAQ — Flutter docs", "url": "https://docs.flutter.dev/resources/faq" },
+    { "title": "Add Flutter to an existing app — Flutter docs", "url": "https://docs.flutter.dev/add-to-app" },
+    { "title": "Core Components and Native Components — React Native docs (source on GitHub)", "url": "https://github.com/facebook/react-native-website/blob/main/docs/intro-react-native-components.md" },
+    { "title": "What is Kotlin Multiplatform — Kotlin docs", "url": "https://kotlinlang.org/docs/multiplatform/kmp-overview.html" },
+    { "title": "Slow rendering — Android Developers", "url": "https://developer.android.com/topic/performance/vitals/render" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

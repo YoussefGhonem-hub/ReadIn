@@ -1,0 +1,36 @@
+{
+  "slug": "rtl-support-is-more-than-translation",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Arabic Support Is More Than Translation: RTL Layouts Done Right in Flutter",
+      "subtitle": "Arabic strings don't flip a layout. The locale sets the direction, and every hard-coded left or right is a bug waiting for it."
+    },
+    "ar-EG": {
+      "title": "دعم العربي مش ترجمة وبس: إزاي تعمل RTL layouts صح في Flutter",
+      "subtitle": "الكلام العربي مش هو اللي بيقلب الـ layout. الـ locale هو اللي بيحدد الاتجاه، وأي left أو right مكتوب ثابت هو bug مستنيه."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "mobile-app-engineering", "order": 4 },
+  "tags": ["Flutter", "RTL", "Localization", "Arabic"],
+  "sources": [
+    { "title": "Internationalizing Flutter apps — Flutter docs", "url": "https://docs.flutter.dev/ui/internationalization" },
+    { "title": "Directionality class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/Directionality-class.html" },
+    { "title": "EdgeInsetsDirectional class — Flutter API", "url": "https://api.flutter.dev/flutter/painting/EdgeInsetsDirectional-class.html" },
+    { "title": "IconData.matchTextDirection — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/IconData/matchTextDirection.html" },
+    { "title": "Right to left — Apple Human Interface Guidelines", "url": "https://developer.apple.com/design/human-interface-guidelines/right-to-left" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\n// Stand-in for package:flutter_localizations, which the checker package doesn't depend on.\nclass GlobalMaterialLocalizations {\n  static const List<LocalizationsDelegate<dynamic>> delegates = [];\n}\nclass OrdersScreen extends StatelessWidget {\n  const OrdersScreen({super.key});\n  @override\n  Widget build(BuildContext context) => const SizedBox();\n}"
+    }
+  }
+}

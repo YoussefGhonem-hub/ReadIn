@@ -1,0 +1,36 @@
+{
+  "slug": "flutter-jank-ui-thread-vs-raster-thread",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Jank Isn't Always Your Dart Code: UI Thread, Raster Thread and saveLayer",
+      "subtitle": "Each frame has two budgets. When the raster thread is the slow one, faster build() methods change nothing."
+    },
+    "ar-EG": {
+      "title": "مش كل jank سببه كود Dart: الـ UI thread والـ raster thread والـ saveLayer",
+      "subtitle": "كل frame ليه ميزانيتين. ولما الـ raster thread هو اللي بطيء، تسريع الـ build() مش هيغيّر حاجة."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 13 },
+  "tags": ["Flutter", "Performance", "Jank", "Rendering"],
+  "sources": [
+    { "title": "Flutter performance profiling — Flutter docs", "url": "https://docs.flutter.dev/perf/ui-performance" },
+    { "title": "Performance best practices — Flutter docs", "url": "https://docs.flutter.dev/perf/best-practices" },
+    { "title": "Use the Performance view — Flutter DevTools docs", "url": "https://docs.flutter.dev/tools/devtools/performance" },
+    { "title": "Opacity class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/Opacity-class.html" },
+    { "title": "Impeller rendering engine — Flutter docs", "url": "https://docs.flutter.dev/perf/impeller" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\n\nclass Coupon {\n  const Coupon(this.title, this.imagePath);\n  final String title;\n  final String imagePath;\n}\n\nclass CouponsScreen extends StatelessWidget {\n  const CouponsScreen({super.key});\n  @override\n  Widget build(BuildContext context) => const SizedBox();\n}"
+    }
+  }
+}

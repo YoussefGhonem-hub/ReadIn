@@ -1,0 +1,35 @@
+{
+  "slug": "setstate-is-not-an-anti-pattern",
+  "field": "mobile",
+  "topic": "mobile-state-management",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "setState Isn't the Enemy: Ephemeral State vs App State in Flutter",
+      "subtitle": "State that lives in one widget belongs in that widget. Reach for a library when state is shared, not by default."
+    },
+    "ar-EG": {
+      "title": "الـ setState مش عدوك: الفرق بين الـ ephemeral state والـ app state في Flutter",
+      "subtitle": "الـ state اللي عايش في widget واحد مكانه الـ widget ده. استخدم library لما الـ state يبقى مشترك، مش كـ default."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "mobile-app-engineering", "order": 2 },
+  "tags": ["Flutter", "State management", "setState", "Bloc"],
+  "sources": [
+    { "title": "Differentiate between ephemeral state and app state — Flutter docs", "url": "https://docs.flutter.dev/data-and-backend/state-mgmt/ephemeral-vs-app" },
+    { "title": "Approaches to state management — Flutter docs", "url": "https://docs.flutter.dev/data-and-backend/state-mgmt/options" },
+    { "title": "State.setState — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/setState.html" },
+    { "title": "Flutter Bloc Concepts — Bloc library", "url": "https://bloclibrary.dev/flutter-bloc-concepts/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\nimport 'package:flutter_bloc/flutter_bloc.dart';"
+    }
+  }
+}

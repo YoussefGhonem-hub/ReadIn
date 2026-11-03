@@ -1,0 +1,35 @@
+{
+  "slug": "dart-sealed-classes-for-ui-state",
+  "field": "mobile",
+  "topic": "dart",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Stop Modeling Screens with Flags: Sealed Classes and Exhaustive Switches in Dart 3",
+      "subtitle": "Three flags describe eight states when your screen has three. A sealed class lists the real ones, and the compiler checks you handled each."
+    },
+    "ar-EG": {
+      "title": "بطّل توصف الشاشة بـ flags: الـ sealed classes والـ exhaustive switch في Dart 3",
+      "subtitle": "تلات flags بيوصفوا تمن حالات والشاشة بتاعتك فيها تلاتة بس. الـ sealed class بتعدّ الحالات الحقيقية، والـ compiler بيتأكد إنك غطّيت كل واحدة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Dart 3",
+  "learningPath": { "slug": "mobile-app-engineering", "order": 7 },
+  "tags": ["Dart", "Sealed classes", "Pattern matching", "Bloc"],
+  "sources": [
+    { "title": "Class modifiers: sealed — Dart docs", "url": "https://dart.dev/language/class-modifiers" },
+    { "title": "Branches: exhaustiveness checking — Dart docs", "url": "https://dart.dev/language/branches" },
+    { "title": "Patterns — Dart docs", "url": "https://dart.dev/language/patterns" },
+    { "title": "Modeling state — Bloc library", "url": "https://bloclibrary.dev/modeling-state/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\nclass User {\n  const User(this.name);\n  final String name;\n}"
+    }
+  }
+}

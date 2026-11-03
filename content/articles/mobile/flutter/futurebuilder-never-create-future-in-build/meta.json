@@ -1,0 +1,36 @@
+{
+  "slug": "futurebuilder-never-create-future-in-build",
+  "field": "mobile",
+  "topic": "flutter",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why FutureBuilder Keeps Refetching: Never Create the Future in build()",
+      "subtitle": "A future created in build() is a new request on every rebuild. Create it once in State and pass the same one."
+    },
+    "ar-EG": {
+      "title": "ليه الـ FutureBuilder بيعيد الـ request كل شوية؟ متعملش الـ Future جوه build()",
+      "subtitle": "الـ Future اللي بتعمله جوه build() معناه request جديد مع كل rebuild. اعمله مرة واحدة في الـ State وابعت نفسه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "flutter-under-the-hood", "order": 11 },
+  "tags": ["Flutter", "FutureBuilder", "Async", "State"],
+  "sources": [
+    { "title": "FutureBuilder class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/FutureBuilder-class.html" },
+    { "title": "StreamBuilder class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/StreamBuilder-class.html" },
+    { "title": "Fetch data from the internet — Flutter docs", "url": "https://docs.flutter.dev/cookbook/networking/fetch-data" },
+    { "title": "State.build — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/build.html" },
+    { "title": "MediaQuery class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/MediaQuery-class.html" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\n\nclass Order {\n  const Order(this.id, this.status);\n  final String id;\n  final String status;\n}\n\nclass OrderApi {\n  Future<Order> fetchOrder(String id) async => Order(id, 'On the way');\n}\n\nfinal api = OrderApi();\n\nWidget orderCard(BuildContext context, AsyncSnapshot<Order> snapshot) =>\n    Text(snapshot.data?.status ?? '...');\n\nclass OrderScreen extends StatefulWidget {\n  const OrderScreen({super.key, required this.orderId});\n  final String orderId;\n  @override\n  State<OrderScreen> createState() => throw UnimplementedError();\n}"
+    }
+  }
+}

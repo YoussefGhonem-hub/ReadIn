@@ -1,0 +1,36 @@
+{
+  "slug": "mobile-app-lifecycle-and-process-death",
+  "field": "mobile",
+  "topic": "app-architecture",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Backgrounded Doesn't Mean Running: The Mobile App Lifecycle and Process Death",
+      "subtitle": "The OS can kill your app in the background without a callback, and the user still expects to find their work when they come back."
+    },
+    "ar-EG": {
+      "title": "لما التطبيق يروح الخلفية مش معناه إنه شغال: الـ app lifecycle والـ process death",
+      "subtitle": "الـ OS ممكن يقتل التطبيق وهو في الخلفية من غير أي callback، والمستخدم لسه متوقع يلاقي شغله لما يرجع."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "mobile-app-engineering", "order": 3 },
+  "tags": ["Flutter", "App lifecycle", "Process death", "State restoration"],
+  "sources": [
+    { "title": "AppLifecycleState — Flutter API", "url": "https://api.flutter.dev/flutter/dart-ui/AppLifecycleState.html" },
+    { "title": "State restoration on Android — Flutter docs", "url": "https://docs.flutter.dev/platform-integration/android/restore-state-android" },
+    { "title": "Processes and app lifecycle — Android Developers", "url": "https://developer.android.com/guide/components/activities/process-lifecycle" },
+    { "title": "Save UI states — Android Developers", "url": "https://developer.android.com/topic/libraries/architecture/saving-states" },
+    { "title": "Managing your app's life cycle — Apple Developer Documentation", "url": "https://developer.apple.com/documentation/uikit/managing-your-app-s-life-cycle" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:flutter/material.dart';\nclass DraftStore {\n  void save(String text) {}\n  void saveSoon(String text) {}\n}\nfinal drafts = DraftStore();\nclass ReviewForm extends StatefulWidget {\n  const ReviewForm({super.key});\n  @override\n  State<ReviewForm> createState() => throw UnimplementedError();\n}"
+    }
+  }
+}

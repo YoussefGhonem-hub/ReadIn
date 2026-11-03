@@ -1,0 +1,36 @@
+{
+  "slug": "bloc-not-rebuilding-state-equality",
+  "field": "mobile",
+  "topic": "mobile-state-management",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Your Bloc Doesn't Rebuild: State Equality and Immutable States",
+      "subtitle": "Bloc drops a state that equals the current one, and a mutated state always equals itself. Emit new, immutable states instead."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Bloc مش بيعمل rebuild؟ الـ equality والـ immutable states",
+      "subtitle": "الـ Bloc بيتجاهل أي state بيساوي الحالي، والـ state اللي اتعدّل في مكانه دايمًا بيساوي نفسه. ابعت states جديدة وimmutable."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Flutter 3.x",
+  "learningPath": { "slug": "mobile-app-engineering", "order": 6 },
+  "tags": ["Flutter", "Bloc", "Equatable", "Immutability"],
+  "sources": [
+    { "title": "FAQs: State not updating — Bloc library", "url": "https://bloclibrary.dev/faqs/" },
+    { "title": "BlocBase.emit — bloc API reference", "url": "https://pub.dev/documentation/bloc/latest/bloc/BlocBase/emit.html" },
+    { "title": "equatable — pub.dev", "url": "https://pub.dev/packages/equatable" },
+    { "title": "Object.operator == — Dart API", "url": "https://api.dart.dev/dart-core/Object/operator_equals.html" },
+    { "title": "Effective Dart: Design — Equality", "url": "https://dart.dev/effective-dart/design" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "dart": "import 'package:equatable/equatable.dart';\nimport 'package:flutter_bloc/flutter_bloc.dart';"
+    }
+  }
+}
