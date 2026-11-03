@@ -36,6 +36,7 @@
   .titles { margin-top: 40px; max-width: 960px; }
   .title-ar { font-weight: 700; line-height: 1.32; letter-spacing: 0; text-wrap: balance; }
   .title-ar bdi { font-family: "IBM Plex Sans", "IBM Plex Sans Arabic", sans-serif; }
+  .title-ar bdi.nw { white-space: nowrap; }
   .title-en {
     margin-top: 22px; font-family: "IBM Plex Sans", sans-serif; font-weight: 500; font-size: 26px; line-height: 1.35;
     color: rgba(255, 255, 255, .78); text-wrap: balance;
@@ -76,12 +77,14 @@
   // wrap, and neither does the gap after "الـ"/"لـ", so a line never ends on half of an English term or on a bare "الـ".
   const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   // Runs are found on the raw text and each piece is escaped afterwards, so trimming never cuts an entity ("Span<T>").
-  const isolate = (s) => s.replace(/(?:\.|@|#)?[A-Za-z][^؀-ۿ،؛؟«»]*|[^A-Za-z.@#]+|./g, (piece) => {
-    if (!/^(?:\.|@|#)?[A-Za-z]/.test(piece)) return escape(piece);
+  // A run may start with ".", "@", "#" or "/" (.NET, @handle, #tag, /compact).
+  const isolate = (s) => s.replace(/(?:[.@#/])?[A-Za-z][^؀-ۿ،؛؟«»]*|[^A-Za-z.@#/]+|./g, (piece) => {
+    if (!/^[.@#/]?[A-Za-z]/.test(piece)) return escape(piece);
     const trimmed = piece.replace(/[\s.,:;!?'"-]+$/, "");
     const text = escape(trimmed);
-    return `<bdi>${trimmed.length <= 24 ? text.replace(/ /g, "&nbsp;") : text}</bdi>${escape(piece.slice(trimmed.length))}`;
-  }).replace(/ـ (?=<bdi>)/g, "ـ&nbsp;");
+    // Short runs never wrap, not even at a hyphen ("fire-and-forget").
+    return `${trimmed.length <= 24 ? `<bdi class="nw">${text}</bdi>` : `<bdi>${text}</bdi>`}${escape(piece.slice(trimmed.length))}`;
+  }).replace(/ـ (?=<bdi)/g, "ـ&nbsp;");
 
   window.renderCover = async (d) => {
     const cover = document.getElementById("cover");
