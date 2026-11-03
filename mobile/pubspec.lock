@@ -225,6 +225,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  country_flags:
+    dependency: "direct main"
+    description:
+      name: country_flags
+      sha256: f022d18337f3861f1f4e319b936cb53920de9259f38cb09e169eace9942e2b79
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.2"
   coverage:
     dependency: transitive
     description:
@@ -281,6 +289,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.8.0"
+  device_info_plus:
+    dependency: "direct main"
+    description:
+      name: device_info_plus
+      sha256: ade1c36f8355d6284c98e4a47992ea263887ed3d1acb281e37635dd45f04c4aa
+      url: "https://pub.dev"
+    source: hosted
+    version: "13.3.0"
+  device_info_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: device_info_plus_platform_interface
+      sha256: "04b173a92e2d9161dfead145667037c8d834db725ce2e7b942bfe18fd2f45a46"
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.1.0"
   diff_match_patch:
     dependency: transitive
     description:
@@ -965,6 +989,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  jovial_misc:
+    dependency: transitive
+    description:
+      name: jovial_misc
+      sha256: "065b5240badae6b13472efdea28fffe8baf914a7831361469a95c6456d9b8dc8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.0"
+  jovial_svg:
+    dependency: transitive
+    description:
+      name: jovial_svg
+      sha256: "075071ae3b67d7bdf85979616d9fd6c4da27c2e6ab2e68b86e412cca87385225"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.31"
   json_annotation:
     dependency: "direct main"
     description:
@@ -1181,6 +1221,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.2"
+  phone_numbers_parser:
+    dependency: "direct main"
+    description:
+      name: phone_numbers_parser
+      sha256: "911410b1b6e81a03b7052f2f5ddb838d85d50410295a42551ded7720f4ef4923"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.0.28"
   platform:
     dependency: transitive
     description:
@@ -1642,6 +1690,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.4.0"
+  win32_registry:
+    dependency: transitive
+    description:
+      name: win32_registry
+      sha256: "73b1d78920a9d6e03f8b4e43e612b87bf3152a0e5c5e5150267762b7c4116904"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.3"
   windows_file_picker:
     dependency: transitive
     description:
