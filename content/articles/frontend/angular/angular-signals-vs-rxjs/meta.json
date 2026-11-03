@@ -1,0 +1,36 @@
+{
+  "slug": "angular-signals-vs-rxjs",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Signals vs RxJS: State vs Events, Not Old vs New",
+      "subtitle": "A signal holds the latest value; an Observable delivers every event in time. Most apps need both."
+    },
+    "ar-EG": {
+      "title": "هل الـ Signals بتلغي RxJS؟ state مقابل events، مش قديم وجديد",
+      "subtitle": "الـ signal شايلة آخر قيمة، والـ Observable بيوصّل كل event في وقته. وأغلب التطبيقات محتاجة الاتنين."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 8 },
+  "tags": ["Angular", "Signals", "RxJS", "toSignal", "Observables"],
+  "sources": [
+    { "title": "RxJS interop with Angular signals — Angular", "url": "https://angular.dev/ecosystem/rxjs-interop" },
+    { "title": "toSignal — Angular API", "url": "https://angular.dev/api/core/rxjs-interop/toSignal" },
+    { "title": "Angular Signals — Angular", "url": "https://angular.dev/guide/signals" },
+    { "title": "Making HTTP requests — Angular", "url": "https://angular.dev/guide/http/making-requests" },
+    { "title": "httpResource — Angular API", "url": "https://angular.dev/api/common/http/httpResource" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface Product { id: number; name: string; }\ninterface CartLine { sku: string; qty: number; }\ndeclare class ProductApi { search(query: string): import('rxjs').Observable<Product[]>; }"
+    }
+  }
+}

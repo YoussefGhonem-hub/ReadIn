@@ -1,0 +1,36 @@
+{
+  "slug": "angular-signals-in-templates-are-cheap",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Calling count() in a Template Is Fine; Calling getTotal() Isn't",
+      "subtitle": "Every check re-evaluates the template. What matters is how much work each expression does, not its parentheses."
+    },
+    "ar-EG": {
+      "title": "استدعاء count() في الـ template تمام، لكن getTotal() لأ: ليه؟",
+      "subtitle": "كل check بيعيد تقييم الـ template كله. المهم كل expression بيعمل شغل قد إيه، مش فيه أقواس ولا لأ."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 2 },
+  "tags": ["Angular", "Signals", "computed", "Pipes", "Performance"],
+  "sources": [
+    { "title": "Signals: computed signals are lazily evaluated and memoized — Angular", "url": "https://angular.dev/guide/signals#computed-signals-are-both-lazily-evaluated-and-memoized" },
+    { "title": "Slow computations — Angular", "url": "https://angular.dev/best-practices/slow-computations" },
+    { "title": "Pipes — Angular", "url": "https://angular.dev/guide/templates/pipes" },
+    { "title": "Skipping component subtrees — Angular", "url": "https://angular.dev/best-practices/skipping-subtrees" },
+    { "title": "NG8109: Signals must be invoked in template interpolations — Angular", "url": "https://angular.dev/extended-diagnostics/NG8109" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface CartLine { sku: string; price: number; qty: number; }\ndeclare function lineTotal(line: CartLine): number;"
+    }
+  }
+}

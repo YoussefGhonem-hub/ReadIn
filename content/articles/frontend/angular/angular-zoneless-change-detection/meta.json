@@ -1,0 +1,36 @@
+{
+  "slug": "angular-zoneless-change-detection",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Zoneless Angular: What Schedules Rendering Without zone.js",
+      "subtitle": "zone.js only told Angular when to check. Without it, your signals and listeners do, and Angular schedules the pass."
+    },
+    "ar-EG": {
+      "title": "من غير zone.js، مين اللي بيقول لـ Angular يعمل render؟",
+      "subtitle": "الـ zone.js كان بس بيقول لـ Angular إمتى يعمل check. من غيره، الـ signals والـ listeners بتوعك بيقولوا، وAngular بيجدول اللفّة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 10 },
+  "tags": ["Angular", "Zoneless", "Change Detection", "Signals", "zone.js"],
+  "sources": [
+    { "title": "Angular without ZoneJS (Zoneless) — Angular", "url": "https://angular.dev/guide/zoneless" },
+    { "title": "afterNextRender — Angular API", "url": "https://angular.dev/api/core/afterNextRender" },
+    { "title": "provideZonelessChangeDetection — Angular API", "url": "https://angular.dev/api/core/provideZonelessChangeDetection" },
+    { "title": "ChangeDetectorRef — Angular API", "url": "https://angular.dev/api/core/ChangeDetectorRef" },
+    { "title": "Effects: side effects on DOM elements — Angular", "url": "https://angular.dev/guide/signals/effect#side-effects-on-dom-elements" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface Message { id: number; text: string; }\ndeclare class ChatSocket { messages$: import('rxjs').Observable<Message>; }"
+    }
+  }
+}

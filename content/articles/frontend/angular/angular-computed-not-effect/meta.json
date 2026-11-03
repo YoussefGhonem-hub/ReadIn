@@ -1,0 +1,36 @@
+{
+  "slug": "angular-computed-not-effect",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Stop Syncing Signals with effect(): Use computed() and linkedSignal()",
+      "subtitle": "An effect runs later, so the copy it keeps is stale in between. Derive state; keep effects at the edges."
+    },
+    "ar-EG": {
+      "title": "بطّل تزامن الـ signals بـ effect(): استخدم computed() و linkedSignal()",
+      "subtitle": "الـ effect بيشتغل بعدين، فالنسخة اللي بيزامنها بتبقى قديمة في النص. احسب الـ state، وسيب الـ effects للأطراف."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 7 },
+  "tags": ["Angular", "Signals", "effect", "computed", "linkedSignal"],
+  "sources": [
+    { "title": "Effects — Angular", "url": "https://angular.dev/guide/signals/effect" },
+    { "title": "Angular Signals — Angular", "url": "https://angular.dev/guide/signals" },
+    { "title": "Dependent state with linkedSignal — Angular", "url": "https://angular.dev/guide/signals/linked-signal" },
+    { "title": "Async reactivity with resources — Angular", "url": "https://angular.dev/guide/signals/resource" },
+    { "title": "CreateEffectOptions — Angular API", "url": "https://angular.dev/api/core/CreateEffectOptions" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface Product { id: number; name: string; }\ndeclare function byName(query: string): (product: Product) => boolean;"
+    }
+  }
+}

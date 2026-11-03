@@ -1,0 +1,36 @@
+{
+  "slug": "angular-change-detection-explained",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Angular Doesn't Watch Your Variables: How Change Detection Really Works",
+      "subtitle": "Angular re-renders in passes, and in Angular 22 only a notification schedules one. A plain assignment isn't one."
+    },
+    "ar-EG": {
+      "title": "ليه Angular مش بيراقب الـ variables بتاعتك؟ الـ change detection على حقيقته",
+      "subtitle": "Angular بيحدّث الشاشة على لفّات، وفي Angular 22 مفيش لفّة بتحصل غير لو حاجة نبّهته. والـ assignment العادي مش منهم."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 4 },
+  "tags": ["Angular", "Change Detection", "Zoneless", "OnPush", "Signals"],
+  "sources": [
+    { "title": "Runtime performance overview — Angular", "url": "https://angular.dev/best-practices/runtime-performance" },
+    { "title": "Angular without ZoneJS (Zoneless) — Angular", "url": "https://angular.dev/guide/zoneless" },
+    { "title": "Skipping component subtrees — Angular", "url": "https://angular.dev/best-practices/skipping-subtrees" },
+    { "title": "NG0100: Expression changed after it was checked — Angular", "url": "https://angular.dev/errors/NG0100" },
+    { "title": "Resolving zone pollution — Angular", "url": "https://angular.dev/best-practices/zone-pollution" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare class DraftApi { save(): Promise<void>; }"
+    }
+  }
+}

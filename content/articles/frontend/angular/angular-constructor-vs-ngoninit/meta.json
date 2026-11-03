@@ -1,0 +1,36 @@
+{
+  "slug": "angular-constructor-vs-ngoninit",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Inputs Aren't Ready in the Constructor: constructor vs ngOnInit",
+      "subtitle": "Angular creates the component first and binds its inputs second. Where you read an input decides what you get."
+    },
+    "ar-EG": {
+      "title": "ليه الـ inputs مش جاهزة في الـ constructor؟ الفرق بينه وبين ngOnInit",
+      "subtitle": "Angular بيعمل الـ component الأول وبعدين يربط الـ inputs بتاعتها. والمكان اللي بتقرا فيه الـ input بيحدد هتاخد إيه."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 3 },
+  "tags": ["Angular", "Lifecycle", "ngOnInit", "Signal Inputs"],
+  "sources": [
+    { "title": "Component lifecycle — Angular", "url": "https://angular.dev/guide/components/lifecycle" },
+    { "title": "NG0950: Required input is accessed before a value is set — Angular", "url": "https://angular.dev/errors/NG0950" },
+    { "title": "Accepting data with input properties — Angular", "url": "https://angular.dev/guide/components/inputs" },
+    { "title": "Async reactivity with resources — Angular", "url": "https://angular.dev/guide/signals/resource" },
+    { "title": "Injection context — Angular", "url": "https://angular.dev/guide/di/dependency-injection-context" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface Product { id: string; name: string; }\ndeclare class ProductApi { get(id: string, signal?: AbortSignal): Promise<Product>; }"
+    }
+  }
+}

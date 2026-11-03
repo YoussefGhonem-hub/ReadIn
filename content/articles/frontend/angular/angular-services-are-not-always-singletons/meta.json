@@ -1,0 +1,35 @@
+{
+  "slug": "angular-services-are-not-always-singletons",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Not Every Angular Service Is a Singleton: Hierarchical Injectors Explained",
+      "subtitle": "A service is one instance per injector, and every providers array you write creates an injector of its own."
+    },
+    "ar-EG": {
+      "title": "مش كل service في Angular بتبقى singleton: الـ hierarchical injectors",
+      "subtitle": "الـ service بتبقى instance واحدة لكل injector، وكل providers array بتكتبها بتعمل injector خاص بيها."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 5 },
+  "tags": ["Angular", "Dependency Injection", "Services", "Injectors"],
+  "sources": [
+    { "title": "Hierarchical injectors — Angular", "url": "https://angular.dev/guide/di/hierarchical-dependency-injection" },
+    { "title": "Creating and using services — Angular", "url": "https://angular.dev/guide/di/creating-and-using-services" },
+    { "title": "Defining dependency providers — Angular", "url": "https://angular.dev/guide/di/defining-dependency-providers" },
+    { "title": "NG0201: No provider found — Angular", "url": "https://angular.dev/errors/NG0201" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare class CartStore {\n  readonly items: import('@angular/core').WritableSignal<string[]>;\n  add(item: string): void;\n}"
+    }
+  }
+}

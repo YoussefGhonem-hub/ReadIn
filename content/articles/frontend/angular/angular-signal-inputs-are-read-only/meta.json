@@ -1,0 +1,36 @@
+{
+  "slug": "angular-signal-inputs-are-read-only",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Signal Inputs Are Read-Only: When to Reach for model() and linkedSignal()",
+      "subtitle": "An input belongs to the parent. Decide who owns the edit, then pick model() or linkedSignal()."
+    },
+    "ar-EG": {
+      "title": "ليه مينفعش تعدّل الـ signal input؟ إمتى تستخدم model() و linkedSignal()",
+      "subtitle": "الـ input ملك الـ parent. حدّد الأول مين صاحب التعديل، وبعدين اختار model() أو linkedSignal()."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 6 },
+  "tags": ["Angular", "Signals", "Inputs", "model", "linkedSignal"],
+  "sources": [
+    { "title": "Accepting data with input properties — Angular", "url": "https://angular.dev/guide/components/inputs" },
+    { "title": "model — Angular API", "url": "https://angular.dev/api/core/model" },
+    { "title": "Two-way binding — Angular", "url": "https://angular.dev/guide/templates/two-way-binding" },
+    { "title": "Dependent state with linkedSignal — Angular", "url": "https://angular.dev/guide/signals/linked-signal" },
+    { "title": "Migration to signal inputs — Angular", "url": "https://angular.dev/reference/migrations/signal-inputs" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "skip": {
+      "b12/0": "Shows compiler error TS2339 on purpose: an InputSignal has no set() method"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "slug": "angular-onpush-change-detection",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "OnPush Isn't 'Only When Inputs Change': What Really Triggers a Check",
+      "subtitle": "OnPush is a dirty flag with four triggers, and only one of them comes from the parent."
+    },
+    "ar-EG": {
+      "title": "إيه اللي بيخلّي component الـ OnPush يتعمله check؟ مش الـ inputs بس",
+      "subtitle": "الـ OnPush هو dirty flag ليه أربع triggers، وواحد بس فيهم جاي من الـ parent."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 9 },
+  "tags": ["Angular", "OnPush", "Change Detection", "Signals", "Performance"],
+  "sources": [
+    { "title": "Skipping component subtrees — Angular", "url": "https://angular.dev/best-practices/skipping-subtrees" },
+    { "title": "ChangeDetectionStrategy — Angular API", "url": "https://angular.dev/api/core/ChangeDetectionStrategy" },
+    { "title": "ChangeDetectorRef — Angular API", "url": "https://angular.dev/api/core/ChangeDetectorRef" },
+    { "title": "Signals: reading signals in OnPush components — Angular", "url": "https://angular.dev/guide/signals#reading-signals-in-onpush-components" },
+    { "title": "Angular without ZoneJS (Zoneless) — Angular", "url": "https://angular.dev/guide/zoneless" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare class UploadProgress { percent: number; }"
+    }
+  }
+}

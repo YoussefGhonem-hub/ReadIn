@@ -1,0 +1,36 @@
+{
+  "slug": "angular-standalone-components-without-ngmodules",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "You Don't Need NgModules: Standalone Components Are the Default",
+      "subtitle": "A component imports what its template uses. Folders and routes do the organizing modules used to do."
+    },
+    "ar-EG": {
+      "title": "مش محتاج NgModules: الـ standalone components هي الأساس دلوقتي",
+      "subtitle": "الـ component بتعمل import للي الـ template بتاعها بيستخدمه، والفولدرات والـ routes بتنظّم اللي كانت الـ modules بتنظّمه."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 1 },
+  "tags": ["Angular", "Standalone Components", "NgModule", "Lazy Loading"],
+  "sources": [
+    { "title": "Anatomy of components — Angular", "url": "https://angular.dev/guide/components" },
+    { "title": "NgModules — Angular", "url": "https://angular.dev/guide/ngmodules/overview" },
+    { "title": "Migrate an existing Angular project to standalone — Angular", "url": "https://angular.dev/reference/migrations/standalone" },
+    { "title": "Route loading strategies — Angular", "url": "https://angular.dev/guide/routing/loading-strategies" },
+    { "title": "bootstrapApplication — Angular API", "url": "https://angular.dev/api/platform-browser/bootstrapApplication" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare class App {}\ndeclare class Home {}\ndeclare class AdminApi {}\ndeclare const adminRoutes: import('@angular/router').Routes;"
+    }
+  }
+}
