@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-title-ar="ReadIn — مقال كل يوم يفرق معاك" data-title-en="ReadIn — Read daily. Grow daily.">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReadIn — مقال كل يوم يفرق معاك · Read daily. Grow daily.</title>
+  <script>
+    (function () {
+      var d = document.documentElement;
+      var q = new URLSearchParams(location.search).get('lang');
+      var nav = ((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+      var l = q === 'ar' || q === 'en' ? q : nav.indexOf('ar') === 0 ? 'ar' : 'en';
+      d.setAttribute('data-lang', l); d.lang = l; d.dir = l === 'ar' ? 'rtl' : 'ltr';
+      document.title = d.getAttribute('data-title-' + l);
+    })();
+  </script>
+  <meta name="description" content="ReadIn is a bilingual Arabic and English app for reading one valuable article a day. ReadIn منصة معرفة بالعربي والإنجليزي: مقال مفيد كل يوم في المجال اللي بتحبه.">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121413" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://readin-cca78.firebaseapp.com/">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="apple-touch-icon" href="/logo.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ReadIn — Read daily. Grow daily.">
+  <meta property="og:description" content="One valuable article a day, in Arabic and English, in the field you love.">
+  <meta property="og:image" content="https://readin-cca78.firebaseapp.com/logo.png">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #FAF8F4; --surface: #FFFFFF; --border: #E8E4DC;
+      --text: #1A1A1A; --muted: #6B6B6B;
+      --primary: #0F5E52; --on-primary: #FFFFFF; --primary-soft: #E3F1EE;
+      --accent: #F2A93B; --accent-soft: #FDF3E1;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121413; --surface: #1B1E1C; --border: #2E322F;
+        --text: #ECEAE6; --muted: #A3A39E;
+        --primary: #3FB8A3; --on-primary: #121413; --primary-soft: #16302A;
+        --accent: #F5B95A; --accent-soft: #3A2E17;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 17px/1.75 "IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    a { color: var(--primary); text-underline-offset: 3px; }
+    a:hover { text-decoration-thickness: 2px; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+    .top { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font: 700 22px/1 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .brand img { width: 36px; height: 36px; border-radius: 9px; }
+    .brand b { color: var(--primary); }
+    .lang-btn { display: none; align-items: center; font: inherit; font-size: 15px; line-height: 1; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
+    .lang-btn:hover { border-color: var(--primary); }
+    html[data-lang] .lang-btn { display: inline-flex; }
+    html[data-lang="ar"] .l-en, html[data-lang="en"] .l-ar { display: none !important; }
+    html:not([data-lang]) span.l-ar + span.l-en::before { content: " · "; }
+    html[data-lang] .lang-sep { display: none; }
+    .lang-sep { border: 0; border-top: 1px dashed var(--border); margin: 8px 0 40px; }
+    main { padding: 32px 0 48px; }
+    h1 { font-size: 30px; line-height: 1.3; margin: 0 0 8px; }
+    h2 { font-size: 21px; line-height: 1.4; margin: 36px 0 10px; }
+    h3 { font-size: 17px; line-height: 1.5; margin: 0 0 4px; }
+    p, ul, ol { margin: 0 0 14px; }
+    ul, ol { padding-inline-start: 22px; }
+    li { margin-bottom: 6px; }
+    .meta { color: var(--muted); font-size: 15px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; margin: 12px 0; }
+    .note { background: var(--primary-soft); border-radius: 16px; padding: 14px 18px; margin: 12px 0; }
+    footer { border-top: 1px solid var(--border); padding: 24px 0 40px; font-size: 15px; color: var(--muted); }
+    footer nav { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 8px; }
+    @media (min-width: 640px) { h1 { font-size: 36px; } }
+
+    .hero { text-align: center; padding: 8px 0 8px; }
+    .hero img { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 10px 30px rgba(15, 94, 82, .25); }
+    .hero .tagline { font-size: 20px; color: var(--muted); margin: 0 0 20px; }
+    .wordmark { font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .wordmark b { color: var(--primary); }
+    .lead { font-size: 18px; }
+    .stores { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 16px 0 8px; }
+    .store { display: inline-flex; flex-direction: column; align-items: flex-start; min-width: 168px; padding: 10px 18px; border-radius: 14px; background: var(--text); color: var(--bg); opacity: .55; cursor: not-allowed; text-align: start; }
+    .store small { font-size: 12px; line-height: 1.3; }
+    .store span { font: 600 18px/1.3 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .features { list-style: none; padding: 0; display: grid; gap: 12px; }
+    .features li { margin: 0; }
+    .features .card { margin: 0; height: 100%; }
+    .features p { margin: 0; color: var(--muted); font-size: 16px; }
+    .ico { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); margin-bottom: 8px; font-size: 18px; }
+    @media (min-width: 640px) { .features { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/" data-page="/" aria-label="ReadIn"><img src="/logo.png" alt="" width="36" height="36"><span dir="ltr">Read<b>In</b></span></a>
+      <button id="lang-btn" class="lang-btn" type="button"><span class="l-ar" lang="en">English</span><span class="l-en" lang="ar">العربية</span></button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ===================== العربية ===================== -->
+    <section class="l-ar" lang="ar" dir="rtl">
+      <div class="hero">
+        <img src="/logo.png" alt="شعار ReadIn" width="96" height="96">
+        <h1 class="wordmark" dir="ltr">Read<b>In</b></h1>
+        <p class="tagline">مقال كل يوم يفرق معاك</p>
+      </div>
+
+      <p class="lead"><bdi>ReadIn</bdi> منصة معرفة بالعربي والإنجليزي. الكُتّاب ينشرون فيها مقالات منسقة بعناية، والقرّاء يبنون عادة قراءة مقال مفيد واحد كل يوم في المجال الذي يحبونه. يعرض التطبيق النص العربي المختلط بالإنجليزي بشكل صحيح، فتبقى المصطلحات وعلامات الترقيم والأكواد في مكانها. نبدأ بمجال البرمجيات: الذكاء الاصطناعي، وتعلّم الآلة، و<bdi>.NET</bdi>، والواجهات الأمامية، وتطبيقات الموبايل، وقواعد البيانات، و<bdi>DevOps</bdi>، ومعمارية البرمجيات، والأمان، والاختبارات.</p>
+
+      <h2>حمّل التطبيق</h2>
+      <p>لم يُنشر <bdi>ReadIn</bdi> في المتاجر بعد. ستظهر روابط التحميل هنا عند نشره.</p>
+      <div class="stores">
+        <span class="store" aria-disabled="true"><small>قريبًا على</small><span dir="ltr">App Store</span></span>
+        <span class="store" aria-disabled="true"><small>قريبًا على</small><span dir="ltr">Google Play</span></span>
+      </div>
+
+      <h2>ماذا ستجد في التطبيق</h2>
+      <ul class="features">
+        <li><div class="card"><span class="ico" aria-hidden="true">☕</span><h3>مقال النهارده</h3><p>مقال واحد نختاره لك كل يوم حسب اهتماماتك، ويصلك تذكير به في الوقت الذي تحدده.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">🔥</span><h3>سلسلة القراءة والإحصائيات</h3><p>عدد أيام القراءة المتتالية، وخريطة لأيام قراءتك، ودقائق القراءة، وأكثر المجالات التي تقرأ فيها.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">🧭</span><h3>مسارات التعلّم</h3><p>سلاسل مقالات مرتبة في موضوع واحد، مع متابعة تقدمك والمقال التالي.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">↔️</span><h3>عربي وإنجليزي بشكل صحيح</h3><p>اتجاه مستقل لكل فقرة، ومصطلحات إنجليزية سليمة داخل النص العربي، والأكواد دائمًا من اليسار لليمين.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">🌐</span><h3>نسختان لكل مقال</h3><p>مصري مع المصطلحات بالإنجليزي، أو إنجليزي فقط. اختر ما يناسبك.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">✓</span><h3>ثقة واضحة</h3><p>كُتّاب موثّقون، ومقالات مراجَعة، ومصادر لكل مقال تقني، وعلامة واضحة على المقالات المكتوبة بمساعدة الذكاء الاصطناعي.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">✍️</span><h3>اكتب وناقش</h3><p>محرر بتنسيق غني، وتعليقات وتفاعلات، ومتابعة الكُتّاب، وحفظ المقالات لقراءتها لاحقًا.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">🌙</span><h3>فاتح وداكن</h3><p>الوضع الفاتح أو الداكن أو حسب إعدادات جهازك.</p></div></li>
+      </ul>
+
+      <h2>تواصل معنا</h2>
+      <p>لأي سؤال أو ملاحظة، راسل فريق <bdi>ReadIn</bdi> على <a href="mailto:youssef.fcaih@gmail.com"><bdi>youssef.fcaih@gmail.com</bdi></a>.</p>
+      <p>اقرأ <a href="/privacy" data-page="/privacy">سياسة الخصوصية</a> و<a href="/terms" data-page="/terms">شروط الاستخدام</a>، أو اعرف <a href="/delete-account" data-page="/delete-account">كيف تحذف حسابك</a>.</p>
+    </section>
+
+    <hr class="lang-sep">
+
+    <!-- ===================== English ===================== -->
+    <section class="l-en" lang="en" dir="ltr">
+      <div class="hero">
+        <img src="/logo.png" alt="ReadIn logo" width="96" height="96">
+        <h1 class="wordmark">Read<b>In</b></h1>
+        <p class="tagline">Read daily. Grow daily.</p>
+      </div>
+
+      <p class="lead">ReadIn is a bilingual Arabic and English knowledge app. Writers publish well-formatted articles, and readers build a habit of reading one valuable article a day in the field they love. It gets mixed Arabic and English text right, so technical terms, punctuation and code stay in the right order. ReadIn starts with software: AI, machine learning, .NET, frontend, mobile, databases, DevOps, software architecture, security and testing.</p>
+
+      <h2>Download</h2>
+      <p>ReadIn isn't in the stores yet. Download links will appear here when it is.</p>
+      <div class="stores">
+        <span class="store" aria-disabled="true"><small>Coming soon to the</small><span>App Store</span></span>
+        <span class="store" aria-disabled="true"><small>Coming soon to</small><span>Google Play</span></span>
+      </div>
+
+      <h2>What's inside</h2>
+      <ul class="features">
+        <li><div class="card"><span class="ico" aria-hidden="true">☕</span><h3>Today's article</h3><p>One article picked for you every day from your interests, with a reminder at the time you choose.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">🔥</span><h3>Streaks and reading stats</h3><p>Your reading streak, a heatmap of your reading days, minutes read and your top fields.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">🧭</span><h3>Learning paths</h3><p>Ordered series of articles on one topic, with your progress and the next article.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">↔️</span><h3>Arabic and English, done right</h3><p>Each paragraph keeps its own direction, English terms sit cleanly inside Arabic text, and code is always left to right.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">🌐</span><h3>Two versions of each article</h3><p>Egyptian Arabic with English terms, or English only. Pick the one that suits you.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">✓</span><h3>Trust you can see</h3><p>Verified writers, reviewed articles, sources on every technical article, and a clear label on AI-assisted articles.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">✍️</span><h3>Write and discuss</h3><p>A rich editor, comments and reactions, following writers, and saving articles for later.</p></div></li>
+        <li><div class="card"><span class="ico" aria-hidden="true">🌙</span><h3>Light and dark</h3><p>Light mode, dark mode, or follow your device setting.</p></div></li>
+      </ul>
+
+      <h2>Contact</h2>
+      <p>Questions or feedback? Email the ReadIn team at <a href="mailto:youssef.fcaih@gmail.com">youssef.fcaih@gmail.com</a>.</p>
+      <p>Read our <a href="/privacy" data-page="/privacy">Privacy Policy</a> and <a href="/terms" data-page="/terms">Terms of Service</a>, or see <a href="/delete-account" data-page="/delete-account">how to delete your account</a>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <nav aria-label="Pages">
+        <a href="/" data-page="/"><span class="l-ar">الرئيسية</span><span class="l-en">Home</span></a>
+        <a href="/privacy" data-page="/privacy"><span class="l-ar">سياسة الخصوصية</span><span class="l-en">Privacy Policy</span></a>
+        <a href="/terms" data-page="/terms"><span class="l-ar">شروط الاستخدام</span><span class="l-en">Terms of Service</span></a>
+        <a href="/delete-account" data-page="/delete-account"><span class="l-ar">حذف الحساب</span><span class="l-en">Delete account</span></a>
+      </nav>
+      <p><a href="mailto:youssef.fcaih@gmail.com">youssef.fcaih@gmail.com</a> · © 2026 <span class="l-ar">فريق ReadIn</span><span class="l-en">The ReadIn team</span></p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var d = document.documentElement;
+      function sync() {
+        var l = d.getAttribute('data-lang');
+        document.title = d.getAttribute('data-title-' + l);
+        document.querySelectorAll('a[data-page]').forEach(function (a) { a.href = a.getAttribute('data-page') + '?lang=' + l; });
+      }
+      document.getElementById('lang-btn').addEventListener('click', function () {
+        var l = d.getAttribute('data-lang') === 'ar' ? 'en' : 'ar';
+        d.setAttribute('data-lang', l); d.lang = l; d.dir = l === 'ar' ? 'rtl' : 'ltr';
+        var u = new URL(location.href); u.searchParams.set('lang', l); history.replaceState(null, '', u);
+        sync();
+      });
+      sync();
+    })();
+  </script>
+</body>
+</html>

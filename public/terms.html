@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-title-ar="شروط الاستخدام · ReadIn" data-title-en="Terms of Service · ReadIn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>شروط الاستخدام · Terms of Service · ReadIn</title>
+  <script>
+    (function () {
+      var d = document.documentElement;
+      var q = new URLSearchParams(location.search).get('lang');
+      var nav = ((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+      var l = q === 'ar' || q === 'en' ? q : nav.indexOf('ar') === 0 ? 'ar' : 'en';
+      d.setAttribute('data-lang', l); d.lang = l; d.dir = l === 'ar' ? 'rtl' : 'ltr';
+      document.title = d.getAttribute('data-title-' + l);
+    })();
+  </script>
+  <meta name="description" content="The rules for using ReadIn, in plain language. شروط استخدام ReadIn بلغة بسيطة.">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121413" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://readin-cca78.firebaseapp.com/terms">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="apple-touch-icon" href="/logo.png">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #FAF8F4; --surface: #FFFFFF; --border: #E8E4DC;
+      --text: #1A1A1A; --muted: #6B6B6B;
+      --primary: #0F5E52; --on-primary: #FFFFFF; --primary-soft: #E3F1EE;
+      --accent: #F2A93B; --accent-soft: #FDF3E1;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121413; --surface: #1B1E1C; --border: #2E322F;
+        --text: #ECEAE6; --muted: #A3A39E;
+        --primary: #3FB8A3; --on-primary: #121413; --primary-soft: #16302A;
+        --accent: #F5B95A; --accent-soft: #3A2E17;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 17px/1.75 "IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    a { color: var(--primary); text-underline-offset: 3px; }
+    a:hover { text-decoration-thickness: 2px; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+    .top { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font: 700 22px/1 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .brand img { width: 36px; height: 36px; border-radius: 9px; }
+    .brand b { color: var(--primary); }
+    .lang-btn { display: none; align-items: center; font: inherit; font-size: 15px; line-height: 1; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
+    .lang-btn:hover { border-color: var(--primary); }
+    html[data-lang] .lang-btn { display: inline-flex; }
+    html[data-lang="ar"] .l-en, html[data-lang="en"] .l-ar { display: none !important; }
+    html:not([data-lang]) span.l-ar + span.l-en::before { content: " · "; }
+    html[data-lang] .lang-sep { display: none; }
+    .lang-sep { border: 0; border-top: 1px dashed var(--border); margin: 8px 0 40px; }
+    main { padding: 32px 0 48px; }
+    h1 { font-size: 30px; line-height: 1.3; margin: 0 0 8px; }
+    h2 { font-size: 21px; line-height: 1.4; margin: 36px 0 10px; }
+    h3 { font-size: 17px; line-height: 1.5; margin: 0 0 4px; }
+    p, ul, ol { margin: 0 0 14px; }
+    ul, ol { padding-inline-start: 22px; }
+    li { margin-bottom: 6px; }
+    .meta { color: var(--muted); font-size: 15px; }
+    .note { background: var(--primary-soft); border-radius: 16px; padding: 14px 18px; margin: 12px 0; }
+    .note > :last-child { margin-bottom: 0; }
+    footer { border-top: 1px solid var(--border); padding: 24px 0 40px; font-size: 15px; color: var(--muted); }
+    footer nav { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 8px; }
+    @media (min-width: 640px) { h1 { font-size: 36px; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/" data-page="/" aria-label="ReadIn"><img src="/logo.png" alt="" width="36" height="36"><span dir="ltr">Read<b>In</b></span></a>
+      <button id="lang-btn" class="lang-btn" type="button"><span class="l-ar" lang="en">English</span><span class="l-en" lang="ar">العربية</span></button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ===================== العربية ===================== -->
+    <article class="l-ar" lang="ar" dir="rtl">
+      <h1>شروط الاستخدام</h1>
+      <p class="meta">آخر تحديث: 3 نوفمبر 2026</p>
+      <p>هذه الشروط تنظّم استخدامك لتطبيقات <bdi>ReadIn</bdi> (أندرويد و<bdi>iOS</bdi> والويب). باستخدامك <bdi>ReadIn</bdi> فأنت توافق عليها. يدير <bdi>ReadIn</bdi> فريق <bdi>ReadIn</bdi>، ويمكنك مراسلتنا على <a href="mailto:youssef.fcaih@gmail.com"><bdi>youssef.fcaih@gmail.com</bdi></a>.</p>
+
+      <h2>1. من يمكنه استخدام <bdi>ReadIn</bdi></h2>
+      <p>يجب أن يكون عمرك <strong>13 عامًا أو أكثر</strong> لإنشاء حساب. يمكن لأي شخص تصفّح المقالات وقراءتها بدون حساب.</p>
+
+      <h2>2. حسابك</h2>
+      <ul>
+        <li>احتفظ بكلمة المرور ورمز الاسترداد (<bdi>PIN</bdi>) لنفسك. أنت مسؤول عمّا يحدث من خلال حسابك.</li>
+        <li>اكتب رقم هاتفك بشكل صحيح. لا نرسل رسائل <bdi>SMS</bdi> للتحقق من الرقم، لذلك قد تفقد حسابك إذا كان الرقم خطأ ونسيت كلمة المرور ورمز الاسترداد.</li>
+        <li>إذا اشتبهت أن أحدًا دخل حسابك، غيّر كلمة المرور، واستخدم «تسجيل الخروج من كل الأجهزة»، وراسلنا.</li>
+      </ul>
+
+      <h2>3. محتواك</h2>
+      <ul>
+        <li>ما تكتبه ملكك. عندما تنشر مقالًا أو تعليقًا، تمنح <bdi>ReadIn</bdi> إذنًا بحفظه وعرضه ومشاركته داخل التطبيق والموقع، بما في ذلك روابط المشاركة وبطاقات الاقتباس، لكي تعمل الخدمة.</li>
+        <li>يستمر هذا الإذن للمقالات والتعليقات التي تبقى باسم «مستخدم محذوف» بعد حذف حسابك. احذفها قبل حذف حسابك إذا لم ترد بقاءها.</li>
+        <li>انشر فقط ما تملك حق نشره.</li>
+      </ul>
+
+      <h2>4. قواعد الكتابة والمشاركة</h2>
+      <ul>
+        <li>اكتب بأمانة: أضف مصادر للمقالات التقنية والصحية، ووضّح عندما يكون المقال مكتوبًا بمساعدة الذكاء الاصطناعي.</li>
+        <li>استخدم هويتك الحقيقية، ولا تنتحل شخصية أحد.</li>
+        <li>ممنوع: الرسائل المزعجة (<bdi>spam</bdi>)، والتحرش والإساءة، والمعلومات المضللة، ونشر محتوى غيرك بدون إذن، وأي محتوى مخالف للقانون.</li>
+        <li>لا تحاول تعطيل الخدمة أو الوصول إلى حسابات الآخرين أو بياناتهم.</li>
+      </ul>
+
+      <h2>5. المراجعة والإشراف</h2>
+      <ul>
+        <li>يمكن لأي مستخدم الإبلاغ عن مقال أو تعليق أو مستخدم.</li>
+        <li>يمكن لفريق الإشراف إخفاء المحتوى، وتوجيه تحذير، وإيقاف الحسابات مؤقتًا أو نهائيًا عند مخالفة هذه الشروط.</li>
+        <li>شارة «كاتب موثّق» وشارة «تمت المراجعة» يمنحهما فريقنا، ويمكن سحبهما.</li>
+      </ul>
+
+      <h2>6. المحتوى للمعرفة فقط</h2>
+      <p>يكتب المقالات كُتّاب من المجتمع. شارة «تمت المراجعة» تعني أن مراجعًا اطّلع على المقال، لكن قد تحتوي المقالات على أخطاء. المحتوى للمعرفة العامة، وليس بديلًا عن استشارة مختص (طبي أو قانوني أو مالي أو غيره).</p>
+
+      <h2>7. الخدمة كما هي</h2>
+      <p>نقدّم <bdi>ReadIn</bdi> «كما هو». قد نغيّر الخصائص أو نوقفها، وقد تتوقف الخدمة أحيانًا. في الحدود التي يسمح بها القانون، لا نتحمل مسؤولية الخسائر الناتجة عن استخدام التطبيق أو الاعتماد على محتواه.</p>
+
+      <h2>8. إنهاء الاستخدام</h2>
+      <p>يمكنك حذف حسابك في أي وقت (انظر <a href="/delete-account" data-page="/delete-account">صفحة حذف الحساب</a>). ويمكننا إيقاف حسابك إذا خالفت هذه الشروط.</p>
+
+      <h2>9. التغييرات على هذه الشروط</h2>
+      <p>عندما نغيّر هذه الشروط نحدّث هذه الصفحة وتاريخ «آخر تحديث». وعند التغييرات المهمة نعلن عنها أيضًا في ملاحظات إصدار التطبيق على <bdi>App Store</bdi> و<bdi>Google Play</bdi> قبل أن تسري.</p>
+
+      <h2>10. تواصل معنا</h2>
+      <p>فريق <bdi>ReadIn</bdi>: <a href="mailto:youssef.fcaih@gmail.com"><bdi>youssef.fcaih@gmail.com</bdi></a>. اقرأ أيضًا <a href="/privacy" data-page="/privacy">سياسة الخصوصية</a>.</p>
+    </article>
+
+    <hr class="lang-sep">
+
+    <!-- ===================== English ===================== -->
+    <article class="l-en" lang="en" dir="ltr">
+      <h1>Terms of Service</h1>
+      <p class="meta">Last updated: November 3, 2026</p>
+      <p>These terms cover your use of the ReadIn apps (Android, iOS and web). By using ReadIn, you agree to them. ReadIn is operated by the ReadIn team, and you can reach us at <a href="mailto:youssef.fcaih@gmail.com">youssef.fcaih@gmail.com</a>.</p>
+
+      <h2>1. Who can use ReadIn</h2>
+      <p>You must be <strong>13 or older</strong> to create an account. Anyone can browse and read articles without one.</p>
+
+      <h2>2. Your account</h2>
+      <ul>
+        <li>Keep your password and recovery PIN to yourself. You're responsible for what happens through your account.</li>
+        <li>Enter your phone number correctly. We don't send SMS to check it, so if the number is wrong and you forget both your password and your PIN, you may lose the account.</li>
+        <li>If you think someone else got into your account, change your password, use "Sign out of all devices", and email us.</li>
+      </ul>
+
+      <h2>3. Your content</h2>
+      <ul>
+        <li>What you write is yours. When you publish an article or comment, you give ReadIn permission to store, display and share it in the app and on the website, including share links and quote cards, so the service can work.</li>
+        <li>This permission continues for articles and comments that stay as "Deleted user" after you delete your account. Delete them first if you don't want them to stay.</li>
+        <li>Only post what you have the right to post.</li>
+      </ul>
+
+      <h2>4. Rules for writing and taking part</h2>
+      <ul>
+        <li>Write honestly: add sources to technical and health articles, and label articles written with AI assistance.</li>
+        <li>Be yourself. Don't pretend to be someone else.</li>
+        <li>Not allowed: spam, harassment and abuse, misinformation, posting other people's work without permission, and anything illegal.</li>
+        <li>Don't try to disrupt the service or get into other people's accounts or data.</li>
+      </ul>
+
+      <h2>5. Reviews and moderation</h2>
+      <ul>
+        <li>Anyone can report an article, a comment or a user.</li>
+        <li>Our moderators can hide content, give warnings, and suspend accounts for a while or for good when these terms are broken.</li>
+        <li>"Verified writer" and "Reviewed" badges are given by our team and can be taken away.</li>
+      </ul>
+
+      <h2>6. Content is for information</h2>
+      <p>Articles are written by community writers. A "Reviewed" badge means a reviewer checked the article, but articles can still contain mistakes. Content is general information, not a substitute for advice from a qualified professional (medical, legal, financial or otherwise).</p>
+
+      <h2>7. The service as it is</h2>
+      <p>We provide ReadIn "as is". We may change or remove features, and the service may sometimes be unavailable. As far as the law allows, we aren't responsible for losses caused by using the app or relying on its content.</p>
+
+      <h2>8. Ending your use</h2>
+      <p>You can delete your account at any time (see the <a href="/delete-account" data-page="/delete-account">account deletion page</a>). We can suspend your account if you break these terms.</p>
+
+      <h2>9. Changes to these terms</h2>
+      <p>When we change these terms, we update this page and the "last updated" date. For significant changes, we also announce them in the app's release notes on the App Store and Google Play before they take effect.</p>
+
+      <h2>10. Contact</h2>
+      <p>The ReadIn team: <a href="mailto:youssef.fcaih@gmail.com">youssef.fcaih@gmail.com</a>. See also our <a href="/privacy" data-page="/privacy">Privacy Policy</a>.</p>
+    </article>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <nav aria-label="Pages">
+        <a href="/" data-page="/"><span class="l-ar">الرئيسية</span><span class="l-en">Home</span></a>
+        <a href="/privacy" data-page="/privacy"><span class="l-ar">سياسة الخصوصية</span><span class="l-en">Privacy Policy</span></a>
+        <a href="/terms" data-page="/terms"><span class="l-ar">شروط الاستخدام</span><span class="l-en">Terms of Service</span></a>
+        <a href="/delete-account" data-page="/delete-account"><span class="l-ar">حذف الحساب</span><span class="l-en">Delete account</span></a>
+      </nav>
+      <p><a href="mailto:youssef.fcaih@gmail.com">youssef.fcaih@gmail.com</a> · © 2026 <span class="l-ar">فريق ReadIn</span><span class="l-en">The ReadIn team</span></p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var d = document.documentElement;
+      function sync() {
+        var l = d.getAttribute('data-lang');
+        document.title = d.getAttribute('data-title-' + l);
+        document.querySelectorAll('a[data-page]').forEach(function (a) { a.href = a.getAttribute('data-page') + '?lang=' + l; });
+      }
+      document.getElementById('lang-btn').addEventListener('click', function () {
+        var l = d.getAttribute('data-lang') === 'ar' ? 'en' : 'ar';
+        d.setAttribute('data-lang', l); d.lang = l; d.dir = l === 'ar' ? 'rtl' : 'ltr';
+        var u = new URL(location.href); u.searchParams.set('lang', l); history.replaceState(null, '', u);
+        sync();
+      });
+      sync();
+    })();
+  </script>
+</body>
+</html>
