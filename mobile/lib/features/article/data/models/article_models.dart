@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../shared/rdoc/rdoc_document.dart';
+import '../../../media/data/models/media_models.dart';
 import '../../domain/entities/article.dart';
 
 part 'article_models.freezed.dart';
@@ -62,6 +63,7 @@ abstract class ArticleCardModel with _$ArticleCardModel {
     required DateTime publishedAt,
     @Default(0) int reactionCount,
     @Default(0) int commentCount,
+    ArticleAttachmentsModel? attachments,
   }) = _ArticleCardModel;
 
   factory ArticleCardModel.fromJson(Map<String, dynamic> json) => _$ArticleCardModelFromJson(json);
@@ -82,6 +84,7 @@ abstract class ArticleCardModel with _$ArticleCardModel {
         publishedAt: publishedAt,
         reactionCount: reactionCount,
         commentCount: commentCount,
+        attachments: attachments?.toEntity(),
       );
 }
 
@@ -132,6 +135,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     required DateTime publishedAt,
     @Default(0) int reactionCount,
     @Default(0) int commentCount,
+    ArticleAttachmentsModel? attachments,
     @Default(<String>[]) List<String> availableLanguages,
     String? summary,
     @Default(<String, dynamic>{}) Map<String, dynamic> content,
@@ -163,6 +167,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
           publishedAt: publishedAt,
           reactionCount: reactionCount,
           commentCount: commentCount,
+          attachments: attachments?.toEntity(),
         ),
         availableLanguages: availableLanguages.isEmpty ? [language] : availableLanguages,
         summary: summary,

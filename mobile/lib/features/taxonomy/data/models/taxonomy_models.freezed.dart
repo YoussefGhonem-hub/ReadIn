@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FieldModel {
 
- String get id; String get slug; String get nameAr; String get nameEn; String? get name; String get icon; String get color; bool get isSensitive; int get topicCount;
+ String get id; String get slug; String get nameAr; String get nameEn; String? get name; String get icon; String get color; bool get isSensitive; bool get requiresSources; int get topicCount;
 /// Create a copy of FieldModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $FieldModelCopyWith<FieldModel> get copyWith => _$FieldModelCopyWithImpl<FieldMo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FieldModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.name, name) || other.name == name)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.isSensitive, isSensitive) || other.isSensitive == isSensitive)&&(identical(other.topicCount, topicCount) || other.topicCount == topicCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FieldModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.name, name) || other.name == name)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.isSensitive, isSensitive) || other.isSensitive == isSensitive)&&(identical(other.requiresSources, requiresSources) || other.requiresSources == requiresSources)&&(identical(other.topicCount, topicCount) || other.topicCount == topicCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,slug,nameAr,nameEn,name,icon,color,isSensitive,topicCount);
+int get hashCode => Object.hash(runtimeType,id,slug,nameAr,nameEn,name,icon,color,isSensitive,requiresSources,topicCount);
 
 @override
 String toString() {
-  return 'FieldModel(id: $id, slug: $slug, nameAr: $nameAr, nameEn: $nameEn, name: $name, icon: $icon, color: $color, isSensitive: $isSensitive, topicCount: $topicCount)';
+  return 'FieldModel(id: $id, slug: $slug, nameAr: $nameAr, nameEn: $nameEn, name: $name, icon: $icon, color: $color, isSensitive: $isSensitive, requiresSources: $requiresSources, topicCount: $topicCount)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $FieldModelCopyWith<$Res>  {
   factory $FieldModelCopyWith(FieldModel value, $Res Function(FieldModel) _then) = _$FieldModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String slug, String nameAr, String nameEn, String? name, String icon, String color, bool isSensitive, int topicCount
+ String id, String slug, String nameAr, String nameEn, String? name, String icon, String color, bool isSensitive, bool requiresSources, int topicCount
 });
 
 
@@ -65,7 +65,7 @@ class _$FieldModelCopyWithImpl<$Res>
 
 /// Create a copy of FieldModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? nameAr = null,Object? nameEn = null,Object? name = freezed,Object? icon = null,Object? color = null,Object? isSensitive = null,Object? topicCount = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? nameAr = null,Object? nameEn = null,Object? name = freezed,Object? icon = null,Object? color = null,Object? isSensitive = null,Object? requiresSources = null,Object? topicCount = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -75,6 +75,7 @@ as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_
 as String?,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as String,isSensitive: null == isSensitive ? _self.isSensitive : isSensitive // ignore: cast_nullable_to_non_nullable
+as bool,requiresSources: null == requiresSources ? _self.requiresSources : requiresSources // ignore: cast_nullable_to_non_nullable
 as bool,topicCount: null == topicCount ? _self.topicCount : topicCount // ignore: cast_nullable_to_non_nullable
 as int,
   ));
@@ -161,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String nameAr,  String nameEn,  String? name,  String icon,  String color,  bool isSensitive,  int topicCount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String nameAr,  String nameEn,  String? name,  String icon,  String color,  bool isSensitive,  bool requiresSources,  int topicCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FieldModel() when $default != null:
-return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.icon,_that.color,_that.isSensitive,_that.topicCount);case _:
+return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.icon,_that.color,_that.isSensitive,_that.requiresSources,_that.topicCount);case _:
   return orElse();
 
 }
@@ -182,10 +183,10 @@ return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String nameAr,  String nameEn,  String? name,  String icon,  String color,  bool isSensitive,  int topicCount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String nameAr,  String nameEn,  String? name,  String icon,  String color,  bool isSensitive,  bool requiresSources,  int topicCount)  $default,) {final _that = this;
 switch (_that) {
 case _FieldModel():
-return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.icon,_that.color,_that.isSensitive,_that.topicCount);case _:
+return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.icon,_that.color,_that.isSensitive,_that.requiresSources,_that.topicCount);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +203,10 @@ return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String nameAr,  String nameEn,  String? name,  String icon,  String color,  bool isSensitive,  int topicCount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String nameAr,  String nameEn,  String? name,  String icon,  String color,  bool isSensitive,  bool requiresSources,  int topicCount)?  $default,) {final _that = this;
 switch (_that) {
 case _FieldModel() when $default != null:
-return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.icon,_that.color,_that.isSensitive,_that.topicCount);case _:
+return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.icon,_that.color,_that.isSensitive,_that.requiresSources,_that.topicCount);case _:
   return null;
 
 }
@@ -217,7 +218,7 @@ return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.i
 @JsonSerializable()
 
 class _FieldModel extends FieldModel {
-  const _FieldModel({required this.id, required this.slug, required this.nameAr, required this.nameEn, this.name, this.icon = 'book-open', this.color = 'primary', this.isSensitive = false, this.topicCount = 0}): super._();
+  const _FieldModel({required this.id, required this.slug, required this.nameAr, required this.nameEn, this.name, this.icon = 'book-open', this.color = 'primary', this.isSensitive = false, this.requiresSources = false, this.topicCount = 0}): super._();
   factory _FieldModel.fromJson(Map<String, dynamic> json) => _$FieldModelFromJson(json);
 
 @override final  String id;
@@ -228,6 +229,7 @@ class _FieldModel extends FieldModel {
 @override@JsonKey() final  String icon;
 @override@JsonKey() final  String color;
 @override@JsonKey() final  bool isSensitive;
+@override@JsonKey() final  bool requiresSources;
 @override@JsonKey() final  int topicCount;
 
 /// Create a copy of FieldModel
@@ -243,16 +245,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FieldModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.name, name) || other.name == name)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.isSensitive, isSensitive) || other.isSensitive == isSensitive)&&(identical(other.topicCount, topicCount) || other.topicCount == topicCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FieldModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.name, name) || other.name == name)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.isSensitive, isSensitive) || other.isSensitive == isSensitive)&&(identical(other.requiresSources, requiresSources) || other.requiresSources == requiresSources)&&(identical(other.topicCount, topicCount) || other.topicCount == topicCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,slug,nameAr,nameEn,name,icon,color,isSensitive,topicCount);
+int get hashCode => Object.hash(runtimeType,id,slug,nameAr,nameEn,name,icon,color,isSensitive,requiresSources,topicCount);
 
 @override
 String toString() {
-  return 'FieldModel(id: $id, slug: $slug, nameAr: $nameAr, nameEn: $nameEn, name: $name, icon: $icon, color: $color, isSensitive: $isSensitive, topicCount: $topicCount)';
+  return 'FieldModel(id: $id, slug: $slug, nameAr: $nameAr, nameEn: $nameEn, name: $name, icon: $icon, color: $color, isSensitive: $isSensitive, requiresSources: $requiresSources, topicCount: $topicCount)';
 }
 
 
@@ -263,7 +265,7 @@ abstract mixin class _$FieldModelCopyWith<$Res> implements $FieldModelCopyWith<$
   factory _$FieldModelCopyWith(_FieldModel value, $Res Function(_FieldModel) _then) = __$FieldModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String slug, String nameAr, String nameEn, String? name, String icon, String color, bool isSensitive, int topicCount
+ String id, String slug, String nameAr, String nameEn, String? name, String icon, String color, bool isSensitive, bool requiresSources, int topicCount
 });
 
 
@@ -280,7 +282,7 @@ class __$FieldModelCopyWithImpl<$Res>
 
 /// Create a copy of FieldModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? nameAr = null,Object? nameEn = null,Object? name = freezed,Object? icon = null,Object? color = null,Object? isSensitive = null,Object? topicCount = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? nameAr = null,Object? nameEn = null,Object? name = freezed,Object? icon = null,Object? color = null,Object? isSensitive = null,Object? requiresSources = null,Object? topicCount = null,}) {
   return _then(_FieldModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -290,6 +292,7 @@ as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_
 as String?,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as String,isSensitive: null == isSensitive ? _self.isSensitive : isSensitive // ignore: cast_nullable_to_non_nullable
+as bool,requiresSources: null == requiresSources ? _self.requiresSources : requiresSources // ignore: cast_nullable_to_non_nullable
 as bool,topicCount: null == topicCount ? _self.topicCount : topicCount // ignore: cast_nullable_to_non_nullable
 as int,
   ));

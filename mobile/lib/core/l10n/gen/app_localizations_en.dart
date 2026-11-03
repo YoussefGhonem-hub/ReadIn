@@ -493,4 +493,341 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errTooManyRequests => 'Too many attempts. Try again later.';
+
+  @override
+  String get errCancelled => 'Cancelled.';
+
+  @override
+  String get errSourcesRequired => 'Add at least one source before publishing.';
+
+  @override
+  String get errMediaPurposeInvalid => 'This kind of upload isn\'t supported.';
+
+  @override
+  String get errMediaFileRequired => 'Choose a file first.';
+
+  @override
+  String get errMediaTooLarge =>
+      'This file is too large (PDF up to 20 MB, images up to 10 MB).';
+
+  @override
+  String get errMediaUnsupportedType =>
+      'This file type isn\'t supported. Use JPEG, PNG, WebP, HEIC or PDF.';
+
+  @override
+  String get errMediaDimensionsTooLarge =>
+      'This image is too big (up to 8000 × 8000 pixels).';
+
+  @override
+  String get errMediaImageCorrupted =>
+      'We couldn\'t read this image. Try another one.';
+
+  @override
+  String get errMediaPdfEncrypted =>
+      'This PDF is password-protected. Upload it without a password.';
+
+  @override
+  String get errMediaPdfCorrupted =>
+      'We couldn\'t read this PDF. It may be damaged.';
+
+  @override
+  String get errMediaPdfTooManyPages => 'This PDF has more than 100 pages.';
+
+  @override
+  String get errMediaQuotaDaily =>
+      'You\'ve reached today\'s upload limit (50 files). Try again tomorrow.';
+
+  @override
+  String get errMediaQuotaStorage =>
+      'Your storage is full (200 MB). Remove old files to upload more.';
+
+  @override
+  String get errMediaNotFound => 'This file doesn\'t exist anymore.';
+
+  @override
+  String get errMediaInUse => 'This file is attached to a post.';
+
+  @override
+  String get errMediaDownloadNotAllowed =>
+      'The author didn\'t allow downloading this file.';
+
+  @override
+  String get errMediaProcessingFailed =>
+      'We couldn\'t prepare this file. Remove it or try again.';
+
+  @override
+  String get errMediaProcessingTimeout =>
+      'Preparing this file took too long. Try again.';
+
+  @override
+  String get errAttachmentsMixedKinds =>
+      'A post can have images or one PDF, not both.';
+
+  @override
+  String get errAttachmentsTooManyImages => 'You can attach up to 10 images.';
+
+  @override
+  String get errAttachmentsSingleDocument => 'You can attach only one PDF.';
+
+  @override
+  String get errAttachmentsAltTextRequired => 'Every image needs alt text.';
+
+  @override
+  String get errAttachmentsAltTextTooLong =>
+      'Alt text can be up to 250 characters.';
+
+  @override
+  String get errAttachmentsCaptionTooLong =>
+      'Captions can be up to 120 characters.';
+
+  @override
+  String get errAttachmentsTitleTooLong =>
+      'The document title can be up to 150 characters.';
+
+  @override
+  String get errAttachmentsTitleRequired => 'The document needs a title.';
+
+  @override
+  String get errAttachmentsAssetNotFound =>
+      'An attachment is missing. Remove it and upload it again.';
+
+  @override
+  String get errAttachmentsAssetNotReady =>
+      'An attachment is still being prepared. Wait a moment.';
+
+  @override
+  String get errAttachmentsDuplicateAsset => 'The same file is attached twice.';
+
+  @override
+  String get composerTitle => 'New post';
+
+  @override
+  String get composerField => 'Field';
+
+  @override
+  String get composerFieldHint => 'Pick a field';
+
+  @override
+  String get composerTitleLabel => 'Title';
+
+  @override
+  String get composerTitleHint => 'A clear title, 5 to 150 characters';
+
+  @override
+  String get composerBodyLabel => 'Your post';
+
+  @override
+  String get composerBodyHint => 'Leave an empty line between paragraphs.';
+
+  @override
+  String get composerSourcesRequired => 'This field needs at least one source.';
+
+  @override
+  String get composerSourcesOptional =>
+      'Optional, but readers trust posts with sources.';
+
+  @override
+  String get composerAddSource => 'Add source';
+
+  @override
+  String get composerAttachments => 'Attachments';
+
+  @override
+  String get composerSourceTitle => 'Source title';
+
+  @override
+  String get composerSourceUrl => 'Link (https://…)';
+
+  @override
+  String get composerRemoveSource => 'Remove source';
+
+  @override
+  String get composerInvalidUrl => 'Enter a valid http(s) link';
+
+  @override
+  String get composerPublish => 'Publish';
+
+  @override
+  String get composerPublishing => 'Publishing…';
+
+  @override
+  String get composerPublished => 'Published ✨';
+
+  @override
+  String get composerNeedField => 'Pick a field.';
+
+  @override
+  String get composerNeedTitle => 'Write a title (5 to 150 characters).';
+
+  @override
+  String get composerNeedBody => 'Write something or add an attachment.';
+
+  @override
+  String get composerNeedSources => 'Add at least one source.';
+
+  @override
+  String get composerFixSources => 'Complete or remove the unfinished sources.';
+
+  @override
+  String get attachImages => 'Images';
+
+  @override
+  String get attachPdf => 'PDF document';
+
+  @override
+  String get attachMixHint => 'A post can have images or one PDF, not both.';
+
+  @override
+  String attachImagesLimit(int count) {
+    return '$count of 10 images';
+  }
+
+  @override
+  String get attachReorderHint =>
+      'Long-press and drag to reorder. Tap an image to add alt text.';
+
+  @override
+  String get attachNeedAlt => 'Add alt text to every image.';
+
+  @override
+  String get attachBusy => 'Wait until uploads and processing finish.';
+
+  @override
+  String get attachFailed => 'Remove or retry the failed attachments.';
+
+  @override
+  String get attachNeedDocTitle => 'Give the document a title.';
+
+  @override
+  String get altTextLabel => 'Alt text (required)';
+
+  @override
+  String get altTextHint =>
+      'Describe the image for people using a screen reader';
+
+  @override
+  String get altTextMissing => 'Alt text needed';
+
+  @override
+  String get altTextAdded => 'ALT ✓';
+
+  @override
+  String get altTextBadgeMissing => 'Add ALT';
+
+  @override
+  String get listSeparator => ', ';
+
+  @override
+  String get captionLabel => 'Caption (optional)';
+
+  @override
+  String imageDetailsTitle(int index, int total) {
+    return 'Image $index of $total';
+  }
+
+  @override
+  String get editImageDetails => 'Edit alt text and caption';
+
+  @override
+  String get moveEarlier => 'Move earlier';
+
+  @override
+  String get moveLater => 'Move later';
+
+  @override
+  String get removeAttachment => 'Remove';
+
+  @override
+  String get cancelUpload => 'Cancel upload';
+
+  @override
+  String get uploadPreparing => 'Preparing…';
+
+  @override
+  String uploadProgress(int percent) {
+    return 'Uploading… $percent%';
+  }
+
+  @override
+  String get uploadCancelled => 'Upload cancelled';
+
+  @override
+  String get uploadFailed => 'Upload failed';
+
+  @override
+  String fileSizeMb(String size) {
+    return '$size MB';
+  }
+
+  @override
+  String fileSizeKb(String size) {
+    return '$size KB';
+  }
+
+  @override
+  String get pdfTitleLabel => 'Document title (required)';
+
+  @override
+  String get pdfAllowDownload => 'Allow download';
+
+  @override
+  String get pdfAllowDownloadHint => 'Readers can download the original PDF.';
+
+  @override
+  String get pdfPreparingPages => 'Preparing pages…';
+
+  @override
+  String pdfPagesReady(int ready, int total) {
+    return '$ready of $total pages ready';
+  }
+
+  @override
+  String pdfPageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pages',
+      one: '1 page',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pdfMorePages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count pages, open document',
+      one: '+1 page, open document',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get openDocument => 'Open document';
+
+  @override
+  String get viewerDownload => 'Download';
+
+  @override
+  String get viewerDownloading => 'Downloading…';
+
+  @override
+  String viewerImageOf(int index, int total) {
+    return 'Image $index of $total';
+  }
+
+  @override
+  String viewerPageOf(int index, int total) {
+    return 'Page $index of $total';
+  }
+
+  @override
+  String get viewerZoomHint => 'Double-tap to zoom';
+
+  @override
+  String get viewerPageLoading => 'Loading page…';
+
+  @override
+  String get viewerThumbnails => 'Pages';
 }

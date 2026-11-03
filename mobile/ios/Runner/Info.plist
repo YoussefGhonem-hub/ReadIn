@@ -15,6 +15,8 @@
 	</array>
 	<key>FlutterDeepLinkingEnabled</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>ReadIn lets you attach photos from your library to your posts.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

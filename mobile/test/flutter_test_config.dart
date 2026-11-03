@@ -1,8 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:readin/core/theme/theme_x.dart';
+import 'package:readin/shared/media/media_image.dart';
 import 'package:readin/shared/widgets/app_network_image.dart';
 
 /// Runs before every test file: loads the bundled fonts so golden tests render
@@ -25,6 +27,10 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   await _loadFont('JetBrains Mono', ['assets/fonts/JetBrainsMono-Regular.ttf', 'assets/fonts/JetBrainsMono-Medium.ttf']);
   await _loadFont('MaterialIcons', ['fonts/MaterialIcons-Regular.otf']);
   AppNetworkImage.providerFactory = NetworkImage.new;
+  // Media: no disk cache, and a plain token-colored placeholder instead of
+  // asynchronous BlurHash decoding. Goldens install FakeMedia on top.
+  MediaImages.networkProvider = NetworkImage.new;
+  MediaImages.placeholder = (context, _) => ColoredBox(color: context.colors.surfaceVariant, child: const SizedBox.expand());
   await testMain();
 }
 

@@ -58,6 +58,11 @@ _ArticleCardModel _$ArticleCardModelFromJson(Map<String, dynamic> json) =>
       publishedAt: DateTime.parse(json['publishedAt'] as String),
       reactionCount: (json['reactionCount'] as num?)?.toInt() ?? 0,
       commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
+      attachments: json['attachments'] == null
+          ? null
+          : ArticleAttachmentsModel.fromJson(
+              json['attachments'] as Map<String, dynamic>,
+            ),
     );
 
 Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
@@ -77,6 +82,7 @@ Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
       'publishedAt': instance.publishedAt.toIso8601String(),
       'reactionCount': instance.reactionCount,
       'commentCount': instance.commentCount,
+      'attachments': ?instance.attachments?.toJson(),
     };
 
 _ArticleCardPageModel _$ArticleCardPageModelFromJson(
@@ -132,6 +138,11 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
       publishedAt: DateTime.parse(json['publishedAt'] as String),
       reactionCount: (json['reactionCount'] as num?)?.toInt() ?? 0,
       commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
+      attachments: json['attachments'] == null
+          ? null
+          : ArticleAttachmentsModel.fromJson(
+              json['attachments'] as Map<String, dynamic>,
+            ),
       availableLanguages:
           (json['availableLanguages'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -179,6 +190,7 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'publishedAt': instance.publishedAt.toIso8601String(),
   'reactionCount': instance.reactionCount,
   'commentCount': instance.commentCount,
+  'attachments': ?instance.attachments?.toJson(),
   'availableLanguages': instance.availableLanguages,
   'summary': ?instance.summary,
   'content': instance.content,

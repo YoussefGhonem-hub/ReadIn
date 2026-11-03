@@ -15,6 +15,7 @@ _FieldModel _$FieldModelFromJson(Map<String, dynamic> json) => _FieldModel(
   icon: json['icon'] as String? ?? 'book-open',
   color: json['color'] as String? ?? 'primary',
   isSensitive: json['isSensitive'] as bool? ?? false,
+  requiresSources: json['requiresSources'] as bool? ?? false,
   topicCount: (json['topicCount'] as num?)?.toInt() ?? 0,
 );
 
@@ -28,6 +29,7 @@ Map<String, dynamic> _$FieldModelToJson(_FieldModel instance) =>
       'icon': instance.icon,
       'color': instance.color,
       'isSensitive': instance.isSensitive,
+      'requiresSources': instance.requiresSources,
       'topicCount': instance.topicCount,
     };
 

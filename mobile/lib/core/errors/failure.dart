@@ -38,9 +38,40 @@ abstract final class FailureCodes {
   static const interestsMinThree = 'user.interests.min_three';
   static const fieldNotFound = 'field.not_found';
   static const articleNotFound = 'article.not_found';
+  static const articleSourcesRequired = 'article.sources_required';
   static const serverError = 'server.error';
 
+  // Media (docs/api/contract-v1.md "Media", ADR 0011)
+  static const mediaPurposeInvalid = 'media.purpose_invalid';
+  static const mediaFileRequired = 'media.file_required';
+  static const mediaTooLarge = 'media.too_large';
+  static const mediaUnsupportedType = 'media.unsupported_type';
+  static const mediaDimensionsTooLarge = 'media.dimensions_too_large';
+  static const mediaImageCorrupted = 'media.image_corrupted';
+  static const mediaPdfEncrypted = 'media.pdf_encrypted';
+  static const mediaPdfCorrupted = 'media.pdf_corrupted';
+  static const mediaPdfTooManyPages = 'media.pdf_too_many_pages';
+  static const mediaQuotaDaily = 'media.quota_daily';
+  static const mediaQuotaStorage = 'media.quota_storage';
+  static const mediaNotFound = 'media.not_found';
+  static const mediaInUse = 'media.in_use';
+  static const mediaDownloadNotAllowed = 'media.download_not_allowed';
+  static const mediaProcessingFailed = 'media.processing_failed';
+  static const mediaProcessingTimeout = 'media.processing_timeout';
+  static const attachmentsMixedKinds = 'attachments.mixed_kinds';
+  static const attachmentsTooManyImages = 'attachments.too_many_images';
+  static const attachmentsSingleDocument = 'attachments.single_document';
+  static const attachmentsAltTextRequired = 'attachments.alt_text_required';
+  static const attachmentsAltTextTooLong = 'attachments.alt_text_too_long';
+  static const attachmentsCaptionTooLong = 'attachments.caption_too_long';
+  static const attachmentsTitleRequired = 'attachments.title_required';
+  static const attachmentsTitleTooLong = 'attachments.title_too_long';
+  static const attachmentsAssetNotFound = 'attachments.asset_not_found';
+  static const attachmentsAssetNotReady = 'attachments.asset_not_ready';
+  static const attachmentsDuplicateAsset = 'attachments.duplicate_asset';
+
   // Client-side
+  static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';
   static const networkTimeout = 'network.timeout';
   static const authUnavailable = 'auth.unavailable';

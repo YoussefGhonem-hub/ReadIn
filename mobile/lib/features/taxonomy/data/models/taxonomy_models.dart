@@ -19,6 +19,7 @@ abstract class FieldModel with _$FieldModel {
     @Default('book-open') String icon,
     @Default('primary') String color,
     @Default(false) bool isSensitive,
+    @Default(false) bool requiresSources,
     @Default(0) int topicCount,
   }) = _FieldModel;
 
@@ -31,6 +32,7 @@ abstract class FieldModel with _$FieldModel {
         nameEn: nameEn,
         icon: icon,
         isSensitive: isSensitive,
+        requiresSources: requiresSources,
         topicCount: topicCount,
       );
 }

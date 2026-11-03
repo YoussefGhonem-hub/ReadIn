@@ -9,6 +9,7 @@ class Field extends Equatable {
     required this.nameEn,
     this.icon = 'book-open',
     this.isSensitive = false,
+    this.requiresSources = false,
     this.topicCount = 0,
   });
 
@@ -20,12 +21,15 @@ class Field extends Equatable {
   /// Lucide icon name from the API (mapped to a Material icon on mobile).
   final String icon;
   final bool isSensitive;
+
+  /// Publishing needs at least one source (Software, Medicine, Health; SPEC F05).
+  final bool requiresSources;
   final int topicCount;
 
   String nameFor(String languageCode) => languageCode == 'ar' ? nameAr : nameEn;
 
   @override
-  List<Object?> get props => [id, slug, nameAr, nameEn, icon, isSensitive, topicCount];
+  List<Object?> get props => [id, slug, nameAr, nameEn, icon, isSensitive, requiresSources, topicCount];
 }
 
 class Topic extends Equatable {

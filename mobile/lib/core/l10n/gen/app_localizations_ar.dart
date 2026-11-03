@@ -497,4 +497,342 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errTooManyRequests => 'محاولات كتير. جرّب بعد شوية.';
+
+  @override
+  String get errCancelled => 'اتلغى.';
+
+  @override
+  String get errSourcesRequired => 'ضيف مصدر واحد على الأقل قبل النشر.';
+
+  @override
+  String get errMediaPurposeInvalid => 'نوع الرفع ده مش مدعوم.';
+
+  @override
+  String get errMediaFileRequired => 'اختار ملف الأول.';
+
+  @override
+  String get errMediaTooLarge =>
+      'الملف ده حجمه كبير (الـ PDF لحد 20 ميجا، والصور لحد 10 ميجا).';
+
+  @override
+  String get errMediaUnsupportedType =>
+      'نوع الملف ده مش مدعوم. استخدم JPEG أو PNG أو WebP أو HEIC أو PDF.';
+
+  @override
+  String get errMediaDimensionsTooLarge =>
+      'أبعاد الصورة دي كبيرة (لحد 8000 × 8000 بكسل).';
+
+  @override
+  String get errMediaImageCorrupted =>
+      'معرفناش نقرا الصورة دي. جرّب صورة تانية.';
+
+  @override
+  String get errMediaPdfEncrypted =>
+      'الملف ده عليه باسورد، ارفعه من غير باسورد.';
+
+  @override
+  String get errMediaPdfCorrupted => 'معرفناش نقرا الـ PDF ده، ممكن يكون بايظ.';
+
+  @override
+  String get errMediaPdfTooManyPages => 'الـ PDF ده أكتر من 100 صفحة.';
+
+  @override
+  String get errMediaQuotaDaily =>
+      'وصلت لحد الرفع بتاع النهارده (50 ملف). جرّب بكره.';
+
+  @override
+  String get errMediaQuotaStorage =>
+      'المساحة بتاعتك خلصت (200 ميجا). امسح ملفات قديمة عشان ترفع تاني.';
+
+  @override
+  String get errMediaNotFound => 'الملف ده مبقاش موجود.';
+
+  @override
+  String get errMediaInUse => 'الملف ده مرفق في منشور.';
+
+  @override
+  String get errMediaDownloadNotAllowed => 'الكاتب مسمحش بتحميل الملف ده.';
+
+  @override
+  String get errMediaProcessingFailed =>
+      'معرفناش نجهّز الملف ده. امسحه أو جرّب تاني.';
+
+  @override
+  String get errMediaProcessingTimeout =>
+      'تجهيز الملف أخد وقت كتير. جرّب تاني.';
+
+  @override
+  String get errAttachmentsMixedKinds =>
+      'المنشور يا صور يا ملف PDF واحد، مش الاتنين.';
+
+  @override
+  String get errAttachmentsTooManyImages => 'تقدر ترفق لحد 10 صور بس.';
+
+  @override
+  String get errAttachmentsSingleDocument => 'تقدر ترفق ملف PDF واحد بس.';
+
+  @override
+  String get errAttachmentsAltTextRequired => 'كل صورة محتاجة وصف (Alt text).';
+
+  @override
+  String get errAttachmentsAltTextTooLong => 'وصف الصورة لحد 250 حرف بس.';
+
+  @override
+  String get errAttachmentsCaptionTooLong =>
+      'التعليق على الصورة لحد 120 حرف بس.';
+
+  @override
+  String get errAttachmentsTitleTooLong => 'عنوان الملف لحد 150 حرف بس.';
+
+  @override
+  String get errAttachmentsTitleRequired => 'الملف محتاج عنوان.';
+
+  @override
+  String get errAttachmentsAssetNotFound =>
+      'فيه مرفق مش موجود. امسحه وارفعه تاني.';
+
+  @override
+  String get errAttachmentsAssetNotReady => 'فيه مرفق لسه بيتجهّز. استنى شوية.';
+
+  @override
+  String get errAttachmentsDuplicateAsset => 'نفس الملف مرفق مرتين.';
+
+  @override
+  String get composerTitle => 'منشور جديد';
+
+  @override
+  String get composerField => 'المجال';
+
+  @override
+  String get composerFieldHint => 'اختار المجال';
+
+  @override
+  String get composerTitleLabel => 'العنوان';
+
+  @override
+  String get composerTitleHint => 'عنوان واضح، من 5 لـ 150 حرف';
+
+  @override
+  String get composerBodyLabel => 'المنشور';
+
+  @override
+  String get composerBodyHint => 'سيب سطر فاضي بين كل فقرة والتانية.';
+
+  @override
+  String get composerSourcesRequired => 'المجال ده محتاج مصدر واحد على الأقل.';
+
+  @override
+  String get composerSourcesOptional =>
+      'اختياري، بس القراء بيثقوا أكتر في المنشورات اللي ليها مصادر.';
+
+  @override
+  String get composerAddSource => 'ضيف مصدر';
+
+  @override
+  String get composerAttachments => 'المرفقات';
+
+  @override
+  String get composerSourceTitle => 'اسم المصدر';
+
+  @override
+  String get composerSourceUrl => 'اللينك (https://…)';
+
+  @override
+  String get composerRemoveSource => 'شيل المصدر';
+
+  @override
+  String get composerInvalidUrl => 'اكتب لينك صحيح بيبدأ بـ http';
+
+  @override
+  String get composerPublish => 'انشر';
+
+  @override
+  String get composerPublishing => 'بننشر…';
+
+  @override
+  String get composerPublished => 'اتنشر ✨';
+
+  @override
+  String get composerNeedField => 'اختار المجال.';
+
+  @override
+  String get composerNeedTitle => 'اكتب عنوان (من 5 لـ 150 حرف).';
+
+  @override
+  String get composerNeedBody => 'اكتب حاجة أو ضيف مرفق.';
+
+  @override
+  String get composerNeedSources => 'ضيف مصدر واحد على الأقل.';
+
+  @override
+  String get composerFixSources => 'كمّل أو امسح المصادر الناقصة.';
+
+  @override
+  String get attachImages => 'صور';
+
+  @override
+  String get attachPdf => 'ملف PDF';
+
+  @override
+  String get attachMixHint => 'المنشور يا صور يا ملف PDF واحد، مش الاتنين.';
+
+  @override
+  String attachImagesLimit(int count) {
+    return '$count من 10 صور';
+  }
+
+  @override
+  String get attachReorderHint =>
+      'اضغط مطوّل واسحب عشان ترتّب. دوس على الصورة عشان تكتب وصفها.';
+
+  @override
+  String get attachNeedAlt => 'اكتب وصف (Alt text) لكل صورة.';
+
+  @override
+  String get attachBusy => 'استنى لحد ما الرفع والتجهيز يخلصوا.';
+
+  @override
+  String get attachFailed => 'امسح المرفقات اللي فشلت أو جرّبها تاني.';
+
+  @override
+  String get attachNeedDocTitle => 'اكتب عنوان للملف.';
+
+  @override
+  String get altTextLabel => 'وصف الصورة (مطلوب)';
+
+  @override
+  String get altTextHint => 'اوصف الصورة للي بيستخدموا قارئ الشاشة';
+
+  @override
+  String get altTextMissing => 'محتاجة وصف';
+
+  @override
+  String get altTextAdded => 'وصف ✓';
+
+  @override
+  String get altTextBadgeMissing => 'ضيف وصف';
+
+  @override
+  String get listSeparator => '، ';
+
+  @override
+  String get captionLabel => 'تعليق (اختياري)';
+
+  @override
+  String imageDetailsTitle(int index, int total) {
+    return 'صورة $index من $total';
+  }
+
+  @override
+  String get editImageDetails => 'تعديل الوصف والتعليق';
+
+  @override
+  String get moveEarlier => 'قدّمها';
+
+  @override
+  String get moveLater => 'أخّرها';
+
+  @override
+  String get removeAttachment => 'امسح';
+
+  @override
+  String get cancelUpload => 'إلغاء الرفع';
+
+  @override
+  String get uploadPreparing => 'بنجهّز…';
+
+  @override
+  String uploadProgress(int percent) {
+    return 'بنرفع… $percent%';
+  }
+
+  @override
+  String get uploadCancelled => 'الرفع اتلغى';
+
+  @override
+  String get uploadFailed => 'الرفع فشل';
+
+  @override
+  String fileSizeMb(String size) {
+    return '$size ميجا';
+  }
+
+  @override
+  String fileSizeKb(String size) {
+    return '$size كيلو';
+  }
+
+  @override
+  String get pdfTitleLabel => 'عنوان الملف (مطلوب)';
+
+  @override
+  String get pdfAllowDownload => 'السماح بتحميل الملف';
+
+  @override
+  String get pdfAllowDownloadHint =>
+      'القراء هيقدروا ينزّلوا ملف الـ PDF الأصلي.';
+
+  @override
+  String get pdfPreparingPages => 'بنجهز الصفحات…';
+
+  @override
+  String pdfPagesReady(int ready, int total) {
+    return '$ready من $total صفحة جاهزة';
+  }
+
+  @override
+  String pdfPageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صفحة',
+      many: '$count صفحة',
+      few: '$count صفحات',
+      two: 'صفحتين',
+      one: 'صفحة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pdfMorePages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count صفحة، افتح الملف',
+      many: '+$count صفحة، افتح الملف',
+      few: '+$count صفحات، افتح الملف',
+      two: '+صفحتين، افتح الملف',
+      one: '+صفحة، افتح الملف',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get openDocument => 'افتح الملف';
+
+  @override
+  String get viewerDownload => 'تحميل';
+
+  @override
+  String get viewerDownloading => 'بننزّل الملف…';
+
+  @override
+  String viewerImageOf(int index, int total) {
+    return 'صورة $index من $total';
+  }
+
+  @override
+  String viewerPageOf(int index, int total) {
+    return 'صفحة $index من $total';
+  }
+
+  @override
+  String get viewerZoomHint => 'دوس مرتين للتكبير';
+
+  @override
+  String get viewerPageLoading => 'بنحمّل الصفحة…';
+
+  @override
+  String get viewerThumbnails => 'الصفحات';
 }

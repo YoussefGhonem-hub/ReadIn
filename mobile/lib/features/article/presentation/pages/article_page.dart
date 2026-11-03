@@ -14,6 +14,7 @@ import '../../../settings/domain/entities/app_settings.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/entities/article.dart';
 import '../cubit/article_cubit.dart';
+import '../widgets/article_attachments_view.dart';
 import '../widgets/reader_widgets.dart';
 
 /// Article reader (F04). Deep link: `readin.app/a/{slug}`.
@@ -228,6 +229,11 @@ class _ReaderBody extends StatelessWidget {
                 ),
               ),
             SliverPadding(padding: gutter, sliver: RDocSliver(article.content)),
+            if (article.card.attachments != null)
+              SliverPadding(
+                padding: gutter.copyWith(bottom: ReadInSpace.s4),
+                sliver: SliverToBoxAdapter(child: ArticleAttachmentsView(article: article.card)),
+              ),
             SliverPadding(
               padding: gutter.copyWith(top: ReadInSpace.s4, bottom: ReadInSpace.s8),
               sliver: SliverToBoxAdapter(child: SourcesSection(sources: article.sources, onOpen: openExternalLink)),

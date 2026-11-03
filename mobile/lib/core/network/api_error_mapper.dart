@@ -13,6 +13,8 @@ abstract final class ApiErrorMapper {
         return const Failure(FailureCodes.networkTimeout);
       case DioExceptionType.connectionError:
         return const Failure(FailureCodes.networkOffline);
+      case DioExceptionType.cancel:
+        return const Failure(FailureCodes.requestCancelled);
       default:
         break;
     }

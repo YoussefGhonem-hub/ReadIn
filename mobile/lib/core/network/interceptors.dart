@@ -31,6 +31,9 @@ class AuthInterceptor extends QueuedInterceptor {
       options
         ..headers['Authorization'] = 'Bearer $token'
         ..extra[_retriedKey] = true;
+      // A multipart body is finalized once sent; uploads need a fresh copy.
+      final data = options.data;
+      if (data is FormData) options.data = data.clone();
       handler.resolve(await _dio.fetch<dynamic>(options));
     } on DioException catch (e) {
       handler.next(e);

@@ -22,6 +22,8 @@ import '../../features/article/domain/repositories/article_repository.dart'
     as _i904;
 import '../../features/article/domain/usecases/get_article.dart' as _i904;
 import '../../features/article/presentation/cubit/article_cubit.dart' as _i284;
+import '../../features/article/presentation/cubit/attachment_viewer_cubit.dart'
+    as _i189;
 import '../../features/auth/data/auth_module.dart' as _i360;
 import '../../features/auth/data/datasources/account_api.dart' as _i506;
 import '../../features/auth/data/datasources/firebase_auth_data_source.dart'
@@ -32,6 +34,13 @@ import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
 import '../../features/auth/domain/usecases/auth_usecases.dart' as _i46;
 import '../../features/auth/presentation/cubit/auth_form_cubit.dart' as _i0;
 import '../../features/auth/presentation/session/session_cubit.dart' as _i371;
+import '../../features/editor/data/datasources/editor_api.dart' as _i815;
+import '../../features/editor/data/repositories/editor_repository_impl.dart'
+    as _i552;
+import '../../features/editor/domain/repositories/editor_repository.dart'
+    as _i940;
+import '../../features/editor/domain/usecases/publish_usecases.dart' as _i1065;
+import '../../features/editor/presentation/cubit/composer_cubit.dart' as _i485;
 import '../../features/home/data/datasources/feed_api.dart' as _i931;
 import '../../features/home/data/repositories/feed_repository_impl.dart'
     as _i198;
@@ -39,6 +48,20 @@ import '../../features/home/domain/repositories/feed_repository.dart' as _i954;
 import '../../features/home/domain/usecases/feed_usecases.dart' as _i251;
 import '../../features/home/presentation/cubit/feed_cubit.dart' as _i646;
 import '../../features/home/presentation/cubit/home_cubit.dart' as _i9;
+import '../../features/media/data/datasources/device_media_picker.dart'
+    as _i434;
+import '../../features/media/data/datasources/document_file_data_source.dart'
+    as _i848;
+import '../../features/media/data/datasources/image_compressor.dart' as _i221;
+import '../../features/media/data/datasources/media_api.dart' as _i757;
+import '../../features/media/data/repositories/media_repository_impl.dart'
+    as _i110;
+import '../../features/media/domain/repositories/media_picker.dart' as _i956;
+import '../../features/media/domain/repositories/media_repository.dart'
+    as _i459;
+import '../../features/media/domain/usecases/media_usecases.dart' as _i504;
+import '../../features/media/presentation/cubit/attachments_cubit.dart'
+    as _i571;
 import '../../features/onboarding/data/datasources/interests_api.dart' as _i227;
 import '../../features/onboarding/data/repositories/interests_repository_impl.dart'
     as _i1032;
@@ -69,6 +92,7 @@ import '../config/app_config.dart' as _i650;
 import '../firebase/firebase_bootstrap.dart' as _i223;
 import '../l10n/current_locale.dart' as _i1026;
 import '../network/request_context.dart' as _i194;
+import '../platform/share_service.dart' as _i868;
 import '../platform/time_zone_service.dart' as _i878;
 import '../storage/key_value_store.dart' as _i892;
 import '../storage/secure_store.dart' as _i271;
@@ -92,10 +116,17 @@ extension GetItInjectableX on _i174.GetIt {
       () => registerModule.secureStorage,
     );
     gh.lazySingleton<_i1026.CurrentLocale>(() => _i1026.CurrentLocale());
+    gh.lazySingleton<_i868.ShareService>(() => _i868.ShareService());
     gh.lazySingleton<_i878.TimeZoneService>(() => _i878.TimeZoneService());
+    gh.lazySingleton<_i221.ImageCompressor>(() => _i221.ImageCompressor());
     gh.lazySingleton<_i271.SecureStore>(
       () => _i271.SecureStore(gh<_i558.FlutterSecureStorage>()),
     );
+    gh.lazySingleton<_i956.MediaPicker>(() => _i434.DeviceMediaPicker());
+    gh.factory<_i504.PickImages>(
+      () => _i504.PickImages(gh<_i956.MediaPicker>()),
+    );
+    gh.factory<_i504.PickPdf>(() => _i504.PickPdf(gh<_i956.MediaPicker>()));
     gh.lazySingleton<_i599.SettingsLocalDataSource>(
       () => _i599.SettingsLocalDataSource(gh<_i892.KeyValueStore>()),
     );
@@ -141,7 +172,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i462.ArticleApi>(() => _i462.ArticleApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i506.AccountApi>(() => _i506.AccountApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i815.EditorApi>(() => _i815.EditorApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i931.FeedApi>(() => _i931.FeedApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i757.MediaApi>(() => _i757.MediaApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i227.InterestsApi>(
       () => _i227.InterestsApi(gh<_i361.Dio>()),
     );
@@ -151,8 +184,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i421.TaxonomyApi>(
       () => _i421.TaxonomyApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i848.DocumentFileDataSource>(
+      () => _i848.DocumentFileDataSource(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i263.TaxonomyRepository>(
       () => _i551.TaxonomyRepositoryImpl(gh<_i421.TaxonomyApi>()),
+    );
+    gh.lazySingleton<_i459.MediaRepository>(
+      () => _i110.MediaRepositoryImpl(
+        gh<_i757.MediaApi>(),
+        gh<_i221.ImageCompressor>(),
+        gh<_i848.DocumentFileDataSource>(),
+      ),
     );
     gh.lazySingleton<_i904.ArticleRepository>(
       () => _i473.ArticleRepositoryImpl(gh<_i462.ArticleApi>()),
@@ -179,6 +222,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i878.TimeZoneService>(),
       ),
     );
+    gh.lazySingleton<_i940.EditorRepository>(
+      () => _i552.EditorRepositoryImpl(gh<_i815.EditorApi>()),
+    );
     gh.factory<_i251.GetTodayArticle>(
       () => _i251.GetTodayArticle(gh<_i954.FeedRepository>()),
     );
@@ -190,6 +236,30 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i172.GetTopics>(
       () => _i172.GetTopics(gh<_i263.TaxonomyRepository>()),
+    );
+    gh.factory<_i504.UploadImage>(
+      () => _i504.UploadImage(gh<_i459.MediaRepository>()),
+    );
+    gh.factory<_i504.UploadDocument>(
+      () => _i504.UploadDocument(gh<_i459.MediaRepository>()),
+    );
+    gh.factory<_i504.GetUpload>(
+      () => _i504.GetUpload(gh<_i459.MediaRepository>()),
+    );
+    gh.factory<_i504.DeleteUpload>(
+      () => _i504.DeleteUpload(gh<_i459.MediaRepository>()),
+    );
+    gh.factory<_i504.DownloadDocument>(
+      () => _i504.DownloadDocument(gh<_i459.MediaRepository>()),
+    );
+    gh.factory<_i1065.CreateArticleDraft>(
+      () => _i1065.CreateArticleDraft(gh<_i940.EditorRepository>()),
+    );
+    gh.factory<_i1065.SetArticleAttachments>(
+      () => _i1065.SetArticleAttachments(gh<_i940.EditorRepository>()),
+    );
+    gh.factory<_i1065.PublishArticle>(
+      () => _i1065.PublishArticle(gh<_i940.EditorRepository>()),
     );
     gh.factory<_i9.HomeCubit>(
       () => _i9.HomeCubit(gh<_i251.GetTodayArticle>(), gh<_i172.GetFields>()),
@@ -212,10 +282,35 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i646.FeedCubit>(
       () => _i646.FeedCubit(gh<_i251.GetForYouFeed>()),
     );
+    gh.factory<_i485.ComposerCubit>(
+      () => _i485.ComposerCubit(
+        gh<_i172.GetFields>(),
+        gh<_i1065.CreateArticleDraft>(),
+        gh<_i1065.SetArticleAttachments>(),
+        gh<_i1065.PublishArticle>(),
+      ),
+    );
+    gh.factory<_i189.AttachmentViewerCubit>(
+      () => _i189.AttachmentViewerCubit(
+        gh<_i904.GetArticle>(),
+        gh<_i504.DownloadDocument>(),
+        gh<_i868.ShareService>(),
+      ),
+    );
     gh.factory<_i46.SyncAccount>(
       () => _i46.SyncAccount(gh<_i787.AccountRepository>()),
     );
     gh.factory<_i46.GetMe>(() => _i46.GetMe(gh<_i787.AccountRepository>()));
+    gh.factory<_i571.AttachmentsCubit>(
+      () => _i571.AttachmentsCubit(
+        gh<_i504.PickImages>(),
+        gh<_i504.PickPdf>(),
+        gh<_i504.UploadImage>(),
+        gh<_i504.UploadDocument>(),
+        gh<_i504.GetUpload>(),
+        gh<_i504.DeleteUpload>(),
+      ),
+    );
     gh.lazySingleton<_i371.SessionCubit>(
       () => _i371.SessionCubit(
         gh<_i46.WatchAuthState>(),

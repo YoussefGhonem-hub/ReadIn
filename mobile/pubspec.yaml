@@ -45,6 +45,16 @@ dependencies:
   cupertino_icons: ^1.0.8
   url_launcher: ^6.3.3
 
+  # Media (SPEC §3.3, F26): compress before upload, BlurHash placeholders,
+  # a size-limited disk cache, pickers and the share sheet.
+  flutter_image_compress: ^2.5.1
+  flutter_blurhash: ^0.9.1
+  flutter_cache_manager: ^3.4.8
+  image_picker: ^1.2.4
+  file_picker: ^13.3.2
+  share_plus: ^13.3.1
+  path_provider: ^2.1.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

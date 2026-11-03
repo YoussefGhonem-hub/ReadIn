@@ -949,6 +949,576 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many attempts. Try again later.'**
   String get errTooManyRequests;
+
+  /// No description provided for @errCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled.'**
+  String get errCancelled;
+
+  /// No description provided for @errSourcesRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one source before publishing.'**
+  String get errSourcesRequired;
+
+  /// No description provided for @errMediaPurposeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This kind of upload isn\'t supported.'**
+  String get errMediaPurposeInvalid;
+
+  /// No description provided for @errMediaFileRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a file first.'**
+  String get errMediaFileRequired;
+
+  /// No description provided for @errMediaTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is too large (PDF up to 20 MB, images up to 10 MB).'**
+  String get errMediaTooLarge;
+
+  /// No description provided for @errMediaUnsupportedType.
+  ///
+  /// In en, this message translates to:
+  /// **'This file type isn\'t supported. Use JPEG, PNG, WebP, HEIC or PDF.'**
+  String get errMediaUnsupportedType;
+
+  /// No description provided for @errMediaDimensionsTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This image is too big (up to 8000 × 8000 pixels).'**
+  String get errMediaDimensionsTooLarge;
+
+  /// No description provided for @errMediaImageCorrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t read this image. Try another one.'**
+  String get errMediaImageCorrupted;
+
+  /// No description provided for @errMediaPdfEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'This PDF is password-protected. Upload it without a password.'**
+  String get errMediaPdfEncrypted;
+
+  /// No description provided for @errMediaPdfCorrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t read this PDF. It may be damaged.'**
+  String get errMediaPdfCorrupted;
+
+  /// No description provided for @errMediaPdfTooManyPages.
+  ///
+  /// In en, this message translates to:
+  /// **'This PDF has more than 100 pages.'**
+  String get errMediaPdfTooManyPages;
+
+  /// No description provided for @errMediaQuotaDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached today\'s upload limit (50 files). Try again tomorrow.'**
+  String get errMediaQuotaDaily;
+
+  /// No description provided for @errMediaQuotaStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your storage is full (200 MB). Remove old files to upload more.'**
+  String get errMediaQuotaStorage;
+
+  /// No description provided for @errMediaNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This file doesn\'t exist anymore.'**
+  String get errMediaNotFound;
+
+  /// No description provided for @errMediaInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is attached to a post.'**
+  String get errMediaInUse;
+
+  /// No description provided for @errMediaDownloadNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'The author didn\'t allow downloading this file.'**
+  String get errMediaDownloadNotAllowed;
+
+  /// No description provided for @errMediaProcessingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t prepare this file. Remove it or try again.'**
+  String get errMediaProcessingFailed;
+
+  /// No description provided for @errMediaProcessingTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing this file took too long. Try again.'**
+  String get errMediaProcessingTimeout;
+
+  /// No description provided for @errAttachmentsMixedKinds.
+  ///
+  /// In en, this message translates to:
+  /// **'A post can have images or one PDF, not both.'**
+  String get errAttachmentsMixedKinds;
+
+  /// No description provided for @errAttachmentsTooManyImages.
+  ///
+  /// In en, this message translates to:
+  /// **'You can attach up to 10 images.'**
+  String get errAttachmentsTooManyImages;
+
+  /// No description provided for @errAttachmentsSingleDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'You can attach only one PDF.'**
+  String get errAttachmentsSingleDocument;
+
+  /// No description provided for @errAttachmentsAltTextRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Every image needs alt text.'**
+  String get errAttachmentsAltTextRequired;
+
+  /// No description provided for @errAttachmentsAltTextTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Alt text can be up to 250 characters.'**
+  String get errAttachmentsAltTextTooLong;
+
+  /// No description provided for @errAttachmentsCaptionTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Captions can be up to 120 characters.'**
+  String get errAttachmentsCaptionTooLong;
+
+  /// No description provided for @errAttachmentsTitleTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'The document title can be up to 150 characters.'**
+  String get errAttachmentsTitleTooLong;
+
+  /// No description provided for @errAttachmentsTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'The document needs a title.'**
+  String get errAttachmentsTitleRequired;
+
+  /// No description provided for @errAttachmentsAssetNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'An attachment is missing. Remove it and upload it again.'**
+  String get errAttachmentsAssetNotFound;
+
+  /// No description provided for @errAttachmentsAssetNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'An attachment is still being prepared. Wait a moment.'**
+  String get errAttachmentsAssetNotReady;
+
+  /// No description provided for @errAttachmentsDuplicateAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'The same file is attached twice.'**
+  String get errAttachmentsDuplicateAsset;
+
+  /// No description provided for @composerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New post'**
+  String get composerTitle;
+
+  /// No description provided for @composerField.
+  ///
+  /// In en, this message translates to:
+  /// **'Field'**
+  String get composerField;
+
+  /// No description provided for @composerFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a field'**
+  String get composerFieldHint;
+
+  /// No description provided for @composerTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get composerTitleLabel;
+
+  /// No description provided for @composerTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A clear title, 5 to 150 characters'**
+  String get composerTitleHint;
+
+  /// No description provided for @composerBodyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your post'**
+  String get composerBodyLabel;
+
+  /// No description provided for @composerBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave an empty line between paragraphs.'**
+  String get composerBodyHint;
+
+  /// No description provided for @composerSourcesRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field needs at least one source.'**
+  String get composerSourcesRequired;
+
+  /// No description provided for @composerSourcesOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional, but readers trust posts with sources.'**
+  String get composerSourcesOptional;
+
+  /// No description provided for @composerAddSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Add source'**
+  String get composerAddSource;
+
+  /// No description provided for @composerAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments'**
+  String get composerAttachments;
+
+  /// No description provided for @composerSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Source title'**
+  String get composerSourceTitle;
+
+  /// No description provided for @composerSourceUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Link (https://…)'**
+  String get composerSourceUrl;
+
+  /// No description provided for @composerRemoveSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove source'**
+  String get composerRemoveSource;
+
+  /// No description provided for @composerInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid http(s) link'**
+  String get composerInvalidUrl;
+
+  /// No description provided for @composerPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get composerPublish;
+
+  /// No description provided for @composerPublishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Publishing…'**
+  String get composerPublishing;
+
+  /// No description provided for @composerPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Published ✨'**
+  String get composerPublished;
+
+  /// No description provided for @composerNeedField.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a field.'**
+  String get composerNeedField;
+
+  /// No description provided for @composerNeedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a title (5 to 150 characters).'**
+  String get composerNeedTitle;
+
+  /// No description provided for @composerNeedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Write something or add an attachment.'**
+  String get composerNeedBody;
+
+  /// No description provided for @composerNeedSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one source.'**
+  String get composerNeedSources;
+
+  /// No description provided for @composerFixSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete or remove the unfinished sources.'**
+  String get composerFixSources;
+
+  /// No description provided for @attachImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get attachImages;
+
+  /// No description provided for @attachPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF document'**
+  String get attachPdf;
+
+  /// No description provided for @attachMixHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A post can have images or one PDF, not both.'**
+  String get attachMixHint;
+
+  /// No description provided for @attachImagesLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 10 images'**
+  String attachImagesLimit(int count);
+
+  /// No description provided for @attachReorderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press and drag to reorder. Tap an image to add alt text.'**
+  String get attachReorderHint;
+
+  /// No description provided for @attachNeedAlt.
+  ///
+  /// In en, this message translates to:
+  /// **'Add alt text to every image.'**
+  String get attachNeedAlt;
+
+  /// No description provided for @attachBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait until uploads and processing finish.'**
+  String get attachBusy;
+
+  /// No description provided for @attachFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove or retry the failed attachments.'**
+  String get attachFailed;
+
+  /// No description provided for @attachNeedDocTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the document a title.'**
+  String get attachNeedDocTitle;
+
+  /// No description provided for @altTextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Alt text (required)'**
+  String get altTextLabel;
+
+  /// No description provided for @altTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the image for people using a screen reader'**
+  String get altTextHint;
+
+  /// No description provided for @altTextMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Alt text needed'**
+  String get altTextMissing;
+
+  /// No description provided for @altTextAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'ALT ✓'**
+  String get altTextAdded;
+
+  /// No description provided for @altTextBadgeMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Add ALT'**
+  String get altTextBadgeMissing;
+
+  /// No description provided for @listSeparator.
+  ///
+  /// In en, this message translates to:
+  /// **', '**
+  String get listSeparator;
+
+  /// No description provided for @captionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Caption (optional)'**
+  String get captionLabel;
+
+  /// No description provided for @imageDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Image {index} of {total}'**
+  String imageDetailsTitle(int index, int total);
+
+  /// No description provided for @editImageDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit alt text and caption'**
+  String get editImageDetails;
+
+  /// No description provided for @moveEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Move earlier'**
+  String get moveEarlier;
+
+  /// No description provided for @moveLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Move later'**
+  String get moveLater;
+
+  /// No description provided for @removeAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeAttachment;
+
+  /// No description provided for @cancelUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel upload'**
+  String get cancelUpload;
+
+  /// No description provided for @uploadPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing…'**
+  String get uploadPreparing;
+
+  /// No description provided for @uploadProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading… {percent}%'**
+  String uploadProgress(int percent);
+
+  /// No description provided for @uploadCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload cancelled'**
+  String get uploadCancelled;
+
+  /// No description provided for @uploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed'**
+  String get uploadFailed;
+
+  /// No description provided for @fileSizeMb.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} MB'**
+  String fileSizeMb(String size);
+
+  /// No description provided for @fileSizeKb.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} KB'**
+  String fileSizeKb(String size);
+
+  /// No description provided for @pdfTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Document title (required)'**
+  String get pdfTitleLabel;
+
+  /// No description provided for @pdfAllowDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow download'**
+  String get pdfAllowDownload;
+
+  /// No description provided for @pdfAllowDownloadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Readers can download the original PDF.'**
+  String get pdfAllowDownloadHint;
+
+  /// No description provided for @pdfPreparingPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing pages…'**
+  String get pdfPreparingPages;
+
+  /// No description provided for @pdfPagesReady.
+  ///
+  /// In en, this message translates to:
+  /// **'{ready} of {total} pages ready'**
+  String pdfPagesReady(int ready, int total);
+
+  /// No description provided for @pdfPageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 page} other{{count} pages}}'**
+  String pdfPageCount(int count);
+
+  /// No description provided for @pdfMorePages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{+1 page, open document} other{+{count} pages, open document}}'**
+  String pdfMorePages(int count);
+
+  /// No description provided for @openDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Open document'**
+  String get openDocument;
+
+  /// No description provided for @viewerDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get viewerDownload;
+
+  /// No description provided for @viewerDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
+  String get viewerDownloading;
+
+  /// No description provided for @viewerImageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Image {index} of {total}'**
+  String viewerImageOf(int index, int total);
+
+  /// No description provided for @viewerPageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {index} of {total}'**
+  String viewerPageOf(int index, int total);
+
+  /// No description provided for @viewerZoomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Double-tap to zoom'**
+  String get viewerZoomHint;
+
+  /// No description provided for @viewerPageLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading page…'**
+  String get viewerPageLoading;
+
+  /// No description provided for @viewerThumbnails.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages'**
+  String get viewerThumbnails;
 }
 
 class _AppLocalizationsDelegate

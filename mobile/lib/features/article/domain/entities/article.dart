@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../shared/rdoc/rdoc_document.dart';
+import '../../../media/domain/entities/media.dart';
 
 class Author extends Equatable {
   const Author({required this.id, required this.displayName, required this.username, this.avatarUrl, this.isVerified = false});
@@ -47,6 +48,7 @@ class ArticleCard extends Equatable {
     this.versionBadge,
     this.reactionCount = 0,
     this.commentCount = 0,
+    this.attachments,
   });
 
   final String id;
@@ -69,6 +71,10 @@ class ArticleCard extends Equatable {
   final int reactionCount;
   final int commentCount;
 
+  /// 1–10 images or one PDF (F26); null when the post has none. Feed cards
+  /// carry at most the first 10 PDF pages.
+  final ArticleAttachments? attachments;
+
   @override
   List<Object?> get props => [
         id,
@@ -86,6 +92,7 @@ class ArticleCard extends Equatable {
         publishedAt,
         reactionCount,
         commentCount,
+        attachments,
       ];
 }
 
