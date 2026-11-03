@@ -1,0 +1,5 @@
+/* Screenshots of the reader's action bar: the comments section (F11) loads after the article, so on a short article it
+   may or may not be behind the bar when the shot is taken. */
+#comments {
+  visibility: hidden !important;
+}

@@ -1,5 +1,5 @@
 import { Page, expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, VARIANTS, imagesLoaded, parkMouse, useVariant } from './support/mock-api';
+import { HIDE_APP_CHROME, HIDE_COMMENTS, VARIANTS, imagesLoaded, parkMouse, useVariant } from './support/mock-api';
 import { expectSignInPrompt, openArticle, signInAsReader } from './support/social';
 
 /**
@@ -46,7 +46,10 @@ for (const variant of VARIANTS) {
     await expect(picker.locator('[data-reaction="insightful"]')).toHaveAttribute('aria-checked', 'true');
     await expect(picker.locator('[data-reaction-count="insightful"]')).toHaveText('9');
     await parkMouse(page);
-    await expect(page).toHaveScreenshot(`reaction-picker-${suffix}.png`, { clip: await pickerArea(page), stylePath: HIDE_APP_CHROME });
+    await expect(page).toHaveScreenshot(`reaction-picker-${suffix}.png`, {
+      clip: await pickerArea(page),
+      stylePath: [HIDE_APP_CHROME, HIDE_COMMENTS],
+    });
     await picker.locator('[data-reaction="love"]').click();
     await expect(picker).toHaveCount(0);
     await expect(react).toHaveAttribute('data-my-reaction', 'love');

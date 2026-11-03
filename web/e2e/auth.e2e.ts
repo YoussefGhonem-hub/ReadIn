@@ -294,6 +294,9 @@ for (const variant of VARIANTS) {
     await page.goto('/settings');
     const account = page.locator('[data-account]');
     await expect(account.locator('[data-account-phone]')).toHaveText('+20 10 01234567', { timeout: FIRST_RENDER_MS });
+    // Scroll only once the web fonts are in: a late font swap moves the cards above by a pixel or two, and the
+    // change-number shot below shows the page behind its sheet.
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
     await account.scrollIntoViewIfNeeded();
     await imagesSettled(page);
     await expect(account).toHaveScreenshot(`settings-account-${suffix}.png`, { stylePath: HIDE_APP_CHROME });

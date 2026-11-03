@@ -158,6 +158,9 @@ export async function imagesLoaded(scope: Locator, min = 1): Promise<void> {
 /** `stylePath` for screenshots: hides the sticky top bar, bottom nav and toasts so they don't overlap the element. */
 export const HIDE_APP_CHROME = join(__dirname, 'hide-app-chrome.css');
 
+/** `stylePath` for shots of the reader's action bar: hides the comments section, which may still be loading. */
+export const HIDE_COMMENTS = join(__dirname, 'hide-comments.css');
+
 /** Moves the pointer off any card so hover-only UI (carousel arrows) isn't captured. */
 export async function parkMouse(page: Page): Promise<void> {
   await page.mouse.move(1, 1);
