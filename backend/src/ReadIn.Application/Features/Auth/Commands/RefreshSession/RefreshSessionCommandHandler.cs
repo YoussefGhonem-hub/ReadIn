@@ -42,7 +42,7 @@ internal sealed class RefreshSessionCommandHandler(
             }
         }
 
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == token.UserId, cancellationToken);
+        var user = await db.Users.Include(u => u.ExternalLogins).FirstOrDefaultAsync(u => u.Id == token.UserId, cancellationToken);
         if (user is null || !user.CanSignIn)
         {
             token.Revoke(now);

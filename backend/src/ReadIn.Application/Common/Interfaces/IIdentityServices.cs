@@ -1,3 +1,5 @@
+using ReadIn.Domain.Common;
+
 namespace ReadIn.Application.Common.Interfaces;
 
 public enum PasswordCheck
@@ -58,4 +60,19 @@ public interface IAttemptThrottle
 {
     /// <returns>false when <paramref name="limit"/> attempts were already made for <paramref name="key"/> in the window.</returns>
     bool TryAcquire(string key, int limit, TimeSpan window);
+}
+
+/// <summary>What Google or Apple vouched for in a verified ID token (SPEC §9.1).</summary>
+/// <param name="Subject">The provider's stable user id (<c>sub</c>).</param>
+/// <param name="Name">Google's profile name; Apple never puts the name in its token.</param>
+public sealed record ExternalIdentity(string Provider, string Subject, string? Email, bool EmailVerified, string? Name);
+
+/// <summary>Checks Google and Apple ID tokens against the providers' published keys and our client ids (ADR 0012).</summary>
+public interface IExternalIdentityVerifier
+{
+    /// <summary>Providers with at least one client id configured, in display order.</summary>
+    IReadOnlyList<string> EnabledProviders { get; }
+
+    /// <param name="nonce">The raw nonce the client generated; required for Apple, whose token carries its SHA-256.</param>
+    Task<Result<ExternalIdentity>> VerifyAsync(string provider, string idToken, string? nonce, CancellationToken ct);
 }

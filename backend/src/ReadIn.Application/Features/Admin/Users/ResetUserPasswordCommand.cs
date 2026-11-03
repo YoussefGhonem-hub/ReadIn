@@ -37,7 +37,7 @@ internal sealed class ResetUserPasswordCommandHandler(
     public async ValueTask<Result<TemporaryPasswordDto>> Handle(ResetUserPasswordCommand command, CancellationToken cancellationToken)
     {
         var user = await db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
-        if (user is null || !user.CanSignIn) return UserErrors.NotFound;
+        if (user is null || !user.CanSignInWithPassword) return UserErrors.NotFound;
         // Taking over an Admin or SuperAdmin account would be a way around the role rules (SPEC §10.2 footnote).
         if ((user.HasRole(RoleIds.Admin) || user.HasRole(RoleIds.SuperAdmin)) && !currentUser.Roles.Contains(RoleNames.SuperAdmin))
             return AuthErrors.Forbidden;

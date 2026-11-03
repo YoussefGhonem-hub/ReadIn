@@ -92,8 +92,7 @@ public sealed class ContentSeedingTests(ApiFactory api)
     [Fact]
     public async Task Today_falls_back_to_an_auto_checked_article_when_no_reviewed_article_matches()
     {
-        var client = api.ClientFor("it-today-fallback", "today.fallback@readin.test");
-        (await client.PostAsJsonAsync("/api/v1/auth/sync", new { uiLanguage = "en", timeZone = "Africa/Cairo" }, Ct)).EnsureSuccessStatusCode();
+        var client = (await api.SignUpAsync()).Client;
 
         // Security has only the pipeline article (published, pending review); the other two fields have no articles.
         var fields = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!

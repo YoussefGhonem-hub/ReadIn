@@ -2,6 +2,7 @@ using Mediator;
 using ReadIn.Api.Auth;
 using ReadIn.Api.Errors;
 using ReadIn.Application.Features.Auth;
+using ReadIn.Application.Features.Auth.Commands.ExternalSignIn;
 using ReadIn.Application.Features.Auth.Commands.RefreshSession;
 using ReadIn.Application.Features.Auth.Commands.Register;
 using ReadIn.Application.Features.Auth.Commands.ResetPassword;
@@ -13,7 +14,9 @@ using ReadIn.Application.Features.Auth.Queries.GetAuthConfig;
 
 namespace ReadIn.Api.Endpoints;
 
-/// <summary>Phone + password sign in with rotating refresh tokens and PIN recovery (SPEC §9, ADR 0007).</summary>
+/// <summary>
+/// Phone + password or Google/Apple sign in, rotating refresh tokens and PIN recovery (SPEC §9, ADR 0007, ADR 0012).
+/// </summary>
 internal sealed class AuthEndpoints : IEndpointGroup
 {
     public void Map(RouteGroupBuilder api)
@@ -21,7 +24,7 @@ internal sealed class AuthEndpoints : IEndpointGroup
         var auth = api.MapGroup("/auth").WithTags("Auth").AllowAnonymous();
 
         auth.MapGet("/config", async (ISender sender, CancellationToken ct) => TypedResults.Ok(await sender.Send(new GetAuthConfigQuery(), ct)))
-            .WithSummary("PIN length and password rules for the sign-up forms");
+            .WithSummary("PIN length, password rules and the Google/Apple providers this server accepts");
 
         auth.MapPost("/register", async (RegisterCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(body, ct)).ToSession(http))
@@ -33,6 +36,12 @@ internal sealed class AuthEndpoints : IEndpointGroup
                 (await sender.Send(body, ct)).ToSession(http))
             .RequireRateLimiting(RateLimitPolicies.SignIn)
             .WithSummary("Sign in with phone and password")
+            .Produces<SessionResponse>();
+
+        auth.MapPost("/external", async (ExternalSignInCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(body, ct)).ToSession(http))
+            .RequireRateLimiting(RateLimitPolicies.SignIn)
+            .WithSummary("Continue with Google or Apple: signs in, links by verified email or phone + password, or creates an account")
             .Produces<SessionResponse>();
 
         auth.MapPost("/refresh", async (RefreshTokenRequest? body, ISender sender, HttpContext http, CancellationToken ct) =>

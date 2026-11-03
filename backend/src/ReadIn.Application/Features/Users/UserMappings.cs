@@ -19,6 +19,10 @@ public sealed class UserMappings : IRegister
             .Map(d => d.Interests, s => new InterestsDto(
                 s.Interests.Where(i => i.FieldId != null).Select(i => i.FieldId!.Value).ToList(),
                 s.Interests.Where(i => i.TopicId != null).Select(i => i.TopicId!.Value).ToList()))
+            .Map(d => d.ExternalLogins, s => s.ExternalLogins
+                .OrderBy(l => l.LinkedAt)
+                .Select(l => new ExternalLoginDto(l.Provider, l.Email, l.LinkedAt))
+                .ToList())
             .Ignore(d => d.Roles, d => d.Permissions, d => d.IsVerified);
     }
 }

@@ -40,11 +40,29 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Ignore(u => u.OnboardingCompleted);
         builder.Ignore(u => u.HasRecoveryPin);
+        builder.Ignore(u => u.HasPassword);
+        builder.Ignore(u => u.CanSignInWithPassword);
         builder.Ignore(u => u.CanSignIn);
 
         builder.HasMany(u => u.Roles).WithOne().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.Interests).WithOne().HasForeignKey(i => i.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.Devices).WithOne().HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(u => u.ExternalLogins).WithOne().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+/// <summary>Google/Apple identities (SPEC §9.1): each belongs to one account, and an account has one per provider.</summary>
+internal sealed class ExternalLoginConfiguration : IEntityTypeConfiguration<ExternalLogin>
+{
+    public void Configure(EntityTypeBuilder<ExternalLogin> builder)
+    {
+        builder.ToTable("UserExternalLogins");
+        builder.HasKey(l => l.Id);
+        builder.Property(l => l.Provider).HasMaxLength(16).IsUnicode(false).IsRequired();
+        builder.Property(l => l.Subject).HasMaxLength(255).IsUnicode(false).IsRequired();
+        builder.Property(l => l.Email).HasMaxLength(320);
+        builder.HasIndex(l => new { l.Provider, l.Subject }).IsUnique();
+        builder.HasIndex(l => new { l.UserId, l.Provider }).IsUnique();
     }
 }
 

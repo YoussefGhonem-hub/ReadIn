@@ -27,7 +27,7 @@ internal sealed class ResetPasswordCommandHandler(
         if (token is null || !token.IsUsableAt(now, client.IpAddress)) return CredentialErrors.ResetTokenInvalid;
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == token.UserId, cancellationToken);
-        if (user is null || !user.CanSignIn) return CredentialErrors.ResetTokenInvalid;
+        if (user is null || !user.CanSignInWithPassword) return CredentialErrors.ResetTokenInvalid;
 
         var violations = PasswordRules.Check(command.NewPassword, user.PhoneNumber);
         if (violations.Count > 0) return ValidationErrors.For(nameof(command.NewPassword), violations);

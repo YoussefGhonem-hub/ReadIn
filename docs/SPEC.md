@@ -25,7 +25,7 @@
 6. [Backend: Clean Architecture + CQRS + Mapster](#6-backend-clean-architecture--cqrs--mapster)
 7. [Web: Angular](#7-web-angular)
 8. [Mobile: Flutter](#8-mobile-flutter)
-9. [Authentication: Phone + Password](#9-authentication-phone--password)
+9. [Authentication: Phone, Google, Apple](#9-authentication-phone-google-apple)
 10. [Roles & Permissions](#10-roles--permissions)
 11. [Features](#11-features)
 12. [Feature Parity Matrix (Web + Mobile)](#12-feature-parity-matrix-web--mobile)
@@ -105,7 +105,7 @@ These rules apply to **every** feature, commit and code review.
 | Validation | **FluentValidation** |
 | ORM | **EF Core 10** (writes + simple reads), **Dapper** (heavy read queries, e.g. feeds) |
 | Database | **SQL Server 2022+** (Full-Text Search, Arabic collation) |
-| Auth | **Own JWT auth**: phone number + password. Access token (JWT, 15 min) + rotating refresh token. Passwords hashed with `PasswordHasher<T>` (`Microsoft.Extensions.Identity.Core`, no Identity tables). See [§9](#9-authentication-phone--password). |
+| Auth | **Own JWT auth**: phone number + password, or Google/Apple ID tokens verified by the API ([ADR 0012](adr/0012-google-and-apple-sign-in.md)). Access token (JWT, 15 min) + rotating refresh token. Passwords hashed with `PasswordHasher<T>` (`Microsoft.Extensions.Identity.Core`, no Identity tables). See [§9](#9-authentication-phone-google-apple). |
 | Phone numbers | `libphonenumber-csharp` (validation + E.164 normalization) |
 | Push notifications | **Firebase Cloud Messaging (FCM)** via `FirebaseAdmin` SDK |
 | Real-time | **Firebase Realtime Database** (live counters, comment events, unread badges), written by the backend only via `FirebaseAdmin` SDK. **No SignalR.** |
@@ -479,14 +479,16 @@ mobile/lib/
 
 ---
 
-## 9. Authentication: Phone + Password
+## 9. Authentication: Phone, Google, Apple
 
 ### 9.1 Decisions
 | Topic | Decision |
 |---|---|
-| Sign up / sign in | **Phone number + password only.** No SMS, no OTP, no email login, no Google/Apple. |
+| Sign up / sign in | **Phone number + password, Google, or Apple**, all on **one account** with the same sessions. No SMS, no OTP, no email + password login. |
+| Google / Apple | The app gets an ID token from the provider SDK and sends it to `POST /auth/external`; the backend verifies it against Google's / Apple's published keys and our client ids, then starts a normal ReadIn session ([ADR 0012](adr/0012-google-and-apple-sign-in.md)). Google on web, Android and iOS; Apple on iOS and web (Android later: it needs a server callback). Apple must be offered on iOS whenever Google is (App Store guideline 4.8). Buttons show only for providers listed in `GET /auth/config` → `externalProviders`. |
+| Linking | A Google/Apple identity is linked automatically when the provider reports a **verified** email that matches an account. Otherwise the person chooses "create a new account" or "I already have an account" (phone + password links it). Settings links and unlinks providers; Google/Apple-only accounts can add phone + password later. |
 | Who handles auth | The **.NET backend** (own JWT). Firebase Auth is **not** used for sign-in. |
-| Forgot password | **Recovery PIN** (4 digits, set at sign up): phone + PIN → new password. |
+| Forgot password | **Recovery PIN** (4 digits, set at sign up): phone + PIN → new password. Google/Apple-only accounts recover through their provider and have no PIN. |
 | Last fallback | "نسيت الـ PIN كمان؟" → contact support → an Admin resets the password. |
 | Guests | Can browse and read without an account. |
 
@@ -498,13 +500,16 @@ Every screen supports ar/en × light/dark, has loading and error states, and pre
 ```text
 Welcome ─► Sign in ─────────────────────────────────────────────────────► Home
         ─► Create account (3 steps) ─► Complete profile ─► Onboarding ─► Home
+        ─► Continue with Google / Apple ─► linked or verified-email match ─► Home
+                                        ─► not linked ─► Create new account ─► Complete profile ─► Onboarding ─► Home
+                                                      ─► I already have an account (phone + password) ─► linked ─► Home
 Sign in ─► Forgot password ─► (phone + PIN) ─► New password ─► Sign in
 ```
 
-**Welcome:** logo + tagline, "اعمل حساب جديد" (Create account), "عندي حساب، سجل دخول" (Sign in), "تصفح كزائر" (Browse as guest), UI language switcher.
+**Welcome:** logo + tagline, "اعمل حساب جديد" (Create account), "عندي حساب، سجل دخول" (Sign in), "كمّل بجوجل" / "كمّل بأبل" (Continue with Google / Apple), "تصفح كزائر" (Browse as guest), UI language switcher.
 
 **Sign in:**
-- Phone field, password field, "نسيت كلمة السر؟" link, "سجل دخول" button, "معندكش حساب؟ اعمل حساب" link.
+- Phone field, password field, "نسيت كلمة السر؟" link, "سجل دخول" button, "معندكش حساب؟ اعمل حساب" link, then "أو" and the Google / Apple buttons.
 - Wrong credentials → one generic error: "رقم التليفون أو كلمة السر غلط" (never reveals whether the number exists).
 - 5 wrong attempts → "محاولات كتير. جرّب تاني بعد 15 دقيقة". Suspended → "الحساب ده موقوف. تواصل مع الدعم".
 - After success, guards apply in order: `MustChangePassword` → change password, `MustSetRecoveryPin` → set PIN, profile incomplete → Complete profile, onboarding not done → Onboarding, otherwise → Home.
@@ -520,6 +525,11 @@ Then **Complete profile** (display name, unique `@username` with live availabili
 1. Phone field (pre-filled from Sign in) + PIN input → "كمّل". Generic error "رقم التليفون أو الـ PIN غلط". Link "نسيت الـ PIN كمان؟" opens the contact-support sheet.
 2. New password + strength meter + confirm → "احفظ". Success → Sign in with the number pre-filled and the banner "تم تغيير كلمة السر. سجل دخول بكلمة السر الجديدة". Expired reset token → "انتهت المهلة، ابدأ من الأول".
 
+**Continue with Google / Apple:**
+- Cancelling the provider dialog does nothing. A linked identity, or a verified email that matches an account, signs in and the same guards apply (Google/Apple-only accounts never need a PIN).
+- Not linked (`auth.external_not_linked`) → sheet "مفيش حساب ReadIn مربوط بالحساب ده لسه" with "اعمل حساب جديد" (creates it → Complete profile → Onboarding) and "عندي حساب برقم تليفون" (phone + password; links it and signs in). A phone account that already has another Google (or Apple) account → "في حساب تاني من نفس النوع مربوط بالفعل".
+- Apple gives the name only on the first authorization; the app sends it as the display name of a new account.
+
 **Set recovery PIN (mandatory):** shown when `mustSetRecoveryPin = true` (accounts created before the PIN existed, admin-reset accounts, the production SuperAdmin). Cannot be skipped.
 
 **Settings → Account:** see [F18](#f18--settings).
@@ -532,7 +542,8 @@ Then **Complete profile** (display name, unique `@username` with live availabili
 | Reset token | Random 256-bit, **10 minutes**, single use, bound to the user and the creating IP, stored hashed. Issued after a correct recovery PIN. |
 
 - An `IClaimsTransformation` loads roles & permissions from SQL Server (cached, invalidated on role change). Tokens whose `security_stamp` no longer matches are rejected.
-- `SecurityStamp` changes on password change, password reset, phone change and "sign out of all devices", which signs out every other session.
+- `SecurityStamp` changes on password change, password reset, phone change, adding phone sign in to a Google/Apple account and "sign out of all devices", which signs out every other session.
+- Google/Apple sign in starts the same session (access + refresh token). Provider tokens are verified once and never stored.
 - **Web:** refresh token in an `HttpOnly`, `Secure`, `SameSite=Strict` cookie (path `/api/v1/auth`); access token in memory only (never localStorage). On start (browser only) the app calls `/auth/refresh`. SSR of public pages is anonymous. The interceptor refreshes once on 401 (single-flight) and retries.
 - **Mobile:** refresh token in `flutter_secure_storage`, access token in memory, Dio `QueuedInterceptor` with the same single-flight refresh. Splash → restore session → route by guards.
 - Suspended users get `403` with code `user.suspended`.
@@ -560,7 +571,9 @@ Then **Complete profile** (display name, unique `@username` with live availabili
 | Recovery lockout | 5 wrong PINs → recovery locked 1 hour. 3 lockouts within 7 days → recovery disabled until an Admin reset. Rate limits: 10/hour per IP, 5/hour per phone. |
 | Anti-enumeration | Generic errors for login and recovery; a dummy hash runs for unknown numbers so timing stays the same. |
 | After reset / password change / phone change / sign out all | New `SecurityStamp`, all refresh tokens revoked, counters reset, audit log entry. |
-| Owner notifications (push + in-app) | Recovery lockout, password changed, PIN changed, phone number changed. These ignore quiet hours. |
+| Google / Apple tokens | Verified with the provider's OpenID Connect keys: RS256 signature, issuer, audience (`ExternalAuth:{Google,Apple}:ClientIds`), expiry. Apple tokens must carry the SHA-256 of the raw nonce the app sends (so a leaked token can't be replayed). Only the provider's `sub` and the email it reported are kept, in `UserExternalLogins`. |
+| Linking | Automatic only for a provider-**verified** email matching `Users.Email`, which is itself only ever set from a provider-verified address (or seeding), never from user input. Linking from Settings needs the password or an already linked provider, so a stolen access token can't add a way in. One identity per provider per account; the last way to sign in can't be removed. |
+| Owner notifications (push + in-app) | Recovery lockout, password changed, PIN changed, phone number changed, Google/Apple linked or unlinked, phone sign in added. These ignore quiet hours. |
 | Admin reset | Permission `users.reset_password`: temporary password + `MustChangePassword`, PIN cleared + `MustSetRecoveryPin`, `RecoveryDisabled = false`, sessions revoked, audit log. |
 | PII | Phone numbers never appear in public DTOs (profiles, comments, articles); only in `GET /me` and admin endpoints with `users.read.pii`. Masked in logs (`+20******4567`). Passwords, PINs, hashes and tokens are never logged. |
 
@@ -617,13 +630,13 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 > Every feature below ships on **Web + Mobile** (see [§12](#12-feature-parity-matrix-web--mobile)), supports **ar/en** and **light/dark**.
 
 ### F01 — Authentication & Account
-- Sign up / sign in with **phone number + password only** (country picker, E.164). Full screens and rules in [§9](#9-authentication-phone--password).
+- Sign up / sign in with **phone number + password** (country picker, E.164), **Google** or **Apple**, all on one account. Full screens and rules in [§9](#9-authentication-phone-google-apple).
 - Sign up is a 3-step stepper: phone + password → recovery PIN → confirm your number.
 - **Forgot password** with phone + recovery PIN → new password. "Forgot the PIN too" → contact support → Admin reset.
 - Mandatory "set recovery PIN" screen for accounts without a PIN.
 - Complete profile after sign up: display name, unique `@username`, optional avatar.
 - Guest browsing with a soft prompt to sign in when trying to interact.
-- Sign out, sign out of all devices, delete account (requires the password; soft delete then hard delete after 30 days, content attributed to "Deleted user").
+- Sign out, sign out of all devices, delete account (requires the password, or Google/Apple for accounts without one; soft delete then hard delete after 30 days, content attributed to "Deleted user").
 
 ### F02 — Onboarding (3 steps)
 1. Welcome + value proposition.
@@ -753,7 +766,9 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
   - Phone number (visible to the owner only) + "تغيير الرقم" (new number + current password + confirm-number dialog).
   - "تغيير كلمة السر" (current + new + confirm).
   - "تغيير الـ PIN" (current password + new PIN + confirm).
-  - Sign out, sign out of all devices, delete account (requires the password).
+  - "الحسابات المربوطة" (Linked accounts): Google and Apple with the linked email, "اربط" (confirmed with the password, or with an already linked provider) and "فك الربط" (refused if it is the only way to sign in).
+  - Google/Apple-only accounts see "ضيف رقم تليفون وكلمة سر" (phone + password + recovery PIN, confirmed with Google/Apple) instead of the number, password and PIN items above.
+  - Sign out, sign out of all devices, delete account (requires the password, or Google/Apple for accounts without one).
 
 ### F19 — Writer Verification
 - Request verification: field, job title, proof (LinkedIn/GitHub URL, certificate or syndicate card upload).
@@ -1042,7 +1057,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 ### 16.2 Tables
 | Area | Tables |
 |---|---|
-| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, Email (optional, never used for login), DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, IsSuspended, SuspendedUntil), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
+| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, Email (only from a provider-verified address; links Google/Apple sign in), AnonymizedAt, DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, IsSuspended, SuspendedUntil), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId, Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
@@ -1064,7 +1079,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 - `ReadingProgress(UserId, ArticleId)` unique.
 - `Reactions(ArticleId, Type)`, `UserFollows(FolloweeId)`.
 - Full-Text index on `ArticleTranslations(SearchText)`, `MediaAssets(ExtractedText)` and `Users(DisplayName, Username)` (created with F16 Search; the columns and their collation exist already).
-- `Users(PhoneNumber)` unique, `RefreshTokens(TokenHash)` unique, `RefreshTokens(UserId, RevokedAt)`.
+- `Users(PhoneNumber)` unique, `RefreshTokens(TokenHash)` unique, `RefreshTokens(UserId, RevokedAt)`, `UserExternalLogins(Provider, Subject)` unique, `UserExternalLogins(UserId, Provider)` unique.
 - `ArticleAttachments(MediaAssetId)` unique (an asset belongs to one post), `MediaAssets(OwnerId, CreatedAt)` (quotas), `MediaAssets(CreatedAt)` (orphan cleanup).
 - Media paths are stored **relative** (`/uploads/...`); absolute URLs are built from `Storage:PublicBaseUrl`, so a domain change never needs a data migration.
 
@@ -1430,7 +1445,7 @@ Deploy targets (suggested): API + SSR on a single server or container host (with
 - **Conventional Commits** with scope: `feat(backend): ...`, `feat(web): ...`, `feat(mobile): ...`, `fix(...)`, `test(...)`, `refactor(...)`, `content(dotnet): ...`, `docs: ...`, `chore(ci): ...`.
 - Each feature tracks `backend`, `web` and `mobile` parts (see [§12](#12-feature-parity-matrix-web--mobile)); it is done when all three are committed to `dev`.
 - Secrets are never committed: the Firebase service-account key, `google-services.json`, `GoogleService-Info.plist`, `Jwt:SigningKey`, `Security:RecoveryPinPepper`, passwords and PINs.
-- Architecture decisions recorded as ADRs in `docs/adr/`. Existing: 0001–0011 (`0007-phone-password-authentication.md` supersedes 0001 and the auth part of 0004; `0008-firebase-scope-fcm-and-rtdb.md`; `0009-recovery-pin.md`).
+- Architecture decisions recorded as ADRs in `docs/adr/`. Existing: 0001–0012 (`0007-phone-password-authentication.md` supersedes 0001 and the auth part of 0004; `0008-firebase-scope-fcm-and-rtdb.md`; `0009-recovery-pin.md`; `0012-google-and-apple-sign-in.md` amends 0007).
 
 ---
 

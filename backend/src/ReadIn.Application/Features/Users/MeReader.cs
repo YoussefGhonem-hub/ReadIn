@@ -15,6 +15,7 @@ internal sealed class MeReader(IAppDbContext db, IUserAccessService access, IMap
     {
         var user = await db.Users.AsNoTracking()
             .Include(u => u.Interests)
+            .Include(u => u.ExternalLogins)
             .FirstOrDefaultAsync(u => u.Id == userId, ct);
         if (user is null) return UserErrors.NotFound;
 

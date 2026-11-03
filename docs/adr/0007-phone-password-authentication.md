@@ -3,6 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-11-03
 - **Supersedes:** [0001](0001-firebase-auth-sql-server-roles.md) and the auth part of [0004](0004-firebase-js-sdk-on-web.md)
+- **Amended by:** [0012](0012-google-and-apple-sign-in.md): Google and Apple sign in were added on the same accounts and sessions
 
 ## Context
 

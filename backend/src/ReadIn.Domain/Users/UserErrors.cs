@@ -39,6 +39,30 @@ public static class CredentialErrors
     public static readonly Error PhoneUnchanged =
         Error.Validation("auth.phone_unchanged", "This is already your number.");
 
+    // ---- Google / Apple (SPEC §9.1) ----
+
+    public static readonly Error ExternalInvalid =
+        Error.Unauthorized("auth.external_invalid", "This Google or Apple sign in could not be verified. Try again.");
+    public static readonly Error ProviderDisabled =
+        Error.Validation("auth.provider_disabled", "This sign-in method is not available.");
+    /// <summary>No account has this identity: the client offers "create a new account" or "link my phone account".</summary>
+    public static readonly Error ExternalNotLinked =
+        Error.NotFound("auth.external_not_linked", "No ReadIn account is linked to this account yet.");
+    public static readonly Error ExternalInUse =
+        Error.Conflict("auth.external_in_use", "This Google or Apple account is linked to another ReadIn account.");
+    public static readonly Error ExternalConflict =
+        Error.Conflict("auth.external_conflict", "Another account from this provider is already linked.");
+    public static readonly Error ExternalLoginNotFound =
+        Error.NotFound("auth.external_login_not_found", "This sign-in method is not linked to your account.");
+    public static readonly Error LastSignInMethod =
+        Error.Validation("auth.last_sign_in_method", "You can't remove your only way to sign in.");
+    public static readonly Error PhoneSignInExists =
+        Error.Conflict("auth.phone_sign_in_exists", "This account already signs in with a phone number.");
+    public static readonly Error ConfirmationRequired =
+        Error.Validation("auth.confirmation_required", "Confirm it's you with your password or with Google or Apple.");
+    public static readonly Error ExternalMismatch =
+        Error.Validation("auth.external_mismatch", "Use the Google or Apple account that is linked to ReadIn.");
+
     /// <summary>Per-number limits (SPEC §9.5): 5 sign-in attempts a minute, 5 recovery attempts an hour.</summary>
     public static readonly Error TooManyAttempts =
         Error.TooManyRequests("rate_limited", "Too many requests. Please try again shortly.");

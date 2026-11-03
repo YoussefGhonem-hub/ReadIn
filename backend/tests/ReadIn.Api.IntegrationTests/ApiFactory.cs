@@ -4,7 +4,11 @@ using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using ReadIn.Application.Common.Interfaces;
 using Testcontainers.MsSql;
 
 namespace ReadIn.Api.IntegrationTests;
@@ -82,6 +86,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Storage:PublicBaseUrl", PublicBaseUrl);
         // Seed from fixture content so tests never depend on which of the real articles exist (content/).
         builder.UseSetting("Content:RootPath", Path.Combine(AppContext.BaseDirectory, "fixtures", "content"));
+        builder.ConfigureTestServices(services =>
+            services.Replace(ServiceDescriptor.Singleton<IExternalIdentityVerifier, FakeExternalIdentityVerifier>()));
     }
 
     /// <summary>A valid, unused mobile number in the fictional range.</summary>

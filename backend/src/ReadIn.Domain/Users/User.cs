@@ -9,17 +9,25 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public static readonly TimeOnly DefaultReminderTime = new(8, 0);
     public const string DefaultTimeZone = "Africa/Cairo";
     public const string DeletedDisplayName = "Deleted user";
+    public const int MaxDisplayNameLength = 60;
 
     private readonly List<UserRole> _roles = [];
     private readonly List<UserInterest> _interests = [];
     private readonly List<UserDevice> _devices = [];
+    private readonly List<ExternalLogin> _externalLogins = [];
 
     private User() { } // EF
 
-    /// <summary>E.164 (<c>+201001234567</c>), the sign-in identifier (SPEC §9.1). Null only once a deleted account is anonymized.</summary>
+    /// <summary>
+    /// E.164 (<c>+201001234567</c>), the phone sign-in identifier (SPEC §9.1). Null for accounts that only sign in with
+    /// Google or Apple, and once a deleted account is anonymized.
+    /// </summary>
     public string? PhoneNumber { get; private set; }
 
-    /// <summary>Optional contact address; never used to sign in (SPEC §16.2).</summary>
+    /// <summary>
+    /// Only ever set from an email that Google or Apple reported as verified (or by seeding), so a later Google or Apple
+    /// sign in with the same address can be linked to this account (SPEC §9.1). Never set it from user input.
+    /// </summary>
     public string? Email { get; private set; }
 
     public string DisplayName { get; private set; } = default!;
@@ -34,7 +42,7 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public string TimeZone { get; private set; } = DefaultTimeZone;
     public TimeOnly ReminderTime { get; private set; } = DefaultReminderTime;
 
-    /// <summary>Null for accounts that cannot sign in (the official ReadIn account).</summary>
+    /// <summary>Null for accounts without phone sign in: Google/Apple only, or the official ReadIn account.</summary>
     public string? PasswordHash { get; private set; }
 
     /// <summary>Embedded in every access token; changing it signs out every session (SPEC §9.3).</summary>
@@ -65,6 +73,7 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public IReadOnlyCollection<UserRole> Roles => _roles.AsReadOnly();
     public IReadOnlyCollection<UserInterest> Interests => _interests.AsReadOnly();
     public IReadOnlyCollection<UserDevice> Devices => _devices.AsReadOnly();
+    public IReadOnlyCollection<ExternalLogin> ExternalLogins => _externalLogins.AsReadOnly();
 
     public DateTime CreatedAt { get; private set; }
     public Guid? CreatedBy { get; private set; }
@@ -72,11 +81,18 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public Guid? UpdatedBy { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
+
+    /// <summary>When the personal data of a deleted account was removed (SPEC F01); null until then.</summary>
+    public DateTime? AnonymizedAt { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
     public bool OnboardingCompleted => _interests.Count >= MinInterests;
     public bool HasRecoveryPin => RecoveryPinHash is not null;
-    public bool CanSignIn => PasswordHash is not null && PhoneNumber is not null;
+    public bool HasPassword => PasswordHash is not null;
+    public bool CanSignInWithPassword => PasswordHash is not null && PhoneNumber is not null;
+
+    /// <summary>Phone + password or a linked Google/Apple account. Needs <see cref="ExternalLogins"/> loaded.</summary>
+    public bool CanSignIn => CanSignInWithPassword || _externalLogins.Count > 0;
 
     /// <summary>
     /// Sign up with phone + password (SPEC §9.2). The profile starts incomplete with a placeholder @username. The recovery
@@ -104,6 +120,39 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
             MustSetRecoveryPin = true,
         };
         user._roles.Add(new UserRole(user.Id, memberRoleId));
+        user.Raise(() => new UserRegisteredDomainEvent(user.Id));
+        return user;
+    }
+
+    /// <summary>
+    /// Sign up with Google or Apple (SPEC §9.2): no phone, password or recovery PIN (the provider handles recovery). The
+    /// profile starts incomplete; Apple sends the name only on the first authorization, so it's used when there is one.
+    /// </summary>
+    public static User RegisterExternal(
+        string provider,
+        string subject,
+        string? verifiedEmail,
+        string? displayName,
+        string placeholderUsername,
+        Guid memberRoleId,
+        DateTime now,
+        string? uiLanguage = null,
+        string? timeZone = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subject);
+        if (!ExternalProviders.IsKnown(provider)) throw new ArgumentOutOfRangeException(nameof(provider), provider, null);
+
+        var name = displayName?.Trim();
+        var user = new User
+        {
+            Email = verifiedEmail,
+            DisplayName = string.IsNullOrEmpty(name) ? placeholderUsername : name[..Math.Min(name.Length, MaxDisplayNameLength)],
+            Username = placeholderUsername,
+            UiLanguage = UiLanguages.Normalize(uiLanguage),
+            TimeZone = string.IsNullOrWhiteSpace(timeZone) ? DefaultTimeZone : timeZone,
+        };
+        user._roles.Add(new UserRole(user.Id, memberRoleId));
+        user._externalLogins.Add(new ExternalLogin(user.Id, provider, subject, verifiedEmail, now));
         user.Raise(() => new UserRegisteredDomainEvent(user.Id));
         return user;
     }
@@ -321,6 +370,60 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
         PhoneNumber = phoneNumber;
     }
 
+    // ---- Google / Apple (SPEC §9.1) ----
+
+    public ExternalLogin? FindExternalLogin(string provider) => _externalLogins.FirstOrDefault(l => l.Provider == provider);
+
+    /// <summary>One identity per provider: a second Google account can't be added next to the first.</summary>
+    public Result LinkExternalLogin(string provider, string subject, string? email, DateTime now)
+    {
+        if (FindExternalLogin(provider) is { } existing)
+        {
+            if (existing.Subject != subject) return CredentialErrors.ExternalConflict;
+            existing.Touch(now);
+            return Result.Success();
+        }
+
+        _externalLogins.Add(new ExternalLogin(Id, provider, subject, email, now));
+        Raise(() => new UserSecurityChangedDomainEvent(Id, SecurityChange.ExternalLoginLinked));
+        return Result.Success();
+    }
+
+    /// <summary>Refused when it is the only way left to sign in.</summary>
+    public Result UnlinkExternalLogin(string provider)
+    {
+        if (FindExternalLogin(provider) is not { } login) return CredentialErrors.ExternalLoginNotFound;
+        if (!CanSignInWithPassword && _externalLogins.Count == 1) return CredentialErrors.LastSignInMethod;
+
+        _externalLogins.Remove(login);
+        Raise(() => new UserSecurityChangedDomainEvent(Id, SecurityChange.ExternalLoginUnlinked));
+        return Result.Success();
+    }
+
+    public void RecordExternalSignIn(string provider, DateTime now) => FindExternalLogin(provider)?.Touch(now);
+
+    /// <summary>On delete (SPEC F01): the Google/Apple identities can sign up again at once.</summary>
+    public void ReleaseExternalLogins() => _externalLogins.Clear();
+
+    /// <summary>
+    /// A Google/Apple account adds phone + password sign in (SPEC F18). The recovery PIN is set right after, like at sign
+    /// up; other sessions are signed out.
+    /// </summary>
+    public Result AddPhoneSignIn(string phoneNumber, string passwordHash)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(phoneNumber);
+        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+        if (HasPassword) return CredentialErrors.PhoneSignInExists;
+
+        PhoneNumber = phoneNumber;
+        PasswordHash = passwordHash;
+        MustChangePassword = false;
+        MustSetRecoveryPin = true;
+        RotateSecurityStamp();
+        Raise(() => new UserSecurityChangedDomainEvent(Id, SecurityChange.PhoneSignInAdded));
+        return Result.Success();
+    }
+
     // ---- Roles & moderation ----
 
     public bool HasRole(Guid roleId) => _roles.Any(r => r.RoleId == roleId);
@@ -359,8 +462,9 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     /// Runs <see cref="AccountSecurity.DeletionGracePeriod"/> after the soft delete: personal data is removed, while articles
     /// and comments stay attributed to "Deleted user". The phone number is released, so it can sign up again.
     /// </summary>
-    public void Anonymize()
+    public void Anonymize(DateTime now)
     {
+        AnonymizedAt = now;
         PhoneNumber = null;
         Email = null;
         PasswordHash = null;
@@ -373,6 +477,7 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
         Links = new UserLinks();
         _devices.Clear();
         _interests.Clear();
+        _externalLogins.Clear(); // the Google/Apple account can sign up again
         RotateSecurityStamp();
     }
 
@@ -413,6 +518,9 @@ public enum SecurityChange
     RecoveryPinChanged,
     PhoneNumberChanged,
     RecoveryLockedOut,
+    ExternalLoginLinked,
+    ExternalLoginUnlinked,
+    PhoneSignInAdded,
 }
 
 public sealed record UserRegisteredDomainEvent(Guid UserId) : DomainEvent;

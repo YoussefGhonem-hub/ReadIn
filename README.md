@@ -20,7 +20,7 @@ ReadIn is a bilingual (Arabic + English) knowledge platform that helps you read 
 | Backend | .NET 10 · ASP.NET Core · Clean Architecture · CQRS (Mediator) · Mapster · EF Core · SQL Server · Hangfire |
 | Web | Angular 22 (SSR) · Signals · Tailwind CSS v4 · Transloco · Shiki |
 | Mobile | Flutter · flutter_bloc · get_it/injectable · go_router · dio/retrofit |
-| Platform | Phone + password sign in with the API's own JWT ([ADR 0007](docs/adr/0007-phone-password-authentication.md)) · Firebase Cloud Messaging + Realtime Database ([ADR 0008](docs/adr/0008-firebase-scope-fcm-and-rtdb.md)) |
+| Platform | Phone + password, Google or Apple sign in with the API's own JWT ([ADR 0007](docs/adr/0007-phone-password-authentication.md), [ADR 0012](docs/adr/0012-google-and-apple-sign-in.md)) · Firebase Cloud Messaging + Realtime Database ([ADR 0008](docs/adr/0008-firebase-scope-fcm-and-rtdb.md)) |
 
 ## Repository Structure
 | Folder | Content |
@@ -92,7 +92,7 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | Design tokens → CSS variables + Flutter `ThemeExtension` | ✅ generated from `design/tokens.json` |
 | RDoc schema + examples + BiDi fixtures | ✅ shared by backend, web and mobile tests |
 | Backend skeleton (Domain / Application / Infrastructure / Api / ContentStudio) | ✅ |
-| Phone + password auth (JWT, rotating refresh tokens, recovery PIN), SQL-backed roles & permissions | ✅ backend |
+| Phone + password / Google / Apple auth (JWT, rotating refresh tokens, recovery PIN, account linking), SQL-backed roles & permissions | ✅ backend |
 | Seeders: roles & permissions, taxonomy, system accounts, demo users, articles | ✅ |
 | Seeders: glossary, learning paths, demo interactions | ⏳ arrive with F21 / F09 / F10–F13 |
 | Outbox + Hangfire (immediate trigger + per-minute safety net), scheduled publishing | ✅ |

@@ -70,3 +70,43 @@ public sealed class ReviewerField
     public Guid UserId { get; private set; }
     public Guid FieldId { get; private set; }
 }
+
+/// <summary>Google or Apple sign in (SPEC §9.1).</summary>
+public static class ExternalProviders
+{
+    public const string Google = "google";
+    public const string Apple = "apple";
+
+    public static readonly IReadOnlyList<string> All = [Google, Apple];
+
+    public static bool IsKnown(string? provider) => provider is Google or Apple;
+}
+
+/// <summary>
+/// A Google or Apple identity linked to an account (SPEC §9.1). <see cref="Subject"/> is the provider's stable user id
+/// (<c>sub</c>); the email is only what the provider reported when it was linked, shown in Settings.
+/// </summary>
+public sealed class ExternalLogin
+{
+    private ExternalLogin() { } // EF
+
+    internal ExternalLogin(Guid userId, string provider, string subject, string? email, DateTime now)
+    {
+        UserId = userId;
+        Provider = provider;
+        Subject = subject;
+        Email = email;
+        LinkedAt = now;
+        LastUsedAt = now;
+    }
+
+    public Guid Id { get; private set; }
+    public Guid UserId { get; private set; }
+    public string Provider { get; private set; } = default!;
+    public string Subject { get; private set; } = default!;
+    public string? Email { get; private set; }
+    public DateTime LinkedAt { get; private set; }
+    public DateTime LastUsedAt { get; private set; }
+
+    internal void Touch(DateTime now) => LastUsedAt = now;
+}

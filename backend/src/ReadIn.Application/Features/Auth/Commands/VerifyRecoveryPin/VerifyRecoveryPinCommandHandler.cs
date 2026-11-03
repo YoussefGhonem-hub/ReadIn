@@ -38,7 +38,7 @@ internal sealed class VerifyRecoveryPinCommandHandler(
             return CredentialErrors.TooManyAttempts;
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phone, cancellationToken);
-        if (user is null || !user.CanSignIn || !user.HasRecoveryPin)
+        if (user is null || !user.CanSignInWithPassword || !user.HasRecoveryPin)
         {
             pins.VerifyAgainstDummy(pin);
             return await FailAsync(user?.Id, phoneHash, now, CredentialErrors.RecoveryInvalid, cancellationToken);

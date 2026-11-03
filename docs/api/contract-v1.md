@@ -31,13 +31,14 @@ Clients translate `code` (and each validation error code) with their own `ar`/`e
 
 ## Endpoints
 
-### Auth 🌐 (SPEC §9, ADR 0007, ADR 0009)
+### Auth 🌐 (SPEC §9, ADR 0007, ADR 0009, ADR 0012)
 
 | Method | Path | Body → Response |
 |---|---|---|
-| GET | `/auth/config` | → `200 AuthConfigDto` (PIN length and password rules for the forms) |
+| GET | `/auth/config` | → `200 AuthConfigDto` (PIN length, password rules, and the Google/Apple providers this server accepts) |
 | POST | `/auth/register` | `RegisterRequest` → `200 SessionDto`. `409 auth.phone_taken`. The profile starts incomplete (`isProfileComplete: false`, placeholder `@reader_xxxxxxxxxx`) |
 | POST | `/auth/login` | `LoginRequest` → `200 SessionDto`. `401 auth.invalid_credentials` (wrong number or password, same error), `429 auth.locked_out` (5 wrong → 15 minutes), `403 user.suspended`, `429 rate_limited` (5 a minute per number) |
+| POST | `/auth/external` | `ExternalSignInRequest` → `200 SessionDto`. Signs in a linked identity, or links one whose **verified** email matches an account. Otherwise `404 auth.external_not_linked`: ask again with `createAccount: true` or with `link: { phoneNumber, password }`. `401 auth.external_invalid` (bad, expired or wrong-audience token, nonce mismatch), `400 auth.provider_disabled`, `409 auth.external_conflict` (that account already has another identity of this provider), `409 auth.external_in_use` (`link` to an account other than the one this identity belongs to), `401 auth.invalid_credentials` / `429 auth.locked_out` for `link`, `403 user.suspended`. New accounts have no phone, password or PIN (`hasPassword: false`, `mustSetRecoveryPin: false`) and an incomplete profile |
 | POST | `/auth/refresh` | `RefreshRequest` (mobile) or no body + cookie (web) → `200 SessionDto` with a **new** refresh token. `401 auth.refresh_invalid` → sign out |
 | POST | `/auth/logout` | `RefreshRequest` or cookie → `204` (always); ends this device's session |
 | POST | `/auth/logout-all` | Bearer → `200 SessionDto`: every other session ends, this device gets fresh tokens |
@@ -45,7 +46,7 @@ Clients translate `code` (and each validation error code) with their own `ar`/`e
 | POST | `/auth/recovery/reset-password` | `{ resetToken, newPassword }` → `204`; every session is signed out. `400 auth.reset_token_invalid` → start again |
 
 **Web sessions:** send `X-ReadIn-Client: web` with `credentials: "include"` on every `/auth/*` call and on `PUT /me/password`,
-`PUT /me/phone` and `DELETE /me`. The refresh token then comes as an `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth`
+`PUT /me/phone`, `POST /me/phone-sign-in` and `DELETE /me`. The refresh token then comes as an `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth`
 cookie named `readin_refresh`, and `SessionDto.refreshToken` is `null`. Without the header the cookie is ignored.
 **Mobile** keeps `refreshToken` in secure storage and may send `X-Device-Name` (e.g. "Pixel 8"). Tokens rotate: presenting a
 refresh token that was already used ends the whole session (a 30-second grace covers parallel tabs), so refresh one call
@@ -60,12 +61,15 @@ at a time (single-flight) and always keep the newest token.
 |---|---|---|
 | GET | `/me` | → `200 MeDto` |
 | PATCH | `/me` | `UpdateProfileRequest` → `204` |
-| DELETE | `/me` | `{ password }` → `204`. Signed out everywhere; personal data removed after 30 days. `400 auth.wrong_password` |
+| DELETE | `/me` | `{ password? , external?: ExternalCredential }` → `204`. Confirm with the password, or (accounts without one) a fresh Google/Apple token. Signed out everywhere, Google/Apple identities released at once, personal data removed after 30 days. `400 auth.wrong_password`, `400 auth.confirmation_required`, `400 auth.external_mismatch` |
 | PUT | `/me/profile/complete` | `{ displayName, username, avatarUrl? }` → `200 MeDto`. `409 user.username_taken` |
 | PUT | `/me/password` | `{ currentPassword, newPassword }` → `200 SessionDto`; other sessions end. `400 auth.wrong_password` |
 | PUT | `/me/phone` | `{ newPhoneNumber, currentPassword }` → `200 SessionDto`; other sessions end. `409 auth.phone_taken`, `400 auth.phone_unchanged` |
 | POST | `/me/recovery-pin` | `{ pin }` → `200 MeDto`. Only while `mustSetRecoveryPin` (or without a PIN); `409 auth.pin_already_set` otherwise |
 | PUT | `/me/recovery-pin` | `{ currentPassword, newPin }` → `204` |
+| POST | `/me/phone-sign-in` | `{ phoneNumber, password, recoveryPin, external: ExternalCredential }` → `200 SessionDto`; other sessions end. Google/Apple-only accounts add phone + password + PIN, confirmed with a linked provider. Same validation codes as `/auth/register`; `409 auth.phone_taken`, `409 auth.phone_sign_in_exists`, `400 auth.external_mismatch` |
+| POST | `/me/external-logins` | `{ credential: ExternalCredential, password?, external?: ExternalCredential }` → `200 MeDto`. Links Google/Apple; confirm with the password or a fresh token of an already linked provider. `409 auth.external_in_use` (belongs to another account), `409 auth.external_conflict`, `400 auth.wrong_password`, `400 auth.confirmation_required`, `400 auth.external_mismatch` |
+| DELETE | `/me/external-logins/{provider}` | → `200 MeDto`. `400 auth.last_sign_in_method` (it's the only way to sign in), `404 auth.external_login_not_found` |
 | PUT | `/me/preferences` | `UpdatePreferencesRequest` → `204` |
 | PUT | `/me/interests` | `UpdateInterestsRequest` → `204` (at least 3 field ids + topic ids combined) |
 | POST | `/me/devices` | `RegisterDeviceRequest` → `204` (FCM token upsert) |
@@ -127,6 +131,23 @@ type ThemePreference = 'system' | 'light' | 'dark';
 interface AuthConfigDto {
   pinLength: number;             // default 4
   password: { minLength: number; maxLength: number; requireLetter: boolean; requireDigit: boolean };
+  externalProviders: ExternalProvider[]; // configured on this server; hide the other buttons (and Apple on Android)
+}
+
+type ExternalProvider = 'google' | 'apple';
+
+interface ExternalCredential {
+  provider: ExternalProvider;
+  idToken: string;               // Google ID token / Apple identityToken (JWT from the provider SDK)
+  nonce?: string;                // RAW nonce: required for Apple, which must have been given its SHA-256 (hex)
+}
+
+interface ExternalSignInRequest extends ExternalCredential {
+  displayName?: string;          // Apple sends the name only on the first authorization; used for new accounts
+  uiLanguage?: UiLanguage;
+  timeZone?: string;
+  link?: { phoneNumber: string; password: string }; // "I already have an account"
+  createAccount?: boolean;       // "Create a new account" (not together with link)
 }
 
 interface RegisterRequest {
@@ -150,12 +171,12 @@ interface SessionDto {
 }
 
 // Validation codes (in `errors`): phone.invalid · password.too_short | too_long | letter_required | digit_required |
-// too_common | contains_phone · pin.length | digits_only | weak
+// too_common | contains_phone · pin.length | digits_only | weak · provider.invalid
 
 interface MeDto {
   id: string;
-  phoneNumber: string | null;    // E.164; only in MeDto and admin endpoints (SPEC §9.5)
-  email: string | null;
+  phoneNumber: string | null;    // E.164; only in MeDto and admin endpoints (SPEC §9.5); null for Google/Apple-only accounts
+  email: string | null;          // provider-verified only
   displayName: string;
   username: string;              // @handle without "@"
   avatarUrl: string | null;
@@ -172,6 +193,8 @@ interface MeDto {
   mustSetRecoveryPin: boolean;
   isProfileComplete: boolean;
   hasRecoveryPin: boolean;
+  hasPassword: boolean;          // false for Google/Apple-only accounts: offer "add phone sign in" instead of "change password"
+  externalLogins: { provider: ExternalProvider; email: string | null; linkedAt: string }[];
   roles: string[];               // e.g. ["Member", "VerifiedWriter"]
   permissions: string[];         // e.g. ["articles.read", "articles.create", ...]
   interests: { fieldIds: string[]; topicIds: string[] };

@@ -4,10 +4,12 @@ using ReadIn.Api.Auth;
 using ReadIn.Api.Errors;
 using ReadIn.Application.Features.Admin.Users;
 using ReadIn.Application.Features.Users;
+using ReadIn.Application.Features.Users.Commands.AddPhoneSignIn;
 using ReadIn.Application.Features.Users.Commands.ChangePassword;
 using ReadIn.Application.Features.Users.Commands.ChangePhoneNumber;
 using ReadIn.Application.Features.Users.Commands.CompleteProfile;
 using ReadIn.Application.Features.Users.Commands.DeleteAccount;
+using ReadIn.Application.Features.Users.Commands.ExternalLogins;
 using ReadIn.Application.Features.Users.Commands.RecoveryPin;
 using ReadIn.Application.Features.Users.Commands.RegisterDevice;
 using ReadIn.Application.Features.Users.Commands.UnregisterDevice;
@@ -42,7 +44,7 @@ internal sealed class MeEndpoints : IEndpointGroup
                 return result.ToHttp(http);
             })
             .RequireRateLimiting(RateLimitPolicies.Auth)
-            .WithSummary("Delete the account (requires the password); personal data is removed after 30 days");
+            .WithSummary("Delete the account (password, or Google/Apple for accounts without one); personal data is removed after 30 days");
 
         me.MapPut("/profile/complete", async (CompleteProfileCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(body, ct)).ToHttp(http))
@@ -61,6 +63,24 @@ internal sealed class MeEndpoints : IEndpointGroup
             .RequireRateLimiting(RateLimitPolicies.Auth)
             .WithSummary("Change the phone number (requires the password); other sessions are signed out")
             .Produces<SessionResponse>();
+
+        me.MapPost("/phone-sign-in", async (AddPhoneSignInCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(body, ct)).ToSession(http))
+            .RequireRateLimiting(RateLimitPolicies.Auth)
+            .WithSummary("Google/Apple accounts: add phone + password + recovery PIN; other sessions are signed out")
+            .Produces<SessionResponse>();
+
+        me.MapPost("/external-logins", async (LinkExternalLoginCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(body, ct)).ToHttp(http))
+            .RequireRateLimiting(RateLimitPolicies.Auth)
+            .WithSummary("Link Google or Apple (confirmed with the password or an already linked provider)")
+            .Produces<MeDto>();
+
+        me.MapDelete("/external-logins/{provider}", async (string provider, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new UnlinkExternalLoginCommand(provider), ct)).ToHttp(http))
+            .RequireRateLimiting(RateLimitPolicies.Auth)
+            .WithSummary("Unlink Google or Apple; refused when it's the only way to sign in")
+            .Produces<MeDto>();
 
         me.MapPost("/recovery-pin", async (SetRecoveryPinCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(body, ct)).ToHttp(http))

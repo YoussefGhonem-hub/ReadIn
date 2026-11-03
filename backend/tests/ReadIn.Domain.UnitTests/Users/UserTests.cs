@@ -178,7 +178,7 @@ public sealed class UserTests
         user.UpdateProfile("Reader One", "reader_one", "Bio", "/uploads/avatars/2026/11/x_512.webp", new UserLinks { GitHub = "https://github.com/x" });
         user.RegisterDevice("token", DevicePlatform.Android, Now);
 
-        user.Anonymize();
+        user.Anonymize(DateTime.UtcNow);
 
         user.PhoneNumber.Should().BeNull();
         user.PasswordHash.Should().BeNull();

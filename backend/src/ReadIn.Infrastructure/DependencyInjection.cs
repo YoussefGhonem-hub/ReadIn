@@ -46,6 +46,8 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddSingleton<IRecoveryPinHasher, PepperedPinHasher>();
         services.AddSingleton<IAttemptThrottle, MemoryAttemptThrottle>();
+        services.Configure<ExternalAuthOptions>(configuration.GetSection(ExternalAuthOptions.Section));
+        services.AddSingleton<IExternalIdentityVerifier, OidcExternalIdentityVerifier>();
 
         // Uploads live on this server's disk (ADR 0010); swap IFileStorage to move them to shared storage.
         services.AddSingleton<WwwrootFileStorage>();

@@ -40,13 +40,14 @@ public sealed partial class IdentityCleanupJob(AppDbContext db, TimeProvider clo
         var users = await db.Users.IgnoreQueryFilters()
             .Include(u => u.Devices)
             .Include(u => u.Interests)
-            .Where(u => u.IsDeleted && u.DeletedAt < cutoff && (u.PhoneNumber != null || u.PasswordHash != null))
+            .Include(u => u.ExternalLogins)
+            .Where(u => u.IsDeleted && u.DeletedAt < cutoff && u.AnonymizedAt == null)
             .Take(500)
             .ToListAsync(ct);
 
         foreach (var user in users)
         {
-            user.Anonymize();
+            user.Anonymize(now);
             db.AuditLogs.Add(AuditLog.Record(AuditActions.AccountAnonymized, actorId: null, user.Id, ip: null, now));
         }
         await db.SaveChangesAsync(ct);

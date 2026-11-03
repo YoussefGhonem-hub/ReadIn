@@ -20,6 +20,7 @@
     </PackageReference>
     <PackageReference Include="Dapper" />
     <PackageReference Include="FirebaseAdmin" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" />
     <PackageReference Include="Hangfire.Core" />
     <PackageReference Include="Hangfire.SqlServer" />
     <PackageReference Include="Hangfire.AspNetCore" />

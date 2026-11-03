@@ -131,6 +131,10 @@ public static class AuditActions
     public const string RecoveryPinChanged = "auth.recovery_pin_changed";
     public const string RecoveryLockedOut = "auth.recovery_locked_out";
     public const string PhoneNumberChanged = "auth.phone_changed";
+    public const string ExternalSignUp = "auth.external_sign_up";
+    public const string ExternalLoginLinked = "auth.external_linked";
+    public const string ExternalLoginUnlinked = "auth.external_unlinked";
+    public const string PhoneSignInAdded = "auth.phone_sign_in_added";
     public const string SignedOutEverywhere = "auth.signed_out_everywhere";
     public const string RefreshTokenReused = "auth.refresh_token_reused";
     public const string AdminPasswordReset = "admin.password_reset";
