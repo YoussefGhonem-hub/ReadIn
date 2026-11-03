@@ -1173,6 +1173,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 ### 17.1 Conventions
 - REST, JSON, base path `/api/v1`, OpenAPI documented, Scalar UI at `/docs` (non-production).
 - `Accept-Language: ar | en` controls error messages and taxonomy names. `?lang=ar-EG|en` selects the article version.
+- Article cards (feeds, today's article, a profile's articles) come in the viewer's article language preference; for a guest, in the version that matches `Accept-Language` (`ar` → `ar-EG`, `en` → `en`). Either way the source language is the fallback.
 - Cursor pagination for feeds (`?cursor=...&limit=20`), offset pagination for admin tables.
 - Idempotent `PUT`/`DELETE` for toggles (reactions, follow, save).
 - Errors: ProblemDetails with `code`, `traceId` and `errors` (validation).

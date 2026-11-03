@@ -90,6 +90,34 @@ public sealed class TaxonomyAndContentTests(ApiFactory api)
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
+    [Theory]
+    [InlineData("ar", "ar-EG", "يعني إيه RAG")]
+    [InlineData("en", "en", "What is RAG")]
+    public async Task Guest_cards_come_in_the_ui_language(string uiLanguage, string language, string title)
+    {
+        // Only the fixtures live in ai-fundamentals and on the official account, so what-is-rag is on the first page.
+        var client = api.GuestClient(uiLanguage);
+        var feed = await client.GetFromJsonAsync<JsonObject>("/api/v1/feed/for-you?field=ai-fundamentals&limit=50", Ct);
+        var profile = await client.GetFromJsonAsync<JsonObject>("/api/v1/users/readin/articles?limit=50", Ct);
+
+        foreach (var page in new[] { feed!, profile! })
+        {
+            var card = page["items"]!.AsArray().Single(c => c!["slug"]!.GetValue<string>() == "what-is-rag")!;
+            card["language"]!.GetValue<string>().Should().Be(language);
+            card["title"]!.GetValue<string>().Should().StartWith(title);
+        }
+    }
+
+    [Fact]
+    public async Task A_guest_today_card_is_in_egyptian_arabic_when_the_ui_is_arabic_and_a_translation_exists()
+    {
+        var client = api.GuestClient("ar");
+        var card = await client.GetFromJsonAsync<JsonObject>("/api/v1/feed/today", Ct);
+        var arabic = await client.GetFromJsonAsync<JsonObject>($"/api/v1/articles/{card!["slug"]!.GetValue<string>()}?lang=ar-EG", Ct);
+
+        card["language"]!.GetValue<string>().Should().Be(arabic!["language"]!.GetValue<string>());
+    }
+
     internal static async Task<JsonObject> Problem(HttpResponseMessage response) =>
         (await response.Content.ReadFromJsonAsync<JsonObject>(Ct))!;
 }

@@ -25,7 +25,7 @@ internal sealed class GetTodayArticleQueryHandler(
         if (currentUser.UserId is not { } userId)
         {
             var guestPick = await picker.PickForGuestAsync(now, ct);
-            return Result.Success(guestPick is null ? null : await CardAsync(guestPick.Value, query.UiLanguage, null, ct));
+            return Result.Success(guestPick is null ? null : await CardAsync(guestPick.Value, query.UiLanguage, ArticleLanguages.ForUi(query.UiLanguage), ct));
         }
 
         var user = await db.Users.AsNoTracking()

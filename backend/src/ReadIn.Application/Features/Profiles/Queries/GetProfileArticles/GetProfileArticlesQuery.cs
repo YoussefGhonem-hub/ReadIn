@@ -45,7 +45,7 @@ internal sealed class GetProfileArticlesQueryHandler(
 
         var articleLanguage = currentUser.UserId is { } viewerId
             ? await db.Users.AsNoTracking().Where(u => u.Id == viewerId).Select(u => u.ArticleLanguagePref).FirstOrDefaultAsync(ct)
-            : null;
+            : ArticleLanguages.ForUi(query.UiLanguage);
         using var _ = LocalizedProjection.Begin(query.UiLanguage, articleLanguage);
 
         var page = await articles

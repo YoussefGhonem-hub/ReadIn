@@ -7,7 +7,7 @@ using ReadIn.Domain.Common;
 namespace ReadIn.Application.Features.Feed.Queries.GetForYouFeed;
 
 /// <summary>
-/// GET /feed/for-you — signed-in users see their interests first; guests see the latest articles.
+/// GET /feed/for-you — signed-in users see their interests first; guests see the latest articles, in the UI's language.
 /// Keyset-paginated over (PublishedAt DESC, Id DESC).
 /// </summary>
 [RequirePermission(Permissions.Articles.Read)]
