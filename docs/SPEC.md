@@ -6,10 +6,12 @@
 | | |
 |---|---|
 | **Document** | Product & Technical Specification |
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Status** | Approved for development |
 | **Platforms** | Web (Angular) · Mobile (Flutter: Android & iOS) |
-| **Backend** | ASP.NET Core · SQL Server · Firebase |
+| **Backend** | ASP.NET Core · SQL Server · Firebase (push + real-time only) |
+
+> **v1.1 changes:** phone + password sign-in handled by the backend (no Firebase Auth, no SMS), recovery PIN for forgotten passwords, Firebase limited to FCM + Realtime Database, uploads stored in `wwwroot`, image optimization, and post attachments (image carousel + PDF preview).
 
 ---
 
@@ -23,7 +25,7 @@
 6. [Backend: Clean Architecture + CQRS + Mapster](#6-backend-clean-architecture--cqrs--mapster)
 7. [Web: Angular](#7-web-angular)
 8. [Mobile: Flutter](#8-mobile-flutter)
-9. [Authentication with Firebase](#9-authentication-with-firebase)
+9. [Authentication: Phone + Password](#9-authentication-phone--password)
 10. [Roles & Permissions](#10-roles--permissions)
 11. [Features](#11-features)
 12. [Feature Parity Matrix (Web + Mobile)](#12-feature-parity-matrix-web--mobile)
@@ -35,7 +37,7 @@
 18. [Seeding: Users, Reference Data, Articles](#18-seeding-users-reference-data-articles)
 19. [Content Pipeline: 1000+ Trusted Articles](#19-content-pipeline-1000-trusted-articles)
 20. [Trust & Content Quality](#20-trust--content-quality)
-21. [Notifications](#21-notifications)
+21. [Notifications & Real-time](#21-notifications--real-time)
 22. [Search](#22-search)
 23. [SEO](#23-seo)
 24. [Security](#24-security)
@@ -103,10 +105,13 @@ These rules apply to **every** feature, commit and code review.
 | Validation | **FluentValidation** |
 | ORM | **EF Core 10** (writes + simple reads), **Dapper** (heavy read queries, e.g. feeds) |
 | Database | **SQL Server 2022+** (Full-Text Search, Arabic collation) |
-| Auth | **Firebase Authentication** (ID token validated by JWT Bearer) |
+| Auth | **Own JWT auth**: phone number + password. Access token (JWT, 15 min) + rotating refresh token. Passwords hashed with `PasswordHasher<T>` (`Microsoft.Extensions.Identity.Core`, no Identity tables). See [§9](#9-authentication-phone--password). |
+| Phone numbers | `libphonenumber-csharp` (validation + E.164 normalization) |
 | Push notifications | **Firebase Cloud Messaging (FCM)** via `FirebaseAdmin` SDK |
-| File storage | **Firebase Storage** (avatars, covers, article images) |
-| Real-time | **SignalR** (in-app notifications, live comment counts) |
+| Real-time | **Firebase Realtime Database** (live counters, comment events, unread badges), written by the backend only via `FirebaseAdmin` SDK. **No SignalR.** |
+| File storage | **`wwwroot/uploads`** on the API server (Development and Production), behind `IFileStorage` |
+| Image processing | **SkiaSharp** (resize, WebP, strip EXIF), **BlurHash** placeholders |
+| PDF processing | **PDFtoImage** (PDFium, page rendering) + **PdfPig** (metadata, text extraction) |
 | Background jobs | **Hangfire** (SQL Server storage): daily article push, streak reset, link checks, scheduled publishing |
 | Caching | `HybridCache` (in-memory + optional Redis) |
 | Logging | **Serilog** (console + Seq in dev, App Insights / file in prod) |
@@ -125,8 +130,10 @@ These rules apply to **every** feature, commit and code review.
 | i18n | **Transloco** (runtime language switch `ar` / `en`) |
 | Editor | **Tiptap** (`ngx-tiptap`) with custom RDoc extensions |
 | Code highlighting | **Shiki** (light + dark themes) |
-| Firebase | `@angular/fire` (Auth, Messaging for web push) |
-| HTTP | `HttpClient` + interceptors (auth, language, errors) + typed API client generated from OpenAPI |
+| Firebase | Firebase JS SDK directly: `firebase/messaging` (web push), `firebase/database` (real-time), and `firebase/auth` **only** for `signInWithCustomToken` to read the Realtime Database. Never used for user sign-in. |
+| Phone input | `libphonenumber-js` + `flag-icons` (SVG flags) |
+| Images | `NgOptimizedImage` with a custom loader (`srcset`), client-side compression before upload (`browser-image-compression`), BlurHash placeholders |
+| HTTP | `HttpClient` + interceptors (auth with single-flight refresh, language, errors) + typed API client generated from OpenAPI |
 | Testing | Vitest/Jest (unit), **Playwright** (E2E, RTL + dark mode screenshots) |
 
 ### 3.3 Mobile
@@ -143,7 +150,9 @@ These rules apply to **every** feature, commit and code review.
 | i18n | `flutter_localizations` + `intl` (ARB files `ar`, `en`) |
 | Editor | `appflowy_editor` with RDoc converters |
 | Code highlighting | `re_highlight` (light + dark themes) |
-| Firebase | `firebase_auth`, `firebase_messaging`, `firebase_storage`, `firebase_crashlytics`, `firebase_analytics` |
+| Firebase | `firebase_messaging` (+ `flutter_local_notifications`), `firebase_database`, and `firebase_auth` **only** for `signInWithCustomToken` to read the Realtime Database (never for user sign-in). No Firebase Storage, Crashlytics or Analytics. |
+| Phone input | `phone_numbers_parser` + bundled-asset flags |
+| Images | `flutter_image_compress` (before upload), `cached_network_image`, `flutter_blurhash` |
 | Testing | `flutter_test`, `bloc_test`, `mocktail`, golden tests (RTL/LTR × light/dark), `integration_test` |
 
 ### 3.4 Shared / Tooling
@@ -160,31 +169,33 @@ These rules apply to **every** feature, commit and code review.
  ┌──────────────────┐     ┌──────────────────┐
  │  Angular (SSR)   │     │  Flutter (iOS/   │
  │  Web             │     │  Android)        │
- └────────┬─────────┘     └────────┬─────────┘
-          │  Firebase ID Token (Bearer)│
-          │◄────────── Firebase Auth ─►│
-          ▼                            ▼
- ┌─────────────────────────────────────────────┐
- │           ReadIn.Api (ASP.NET Core)         │
- │  REST /api/v1 · SignalR /hubs · Scalar docs │
+ └───┬─────────▲────┘     └───┬─────────▲────┘
+     │ REST +  │ live reads   │ REST +  │ live reads
+     │ JWT     │ + push       │ JWT     │ + push
+     ▼         │              ▼         │
+ ┌─────────────┼────────────────────────┼──────┐
+ │           ReadIn.Api (ASP.NET Core)  │      │
+ │  REST /api/v1 · Auth (JWT) · /uploads · Scalar
  ├─────────────────────────────────────────────┤
  │ Application: Commands / Queries (CQRS)      │
  │ Validation · Authorization · Caching        │
  ├─────────────────────────────────────────────┤
  │ Domain: Aggregates · Value Objects · Events │
  ├─────────────────────────────────────────────┤
- │ Infrastructure: EF Core · Dapper · Firebase │
- │ Hangfire · FCM · Storage · Outbox           │
- └───────┬─────────────────┬───────────────────┘
-         ▼                 ▼
-   ┌───────────┐    ┌──────────────────────────┐
-   │SQL Server │    │ Firebase (Auth, FCM,     │
-   │           │    │ Storage, Crashlytics)    │
-   └───────────┘    └──────────────────────────┘
+ │ Infrastructure: EF Core · Dapper · Hangfire │
+ │ Outbox · FCM sender · RTDB publisher        │
+ │ wwwroot file storage · image/PDF pipeline   │
+ └───────┬───────────────────┬─────────────────┘
+         ▼                   ▼ (Admin SDK, writes only)
+   ┌───────────┐    ┌─────────────────────────────┐
+   │SQL Server │    │ Firebase                    │
+   │ (truth)   │    │ · Cloud Messaging (push)    │
+   └───────────┘    │ · Realtime Database (live)  │
+                    └─────────────────────────────┘
 ```
 
-**Responsibilities of Firebase (and nothing more):** identity (sign-in), push notifications, file storage, crash reporting and analytics.
-**SQL Server is the single source of truth** for all business data, including users' roles. **Firestore is NOT used.**
+**Firebase has exactly two jobs:** push notifications (FCM) and real-time updates for posts (Realtime Database). It is **not** used for sign-in, file storage, Firestore, crash reporting or analytics.
+**SQL Server is the single source of truth** for all business data, including users, credentials and roles. The Realtime Database only holds small, disposable signals and counters that can be rebuilt from SQL Server at any time.
 
 ---
 
@@ -206,10 +217,17 @@ ReadIn/
 │   └── design/                 # approved UI/UX screens, logo
 ├── design/
 │   └── tokens.json             # colors, typography, spacing (light + dark)
+├── firebase/
+│   └── database.rules.json     # Realtime Database security rules
 ├── shared/
-│   └── rdoc/
-│       ├── rdoc.schema.json    # article content JSON Schema
-│       └── examples/
+│   ├── rdoc/
+│   │   ├── rdoc.schema.json    # article content JSON Schema
+│   │   └── examples/
+│   ├── countries/
+│   │   ├── countries.json      # generated from libphonenumber (dial codes, ar/en names)
+│   │   └── phone-fixtures.json # shared phone parsing test cases
+│   └── auth/
+│       └── pin-fixtures.json   # shared weak-PIN test cases
 ├── backend/
 │   ├── ReadIn.slnx
 │   ├── Directory.Build.props
@@ -219,6 +237,7 @@ ReadIn/
 │   │   ├── ReadIn.Application/
 │   │   ├── ReadIn.Infrastructure/
 │   │   ├── ReadIn.Api/
+│   │   │   └── wwwroot/uploads/   # user uploads (git-ignored, excluded from publish)
 │   │   └── ReadIn.ContentStudio/  # content pipeline CLI (generate/validate/import)
 │   └── tests/
 │       ├── ReadIn.Domain.UnitTests/
@@ -253,9 +272,9 @@ Api ──► Application ──► Domain
 | Layer | Contains | May depend on |
 |---|---|---|
 | **Domain** | Entities, aggregates, value objects, domain events, enums, domain errors, specifications | Nothing |
-| **Application** | Commands, queries, handlers, validators, DTOs, Mapster configs, interfaces (`IAppDbContext`, `ICurrentUser`, `IPushSender`, `IFileStorage`, `IDateTime`), pipeline behaviors | Domain |
-| **Infrastructure** | EF Core DbContext & configurations, migrations, Dapper read queries, Firebase services, Hangfire jobs, Outbox processor, seeders | Application, Domain |
-| **Api** | Endpoints (Minimal APIs grouped by feature), middleware, SignalR hubs, auth setup, OpenAPI | Application, Infrastructure (composition root only) |
+| **Application** | Commands, queries, handlers, validators, DTOs, Mapster configs, interfaces (`IAppDbContext`, `ICurrentUser`, `IPasswordHasher`, `IRecoveryPinHasher`, `ITokenService`, `IRefreshTokenStore`, `IPhoneNumberService`, `IPushSender`, `IRealtimePublisher`, `IFileStorage`, `IImageProcessor`, `IPdfProcessor`, `IDateTime`), pipeline behaviors | Domain |
+| **Infrastructure** | EF Core DbContext & configurations, migrations, Dapper read queries, auth services (hashing, tokens), Firebase services (FCM sender, RTDB publisher), file storage + image/PDF pipeline, Hangfire jobs, Outbox processor, seeders | Application, Domain |
+| **Api** | Endpoints (Minimal APIs grouped by feature), middleware, JWT Bearer setup, static files for `/uploads`, OpenAPI | Application, Infrastructure (composition root only) |
 
 Enforced by **NetArchTest** in `ReadIn.ArchitectureTests` (e.g. Domain must not reference EF Core, Application must not reference Infrastructure).
 
@@ -270,6 +289,9 @@ ReadIn.Application/
 │   ├── Security/           # Permissions constants, [RequirePermission] attribute
 │   └── Mapping/            # MappingRegistration (scans IRegister)
 └── Features/
+    ├── Auth/               # register, login, refresh, logout, recovery PIN, reset password
+    ├── Media/              # image/PDF uploads, attachments
+    ├── Realtime/           # realtime token, outbox → RTDB handlers
     ├── Articles/
     │   ├── Commands/
     │   │   ├── CreateArticle/
@@ -373,8 +395,9 @@ public sealed class ArticleMappings : IRegister
 ### 6.6 Domain Model (main aggregates)
 | Aggregate | Key behavior |
 |---|---|
-| `User` | `UpdateProfile`, `SetPreferences`, `Suspend`, `GrantRole`, `RecordReading` (streak logic) |
-| `Article` | `CreateDraft`, `AddTranslation`, `SubmitForReview`, `Approve`, `RequestChanges`, `Publish`, `Schedule`, `Archive`, `CreateRevision` |
+| `User` | `Register`, `ChangePassword`, `ChangePhoneNumber`, `SetRecoveryPin`, `RecordFailedLogin`, `RecordFailedRecovery`, `RotateSecurityStamp`, `CompleteProfile`, `UpdateProfile`, `SetPreferences`, `Suspend`, `GrantRole`, `RecordReading` (streak logic) |
+| `Article` | `CreateDraft`, `AddTranslation`, `SetAttachments`, `SubmitForReview`, `Approve`, `RequestChanges`, `Publish`, `Schedule`, `Archive`, `CreateRevision` |
+| `MediaAsset` | `CreateImage`, `CreateDocument`, `MarkProcessing`, `MarkReady`, `MarkFailed` |
 | `Comment` | `Create`, `Reply` (max depth 2), `Edit`, `SoftDelete`, `Pin` |
 | `LearningPath` | `AddArticle`, `Reorder`, `Publish` |
 | `VerificationRequest` | `Submit`, `Approve`, `Reject` |
@@ -388,14 +411,17 @@ public sealed class ArticleMappings : IRegister
 ```text
 web/src/app/
 ├── core/
-│   ├── auth/            # Firebase auth service, auth guard, role/permission guards
-│   ├── http/            # interceptors: auth token, Accept-Language, errors, loading
+│   ├── auth/            # session (in-memory access token), auth/profile/onboarding/PIN guards, permission guards
+│   ├── http/            # interceptors: auth token + single-flight refresh, Accept-Language, errors, loading
 │   ├── i18n/            # Transloco config, ar.json / en.json
 │   ├── theme/           # ThemeService (light/dark/system), token loader
 │   ├── api/             # generated OpenAPI client
-│   └── realtime/        # SignalR connection
+│   ├── realtime/        # RealtimeService (Firebase RTDB, browser only)
+│   └── push/            # FCM web push + service worker registration
 ├── shared/
-│   ├── ui/              # buttons, chips, cards, avatar, badges, bottom sheet, skeletons
+│   ├── ui/              # buttons, chips, cards, avatar, badges, bottom sheet, skeletons,
+│   │                    # phone field + country picker, password field, PIN input,
+│   │                    # media carousel, full-screen viewer
 │   ├── rdoc/            # RDoc renderer components (one per block type)
 │   ├── directives/      # autoDir, bdi helpers
 │   └── pipes/           # relativeTime, readingTime, localizedNumber
@@ -428,10 +454,13 @@ mobile/lib/
 │   ├── network/         # dio client, interceptors, api error mapping
 │   ├── theme/           # tokens → ThemeData light/dark + ThemeExtensions
 │   ├── l10n/            # app_ar.arb, app_en.arb
-│   ├── storage/         # hive boxes, secure storage
+│   ├── storage/         # hive boxes, secure storage (refresh token)
+│   ├── realtime/        # Firebase RTDB data source
+│   ├── push/            # FCM + local notifications, deep-link routing
 │   └── errors/          # Failure types
 ├── shared/
-│   ├── widgets/
+│   ├── widgets/         # phone field + country picker, password field, PIN input,
+│   │                    # media carousel, full-screen viewer
 │   └── rdoc/            # RDoc renderer widgets + editor converters
 └── features/
     └── article/
@@ -450,20 +479,92 @@ mobile/lib/
 
 ---
 
-## 9. Authentication with Firebase
+## 9. Authentication: Phone + Password
 
-### 9.1 Sign-in Methods
-Email + password (with email verification), Google, Apple (iOS required), and guest mode (read-only browsing).
+### 9.1 Decisions
+| Topic | Decision |
+|---|---|
+| Sign up / sign in | **Phone number + password only.** No SMS, no OTP, no email login, no Google/Apple. |
+| Who handles auth | The **.NET backend** (own JWT). Firebase Auth is **not** used for sign-in. |
+| Forgot password | **Recovery PIN** (4 digits, set at sign up): phone + PIN → new password. |
+| Last fallback | "نسيت الـ PIN كمان؟" → contact support → an Admin resets the password. |
+| Guests | Can browse and read without an account. |
 
-### 9.2 Flow
-1. Client signs in with Firebase SDK and gets an **ID token**.
-2. Client calls the API with `Authorization: Bearer <idToken>`.
-3. API validates the token with JWT Bearer (`Authority = https://securetoken.google.com/{projectId}`, audience = project id).
-4. First call → `POST /api/v1/auth/sync` creates the `User` row (role `Member`) from the Firebase `uid`, email, name and photo.
-5. An `IClaimsTransformation` loads the user's roles & permissions from SQL Server (cached 5 min, invalidated on role change) and adds them as claims.
-6. Suspended users get `403` with code `user.suspended`.
+**Known trade-off:** without SMS, the app cannot prove that a user owns the phone number. This is mitigated by the "confirm your number" step at sign up, the recovery PIN and owner notifications.
 
-> Roles are stored in **SQL Server** (source of truth), not in Firebase custom claims.
+### 9.2 Screens & Flows (web + mobile, identical)
+Every screen supports ar/en × light/dark, has loading and error states, and prevents double submits. Shared components: phone field + country picker ([§9.4](#94-shared-input-components)), password field, PIN input.
+
+```text
+Welcome ─► Sign in ─────────────────────────────────────────────────────► Home
+        ─► Create account (3 steps) ─► Complete profile ─► Onboarding ─► Home
+Sign in ─► Forgot password ─► (phone + PIN) ─► New password ─► Sign in
+```
+
+**Welcome:** logo + tagline, "اعمل حساب جديد" (Create account), "عندي حساب، سجل دخول" (Sign in), "تصفح كزائر" (Browse as guest), UI language switcher.
+
+**Sign in:**
+- Phone field, password field, "نسيت كلمة السر؟" link, "سجل دخول" button, "معندكش حساب؟ اعمل حساب" link.
+- Wrong credentials → one generic error: "رقم التليفون أو كلمة السر غلط" (never reveals whether the number exists).
+- 5 wrong attempts → "محاولات كتير. جرّب تاني بعد 15 دقيقة". Suspended → "الحساب ده موقوف. تواصل مع الدعم".
+- After success, guards apply in order: `MustChangePassword` → change password, `MustSetRecoveryPin` → set PIN, profile incomplete → Complete profile, onboarding not done → Onboarding, otherwise → Home.
+
+**Create account (stepper "خطوة 1 من 3"):**
+1. **Phone & password:** phone field, password + strength meter, confirm password, live rules checklist (8+ characters, a letter, a digit). Number already registered → "الرقم ده عليه حساب بالفعل" + Sign in action.
+2. **Recovery PIN:** "اعمل PIN للطوارئ", explanation that it is needed if the password is forgotten, PIN input + confirm PIN. Errors for mismatch and weak PINs.
+3. **Confirm your number** (dialog): the number in large LTR text with the warning "هتستخدم الرقم ده في تسجيل الدخول، ومش هتقدر تسترجع حسابك لو الرقم غلط." Buttons: "صح، اعمل الحساب" / "تعديل".
+
+Then **Complete profile** (display name, unique `@username` with live availability check, optional avatar) → **Onboarding** ([F02](#f02--onboarding-3-steps)).
+
+**Forgot password:**
+1. Phone field (pre-filled from Sign in) + PIN input → "كمّل". Generic error "رقم التليفون أو الـ PIN غلط". Link "نسيت الـ PIN كمان؟" opens the contact-support sheet.
+2. New password + strength meter + confirm → "احفظ". Success → Sign in with the number pre-filled and the banner "تم تغيير كلمة السر. سجل دخول بكلمة السر الجديدة". Expired reset token → "انتهت المهلة، ابدأ من الأول".
+
+**Set recovery PIN (mandatory):** shown when `mustSetRecoveryPin = true` (accounts created before the PIN existed, admin-reset accounts, the production SuperAdmin). Cannot be skipped.
+
+**Settings → Account:** see [F18](#f18--settings).
+
+### 9.3 Tokens & Sessions
+| Token | Details |
+|---|---|
+| Access token | JWT, **15 minutes**. Claims: `sub`, `security_stamp`. Signed with `Jwt:SigningKey`. Issuer, audience, lifetime and key are validated. |
+| Refresh token | Random 256-bit, **30 days**, **rotating**, stored **hashed** in `RefreshTokens`. Reusing an already-rotated token revokes the whole token family (theft detection). |
+| Reset token | Random 256-bit, **10 minutes**, single use, bound to the user and the creating IP, stored hashed. Issued after a correct recovery PIN. |
+
+- An `IClaimsTransformation` loads roles & permissions from SQL Server (cached, invalidated on role change). Tokens whose `security_stamp` no longer matches are rejected.
+- `SecurityStamp` changes on password change, password reset, phone change and "sign out of all devices", which signs out every other session.
+- **Web:** refresh token in an `HttpOnly`, `Secure`, `SameSite=Strict` cookie (path `/api/v1/auth`); access token in memory only (never localStorage). On start (browser only) the app calls `/auth/refresh`. SSR of public pages is anonymous. The interceptor refreshes once on 401 (single-flight) and retries.
+- **Mobile:** refresh token in `flutter_secure_storage`, access token in memory, Dio `QueuedInterceptor` with the same single-flight refresh. Splash → restore session → route by guards.
+- Suspended users get `403` with code `user.suspended`.
+
+### 9.4 Shared Input Components
+**Phone field + country picker**
+- Country list in `shared/countries/countries.json`, generated from libphonenumber (`iso2`, `dialCode`, `nameAr`, `nameEn`, `exampleNational`).
+- Pinned first: Egypt, Saudi Arabia, UAE, Kuwait, Qatar, Bahrain, Oman, Jordan, Lebanon, Iraq, Morocco, Algeria, Tunisia, Libya, Sudan, Palestine, Syria, Yemen; then all other countries alphabetically in the UI language.
+- Default country: last used → device/browser region → Egypt (+20).
+- Picker: searchable by Arabic name, English name, ISO code and dial code. Web uses an accessible CDK overlay (bottom sheet on small screens) with SVG flags (`flag-icons`, because emoji flags don't render on Windows); mobile uses a full-height bottom sheet with bundled flags.
+- The field is **always LTR**. Arabic-Indic (٠-٩) and Persian (۰-۹) digits are converted, pasted international numbers switch the country, the trunk prefix is stripped, and the number is formatted as you type.
+- Validation with libphonenumber on all three platforms (mobile numbers only). The API always receives and stores **E.164** (`+201001234567`) and re-validates it.
+
+**Password field:** show/hide toggle, always LTR, password-manager autofill hints. Rules: 8–128 characters, at least one letter and one digit, not in the 10,000 most common passwords, must not contain the phone number.
+
+**PIN input:** separate boxes (length from `GET /auth/config`, default **4**, configurable via `Recovery:PinLength`), always LTR, numeric keyboard, masked with a show/hide toggle, paste support, Arabic-Indic digits converted. **Weak PINs are rejected** (same digit repeated, ascending/descending sequences, the 100 most common PINs, years 1950–2030, the last 4 digits of the phone number, the first 4 digits of the password).
+
+### 9.5 Security Rules
+| Area | Rule |
+|---|---|
+| Password hashing | `PasswordHasher<User>` (PBKDF2), rehash when needed. |
+| PIN hashing | `PasswordHasher( HMACSHA256(pepper, userId + ":" + pin) )`. The **pepper** (`Security:RecoveryPinPepper`) lives only in secrets, never in the database, so a leaked database cannot be used to brute-force the 10,000 PINs offline. |
+| Login lockout | 5 wrong attempts → locked 15 minutes. Rate limits: 5/min per phone, 20/min per IP. |
+| Register | 3/hour per IP. |
+| Recovery lockout | 5 wrong PINs → recovery locked 1 hour. 3 lockouts within 7 days → recovery disabled until an Admin reset. Rate limits: 10/hour per IP, 5/hour per phone. |
+| Anti-enumeration | Generic errors for login and recovery; a dummy hash runs for unknown numbers so timing stays the same. |
+| After reset / password change / phone change / sign out all | New `SecurityStamp`, all refresh tokens revoked, counters reset, audit log entry. |
+| Owner notifications (push + in-app) | Recovery lockout, password changed, PIN changed, phone number changed. These ignore quiet hours. |
+| Admin reset | Permission `users.reset_password`: temporary password + `MustChangePassword`, PIN cleared + `MustSetRecoveryPin`, `RecoveryDisabled = false`, sessions revoked, audit log. |
+| PII | Phone numbers never appear in public DTOs (profiles, comments, articles); only in `GET /me` and admin endpoints with `users.read.pii`. Masked in logs (`+20******4567`). Passwords, PINs, hashes and tokens are never logged. |
+
+> Roles and credentials are stored in **SQL Server** (source of truth).
 
 ---
 
@@ -497,6 +598,8 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 | `reports.create` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `moderation.manage` (hide content, resolve reports) | | | | | ✅ | ✅ | ✅ |
 | `users.suspend` | | | | | ✅ | ✅ | ✅ |
+| `users.reset_password` (admin password reset) | | | | | | ✅ | ✅ |
+| `users.read.pii` (see phone numbers) | | | | | | ✅ | ✅ |
 | `verification.manage` | | | | | | ✅ | ✅ |
 | `taxonomy.manage` (fields, topics, tags) | | | | | | ✅ | ✅ |
 | `paths.manage` | | | | | | ✅ | ✅ |
@@ -514,14 +617,18 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 > Every feature below ships on **Web + Mobile** (see [§12](#12-feature-parity-matrix-web--mobile)), supports **ar/en** and **light/dark**.
 
 ### F01 — Authentication & Account
-- Sign up / sign in: email + password, Google, Apple. Email verification and forgot password.
+- Sign up / sign in with **phone number + password only** (country picker, E.164). Full screens and rules in [§9](#9-authentication-phone--password).
+- Sign up is a 3-step stepper: phone + password → recovery PIN → confirm your number.
+- **Forgot password** with phone + recovery PIN → new password. "Forgot the PIN too" → contact support → Admin reset.
+- Mandatory "set recovery PIN" screen for accounts without a PIN.
+- Complete profile after sign up: display name, unique `@username`, optional avatar.
 - Guest browsing with a soft prompt to sign in when trying to interact.
-- Sign out from all devices, delete account (soft delete then hard delete after 30 days, content attributed to "Deleted user").
+- Sign out, sign out of all devices, delete account (requires the password; soft delete then hard delete after 30 days, content attributed to "Deleted user").
 
 ### F02 — Onboarding (3 steps)
 1. Welcome + value proposition.
 2. **Choose interests** (fields/topics chips, minimum 3).
-3. **Preferences:** article language (`مصري + English` / `English only`), daily reminder time (default 8:00 AM, user's time zone), notifications permission.
+3. **Preferences:** article language (`مصري + English` / `English only`), daily reminder time (default 8:00 AM, user's time zone), notifications permission (asked here, in context, never on first launch).
 
 ### F03 — Home: "النهارده" (Today)
 - Greeting + **streak badge** 🔥 + notifications bell.
@@ -529,6 +636,8 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Continue reading (resume last unfinished article).
 - Learning path progress card.
 - Field filter chips + feed: **For you** (interests + popularity + freshness) and **Following** tabs.
+- Feed cards show attachments: a single image, an **image carousel** or a **PDF page carousel** ([F26](#f26--post-attachments--media)).
+- Live counters on visible cards and a "مقالات جديدة ↑" banner when new articles are published ([F27](#f27--real-time-updates)).
 - Infinite scroll with cursor pagination, skeleton loading, pull to refresh.
 
 ### F04 — Article Reader
@@ -539,7 +648,8 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - **TL;DR summary** at the top (optional per article).
 - **Sources** section at the bottom (mandatory for technical and health articles).
 - Font size control (S / M / L / XL), reading mode toggle.
-- Floating action bar: reactions, comments, save, share.
+- Attachments (image carousel or PDF page carousel) with a full-screen viewer ([F26](#f26--post-attachments--media)).
+- Floating action bar: reactions, comments, save, share. Reaction and comment counts update live ([F27](#f27--real-time-updates)).
 - Remembers the last scroll position. Marks the article as "read" when ≥ 70% scrolled **and** ≥ 30 seconds spent.
 - Related articles + "Next in path" at the end.
 - Report article.
@@ -547,7 +657,8 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 ### F05 — Article Editor (Write)
 - Block-based rich editor producing **RDoc**: all block types in [§13](#13-article-content-format-rdoc), slash menu (`/`) to insert blocks, markdown shortcuts.
 - Per-block automatic direction (`dir="auto"`) with manual override, code blocks forced LTR.
-- Cover image upload (Firebase Storage, compressed), field, topic, tags (max 5).
+- Cover image upload (compressed on the device, processed by the backend, stored in `wwwroot/uploads`), field, topic, tags (max 5).
+- **Attachments:** 1–10 images **or** one PDF ([F26](#f26--post-attachments--media)).
 - **Sources** list (title + URL), required for Software, Medicine and Health fields.
 - Second language version: add `en` or `ar-EG` translation of the same article.
 - Autosave drafts every 10 seconds + local backup (offline-safe).
@@ -595,6 +706,7 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
 - Like comments, reply, `@mention` users (notifies them), edit (shows "edited"), delete (soft).
 - Writer badge "الكاتب" on the author's comments, author can **pin** one comment.
 - Mixed Arabic/English input renders correctly (`dir="auto"` per comment).
+- **Live:** new comments/replies appear without refreshing, edits/deletes update in place, and a "N تعليقات جديدة" pill appears when the user is scrolled away ([F27](#f27--real-time-updates)).
 - Rate limit: 10 comments / minute per user. Report comment.
 
 ### F12 — Follow
@@ -614,7 +726,8 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
 - Stats: articles, followers, following, total reads.
 - Tabs: **Articles** / **Saved** (own profile only) / **Paths** / **About**.
 - Reading stats card + heatmap (own profile, optional public).
-- Edit profile.
+- Edit profile, including avatar upload (compressed, square-cropped variants 64/128/256/512).
+- The phone number is never shown on public profiles.
 
 ### F15 — Explore
 - Browse by field → topic.
@@ -626,16 +739,20 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
 - Arabic normalization (see [§22](#22-search)), filters (field, language, reading time, reviewed only), recent searches.
 
 ### F17 — Notifications
-- In-app notification center (real-time via SignalR) + push (FCM).
-- Types: new follower, reply to your comment, mention, reactions milestone (10/50/100), comment on your article, article reviewed/approved/changes requested, verification result, daily article, streak reminder (evening, if not read yet), new article from a followed writer.
-- Per-type preferences (push / in-app / off), quiet hours.
+- In-app notification center (SQL `Notifications` table, live unread badge via Firebase Realtime Database) + push (FCM).
+- Types: new follower, reply to your comment, mention, reactions milestone (10/50/100), comment on your article, article reviewed/approved/changes requested, verification result, daily article, streak reminder (evening, if not read yet), new article from a followed writer, **security alerts** (password/PIN/phone changed, recovery lockout).
+- Per-type preferences (push / in-app / off), quiet hours. Details in [§21](#21-notifications--real-time).
 
 ### F18 — Settings
 - Theme: **System / Light / Dark** (synced to profile across devices).
 - UI language: العربية / English.
 - Article language preference, daily reminder time, notification preferences, font size.
 - Privacy: public reading stats on/off, who can mention me.
-- Account: change email/password, linked providers, delete account.
+- **Account:**
+  - Phone number (visible to the owner only) + "تغيير الرقم" (new number + current password + confirm-number dialog).
+  - "تغيير كلمة السر" (current + new + confirm).
+  - "تغيير الـ PIN" (current password + new PIN + confirm).
+  - Sign out, sign out of all devices, delete account (requires the password).
 
 ### F19 — Writer Verification
 - Request verification: field, job title, proof (LinkedIn/GitHub URL, certificate or syndicate card upload).
@@ -671,6 +788,57 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
 - Today's article and saved articles cached for offline reading.
 - Queued actions (reactions, saves) replay when back online.
 
+### F26 — Post Attachments & Media
+A post/article has **either** 1–10 images **or** exactly one PDF (never both), like LinkedIn.
+
+**Composer / editor**
+- Attachment bar: "📷 صور" (Images) and "📄 ملف PDF" (PDF document).
+- Images: multi-select up to 10, drag to reorder, remove, optional caption per image (`dir="auto"`, max 120 characters), **required alt text** per image (publishing is blocked until every image has one).
+- PDF: one file, max 20 MB, max 100 pages, required document title (pre-filled from the file name), "السماح بتحميل الملف" (Allow download) toggle, off by default. Shows "بنجهز الصفحات…" while processing, then a preview.
+- Each upload shows progress, cancel and retry. Publishing is blocked while anything is uploading or processing.
+
+**Display (feed card + post/article page)**
+- One image → full width. Two or more images, or a PDF → **carousel**:
+  - Horizontal scroll-snap; the next slide peeks from the edge; counter badge "3 / 12".
+  - Desktop web: round ❮ ❯ arrows on hover (hidden at the ends) + keyboard ← →. Touch: swipe.
+  - Optional caption bar under image slides.
+  - RTL: starts from the right in the Arabic UI, arrows mirrored.
+  - Only about 3 slides around the current one are rendered; BlurHash placeholders while loading.
+- PDF: header strip "📄 {title} · 12 صفحة", page slides, and a "+N صفحة، افتح الملف" card after 10 pages.
+- **Full-screen viewer:** swipe/arrows, pinch and double-tap zoom, counter + thumbnail strip (PDF), close with ✕ / back / swipe down, "تحميل" (Download, only when allowed) and "مشاركة" (Share).
+
+**Image optimization (all images in the app)**
+- Compressed on the device **before upload** (max 2048px, quality 85, orientation fixed).
+- Re-processed by the backend (never trusts the client): metadata and GPS stripped, sRGB, **WebP variants** (quality 78, never upscaled) and a **BlurHash**:
+
+| Purpose | Variant widths |
+|---|---|
+| Avatar | 64, 128, 256, 512 (square crop) |
+| Cover | 400, 800, 1200 |
+| Post / article image | 320, 640, 1080, 1600 |
+| PDF page | 400 (thumbnail), 1080 (viewer) |
+
+- Clients load the smallest variant that fits (`srcset` on web, width × pixel ratio on mobile), lazy-load off-screen images and always reserve the image size (no layout shift).
+- Budgets: typical feed image ≤ 150 KB, avatar ≤ 30 KB.
+
+**PDF processing** (background job, never in the request)
+- Validation: `%PDF-` magic bytes, size/page limits; encrypted or corrupted files are rejected ("الملف ده عليه باسورد، ارفعه من غير باسورد").
+- Page 1 is rendered first so the preview appears quickly, then the rest. Text is extracted for search ([§22](#22-search)).
+- Status `Processing → Ready / Failed`; clients poll the upload status and also get a live signal ([F27](#f27--real-time-updates)).
+- Per-job timeout, limited concurrency and capped render DPI.
+
+**Quotas:** 50 uploads per user per day, 200 MB stored per user (configurable).
+
+### F27 — Real-time Updates
+Powered by **Firebase Realtime Database**, written only by the backend ([§21.2](#212-real-time-firebase-realtime-database)).
+- Reader: reaction and comment counts update live.
+- Comments: new comments/replies appear live with a short highlight, edits/deletes/likes update in place, "N تعليقات جديدة" pill when scrolled away.
+- Feed: live counters on visible cards only, "مقالات جديدة ↑" banner.
+- Notification bell: live unread badge.
+- Upload processing status for the user's own PDFs.
+- The user's own optimistic actions are not counted twice.
+- If the Realtime Database is unavailable, everything still works through the REST API; only live updates are missing.
+
 ---
 
 ## 12. Feature Parity Matrix (Web + Mobile)
@@ -702,6 +870,8 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
 | F23 | Admin Console | ✅ | ✅ | 2 |
 | F24 | Sharing | ✅ | ✅ | 2 |
 | F25 | Offline | ✅ | ✅ | 3 |
+| F26 | Post Attachments & Media | ✅ | ✅ | 1 |
+| F27 | Real-time Updates | ✅ | ✅ | 1 |
 
 **Process:** each feature is one GitHub issue with three sub-tasks (`backend`, `web`, `mobile`). The issue closes only when all three are committed to `dev` (see [§29](#29-git-workflow--conventions)).
 
@@ -869,7 +1039,10 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 ### 16.2 Tables
 | Area | Tables |
 |---|---|
-| Identity | `Users` (FirebaseUid unique, Email, DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, IsSuspended, SuspendedUntil), `Roles`, `Permissions`, `RolePermissions`, `UserRoles`, `UserDevices` (FCM token, platform, last seen) |
+| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, Email (optional, never used for login), DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, IsSuspended, SuspendedUntil), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
+| Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
+| Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
+| Media | `MediaAssets` (OwnerId, Kind Image/Document, Purpose, Status Uploading/Processing/Ready/Failed, FailureReason, OriginalPath, OriginalSizeBytes, Width, Height, BlurHash, Variants JSON, PageCount, Title, AllowDownload, ExtractedText), `MediaAssetPages` (AssetId, PageNo, ThumbPath, ViewPath, Width, Height, BlurHash), `ArticleAttachments` (ArticleId, MediaAssetId, Order, Caption, AltText) |
 | Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive, IsEnabled), `Topics`, `Tags`, `UserInterests` |
 | Articles | `Articles` (AuthorId, FieldId, TopicId, Slug, Status, ReviewStatus, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, LastReviewedAt, ReviewedById, PublishedAt, ScheduledAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleRevisions`, `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive), `ArticleReviews` (ReviewerId, Decision, Notes JSON) |
 | Engagement | `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId, AuthorId, Body, IsPinned, LikeCount, EditedAt), `CommentLikes`, `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
@@ -887,7 +1060,9 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 - `Comments(ArticleId, ParentId, CreatedAt)`.
 - `ReadingProgress(UserId, ArticleId)` unique.
 - `Reactions(ArticleId, Type)`, `UserFollows(FolloweeId)`.
-- Full-Text index on `ArticleTranslations(SearchText)` and `Users(DisplayName, Username)`.
+- Full-Text index on `ArticleTranslations(SearchText)`, `MediaAssets(ExtractedText)` and `Users(DisplayName, Username)`.
+- `Users(PhoneNumber)` unique, `RefreshTokens(TokenHash)` unique, `RefreshTokens(UserId, RevokedAt)`, `ArticleAttachments(ArticleId, Order)`.
+- Media paths are stored **relative** (`/uploads/...`); absolute URLs are built from `Storage:PublicBaseUrl`, so a domain change never needs a data migration.
 
 ---
 
@@ -903,7 +1078,9 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 ### 17.2 Main Endpoints
 | Area | Endpoints |
 |---|---|
-| Auth & Me | `POST /auth/sync` · `GET /me` · `PATCH /me` · `PUT /me/preferences` · `PUT /me/interests` · `POST /me/devices` · `DELETE /me` |
+| Auth | `GET /auth/config` (PIN length, password rules) · `POST /auth/register` (phone, password, pin) · `POST /auth/login` · `POST /auth/refresh` · `POST /auth/logout` · `POST /auth/logout-all` · `POST /auth/recovery/verify-pin` → reset token · `POST /auth/recovery/reset-password` |
+| Me | `GET /me` (incl. `hasRecoveryPin`, `mustSetRecoveryPin`, `mustChangePassword`, `isProfileComplete`) · `PATCH /me` · `PUT /me/profile/complete` · `PUT /me/password` · `PUT /me/phone` · `POST /me/recovery-pin` (first set) · `PUT /me/recovery-pin` (change) · `PUT /me/preferences` · `PUT /me/interests` · `POST /me/devices` · `DELETE /me/devices/{token}` · `DELETE /me` · `GET /users/username-available?u=` |
+| Real-time | `POST /realtime/token` (Firebase custom token, used only to read the Realtime Database) |
 | Feed | `GET /feed/today` · `GET /feed/for-you` · `GET /feed/following` · `GET /feed/continue-reading` |
 | Articles | `GET /articles/{slug}?lang=` · `POST /articles` · `PUT /articles/{id}` · `PUT /articles/{id}/translations/{lang}` · `POST /articles/{id}/submit` · `POST /articles/{id}/publish` · `POST /articles/{id}/schedule` · `DELETE /articles/{id}` · `GET /articles/{id}/revisions` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` |
 | Reactions | `PUT /articles/{id}/reaction` · `DELETE /articles/{id}/reaction` · `GET /articles/{id}/reactions` |
@@ -915,21 +1092,21 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Paths | `GET /paths` · `GET /paths/{slug}` · `POST /paths/{id}/enroll` |
 | Search | `GET /search?q=&type=articles\|users\|topics&field=&lang=` |
 | Glossary | `GET /glossary/{slug}` · `GET /glossary?q=` |
-| Notifications | `GET /notifications` · `POST /notifications/read` · `GET/PUT /me/notification-preferences` · SignalR `/hubs/notifications` |
-| Uploads | `POST /uploads/signed-url` (Firebase Storage signed upload) |
+| Notifications | `GET /notifications` · `POST /notifications/read` · `GET/PUT /me/notification-preferences` |
+| Uploads & media | `POST /uploads/images` (purpose `avatar` \| `cover` \| `article-image`) · `POST /uploads/documents` (PDF) · `GET /uploads/{id}` (status, variants, pages) · `DELETE /uploads/{id}` · `PUT /articles/{id}/attachments` · `GET /documents/{assetId}/download` |
 | Trust | `POST /verification-requests` · `GET /reviews/queue` · `POST /articles/{id}/reviews` |
 | Moderation | `POST /reports` · `GET /moderation/reports` · `POST /moderation/actions` |
-| Admin | `/admin/users`, `/admin/roles`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests`, `/admin/dashboard`, `/admin/content-pipeline` |
+| Admin | `/admin/users`, `POST /admin/users/{id}/reset-password`, `/admin/roles`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests`, `/admin/dashboard`, `/admin/content-pipeline` |
 
 ---
 
 ## 18. Seeding: Users, Reference Data, Articles
 
 ### 18.1 Principles
-- Seeders are **idempotent** (upsert by natural keys: role name, field slug, email, article slug) and **versioned** (`SeedHistory` stores name + version + checksum, so a seeder only re-runs when its data changes).
+- Seeders are **idempotent** (upsert by natural keys: role name, field slug, phone number, article slug) and **versioned** (`SeedHistory` stores name + version + checksum, so a seeder only re-runs when its data changes).
 - Run on startup in Development, and via `dotnet run --project ReadIn.Api -- seed` in Production.
-- Environment-gated: **demo users and demo interactions are seeded only into the Firebase Auth Emulator and the local database, never into the real Firebase project** (they require `Firebase:UseEmulator = true`, see [§28.1](#281-environments)).
-- Passwords are **never** committed. Demo password comes from configuration: `Seed:DemoPassword` (user-secrets locally).
+- Environment-gated: **demo users and demo interactions are seeded only into the local database** (`Development` and `Testing` environments), never into production.
+- Passwords and PINs are **never** committed. They come from configuration: `Seed:DemoPassword`, `Seed:DemoPin` (must pass the weak-PIN policy), `Seed:SuperAdminPhone`, `Seed:SuperAdminPassword` (user-secrets locally, secret store in production).
 
 ### 18.2 Seeding Order
 | # | Seeder | Environments |
@@ -937,27 +1114,32 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | 1 | Roles & Permissions | All |
 | 2 | Fields, Topics, Tags (from `content/taxonomy.yaml`) | All |
 | 3 | System accounts (`ReadIn Editorial`, `SuperAdmin`) | All |
-| 4 | Demo users (Firebase Auth Emulator + SQL Server) | Local (emulator) only |
+| 4 | Demo users (SQL Server) | Local only |
 | 5 | Glossary terms | All |
 | 6 | Articles (from `content/articles/`, status-aware) | All |
 | 7 | Learning paths | All |
-| 8 | Demo interactions (follows, reactions, comments, saves, reading history, streaks) | Local (emulator) only |
+| 8 | Demo interactions (follows, reactions, comments, saves, reading history, streaks, sample image/PDF attachments) | Local only |
 
 ### 18.3 Seed Users
-Users are created in **Firebase Auth** (Admin SDK, deterministic `uid`, local **Firebase Auth Emulator** in development) and in SQL Server. Emails use the reserved `.test` domain.
+Users are created in SQL Server only (no Firebase Auth). Phone numbers use the reserved fictional range **+1 202 555 01XX** (555-0100 to 555-0199 are reserved for fiction, so they never belong to a real person).
 
-| Email | Display name | Roles | Environments |
-|---|---|---|---|
-| `editorial@readin.test` | ReadIn Editorial (فريق ReadIn) | Member, VerifiedWriter | All (no login, author of seeded articles) |
-| `superadmin@readin.test` | Super Admin | SuperAdmin | All (password from secret store, must change on first login) |
-| `admin@readin.test` | Admin User | Admin | Local |
-| `moderator@readin.test` | Moderator User | Moderator | Local |
-| `reviewer.dotnet@readin.test` | .NET Reviewer | Member, VerifiedWriter, Reviewer (.NET, Architecture) | Local |
-| `reviewer.ai@readin.test` | AI Reviewer | Member, VerifiedWriter, Reviewer (AI, ML, Claude) | Local |
-| `writer.verified@readin.test` | Verified Writer | Member, VerifiedWriter | Local |
-| `writer1@readin.test` … `writer3@readin.test` | Writer 1–3 | Member | Local |
-| `reader1@readin.test` … `reader10@readin.test` | Reader 1–10 | Member | Local |
-| `suspended@readin.test` | Suspended User | Member (suspended) | Local |
+| Phone | Display name | Roles | Recovery PIN | Environments |
+|---|---|---|:-:|---|
+| `+12025550100` | ReadIn Editorial (فريق ReadIn) | Member, VerifiedWriter | — | All (cannot sign in, author of seeded articles) |
+| `+12025550101` | Super Admin | SuperAdmin | ✅ | Local |
+| `+12025550102` | Admin User | Admin | ✅ | Local |
+| `+12025550103` | Moderator User | Moderator | ✅ | Local |
+| `+12025550104` | .NET Reviewer | Member, VerifiedWriter, Reviewer (.NET, Architecture) | ✅ | Local |
+| `+12025550105` | AI Reviewer | Member, VerifiedWriter, Reviewer (AI, ML, Claude) | ✅ | Local |
+| `+12025550106` | Verified Writer | Member, VerifiedWriter | ✅ | Local |
+| `+12025550107` … `+12025550109` | Writer 1–3 | Member | ✅ | Local |
+| `+12025550110` … `+12025550118` | Reader 1–9 | Member | ✅ | Local |
+| `+12025550119` | Reader 10 | Member | ❌ (tests the mandatory "set PIN" screen) | Local |
+| `+12025550120` | Suspended User | Member (suspended) | ❌ | Local |
+
+**Production SuperAdmin:** seeded from `Seed:SuperAdminPhone` + `Seed:SuperAdminPassword` with `MustChangePassword = true` and `MustSetRecoveryPin = true`.
+
+**Dev login panel (debug builds only):** lists the seed users with a PIN ✅/❌ indicator and signs in with one tap. It is compiled out / tree-shaken from production builds.
 
 Demo users get realistic profiles (bios mixing Arabic and English, interests, avatars), follow relationships, reading history with streaks (e.g. `reader1` has a 12-day streak), comments and replies, reactions and saved articles, so every screen looks real in development.
 
@@ -1043,24 +1225,57 @@ Approved content lives in `content/articles/` so it is versioned, reviewable in 
 
 ---
 
-## 21. Notifications
+## 21. Notifications & Real-time
 
+### 21.1 Notifications
 | Channel | Technology | Use |
 |---|---|---|
-| Push | FCM (Android, iOS, Web Push) | Daily article, replies, mentions, followers, review results |
-| In-app | SignalR + `Notifications` table | Notification center with unread badge |
+| Push | **Firebase Cloud Messaging** (Android, iOS, Web Push) | Daily article, replies, mentions, followers, review results, security alerts |
+| In-app | SQL `Notifications` table + live unread badge from the **Realtime Database** | Notification center |
 | Email (Phase 3) | Transactional provider | Weekly digest, verification results |
 
+- Pushes are sent **only** from outbox handlers and Hangfire jobs (`IPushSender` → `FcmPushSender`, multicast + batching), never inside request handlers.
+- Every push also creates a `Notifications` row and increments `/live/users/{id}/unreadNotifications`.
+- Device tokens: registered on sign-in/app start, refreshed when FCM rotates them, deleted on sign out, and removed when FCM reports them as invalid.
 - Daily article and streak reminders are scheduled per user's **time zone** via Hangfire.
-- Aggregation: "Ahmed and 9 others reacted to your article" instead of 10 notifications.
-- Quiet hours respected (default 11 PM – 7 AM).
-- Notification payload contains a deep link (`readin://a/{slug}#comment-{id}`).
+- Message language = the user's UI language. Aggregation: "أحمد و9 غيره عملوا رياكت على مقالك" instead of 10 pushes.
+- Quiet hours respected (default 23:00 – 07:00); security alerts ignore quiet hours.
+- Payloads carry a deep link (`readin://a/{slug}#comment-{id}`). Taps open the right screen from terminated, background and foreground states.
+- Web: `firebase-messaging-sw.js` + VAPID key, foreground messages as an in-app toast. Mobile: `firebase_messaging` + `flutter_local_notifications`, Android 13+ `POST_NOTIFICATIONS`, iOS APNs.
+- Permission is requested **in context** (onboarding reminder step or when enabling a notification type), never on first launch.
+
+### 21.2 Real-time: Firebase Realtime Database
+The Realtime Database (RTDB) was chosen over Firestore because Firestore bills every document read, which is expensive for frequently updated live counters.
+
+**Principle: RTDB carries signals, not content.** Comment text, user data and phone numbers never go to RTDB. Clients update counters from RTDB and fetch full data from the REST API.
+
+```text
+/live/articles/{articleId}
+    reactions: { insightful, love, fire, mindBlown }
+    commentCount, saveCount, updatedAt
+/live/articles/{articleId}/events/{pushId}
+    { type: comment.created | comment.updated | comment.deleted
+          | reply.created | comment.liked | comment.pinned,
+      commentId, parentId?, at }
+/live/feed
+    latestPublishedAt
+/live/users/{userId}
+    unreadNotifications, lastNotificationAt
+/live/users/{userId}/media/{assetId}
+    status
+```
+
+- **Writes:** only the backend (`IRealtimePublisher` → `FirebaseRealtimePublisher`, Firebase Admin SDK), in outbox handlers **after** the SQL commit, with retry and backoff. If RTDB is down, the app keeps working through REST.
+- **Cleanup:** a Hangfire job keeps events for 24 hours and at most 100 per article. A rebuild command recalculates all counters from SQL Server.
+- **Access:** signed-in users get a Firebase **custom token** from `POST /realtime/token` and call `signInWithCustomToken` only to read RTDB (it is not a login method). Guests read public paths without a token. Signing out of ReadIn also signs out of Firebase.
+- **Security rules** (`firebase/database.rules.json`): `/live/articles` and `/live/feed` are public read; `/live/users/$uid` is readable only when `auth.uid === $uid`; **no client writes anywhere**; everything else is denied.
+- **Lifecycle:** web subscribes in the browser only (never during SSR) and cleans up on destroy; mobile cancels subscriptions in the Bloc's `close()` and pauses listeners in the background. Feed cards subscribe only while visible.
 
 ---
 
 ## 22. Search
 
-- SQL Server **Full-Text Search** on `ArticleTranslations.SearchText` (Arabic word breaker for `ar-EG`, English for `en`) + `Users`.
+- SQL Server **Full-Text Search** on `ArticleTranslations.SearchText` (Arabic word breaker for `ar-EG`, English for `en`), `MediaAssets.ExtractedText` (text of attached PDFs) + `Users`.
 - **Arabic normalization** into `SearchText` and on queries: remove diacritics (تشكيل) and tatweel (ـ), unify `أ إ آ → ا`, `ى → ي`, `ة → ه`.
 - Ranking: full-text rank × quality score × freshness.
 - Typo tolerance and suggestions in Phase 3 (or move to Azure AI Search / Elasticsearch if needed).
@@ -1080,14 +1295,21 @@ Approved content lives in `content/articles/` so it is versioned, reviewable in 
 
 ## 24. Security
 
-- Firebase ID token validation on every request, short-lived tokens refreshed by clients.
+- **Authentication:** own JWT access tokens (15 min) validated on every request, rotating hashed refresh tokens with reuse detection, security-stamp invalidation. Full rules (hashing, PIN pepper, lockouts, anti-enumeration, owner alerts) in [§9.5](#95-security-rules).
 - **Permission-based** authorization on every endpoint + ownership checks in handlers.
 - FluentValidation for all commands, RDoc schema validation + sanitization for content (no raw HTML stored or rendered).
-- Rate limiting per user/IP (auth, comments, reactions, search, uploads).
-- Uploads: signed URLs, type/size limits (images ≤ 5 MB), images re-encoded server-side, EXIF stripped.
-- CORS restricted to app origins, HTTPS only, HSTS, security headers (CSP, X-Content-Type-Options, Referrer-Policy).
-- Secrets in user-secrets (dev) and a secret store (production), never in the repo. `firebase-adminsdk*.json`, `google-services.json` and `GoogleService-Info.plist` are git-ignored.
-- Audit log for admin/moderation actions, PII minimized in logs.
+- Rate limiting per user/IP (login, register, recovery, refresh, comments, reactions, search, uploads).
+- **Uploads:**
+  - Images up to 10 MB (jpeg/png/webp/heic), PDFs up to 20 MB / 100 pages, validated by **magic bytes** (never the extension or Content-Type), images over 8000×8000 rejected.
+  - Images re-encoded to WebP with metadata/GPS stripped; random GUID file names; path traversal blocked.
+  - `/uploads` static files serve **only `.webp`** with `X-Content-Type-Options: nosniff`, `Cache-Control: public, max-age=31536000, immutable` and `Content-Security-Policy: default-src 'none'`. Everything else returns 404.
+  - PDFs are **never** served as static files: only via `GET /documents/{assetId}/download` with permission checks (published post or owner; `AllowDownload` or owner/moderator), `Content-Disposition: attachment`, `nosniff` and `Content-Security-Policy: sandbox`.
+  - PDF processing runs in background jobs with timeouts, limited concurrency and capped DPI; encrypted/corrupted PDFs are rejected.
+- **Firebase:** the Realtime Database rules allow no client writes; the service-account key lives only in secrets.
+- CORS restricted to app origins (with credentials for the web origin), HTTPS only, HSTS, security headers (CSP, X-Content-Type-Options, Referrer-Policy).
+- Secrets in user-secrets (dev) and a secret store (production), never in the repo: `Jwt:SigningKey`, `Security:RecoveryPinPepper`, seed passwords/PIN, the Firebase service-account JSON. `google-services.json` and `GoogleService-Info.plist` are git-ignored.
+- **PII:** phone numbers are never in public DTOs and are masked in logs. Passwords, PINs, hashes and tokens are never logged.
+- Audit log for admin/moderation actions and security events (password/PIN/phone changes, admin resets, sign out of all devices, account deletion).
 - Dependabot + `dotnet list package --vulnerable` + `npm audit` + `flutter pub outdated` in CI.
 
 ---
@@ -1097,7 +1319,8 @@ Approved content lives in `content/articles/` so it is versioned, reviewable in 
 - Feeds via Dapper with covering indexes, cursor pagination, cached per user for 60s.
 - Article details cached (`HybridCache`, tag-invalidated on update).
 - Denormalized counters updated asynchronously via outbox.
-- Images served through Firebase Storage CDN with responsive sizes (WebP).
+- Images: compressed on the device before upload, served from `wwwroot/uploads` as WebP variants with `srcset`, lazy loading, BlurHash placeholders and immutable caching (see [F26](#f26--post-attachments--media) for budgets). A CDN can be put in front of `/uploads` later without code changes.
+- Real-time: counters and events through the Realtime Database instead of polling; subscriptions only for visible content.
 - API response compression (Brotli), HTTP/2.
 - Mobile: image caching, list virtualization, lazy RDoc rendering for long articles.
 - Targets: p95 API latency < 200 ms for reads, < 400 ms for writes.
@@ -1120,13 +1343,16 @@ Approved content lives in `content/articles/` so it is versioned, reviewable in 
 | Level | Backend | Web | Mobile |
 |---|---|---|---|
 | Unit | Domain + handlers + validators + Mapster configs (`config.Compile()` test) | Components, stores, pipes | Blocs, use cases, repositories |
-| Integration | API + SQL Server via Testcontainers, Firebase Auth emulator | API client contract tests | Repository + Dio mocks |
+| Integration | API + SQL Server via Testcontainers, Realtime Database emulator, temporary uploads folder | API client contract tests | Repository + Dio mocks |
+| Security rules | Realtime Database rules tests (`@firebase/rules-unit-testing`) | — | — |
 | Architecture | NetArchTest (layer rules, naming, sealed handlers) | ESLint boundaries | `import_lint` rules |
 | UI / Visual | — | Playwright screenshots: ar/en × light/dark | Golden tests: ar/en × light/dark |
 | E2E | — | Playwright critical flows | `integration_test` critical flows |
 | BiDi | RDoc text extraction tests | Mixed-text fixtures | Mixed-text fixtures |
 
-**Critical flows (E2E on both platforms):** sign up → onboarding → read today's article → react → comment → reply → save → follow writer → switch theme → switch article language.
+**Critical flows (E2E on both platforms):** sign up (phone + password + PIN) → complete profile → onboarding → read today's article → react → comment → reply → save → follow writer → switch theme → switch article language → sign out → forgot password (phone + PIN) → sign in with the new password.
+
+**Shared fixtures** used on all three platforms: mixed-text samples, `shared/countries/phone-fixtures.json`, `shared/auth/pin-fixtures.json`, and small test PDFs (normal, encrypted, corrupted, 101 pages).
 
 Coverage targets: Domain/Application ≥ 80%, clients ≥ 60%.
 
@@ -1135,31 +1361,42 @@ Coverage targets: Domain/Application ≥ 80%, clients ≥ 60%.
 ## 28. DevOps, Environments & CI/CD
 
 ### 28.1 Environments
-There is **one** real Firebase project. Everything else runs against the **Firebase Emulator Suite**.
+There is **one** real Firebase project, used **only** for Cloud Messaging and the Realtime Database. Local development and automated tests use the **Realtime Database emulator** (FCM has no emulator).
 
 | Env | Purpose | Firebase | Data |
 |---|---|---|---|
-| Local (+ all automated tests) | Development, CI | **Emulator Suite** (Auth + Storage), project `demo-readin` | Docker SQL Server, full demo seed (demo users + demo interactions) |
-| Production | Deployed app | **The single real Firebase project** | Reference data + editorial content + system accounts only |
+| Local (+ all automated tests) | Development, CI | **Realtime Database emulator** (port 9000), project `demo-readin`; pushes go to `LoggingPushSender` (logged + visible on a debug-only "Sent pushes" admin page) | Docker SQL Server, full demo seed (demo users + demo interactions), local `wwwroot/uploads` |
+| Production | Deployed app | **The single real Firebase project** (FCM + Realtime Database) | Reference data + editorial content + system accounts only, production `wwwroot/uploads` |
 
-- **Demo users and demo interactions are seeded only into the emulator and the local database, never into the real Firebase project.** The backend enforces this: demo seeders run only when `Firebase:UseEmulator` is `true`, which itself is only allowed in `Development` and `Testing`.
+- **Demo users and demo interactions are seeded only into the local database**; demo seeders run only in `Development` and `Testing`.
 - There is no staging Firebase project. Switching between the emulator and the real project is a configuration choice per platform:
 
 | Platform | Emulator (default) | Real project |
 |---|---|---|
-| Backend | `Firebase:UseEmulator = true` (`appsettings.Development.json`) | `Firebase:UseEmulator = false` + `Firebase:ProjectId` (`appsettings.json` / environment) |
-| Web | `environment.development.ts` (`authEmulatorUrl` set) | `environment.ts` (production build) |
+| Backend | `Firebase:UseEmulator = true` (`appsettings.Development.json`) | `Firebase:UseEmulator = false` + `Firebase:ProjectId` + `Firebase:DatabaseUrl` + service-account JSON from secrets |
+| Web | `environment.development.ts` (RTDB emulator URL set) | `environment.ts` (production build, VAPID key) |
 | Mobile | `dev` flavor (`--dart-define-from-file=config/dev.json`) | `prod` flavor (`config/prod.json`) |
 
 Step-by-step creation and wiring of the real project: [`docs/setup/firebase.md`](setup/firebase.md) ([ADR 0005](adr/0005-single-firebase-project.md)).
 
 ### 28.2 Local Setup
-- `docker compose up` → SQL Server (host port 14333) + Seq.
-- `firebase emulators:start` → Auth, Storage emulators.
-- Backend: `dotnet run --project backend/src/ReadIn.Api` (migrates + seeds in Development).
+- `docker compose up` → SQL Server (host port **14333**, because a local SQL Server already uses 1433) + Seq.
+- `firebase emulators:start` → Realtime Database emulator only.
+- Backend: `dotnet run --project backend/src/ReadIn.Api` (migrates + seeds in Development, creates `wwwroot/uploads` if missing).
 - Web: `npm start` in `web/`. Mobile: `flutter run` in `mobile/` (flavors: `dev` = emulator, `prod` = real project).
+- Required secrets (`dotnet user-secrets`): `Jwt:SigningKey`, `Security:RecoveryPinPepper`, `Seed:DemoPassword`, `Seed:DemoPin`.
 
-### 28.3 CI/CD (GitHub Actions)
+### 28.3 Uploads in Production (`wwwroot/uploads`)
+Uploads live inside the API folder, so deployments must never delete them:
+- `wwwroot/uploads/` is git-ignored (only a `.gitkeep` is committed) and **excluded from `dotnet publish`** (`<Content Update="wwwroot\uploads\**" CopyToPublishDirectory="Never" />`).
+- Deploy methods that wipe the target folder (e.g. "remove additional files at destination") must exclude `wwwroot/uploads`. With Docker, `wwwroot/uploads` is a named **volume**.
+- IIS / Windows Server: the app pool identity gets write permission on `wwwroot/uploads` only.
+- At startup the API creates the folder if missing and fails fast with a clear log message if it isn't writable.
+- **Backups:** back up `wwwroot/uploads` together with the SQL Server database; restoring one without the other breaks images.
+- **Limitation:** with more than one API server, uploads must move to shared or cloud storage by swapping the `IFileStorage` implementation (no Application code changes).
+- Details: `docs/setup/deployment.md`.
+
+### 28.4 CI/CD (GitHub Actions)
 | Workflow | Trigger | Steps |
 |---|---|---|
 | `backend.yml` | changes in `backend/**` | restore → build → test (Testcontainers) → architecture tests → publish image |
@@ -1167,7 +1404,7 @@ Step-by-step creation and wiring of the real project: [`docs/setup/firebase.md`]
 | `mobile.yml` | changes in `mobile/**` | analyze → test → golden tests → build APK/IPA (release on tags) |
 | `content.yml` | changes in `content/**` | RDoc schema validation → code compile checks → link checks |
 
-Deploy targets (suggested): API + SSR on Azure App Service (or containers), SQL Server on Azure SQL, mobile via Play Console / App Store Connect (Fastlane).
+Deploy targets (suggested): API + SSR on a single server or container host (with the uploads rules in [§28.3](#283-uploads-in-production-wwwrootuploads)), SQL Server, mobile via Play Console / App Store Connect (Fastlane).
 
 ---
 
@@ -1178,8 +1415,8 @@ Deploy targets (suggested): API + SSR on Azure App Service (or containers), SQL 
 - **No pull requests per feature.** There is exactly **one** pull request, `dev → main`, opened only when the product owner asks for a release. Nothing is pushed to `main` directly.
 - **Conventional Commits** with scope: `feat(backend): ...`, `feat(web): ...`, `feat(mobile): ...`, `fix(...)`, `test(...)`, `refactor(...)`, `content(dotnet): ...`, `docs: ...`, `chore(ci): ...`.
 - Each feature tracks `backend`, `web` and `mobile` parts (see [§12](#12-feature-parity-matrix-web--mobile)); it is done when all three are committed to `dev`.
-- Secrets are never committed: Firebase Admin keys, `google-services.json`, `GoogleService-Info.plist`, passwords.
-- Architecture decisions recorded as ADRs in `docs/adr/` (e.g. `0001-firebase-auth-sql-server-roles.md`, `0002-rdoc-content-format.md`, `0003-mediator-over-mediatr.md`).
+- Secrets are never committed: the Firebase service-account key, `google-services.json`, `GoogleService-Info.plist`, `Jwt:SigningKey`, `Security:RecoveryPinPepper`, passwords and PINs.
+- Architecture decisions recorded as ADRs in `docs/adr/`. Existing: 0001–0006. To add with the v1.1 changes: `0007-phone-password-authentication.md` (supersedes 0001 and the auth part of 0004), `0008-firebase-scope-fcm-and-rtdb.md`, `0009-recovery-pin.md`, `0010-uploads-in-wwwroot.md`, `0011-media-pipeline-and-pdf-preview.md`.
 
 ---
 
@@ -1188,7 +1425,7 @@ Deploy targets (suggested): API + SSR on Azure App Service (or containers), SQL 
 | Phase | Scope |
 |---|---|
 | **0 — Foundation** | Repo, solution skeleton, CI, design tokens, RDoc schema, Firebase project + emulators, seeders for roles/fields/users |
-| **1 — MVP** | F01–F07, F10–F14, F18 · ~200 reviewed seeded articles · Web + Mobile beta |
+| **1 — MVP** | F01–F07, F10–F14, F18, F26, F27 · phone + password auth with recovery PIN · ~200 reviewed seeded articles · Web + Mobile beta |
 | **2 — Growth** | F08, F09, F15–F17, F19, F20, F22–F24 · drip publishing toward 1,000+ articles |
 | **3 — Depth** | F21, F25, email digest, quizzes at the end of articles, text-to-speech, AI translation for user articles, Medicine/Engineering/Public Health fields |
 
