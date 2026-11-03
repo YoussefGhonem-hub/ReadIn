@@ -4,15 +4,16 @@
  * browser calls on the API's dev address (http://localhost:5080/api/v1, from environment.development.ts).
  *
  * Content is stateless: per-test flows (create post, uploads, polling, publish) are stubbed in the browser with
- * `page.route` (e2e/support). Reactions, saved articles, collections and follows (social.mjs) keep state per signed-in
- * viewer, so those flows run against it end to end. It also serves generated PNGs for every media URL and fixture
- * builders under `/__mock`.
+ * `page.route` (e2e/support). Reactions, saved articles, collections and follows (social.mjs) and profiles, `GET /me`,
+ * `PATCH /me`, privacy and reading stats (profiles.mjs) keep state per signed-in viewer, so those flows run against it
+ * end to end. It also serves generated PNGs for every media URL and fixture builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
  */
 import { createServer } from 'node:http';
 import { crc32, deflateSync } from 'node:zlib';
 import { encode } from 'blurhash';
+import { createProfiles } from './profiles.mjs';
 import { createSocial } from './social.mjs';
 
 const PORT = Number(process.env.MOCK_API_PORT ?? 5080);
@@ -133,6 +134,24 @@ function page(docSeed, pageNo) {
     blurHash: blurHashOf('page', seed, 1080, 1527),
     thumbUrl: mediaUrl('page', seed, 400, 566),
     viewUrl: mediaUrl('page', seed, 1080, 1527),
+  };
+}
+
+const AVATAR_WIDTHS = ['64', '128', '256', '512'];
+
+/** Square avatar renditions by width (absolute URLs), like the API's `ProfileDto.avatarVariants`. */
+function avatarVariants(seed) {
+  return Object.fromEntries(AVATAR_WIDTHS.map((w) => [w, mediaUrl('photo', `avatar-${seed}`, Number(w), Number(w))]));
+}
+
+/** `POST /uploads/images` with `purpose=avatar`: id `asset-avatar-{seed}`, which `PATCH /me` accepts as `avatarAssetId`. */
+function avatarAsset(seed) {
+  const urls = avatarVariants(seed);
+  return {
+    ...imageAsset(`avatar-${seed}`, 512, 512),
+    id: `asset-avatar-${seed}`,
+    purpose: 'avatar',
+    variants: AVATAR_WIDTHS.map((w) => ({ width: Number(w), height: Number(w), url: urls[w], bytes: Number(w) * 40 })),
   };
 }
 
@@ -483,11 +502,14 @@ const PDF = Buffer.from(
 );
 
 const social = createSocial({ articles: ALL_ARTICLES, writers: WRITERS, problem });
+const profiles = createProfiles({ me, articles: ALL_ARTICLES, writers: WRITERS, fields: FIELDS, social, problem, avatarVariants });
 
 const routes = [
   ...social.routes,
+  ...profiles.routes,
   ['GET', /^\/__mock\/health$/, () => [200, { ok: true }]],
   ['GET', /^\/__mock\/asset\/image$/, (q) => [200, imageAsset(q.get('seed') ?? 'upload', Number(q.get('w') ?? 1600), Number(q.get('h') ?? 1200))]],
+  ['GET', /^\/__mock\/asset\/avatar$/, (q) => [200, avatarAsset(q.get('seed') ?? 'avatar')]],
   [
     'GET',
     /^\/__mock\/asset\/document$/,
@@ -551,10 +573,9 @@ const routes = [
     new RegExp(`^${API}/users/username-available$`),
     (q) => [200, { username: q.get('u') ?? '', valid: /^[a-z0-9_]{3,30}$/.test(q.get('u') ?? ''), available: q.get('u') !== 'taken' }],
   ],
-  ['GET', new RegExp(`^${API}/me$`), () => [200, me()]],
+  // GET /me and PATCH /me are per viewer (profiles.mjs).
   ['DELETE', new RegExp(`^${API}/me/devices/[^/]+$`), () => [204, undefined]],
   ['PUT', new RegExp(`^${API}/me/(preferences|interests)$`), () => [204, undefined]],
-  ['PATCH', new RegExp(`^${API}/me$`), () => [204, undefined]],
   ['POST', new RegExp(`^${API}/me/devices$`), () => [204, undefined]],
   [
     'GET',

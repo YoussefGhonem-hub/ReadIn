@@ -140,6 +140,18 @@ export function createSocial({ articles, writers, problem }) {
     return base + (viewer && viewer !== userId && stateOf(viewer).follows.has(userId) ? 1 : 0);
   }
 
+  /** Followers / following of `id` as `viewer` sees them: readers picked by a hash; your own Following is your follows. */
+  function listOf(id, list, viewer) {
+    if (list === 'following' && viewer && id === viewer) return writers.filter((w) => stateOf(viewer).follows.has(w.id));
+    const start = hash(`${id}:${list}`) % READERS.length;
+    const count = list === 'followers' ? 30 : 12;
+    const users = Array.from({ length: count }, (_, i) => READERS[(start + i) % READERS.length]);
+    if (list === 'followers' && viewer && viewer !== id && stateOf(viewer).follows.has(id)) {
+      return [people.get(viewer) ?? { id: viewer, displayName: 'You', username: 'you', avatarUrl: null, isVerified: false }, ...users];
+    }
+    return users;
+  }
+
   function summary(user, viewer) {
     return {
       ...author(user),
@@ -374,13 +386,11 @@ export function createSocial({ articles, writers, problem }) {
       'GET',
       new RegExp(`^${API}/users/([^/]+)/(followers|following)$`),
       (q, [, id, list], _body, req) => {
-        if (!people.has(id)) return [404, problem(404, 'user.not_found', 'User not found')];
         const viewer = viewerOf(req);
+        // Your own lists work too (your profile, F14), though you aren't one of the seeded people.
+        if (!people.has(id) && id !== viewer) return [404, problem(404, 'user.not_found', 'User not found')];
         const text = normalize(q.get('q') ?? '').trim();
-        const start = hash(`${id}:${list}`) % READERS.length;
-        const count = list === 'followers' ? 30 : 12;
-        let users = Array.from({ length: count }, (_, i) => READERS[(start + i) % READERS.length]);
-        if (list === 'followers' && viewer && viewer !== id && stateOf(viewer).follows.has(id)) users = [people.get(viewer) ?? { id: viewer, displayName: 'You', username: 'you', avatarUrl: null, isVerified: false }, ...users];
+        let users = listOf(id, list, viewer);
         if (text) users = users.filter((u) => normalize(u.displayName).includes(text) || u.username.includes(text.replace(/^@/, '')));
         return [200, page(users, q, (u) => summary(u, viewer))];
       },
@@ -411,5 +421,14 @@ export function createSocial({ articles, writers, problem }) {
     ]),
   ];
 
-  return { routes, personalize, viewerOf };
+  return {
+    routes,
+    personalize,
+    viewerOf,
+    readers: READERS,
+    // Profiles (profiles.mjs) count and show the same follows.
+    isFollowing: (viewer, id) => !!viewer && stateOf(viewer).follows.has(id),
+    followerCount,
+    listCount: (id, list, viewer) => listOf(id, list, viewer).length,
+  };
 }
