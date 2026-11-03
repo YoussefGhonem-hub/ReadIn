@@ -1,0 +1,36 @@
+{
+  "slug": "oauth-is-not-a-login-protocol",
+  "field": "security",
+  "topic": "auth",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "OAuth 2.0 Is Not a Login Protocol: Where OpenID Connect Comes In",
+      "subtitle": "An access token lets its holder call an API; it doesn't say which app it was issued to. Sign users in with a validated ID token, keyed by issuer and subject."
+    },
+    "ar-EG": {
+      "title": "ليه OAuth 2.0 مش بروتوكول login؟ وفين دور الـ OpenID Connect",
+      "subtitle": "الـ access token بيخلّي اللي ماسكه يكلّم API، ومش بيقول اتطلع لأنهي app. سجّل دخول المستخدمين بـ ID token متأكد منه، وتعرّف عليهم بالـ issuer والـ subject."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "secure-by-default", "order": 13 },
+  "tags": ["Security", "OAuth 2.0", "OpenID Connect", "Authentication", "ID Token"],
+  "sources": [
+    { "title": "RFC 6749: The OAuth 2.0 Authorization Framework", "url": "https://www.rfc-editor.org/rfc/rfc6749" },
+    { "title": "OpenID Connect Core 1.0", "url": "https://openid.net/specs/openid-connect-core-1_0.html" },
+    { "title": "RFC 9700: Best Current Practice for OAuth 2.0 Security", "url": "https://www.rfc-editor.org/rfc/rfc9700" },
+    { "title": "OpenID Connect on the Microsoft identity platform — Microsoft Learn", "url": "https://learn.microsoft.com/entra/identity-platform/v2-protocols-oidc" },
+    { "title": "Authentication Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record TokenLogin(string Token);\npublic sealed record Profile(string Email);\npublic sealed class Users\n{\n    public Task<string> SignInByEmailAsync(string email) => Task.FromResult(email);\n    public Task<string> SignInAsync(string issuer, string subject) => Task.FromResult(subject);\n}"
+    }
+  }
+}

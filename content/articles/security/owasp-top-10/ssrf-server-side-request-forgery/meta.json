@@ -1,0 +1,31 @@
+{
+  "slug": "ssrf-server-side-request-forgery",
+  "field": "security",
+  "topic": "owasp-top-10",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "SSRF: When Your Server Fetches a URL, Attackers Get Inside Your Network",
+      "subtitle": "A user-supplied URL turns your server into a proxy with your network's access. Check the address you actually connect to, not the URL text."
+    },
+    "ar-EG": {
+      "title": "الـ SSRF: لما السيرفر بتاعك يجيب URL، المهاجم يوصل لجوه الـ network بتاعتك",
+      "subtitle": "الـ URL اللي المستخدم بيبعته بيحوّل السيرفر بتاعك لـ proxy بصلاحيات الـ network بتاعتك. اتأكد من العنوان اللي هتتصل بيه فعلًا، مش من نص الـ URL."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "OWASP Top 10 2025",
+  "learningPath": { "slug": "secure-by-default", "order": 15 },
+  "tags": ["Security", "OWASP Top 10", "SSRF", "Broken Access Control", ".NET"],
+  "sources": [
+    { "title": "Server-Side Request Forgery Prevention Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html" },
+    { "title": "A01:2025 Broken Access Control — OWASP Top 10:2025", "url": "https://top10.owasp.org/2025/A01_2025-Broken_Access_Control/" },
+    { "title": "Server Side Request Forgery — OWASP Community", "url": "https://community.owasp.org/attacks/Server_Side_Request_Forgery" },
+    { "title": "Use the Instance Metadata Service to access instance metadata — Amazon EC2", "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html" },
+    { "title": "SocketsHttpHandler.ConnectCallback — .NET API, Microsoft Learn", "url": "https://learn.microsoft.com/dotnet/api/system.net.http.socketshttphandler.connectcallback" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

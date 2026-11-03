@@ -1,0 +1,31 @@
+{
+  "slug": "least-privilege-applies-to-your-app",
+  "field": "security",
+  "topic": "secure-coding",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Least Privilege Applies to Your App Too: Database Users, Service Accounts, Containers",
+      "subtitle": "Every bug in your app runs with your app's rights. Give the running code only what it uses, and keep schema changes and admin rights somewhere else."
+    },
+    "ar-EG": {
+      "title": "الـ Least Privilege للتطبيق كمان: الـ DB users والـ service accounts والـ containers",
+      "subtitle": "أي bug في التطبيق بيشتغل بصلاحيات التطبيق نفسه. ادّي الكود اللي شغال اللي بيستخدمه بس، وخلّي تغييرات الـ schema وصلاحيات الـ admin في حتة تانية."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "secure-by-default", "order": 12 },
+  "tags": ["Security", "Least Privilege", "SQL Server", "Containers", "Kubernetes"],
+  "sources": [
+    { "title": "Database Security Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Database_Security_Cheat_Sheet.html" },
+    { "title": "Applying Migrations — EF Core, Microsoft Learn", "url": "https://learn.microsoft.com/ef/core/managing-schemas/migrations/applying" },
+    { "title": "Docker Security Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html" },
+    { "title": "What's new in containers for .NET 8 — Microsoft Learn", "url": "https://learn.microsoft.com/dotnet/core/whats-new/dotnet-8/containers" },
+    { "title": "Role Based Access Control Good Practices — Kubernetes", "url": "https://kubernetes.io/docs/concepts/security/rbac-good-practices/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

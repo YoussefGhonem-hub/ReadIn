@@ -1,0 +1,36 @@
+{
+  "slug": "rate-limiting-against-credential-stuffing",
+  "field": "security",
+  "topic": "auth",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Strong Passwords Won't Stop Credential Stuffing: Rate Limiting and Login Defenses",
+      "subtitle": "Stuffing attacks try real passwords leaked from other sites, so strength rules don't matter. Limit attempts per IP and per account, and add MFA."
+    },
+    "ar-EG": {
+      "title": "الـ passwords القوية مش هتوقف الـ credential stuffing: الـ rate limiting وحماية الـ login",
+      "subtitle": "هجمات الـ stuffing بتجرّب passwords حقيقية اتسرّبت من مواقع تانية، فقواعد القوة مش فارقة. حدّد عدد المحاولات لكل IP ولكل حساب، وضيف MFA."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "secure-by-default", "order": 14 },
+  "tags": ["Security", "Authentication", "Rate Limiting", "ASP.NET Core", "Credential Stuffing"],
+  "sources": [
+    { "title": "Credential Stuffing Prevention Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Credential_Stuffing_Prevention_Cheat_Sheet.html" },
+    { "title": "Authentication Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html" },
+    { "title": "NIST SP 800-63B-4: Authentication and Authenticator Management", "url": "https://pages.nist.gov/800-63-4/sp800-63b.html" },
+    { "title": "Rate limiting middleware in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/performance/rate-limit" },
+    { "title": "Configure ASP.NET Core Identity — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/authentication/identity-configuration" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record LoginForm(string Email, string Password);\npublic class AppUser : Microsoft.AspNetCore.Identity.IdentityUser { }"
+    }
+  }
+}

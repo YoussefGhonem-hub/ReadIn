@@ -208,3 +208,83 @@ terms:
     definitionAr: >-
       إنك تستبدل secret، زي API key أو password بتاع database، بواحد جديد وتعمل revoke للقديم، عشان أي نسخة اتسرّبت أو
       اتسرقت تبطّل تشتغل. وممكن تحصل بشكل دوري أو على طول بعد ما تشك إن الـ secret اتكشف.
+  - id: least-privilege
+    term: Least privilege
+    definitionEn: >-
+      The principle that every user, process and service gets only the permissions it needs for its task, and nothing
+      more. When an account is misused, through a bug or stolen credentials, the damage is limited to those rights.
+    definitionAr: >-
+      مبدأ إن كل user أو process أو service ياخد الصلاحيات اللي محتاجها للشغلانة بتاعته بس، ومفيش حاجة زيادة. ولما
+      حساب يتساء استخدامه، بسبب bug أو credentials اتسرقت، الضرر بيفضل على قد الصلاحيات دي.
+  - id: service-account
+    term: Service account
+    definitionEn: >-
+      An identity used by software rather than a person, such as the account a Kubernetes pod uses to call the API
+      server. Its permissions apply to anything that runs as that workload, including a compromised process.
+    definitionAr: >-
+      identity بيستخدمها سوفتوير مش بني آدم، زي الحساب اللي الـ pod في Kubernetes بيكلّم بيه الـ API server. والصلاحيات
+      بتاعته بتنطبق على أي حاجة شغالة بالـ workload ده، حتى لو process اتخترق.
+  - id: ssrf
+    term: SSRF (Server-side request forgery)
+    definitionEn: >-
+      An attack where the attacker makes your server send a request to a destination they choose, often through a URL
+      parameter. The request comes from inside your network, so it can reach internal services the attacker can't.
+    definitionAr: >-
+      هجوم المهاجم فيه بيخلّي السيرفر بتاعك يبعت request لمكان هو اللي بيختاره، وغالبًا من خلال parameter فيه URL.
+      والـ request بيطلع من جوه الـ network بتاعتك، فيقدر يوصل لـ services داخلية المهاجم نفسه مايقدرش يوصلها.
+  - id: access-token
+    term: Access token (OAuth 2.0)
+    definitionEn: >-
+      A credential an OAuth 2.0 client presents to an API to act within the scopes the user granted. It is meant for
+      the API, is often opaque to the client, and says nothing reliable to the client about who the user is.
+    definitionAr: >-
+      credential الـ client في OAuth 2.0 بيقدّمه لـ API عشان يتصرف في حدود الـ scopes اللي المستخدم وافق عليها. هو
+      معمول للـ API، وغالبًا الـ client مش بيقدر يقراه، ومش بيقول للـ client أي حاجة موثوقة عن المستخدم مين.
+  - id: id-token
+    term: ID token (OpenID Connect)
+    definitionEn: >-
+      A signed JWT that an OpenID Connect provider issues to a client after the user authenticates. Its iss, sub and
+      aud claims say who issued it, which user it is about and which client it was issued to.
+    definitionAr: >-
+      JWT عليه signature بيطلّعه الـ OpenID Connect provider للـ client بعد ما المستخدم يعمل authentication. والـ
+      claims اللي اسمها iss وsub وaud بتقول مين اللي أصدره، وهو عن أنهي مستخدم، واتطلع لأنهي client.
+  - id: openid-connect
+    term: OpenID Connect (OIDC)
+    definitionEn: >-
+      An identity layer on top of OAuth 2.0 that lets an app verify who the user is, based on the login performed by
+      the provider. It adds the ID token, the openid scope and a standard userinfo endpoint.
+    definitionAr: >-
+      طبقة هوية فوق OAuth 2.0 بتخلّي التطبيق يتأكد المستخدم مين، بناءً على الـ login اللي عمله عند الـ provider.
+      وبتضيف الـ ID token، والـ scope اللي اسمه openid، و userinfo endpoint موحّد.
+  - id: credential-stuffing
+    term: Credential stuffing
+    definitionEn: >-
+      An automated attack that tries email and password pairs leaked from another site against your login. It works
+      whenever users reuse passwords, however strong those passwords are.
+    definitionAr: >-
+      هجوم automated بيجرّب أزواج إيميل و password اتسرّبت من موقع تاني على الـ login بتاعك. وبينجح كل ما المستخدمين
+      يكرروا نفس الـ password، مهما كان الـ password ده قوي.
+  - id: account-lockout
+    term: Account lockout
+    definitionEn: >-
+      A login control that blocks further attempts on an account for a period after a number of failed logins. It
+      counts per account, not per IP address, so it also catches guesses spread across many addresses.
+    definitionAr: >-
+      control في الـ login بيمنع أي محاولات تانية على حساب لفترة بعد عدد معيّن من المحاولات الفاشلة. وبيعدّ لكل حساب، مش
+      لكل IP address، فبيمسك كمان التخمينات اللي متوزّعة على عناوين كتير.
+  - id: dns-rebinding
+    term: DNS rebinding
+    definitionEn: >-
+      A trick where a domain first resolves to a harmless address and then, on a later lookup, to an internal one. A
+      check that resolves the name once and lets the HTTP client resolve it again can be bypassed this way.
+    definitionAr: >-
+      حيلة فيها الـ domain بيعمل resolve الأول لعنوان مالوش ضرر، وبعدين في lookup تاني لعنوان داخلي. والـ check اللي
+      بيعمل resolve للاسم مرة، ويسيب الـ HTTP client يعمل resolve تاني، ممكن يتعدّى بالطريقة دي.
+  - id: instance-metadata-service
+    term: Instance metadata service
+    definitionEn: >-
+      A link-local HTTP endpoint, such as 169.254.169.254, that a cloud VM calls to learn about itself, including
+      temporary credentials for its role. Only code on the machine can reach it, which is why SSRF targets it.
+    definitionAr: >-
+      endpoint بـ HTTP على عنوان link-local زي 169.254.169.254، الـ VM في الـ cloud بتكلّمه عشان تعرف معلومات عن نفسها،
+      ومنها credentials مؤقتة للـ role بتاعها. ومحدش يوصله غير الكود اللي على الجهاز نفسه، وعشان كده الـ SSRF بيستهدفه.
