@@ -1,0 +1,59 @@
+{
+  "slug": "exactly-once-delivery-and-idempotent-consumers",
+  "field": "software-architecture",
+  "topic": "microservices",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Exactly-Once Delivery Is a Myth: Designing Idempotent Consumers",
+      "subtitle": "Brokers deliver at least once, and their exactly-once features are narrower than their names. Record each message id in the same transaction as its effect."
+    },
+    "ar-EG": {
+      "title": "الـ exactly-once delivery خرافة: إزاي تصمم idempotent consumers",
+      "subtitle": "الـ brokers بتوصّل at least once، ومميزات الـ exactly-once عندهم أضيق من أساميها. سجّل الـ id بتاع كل رسالة في نفس الـ transaction بتاعة الأثر بتاعها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "distributed-systems-realistically",
+    "order": 8
+  },
+  "tags": [
+    "Idempotency",
+    "Messaging",
+    "Microservices",
+    "Distributed Systems"
+  ],
+  "sources": [
+    {
+      "title": "Design: Message Delivery Semantics — Apache Kafka documentation (4.4)",
+      "url": "https://kafka.apache.org/44/design/design/#message-delivery-semantics"
+    },
+    {
+      "title": "Reliability Guide — RabbitMQ documentation",
+      "url": "https://www.rabbitmq.com/docs/reliability"
+    },
+    {
+      "title": "Pattern: Idempotent Consumer — Chris Richardson, microservices.io",
+      "url": "https://microservices.io/patterns/communication-style/idempotent-consumer.html"
+    },
+    {
+      "title": "Duplicate message detection — Azure Service Bus, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/service-bus-messaging/duplicate-detection"
+    },
+    {
+      "title": "Transactions — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/transactions"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\n\npublic sealed record OrderPaid(Guid MessageId, Guid CustomerId, int Points);\npublic sealed class Account\n{\n    public Guid CustomerId { get; set; }\n    public int Points { get; set; }\n}\npublic sealed record ProcessedMessage(Guid Id, DateTime ProcessedAt);\npublic sealed class LoyaltyDb(DbContextOptions<LoyaltyDb> options) : DbContext(options)\n{\n    public DbSet<Account> Accounts => Set<Account>();\n    public DbSet<ProcessedMessage> ProcessedMessages => Set<ProcessedMessage>();\n}"
+    }
+  }
+}

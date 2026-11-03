@@ -1,0 +1,59 @@
+{
+  "slug": "shared-database-distributed-monolith",
+  "field": "software-architecture",
+  "topic": "microservices",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Separate Services, Shared Database: How You Build a Distributed Monolith",
+      "subtitle": "When services read and write the same tables, the schema becomes a contract nobody owns, and releases have to be coordinated again. Give each service its own data."
+    },
+    "ar-EG": {
+      "title": "لما الـ services تشارك نفس الـ database: كده بتبني distributed monolith",
+      "subtitle": "لما الـ services تقرا وتكتب في نفس الـ tables، الـ schema بتبقى contract محدش مالكه، والـ releases بترجع لازم تتنسّق. ادّي كل service الداتا بتاعتها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "distributed-systems-realistically",
+    "order": 4
+  },
+  "tags": [
+    "Microservices",
+    "Databases",
+    "Coupling",
+    "Data Ownership"
+  ],
+  "sources": [
+    {
+      "title": "IntegrationDatabase — Martin Fowler, bliki (2004, updated 2015)",
+      "url": "https://martinfowler.com/bliki/IntegrationDatabase.html"
+    },
+    {
+      "title": "Data sovereignty per microservice — .NET Microservices e-book, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/architect-microservice-container-applications/data-sovereignty-per-microservice"
+    },
+    {
+      "title": "Data considerations for microservices — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/microservices/design/data-considerations"
+    },
+    {
+      "title": "Communication in a microservice architecture — .NET Microservices e-book, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/architect-microservice-container-applications/communication-in-microservice-architecture"
+    },
+    {
+      "title": "Microservice Trade-Offs — Martin Fowler (2015)",
+      "url": "https://martinfowler.com/articles/microservice-trade-offs.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "global using Microsoft.EntityFrameworkCore;\npublic sealed record Address(string Street, string City);\npublic sealed record Label(Guid OrderId, string Name, string Street, string City);\npublic sealed class OrderRow\n{\n    public Guid Id { get; set; }\n    public string Status { get; set; } = \"\";\n    public DateTime? ShippedAt { get; set; }\n    public string CustomerName { get; set; } = \"\";\n    public string Street { get; set; } = \"\";\n    public string City { get; set; } = \"\";\n}\npublic sealed class Shipment(Guid orderId, string recipient, Address shipTo)\n{\n    public Guid OrderId { get; } = orderId;\n    public string Recipient { get; } = recipient;\n    public Address ShipTo { get; } = shipTo;\n    public DateTime? ShippedAt { get; set; }\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<OrderRow> Orders => Set<OrderRow>();\n}\npublic sealed class ShippingDb(DbContextOptions<ShippingDb> options) : DbContext(options)\n{\n    public DbSet<Shipment> Shipments => Set<Shipment>();\n}"
+    }
+  }
+}

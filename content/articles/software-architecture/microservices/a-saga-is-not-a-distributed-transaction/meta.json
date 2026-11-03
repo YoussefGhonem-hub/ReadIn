@@ -1,0 +1,55 @@
+{
+  "slug": "a-saga-is-not-a-distributed-transaction",
+  "field": "software-architecture",
+  "topic": "microservices",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "A Saga Is Not a Distributed Transaction: Compensation Without Isolation",
+      "subtitle": "Every saga step commits for real, others see the state in between, and a compensation is a new business action, not a rollback. Design for that."
+    },
+    "ar-EG": {
+      "title": "الـ Saga مش distributed transaction: compensation من غير isolation",
+      "subtitle": "كل خطوة في الـ saga بتعمل commit بجد، والباقيين بيشوفوا الحالة اللي في النص، والـ compensation action جديد في الـ business مش rollback. صمّم على الأساس ده."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "distributed-systems-realistically",
+    "order": 10
+  },
+  "tags": [
+    "Saga Pattern",
+    "Microservices",
+    "Distributed Systems",
+    "Transactions"
+  ],
+  "sources": [
+    {
+      "title": "Saga distributed transactions pattern — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/patterns/saga"
+    },
+    {
+      "title": "Compensating Transaction pattern — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/patterns/compensating-transaction"
+    },
+    {
+      "title": "Sagas — Hector Garcia-Molina and Kenneth Salem, ACM SIGMOD (1987)",
+      "url": "https://www.cs.cornell.edu/andru/cs711/2002fa/reading/sagas.pdf"
+    },
+    {
+      "title": "Pattern: Saga — Chris Richardson, microservices.io",
+      "url": "https://microservices.io/patterns/data/saga.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using System.ComponentModel.DataAnnotations;\nusing Microsoft.EntityFrameworkCore;\n\npublic sealed record SagaStep(Guid SagaId, string Sku, int AvailableBefore);\npublic sealed class Item\n{\n    public string Sku { get; set; } = \"\";\n    [ConcurrencyCheck] public int Available { get; set; }\n}\npublic sealed class Reservation\n{\n    public Guid Id { get; set; }\n    public string Sku { get; set; } = \"\";\n    public int Quantity { get; set; }\n    public bool Released { get; set; }\n}\npublic sealed class InventoryDb(DbContextOptions<InventoryDb> options) : DbContext(options)\n{\n    public DbSet<Item> Items => Set<Item>();\n    public DbSet<Reservation> Reservations => Set<Reservation>();\n}"
+    }
+  }
+}

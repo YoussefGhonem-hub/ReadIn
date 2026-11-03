@@ -1,0 +1,59 @@
+{
+  "slug": "retries-can-make-outages-worse",
+  "field": "software-architecture",
+  "topic": "system-design",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "More Retries Can Mean a Bigger Outage: Backoff, Jitter and Retry Budgets",
+      "subtitle": "Retries multiply across layers, arrive in waves and add load to whatever is already overloaded. Retry at one layer, with jitter, under a budget."
+    },
+    "ar-EG": {
+      "title": "ليه الـ retries الكتير ممكن توقّع السيستم؟ الـ backoff والـ jitter والـ retry budgets",
+      "subtitle": "الـ retries بتتضاعف على الطبقات، وبتيجي على دفعات، وبتزوّد الحمل على اللي تعبان أصلًا. اعمل retry في طبقة واحدة، بـ jitter، وجوه budget."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "distributed-systems-realistically",
+    "order": 7
+  },
+  "tags": [
+    "Retries",
+    "Resilience",
+    "Distributed Systems",
+    "Microservices"
+  ],
+  "sources": [
+    {
+      "title": "Timeouts, retries, and backoff with jitter — Marc Brooker, Amazon Builders' Library (2019)",
+      "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/"
+    },
+    {
+      "title": "Exponential Backoff And Jitter — Marc Brooker, AWS Architecture Blog (2015)",
+      "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/"
+    },
+    {
+      "title": "Addressing Cascading Failures — Site Reliability Engineering, Google",
+      "url": "https://sre.google/sre-book/addressing-cascading-failures/"
+    },
+    {
+      "title": "Handling Overload — Site Reliability Engineering, Google",
+      "url": "https://sre.google/sre-book/handling-overload/"
+    },
+    {
+      "title": "Build resilient HTTP apps: Key development patterns — .NET, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/resilience/http-resilience"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record Stock(string Sku, int Available);\n\n// A token bucket shared by all calls to one dependency\npublic sealed class RetryBudget\n{\n    private readonly Lock _gate = new();\n    private double _tokens = 10;\n\n    public void OnRequest() { lock (_gate) _tokens = Math.Min(10, _tokens + 0.1); }\n\n    public bool TrySpend()\n    {\n        lock (_gate)\n        {\n            if (_tokens < 1) return false;\n            _tokens--;\n            return true;\n        }\n    }\n}"
+    }
+  }
+}

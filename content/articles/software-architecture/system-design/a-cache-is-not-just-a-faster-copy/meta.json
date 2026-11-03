@@ -1,0 +1,55 @@
+{
+  "slug": "a-cache-is-not-just-a-faster-copy",
+  "field": "software-architecture",
+  "topic": "system-design",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "A Cache Is Not Just a Faster Copy: Staleness, Invalidation and Cache-Aside Races",
+      "subtitle": "Every cache is a second copy that can drift from the database. Decide how stale each value may be, and keep old copies from overwriting new ones."
+    },
+    "ar-EG": {
+      "title": "الـ cache مش مجرد نسخة أسرع: الداتا القديمة والـ invalidation وسباقات الـ cache-aside",
+      "subtitle": "أي cache هو نسخة تانية ممكن تبعد عن الداتابيز. حدّد كل قيمة مسموح تبقى قديمة قد إيه، وامنع النسخ القديمة إنها تكتب فوق الجديدة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "distributed-systems-realistically",
+    "order": 3
+  },
+  "tags": [
+    "Caching",
+    "Cache-Aside",
+    "Consistency",
+    "Race Conditions"
+  ],
+  "sources": [
+    {
+      "title": "Caching guidance — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/best-practices/caching"
+    },
+    {
+      "title": "Cache-Aside pattern — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/patterns/cache-aside"
+    },
+    {
+      "title": "Scaling Memcache at Facebook — Nishtala et al., NSDI 2013",
+      "url": "https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf"
+    },
+    {
+      "title": "TwoHardThings — Martin Fowler, bliki",
+      "url": "https://martinfowler.com/bliki/TwoHardThings.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "global using Microsoft.Extensions.Caching.Memory;\npublic sealed record Product(int Id, decimal Price, long Version);\npublic interface IProductStore\n{\n    Task<Product?> LoadAsync(int id);\n    Task<Product> SavePriceAsync(int id, decimal price);\n}"
+    }
+  }
+}

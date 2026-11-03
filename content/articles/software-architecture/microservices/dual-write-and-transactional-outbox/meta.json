@@ -1,0 +1,59 @@
+{
+  "slug": "dual-write-and-transactional-outbox",
+  "field": "software-architecture",
+  "topic": "microservices",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Save Then Publish Is Not Atomic: The Dual-Write Problem and the Outbox",
+      "subtitle": "No transaction covers your database and your broker, so a failure between the two writes loses events silently. Commit the event with the data and relay it."
+    },
+    "ar-EG": {
+      "title": "الـ save وبعده publish مش atomic: مشكلة الـ dual write والـ outbox pattern",
+      "subtitle": "مفيش transaction بتغطي الداتابيز والـ broker مع بعض، فأي فشل بين الكتابتين بيضيّع events من غير صوت. اعمل commit للـ event مع الداتا وخلّي relay ينشره."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "distributed-systems-realistically",
+    "order": 9
+  },
+  "tags": [
+    "Outbox Pattern",
+    "Messaging",
+    "Microservices",
+    "Distributed Systems"
+  ],
+  "sources": [
+    {
+      "title": "Pattern: Transactional outbox — Chris Richardson, microservices.io",
+      "url": "https://microservices.io/patterns/data/transactional-outbox.html"
+    },
+    {
+      "title": "Pattern: Polling publisher — Chris Richardson, microservices.io",
+      "url": "https://microservices.io/patterns/data/polling-publisher.html"
+    },
+    {
+      "title": "Reliable Microservices Data Exchange With the Outbox Pattern — Gunnar Morling, Debezium blog (2019)",
+      "url": "https://debezium.io/blog/2019/02/19/reliable-microservices-data-exchange-with-the-outbox-pattern/"
+    },
+    {
+      "title": "Implement the Transactional Outbox pattern by using Azure Cosmos DB — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/databases/guide/transactional-out-box-cosmos"
+    },
+    {
+      "title": "Subscribing to events — .NET Microservices e-book, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/multi-container-microservice-net-applications/subscribe-events"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\n\npublic sealed class Order\n{\n    public Guid Id { get; set; }\n    public decimal Total { get; set; }\n}\npublic sealed record OrderPlaced(Guid OrderId, decimal Total);\npublic sealed class OutboxMessage\n{\n    public Guid Id { get; set; }\n    public long Sequence { get; set; }\n    public string Type { get; set; } = \"\";\n    public string Payload { get; set; } = \"\";\n    public DateTime? PublishedAt { get; set; }\n}\npublic interface IMessageBus\n{\n    Task PublishAsync<T>(T message, CancellationToken ct);\n    Task PublishAsync(Guid id, string type, string payload, CancellationToken ct);\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Order> Orders => Set<Order>();\n    public DbSet<OutboxMessage> Outbox => Set<OutboxMessage>();\n}"
+    }
+  }
+}

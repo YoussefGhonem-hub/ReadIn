@@ -1,0 +1,59 @@
+{
+  "slug": "cap-theorem-is-not-pick-two",
+  "field": "software-architecture",
+  "topic": "system-design",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "CAP Is Not 'Pick Any Two': The CAP Theorem Without Myths",
+      "subtitle": "Partitions aren't optional, CAP's C and A are narrower than their names, and the real choice is made per operation, during a partition, and against latency the rest of the time."
+    },
+    "ar-EG": {
+      "title": "الـ CAP مش «اختار 2 من 3»: نظرية CAP من غير خرافات",
+      "subtitle": "الـ partitions مش اختيار، والـ C والـ A في CAP أضيق من أساميهم، والاختيار الحقيقي بيتعمل لكل operation، وقت الـ partition، وقصاد الـ latency في باقي الوقت."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "distributed-systems-realistically",
+    "order": 5
+  },
+  "tags": [
+    "CAP Theorem",
+    "Distributed Systems",
+    "Consistency",
+    "Availability"
+  ],
+  "sources": [
+    {
+      "title": "CAP Twelve Years Later: How the \"Rules\" Have Changed — Eric Brewer, IEEE Computer, via InfoQ (2012)",
+      "url": "https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/"
+    },
+    {
+      "title": "Brewer's Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services — Seth Gilbert and Nancy Lynch (2002)",
+      "url": "https://www.comp.nus.edu.sg/~gilbert/pubs/BrewersConjecture-SigAct.pdf"
+    },
+    {
+      "title": "Please stop calling databases CP or AP — Martin Kleppmann (2015)",
+      "url": "https://martin.kleppmann.com/2015/05/11/please-stop-calling-databases-cp-or-ap.html"
+    },
+    {
+      "title": "Consistency Tradeoffs in Modern Distributed Database System Design — Daniel J. Abadi, IEEE Computer (2012)",
+      "url": "https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf"
+    },
+    {
+      "title": "Consistency levels in Azure Cosmos DB — Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/cosmos-db/consistency-levels"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public interface ISeatStore\n{\n    // Assigns the seat only if it's still free on this store; false if taken\n    Task<bool> TryAssignAsync(Guid flight, string seat, CancellationToken ct);\n    Task<string[]> GetFreeSeatsAsync(Guid flight, CancellationToken ct);\n}"
+    }
+  }
+}

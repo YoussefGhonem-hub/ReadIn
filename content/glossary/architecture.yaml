@@ -83,3 +83,83 @@ terms:
     term: Optimistic concurrency
     definitionEn: Letting two users edit the same data without locking it, and checking a version number when saving. The save based on an older version is rejected, so one of two overlapping changes fails instead of silently overwriting the other.
     definitionAr: إنك تسيب اتنين يعدّلوا نفس الداتا من غير lock، وتشيّك على رقم version وقت الحفظ. والحفظ اللي مبني على version أقدم بيترفض، فواحد من التغييرين المتداخلين بيفشل بدل ما يكتب فوق التاني من غير ما حد ياخد باله.
+  - id: modular-monolith
+    term: Modular monolith
+    definitionEn: An application built and deployed as a single unit whose code is split into modules with firm boundaries. Each module owns its data and exposes a small public contract, so the others can't reach into its internals.
+    definitionAr: تطبيق بيتبني ويتعمله deploy كوحدة واحدة، بس الكود بتاعه متقسم modules ليها حدود ثابتة. كل module مالك الداتا بتاعته وبيطلّع contract صغير للي برّه، فالباقيين مايقدروش يدخلوا جواه.
+  - id: microservice-premium
+    term: Microservice Premium
+    definitionEn: Martin Fowler's name for the extra cost and risk that microservices add on their own, such as automated deployment, monitoring, handling failure and eventual consistency. It only pays off for systems too complex to manage as a monolith.
+    definitionAr: الاسم اللي Martin Fowler بيطلقه على التكلفة والمخاطرة الزيادة اللي الـ microservices بتجيبها لوحدها، زي الـ deployment الأوتوماتيك والـ monitoring والتعامل مع الفشل والـ eventual consistency. ومش بتستاهل غير في سيستم معقد لدرجة إنك ماتقدرش تديره كـ monolith.
+  - id: partial-failure
+    term: Partial failure
+    definitionEn: In a distributed system, a failure that hits some components or messages while the rest keep working. A caller that gets no answer can't tell whether its request was lost, done, or still running.
+    definitionAr: في الـ distributed system، فشل بيضرب جزء من الـ components أو الرسايل والباقي شغال عادي. والـ caller اللي مجالوش رد مايقدرش يعرف إذا كان الـ request بتاعه ضاع، ولا اتنفّذ، ولا لسه شغال.
+  - id: fallacies-of-distributed-computing
+    term: Fallacies of distributed computing
+    definitionEn: Eight false assumptions, credited to L. Peter Deutsch and colleagues at Sun Microsystems, that developers make when they first build a distributed application, starting with "the network is reliable" and "latency is zero".
+    definitionAr: تمن افتراضات غلط، منسوبة لـ L. Peter Deutsch وزمايله في Sun Microsystems، المطورين بيعملوها أول ما يبنوا distributed application، وأولهم إن "الـ network موثوقة" وإن "الـ latency بصفر".
+  - id: cache-aside
+    term: Cache-aside
+    definitionEn: A caching pattern where the application checks the cache first, loads the data from the database on a miss and puts it in the cache, and on a write updates the database and then removes the cached entry.
+    definitionAr: pattern للـ caching التطبيق فيه بيدوّر في الـ cache الأول، ولو مالقاش بيجيب الداتا من الداتابيز ويحطها في الـ cache، ولما يكتب بيحدّث الداتابيز وبعدين يشيل الـ entry من الـ cache.
+  - id: time-to-live
+    term: Time to live (TTL)
+    definitionEn: How long a cache entry may live before the cache removes it. It puts an upper bound on how long a stale copy can be served, at the cost of more misses when it's short.
+    definitionAr: المدة اللي الـ entry يقدر يعيشها في الـ cache قبل ما يتشال. بيحط حد أقصى للمدة اللي نسخة قديمة ممكن تتعرض فيها، والتمن إن الـ misses بتزيد لما تبقى قصيرة.
+  - id: integration-database
+    term: Integration database
+    definitionEn: Martin Fowler's term for a database that several applications or services read and write directly, so its schema becomes a contract between all of them and changing it means coordinating every one.
+    definitionAr: المصطلح اللي Martin Fowler بيستخدمه لداتابيز كذا application أو service بيقروا ويكتبوا فيها مباشرة، فالـ schema بتاعتها بتبقى contract بينهم كلهم، وتغييرها محتاج تنسيق مع كل واحد فيهم.
+  - id: distributed-monolith
+    term: Distributed monolith
+    definitionEn: A system split into separately deployed services that are still so tightly coupled, often through shared tables or chatty synchronous calls, that they must change and be released together. It has the costs of a distributed system without independent deployment.
+    definitionAr: سيستم متقسم services كل واحدة بتتعمل deploy لوحدها، بس لسه مربوطين ببعض جامد، غالبًا بـ tables مشتركة أو calls synchronous كتير، لدرجة إنهم لازم يتغيّروا وينزلوا مع بعض. بتدفع فيه تمن الـ distributed system من غير ما تاخد الـ deployment المستقل.
+  - id: cap-theorem
+    term: CAP theorem
+    definitionEn: Eric Brewer's conjecture, proved by Seth Gilbert and Nancy Lynch in 2002, that a replicated read/write store can't be both linearizable and available for every request while the network may lose messages between its nodes.
+    definitionAr: الفرضية اللي Eric Brewer قالها، و Seth Gilbert و Nancy Lynch أثبتوها سنة 2002، إن الـ store المتكرر على كذا node مايقدرش يبقى linearizable ومتاح لكل request في نفس الوقت، طالما الـ network ممكن تضيّع رسايل بين الـ nodes.
+  - id: linearizability
+    term: Linearizability
+    definitionEn: A strong consistency guarantee where the system behaves as if there were a single copy of the data. Once a write has completed, every read that starts after it sees that value or a newer one. It's the C in CAP, not the C in ACID.
+    definitionAr: ضمان consistency قوي السيستم فيه بيتصرف كأن فيه نسخة واحدة بس من الداتا. أول ما كتابة تخلص، أي قراية تبدأ بعدها بتشوف القيمة دي أو أحدث منها. وده الـ C في CAP، مش الـ C في ACID.
+  - id: network-partition
+    term: Network partition
+    definitionEn: A fault where nodes keep running but the network between some of them drops or delays messages, so the system splits into groups that can't communicate. In practice a long enough delay is indistinguishable from a partition.
+    definitionAr: عطل الـ nodes فيه بتفضل شغالة بس الـ network اللي بينها بتضيّع الرسايل أو بتأخّرها، فالسيستم بيتقسم لمجموعات مش قادرة تكلم بعض. وعمليًا، التأخير الطويل كفاية مش بيتفرق عن الـ partition.
+  - id: inconsistency-window
+    term: Inconsistency window
+    definitionEn: Werner Vogels's name for the period between an update and the moment every reader is guaranteed to see it. In an eventually consistent system, a read during the window can return an older value.
+    definitionAr: الاسم اللي Werner Vogels بيطلقه على الفترة ما بين التحديث واللحظة اللي أي حد بيقرا مضمون يشوفه فيها. وفي السيستم الـ eventually consistent، القراية جوه الفترة دي ممكن ترجّع قيمة أقدم.
+  - id: read-your-writes
+    term: Read-your-writes consistency
+    definitionEn: A guarantee that after a client changes a piece of data, its own later reads return that change or a newer one, even if other clients may still see the older value for a while.
+    definitionAr: ضمان إن الـ client بعد ما يغيّر داتا، القراية بتاعته هو بعد كده بترجّع التغيير ده أو حاجة أحدث، حتى لو clients تانيين لسه ممكن يشوفوا القيمة القديمة شوية.
+  - id: retry-budget
+    term: Retry budget
+    definitionEn: A limit on how many retries a client or process may send to a dependency across all requests, such as retries staying under 10% of requests. When it's spent, calls fail at once instead of retrying, so retries can't multiply the load on a struggling service.
+    definitionAr: حد لعدد الـ retries اللي client أو process مسموح يبعتها لـ dependency على كل الـ requests مع بعض، زي إن الـ retries ماتعدّيش 10% من الـ requests. ولما يخلص، الـ calls بتفشل على طول بدل ما تعيد، فالـ retries مايقدروش يضاعفوا الحمل على service تعبانة.
+  - id: jitter
+    term: Jitter
+    definitionEn: A random amount added to a delay, such as the wait before a retry, so that many clients that failed at the same moment don't all try again at the same moment.
+    definitionAr: قيمة عشوائية بتتضاف على وقت استنا، زي الوقت قبل الـ retry، عشان clients كتير فشلوا في نفس اللحظة مايرجعوش يحاولوا كلهم في نفس اللحظة.
+  - id: idempotency
+    term: Idempotency
+    definitionEn: The property of an operation that can be repeated with the same input and leaves the same result as doing it once, such as setting an order's status to Paid, unlike adding points to a balance.
+    definitionAr: صفة الـ operation اللي لو اتكررت بنفس الـ input بتسيب نفس النتيجة كأنها اتعملت مرة واحدة، زي إنك تخلّي حالة الـ order "مدفوع"، على عكس إنك تضيف نقط على رصيد.
+  - id: at-least-once-delivery
+    term: At-least-once delivery
+    definitionEn: A messaging guarantee that a message won't be lost but may be delivered more than once, for example when a consumer crashes after processing a message and before acknowledging it.
+    definitionAr: ضمان في الـ messaging إن الرسالة مش هتضيع بس ممكن توصل أكتر من مرة، زي لما الـ consumer يقع بعد ما يعالج الرسالة وقبل ما يعمل لها acknowledge.
+  - id: dual-write
+    term: Dual write
+    definitionEn: One operation that writes to two systems, such as a database and a message broker, with no transaction spanning both. A failure between the two writes leaves them disagreeing, for example an order saved with no event published.
+    definitionAr: عملية واحدة بتكتب في سيستمين، زي داتابيز و message broker، من غير transaction واحدة بتغطي الاتنين. ولو حصل فشل بين الكتابتين، الاتنين بيبقوا مش متفقين، زي order اتحفظ ومفيش event اتنشر عنه.
+  - id: saga
+    term: Saga
+    definitionEn: A business process that spans several services, run as a sequence of local transactions that each commit on their own. If a step fails, compensating transactions undo the effects of the steps that already committed. Unlike a database transaction, it offers no isolation.
+    definitionAr: business process بتعدّي على كذا service، وبتتنفّذ كسلسلة local transactions كل واحدة بتعمل commit لوحدها. ولو خطوة فشلت، الـ compensating transactions بتلغي أثر الخطوات اللي اتعملها commit خلاص. وعلى عكس الـ transaction بتاعة الداتابيز، مفيهاش isolation.
+  - id: compensating-transaction
+    term: Compensating transaction
+    definitionEn: A new business action that semantically undoes a step that has already committed, such as refunding a payment or releasing a reservation. It doesn't restore the previous state, because other work may have happened since.
+    definitionAr: action جديد في الـ business بيلغي من ناحية المعنى خطوة اتعملها commit خلاص، زي إنك ترجّع فلوس أو تفك حجز. ومش بيرجّع الحالة اللي كانت قبل كده، لأن ممكن يكون حصل شغل تاني من ساعتها.

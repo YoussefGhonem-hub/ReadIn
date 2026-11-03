@@ -1,0 +1,55 @@
+{
+  "slug": "eventual-consistency-is-a-product-decision",
+  "field": "software-architecture",
+  "topic": "microservices",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Eventual Consistency Is a Product Decision, Not a Bug You Tolerate",
+      "subtitle": "The lag between copies is visible, so what users see during it, and what the system does with old data, are product decisions, not database settings."
+    },
+    "ar-EG": {
+      "title": "الـ eventual consistency قرار في الـ product مش bug بتستحمله",
+      "subtitle": "الفرق بين النسخ باين للناس، فاللي المستخدم يشوفه وقتها، واللي السيستم يعمله بالداتا القديمة، قرارات product مش settings في الداتابيز."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "distributed-systems-realistically",
+    "order": 6
+  },
+  "tags": [
+    "Eventual Consistency",
+    "Microservices",
+    "Distributed Systems",
+    "UX"
+  ],
+  "sources": [
+    {
+      "title": "Eventually Consistent - Revisited — Werner Vogels, All Things Distributed (2008)",
+      "url": "https://www.allthingsdistributed.com/2008/12/eventually_consistent.html"
+    },
+    {
+      "title": "Microservice Trade-Offs — Martin Fowler (2015)",
+      "url": "https://martinfowler.com/articles/microservice-trade-offs.html"
+    },
+    {
+      "title": "Challenges and solutions for distributed data management — .NET Microservices e-book, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/architect-microservice-container-applications/distributed-data-management"
+    },
+    {
+      "title": "Consistency level choices — Azure Cosmos DB, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/cosmos-db/consistency-levels"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record OrderView(Guid Id, string Status, long Version);\npublic sealed class Orders\n{\n    public Task<long> CancelAsync(Guid id) => Task.FromResult(1L);\n}\npublic sealed class OrderViews\n{\n    public Task<OrderView?> FindAsync(Guid id) => Task.FromResult<OrderView?>(null);\n}"
+    }
+  }
+}

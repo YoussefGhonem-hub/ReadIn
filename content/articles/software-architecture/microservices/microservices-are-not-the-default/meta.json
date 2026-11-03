@@ -1,0 +1,59 @@
+{
+  "slug": "microservices-are-not-the-default",
+  "field": "software-architecture",
+  "topic": "microservices",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Monolith First: Why Microservices Shouldn't Be Your Starting Point",
+      "subtitle": "Microservices trade simplicity for firm boundaries and independent deployment, at a real premium. Start with a well-modularized monolith and split only when complexity demands it."
+    },
+    "ar-EG": {
+      "title": "ابدأ بـ monolith: ليه الـ microservices مش نقطة البداية الصح",
+      "subtitle": "الـ microservices بتديك حدود ثابتة و deployment مستقل، بس قصاد تمن حقيقي. ابدأ بـ monolith متقسم modules كويس، وقسّمه بس لما التعقيد يفرض ده."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "distributed-systems-realistically",
+    "order": 1
+  },
+  "tags": [
+    "Microservices",
+    "Monolith",
+    "Modularity",
+    "Architecture"
+  ],
+  "sources": [
+    {
+      "title": "MonolithFirst — Martin Fowler, bliki (2015)",
+      "url": "https://martinfowler.com/bliki/MonolithFirst.html"
+    },
+    {
+      "title": "MicroservicePremium — Martin Fowler, bliki (2015)",
+      "url": "https://martinfowler.com/bliki/MicroservicePremium.html"
+    },
+    {
+      "title": "Microservice Trade-Offs — Martin Fowler (2015)",
+      "url": "https://martinfowler.com/articles/microservice-trade-offs.html"
+    },
+    {
+      "title": "Microservices — James Lewis and Martin Fowler (2014)",
+      "url": "https://martinfowler.com/articles/microservices.html"
+    },
+    {
+      "title": "Microservices architecture style — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/guide/architecture-styles/microservices"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed record Order(Guid Id, decimal Net);\npublic sealed class Invoice(Guid orderId, decimal total)\n{\n    public Guid OrderId { get; } = orderId;\n    public decimal Total { get; } = total;\n    public string Number { get; } = $\"INV-{orderId:N}\";\n    public static Invoice For(Guid orderId, decimal net) => new(orderId, net * 1.14m);\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Order> Orders => Set<Order>();\n    public DbSet<Invoice> Invoices => Set<Invoice>();\n}\npublic sealed class BillingDb(DbContextOptions<BillingDb> options) : DbContext(options)\n{\n    public DbSet<Invoice> Invoices => Set<Invoice>();\n}"
+    }
+  }
+}

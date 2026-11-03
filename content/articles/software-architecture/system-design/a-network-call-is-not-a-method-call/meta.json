@@ -1,0 +1,59 @@
+{
+  "slug": "a-network-call-is-not-a-method-call",
+  "field": "software-architecture",
+  "topic": "system-design",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "A Network Call Is Not a Method Call: Assumptions That Break Distributed Systems",
+      "subtitle": "A remote call can succeed, fail, or leave you not knowing which. Latency adds up, failures multiply, and a timeout is not a no."
+    },
+    "ar-EG": {
+      "title": "الـ network call مش method call: الافتراضات الغلط اللي بتكسر الـ distributed systems",
+      "subtitle": "الـ remote call ممكن تنجح، أو تفشل، أو تسيبك مش عارف حصل إيه. الـ latency بتتجمع، والأعطال بتتضاعف، والـ timeout مش معناه لأ."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "distributed-systems-realistically",
+    "order": 2
+  },
+  "tags": [
+    "Distributed Systems",
+    "Microservices",
+    "HTTP",
+    "Resilience"
+  ],
+  "sources": [
+    {
+      "title": "The Eight Fallacies of Distributed Computing — Peter Deutsch, on James Gosling's site",
+      "url": "https://nighthacks.com/jag/res/Fallacies.html"
+    },
+    {
+      "title": "SE Radio 470: L. Peter Deutsch on the Fallacies of Distributed Computing (2021)",
+      "url": "https://se-radio.net/2021/07/episode-470-l-peter-deutsch-on-the-fallacies-of-distributed-computing/"
+    },
+    {
+      "title": "Microservices and the First Law of Distributed Objects — Martin Fowler (2014)",
+      "url": "https://martinfowler.com/articles/distributed-objects-microservices.html"
+    },
+    {
+      "title": "Communication in a microservice architecture — .NET Microservices e-book, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/architect-microservice-container-applications/communication-in-microservice-architecture"
+    },
+    {
+      "title": "Transient fault handling — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/best-practices/transient-faults"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record Charge(Guid Id, Guid OrderId, decimal Amount);"
+    }
+  }
+}
