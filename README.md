@@ -20,7 +20,7 @@ ReadIn is a bilingual (Arabic + English) knowledge platform that helps you read 
 | Backend | .NET 10 · ASP.NET Core · Clean Architecture · CQRS (Mediator) · Mapster · EF Core · SQL Server · Hangfire |
 | Web | Angular 22 (SSR) · Signals · Tailwind CSS v4 · Transloco · Shiki |
 | Mobile | Flutter · flutter_bloc · get_it/injectable · go_router · dio/retrofit |
-| Platform | Firebase Auth · Cloud Messaging · Storage |
+| Platform | Phone + password sign in with the API's own JWT ([ADR 0007](docs/adr/0007-phone-password-authentication.md)) · Firebase Cloud Messaging + Realtime Database ([ADR 0008](docs/adr/0008-firebase-scope-fcm-and-rtdb.md)) |
 
 ## Repository Structure
 | Folder | Content |
@@ -46,11 +46,14 @@ ReadIn is a bilingual (Arabic + English) knowledge platform that helps you read 
 # 1. SQL Server 2022 (host port 14333) + Seq (http://localhost:5341)
 docker compose up -d
 
-# 2. Firebase Auth + Storage emulators (project "demo-readin", UI at http://127.0.0.1:4000)
+# 2. Optional: Firebase emulators for live updates and push (project "demo-readin", UI at http://127.0.0.1:4000).
+#    Sign in works without them.
 firebase emulators:start
 
 # 3. Demo user password (never committed, SPEC §18.1). Without it demo users can't sign in.
 dotnet user-secrets set "Seed:DemoPassword" "<choose-a-password>" --project backend/src/ReadIn.Api
+#    Demo recovery PIN: 4 digits, not weak (no 1234, 1111, years…). Without it demo users must set a PIN after signing in.
+dotnet user-secrets set "Seed:DemoPin" "<4-digit-pin>" --project backend/src/ReadIn.Api
 
 # 4. API on http://localhost:5080. Applies migrations and runs all seeders in Development.
 #    API docs: http://localhost:5080/docs · Hangfire: http://localhost:5080/hangfire
@@ -63,7 +66,7 @@ cd web && npm ci && npm start
 cd mobile && flutter pub get && flutter run --dart-define-from-file=config/dev.json
 ```
 
-Sign in with any seeded account (SPEC §18.3), e.g. `reader1@readin.test`, `writer.verified@readin.test`, `reviewer.dotnet@readin.test` or `admin@readin.test`, using the demo password.
+Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+12025550110` (reader1), `+12025550106` (verified writer), `+12025550104` (.NET reviewer), `+12025550102` (admin) or `+12025550101` (SuperAdmin). These are fictional 555-01XX numbers. `+12025550119` (reader10) has no PIN and shows the mandatory "set PIN" screen.
 
 > Port 1433 is often taken by a locally installed SQL Server, so the container is published on **14333**.
 
@@ -89,7 +92,7 @@ Sign in with any seeded account (SPEC §18.3), e.g. `reader1@readin.test`, `writ
 | Design tokens → CSS variables + Flutter `ThemeExtension` | ✅ generated from `design/tokens.json` |
 | RDoc schema + examples + BiDi fixtures | ✅ shared by backend, web and mobile tests |
 | Backend skeleton (Domain / Application / Infrastructure / Api / ContentStudio) | ✅ |
-| Firebase auth (emulator in dev), SQL-backed roles & permissions | ✅ |
+| Phone + password auth (JWT, rotating refresh tokens, recovery PIN), SQL-backed roles & permissions | ✅ backend |
 | Seeders: roles & permissions, taxonomy, system accounts, demo users, articles | ✅ |
 | Seeders: glossary, learning paths, demo interactions | ⏳ arrive with F21 / F09 / F10–F13 |
 | Outbox + Hangfire (immediate trigger + per-minute safety net), scheduled publishing | ✅ |

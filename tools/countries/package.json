@@ -1,0 +1,12 @@
+{
+  "name": "readin-countries",
+  "private": true,
+  "type": "module",
+  "description": "Generates shared/countries/countries.json for the phone field (SPEC §9.4).",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "libphonenumber-js": "1.13.15"
+  }
+}

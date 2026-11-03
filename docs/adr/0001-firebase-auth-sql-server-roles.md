@@ -1,6 +1,6 @@
 # 0001 — Firebase Authentication for identity, SQL Server for roles
 
-- **Status:** Accepted
+- **Status:** Superseded by [0007](0007-phone-password-authentication.md) (2026-11-03). Roles and permissions still come from SQL Server as described here.
 - **Date:** 2026-11-02
 
 ## Context

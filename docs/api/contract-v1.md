@@ -7,7 +7,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 | Item | Value |
 |---|---|
 | Base URL (local) | `http://localhost:5080/api/v1` |
-| Auth | `Authorization: Bearer <Firebase ID token>`. Anonymous calls are allowed where marked 🌐 |
+| Auth | `Authorization: Bearer <access token>` from `/auth/login` or `/auth/register` (JWT, 15 minutes; ADR 0007). Anonymous calls are allowed where marked 🌐 |
 | UI language | `Accept-Language: ar` or `en`. Controls error `title`/`detail` and localized `name` fields |
 | Article language | `?lang=ar-EG` or `?lang=en` on article endpoints (falls back to the article's source language) |
 | JSON | camelCase, enums as camelCase strings, dates ISO-8601 UTC (`2026-11-02T08:00:00Z`), times `HH:mm` |
@@ -27,20 +27,56 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_synced`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `article.not_found`, `server.error`.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth codes below.
 
 ## Endpoints
 
-### Auth & Me
+### Auth 🌐 (SPEC §9, ADR 0007, ADR 0009)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/auth/config` | → `200 AuthConfigDto` (PIN length and password rules for the forms) |
+| POST | `/auth/register` | `RegisterRequest` → `200 SessionDto`. `409 auth.phone_taken`. The profile starts incomplete (`isProfileComplete: false`, placeholder `@reader_xxxxxxxxxx`) |
+| POST | `/auth/login` | `LoginRequest` → `200 SessionDto`. `401 auth.invalid_credentials` (wrong number or password, same error), `429 auth.locked_out` (5 wrong → 15 minutes), `403 user.suspended`, `429 rate_limited` (5 a minute per number) |
+| POST | `/auth/refresh` | `RefreshRequest` (mobile) or no body + cookie (web) → `200 SessionDto` with a **new** refresh token. `401 auth.refresh_invalid` → sign out |
+| POST | `/auth/logout` | `RefreshRequest` or cookie → `204` (always); ends this device's session |
+| POST | `/auth/logout-all` | Bearer → `200 SessionDto`: every other session ends, this device gets fresh tokens |
+| POST | `/auth/recovery/verify-pin` | `VerifyPinRequest` → `200 { resetToken, expiresAt }` (10 minutes, single use). `401 auth.recovery_invalid` (wrong number or PIN), `429 auth.recovery_locked` (5 wrong → 1 hour), `403 auth.recovery_disabled` (3 lockouts in 7 days → contact support) |
+| POST | `/auth/recovery/reset-password` | `{ resetToken, newPassword }` → `204`; every session is signed out. `400 auth.reset_token_invalid` → start again |
+
+**Web sessions:** send `X-ReadIn-Client: web` with `credentials: "include"` on every `/auth/*` call and on `PUT /me/password`,
+`PUT /me/phone` and `DELETE /me`. The refresh token then comes as an `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth`
+cookie named `readin_refresh`, and `SessionDto.refreshToken` is `null`. Without the header the cookie is ignored.
+**Mobile** keeps `refreshToken` in secure storage and may send `X-Device-Name` (e.g. "Pixel 8"). Tokens rotate: presenting a
+refresh token that was already used ends the whole session (a 30-second grace covers parallel tabs), so refresh one call
+at a time (single-flight) and always keep the newest token.
+
+**After sign in**, route by `SessionDto.user` in this order (SPEC §9.2): `mustChangePassword` → change password,
+`mustSetRecoveryPin` → set PIN, `!isProfileComplete` → complete profile, `!onboardingCompleted` → onboarding, else home.
+
+### Me (Bearer)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/me` | → `200 MeDto` |
+| PATCH | `/me` | `UpdateProfileRequest` → `204` |
+| DELETE | `/me` | `{ password }` → `204`. Signed out everywhere; personal data removed after 30 days. `400 auth.wrong_password` |
+| PUT | `/me/profile/complete` | `{ displayName, username, avatarUrl? }` → `200 MeDto`. `409 user.username_taken` |
+| PUT | `/me/password` | `{ currentPassword, newPassword }` → `200 SessionDto`; other sessions end. `400 auth.wrong_password` |
+| PUT | `/me/phone` | `{ newPhoneNumber, currentPassword }` → `200 SessionDto`; other sessions end. `409 auth.phone_taken`, `400 auth.phone_unchanged` |
+| POST | `/me/recovery-pin` | `{ pin }` → `200 MeDto`. Only while `mustSetRecoveryPin` (or without a PIN); `409 auth.pin_already_set` otherwise |
+| PUT | `/me/recovery-pin` | `{ currentPassword, newPin }` → `204` |
+| PUT | `/me/preferences` | `UpdatePreferencesRequest` → `204` |
+| PUT | `/me/interests` | `UpdateInterestsRequest` → `204` (at least 3 field ids + topic ids combined) |
+| POST | `/me/devices` | `RegisterDeviceRequest` → `204` (FCM token upsert) |
+| DELETE | `/me/devices/{token}` | → `204` (idempotent; call on sign out, URL-encode the token) |
+
+A wrong `currentPassword` counts toward the same 15-minute lockout as sign in (`429 auth.locked_out`).
 
 | Method | Path | Auth | Body → Response |
 |---|---|---|---|
-| POST | `/auth/sync` | Bearer | `SyncUserRequest` → `200 MeDto`. Creates the user on first call (role `Member`) and refreshes email/photo after that. Call it after every sign-in. |
-| GET | `/me` | Bearer | → `200 MeDto` (`404 user.not_synced` if `/auth/sync` was never called) |
-| PATCH | `/me` | Bearer | `UpdateProfileRequest` → `204` |
-| PUT | `/me/preferences` | Bearer | `UpdatePreferencesRequest` → `204` |
-| PUT | `/me/interests` | Bearer | `UpdateInterestsRequest` → `204` (at least 3 field ids + topic ids combined) |
-| POST | `/me/devices` | Bearer | `RegisterDeviceRequest` → `204` (FCM token upsert) |
+| GET | `/users/username-available?u=` | 🌐 | → `200 { username, valid, available }` (your own handle counts as available) |
+| POST | `/admin/users/{id}/reset-password` | Bearer, `users.reset_password` | → `200 { temporaryPassword }`. "Forgot the PIN too" (ADR 0009): the user must change the password and set a PIN on the next sign in. Only a SuperAdmin can reset an Admin or SuperAdmin |
 
 ### Taxonomy 🌐
 
@@ -88,11 +124,38 @@ type UiLanguage = 'ar' | 'en';
 type ArticleLanguage = 'ar-EG' | 'en';
 type ThemePreference = 'system' | 'light' | 'dark';
 
-interface SyncUserRequest { uiLanguage?: UiLanguage; timeZone?: string /* IANA, e.g. "Africa/Cairo" */ }
+interface AuthConfigDto {
+  pinLength: number;             // default 4
+  password: { minLength: number; maxLength: number; requireLetter: boolean; requireDigit: boolean };
+}
+
+interface RegisterRequest {
+  phoneNumber: string;           // E.164, e.g. "+201001234567" (mobile numbers only)
+  password: string;              // 8..128, a letter and a digit, not common, not containing the number
+  recoveryPin: string;           // pinLength digits, not weak (SPEC §9.4)
+  uiLanguage?: UiLanguage;
+  timeZone?: string;             // IANA, e.g. "Africa/Cairo"
+}
+
+interface LoginRequest { phoneNumber: string; password: string }
+interface RefreshRequest { refreshToken?: string }   // omit on the web (cookie)
+interface VerifyPinRequest { phoneNumber: string; pin: string }
+
+interface SessionDto {
+  accessToken: string;           // JWT, send as Bearer
+  accessTokenExpiresAt: string;  // ~15 minutes
+  refreshToken: string | null;   // null on the web (HttpOnly cookie)
+  refreshTokenExpiresAt: string; // 30 days; rotates on every refresh
+  user: MeDto;
+}
+
+// Validation codes (in `errors`): phone.invalid · password.too_short | too_long | letter_required | digit_required |
+// too_common | contains_phone · pin.length | digits_only | weak
 
 interface MeDto {
   id: string;
-  email: string;
+  phoneNumber: string | null;    // E.164; only in MeDto and admin endpoints (SPEC §9.5)
+  email: string | null;
   displayName: string;
   username: string;              // @handle without "@"
   avatarUrl: string | null;
@@ -105,6 +168,10 @@ interface MeDto {
   reminderTime: string;          // "08:00"
   isVerified: boolean;           // has VerifiedWriter role
   onboardingCompleted: boolean;  // true once ≥ 3 interests are saved
+  mustChangePassword: boolean;   // after an Admin reset, or the production SuperAdmin's first sign in
+  mustSetRecoveryPin: boolean;
+  isProfileComplete: boolean;
+  hasRecoveryPin: boolean;
   roles: string[];               // e.g. ["Member", "VerifiedWriter"]
   permissions: string[];         // e.g. ["articles.read", "articles.create", ...]
   interests: { fieldIds: string[]; topicIds: string[] };
@@ -250,5 +317,4 @@ interface ArticleDetailsDto extends ArticleCardDto {
 ## Local development
 
 - API: `http://localhost:5080` (Scalar UI: `/docs`, OpenAPI: `/openapi/v1.json`)
-- Firebase Auth emulator: `http://127.0.0.1:9099`, project id `demo-readin`
-- Seeded demo users: `reader1@readin.test` … with the password from `Seed:DemoPassword`. It is never committed; set it once with `dotnet user-secrets set "Seed:DemoPassword" "<your password>" --project backend/src/ReadIn.Api`. Without it, demo users are created in SQL Server only and you can't sign in as them.
+- Seeded demo users (SPEC §18.3): `+12025550110` (reader1) … with the password from `Seed:DemoPassword` and the recovery PIN from `Seed:DemoPin`. Neither is committed; set them once with `dotnet user-secrets set "Seed:DemoPassword" "<password>" --project backend/src/ReadIn.Api` and `dotnet user-secrets set "Seed:DemoPin" "<4 digits, not weak>" --project backend/src/ReadIn.Api`. Without a password you can't sign in as them; without a PIN they must set one after signing in.

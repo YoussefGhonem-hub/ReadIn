@@ -1129,7 +1129,7 @@ Users are created in SQL Server only (no Firebase Auth). Phone numbers use the r
 
 | Phone | Display name | Roles | Recovery PIN | Environments |
 |---|---|---|:-:|---|
-| `+12025550100` | ReadIn Editorial (فريق ReadIn) | Member, VerifiedWriter | — | All (cannot sign in, author of seeded articles) |
+| `+201229391155` | ReadIn (official account, `@readin`) | Member, VerifiedWriter | — | All (cannot sign in, author of seeded articles; fixed id) |
 | `+12025550101` | Super Admin | SuperAdmin | ✅ | Local |
 | `+12025550102` | Admin User | Admin | ✅ | Local |
 | `+12025550103` | Moderator User | Moderator | ✅ | Local |
@@ -1430,7 +1430,7 @@ Deploy targets (suggested): API + SSR on a single server or container host (with
 - **Conventional Commits** with scope: `feat(backend): ...`, `feat(web): ...`, `feat(mobile): ...`, `fix(...)`, `test(...)`, `refactor(...)`, `content(dotnet): ...`, `docs: ...`, `chore(ci): ...`.
 - Each feature tracks `backend`, `web` and `mobile` parts (see [§12](#12-feature-parity-matrix-web--mobile)); it is done when all three are committed to `dev`.
 - Secrets are never committed: the Firebase service-account key, `google-services.json`, `GoogleService-Info.plist`, `Jwt:SigningKey`, `Security:RecoveryPinPepper`, passwords and PINs.
-- Architecture decisions recorded as ADRs in `docs/adr/`. Existing: 0001–0006, `0010-uploads-in-wwwroot.md`, `0011-media-pipeline-and-pdf-preview.md`. To add with the v1.1 changes: `0007-phone-password-authentication.md` (supersedes 0001 and the auth part of 0004), `0008-firebase-scope-fcm-and-rtdb.md`, `0009-recovery-pin.md`.
+- Architecture decisions recorded as ADRs in `docs/adr/`. Existing: 0001–0011 (`0007-phone-password-authentication.md` supersedes 0001 and the auth part of 0004; `0008-firebase-scope-fcm-and-rtdb.md`; `0009-recovery-pin.md`).
 
 ---
 
