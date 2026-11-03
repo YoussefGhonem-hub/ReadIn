@@ -114,3 +114,38 @@ terms:
     definitionAr: >-
       رسمة للـ score بتاع الموديل على الـ training والـ validation قصاد عدد أمثلة الـ training. شكلها بيوضّح الموديل
       عنده مشكلة bias ولا variance، وهل داتا أكتر هتفيد ولا لأ.
+  - id: imputation
+    term: Imputation
+    definitionEn: >-
+      Filling in missing values with estimates inferred from the known data, such as a column's mean or median, or a
+      prediction from the other columns. The filled values are guesses, not measurements.
+    definitionAr: >-
+      إنك تملا القيم الناقصة بتقديرات من الداتا المعروفة، زي متوسط العمود أو الـ median بتاعه، أو توقع من باقي الأعمدة.
+      القيم اللي بتتملي دي تخمين، مش قياس حقيقي.
+  - id: data-leakage
+    term: Data Leakage
+    definitionEn: >-
+      When information from the evaluation data, or from the future, reaches the model during training, for example by
+      fitting a scaler or imputer on all rows before splitting. Scores look better than the model will do in
+      production.
+    definitionAr: >-
+      لما معلومة من داتا التقييم، أو من المستقبل، توصل للموديل وقت الـ training، زي إنك تعمل fit لـ scaler أو imputer على
+      كل الصفوف قبل الـ split. الـ scores بتطلع أحسن من اللي الموديل هيعمله فعلًا في الـ production.
+  - id: curse-of-dimensionality
+    term: Curse of Dimensionality
+    definitionEn: >-
+      The set of problems that appear as the number of features grows: the space grows so fast that a fixed number of
+      rows covers it thinly, distances become less meaningful, and methods such as nearest neighbors lose accuracy and
+      speed.
+    definitionAr: >-
+      مجموعة المشاكل اللي بتظهر لما عدد الـ features يزيد: المساحة بتكبر بسرعة لدرجة إن نفس عدد الصفوف بيغطّيها بشكل
+      خفيف، والمسافات بتفقد معناها، وطرق زي الـ nearest neighbors بتخسر في الدقة والسرعة.
+  - id: feature-selection
+    term: Feature Selection
+    definitionEn: >-
+      Choosing a subset of the available features to train on, for example by a statistical test, a model's weights or
+      importances, or by adding and removing features under cross-validation. It removes columns that add noise
+      rather than signal.
+    definitionAr: >-
+      إنك تختار جزء من الـ features المتاحة تدرّب عليه، مثلًا بـ test إحصائي، أو بالـ weights أو الـ importances بتاعة
+      موديل، أو بإنك تضيف وتشيل features تحت الـ cross-validation. بتشيل الأعمدة اللي بتزوّد noise مش معلومة.

@@ -1,0 +1,47 @@
+{
+  "slug": "context-window-is-not-memory",
+  "field": "ai-fundamentals",
+  "topic": "ai-concepts",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The Context Window Is Not Memory: LLMs Are Stateless Between Calls",
+      "subtitle": "Every request starts from zero: the conversation lives in your app, and the model only sees what you send."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Context Window مش ذاكرة؟ الموديل مش فاكر حاجة بين الـ requests",
+      "subtitle": "كل request بيبدأ من الصفر: المحادثة عايشة في الـ app بتاعك، والموديل بيشوف اللي انت بتبعته بس."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 4 },
+  "tags": ["LLMs", "Context Window", "Claude API", "Memory"],
+  "sources": [
+    {
+      "title": "Using the Messages API: multiple conversational turns — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/working-with-messages"
+    },
+    {
+      "title": "Context windows — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/context-windows"
+    },
+    {
+      "title": "Memory tool — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool"
+    },
+    {
+      "title": "Brown et al., Language Models are Few-Shot Learners (GPT-3), arXiv:2005.14165",
+      "url": "https://arxiv.org/abs/2005.14165"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\n\ndef _create(*, model, max_tokens, messages, **kwargs):\n    said = \" \".join(m[\"content\"] for m in messages if m[\"role\"] == \"user\")\n    name = said.split(\"I'm \")[1].split(\".\")[0] if \"I'm \" in said else None\n    text = f\"Your name is {name}.\" if name else \"I don't know your name yet.\"\n    blocks = [types.SimpleNamespace(type=\"thinking\", thinking=\"\"),\n              types.SimpleNamespace(type=\"text\", text=text)]\n    return types.SimpleNamespace(content=blocks, stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = types.SimpleNamespace(create=_create)\n\n\nsys.modules[\"anthropic\"] = types.SimpleNamespace(Anthropic=_Anthropic)\n"
+    }
+  }
+}

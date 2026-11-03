@@ -1,0 +1,46 @@
+{
+  "slug": "llms-predict-tokens-not-look-up-answers",
+  "field": "deep-learning-llms",
+  "topic": "transformers",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "An LLM Doesn't Look Up Answers: It Predicts the Next Token",
+      "subtitle": "No database, no matching row: a probability for every possible next token, one token at a time."
+    },
+    "ar-EG": {
+      "title": "الموديل مش بيدوّر على إجابة جاهزة: الـ LLM بيتوقع الـ token اللي بعده",
+      "subtitle": "مفيش database ولا صف بيتطابق: فيه احتمال لكل token ممكن ييجي بعد كده، وtoken ورا التاني."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 2 },
+  "tags": ["LLMs", "Tokens", "Transformers", "Next-token prediction"],
+  "sources": [
+    {
+      "title": "Introduction to Large Language Models — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/llm"
+    },
+    {
+      "title": "LLMs: What's a large language model? — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/llm/transformers"
+    },
+    {
+      "title": "Brown et al., Language Models are Few-Shot Learners (GPT-3), arXiv:2005.14165",
+      "url": "https://arxiv.org/abs/2005.14165"
+    },
+    {
+      "title": "Roberts, Raffel and Shazeer, How Much Knowledge Can You Pack Into the Parameters of a Language Model?, arXiv:2002.08910",
+      "url": "https://arxiv.org/abs/2002.08910"
+    },
+    {
+      "title": "Tracing the thoughts of a large language model — Anthropic",
+      "url": "https://www.anthropic.com/research/tracing-thoughts-language-model"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

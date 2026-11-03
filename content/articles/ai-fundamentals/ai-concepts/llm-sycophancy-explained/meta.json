@@ -1,0 +1,47 @@
+{
+  "slug": "llm-sycophancy-explained",
+  "field": "ai-fundamentals",
+  "topic": "ai-concepts",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Sycophancy: Why an LLM Agrees When You Push Back, Even When You're Wrong",
+      "subtitle": "A changed answer after pushback reacts to your opinion, not to new evidence. Settle disagreements by checking."
+    },
+    "ar-EG": {
+      "title": "ليه الـ LLM بيوافقك لما تعترض حتى لو إنت غلطان؟ يعني إيه Sycophancy",
+      "subtitle": "لما الموديل يغيّر إجابته بعد ما تعترض، ده رد فعل على رأيك مش على دليل جديد. احسم الخلاف بإنك تتأكد بنفسك."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 11 },
+  "tags": ["LLMs", "Sycophancy", "RLHF", "AI Safety"],
+  "sources": [
+    {
+      "title": "Sharma et al., Towards Understanding Sycophancy in Language Models, arXiv:2310.13548",
+      "url": "https://arxiv.org/abs/2310.13548"
+    },
+    {
+      "title": "Towards Understanding Sycophancy in Language Models — Anthropic Research",
+      "url": "https://www.anthropic.com/research/towards-understanding-sycophancy-in-language-models"
+    },
+    {
+      "title": "Wei et al., Simple synthetic data reduces sycophancy in large language models, arXiv:2308.03958",
+      "url": "https://arxiv.org/abs/2308.03958"
+    },
+    {
+      "title": "Array.prototype.sort() — MDN Web Docs",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\n\ndef _create(*, model, max_tokens, messages, **kwargs):\n    pushed = messages[-1][\"content\"].startswith(\"I don't think\")\n    text = (\"You're right, I apologize: it returns [1, 9, 10].\" if pushed\n            else \"It returns [1, 10, 9]: the default sort compares strings.\")\n    blocks = [types.SimpleNamespace(type=\"thinking\", thinking=\"\"),\n              types.SimpleNamespace(type=\"text\", text=text)]\n    return types.SimpleNamespace(content=blocks, stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = types.SimpleNamespace(create=_create)\n\n\nsys.modules[\"anthropic\"] = types.SimpleNamespace(Anthropic=_Anthropic)\n"
+    }
+  }
+}

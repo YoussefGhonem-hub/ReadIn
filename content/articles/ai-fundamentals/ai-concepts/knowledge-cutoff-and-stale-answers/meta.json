@@ -1,0 +1,51 @@
+{
+  "slug": "knowledge-cutoff-and-stale-answers",
+  "field": "ai-fundamentals",
+  "topic": "ai-concepts",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Knowledge Cutoff: Why Your Assistant Suggests Deprecated APIs with Confidence",
+      "subtitle": "Training data stops at a date the model can't see, so give it current versions, docs and the date yourself."
+    },
+    "ar-EG": {
+      "title": "ليه المساعد بيقترح عليك APIs اتلغت وهو واثق؟ حكاية الـ Knowledge Cutoff",
+      "subtitle": "داتا الـ training بتقف عند تاريخ الموديل مش شايفه، فادّيله انت الـ versions والـ docs الحالية وتاريخ النهارده."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 6 },
+  "tags": ["LLMs", "Knowledge Cutoff", "Deprecated APIs", "pandas"],
+  "sources": [
+    {
+      "title": "Cheng et al., Dated Data: Tracing Knowledge Cutoffs in Large Language Models, arXiv:2403.12958",
+      "url": "https://arxiv.org/abs/2403.12958"
+    },
+    {
+      "title": "Wang et al., LLMs Meet Library Evolution: Evaluating Deprecated API Usage in LLM-based Code Completion (ICSE 2025), arXiv:2406.09834",
+      "url": "https://arxiv.org/abs/2406.09834"
+    },
+    {
+      "title": "Models overview: reliable knowledge cutoff and training data cutoff — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/models/overview"
+    },
+    {
+      "title": "Web search tool — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool"
+    },
+    {
+      "title": "What's new in pandas 2.0.0: removed DataFrame.append — pandas documentation",
+      "url": "https://pandas.pydata.org/docs/whatsnew/v2.0.0.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "skip": {
+      "b17/0": "Raises AttributeError on purpose: DataFrame.append was removed in pandas 2.0, which is the point of the example"
+    }
+  }
+}

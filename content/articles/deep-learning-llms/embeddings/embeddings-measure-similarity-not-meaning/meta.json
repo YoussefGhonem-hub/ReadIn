@@ -1,0 +1,51 @@
+{
+  "slug": "embeddings-measure-similarity-not-meaning",
+  "field": "deep-learning-llms",
+  "topic": "embeddings",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Embeddings Measure Similarity, Not Truth: What Vector Closeness Really Means",
+      "subtitle": "Close vectors mean related in the way the model was trained to see, not equivalent, correct or current."
+    },
+    "ar-EG": {
+      "title": "قُرب الـ Embeddings مش معناه نفس المعنى: الـ vectors بتقيس إيه بالظبط؟",
+      "subtitle": "الـ vectors القريبة معناها نصوص مرتبطة بالطريقة اللي الموديل اتدرّب يشوفها، مش نفس المعنى ولا صح ولا محدّثة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 8 },
+  "tags": ["Embeddings", "RAG", "Semantic Search", "LLMs"],
+  "sources": [
+    {
+      "title": "Embeddings: Embedding space and static embeddings — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/embeddings/embedding-space"
+    },
+    {
+      "title": "Reimers and Gurevych, Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks, arXiv:1908.10084",
+      "url": "https://arxiv.org/abs/1908.10084"
+    },
+    {
+      "title": "Steck, Ekanadham and Kallus, Is Cosine-Similarity of Embeddings Really About Similarity?, arXiv:2403.05440",
+      "url": "https://arxiv.org/abs/2403.05440"
+    },
+    {
+      "title": "Weller, Lawrie and Van Durme, NevIR: Negation in Neural Information Retrieval, arXiv:2305.07614",
+      "url": "https://arxiv.org/abs/2305.07614"
+    },
+    {
+      "title": "Introducing Contextual Retrieval — Anthropic",
+      "url": "https://www.anthropic.com/news/contextual-retrieval"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nimport numpy as np\n\n_index = types.ModuleType(\"vector_index\")\n_index.docs = [\"Refunds are accepted within 30 days of purchase.\",\n               \"Refunds are not accepted after 30 days of purchase.\",\n               \"Shipping is free on orders over 50 dollars.\"]\n_vecs = np.random.default_rng(0).normal(size=(3, 8))\n_index.doc_vecs = _vecs / np.linalg.norm(_vecs, axis=1, keepdims=True)\n\n\ndef _embed(text):\n    v = np.random.default_rng(len(text)).normal(size=8)\n    return v / np.linalg.norm(v)\n\n\ndef _rerank(question, passages):\n    return [float(len(set(question.split()) & set(p.split()))) for p in passages]\n\n\n_index.embed = _embed\n_index.rerank = _rerank\nsys.modules[\"vector_index\"] = _index\n"
+    }
+  }
+}

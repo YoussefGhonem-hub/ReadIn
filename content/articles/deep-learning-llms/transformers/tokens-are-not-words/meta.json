@@ -1,0 +1,46 @@
+{
+  "slug": "tokens-are-not-words",
+  "field": "deep-learning-llms",
+  "topic": "transformers",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Tokens Aren't Words: Why Arabic Costs More and Models Miscount Letters",
+      "subtitle": "A token is a chunk the tokenizer learned from data, and that one fact shapes your bill, your context and letter counting."
+    },
+    "ar-EG": {
+      "title": "ليه الـ token مش كلمة؟ وده بيأثر إزاي على تكلفة العربي وعدّ الحروف",
+      "subtitle": "الـ token حتة نص الـ tokenizer اتعلّمها من الداتا، والمعلومة دي بتحدد الفاتورة والـ context وعدّ الحروف."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 3 },
+  "tags": ["LLMs", "Tokens", "Tokenization", "Arabic"],
+  "sources": [
+    {
+      "title": "Sennrich, Haddow and Birch, Neural Machine Translation of Rare Words with Subword Units, arXiv:1508.07909",
+      "url": "https://arxiv.org/abs/1508.07909"
+    },
+    {
+      "title": "Petrov et al., Language Model Tokenizers Introduce Unfairness Between Languages (NeurIPS 2023), arXiv:2305.15425",
+      "url": "https://arxiv.org/abs/2305.15425"
+    },
+    {
+      "title": "Token counting — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/token-counting"
+    },
+    {
+      "title": "Glossary: Tokens — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/about-claude/glossary"
+    },
+    {
+      "title": "Fu et al., Why Do Large Language Models (LLMs) Struggle to Count Letters?, arXiv:2412.18626",
+      "url": "https://arxiv.org/abs/2412.18626"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

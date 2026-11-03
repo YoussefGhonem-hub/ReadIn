@@ -1,0 +1,42 @@
+{
+  "slug": "why-llms-hallucinate",
+  "field": "ai-fundamentals",
+  "topic": "ai-concepts",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why LLMs Hallucinate, and Why a Bigger Model Won't Simply Fix It",
+      "subtitle": "Rare facts and tests that reward guessing make confident errors predictable, so design for them."
+    },
+    "ar-EG": {
+      "title": "ليه الـ LLMs بتألّف إجابات؟ والموديل الأكبر مش هيحل المشكلة لوحده",
+      "subtitle": "الحقايق النادرة والاختبارات اللي بتكافئ التخمين بتخلّي الغلط الواثق متوقع، فصمّم على الأساس ده."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 5 },
+  "tags": ["LLMs", "Hallucinations", "Evaluation", "Grounding"],
+  "sources": [
+    {
+      "title": "Kalai, Nachum, Vempala and Zhang, Why Language Models Hallucinate, arXiv:2509.04664",
+      "url": "https://arxiv.org/abs/2509.04664"
+    },
+    {
+      "title": "Huang et al., A Survey on Hallucination in Large Language Models (ACM TOIS), arXiv:2311.05232",
+      "url": "https://arxiv.org/abs/2311.05232"
+    },
+    {
+      "title": "Reduce hallucinations — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations"
+    },
+    {
+      "title": "Tracing the thoughts of a large language model — Anthropic",
+      "url": "https://www.anthropic.com/research/tracing-thoughts-language-model"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

@@ -1,0 +1,46 @@
+{
+  "slug": "temperature-is-not-a-creativity-dial",
+  "field": "deep-learning-llms",
+  "topic": "transformers",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Temperature Isn't a Creativity Dial: How LLM Sampling Really Works",
+      "subtitle": "Temperature reshapes the odds of the next token. It adds no ideas, and 0 buys neither truth nor identical runs."
+    },
+    "ar-EG": {
+      "title": "إزاي الـ Sampling بيشتغل فعلًا؟ الـ Temperature مش زرار للإبداع",
+      "subtitle": "الـ temperature بتغيّر فرص الـ token اللي جاي وبس: مابتزوّدش أفكار، والـ 0 مابيضمنش صح ولا نفس النتيجة كل مرة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 7 },
+  "tags": ["LLMs", "Temperature", "Sampling", "Determinism"],
+  "sources": [
+    {
+      "title": "Holtzman et al., The Curious Case of Neural Text Degeneration, arXiv:1904.09751",
+      "url": "https://arxiv.org/abs/1904.09751"
+    },
+    {
+      "title": "Atil et al., Non-Determinism of \"Deterministic\" LLM Settings, arXiv:2408.04667",
+      "url": "https://arxiv.org/abs/2408.04667"
+    },
+    {
+      "title": "Horace He and Thinking Machines Lab, Defeating Nondeterminism in LLM Inference",
+      "url": "https://thinkingmachines.ai/blog/defeating-nondeterminism-in-llm-inference/"
+    },
+    {
+      "title": "Migrating to API version 2026-10-21: sampling parameters are removed — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/api/migration-2026-10-21"
+    },
+    {
+      "title": "Prompt design strategies: sampling parameters — Gemini API Docs",
+      "url": "https://aistudio.google.com/docs/prompting-strategies"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

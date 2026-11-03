@@ -87,3 +87,15 @@ terms:
     term: Large object heap (LOH)
     definitionEn: A separate part of the managed heap for objects of 85,000 bytes or more, usually big arrays. It's collected only with generation 2 and usually isn't compacted.
     definitionAr: جزء منفصل من الـ managed heap للـ objects اللي حجمها 85,000 byte أو أكتر، وغالبًا بتبقى arrays كبيرة. بيتعمله collection مع generation 2 بس، وعادةً مش بيتعمله compaction.
+  - id: unmanaged-resource
+    term: Unmanaged resource
+    definitionEn: Something an object holds outside the managed heap, such as an operating system file handle, a socket or a database connection. The garbage collector can't release it; Dispose (or a finalizer as a last resort) has to.
+    definitionAr: حاجة الـ object ماسكها برّه الـ managed heap، زي file handle من نظام التشغيل أو socket أو connection للداتابيز. الـ garbage collector مايعرفش يحررها، واللي بيحررها هو الـ Dispose (أو الـ finalizer كآخر حل).
+  - id: finalizer
+    term: Finalizer
+    definitionEn: A method (~ClassName() in C#) that the garbage collector calls at an unspecified time after an object becomes unreachable, so the object can release an unmanaged resource that nobody disposed.
+    definitionAr: method بتتكتب ~ClassName() في C#، والـ garbage collector بيناديها في وقت مش محدد بعد ما الـ object يبقى محدش بيوصله، عشان يحرر unmanaged resource محدش عمله Dispose.
+  - id: connection-pool
+    term: Connection pool
+    definitionEn: A set of open database connections that a data provider keeps and reuses. Opening a connection borrows one from the pool; closing or disposing it returns it.
+    definitionAr: مجموعة connections مفتوحة للداتابيز الـ data provider بيحتفظ بيها ويعيد استخدامها. لما تفتح connection بتستلف واحد من الـ pool، ولما تعمله Close أو Dispose بيرجع له.

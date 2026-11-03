@@ -143,3 +143,51 @@ terms:
     definitionAr: >-
       الاسم اللي React بيطلقه على حاجات زي الـ refs والـ Effects، اللي بتخليك تطلع بره الـ data flow بتاعه عشان تتعامل
       مع حاجات هو مابيديرهاش، زي الـ DOM أو الـ timers أو مكتبات من بره.
+  - id: stale-closure
+    term: Stale closure
+    definitionEn: >-
+      A function that keeps reading the props and state of the render that created it after newer renders exist,
+      because it closed over that render's variables. Common in intervals, timeouts and listeners set up by an Effect.
+    definitionAr: >-
+      function لسه بتقرا الـ props والـ state بتوع الـ render اللي اتعملت فيه، مع إن فيه renders أحدث، لأنها مسكت
+      متغيرات الـ render ده. بتظهر كتير في الـ intervals والـ timeouts والـ listeners اللي بيعملها Effect.
+  - id: effect-event
+    term: Effect Event
+    definitionEn: >-
+      A function created with useEffectEvent and called from inside an Effect. It always reads the latest committed
+      props and state and is not a dependency, so changes to the values it reads don't re-run the Effect.
+    definitionAr: >-
+      function بتعملها بـ useEffectEvent وبتناديها من جوه Effect. دايمًا بتقرا آخر props وstate اتعملهم commit، ومش
+      بتتحط في الـ dependencies، فتغيير القيم اللي بتقراها مابيعيدش تشغيل الـ Effect.
+  - id: referential-equality
+    term: Referential equality
+    definitionEn: >-
+      Two values being the very same object or function in memory, which is what Object.is checks for objects. Two
+      objects with identical contents are still different references.
+    definitionAr: >-
+      إن قيمتين يبقوا نفس الـ object أو الـ function بالظبط في الميموري، وده اللي Object.is بيتأكد منه في الـ objects.
+      يعني اتنين objects بنفس المحتوى بالظبط لسه references مختلفة.
+  - id: react-compiler
+    term: React Compiler
+    definitionEn: >-
+      A build-time tool, usually run as a Babel plugin, that analyzes components and Hooks and adds memoization to
+      them automatically, as long as they follow the Rules of React.
+    definitionAr: >-
+      أداة بتشتغل وقت الـ build، غالبًا كـ Babel plugin، بتحلل الـ components والـ Hooks وتضيف لهم memoization
+      لوحدها، طالما ماشيين على الـ Rules of React.
+  - id: controlled-input
+    term: Controlled input
+    definitionEn: >-
+      A form field whose current value comes from React state through the value (or checked) prop, with an onChange
+      handler that updates that state. React makes the field match the state on every render.
+    definitionAr: >-
+      field في form القيمة الحالية بتاعته جاية من state في React عن طريق الـ value (أو الـ checked)، ومعاه onChange
+      handler بيحدّث الـ state ده. وReact بيخلّي الـ field يطابق الـ state في كل render.
+  - id: uncontrolled-input
+    term: Uncontrolled input
+    definitionEn: >-
+      A form field whose current value is kept by the browser's DOM. React only sets its starting value, through
+      defaultValue or defaultChecked, and you read the value when you need it, for example on submit.
+    definitionAr: >-
+      field في form القيمة الحالية بتاعته محفوظة في الـ DOM بتاع المتصفح. React بيحط القيمة اللي بيبدأ بيها بس، عن
+      طريق defaultValue أو defaultChecked، وانت بتقرا القيمة وقت ما تحتاجها، زي وقت الـ submit.

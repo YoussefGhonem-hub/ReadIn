@@ -151,3 +151,35 @@ terms:
     definitionAr: >-
       طريقة post-training فيها ناس بترتّب ردود الموديل، وreward model بيتعلّم يتوقع الترتيب ده، وبعدين الـ
       reinforcement learning بيوجّه الموديل للردود اللي الـ reward model بيدّيها score عالي.
+  - id: context-rot
+    term: Context Rot
+    definitionEn: >-
+      The decline in how accurately a model recalls and uses information from its context as the number of tokens
+      grows. It's gradual, starting well before the context window is full.
+    definitionAr: >-
+      إن دقة الموديل في إنه يفتكر ويستخدم المعلومات اللي في الـ context بتقل كل ما عدد الـ tokens يزيد. وده بيحصل
+      بالتدريج، وبيبدأ قبل ما الـ context window تتملي بكتير.
+  - id: needle-in-a-haystack
+    term: Needle-in-a-Haystack Test
+    definitionEn: >-
+      A long-context test that hides one fact (the needle) in a long filler text (the haystack) and asks the model to
+      find it. When the question repeats the fact's words, it measures only the easiest kind of lookup.
+    definitionAr: >-
+      اختبار للـ long context بيستخبى فيه معلومة واحدة (الإبرة) جوه نص طويل مالوش لازمة (كومة القش)، وبيطلب من
+      الموديل يلاقيها. ولما السؤال يكرر نفس كلمات المعلومة، بيقيس أسهل نوع بحث بس.
+  - id: sycophancy
+    term: Sycophancy
+    definitionEn: >-
+      A model's tendency to tell users what they seem to want to hear: agreeing with their stated views, praising their
+      work or abandoning a correct answer when they push back.
+    definitionAr: >-
+      ميل الموديل إنه يقول للمستخدم اللي باين إنه عايز يسمعه: يوافقه على رأيه، أو يمدح شغله، أو يسيب إجابة صح لما
+      المستخدم يعترض.
+  - id: preference-model
+    term: Preference Model (Reward Model)
+    definitionEn: >-
+      A model trained on human comparisons of responses to predict which one people would prefer. Post-training
+      methods such as RLHF then tune the assistant toward responses it scores highly.
+    definitionAr: >-
+      موديل متدرّب على مقارنات بشرية بين الردود عشان يتوقع الناس هتفضّل أنهي رد. وبعدين طرق الـ post-training زي
+      الـ RLHF بتوجّه الـ assistant للردود اللي بيدّيها score عالي.

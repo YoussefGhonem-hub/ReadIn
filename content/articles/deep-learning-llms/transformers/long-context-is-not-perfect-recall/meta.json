@@ -1,0 +1,51 @@
+{
+  "slug": "long-context-is-not-perfect-recall",
+  "field": "deep-learning-llms",
+  "topic": "transformers",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Fitting in the Context Window Doesn't Mean the Model Reads It All Well",
+      "subtitle": "Recall depends on where a fact sits and how much surrounds it, so send less and test at your real lengths."
+    },
+    "ar-EG": {
+      "title": "إن المستند يدخل في الـ Context Window مش معناه إن الموديل هيقراه كله كويس",
+      "subtitle": "قدرة الموديل يلاقي المعلومة بتعتمد على مكانها وكمية الكلام اللي حواليها، فابعت أقل واختبر على الأطوال الحقيقية."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 10 },
+  "tags": ["LLMs", "Context Window", "Long Context", "Prompting"],
+  "sources": [
+    {
+      "title": "Liu et al., Lost in the Middle: How Language Models Use Long Contexts, arXiv:2307.03172",
+      "url": "https://arxiv.org/abs/2307.03172"
+    },
+    {
+      "title": "Hsieh et al., RULER: What's the Real Context Size of Your Long-Context Language Models?, arXiv:2404.06654",
+      "url": "https://arxiv.org/abs/2404.06654"
+    },
+    {
+      "title": "Modarressi et al., NoLiMa: Long-Context Evaluation Beyond Literal Matching, arXiv:2502.05167",
+      "url": "https://arxiv.org/abs/2502.05167"
+    },
+    {
+      "title": "Effective context engineering for AI agents — Anthropic Engineering",
+      "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+    },
+    {
+      "title": "Prompting best practices: long context prompting — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\n\ndef load_chunks():\n    return [f\"Section {i}: routine notes about the release process.\" for i in range(40)]\n\n\ndef _create(*, model, max_tokens, messages, **kwargs):\n    prompt = messages[-1][\"content\"]\n    text = \"Every 45 days.\" if \"45 days\" in prompt else \"The documents don't say.\"\n    blocks = [types.SimpleNamespace(type=\"thinking\", thinking=\"\"),\n              types.SimpleNamespace(type=\"text\", text=text)]\n    return types.SimpleNamespace(content=blocks, stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = types.SimpleNamespace(create=_create)\n\n\nsys.modules[\"anthropic\"] = types.SimpleNamespace(Anthropic=_Anthropic)\n"
+    }
+  }
+}

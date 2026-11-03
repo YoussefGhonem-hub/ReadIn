@@ -1,0 +1,46 @@
+{
+  "slug": "base-models-vs-chat-models",
+  "field": "deep-learning-llms",
+  "topic": "fine-tuning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Base Model vs Chat Model: What Pretraining and RLHF Each Actually Teach",
+      "subtitle": "Pretraining supplies the knowledge; instruction tuning and RLHF teach the assistant how to use it."
+    },
+    "ar-EG": {
+      "title": "الفرق بين الـ Base Model والـ Chat Model: الـ Pretraining والـ RLHF كل واحد بيعلّم إيه",
+      "subtitle": "الـ pretraining هو اللي بيدّي المعرفة؛ والـ instruction tuning والـ RLHF بيعلّموا الـ assistant يستخدمها إزاي."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 9 },
+  "tags": ["LLMs", "Pretraining", "RLHF", "Fine-tuning"],
+  "sources": [
+    {
+      "title": "Ouyang et al., Training language models to follow instructions with human feedback (InstructGPT), arXiv:2203.02155",
+      "url": "https://arxiv.org/abs/2203.02155"
+    },
+    {
+      "title": "Zhou et al., LIMA: Less Is More for Alignment, arXiv:2305.11206",
+      "url": "https://arxiv.org/abs/2305.11206"
+    },
+    {
+      "title": "Bai et al., Constitutional AI: Harmlessness from AI Feedback, arXiv:2212.08073",
+      "url": "https://arxiv.org/abs/2212.08073"
+    },
+    {
+      "title": "OpenAI, GPT-4 Technical Report, arXiv:2303.08774",
+      "url": "https://arxiv.org/abs/2303.08774"
+    },
+    {
+      "title": "Gekhman et al., Does Fine-Tuning LLMs on New Knowledge Encourage Hallucinations?, arXiv:2405.05904",
+      "url": "https://arxiv.org/abs/2405.05904"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
