@@ -1,0 +1,55 @@
+{
+  "slug": "dbcontext-is-not-thread-safe",
+  "field": "dotnet",
+  "topic": "ef-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "One DbContext, Many Tasks: Why Parallel Queries on a Context Fail",
+      "subtitle": "A DbContext runs one operation at a time. Task.WhenAll on a single context throws, and switching the check off trades the exception for broken state."
+    },
+    "ar-EG": {
+      "title": "ليه مينفعش تشغّل queries بالتوازي على نفس الـ DbContext؟",
+      "subtitle": "الـ DbContext بيشغّل عملية واحدة في المرة. الـ Task.WhenAll على context واحد بيرمي exception، ولو قفلت الـ check بتاخد بداله state بايظة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 7
+  },
+  "tags": [
+    "EF Core",
+    "DbContext",
+    "async/await",
+    "Concurrency"
+  ],
+  "sources": [
+    {
+      "title": "DbContext Lifetime, Configuration, and Initialization — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/dbcontext-configuration/"
+    },
+    {
+      "title": "Asynchronous Programming — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/miscellaneous/async"
+    },
+    {
+      "title": "Advanced Performance Topics — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/performance/advanced-performance-topics"
+    },
+    {
+      "title": "Async limitations — Microsoft.Data.Sqlite, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/data/sqlite/async"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed class Order\n{\n    public int Id { get; set; }\n    public decimal Total { get; set; }\n}\npublic sealed class Product\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public int Sold { get; set; }\n}\npublic sealed record Dashboard(int Orders, decimal Revenue, List<Product> TopSellers);\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Order> Orders => Set<Order>();\n    public DbSet<Product> Products => Set<Product>();\n}"
+    }
+  }
+}

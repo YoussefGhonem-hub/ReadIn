@@ -1,0 +1,59 @@
+{
+  "slug": "ef-core-inmemory-provider-is-not-a-test-database",
+  "field": "dotnet",
+  "topic": "dotnet-testing",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Tests Pass on the EF Core InMemory Provider and Fail in Production",
+      "subtitle": "The InMemory provider runs your LINQ as C# over lists. It skips constraints, compares strings its own way and accepts queries SQL Server rejects."
+    },
+    "ar-EG": {
+      "title": "ليه الـ tests بتنجح على الـ InMemory provider في EF Core وتقع في الـ production؟",
+      "subtitle": "الـ InMemory provider بيشغّل الـ LINQ بتاعك كـ C# على lists. بيتخطى الـ constraints، وبيقارن الـ strings بطريقته، وبيقبل queries الـ SQL Server بيرفضها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 10
+  },
+  "tags": [
+    "EF Core",
+    "Testing",
+    "Integration Tests",
+    "SQL Server"
+  ],
+  "sources": [
+    {
+      "title": "Choosing a testing strategy — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/testing/choosing-a-testing-strategy"
+    },
+    {
+      "title": "In-memory Database Provider — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/providers/in-memory/"
+    },
+    {
+      "title": "Testing against your Production Database System — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/testing/testing-with-the-database"
+    },
+    {
+      "title": "Testing EF Core Applications — Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/testing/"
+    },
+    {
+      "title": "Cascade Delete — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/cascade-delete"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\nnamespace Xunit\n{\n    [System.AttributeUsage(System.AttributeTargets.Method)]\n    public sealed class FactAttribute : System.Attribute { }\n    public interface IClassFixture<TFixture> where TFixture : class { }\n    public static class Assert\n    {\n        public static void True(bool condition) { }\n    }\n}\nnamespace Shop\n{\n    public sealed class SignUp(ShopDb db)\n    {\n        public Task<bool> EmailTakenAsync(string email, CancellationToken ct) =>\n            db.Customers.AnyAsync(c => c.NormalizedEmail == email, ct);\n    }\n}\npublic sealed class Customer\n{\n    public int Id { get; set; }\n    public string Email { get; set; } = \"\";\n    public string NormalizedEmail { get; set; } = \"\";\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Customer> Customers => Set<Customer>();\n}\npublic sealed class SqlServerFixture\n{\n    public ShopDb CreateContext() => throw new NotImplementedException();\n}"
+    }
+  }
+}

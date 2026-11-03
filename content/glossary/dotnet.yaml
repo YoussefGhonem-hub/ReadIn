@@ -303,3 +303,7 @@ terms:
     term: Test double
     definitionEn: Any object that replaces a real dependency in a test, such as a fake with a simplified working implementation, a stub that returns canned answers, or a mock that checks how it was called.
     definitionAr: أي object بياخد مكان dependency حقيقية في الـ test، زي fake فيه implementation مبسّطة شغالة، أو stub بيرجّع إجابات جاهزة، أو mock بيتأكد اتنادى إزاي.
+  - id: aggregate-root
+    term: Aggregate root
+    definitionEn: In Domain-Driven Design, the one entity through which a cluster of related objects (an aggregate) is loaded, changed and saved, so it can enforce the cluster's rules. An Order with its lines is a typical example.
+    definitionAr: في الـ Domain-Driven Design، هو الـ entity الوحيدة اللي من خلالها مجموعة objects مرتبطة ببعض (اسمها aggregate) بتتحمّل وتتغير وتتحفظ، عشان تقدر تفرض القواعد بتاعة المجموعة دي. والـ Order مع الـ lines بتاعته مثال معروف.

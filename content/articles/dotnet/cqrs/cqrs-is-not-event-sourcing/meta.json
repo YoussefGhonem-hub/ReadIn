@@ -1,0 +1,59 @@
+{
+  "slug": "cqrs-is-not-event-sourcing",
+  "field": "dotnet",
+  "topic": "cqrs",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "CQRS Is Not Event Sourcing (and Doesn't Need Two Databases)",
+      "subtitle": "CQRS splits one model into a command side and a query side. Separate stores, messaging and event sourcing are optional steps with their own costs."
+    },
+    "ar-EG": {
+      "title": "الـ CQRS مش Event Sourcing ومش محتاج 2 databases",
+      "subtitle": "الـ CQRS بيقسم الـ model الواحد لـ command side و query side. والـ stores المنفصلة والـ messaging والـ event sourcing خطوات اختيارية وليها تمنها."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 5
+  },
+  "tags": [
+    "CQRS",
+    "Event Sourcing",
+    "Architecture",
+    "EF Core"
+  ],
+  "sources": [
+    {
+      "title": "CQRS — Martin Fowler, bliki (2011)",
+      "url": "https://martinfowler.com/bliki/CQRS.html"
+    },
+    {
+      "title": "CQRS Documents — Greg Young (2010)",
+      "url": "https://cqrs.wordpress.com/wp-content/uploads/2010/11/cqrs_documents.pdf"
+    },
+    {
+      "title": "CQRS pattern — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/patterns/cqrs"
+    },
+    {
+      "title": "Event Sourcing pattern — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/patterns/event-sourcing"
+    },
+    {
+      "title": "Applying simplified CQRS and DDD patterns in a microservice — .NET Architecture Guides, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/apply-simplified-microservice-cqrs-ddd-patterns"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic enum OrderStatus { Pending, Shipped, Cancelled }\npublic sealed record OrderRow(int Id, DateTime PlacedAt, OrderStatus Status);\npublic sealed record OrderCancelled(int OrderId);\npublic interface IEventBus\n{\n    Task PublishAsync<T>(T message, CancellationToken ct);\n}\npublic interface IReadStore\n{\n    Task<List<OrderRow>> OrdersFor(int customerId, CancellationToken ct);\n}\npublic sealed class Order\n{\n    public int Id { get; private set; }\n    public int CustomerId { get; init; }\n    public DateTime PlacedAt { get; init; }\n    public OrderStatus Status { get; private set; }\n    public void Cancel()\n    {\n        if (Status == OrderStatus.Shipped)\n            throw new InvalidOperationException(\"Shipped orders can't be cancelled.\");\n        Status = OrderStatus.Cancelled;\n    }\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Order> Orders => Set<Order>();\n}"
+    }
+  }
+}

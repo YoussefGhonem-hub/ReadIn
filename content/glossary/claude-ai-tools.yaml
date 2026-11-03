@@ -147,3 +147,38 @@ terms:
       حد أقصى للاستخدام اللي الـ organization تقدر تعمله على Claude API في فترة زمنية، بيتقاس لكل نوع موديل بالـ requests
       والـ input tokens والـ output tokens في الدقيقة. ولو عديته بيرجع 429 rate_limit_error، وغالبًا معاه header اسمه
       retry-after بيقولك تستنى كام ثانية.
+  - id: cache-breakpoint
+    term: Cache breakpoint (Claude API)
+    definitionEn: >-
+      The content block marked with cache_control in a Claude API request. The prompt up to and including it, in the
+      order tools, system, messages, is what gets written to the prompt cache, and only a later request with exactly
+      the same prefix can read it.
+    definitionAr: >-
+      الـ content block اللي عليه cache_control في request لـ Claude API. الـ prompt لحد البلوك ده وهو معاه، بالترتيب
+      tools ثم system ثم messages، هو اللي بيتكتب في الـ prompt cache، ومفيش request بعد كده يقدر يقراه غير لو أوله
+      نفس الـ prefix بالظبط.
+  - id: kv-cache
+    term: KV cache
+    definitionEn: >-
+      The attention keys and values a transformer computes for each token it has already read, kept so the model
+      doesn't recompute them for every new token. Prompt caching keeps these for a prompt's prefix between requests.
+    definitionAr: >-
+      الـ keys والـ values بتوع الـ attention اللي الـ transformer بيحسبها لكل token قراه، وبيحتفظ بيها عشان الموديل
+      ميحسبهاش تاني مع كل token جديد. والـ prompt caching بيحتفظ بيها لأول الـ prompt من request للتاني.
+  - id: mcp-resource
+    term: Resource (MCP)
+    definitionEn: >-
+      Data an MCP server exposes under a URI, such as a file, a database schema or a record. Resources are
+      application-controlled: the host application decides which ones to read and how to put them in front of the model.
+    definitionAr: >-
+      داتا الـ MCP server بيعرضها تحت URI، زي ملف أو schema بتاعة داتابيز أو record. والـ resources الـ application هو اللي
+      بيتحكم فيها: التطبيق الـ host هو اللي بيقرر يقرا أنهي واحدة ويحطها قدام الموديل إزاي.
+  - id: mcp-prompt
+    term: Prompt (MCP)
+    definitionEn: >-
+      A named template with arguments that an MCP server exposes and a client renders into conversation messages.
+      Prompts are user-controlled: a person chooses when to run one, for example as a slash command, while the server
+      writes its content.
+    definitionAr: >-
+      template ليه اسم وarguments، الـ MCP server بيعرضه والـ client بيحوّله لرسايل في المحادثة. والـ prompts اليوزر هو اللي
+      بيتحكم فيها: الشخص بيختار امتى يشغّل واحد، زي slash command مثلًا، والـ server هو اللي كاتب محتواه.

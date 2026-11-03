@@ -1,0 +1,55 @@
+{
+  "slug": "savechanges-is-already-a-transaction",
+  "field": "dotnet",
+  "topic": "ef-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "SaveChanges Is Already a Transaction: When You Actually Need an Explicit One",
+      "subtitle": "Every change in one SaveChanges call succeeds or fails together. An explicit transaction is for work that spans more than one call."
+    },
+    "ar-EG": {
+      "title": "الـ SaveChanges أصلًا transaction: إمتى تحتاج transaction صريحة فعلًا؟",
+      "subtitle": "كل التغييرات اللي في call واحد لـ SaveChanges بتنجح مع بعض أو تفشل مع بعض. والـ transaction الصريحة معمولة للشغل اللي بيعدّي أكتر من call."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 3
+  },
+  "tags": [
+    "EF Core",
+    "Transactions",
+    "SaveChanges",
+    "Connection Resiliency"
+  ],
+  "sources": [
+    {
+      "title": "Transactions — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/transactions"
+    },
+    {
+      "title": "Basic SaveChanges — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/basic"
+    },
+    {
+      "title": "Connection Resiliency — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/miscellaneous/connection-resiliency"
+    },
+    {
+      "title": "ExecuteUpdate and ExecuteDelete — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/execute-insert-update-delete"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed class Product\n{\n    public int Id { get; set; }\n    public int Stock { get; set; }\n}\npublic sealed class Order\n{\n    public int Id { get; set; }\n    public int CustomerId { get; set; }\n    public List<OrderLine> Lines { get; } = [];\n}\npublic sealed class OrderLine\n{\n    public int Id { get; set; }\n    public int OrderId { get; set; }\n    public int ProductId { get; set; }\n    public int Quantity { get; set; }\n}\npublic sealed class Cart\n{\n    public int Id { get; set; }\n    public int CustomerId { get; set; }\n    public List<CartItem> Items { get; } = [];\n}\npublic sealed class CartItem\n{\n    public int Id { get; set; }\n    public int CartId { get; set; }\n    public int ProductId { get; set; }\n    public int Quantity { get; set; }\n    public OrderLine ToLine(int orderId = 0) =>\n        new() { OrderId = orderId, ProductId = ProductId, Quantity = Quantity };\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Product> Products => Set<Product>();\n    public DbSet<Order> Orders => Set<Order>();\n    public DbSet<OrderLine> OrderLines => Set<OrderLine>();\n    public DbSet<Cart> Carts => Set<Cart>();\n}"
+    }
+  }
+}

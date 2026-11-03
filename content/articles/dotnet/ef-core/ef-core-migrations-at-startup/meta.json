@@ -1,0 +1,55 @@
+{
+  "slug": "ef-core-migrations-at-startup",
+  "field": "dotnet",
+  "topic": "ef-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Database.Migrate() at Startup Is Risky in Production",
+      "subtitle": "Since EF Core 9 a lock keeps replicas from migrating at the same time. Permissions, rolling deploys, rollbacks and unreviewed SQL are still your problem."
+    },
+    "ar-EG": {
+      "title": "ليه Database.Migrate() وقت الـ startup خطر في الـ production؟",
+      "subtitle": "من EF Core 9 فيه lock بيمنع الـ replicas تعمل migrate في نفس الوقت. بس الـ permissions والـ rolling deploys والـ rollback والـ SQL اللي محدش راجعه لسه مشكلتك."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 9
+  },
+  "tags": [
+    "EF Core",
+    "Migrations",
+    "Deployment",
+    "DevOps"
+  ],
+  "sources": [
+    {
+      "title": "Applying Migrations — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/managing-schemas/migrations/applying"
+    },
+    {
+      "title": "Migrations Overview — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/managing-schemas/migrations/"
+    },
+    {
+      "title": "Managing Migrations — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/managing-schemas/migrations/managing"
+    },
+    {
+      "title": "Parallel Change — Danilo Sato, martinfowler.com",
+      "url": "https://martinfowler.com/bliki/ParallelChange.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n}"
+    }
+  }
+}

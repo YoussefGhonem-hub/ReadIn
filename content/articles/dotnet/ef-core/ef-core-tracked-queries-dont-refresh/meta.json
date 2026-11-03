@@ -1,0 +1,59 @@
+{
+  "slug": "ef-core-tracked-queries-dont-refresh",
+  "field": "dotnet",
+  "topic": "ef-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Querying Again Won't Refresh Your Entity: How EF Core Change Tracking Works",
+      "subtitle": "A tracking query always runs its SQL, but for an entity the context already tracks, EF Core hands back the instance it has and ignores the new row."
+    },
+    "ar-EG": {
+      "title": "ليه الـ query التانية مش بتجيب الداتا الجديدة؟ إزاي الـ change tracking في EF Core بيشتغل",
+      "subtitle": "الـ tracking query بتبعت الـ SQL بتاعها كل مرة، بس لو الـ entity متتبّعة أصلًا في الـ context، الـ EF Core بيرجّعلك الـ instance اللي عنده ويتجاهل الـ row الجديد."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 2
+  },
+  "tags": [
+    "EF Core",
+    "Change Tracking",
+    "DbContext",
+    "Concurrency"
+  ],
+  "sources": [
+    {
+      "title": "Tracking vs. No-Tracking Queries — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/tracking"
+    },
+    {
+      "title": "Identity Resolution — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/change-tracking/identity-resolution"
+    },
+    {
+      "title": "Change Tracking in EF Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/change-tracking/"
+    },
+    {
+      "title": "DbContext Lifetime, Configuration, and Initialization — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/dbcontext-configuration/"
+    },
+    {
+      "title": "Handling Concurrency Conflicts — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/concurrency"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic enum PaymentStatus { Pending, Confirmed, Failed }\npublic sealed class Payment\n{\n    public int Id { get; set; }\n    public PaymentStatus Status { get; set; }\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Payment> Payments => Set<Payment>();\n}"
+    }
+  }
+}

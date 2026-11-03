@@ -1,0 +1,55 @@
+{
+  "slug": "ef-core-n-plus-one-include-projections",
+  "field": "dotnet",
+  "topic": "ef-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Beyond Include: Fixing N+1 in EF Core With Projections and Split Queries",
+      "subtitle": "Include turns many round trips into one, but that one query can carry every column of every table, multiplied. Projections ask the database for the answer instead."
+    },
+    "ar-EG": {
+      "title": "إزاي تحل الـ N+1 في EF Core من غير Include لكل حاجة؟ الـ projections والـ split queries",
+      "subtitle": "الـ Include بيحوّل رحلات كتير للداتابيز لرحلة واحدة، بس الـ query دي ممكن تشيل كل أعمدة كل الجداول ومتضاعفة كمان. والـ projections بتطلب من الداتابيز الإجابة نفسها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 6
+  },
+  "tags": [
+    "EF Core",
+    "N+1",
+    "Performance",
+    "LINQ"
+  ],
+  "sources": [
+    {
+      "title": "Efficient Querying — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/performance/efficient-querying"
+    },
+    {
+      "title": "Single vs. Split Queries — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/single-split-queries"
+    },
+    {
+      "title": "Loading Related Data — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/related-data/"
+    },
+    {
+      "title": "Lazy Loading of Related Data — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/related-data/lazy"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed record OrderSummary(int Id, string Customer, decimal Total, int Payments);\npublic sealed record LineDto(string Product, int Quantity);\npublic sealed record PaymentDto(decimal Amount, DateTime PaidAt);\npublic sealed record OrderDetails(\n    int Id, string Customer, List<LineDto> Lines, List<PaymentDto> Payments);\npublic class Customer\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n}\npublic class Product\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public string Description { get; set; } = \"\";\n}\npublic class OrderLine\n{\n    public int Id { get; set; }\n    public int OrderId { get; set; }\n    public int ProductId { get; set; }\n    public Product Product { get; set; } = null!;\n    public int Quantity { get; set; }\n    public decimal UnitPrice { get; set; }\n}\npublic class Payment\n{\n    public int Id { get; set; }\n    public int OrderId { get; set; }\n    public decimal Amount { get; set; }\n    public DateTime PaidAt { get; set; }\n}\npublic class Order\n{\n    public int Id { get; set; }\n    public int CustomerId { get; set; }\n    public Customer Customer { get; set; } = null!;\n    public DateTime PlacedAt { get; set; }\n    public List<OrderLine> Lines { get; set; } = [];\n    public List<Payment> Payments { get; set; } = [];\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Order> Orders => Set<Order>();\n}"
+    }
+  }
+}

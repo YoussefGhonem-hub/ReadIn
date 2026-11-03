@@ -1,0 +1,59 @@
+{
+  "slug": "ef-core-executeupdate-executedelete",
+  "field": "dotnet",
+  "topic": "ef-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "You Don't Have to Load Entities to Update Them: ExecuteUpdate and ExecuteDelete",
+      "subtitle": "One UPDATE or DELETE statement replaces loading thousands of rows. The price is that the change tracker, and everything SaveChanges did for you, is out of the loop."
+    },
+    "ar-EG": {
+      "title": "مش لازم تحمّل الـ entities عشان تعدّلها: ExecuteUpdate و ExecuteDelete",
+      "subtitle": "statement واحد UPDATE أو DELETE بيغنيك عن تحميل آلاف الـ rows. والتمن إن الـ change tracker، وكل اللي SaveChanges كان بيعمله عشانك، بقوا برّه الصورة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 8
+  },
+  "tags": [
+    "EF Core",
+    "ExecuteUpdate",
+    "ExecuteDelete",
+    "Performance"
+  ],
+  "sources": [
+    {
+      "title": "ExecuteUpdate and ExecuteDelete — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/execute-insert-update-delete"
+    },
+    {
+      "title": "Efficient Updating — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/performance/efficient-updating"
+    },
+    {
+      "title": "Saving Data — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/"
+    },
+    {
+      "title": "What's New in EF Core 10 — Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/what-is-new/ef-core-10.0/whatsnew"
+    },
+    {
+      "title": "Cascade Delete — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/cascade-delete"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed class Customer\n{\n    public int Id { get; set; }\n    public bool IsActive { get; set; }\n    public DateTime LastSeenAt { get; set; }\n    public DateTime? UpdatedAt { get; set; }\n}\npublic sealed class Product\n{\n    public int Id { get; set; }\n    public decimal Price { get; set; }\n    public bool OnSale { get; set; }\n    public int Version { get; set; }\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Customer> Customers => Set<Customer>();\n    public DbSet<Product> Products => Set<Product>();\n}"
+    }
+  }
+}

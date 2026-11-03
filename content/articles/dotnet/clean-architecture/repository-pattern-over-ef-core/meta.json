@@ -1,0 +1,59 @@
+{
+  "slug": "repository-pattern-over-ef-core",
+  "field": "dotnet",
+  "topic": "clean-architecture",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Do You Need a Repository on Top of EF Core? The Honest Trade-offs",
+      "subtitle": "Clean Architecture asks that inner code not depend on EF Core. A generic repository and unit of work rarely deliver that; a specific repository per aggregate, or the DbContext itself, usually does."
+    },
+    "ar-EG": {
+      "title": "هل محتاج Repository فوق EF Core؟ الـ trade-offs بصراحة",
+      "subtitle": "الـ Clean Architecture عايزة الكود اللي جوه مايعتمدش على EF Core. والـ generic repository مع الـ unit of work نادرًا ما بيحققوا ده؛ الـ repository المخصوص لكل aggregate، أو الـ DbContext نفسه، غالبًا بيعملوها أحسن."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 11
+  },
+  "tags": [
+    "Clean Architecture",
+    "Repository Pattern",
+    "EF Core",
+    "Architecture"
+  ],
+  "sources": [
+    {
+      "title": "Designing the infrastructure persistence layer — .NET Architecture Guides, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design"
+    },
+    {
+      "title": "Choosing a testing strategy — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/testing/choosing-a-testing-strategy"
+    },
+    {
+      "title": "DbContext Class — EF Core API reference, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/microsoft.entityframeworkcore.dbcontext"
+    },
+    {
+      "title": "Repository — Martin Fowler, Catalog of Patterns of Enterprise Application Architecture",
+      "url": "https://martinfowler.com/eaaCatalog/repository.html"
+    },
+    {
+      "title": "The Clean Architecture — Robert C. Martin, The Clean Code Blog (2012)",
+      "url": "https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\nnamespace Shop.Application\n{\n}\npublic interface IUnitOfWork\n{\n    Task SaveChangesAsync(CancellationToken ct);\n}\npublic interface IOrderRepository\n{\n    Task<Order> GetForCheckoutAsync(int orderId, CancellationToken ct);\n}\npublic sealed class Order\n{\n    public int Id { get; set; }\n    public string Status { get; set; } = \"Draft\";\n    public List<OrderLine> Lines { get; } = [];\n    public void Submit() => Status = \"Submitted\";\n}\npublic sealed class OrderLine\n{\n    public int Id { get; set; }\n    public int OrderId { get; set; }\n    public int Quantity { get; set; }\n}"
+    }
+  }
+}

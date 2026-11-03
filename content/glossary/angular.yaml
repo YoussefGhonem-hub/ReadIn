@@ -233,3 +233,53 @@ terms:
       object في Angular بيتعمل بـ resource() أو rxResource() أو httpResource()، بيحمّل داتا async من params بتتحسب من
       signals، ويعرض القيمة والـ status والـ error وحالة التحميل كـ signals. ولما الـ params تتغير، بيلغي التحميل اللي
       لسه شغال ويبدأ واحد جديد.
+  - id: angular-hydration
+    term: Hydration (Angular)
+    definitionEn: >-
+      Angular's process for restoring a server-rendered page in the browser. It runs the app's components again but,
+      instead of creating new DOM nodes, matches and reuses the ones in the server's HTML and attaches event listeners
+      to them. The DOM must have the same structure on both sides.
+    definitionAr: >-
+      الطريقة اللي Angular بيرجّع بيها صفحة اتعملها render على الـ server جوه المتصفح. بيشغّل الـ components بتاعة
+      التطبيق تاني، بس بدل ما يعمل DOM nodes جديدة، بيطابق اللي موجودة في الـ HTML اللي جه من الـ server ويعيد
+      استخدامها ويربط عليها الـ event listeners. والـ DOM لازم يبقى بنفس الشكل في الناحيتين.
+  - id: event-replay
+    term: Event replay
+    definitionEn: >-
+      An Angular hydration feature that records native browser events, such as clicks, that happen on server-rendered
+      HTML before hydration finishes, then replays them to the matching listeners once hydration completes. It's
+      enabled along with incremental hydration.
+    definitionAr: >-
+      ميزة في الـ hydration بتاع Angular بتسجّل الـ native events بتاعة المتصفح، زي الـ clicks، اللي بتحصل على الـ HTML
+      اللي جه من الـ server قبل ما الـ hydration يخلص، وبعدين تعيد تشغيلها على الـ listeners المناسبة أول ما يخلص.
+      وبتبقى شغالة مع الـ incremental hydration.
+  - id: prerendering
+    term: Prerendering (SSG)
+    definitionEn: >-
+      Rendering routes to static HTML files at build time instead of on each request, also called static site
+      generation. The build runs the app's components on the server platform, so the same browser-only code rules
+      apply as with server-side rendering.
+    definitionAr: >-
+      إنك تعمل render للـ routes لـ HTML files ثابتة وقت الـ build بدل ما يحصل مع كل request، وبيتسمّى كمان static site
+      generation. الـ build بيشغّل الـ components بتاعة التطبيق على الـ server platform، فنفس قواعد الكود اللي للمتصفح بس
+      بتنطبق زي الـ server-side rendering بالظبط.
+  - id: transfer-state
+    term: TransferState
+    definitionEn: >-
+      Angular's key-value store that the server serializes into the rendered page and the browser reads back while
+      the app starts. The HttpClient transfer cache and resources with an id use it to hand data the server already
+      fetched to the browser.
+    definitionAr: >-
+      مخزن key-value في Angular، الـ server بيعمله serialize جوه الصفحة اللي اتعملها render، والمتصفح بيقراه تاني وهو
+      بيشغّل التطبيق. والـ HttpClient transfer cache والـ resources اللي ليها id بيستخدموه عشان يسلّموا للمتصفح الداتا
+      اللي الـ server جابها خلاص.
+  - id: incremental-hydration
+    term: Incremental hydration
+    definitionEn: >-
+      Angular's hydration mode in which @defer blocks with hydrate triggers are rendered on the server but stay
+      dehydrated in the browser, as static HTML whose code hasn't loaded, until a trigger such as viewport or
+      interaction fires. Then Angular loads that block's code and hydrates it. It's on by default since Angular 22.
+    definitionAr: >-
+      mode في الـ hydration بتاع Angular، الـ @defer blocks اللي فيها hydrate triggers بيتعملها render على الـ server،
+      بس بتفضل dehydrated في المتصفح، يعني HTML ثابت الكود بتاعه لسه ماتحمّلش، لحد ما trigger زي viewport أو interaction
+      يشتغل. ساعتها Angular بيحمّل الكود بتاع الـ block ده ويعمله hydrate. وشغال افتراضيًا من أول Angular 22.

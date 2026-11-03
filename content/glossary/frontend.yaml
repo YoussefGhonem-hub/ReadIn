@@ -1,0 +1,42 @@
+terms:
+  - id: type-coercion
+    term: Type coercion
+    definitionEn: >-
+      JavaScript converting a value from one type to another on its own, for example a string to a number, because an
+      operator such as == or + received operands of different types.
+    definitionAr: >-
+      إن JavaScript تحوّل قيمة من نوع لنوع تاني من نفسها، زي string لـ number، لأن operator زي == أو + جاله قيم من
+      أنواع مختلفة.
+  - id: nan
+    term: NaN
+    definitionEn: >-
+      "Not a Number", a special value of the Number type that results from invalid math or failed conversions, such as
+      Number("abc"). It is the only value that is not equal to itself with == or ===.
+    definitionAr: >-
+      اختصار "Not a Number"، قيمة خاصة من نوع Number بتطلع من عملية حسابية مش صالحة أو تحويل فشل، زي Number("abc").
+      وهي القيمة الوحيدة اللي مش بتساوي نفسها بـ == ولا بـ ===.
+  - id: js-strict-mode
+    term: Strict mode (JavaScript)
+    definitionEn: >-
+      A stricter variant of JavaScript that turns some silent mistakes into errors. Classes and ES modules always run
+      in it; elsewhere you opt in with "use strict". In strict code, a plain function call gets this as undefined.
+    definitionAr: >-
+      نسخة أصرم من JavaScript بتحوّل شوية أخطاء كانت بتعدّي في صمت لـ errors. الـ classes والـ ES modules دايمًا شغالة
+      بيها، وفي أي مكان تاني بتفعّلها بـ "use strict". وفي الكود الـ strict، الـ function اللي بتتنادى لوحدها بتاخد
+      this بقيمة undefined.
+  - id: arrow-function
+    term: Arrow function
+    definitionEn: >-
+      A compact function written with =>, such as (x) => x * 2. It has no this of its own: it uses the this of the
+      code around it, and call, apply and bind can't change that.
+    definitionAr: >-
+      function مختصرة بتتكتب بـ =>، زي (x) => x * 2. مالهاش this خاص بيها: بتستخدم this بتاع الكود اللي حواليها، والـ
+      call والـ apply والـ bind مايقدروش يغيّروه.
+  - id: bound-function
+    term: Bound function
+    definitionEn: >-
+      The new function returned by fn.bind(obj). Whenever it is called, it calls fn with this set to obj, and a later
+      call() or bind() can't change that.
+    definitionAr: >-
+      الـ function الجديدة اللي بترجع من fn.bind(obj). كل ما تتنادى بتنادي fn وهي مثبّتة this على obj، وأي call() أو
+      bind() بعد كده مايقدرش يغيّر ده.
