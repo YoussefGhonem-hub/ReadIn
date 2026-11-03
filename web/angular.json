@@ -33,6 +33,11 @@
                 "glob": "browser-image-compression.js",
                 "input": "node_modules/browser-image-compression/dist",
                 "output": "vendor"
+              },
+              {
+                "glob": "*.svg",
+                "input": "node_modules/flag-icons/flags/4x3",
+                "output": "flags"
               }
             ],
             "styles": ["src/styles.css"],
@@ -43,6 +48,9 @@
             },
             "ssr": {
               "entry": "src/server.ts"
+            },
+            "loader": {
+              ".txt": "text"
             }
           },
           "configurations": {
@@ -69,6 +77,25 @@
                 {
                   "with": "src/environments/environment.development.ts",
                   "replace": "src/environments/environment.ts"
+                },
+                {
+                  "with": "src/app/features/auth/dev/dev-login.development.ts",
+                  "replace": "src/app/features/auth/dev/dev-login.ts"
+                }
+              ]
+            },
+            "e2e": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "with": "src/environments/environment.e2e.ts",
+                  "replace": "src/environments/environment.ts"
+                },
+                {
+                  "with": "src/app/features/auth/dev/dev-login.development.ts",
+                  "replace": "src/app/features/auth/dev/dev-login.ts"
                 }
               ]
             }
@@ -83,6 +110,9 @@
             },
             "development": {
               "buildTarget": "readin-web:build:development"
+            },
+            "e2e": {
+              "buildTarget": "readin-web:build:e2e"
             }
           },
           "defaultConfiguration": "development"

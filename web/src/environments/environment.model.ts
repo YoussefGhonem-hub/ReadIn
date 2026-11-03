@@ -22,6 +22,11 @@ export interface AppEnvironment {
   firebaseVapidKey: string | null;
   /** Realtime Database emulator `host:port`, or null to use the real project. */
   databaseEmulatorHost: string | null;
-  /** Firebase Auth emulator URL, or null to use the real Firebase project. */
+  /**
+   * Firebase Auth emulator URL, or null to use the real Firebase project. Firebase Auth only exchanges the custom
+   * token for the Realtime Database (ADR 0008); it is never a ReadIn sign-in.
+   */
   authEmulatorUrl: string | null;
+  /** Where "Forgot the PIN too?" sends people (ADR 0009: an Admin resets the account). */
+  supportEmail: string;
 }

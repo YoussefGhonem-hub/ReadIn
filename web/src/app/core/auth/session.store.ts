@@ -1,58 +1,47 @@
 import { computed } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { MeDto } from '../api/models';
+import { nextSetupStep } from './account-setup';
 
-/** `unknown` until Firebase reports the persisted session (always `unknown` during SSR). */
+/** `unknown` until the browser has tried to restore the session (always `unknown` during SSR). */
 export type SessionStatus = 'unknown' | 'guest' | 'authenticated';
-
-export interface FirebaseUserSummary {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoUrl: string | null;
-  emailVerified: boolean;
-}
 
 interface SessionState {
   status: SessionStatus;
-  user: FirebaseUserSummary | null;
   me: MeDto | null;
-  syncing: boolean;
-  syncFailed: boolean;
 }
 
 /** Guests can only read (SPEC §10.2). */
 const GUEST_PERMISSIONS: readonly string[] = ['articles.read'];
 
+/**
+ * Who is signed in, as UI state. The access token itself never lives here (AuthService keeps it in a private field);
+ * nothing about the session is ever written to localStorage or sessionStorage (SPEC §9.3).
+ */
 export const SessionStore = signalStore(
   { providedIn: 'root' },
-  withState<SessionState>({ status: 'unknown', user: null, me: null, syncing: false, syncFailed: false }),
-  withComputed(({ status, me, user }) => ({
+  withState<SessionState>({ status: 'unknown', me: null }),
+  withComputed(({ status, me }) => ({
     isResolved: computed(() => status() !== 'unknown'),
     isAuthenticated: computed(() => status() === 'authenticated'),
     isGuest: computed(() => status() === 'guest'),
     permissions: computed(() => new Set(status() === 'authenticated' ? (me()?.permissions ?? []) : GUEST_PERMISSIONS)),
-    displayName: computed(() => me()?.displayName ?? user()?.displayName ?? null),
+    displayName: computed(() => me()?.displayName ?? null),
     username: computed(() => me()?.username ?? null),
-    avatarUrl: computed(() => me()?.avatarUrl ?? user()?.photoUrl ?? null),
-    needsOnboarding: computed(() => status() === 'authenticated' && me() !== null && !me()!.onboardingCompleted),
+    avatarUrl: computed(() => me()?.avatarUrl ?? null),
+    phoneNumber: computed(() => me()?.phoneNumber ?? null),
+    /** The mandatory step this account has to finish first (SPEC §9.2), or null. */
+    setupStep: computed(() => {
+      const current = me();
+      return status() === 'authenticated' && current ? nextSetupStep(current) : null;
+    }),
   })),
   withMethods((store) => ({
     setGuest(): void {
-      patchState(store, { status: 'guest', user: null, me: null, syncing: false, syncFailed: false });
-    },
-    setUser(user: FirebaseUserSummary): void {
-      const sameUser = store.user()?.uid === user.uid;
-      patchState(store, { status: 'authenticated', user, me: sameUser ? store.me() : null });
-    },
-    setSyncing(syncing: boolean): void {
-      patchState(store, { syncing });
+      patchState(store, { status: 'guest', me: null });
     },
     setMe(me: MeDto): void {
-      patchState(store, { me, syncing: false, syncFailed: false });
-    },
-    setSyncFailed(): void {
-      patchState(store, { syncing: false, syncFailed: true });
+      patchState(store, { status: 'authenticated', me });
     },
     patchMe(partial: Partial<MeDto>): void {
       const me = store.me();

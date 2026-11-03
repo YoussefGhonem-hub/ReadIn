@@ -4,7 +4,7 @@ import { MeApi } from '../api/me.api';
 import { UpdatePreferencesRequest } from '../api/models';
 import { LanguageService, UiLanguage } from '../i18n/language.service';
 import { ThemePreference, ThemeService } from '../theme/theme.service';
-import { localTimeZone } from './auth.service';
+import { localTimeZone } from './time-zone';
 import { SessionStore } from './session.store';
 
 /**

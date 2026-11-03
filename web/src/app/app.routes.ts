@@ -1,5 +1,5 @@
 import { Routes, UrlMatchResult, UrlSegment } from '@angular/router';
-import { authGuard, guestOnlyGuard, onboardingGuard, permissionGuard } from './core/auth/guards';
+import { accountSetupGuard, permissionGuard, setupStepGuard } from './core/auth/guards';
 import { PLACEHOLDER_ROUTES } from './features/placeholders.routes';
 import { Shell } from './layout/shell';
 
@@ -22,20 +22,22 @@ export function profileMatcher(segments: UrlSegment[]): UrlMatchResult | null {
 }
 
 export const routes: Routes = [
-  { path: 'auth', canActivate: [guestOnlyGuard], loadChildren: () => import('./features/auth/auth.routes') },
+  // Welcome, sign in/up, forgot password and the mandatory setup screens (SPEC §9.2); each route has its own guard.
+  { path: 'auth', loadChildren: () => import('./features/auth/auth.routes') },
   {
     path: 'onboarding',
-    canActivate: [authGuard],
+    canActivate: [setupStepGuard('onboarding')],
     loadComponent: () => import('./features/onboarding/onboarding.page').then((m) => m.OnboardingPage),
   },
   {
     path: '',
     component: Shell,
+    // Signed-in users finish their pending setup step first; guests browse freely.
+    canActivateChild: [accountSetupGuard],
     children: [
       {
         path: '',
         pathMatch: 'full',
-        canActivate: [onboardingGuard],
         loadComponent: () => import('./features/home/home.page').then((m) => m.HomePage),
       },
       {

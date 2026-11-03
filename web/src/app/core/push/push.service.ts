@@ -61,6 +61,21 @@ export class PushService {
     return permission;
   }
 
+  /**
+   * Called on sign out while the access token still works: `DELETE /me/devices/{token}` so the API stops sending
+   * this account's pushes here, then the FCM token itself is dropped. A no-op when nothing was registered.
+   */
+  async unregisterDevice(): Promise<void> {
+    const registered = this.registered;
+    if (!registered) return;
+    try {
+      await firstValueFrom(this.meApi.unregisterDevice(registered.token));
+    } catch {
+      /* offline: the API drops the token once FCM reports it invalid */
+    }
+    await this.unregister();
+  }
+
   private async sync(userId: string | null, permission: PushPermission): Promise<void> {
     if (userId && permission === 'granted') await this.register(userId);
     else if (!userId && this.registered) await this.unregister();

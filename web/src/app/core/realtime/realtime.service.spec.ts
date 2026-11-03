@@ -71,7 +71,6 @@ function setup(options: { connection?: FakeConnection | null; token?: () => Obse
 }
 
 function signIn(session: SessionStore, id = 'user-1'): void {
-  session.setUser({ uid: `fb-${id}`, email: null, displayName: 'Mona', photoUrl: null, emailVerified: true });
   session.setMe({ id, displayName: 'Mona' } as MeDto);
 }
 

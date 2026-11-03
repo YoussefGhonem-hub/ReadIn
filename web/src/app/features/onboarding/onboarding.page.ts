@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { MeApi } from '../../core/api/me.api';
 import { ArticleLanguage, FieldDto, TopicDto } from '../../core/api/models';
 import { TaxonomyApi } from '../../core/api/taxonomy.api';
+import { safeReturnUrl } from '../../core/auth/account-setup';
 import { AuthService } from '../../core/auth/auth.service';
 import { PreferencesService } from '../../core/auth/preferences.service';
 import { SessionStore } from '../../core/auth/session.store';
@@ -178,6 +179,8 @@ export class OnboardingPage {
   private readonly transloco = inject(TranslocoService);
   protected readonly lang = inject(LanguageService).lang;
   protected readonly minInterests = MIN_INTERESTS;
+  /** Where the user was going before the account-setup steps (SPEC §9.2). */
+  readonly returnUrl = input<string | null>(null);
 
   protected readonly step = signal<Step>(1);
   protected readonly fields = signal<FieldDto[]>([]);
@@ -257,7 +260,7 @@ export class OnboardingPage {
       // The API derives onboardingCompleted from ≥ 3 interests; patch locally if the refresh fails.
       const me = await this.auth.refreshMe();
       if (!me?.onboardingCompleted) this.session.patchMe({ onboardingCompleted: true });
-      await this.router.navigateByUrl('/');
+      await this.router.navigateByUrl(safeReturnUrl(this.returnUrl()));
     } catch (error) {
       this.error.set(this.errors.forError(error));
     } finally {

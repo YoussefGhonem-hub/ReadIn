@@ -1,11 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { ArticleLanguage } from '../../core/api/models';
-import { AuthService } from '../../core/auth/auth.service';
 import { PreferencesService } from '../../core/auth/preferences.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { ErrorMessages } from '../../core/i18n/error-messages';
@@ -13,14 +11,14 @@ import { LanguageService, UiLanguage } from '../../core/i18n/language.service';
 import { PushService } from '../../core/push/push.service';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
-import { Avatar } from '../../shared/ui/avatar';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { AccountSettings } from './account/account-settings';
 
 /** Settings (F18): theme, UI language, article language, reminder time, push notifications, font size, account. */
 @Component({
   selector: 'rd-settings-page',
-  imports: [FormsModule, RouterLink, TranslocoPipe, Segmented, Avatar, LucideDynamicIcon],
+  imports: [FormsModule, TranslocoPipe, Segmented, LucideDynamicIcon, AccountSettings],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
   template: `
@@ -99,25 +97,8 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
       </fieldset>
     </section>
 
-    <!-- Account -->
-    <section class="rd-card p-5 shadow-none" aria-labelledby="account">
-      <h2 id="account" class="m-0 mb-4 text-base font-semibold">{{ 'settings.account' | transloco }}</h2>
-      @if (session.isAuthenticated()) {
-        <div class="flex items-center gap-3">
-          <rd-avatar [name]="session.displayName()" [src]="session.avatarUrl()" [size]="44" />
-          <div class="min-w-0 flex-1">
-            <div class="font-semibold">{{ session.displayName() }}</div>
-            <div class="truncate text-sm text-text-secondary" dir="ltr">{{ session.me()?.email ?? session.user()?.email }}</div>
-          </div>
-        </div>
-        <button type="button" class="rd-btn rd-btn-outline mt-5 w-full text-error" (click)="signOut()">
-          <svg lucideIcon="LogOut" [size]="16" class="rd-flip-rtl" aria-hidden="true"></svg>{{ 'auth.signOut' | transloco }}
-        </button>
-      } @else {
-        <p class="m-0 mb-4 text-sm text-text-secondary">{{ 'settings.guestHint' | transloco }}</p>
-        <a routerLink="/auth/sign-in" [queryParams]="{ returnUrl: '/settings' }" class="rd-btn rd-btn-primary w-full">{{ 'auth.signIn.submit' | transloco }}</a>
-      }
-    </section>
+    <!-- Account (F18): phone, password, PIN, sign out, sign out everywhere, delete -->
+    <rd-account-settings />
   `,
 })
 export class SettingsPage {
@@ -127,8 +108,6 @@ export class SettingsPage {
   protected readonly session = inject(SessionStore);
   protected readonly push = inject(PushService);
   private readonly preferences = inject(PreferencesService);
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
   private readonly toasts = inject(ToastService);
   private readonly errors = inject(ErrorMessages);
   private readonly transloco = inject(TranslocoService);
@@ -177,11 +156,6 @@ export class SettingsPage {
     if (!value) return;
     await this.persist(() => this.preferences.save({ reminderTime: value }), true);
     this.reminderDraft.set(null);
-  }
-
-  protected async signOut(): Promise<void> {
-    await this.auth.signOut();
-    await this.router.navigateByUrl('/');
   }
 
   private async persist(action: () => Promise<unknown>, confirm = false): Promise<void> {

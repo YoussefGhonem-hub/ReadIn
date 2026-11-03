@@ -44,22 +44,32 @@
     "unknown": "Something went wrong. Please try again.",
     "network": "Can't reach the server. Check your connection and try again.",
     "loadFailed": "We couldn't load this",
-    "syncFailed": "You're signed in, but we couldn't reach your ReadIn account right now.",
     "validation": {
       "failed": "Some details need fixing."
     },
     "auth": {
       "unauthorized": "Please sign in first.",
-      "forbidden": "You're not allowed to do that."
+      "forbidden": "You're not allowed to do that.",
+      "invalid_credentials": "The phone number or password is incorrect.",
+      "locked_out": "Too many attempts. Try again in 15 minutes.",
+      "phone_taken": "This number already has an account.",
+      "refresh_invalid": "Your session has ended. Sign in again.",
+      "recovery_invalid": "The phone number or PIN is incorrect.",
+      "recovery_locked": "Too many attempts. Try again in an hour.",
+      "recovery_disabled": "Recovery is turned off for this account. Contact support.",
+      "reset_token_invalid": "Time ran out. Start again.",
+      "wrong_password": "Your current password is incorrect.",
+      "pin_already_set": "You already have a PIN. Change it from Settings.",
+      "phone_unchanged": "This is already your number."
     },
     "user": {
-      "suspended": "Your account is suspended.",
-      "not_synced": "Your account isn't ready yet. Please sign in again.",
+      "suspended": "This account is suspended. Contact support.",
       "not_found": "This user doesn't exist.",
       "username_taken": "That username is taken.",
       "interests": {
         "min_three": "Pick at least 3 interests."
-      }
+      },
+      "username_invalid": "3–30 characters: a–z, 0–9 and _ only."
     },
     "field": {
       "not_found": "This field doesn't exist."
@@ -101,53 +111,67 @@
       "asset_not_found": "One of the attachments doesn't exist anymore. Remove it and upload it again.",
       "asset_not_ready": "Wait until every attachment is ready.",
       "duplicate_asset": "The same file is attached twice."
+    },
+    "rate_limited": "Too many requests. Wait a little and try again.",
+    "phone": {
+      "invalid": "This mobile number isn't valid."
+    },
+    "password": {
+      "too_short": "Use at least 8 characters.",
+      "too_long": "Use at most 128 characters.",
+      "letter_required": "Add at least one letter.",
+      "digit_required": "Add at least one number.",
+      "too_common": "This password is too common. Choose another one.",
+      "contains_phone": "Don't use your phone number in your password."
+    },
+    "pin": {
+      "length": "Enter all the PIN digits.",
+      "digits_only": "Use digits only.",
+      "weak": "This PIN is too easy to guess. Avoid repeated or consecutive digits, years and the end of your number."
     }
   },
   "auth": {
-    "google": "Continue with Google",
-    "email": "Email",
     "password": "Password",
-    "displayName": "Your name",
     "continueAsGuest": "Browse as a guest",
     "signOut": "Sign out",
     "signIn": {
       "title": "Welcome back 👋",
-      "subtitle": "Sign in and keep your reading habit going.",
+      "subtitle": "Sign in with your mobile number and password.",
       "submit": "Sign in",
-      "forgot": "Forgot password?",
+      "forgot": "Forgot your password?",
       "noAccount": "Don't have an account?",
-      "createAccount": "Create one"
+      "createAccount": "Create one",
+      "action": "Sign in",
+      "passwordReset": "Your password was changed. Sign in with your new password."
     },
     "signUp": {
-      "title": "Start your ReadIn journey",
-      "subtitle": "One valuable article a day, in the field you love.",
-      "submit": "Create account",
+      "title": "Create your account",
+      "subtitle": "Just your mobile number and a password. No SMS, no codes.",
       "haveAccount": "Already have an account?",
-      "verifyNote": "We'll send you a verification email after signing up.",
-      "verifySent": "We sent you a verification email."
+      "step": "Step {{current}} of {{total}}",
+      "phoneHint": "You'll sign in with this number.",
+      "pinTitle": "Create an emergency PIN",
+      "pinSubtitle": "You'll need it if you ever forget your password.",
+      "pinExplain": "If you forget your password, your number and this PIN let you choose a new one. Keep it somewhere safe."
     },
     "forgot": {
       "title": "Forgot your password?",
-      "subtitle": "Enter your email and we'll send you a reset link.",
-      "submit": "Send reset link",
-      "sent": "If that email is registered, a reset link will arrive within a few minutes."
+      "subtitle": "Enter your number and the recovery PIN you created when you signed up.",
+      "forgotPin": "Forgot the PIN too?",
+      "newTitle": "Choose a new password",
+      "newSubtitle": "After saving, you'll sign in again on all your devices.",
+      "save": "Save",
+      "backToSignIn": "Back to sign in"
     },
     "validation": {
       "required": "This field is required.",
-      "email": "Enter a valid email.",
       "displayName": "Name must be 2 to 60 characters.",
-      "password": "At least 8 characters."
-    },
-    "errors": {
-      "invalidCredential": "Wrong email or password.",
-      "emailInUse": "That email already has an account. Try signing in.",
-      "weakPassword": "That password is too weak. Use at least 8 characters.",
-      "invalidEmail": "That email doesn't look right.",
-      "tooMany": "Too many attempts. Wait a bit and try again.",
-      "network": "No connection. Check your internet.",
-      "popupClosed": "The sign-in window was closed before finishing.",
-      "popupBlocked": "Your browser blocked the sign-in window. Allow pop-ups and try again.",
-      "generic": "We couldn't sign you in. Please try again."
+      "phoneRequired": "Enter your mobile number.",
+      "confirmPassword": "Type the password again.",
+      "passwordMismatch": "The passwords don't match.",
+      "confirmPin": "Type the PIN again.",
+      "pinMismatch": "The PINs don't match.",
+      "usernameRequired": "Choose a username."
     },
     "prompt": {
       "title": "Sign in to join in",
@@ -155,6 +179,148 @@
       "signIn": "Sign in",
       "signUp": "Create an account",
       "later": "Not now"
+    },
+    "phone": "Mobile number",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm the password",
+    "temporaryPassword": "Temporary password",
+    "pin": "Recovery PIN",
+    "confirmPin": "Confirm the PIN",
+    "pinHint": "{{length}} digits you'll remember. Not your birth year or 1234.",
+    "switchLanguage": "Switch the app language to {{language}}",
+    "welcome": {
+      "title": "One article a day that makes a difference",
+      "body": "Short, trusted articles in Egyptian Arabic with English terms, or in English only.",
+      "point1": "Today's article, picked for you.",
+      "point2": "A daily reading streak that keeps you going.",
+      "createAccount": "Create a new account",
+      "signIn": "I have an account, sign in"
+    },
+    "confirmPhone": {
+      "title": "Is this your number?",
+      "warning": "You'll use this number to sign in, and you won't be able to recover your account if the number is wrong.",
+      "create": "Yes, create my account",
+      "change": "Yes, change my number",
+      "edit": "Edit"
+    },
+    "support": {
+      "title": "Forgot the PIN too?",
+      "body": "Our support team can give you your account back after checking that it is yours.",
+      "step1": "Email support and include the mobile number of your account.",
+      "step2": "An admin checks the request and gives you a temporary password.",
+      "step3": "Sign in with it, then choose a new password and a new PIN.",
+      "emailLabel": "Support email",
+      "contact": "Contact support",
+      "done": "Got it"
+    },
+    "setPin": {
+      "title": "Create your recovery PIN",
+      "subtitle": "You need it to get back in if you forget your password. This step can't be skipped.",
+      "submit": "Save PIN"
+    },
+    "mustChangePassword": {
+      "title": "Choose a new password",
+      "subtitle": "Your account was reset. Choose your own password to continue."
+    },
+    "completeProfile": {
+      "title": "Complete your profile",
+      "subtitle": "Your name and the username people will see.",
+      "displayName": "Your name",
+      "username": "Username",
+      "usernamePlaceholder": "your_name",
+      "usernameHint": "3–30 characters: a–z, 0–9 and _.",
+      "checking": "Checking…",
+      "available": "Available ✓",
+      "checkFailed": "We couldn't check this username right now. You can still continue.",
+      "avatar": "Profile photo (optional)",
+      "avatarAdd": "Add a photo",
+      "avatarChange": "Change photo",
+      "avatarUploading": "Uploading {{percent}}%",
+      "avatarHint": "JPG, PNG, WebP or HEIC."
+    },
+    "dev": {
+      "title": "Dev login (development builds only)",
+      "hint": "Seed users from SPEC §18.3. Save your Seed:DemoPassword here to sign in with one tap; it stays in this browser.",
+      "demoPassword": "Demo password",
+      "pin": "Has a recovery PIN",
+      "noPin": "No recovery PIN yet"
+    }
+  },
+  "password": {
+    "show": "Show password",
+    "hide": "Hide password",
+    "strength": {
+      "label": "Strength",
+      "empty": "",
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    },
+    "rules": {
+      "title": "Password rules",
+      "length": "{{min}}+ characters",
+      "letter": "A letter",
+      "digit": "A number",
+      "met": "(done)",
+      "notMet": "(not yet)"
+    }
+  },
+  "pin": {
+    "digit": "PIN digit {{n}} of {{total}}",
+    "show": "Show PIN",
+    "hide": "Hide PIN"
+  },
+  "phone": {
+    "country": "Country: {{country}} (+{{dial}}). Change",
+    "picker": {
+      "title": "Choose your country",
+      "search": "Search by country or code",
+      "empty": "No country matches your search."
+    }
+  },
+  "account": {
+    "phone": "Mobile number",
+    "phoneOwnerOnly": "Only you can see this.",
+    "pinSet": "Set ✓",
+    "pinNotSet": "Not set",
+    "dangerZone": "Danger zone",
+    "changePhone": {
+      "action": "Change number",
+      "title": "Change your mobile number",
+      "body": "You'll sign in with the new number. Every other device will be signed out.",
+      "newNumber": "New mobile number",
+      "done": "Your number was changed ✓"
+    },
+    "changePassword": {
+      "action": "Change password",
+      "title": "Change your password",
+      "body": "Every other device will be signed out.",
+      "done": "Password changed. Your other devices were signed out ✓"
+    },
+    "changePin": {
+      "action": "Change PIN",
+      "title": "Change your recovery PIN",
+      "body": "Enter your current password, then the new PIN.",
+      "newPin": "New PIN",
+      "done": "Recovery PIN changed ✓"
+    },
+    "signOutEverywhere": {
+      "action": "Sign out of all devices",
+      "title": "Sign out of all devices?",
+      "body": "Every other browser and phone will be signed out right away. You'll stay signed in here.",
+      "confirm": "Sign out the others",
+      "done": "Signed out of all your other devices ✓"
+    },
+    "delete": {
+      "action": "Delete account",
+      "hint": "Closes your account right away.",
+      "title": "Delete your account?",
+      "body": "Your account closes now and your personal data is deleted after 30 days. Your articles and comments stay, shown as \"Deleted user\". This can’t be undone.",
+      "understand": "I understand that my account will be deleted.",
+      "confirm": "Delete my account",
+      "done": "Your account was deleted."
     }
   },
   "onboarding": {

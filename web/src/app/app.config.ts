@@ -24,7 +24,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay(), withHttpTransferCacheOptions({ includeRequestsWithAuthHeaders: false })),
     ...provideI18n(),
     provideAppIcons(),
-    // Start listening to Firebase in the browser without blocking bootstrap.
+    // Restore the session (POST /auth/refresh) in the browser without blocking bootstrap; a no-op during SSR.
     provideAppInitializer(() => inject(AuthService).init()),
     // Live badge and web push follow the session; both are no-ops during SSR (SPEC §21).
     provideAppInitializer(() => {

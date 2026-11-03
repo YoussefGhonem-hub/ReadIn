@@ -20,14 +20,11 @@ export interface ProfileLinks {
   website?: string;
 }
 
-export interface SyncUserRequest {
-  uiLanguage?: UiLanguage;
-  timeZone?: string;
-}
-
 export interface MeDto {
   id: string;
-  email: string;
+  /** E.164; only in MeDto and admin endpoints (SPEC §9.5). */
+  phoneNumber: string | null;
+  email: string | null;
   displayName: string;
   username: string;
   avatarUrl: string | null;
@@ -39,10 +36,76 @@ export interface MeDto {
   timeZone: string;
   reminderTime: string;
   isVerified: boolean;
+  /** True once ≥ 3 interests are saved. */
   onboardingCompleted: boolean;
+  /** Guards after sign in, in this order (SPEC §9.2): change password → set PIN → complete profile → onboarding. */
+  mustChangePassword: boolean;
+  mustSetRecoveryPin: boolean;
+  isProfileComplete: boolean;
+  hasRecoveryPin: boolean;
   roles: string[];
   permissions: string[];
   interests: { fieldIds: string[]; topicIds: string[] };
+}
+
+// ── Auth (SPEC §9, ADR 0007, ADR 0009) ──────────────────────────
+
+export interface AuthConfigDto {
+  /** Number of PIN boxes (default 4). */
+  pinLength: number;
+  password: { minLength: number; maxLength: number; requireLetter: boolean; requireDigit: boolean };
+}
+
+export interface RegisterRequest {
+  /** E.164, mobile numbers only. */
+  phoneNumber: string;
+  password: string;
+  recoveryPin: string;
+  uiLanguage?: UiLanguage;
+  /** IANA, e.g. "Africa/Cairo". */
+  timeZone?: string;
+}
+
+export interface LoginRequest {
+  phoneNumber: string;
+  password: string;
+}
+
+/** A signed-in session. On the web `refreshToken` is null: it lives in an HttpOnly cookie the page never sees. */
+export interface SessionDto {
+  accessToken: string;
+  accessTokenExpiresAt: string;
+  refreshToken: string | null;
+  refreshTokenExpiresAt: string;
+  user: MeDto;
+}
+
+export interface VerifyPinRequest {
+  phoneNumber: string;
+  pin: string;
+}
+
+/** Forgot password, step 1: a 10-minute, single-use token for step 2. */
+export interface PasswordResetTokenDto {
+  resetToken: string;
+  expiresAt: string;
+}
+
+export interface ResetPasswordRequest {
+  resetToken: string;
+  newPassword: string;
+}
+
+export interface CompleteProfileRequest {
+  displayName: string;
+  username: string;
+  avatarUrl?: string | null;
+}
+
+export interface UsernameAvailabilityDto {
+  username: string;
+  valid: boolean;
+  available: boolean;
 }
 
 export interface UpdateProfileRequest {

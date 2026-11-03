@@ -34,7 +34,7 @@ class FakePushClient implements PushClient {
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 async function setup(client = new FakePushClient()) {
-  const meApi = { registerDevice: vi.fn(() => of(undefined)) };
+  const meApi = { registerDevice: vi.fn(() => of(undefined)), unregisterDevice: vi.fn(() => of(undefined)) };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
@@ -50,7 +50,6 @@ async function setup(client = new FakePushClient()) {
 }
 
 async function signIn(session: SessionStore, id = 'user-1'): Promise<void> {
-  session.setUser({ uid: `fb-${id}`, email: null, displayName: 'Mona', photoUrl: null, emailVerified: true });
   session.setMe({ id, displayName: 'Mona' } as MeDto);
   TestBed.tick();
   await flush();
@@ -119,6 +118,25 @@ describe('PushService', () => {
     TestBed.tick();
     await flush();
     expect(client.deleteToken).toHaveBeenCalledTimes(1);
+  });
+
+  it('unregisters the device on the API before signing out (DELETE /me/devices/{token})', async () => {
+    const client = new FakePushClient();
+    client.current = 'granted';
+    const { service, session, meApi } = await setup(client);
+    await signIn(session);
+
+    await service.unregisterDevice();
+    expect(meApi.unregisterDevice).toHaveBeenCalledWith('fcm-token-1');
+    expect(client.deleteToken).toHaveBeenCalledTimes(1);
+
+    // Signing out afterwards doesn't delete it twice; nothing registered means nothing to do.
+    session.setGuest();
+    TestBed.tick();
+    await flush();
+    await service.unregisterDevice();
+    expect(client.deleteToken).toHaveBeenCalledTimes(1);
+    expect(meApi.unregisterDevice).toHaveBeenCalledTimes(1);
   });
 
   it('shows a foreground push as a toast that opens the post', async () => {

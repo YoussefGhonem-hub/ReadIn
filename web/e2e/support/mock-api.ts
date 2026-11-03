@@ -3,12 +3,15 @@ import { APIRequestContext, BrowserContext, Locator, Page, Route, expect } from 
 
 /**
  * E2E helpers. `e2e/mock-api/server.mjs` answers SSR and browser API calls with fixtures; tests add per-flow state
- * (uploads, create/publish, the new post in the feed) with `page.route`, and sign in through a mocked Firebase Auth
- * emulator, so nothing depends on a running backend.
+ * (uploads, create/publish, sessions, the new post in the feed) with `page.route`, so nothing depends on a running
+ * backend. Sign in is the real phone + password page against the mocked `/auth/login`.
  */
-export const MOCK_ORIGIN = 'http://localhost:5080';
+/** The mock API (playwright.config.ts → MOCK_API_PORT; src/environments/environment.e2e.ts points the app at it). */
+export const MOCK_ORIGIN = 'http://localhost:5180';
 export const API = `${MOCK_ORIGIN}/api/v1`;
-const AUTH_EMULATOR = 'http://127.0.0.1:9099';
+/** The mock API's demo account (e2e/mock-api/server.mjs). */
+export const MOCK_PHONE = '+201001234567';
+export const MOCK_PASSWORD = 'Readin2026!';
 
 export interface Variant {
   lang: 'ar' | 'en';
@@ -32,18 +35,23 @@ export async function useVariant(context: BrowserContext, baseURL: string, { lan
   ]);
 }
 
-const CORS = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-headers': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-};
+/** Credentialed CORS: the web sends cookies to `/auth/*`, so the origin is echoed (never `*`). */
+function cors(route: Route): Record<string, string> {
+  return {
+    'access-control-allow-origin': route.request().headers()['origin'] ?? '*',
+    'access-control-allow-credentials': 'true',
+    'access-control-allow-headers': 'authorization, content-type, accept-language, x-requested-with, x-readin-client',
+    'access-control-allow-methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    vary: 'Origin',
+  };
+}
 
 /** Fulfills a routed call (and its CORS preflight) with JSON, or an empty body for `204`. */
 export function reply(route: Route, status: number, body?: unknown): Promise<void> {
-  if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
+  if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors(route) });
   return route.fulfill({
     status,
-    headers: { ...CORS, ...(body === undefined ? {} : { 'content-type': 'application/json' }) },
+    headers: { ...cors(route), ...(body === undefined ? {} : { 'content-type': 'application/json' }) },
     body: body === undefined ? '' : JSON.stringify(body),
   });
 }
@@ -58,71 +66,49 @@ export async function onApi(page: Page, method: string, path: string | RegExp, h
   });
 }
 
+/** ProblemDetails with a stable `code` (and validation `errors`), like the API's. */
+export function problem(status: number, code: string, errors?: Record<string, string[]>) {
+  return { type: `https://readin.app/errors/${code}`, title: code, status, code, traceId: '00-e2e', ...(errors ? { errors } : {}) };
+}
+
 function base64Url(value: unknown): string {
   return Buffer.from(JSON.stringify(value)).toString('base64url');
 }
 
-/**
- * Firebase Auth emulator REST endpoints (the dev build connects to http://127.0.0.1:9099). The ID token is an
- * unsigned JWT, which is what the emulator issues too; the mock API never verifies it.
- */
-export async function mockFirebaseAuth(page: Page): Promise<void> {
-  const now = Math.floor(Date.now() / 1000);
-  const user = { localId: 'firebase-writer', email: 'writer@readin.test', displayName: 'Mona Adel' };
-  const idToken = [
-    base64Url({ alg: 'none', typ: 'JWT' }),
-    base64Url({
-      iss: 'https://securetoken.google.com/demo-readin',
-      aud: 'demo-readin',
-      auth_time: now,
-      user_id: user.localId,
-      sub: user.localId,
-      iat: now,
-      exp: now + 3600,
-      email: user.email,
-      email_verified: true,
-      name: user.displayName,
-      firebase: { identities: { email: [user.email] }, sign_in_provider: 'password' },
-    }),
-    'mock',
-  ].join('.');
+/** A `SessionDto` for `user`, as the API sends it to the web (the refresh token lives in a cookie: null here). */
+export function sessionFor<T extends { id: string }>(user: T) {
+  const iat = Math.floor(Date.now() / 1000);
+  const accessToken = [base64Url({ alg: 'none', typ: 'JWT' }), base64Url({ sub: user.id, iat, exp: iat + 900 }), 'mock'].join('.');
+  return {
+    accessToken,
+    accessTokenExpiresAt: new Date((iat + 900) * 1000).toISOString(),
+    refreshToken: null,
+    refreshTokenExpiresAt: new Date((iat + 30 * 86_400) * 1000).toISOString(),
+    user,
+  };
+}
 
-  await page.route(`${AUTH_EMULATOR}/**`, (route) => {
-    const url = route.request().url();
-    if (url.includes('accounts:signInWithPassword')) {
-      return reply(route, 200, { kind: 'identitytoolkit#VerifyPasswordResponse', ...user, idToken, registered: true, refreshToken: 'mock-refresh', expiresIn: '3600' });
-    }
-    if (url.includes('accounts:lookup')) {
-      return reply(route, 200, {
-        kind: 'identitytoolkit#GetAccountInfoResponse',
-        users: [
-          {
-            ...user,
-            emailVerified: true,
-            providerUserInfo: [{ providerId: 'password', email: user.email, federatedId: user.email, rawId: user.email, displayName: user.displayName }],
-            validSince: String(now),
-            lastLoginAt: String(now * 1000),
-            createdAt: String(now * 1000),
-          },
-        ],
-      });
-    }
-    if (url.includes('securetoken.googleapis.com')) {
-      return reply(route, 200, { access_token: idToken, expires_in: '3600', token_type: 'Bearer', refresh_token: 'mock-refresh', id_token: idToken, user_id: user.localId, project_id: 'demo-readin' });
-    }
-    return reply(route, 404, { error: { message: 'NOT_MOCKED' } });
-  });
+export type MockMe = Record<string, unknown> & { id: string };
+
+/** The mock API's signed-in user (`GET /me`), in the variant's language and theme so signing in changes neither. */
+export async function writerMe(request: APIRequestContext, variant: Variant, patch: Record<string, unknown> = {}): Promise<MockMe> {
+  const me = (await (await request.get(`${API}/me`)).json()) as MockMe;
+  return { ...me, uiLanguage: variant.lang, theme: variant.theme, ...patch };
+}
+
+/** Starts the page already signed in as `user`: `POST /auth/refresh` (the session restore on start) returns it. */
+export async function restoreSessionAs(page: Page, user: { id: string }): Promise<void> {
+  await onApi(page, 'POST', '/auth/refresh', (route) => reply(route, 200, sessionFor(user)));
 }
 
 /** Signs in as a verified writer (permission `articles.create`) through the real sign-in page, then lands on `returnUrl`. */
 export async function signInAsWriter(page: Page, request: APIRequestContext, variant: Variant, returnUrl = '/write'): Promise<void> {
-  await mockFirebaseAuth(page);
-  const me = { ...(await (await request.get(`${API}/me`)).json()), uiLanguage: variant.lang, theme: variant.theme };
-  await onApi(page, 'POST', '/auth/sync', (route) => reply(route, 200, me));
+  const me = await writerMe(request, variant);
+  await onApi(page, 'POST', '/auth/login', (route) => reply(route, 200, sessionFor(me)));
   await page.goto(`/auth/sign-in?returnUrl=${encodeURIComponent(returnUrl)}`);
-  await page.locator('#email').fill(me.email);
-  await page.locator('#password').fill('a-long-demo-password');
-  await page.locator('form button[type="submit"]').click();
+  await page.locator('#sign-in-phone').fill(MOCK_PHONE);
+  await page.locator('#sign-in-password').fill(MOCK_PASSWORD);
+  await page.locator('form [data-submit]').click();
   await page.waitForURL((url) => url.pathname === returnUrl);
 }
 

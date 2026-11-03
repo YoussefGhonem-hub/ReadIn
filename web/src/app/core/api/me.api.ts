@@ -1,25 +1,23 @@
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, SILENT_ERRORS } from './api.config';
+import { API_BASE_URL, SILENT_ERRORS, webSessionOptions } from './api.config';
 import {
+  CompleteProfileRequest,
   MeDto,
   RegisterDeviceRequest,
-  SyncUserRequest,
+  SessionDto,
   UpdateInterestsRequest,
   UpdatePreferencesRequest,
   UpdateProfileRequest,
+  UsernameAvailabilityDto,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class MeApi {
   private readonly http = inject(HttpClient);
   private readonly base = inject(API_BASE_URL);
-
-  /** Creates the user on first call, refreshes email/photo afterwards. Call after every sign-in. */
-  sync(body: SyncUserRequest): Observable<MeDto> {
-    return this.http.post<MeDto>(`${this.base}/auth/sync`, body);
-  }
+  private readonly silent = () => new HttpContext().set(SILENT_ERRORS, true);
 
   get(options: { silent?: boolean } = {}): Observable<MeDto> {
     return this.http.get<MeDto>(`${this.base}/me`, {
@@ -29,6 +27,44 @@ export class MeApi {
 
   updateProfile(body: UpdateProfileRequest): Observable<void> {
     return this.http.patch<void>(`${this.base}/me`, body);
+  }
+
+  /** After sign up: display name, unique @username and an optional avatar URL from `POST /uploads/images`. */
+  completeProfile(body: CompleteProfileRequest): Observable<MeDto> {
+    return this.http.put<MeDto>(`${this.base}/me/profile/complete`, body, { context: this.silent() });
+  }
+
+  /** Live @username check (format + availability; your own handle counts as available). */
+  usernameAvailable(username: string): Observable<UsernameAvailabilityDto> {
+    return this.http.get<UsernameAvailabilityDto>(`${this.base}/users/username-available`, {
+      params: new HttpParams().set('u', username),
+      context: this.silent(),
+    });
+  }
+
+  /** The mandatory first PIN (`mustSetRecoveryPin`). */
+  setRecoveryPin(pin: string): Observable<MeDto> {
+    return this.http.post<MeDto>(`${this.base}/me/recovery-pin`, { pin }, { context: this.silent() });
+  }
+
+  /** Settings → change PIN. */
+  changeRecoveryPin(currentPassword: string, newPin: string): Observable<void> {
+    return this.http.put<void>(`${this.base}/me/recovery-pin`, { currentPassword, newPin }, { context: this.silent() });
+  }
+
+  /** Other sessions end; this one gets fresh tokens (and a new refresh cookie). */
+  changePassword(currentPassword: string, newPassword: string): Observable<SessionDto> {
+    return this.http.put<SessionDto>(`${this.base}/me/password`, { currentPassword, newPassword }, webSessionOptions());
+  }
+
+  /** Other sessions end; this one gets fresh tokens (and a new refresh cookie). */
+  changePhone(newPhoneNumber: string, currentPassword: string): Observable<SessionDto> {
+    return this.http.put<SessionDto>(`${this.base}/me/phone`, { newPhoneNumber, currentPassword }, webSessionOptions());
+  }
+
+  /** Soft delete with the password; every session ends and the cookie is cleared. */
+  deleteAccount(password: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/me`, { ...webSessionOptions(), body: { password } });
   }
 
   updatePreferences(body: UpdatePreferencesRequest): Observable<void> {
@@ -43,5 +79,10 @@ export class MeApi {
     return this.http.post<void>(`${this.base}/me/devices`, body, {
       context: new HttpContext().set(SILENT_ERRORS, options.silent ?? false),
     });
+  }
+
+  /** On sign out, while the access token is still valid. Idempotent. */
+  unregisterDevice(token: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/me/devices/${encodeURIComponent(token)}`, { context: this.silent() });
   }
 }

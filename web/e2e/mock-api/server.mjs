@@ -284,10 +284,15 @@ const DETAILS = new Map(
   }),
 );
 
+/** The demo account (a fictional Egyptian mobile number). Sign in with MOCK_PASSWORD. */
+const MOCK_PHONE = '+201001234567';
+const MOCK_PASSWORD = 'Readin2026!';
+
 function me({ uiLanguage = 'ar', theme = 'system' } = {}) {
   return {
     id: 'u-writer',
-    email: 'writer@readin.test',
+    phoneNumber: MOCK_PHONE,
+    email: null,
     displayName: 'Mona Adel',
     username: 'mona',
     avatarUrl: null,
@@ -300,24 +305,69 @@ function me({ uiLanguage = 'ar', theme = 'system' } = {}) {
     reminderTime: '08:00',
     isVerified: true,
     onboardingCompleted: true,
+    mustChangePassword: false,
+    mustSetRecoveryPin: false,
+    isProfileComplete: true,
+    hasRecoveryPin: true,
     roles: ['Member', 'VerifiedWriter'],
     permissions: ['articles.read', 'articles.create'],
     interests: { fieldIds: ['f-software'], topicIds: [] },
   };
 }
 
+// ── Sessions (SPEC §9.3) ───────────────────────────────────────
+
+const base64Url = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
+
+/** An unsigned JWT with the claims the web reads (`iat`/`exp` decide when it refreshes); nothing verifies it. */
+function accessToken(userId) {
+  const iat = Math.floor(Date.now() / 1000);
+  const jti = `${userId}-${iat}-${Math.random().toString(36).slice(2)}`;
+  return [base64Url({ alg: 'none', typ: 'JWT' }), base64Url({ sub: userId, iat, exp: iat + 900, jti }), 'mock'].join('.');
+}
+
+/** `SessionDto` as the web gets it: the refresh token travels in the HttpOnly cookie, never in the body. */
+function session(user) {
+  const now = Date.now();
+  return {
+    accessToken: accessToken(user.id),
+    accessTokenExpiresAt: new Date(now + 15 * 60_000).toISOString(),
+    refreshToken: null,
+    refreshTokenExpiresAt: new Date(now + 30 * 24 * 3_600_000).toISOString(),
+    user,
+  };
+}
+
+const REFRESH_COOKIE = 'readin_refresh';
+/** Like the API's cookie, minus `Secure` (the mock is plain http). */
+const setRefreshCookie = (value) => ({ 'set-cookie': `${REFRESH_COOKIE}=${value}; HttpOnly; SameSite=Strict; Path=/api/v1/auth; Max-Age=2592000` });
+const clearRefreshCookie = { 'set-cookie': `${REFRESH_COOKIE}=; HttpOnly; SameSite=Strict; Path=/api/v1/auth; Max-Age=0` };
+
+function cookie(req, name) {
+  for (const part of (req.headers.cookie ?? '').split(';')) {
+    const [key, ...value] = part.trim().split('=');
+    if (key === name) return decodeURIComponent(value.join('='));
+  }
+  return null;
+}
+
 // ── HTTP ───────────────────────────────────────────────────────
 
-const CORS = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-headers': 'authorization, content-type, accept-language, x-requested-with',
-  'access-control-allow-methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-  'access-control-expose-headers': 'content-disposition',
-};
+/** Credentialed CORS (the web sends the refresh cookie to /auth/*): the origin is echoed, never `*`. */
+function cors(req) {
+  return {
+    'access-control-allow-origin': req.headers.origin ?? '*',
+    'access-control-allow-credentials': 'true',
+    'access-control-allow-headers': 'authorization, content-type, accept-language, x-requested-with, x-readin-client',
+    'access-control-allow-methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    'access-control-expose-headers': 'content-disposition',
+    vary: 'Origin',
+  };
+}
 
-function send(res, status, body, headers = {}) {
+function send(req, res, status, body, headers = {}) {
   const isJson = body !== undefined && !Buffer.isBuffer(body);
-  res.writeHead(status, { ...CORS, ...(isJson ? { 'content-type': 'application/json; charset=utf-8' } : {}), ...headers });
+  res.writeHead(status, { ...cors(req), ...(isJson ? { 'content-type': 'application/json; charset=utf-8' } : {}), ...headers });
   res.end(isJson ? JSON.stringify(body) : body);
 }
 
@@ -364,8 +414,33 @@ const routes = [
     new RegExp(`^${API}/articles/([^/]+)$`),
     (_q, [, slug]) => (DETAILS.has(slug) ? [200, DETAILS.get(slug)] : [404, problem(404, 'article.not_found', 'Article not found')]),
   ],
-  ['POST', new RegExp(`^${API}/auth/sync$`), (_q, _m, body) => [200, me({ uiLanguage: body?.uiLanguage ?? 'ar' })]],
+  // Phone + password sessions (docs/api/contract-v1.md → Auth). The cookie is the whole session: `readin_refresh=writer`.
+  ['GET', new RegExp(`^${API}/auth/config$`), () => [200, { pinLength: 4, password: { minLength: 8, maxLength: 128, requireLetter: true, requireDigit: true } }]],
+  [
+    'POST',
+    new RegExp(`^${API}/auth/login$`),
+    (_q, _m, body) =>
+      body?.phoneNumber === MOCK_PHONE && body?.password === MOCK_PASSWORD
+        ? [200, session(me()), setRefreshCookie('writer')]
+        : [401, problem(401, 'auth.invalid_credentials', 'The phone number or password is incorrect.')],
+  ],
+  [
+    'POST',
+    new RegExp(`^${API}/auth/refresh$`),
+    (_q, _m, _body, req) =>
+      cookie(req, REFRESH_COOKIE) === 'writer' && req.headers['x-readin-client'] === 'web'
+        ? [200, session(me()), setRefreshCookie('writer')]
+        : [401, problem(401, 'auth.refresh_invalid', 'Your session has ended. Sign in again.'), clearRefreshCookie],
+  ],
+  ['POST', new RegExp(`^${API}/auth/logout$`), () => [204, undefined, clearRefreshCookie]],
+  ['POST', new RegExp(`^${API}/auth/logout-all$`), () => [200, session(me()), setRefreshCookie('writer')]],
+  [
+    'GET',
+    new RegExp(`^${API}/users/username-available$`),
+    (q) => [200, { username: q.get('u') ?? '', valid: /^[a-z0-9_]{3,30}$/.test(q.get('u') ?? ''), available: q.get('u') !== 'taken' }],
+  ],
   ['GET', new RegExp(`^${API}/me$`), () => [200, me()]],
+  ['DELETE', new RegExp(`^${API}/me/devices/[^/]+$`), () => [204, undefined]],
   ['PUT', new RegExp(`^${API}/me/(preferences|interests)$`), () => [204, undefined]],
   ['PATCH', new RegExp(`^${API}/me$`), () => [204, undefined]],
   ['POST', new RegExp(`^${API}/me/devices$`), () => [204, undefined]],
@@ -389,17 +464,17 @@ async function readJson(req) {
 
 const server = createServer(async (req, res) => {
   try {
-    if (req.method === 'OPTIONS') return send(res, 204, Buffer.alloc(0));
+    if (req.method === 'OPTIONS') return send(req, res, 204, Buffer.alloc(0));
     const url = new URL(req.url ?? '/', ORIGIN);
     for (const [method, pattern, handler] of routes) {
       const match = method === req.method ? pattern.exec(url.pathname) : null;
       if (!match) continue;
-      const [status, body, headers] = handler(url.searchParams, match, await readJson(req));
-      return send(res, status, status === 204 ? Buffer.alloc(0) : body, headers);
+      const [status, body, headers] = handler(url.searchParams, match, await readJson(req), req);
+      return send(req, res, status, status === 204 ? Buffer.alloc(0) : body, headers);
     }
-    send(res, 404, problem(404, 'not_found', `No mock for ${req.method} ${url.pathname}`));
+    send(req, res, 404, problem(404, 'not_found', `No mock for ${req.method} ${url.pathname}`));
   } catch (error) {
-    send(res, 500, problem(500, 'server.error', String(error)));
+    send(req, res, 500, problem(500, 'server.error', String(error)));
   }
 });
 

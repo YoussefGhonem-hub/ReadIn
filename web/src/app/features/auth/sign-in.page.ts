@@ -1,108 +1,178 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
+import { NgComponentOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { AuthService, authErrorKey } from '../../core/auth/auth.service';
-import { ToastService } from '../../shared/ui/toast/toast.service';
-import { AuthCard, postSignInUrl, safeReturnUrl } from './auth-shared';
-import { GoogleIcon } from './google-icon';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { LucideDynamicIcon } from '@lucide/angular';
+import { isApiError } from '../../core/api/api.config';
+import { postAuthUrl, safeReturnUrl } from '../../core/auth/account-setup';
+import { AuthFlowState } from '../../core/auth/auth-flow';
+import { AuthService } from '../../core/auth/auth.service';
+import { ErrorMessages } from '../../core/i18n/error-messages';
+import { PasswordField } from '../../shared/ui/password/password-field';
+import { rememberCountry } from '../../shared/ui/phone/countries';
+import { PhoneField } from '../../shared/ui/phone/phone-field';
+import { AuthCard, SubmitButton, fieldErrors } from './auth-shared';
+import { DEV_LOGIN_PANEL } from './dev/dev-login';
 
+/**
+ * Sign in (SPEC §9.2): phone + password. One generic error for a wrong number or password (it never says whether
+ * the number exists); lockout, suspended and rate-limit messages; after a reset, the number is pre-filled with a
+ * banner. Then the account-setup guards apply (change password → PIN → profile → onboarding).
+ */
 @Component({
   selector: 'rd-sign-in-page',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, AuthCard, GoogleIcon],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LucideDynamicIcon, NgComponentOutlet, AuthCard, SubmitButton, PhoneField, PasswordField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <rd-auth-card [title]="'auth.signIn.title' | transloco" [subtitle]="'auth.signIn.subtitle' | transloco">
-      <button type="button" class="rd-btn rd-btn-outline w-full text-text-primary" [disabled]="busy()" (click)="google()">
-        <rd-google-icon /> {{ 'auth.google' | transloco }}
-      </button>
-      <div class="my-5 flex items-center gap-3 text-xs text-text-secondary" aria-hidden="true">
-        <span class="h-px flex-1 bg-border"></span>{{ 'common.or' | transloco }}<span class="h-px flex-1 bg-border"></span>
-      </div>
+      @if (banner()) {
+        <p class="rd-alert rd-alert-success mb-5 flex items-start gap-2" role="status" data-banner>
+          <svg lucideIcon="CircleCheck" [size]="18" class="mt-0.5 shrink-0 text-success" aria-hidden="true"></svg>
+          <span>{{ 'auth.signIn.passwordReset' | transloco }}</span>
+        </p>
+      }
       <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4" novalidate>
         <div>
-          <label class="rd-label" for="email">{{ 'auth.email' | transloco }}</label>
-          <input id="email" class="rd-input" type="email" formControlName="email" autocomplete="email" dir="ltr" inputmode="email"
-            [attr.aria-invalid]="invalid('email')" />
-          @if (invalid('email')) {
-            <p class="mt-1 text-xs text-error">{{ 'auth.validation.email' | transloco }}</p>
+          <label class="rd-label" for="sign-in-phone">{{ 'auth.phone' | transloco }}</label>
+          <rd-phone-field
+            inputId="sign-in-phone"
+            autocomplete="username"
+            formControlName="phone"
+            [invalid]="!!phoneError()"
+            [describedBy]="phoneError() ? 'sign-in-phone-error' : null"
+          />
+          @if (phoneError()) {
+            <p id="sign-in-phone-error" class="rd-field-error">{{ phoneError()! | transloco }}</p>
           }
         </div>
         <div>
-          <div class="flex items-center justify-between">
-            <label class="rd-label" for="password">{{ 'auth.password' | transloco }}</label>
-            <a routerLink="/auth/forgot-password" class="mb-2 text-xs text-primary">{{ 'auth.signIn.forgot' | transloco }}</a>
+          <div class="flex items-center justify-between gap-2">
+            <label class="rd-label" for="sign-in-password">{{ 'auth.password' | transloco }}</label>
+            <a routerLink="/auth/forgot-password" class="mb-2 text-xs font-semibold text-primary" (click)="handOverPhone()" data-forgot>
+              {{ 'auth.signIn.forgot' | transloco }}
+            </a>
           </div>
-          <input id="password" class="rd-input" type="password" formControlName="password" autocomplete="current-password" dir="ltr"
-            [attr.aria-invalid]="invalid('password')" />
-          @if (invalid('password')) {
-            <p class="mt-1 text-xs text-error">{{ 'auth.validation.required' | transloco }}</p>
+          <rd-password-field
+            inputId="sign-in-password"
+            autocomplete="current-password"
+            formControlName="password"
+            [invalid]="passwordMissing()"
+            [describedBy]="passwordMissing() ? 'sign-in-password-error' : null"
+          />
+          @if (passwordMissing()) {
+            <p id="sign-in-password-error" class="rd-field-error">{{ 'auth.validation.required' | transloco }}</p>
           }
         </div>
-        @if (errorKey()) {
-          <p class="m-0 rounded-md bg-callout-danger p-3 text-sm" role="alert">{{ errorKey()! | transloco }}</p>
+        @if (error()) {
+          <p class="rd-alert rd-alert-error" role="alert" data-error>{{ error() }}</p>
         }
-        <button type="submit" class="rd-btn rd-btn-primary w-full" [disabled]="busy()">
-          {{ (busy() ? 'common.loading' : 'auth.signIn.submit') | transloco }}
-        </button>
+        <rd-submit-button [busy]="busy()">{{ 'auth.signIn.action' | transloco }}</rd-submit-button>
       </form>
       <p class="mt-6 text-center text-sm text-text-secondary">
         {{ 'auth.signIn.noAccount' | transloco }}
-        <a routerLink="/auth/sign-up" [queryParams]="{ returnUrl: returnUrl() }" class="font-semibold text-primary">{{ 'auth.signIn.createAccount' | transloco }}</a>
+        <a routerLink="/auth/sign-up" [queryParams]="returnParams()" class="font-semibold text-primary">{{ 'auth.signIn.createAccount' | transloco }}</a>
       </p>
       <p class="mt-2 text-center text-sm">
-        <a [routerLink]="safeReturn()" class="text-text-secondary">{{ 'auth.continueAsGuest' | transloco }}</a>
+        <a [routerLink]="guestUrl()" class="text-text-secondary">{{ 'auth.continueAsGuest' | transloco }}</a>
       </p>
+      @if (devPanel) {
+        <ng-container *ngComponentOutlet="devPanel; inputs: devInputs" />
+      }
     </rd-auth-card>
   `,
 })
 export class SignInPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly toasts = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly flow = inject(AuthFlowState);
+  private readonly errors = inject(ErrorMessages);
+  private readonly phoneField = viewChild.required(PhoneField);
+  private readonly passwordField = viewChild.required(PasswordField);
 
   readonly returnUrl = input<string | null>(null);
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
+    phone: [this.flow.phone() ?? '', Validators.required],
     password: ['', Validators.required],
   });
+  protected readonly banner = signal(this.flow.takeBanner() === 'passwordReset');
   protected readonly busy = signal(false);
-  protected readonly errorKey = signal<string | null>(null);
+  protected readonly error = signal<string | null>(null);
   private readonly submitted = signal(false);
+  private readonly serverPhoneError = signal<string | null>(null);
+  /** Re-evaluates the template checks below on every change. */
+  private readonly formState = signal(0);
 
-  protected invalid(name: 'email' | 'password'): boolean {
-    const control = this.form.controls[name];
-    return control.invalid && (control.touched || this.submitted());
+  protected readonly guestUrl = computed(() => safeReturnUrl(this.returnUrl()));
+  protected readonly returnParams = computed(() => (this.returnUrl() ? { returnUrl: this.returnUrl() } : {}));
+
+  /** Development builds only (see dev/dev-login.ts). */
+  protected readonly devPanel = DEV_LOGIN_PANEL;
+  protected readonly devInputs = { pick: (phone: string, password: string | null) => this.useSeedUser(phone, password) };
+
+  constructor() {
+    this.form.valueChanges.subscribe(() => {
+      this.serverPhoneError.set(null);
+      this.formState.update((n) => n + 1);
+    });
   }
 
-  protected safeReturn(): string {
-    return safeReturnUrl(this.returnUrl());
+  protected phoneError(): string | null {
+    this.formState();
+    const control = this.form.controls.phone;
+    if (this.serverPhoneError()) return this.serverPhoneError();
+    if (!this.submitted() && !control.touched) return null;
+    if (control.hasError('required')) return 'auth.validation.phoneRequired';
+    if (control.hasError('phoneInvalid')) return 'errors.phone.invalid';
+    return null;
+  }
+
+  protected passwordMissing(): boolean {
+    this.formState();
+    return this.submitted() && this.form.controls.password.hasError('required');
+  }
+
+  /** "Forgot password?" takes the number along (SPEC §9.2: Forgot password is pre-filled from Sign in). */
+  protected handOverPhone(): void {
+    const phone = this.form.controls.phone.value;
+    if (phone) this.flow.phone.set(phone);
   }
 
   protected async submit(): Promise<void> {
+    if (this.busy()) return;
     this.submitted.set(true);
-    if (this.form.invalid) return;
-    const { email, password } = this.form.getRawValue();
-    await this.run(() => this.auth.signInWithEmail(email, password));
-  }
+    this.formState.update((n) => n + 1);
+    this.error.set(null);
+    if (this.form.invalid) {
+      if (this.form.controls.phone.invalid) this.phoneField().focus();
+      else this.passwordField().focus();
+      return;
+    }
 
-  protected google(): Promise<void> {
-    return this.run(() => this.auth.signInWithGoogle());
-  }
-
-  private async run(action: () => ReturnType<AuthService['signInWithEmail']>): Promise<void> {
+    const { phone, password } = this.form.getRawValue();
     this.busy.set(true);
-    this.errorKey.set(null);
     try {
-      const me = await action();
-      if (!me) this.toasts.error(this.transloco.translate('errors.syncFailed'));
-      await this.router.navigateByUrl(postSignInUrl(me, this.returnUrl()));
+      const me = await this.auth.signIn(phone, password);
+      rememberCountry(this.phoneField().selectedCountry);
+      this.flow.phone.set(null);
+      await this.router.navigateByUrl(postAuthUrl(me, this.returnUrl()));
     } catch (error) {
-      this.errorKey.set(authErrorKey(error));
+      const phoneCodes = fieldErrors(error, 'phoneNumber');
+      if (phoneCodes.length) this.serverPhoneError.set(`errors.${phoneCodes[0]}`);
+      else this.error.set(isApiError(error) ? this.errors.forCode(error.code) : this.errors.forError(error));
     } finally {
       this.busy.set(false);
+    }
+  }
+
+  private useSeedUser(phone: string, password: string | null): void {
+    this.form.controls.phone.setValue(phone);
+    if (password) {
+      this.form.controls.password.setValue(password);
+      void this.submit();
+    } else {
+      this.passwordField().focus();
     }
   }
 }

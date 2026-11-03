@@ -1,4 +1,4 @@
-import { HttpContextToken, HttpErrorResponse } from '@angular/common/http';
+import { HttpContext, HttpContextToken, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { InjectionToken } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { ProblemDetails } from './models';
@@ -10,6 +10,26 @@ export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL', {
 
 /** Set on a request to stop the error interceptor from showing a toast (the caller renders its own error state). */
 export const SILENT_ERRORS = new HttpContextToken<boolean>(() => false);
+
+/** Marks the web's session calls; the API only reads (and sets) the refresh token cookie when it is present. */
+export const CLIENT_HEADER = 'X-ReadIn-Client';
+
+/**
+ * Options for calls that read or rotate the session (SPEC §9.3, ADR 0007): every `/auth/*` call and
+ * `PUT /me/password`, `PUT /me/phone`, `DELETE /me`. The API is another origin in development, so the HttpOnly
+ * `readin_refresh` cookie only travels with `withCredentials`. Silent by default: these forms show their own errors.
+ */
+export function webSessionOptions(options: { silent?: boolean } = {}): {
+  withCredentials: true;
+  headers: HttpHeaders;
+  context: HttpContext;
+} {
+  return {
+    withCredentials: true,
+    headers: new HttpHeaders({ [CLIENT_HEADER]: 'web' }),
+    context: new HttpContext().set(SILENT_ERRORS, options.silent ?? true),
+  };
+}
 
 /** Normalized API error thrown by the error interceptor. `code` is the stable, translatable error code. */
 export class ApiError extends Error {
