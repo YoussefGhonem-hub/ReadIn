@@ -165,7 +165,22 @@ static IHost BuildHost()
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
     builder.Services.AddSingleton<ICurrentUser, SystemCurrentUser>();
+    // Sign-in services the API provides; this tool never starts a session, but the container validates their handlers.
+    builder.Services.AddSingleton<IClientInfo, NoClientInfo>();
+    builder.Services.AddSingleton<IAccessTokenIssuer, NoAccessTokens>();
     return builder.Build();
+}
+
+internal sealed class NoClientInfo : IClientInfo
+{
+    public string? IpAddress => null;
+    public string? DeviceName => null;
+}
+
+internal sealed class NoAccessTokens : IAccessTokenIssuer
+{
+    public AccessToken Issue(Guid userId, string securityStamp) =>
+        throw new NotSupportedException("ContentStudio doesn't sign anyone in.");
 }
 
 /// <summary>The pipeline acts as the system, not as a signed-in user.</summary>
