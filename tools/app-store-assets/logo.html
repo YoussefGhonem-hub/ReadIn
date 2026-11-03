@@ -35,8 +35,8 @@ const art = (id) => `
   <defs>
     <linearGradient id="am${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F7C062"/><stop offset="1" stop-color="#E8962A"/></linearGradient>
   </defs>
-  <text x="410" y="675" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="600" fill="#FFFFFF" letter-spacing="-10">R</text>
-  <text x="690" y="700" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-weight="700" font-size="470" fill="url(#am${id})">ر</text>`;
+  <text x="410" y="735" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="600" fill="#FFFFFF" letter-spacing="-10">R</text>
+  <text x="690" y="760" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-weight="700" font-size="470" fill="url(#am${id})">ر</text>`;
 const bg = (id) => `
   <defs><radialGradient id="bg${id}" cx="28%" cy="18%" r="95%"><stop offset="0" stop-color="#1C806A"/><stop offset=".55" stop-color="#0F5E52"/><stop offset="1" stop-color="#083F36"/></radialGradient></defs>
   <rect width="1024" height="1024" fill="url(#bg${id})"/>
@@ -50,7 +50,7 @@ const root = document.getElementById("root");
 root.innerHTML = {
   icon: `<div class="full">${icon("i")}</div>`,
   // 66/108 of the canvas is the safe zone launchers never crop; the art is scaled to sit inside it.
-  fg: `<div class="full">${svg(`<g transform="translate(512 512) scale(.66) translate(-512 -480)">${art("f")}</g>`)}</div>`,
+  fg: `<div class="full">${svg(`<g transform="translate(512 512) scale(.66) translate(-512 -540)">${art("f")}</g>`)}</div>`,
   bg: `<div class="full">${svg(bg("b"))}</div>`,
   lockup: `<div class="lockup"><div class="mark">${icon("l")}</div>${word(false)}</div>`,
   "lockup-dark": `<div class="lockup dark"><div class="mark">${icon("d")}</div>${word(true)}</div>`,
