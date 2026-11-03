@@ -5,7 +5,7 @@
 export type TextDir = 'rtl' | 'ltr';
 
 /** Hebrew, Arabic (+ supplements, presentation forms), Syriac, Thaana, N'Ko. */
-const RTL_CHAR = /[֐-ࣿיִ-﷿ﹰ-﻿]/;
+const RTL_CHAR = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
 /** Latin (+ extended), Greek, Cyrillic — "strong LTR" for our content. */
 const LTR_CHAR = /[A-Za-zÀ-ʸͰ-ϿЀ-ӿ]/;
 
@@ -36,7 +36,7 @@ export interface BidiSegment {
 const LATIN_RUN =
   /[.@#]?[A-Za-zÀ-ɏ][\wÀ-ɏ.+#\-/:@<>(),'&=*[\]{}?%~]*(?:[ \t]+[\wÀ-ɏ.+#\-/:@<>(),'&=*[\]{}?%~]+)*/g;
 /** An Arabic run inside LTR text. */
-const RTL_RUN = /[֐-ࣿיִ-﷿ﹰ-﻿][֐-ࣿיִ-﷿ﹰ-﻿\d\s،؛؟]*/g;
+const RTL_RUN = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF][\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\d\s\u060C\u061B\u061F]*/g;
 
 const TRAILING_PUNCTUATION = /[\s.,:;!?،؛؟'"-]+$/;
 

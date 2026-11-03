@@ -92,11 +92,11 @@ const TOC_MIN_HEADINGS = 3;
         }
 
         <div class="mb-2 flex flex-wrap items-center gap-2 text-xs">
-          <span class="rd-tag"><rd-bdi-text [text]="lang() === 'ar' ? a.field.nameAr : a.field.nameEn" /></span>
+          <span class="rd-tag"><rd-bdi-text [text]="uiLang() === 'ar' ? a.field.nameAr : a.field.nameEn" /></span>
           @if (a.topic; as topic) {
-            <span class="text-text-secondary"><rd-bdi-text [text]="lang() === 'ar' ? topic.nameAr : topic.nameEn" /></span>
+            <span class="text-text-secondary"><rd-bdi-text [text]="uiLang() === 'ar' ? topic.nameAr : topic.nameEn" /></span>
           }
-          <span class="text-text-secondary">· {{ a.readingTimeMinutes | rdReadingTime: lang() }}</span>
+          <span class="text-text-secondary">· {{ a.readingTimeMinutes | rdReadingTime: uiLang() }}</span>
         </div>
 
         <h1 class="m-0 text-[28px] font-semibold leading-snug tracking-tight lg:text-[32px]" [attr.dir]="titleDir()" [attr.lang]="a.language">
@@ -116,7 +116,7 @@ const TOC_MIN_HEADINGS = 3;
                 <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
               }
             </a>
-            <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: lang() : 'long' }}</div>
+            <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
           </div>
           <button type="button" class="rd-btn rd-btn-outline ms-auto min-h-9 px-3 text-sm" (click)="prompt.requireAuth()">
             + {{ 'article.follow' | transloco }}
@@ -141,7 +141,7 @@ const TOC_MIN_HEADINGS = 3;
             </li>
           }
           @if (a.lastReviewedAt) {
-            <li>{{ 'article.lastReviewed' | transloco: { date: (a.lastReviewedAt | rdDate: lang() : 'monthYear') } }}</li>
+            <li>{{ 'article.lastReviewed' | transloco: { date: (a.lastReviewedAt | rdDate: uiLang() : 'monthYear') } }}</li>
           }
           @if (a.versionBadge) {
             <li><span class="rd-tag rd-tag-neutral" dir="ltr">{{ a.versionBadge }}</span></li>
@@ -225,14 +225,14 @@ export class ArticlePage {
   private readonly responseInit = inject(RESPONSE_INIT, { optional: true });
   protected readonly prefs = inject(ReaderPrefsService);
   protected readonly prompt = inject(AuthPromptService);
-  protected readonly lang = inject(LanguageService).lang;
+  protected readonly uiLang = inject(LanguageService).lang;
   protected readonly tocMinHeadings = TOC_MIN_HEADINGS;
 
   /** Route params (component input binding). */
-  readonly urlLang = input<string>('ar', { alias: 'lang' });
+  readonly lang = input<string>('ar');
   readonly slug = input.required<string>();
 
-  protected readonly requestedLanguage = computed<ArticleLanguage>(() => articleLanguageForUrl(this.urlLang()));
+  protected readonly requestedLanguage = computed<ArticleLanguage>(() => articleLanguageForUrl(this.lang()));
   protected readonly resource = httpResource<ArticleDetailsDto>(() => ({
     url: this.content.articleUrl(this.slug(), this.requestedLanguage()),
     context: new HttpContext().set(SILENT_ERRORS, true),
@@ -270,7 +270,7 @@ export class ArticlePage {
   });
 
   protected readonly fontOptions = computed<SegmentOption<ArticleFontSize>[]>(() => {
-    this.lang(); // re-translate on UI language change
+    this.uiLang(); // re-translate on UI language change
     return ARTICLE_FONT_SIZES.map((size) => ({ value: size, label: this.transloco.translate(`article.fontSizes.${size}`) }));
   });
 
