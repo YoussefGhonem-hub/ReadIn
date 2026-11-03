@@ -1,0 +1,59 @@
+{
+  "slug": "acid-does-not-make-your-data-correct",
+  "field": "databases",
+  "topic": "transactions",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "What ACID Really Promises, and the Correctness It Leaves to You",
+      "subtitle": "Atomicity, consistency, isolation and durability each stop at a boundary. Where your transaction starts, ends and fails is still your design."
+    },
+    "ar-EG": {
+      "title": "الـ ACID بيوعدك بإيه فعلًا؟ وإيه اللي سايبه عليك",
+      "subtitle": "الـ atomicity والـ consistency والـ isolation والـ durability كل واحدة ليها حدود. والـ transaction بتبدأ فين وتخلص فين وتفشل إزاي لسه قرارك انت."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "data-consistency",
+    "order": 1
+  },
+  "tags": [
+    "Transactions",
+    "ACID",
+    "SQL Server",
+    "EF Core"
+  ],
+  "sources": [
+    {
+      "title": "Transaction locking and row versioning guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide"
+    },
+    {
+      "title": "Transactions (Transact-SQL) — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/t-sql/language-elements/transactions-transact-sql"
+    },
+    {
+      "title": "SET XACT_ABORT (Transact-SQL) — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/t-sql/statements/set-xact-abort-transact-sql"
+    },
+    {
+      "title": "Transactions — PostgreSQL tutorial, PostgreSQL documentation",
+      "url": "https://www.postgresql.org/docs/current/tutorial-transactions.html"
+    },
+    {
+      "title": "ExecuteUpdate and ExecuteDelete — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/execute-insert-update-delete"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic class Wallet { public int Id { get; set; } public decimal Balance { get; set; } }\npublic class WalletsDb(DbContextOptions<WalletsDb> options) : DbContext(options)\n{\n    public DbSet<Wallet> Wallets => Set<Wallet>();\n}"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "slug": "lost-updates-read-modify-write",
+  "field": "databases",
+  "topic": "transactions",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Read, Modify, Write, Lose: Preventing Lost Updates",
+      "subtitle": "A transaction at the default level doesn't stop two requests from overwriting each other. Do the math in the UPDATE, check a version on write, or lock the row you read."
+    },
+    "ar-EG": {
+      "title": "تقرا وتعدّل وتكتب وتخسر: إزاي تمنع الـ lost updates",
+      "subtitle": "الـ transaction على الـ level الـ default مش بتمنع اتنين requests إنهم يكتبوا فوق بعض. خلّي الحسبة جوه الـ UPDATE، أو اتأكد من الـ version وانت بتكتب، أو اعمل lock للـ row اللي قريته."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "data-consistency",
+    "order": 6
+  },
+  "tags": [
+    "Transactions",
+    "Concurrency",
+    "SQL Server",
+    "PostgreSQL",
+    "EF Core"
+  ],
+  "sources": [
+    {
+      "title": "Transaction locking and row versioning guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide"
+    },
+    {
+      "title": "Table hints (Transact-SQL) — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/t-sql/queries/hints-transact-sql-table"
+    },
+    {
+      "title": "Handling concurrency conflicts — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/concurrency"
+    },
+    {
+      "title": "Explicit Locking — PostgreSQL 18 documentation",
+      "url": "https://www.postgresql.org/docs/current/explicit-locking.html"
+    },
+    {
+      "title": "Transaction Isolation — PostgreSQL 18 documentation",
+      "url": "https://www.postgresql.org/docs/current/transaction-iso.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic class Product { public int Id { get; set; } public string Name { get; set; } = \"\"; public int Stock { get; set; } public byte[] Version { get; set; } = []; }\npublic class OutOfStockException(int productId) : Exception($\"Product {productId} is out of stock\");\npublic class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Product> Products => Set<Product>();\n}"
+    }
+  }
+}

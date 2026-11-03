@@ -1,0 +1,50 @@
+{
+  "slug": "normalization-is-about-anomalies",
+  "field": "databases",
+  "topic": "data-modeling",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Normalization Is About Update Anomalies, Not Disk Space",
+      "subtitle": "Store each fact once and an update can't contradict itself. Copy it for speed and every copy becomes something you have to keep in sync."
+    },
+    "ar-EG": {
+      "title": "الـ normalization هدفه منع الـ update anomalies مش توفير المساحة",
+      "subtitle": "خزّن كل معلومة مرة واحدة، والـ update مش هيناقض نفسه. وانسخها عشان السرعة، وكل نسخة هتبقى حاجة لازم تحافظ عليها متزامنة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "data-consistency",
+    "order": 3
+  },
+  "tags": [
+    "Normalization",
+    "Data Modeling",
+    "SQL Server",
+    "Indexed Views"
+  ],
+  "sources": [
+    {
+      "title": "Database normalization description — Microsoft Learn",
+      "url": "https://learn.microsoft.com/previous-versions/troubleshoot/microsoft-365/microsoft-365-apps/access/database-normalization-description"
+    },
+    {
+      "title": "Materialized View pattern — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/patterns/materialized-view"
+    },
+    {
+      "title": "Understand star schema and the importance for Power BI — Microsoft Learn",
+      "url": "https://learn.microsoft.com/power-bi/guidance/star-schema"
+    },
+    {
+      "title": "Create indexed views — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/views/create-indexed-views"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

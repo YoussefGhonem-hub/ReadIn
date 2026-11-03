@@ -1,0 +1,55 @@
+{
+  "slug": "database-constraints-are-not-redundant",
+  "field": "databases",
+  "topic": "data-modeling",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Constraints Belong in the Database Even When Your App Validates",
+      "subtitle": "Validation explains errors to users. A constraint is the only rule that holds for every writer and every pair of requests that arrive together."
+    },
+    "ar-EG": {
+      "title": "ليه الـ constraints مكانها الـ database حتى لو الـ app بيعمل validation؟",
+      "subtitle": "الـ validation بيشرح الغلط لليوزر. والـ constraint هو القاعدة الوحيدة اللي بتفضل صح مع أي حد بيكتب ومع أي اتنين requests جايين مع بعض."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "data-consistency",
+    "order": 2
+  },
+  "tags": [
+    "Constraints",
+    "Data Integrity",
+    "SQL Server",
+    "EF Core"
+  ],
+  "sources": [
+    {
+      "title": "Unique constraints and check constraints — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/tables/unique-constraints-and-check-constraints"
+    },
+    {
+      "title": "Primary and foreign key constraints — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/tables/primary-and-foreign-key-constraints"
+    },
+    {
+      "title": "Constraints — PostgreSQL documentation",
+      "url": "https://www.postgresql.org/docs/current/ddl-constraints.html"
+    },
+    {
+      "title": "Indexes (uniqueness and check constraints) — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/modeling/indexes"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic record SignUpRequest(string Email);\npublic class User { public int Id { get; set; } public string Email { get; set; } = \"\"; }\npublic class AppDb(DbContextOptions<AppDb> options) : DbContext(options)\n{\n    public DbSet<User> Users => Set<User>();\n}"
+    }
+  }
+}

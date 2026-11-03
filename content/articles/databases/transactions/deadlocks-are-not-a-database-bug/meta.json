@@ -1,0 +1,60 @@
+{
+  "slug": "deadlocks-are-not-a-database-bug",
+  "field": "databases",
+  "topic": "transactions",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Deadlocks Are a Design Problem: Why They Happen and How to Make Them Rare",
+      "subtitle": "Two sessions are enough for a deadlock. Lock order, transaction length and indexes decide how often you get one, and a retry handles the rest."
+    },
+    "ar-EG": {
+      "title": "الـ deadlocks مشكلة في التصميم: بتحصل ليه وإزاي تخليها نادرة",
+      "subtitle": "اتنين sessions كفاية عشان يحصل deadlock. وترتيب الـ locks وطول الـ transaction والـ indexes هما اللي بيحددوا بيحصل قد إيه، والـ retry بيتعامل مع الباقي."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "data-consistency",
+    "order": 9
+  },
+  "tags": [
+    "Deadlocks",
+    "Transactions",
+    "SQL Server",
+    "PostgreSQL",
+    "EF Core"
+  ],
+  "sources": [
+    {
+      "title": "Deadlocks guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/sql-server-deadlocks-guide"
+    },
+    {
+      "title": "Transaction locking and row versioning guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide"
+    },
+    {
+      "title": "Connection resiliency — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/miscellaneous/connection-resiliency"
+    },
+    {
+      "title": "Explicit Locking: Deadlocks — PostgreSQL 18 documentation",
+      "url": "https://www.postgresql.org/docs/current/explicit-locking.html"
+    },
+    {
+      "title": "Lock Management: deadlock_timeout — PostgreSQL 18 documentation",
+      "url": "https://www.postgresql.org/docs/current/runtime-config-locks.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic class Inventory { public int ProductId { get; set; } public int Reserved { get; set; } }\npublic class Shipment { public int OrderId { get; set; } public string Status { get; set; } = \"\"; }\npublic class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Inventory> Inventory => Set<Inventory>();\n    public DbSet<Shipment> Shipments => Set<Shipment>();\n}"
+    }
+  }
+}

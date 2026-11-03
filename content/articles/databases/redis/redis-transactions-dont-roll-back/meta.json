@@ -1,0 +1,59 @@
+{
+  "slug": "redis-transactions-dont-roll-back",
+  "field": "databases",
+  "topic": "redis",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Redis MULTI/EXEC Doesn't Roll Back: Redis vs SQL Transactions",
+      "subtitle": "EXEC runs every queued command even when one of them fails, and a Lua script keeps the writes it made before an error. Check first, write last."
+    },
+    "ar-EG": {
+      "title": "ليه الـ MULTI/EXEC في Redis مش بيعمل rollback؟ الفرق بينه وبين transactions الـ SQL",
+      "subtitle": "الـ EXEC بيشغّل كل الأوامر اللي في الطابور حتى لو واحد منهم فشل، والـ Lua script بيسيب الكتابات اللي عملها قبل الـ error. اتأكد الأول، واكتب في الآخر."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Redis 8",
+  "learningPath": {
+    "slug": "data-consistency",
+    "order": 8
+  },
+  "tags": [
+    "Redis",
+    "Transactions",
+    "Lua",
+    "StackExchange.Redis"
+  ],
+  "sources": [
+    {
+      "title": "Transactions — Redis documentation",
+      "url": "https://redis.io/docs/latest/develop/using-commands/transactions/"
+    },
+    {
+      "title": "Scripting with Lua — Redis documentation",
+      "url": "https://redis.io/docs/latest/develop/programmability/eval-intro/"
+    },
+    {
+      "title": "Redis functions — Redis documentation",
+      "url": "https://redis.io/docs/latest/develop/programmability/functions-intro/"
+    },
+    {
+      "title": "SET (IFEQ and IFNE since Redis 8.4) — Redis command reference",
+      "url": "https://redis.io/docs/latest/commands/set/"
+    },
+    {
+      "title": "Transactions in Redis — StackExchange.Redis documentation",
+      "url": "https://seredis.dev/Transactions"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "namespace StackExchange.Redis\n{\n    // Minimal mirror of the StackExchange.Redis 2.10 API used by the snippets (verified against the real package)\n    public enum CommandFlags { None = 0 }\n    public readonly struct RedisKey { public static implicit operator RedisKey(string? key) => default; }\n    public readonly struct RedisValue\n    {\n        public static implicit operator RedisValue(long value) => default;\n        public static implicit operator RedisValue(string? value) => default;\n    }\n    public abstract class RedisResult { public static explicit operator int(RedisResult result) => 0; }\n    public interface IDatabaseAsync\n    {\n        System.Threading.Tasks.Task<long> StringIncrementAsync(RedisKey key, long value = 1, CommandFlags flags = CommandFlags.None);\n        System.Threading.Tasks.Task<long> StringDecrementAsync(RedisKey key, long value = 1, CommandFlags flags = CommandFlags.None);\n        System.Threading.Tasks.Task<RedisResult> ScriptEvaluateAsync(string script, RedisKey[]? keys = null, RedisValue[]? values = null, CommandFlags flags = CommandFlags.None);\n    }\n    public interface ITransaction : IDatabaseAsync { System.Threading.Tasks.Task<bool> ExecuteAsync(CommandFlags flags = CommandFlags.None); }\n    public interface IDatabase : IDatabaseAsync { ITransaction CreateTransaction(object? asyncState = null); }\n}"
+    }
+  }
+}

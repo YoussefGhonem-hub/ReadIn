@@ -1,0 +1,54 @@
+{
+  "slug": "schemaless-does-not-mean-no-schema",
+  "field": "databases",
+  "topic": "nosql",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Schemaless Doesn't Mean No Schema: SQL vs NoSQL Without the Hype",
+      "subtitle": "A document store skips the schema check, not the schema. It moves into every piece of code that reads the data, along with every old shape."
+    },
+    "ar-EG": {
+      "title": "الـ schemaless مش معناه مفيش schema: SQL ولا NoSQL من غير hype",
+      "subtitle": "الـ document store بيتخطى التأكد من الـ schema، مش الـ schema نفسها. هي بتتنقل لكل كود بيقرا الداتا، ومعاها كل شكل قديم."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "data-consistency",
+    "order": 4
+  },
+  "tags": [
+    "NoSQL",
+    "Data Modeling",
+    "MongoDB",
+    "Schema Migration"
+  ],
+  "sources": [
+    {
+      "title": "Schemaless Data Structures — Martin Fowler",
+      "url": "https://martinfowler.com/articles/schemaless/"
+    },
+    {
+      "title": "Understand data models — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/data-guide/technology-choices/understand-data-store-models"
+    },
+    {
+      "title": "Data modeling in Azure Cosmos DB — Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/cosmos-db/modeling-data"
+    },
+    {
+      "title": "Data Modeling — MongoDB Database Manual",
+      "url": "https://www.mongodb.com/docs/manual/data-modeling/"
+    },
+    {
+      "title": "Specify Validation Level for Existing Documents — MongoDB Database Manual",
+      "url": "https://www.mongodb.com/docs/manual/core/schema-validation/specify-validation-level/"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

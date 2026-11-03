@@ -147,3 +147,180 @@ terms:
       إن SQL Server بيعمل compile للـ parameterized query أو الـ stored procedure بقيم الـ parameters بتاعة الـ call
       اللي عمل الـ compile، وبعدين بيعيد استخدام الـ plan دي مع الـ calls اللي بعدها بأي قيم. و Microsoft بتسميها كمان
       parameter sensitivity.
+  - id: acid
+    term: ACID
+    definitionEn: >-
+      The four properties a database transaction must have: atomicity (all of its changes or none), consistency (the
+      rules declared in the database hold when it ends), isolation (concurrent transactions are kept apart, to the
+      chosen level) and durability (committed changes survive a crash).
+    definitionAr: >-
+      الأربع خصائص اللي لازم تبقى في أي transaction في الداتابيز: الـ atomicity (كل تغييراتها أو ولا واحد)، والـ
+      consistency (القواعد المتعرّفة في الداتابيز تفضل صح لما تخلص)، والـ isolation (الـ transactions اللي شغالة مع
+      بعض بتتفصل بالمستوى اللي اتختار)، والـ durability (اللي اتعمله commit بيعيش بعد أي crash).
+  - id: autocommit-mode
+    term: Autocommit mode
+    definitionEn: >-
+      The default way SQL Server, PostgreSQL and most drivers run statements when no transaction was started: each
+      statement is its own transaction and is committed as soon as it completes successfully.
+    definitionAr: >-
+      الطريقة الـ default اللي SQL Server و PostgreSQL ومعظم الـ drivers بيشغّلوا بيها الـ statements لما مفيش
+      transaction مفتوحة: كل statement هي transaction لوحدها، وبتتعمل commit أول ما تخلص بنجاح.
+  - id: isolation-level
+    term: Isolation level
+    definitionEn: >-
+      A setting that decides how much a transaction can see of other transactions running at the same time, from READ
+      UNCOMMITTED to SERIALIZABLE. Each level below SERIALIZABLE allows some anomalies, such as nonrepeatable reads or
+      phantoms, in exchange for less blocking or fewer failed transactions.
+    definitionAr: >-
+      إعداد بيحدد الـ transaction تقدر تشوف قد إيه من الـ transactions التانية اللي شغالة في نفس الوقت، من READ
+      UNCOMMITTED لحد SERIALIZABLE. وكل مستوى تحت SERIALIZABLE بيسمح ببعض الـ anomalies، زي الـ nonrepeatable reads أو
+      الـ phantoms، في مقابل blocking أقل أو transactions بتفشل أقل.
+  - id: referential-integrity
+    term: Referential integrity
+    definitionEn: >-
+      The guarantee that every reference between tables points at a row that exists: a foreign key value always
+      matches a key in the referenced table, so no order can belong to a customer who isn't there.
+    definitionAr: >-
+      الضمان إن كل إشارة بين الجداول بتشاور على row موجود فعلًا: قيمة الـ foreign key دايمًا بتطابق key في الجدول
+      اللي بتشاور عليه، فمفيش order يبقى تبع عميل مش موجود.
+  - id: database-normalization
+    term: Normalization
+    definitionEn: >-
+      Organizing a relational schema so that each fact is stored once, in the table whose key it depends on. The
+      normal forms (first, second, third and beyond) are the rules for doing it; their purpose is to prevent update,
+      insertion and deletion anomalies.
+    definitionAr: >-
+      إنك تنظّم الـ schema بحيث كل معلومة تتخزن مرة واحدة، في الجدول اللي الـ key بتاعه هو اللي بتعتمد عليه.
+      والـ normal forms (الأول والتاني والتالت وما بعدهم) هي القواعد اللي بتعمل بيها كده، وهدفها تمنع الـ update
+      والـ insertion والـ deletion anomalies.
+  - id: update-anomaly
+    term: Update anomaly
+    definitionEn: >-
+      An inconsistency that appears when the same fact is stored in several rows and an update changes only some of
+      them, so the database holds two different answers to one question.
+    definitionAr: >-
+      تناقض بيظهر لما نفس المعلومة تبقى متخزنة في كذا row، والـ update يغيّر بعضهم بس، فالداتابيز تبقى شايلة
+      إجابتين مختلفتين لنفس السؤال.
+  - id: materialized-view
+    term: Materialized view
+    definitionEn: >-
+      A stored copy of query results, such as a join or an aggregate, kept for fast reads. It's derived from source
+      tables and can be rebuilt from them; depending on how it's refreshed, it's either updated with every change
+      (like a SQL Server indexed view) or allowed to be stale for a while.
+    definitionAr: >-
+      نسخة متخزنة من نتيجة query، زي join أو aggregate، موجودة عشان القراية تبقى سريعة. بتتطلّع من جداول المصدر
+      وممكن تتبني منها تاني، وحسب طريقة تحديثها، يا إما بتتحدّث مع كل تغيير (زي الـ indexed view في SQL Server)، يا
+      إما مسموح لها تبقى قديمة شوية.
+  - id: schema-on-read
+    term: Schema on read
+    definitionEn: >-
+      A storage approach where the database accepts data of any shape and each reader interprets its structure when
+      it reads it, as document and key-value stores do by default. Its opposite, schema on write, checks the shape
+      when data is stored, as relational tables do.
+    definitionAr: >-
+      طريقة تخزين الداتابيز فيها بتقبل داتا بأي شكل، وكل كود بيقرا بيفسّر شكلها وقت القراية، زي ما الـ document
+      والـ key-value stores بيعملوا بشكل default. وعكسها الـ schema on write، اللي بيتأكد من الشكل وقت التخزين، زي
+      الجداول في الـ relational databases.
+  - id: implicit-schema
+    term: Implicit schema
+    definitionEn: >-
+      The structure that code assumes when it reads data the database doesn't validate, such as field names and
+      types. It's real but undeclared, scattered across every piece of code that touches the data.
+    definitionAr: >-
+      الشكل اللي الكود بيفترضه وهو بيقرا داتا الداتابيز مابتتأكدش منها، زي أسامي الـ fields وأنواعها. موجود فعلًا
+      بس مش متعرّف في أي مكان، ومتفرّق في كل حتة كود بتلمس الداتا.
+  - id: polyglot-persistence
+    term: Polyglot persistence
+    definitionEn: >-
+      Using different data storage technologies for different parts of a system, chosen by how each part reads and
+      writes its data, such as a relational database for orders and a document or search store for a catalog.
+    definitionAr: >-
+      إنك تستخدم تكنولوجيات تخزين مختلفة لأجزاء مختلفة من السيستم، وتختار كل واحدة حسب الجزء ده بيقرا ويكتب الداتا
+      إزاي، زي relational database للـ orders، و document أو search store للـ catalog.
+  - id: phantom-read
+    term: Phantom read
+    definitionEn: >-
+      Running the same query twice in one transaction and getting a different set of rows, because another
+      transaction inserted or deleted matching rows and committed in between.
+    definitionAr: >-
+      إنك تشغّل نفس الـ query مرتين في نفس الـ transaction وتطلعلك مجموعة rows مختلفة، لأن transaction تانية عملت
+      insert أو delete لـ rows مطابقة وعملت commit في النص.
+  - id: write-skew
+    term: Write skew
+    definitionEn: >-
+      An anomaly where two concurrent transactions read the same data, each updates a different row based on what
+      it read, and both commit, together breaking a rule that each one checked. Snapshot isolation allows it;
+      serializable isolation doesn't.
+    definitionAr: >-
+      anomaly فيها اتنين transactions شغالين مع بعض بيقروا نفس الداتا، وكل واحدة بتعدّل row مختلف بناءً على اللي
+      قرته، والاتنين بيعملوا commit، فبيكسروا مع بعض قاعدة كل واحدة فيهم اتأكدت منها. والـ snapshot isolation بيسمح
+      بيها، والـ serializable لأ.
+  - id: lost-update
+    term: Lost update
+    definitionEn: >-
+      An anomaly where two transactions read the same row, each computes a new value from what it read, and the
+      later write overwrites the earlier one, so one change disappears without any error.
+    definitionAr: >-
+      anomaly فيها اتنين transactions بيقروا نفس الـ row، وكل واحدة بتحسب قيمة جديدة من اللي قرته، والكتابة
+      اللي بعدها بتكتب فوق اللي قبلها، فتغيير منهم بيختفي من غير أي error.
+  - id: dirty-read
+    term: Dirty read
+    definitionEn: >-
+      Reading a change another transaction made but hasn't committed. If that transaction rolls back, the value you
+      read never existed in the database.
+    definitionAr: >-
+      إنك تقرا تغيير عملته transaction تانية ولسه ماعملتلوش commit. ولو الـ transaction دي عملت rollback، القيمة
+      اللي قريتها عمرها ما كانت موجودة في الداتابيز.
+  - id: read-committed-snapshot
+    term: Read committed snapshot isolation (RCSI)
+    definitionEn: >-
+      A SQL Server database option (READ_COMMITTED_SNAPSHOT ON) that makes the READ COMMITTED level use row versions
+      instead of shared locks: each statement reads the data as last committed when it started, so readers don't
+      wait for writers.
+    definitionAr: >-
+      option في الداتابيز في SQL Server (READ_COMMITTED_SNAPSHOT ON) بيخلّي الـ READ COMMITTED يستخدم row versions
+      بدل الـ shared locks: كل statement بتقرا الداتا زي ما كانت متعملها commit لحد ما بدأت، فاللي بيقرا مابيستناش
+      اللي بيكتب.
+  - id: rollback
+    term: Rollback
+    definitionEn: >-
+      Undoing every change a transaction has made so far, so the data returns to the state it had before the
+      transaction began. Relational databases support it; Redis transactions and scripts don't.
+    definitionAr: >-
+      إنك تلغي كل التغييرات اللي الـ transaction عملتها لحد دلوقتي، فالداتا ترجع زي ما كانت قبل ما الـ transaction
+      تبدأ. والـ relational databases بتدعمه، أما الـ transactions والـ scripts في Redis فلأ.
+  - id: deadlock-victim
+    term: Deadlock victim
+    definitionEn: >-
+      The transaction a database rolls back to break a deadlock, so the others in the cycle can continue. SQL Server
+      reports it to the application as error 1205; PostgreSQL as "deadlock detected" (SQLSTATE 40P01).
+    definitionAr: >-
+      الـ transaction اللي الداتابيز بتعمل لها rollback عشان تكسر الـ deadlock، فالباقيين في الدايرة يقدروا يكمّلوا.
+      الـ SQL Server بيبلّغ التطبيق بيها كـ error رقم 1205، والـ PostgreSQL كـ "deadlock detected" (SQLSTATE 40P01).
+  - id: mvcc
+    term: MVCC (multiversion concurrency control)
+    definitionEn: >-
+      A concurrency model in which an update writes a new version of a row instead of overwriting it, so each
+      statement or transaction can read a consistent snapshot while others write. Old versions stay until no one can
+      still see them.
+    definitionAr: >-
+      طريقة للـ concurrency فيها الـ update بيكتب نسخة جديدة من الـ row بدل ما يكتب فوقها، فكل statement أو transaction
+      تقدر تقرا snapshot متسقة والباقيين بيكتبوا. والنسخ القديمة بتفضل موجودة لحد ما محدش يبقى محتاج يشوفها.
+  - id: dead-tuple
+    term: Dead tuple
+    definitionEn: >-
+      In PostgreSQL, an old row version left behind by an UPDATE or DELETE. It still takes space in the table and its
+      indexes until VACUUM removes it, which it can do only when no transaction can still see it.
+    definitionAr: >-
+      في PostgreSQL، نسخة قديمة من row فضلت بعد UPDATE أو DELETE. بتفضل واخدة مكان في الجدول والـ indexes بتاعته
+      لحد ما الـ VACUUM يشيلها، وده مايحصلش غير لما مفيش أي transaction تقدر تشوفها.
+  - id: xmin-horizon
+    term: Xmin horizon
+    definitionEn: >-
+      The oldest transaction ID that some open snapshot or transaction might still need to see. VACUUM can't remove
+      row versions that died after it, in any table of the database. pg_stat_activity shows each session's share as
+      backend_xmin and backend_xid.
+    definitionAr: >-
+      أقدم transaction ID ممكن snapshot أو transaction مفتوحة لسه محتاجة تشوفه. والـ VACUUM مايقدرش يشيل نسخ الـ rows
+      اللي ماتت بعده، في أي جدول في الداتابيز. والـ pg_stat_activity بيوري نصيب كل session منه في backend_xmin و
+      backend_xid.

@@ -1,0 +1,55 @@
+{
+  "slug": "transaction-isolation-levels-explained",
+  "field": "databases",
+  "topic": "transactions",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Your Transaction Doesn't See a Frozen Database: Isolation Levels Explained",
+      "subtitle": "At the default level, every statement sees the latest commits. Snapshot freezes your reads but not your decisions, and only serializable protects both."
+    },
+    "ar-EG": {
+      "title": "الـ transaction بتاعتك مش شايفة database متجمّدة: شرح الـ isolation levels",
+      "subtitle": "في الـ level الـ default، كل statement بتشوف آخر commits. والـ snapshot بيجمّد القرايات مش القرارات، والـ serializable لوحده بيحمي الاتنين."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "data-consistency",
+    "order": 5
+  },
+  "tags": [
+    "Transactions",
+    "Isolation Levels",
+    "SQL Server",
+    "PostgreSQL"
+  ],
+  "sources": [
+    {
+      "title": "SET TRANSACTION ISOLATION LEVEL (Transact-SQL) — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/t-sql/statements/set-transaction-isolation-level-transact-sql"
+    },
+    {
+      "title": "Transaction locking and row versioning guide — SQL Server, Microsoft Learn",
+      "url": "https://learn.microsoft.com/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide"
+    },
+    {
+      "title": "Transaction Isolation — PostgreSQL documentation",
+      "url": "https://www.postgresql.org/docs/current/transaction-iso.html"
+    },
+    {
+      "title": "A Critique of ANSI SQL Isolation Levels — Berenson, Bernstein, Gray, Melton, O'Neil, O'Neil (SIGMOD 1995), arXiv",
+      "url": "https://arxiv.org/abs/cs/0701157"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic class LedgerEntry { public int Id { get; set; } public int AccountId { get; set; } public decimal Amount { get; set; } }\npublic record Statement(decimal Total, List<LedgerEntry> Lines);\npublic class BankDb(DbContextOptions<BankDb> options) : DbContext(options)\n{\n    public DbSet<LedgerEntry> Entries => Set<LedgerEntry>();\n}"
+    }
+  }
+}

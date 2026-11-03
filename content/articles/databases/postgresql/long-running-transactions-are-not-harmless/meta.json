@@ -1,0 +1,59 @@
+{
+  "slug": "long-running-transactions-are-not-harmless",
+  "field": "databases",
+  "topic": "postgresql",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The Hidden Cost of Long Read-Only Transactions: MVCC, Bloat and Blocking",
+      "subtitle": "A transaction that never writes can still stop VACUUM in every table and make a routine migration freeze a busy one. What it costs depends on the snapshot and the locks it keeps."
+    },
+    "ar-EG": {
+      "title": "التكلفة الخفية للـ transactions الطويلة حتى لو read-only: الـ MVCC والـ bloat والـ blocking",
+      "subtitle": "transaction عمرها ما كتبت ممكن توقّف الـ VACUUM في كل الجداول، وتخلّي migration عادية تجمّد جدول عليه شغل. وتمنها بيعتمد على الـ snapshot والـ locks اللي ماسكاها."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "PostgreSQL 18",
+  "learningPath": {
+    "slug": "data-consistency",
+    "order": 10
+  },
+  "tags": [
+    "PostgreSQL",
+    "MVCC",
+    "VACUUM",
+    "Transactions"
+  ],
+  "sources": [
+    {
+      "title": "Routine Vacuuming — PostgreSQL 18 documentation",
+      "url": "https://www.postgresql.org/docs/current/routine-vacuuming.html"
+    },
+    {
+      "title": "Concurrency Control: Introduction (MVCC) — PostgreSQL 18 documentation",
+      "url": "https://www.postgresql.org/docs/current/mvcc-intro.html"
+    },
+    {
+      "title": "Client Connection Defaults: timeouts — PostgreSQL 18 documentation",
+      "url": "https://www.postgresql.org/docs/current/runtime-config-client.html"
+    },
+    {
+      "title": "Explicit Locking: table-level locks — PostgreSQL 18 documentation",
+      "url": "https://www.postgresql.org/docs/current/explicit-locking.html"
+    },
+    {
+      "title": "PostgreSQL 17 release notes (transaction_timeout added, old_snapshot_threshold removed)",
+      "url": "https://www.postgresql.org/docs/release/17.0/"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic class Account { public int Id { get; set; } public decimal Balance { get; set; } }\npublic interface IMailer { Task SendStatementAsync(Account account, CancellationToken ct); }\npublic class BankDb(DbContextOptions<BankDb> options) : DbContext(options)\n{\n    public DbSet<Account> Accounts => Set<Account>();\n}"
+    }
+  }
+}
