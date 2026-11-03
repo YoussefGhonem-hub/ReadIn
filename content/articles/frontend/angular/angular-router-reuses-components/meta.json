@@ -1,0 +1,36 @@
+{
+  "slug": "angular-router-reuses-components",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Same Route, New :id, Same Component: Why ngOnInit Doesn't Run Again",
+      "subtitle": "When only the parameters change, the router keeps the component you already have. Read the id as a signal, not once in ngOnInit."
+    },
+    "ar-EG": {
+      "title": "ليه ngOnInit مش بيشتغل تاني لما الـ id يتغير في نفس الـ route؟",
+      "subtitle": "لما الـ parameters بس هي اللي تتغير، الـ router بيحتفظ بنفس الـ component اللي عندك. اقرا الـ id كـ signal، مش مرة واحدة في ngOnInit."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 5 },
+  "tags": ["Angular", "Router", "ngOnInit", "httpResource"],
+  "sources": [
+    { "title": "BaseRouteReuseStrategy — Angular", "url": "https://angular.dev/api/router/BaseRouteReuseStrategy" },
+    { "title": "Read route state — Angular", "url": "https://angular.dev/guide/routing/read-route-state" },
+    { "title": "withComponentInputBinding — Angular", "url": "https://angular.dev/api/router/withComponentInputBinding" },
+    { "title": "RunGuardsAndResolvers — Angular", "url": "https://angular.dev/api/router/RunGuardsAndResolvers" },
+    { "title": "Reactive data fetching with httpResource — Angular", "url": "https://angular.dev/guide/http/http-resource" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface User {\n  name: string;\n  email: string;\n}"
+    }
+  }
+}

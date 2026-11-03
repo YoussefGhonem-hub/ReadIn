@@ -1,0 +1,36 @@
+{
+  "slug": "angular-httpclient-observables-are-cold",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "http.get() Sends Nothing Until You Subscribe (and Every Subscribe Sends Again)",
+      "subtitle": "An HttpClient Observable is a blueprint for a request. Each subscription runs it again; no subscription runs nothing."
+    },
+    "ar-EG": {
+      "title": "ليه http.get() مش بيبعت request؟ وليه كل subscribe بيبعت واحد جديد",
+      "subtitle": "الـ Observable اللي راجع من HttpClient مجرد blueprint للـ request. كل subscription بتشغّله من جديد، ومن غيرها مفيش حاجة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 1 },
+  "tags": ["Angular", "HttpClient", "RxJS", "Observables"],
+  "sources": [
+    { "title": "Making HTTP requests — Angular", "url": "https://angular.dev/guide/http/making-requests" },
+    { "title": "Observable — RxJS", "url": "https://rxjs.dev/guide/observable" },
+    { "title": "RxJS interop with Angular signals — Angular", "url": "https://angular.dev/ecosystem/rxjs-interop" },
+    { "title": "Reactive data fetching with httpResource — Angular", "url": "https://angular.dev/guide/http/http-resource" },
+    { "title": "shareReplay — RxJS", "url": "https://rxjs.dev/api/operators/shareReplay" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface User {\n  name: string;\n  email: string;\n  avatarUrl: string;\n}"
+    }
+  }
+}

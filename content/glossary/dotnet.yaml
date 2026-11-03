@@ -275,3 +275,23 @@ terms:
     term: Split query
     definitionEn: An EF Core query mode, turned on with AsSplitQuery, that loads each included or projected collection with its own SQL query instead of joining them all into one, which avoids a cartesian explosion at the cost of extra round trips.
     definitionAr: mode في EF Core بيتشغّل بـ AsSplitQuery، وبيحمّل كل collection متضافة أو معمولها projection بـ SQL query لوحدها بدل ما يعمل join ليهم كلهم في query واحدة، وده بيمنع الـ cartesian explosion مقابل رحلات زيادة للداتابيز.
+  - id: multiple-active-result-sets
+    term: Multiple Active Result Sets (MARS)
+    definitionEn: A SQL Server connection feature, turned on with MultipleActiveResultSets=True, that lets one connection carry more than one batch at a time, such as reading one result set while running another command. It doesn't make the operations run simultaneously.
+    definitionAr: feature في الـ connection بتاع SQL Server، بتتشغّل بـ MultipleActiveResultSets=True، بتخلّي connection واحد يشيل أكتر من batch في نفس الوقت، زي إنك تقرا result set وانت بتشغّل command تاني. ومش معناها إن العمليات بتتنفذ في نفس اللحظة.
+  - id: dbcontext-factory
+    term: DbContext factory
+    definitionEn: IDbContextFactory<TContext>, a service registered with AddDbContextFactory that creates a new DbContext each time you call CreateDbContext. The code that creates a context owns it and must dispose it.
+    definitionAr: الـ IDbContextFactory<TContext>، service بتتسجّل بـ AddDbContextFactory وبتعمل DbContext جديد كل ما تنادي CreateDbContext. والكود اللي بيعمل الـ context هو اللي مسؤول عنه ولازم يعمله Dispose.
+  - id: cascade-delete
+    term: Cascade delete
+    definitionEn: Deleting dependent rows automatically when the row they point to is deleted. EF Core does it itself for entities it tracks, while the database does it only when the foreign key is created with ON DELETE CASCADE, which EF Core sets up by default for required relationships.
+    definitionAr: إن الـ rows التابعة تتمسح لوحدها لما الـ row اللي بتشاور عليه يتمسح. الـ EF Core بيعملها بنفسه للـ entities اللي متتبّعها، والداتابيز بتعملها بس لو الـ foreign key معمول بـ ON DELETE CASCADE، وده الـ default اللي EF Core بيعمله للـ relationships الـ required.
+  - id: expand-contract
+    term: Expand and contract
+    definitionEn: Making a breaking change in steps, also called parallel change. First add the new shape next to the old one, then move every user to it, and remove the old shape only when nothing uses it. For a database, each step's schema works with both the code that's running and the code that replaces it.
+    definitionAr: إنك تعمل تغيير بيكسر الحاجات على مراحل، واسمه كمان parallel change. الأول تضيف الشكل الجديد جنب القديم، وبعدين تنقل كل اللي بيستخدموه للجديد، ومتشيلش القديم غير لما محدش يبقى بيستخدمه. وفي الداتابيز، الـ schema في كل مرحلة بتشتغل مع الكود اللي شغال ومع الكود اللي هييجي مكانه.
+  - id: migration-bundle
+    term: Migration bundle
+    definitionEn: A single-file executable, built with dotnet ef migrations bundle, that applies an app's EF Core migrations to a database. It runs without the .NET SDK, the EF tools or the source code, which makes it a deployment artifact you build in CI and run in the deploy step.
+    definitionAr: ملف تنفيذي واحد بيتعمل بـ dotnet ef migrations bundle، وبيطبّق الـ EF Core migrations بتاعة التطبيق على الداتابيز. بيشتغل من غير الـ .NET SDK ولا الـ EF tools ولا الـ source code، فبيبقى deployment artifact بتبنيه في الـ CI وتشغّله في خطوة الـ deploy.

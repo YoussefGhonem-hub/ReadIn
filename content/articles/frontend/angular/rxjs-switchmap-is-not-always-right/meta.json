@@ -1,0 +1,36 @@
+{
+  "slug": "rxjs-switchmap-is-not-always-right",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "switchMap Isn't Always Right: Choosing concatMap, mergeMap or exhaustMap",
+      "subtitle": "The four operators differ in one thing: what happens when a new value arrives while a request is still running. For saves, cancelling is usually the wrong answer."
+    },
+    "ar-EG": {
+      "title": "إمتى الـ switchMap يبقى غلط؟ الاختيار بين concatMap و mergeMap و exhaustMap",
+      "subtitle": "الأربع operators بيختلفوا في حاجة واحدة: إيه اللي يحصل لما قيمة جديدة توصل والـ request اللي قبلها لسه شغال. وفي الـ saves، الإلغاء غالبًا هو الإجابة الغلط."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 6 },
+  "tags": ["Angular", "RxJS", "switchMap", "HttpClient"],
+  "sources": [
+    { "title": "switchMap — RxJS", "url": "https://rxjs.dev/api/operators/switchMap" },
+    { "title": "concatMap — RxJS", "url": "https://rxjs.dev/api/operators/concatMap" },
+    { "title": "mergeMap — RxJS", "url": "https://rxjs.dev/api/operators/mergeMap" },
+    { "title": "exhaustMap — RxJS", "url": "https://rxjs.dev/api/operators/exhaustMap" },
+    { "title": "Making HTTP requests — Angular", "url": "https://angular.dev/guide/http/making-requests" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface Order {\n  id: string;\n}\ndeclare class OrderApi {\n  placeOrder(): import('rxjs').Observable<Order>;\n}"
+    }
+  }
+}

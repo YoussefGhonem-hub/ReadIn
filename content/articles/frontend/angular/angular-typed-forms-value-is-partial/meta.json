@@ -1,0 +1,35 @@
+{
+  "slug": "angular-typed-forms-value-is-partial",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why form.value Is Partial: Disabled Controls and getRawValue()",
+      "subtitle": "In Reactive Forms, a disabled control drops out of form.value. The Partial type is a warning, not noise: send getRawValue() when you need everything."
+    },
+    "ar-EG": {
+      "title": "ليه الـ form.value نوعه Partial؟ الـ disabled controls و getRawValue()",
+      "subtitle": "في الـ Reactive Forms، الـ control اللي disabled بيختفي من form.value. والـ Partial ده تحذير مش دوشة: ابعت getRawValue() لما تحتاج كل حاجة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 4 },
+  "tags": ["Angular", "Reactive Forms", "Typed Forms", "TypeScript"],
+  "sources": [
+    { "title": "Typed Forms — Angular", "url": "https://angular.dev/guide/forms/typed-forms" },
+    { "title": "FormGroup — Angular", "url": "https://angular.dev/api/forms/FormGroup" },
+    { "title": "Reactive forms — Angular", "url": "https://angular.dev/guide/forms/reactive-forms" },
+    { "title": "Adding form logic (Signal Forms) — Angular", "url": "https://angular.dev/guide/forms/signals/form-logic" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface Employee {\n  name: string;\n  email: string;\n}\ndeclare class EmployeeApi {\n  update(employee: Employee): import('rxjs').Observable<void>;\n}"
+    }
+  }
+}

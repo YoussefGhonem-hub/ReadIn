@@ -1,0 +1,34 @@
+{
+  "slug": "angular-defer-what-really-gets-deferred",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "@defer Doesn't Always Shrink Your Bundle: What Really Gets Deferred",
+      "subtitle": "The block works either way. Whether its code leaves the initial bundle depends on every other reference to it."
+    },
+    "ar-EG": {
+      "title": "إمتى الـ @defer مش بيصغّر الـ bundle؟ إيه اللي بيتأجل فعلًا",
+      "subtitle": "الـ block بيشتغل في الحالتين. أما الكود يطلع من الـ initial bundle ولا لأ، فده بيعتمد على كل reference تاني ليه."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 13 },
+  "tags": ["Angular", "@defer", "Lazy loading", "Bundle size"],
+  "sources": [
+    { "title": "Deferred loading with @defer — Angular", "url": "https://angular.dev/guide/templates/defer" },
+    { "title": "Route loading strategies — Angular", "url": "https://angular.dev/guide/routing/loading-strategies" },
+    { "title": "Building Angular apps (size budgets) — Angular", "url": "https://angular.dev/tools/cli/build" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare class SalesChart {\n  exportPng(): void;\n}"
+    }
+  }
+}

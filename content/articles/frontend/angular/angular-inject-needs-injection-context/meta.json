@@ -1,0 +1,35 @@
+{
+  "slug": "angular-inject-needs-injection-context",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "inject() Isn't a Service Locator: Understanding the Injection Context",
+      "subtitle": "inject() reads the injector Angular sets for a moment. In a method, a callback or after an await, there's none."
+    },
+    "ar-EG": {
+      "title": "ليه inject() بيرمي NG0203؟ فهم الـ injection context",
+      "subtitle": "الـ inject() بيقرا الـ injector اللي Angular بيحطه للحظة. وفي method أو callback أو بعد await، مفيش injector."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 11 },
+  "tags": ["Angular", "Dependency Injection", "inject", "NG0203"],
+  "sources": [
+    { "title": "Injection context — Angular", "url": "https://angular.dev/guide/di/dependency-injection-context" },
+    { "title": "NG0203: inject() must be called from an injection context — Angular", "url": "https://angular.dev/errors/NG0203" },
+    { "title": "runInInjectionContext — Angular API", "url": "https://angular.dev/api/core/runInInjectionContext" },
+    { "title": "takeUntilDestroyed — Angular API", "url": "https://angular.dev/api/core/rxjs-interop/takeUntilDestroyed" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare class AuthService {\n  loadSession(): Promise<{ isAdmin: boolean }>;\n}\ndeclare class PriceFeed {\n  prices(symbol: string): import('rxjs').Observable<number>;\n}"
+    }
+  }
+}

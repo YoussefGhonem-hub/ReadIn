@@ -381,3 +381,47 @@ terms:
       إنك تعمل average لـ metric محسوبة لكل class، وكل class بنفس الوزن مهما كان حجمها. أما الـ micro averaging فبيجمّع
       العدّ بتاع كل الـ classes مع بعض، والـ weighted بيدّي كل class وزن على قد عدد أمثلتها الحقيقية، فالاتنين بيمشوا ورا
       أكبر classes.
+  - id: p-value
+    term: p-value
+    definitionEn: >-
+      The probability of seeing a difference at least as large as the observed one if there were really no difference.
+      A small p-value makes "no difference" hard to believe; a large one means the data can't tell, not that the two
+      things are equal.
+    definitionAr: >-
+      احتمال إنك تشوف فرق قد الفرق اللي ظهر أو أكبر، لو مفيش فرق حقيقي أصلًا. الـ p-value الصغيرة بتخلّي فكرة "مفيش
+      فرق" صعب تتصدّق؛ والكبيرة معناها إن الداتا مش قادرة تحكم، مش إن الاتنين متساويين.
+  - id: confidence-interval
+    term: Confidence Interval
+    definitionEn: >-
+      A range around an estimate, such as a difference in accuracy, that shows how far the true value could plausibly
+      be from it given the noise in the data. A 95% interval that includes zero means the data can't rule out no
+      difference.
+    definitionAr: >-
+      مدى حوالين رقم متقدّر، زي الفرق في الـ accuracy، بيوضّح القيمة الحقيقية ممكن تبعد عنه قد إيه بسبب الـ noise اللي
+      في الداتا. ولو الـ interval بتاع 95% فيه الصفر، يبقى الداتا مش قادرة تستبعد إن مفيش فرق.
+  - id: nested-cross-validation
+    term: Nested Cross-Validation
+    definitionEn: >-
+      An evaluation that runs the whole hyperparameter search inside each fold of an outer cross-validation loop. The
+      inner folds choose the settings; the outer test folds, never seen by the search, score the result. It estimates
+      how the tuning procedure performs, not one particular setting.
+    definitionAr: >-
+      تقييم بيشغّل الـ hyperparameter search كله جوه كل fold من loop برّاني للـ cross-validation. الـ folds الجوّانية
+      بتختار الإعدادات، والـ test folds البرّانية، اللي الـ search عمره ما شافها، بتقيّم النتيجة. بيقدّر أداء طريقة الـ
+      tuning نفسها، مش إعداد واحد بعينه.
+  - id: calibration-curve
+    term: Calibration Curve
+    definitionEn: >-
+      A check of predicted probabilities: group cases into bins by score and plot each bin's average score against the
+      share of positives in it. A calibrated model's points lie on the diagonal. Also called a reliability diagram.
+    definitionAr: >-
+      طريقة تكشف بيها على الاحتمالات: بتقسم الحالات لـ bins حسب الـ score، وترسم متوسط الـ score في كل bin قصاد نسبة
+      الـ positives فيه. الموديل الـ calibrated نقطه بتقع على القطر. واسمه كمان reliability diagram.
+  - id: brier-score
+    term: Brier Score
+    definitionEn: >-
+      The mean squared difference between predicted probabilities and the actual outcomes, coded 1 and 0. Lower is
+      better. It rewards both calibration and the ability to separate classes, so it can't judge calibration alone.
+    definitionAr: >-
+      متوسط مربع الفرق بين الاحتمالات المتوقعة والنتايج الحقيقية، متسجّلة 1 و0. الأقل أحسن. بيكافئ الـ calibration
+      وقدرة الموديل يفصل بين الـ classes مع بعض، فمايقدرش يحكم على الـ calibration لوحده.

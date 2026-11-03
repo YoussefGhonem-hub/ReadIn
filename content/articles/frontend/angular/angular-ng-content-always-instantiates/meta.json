@@ -1,0 +1,30 @@
+{
+  "slug": "angular-ng-content-always-instantiates",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Hiding <ng-content> Doesn't Stop It Being Created: Content Projection Pitfalls",
+      "subtitle": "The parent creates projected content whether or not it's shown. Pass an ng-template when it should be lazy."
+    },
+    "ar-EG": {
+      "title": "إخفاء الـ ng-content مش بيمنع إنشاء المحتوى: مطبات الـ content projection",
+      "subtitle": "الـ parent بيعمل المحتوى المتبعت سواء ظهر أو لأ. ابعت ng-template لو عايزه يتعمل وقت الحاجة بس."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "modern-angular", "order": 12 },
+  "tags": ["Angular", "Content projection", "ng-content", "ng-template"],
+  "sources": [
+    { "title": "Content projection with ng-content — Angular", "url": "https://angular.dev/guide/components/content-projection" },
+    { "title": "Create template fragments with ng-template — Angular", "url": "https://angular.dev/guide/templates/ng-template" },
+    { "title": "Referencing component children with queries — Angular", "url": "https://angular.dev/guide/components/queries" },
+    { "title": "NgTemplateOutlet — Angular API", "url": "https://angular.dev/api/common/NgTemplateOutlet" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

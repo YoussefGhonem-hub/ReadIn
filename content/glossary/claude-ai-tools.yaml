@@ -94,3 +94,38 @@ terms:
     definitionAr: >-
       إعداد من low لحد max بيتحكم Claude هيبذل قد إيه في كل رد: هيفكر قد إيه، وهيراجع بدقة قد إيه، وهيعمل tool calls قد
       إيه. المستويات الأعلى بتصرف tokens ووقت أكتر؛ وفي Claude Code بتظبطه بـ /effort.
+  - id: plugin-marketplace
+    term: Marketplace (Claude Code plugins)
+    definitionEn: >-
+      A catalog of plugins, defined in a repository's .claude-plugin/marketplace.json, that tells Claude Code where to
+      fetch each plugin it lists. Its name tells you who publishes the catalog, not who wrote each plugin in it.
+    definitionAr: >-
+      كتالوج plugins متعرّف في ملف .claude-plugin/marketplace.json جوه repo، بيقول لـ Claude Code يجيب كل plugin فيه منين.
+      واسمه بيقولك مين بينشر الكتالوج، مش مين كتب كل plugin جواه.
+  - id: git-worktree
+    term: Git worktree
+    definitionEn: >-
+      An extra working directory linked to the same git repository, with its own files, checked-out branch, HEAD and
+      index, while history and remotes stay shared. It lets several branches be checked out, and edited, at once.
+    definitionAr: >-
+      working directory زيادة مربوط بنفس الـ git repository، ليه ملفاته والـ branch بتاعه والـ HEAD والـ index بتوعه، والـ
+      history والـ remotes متشاركين. بيخلّيك تفتح كذا branch وتعدّل فيهم في نفس الوقت.
+  - id: json-rpc
+    term: JSON-RPC 2.0
+    definitionEn: >-
+      A small remote procedure call format in which each message is a JSON object that names a method and its params.
+      A request carries an id that its response repeats; a notification has no id and gets no response. MCP is built on
+      it.
+    definitionAr: >-
+      صيغة صغيرة لـ remote procedure calls، كل رسالة فيها JSON object بيسمّي method والـ params بتاعتها. الـ request فيه
+      id والـ response بيرجّعه زي ما هو؛ والـ notification ملهاش id ومفيش response عليها. والـ MCP مبني عليها.
+  - id: stop-reason
+    term: Stop reason (Claude API)
+    definitionEn: >-
+      The stop_reason field in every successful Claude API response, saying why Claude stopped generating: end_turn,
+      max_tokens, stop_sequence, tool_use, pause_turn, refusal or model_context_window_exceeded. Only end_turn means
+      Claude finished its answer on its own.
+    definitionAr: >-
+      الـ field اللي اسمه stop_reason في كل response ناجح من Claude API، وبيقول Claude وقف ليه: end_turn أو max_tokens أو
+      stop_sequence أو tool_use أو pause_turn أو refusal أو model_context_window_exceeded. والـ end_turn بس معناها إن Claude
+      خلّص إجابته لوحده.

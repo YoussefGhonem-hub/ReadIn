@@ -1,0 +1,36 @@
+{
+  "slug": "angular-subscriptions-and-memory-leaks",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Angular Won't Unsubscribe for You: Finding the Subscriptions That Leak",
+      "subtitle": "Angular cleans up what it created. A subscribe() you wrote lives as long as its source, not your component."
+    },
+    "ar-EG": {
+      "title": "مين بيعمل unsubscribe لما الـ component يتشال؟ الـ subscriptions اللي بتسرّب memory",
+      "subtitle": "Angular بينضّف اللي هو عمله. أما الـ subscribe() اللي انت كتبته فبيعيش قد الـ source بتاعه، مش قد الـ component."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 2 },
+  "tags": ["Angular", "RxJS", "Subscriptions", "Memory leaks", "takeUntilDestroyed"],
+  "sources": [
+    { "title": "Unsubscribing with takeUntilDestroyed — Angular", "url": "https://angular.dev/ecosystem/rxjs-interop/take-until-destroyed" },
+    { "title": "Making HTTP requests — Angular", "url": "https://angular.dev/guide/http/making-requests" },
+    { "title": "Subscription — RxJS", "url": "https://rxjs.dev/guide/subscription" },
+    { "title": "toSignal — Angular API", "url": "https://angular.dev/api/core/rxjs-interop/toSignal" },
+    { "title": "Record heap snapshots — Chrome DevTools", "url": "https://developer.chrome.com/docs/devtools/memory-problems/heap-snapshots" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare class NotificationService {\n  readonly messages$: import('rxjs').Observable<{ text: string }>;\n  readonly unread$: import('rxjs').Observable<number>;\n}\ndeclare class ToastService {\n  show(text: string): void;\n}"
+    }
+  }
+}

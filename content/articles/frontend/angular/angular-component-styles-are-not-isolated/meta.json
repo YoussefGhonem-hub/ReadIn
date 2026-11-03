@@ -1,0 +1,34 @@
+{
+  "slug": "angular-component-styles-are-not-isolated",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Component Styles Aren't Fully Isolated: View Encapsulation Explained",
+      "subtitle": "Emulated encapsulation keeps a component's styles in, not the page's styles out. Here's what crosses the line, and how to style a child without ::ng-deep."
+    },
+    "ar-EG": {
+      "title": "هل الـ styles بتاعة الـ component معزولة فعلًا؟ الـ View Encapsulation بالتفصيل",
+      "subtitle": "الـ Emulated encapsulation بتمنع الـ styles بتاعة الـ component إنها تطلع، مش إن styles الصفحة تدخل. إيه اللي بيعدّي، وإزاي تعمل style لـ child من غير ::ng-deep."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 3 },
+  "tags": ["Angular", "CSS", "View Encapsulation", "ng-deep"],
+  "sources": [
+    { "title": "Styling components — Angular", "url": "https://angular.dev/guide/components/styling" },
+    { "title": "ViewEncapsulation — Angular", "url": "https://angular.dev/api/core/ViewEncapsulation" },
+    { "title": "Component host elements — Angular", "url": "https://angular.dev/guide/components/host-elements" },
+    {
+      "title": "REMOVE_STYLES_ON_COMPONENT_DESTROY — Angular",
+      "url": "https://angular.dev/api/platform-browser/REMOVE_STYLES_ON_COMPONENT_DESTROY"
+    },
+    { "title": "Inheritance — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascade/Inheritance" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

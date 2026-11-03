@@ -168,3 +168,58 @@ terms:
     definitionAr: >-
       memory البرنامج مابقاش محتاجها بس مش قادر يفضّيها، لأن حاجة عايشة مدة طويلة لسه شايلة reference ليها. وفي تطبيق
       browser، الـ component اللي اتشالت بتفضل في الـ memory لو subscription أو listener شغال لسه بيشاور عليها.
+  - id: view-encapsulation
+    term: View encapsulation
+    definitionEn: >-
+      The setting that decides how Angular scopes a component's styles. The default, Emulated, adds a generated
+      attribute to the component's template elements and to its selectors, so its rules can't match elements outside
+      the template. It doesn't stop outside styles from matching elements inside.
+    definitionAr: >-
+      الإعداد اللي بيحدد Angular هيعمل scoping للـ styles بتاعة الـ component إزاي. الافتراضي Emulated، وبيضيف attribute
+      متولّد على الـ elements اللي في الـ template وعلى الـ selectors بتاعتها، فالـ rules بتاعتها ماتمسكش elements برّه
+      الـ template. بس مابيمنعش الـ styles اللي برّه إنها تمسك الـ elements اللي جوه.
+  - id: css-custom-property
+    term: CSS custom property
+    definitionEn: >-
+      A CSS property you name yourself with two leading dashes, such as --badge-bg, and read with var(). Its value
+      inherits down the DOM tree like color does, which makes it a common way for a parent to configure a child's
+      styles.
+    definitionAr: >-
+      property في CSS بتسمّيها بنفسك وقبلها شرطتين، زي --badge-bg، وبتقراها بـ var(). قيمتها بتتورث وهي نازلة في شجرة
+      الـ DOM زي color بالظبط، وعشان كده بتبقى طريقة شائعة إن الـ parent يظبط الـ styles بتاعة الـ child.
+  - id: reactive-forms
+    term: Reactive Forms
+    definitionEn: >-
+      Angular's forms API in which you build the form model in the component class from FormControl, FormGroup and
+      FormArray objects, then bind it to inputs. It has been strictly typed by default since Angular 14.
+    definitionAr: >-
+      الـ forms API في Angular اللي بتبني فيه الـ form model جوه الـ component class من objects زي FormControl وFormGroup
+      وFormArray، وبعدين تربطه بالـ inputs. وبقى strictly typed بشكل افتراضي من أول Angular 14.
+  - id: partial-type
+    term: Partial<T>
+    definitionEn: >-
+      A built-in TypeScript utility type that makes every property of T optional, so each one may be undefined. Code
+      that reads a property has to handle the case where it's missing.
+    definitionAr: >-
+      utility type جاهز في TypeScript بيخلّي كل property في T اختيارية، يعني أي واحدة فيهم ممكن تبقى undefined. والكود
+      اللي بيقرا property لازم يتعامل مع احتمال إنها مش موجودة.
+  - id: route-reuse-strategy
+    term: Route reuse strategy
+    definitionEn: >-
+      The object Angular's router asks, on every navigation, whether it can keep the component of an active route. The
+      default reuses it when the matched route config is the same, so a change of parameters alone doesn't create a
+      new component.
+    definitionAr: >-
+      الـ object اللي الـ router في Angular بيسأله في كل navigation إذا كان ينفع يحتفظ بالـ component بتاعة route شغال.
+      الافتراضي بيعيد استخدامها لما الـ route config اللي اتطابق يبقى هو هو، فتغيير الـ parameters لوحده مابيعملش
+      component جديدة.
+  - id: flattening-operator
+    term: Flattening operator
+    definitionEn: >-
+      An RxJS operator such as switchMap, concatMap, mergeMap or exhaustMap that maps each source value to an inner
+      Observable, such as an HTTP request, and subscribes to it. Each one handles a value that arrives while an earlier
+      inner Observable is still running in its own way: cancel, queue, run in parallel or ignore.
+    definitionAr: >-
+      operator في RxJS زي switchMap أو concatMap أو mergeMap أو exhaustMap، بيحوّل كل قيمة جاية من الـ source لـ inner
+      Observable، زي HTTP request، ويعمل عليه subscribe. وكل واحد فيهم بيتعامل بطريقته مع القيمة اللي توصل والـ inner
+      Observable اللي قبلها لسه شغال: يلغيه، أو يستناه، أو يشغّلهم مع بعض، أو يتجاهل الجديدة.

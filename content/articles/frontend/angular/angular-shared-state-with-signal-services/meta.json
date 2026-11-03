@@ -1,0 +1,41 @@
+{
+  "slug": "angular-shared-state-with-signal-services",
+  "field": "frontend",
+  "topic": "angular",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Sharing State Without a Store Library: Signal-Based Services",
+      "subtitle": "A root service is already shared by every component. Hold the state in a private signal, expose it read-only, and change it only through methods."
+    },
+    "ar-EG": {
+      "title": "مش محتاج store library عشان تشارك state: الـ services المبنية على signals",
+      "subtitle": "الـ root service أصلًا متشاركة بين كل الـ components. حط الـ state في signal private، واعرضها read-only، وغيّرها من خلال methods بس."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Angular 22",
+  "learningPath": { "slug": "angular-in-production", "order": 7 },
+  "tags": ["Angular", "Signals", "State management", "Services"],
+  "sources": [
+    {
+      "title": "Converting writable signals to readonly — Angular Signals",
+      "url": "https://angular.dev/guide/signals#converting-writable-signals-to-readonly"
+    },
+    { "title": "Creating and using services — Angular", "url": "https://angular.dev/guide/di/creating-and-using-services" },
+    {
+      "title": "Hierarchical injectors — Angular",
+      "url": "https://angular.dev/guide/di/hierarchical-dependency-injection"
+    },
+    { "title": "Angular without ZoneJS (Zoneless) — Angular", "url": "https://angular.dev/guide/zoneless" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface AppNotification {\n  id: string;\n  text: string;\n  read: boolean;\n}"
+    }
+  }
+}
