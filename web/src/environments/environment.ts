@@ -21,7 +21,7 @@ export const environment: AppEnvironment = {
   firebaseVapidKey: 'BII3t6QLmXvySejsMKG9iz9lZpFqFRwDitQuTPq8RkukKfRCuoQ5_ChkH1zCdKlgF525LBs0yRtqUGEecNuN_YQ',
   databaseEmulatorHost: null,
   authEmulatorUrl: null,
-  supportEmail: 'support@readin.app',
+  supportEmail: 'youssef.fcaih@gmail.com',
   googleWebClientId: '56680910112-11fpmt15shbi4mddnkjtuemfrdoqrp6e.apps.googleusercontent.com',
   appleServicesId: '',
 };

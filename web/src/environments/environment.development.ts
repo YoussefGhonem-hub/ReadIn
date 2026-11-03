@@ -21,7 +21,7 @@ export const environment: AppEnvironment = {
   firebaseVapidKey: null,
   databaseEmulatorHost: '127.0.0.1:9000',
   authEmulatorUrl: 'http://127.0.0.1:9099',
-  supportEmail: 'support@readin.app',
+  supportEmail: 'youssef.fcaih@gmail.com',
   googleWebClientId: '56680910112-11fpmt15shbi4mddnkjtuemfrdoqrp6e.apps.googleusercontent.com',
   appleServicesId: '',
 };

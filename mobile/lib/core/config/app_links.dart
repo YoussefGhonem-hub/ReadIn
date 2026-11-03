@@ -8,5 +8,5 @@ abstract final class AppLinks {
 
 /// Where "نسيت الـ PIN كمان؟" and suspended accounts are sent (SPEC §9.1): an Admin resets the password.
 abstract final class SupportContact {
-  static const email = 'support@readin.app';
+  static const email = 'youssef.fcaih@gmail.com';
 }
