@@ -94,12 +94,14 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | Backend skeleton (Domain / Application / Infrastructure / Api / ContentStudio) | ✅ |
 | Phone + password / Google / Apple auth (JWT, rotating refresh tokens, recovery PIN, account linking), SQL-backed roles & permissions | ✅ backend |
 | Seeders: roles & permissions, taxonomy, system accounts, demo users, articles | ✅ |
-| Seeders: glossary, learning paths, demo interactions | ⏳ arrive with F21 / F09 / F10–F13 |
+| Seeder: demo interactions (reactions, saves, follows, a collection; deterministic, local only) | ✅ comments join with F11 |
+| Seeders: glossary, learning paths | ⏳ arrive with F21 / F09 |
 | Outbox + Hangfire (immediate trigger + per-minute safety net), scheduled publishing | ✅ |
 | F27 Real-time: `POST /realtime/token` (Firebase custom tokens), RTDB publisher with retry + circuit breaker (article counters, comment events, feed, unread badge, PDF status), "new articles" signal on publish | ✅ backend · web + mobile listeners in place; counters, comment events and the badge go live as F10–F13 and F17 publish them |
 | Endpoints: auth sync, me, preferences, interests, devices, fields/topics, article by slug, create/publish, for-you feed, today's article | ✅ |
 | F01 Auth, F02 Onboarding, F03 Home, F04 Reader (subset), F18 Settings: web + mobile | ✅ first slice |
 | F08 Streaks & reading stats + the F04 "read" rule (≥ 70% and ≥ 30 s, [ADR 0013](docs/adr/0013-reading-days-and-streaks.md)): web + mobile + backend, demo reading history | ✅ |
-| F05 Editor, F10 Reactions, F11 Comments, F12 Follow, F13 Saved, F14 Profile | ⏳ next |
+| F10 Reactions, F12 Follow, F13 Saved: endpoints, reactions/saves on every card, Following feed, suggested writers, collections, counters recomputed by the outbox and published as live signals (F27), admin counter rebuild | ✅ backend; web + mobile next |
+| F05 Editor, F11 Comments, F14 Profile | ⏳ next |
 | ContentStudio `generate` (Claude), code-compile and live-link checks | ⏳ |
 | Full-text search index (needs FTS in the SQL image), SignalR, FCM sending | ⏳ Phase 2 |

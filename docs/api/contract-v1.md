@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth codes below.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social and media codes below.
 
 ## Endpoints
 
@@ -96,6 +96,64 @@ A wrong `currentPassword` counts toward the same 15-minute lockout as sign in (`
 | GET | `/articles/{slug}?lang=` | `ArticleDetailsDto` |
 | GET | `/feed/for-you?field=&cursor=&limit=` | `CursorPage<ArticleCardDto>`. Signed in: user's interests first. Guest: latest published. `field` is a field slug. |
 | GET | `/feed/today` | `ArticleCardDto` or `204` when no pick is available yet |
+| GET | `/feed/following?cursor=&limit=` | Bearer → `CursorPage<ArticleCardDto>`: published articles by the writers you follow, newest first (the Home "Following" tab) |
+
+Every card (for you, today, following, saved) carries the article's counters and, for a signed-in caller, their own
+`myReaction` / `isSaved` (`null` / `false` for guests). `ArticleDetailsDto` adds `isFollowingAuthor` (`false` for guests
+and on your own articles).
+
+### Reactions (F10; writes: Bearer, permission `reactions.create`, rate limit `writes`)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| PUT | `/articles/{id}/reaction` | `{ type: ReactionType }` → `200 ArticleReactionsDto`. Sets or changes your one reaction per article. `400` validation code `reaction.invalid` (in `errors.type`), `404 article.not_found` (also for drafts, archived, deleted or other unpublished articles) |
+| DELETE | `/articles/{id}/reaction` | → `200 ArticleReactionsDto` (idempotent) |
+| GET | `/articles/{id}/reactions?type=&cursor=&limit=` | 🌐 → `CursorPage<ReactorDto>` ("who reacted"), newest first; `type` keeps one reaction (`reaction.invalid` otherwise) |
+
+The `ArticleReactionsDto` of a write is counted from the rows right after your change. Counters on cards and details
+come from the article's denormalized columns, which the outbox updates right after the commit (see Live counters).
+
+### Saved (F13; Bearer, permission `saved.manage`, rate limit `writes` on writes)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| PUT | `/me/saved/{articleId}` | → `200 SaveStateDto` (idempotent). `404 article.not_found` |
+| DELETE | `/me/saved/{articleId}` | → `200 SaveStateDto` (idempotent); also removes it from every collection |
+| GET | `/me/saved?field=&q=&collection=&cursor=&limit=` | → `CursorPage<SavedArticleDto>`, newest saved first. `field` = field slug, `q` = title search in any language version (≤ 100 characters; case, Arabic diacritics and letter forms ignored, SPEC §22), `collection` = one of your collection ids. Articles that can no longer be opened are left out |
+| GET | `/me/collections` | → `CollectionDto[]` (name order) |
+| POST | `/me/collections` | `{ name }` (1–60 characters, trimmed) → `201 CollectionDto` with `Location`. `409 collection.name_taken` (per user, ignoring case), `400 collection.limit` (50 per user), validation codes `validation.required` / `validation.max_length` on `name` |
+| PATCH | `/me/collections/{id}` | `{ name }` → `200 CollectionDto`. Same name rules |
+| DELETE | `/me/collections/{id}` | → `204`; the articles stay saved |
+| PUT | `/me/collections/{id}/articles/{articleId}` | → `204` (idempotent); saves the article first if needed |
+| DELETE | `/me/collections/{id}/articles/{articleId}` | → `204` (idempotent); the article stays saved |
+
+`404 collection.not_found` for a collection that isn't yours; `404 article.not_found` for an article that can't be opened.
+
+### Follow (F12; writes: Bearer, permission `follows.manage`, rate limit `writes`)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| PUT | `/users/{id}/follow` | → `200 FollowStateDto` (idempotent). `400 follow.self`, `404 user.not_found`. The official ReadIn account can be followed |
+| DELETE | `/users/{id}/follow` | → `200 FollowStateDto` (idempotent). `400 follow.self`, `404 user.not_found` |
+| GET | `/users/{id}/followers?q=&cursor=&limit=` | 🌐 → `CursorPage<UserSummaryDto>`, newest first; `q` (≤ 100 characters) matches the display name or `@username`. `404 user.not_found` |
+| GET | `/users/{id}/following?q=&cursor=&limit=` | 🌐 → same |
+| GET | `/users/suggested?limit=10` | Bearer → `UserSummaryDto[]` (limit ≤ 50): writers with published articles in fields that overlap your interests (a followed topic counts for its field), not followed, not you, not suspended. Verified writers first, then by follower count. When no writer overlaps your interests yet, any writer with published articles |
+| PUT | `/me/interests/fields/{fieldId}` | → `200 InterestsDto` (follow a field = an interest, F02; idempotent). `404 field.not_found` |
+| PUT | `/me/interests/topics/{topicId}` | → `200 InterestsDto` (idempotent). `404 topic.not_found` |
+| DELETE | `/me/interests/fields/{fieldId}`, `/me/interests/topics/{topicId}` | → `200 InterestsDto` (idempotent). `400 user.interests.min_three` when fewer than 3 interests would remain |
+
+### Live counters (F27, SPEC §21.2)
+
+After a reaction or save change commits, an outbox handler recomputes that article's counters from SQL (idempotent:
+always recounted, never incremented), stores them on `Articles` (`ReactionCount` = the sum of the four per-type
+columns, `SaveCount`), refreshes the cached details and writes `/live/articles/{id}` through `IRealtimePublisher`:
+`{ reactions: { insightful, love, fire, mindBlown }, commentCount, saveCount, updatedAt }` (published articles only).
+Clients apply their own action optimistically, and when live counters arrive they **replace** the numbers (never add),
+so your own action is never counted twice. Feed cards subscribe only while visible; the reader while open.
+
+| Method | Path | Auth | Response |
+|---|---|---|---|
+| POST | `/admin/realtime/rebuild-counters` | Bearer, `system.settings` | → `200 { articleCount }`: every article's counters recomputed from SQL and republished |
 
 ### Writing (Bearer, permission `articles.create`)
 
@@ -277,9 +335,35 @@ interface ArticleCardDto {
   isReviewed: boolean; isAiAssisted: boolean;
   versionBadge: string | null;   // e.g. ".NET 10"
   publishedAt: string;
-  reactionCount: number; commentCount: number;
+  reactionCount: number;         // always the sum of `reactions`
+  reactions: ReactionCountsDto;
+  commentCount: number;          // 0 until F11
+  saveCount: number;
+  myReaction: ReactionType | null; // the caller's reaction; null for guests
+  isSaved: boolean;              // the caller saved it; false for guests
   attachments: ArticleAttachmentsDto | null;  // feed cards carry at most the first 10 PDF pages
 }
+
+// ── Reactions, saved, follow (F10, F12, F13) ──────────────────────
+type ReactionType = 'insightful' | 'love' | 'fire' | 'mindBlown';   // 💡 ❤️ 🔥 🤯 (SPEC F10)
+interface ReactionCountsDto { insightful: number; love: number; fire: number; mindBlown: number }
+
+interface ArticleReactionsDto { reactions: ReactionCountsDto; total: number; myReaction: ReactionType | null }
+interface ReactorDto { user: AuthorDto; type: ReactionType; reactedAt: string }
+
+interface SaveStateDto { isSaved: boolean; saveCount: number }
+interface SavedArticleDto { savedAt: string; collectionIds: string[]; article: ArticleCardDto }
+interface CollectionDto { id: string; name: string; articleCount: number; createdAt: string } // articleCount: openable articles
+
+interface FollowStateDto { isFollowing: boolean; followerCount: number }
+interface UserSummaryDto {
+  id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean;
+  bio: string | null;
+  isFollowing: boolean;          // the caller follows this user (false for guests)
+  followsYou: boolean;           // this user follows the caller (false for guests)
+}
+
+interface InterestsDto { fieldIds: string[]; topicIds: string[] }  // as in MeDto.interests
 
 // ── Media (ADR 0011) ──────────────────────────────────────────────
 type MediaKind = 'image' | 'document';
@@ -362,7 +446,8 @@ interface ArticleDetailsDto extends ArticleCardDto {
   sources: { title: string; url: string }[];
   reviewedBy: { displayName: string; username: string } | null;
   lastReviewedAt: string | null;
-  saveCount: number; readCount: number;
+  readCount: number;             // saveCount comes from ArticleCardDto
+  isFollowingAuthor: boolean;    // false for guests and on your own articles
 }
 
 // Reading & streaks (ADR 0013). Dates are the user's local dates, "yyyy-MM-dd".
@@ -406,6 +491,10 @@ interface ReadingHeatmapDto {
   days: { date: string; articles: number; minutes: number; frozen: boolean }[]; // only days with a read or a freeze
 }
 ```
+
+Validation codes (in `errors`) for this area: `reaction.invalid` (`type`), `validation.required` /
+`validation.max_length` (`name` of a collection, `q`). Error codes: `collection.not_found`, `collection.name_taken`,
+`collection.limit`, `follow.self`, `topic.not_found`.
 
 ## Local development
 
