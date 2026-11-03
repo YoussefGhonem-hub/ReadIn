@@ -70,7 +70,7 @@ Clients translate `code` (and each validation error code) with their own `ar`/`e
 | Method | Path | Body → Response |
 |---|---|---|
 | POST | `/uploads/images` | `multipart/form-data`: `file` (jpeg/png/webp/heic, ≤ 10 MB, ≤ 8000×8000), `purpose` = `image` (default) \| `avatar` \| `cover` → `201 MediaAssetDto` with `status: "ready"` (images are processed in the request) |
-| POST | `/uploads/documents` | `multipart/form-data`: `file` (PDF, ≤ 20 MB, ≤ 100 pages, no password), `title` (optional, ≤ 150, defaults to the file name), `allowDownload` (`true`/`false`, default `false`) → `202 MediaAssetDto` with `status: "processing"` and `pageCount` set. Pages are rendered in the background, page 1 first |
+| POST | `/uploads/documents` | `multipart/form-data`: `file` (PDF, ≤ 20 MB, ≤ 100 pages, no password), `title` (optional, ≤ 5000, defaults to the file name), `allowDownload` (`true`/`false`, default `false`) → `202 MediaAssetDto` with `status: "processing"` and `pageCount` set. Pages are rendered in the background, page 1 first |
 | GET | `/uploads/{id}` | → `200 MediaAssetDto` (owner only). Poll every 2 s while `status` is `processing` |
 | DELETE | `/uploads/{id}` | → `204` (owner only; `409 media.in_use` while attached to an article) |
 | GET | `/documents/{assetId}/download` 🌐 | → `200 application/pdf` with `Content-Disposition: attachment`. Allowed when the article is published and `allowDownload` is on, or for the owner / a moderator. `403 media.download_not_allowed`, `404 media.not_found` |
@@ -195,7 +195,7 @@ interface MediaAssetDto {
 
 interface ImageAttachmentDto {
   assetId: string; order: number;
-  caption: string | null;        // ≤ 120, render with dir="auto"
+  caption: string | null;        // ≤ 5000, render with dir="auto"
   altText: string;               // required
   width: number; height: number; blurHash: string | null;
   variants: MediaVariantDto[];
@@ -227,9 +227,9 @@ interface CreateArticleRequest {
 interface SetAttachmentsRequest {
   items: {
     mediaAssetId: string; order: number;
-    caption?: string | null;     // images, ≤ 120
-    altText?: string | null;     // images, required, ≤ 250
-    title?: string | null;       // the document, required, ≤ 150
+    caption?: string | null;     // images, ≤ 5000
+    altText?: string | null;     // images, required, ≤ 5000
+    title?: string | null;       // the document, required, ≤ 5000
     allowDownload?: boolean;     // the document
   }[];
 }

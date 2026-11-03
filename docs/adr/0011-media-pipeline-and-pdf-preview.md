@@ -18,7 +18,8 @@ belongs to. PDFs can be large, slow to render and hostile (encrypted, damaged, o
 `Uploading | Processing | Ready | Failed`, failure reason, original path and size, upright width/height, BlurHash,
 variants as JSON keyed by width, page count, title, `AllowDownload`, extracted text). PDF pages are
 `MediaAssetPages` rows. `ArticleAttachments` links an article to either 1–10 images (each with required alt text
-and an optional caption ≤ 120) or exactly one document; the rule lives in `Article.SetAttachments`.
+and an optional caption, each up to 5000 characters) or exactly one document (its title up to 5000 characters); the rule
+lives in `Article.SetAttachments`. These three texts are `nvarchar(max)` columns because `nvarchar(n)` stops at 4000.
 
 **Images** (`POST /api/v1/uploads/images`, processed in the request, ≤ 10 MB):
 - Accepted by magic bytes: JPEG, PNG, WebP and **HEIC**. SkiaSharp has no HEIF codec on Windows/Linux, so HEIC is
