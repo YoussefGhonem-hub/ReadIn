@@ -1,0 +1,51 @@
+{
+  "slug": "sync-over-async-thread-pool-starvation",
+  "field": "dotnet",
+  "topic": "dotnet-performance",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Blocking on .Result Hurts ASP.NET Core Even Without a Deadlock",
+      "subtitle": "There's no SynchronizationContext to deadlock on, but every blocked call parks a thread pool thread. Under load the pool runs dry, requests queue, and even a health check waits seconds."
+    },
+    "ar-EG": {
+      "title": "ليه .Result بيوقّع ASP.NET Core حتى من غير deadlock؟ قصة الـ thread pool starvation",
+      "subtitle": "مفيش SynchronizationContext يعمل deadlock، بس كل call بتعمله block بتحجز thread من الـ thread pool. وتحت الضغط الـ pool بيخلص، والـ requests تقف في الطابور، وحتى الـ health check يستنى ثواني."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 13 },
+  "tags": ["ASP.NET Core", "async/await", "Thread pool", "Performance"],
+  "sources": [
+    {
+      "title": "ASP.NET Core Best Practices: Avoid blocking calls — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/best-practices"
+    },
+    {
+      "title": "Debug ThreadPool starvation — .NET, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/diagnostics/debug-threadpool-starvation"
+    },
+    {
+      "title": "The managed thread pool — .NET, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/threading/the-managed-thread-pool"
+    },
+    {
+      "title": "Threading config settings: thread injection in response to blocking — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/runtime-config/threading"
+    },
+    {
+      "title": "CA1849: Call async methods when in an async method — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1849"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed class RatesClient(HttpClient http)\n{\n    public async Task<decimal> GetRateAsync(string currency, CancellationToken ct = default) =>\n        await http.GetFromJsonAsync<decimal>($\"rates/{currency}\", ct);\n}"
+    }
+  }
+}

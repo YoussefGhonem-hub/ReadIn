@@ -1,0 +1,47 @@
+{
+  "slug": "hybridcache-vs-imemorycache-stampede",
+  "field": "dotnet",
+  "topic": "dotnet-performance",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "IMemoryCache Won't Stop a Cache Stampede: What HybridCache Adds",
+      "subtitle": "GetOrCreateAsync isn't atomic, so every request that misses runs your factory. What HybridCache coordinates, what it shares between servers, and where its protection stops."
+    },
+    "ar-EG": {
+      "title": "ليه IMemoryCache مش هيحميك من الـ cache stampede؟ اللي HybridCache بيضيفه",
+      "subtitle": "الـ GetOrCreateAsync مش atomic، فكل request مالقاش القيمة بيشغّل الـ factory بتاعك. HybridCache بينظّم إيه، وبيشارك إيه بين السيرفرات، والحماية بتاعته بتقف فين."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 15 },
+  "tags": ["ASP.NET Core", "Caching", "HybridCache", "Performance"],
+  "sources": [
+    {
+      "title": "HybridCache library in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/performance/caching/hybrid"
+    },
+    {
+      "title": "Cache in-memory in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/performance/caching/memory"
+    },
+    {
+      "title": "Distributed caching in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/performance/caching/distributed"
+    },
+    {
+      "title": "Overview of caching in ASP.NET Core: HybridCache — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/performance/caching/overview"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record Price(int ProductId, decimal Amount);\npublic sealed class PricingClient\n{\n    public Task<Price> GetPriceAsync(int productId, CancellationToken ct) =>\n        Task.FromResult(new Price(productId, 10m));\n}"
+    }
+  }
+}

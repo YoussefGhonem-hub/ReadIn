@@ -1,0 +1,55 @@
+{
+  "slug": "ienumerable-vs-iqueryable-in-ef-core",
+  "field": "dotnet",
+  "topic": "ef-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "IEnumerable vs IQueryable: Where Your EF Core Query Actually Runs",
+      "subtitle": "The same Where compiles against both, but only IQueryable sends it to the database. Once a query becomes IEnumerable, every operator after it runs in memory over rows already fetched."
+    },
+    "ar-EG": {
+      "title": "الفرق بين IEnumerable و IQueryable: الـ query بتاعتك بتتنفذ فين فعلًا؟",
+      "subtitle": "نفس الـ Where بيتعمله compile على الاتنين، بس IQueryable بس هو اللي بيبعته للداتابيز. وأول ما الـ query تبقى IEnumerable، كل operator بعدها بيشتغل في الـ memory على rows اتجابت خلاص."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 1
+  },
+  "tags": [
+    "EF Core",
+    "LINQ",
+    "IQueryable",
+    "Performance"
+  ],
+  "sources": [
+    {
+      "title": "Client vs. Server Evaluation — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/client-eval"
+    },
+    {
+      "title": "How Queries Work — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/how-query-works"
+    },
+    {
+      "title": "IQueryable<T> Interface — .NET API, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.linq.iqueryable-1"
+    },
+    {
+      "title": "Simple logging — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/logging-events-diagnostics/simple-logging"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed class Order\n{\n    public int Id { get; set; }\n    public int CustomerId { get; set; }\n    public decimal Total { get; set; }\n    public DateTime CreatedAt { get; set; }\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Order> Orders => Set<Order>();\n}"
+    }
+  }
+}

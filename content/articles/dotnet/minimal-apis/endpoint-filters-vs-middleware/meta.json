@@ -1,0 +1,51 @@
+{
+  "slug": "endpoint-filters-vs-middleware",
+  "field": "dotnet",
+  "topic": "minimal-apis",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Endpoint Filters vs Middleware: Picking the Right Place for Cross-Cutting Logic",
+      "subtitle": "Middleware wraps every request before an endpoint is chosen; a filter wraps one endpoint after its arguments are bound. What each one sees, who it runs for, and where each check belongs."
+    },
+    "ar-EG": {
+      "title": "تحط الـ cross-cutting logic فين؟ الـ endpoint filters ولا الـ middleware",
+      "subtitle": "الـ middleware بيلف على كل request قبل ما الـ endpoint يتحدد، والـ filter بيلف على endpoint واحد بعد ما الـ arguments بتاعته تتعمل bind. كل واحد بيشوف إيه، وبيشتغل لمين، وكل check مكانه فين."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": {
+    "slug": "aspnet-core-basics",
+    "order": 8
+  },
+  "tags": [
+    "ASP.NET Core",
+    "Minimal APIs",
+    "Middleware",
+    "Endpoint filters"
+  ],
+  "sources": [
+    {
+      "title": "Filters in Minimal API apps — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/min-api-filters"
+    },
+    {
+      "title": "ASP.NET Core middleware — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/middleware/"
+    },
+    {
+      "title": "Filters in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/mvc/controllers/filters"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "namespace Microsoft.Extensions.DependencyInjection { public static class JwtBearerExtensions { public static Microsoft.AspNetCore.Authentication.AuthenticationBuilder AddJwtBearer(this Microsoft.AspNetCore.Authentication.AuthenticationBuilder builder) => builder; } }\npublic interface ICustomerOwned { string CustomerId { get; } }\npublic sealed record OrderRequest(string CustomerId, string Sku, int Quantity) : ICustomerOwned;\npublic static class OrderEndpoints { public static RouteGroupBuilder MapOrders(this RouteGroupBuilder group) => group; }"
+    }
+  }
+}

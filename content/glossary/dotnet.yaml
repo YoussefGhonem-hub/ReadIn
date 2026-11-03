@@ -199,3 +199,23 @@ terms:
     term: Thread pool starvation
     definitionEn: When every thread pool thread is busy or blocked, so new work, including incoming requests and the continuations that would release the waiting threads, sits in the queue until the pool slowly adds threads.
     definitionAr: لما كل threads الـ thread pool تبقى مشغولة أو واقفة، فالشغل الجديد، ومنه الـ requests اللي داخلة والـ continuations اللي المفروض تفك الـ threads الواقفة، يفضل مستني في الطابور لحد ما الـ pool يضيف threads واحدة واحدة.
+  - id: hosted-service
+    term: Hosted service
+    definitionEn: A class that implements IHostedService, usually by deriving from BackgroundService. The .NET host starts it with the app and, during a graceful shutdown, signals it to stop and waits for it to finish, up to the shutdown timeout.
+    definitionAr: class بتعمل implement لـ IHostedService، وغالبًا بتورث من BackgroundService. الـ host بتاع .NET بيشغّلها مع التطبيق، ووقت الـ graceful shutdown بيقولها تقف وبيستناها تخلص، لحد الـ shutdown timeout.
+  - id: backpressure
+    term: Backpressure
+    definitionEn: Slowing down the code that produces work when the code that processes it can't keep up, for example by making a write to a full bounded queue wait for free space, instead of letting pending work grow without limit.
+    definitionAr: إنك تبطّأ الكود اللي بيضيف شغل لما الكود اللي بيعالجه مش لاحق، زي إن الكتابة في queue محدود ومليان تستنى لحد ما يفضى مكان، بدل ما الشغل المستني يكبر من غير حد.
+  - id: distributed-cache
+    term: Distributed cache
+    definitionEn: A cache stored outside the app's process, such as Redis, SQL Server or Postgres, that every instance of the app reads and writes through IDistributedCache, so entries survive restarts and are shared between servers.
+    definitionAr: cache متخزن برّه الـ process بتاع التطبيق، زي Redis أو SQL Server أو Postgres، وكل instance من التطبيق بيقرا ويكتب فيه من خلال IDistributedCache، فالـ entries بتعيش بعد الـ restart وبتبقى مشتركة بين السيرفرات.
+  - id: expression-tree
+    term: Expression tree
+    definitionEn: Code represented as data, a tree of objects that describes a lambda such as o => o.CustomerId == 42. The compiler builds one when a lambda is assigned to Expression<Func<...>>, so a provider like EF Core can read it and translate it into SQL.
+    definitionAr: كود متمثّل كداتا، يعني شجرة objects بتوصف lambda زي o => o.CustomerId == 42. الـ compiler بيبنيها لما الـ lambda تتحط في Expression<Func<...>>، فـ provider زي EF Core يقدر يقراها ويترجمها لـ SQL.
+  - id: client-evaluation
+    term: Client evaluation
+    definitionEn: Running part of a LINQ query in your .NET process instead of in the database. EF Core does it on its own only in the final Select; anywhere else you opt in with AsEnumerable or ToList, and every operator after that works on rows already loaded.
+    definitionAr: إن جزء من الـ LINQ query يتنفذ جوه الـ process بتاع .NET بدل الداتابيز. EF Core بيعمله لوحده في آخر Select بس، وفي أي مكان تاني انت اللي بتختاره بـ AsEnumerable أو ToList، وكل operator بعدها بيشتغل على rows اتحمّلت خلاص.

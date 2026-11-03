@@ -1,0 +1,47 @@
+{
+  "slug": "response-caching-is-not-output-caching",
+  "field": "dotnet",
+  "topic": "aspnet-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Response Caching Is Not Output Caching: Who Really Caches Your API Responses",
+      "subtitle": "The response caching middleware is an HTTP cache that obeys headers, including the client's. Output caching is the server-side cache you configure, evict and share between requests on your terms."
+    },
+    "ar-EG": {
+      "title": "الـ Response Caching مش هو الـ Output Caching: مين اللي بيعمل cache للـ responses فعلًا؟",
+      "subtitle": "الـ response caching middleware عبارة عن HTTP cache بيمشي ورا الـ headers، ومنها headers الـ client نفسه. أما الـ output caching فهو الـ cache اللي على السيرفر وانت اللي بتحدد قواعده وإمتى يتمسح."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 12 },
+  "tags": ["ASP.NET Core", "Caching", "Output caching", "HTTP"],
+  "sources": [
+    {
+      "title": "Overview of caching in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/performance/caching/overview"
+    },
+    {
+      "title": "Output caching middleware in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/performance/caching/output"
+    },
+    {
+      "title": "Response caching middleware in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/performance/caching/middleware"
+    },
+    {
+      "title": "RFC 9111: HTTP Caching — IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc9111.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record Product(int Id, string Name, decimal Price);\npublic sealed class Catalog\n{\n    public Task<List<Product>> GetFeaturedAsync() => Task.FromResult(new List<Product>());\n    public Task SaveAsync(int id, Product product, CancellationToken ct) => Task.CompletedTask;\n}"
+    }
+  }
+}

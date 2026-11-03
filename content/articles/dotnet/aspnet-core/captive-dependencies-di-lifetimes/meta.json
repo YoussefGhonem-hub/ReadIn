@@ -1,0 +1,51 @@
+{
+  "slug": "captive-dependencies-di-lifetimes",
+  "field": "dotnet",
+  "topic": "aspnet-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Singleton, Scoped, Transient: The Captive Dependency Trap in ASP.NET Core",
+      "subtitle": "A singleton keeps every dependency it was built with, so a scoped DbContext inside it is shared by every request. What breaks, what the scope check catches, and what it misses."
+    },
+    "ar-EG": {
+      "title": "فخ الـ Captive Dependency: لما الـ Singleton يمسك في Scoped service",
+      "subtitle": "الـ singleton بيفضل ماسك كل dependency اتبنى بيها، فالـ DbContext الـ scoped اللي جواه بيبقى مشترك بين كل الـ requests. إيه اللي بيبوظ، والـ scope check بيمسك إيه، وبيفوّت إيه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 7 },
+  "tags": ["ASP.NET Core", "Dependency Injection", "Service lifetimes", "EF Core"],
+  "sources": [
+    {
+      "title": "Service lifetimes (dependency injection) — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/extensions/dependency-injection/service-lifetimes"
+    },
+    {
+      "title": "Dependency injection guidelines — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/extensions/dependency-injection/guidelines"
+    },
+    {
+      "title": "Dependency injection in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/dependency-injection"
+    },
+    {
+      "title": "Dependency injection in .NET: Scope validation — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/extensions/dependency-injection/overview"
+    },
+    {
+      "title": "DbContext lifetime, configuration, and initialization — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/dbcontext-configuration/"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed class Product { public int Id { get; set; } public decimal Price { get; set; } public bool OnSale { get; set; } public DateTime? SaleEndsAt { get; set; } }\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options) { public DbSet<Product> Products => Set<Product>(); }"
+    }
+  }
+}

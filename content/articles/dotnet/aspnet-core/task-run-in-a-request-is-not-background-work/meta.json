@@ -1,0 +1,47 @@
+{
+  "slug": "task-run-in-a-request-is-not-background-work",
+  "field": "dotnet",
+  "topic": "aspnet-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Fire-and-Forget in a Request Handler: Why Work Gets Lost and What to Use Instead",
+      "subtitle": "A discarded Task.Run belongs to nobody: it borrows services from a finished request, its errors go unseen, and shutdown doesn't wait for it. Hand the work to a hosted service through a bounded queue."
+    },
+    "ar-EG": {
+      "title": "ليه الشغل اللي بتعمله fire-and-forget جوه الـ request بيضيع؟ وتستخدم إيه بداله",
+      "subtitle": "الـ Task.Run اللي بترميه ملهوش صاحب: بيستلف services من request خلص، والأخطاء بتاعته محدش بيشوفها، والـ shutdown مش بيستناه. سلّم الشغل لـ hosted service من خلال queue محدود."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 14 },
+  "tags": ["ASP.NET Core", "Background work", "Hosted services", "async/await"],
+  "sources": [
+    {
+      "title": "Background tasks with hosted services in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/host/hosted-services"
+    },
+    {
+      "title": "ASP.NET Core Best Practices: Do not capture services on background threads — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/best-practices"
+    },
+    {
+      "title": "Create a queue service — .NET, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/extensions/queue-service"
+    },
+    {
+      "title": ".NET 6 breaking change: Exception handling in hosting — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/compatibility/core-libraries/6.0/hosting-exception-handling"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed class Customer { public int Id { get; set; } public string Email { get; set; } = \"\"; }\npublic sealed class Order { public int Id { get; set; } public int CustomerId { get; set; } public decimal Total { get; set; } }\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Order> Orders => Set<Order>();\n    public DbSet<Customer> Customers => Set<Customer>();\n}\npublic interface IEmailSender { Task SendConfirmationAsync(string to, int orderId); }\npublic sealed class SmtpEmailSender : IEmailSender { public Task SendConfirmationAsync(string to, int orderId) => Task.CompletedTask; }\nnamespace Shop.Orders { }\npublic sealed class ConfirmationWorker : BackgroundService { protected override Task ExecuteAsync(CancellationToken stoppingToken) => Task.CompletedTask; }"
+    }
+  }
+}

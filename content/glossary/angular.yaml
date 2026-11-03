@@ -73,3 +73,57 @@ terms:
       شجرة الـ dependency injection containers في Angular: environment injectors للتطبيق والـ routes بتاعته، وelement
       injectors للـ components والـ directives اللي بتعرّف providers. كل injector بيحتفظ بالـ instances بتاعته، والبحث
       بيطلع لفوق في الشجرة لحد ما يلاقي provider.
+  - id: model-input
+    term: Model input
+    definitionEn: >-
+      An Angular input declared with model(). It's a writable signal that also creates an output named after it with
+      Change appended, so a parent can bind it with two-way syntax like [(value)] and receive every value the child
+      writes.
+    definitionAr: >-
+      input في Angular بيتعرّف بـ model(). هو writable signal، وبيعمل كمان output بنفس اسمه وفي آخره Change، فالـ parent
+      يقدر يربطه بالـ two-way syntax زي [(value)] ويستلم كل قيمة الـ child بيكتبها.
+  - id: angular-effect
+    term: Effect (Angular)
+    definitionEn: >-
+      A function registered with effect() that Angular runs again whenever a signal it read changes. Effects are
+      scheduled, not run on the spot: a component's effects run during change detection. They're meant for side effects
+      outside signals, such as storage, logging or a chart library.
+    definitionAr: >-
+      function بتسجّلها بـ effect()، وAngular بيشغّلها تاني كل ما signal قرتها تتغير. الـ effects بتتجدول ومش بتشتغل في
+      ساعتها: الـ effects بتاعة الـ component بتشتغل وقت الـ change detection. ومعمولة للـ side effects اللي برّه الـ
+      signals، زي الـ storage أو الـ logging أو chart library.
+  - id: linked-signal
+    term: Linked signal
+    definitionEn: >-
+      A writable Angular signal created with linkedSignal() whose value is computed from other signals, like computed(),
+      but can also be set directly. When a signal its computation reads changes, it recomputes and replaces the value
+      that was set.
+    definitionAr: >-
+      writable signal في Angular بتتعمل بـ linkedSignal()، قيمتها بتتحسب من signals تانية زي computed()، بس كمان تقدر
+      تعمل لها set بنفسك. ولما signal الـ computation بتقراها تتغير، بتتحسب من جديد وتحل محل القيمة اللي اتعملها set.
+  - id: rxjs-observable
+    term: Observable
+    definitionEn: >-
+      An RxJS object that delivers a sequence of values over time to each subscriber, in order, and can complete or
+      fail. Operators such as debounceTime and switchMap control which values arrive and when.
+    definitionAr: >-
+      object من RxJS بيوصّل سلسلة قيم على مدار الوقت لكل subscriber، بالترتيب، وممكن يخلص أو يفشل. والـ operators زي
+      debounceTime وswitchMap بتتحكم في أنهي قيم توصل وإمتى.
+  - id: onpush
+    term: OnPush
+    definitionEn: >-
+      Angular's change detection strategy, the default since Angular 22, that checks a component only when it was
+      marked dirty: by a new input value, an event in it or a descendant, a signal its template reads, or
+      markForCheck(). An unmarked OnPush component is skipped along with its subtree.
+    definitionAr: >-
+      الـ change detection strategy في Angular، والافتراضية من أول Angular 22، اللي مابتعملش check للـ component غير لو
+      اتعلّمت dirty: بقيمة input جديدة، أو event فيها أو في component تحتها، أو signal الـ template بتاعها بيقراها، أو
+      markForCheck(). والـ component اللي OnPush ومش متعلّمة بتتساب هي والـ subtree بتاعها.
+  - id: render-hook
+    term: Render hook
+    definitionEn: >-
+      A callback registered with afterNextRender(), afterEveryRender() or afterRenderEffect() that Angular runs after
+      it has updated the DOM, in the browser only. It's the place to read or write the DOM directly.
+    definitionAr: >-
+      callback بتسجّله بـ afterNextRender() أو afterEveryRender() أو afterRenderEffect()، وAngular بيشغّله بعد ما يحدّث
+      الـ DOM، في الـ browser بس. وده المكان اللي تقرا فيه من الـ DOM أو تكتب فيه بإيدك.

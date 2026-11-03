@@ -1,0 +1,47 @@
+{
+  "slug": "ilogger-message-templates-not-interpolation",
+  "field": "dotnet",
+  "topic": "aspnet-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why ILogger Wants Message Templates, Not String Interpolation",
+      "subtitle": "The console line looks the same either way, but an interpolated string reaches the logger as finished text with no fields. What templates keep, what interpolation costs when the level is off, and what the source generator adds."
+    },
+    "ar-EG": {
+      "title": "ليه الـ string interpolation في ILogger غلط؟ شرح الـ message templates",
+      "subtitle": "السطر في الـ console شكله واحد في الحالتين، بس الـ interpolated string بيوصل للـ logger نص جاهز من غير أي fields. الـ templates بتحتفظ بإيه، والـ interpolation بيكلّف إيه والـ level مقفول، والـ source generator بيضيف إيه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 9 },
+  "tags": ["ASP.NET Core", "Logging", "Structured logging", "Performance"],
+  "sources": [
+    {
+      "title": "Logging in C# and .NET — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/extensions/logging/overview"
+    },
+    {
+      "title": "Compile-time logging source generation — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/extensions/logging/source-generation"
+    },
+    {
+      "title": "CA2254: Template should be a static expression — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2254"
+    },
+    {
+      "title": "CA1848: Use the LoggerMessage delegates — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1848"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed class Cart { public override string ToString() => \"3 items\"; }"
+    }
+  }
+}

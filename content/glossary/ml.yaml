@@ -312,3 +312,54 @@ terms:
     definitionAr: >-
       في scikit-learn، سلسلة من خطوات الـ preprocessing وفي آخرها موديل، وبتتعامل كأنها estimator واحد. لما تعملها fit،
       كل خطوة بتتعلّم من نفس الصفوف، فالـ cross-validation بيعيد fit للسلسلة كلها على داتا الـ training بتاعة كل fold.
+  - id: target-leakage
+    term: Target Leakage
+    definitionEn: >-
+      A kind of data leakage where a feature carries information about the label that won't be known when the model
+      makes a prediction, such as a field written after the outcome. The model scores well in validation and fails in
+      production.
+    definitionAr: >-
+      نوع من الـ data leakage فيه feature بتشيل معلومة عن الـ label مش هتبقى معروفة وقت ما الموديل يتوقع، زي حقل
+      بيتكتب بعد ما النتيجة تحصل. الموديل بيجيب score عالي في الـ validation ويفشل في الـ production.
+  - id: roc-auc
+    term: ROC AUC
+    definitionEn: >-
+      The area under the ROC curve, which plots the true positive rate against the false positive rate at every
+      threshold. It is the probability that the model scores a random positive above a random negative: 0.5 is a
+      random ranking, 1.0 a perfect one.
+    definitionAr: >-
+      المساحة تحت منحنى الـ ROC، اللي بيرسم الـ true positive rate قصاد الـ false positive rate عند كل threshold.
+      وهي احتمال إن الموديل يدّي positive عشوائي score أعلى من negative عشوائي: 0.5 يعني ترتيب عشوائي، و1.0 ترتيب مثالي.
+  - id: iid
+    term: i.i.d. (independent and identically distributed)
+    definitionEn: >-
+      The assumption that every row comes from the same process and that rows don't depend on one another. Random
+      splits and shuffled K-fold rely on it; repeated measurements of the same person and time series break it.
+    definitionAr: >-
+      الافتراض إن كل صف جاي من نفس العملية، وإن الصفوف مش معتمدة على بعض. الـ splits العشوائية والـ K-fold المتلخبط
+      معتمدين عليه؛ والقياسات المتكررة لنفس الشخص والـ time series بيكسروه.
+  - id: autocorrelation
+    term: Autocorrelation
+    definitionEn: >-
+      The correlation of a series with its own past values: observations close in time tend to look alike. It makes
+      rows near each other in time poor tests of one another.
+    definitionAr: >-
+      ارتباط السلسلة بقيمها اللي فاتت: الملاحظات القريبة من بعض في الوقت بتبقى شبه بعض. وده بيخلّي الصفوف القريبة من
+      بعض زمنيًا اختبار ضعيف لبعضها.
+  - id: calibration
+    term: Probability Calibration
+    definitionEn: >-
+      How well a classifier's probabilities match observed frequencies: among cases scored 0.2, about 20% should be
+      positive. Rules that turn costs into a cutoff assume calibrated probabilities.
+    definitionAr: >-
+      قد إيه الاحتمالات اللي الـ classifier بيطلّعها ماشية مع اللي بيحصل فعلًا: من الحالات اللي خدت 0.2، المفروض حوالي
+      20% منها تطلع positive. والقواعد اللي بتحوّل التكاليف لـ cutoff بتفترض إن الاحتمالات calibrated.
+  - id: average-precision
+    term: Average Precision (AP)
+    definitionEn: >-
+      A one-number summary of the precision-recall curve: the precision at each threshold, weighted by how much recall
+      rises there. A random ranking scores about the fraction of positives, so its baseline moves with the class
+      balance.
+    definitionAr: >-
+      رقم واحد بيلخّص منحنى الـ precision-recall: الـ precision عند كل threshold، موزونة بقد إيه الـ recall بيزيد
+      عندها. الترتيب العشوائي بيجيب تقريبًا نسبة الـ positives، فالـ baseline بتاعه بيتحرك مع توزيع الـ classes.

@@ -1,0 +1,43 @@
+{
+  "slug": "httpclient-misuse-and-ihttpclientfactory",
+  "field": "dotnet",
+  "topic": "aspnet-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "new HttpClient() in a using Block Is a Bug: IHttpClientFactory Explained",
+      "subtitle": "Each HttpClient owns a connection pool, so disposing one per call leaves a socket behind every time, while one that lives forever never sees DNS changes. What IHttpClientFactory pools, rotates and leaves to you."
+    },
+    "ar-EG": {
+      "title": "ليه new HttpClient() جوه using غلط؟ شرح IHttpClientFactory",
+      "subtitle": "كل HttpClient ماسك connection pool، فلو عملت dispose لواحد مع كل call بتسيب socket وراك كل مرة، والـ client اللي عايش للأبد عمره ما بيشوف تغييرات الـ DNS. الـ IHttpClientFactory بيعمل pool لإيه، وبيغيّر إيه، وبيسيبلك إيه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "aspnet-core-basics", "order": 11 },
+  "tags": ["ASP.NET Core", "HttpClient", "IHttpClientFactory", "Networking"],
+  "sources": [
+    {
+      "title": "HttpClient guidelines for .NET — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/fundamentals/networking/http/httpclient-guidelines"
+    },
+    {
+      "title": "Use the IHttpClientFactory — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/core/extensions/httpclient-factory"
+    },
+    {
+      "title": "Make HTTP requests using IHttpClientFactory in ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/http-requests"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record ChargeRequest(string OrderId, decimal Amount);\npublic sealed record PaymentResult(string Id, string Status);"
+    }
+  }
+}

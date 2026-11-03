@@ -1,0 +1,59 @@
+{
+  "slug": "system-text-json-is-not-newtonsoft",
+  "field": "dotnet",
+  "topic": "aspnet-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Moving From Newtonsoft.Json to System.Text.Json: The Defaults That Change Your API",
+      "subtitle": "System.Text.Json is strict where Newtonsoft guesses, writes the declared type, and escapes non-ASCII text in your own calls. The defaults that silently change requests, responses and stored JSON."
+    },
+    "ar-EG": {
+      "title": "لما تنقل من Newtonsoft.Json لـ System.Text.Json: الـ defaults اللي بتغيّر الـ API بتاعك",
+      "subtitle": "الـ System.Text.Json صارم في الحتت اللي Newtonsoft بيخمّن فيها، وبيكتب الـ declared type، وبيعمل escape للنص العربي في الـ calls بتاعتك. الـ defaults اللي بتغيّر الـ requests والـ responses والـ JSON المتخزن من غير ما تاخد بالك."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": {
+    "slug": "aspnet-core-basics",
+    "order": 10
+  },
+  "tags": [
+    "ASP.NET Core",
+    "System.Text.Json",
+    "Newtonsoft.Json",
+    "Serialization"
+  ],
+  "sources": [
+    {
+      "title": "Migrate from Newtonsoft.Json to System.Text.Json — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/serialization/system-text-json/migrate-from-newtonsoft"
+    },
+    {
+      "title": "How to instantiate JsonSerializerOptions with System.Text.Json — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/serialization/system-text-json/configure-options"
+    },
+    {
+      "title": "How to serialize properties of derived classes with System.Text.Json — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/serialization/system-text-json/polymorphism"
+    },
+    {
+      "title": "How to preserve references in System.Text.Json — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/serialization/system-text-json/preserve-references"
+    },
+    {
+      "title": "How to customize character encoding with System.Text.Json — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/serialization/system-text-json/character-encoding"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public record Order(int Id, string Customer, OrderStatus Status, Payment Payment);\npublic enum OrderStatus { Pending, Paid }"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+terms:
+  - id: subagent
+    term: Subagent
+    definitionEn: >-
+      A separate Claude instance that Claude Code starts for a subtask. It works in its own context window, with its
+      own instructions and tools, and only a summary of its work comes back to the main conversation.
+    definitionAr: >-
+      نسخة Claude منفصلة بيشغّلها Claude Code عشان مهمة فرعية. بتشتغل في context window خاصة بيها، بتعليمات وأدوات
+      خاصة بيها، واللي بيرجع للمحادثة الأساسية ملخص شغلها بس.
+  - id: claude-md
+    term: CLAUDE.md
+    definitionEn: >-
+      A Markdown file of instructions that Claude Code loads into the context at the start of every session, from your
+      project, your home directory or your organization. Claude treats it as context to weigh, not as enforced
+      configuration.
+    definitionAr: >-
+      ملف Markdown فيه تعليمات بيحمّلها Claude Code في الـ context في أول كل session، من المشروع أو من الـ home directory
+      بتاعك أو من الشركة. وClaude بيتعامل معاه كـ context بيوزنه، مش كإعدادات إجبارية.
+  - id: claude-code-hook
+    term: Hook (Claude Code)
+    definitionEn: >-
+      A shell command, HTTP request, MCP tool call or model prompt that Claude Code runs at a fixed point in a session,
+      such as before a tool call or when Claude tries to stop. A command hook runs every time its event fires, whatever
+      the model decides.
+    definitionAr: >-
+      shell command أو HTTP request أو MCP tool call أو prompt لموديل، بيشغّله Claude Code في نقطة ثابتة في الـ session،
+      زي قبل tool call أو لما Claude يحاول يقف. والـ command hook بيشتغل كل مرة الـ event بتاعه يحصل، أيًا كان قرار
+      الموديل.
+  - id: checkpoint
+    term: Checkpoint (Claude Code)
+    definitionEn: >-
+      A snapshot of the files Claude edited, which Claude Code captures before each prompt you send so you can rewind
+      the code, the conversation or both. It covers edits made with Claude's file tools in the session, not every
+      change on disk.
+    definitionAr: >-
+      snapshot للملفات اللي Claude عدّلها، بياخدها Claude Code قبل كل prompt بتبعته عشان تقدر ترجّع الكود أو المحادثة أو
+      الاتنين. وبتغطي التعديلات اللي اتعملت بأدوات الملفات بتاعة Claude في الـ session، مش كل تغيير على الـ disk.
