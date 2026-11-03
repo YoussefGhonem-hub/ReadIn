@@ -1,0 +1,31 @@
+{
+  "slug": "semver-is-a-promise-not-a-guarantee",
+  "field": "devops-cloud",
+  "topic": "ci-cd",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "SemVer Is a Promise, Not a Guarantee: Version Ranges and Lockfiles",
+      "subtitle": "A caret range accepts releases nobody tested with your code. The lockfile is what makes an install repeatable."
+    },
+    "ar-EG": {
+      "title": "الـ SemVer وعد مش ضمان: الـ version ranges والـ lockfiles",
+      "subtitle": "الـ caret range بيقبل releases محدش اختبرها مع الكود بتاعك. والـ lockfile هو اللي بيخلّي الـ install يتكرر زي ما هو."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 14 },
+  "tags": ["SemVer", "npm", "Lockfiles", "Dependencies"],
+  "sources": [
+    { "title": "Semantic Versioning 2.0.0", "url": "https://semver.org/" },
+    { "title": "About semantic versioning — npm Docs", "url": "https://docs.npmjs.com/about-semantic-versioning/" },
+    { "title": "package-lock.json — npm Docs", "url": "https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/" },
+    { "title": "npm ci — npm Docs", "url": "https://docs.npmjs.com/cli/v11/commands/npm-ci/" },
+    { "title": "Package versioning — Dart", "url": "https://dart.dev/tools/pub/versioning" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

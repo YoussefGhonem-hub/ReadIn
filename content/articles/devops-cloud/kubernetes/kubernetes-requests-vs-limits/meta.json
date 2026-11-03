@@ -1,0 +1,30 @@
+{
+  "slug": "kubernetes-requests-vs-limits",
+  "field": "devops-cloud",
+  "topic": "kubernetes",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Requests vs Limits: How Kubernetes Schedules, Throttles and OOM-Kills Your Pods",
+      "subtitle": "Requests are reservations the scheduler adds up; limits are ceilings the kernel enforces, by throttling CPU and OOM-killing on memory."
+    },
+    "ar-EG": {
+      "title": "الـ requests غير الـ limits: إزاي Kubernetes بيعمل schedule و throttle و OOM-kill للـ pods",
+      "subtitle": "الـ requests حجز الـ scheduler بيجمعه، والـ limits سقف الـ kernel بيفرضه: throttling للـ CPU و OOM-kill للـ memory."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 19 },
+  "tags": ["Kubernetes", "Resource Management", "QoS", "cgroups"],
+  "sources": [
+    { "title": "Resource Management for Pods and Containers — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/" },
+    { "title": "Pod Quality of Service Classes — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/workloads/pods/pod-qos/" },
+    { "title": "Assign CPU Resources to Containers and Pods — Kubernetes Documentation", "url": "https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/" },
+    { "title": "Node-pressure Eviction — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

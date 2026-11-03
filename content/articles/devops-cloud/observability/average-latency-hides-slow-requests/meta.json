@@ -1,0 +1,29 @@
+{
+  "slug": "average-latency-hides-slow-requests",
+  "field": "devops-cloud",
+  "topic": "observability",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Average Latency Lies: Why Percentiles Show What Users Actually Feel",
+      "subtitle": "Latency is skewed, so the mean describes almost no request. The median shows the typical wait, p99 the slow ones."
+    },
+    "ar-EG": {
+      "title": "متوسط الـ latency بيضحك عليك: ليه الـ percentiles بتوريك اللي المستخدم حاسس بيه",
+      "subtitle": "الـ latency مش متوزّعة بالتساوي، فالمتوسط تقريبًا مابيوصفش ولا request. الـ median بيوريك الانتظار العادي، والـ p99 البطيء."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 15 },
+  "tags": ["Observability", "Latency", "Percentiles", "Prometheus", "Metrics"],
+  "sources": [
+    { "title": "Service Level Objectives — Google SRE book", "url": "https://sre.google/sre-book/service-level-objectives/" },
+    { "title": "Monitoring Distributed Systems — Google SRE book", "url": "https://sre.google/sre-book/monitoring-distributed-systems/" },
+    { "title": "Histograms and summaries — Prometheus", "url": "https://prometheus.io/docs/practices/histograms/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

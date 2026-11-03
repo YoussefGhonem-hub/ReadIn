@@ -1,0 +1,30 @@
+{
+  "slug": "slos-and-error-budgets",
+  "field": "devops-cloud",
+  "topic": "observability",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "100% Uptime Is the Wrong Target: SLIs, SLOs and Error Budgets",
+      "subtitle": "Measure what users see, aim a little below perfect, and spend the gap on shipping. A policy decides what happens when it runs out."
+    },
+    "ar-EG": {
+      "title": "الـ 100% uptime هدف غلط: الـ SLIs والـ SLOs والـ error budgets",
+      "subtitle": "قيس اللي المستخدم شايفه، وخلّي هدفك تحت الكمال بشوية، واصرف الفرق ده على الـ releases. والـ policy بتقرر إيه اللي يحصل لما يخلص."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 20 },
+  "tags": ["SRE", "SLO", "Error Budget", "Reliability", "C#"],
+  "sources": [
+    { "title": "Embracing Risk — Google SRE book", "url": "https://sre.google/sre-book/embracing-risk/" },
+    { "title": "Service Level Objectives — Google SRE book", "url": "https://sre.google/sre-book/service-level-objectives/" },
+    { "title": "Implementing SLOs — Google SRE workbook", "url": "https://sre.google/workbook/implementing-slos/" },
+    { "title": "Alerting on SLOs — Google SRE workbook", "url": "https://sre.google/workbook/alerting-on-slos/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

@@ -1,0 +1,31 @@
+{
+  "slug": "docker-latest-tag-is-not-the-newest",
+  "field": "devops-cloud",
+  "topic": "docker",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The latest Tag Is Just a Name: Mutable Tags, Digests and Reproducible Deploys",
+      "subtitle": "latest is the default tag, not a version. It points wherever the last push left it; a digest always means the same image."
+    },
+    "ar-EG": {
+      "title": "ليه الـ latest tag مش بالضرورة أحدث نسخة؟ الـ digests والـ deploys اللي تقدر تكررها",
+      "subtitle": "الـ latest هو الـ tag الـ default، مش رقم version. بيشاور مكان ما آخر push سابه، إنما الـ digest دايمًا معناه نفس الـ image."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 12 },
+  "tags": ["Docker", "Image tags", "Digests", "Deployment"],
+  "sources": [
+    { "title": "docker image tag — Docker Docs", "url": "https://docs.docker.com/reference/cli/docker/image/tag/" },
+    { "title": "docker image pull — Docker Docs", "url": "https://docs.docker.com/reference/cli/docker/image/pull/" },
+    { "title": "docker container run — Docker Docs", "url": "https://docs.docker.com/reference/cli/docker/container/run/" },
+    { "title": "Building best practices — Docker Docs", "url": "https://docs.docker.com/build/building/best-practices/" },
+    { "title": "Images — Kubernetes", "url": "https://kubernetes.io/docs/concepts/containers/images/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

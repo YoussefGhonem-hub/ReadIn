@@ -1,0 +1,31 @@
+{
+  "slug": "dockerfile-order-and-build-cache",
+  "field": "devops-cloud",
+  "topic": "docker",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Dockerfile Order Matters: Build Cache, Layers and Multi-Stage Builds",
+      "subtitle": "Docker reuses every step it can until one changes. Copy the lockfile before the source and builds stop reinstalling dependencies."
+    },
+    "ar-EG": {
+      "title": "ترتيب الـ Dockerfile بيفرق: الـ build cache والـ layers والـ multi-stage builds",
+      "subtitle": "Docker بيعيد استخدام كل خطوة يقدر عليها لحد ما واحدة تتغيّر. انسخ الـ lockfile قبل الكود، والـ build هيبطّل يسطّب الـ dependencies من الأول."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 11 },
+  "tags": ["Docker", "Dockerfile", "Build cache", "Multi-stage builds"],
+  "sources": [
+    { "title": "Docker build cache — Docker Docs", "url": "https://docs.docker.com/build/cache/" },
+    { "title": "Build cache invalidation — Docker Docs", "url": "https://docs.docker.com/build/cache/invalidation/" },
+    { "title": "Optimize cache usage in builds — Docker Docs", "url": "https://docs.docker.com/build/cache/optimize/" },
+    { "title": "Multi-stage builds — Docker Docs", "url": "https://docs.docker.com/build/building/multi-stage/" },
+    { "title": "Building best practices — Docker Docs", "url": "https://docs.docker.com/build/building/best-practices/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

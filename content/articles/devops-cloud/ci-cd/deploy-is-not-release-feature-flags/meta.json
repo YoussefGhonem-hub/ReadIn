@@ -1,0 +1,30 @@
+{
+  "slug": "deploy-is-not-release-feature-flags",
+  "field": "devops-cloud",
+  "topic": "ci-cd",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Deploying Isn't Releasing: Feature Flags, Dark Launches and Their Hidden Debt",
+      "subtitle": "Flags let you ship code dark and release it to users later, to a few first. Each one also needs a stable cohort, an owner and an end date."
+    },
+    "ar-EG": {
+      "title": "الـ deploy غير الـ release: الـ feature flags والـ dark launches وتمنهم المخفي",
+      "subtitle": "الـ flags بتخلّيك تنزّل الكود مستخبّي وتطلّعه للمستخدمين بعدين، لعدد قليل الأول. وكل flag محتاج cohort ثابت وصاحب وتاريخ نهاية."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 17 },
+  "tags": ["Feature Flags", "Continuous Delivery", "Dark Launch", "Canary Release", "C#"],
+  "sources": [
+    { "title": "Feature Toggles (aka Feature Flags) — Pete Hodgson, martinfowler.com", "url": "https://martinfowler.com/articles/feature-toggles.html" },
+    { "title": "Dark Launching — Martin Fowler", "url": "https://martinfowler.com/bliki/DarkLaunching.html" },
+    { "title": "Understand feature management using Azure App Configuration — Microsoft Learn", "url": "https://learn.microsoft.com/azure/azure-app-configuration/concept-feature-management" },
+    { "title": "String.GetHashCode Method — .NET API reference, Microsoft Learn", "url": "https://learn.microsoft.com/dotnet/api/system.string.gethashcode" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

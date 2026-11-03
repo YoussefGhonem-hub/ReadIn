@@ -1,0 +1,31 @@
+{
+  "slug": "kubernetes-reconciles-desired-state",
+  "field": "devops-cloud",
+  "topic": "kubernetes",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Kubernetes Doesn't Just Start Containers: It Reconciles Desired State",
+      "subtitle": "Objects record what you want, and controllers loop forever to make the cluster match. Commands only change the target."
+    },
+    "ar-EG": {
+      "title": "إزاي Kubernetes بيفكر؟ مش بيشغّل containers وخلاص، هو بيقرّب الواقع من الـ desired state",
+      "subtitle": "الـ objects بتسجّل انت عايز إيه، والـ controllers بتلف في loop مابتخلصش عشان الـ cluster يبقى زيه. والأوامر بتغيّر الهدف بس."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 16 },
+  "tags": ["Kubernetes", "Controllers", "Deployments", "Desired state"],
+  "sources": [
+    { "title": "Controllers — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/architecture/controller/" },
+    { "title": "Objects In Kubernetes — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/overview/working-with-objects/" },
+    { "title": "Pods — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/workloads/pods/" },
+    { "title": "Deployments — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/" },
+    { "title": "ReplicaSet — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

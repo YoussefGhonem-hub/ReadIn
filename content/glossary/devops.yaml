@@ -209,3 +209,197 @@ terms:
     definitionAr: >-
       ربط بين port على الـ Docker host و port جوه الـ container، بيتعمل بـ -p host:container. بيدخّل الـ traffic اللي جاي
       من بره الـ network بتاعة الـ containers، والـ containers اللي على نفس الـ network مش محتاجاه.
+  - id: docker-build-cache
+    term: Build cache (Docker)
+    definitionEn: >-
+      The stored results of earlier Dockerfile steps. On each build, Docker reuses a step's result while the
+      instruction and the files it copies are unchanged; after the first step that changed, every later step runs again.
+    definitionAr: >-
+      النتايج المتخزّنة من خطوات الـ Dockerfile اللي اتنفّذت قبل كده. في كل build، Docker بيعيد استخدام نتيجة الخطوة طول
+      ما الـ instruction والملفات اللي بتنسخها ماتغيّروش، وبعد أول خطوة اتغيّرت، كل الخطوات اللي بعدها بتتنفّذ تاني.
+  - id: multi-stage-build
+    term: Multi-stage build
+    definitionEn: >-
+      A Dockerfile with several FROM instructions, each starting a new stage. Later stages copy only the files they
+      need from earlier ones, so compilers and build-only dependencies stay out of the final image.
+    definitionAr: >-
+      Dockerfile فيه أكتر من FROM، وكل واحد بيبدأ stage جديدة. الـ stages اللي بعد كده بتنسخ من اللي قبلها الملفات
+      اللي محتاجاها بس، فالـ compilers والـ dependencies اللي للـ build بس مابتدخلش الـ image النهائية.
+  - id: image-tag
+    term: Image tag
+    definitionEn: >-
+      A name after the colon in an image reference, such as 1.4.0 in shop-api:1.4.0. It's a pointer that whoever can
+      push to the repository may move to another image. When no tag is given, Docker uses latest.
+    definitionAr: >-
+      الاسم اللي بعد الـ colon في اسم الـ image، زي 1.4.0 في shop-api:1.4.0. هو pointer أي حد عنده صلاحية push على الـ
+      repository يقدر يحرّكه لـ image تانية. ولو مافيش tag، Docker بيستخدم latest.
+  - id: image-digest
+    term: Image digest
+    definitionEn: >-
+      The content hash that identifies one exact image, written as sha256: followed by 64 hex characters. Any change to
+      the image gives a different digest, so a reference by digest always means the same bytes.
+    definitionAr: >-
+      الـ hash بتاع المحتوى اللي بيحدّد image واحدة بالظبط، ومكتوب sha256: وبعدها 64 حرف hex. أي تغيير في الـ image
+      بيدّي digest مختلف، فلما تشاور على image بالـ digest بتاعها بتبقى دايمًا نفس الـ bytes.
+  - id: desired-state
+    term: Desired state (Kubernetes)
+    definitionEn: >-
+      What you want an object to look like, written in its spec, such as three replicas of an image. Kubernetes
+      reports what is really running in the object's status, and its controllers keep working to make the two match.
+    definitionAr: >-
+      الشكل اللي انت عايز الـ object يبقى عليه، ومكتوب في الـ spec بتاعه، زي 3 replicas من image معيّنة. و Kubernetes
+      بيكتب اللي شغال فعلًا في الـ status، والـ controllers بتفضل شغالة عشان الاتنين يبقوا زي بعض.
+  - id: control-loop
+    term: Control loop (Kubernetes controller)
+    definitionEn: >-
+      A loop that never ends: it watches the current state of a system, compares it with the desired state and acts to
+      close the gap, like a thermostat. Every Kubernetes controller, such as the ReplicaSet controller, is one.
+    definitionAr: >-
+      loop مابتخلصش: بتراقب الحالة الحالية للسيستم، وتقارنها بالـ desired state، وتتصرّف عشان تقفل الفرق، زي الـ
+      thermostat بالظبط. وكل controller في Kubernetes، زي الـ ReplicaSet controller، هو loop من النوع ده.
+  - id: replicaset
+    term: ReplicaSet
+    definitionEn: >-
+      A Kubernetes object that keeps a set number of Pods running. Its controller counts the Pods that match its label
+      selector and creates or deletes Pods from its template to reach that number. Deployments create and manage them.
+    definitionAr: >-
+      object في Kubernetes بيحافظ على عدد ثابت من الـ Pods شغالين. الـ controller بتاعه بيعدّ الـ Pods اللي ماتشة مع
+      الـ label selector بتاعه، ويعمل أو يمسح Pods من الـ template عشان يوصل للعدد ده. والـ Deployments هي اللي بتعمله وتديره.
+  - id: build-artifact
+    term: Build artifact
+    definitionEn: >-
+      The deployable output of a build, such as a container image, a package or a compiled bundle. In a build-once
+      pipeline it's created one time, identified by a version or digest, and promoted unchanged through every
+      environment.
+    definitionAr: >-
+      الناتج اللي بيطلع من الـ build وبيتعمله deploy، زي container image أو package أو bundle متعمله compile. وفي
+      pipeline بتعمل build مرة واحدة، بيتعمل مرة واحدة بس، وليه version أو digest يعرّفه، وبيعدّي على كل الـ
+      environments من غير ما يتغيّر.
+  - id: feature-flag
+    term: Feature flag (feature toggle)
+    definitionEn: >-
+      A switch in the code that picks between code paths at runtime, based on configuration or on who is asking. It lets
+      a team deploy code without releasing it, release it to some users first, or turn it off without a new deploy.
+    definitionAr: >-
+      مفتاح جوه الكود بيختار بين طريقين وهو شغال، على حسب الـ configuration أو مين اللي بيطلب. بيخلّي الفريق يعمل deploy
+      للكود من غير ما يعمله release، أو يطلّعه لمستخدمين معيّنين الأول، أو يقفله من غير deploy جديد.
+  - id: dark-launch
+    term: Dark launch
+    definitionEn: >-
+      Calling a new or changed back-end behavior from real user traffic while hiding its results, so the team can measure
+      its load and performance before users can see or use the feature.
+    definitionAr: >-
+      إنك تشغّل سلوك جديد أو متعدّل في الـ back-end مع الـ traffic الحقيقي بتاع المستخدمين وتخبّي نتيجته، عشان الفريق يقيس
+      الـ load والـ performance بتوعه قبل ما المستخدمين يشوفوا الـ feature أو يستخدموها.
+  - id: canary-release
+    term: Canary release
+    definitionEn: >-
+      Turning a new feature or version on for a small cohort of users first, and widening it only while its metrics stay
+      healthy. Each user should stay in the same cohort, so their experience doesn't flip between requests.
+    definitionAr: >-
+      إنك تشغّل feature أو نسخة جديدة لمجموعة صغيرة من المستخدمين الأول، وتوسّعها بس طول ما الـ metrics بتاعتها كويسة. وكل
+      مستخدم المفروض يفضل في نفس المجموعة، عشان التجربة بتاعته ماتتقلبش من request للتاني.
+  - id: semantic-versioning
+    term: Semantic Versioning (SemVer)
+    definitionEn: >-
+      A convention for version numbers in the form MAJOR.MINOR.PATCH: the major number changes for incompatible
+      changes to the public API, the minor for backward compatible features, the patch for backward compatible fixes.
+      The author picks each number, so it is a promise, not a check.
+    definitionAr: >-
+      اتفاق على شكل أرقام الـ versions بالشكل MAJOR.MINOR.PATCH: رقم الـ major بيتغيّر مع أي تغيير مش compatible في الـ
+      public API، والـ minor مع features جديدة compatible، والـ patch مع fixes compatible. والـ author
+      هو اللي بيختار كل رقم، فهو وعد مش فحص.
+  - id: lockfile
+    term: Lockfile
+    definitionEn: >-
+      A generated file, such as package-lock.json or pubspec.lock, that records the exact version, source and hash of
+      every dependency installed, including transitive ones, so later installs reproduce the same tree.
+    definitionAr: >-
+      ملف بيتعمل أوتوماتيك، زي package-lock.json أو pubspec.lock، بيسجّل الـ version بالظبط والمصدر والـ hash لكل
+      dependency اتسطّبت، حتى اللي جاية بشكل غير مباشر، عشان أي install بعد كده يطلّع نفس الشجرة.
+  - id: latency-percentile
+    term: Percentile (latency)
+    definitionEn: >-
+      The value that a given share of requests are at or under. A p95 of 300 ms means 95% of requests took 300 ms or
+      less; p50, the median, describes the typical request, and p99 the slow ones.
+    definitionAr: >-
+      القيمة اللي نسبة معيّنة من الـ requests بتساويها أو أقل منها. يعني p95 قيمته 300 ms معناها إن 95% من الـ requests
+      خدت 300 ms أو أقل، والـ p50، أو الـ median، بيوصف الـ request العادي، والـ p99 بيوصف البطيئة.
+  - id: tail-latency
+    term: Tail latency
+    definitionEn: >-
+      The latency of the slowest requests, usually read as p99 or p99.9. It's invisible in an average, and it matters
+      more than its share suggests when one page waits on several backends.
+    definitionAr: >-
+      الـ latency بتاعة أبطأ requests، وغالبًا بتتقري كـ p99 أو p99.9. مابتبانش في المتوسط، وأهميتها أكبر من نسبتها لما
+      صفحة واحدة تستنى كذا backend.
+  - id: metrics-histogram
+    term: Histogram (metrics)
+    definitionEn: >-
+      A metric that counts observations, such as request durations, in buckets of value ranges. Bucket counts from many
+      servers can be added up, so percentiles can be computed for the whole service at query time.
+    definitionAr: >-
+      metric بيعدّ الـ observations، زي مدة الـ requests، في buckets لكل range من القيم. والـ counts بتاعة الـ buckets من
+      servers كتير ممكن تتجمع على بعض، فتقدر تحسب الـ percentiles للـ service كلها وقت الـ query.
+  - id: liveness-probe
+    term: Liveness probe
+    definitionEn: >-
+      A periodic check the kubelet runs against a container to decide whether to restart it. After failureThreshold
+      failures in a row (3 by default), the container is killed and restarted, so it should only fail when a restart
+      would actually help, such as a deadlock.
+    definitionAr: >-
+      check بيعمله الـ kubelet على الـ container كل شوية عشان يقرر يعمله restart ولا لأ. وبعد ما يفشل failureThreshold مرة
+      ورا بعض (3 في الـ default)، الـ container بيتقتل ويقوم من جديد، فالمفروض مايفشلش غير لما الـ restart يفيد فعلًا، زي
+      حالة deadlock.
+  - id: readiness-probe
+    term: Readiness probe
+    definitionEn: >-
+      A periodic check that decides whether a container should receive traffic. When it fails, the Pod's Ready condition
+      turns false and Services stop routing requests to it, but the container keeps running and isn't restarted.
+    definitionAr: >-
+      check بيتعمل كل شوية عشان يقرر الـ container ياخد traffic ولا لأ. ولما يفشل، الـ Ready condition بتاعة الـ Pod
+      بتبقى false والـ Services بتبطّل تبعتله requests، بس الـ container بيفضل شغال ومش بيتعمله restart.
+  - id: pod-qos-class
+    term: QoS class (Kubernetes Pod)
+    definitionEn: >-
+      A label Kubernetes derives from a Pod's requests and limits: Guaranteed when every container's CPU and memory
+      requests equal its limits, BestEffort when none are set, Burstable otherwise. It helps predict which Pods go
+      first when a node runs short of memory.
+    definitionAr: >-
+      تصنيف Kubernetes بيطلّعه من الـ requests والـ limits بتاعة الـ Pod: Guaranteed لما الـ requests بتاعة الـ CPU والـ
+      memory تساوي الـ limits في كل container، و BestEffort لما مفيش ولا واحدة متحددة، و Burstable في أي حالة تانية.
+      وبيساعدك تتوقع أنهي Pods هتمشي الأول لما الـ node يقصر في الـ memory.
+  - id: cpu-throttling
+    term: CPU throttling
+    definitionEn: >-
+      What the Linux kernel does when a cgroup uses up its CPU quota for the current period: it stops running that
+      cgroup's processes until the next period starts. A Kubernetes CPU limit becomes such a quota, so a busy container
+      slows down instead of being killed.
+    definitionAr: >-
+      اللي الـ Linux kernel بيعمله لما cgroup تخلّص الـ CPU quota بتاعتها في الفترة الحالية: بيوقّف تشغيل الـ processes
+      بتاعتها لحد ما الفترة اللي بعدها تبدأ. والـ CPU limit في Kubernetes بيتحوّل لـ quota من النوع ده، فالـ container
+      المشغول بيبطّأ بدل ما يتقتل.
+  - id: service-level-indicator
+    term: Service level indicator (SLI)
+    definitionEn: >-
+      A carefully defined measure of the service users get, usually written as good events divided by valid events,
+      such as successful requests over all requests, or requests faster than 300 ms over all requests.
+    definitionAr: >-
+      مقياس متعرّف بدقة للخدمة اللي المستخدمين بياخدوها، وغالبًا بيتكتب كـ events كويسة على كل الـ events الصالحة، زي
+      الـ requests الناجحة على كل الـ requests، أو الـ requests اللي أسرع من 300 ms على كل الـ requests.
+  - id: service-level-objective
+    term: Service level objective (SLO)
+    definitionEn: >-
+      A target for an SLI over a time window, such as 99.9% of requests succeeding over four weeks, deliberately set
+      below 100%. An SLA is a contract with consequences for missing its SLOs; an SLO on its own has none.
+    definitionAr: >-
+      هدف لـ SLI على مدى فترة زمنية، زي إن 99.9% من الـ requests تنجح على مدار 4 أسابيع، وبيتحط تحت الـ 100% عن قصد.
+      والـ SLA عقد ليه عواقب لو الـ SLOs اللي فيه ماتحققتش، أما الـ SLO لوحده فملوش عواقب.
+  - id: error-budget
+    term: Error budget
+    definitionEn: >-
+      The amount of failure an SLO allows in its window: 100% minus the SLO, times the valid events. While budget
+      remains, a team can spend it on releases and experiments; when it runs out, its error budget policy applies.
+    definitionAr: >-
+      كمية الفشل اللي الـ SLO بيسمح بيها في الفترة بتاعته: 100% ناقص الـ SLO، مضروبة في الـ events الصالحة. وطول ما فيه
+      budget، الفريق يقدر يصرفه على releases وتجارب، ولما يخلص بتتطبّق الـ error budget policy بتاعته.

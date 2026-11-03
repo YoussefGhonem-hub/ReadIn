@@ -1,0 +1,31 @@
+{
+  "slug": "build-once-deploy-everywhere",
+  "field": "devops-cloud",
+  "topic": "ci-cd",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Build Once, Deploy Everywhere: Why Config Doesn't Belong in Your Build",
+      "subtitle": "A build per environment ships an artifact nobody tested. Build one image and give it its settings when it starts."
+    },
+    "ar-EG": {
+      "title": "اعمل build مرة واحدة وانشره في كل مكان: ليه الـ config مالوش مكان في الـ build",
+      "subtitle": "إنك تعمل build لكل environment معناه إنك بتنزّل artifact محدش اختبره. اعمل image واحدة وادّيها الـ settings بتاعتها وهي بتقوم."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 13 },
+  "tags": ["CI/CD", "Configuration", "Docker", "Twelve-Factor"],
+  "sources": [
+    { "title": "III. Config — The Twelve-Factor App", "url": "https://12factor.net/config" },
+    { "title": "V. Build, release, run — The Twelve-Factor App", "url": "https://12factor.net/build-release-run" },
+    { "title": "Build variables — Docker Docs", "url": "https://docs.docker.com/build/building/variables/" },
+    { "title": "Configuration in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/fundamentals/configuration/" },
+    { "title": "Build environments — Angular", "url": "https://angular.dev/tools/cli/environments" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

@@ -1,0 +1,30 @@
+{
+  "slug": "liveness-vs-readiness-probes",
+  "field": "devops-cloud",
+  "topic": "kubernetes",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Liveness Is Not Readiness: Health Checks That Don't Restart Your Whole Fleet",
+      "subtitle": "Liveness decides restarts and readiness decides traffic. Put a database check in liveness and one outage restarts every replica."
+    },
+    "ar-EG": {
+      "title": "الـ liveness غير الـ readiness: health checks متعملش restart لكل الـ pods مرة واحدة",
+      "subtitle": "الـ liveness بيقرر الـ restart والـ readiness بيقرر الـ traffic. ولو حطيت check للداتابيز في الـ liveness، أول outage هيعمل restart لكل الـ replicas."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "devops-essentials", "order": 18 },
+  "tags": ["Kubernetes", "Health Checks", "Probes", "Reliability"],
+  "sources": [
+    { "title": "Liveness, Readiness, and Startup Probes — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/workloads/pods/probes/" },
+    { "title": "Configure Liveness, Readiness and Startup Probes — Kubernetes Documentation", "url": "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" },
+    { "title": "EndpointSlices — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/" },
+    { "title": "Health Endpoint Monitoring pattern — Azure Architecture Center", "url": "https://learn.microsoft.com/azure/architecture/patterns/health-endpoint-monitoring" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
