@@ -52,6 +52,9 @@ void main() {
       expect(redirect('/a/di-in-dotnet', guest, fresh), isNull);
       expect(redirect('/auth/sign-in', guest, fresh), isNull);
       expect(redirect('/auth/forgot-password', guest, fresh), isNull);
+      // A shared profile link (F14) opens too.
+      expect(redirect('/u/mona', guest, fresh), isNull);
+      expect(redirect('/u/mona/followers', guest, fresh), isNull);
     });
 
     test('can browse and read once Welcome was seen', () {
@@ -67,6 +70,10 @@ void main() {
       expect(redirect(AppRoutes.deleteAccount, guest), AppRoutes.home);
       expect(redirect(AppRoutes.onboarding, guest), AppRoutes.home);
       expect(redirect(AppRoutes.onboarding, guest, fresh), AppRoutes.welcome);
+      expect(redirect(AppRoutes.editProfile, guest), AppRoutes.home);
+      expect(redirect(AppRoutes.editProfile, onboarded), isNull);
+      expect(redirect(AppRoutes.user('@mona'), onboarded), isNull);
+      expect(AppRoutes.user('@mona'), '/u/mona');
     });
 
     test('a session that ended (refresh rejected) is a guest', () {

@@ -30,6 +30,7 @@ import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/auth/presentation/widgets/auth_widgets.dart';
 import 'package:readin/features/auth/presentation/widgets/dev_login_panel.dart';
 import 'package:readin/features/auth/presentation/widgets/external_sign_in.dart';
+import 'package:readin/features/profile/presentation/cubit/privacy_cubit.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/features/settings/presentation/pages/settings_page.dart';
@@ -64,6 +65,8 @@ class MockAddPhoneSignInCubit extends MockCubit<AccountFormState> implements Add
 class MockExternalSignInCubit extends MockCubit<ExternalSignInState> implements ExternalSignInCubit {}
 
 class MockLinkedAccountsCubit extends MockCubit<LinkedAccountsState> implements LinkedAccountsCubit {}
+
+class MockPrivacyCubit extends MockCubit<PrivacyState> implements PrivacyCubit {}
 
 const bothProviders = [ExternalProvider.google, ExternalProvider.apple];
 
@@ -542,7 +545,10 @@ void main() {
         tester,
         variant,
         const SettingsView(),
-        providers: [BlocProvider<LinkedAccountsCubit>.value(value: MockLinkedAccountsCubit()..seed(const LinkedAccountsState()))],
+        providers: [
+          BlocProvider<LinkedAccountsCubit>.value(value: MockLinkedAccountsCubit()..seed(const LinkedAccountsState())),
+          BlocProvider<PrivacyCubit>.value(value: MockPrivacyCubit()..seed(const PrivacyState())),
+        ],
       );
       await tester.drag(find.byType(ListView), const Offset(0, -2000));
       await tester.pumpAndSettle();
@@ -563,6 +569,7 @@ void main() {
           BlocProvider<LinkedAccountsCubit>.value(
             value: MockLinkedAccountsCubit()..seed(const LinkedAccountsState(providers: bothProviders)),
           ),
+          BlocProvider<PrivacyCubit>.value(value: MockPrivacyCubit()..seed(const PrivacyState(publicReadingStats: true))),
         ],
       );
       await tester.drag(find.byType(ListView), const Offset(0, -2000));

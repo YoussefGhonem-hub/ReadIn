@@ -9,12 +9,26 @@ void main() {
       'https://readin.app/a/my-post': '/a/my-post',
       'https://readin.app/en/a/my-post': '/a/my-post',
       '/ar/a/my-post': '/a/my-post',
+      // Profiles (F14): the app's /u/{username} and the web's /@{username}.
+      'readin://u/mona_dev': '/u/mona_dev',
+      'https://readin.app/@Mona_Dev': '/u/mona_dev',
+      '/u/omar': '/u/omar',
     };
     cases.forEach((link, path) {
       test('maps $link to $path', () => expect(pushLinkToPath(link), path));
     });
 
-    for (final link in ['https://evil.example/a/x', '//evil.example/a/x', 'javascript:alert(1)', 'readin://settings/danger', '', null]) {
+    for (final link in [
+      'https://evil.example/a/x',
+      '//evil.example/a/x',
+      'javascript:alert(1)',
+      'readin://settings/danger',
+      'readin://u/mona/edit',
+      'https://readin.app/@',
+      'readin://u/..%2Fsettings',
+      '',
+      null,
+    ]) {
       test('drops ${link ?? 'null'}', () => expect(pushLinkToPath(link), isNull));
     }
   });
