@@ -33,6 +33,18 @@ void main() {
     }
   });
 
+  // Sentences from seeded articles that pin down exactly which runs are isolated (same expectation on web).
+  group('Bidi.isolateOppositeRuns — shared fixtures', () {
+    final isolate = RegExp('${Bidi.fsi}(.*?)${Bidi.pdi}');
+    for (final f in fixtures.where((f) => f['isolated'] != null)) {
+      test('${f['id']}', () {
+        final base = f['expectedDir'] == 'rtl' ? TextDirection.rtl : TextDirection.ltr;
+        final runs = isolate.allMatches(Bidi.isolateOppositeRuns(f['text'] as String, base)).map((m) => m.group(1)).toList();
+        expect(runs, (f['isolated'] as List).cast<String>());
+      });
+    }
+  });
+
   group('Bidi.isolateOppositeRuns', () {
     String iso(String s) => '${Bidi.fsi}$s${Bidi.pdi}';
     String rtl(String s) => Bidi.isolateOppositeRuns(s, TextDirection.rtl);
@@ -52,6 +64,13 @@ void main() {
 
     test('keeps generics and call parens with code-like runs', () {
       expect(rtl('استخدم services.AddScoped<IFoo, Foo>() هنا.'), 'استخدم ${iso('services.AddScoped<IFoo, Foo>()')} هنا.');
+    });
+
+    test('leaves a bracket the run opens but never closes to the Arabic text', () {
+      // Text before inline code ("الـ render (" + `Math.random()`) and a plain-text call list.
+      expect(rtl('أثناء الـ render ('), 'أثناء الـ ${iso('render')} (');
+      expect(rtl('الـ render (Math.random()، Date.now())، وبس'),
+          'الـ ${iso('render')} (${iso('Math.random()')}، ${iso('Date.now()')})، وبس');
     });
 
     test('keeps C# and URLs whole', () {

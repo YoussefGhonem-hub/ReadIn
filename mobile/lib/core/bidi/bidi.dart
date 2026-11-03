@@ -95,8 +95,17 @@ abstract final class Bidi {
         if (isOpposite(cps[j]) || _isDigit(cps[j])) lastStrong = j;
         j++;
       }
+      // A bracket the run opens but never closes belongs to the surrounding
+      // text ("render (Math.random()، …)"): end the run before it, rescan after.
+      final unclosed = _firstUnclosed(cps, start, j);
+      if (unclosed > i) {
+        j = unclosed;
+        while (lastStrong >= unclosed || !(isOpposite(cps[lastStrong]) || _isDigit(cps[lastStrong]))) {
+          lastStrong--;
+        }
+      }
       var end = lastStrong + 1;
-      while (end < n) {
+      while (end < j) {
         final c = cps[end];
         final opener = _closers[c];
         if (opener != null && _unmatched(cps, start, end, opener, c)) {
@@ -127,6 +136,20 @@ abstract final class Bidi {
     }
     out.write(String.fromCharCodes(cps.sublist(cursor)));
     return out.toString();
+  }
+
+  /// Index of the first `(`, `[` or `{` in [start, end) without a matching closer before [end], or -1.
+  static int _firstUnclosed(List<int> cps, int start, int end) {
+    final open = <int>[];
+    for (var k = start; k < end; k++) {
+      final c = cps[k];
+      if (c == 0x28 || c == 0x5B || c == 0x7B) {
+        open.add(k);
+      } else if ((c == 0x29 || c == 0x5D || c == 0x7D) && open.isNotEmpty) {
+        open.removeLast();
+      }
+    }
+    return open.isEmpty ? -1 : open.first;
   }
 
   static bool _unmatched(List<int> cps, int start, int end, int opener, int closer) {

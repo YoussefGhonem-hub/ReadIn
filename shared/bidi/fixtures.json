@@ -18,6 +18,11 @@
     { "id": "alef-variants", "text": "أحمد إبراهيم آمن ى ة", "expectedDir": "rtl", "normalized": "احمد ابراهيم امن ي ه" },
     { "id": "emoji", "text": "مقال النهارده جاهز ☕ — Clean Architecture", "expectedDir": "rtl" },
     { "id": "file-path", "text": "افتح backend/src/ReadIn.Api/Program.cs الأول.", "expectedDir": "rtl" },
-    { "id": "hashtag", "text": "#dotnet و #flutter أكتر حاجتين بقراهم.", "expectedDir": "ltr", "note": "'#' is neutral; first strong char is Latin." }
+    { "id": "hashtag", "text": "#dotnet و #flutter أكتر حاجتين بقراهم.", "expectedDir": "ltr", "note": "'#' is neutral; first strong char is Latin." },
+    { "id": "article-hyphen-and-joined-terms", "text": "ليه الـ re-render مش معناه إن الـ DOM اتكتب من جديد؟ مرحلتي Render و Commit", "expectedDir": "rtl", "isolated": ["re-render", "DOM", "Render", "Commit"], "note": "Seeded article title: a hyphenated term, '؟' right after Arabic, and two terms joined by the Arabic 'و'." },
+    { "id": "article-colon-before-quote", "text": "يوم الاتنين الصبح يوصلك bug report: \"الـ search box بيفقد الـ focus بعد كل حرف\".", "expectedDir": "rtl", "isolated": ["bug report", "search box", "focus"], "note": "The colon and the opening quote after 'bug report' belong to the Arabic sentence." },
+    { "id": "article-unclosed-paren-before-calls", "text": "دوّر على components متعرّفة جوه components تانية، وkeys بتتعمل أثناء الـ render (Math.random()، Date.now())، وشروط بتبدّل الـ wrapper element.", "expectedDir": "rtl", "isolated": ["components", "components", "keys", "render", "Math.random()", "Date.now()", "wrapper element"], "note": "The '(' opened after 'render' closes after the Arabic comma, so it stays outside every run; 'و' attached to 'keys' stays Arabic." },
+    { "id": "article-dotnet-version-after-arabic", "text": "الـ JIT حر يحرّك الحاجات: في .NET 10 يقدر يحجز على الـ stack objects مش بتهرب، ويحط fields الـ struct في الـ registers.", "expectedDir": "rtl", "isolated": ["JIT", ".NET 10", "stack objects", "fields", "struct", "registers"], "note": "'.NET 10' keeps its leading dot and number; the trailing period stays Arabic." },
+    { "id": "article-generic-before-arabic-comma", "text": "يعني لو الـ struct شايل List<string>، النسختين بيشتركوا في نفس الـ list.", "expectedDir": "rtl", "isolated": ["struct", "List<string>", "list"], "note": "A generic type keeps its angle brackets; the Arabic comma right after it stays outside." }
   ]
 }

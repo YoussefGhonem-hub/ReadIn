@@ -40,17 +40,33 @@ const RTL_RUN = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF][\u0590-\u08FF\uFB1D-\
 
 const TRAILING_PUNCTUATION = /[\s.,:;!?،؛؟'"-]+$/;
 
-/** Removes trailing punctuation and unbalanced closing brackets so they stay with the surrounding text. */
+/**
+ * Removes trailing punctuation and unbalanced closing brackets so they stay with the surrounding text, and ends the
+ * run before a bracket it opens but never closes (`الـ render (` before inline code, `render (Math.random()،`).
+ */
 function trimRun(run: string): string {
   let result = run;
   for (;;) {
     const before = result;
+    const unclosed = firstUnclosedBracket(result);
+    if (unclosed > 0) result = result.slice(0, unclosed);
     result = result.replace(TRAILING_PUNCTUATION, '');
     for (const [open, close] of [['(', ')'], ['[', ']'], ['{', '}'], ['<', '>']] as const) {
       while (result.endsWith(close) && count(result, close) > count(result, open)) result = result.slice(0, -1);
     }
     if (result === before) return result;
   }
+}
+
+/** Index of the first `(`, `[` or `{` without a matching closer later in the run, or -1. */
+function firstUnclosedBracket(text: string): number {
+  const open: number[] = [];
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '(' || c === '[' || c === '{') open.push(i);
+    else if ((c === ')' || c === ']' || c === '}') && open.length > 0) open.pop();
+  }
+  return open.length > 0 ? open[0] : -1;
 }
 
 function count(text: string, ch: string): number {

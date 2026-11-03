@@ -10,6 +10,8 @@ interface BidiFixture {
   id: string;
   text: string;
   expectedDir: 'rtl' | 'ltr';
+  /** Runs that must be isolated, in order (when the fixture pins them down). */
+  isolated?: string[];
 }
 const fixtures = (fixturesFile as { fixtures: BidiFixture[] }).fixtures;
 
@@ -101,6 +103,12 @@ describe('segmentBidi', () => {
     expect(isolated('الـ lifetime (Scoped) مهم جداً.', 'rtl')).toEqual(['lifetime (Scoped)']);
   });
 
+  it('leaves a bracket the run opens but never closes to the Arabic text', () => {
+    // Text before inline code ("الـ render (" + `Math.random()`) and a plain-text call list.
+    expect(isolated('أثناء الـ render (', 'rtl')).toEqual(['render']);
+    expect(isolated('الـ render (Math.random()، Date.now())، وبس', 'rtl')).toEqual(['render', 'Math.random()', 'Date.now()']);
+  });
+
   it('isolates mentions and URLs', () => {
     expect(isolated('شكراً @youssef_dev على الشرح!', 'rtl')).toEqual(['@youssef_dev']);
     expect(isolated('شوف https://learn.microsoft.com/dotnet/ للتفاصيل.', 'rtl')).toEqual(['https://learn.microsoft.com/dotnet/']);
@@ -109,6 +117,13 @@ describe('segmentBidi', () => {
   it('isolates Arabic runs inside English text', () => {
     expect(isolated('Use DI (الحقن) everywhere.', 'ltr')).toEqual(['الحقن']);
   });
+
+  // Sentences from seeded articles that pin down exactly which runs are isolated (same expectation on mobile).
+  for (const f of fixtures.filter((f) => f.isolated)) {
+    it(`isolates the English runs of ${f.id}`, () => {
+      expect(isolated(f.text, f.expectedDir)).toEqual(f.isolated);
+    });
+  }
 
   it('round-trips the original text', () => {
     for (const f of fixtures) {
