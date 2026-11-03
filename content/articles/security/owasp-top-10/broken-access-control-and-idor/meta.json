@@ -1,0 +1,36 @@
+{
+  "slug": "broken-access-control-and-idor",
+  "field": "security",
+  "topic": "owasp-top-10",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Logged In Doesn't Mean Allowed: Broken Access Control and IDOR, the #1 Web Risk",
+      "subtitle": "A login tells you who sent the request. Only a check on the record itself tells you whether they may touch the ID they sent."
+    },
+    "ar-EG": {
+      "title": "إن المستخدم عامل login مش معناه إنه مسموح له: الـ Broken Access Control والـ IDOR",
+      "subtitle": "الـ login بيقولك مين اللي بعت الـ request. لكن مين مسموح له يلمس الـ ID اللي بعته، ده محتاج check على الـ record نفسه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "OWASP Top 10 2025",
+  "learningPath": { "slug": "secure-by-default", "order": 6 },
+  "tags": ["Security", "OWASP Top 10", "Access Control", "IDOR", "ASP.NET Core"],
+  "sources": [
+    { "title": "A01:2025 Broken Access Control — OWASP Top 10:2025", "url": "https://top10.owasp.org/2025/A01_2025-Broken_Access_Control/" },
+    { "title": "Authorization Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html" },
+    { "title": "Insecure Direct Object Reference Prevention Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html" },
+    { "title": "Resource-based authorization in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/authorization/resourcebased" },
+    { "title": "Global Query Filters — EF Core, Microsoft Learn", "url": "https://learn.microsoft.com/ef/core/querying/filters" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "global using System.Security.Claims;\nglobal using Microsoft.EntityFrameworkCore;\npublic sealed class Invoice\n{\n    public int Id { get; set; }\n    public string TenantId { get; set; } = \"\";\n    public decimal Total { get; set; }\n}\npublic sealed class BillingDb(DbContextOptions<BillingDb> options) : DbContext(options)\n{\n    public DbSet<Invoice> Invoices => Set<Invoice>();\n}\npartial class Program { static readonly WebApplication app = WebApplication.Create(); }"
+    }
+  }
+}

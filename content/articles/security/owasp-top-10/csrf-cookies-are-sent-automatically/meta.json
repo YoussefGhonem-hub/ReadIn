@@ -1,0 +1,36 @@
+{
+  "slug": "csrf-cookies-are-sent-automatically",
+  "field": "security",
+  "topic": "owasp-top-10",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "CSRF Explained: Your Session Cookie Doesn't Prove the Request Came From You",
+      "subtitle": "The browser attaches your cookie to requests that other sites start. Only a token they can't read, or a browser signal, proves the request came from your own page."
+    },
+    "ar-EG": {
+      "title": "يعني إيه CSRF؟ الـ session cookie مش دليل إن الـ request جاي من موقعك",
+      "subtitle": "المتصفح بيحط الـ cookie بتاعتك على requests مواقع تانية هي اللي بدأتها. والدليل إن الـ request جاي من صفحتك هو token مايقدروش يقروه، أو إشارة من المتصفح نفسه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "OWASP Top 10 2025",
+  "learningPath": { "slug": "secure-by-default", "order": 8 },
+  "tags": ["Security", "OWASP Top 10", "CSRF", "Cookies", "ASP.NET Core"],
+  "sources": [
+    { "title": "Cross-Site Request Forgery Prevention Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html" },
+    { "title": "Cross-site request forgery (CSRF) — MDN Web Docs", "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF" },
+    { "title": "A01:2025 Broken Access Control — OWASP Top 10:2025", "url": "https://top10.owasp.org/2025/A01_2025-Broken_Access_Control/" },
+    { "title": "Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/anti-request-forgery" },
+    { "title": "Work with SameSite cookies in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/samesite" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "global using System.Security.Claims;\nglobal using Microsoft.AspNetCore.Antiforgery;\nglobal using Microsoft.AspNetCore.Mvc;\npublic sealed class UserStore\n{\n    public Task DisableTwoFactorAsync(string user) => Task.CompletedTask;\n    public Task<bool> DisableTwoFactorAsync(string user, string password) => Task.FromResult(true);\n}\npublic static class SettingsPage\n{\n    public static string Render(AntiforgeryTokenSet tokens) => \"\";\n}"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "slug": "xss-needs-output-encoding",
+  "field": "security",
+  "topic": "owasp-top-10",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Filtering Input Won't Stop XSS: Encode Output for Its Context",
+      "subtitle": "A filter on save misses most of what HTML can execute. Encode each value where it's rendered, for the place it lands, and keep CSP as the backup."
+    },
+    "ar-EG": {
+      "title": "فلترة الـ input مش هتوقف الـ XSS: اعمل encoding للـ output حسب مكانه",
+      "subtitle": "الفلتر وقت الحفظ بيفوّت أغلب الحاجات اللي الـ HTML يقدر يشغّلها. اعمل encoding لكل قيمة وقت العرض، حسب المكان اللي هتتحط فيه، وخلّي الـ CSP خط دفاع احتياطي."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "OWASP Top 10 2025",
+  "learningPath": { "slug": "secure-by-default", "order": 7 },
+  "tags": ["Security", "OWASP Top 10", "XSS", "Output Encoding", "CSP"],
+  "sources": [
+    { "title": "Cross Site Scripting Prevention Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html" },
+    { "title": "Cross-site scripting (XSS) — MDN Web Docs", "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS" },
+    { "title": "Content Security Policy (CSP) — MDN Web Docs", "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP" },
+    { "title": "A05:2025 Injection — OWASP Top 10:2025", "url": "https://top10.owasp.org/2025/A05_2025-Injection/" },
+    { "title": "Prevent Cross-Site Scripting (XSS) in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/cross-site-scripting" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "interface Review { author: string; text: string; website: string; }"
+    }
+  }
+}

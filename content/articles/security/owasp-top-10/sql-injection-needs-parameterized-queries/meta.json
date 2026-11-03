@@ -1,0 +1,36 @@
+{
+  "slug": "sql-injection-needs-parameterized-queries",
+  "field": "security",
+  "topic": "owasp-top-10",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Escaping Quotes Won't Stop SQL Injection: Parameterized Queries Will",
+      "subtitle": "Escaping guards one context, the quoted string. Parameters keep values out of the SQL text entirely, so the database never parses them as code."
+    },
+    "ar-EG": {
+      "title": "الـ escaping مش هيحميك من الـ SQL Injection: الحل هو الـ parameterized queries",
+      "subtitle": "الـ escaping بيحمي حالة واحدة بس، الـ string اللي بين علامتين تنصيص. الـ parameters بتطلّع القيم برّه نص الـ SQL خالص، فالـ database عمرها ما تقراها ككود."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "OWASP Top 10 2025",
+  "learningPath": { "slug": "secure-by-default", "order": 4 },
+  "tags": ["Security", "SQL Injection", "SQL Server", "EF Core", "OWASP Top 10"],
+  "sources": [
+    { "title": "SQL Injection Prevention Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html" },
+    { "title": "Query Parameterization Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Query_Parameterization_Cheat_Sheet.html" },
+    { "title": "A05:2025 Injection — OWASP Top 10:2025", "url": "https://top10.owasp.org/2025/A05_2025-Injection/" },
+    { "title": "SQL Injection — OWASP Community", "url": "https://community.owasp.org/attacks/SQL_Injection" },
+    { "title": "SQL Queries — EF Core, Microsoft Learn", "url": "https://learn.microsoft.com/ef/core/querying/sql-queries" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed class Product\n{\n    public int Id { get; set; }\n    public string Name { get; set; } = \"\";\n    public decimal Price { get; set; }\n    public int CategoryId { get; set; }\n    public bool IsPublished { get; set; }\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Product> Products => Set<Product>();\n}"
+    }
+  }
+}

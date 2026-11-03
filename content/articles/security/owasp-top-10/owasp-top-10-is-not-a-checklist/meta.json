@@ -1,0 +1,36 @@
+{
+  "slug": "owasp-top-10-is-not-a-checklist",
+  "field": "security",
+  "topic": "owasp-top-10",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The OWASP Top 10 Is an Awareness List, Not a Security Checklist",
+      "subtitle": "OWASP calls its own list the bare minimum. Learn where the risks are from it, then verify against the ASVS and threat-model your business rules."
+    },
+    "ar-EG": {
+      "title": "ليه الـ OWASP Top 10 مش checklist؟ قايمة للتوعية مش معيار أمان كامل",
+      "subtitle": "OWASP نفسها بتسمّي القايمة الحد الأدنى. اعرف منها الخطر فين، وبعدين اتحقق بالـ ASVS واعمل threat modeling لقواعد البيزنس بتاعتك."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "OWASP Top 10 2025",
+  "learningPath": { "slug": "secure-by-default", "order": 1 },
+  "tags": ["Security", "OWASP Top 10", "ASVS", "Threat Modeling"],
+  "sources": [
+    { "title": "Introduction — OWASP Top 10:2025", "url": "https://top10.owasp.org/2025/0x00_2025-Introduction/" },
+    { "title": "Establishing a Modern Application Security Program — OWASP Top 10:2025", "url": "https://top10.owasp.org/2025/0x03_2025-Establishing_a_Modern_Application_Security_Program/" },
+    { "title": "A06:2025 Insecure Design — OWASP Top 10:2025", "url": "https://top10.owasp.org/2025/A06_2025-Insecure_Design/" },
+    { "title": "OWASP Application Security Verification Standard (ASVS)", "url": "https://asvs.owasp.org/" },
+    { "title": "What is the ASVS? — OWASP ASVS 5.0.0", "url": "https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x03-What-is-the-ASVS.md" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "global using System.Security.Claims;\nglobal using Microsoft.EntityFrameworkCore;\npublic enum OrderStatus { Paid, Shipped, Cancelled }\npublic sealed class Order\n{\n    public int Id { get; set; }\n    public string CustomerId { get; set; } = \"\";\n    public decimal Total { get; set; }\n    public OrderStatus Status { get; set; }\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Order> Orders => Set<Order>();\n}\npublic interface IPayments { Task RefundAsync(int orderId, decimal amount); }\npartial class Program { static readonly WebApplication app = WebApplication.Create(); }"
+    }
+  }
+}

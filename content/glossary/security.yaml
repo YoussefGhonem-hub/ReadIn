@@ -1,0 +1,210 @@
+terms:
+  - id: cwe
+    term: CWE (Common Weakness Enumeration)
+    definitionEn: >-
+      A public catalog of software and hardware weakness types maintained by MITRE. Each type has an ID, such as
+      CWE-89 for SQL injection, and security tools and lists like the OWASP Top 10 use these IDs to name what they find.
+    definitionAr: >-
+      كتالوج عام بأنواع نقاط الضعف في السوفتوير والهاردوير بتديره MITRE. كل نوع ليه ID، زي CWE-89 للـ SQL injection،
+      وأدوات الأمان والقوايم زي الـ OWASP Top 10 بتستخدم الـ IDs دي عشان تسمّي اللي بتلاقيه.
+  - id: threat-modeling
+    term: Threat modeling
+    definitionEn: >-
+      A design activity where the team asks what can go wrong in a system or feature, who could make it happen, and
+      which controls stop it, ideally before the code is written.
+    definitionAr: >-
+      نشاط في مرحلة التصميم بيسأل فيه الفريق: إيه اللي ممكن يبوظ في السيستم أو الـ feature، ومين ممكن يعمله، وإيه
+      الـ controls اللي هتمنعه، والأفضل يحصل قبل ما الكود يتكتب.
+  - id: asvs
+    term: ASVS (Application Security Verification Standard)
+    definitionEn: >-
+      An OWASP standard that lists security requirements for web applications and services in three levels. Each
+      requirement is written so that a reviewer can mark it as pass or fail.
+    definitionAr: >-
+      standard من OWASP فيه requirements الأمان لتطبيقات الويب والـ services، مقسّمة على 3 levels. وكل requirement
+      مكتوب بحيث اللي بيراجع يقدر يحكم عليه بـ pass أو fail.
+  - id: base64
+    term: Base64
+    definitionEn: >-
+      An encoding that writes any bytes using 64 printable characters, so binary data can travel through text-only
+      places such as JSON, URLs or email. It uses no key, and anyone can decode it.
+    definitionAr: >-
+      encoding بيكتب أي bytes بـ 64 حرف ينفع يتطبعوا، عشان الداتا الـ binary تعدّي في أماكن معمولة للنص بس زي الـ JSON
+      والـ URLs والإيميل. مفيهوش أي key، وأي حد يقدر يعمله decode.
+  - id: cryptographic-hash-function
+    term: Cryptographic hash function
+    definitionEn: >-
+      A function that turns input of any length into a fixed-length digest, such as SHA-256. It is one-way and the
+      same input always gives the same digest, so it can verify data but can't hide predictable values.
+    definitionAr: >-
+      function بتحوّل input بأي طول لـ digest طوله ثابت، زي SHA-256. هي one-way، ونفس الـ input بيدّي نفس الـ digest
+      دايمًا، فتنفع تتأكد بيها من الداتا لكن ماتقدرش تخبّي بيها قيم سهل تتخمّن.
+  - id: authenticated-encryption
+    term: Authenticated encryption
+    definitionEn: >-
+      Encryption that also proves the ciphertext wasn't changed, such as AES in GCM mode. Decrypting with the wrong
+      key or after any modification fails with an error instead of returning garbage.
+    definitionAr: >-
+      encryption بيثبت كمان إن الـ ciphertext ماتغيّرش، زي AES بالـ GCM mode. لو عملت decrypt بـ key غلط أو بعد أي
+      تعديل، العملية بتفشل بـ error بدل ما ترجّع كلام فاضي.
+  - id: tls
+    term: TLS (Transport Layer Security)
+    definitionEn: >-
+      The protocol behind HTTPS. It authenticates the server with a certificate and encrypts and protects the traffic
+      between two endpoints, so nobody on the network can read or silently change it. SSL is its deprecated
+      predecessor.
+    definitionAr: >-
+      الـ protocol اللي ورا الـ HTTPS. بيتأكد من هوية السيرفر بـ certificate، وبيشفّر ويحمي الـ traffic بين طرفين،
+      عشان محدش على الـ network يقدر يقراه أو يغيّره من غير ما يبان. والـ SSL هو النسخة القديمة اللي اتلغت.
+  - id: hsts
+    term: HSTS (HTTP Strict Transport Security)
+    definitionEn: >-
+      A response header, Strict-Transport-Security, that tells the browser to use only HTTPS for a domain for a set
+      time. The browser then upgrades http:// requests by itself and blocks users from clicking through certificate
+      errors.
+    definitionAr: >-
+      response header اسمه Strict-Transport-Security بيقول للمتصفح يستخدم HTTPS بس مع الـ domain لمدة معيّنة.
+      وبعدها المتصفح بيحوّل أي request بـ http:// لـ HTTPS لوحده، ومش بيسيب المستخدم يتجاهل أخطاء الـ certificate.
+  - id: sql-injection
+    term: SQL injection
+    definitionEn: >-
+      An attack where input sent to an application becomes part of the syntax of a SQL query, so the attacker can
+      change what the query reads or writes. It's possible whenever SQL text is built by joining strings with input.
+    definitionAr: >-
+      هجوم فيه الـ input اللي بيتبعت للتطبيق بيبقى جزء من syntax الـ SQL query نفسها، فالمهاجم يقدر يغيّر الـ query
+      بتقرا أو بتكتب إيه. وبيبقى ممكن في أي حتة نص الـ SQL فيها بيتبني بلزق strings مع الـ input.
+  - id: parameterized-query
+    term: Parameterized query
+    definitionEn: >-
+      A query whose SQL text contains placeholders such as @id, with the values sent separately and typed. The
+      database parses the text once and treats the values only as data, never as SQL.
+    definitionAr: >-
+      query نص الـ SQL بتاعها فيه placeholders زي @id، والقيم بتتبعت لوحدها ومعاها النوع بتاعها. والـ database بتعمل
+      parse للنص لوحده، وبتتعامل مع القيم على إنها داتا بس، عمرها ما تبقى SQL.
+  - id: authorization
+    term: Authorization
+    definitionEn: >-
+      The decision whether an identified user may perform a specific action on a specific resource. It's separate
+      from authentication, which only establishes who the user is.
+    definitionAr: >-
+      القرار إذا كان المستخدم اللي اتعرفنا عليه مسموح له يعمل action معيّن على resource معيّن ولا لأ. وده غير الـ
+      authentication، اللي بيحدد المستخدم مين وبس.
+  - id: idor
+    term: IDOR (Insecure Direct Object Reference)
+    definitionEn: >-
+      An access control flaw where a user reaches someone else's data by changing an identifier in the request, such as
+      an ID in the URL or body, because the server never checks that the object belongs to them.
+    definitionAr: >-
+      ثغرة في الـ access control بيوصل فيها المستخدم لداتا حد تاني بإنه يغيّر identifier في الـ request، زي ID في الـ
+      URL أو الـ body، لأن السيرفر عمره ما بيتأكد إن الـ object ده بتاعه.
+  - id: jwt
+    term: JWT (JSON Web Token)
+    definitionEn: >-
+      A compact token that carries claims, such as a user ID and an expiry time, as JSON. In its common signed form it
+      is three Base64url parts (header, claims, signature): the signature proves who issued it, but the claims are
+      readable by anyone.
+    definitionAr: >-
+      token صغير بيشيل claims، زي ID المستخدم ووقت الـ expiry، في صورة JSON. وفي الشكل المشهور بتاعه، اللي عليه
+      signature، بيبقى 3 أجزاء Base64url (header وclaims وsignature): الـ signature بتثبت مين أصدره، لكن الـ claims
+      أي حد يقدر يقراها.
+  - id: jwe
+    term: JWE (JSON Web Encryption)
+    definitionEn: >-
+      The encrypted form of a JOSE token, defined in RFC 7516. Its compact form has five parts, and only the holder of
+      the right key can read the content. It doesn't prove who created the token unless the content is also signed.
+    definitionAr: >-
+      الشكل المتشفّر من الـ JOSE tokens، ومتعرّف في RFC 7516. الشكل الـ compact بتاعه 5 أجزاء، ومحدش يقدر يقرا المحتوى
+      غير اللي معاه الـ key الصح. ومش بيثبت مين اللي عمل الـ token إلا لو المحتوى عليه signature كمان.
+  - id: xss
+    term: XSS (Cross-site scripting)
+    definitionEn: >-
+      An attack where data an attacker controls ends up in a page in a way the browser runs as code. The script then
+      acts with the victim's session, as if it were the site's own code.
+    definitionAr: >-
+      هجوم فيه داتا المهاجم متحكّم فيها بتتحط في صفحة بطريقة المتصفح بيشغّلها ككود. والـ script ساعتها بيتصرف بالـ
+      session بتاعة الضحية، كأنه كود الموقع نفسه.
+  - id: output-encoding
+    term: Output encoding
+    definitionEn: >-
+      Converting characters that have meaning in the destination, such as < in HTML or & in a URL, into a form that is
+      shown as text, at the moment data is written into that destination. Each context needs its own encoding.
+    definitionAr: >-
+      إنك تحوّل الحروف اللي ليها معنى في المكان اللي الداتا رايحاله، زي < في الـ HTML أو & في الـ URL، لشكل
+      بيتعرض كنص، في اللحظة اللي الداتا بتتكتب فيها هناك. وكل context محتاج encoding بتاعه.
+  - id: content-security-policy
+    term: Content Security Policy (CSP)
+    definitionEn: >-
+      A response header that tells the browser which scripts, styles and other resources a page may load and run. A
+      strict policy based on nonces or hashes blocks injected scripts the server didn't approve.
+    definitionAr: >-
+      response header بيقول للمتصفح الصفحة مسموح لها تحمّل وتشغّل أنهي scripts وstyles وresources. والـ policy الـ
+      strict المبنية على nonces أو hashes بتمنع أي script اتحقن والسيرفر ماوافقش عليه.
+  - id: same-origin-policy
+    term: Same-origin policy
+    definitionEn: >-
+      The browser rule that stops a page from one origin (scheme, host and port) from reading data from another
+      origin. It blocks reading cross-origin responses, but links, redirects and form submissions to other origins are
+      still allowed.
+    definitionAr: >-
+      قاعدة في المتصفح بتمنع صفحة من origin معيّن (الـ scheme والـ host والـ port) إنها تقرا داتا من origin تاني. هي
+      بتمنع قراية الـ responses اللي جاية من origin تاني، لكن اللينكات والـ redirects وإرسال الـ forms لـ origins تانية
+      لسه مسموح.
+  - id: csrf
+    term: CSRF (Cross-site request forgery)
+    definitionEn: >-
+      An attack where another site makes the victim's browser send a request to your app. The browser attaches the
+      victim's cookies, so the app performs the action as if the user had asked for it.
+    definitionAr: >-
+      هجوم فيه موقع تاني بيخلّي متصفح الضحية يبعت request للتطبيق بتاعك. المتصفح بيحط الـ cookies بتاعة الضحية،
+      فالتطبيق بينفّذ العملية كأن المستخدم هو اللي طلبها.
+  - id: samesite-cookie
+    term: SameSite cookie attribute
+    definitionEn: >-
+      A cookie attribute that tells the browser whether to send the cookie on requests started by other sites. Strict
+      never sends it cross-site, Lax sends it only on top-level navigations with safe methods such as GET, and None
+      always sends it.
+    definitionAr: >-
+      attribute على الـ cookie بيقول للمتصفح يبعتها ولا لأ مع الـ requests اللي مواقع تانية بتبدأها. الـ Strict عمره ما
+      بيبعتها لموقع تاني، والـ Lax بيبعتها بس في الـ top-level navigations بـ methods آمنة زي GET، والـ None بيبعتها دايمًا.
+  - id: cors
+    term: CORS (Cross-Origin Resource Sharing)
+    definitionEn: >-
+      A set of HTTP headers, such as Access-Control-Allow-Origin, that lets a server tell browsers which other origins
+      may read its responses. It relaxes the same-origin policy in browsers and does not stop any client from sending
+      requests.
+    definitionAr: >-
+      مجموعة HTTP headers، زي Access-Control-Allow-Origin، بيستخدمها السيرفر عشان يقول للمتصفحات أنهي origins تانية
+      مسموح لها تقرا الـ responses بتاعته. هو بيخفف الـ same-origin policy في المتصفحات، ومش بيمنع أي client إنه يبعت
+      requests.
+  - id: cors-preflight
+    term: CORS preflight request
+    definitionEn: >-
+      An OPTIONS request the browser sends before a cross-origin request that a plain HTML form couldn't make, such as
+      one with a custom header or a JSON body, to ask the server whether the real request is allowed.
+    definitionAr: >-
+      request بـ OPTIONS المتصفح بيبعته قبل أي cross-origin request مكانتش form عادية تقدر تعمله، زي request فيه
+      custom header أو JSON body، عشان يسأل السيرفر الـ request الحقيقي مسموح ولا لأ.
+  - id: salt
+    term: Salt
+    definitionEn: >-
+      A random value generated for each password and stored next to its hash. It makes identical passwords produce
+      different hashes and forces attackers to guess each account separately, but it doesn't make a single guess slower.
+    definitionAr: >-
+      قيمة عشوائية بتتعمل لكل password وبتتخزّن جنب الـ hash بتاعه. بتخلّي الـ passwords المتشابهة تطلع hashes مختلفة،
+      وبتجبر المهاجم يخمّن كل حساب لوحده، لكنها مش بتخلّي التخمينة الواحدة أبطأ.
+  - id: password-hashing-scheme
+    term: Password hashing scheme
+    definitionEn: >-
+      A deliberately slow function such as Argon2id, scrypt, bcrypt or PBKDF2 that takes a password, a salt and a cost
+      factor, so each guess against a leaked hash costs the attacker real time, memory or both.
+    definitionAr: >-
+      function بطيئة عن قصد، زي Argon2id أو scrypt أو bcrypt أو PBKDF2، بتاخد password و salt و cost factor، عشان كل
+      تخمينة على hash متسرّب تكلّف المهاجم وقت أو memory حقيقية أو الاتنين.
+  - id: secret-rotation
+    term: Secret rotation
+    definitionEn: >-
+      Replacing a secret, such as an API key or a database password, with a new one and revoking the old one, so a
+      copy that leaked or was stolen stops working. It can happen on a schedule or right after a suspected exposure.
+    definitionAr: >-
+      إنك تستبدل secret، زي API key أو password بتاع database، بواحد جديد وتعمل revoke للقديم، عشان أي نسخة اتسرّبت أو
+      اتسرقت تبطّل تشتغل. وممكن تحصل بشكل دوري أو على طول بعد ما تشك إن الـ secret اتكشف.

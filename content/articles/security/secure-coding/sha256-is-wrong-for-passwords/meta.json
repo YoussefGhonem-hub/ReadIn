@@ -1,0 +1,35 @@
+{
+  "slug": "sha256-is-wrong-for-passwords",
+  "field": "security",
+  "topic": "secure-coding",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "SHA-256 Is the Wrong Tool for Passwords: Slow Hashing with Argon2id and bcrypt",
+      "subtitle": "A salt stops shortcuts, not guessing. Password hashing needs a cost factor that makes every guess expensive, and a way to raise it later."
+    },
+    "ar-EG": {
+      "title": "ليه SHA-256 مينفعش للـ passwords؟ الـ slow hashing بـ Argon2id و bcrypt",
+      "subtitle": "الـ salt بيمنع الاختصارات، مش التخمين. الـ password hashing محتاج cost factor يخلّي كل تخمينة غالية، وطريقة تزوّده بيها بعدين."
+    }
+  },
+  "level": "intermediate",
+  "learningPath": { "slug": "secure-by-default", "order": 10 },
+  "tags": ["Security", "Passwords", "Argon2id", "PBKDF2", "ASP.NET Core"],
+  "sources": [
+    { "title": "Password Storage Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html" },
+    { "title": "NIST SP 800-63B-4: Authentication and Authenticator Management", "url": "https://pages.nist.gov/800-63-4/sp800-63b.html" },
+    { "title": "RFC 9106: Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications", "url": "https://datatracker.ietf.org/doc/html/rfc9106" },
+    { "title": "PasswordHasherOptions.IterationCount Property — Microsoft Learn", "url": "https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions.iterationcount" },
+    { "title": "PasswordHasher.cs (ASP.NET Core 10) — dotnet/aspnetcore on GitHub", "url": "https://github.com/dotnet/aspnetcore/blob/release/10.0/src/Identity/Extensions.Core/src/PasswordHasher.cs" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed class User\n{\n    public string PasswordHash { get; set; } = \"\";\n}"
+    }
+  }
+}

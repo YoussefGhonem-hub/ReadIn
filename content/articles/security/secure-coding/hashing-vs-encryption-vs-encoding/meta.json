@@ -1,0 +1,31 @@
+{
+  "slug": "hashing-vs-encryption-vs-encoding",
+  "field": "security",
+  "topic": "secure-coding",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Hashing, Encryption and Encoding Are Not the Same: Pick the Right One",
+      "subtitle": "Base64 changes the format, a hash makes a fingerprint, and only encryption keeps data secret, as long as the key stays secret."
+    },
+    "ar-EG": {
+      "title": "الـ hashing غير الـ encryption غير الـ encoding: تستخدم مين وإمتى؟",
+      "subtitle": "الـ Base64 بيغيّر الشكل، والـ hash بيعمل بصمة، والـ encryption بس هو اللي بيخلّي الداتا سر، طول ما الـ key سر."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "secure-by-default", "order": 2 },
+  "tags": ["Security", "Cryptography", "Base64", "Hashing", "Encryption"],
+  "sources": [
+    { "title": "Cryptographic Storage Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html" },
+    { "title": "Hash function — MDN Web Docs Glossary", "url": "https://developer.mozilla.org/en-US/docs/Glossary/Hash_function" },
+    { "title": "RFC 4648: The Base16, Base32, and Base64 Data Encodings", "url": "https://www.rfc-editor.org/rfc/rfc4648" },
+    { "title": "Consumer APIs overview for ASP.NET Core Data Protection — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/data-protection/consumer-apis/overview" },
+    { "title": "Data Protection key management and lifetime in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/data-protection/configuration/default-settings" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

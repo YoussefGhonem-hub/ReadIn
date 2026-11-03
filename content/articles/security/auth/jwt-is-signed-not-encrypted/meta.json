@@ -1,0 +1,36 @@
+{
+  "slug": "jwt-is-signed-not-encrypted",
+  "field": "security",
+  "topic": "auth",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "A JWT Is Signed, Not Encrypted: Anyone Can Read Your Token",
+      "subtitle": "The signature proves who issued the token and that nobody changed it. It hides nothing: the claims are Base64url-encoded JSON that anyone can decode."
+    },
+    "ar-EG": {
+      "title": "الـ JWT عليه signature بس مش متشفّر: أي حد يقدر يقرا اللي جواه",
+      "subtitle": "الـ signature بتثبت مين اللي أصدر الـ token وإن محدش غيّره. لكنها مش بتخبّي حاجة: الـ claims مجرد JSON متعمله Base64url وأي حد يقدر يفكّه."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "secure-by-default", "order": 5 },
+  "tags": ["Security", "JWT", "Authentication", "Tokens"],
+  "sources": [
+    { "title": "RFC 7519: JSON Web Token (JWT)", "url": "https://www.rfc-editor.org/rfc/rfc7519" },
+    { "title": "RFC 7515: JSON Web Signature (JWS)", "url": "https://www.rfc-editor.org/rfc/rfc7515" },
+    { "title": "RFC 7516: JSON Web Encryption (JWE)", "url": "https://www.rfc-editor.org/rfc/rfc7516" },
+    { "title": "RFC 8725: JSON Web Token Best Current Practices", "url": "https://www.rfc-editor.org/rfc/rfc8725" },
+    { "title": "JSON Web Token Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet.html" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record Customer(Guid Id, string Email, string Phone, DateOnly DateOfBirth, int CreditLimit);"
+    }
+  }
+}
