@@ -73,13 +73,13 @@
 </div>
 <script>
   // Latin runs inside the Arabic title are isolated like in the readers (SPEC §14.2). Short runs ("value types") never
-  // wrap, so a line never ends on half of an English term.
+  // wrap, and neither does the gap after "الـ"/"لـ", so a line never ends on half of an English term or on a bare "الـ".
   const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const isolate = (s) => escape(s).replace(/(?:\.|@|#)?[A-Za-z][^؀-ۿ،؛؟]*/g, (run) => {
     const trimmed = run.replace(/[\s.,:;!?'"-]+$/, "");
     const text = trimmed.length <= 24 ? trimmed.replace(/ /g, "&nbsp;") : trimmed;
     return `<bdi>${text}</bdi>${run.slice(trimmed.length)}`;
-  });
+  }).replace(/ـ (?=<bdi>)/g, "ـ&nbsp;");
 
   window.renderCover = async (d) => {
     const cover = document.getElementById("cover");
