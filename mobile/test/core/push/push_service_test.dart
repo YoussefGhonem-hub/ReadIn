@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/push/devices_api.dart';
@@ -154,5 +155,63 @@ void main() {
     await settle();
 
     expect(paths, ['/a/launch-post', '/a/my-post', '/notifications']);
+  });
+
+  group('daily-article push (F07)', () {
+    // As FCM delivers it (docs/api/contract-v1.md, "Push payloads").
+    const daily = RemoteMessage(
+      notification: RemoteNotification(title: 'مقال النهارده جاهز ☕', body: 'RAG ولا Fine-tuning؟'),
+      data: {
+        'type': 'daily_article',
+        'articleId': '0a1b2c3d-0000-0000-0000-000000000001',
+        'slug': 'rag-vs-fine-tuning',
+        'link': 'readin://a/rag-vs-fine-tuning',
+        'lang': 'ar',
+      },
+    );
+    final payload = FirebasePushPlatform.payloadOf(daily);
+
+    test('is read the same way in every app state', () {
+      expect(payload.title, 'مقال النهارده جاهز ☕');
+      expect(payload.body, 'RAG ولا Fine-tuning؟');
+      expect(payload.link, 'readin://a/rag-vs-fine-tuning');
+      final withoutLink = FirebasePushPlatform.payloadOf(
+        const RemoteMessage(data: {'type': 'daily_article', 'slug': 'rag-vs-fine-tuning'}),
+      );
+      expect(withoutLink.link, 'readin://a/rag-vs-fine-tuning');
+    });
+
+    test('a tap that launches the app (terminated) opens the reader', () async {
+      platform.launch = payload.link;
+      final paths = <String>[];
+      push.openPaths.listen(paths.add);
+      await push.start();
+      await settle();
+      expect(paths, ['/a/rag-vs-fine-tuning']);
+    });
+
+    test('a tap while the app is in the background opens the reader', () async {
+      final paths = <String>[];
+      push.openPaths.listen(paths.add);
+      await push.start();
+      platform.opened.add(payload.link);
+      await settle();
+      expect(paths, ['/a/rag-vs-fine-tuning']);
+    });
+
+    test('in the foreground it is shown, and tapping it opens the reader', () async {
+      final paths = <String>[];
+      push.openPaths.listen(paths.add);
+      await push.start();
+
+      platform.foreground.add(payload);
+      await settle();
+      expect(platform.shown.single.title, 'مقال النهارده جاهز ☕');
+      expect(paths, isEmpty, reason: 'showing it opens nothing by itself');
+
+      platform.opened.add(platform.shown.single.link); // the local notification's tap
+      await settle();
+      expect(paths, ['/a/rag-vs-fine-tuning']);
+    });
   });
 }

@@ -1,3 +1,18 @@
+/// `data.type` of the daily-article push (SPEC F07, docs/api/contract-v1.md).
+const dailyArticlePushType = 'daily_article';
+
+/// The link a push opens: its `data.link`, or for a daily-article push without
+/// one, the reader of its `data.slug`. Null when the push opens nothing specific.
+String? pushDataLink(Map<String, dynamic> data) {
+  final link = data['link'];
+  if (link is String && link.trim().isNotEmpty) return link.trim();
+  final slug = data['slug'];
+  if (data['type'] == dailyArticlePushType && slug is String && slug.trim().isNotEmpty) {
+    return 'readin://a/${Uri.encodeComponent(slug.trim())}';
+  }
+  return null;
+}
+
 /// Maps a push link to an in-app route (SPEC §21.1). Deep links
 /// (`readin://a/{slug}#comment-{id}`), App Links (`https://readin.app/a/{slug}`,
 /// `https://readin.app/ar/a/{slug}`) and app paths open the matching screen;

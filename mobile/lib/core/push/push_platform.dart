@@ -7,6 +7,7 @@ import 'package:injectable/injectable.dart';
 
 import '../config/app_config.dart';
 import '../firebase/firebase_bootstrap.dart';
+import 'push_links.dart';
 
 enum PushPermission { unsupported, notDetermined, granted, denied }
 
@@ -132,18 +133,18 @@ class FirebasePushPlatform implements PushPlatform {
   Stream<String> get onTokenRefresh => _messaging.onTokenRefresh;
 
   @override
-  Stream<PushPayload> get onForegroundMessage => FirebaseMessaging.onMessage.map(_payload);
+  Stream<PushPayload> get onForegroundMessage => FirebaseMessaging.onMessage.map(payloadOf);
 
   @override
   Stream<String?> get onOpened => StreamGroupLite.merge([
-        FirebaseMessaging.onMessageOpenedApp.map((message) => _payload(message).link),
+        FirebaseMessaging.onMessageOpenedApp.map((message) => payloadOf(message).link),
         _localTaps.stream,
       ]);
 
   @override
   Future<String?> launchLink() async {
     final initial = await _messaging.getInitialMessage();
-    if (initial != null) return _payload(initial).link;
+    if (initial != null) return payloadOf(initial).link;
     final details = await _local.getNotificationAppLaunchDetails();
     return details?.didNotificationLaunchApp == true ? details!.notificationResponse?.payload : null;
   }
@@ -174,10 +175,12 @@ class FirebasePushPlatform implements PushPlatform {
         AuthorizationStatus.notDetermined => PushPermission.notDetermined,
       };
 
-  static PushPayload _payload(RemoteMessage message) => PushPayload(
+  /// One mapping for every app state: foreground messages, background taps and the tap that launched the app.
+  @visibleForTesting
+  static PushPayload payloadOf(RemoteMessage message) => PushPayload(
         title: message.notification?.title ?? message.data['title'] as String?,
         body: message.notification?.body ?? message.data['body'] as String?,
-        link: message.data['link'] as String?,
+        link: pushDataLink(message.data),
       );
 }
 
