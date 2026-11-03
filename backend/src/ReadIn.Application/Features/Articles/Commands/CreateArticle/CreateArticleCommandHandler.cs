@@ -44,7 +44,7 @@ internal sealed class CreateArticleCommandHandler(IAppDbContext db, ICurrentUser
     private async Task<string> UniqueSlugAsync(string title, CancellationToken ct)
     {
         var baseSlug = SlugGenerator.FromTitle(title);
-        if (baseSlug.Length < 3) baseSlug = $"article-{Guid.CreateVersion7().ToString("N")[^8..]}";
+        if (baseSlug.Length < 3) baseSlug = $"article-{Guid.NewGuid().ToString("N")[..8]}";
 
         var taken = await db.Articles.IgnoreQueryFilters().AsNoTracking()
             .Where(a => a.Slug.StartsWith(baseSlug))

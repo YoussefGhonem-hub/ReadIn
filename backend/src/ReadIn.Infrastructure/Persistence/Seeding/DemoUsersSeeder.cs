@@ -9,13 +9,14 @@ using ReadIn.Infrastructure.Identity;
 namespace ReadIn.Infrastructure.Persistence.Seeding;
 
 /// <summary>
-/// Seeder #4 (Development/Staging only): demo users from SPEC §18.3, created in Firebase Auth (emulator
-/// locally) with deterministic uids and in SQL Server with realistic mixed-language profiles.
+/// Seeder #4 (local only): demo users from SPEC §18.3, created in the Firebase Auth Emulator with deterministic uids
+/// and in SQL Server with realistic mixed-language profiles. Never runs against the real Firebase project (ADR 0005).
 /// </summary>
 internal sealed partial class DemoUsersSeeder(
     AppDbContext db,
     IIdentityProvisioner identity,
     IOptions<SeedOptions> options,
+    IOptions<FirebaseOptions> firebase,
     ILogger<DemoUsersSeeder> logger) : ISeeder
 {
     private sealed record DemoUser(
@@ -53,7 +54,7 @@ internal sealed partial class DemoUsersSeeder(
     public int Order => 4;
     public int Version => 1;
 
-    public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.IsDevOrStaging(environment);
+    public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.AllowsDemoData(environment, firebase.Value);
 
     public Task<string> ComputeChecksumAsync(CancellationToken cancellationToken) => Task.FromResult(SeedChecksum.Of(
         [.. Users.Select(u => $"{u.LocalPart}|{u.DisplayName}|{string.Join(',', u.Roles)}|{u.Bio}|{string.Join(',', u.Interests)}|{u.Suspended}"),

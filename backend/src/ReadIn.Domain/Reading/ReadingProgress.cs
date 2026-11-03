@@ -16,7 +16,7 @@ public sealed class ReadingProgress
         Language = language;
     }
 
-    public Guid Id { get; private set; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
     public Guid ArticleId { get; private set; }
     public string Language { get; private set; } = default!;
@@ -58,7 +58,7 @@ public sealed class DailyPick
         ArticleId = articleId;
     }
 
-    public Guid Id { get; private set; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
     public DateOnly Date { get; private set; }
     public Guid ArticleId { get; private set; }

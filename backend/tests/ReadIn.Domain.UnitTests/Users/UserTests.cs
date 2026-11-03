@@ -5,7 +5,7 @@ namespace ReadIn.Domain.UnitTests.Users;
 
 public sealed class UserTests
 {
-    private static readonly Guid MemberRole = Guid.CreateVersion7();
+    private static readonly Guid MemberRole = Guid.NewGuid();
 
     private static User NewUser() =>
         User.Register("uid-1", "Reader.One@ReadIn.test", "Reader One", "reader_one", null, MemberRole);
@@ -76,7 +76,7 @@ public sealed class UserTests
     public void Granting_a_role_twice_is_idempotent()
     {
         var user = NewUser();
-        var role = Guid.CreateVersion7();
+        var role = Guid.NewGuid();
         user.ClearDomainEvents();
 
         user.GrantRole(role);

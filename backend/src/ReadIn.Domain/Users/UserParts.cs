@@ -19,7 +19,7 @@ public sealed class UserInterest
 {
     private UserInterest() { } // EF
 
-    public Guid Id { get; private set; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
     public Guid? FieldId { get; private set; }
     public Guid? TopicId { get; private set; }
@@ -47,7 +47,7 @@ public sealed class UserDevice
         LastSeenAt = now;
     }
 
-    public Guid Id { get; private set; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
     public string Token { get; private set; } = default!;
     public DevicePlatform Platform { get; private set; }

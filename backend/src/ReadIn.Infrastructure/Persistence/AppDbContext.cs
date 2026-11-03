@@ -43,10 +43,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         {
             var clr = entityType.ClrType;
 
-            // Ids are generated client-side (Guid v7). Without this, EF treats a new child added to a loaded
-            // aggregate (e.g. user.SetInterests) as an existing row because its key is already set.
-            if (entityType.FindPrimaryKey()?.Properties is [{ ClrType: var keyType, Name: var keyName }] && keyType == typeof(Guid))
-                modelBuilder.Entity(clr).Property(keyName).ValueGeneratedNever();
+            // Single Guid keys come from EF Core's sequential GUID generator, which follows SQL Server's
+            // uniqueidentifier sort order (ADR 0006). This is the EF default; it is stated here so nobody turns it off.
+            if (entityType.FindPrimaryKey()?.Properties is [{ ClrType: var keyType } keyProperty] && keyType == typeof(Guid) && !keyProperty.IsForeignKey())
+                keyProperty.ValueGenerated = Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.OnAdd;
 
             if (typeof(ISoftDeletable).IsAssignableFrom(clr) && entityType.BaseType is null)
             {

@@ -75,6 +75,8 @@ static IHost BuildHost()
     });
     builder.Configuration.AddEnvironmentVariables("READIN_");
     builder.Configuration["Hangfire:Enabled"] = "false";
+    // Like the API in Development: the local import talks to the Auth emulator, so demo seeders may run (ADR 0005).
+    builder.Configuration["Firebase:UseEmulator"] ??= builder.Environment.IsDevelopment() ? "true" : "false";
     builder.Configuration["ConnectionStrings:ReadIn"] ??=
         "Server=localhost,14333;Database=ReadIn;User Id=sa;Password=ReadIn_Local_Dev_1;TrustServerCertificate=True;Encrypt=False";
 

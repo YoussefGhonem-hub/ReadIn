@@ -63,7 +63,7 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
 
         var user = new User
         {
-            Id = id ?? Guid.CreateVersion7(),
+            Id = id ?? Guid.Empty,
             FirebaseUid = firebaseUid,
             Email = email.Trim().ToLowerInvariant(),
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? email.Split('@')[0] : displayName.Trim(),
@@ -73,7 +73,7 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
             TimeZone = string.IsNullOrWhiteSpace(timeZone) ? DefaultTimeZone : timeZone,
         };
         user._roles.Add(new UserRole(user.Id, memberRoleId));
-        user.Raise(new UserRegisteredDomainEvent(user.Id, user.Email));
+        user.Raise(() => new UserRegisteredDomainEvent(user.Id, user.Email));
         return user;
     }
 
@@ -137,26 +137,26 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     {
         if (HasRole(roleId)) return;
         _roles.Add(new UserRole(Id, roleId));
-        Raise(new UserRolesChangedDomainEvent(Id));
+        Raise(() => new UserRolesChangedDomainEvent(Id));
     }
 
     public void RevokeRole(Guid roleId)
     {
-        if (_roles.RemoveAll(r => r.RoleId == roleId) > 0) Raise(new UserRolesChangedDomainEvent(Id));
+        if (_roles.RemoveAll(r => r.RoleId == roleId) > 0) Raise(() => new UserRolesChangedDomainEvent(Id));
     }
 
     public void Suspend(DateTime? until)
     {
         IsSuspended = true;
         SuspendedUntil = until;
-        Raise(new UserRolesChangedDomainEvent(Id));
+        Raise(() => new UserRolesChangedDomainEvent(Id));
     }
 
     public void Unsuspend()
     {
         IsSuspended = false;
         SuspendedUntil = null;
-        Raise(new UserRolesChangedDomainEvent(Id));
+        Raise(() => new UserRolesChangedDomainEvent(Id));
     }
 
     public bool IsSuspendedAt(DateTime now) => IsSuspended && (SuspendedUntil is null || SuspendedUntil > now);

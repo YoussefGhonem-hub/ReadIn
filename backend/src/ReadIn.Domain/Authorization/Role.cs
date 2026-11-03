@@ -11,7 +11,7 @@ public sealed class Role : Entity
 
     public Role(string name, string description, Guid? id = null)
     {
-        Id = id ?? Guid.CreateVersion7();
+        if (id is { } fixedId) Id = fixedId;
         Name = name;
         Description = description;
     }
@@ -41,7 +41,7 @@ public sealed class Permission : Entity
 
     public Permission(string code, string description, Guid? id = null)
     {
-        Id = id ?? Guid.CreateVersion7();
+        if (id is { } fixedId) Id = fixedId;
         Code = code;
         Description = description;
     }

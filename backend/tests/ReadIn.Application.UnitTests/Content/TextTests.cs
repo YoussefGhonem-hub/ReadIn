@@ -56,7 +56,7 @@ public sealed class TimeCursorTests
     [Fact]
     public void Round_trips()
     {
-        var cursor = new TimeCursor(new DateTime(2026, 11, 2, 8, 30, 15, DateTimeKind.Utc), Guid.CreateVersion7());
+        var cursor = new TimeCursor(new DateTime(2026, 11, 2, 8, 30, 15, DateTimeKind.Utc), Guid.NewGuid());
 
         TimeCursor.Decode(cursor.Encode()).Should().Be(cursor);
     }

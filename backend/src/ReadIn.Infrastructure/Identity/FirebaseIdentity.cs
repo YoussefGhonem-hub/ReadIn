@@ -18,6 +18,26 @@ public sealed class FirebaseOptions
     public string AuthEmulatorHost { get; set; } = "127.0.0.1:9099";
 
     public string? StorageBucket { get; set; }
+
+    /// <summary>
+    /// Admin SDK service-account key for the real project, as JSON or base64-encoded JSON. Kept in user-secrets locally and
+    /// in the host's secret store on servers, never in the repo (docs/setup/firebase.md). When empty, Application Default
+    /// Credentials are used.
+    /// </summary>
+    public string? ServiceAccountJson { get; set; }
+}
+
+/// <summary>Builds the Admin SDK credential for the real Firebase project.</summary>
+public static class FirebaseCredentials
+{
+    public static GoogleCredential Create(FirebaseOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.ServiceAccountJson)) return GoogleCredential.GetApplicationDefault();
+
+        var value = options.ServiceAccountJson.Trim();
+        var json = value.StartsWith('{') ? value : System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(value));
+        return CredentialFactory.FromJson<ServiceAccountCredential>(json).ToGoogleCredential();
+    }
 }
 
 /// <summary>Creates/updates Firebase Auth users for seeding (SPEC §18.3).</summary>
@@ -97,9 +117,9 @@ internal sealed partial class FirebaseIdentityProvisioner(IOptions<FirebaseOptio
                 {
                     try
                     {
-                        credential = GoogleCredential.GetApplicationDefault();
+                        credential = FirebaseCredentials.Create(settings);
                     }
-                    catch (InvalidOperationException ex)
+                    catch (Exception ex) when (ex is InvalidOperationException or FormatException or System.Text.Json.JsonException or Newtonsoft.Json.JsonException)
                     {
                         LogNotConfigured(logger, ex);
                         _unavailable = true;

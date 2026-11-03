@@ -19,6 +19,8 @@ public static class FirebaseAuthentication
 
         if (firebase.UseEmulator && !(environment.IsDevelopment() || environment.IsEnvironment("Testing")))
             throw new InvalidOperationException("Firebase:UseEmulator is only allowed in Development and Testing.");
+        if (!firebase.UseEmulator && string.IsNullOrWhiteSpace(firebase.ProjectId))
+            throw new InvalidOperationException("Firebase:ProjectId must be set to the real Firebase project when Firebase:UseEmulator is false (docs/setup/firebase.md).");
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

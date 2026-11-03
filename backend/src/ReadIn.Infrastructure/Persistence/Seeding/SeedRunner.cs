@@ -113,6 +113,10 @@ public sealed partial class SeedRunner(
 
 public static class SeedEnvironments
 {
-    public static bool IsDevOrStaging(IHostEnvironment env) =>
-        env.IsDevelopment() || env.IsStaging() || env.IsEnvironment("Testing");
+    /// <summary>
+    /// Demo users and demo interactions are seeded only into the Firebase Auth Emulator and the local database, never into
+    /// the real Firebase project (SPEC §18.1, ADR 0005): the environment must be local AND Firebase must be the emulator.
+    /// </summary>
+    public static bool AllowsDemoData(IHostEnvironment env, Identity.FirebaseOptions firebase) =>
+        (env.IsDevelopment() || env.IsEnvironment("Testing")) && firebase.UseEmulator;
 }

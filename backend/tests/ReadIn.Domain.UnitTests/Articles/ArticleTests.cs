@@ -6,8 +6,8 @@ namespace ReadIn.Domain.UnitTests.Articles;
 public sealed class ArticleTests
 {
     private static readonly DateTime Now = new(2026, 11, 2, 8, 0, 0, DateTimeKind.Utc);
-    private static readonly Guid AuthorId = Guid.CreateVersion7();
-    private static readonly Guid ReviewerId = Guid.CreateVersion7();
+    private static readonly Guid AuthorId = Guid.NewGuid();
+    private static readonly Guid ReviewerId = Guid.NewGuid();
 
     private static ArticleContent Content(int words = 900) =>
         new("{}", "text", "text", null, ReadingTimeMinutes: 5, WordCount: words);
@@ -52,7 +52,7 @@ public sealed class ArticleTests
     [Fact]
     public void Unsupported_language_is_rejected()
     {
-        var article = Article.CreateDraft(AuthorId, Guid.CreateVersion7(), null, "slug");
+        var article = Article.CreateDraft(AuthorId, Guid.NewGuid(), null, "slug");
 
         article.AddTranslation("fr", "Titre", null, Content()).Error.Should().Be(ArticleErrors.InvalidLanguage);
     }
@@ -177,8 +177,8 @@ public sealed class ArticleTests
     {
         var article = Draft(SoftwareField());
 
-        article.SetTags([.. Enumerable.Range(0, 6).Select(_ => Guid.CreateVersion7())]).Error.Should().Be(ArticleErrors.TooManyTags);
-        article.SetTags([.. Enumerable.Range(0, 5).Select(_ => Guid.CreateVersion7())]).IsSuccess.Should().BeTrue();
+        article.SetTags([.. Enumerable.Range(0, 6).Select(_ => Guid.NewGuid())]).Error.Should().Be(ArticleErrors.TooManyTags);
+        article.SetTags([.. Enumerable.Range(0, 5).Select(_ => Guid.NewGuid())]).IsSuccess.Should().BeTrue();
     }
 
     [Fact]

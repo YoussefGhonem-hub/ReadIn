@@ -89,7 +89,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         ArgumentException.ThrowIfNullOrWhiteSpace(slug);
         return new Article
         {
-            Id = id ?? Guid.CreateVersion7(),
+            Id = id ?? Guid.Empty,
             AuthorId = authorId,
             FieldId = fieldId,
             TopicId = topicId,
@@ -168,7 +168,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
 
         if (Status != ArticleStatus.Published) Status = ArticleStatus.Submitted;
         ReviewStatus = ReviewStatus.Pending;
-        Raise(new ArticleSubmittedDomainEvent(Id, FieldId));
+        Raise(() => new ArticleSubmittedDomainEvent(Id, FieldId));
         return Result.Success();
     }
 
@@ -188,7 +188,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         ReviewedById = reviewerId;
         LastReviewedAt = now;
         if (Status is ArticleStatus.Submitted or ArticleStatus.InReview) Status = ArticleStatus.Approved;
-        Raise(new ArticleReviewedDomainEvent(Id, AuthorId, Approved: true));
+        Raise(() => new ArticleReviewedDomainEvent(Id, AuthorId, Approved: true));
         return Result.Success();
     }
 
@@ -199,7 +199,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
 
         ReviewStatus = ReviewStatus.ChangesRequested;
         if (Status is ArticleStatus.Submitted or ArticleStatus.InReview) Status = ArticleStatus.ChangesRequested;
-        Raise(new ArticleReviewedDomainEvent(Id, AuthorId, Approved: false));
+        Raise(() => new ArticleReviewedDomainEvent(Id, AuthorId, Approved: false));
         return Result.Success();
     }
 
@@ -211,7 +211,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         Status = ArticleStatus.Published;
         PublishedAt ??= now;
         ScheduledAt = null;
-        Raise(new ArticlePublishedDomainEvent(Id, AuthorId, FieldId, Slug));
+        Raise(() => new ArticlePublishedDomainEvent(Id, AuthorId, FieldId, Slug));
         return Result.Success();
     }
 

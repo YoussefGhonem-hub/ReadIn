@@ -28,7 +28,7 @@ public sealed class ArticleTranslation
         Apply(content);
     }
 
-    public Guid Id { get; private set; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; }
     public Guid ArticleId { get; private set; }
     public string Language { get; private set; } = default!;
     public string Title { get; private set; } = default!;
@@ -88,7 +88,7 @@ public sealed class ArticleSource
         SortOrder = sortOrder;
     }
 
-    public Guid Id { get; private set; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; }
     public Guid ArticleId { get; private set; }
     public string Title { get; private set; } = default!;
     public string Url { get; private set; } = default!;
@@ -119,7 +119,7 @@ public sealed class ArticleRevision
         CreatedAt = now;
     }
 
-    public Guid Id { get; private set; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; }
     public Guid ArticleId { get; private set; }
     public string Language { get; private set; } = default!;
     public string Title { get; private set; } = default!;

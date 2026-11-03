@@ -14,7 +14,7 @@ public sealed class OutboxMessage
         OccurredAt = occurredAt;
     }
 
-    public Guid Id { get; private set; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; }
     public string Type { get; private set; } = default!;
     public string Content { get; private set; } = default!;
     public DateTime OccurredAt { get; private set; }
