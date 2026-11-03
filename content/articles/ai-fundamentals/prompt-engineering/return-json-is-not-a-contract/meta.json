@@ -1,0 +1,59 @@
+{
+  "slug": "return-json-is-not-a-contract",
+  "field": "ai-fundamentals",
+  "topic": "prompt-engineering",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "'Respond in JSON' Isn't a Contract: Getting Structured Output You Can Trust",
+      "subtitle": "A format instruction makes JSON likely, not certain. Constrained decoding guarantees the shape; your code still checks the meaning."
+    },
+    "ar-EG": {
+      "title": "كلمة «رد بـ JSON» في الـ prompt مش ضمان: إزاي تطلع structured output تقدر تثق فيه",
+      "subtitle": "التعليمة بتخلّي الـ JSON محتمل، مش مضمون. الـ constrained decoding بيضمن الشكل، والكود بتاعك لسه لازم يراجع المعنى."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "building-with-llms",
+    "order": 3
+  },
+  "tags": [
+    "Structured Outputs",
+    "JSON",
+    "Claude API",
+    "Prompt Engineering"
+  ],
+  "sources": [
+    {
+      "title": "Structured outputs — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+    },
+    {
+      "title": "Strict tool use — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use"
+    },
+    {
+      "title": "Define tools: forcing tool use — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+    },
+    {
+      "title": "Prompting best practices: migrating away from prefilled responses — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+    },
+    {
+      "title": "Tam et al., Let Me Speak Freely? A Study on the Impact of Format Restrictions on Performance of Large Language Models, arXiv:2408.02442",
+      "url": "https://arxiv.org/abs/2408.02442"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import json\nimport sys\nimport types\n\nNS = types.SimpleNamespace\ninvoice_text = (\"ACME Supplies Ltd. Invoice for October services. \"\n                \"Total due: 1,240.50 EUR by 2026-11-30.\")\n\n\nclass BaseModel:\n    def __init__(self, **data):\n        self.__dict__.update(data)\n\n\n_DATA = {\"vendor\": \"ACME Supplies Ltd.\", \"number\": None, \"currency\": \"EUR\",\n         \"total\": 1240.5, \"due_date\": \"2026-11-30\"}\n\n\ndef _create(*, model, max_tokens, messages, **kwargs):\n    loose = dict(_DATA, number=\"\", total=\"1,240.50\")\n    block = NS(type=\"text\", text=json.dumps(loose))\n    return NS(content=[block], stop_reason=\"end_turn\")\n\n\ndef _parse(*, model, max_tokens, messages, output_format, **kwargs):\n    block = NS(type=\"text\", text=json.dumps(_DATA))\n    return NS(content=[block], stop_reason=\"end_turn\",\n              parsed_output=output_format(**_DATA))\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create, parse=_parse)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\nsys.modules[\"pydantic\"] = NS(BaseModel=BaseModel)\n"
+    }
+  }
+}

@@ -147,3 +147,15 @@ terms:
     term: Configuration provider
     definitionEn: A component that reads settings from one source, such as a JSON file, environment variables or command-line arguments, as flat key-value pairs. When several providers set the same key, the one added last wins.
     definitionAr: component بيقرا الـ settings من مصدر واحد، زي ملف JSON أو environment variables أو command-line arguments، على شكل key وقيمته. ولو كذا provider حطوا نفس الـ key، اللي اتضاف الآخر هو اللي بيكسب.
+  - id: problem-details
+    term: Problem Details
+    definitionEn: The standard JSON shape for HTTP API errors defined by RFC 9457, sent as application/problem+json, with members such as type, title, status, detail and instance.
+    definitionAr: الشكل القياسي لأخطاء الـ HTTP APIs اللي معرّف في RFC 9457، وبيتبعت كـ application/problem+json وفيه حاجات زي type و title و status و detail و instance.
+  - id: options-pattern
+    term: Options pattern
+    definitionEn: Binding a section of configuration to a plain C# class and receiving it through dependency injection as IOptions<T>, IOptionsSnapshot<T> or IOptionsMonitor<T>, instead of reading string keys directly.
+    definitionAr: إنك تعمل bind لـ section من الـ configuration على class عادية في C#، وتستلمها من الـ dependency injection كـ IOptions<T> أو IOptionsSnapshot<T> أو IOptionsMonitor<T>، بدل ما تقرا keys كـ strings بنفسك.
+  - id: service-lifetime
+    term: Service lifetime
+    definitionEn: How long the dependency injection container keeps an instance of a service. Singleton means one instance for the whole app, scoped means one per request, and transient means a new one every time it's resolved.
+    definitionAr: المدة اللي الـ dependency injection container بيحتفظ فيها بـ instance من الـ service. الـ Singleton يعني instance واحدة للتطبيق كله، والـ scoped يعني واحدة لكل request، والـ transient يعني واحدة جديدة كل مرة تتطلب.

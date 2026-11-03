@@ -1,0 +1,46 @@
+{
+  "slug": "attention-weights-are-not-explanations",
+  "field": "deep-learning-llms",
+  "topic": "transformers",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "What Attention Really Computes, and Why Its Weights Don't Explain Answers",
+      "subtitle": "An attention weight says where one head read from, not how much it mattered or why the model answered."
+    },
+    "ar-EG": {
+      "title": "الـ Attention بيحسب إيه فعلًا؟ وليه الـ weights بتاعته مش تفسير للإجابة",
+      "subtitle": "الـ attention weight بيقولك head واحد قرا منين، مش ده فرق قد إيه ولا الموديل جاوب كده ليه."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 13 },
+  "tags": ["Transformers", "Attention", "Interpretability", "LLMs"],
+  "sources": [
+    {
+      "title": "Vaswani et al., Attention Is All You Need, arXiv:1706.03762",
+      "url": "https://arxiv.org/abs/1706.03762"
+    },
+    {
+      "title": "LLMs: What's a large language model? — Google Machine Learning Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/llm/transformers"
+    },
+    {
+      "title": "Jain and Wallace, Attention is not Explanation, arXiv:1902.10186",
+      "url": "https://arxiv.org/abs/1902.10186"
+    },
+    {
+      "title": "Kobayashi et al., Attention is Not Only a Weight: Analyzing Transformers with Vector Norms, arXiv:2004.10102",
+      "url": "https://arxiv.org/abs/2004.10102"
+    },
+    {
+      "title": "Xiao et al., Efficient Streaming Language Models with Attention Sinks, arXiv:2309.17453",
+      "url": "https://arxiv.org/abs/2309.17453"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

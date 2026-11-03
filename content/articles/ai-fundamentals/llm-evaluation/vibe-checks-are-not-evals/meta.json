@@ -1,0 +1,51 @@
+{
+  "slug": "vibe-checks-are-not-evals",
+  "field": "ai-fundamentals",
+  "topic": "llm-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Vibe Checks Aren't Evals: Testing an LLM Feature Before You Ship It",
+      "subtitle": "A few good-looking outputs prove little. Real cases, a clear bar, automated grading and repeated runs tell you if it's ready."
+    },
+    "ar-EG": {
+      "title": "تجربة كام prompt مش تقييم: إزاي تختبر feature معمولة بالـ LLM قبل ما تنزّلها",
+      "subtitle": "كام output شكلهم حلو مابيثبتوش حاجة. اللي بيقولك إنها جاهزة: حالات حقيقية، ومعيار واضح، وتصحيح أوتوماتيك، وتشغيل أكتر من مرة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "building-with-llms",
+    "order": 5
+  },
+  "tags": [
+    "LLM Evaluation",
+    "Testing",
+    "Claude API",
+    "LLMs"
+  ],
+  "sources": [
+    {
+      "title": "Define success criteria and build evaluations — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests"
+    },
+    {
+      "title": "Demystifying evals for AI agents — Anthropic Engineering",
+      "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+    },
+    {
+      "title": "Liang et al., Holistic Evaluation of Language Models (HELM), arXiv:2211.09110",
+      "url": "https://arxiv.org/abs/2211.09110"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nROUTER_PROMPT = \"Route the ticket. Reply with one word: billing, technical or account.\"\n_QUEUES = {\"charged\": \"billing\", \"refund\": \"billing\", \"crash\": \"technical\",\n           \"login\": \"technical\", \"email\": \"account\", \"password\": \"account\"}\n\n\ndef _create(*, model, max_tokens, messages, system=\"\", **kwargs):\n    text = messages[-1][\"content\"].lower()\n    queue = next((q for k, q in _QUEUES.items() if k in text), \"technical\")\n    return NS(content=[NS(type=\"text\", text=queue.capitalize())],\n              stop_reason=\"end_turn\")\n\n\ndef route(ticket):\n    reply = _create(model=\"\", max_tokens=1, messages=[{\"content\": ticket}])\n    return reply.content[0].text\n\n\ndef load_cases(path):\n    return [{\"text\": \"I was charged twice for March\", \"queue\": \"billing\"},\n            {\"text\": \"refund pls, wrong plan\", \"queue\": \"billing\"},\n            {\"text\": \"App crashes when I open reports\", \"queue\": \"technical\"},\n            {\"text\": \"cant login since update\", \"queue\": \"technical\"},\n            {\"text\": \"How do I change my email?\", \"queue\": \"account\"},\n            {\"text\": \"Reset password link expired\", \"queue\": \"account\"}]\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=lambda **kw: NS(messages=NS(create=_create)))\n"
+    }
+  }
+}

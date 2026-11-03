@@ -312,3 +312,11 @@ terms:
     definitionAr: >-
       إنك تستخدم language model ومعاه rubric عشان يقيّم outputs موديل تاني لما checks الكود البسيطة ماتنفعش، زي النبرة أو
       إن الإجابة كاملة. ومحتاج تتأكد منه قصاد تقييم البشر قبل ما تعتمد عليه.
+  - id: few-shot-prompting
+    term: Few-Shot Prompting
+    definitionEn: >-
+      Putting a few worked examples of a task, inputs with the outputs you want, into the prompt so the model follows
+      the same pattern. Zero-shot means no examples; one-shot means a single example.
+    definitionAr: >-
+      إنك تحط في الـ prompt كام مثال محلول للمهمة، inputs ومعاها الـ outputs اللي إنت عايزها، عشان الموديل يمشي على نفس
+      الـ pattern. والـ zero-shot يعني من غير أمثلة، والـ one-shot يعني مثال واحد.

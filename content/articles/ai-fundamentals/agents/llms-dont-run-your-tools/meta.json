@@ -1,0 +1,59 @@
+{
+  "slug": "llms-dont-run-your-tools",
+  "field": "ai-fundamentals",
+  "topic": "agents",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "The Model Doesn't Run Your Function: How Tool Calling Really Works",
+      "subtitle": "The model only writes a request. Your code runs it, checks it and sends the result back, one round trip at a time."
+    },
+    "ar-EG": {
+      "title": "الموديل مش بيشغّل الـ function بتاعتك: الـ Tool Calling بيشتغل إزاي فعلًا",
+      "subtitle": "الموديل بيكتب طلب وبس. الكود بتاعك هو اللي بيشغّله ويراجعه ويرجّعله النتيجة، رايح جاي في كل مرة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "building-with-llms",
+    "order": 2
+  },
+  "tags": [
+    "Tool Use",
+    "Agents",
+    "Claude API",
+    "LLMs"
+  ],
+  "sources": [
+    {
+      "title": "How tool use works — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works"
+    },
+    {
+      "title": "Handle tool calls — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+    },
+    {
+      "title": "Define tools — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+    },
+    {
+      "title": "Schick et al., Toolformer: Language Models Can Teach Themselves to Use Tools, arXiv:2302.04761",
+      "url": "https://arxiv.org/abs/2302.04761"
+    },
+    {
+      "title": "Yao et al., ReAct: Synergizing Reasoning and Acting in Language Models, arXiv:2210.03629",
+      "url": "https://arxiv.org/abs/2210.03629"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\ncustomer = NS(id=\"cus_77\", orders={\"1042\"})\n\n\ndef refund_order(order_id, user):\n    if order_id not in user.orders:\n        raise PermissionError(f\"Order {order_id} doesn't belong to this customer.\")\n    return f\"Refunded order {order_id}: 49.00 USD to the original card.\"\n\n\nREFUND_TOOL = {\"name\": \"refund_order\", \"description\": \"Refunds an order.\",\n               \"input_schema\": {\"type\": \"object\"}}\n\n\ndef _create(*, model, max_tokens, messages, tools=None, **kwargs):\n    last = messages[-1][\"content\"]\n    if isinstance(last, list) and last and last[0].get(\"type\") == \"tool_result\":\n        res = last[0]\n        text = (\"I couldn't refund it: \" if res.get(\"is_error\") else \"Done. \") + res[\"content\"]\n        return NS(content=[NS(type=\"text\", text=text)], stop_reason=\"end_turn\")\n    blocks = [NS(type=\"text\", text=\"I'll refund order 1042 now.\"),\n              NS(type=\"tool_use\", id=\"toolu_01\", name=\"refund_order\",\n                 input={\"order_id\": \"1042\"})]\n    return NS(content=blocks, stop_reason=\"tool_use\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

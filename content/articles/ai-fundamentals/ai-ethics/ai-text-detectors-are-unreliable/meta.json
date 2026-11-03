@@ -1,0 +1,42 @@
+{
+  "slug": "ai-text-detectors-are-unreliable",
+  "field": "ai-fundamentals",
+  "topic": "ai-ethics",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "AI Text Detectors Can't Reliably Tell Who Wrote It, and They Penalize Non-Native Writers",
+      "subtitle": "A detector score measures how predictable a text is, not who wrote it, and plain writing pays the price."
+    },
+    "ar-EG": {
+      "title": "ليه أدوات كشف النصوص المكتوبة بالـ AI مش موثوقة؟ وبتظلم اللي بيكتبوا بلغة مش لغتهم",
+      "subtitle": "الـ score بتاع الـ detector بيقيس النص متوقَّع قد إيه، مش مين كتبه، والكتابة البسيطة هي اللي بتدفع التمن."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "understanding-llms", "order": 12 },
+  "tags": ["AI Ethics", "AI Detection", "LLMs", "Fairness"],
+  "sources": [
+    {
+      "title": "Liang et al., GPT detectors are biased against non-native English writers, arXiv:2304.02819",
+      "url": "https://arxiv.org/abs/2304.02819"
+    },
+    {
+      "title": "Sadasivan et al., Can AI-Generated Text be Reliably Detected?, arXiv:2303.11156",
+      "url": "https://arxiv.org/abs/2303.11156"
+    },
+    {
+      "title": "Kirchenbauer et al., A Watermark for Large Language Models, arXiv:2301.10226",
+      "url": "https://arxiv.org/abs/2301.10226"
+    },
+    {
+      "title": "SynthID — Google AI for Developers, Responsible Generative AI Toolkit",
+      "url": "https://ai.google.dev/responsible/docs/safeguards/synthid"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

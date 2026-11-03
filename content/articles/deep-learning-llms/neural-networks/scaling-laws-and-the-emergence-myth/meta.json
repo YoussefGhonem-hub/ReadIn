@@ -1,0 +1,54 @@
+{
+  "slug": "scaling-laws-and-the-emergence-myth",
+  "field": "deep-learning-llms",
+  "topic": "neural-networks",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Bigger Isn't Automatically Smarter: Scaling Laws and the Emergence Myth",
+      "subtitle": "Loss improves smoothly with size, data and compute; many sudden jumps come from all-or-nothing metrics."
+    },
+    "ar-EG": {
+      "title": "الموديل الأكبر مش دايمًا أذكى: الـ Scaling Laws وأسطورة الـ Emergence",
+      "subtitle": "الـ loss بيتحسن بسلاسة مع الحجم والداتا والـ compute، وقفزات كتير مفاجئة جاية من مقاييس يا كله يا مفيش."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "understanding-llms",
+    "order": 15
+  },
+  "tags": [
+    "LLMs",
+    "Scaling Laws",
+    "Emergent Abilities",
+    "Model Selection"
+  ],
+  "sources": [
+    {
+      "title": "Kaplan et al., Scaling Laws for Neural Language Models, arXiv:2001.08361",
+      "url": "https://arxiv.org/abs/2001.08361"
+    },
+    {
+      "title": "Hoffmann et al., Training Compute-Optimal Large Language Models (Chinchilla), arXiv:2203.15556",
+      "url": "https://arxiv.org/abs/2203.15556"
+    },
+    {
+      "title": "Wei et al., Emergent Abilities of Large Language Models, arXiv:2206.07682",
+      "url": "https://arxiv.org/abs/2206.07682"
+    },
+    {
+      "title": "Schaeffer, Miranda and Koyejo, Are Emergent Abilities of Large Language Models a Mirage?, arXiv:2304.15004",
+      "url": "https://arxiv.org/abs/2304.15004"
+    },
+    {
+      "title": "Choosing the right model — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/about-claude/models/choosing-a-model"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

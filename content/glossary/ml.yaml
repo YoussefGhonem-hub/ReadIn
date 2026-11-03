@@ -197,3 +197,20 @@ terms:
     definitionAr: >-
       score من -1 لـ 1 بيقيّم الـ clustering، بيتحسب من قد إيه كل نقطة قريبة من الـ cluster بتاعها مقارنةً بأقرب cluster
       تاني. مش محتاج labels، بس بيفضّل الـ clusters المتماسكة والـ convex.
+  - id: confounder
+    term: Confounder
+    definitionEn: >-
+      A variable that affects both a feature and the outcome, such as ability affecting both education and wages. Left
+      out, it makes the feature look more influential than it is.
+    definitionAr: >-
+      متغيّر بيأثر على الـ feature وعلى النتيجة في نفس الوقت، زي القدرات اللي بتأثر على التعليم وعلى المرتب. لو سبته برّه،
+      الـ feature بتبان مؤثرة أكتر من حقيقتها.
+  - id: ab-test
+    term: A/B Test
+    definitionEn: >-
+      An experiment that assigns users at random to two or more variants, such as with and without a feature, and
+      compares the outcome. Random assignment balances every other factor, measured or not, so the difference
+      estimates the variant's real effect.
+    definitionAr: >-
+      تجربة بتوزّع المستخدمين عشوائيًا على نسختين أو أكتر، زي بالـ feature ومن غيرها، وبتقارن النتيجة. التوزيع العشوائي
+      بيوازن كل العوامل التانية، سواء اتقاست أو لأ، فالفرق بيقدّر التأثير الحقيقي للنسخة.

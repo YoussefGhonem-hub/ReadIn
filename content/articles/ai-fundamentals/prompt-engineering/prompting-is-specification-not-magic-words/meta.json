@@ -1,0 +1,59 @@
+{
+  "slug": "prompting-is-specification-not-magic-words",
+  "field": "ai-fundamentals",
+  "topic": "prompt-engineering",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Prompt Engineering Isn't Magic Words: Write a Clear Spec Instead",
+      "subtitle": "Tips, threats and expert personas don't reliably help. Context, a precise task and a test set do."
+    },
+    "ar-EG": {
+      "title": "ليه الـ prompt الكويس مش كلمات سحرية؟ اكتب spec واضح بدلها",
+      "subtitle": "الـ tips والتهديدات وشخصية الخبير مش بتفرق بشكل ثابت. اللي بيفرق: context ومهمة دقيقة وset تختبر بيها."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "building-with-llms",
+    "order": 1
+  },
+  "tags": [
+    "Prompt Engineering",
+    "LLMs",
+    "Claude API",
+    "System Prompts"
+  ],
+  "sources": [
+    {
+      "title": "Prompt engineering overview — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"
+    },
+    {
+      "title": "Prompting best practices — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+    },
+    {
+      "title": "Sclar et al., Quantifying Language Models' Sensitivity to Spurious Features in Prompt Design, arXiv:2310.11324",
+      "url": "https://arxiv.org/abs/2310.11324"
+    },
+    {
+      "title": "Zheng et al., When \"A Helpful Assistant\" Is Not Really Helpful: Personas in System Prompts Do Not Improve Performances of Large Language Models, arXiv:2311.10054",
+      "url": "https://arxiv.org/abs/2311.10054"
+    },
+    {
+      "title": "Meincke et al., Prompting Science Report 3: I'll pay you or I'll kill you — but will you care?, arXiv:2508.00614",
+      "url": "https://arxiv.org/abs/2508.00614"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\n\ndef _create(*, model, max_tokens, messages, system=\"\", **kwargs):\n    text = (\"Plan: Pro\\nProblem: exports fail with E413\\nSince: Monday\"\n            if \"three lines\" in system else\n            \"The customer is having an issue with exports.\")\n    block = types.SimpleNamespace(type=\"text\", text=text)\n    return types.SimpleNamespace(content=[block], stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = types.SimpleNamespace(create=_create)\n\n\nsys.modules[\"anthropic\"] = types.SimpleNamespace(Anthropic=_Anthropic)\n"
+    }
+  }
+}

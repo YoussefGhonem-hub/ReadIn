@@ -1,0 +1,59 @@
+{
+  "slug": "llm-cost-grows-with-every-turn",
+  "field": "ai-fundamentals",
+  "topic": "ai-concepts",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "You Pay for the Whole Conversation Every Turn: How LLM Costs Add Up",
+      "subtitle": "Each request bills the full history again, so a chat's cost grows much faster than its messages. Measure it, then cache it."
+    },
+    "ar-EG": {
+      "title": "بتدفع تمن المحادثة كلها مع كل رسالة: إزاي تكلفة الـ LLM بتكبر",
+      "subtitle": "كل request بيتحاسب على التاريخ كله من الأول، فتكلفة المحادثة بتكبر أسرع بكتير من رسايلها. قيسها، وبعدين اعملها cache."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "building-with-llms",
+    "order": 4
+  },
+  "tags": [
+    "LLMs",
+    "Claude API",
+    "Prompt Caching",
+    "Cost"
+  ],
+  "sources": [
+    {
+      "title": "Using the Messages API: multiple conversational turns — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/working-with-messages"
+    },
+    {
+      "title": "Pricing — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/about-claude/pricing"
+    },
+    {
+      "title": "Prompt caching — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+    },
+    {
+      "title": "Token counting — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/token-counting"
+    },
+    {
+      "title": "Thinking — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/thinking"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nSYSTEM = \"You answer questions about our export service.\"\nhistory = []\n\n\ndef _create(*, model, max_tokens, messages, system=\"\", cache_control=None, **kw):\n    sent = 3000 + 600 * len(messages)\n    if cache_control:\n        usage = NS(input_tokens=0, cache_creation_input_tokens=600,\n                   cache_read_input_tokens=sent - 600, output_tokens=400)\n    else:\n        usage = NS(input_tokens=sent, cache_creation_input_tokens=None,\n                   cache_read_input_tokens=None, output_tokens=400)\n    text = NS(type=\"text\", text=\"E413 means the file is over the size limit.\")\n    return NS(content=[text], usage=usage, stop_reason=\"end_turn\")\n\n\nclass _Meter:\n    usd = 0.0\n\n    def add_usd(self, amount):\n        self.usd += amount\n\n\nmeter = _Meter()\nclient = NS(messages=NS(create=_create))\nsys.modules[\"anthropic\"] = NS(Anthropic=lambda **kw: client)\n"
+    }
+  }
+}

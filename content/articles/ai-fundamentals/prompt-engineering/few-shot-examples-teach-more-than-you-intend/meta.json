@@ -1,0 +1,51 @@
+{
+  "slug": "few-shot-examples-teach-more-than-you-intend",
+  "field": "ai-fundamentals",
+  "topic": "prompt-engineering",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Few-Shot Examples Teach More Than You Intend: Label Bias, Order and Copying",
+      "subtitle": "The model learns from everything in your examples: which labels dominate, which comes last, how long and how phrased they are."
+    },
+    "ar-EG": {
+      "title": "الأمثلة اللي في الـ prompt بتعلّم الموديل أكتر من اللي إنت قاصده",
+      "subtitle": "الموديل بيتعلّم من كل حاجة في أمثلتك: أنهي label غالب، وأنهي واحد جه في الآخر، وطولها وصياغتها شكلها إيه."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "building-with-llms",
+    "order": 6
+  },
+  "tags": [
+    "Prompt Engineering",
+    "Few-Shot Prompting",
+    "In-Context Learning",
+    "LLMs"
+  ],
+  "sources": [
+    {
+      "title": "Zhao et al., Calibrate Before Use: Improving Few-Shot Performance of Language Models, arXiv:2102.09690",
+      "url": "https://arxiv.org/abs/2102.09690"
+    },
+    {
+      "title": "Min et al., Rethinking the Role of Demonstrations: What Makes In-Context Learning Work?, arXiv:2202.12837",
+      "url": "https://arxiv.org/abs/2202.12837"
+    },
+    {
+      "title": "Prompting best practices: use examples effectively — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import random\n\nRULE = \"Route the ticket. Answer billing, technical or account.\"\nEXAMPLES = [(\"Export to CSV fails\", \"technical\"), (\"Refund my plan\", \"billing\")]\nCASES = [(\"I was charged twice\", \"billing\"), (\"App crashes\", \"technical\"),\n         (\"Change my email\", \"account\"), (\"Pricing page is blank\", \"technical\")]\n\n\ndef build_system(examples):\n    return RULE + \"\".join(f\"\\n{t} -> {q}\" for t, q in examples)\n\n\ndef accuracy(system, cases):\n    rng = random.Random(len(system))\n    return sum(rng.random() < 0.9 for _ in cases) / len(cases)\n"
+    }
+  }
+}

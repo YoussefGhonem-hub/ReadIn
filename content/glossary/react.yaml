@@ -265,3 +265,11 @@ terms:
     definitionAr: >-
       الاسم اللي React بيطلقه على function بتشتغل جوه Transition، زي اللي بتديها للـ action بتاع فورم أو لـ
       startTransition. React بيتابع هل لسه شغالة، ولو رمت error بيبعته لأقرب Error Boundary.
+  - id: debounce
+    term: Debounce
+    definitionEn: >-
+      Waiting until a burst of events has paused for a fixed time, then acting once, for example running a search
+      only after the user has stopped typing for 300 ms. Every new event restarts the wait.
+    definitionAr: >-
+      إنك تستنى لحد ما سلسلة events تهدى لمدة ثابتة، وبعدين تعمل الحاجة مرة واحدة، زي إنك تعمل search بس بعد ما
+      اليوزر يبطّل كتابة لمدة 300 ms. وكل event جديد بيبدأ الانتظار من الأول.

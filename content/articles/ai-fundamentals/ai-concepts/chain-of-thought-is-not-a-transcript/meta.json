@@ -1,0 +1,59 @@
+{
+  "slug": "chain-of-thought-is-not-a-transcript",
+  "field": "ai-fundamentals",
+  "topic": "ai-concepts",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Chain-of-Thought Isn't a Transcript of the Model's Reasoning",
+      "subtitle": "The steps a model writes can help it answer, but they can leave out what actually drove the answer."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Chain-of-Thought مش تسجيل حقيقي لطريقة تفكير الموديل؟",
+      "subtitle": "الخطوات اللي الموديل بيكتبها ممكن تساعده يجاوب، بس ممكن تسيب برّه اللي فعلًا حرّك الإجابة."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "understanding-llms",
+    "order": 14
+  },
+  "tags": [
+    "LLMs",
+    "Chain-of-Thought",
+    "Reasoning",
+    "AI Safety"
+  ],
+  "sources": [
+    {
+      "title": "Wei et al., Chain-of-Thought Prompting Elicits Reasoning in Large Language Models, arXiv:2201.11903",
+      "url": "https://arxiv.org/abs/2201.11903"
+    },
+    {
+      "title": "Lanham et al., Measuring Faithfulness in Chain-of-Thought Reasoning, arXiv:2307.13702",
+      "url": "https://arxiv.org/abs/2307.13702"
+    },
+    {
+      "title": "Reasoning models don't always say what they think — Anthropic Research",
+      "url": "https://www.anthropic.com/research/reasoning-models-dont-say-think"
+    },
+    {
+      "title": "Tracing the thoughts of a large language model — Anthropic Research",
+      "url": "https://www.anthropic.com/research/tracing-thoughts-language-model"
+    },
+    {
+      "title": "Thinking — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/thinking"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\n\ndef _create(*, model, max_tokens, messages, **kwargs):\n    hinted = messages[-1][\"content\"].startswith(\"A senior engineer\")\n    text = (\"Quicksort splits around a pivot, so it runs in n log n. \"\n            \"Answer: A\" if hinted else\n            \"A bad pivot every time gives quadratic time. Answer: B\")\n    blocks = [types.SimpleNamespace(type=\"thinking\", thinking=\"\"),\n              types.SimpleNamespace(type=\"text\", text=text)]\n    return types.SimpleNamespace(content=blocks, stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = types.SimpleNamespace(create=_create)\n\n\nsys.modules[\"anthropic\"] = types.SimpleNamespace(Anthropic=_Anthropic)\n"
+    }
+  }
+}
