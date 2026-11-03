@@ -837,7 +837,7 @@ as int,
 /// @nodoc
 mixin _$ArticleCardModel {
 
- String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel get author; int get readingTimeMinutes; bool get isReviewed; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; int get saveCount; String? get myReaction; bool get isSaved;
+ String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel? get author; int get readingTimeMinutes; bool get isReviewed; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; int get saveCount; String? get myReaction; bool get isSaved;
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -870,11 +870,11 @@ abstract mixin class $ArticleCardModelCopyWith<$Res>  {
   factory $ArticleCardModelCopyWith(ArticleCardModel value, $Res Function(ArticleCardModel) _then) = _$ArticleCardModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved
 });
 
 
-$FieldRefModelCopyWith<$Res> get field;$AuthorModelCopyWith<$Res> get author;$ArticleAttachmentsModelCopyWith<$Res>? get attachments;$ReactionCountsModelCopyWith<$Res>? get reactions;
+$FieldRefModelCopyWith<$Res> get field;$AuthorModelCopyWith<$Res>? get author;$ArticleAttachmentsModelCopyWith<$Res>? get attachments;$ReactionCountsModelCopyWith<$Res>? get reactions;
 
 }
 /// @nodoc
@@ -887,7 +887,7 @@ class _$ArticleCardModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = null,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -896,8 +896,8 @@ as String,title: null == title ? _self.title : title // ignore: cast_nullable_to
 as String,subtitle: freezed == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String?,coverUrl: freezed == coverUrl ? _self.coverUrl : coverUrl // ignore: cast_nullable_to_non_nullable
 as String?,field: null == field ? _self.field : field // ignore: cast_nullable_to_non_nullable
-as FieldRefModel,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
-as AuthorModel,readingTimeMinutes: null == readingTimeMinutes ? _self.readingTimeMinutes : readingTimeMinutes // ignore: cast_nullable_to_non_nullable
+as FieldRefModel,author: freezed == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
+as AuthorModel?,readingTimeMinutes: null == readingTimeMinutes ? _self.readingTimeMinutes : readingTimeMinutes // ignore: cast_nullable_to_non_nullable
 as int,isReviewed: null == isReviewed ? _self.isReviewed : isReviewed // ignore: cast_nullable_to_non_nullable
 as bool,isAiAssisted: null == isAiAssisted ? _self.isAiAssisted : isAiAssisted // ignore: cast_nullable_to_non_nullable
 as bool,versionBadge: freezed == versionBadge ? _self.versionBadge : versionBadge // ignore: cast_nullable_to_non_nullable
@@ -925,9 +925,12 @@ $FieldRefModelCopyWith<$Res> get field {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$AuthorModelCopyWith<$Res> get author {
-  
-  return $AuthorModelCopyWith<$Res>(_self.author, (value) {
+$AuthorModelCopyWith<$Res>? get author {
+    if (_self.author == null) {
+    return null;
+  }
+
+  return $AuthorModelCopyWith<$Res>(_self.author!, (value) {
     return _then(_self.copyWith(author: value));
   });
 }/// Create a copy of ArticleCardModel
@@ -1036,7 +1039,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ArticleCardModel() when $default != null:
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved);case _:
@@ -1057,7 +1060,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved)  $default,) {final _that = this;
 switch (_that) {
 case _ArticleCardModel():
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved);case _:
@@ -1077,7 +1080,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved)?  $default,) {final _that = this;
 switch (_that) {
 case _ArticleCardModel() when $default != null:
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved);case _:
@@ -1102,7 +1105,7 @@ class _ArticleCardModel extends ArticleCardModel {
 @override final  String? subtitle;
 @override final  String? coverUrl;
 @override final  FieldRefModel field;
-@override final  AuthorModel author;
+@override final  AuthorModel? author;
 @override@JsonKey() final  int readingTimeMinutes;
 @override@JsonKey() final  bool isReviewed;
 @override@JsonKey() final  bool isAiAssisted;
@@ -1149,11 +1152,11 @@ abstract mixin class _$ArticleCardModelCopyWith<$Res> implements $ArticleCardMod
   factory _$ArticleCardModelCopyWith(_ArticleCardModel value, $Res Function(_ArticleCardModel) _then) = __$ArticleCardModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved
 });
 
 
-@override $FieldRefModelCopyWith<$Res> get field;@override $AuthorModelCopyWith<$Res> get author;@override $ArticleAttachmentsModelCopyWith<$Res>? get attachments;@override $ReactionCountsModelCopyWith<$Res>? get reactions;
+@override $FieldRefModelCopyWith<$Res> get field;@override $AuthorModelCopyWith<$Res>? get author;@override $ArticleAttachmentsModelCopyWith<$Res>? get attachments;@override $ReactionCountsModelCopyWith<$Res>? get reactions;
 
 }
 /// @nodoc
@@ -1166,7 +1169,7 @@ class __$ArticleCardModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = null,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,}) {
   return _then(_ArticleCardModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -1175,8 +1178,8 @@ as String,title: null == title ? _self.title : title // ignore: cast_nullable_to
 as String,subtitle: freezed == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String?,coverUrl: freezed == coverUrl ? _self.coverUrl : coverUrl // ignore: cast_nullable_to_non_nullable
 as String?,field: null == field ? _self.field : field // ignore: cast_nullable_to_non_nullable
-as FieldRefModel,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
-as AuthorModel,readingTimeMinutes: null == readingTimeMinutes ? _self.readingTimeMinutes : readingTimeMinutes // ignore: cast_nullable_to_non_nullable
+as FieldRefModel,author: freezed == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
+as AuthorModel?,readingTimeMinutes: null == readingTimeMinutes ? _self.readingTimeMinutes : readingTimeMinutes // ignore: cast_nullable_to_non_nullable
 as int,isReviewed: null == isReviewed ? _self.isReviewed : isReviewed // ignore: cast_nullable_to_non_nullable
 as bool,isAiAssisted: null == isAiAssisted ? _self.isAiAssisted : isAiAssisted // ignore: cast_nullable_to_non_nullable
 as bool,versionBadge: freezed == versionBadge ? _self.versionBadge : versionBadge // ignore: cast_nullable_to_non_nullable
@@ -1205,9 +1208,12 @@ $FieldRefModelCopyWith<$Res> get field {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$AuthorModelCopyWith<$Res> get author {
-  
-  return $AuthorModelCopyWith<$Res>(_self.author, (value) {
+$AuthorModelCopyWith<$Res>? get author {
+    if (_self.author == null) {
+    return null;
+  }
+
+  return $AuthorModelCopyWith<$Res>(_self.author!, (value) {
     return _then(_self.copyWith(author: value));
   });
 }/// Create a copy of ArticleCardModel
@@ -2045,7 +2051,7 @@ as String,
 /// @nodoc
 mixin _$ArticleDetailsModel {
 
- String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel get author; int get readingTimeMinutes; bool get isReviewed; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; String? get myReaction; bool get isSaved; List<String> get availableLanguages; String? get summary; Map<String, dynamic> get content; FieldRefModel? get topic; List<String> get tags; List<SourceModel> get sources; ReviewerModel? get reviewedBy; DateTime? get lastReviewedAt; int get saveCount; int get readCount; bool get isFollowingAuthor; List<String> get collectionIds;
+ String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel? get author; int get readingTimeMinutes; bool get isReviewed; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; String? get myReaction; bool get isSaved; List<String> get availableLanguages; String? get summary; Map<String, dynamic> get content; FieldRefModel? get topic; List<String> get tags; List<SourceModel> get sources; ReviewerModel? get reviewedBy; DateTime? get lastReviewedAt; int get saveCount; int get readCount; bool get isFollowingAuthor; List<String> get collectionIds;
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2078,11 +2084,11 @@ abstract mixin class $ArticleDetailsModelCopyWith<$Res>  {
   factory $ArticleDetailsModelCopyWith(ArticleDetailsModel value, $Res Function(ArticleDetailsModel) _then) = _$ArticleDetailsModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic, List<String> tags, List<SourceModel> sources, ReviewerModel? reviewedBy, DateTime? lastReviewedAt, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic, List<String> tags, List<SourceModel> sources, ReviewerModel? reviewedBy, DateTime? lastReviewedAt, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds
 });
 
 
-$FieldRefModelCopyWith<$Res> get field;$AuthorModelCopyWith<$Res> get author;$ArticleAttachmentsModelCopyWith<$Res>? get attachments;$ReactionCountsModelCopyWith<$Res>? get reactions;$FieldRefModelCopyWith<$Res>? get topic;$ReviewerModelCopyWith<$Res>? get reviewedBy;
+$FieldRefModelCopyWith<$Res> get field;$AuthorModelCopyWith<$Res>? get author;$ArticleAttachmentsModelCopyWith<$Res>? get attachments;$ReactionCountsModelCopyWith<$Res>? get reactions;$FieldRefModelCopyWith<$Res>? get topic;$ReviewerModelCopyWith<$Res>? get reviewedBy;
 
 }
 /// @nodoc
@@ -2095,7 +2101,7 @@ class _$ArticleDetailsModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = null,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? reviewedBy = freezed,Object? lastReviewedAt = freezed,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? reviewedBy = freezed,Object? lastReviewedAt = freezed,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -2104,8 +2110,8 @@ as String,title: null == title ? _self.title : title // ignore: cast_nullable_to
 as String,subtitle: freezed == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String?,coverUrl: freezed == coverUrl ? _self.coverUrl : coverUrl // ignore: cast_nullable_to_non_nullable
 as String?,field: null == field ? _self.field : field // ignore: cast_nullable_to_non_nullable
-as FieldRefModel,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
-as AuthorModel,readingTimeMinutes: null == readingTimeMinutes ? _self.readingTimeMinutes : readingTimeMinutes // ignore: cast_nullable_to_non_nullable
+as FieldRefModel,author: freezed == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
+as AuthorModel?,readingTimeMinutes: null == readingTimeMinutes ? _self.readingTimeMinutes : readingTimeMinutes // ignore: cast_nullable_to_non_nullable
 as int,isReviewed: null == isReviewed ? _self.isReviewed : isReviewed // ignore: cast_nullable_to_non_nullable
 as bool,isAiAssisted: null == isAiAssisted ? _self.isAiAssisted : isAiAssisted // ignore: cast_nullable_to_non_nullable
 as bool,versionBadge: freezed == versionBadge ? _self.versionBadge : versionBadge // ignore: cast_nullable_to_non_nullable
@@ -2144,9 +2150,12 @@ $FieldRefModelCopyWith<$Res> get field {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$AuthorModelCopyWith<$Res> get author {
-  
-  return $AuthorModelCopyWith<$Res>(_self.author, (value) {
+$AuthorModelCopyWith<$Res>? get author {
+    if (_self.author == null) {
+    return null;
+  }
+
+  return $AuthorModelCopyWith<$Res>(_self.author!, (value) {
     return _then(_self.copyWith(author: value));
   });
 }/// Create a copy of ArticleDetailsModel
@@ -2279,7 +2288,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel() when $default != null:
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.reviewedBy,_that.lastReviewedAt,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds);case _:
@@ -2300,7 +2309,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds)  $default,) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel():
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.reviewedBy,_that.lastReviewedAt,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds);case _:
@@ -2320,7 +2329,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds)?  $default,) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel() when $default != null:
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.reviewedBy,_that.lastReviewedAt,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds);case _:
@@ -2345,7 +2354,7 @@ class _ArticleDetailsModel extends ArticleDetailsModel {
 @override final  String? subtitle;
 @override final  String? coverUrl;
 @override final  FieldRefModel field;
-@override final  AuthorModel author;
+@override final  AuthorModel? author;
 @override@JsonKey() final  int readingTimeMinutes;
 @override@JsonKey() final  bool isReviewed;
 @override@JsonKey() final  bool isAiAssisted;
@@ -2433,11 +2442,11 @@ abstract mixin class _$ArticleDetailsModelCopyWith<$Res> implements $ArticleDeta
   factory _$ArticleDetailsModelCopyWith(_ArticleDetailsModel value, $Res Function(_ArticleDetailsModel) _then) = __$ArticleDetailsModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic, List<String> tags, List<SourceModel> sources, ReviewerModel? reviewedBy, DateTime? lastReviewedAt, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic, List<String> tags, List<SourceModel> sources, ReviewerModel? reviewedBy, DateTime? lastReviewedAt, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds
 });
 
 
-@override $FieldRefModelCopyWith<$Res> get field;@override $AuthorModelCopyWith<$Res> get author;@override $ArticleAttachmentsModelCopyWith<$Res>? get attachments;@override $ReactionCountsModelCopyWith<$Res>? get reactions;@override $FieldRefModelCopyWith<$Res>? get topic;@override $ReviewerModelCopyWith<$Res>? get reviewedBy;
+@override $FieldRefModelCopyWith<$Res> get field;@override $AuthorModelCopyWith<$Res>? get author;@override $ArticleAttachmentsModelCopyWith<$Res>? get attachments;@override $ReactionCountsModelCopyWith<$Res>? get reactions;@override $FieldRefModelCopyWith<$Res>? get topic;@override $ReviewerModelCopyWith<$Res>? get reviewedBy;
 
 }
 /// @nodoc
@@ -2450,7 +2459,7 @@ class __$ArticleDetailsModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = null,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? reviewedBy = freezed,Object? lastReviewedAt = freezed,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? reviewedBy = freezed,Object? lastReviewedAt = freezed,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,}) {
   return _then(_ArticleDetailsModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -2459,8 +2468,8 @@ as String,title: null == title ? _self.title : title // ignore: cast_nullable_to
 as String,subtitle: freezed == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String?,coverUrl: freezed == coverUrl ? _self.coverUrl : coverUrl // ignore: cast_nullable_to_non_nullable
 as String?,field: null == field ? _self.field : field // ignore: cast_nullable_to_non_nullable
-as FieldRefModel,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
-as AuthorModel,readingTimeMinutes: null == readingTimeMinutes ? _self.readingTimeMinutes : readingTimeMinutes // ignore: cast_nullable_to_non_nullable
+as FieldRefModel,author: freezed == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
+as AuthorModel?,readingTimeMinutes: null == readingTimeMinutes ? _self.readingTimeMinutes : readingTimeMinutes // ignore: cast_nullable_to_non_nullable
 as int,isReviewed: null == isReviewed ? _self.isReviewed : isReviewed // ignore: cast_nullable_to_non_nullable
 as bool,isAiAssisted: null == isAiAssisted ? _self.isAiAssisted : isAiAssisted // ignore: cast_nullable_to_non_nullable
 as bool,versionBadge: freezed == versionBadge ? _self.versionBadge : versionBadge // ignore: cast_nullable_to_non_nullable
@@ -2500,9 +2509,12 @@ $FieldRefModelCopyWith<$Res> get field {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$AuthorModelCopyWith<$Res> get author {
-  
-  return $AuthorModelCopyWith<$Res>(_self.author, (value) {
+$AuthorModelCopyWith<$Res>? get author {
+    if (_self.author == null) {
+    return null;
+  }
+
+  return $AuthorModelCopyWith<$Res>(_self.author!, (value) {
     return _then(_self.copyWith(author: value));
   });
 }/// Create a copy of ArticleDetailsModel

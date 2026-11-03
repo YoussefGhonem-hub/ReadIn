@@ -171,6 +171,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get verifiedWriter => 'كاتب موثّق';
 
   @override
+  String get deletedUser => 'مستخدم محذوف';
+
+  @override
   String get tldr => 'الخلاصة';
 
   @override
@@ -1224,17 +1227,116 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteAccount => 'حذف الحساب';
 
   @override
-  String get deleteAccountBody =>
-      'هنمسح بروفايلك وبياناتك الشخصية بعد 30 يوم. مقالاتك وتعليقاتك هتفضل باسم \"مستخدم محذوف\". مينفعش ترجع في القرار ده.';
+  String get deleteAccountTitle => 'احذف حسابك';
 
   @override
-  String get deleteAccountConfirm => 'فاهم، امسح حسابي';
+  String get deleteAccountLead =>
+      'ده بيحذف حسابك على ReadIn نهائيًا. مينفعش ترجع فيه، ومش هنقدر نرجّعه.';
 
   @override
-  String get deleteAccountButton => 'امسح حسابي';
+  String get deleteAccountDeletedHeading => 'هنحذف فورًا';
 
   @override
-  String get accountDeleted => 'تم حذف الحساب.';
+  String get deleteAccountDeletedProfile =>
+      'بروفايلك: الاسم واسم المستخدم والصورة والنبذة والروابط';
+
+  @override
+  String get deleteAccountDeletedContact =>
+      'رقم تليفونك وإيميلك وكلمة السر ورمز الاسترداد';
+
+  @override
+  String get deleteAccountDeletedSignIns =>
+      'ربط حسابك بجوجل وأبل، وبنلغي صلاحية ReadIn عند أبل كمان.';
+
+  @override
+  String get deleteAccountDeletedDrafts =>
+      'المسودات وأي مقال مش منشور، بالصور وملفات الـ PDF اللي فيها، وأي صورة أو ملف تاني رفعته';
+
+  @override
+  String get deleteAccountDeletedActivity =>
+      'اهتماماتك وتقدّمك في القراية وإحصائياتك وتفاعلاتك والمقالات المحفوظة واللي بتتابعهم';
+
+  @override
+  String get deleteAccountDeletedDevices =>
+      'أجهزتك ورموز الإشعارات، فمش هيوصلك أي إشعار';
+
+  @override
+  String get deleteAccountDeletedSecurityLog =>
+      'سجل الأمان بتاع حسابك: تسجيلات الدخول وتغييرات الحساب';
+
+  @override
+  String get deleteAccountKeptHeading => 'اللي بنحتفظ بيه وليه';
+
+  @override
+  String get deleteAccountKeptPublished =>
+      'مقالاتك المنشورة وتعليقاتك بتفضل موجودة باسم «مستخدم محذوف»، بالصور وملفات الـ PDF اللي فيها: من غير اسمك أو اسم المستخدم أو صورتك، ومن غير أي حاجة تربطها بيك. ده عشان الروابط والنقاشات اللي غيرك معتمد عليها تفضل شغالة. لو عايز تشيل مقال، احذفه قبل ما تحذف حسابك.';
+
+  @override
+  String get deleteAccountKeptRecord =>
+      'سجل إن الحساب ده اتحذف: الـ ID الداخلي ووقت الحذف بس، من غير أي حاجة تعرّف بيك. بيثبت إن الحذف حصل.';
+
+  @override
+  String get deleteAccountKeptBackups =>
+      'النسخ الاحتياطية من قاعدة البيانات ممكن يفضل فيها بياناتك لحد 14 يوم، لحد ما تتمسح.';
+
+  @override
+  String get deleteAccountKeptReviews =>
+      'مراجعاتك وتعديلاتك على مقالات كتّاب تانيين بتفضل مع المقالات دي، من غير اسمك.';
+
+  @override
+  String get deleteAccountAfter =>
+      'بعد الحذف، رقم التليفون أو الإيميل أو حساب جوجل أو أبل ده يقدر يعمل حساب جديد على ReadIn، وهيبدأ فاضي.';
+
+  @override
+  String get deleteAccountByEmail => 'احذفه بالإيميل بدل كده';
+
+  @override
+  String get deleteAccountPasswordBody => 'اكتب كلمة السر عشان تحذف حسابك.';
+
+  @override
+  String get deleteAccountProviderBody =>
+      'سجّل دخول تاني بالحساب المربوط بـ ReadIn.';
+
+  @override
+  String get confirmWithGoogle => 'أكّد بجوجل';
+
+  @override
+  String get confirmWithApple => 'أكّد بأبل';
+
+  @override
+  String get confirmedWithGoogle => 'اتأكدنا إنه انت بجوجل';
+
+  @override
+  String get confirmedWithApple => 'اتأكدنا إنه انت بأبل';
+
+  @override
+  String get deleteAccountAppleUnavailable =>
+      'حسابك مربوط بأبل. أكّد بأبل من تطبيق ReadIn على الآيفون، أو ابعتلنا إيميل نحذفه.';
+
+  @override
+  String get deleteAccountConfirm => 'فاهم، احذف حسابي';
+
+  @override
+  String get deleteAccountButton => 'احذف حسابي';
+
+  @override
+  String get deletingAccount => 'بنحذف حسابك…';
+
+  @override
+  String get deleteAccountDialogTitle => 'تحذف حسابك نهائيًا؟';
+
+  @override
+  String get deleteAccountDialogBody => 'مينفعش ترجع في الخطوة دي.';
+
+  @override
+  String get deleteAccountDialogConfirm => 'احذف نهائيًا';
+
+  @override
+  String get deleteAccountOffline =>
+      'انت مش متصل بالإنترنت. اتصل الأول عشان تحذف حسابك.';
+
+  @override
+  String get accountDeleted => 'تم حذف حسابك.';
 
   @override
   String get countryPickerTitle => 'اختار الدولة';
@@ -1433,11 +1535,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get phoneSignInAdded => 'اتضاف رقم التليفون وكلمة السر';
-
-  @override
-  String deleteAccountWithProvider(String provider) {
-    return 'عشان تمسح حسابك، هتأكد بـ $provider.';
-  }
 
   @override
   String get errExternalNotLinked => 'مفيش حساب ReadIn مربوط بالحساب ده لسه.';
@@ -2245,4 +2342,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get commentsErrReportReason => 'اختار سبب.';
+
+  @override
+  String get errAppleConfirmationRequired =>
+      'حسابك مربوط بأبل. أكّد بأبل عشان تحذفه.';
+
+  @override
+  String get errDeletionUnavailable =>
+      'معرفناش نكمّل حذف حسابك، فمفيش حاجة اتحذفت. جرّب تاني بعد شوية.';
 }

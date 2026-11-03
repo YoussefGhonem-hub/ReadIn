@@ -60,7 +60,7 @@ abstract class ReactionCountsModel with _$ReactionCountsModel {
 }
 
 /// `ArticleCardDto`. The wave 1 fields (`reactions`, `saveCount`, `myReaction`, `isSaved`) have defaults, so an API
-/// that doesn't send them yet still parses.
+/// that doesn't send them yet still parses. `author` is null when the author deleted their account (SPEC §9.6).
 @freezed
 abstract class ArticleCardModel with _$ArticleCardModel {
   const ArticleCardModel._();
@@ -73,7 +73,7 @@ abstract class ArticleCardModel with _$ArticleCardModel {
     String? subtitle,
     String? coverUrl,
     required FieldRefModel field,
-    required AuthorModel author,
+    required AuthorModel? author,
     @Default(1) int readingTimeMinutes,
     @Default(false) bool isReviewed,
     @Default(false) bool isAiAssisted,
@@ -98,7 +98,7 @@ abstract class ArticleCardModel with _$ArticleCardModel {
         subtitle: subtitle,
         coverUrl: coverUrl,
         field: field.toEntity(),
-        author: author.toEntity(),
+        author: author?.toEntity(),
         readingTimeMinutes: readingTimeMinutes,
         isReviewed: isReviewed,
         isAiAssisted: isAiAssisted,
@@ -154,7 +154,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     String? subtitle,
     String? coverUrl,
     required FieldRefModel field,
-    required AuthorModel author,
+    required AuthorModel? author,
     @Default(1) int readingTimeMinutes,
     @Default(false) bool isReviewed,
     @Default(false) bool isAiAssisted,
@@ -190,7 +190,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         subtitle: subtitle,
         coverUrl: coverUrl,
         field: field.toEntity(),
-        author: author.toEntity(),
+        author: author?.toEntity(),
         readingTimeMinutes: readingTimeMinutes,
         isReviewed: isReviewed,
         isAiAssisted: isAiAssisted,

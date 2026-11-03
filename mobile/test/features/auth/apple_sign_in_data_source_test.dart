@@ -35,12 +35,13 @@ void main() {
     error = null;
   });
 
-  test('sends Apple the SHA-256 of the nonce and the API the raw nonce', () async {
+  test('sends Apple the SHA-256 of the nonce, and the API the raw nonce and the authorization code', () async {
     final credential = (await source().signInWithApple())!;
 
     expect(credential.provider, ExternalProvider.apple);
     expect(credential.idToken, 'apple-id-token');
     expect(credential.nonce, hasLength(32));
+    expect(credential.authorizationCode, 'code'); // the API keeps a revocable Apple token (account deletion)
     expect(requests.single.nonce, sha256.convert(utf8.encode(credential.nonce!)).toString());
     expect(requests.single.scopes, [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName]);
   });

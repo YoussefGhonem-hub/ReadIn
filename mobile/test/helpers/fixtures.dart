@@ -14,13 +14,14 @@ const sampleTitles = [
   'EF Core: إزاي تكتب queries سريعة من غير ما توجع الـ database',
 ];
 
-ArticleCard sampleCard(int i, {String language = 'ar-EG'}) => ArticleCard(
+/// [authorDeleted]: the author deleted their account, so the API sends `author: null` (SPEC §9.6).
+ArticleCard sampleCard(int i, {String language = 'ar-EG', bool authorDeleted = false}) => ArticleCard(
       id: 'art-$i',
       slug: 'article-$i',
       language: language,
       title: sampleTitles[i % sampleTitles.length],
       field: i.isEven ? aiField : dotnetField,
-      author: editorial,
+      author: authorDeleted ? null : editorial,
       readingTimeMinutes: 4 + i,
       publishedAt: DateTime.utc(2026, 10, 12),
       isReviewed: i.isOdd,

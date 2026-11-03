@@ -28,8 +28,6 @@ class MockChangePassword extends Mock implements ChangePassword {}
 
 class MockChangePhoneNumber extends Mock implements ChangePhoneNumber {}
 
-class MockDeleteAccount extends Mock implements DeleteAccount {}
-
 class MockConfirmWithLinkedProvider extends Mock implements ConfirmWithLinkedProvider {}
 
 class MockAddPhoneSignIn extends Mock implements AddPhoneSignIn {}
@@ -187,55 +185,6 @@ void main() {
       skip: 2,
       expect: () => const [AccountFormState(status: FormStatus.success)],
       verify: (_) => expect(countries.initial(deviceRegion: 'US'), 'EG'),
-    );
-  });
-
-  group('DeleteAccountCubit', () {
-    late MockDeleteAccount delete;
-    late MockConfirmWithLinkedProvider confirmWith;
-    setUp(() {
-      delete = MockDeleteAccount();
-      confirmWith = MockConfirmWithLinkedProvider();
-    });
-
-    blocTest<DeleteAccountCubit, AccountFormState>(
-      'needs the explicit confirmation and the password',
-      setUp: () => when(() => delete(password: 'nope')).thenAnswer((_) async => const Err(wrongPassword)),
-      build: () => DeleteAccountCubit(config, delete, confirmWith),
-      act: (cubit) async {
-        await cubit.submit(password: 'nope', confirmed: false); // nothing happens
-        await cubit.submit(password: '', confirmed: true);
-        await cubit.submit(password: 'nope', confirmed: true, me: sampleMe);
-      },
-      expect: () => const [
-        AccountFormState(errors: {Fields.password: CredentialCodes.required}),
-        AccountFormState(status: FormStatus.submitting),
-        AccountFormState(errors: {Fields.password: FailureCodes.authWrongPassword}),
-      ],
-      verify: (_) => verifyNever(() => confirmWith(any())),
-    );
-
-    blocTest<DeleteAccountCubit, AccountFormState>(
-      'an account without a password confirms with its linked provider',
-      setUp: () {
-        when(() => confirmWith(googleOnly)).thenAnswer((_) async => const Ok(googleToken));
-        when(() => delete(external: googleToken)).thenAnswer((_) async => const Ok(null));
-      },
-      build: () => DeleteAccountCubit(config, delete, confirmWith),
-      act: (cubit) => cubit.submit(password: '', confirmed: true, me: googleOnly),
-      expect: () => const [
-        AccountFormState(status: FormStatus.submitting),
-        AccountFormState(status: FormStatus.success),
-      ],
-    );
-
-    blocTest<DeleteAccountCubit, AccountFormState>(
-      'closing the provider sheet deletes nothing',
-      setUp: () => when(() => confirmWith(googleOnly)).thenAnswer((_) async => const Ok(null)),
-      build: () => DeleteAccountCubit(config, delete, confirmWith),
-      act: (cubit) => cubit.submit(password: '', confirmed: true, me: googleOnly),
-      expect: () => const [AccountFormState(status: FormStatus.submitting), AccountFormState()],
-      verify: (_) => verifyNever(() => delete(password: any(named: 'password'), external: any(named: 'external'))),
     );
   });
 

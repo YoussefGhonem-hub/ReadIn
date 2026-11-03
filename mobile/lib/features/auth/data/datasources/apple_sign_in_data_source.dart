@@ -15,7 +15,9 @@ typedef AppleCredentialRequest = Future<AuthorizationCredentialAppleID> Function
 
 /// Sign in with Apple (native, iOS only for now: Android needs a server
 /// callback). Apple gets the SHA-256 of a fresh nonce and the API gets the raw
-/// nonce, so a stolen identity token can't be replayed.
+/// nonce, so a stolen identity token can't be replayed. The one-time
+/// authorization code goes to the API too: it keeps a token it can revoke when
+/// the account is deleted.
 @lazySingleton
 class AppleSignInDataSource {
   AppleSignInDataSource() : this.withRequest(SignInWithApple.getAppleIDCredential);
@@ -53,6 +55,7 @@ class AppleSignInDataSource {
       provider: ExternalProvider.apple,
       idToken: idToken,
       nonce: nonce,
+      authorizationCode: credential.authorizationCode.isEmpty ? null : credential.authorizationCode,
       displayName: name.isEmpty ? null : name,
     );
   }

@@ -58,6 +58,7 @@ class _Summary extends StatelessWidget {
     final lang = Localizations.localeOf(context).languageCode;
     final titleDir = Bidi.detect(article.title) ?? Directionality.of(context);
     final meta = context.textTheme.bodySmall;
+    final author = article.author;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,18 +91,21 @@ class _Summary extends StatelessWidget {
                 children: [
                   // The author's name opens their profile (F14); the rest of the card opens the article.
                   Flexible(
-                    child: ProfileLink(
-                      username: article.author.username,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: BidiText(article.author.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta),
+                    child: author == null
+                        // A deleted account's articles stay up under "Deleted user" (SPEC §9.6), with no profile link.
+                        ? BidiText(l10n.deletedUser, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta)
+                        : ProfileLink(
+                            username: author.username,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: BidiText(author.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta),
+                                ),
+                                if (author.isVerified) ...[const SizedBox(width: 3), const VerifiedMark(size: 12)],
+                              ],
+                            ),
                           ),
-                          if (article.author.isVerified) ...[const SizedBox(width: 3), const VerifiedMark(size: 12)],
-                        ],
-                      ),
-                    ),
                   ),
                   Text('  ·  ${l10n.readingTime(article.readingTimeMinutes)}', style: meta),
                 ],

@@ -72,6 +72,13 @@ abstract final class FailureCodes {
   static const authPhoneSignInExists = 'auth.phone_sign_in_exists';
   static const providerInvalid = 'provider.invalid';
 
+  // Delete account (`DELETE /me`)
+  /// The account is linked to Apple and the server has no Apple token to revoke: confirm with Apple.
+  static const authAppleConfirmationRequired = 'auth.apple_confirmation_required';
+
+  /// `503`: Apple couldn't be reached, so nothing was deleted.
+  static const accountDeletionUnavailable = 'account.deletion_unavailable';
+
   // Media (docs/api/contract-v1.md "Media", ADR 0011)
   static const mediaPurposeInvalid = 'media.purpose_invalid';
   static const mediaFileRequired = 'media.file_required';
@@ -140,4 +147,7 @@ abstract final class FailureCodes {
 
   /// The Google / Apple sheet failed for a reason other than the person closing it.
   static const authExternalProviderFailed = 'auth.external_provider_failed';
+
+  /// Deleting needs a fresh Apple sign in, which this device can't show (Android): the iPhone app, or email.
+  static const authAppleUnavailable = 'auth.apple_unavailable';
 }

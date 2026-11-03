@@ -34,6 +34,25 @@ void main() {
     expect(await store.contains('art-1'), isTrue);
   });
 
+  test("a deleted author's article is kept and read back without an author (SPEC §9.6)", () async {
+    await store.put(detailsModel(1, isSaved: true, authorDeleted: true));
+
+    final copy = await store.find('article-1');
+    expect(copy, isNotNull, reason: 'not dropped as unreadable');
+    expect(copy!.author, isNull);
+    expect(copy.toEntity(offline: true).card.author, isNull);
+    expect([for (final c in await store.all()) c.article.id], ['art-1']);
+  });
+
+  test('a copy kept before its author deleted their account is refreshed without the author', () async {
+    await store.put(detailsModel(1, isSaved: true), savedAt: DateTime.utc(2026, 10, 1));
+    await store.put(detailsModel(1, isSaved: true, authorDeleted: true));
+
+    final all = await store.all();
+    expect(all.single.article.author, isNull);
+    expect(all.single.savedAt, DateTime.utc(2026, 10, 1));
+  });
+
   test('unsaving drops every language', () async {
     await store.put(detailsModel(1));
     await store.put(detailsModel(1, language: 'en'));

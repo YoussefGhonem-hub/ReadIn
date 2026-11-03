@@ -350,6 +350,12 @@ abstract class AppLocalizations {
   /// **'Verified writer'**
   String get verifiedWriter;
 
+  /// No description provided for @deletedUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted user'**
+  String get deletedUser;
+
   /// No description provided for @tldr.
   ///
   /// In en, this message translates to:
@@ -2222,11 +2228,149 @@ abstract class AppLocalizations {
   /// **'Delete account'**
   String get deleteAccount;
 
-  /// No description provided for @deleteAccountBody.
+  /// No description provided for @deleteAccountTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your profile and personal data are removed after 30 days. Your articles and comments stay, shown as \"Deleted user\". This can\'t be undone.'**
-  String get deleteAccountBody;
+  /// **'Delete your account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountLead.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your ReadIn account. You can\'t undo it, and we can\'t restore it.'**
+  String get deleteAccountLead;
+
+  /// No description provided for @deleteAccountDeletedHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'We delete right away'**
+  String get deleteAccountDeletedHeading;
+
+  /// No description provided for @deleteAccountDeletedProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile: name, @username, photo, bio and links'**
+  String get deleteAccountDeletedProfile;
+
+  /// No description provided for @deleteAccountDeletedContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone number, email, password and recovery PIN'**
+  String get deleteAccountDeletedContact;
+
+  /// No description provided for @deleteAccountDeletedSignIns.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Google and Apple sign-in links. We also revoke ReadIn\'s access at Apple.'**
+  String get deleteAccountDeletedSignIns;
+
+  /// No description provided for @deleteAccountDeletedDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'Your drafts and any article that isn\'t published, with their images and PDFs, and every other photo or file you uploaded'**
+  String get deleteAccountDeletedDrafts;
+
+  /// No description provided for @deleteAccountDeletedActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Your interests, reading progress, stats, reactions, saved articles and follows'**
+  String get deleteAccountDeletedActivity;
+
+  /// No description provided for @deleteAccountDeletedDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Your devices and notification tokens, so no notification reaches you'**
+  String get deleteAccountDeletedDevices;
+
+  /// No description provided for @deleteAccountDeletedSecurityLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Your security log: sign-ins and account changes'**
+  String get deleteAccountDeletedSecurityLog;
+
+  /// No description provided for @deleteAccountKeptHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'What we keep, and why'**
+  String get deleteAccountKeptHeading;
+
+  /// No description provided for @deleteAccountKeptPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Your published articles and comments stay up under “Deleted user”, with the images and PDFs they show: no name, @username or photo, and nothing that links them to you. That keeps links and discussions other readers rely on working. To take an article down, delete it before you delete your account.'**
+  String get deleteAccountKeptPublished;
+
+  /// No description provided for @deleteAccountKeptRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'A record that this account was deleted: its internal ID and the time, nothing that identifies you. It proves the deletion happened.'**
+  String get deleteAccountKeptRecord;
+
+  /// No description provided for @deleteAccountKeptBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Database backups may still hold your data for up to 14 days, until they\'re overwritten.'**
+  String get deleteAccountKeptBackups;
+
+  /// No description provided for @deleteAccountKeptReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews and edits you made on other writers\' articles stay with those articles, without your name.'**
+  String get deleteAccountKeptReviews;
+
+  /// No description provided for @deleteAccountAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Afterwards, this phone number, email, Google or Apple account can create a new ReadIn account, which starts empty.'**
+  String get deleteAccountAfter;
+
+  /// No description provided for @deleteAccountByEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete by email instead'**
+  String get deleteAccountByEmail;
+
+  /// No description provided for @deleteAccountPasswordBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password to delete your account.'**
+  String get deleteAccountPasswordBody;
+
+  /// No description provided for @deleteAccountProviderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again with the account that\'s linked to ReadIn.'**
+  String get deleteAccountProviderBody;
+
+  /// No description provided for @confirmWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm with Google'**
+  String get confirmWithGoogle;
+
+  /// No description provided for @confirmWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm with Apple'**
+  String get confirmWithApple;
+
+  /// No description provided for @confirmedWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed with Google'**
+  String get confirmedWithGoogle;
+
+  /// No description provided for @confirmedWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed with Apple'**
+  String get confirmedWithApple;
+
+  /// No description provided for @deleteAccountAppleUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is linked to Apple. Confirm with Apple from the ReadIn iPhone app, or email us to delete it.'**
+  String get deleteAccountAppleUnavailable;
 
   /// No description provided for @deleteAccountConfirm.
   ///
@@ -2239,6 +2383,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete my account'**
   String get deleteAccountButton;
+
+  /// No description provided for @deletingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your account…'**
+  String get deletingAccount;
+
+  /// No description provided for @deleteAccountDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account forever?'**
+  String get deleteAccountDialogTitle;
+
+  /// No description provided for @deleteAccountDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone.'**
+  String get deleteAccountDialogBody;
+
+  /// No description provided for @deleteAccountDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete forever'**
+  String get deleteAccountDialogConfirm;
+
+  /// No description provided for @deleteAccountOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline. Connect to the internet to delete your account.'**
+  String get deleteAccountOffline;
 
   /// No description provided for @accountDeleted.
   ///
@@ -2599,12 +2773,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Phone number and password added'**
   String get phoneSignInAdded;
-
-  /// No description provided for @deleteAccountWithProvider.
-  ///
-  /// In en, this message translates to:
-  /// **'To delete your account, you\'ll confirm with {provider}.'**
-  String deleteAccountWithProvider(String provider);
 
   /// No description provided for @errExternalNotLinked.
   ///
@@ -3775,6 +3943,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a reason.'**
   String get commentsErrReportReason;
+
+  /// No description provided for @errAppleConfirmationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is linked to Apple. Confirm with Apple to delete it.'**
+  String get errAppleConfirmationRequired;
+
+  /// No description provided for @errDeletionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t finish deleting your account, so nothing was deleted. Try again in a few minutes.'**
+  String get errDeletionUnavailable;
 }
 
 class _AppLocalizationsDelegate

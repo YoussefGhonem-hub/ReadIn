@@ -77,25 +77,54 @@ class AuthScaffold extends StatelessWidget {
 
 /// The main button of a form: disabled with a spinner while submitting, so a double tap can't submit twice.
 class SubmitButton extends StatelessWidget {
-  const SubmitButton({super.key, required this.label, required this.submitting, required this.onPressed});
+  const SubmitButton({
+    super.key,
+    required this.label,
+    required this.submitting,
+    required this.onPressed,
+    this.destructive = false,
+    this.progressLabel,
+  });
 
   final String label;
   final bool submitting;
   final VoidCallback? onPressed;
 
+  /// Red, for an action that can't be undone (delete account); it stays red with its spinner while submitting.
+  final bool destructive;
+
+  /// Announced to screen readers once submitting starts (a live region); otherwise the button reads "label, Loading…".
+  final String? progressLabel;
+
   @override
-  Widget build(BuildContext context) => Semantics(
-        button: true,
-        enabled: !submitting && onPressed != null,
-        label: submitting ? '$label, ${context.l10n.loading}' : null,
-        excludeSemantics: submitting,
-        child: FilledButton(
-          onPressed: submitting ? null : onPressed,
-          child: submitting
-              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
-              : Text(label),
-        ),
-      );
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      button: true,
+      enabled: !submitting && onPressed != null,
+      liveRegion: progressLabel != null && submitting,
+      label: submitting ? progressLabel ?? '$label, ${context.l10n.loading}' : null,
+      excludeSemantics: submitting,
+      child: FilledButton(
+        style: destructive
+            ? FilledButton.styleFrom(
+                backgroundColor: colors.error,
+                foregroundColor: colors.onError,
+                disabledBackgroundColor: submitting ? colors.error : null,
+                disabledForegroundColor: submitting ? colors.onError : null,
+              )
+            : null,
+        onPressed: submitting ? null : onPressed,
+        child: submitting
+            ? SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.5, color: destructive ? colors.onError : null),
+              )
+            : Text(label),
+      ),
+    );
+  }
 }
 
 /// "أو" between the phone sign in and other ways to sign in (Google / Apple, SPEC v1.1).
