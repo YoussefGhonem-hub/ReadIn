@@ -9,7 +9,7 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { MediaImage } from '../../shared/media/media-image';
 import { PAGE_THUMB_WIDTH } from '../../shared/media/media-slides';
 import { PluralPipe } from '../../shared/pipes/format.pipes';
-import { ALT_TEXT_MAX, AttachmentDraft, CAPTION_MAX, DOCUMENT_TITLE_MAX, DraftImage, MAX_IMAGES, UploadStatus } from './attachment-draft';
+import { ALT_TEXT_MAX, AttachmentDraft, CAPTION_MAX, COUNTER_WITHIN, DOCUMENT_TITLE_MAX, DraftImage, MAX_IMAGES, UploadStatus } from './attachment-draft';
 
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif';
 const PREVIEW_PAGES = 4;
@@ -141,8 +141,9 @@ const PREVIEW_PAGES = 4;
               <div class="flex flex-col gap-2 p-2">
                 <div>
                   <label class="mb-1 block text-xs font-semibold" [attr.for]="'rd-alt-' + image.id">{{ 'attachments.altLabel' | transloco }} *</label>
-                  <input
-                    class="rd-input min-h-9 text-sm"
+                  <textarea
+                    class="rd-input rd-autogrow min-h-9 text-sm"
+                    rows="2"
                     [id]="'rd-alt-' + image.id"
                     dir="auto"
                     required
@@ -153,26 +154,29 @@ const PREVIEW_PAGES = 4;
                     [attr.aria-describedby]="!image.altText.trim() ? 'rd-alt-error-' + image.id : null"
                     data-alt
                     (input)="draft().setAltText(image.id, valueOf($event))"
-                  />
+                  ></textarea>
                   @if (!image.altText.trim()) {
                     <p class="m-0 mt-1 text-xs text-error" [id]="'rd-alt-error-' + image.id">{{ 'attachments.altRequired' | transloco }}</p>
+                  }
+                  @if (nearLimit(image.altText, altMax)) {
+                    <p class="m-0 mt-1 text-end text-xs text-text-secondary tabular-nums" dir="ltr" aria-live="polite" data-count>{{ image.altText.length }}/{{ altMax }}</p>
                   }
                 </div>
                 <div>
                   <label class="mb-1 block text-xs font-semibold" [attr.for]="'rd-caption-' + image.id">{{ 'attachments.captionLabel' | transloco }}</label>
-                  <input
-                    class="rd-input min-h-9 text-sm"
+                  <textarea
+                    class="rd-input rd-autogrow min-h-9 text-sm"
+                    rows="2"
                     [id]="'rd-caption-' + image.id"
                     dir="auto"
                     [maxLength]="captionMax"
                     [value]="image.caption"
-                    [attr.aria-describedby]="'rd-caption-count-' + image.id"
                     data-caption
                     (input)="draft().setCaption(image.id, valueOf($event))"
-                  />
-                  <p class="m-0 mt-1 text-end text-xs text-text-secondary tabular-nums" [id]="'rd-caption-count-' + image.id" dir="ltr">
-                    {{ image.caption.length }}/{{ captionMax }}
-                  </p>
+                  ></textarea>
+                  @if (nearLimit(image.caption, captionMax)) {
+                    <p class="m-0 mt-1 text-end text-xs text-text-secondary tabular-nums" dir="ltr" aria-live="polite" data-count>{{ image.caption.length }}/{{ captionMax }}</p>
+                  }
                 </div>
                 <div class="flex justify-between gap-2">
                   <button
@@ -210,17 +214,22 @@ const PREVIEW_PAGES = 4;
             </span>
             <div class="min-w-0 flex-1">
               <label class="mb-1 block text-xs font-semibold" for="rd-doc-title">{{ 'attachments.docTitle' | transloco }} *</label>
-              <input
+              <textarea
                 id="rd-doc-title"
-                class="rd-input min-h-9 text-sm"
+                class="rd-input rd-autogrow min-h-9 text-sm"
+                rows="1"
                 dir="auto"
                 required
                 [maxLength]="docTitleMax"
                 [value]="doc.title"
                 [attr.aria-invalid]="!doc.title.trim()"
                 data-doc-title
+                (keydown.enter)="$event.preventDefault()"
                 (input)="draft().setDocumentTitle(valueOf($event))"
-              />
+              ></textarea>
+              @if (nearLimit(doc.title, docTitleMax)) {
+                <p class="m-0 mt-1 text-end text-xs text-text-secondary tabular-nums" dir="ltr" aria-live="polite" data-count>{{ doc.title.length }}/{{ docTitleMax }}</p>
+              }
               <p class="m-0 mt-1 truncate text-xs text-text-secondary" dir="ltr">{{ doc.file.name }} · {{ fileSize(doc.file.size) }}</p>
             </div>
             <button type="button" class="rd-icon-btn h-9 w-9 shrink-0" [attr.aria-label]="'attachments.removeDocument' | transloco" data-remove-document (click)="draft().removeDocument()">
@@ -394,7 +403,12 @@ export class AttachmentBar {
   }
 
   protected valueOf(event: Event): string {
-    return (event.target as HTMLInputElement).value;
+    return (event.target as HTMLInputElement | HTMLTextAreaElement).value;
+  }
+
+  /** The counter shows only near the limit; a permanent "0/5000" would be noise. */
+  protected nearLimit(value: string, max: number): boolean {
+    return value.length >= max - COUNTER_WITHIN;
   }
 
   protected checkedOf(event: Event): boolean {

@@ -174,11 +174,11 @@ export interface CreatedArticleDto {
 export interface SetAttachmentItem {
   mediaAssetId: string;
   order: number;
-  /** Images, ≤ 120. */
+  /** Images, ≤ 5000. */
   caption?: string | null;
-  /** Images, required, ≤ 250. */
+  /** Images, required, ≤ 5000. */
   altText?: string | null;
-  /** The document, required, ≤ 150. */
+  /** The document, required, ≤ 5000. */
   title?: string | null;
   /** The document. */
   allowDownload?: boolean;
@@ -247,7 +247,7 @@ export interface MediaAssetDto {
 export interface ImageAttachmentDto {
   assetId: string;
   order: number;
-  /** ≤ 120, render with `dir="auto"`. */
+  /** ≤ 5000, render with `dir="auto"`. */
   caption: string | null;
   altText: string;
   width: number;

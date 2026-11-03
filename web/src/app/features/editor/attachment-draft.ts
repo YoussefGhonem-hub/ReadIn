@@ -10,9 +10,12 @@ export const MAX_IMAGES = 10;
 /** Server limit for one image upload (after client-side compression). */
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 export const MAX_DOCUMENT_BYTES = 20 * 1024 * 1024;
-export const CAPTION_MAX = 120;
-export const ALT_TEXT_MAX = 250;
-export const DOCUMENT_TITLE_MAX = 150;
+/** Same limits as the API (Article.MaxCaptionLength / MaxAltTextLength, MediaAsset.MaxTitleLength). */
+export const CAPTION_MAX = 5000;
+export const ALT_TEXT_MAX = 5000;
+export const DOCUMENT_TITLE_MAX = 5000;
+/** A character counter appears only when this close to a limit. */
+export const COUNTER_WITHIN = 500;
 export const POLL_INTERVAL_MS = 2000;
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];

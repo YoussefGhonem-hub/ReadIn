@@ -94,10 +94,10 @@
       "too_many_images": "A post can have up to 10 images.",
       "single_document": "A post can have only one PDF.",
       "alt_text_required": "Every image needs alt text.",
-      "alt_text_too_long": "Alt text can be up to 250 characters.",
-      "caption_too_long": "Captions can be up to 120 characters.",
+      "alt_text_too_long": "Alt text can be up to 5000 characters.",
+      "caption_too_long": "Captions can be up to 5000 characters.",
       "title_required": "The document needs a title.",
-      "title_too_long": "The document title can be up to 150 characters.",
+      "title_too_long": "The document title can be up to 5000 characters.",
       "asset_not_found": "One of the attachments doesn't exist anymore. Remove it and upload it again.",
       "asset_not_ready": "Wait until every attachment is ready.",
       "duplicate_asset": "The same file is attached twice."

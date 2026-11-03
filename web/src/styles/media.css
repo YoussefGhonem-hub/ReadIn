@@ -7,6 +7,15 @@
     overflow: hidden;
   }
 
+  /* Composer fields that accept long text (alt text, captions, document titles: up to 5000 characters). They grow with
+     their content where `field-sizing` is supported and scroll after ~10 lines; elsewhere they are resizable. */
+  .rd-autogrow {
+    field-sizing: content;
+    resize: vertical;
+    max-height: 15rem;
+    overflow-y: auto;
+  }
+
   /* Round arrows: only for hover-capable fine pointers, shown while the carousel is hovered or focused. */
   .rd-carousel-arrow {
     position: absolute;

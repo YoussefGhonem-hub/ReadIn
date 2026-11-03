@@ -273,6 +273,22 @@ describe('ComposerPage (/write)', () => {
     expect(media.uploadDocument).toHaveBeenCalledTimes(2);
   });
 
+  it('accepts alt text and captions up to 5000 characters, with a counter only near the limit', async () => {
+    await addReadyImages(1);
+
+    type('[data-alt]', 'A'.repeat(4000));
+    type('[data-caption]', 'C'.repeat(6000));
+    await settle();
+
+    const draft = bar().draft();
+    expect(draft.images()[0].altText).toHaveLength(4000);
+    expect(draft.images()[0].caption).toHaveLength(5000);
+    const counters = [...el().querySelectorAll('[data-count]')].map((c) => c.textContent?.trim());
+    // Only the caption is within 500 characters of its limit.
+    expect(counters).toEqual(['5000/5000']);
+    expect(el().querySelector('[data-alt]')?.tagName).toBe('TEXTAREA');
+  });
+
   it("can't mix images and a PDF", async () => {
     await addReadyImages(1);
     const pdfButton = el().querySelector('[data-add-pdf]') as HTMLButtonElement;
