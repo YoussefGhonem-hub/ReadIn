@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "language": "en",
+  "blocks": [
+    { "id": "tldr", "type": "summary", "content": [
+      { "type": "text", "text": "RAG (Retrieval-Augmented Generation) answers a question in two moves: first retrieve the most relevant passages from your own documents, then ask the LLM to answer using only those passages. The model stays the same; what changes is the context you give it." }
+    ]},
+    { "id": "intro", "type": "paragraph", "content": [
+      { "type": "text", "text": "A large language model only knows what was in its training data. It has never seen your company handbook, last week's release notes or a customer's contract. You could fine-tune it, but that is slow, expensive and goes stale the moment the documents change. RAG takes a simpler route: look the facts up at question time and put them in the prompt." }
+    ]},
+    { "id": "h-how", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "How it works" }] },
+    { "id": "steps", "type": "steps", "items": [
+      { "title": "Chunk", "content": [{ "type": "text", "text": "Split documents into passages of a few hundred tokens, keeping headings and source links with each chunk." }] },
+      { "title": "Embed and index", "content": [{ "type": "text", "text": "Turn each chunk into an embedding vector and store it in a vector index, often alongside a keyword (BM25) index." }] },
+      { "title": "Retrieve", "content": [{ "type": "text", "text": "Embed the user's question and fetch the top-k most similar chunks." }] },
+      { "title": "Generate", "content": [{ "type": "text", "text": "Send the question plus the retrieved chunks to the LLM and instruct it to answer from them and cite them." }] }
+    ]},
+    { "id": "code-flow", "type": "code", "lang": "python", "filename": "rag_flow.py",
+      "code": "question = \"How many vacation days do new employees get?\"\n\nquery_vector = embed(question)\nchunks = vector_index.search(query_vector, top_k=5)\n\ncontext = \"\\n\\n\".join(f\"[{c.source}] {c.text}\" for c in chunks)\nprompt = (\n    \"Answer using only the context below and cite the sources in brackets. \"\n    \"If the answer is not in the context, say you don't know.\\n\\n\"\n    f\"Context:\\n{context}\\n\\nQuestion: {question}\"\n)\nanswer = llm.generate(prompt)",
+      "compile": false },
+    { "id": "h-why", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "Why teams choose RAG" }] },
+    { "id": "why", "type": "bulletList", "items": [
+      [{ "type": "text", "text": "Fresh knowledge: update the index and the very next answer uses the new document." }],
+      [{ "type": "text", "text": "Traceable answers: every claim can point back to the chunk it came from." }],
+      [{ "type": "text", "text": "Access control: retrieve only documents the current user is allowed to see." }]
+    ]},
+    { "id": "warn", "type": "callout", "variant": "warning", "title": "RAG is not a hallucination cure", "content": [
+      { "type": "text", "text": "If retrieval returns the wrong chunks, the model will confidently answer from the wrong context. Measure retrieval quality on real questions before tuning prompts." }
+    ]},
+    { "id": "h-tips", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "Practical tips" }] },
+    { "id": "tips", "type": "orderedList", "items": [
+      [{ "type": "text", "text": "Combine embeddings with keyword search; exact terms such as error codes and product names are often missed by vectors alone." }],
+      [{ "type": "text", "text": "Add a short description of the surrounding document to each chunk before embedding it. Anthropic's write-up on contextual retrieval reports far fewer failed retrievals with this technique." }],
+      [{ "type": "text", "text": "Re-rank the top candidates before sending them to the model, and keep the final context small." }]
+    ]},
+    { "id": "tip", "type": "callout", "variant": "tip", "content": [
+      { "type": "text", "text": "Start with the simplest pipeline and a small set of real user questions with known answers. That evaluation set is worth more than any framework choice." }
+    ]}
+  ]
+}

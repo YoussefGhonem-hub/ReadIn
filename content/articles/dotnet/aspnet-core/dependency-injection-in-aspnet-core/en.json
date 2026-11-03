@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "language": "en",
+  "blocks": [
+    { "id": "tldr", "type": "summary", "content": [
+      { "type": "text", "text": "ASP.NET Core ships with a built-in " },
+      { "type": "term", "termId": "dependency-injection", "text": "Dependency Injection" },
+      { "type": "text", "text": " container. You register services once in Program.cs with a lifetime (Singleton, Scoped or Transient), ask for them in constructors, and the framework builds and disposes the objects for you. The classic production bug is a Singleton holding on to a Scoped service." }
+    ]},
+
+    { "id": "intro", "type": "paragraph", "content": [
+      { "type": "text", "text": "Open any ASP.NET Core project and you will see the same pattern: classes never call " },
+      { "type": "text", "text": "new", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " on the services they depend on. Instead they list those dependencies as constructor parameters and something else hands them over. That something is the DI container, and understanding it is one of the first real steps from writing code that works to writing code that is easy to test and change." }
+    ]},
+
+    { "id": "h-what", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "What problem does it solve?" }] },
+    { "id": "what-1", "type": "paragraph", "content": [
+      { "type": "text", "text": "Imagine an " },
+      { "type": "text", "text": "OrderService", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " that creates its own " },
+      { "type": "text", "text": "SmtpEmailSender", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": ". It is now welded to SMTP: you cannot swap in a different provider, and every unit test that touches orders tries to send a real email. Dependency Injection flips this around. The service declares what it needs, usually as an interface, and the caller decides which implementation to provide." }
+    ]},
+    { "id": "what-list", "type": "bulletList", "items": [
+      [{ "type": "text", "text": "Swap implementations without touching the consumer (SMTP today, a cloud email API tomorrow)." }],
+      [{ "type": "text", "text": "Unit tests pass in fakes or mocks instead of real infrastructure." }],
+      [{ "type": "text", "text": "Object lifetimes and disposal are managed in one place instead of all over the codebase." }]
+    ]},
+
+    { "id": "h-start", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "Registering and consuming a service" }] },
+    { "id": "steps", "type": "steps", "items": [
+      { "title": "Define the contract", "content": [{ "type": "text", "text": "An interface describes what the service does, not how." }] },
+      { "title": "Write the implementation", "content": [{ "type": "text", "text": "A class implements the interface and asks for its own dependencies in its constructor." }] },
+      { "title": "Register it with a lifetime", "content": [{ "type": "text", "text": "In Program.cs, map the interface to the implementation on builder.Services." }] },
+      { "title": "Ask for it", "content": [{ "type": "text", "text": "Controllers, minimal API handlers and other services receive it as a parameter." }] }
+    ]},
+    { "id": "code-register", "type": "code", "lang": "csharp", "filename": "Program.cs", "highlightLines": [3, 4],
+      "code": "var builder = WebApplication.CreateBuilder(args);\n\nbuilder.Services.AddScoped<IOrderService, OrderService>();\nbuilder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();\n\nvar app = builder.Build();\n\napp.MapPost(\"/orders\", async (CreateOrder request, IOrderService orders) =>\n{\n    var id = await orders.CreateAsync(request);\n    return Results.Created($\"/orders/{id}\", new { id });\n});\n\napp.Run();",
+      "compile": false },
+    { "id": "code-consume", "type": "code", "lang": "csharp", "filename": "OrderService.cs",
+      "code": "public interface IOrderService\n{\n    Task<Guid> CreateAsync(CreateOrder request);\n}\n\n// C# 12 primary constructor: the container supplies IEmailSender.\npublic sealed class OrderService(IEmailSender email) : IOrderService\n{\n    public async Task<Guid> CreateAsync(CreateOrder request)\n    {\n        var id = Guid.CreateVersion7();\n        await email.SendAsync(request.CustomerEmail, \"Order received\", $\"Your order {id} is confirmed.\");\n        return id;\n    }\n}",
+      "compile": false },
+    { "id": "tip-minimal", "type": "callout", "variant": "tip", "title": "Minimal APIs", "content": [
+      { "type": "text", "text": "In minimal API handlers, parameters whose type is registered in the container are injected automatically, as with " },
+      { "type": "text", "text": "IOrderService orders", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " above. No attribute is needed." }
+    ]},
+
+    { "id": "h-lifetimes", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "The three lifetimes" }] },
+    { "id": "lifetimes-intro", "type": "paragraph", "content": [
+      { "type": "text", "text": "Every registration has a lifetime that decides how often the container creates a new instance. Picking the right one matters more than any other DI decision." }
+    ]},
+    { "id": "lifetimes-table", "type": "table",
+      "header": [
+        [{ "type": "text", "text": "Lifetime" }],
+        [{ "type": "text", "text": "One instance per…" }],
+        [{ "type": "text", "text": "Typical use" }]
+      ],
+      "rows": [
+        [[{ "type": "text", "text": "Singleton", "marks": [{ "type": "code" }] }], [{ "type": "text", "text": "application lifetime" }], [{ "type": "text", "text": "Stateless helpers, caches, configuration, HttpClient factories" }]],
+        [[{ "type": "text", "text": "Scoped", "marks": [{ "type": "code" }] }], [{ "type": "text", "text": "scope (in ASP.NET Core: one HTTP request)" }], [{ "type": "text", "text": "DbContext, unit of work, the current user" }]],
+        [[{ "type": "text", "text": "Transient", "marks": [{ "type": "code" }] }], [{ "type": "text", "text": "every time it is requested" }], [{ "type": "text", "text": "Lightweight, stateless services" }]]
+      ]
+    },
+    { "id": "tip-dbcontext", "type": "callout", "variant": "info", "content": [
+      { "type": "text", "text": "AddDbContext", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " registers your EF Core " },
+      { "type": "text", "text": "DbContext", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " as Scoped by default, so each request gets its own change tracker. Services that use it should normally be Scoped too." }
+    ]},
+
+    { "id": "h-mistakes", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "Mistakes that bite in production" }] },
+    { "id": "h-captive", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "1. Captive dependencies" }] },
+    { "id": "captive", "type": "paragraph", "content": [
+      { "type": "text", "text": "A Singleton that receives a Scoped service keeps that one instance alive for the whole application. With a DbContext this means one change tracker shared by every request and every thread, which leads to stale data, memory growth and threading exceptions. In the Development environment ASP.NET Core validates scopes and throws an " },
+      { "type": "text", "text": "InvalidOperationException", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " at startup or on first resolve, which is exactly why you should run locally in Development." }
+    ]},
+    { "id": "warn-captive", "type": "callout", "variant": "warning", "title": "Rule of thumb", "content": [
+      { "type": "text", "text": "A service may depend on services with the same or a longer lifetime, never a shorter one. If a Singleton really needs scoped work, inject " },
+      { "type": "text", "text": "IServiceScopeFactory", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " and create a scope for each unit of work." }
+    ]},
+    { "id": "code-scope", "type": "code", "lang": "csharp", "filename": "NightlyReportJob.cs",
+      "code": "public sealed class NightlyReportJob(IServiceScopeFactory scopes) : BackgroundService\n{\n    protected override async Task ExecuteAsync(CancellationToken stoppingToken)\n    {\n        await using var scope = scopes.CreateAsyncScope();\n        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();\n        // ... work with a fresh DbContext, disposed with the scope\n    }\n}",
+      "compile": false },
+    { "id": "h-buildsp", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "2. Building the provider yourself" }] },
+    { "id": "buildsp", "type": "paragraph", "content": [
+      { "type": "text", "text": "Calling " },
+      { "type": "text", "text": "builder.Services.BuildServiceProvider()", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " during registration creates a second container with its own copies of every Singleton. The ASP0000 analyzer warns about it. Use the options pattern or factory overloads such as " },
+      { "type": "text", "text": "AddSingleton(sp => ...)", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " instead." }
+    ]},
+    { "id": "h-locator", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "3. Service locator everywhere" }] },
+    { "id": "locator", "type": "paragraph", "content": [
+      { "type": "text", "text": "Injecting " },
+      { "type": "text", "text": "IServiceProvider", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " and calling " },
+      { "type": "text", "text": "GetService", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " inside business code hides the real dependencies and makes tests harder. Keep it for infrastructure code like the scope factory example above." }
+    ]},
+
+    { "id": "h-keyed", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "Bonus: keyed services" }] },
+    { "id": "keyed", "type": "paragraph", "content": [
+      { "type": "text", "text": "Since .NET 8 you can register several implementations of the same interface under different keys and pick one with " },
+      { "type": "text", "text": "[FromKeyedServices]", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": "." }
+    ]},
+    { "id": "code-keyed", "type": "code", "lang": "csharp", "filename": "Program.cs",
+      "code": "builder.Services.AddKeyedSingleton<IEmailSender, SmtpEmailSender>(\"smtp\");\nbuilder.Services.AddKeyedSingleton<IEmailSender, ApiEmailSender>(\"api\");\n\npublic sealed class Newsletter([FromKeyedServices(\"api\")] IEmailSender sender) { }",
+      "compile": false },
+
+    { "id": "h-recap", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "Recap" }] },
+    { "id": "recap", "type": "orderedList", "items": [
+      [{ "type": "text", "text": "Depend on interfaces and ask for them in constructors." }],
+      [{ "type": "text", "text": "Register once in Program.cs with the right lifetime; DbContext-based services are Scoped." }],
+      [{ "type": "text", "text": "Never let a longer-lived service capture a shorter-lived one; use IServiceScopeFactory when you must." }],
+      [{ "type": "text", "text": "Don't build the provider yourself and avoid the service locator in business code." }]
+    ]}
+  ]
+}

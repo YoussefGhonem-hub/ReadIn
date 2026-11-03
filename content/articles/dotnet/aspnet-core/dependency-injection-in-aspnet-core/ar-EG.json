@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "language": "ar-EG",
+  "blocks": [
+    { "id": "tldr", "type": "summary", "content": [
+      { "type": "text", "text": "ASP.NET Core جاي معاه " },
+      { "type": "term", "termId": "dependency-injection", "text": "Dependency Injection" },
+      { "type": "text", "text": " container جاهز. بتسجّل الـ services مرة واحدة في Program.cs بـ lifetime (Singleton أو Scoped أو Transient)، وبتطلبها في الـ constructor، والـ framework هو اللي بيعمل الـ objects ويعملهم dispose. وأشهر bug في الـ production إن Singleton يمسك في Scoped service." }
+    ]},
+
+    { "id": "intro", "type": "paragraph", "content": [
+      { "type": "text", "text": "افتح أي مشروع ASP.NET Core وهتلاقي نفس الـ pattern: الـ classes عمرها ما بتعمل " },
+      { "type": "text", "text": "new", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " للـ services اللي محتاجاها. بدل كده بتكتبها كـ parameters في الـ constructor، وفيه حد تاني بيسلّمهالها. الحد ده هو الـ DI container، وفهمه من أول الخطوات الحقيقية من «كود شغال» لـ «كود سهل تعمله test وتغيّره»." }
+    ]},
+
+    { "id": "h-what", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "بيحل مشكلة إيه أصلاً؟" }] },
+    { "id": "what-1", "type": "paragraph", "content": [
+      { "type": "text", "text": "تخيّل " },
+      { "type": "text", "text": "OrderService", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " بيعمل " },
+      { "type": "text", "text": "SmtpEmailSender", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " بنفسه. كده هو بقى ملزوق في الـ SMTP: مش هتعرف تغيّر الـ provider، وأي unit test فيه orders هيحاول يبعت email بجد. الـ Dependency Injection بيقلب الموضوع: الـ service بتقول هي محتاجة إيه (غالباً interface)، واللي بيستخدمها هو اللي بيقرر أنهي implementation." }
+    ]},
+    { "id": "what-list", "type": "bulletList", "items": [
+      [{ "type": "text", "text": "تغيّر الـ implementation من غير ما تلمس الـ consumer (SMTP النهارده، email API بكرة)." }],
+      [{ "type": "text", "text": "الـ unit tests بتدّي fakes أو mocks بدل الـ infrastructure الحقيقية." }],
+      [{ "type": "text", "text": "الـ lifetimes والـ disposal بيتداروا في مكان واحد بدل ما يبقوا متفرقين في الكود كله." }]
+    ]},
+
+    { "id": "h-start", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "إزاي تسجّل service وتستخدمها" }] },
+    { "id": "steps", "type": "steps", "items": [
+      { "title": "اكتب الـ contract", "content": [{ "type": "text", "text": "الـ interface بيوصف الـ service بتعمل إيه، مش بتعمله إزاي." }] },
+      { "title": "اكتب الـ implementation", "content": [{ "type": "text", "text": "class بيعمل implement للـ interface وبيطلب الـ dependencies بتاعته في الـ constructor." }] },
+      { "title": "سجّله بـ lifetime", "content": [{ "type": "text", "text": "في Program.cs اربط الـ interface بالـ implementation على builder.Services." }] },
+      { "title": "اطلبه", "content": [{ "type": "text", "text": "الـ controllers والـ minimal API handlers والـ services التانية بتستلمه كـ parameter." }] }
+    ]},
+    { "id": "code-register", "type": "code", "lang": "csharp", "filename": "Program.cs", "highlightLines": [3, 4],
+      "code": "var builder = WebApplication.CreateBuilder(args);\n\nbuilder.Services.AddScoped<IOrderService, OrderService>();\nbuilder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();\n\nvar app = builder.Build();\n\napp.MapPost(\"/orders\", async (CreateOrder request, IOrderService orders) =>\n{\n    var id = await orders.CreateAsync(request);\n    return Results.Created($\"/orders/{id}\", new { id });\n});\n\napp.Run();",
+      "compile": false },
+    { "id": "code-consume", "type": "code", "lang": "csharp", "filename": "OrderService.cs",
+      "code": "public interface IOrderService\n{\n    Task<Guid> CreateAsync(CreateOrder request);\n}\n\n// C# 12 primary constructor: the container supplies IEmailSender.\npublic sealed class OrderService(IEmailSender email) : IOrderService\n{\n    public async Task<Guid> CreateAsync(CreateOrder request)\n    {\n        var id = Guid.CreateVersion7();\n        await email.SendAsync(request.CustomerEmail, \"Order received\", $\"Your order {id} is confirmed.\");\n        return id;\n    }\n}",
+      "compile": false },
+    { "id": "tip-minimal", "type": "callout", "variant": "tip", "title": "Minimal APIs", "content": [
+      { "type": "text", "text": "في الـ minimal API handlers، أي parameter نوعه متسجّل في الـ container بيتحقن لوحده، زي " },
+      { "type": "text", "text": "IOrderService orders", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " اللي فوق. مش محتاج أي attribute." }
+    ]},
+
+    { "id": "h-lifetimes", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "الـ lifetimes التلاتة" }] },
+    { "id": "lifetimes-intro", "type": "paragraph", "content": [
+      { "type": "text", "text": "كل registration ليه lifetime بيحدد الـ container هيعمل instance جديد كل قد إيه. اختيار الـ lifetime الصح أهم من أي قرار تاني في الـ DI." }
+    ]},
+    { "id": "lifetimes-table", "type": "table",
+      "header": [
+        [{ "type": "text", "text": "الـ Lifetime" }],
+        [{ "type": "text", "text": "instance واحد لكل…" }],
+        [{ "type": "text", "text": "بيتستخدم في" }]
+      ],
+      "rows": [
+        [[{ "type": "text", "text": "Singleton", "marks": [{ "type": "code" }] }], [{ "type": "text", "text": "عمر الـ application كله" }], [{ "type": "text", "text": "helpers من غير state، cache، configuration، HttpClient factories" }]],
+        [[{ "type": "text", "text": "Scoped", "marks": [{ "type": "code" }] }], [{ "type": "text", "text": "scope (في ASP.NET Core يعني HTTP request واحد)" }], [{ "type": "text", "text": "الـ DbContext، الـ unit of work، الـ current user" }]],
+        [[{ "type": "text", "text": "Transient", "marks": [{ "type": "code" }] }], [{ "type": "text", "text": "كل مرة تطلبه" }], [{ "type": "text", "text": "services خفيفة من غير state" }]]
+      ]
+    },
+    { "id": "tip-dbcontext", "type": "callout", "variant": "info", "content": [
+      { "type": "text", "text": "AddDbContext", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " بيسجّل الـ " },
+      { "type": "text", "text": "DbContext", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " بتاع EF Core كـ Scoped بشكل افتراضي، فكل request بياخد change tracker لوحده. والـ services اللي بتستخدمه المفروض تبقى Scoped هي كمان." }
+    ]},
+
+    { "id": "h-mistakes", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "غلطات بتظهر في الـ production" }] },
+    { "id": "h-captive", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "1. الـ Captive dependencies" }] },
+    { "id": "captive", "type": "paragraph", "content": [
+      { "type": "text", "text": "لو Singleton استلم Scoped service، هيفضل ماسك نفس الـ instance طول عمر الـ application. ولو ده DbContext، يبقى عندك change tracker واحد متشارك بين كل الـ requests والـ threads، والنتيجة data قديمة، memory بتكبر، و threading exceptions. في الـ Development environment الـ ASP.NET Core بيعمل validate للـ scopes وبيرمي " },
+      { "type": "text", "text": "InvalidOperationException", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " وقت الـ startup أو أول resolve، وده بالظبط سبب إنك تشغّل local على Development." }
+    ]},
+    { "id": "warn-captive", "type": "callout", "variant": "warning", "title": "قاعدة سهلة", "content": [
+      { "type": "text", "text": "الـ service تعتمد على services ليها نفس الـ lifetime أو أطول، عمرها ما تعتمد على أقصر. ولو Singleton محتاج يعمل شغل Scoped فعلاً، احقن " },
+      { "type": "text", "text": "IServiceScopeFactory", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " واعمل scope لكل unit of work." }
+    ]},
+    { "id": "code-scope", "type": "code", "lang": "csharp", "filename": "NightlyReportJob.cs",
+      "code": "public sealed class NightlyReportJob(IServiceScopeFactory scopes) : BackgroundService\n{\n    protected override async Task ExecuteAsync(CancellationToken stoppingToken)\n    {\n        await using var scope = scopes.CreateAsyncScope();\n        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();\n        // ... work with a fresh DbContext, disposed with the scope\n    }\n}",
+      "compile": false },
+    { "id": "h-buildsp", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "2. إنك تبني الـ provider بنفسك" }] },
+    { "id": "buildsp", "type": "paragraph", "content": [
+      { "type": "text", "text": "لو ناديت " },
+      { "type": "text", "text": "builder.Services.BuildServiceProvider()", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " وانت بتسجّل الـ services، هتعمل container تاني بنسخ تانية من كل Singleton. الـ analyzer بتاع ASP0000 بيحذّرك من كده. استخدم الـ options pattern أو الـ factory overloads زي " },
+      { "type": "text", "text": "AddSingleton(sp => ...)", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " بدله." }
+    ]},
+    { "id": "h-locator", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "3. الـ Service locator في كل حتة" }] },
+    { "id": "locator", "type": "paragraph", "content": [
+      { "type": "text", "text": "لما تحقن " },
+      { "type": "text", "text": "IServiceProvider", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " وتنادي " },
+      { "type": "text", "text": "GetService", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " جوه الـ business code، بتخبّي الـ dependencies الحقيقية وبتصعّب الـ tests. سيبه للـ infrastructure code زي مثال الـ scope factory اللي فوق." }
+    ]},
+
+    { "id": "h-keyed", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "Bonus: الـ keyed services" }] },
+    { "id": "keyed", "type": "paragraph", "content": [
+      { "type": "text", "text": "من .NET 8 تقدر تسجّل أكتر من implementation لنفس الـ interface بـ keys مختلفة، وتختار واحد بـ " },
+      { "type": "text", "text": "[FromKeyedServices]", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": "." }
+    ]},
+    { "id": "code-keyed", "type": "code", "lang": "csharp", "filename": "Program.cs",
+      "code": "builder.Services.AddKeyedSingleton<IEmailSender, SmtpEmailSender>(\"smtp\");\nbuilder.Services.AddKeyedSingleton<IEmailSender, ApiEmailSender>(\"api\");\n\npublic sealed class Newsletter([FromKeyedServices(\"api\")] IEmailSender sender) { }",
+      "compile": false },
+
+    { "id": "h-recap", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "الخلاصة" }] },
+    { "id": "recap", "type": "orderedList", "items": [
+      [{ "type": "text", "text": "اعتمد على interfaces واطلبها في الـ constructors." }],
+      [{ "type": "text", "text": "سجّل مرة واحدة في Program.cs بالـ lifetime الصح، والـ services اللي بتستخدم DbContext تبقى Scoped." }],
+      [{ "type": "text", "text": "متخليش service عمرها أطول تمسك في service عمرها أقصر، واستخدم IServiceScopeFactory لو مضطر." }],
+      [{ "type": "text", "text": "متبنيش الـ provider بنفسك، وابعد عن الـ service locator في الـ business code." }]
+    ]}
+  ]
+}

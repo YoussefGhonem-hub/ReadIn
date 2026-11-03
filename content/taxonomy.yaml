@@ -1,0 +1,232 @@
+# ReadIn taxonomy — fields → topics → planned articles (SPEC §1.4, §19.1).
+# Imported by the Taxonomy seeder (all environments). Removing a field disables it; it is never deleted.
+#
+# Field keys:   slug, nameAr, nameEn, icon (Lucide name), color (design token name),
+#               sensitive (needs VerifiedWriter + reviewer approval), requiresSources, enabled, target
+# Planned article keys: slug, topic, level (beginner|intermediate|advanced), version, path {slug, order}, sources
+version: 1
+
+fields:
+  - slug: ai-fundamentals
+    nameAr: أساسيات الـ AI
+    nameEn: AI Fundamentals
+    icon: sparkles
+    color: primary
+    target: 80
+    topics:
+      - { slug: ai-concepts, nameAr: مفاهيم الـ AI, nameEn: AI Concepts }
+      - { slug: prompt-engineering, nameAr: Prompt Engineering, nameEn: Prompt Engineering }
+      - { slug: ai-ethics, nameAr: أخلاقيات الـ AI, nameEn: AI Ethics }
+      - { slug: rag, nameAr: RAG, nameEn: RAG }
+      - { slug: agents, nameAr: AI Agents, nameEn: AI Agents }
+    plannedArticles:
+      - slug: what-is-rag
+        topic: rag
+        level: beginner
+        path: { slug: llm-apps-basics, order: 1 }
+        sources:
+          - https://arxiv.org/abs/2005.11401
+          - https://www.anthropic.com/news/contextual-retrieval
+
+  - slug: machine-learning
+    nameAr: Machine Learning
+    nameEn: Machine Learning
+    icon: brain-circuit
+    color: callout-info-accent
+    target: 100
+    topics:
+      - { slug: supervised-learning, nameAr: Supervised Learning, nameEn: Supervised Learning }
+      - { slug: unsupervised-learning, nameAr: Unsupervised Learning, nameEn: Unsupervised Learning }
+      - { slug: feature-engineering, nameAr: Feature Engineering, nameEn: Feature Engineering }
+      - { slug: model-evaluation, nameAr: تقييم الموديلات, nameEn: Model Evaluation }
+      - { slug: scikit-learn, nameAr: scikit-learn, nameEn: scikit-learn }
+      - { slug: mlops, nameAr: MLOps, nameEn: MLOps }
+
+  - slug: deep-learning-llms
+    nameAr: Deep Learning و LLMs
+    nameEn: Deep Learning & LLMs
+    icon: network
+    color: callout-info-accent
+    target: 80
+    topics:
+      - { slug: neural-networks, nameAr: Neural Networks, nameEn: Neural Networks }
+      - { slug: transformers, nameAr: Transformers, nameEn: Transformers }
+      - { slug: embeddings, nameAr: Embeddings, nameEn: Embeddings }
+      - { slug: fine-tuning, nameAr: Fine-tuning, nameEn: Fine-tuning }
+      - { slug: vector-databases, nameAr: Vector Databases, nameEn: Vector Databases }
+
+  - slug: claude-ai-tools
+    nameAr: Claude وأدوات الـ AI للبرمجة
+    nameEn: Claude & AI Coding Tools
+    icon: bot
+    color: accent
+    target: 60
+    topics:
+      - { slug: claude-code, nameAr: Claude Code, nameEn: Claude Code }
+      - { slug: claude-md, nameAr: CLAUDE.md, nameEn: CLAUDE.md }
+      - { slug: context-management, nameAr: إدارة الـ Context, nameEn: Context Management }
+      - { slug: skills-hooks-subagents, nameAr: Skills و Hooks و Subagents, nameEn: "Skills, Hooks & Subagents" }
+      - { slug: mcp, nameAr: MCP Servers, nameEn: MCP Servers }
+      - { slug: claude-api, nameAr: Claude API و Tool Use, nameEn: Claude API & Tool Use }
+      - { slug: prompt-caching, nameAr: Prompt Caching, nameEn: Prompt Caching }
+      - { slug: community-plugins, nameAr: Plugins من المجتمع, nameEn: Community Plugins }
+
+  - slug: dotnet
+    nameAr: .NET
+    nameEn: .NET
+    icon: code-xml
+    color: primary
+    target: 180
+    topics:
+      - { slug: csharp, nameAr: "C#", nameEn: "C#" }
+      - { slug: aspnet-core, nameAr: ASP.NET Core, nameEn: ASP.NET Core }
+      - { slug: ef-core, nameAr: EF Core, nameEn: EF Core }
+      - { slug: clean-architecture, nameAr: Clean Architecture, nameEn: Clean Architecture }
+      - { slug: cqrs, nameAr: CQRS, nameEn: CQRS }
+      - { slug: mapster, nameAr: Mapster, nameEn: Mapster }
+      - { slug: minimal-apis, nameAr: Minimal APIs, nameEn: Minimal APIs }
+      - { slug: dotnet-testing, nameAr: Testing في .NET, nameEn: Testing in .NET }
+      - { slug: dotnet-performance, nameAr: Performance, nameEn: Performance }
+    plannedArticles:
+      - slug: dependency-injection-in-aspnet-core
+        topic: aspnet-core
+        level: beginner
+        version: .NET 10
+        path: { slug: aspnet-core-basics, order: 3 }
+        sources:
+          - https://learn.microsoft.com/aspnet/core/fundamentals/dependency-injection
+          - https://learn.microsoft.com/dotnet/core/extensions/dependency-injection-guidelines
+      - slug: minimal-apis-route-groups
+        topic: minimal-apis
+        level: beginner
+        version: .NET 10
+        path: { slug: aspnet-core-basics, order: 4 }
+        sources:
+          - https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/route-handlers
+      - slug: cqrs-with-mediator-source-generator
+        topic: cqrs
+        level: intermediate
+        version: .NET 10
+        sources:
+          - https://github.com/martinothamar/Mediator
+
+  - slug: frontend
+    nameAr: Frontend
+    nameEn: Frontend
+    icon: layout-template
+    color: callout-warning-accent
+    target: 150
+    topics:
+      - { slug: html-css, nameAr: HTML و CSS, nameEn: HTML & CSS }
+      - { slug: typescript, nameAr: TypeScript, nameEn: TypeScript }
+      - { slug: angular, nameAr: Angular, nameEn: Angular }
+      - { slug: react, nameAr: React, nameEn: React }
+      - { slug: state-management, nameAr: State Management, nameEn: State Management }
+      - { slug: accessibility, nameAr: Accessibility, nameEn: Accessibility }
+      - { slug: web-performance, nameAr: Web Performance, nameEn: Web Performance }
+
+  - slug: mobile
+    nameAr: تطبيقات الموبايل
+    nameEn: Mobile
+    icon: smartphone
+    color: primary
+    target: 120
+    topics:
+      - { slug: flutter, nameAr: Flutter, nameEn: Flutter }
+      - { slug: dart, nameAr: Dart, nameEn: Dart }
+      - { slug: mobile-state-management, nameAr: State Management, nameEn: State Management }
+      - { slug: kotlin, nameAr: Kotlin, nameEn: Kotlin }
+      - { slug: swift, nameAr: Swift, nameEn: Swift }
+      - { slug: app-architecture, nameAr: App Architecture, nameEn: App Architecture }
+      - { slug: publishing, nameAr: النشر على الـ Stores, nameEn: Publishing }
+
+  - slug: databases
+    nameAr: قواعد البيانات
+    nameEn: Databases
+    icon: database
+    color: callout-info-accent
+    target: 80
+    topics:
+      - { slug: sql-server, nameAr: SQL Server, nameEn: SQL Server }
+      - { slug: postgresql, nameAr: PostgreSQL, nameEn: PostgreSQL }
+      - { slug: indexing, nameAr: Indexing, nameEn: Indexing }
+      - { slug: query-tuning, nameAr: Query Tuning, nameEn: Query Tuning }
+      - { slug: nosql, nameAr: NoSQL, nameEn: NoSQL }
+      - { slug: redis, nameAr: Redis, nameEn: Redis }
+
+  - slug: devops-cloud
+    nameAr: DevOps والـ Cloud
+    nameEn: DevOps & Cloud
+    icon: cloud
+    color: callout-info-accent
+    target: 70
+    topics:
+      - { slug: git, nameAr: Git, nameEn: Git }
+      - { slug: docker, nameAr: Docker, nameEn: Docker }
+      - { slug: ci-cd, nameAr: CI/CD, nameEn: CI/CD }
+      - { slug: kubernetes, nameAr: Kubernetes, nameEn: Kubernetes }
+      - { slug: azure, nameAr: Azure, nameEn: Azure }
+      - { slug: observability, nameAr: Observability, nameEn: Observability }
+
+  - slug: software-architecture
+    nameAr: Software Architecture
+    nameEn: Software Architecture
+    icon: boxes
+    color: accent
+    target: 60
+    topics:
+      - { slug: solid, nameAr: SOLID, nameEn: SOLID }
+      - { slug: design-patterns, nameAr: Design Patterns, nameEn: Design Patterns }
+      - { slug: ddd, nameAr: DDD, nameEn: DDD }
+      - { slug: microservices, nameAr: Microservices, nameEn: Microservices }
+      - { slug: system-design, nameAr: System Design, nameEn: System Design }
+
+  - slug: security
+    nameAr: الأمان (Security)
+    nameEn: Security
+    icon: shield-check
+    color: callout-danger-accent
+    target: 40
+    topics:
+      - { slug: owasp-top-10, nameAr: OWASP Top 10, nameEn: OWASP Top 10 }
+      - { slug: auth, nameAr: OAuth و OIDC و JWT, nameEn: "OAuth, OIDC & JWT" }
+      - { slug: secrets, nameAr: إدارة الـ Secrets, nameEn: Secrets Management }
+      - { slug: secure-coding, nameAr: Secure Coding, nameEn: Secure Coding }
+
+  - slug: testing
+    nameAr: Testing
+    nameEn: Testing
+    icon: flask-conical
+    color: success
+    target: 0
+    topics:
+      - { slug: unit-testing, nameAr: Unit Testing, nameEn: Unit Testing }
+      - { slug: integration-testing, nameAr: Integration Testing, nameEn: Integration Testing }
+      - { slug: e2e-testing, nameAr: E2E Testing, nameEn: E2E Testing }
+
+  # ── Enabled after launch (SPEC §1.4). Sensitive fields need verified writers + reviewer approval. ──
+  - slug: medicine
+    nameAr: الطب
+    nameEn: Medicine
+    icon: stethoscope
+    color: callout-danger-accent
+    sensitive: true
+    enabled: false
+    topics: []
+
+  - slug: engineering
+    nameAr: الهندسة
+    nameEn: Engineering
+    icon: cog
+    color: callout-warning-accent
+    enabled: false
+    topics: []
+
+  - slug: public-health
+    nameAr: الصحة العامة
+    nameEn: Public Health
+    icon: heart-pulse
+    color: success
+    sensitive: true
+    enabled: false
+    topics: []
