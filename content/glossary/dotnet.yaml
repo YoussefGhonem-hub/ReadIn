@@ -307,3 +307,43 @@ terms:
     term: Aggregate root
     definitionEn: In Domain-Driven Design, the one entity through which a cluster of related objects (an aggregate) is loaded, changed and saved, so it can enforce the cluster's rules. An Order with its lines is a typical example.
     definitionAr: في الـ Domain-Driven Design، هو الـ entity الوحيدة اللي من خلالها مجموعة objects مرتبطة ببعض (اسمها aggregate) بتتحمّل وتتغير وتتحفظ، عشان تقدر تفرض القواعد بتاعة المجموعة دي. والـ Order مع الـ lines بتاعته مثال معروف.
+  - id: object-flattening
+    term: Flattening
+    definitionEn: In object mapping, filling one destination member from a value nested inside the source by joining the names, such as AddressCity from Address.City.
+    definitionAr: في الـ object mapping، إنك تملا member واحد في الـ destination من قيمة جوه object متداخل في الـ source عن طريق دمج الأسماء، زي AddressCity من Address.City.
+  - id: over-posting
+    term: Over-posting
+    definitionEn: When a request changes data the client was never meant to set, because the server copies incoming values onto a model by name, for example a request that sets IsAdmin on a user. Also called mass assignment.
+    definitionAr: لما request يغيّر داتا الـ client مكانش المفروض يلمسها، لأن السيرفر بينسخ القيم اللي جاية على الـ model بالاسم، زي request بيحط IsAdmin على user. واسمها كمان mass assignment.
+  - id: domain-event
+    term: Domain event
+    definitionEn: A record of something that happened in the domain, such as OrderPlaced, raised so other parts of the same domain, in the same process, can react. Its handlers often run in the same transaction as the change that raised it.
+    definitionAr: تسجيل لحاجة حصلت في الـ domain، زي OrderPlaced، بيتعمله raise عشان أجزاء تانية من نفس الـ domain وجوه نفس الـ process تتفاعل معاه. والـ handlers بتاعته غالبًا بتشتغل في نفس الـ transaction بتاعة التغيير اللي طلّعه.
+  - id: integration-event
+    term: Integration event
+    definitionEn: A message that tells other services or applications about a change that has already been committed. It travels asynchronously through an event bus, and its shape is a public contract that consumers depend on.
+    definitionAr: رسالة بتبلّغ services أو applications تانية بتغيير اتعمله commit خلاص. بتتبعت asynchronous عن طريق event bus، والشكل بتاعها contract عام الـ consumers معتمدين عليه.
+  - id: transactional-outbox
+    term: Transactional outbox
+    definitionEn: A table in the service's own database where outgoing messages are inserted in the same transaction as the business change, then published to the broker by a separate process, so a message is never lost or sent for a change that was rolled back. Delivery becomes at-least-once.
+    definitionAr: table في الداتابيز بتاعة الـ service نفسها، الرسايل الخارجة بتتضاف فيها في نفس الـ transaction بتاعة التغيير، وبعدين process منفصلة بتنشرها على الـ broker، فمفيش رسالة تضيع ولا تتبعت عن تغيير اتعمله rollback. والتوصيل بيبقى at-least-once.
+  - id: global-query-filter
+    term: Global query filter
+    definitionEn: A LINQ predicate configured on an entity type with HasQueryFilter that EF Core adds to every query for that type, including loads through Include, until a query opts out with IgnoreQueryFilters.
+    definitionAr: شرط LINQ بيتظبط على entity type بـ HasQueryFilter، و EF Core بيضيفه لكل query على الـ type ده، حتى اللي بتتحمّل بـ Include، لحد ما query تلغيه بـ IgnoreQueryFilters.
+  - id: soft-delete
+    term: Soft delete
+    definitionEn: Marking a row as deleted, usually with an IsDeleted flag or a DeletedAt timestamp, instead of removing it, so it can be restored or kept for audit while the app treats it as gone.
+    definitionAr: إنك تعلّم الـ row إنه اتمسح، غالبًا بـ flag زي IsDeleted أو وقت في DeletedAt، بدل ما تشيله فعلًا، عشان تقدر ترجّعه أو تحتفظ بيه للـ audit والتطبيق بيتعامل معاه كأنه مش موجود.
+  - id: filtered-index
+    term: Filtered index
+    definitionEn: An index that covers only the rows matching a condition, such as IsDeleted = 0. Also called a partial index. A unique filtered index enforces uniqueness only among those rows.
+    definitionAr: index بيغطي بس الـ rows اللي بتحقق شرط معين، زي IsDeleted = 0، واسمه كمان partial index. ولو unique فهو بيفرض عدم التكرار بين الـ rows دي بس.
+  - id: keyset-pagination
+    term: Keyset pagination
+    definitionEn: Fetching the next page or batch with a WHERE clause on the last key you saw, such as Id > lastId with an ORDER BY on that key, instead of skipping rows with OFFSET. Also called seek-based pagination.
+    definitionAr: إنك تجيب الصفحة أو الـ batch اللي بعدها بشرط WHERE على آخر key شفته، زي Id > lastId مع ORDER BY على نفس الـ key، بدل ما تتخطى rows بـ OFFSET. واسمها كمان seek-based pagination.
+  - id: query-streaming
+    term: Streaming (query results)
+    definitionEn: Handing query results to the application one row at a time as they're read, so memory stays roughly constant however many rows the query returns. The opposite is buffering, which loads every row before returning the first.
+    definitionAr: إن نتايج الـ query توصل للتطبيق row ورا row وهي بتتقري، فالـ memory بتفضل تقريبًا ثابتة مهما كان عدد الـ rows. وعكسها الـ buffering، اللي بيحمّل كل الـ rows قبل ما يرجّع أول واحد.

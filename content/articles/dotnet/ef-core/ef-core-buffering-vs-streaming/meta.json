@@ -1,0 +1,59 @@
+{
+  "slug": "ef-core-buffering-vs-streaming",
+  "field": "dotnet",
+  "topic": "ef-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "ToListAsync Loads Everything: Buffering vs Streaming Large Results in EF Core",
+      "subtitle": "Async frees the thread, not the memory. For large results, stream with AsAsyncEnumerable and no tracking, write in bounded batches, and know when EF buffers for you."
+    },
+    "ar-EG": {
+      "title": "الـ ToListAsync بيحمّل كل حاجة: الـ buffering والـ streaming للـ results الكبيرة في EF Core",
+      "subtitle": "الـ async بيحرر الـ thread، مش الـ memory. للنتايج الكبيرة اعمل streaming بـ AsAsyncEnumerable من غير tracking، واكتب على batches محدودة، واعرف إمتى EF بيعمل buffering لوحده."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 15
+  },
+  "tags": [
+    "EF Core",
+    "Performance",
+    "Memory",
+    "IAsyncEnumerable"
+  ],
+  "sources": [
+    {
+      "title": "Efficient Querying: buffering and streaming — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/performance/efficient-querying"
+    },
+    {
+      "title": "Asynchronous Programming — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/miscellaneous/async"
+    },
+    {
+      "title": "EntityFrameworkQueryableExtensions.AsAsyncEnumerable — EF Core API reference, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.asasyncenumerable"
+    },
+    {
+      "title": "Tracking vs. No-Tracking Queries — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/tracking"
+    },
+    {
+      "title": "Pagination: keyset pagination — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/pagination"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic sealed class Order\n{\n    public int Id { get; set; }\n    public int CustomerId { get; set; }\n    public decimal Total { get; set; }\n}\npublic sealed class Customer\n{\n    public int Id { get; set; }\n    public string Tier { get; set; } = \"Standard\";\n    public void RecalculateTier() => Tier = \"Gold\";\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<Order> Orders => Set<Order>();\n    public DbSet<Customer> Customers => Set<Customer>();\n}"
+    }
+  }
+}

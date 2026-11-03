@@ -1,0 +1,59 @@
+{
+  "slug": "mapster-vs-manual-mapping",
+  "field": "dotnet",
+  "topic": "mapster",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Mapping Libraries Don't Remove Mapping Bugs: Mapster vs Manual Mapping",
+      "subtitle": "Mapster saves the typing, not the decisions. By default a member with no match stays empty and enums map by number, silently, until you turn on its checks or let the compiler check hand-written mapping."
+    },
+    "ar-EG": {
+      "title": "مكتبات الـ mapping مش بتشيل أخطاء الـ mapping: Mapster ولا manual mapping؟",
+      "subtitle": "الـ Mapster بيوفّر عليك الكتابة، مش القرارات. افتراضيًا الـ member اللي ملوش مقابل بيفضل فاضي والـ enums بتتنقل بالرقم، من غير أي error، لحد ما تشغّل الـ checks بتاعته أو تخلّي الـ compiler يراجع الـ mapping اللي بإيدك."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": ".NET 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 12
+  },
+  "tags": [
+    "Mapster",
+    "Object Mapping",
+    "DTOs",
+    "Architecture"
+  ],
+  "sources": [
+    {
+      "title": "Mapster README — MapsterMapper/Mapster on GitHub",
+      "url": "https://github.com/MapsterMapper/Mapster"
+    },
+    {
+      "title": "Config validation & compilation — Mapster wiki",
+      "url": "https://github.com/MapsterMapper/Mapster/wiki/Config-validation-%26-compilation"
+    },
+    {
+      "title": "Data types (enums, mappable objects, flattening) — Mapster wiki",
+      "url": "https://github.com/MapsterMapper/Mapster/wiki/Data-types"
+    },
+    {
+      "title": "Ignoring members (IgnoreNullValues) — Mapster wiki",
+      "url": "https://github.com/MapsterMapper/Mapster/wiki/Ignoring-members"
+    },
+    {
+      "title": "required modifier — C# reference, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/required"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public enum CustomerStatus { Active, Suspended, Closed }\npublic enum CustomerStatusDto { Pending, Active, Suspended, Closed }\npublic class Customer\n{\n    public int Id { get; set; }\n    public string? Name { get; set; }\n    public string EmailAddress { get; set; } = \"\";\n    public CustomerStatus Status { get; set; }\n}\npublic class CustomerDto\n{\n    public int Id { get; set; }\n    public string? Name { get; set; }\n    public string? Email { get; set; }\n    public CustomerStatusDto Status { get; set; }\n}\npublic class UpdateCustomer\n{\n    public string? Name { get; set; }\n    public string? EmailAddress { get; set; }\n}"
+    }
+  }
+}

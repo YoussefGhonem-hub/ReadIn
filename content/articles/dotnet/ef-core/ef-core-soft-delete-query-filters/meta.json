@@ -1,0 +1,59 @@
+{
+  "slug": "ef-core-soft-delete-query-filters",
+  "field": "dotnet",
+  "topic": "ef-core",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Soft Delete Is More Than an IsDeleted Flag: Global Query Filters in EF Core",
+      "subtitle": "A query filter only hides rows from LINQ reads. Cascades, unique indexes, required navigations, bulk deletes and IgnoreQueryFilters all still need a decision."
+    },
+    "ar-EG": {
+      "title": "الـ soft delete أكتر من flag اسمه IsDeleted: الـ global query filters في EF Core",
+      "subtitle": "الـ query filter بيخبّي الـ rows من قراية الـ LINQ وبس. الـ cascades والـ unique indexes والـ required navigations والـ bulk deletes و IgnoreQueryFilters كلهم لسه محتاجين قرار منك."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "EF Core 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 14
+  },
+  "tags": [
+    "EF Core",
+    "Soft Delete",
+    "Query Filters",
+    "Multi-tenancy"
+  ],
+  "sources": [
+    {
+      "title": "Global Query Filters — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/querying/filters"
+    },
+    {
+      "title": "What's New in EF Core 10: named query filters — Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/what-is-new/ef-core-10.0/whatsnew"
+    },
+    {
+      "title": "Cascade Delete — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/saving/cascade-delete"
+    },
+    {
+      "title": "Indexes: index filter — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/modeling/indexes"
+    },
+    {
+      "title": "Interceptors: SaveChanges interception — EF Core, Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/logging-events-diagnostics/interceptors"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public interface ITenant\n{\n    int Id { get; }\n}\npublic interface ISoftDelete\n{\n    bool IsDeleted { get; set; }\n    DateTime? DeletedAt { get; set; }\n}\npublic sealed class Customer : ISoftDelete\n{\n    public int Id { get; set; }\n    public int TenantId { get; set; }\n    public string Email { get; set; } = \"\";\n    public bool IsDeleted { get; set; }\n    public DateTime? DeletedAt { get; set; }\n    public List<Order> Orders { get; } = [];\n}\npublic sealed class Order : ISoftDelete\n{\n    public int Id { get; set; }\n    public int CustomerId { get; set; }\n    public Customer Customer { get; set; } = null!;\n    public bool IsDeleted { get; set; }\n    public DateTime? DeletedAt { get; set; }\n}"
+    }
+  }
+}

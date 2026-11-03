@@ -1,0 +1,55 @@
+{
+  "slug": "domain-events-are-not-integration-events",
+  "field": "dotnet",
+  "topic": "clean-architecture",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Domain Events Are Not Integration Events: Two Kinds of Events in a .NET App",
+      "subtitle": "A domain event is handled in-process, often before the commit. An integration event is a public contract that must leave only after the commit, and an outbox is how you get it there."
+    },
+    "ar-EG": {
+      "title": "الـ domain events مش integration events: نوعين events في أي app بالـ .NET",
+      "subtitle": "الـ domain event بيتعالج جوه نفس الـ process، وغالبًا قبل الـ commit. أما الـ integration event فهو contract عام لازم يخرج بعد الـ commit بس، والـ outbox هو الطريقة اللي توصّله بيها."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": ".NET 10",
+  "learningPath": {
+    "slug": "dotnet-data-and-architecture",
+    "order": 13
+  },
+  "tags": [
+    "Domain Events",
+    "Integration Events",
+    "Outbox Pattern",
+    "Architecture"
+  ],
+  "sources": [
+    {
+      "title": "Domain events: design and implementation — .NET Architecture Guides, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/domain-events-design-implementation"
+    },
+    {
+      "title": "Implementing event-based communication between microservices (integration events) — .NET Architecture Guides, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/multi-container-microservice-net-applications/integration-event-based-microservice-communications"
+    },
+    {
+      "title": "Subscribing to events: atomicity, outbox and idempotency — .NET Architecture Guides, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/multi-container-microservice-net-applications/subscribe-events"
+    },
+    {
+      "title": "Domain Event — Martin Fowler",
+      "url": "https://martinfowler.com/eaaDev/DomainEvent.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "using Microsoft.EntityFrameworkCore;\npublic interface IMessageBus\n{\n    Task PublishAsync<T>(T message, CancellationToken ct);\n    Task PublishAsync(string type, string payload, CancellationToken ct);\n}\npublic sealed record OrderPlaced(Guid OrderId, Guid CustomerId, decimal Total)\n    : Mediator.INotification;\npublic sealed class OutboxMessage\n{\n    public long Id { get; set; }\n    public string Type { get; set; } = \"\";\n    public string Payload { get; set; } = \"\";\n    public DateTime? PublishedAt { get; set; }\n    public static OutboxMessage From<T>(T message) where T : notnull => new()\n    {\n        Type = typeof(T).Name,\n        Payload = System.Text.Json.JsonSerializer.Serialize(message),\n    };\n}\npublic sealed class ShopDb(DbContextOptions<ShopDb> options) : DbContext(options)\n{\n    public DbSet<OutboxMessage> Outbox => Set<OutboxMessage>();\n}"
+    }
+  }
+}
