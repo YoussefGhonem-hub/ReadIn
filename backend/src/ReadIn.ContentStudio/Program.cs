@@ -49,6 +49,11 @@ validate.SetAction(async (parse, ct) =>
 
     Console.WriteLine();
     if (!request.Plan) Console.WriteLine($"Articles: {stats.Articles}");
+    if (stats.Articles <= 40)
+    {
+        foreach (var article in stats.Lengths.GroupBy(l => l.Slug))
+            Console.WriteLine($"  {article.Key}: {string.Join(", ", article.OrderBy(l => l.Language, StringComparer.Ordinal).Select(l => $"{l.Language} {l.Words} words / {l.Minutes} min"))}");
+    }
     if (request.Compile && !request.Plan)
     {
         Console.WriteLine($"Snippets compiled: {(stats.Compiled.Count == 0 ? "0" : string.Join(", ", stats.Compiled.Select(c => $"{c.Key} {c.Value}")))}");

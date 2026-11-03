@@ -77,6 +77,8 @@ public sealed partial class ContentValidator(ContentRepository content, IRDocPro
             stats.Articles++;
             var article = await LoadAsync(folder, meta, plan.GetValueOrDefault(meta.Slug), findings, ct);
             if (article is null) continue;
+            foreach (var (language, processed) in article.Processed)
+                stats.Lengths.Add((meta.Slug, language, processed.Content.WordCount, processed.Content.ReadingTimeMinutes));
 
             foreach (var (severity, check, message) in ArticleRules.Check(article, glossary))
                 findings.Add(new(meta.Slug, severity, check, message));
