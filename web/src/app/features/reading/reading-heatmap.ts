@@ -136,7 +136,8 @@ export class ReadingHeatmap {
     const data = this.data();
     if (!data) return null;
     const lang = this.language.lang();
-    const grid = buildHeatmapGrid(data);
+    // Weeks start on Saturday in Arabic and Sunday in English, like the mobile app (its MaterialLocalizations).
+    const grid = buildHeatmapGrid(data, lang === 'ar' ? 6 : 0);
     const locale = intlLocale(lang);
     const dayFormat = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' });
     const monthFormat = new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' });
