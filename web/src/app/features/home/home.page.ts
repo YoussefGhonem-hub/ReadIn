@@ -2,6 +2,7 @@ import {
   ApplicationRef,
   ChangeDetectionStrategy,
   Component,
+  DOCUMENT,
   DestroyRef,
   ElementRef,
   Injector,
@@ -26,6 +27,7 @@ import { ArticleCardSkeleton, HeroSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { StreakBadge } from '../../shared/ui/streak-badge';
 import { StreakStore } from '../reading/streak.store';
+import { FollowingFeed } from './following-feed';
 import { HomeStore } from './home.store';
 import { TodayHero } from './today-hero';
 
@@ -34,7 +36,7 @@ type FeedTab = 'forYou' | 'following';
 /** Home — "النهارده" (F03). */
 @Component({
   selector: 'rd-home-page',
-  imports: [TranslocoPipe, BdiText, ArticleCard, ArticleCardSkeleton, HeroSkeleton, EmptyState, ErrorState, StreakBadge, TodayHero],
+  imports: [TranslocoPipe, BdiText, ArticleCard, ArticleCardSkeleton, HeroSkeleton, EmptyState, ErrorState, StreakBadge, TodayHero, FollowingFeed],
   providers: [HomeStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[720px] px-4 pt-5 lg:pt-8' },
@@ -67,22 +69,24 @@ type FeedTab = 'forYou' | 'following';
       }
     }
 
-    <!-- Field chips -->
-    <div class="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1" role="toolbar" [attr.aria-label]="'home.filterByField' | transloco">
-      <button type="button" class="rd-chip" [attr.aria-pressed]="store.selectedField() === null" (click)="store.selectField(null)">
-        {{ 'home.allFields' | transloco }}
-      </button>
-      @for (field of store.fields(); track field.id) {
-        <button
-          type="button"
-          class="rd-chip"
-          [attr.aria-pressed]="store.selectedField() === field.slug"
-          (click)="store.selectField(field.slug)"
-        >
-          <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
+    <!-- Field chips (they filter For you; the Following feed has no field filter) -->
+    @if (activeTab() === 'forYou') {
+      <div class="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1" role="toolbar" [attr.aria-label]="'home.filterByField' | transloco">
+        <button type="button" class="rd-chip" [attr.aria-pressed]="store.selectedField() === null" (click)="store.selectField(null)">
+          {{ 'home.allFields' | transloco }}
         </button>
-      }
-    </div>
+        @for (field of store.fields(); track field.id) {
+          <button
+            type="button"
+            class="rd-chip"
+            [attr.aria-pressed]="store.selectedField() === field.slug"
+            (click)="store.selectField(field.slug)"
+          >
+            <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
+          </button>
+        }
+      </div>
+    }
 
     <!-- Tabs -->
     <div class="mb-1 flex gap-6 border-b border-border" role="tablist">
@@ -90,10 +94,15 @@ type FeedTab = 'forYou' | 'following';
         <button
           type="button"
           role="tab"
+          [id]="'home-tab-' + tab"
+          [attr.aria-controls]="'home-panel-' + tab"
           [attr.aria-selected]="activeTab() === tab"
+          [attr.tabindex]="activeTab() === tab ? 0 : -1"
+          [attr.data-home-tab]="tab"
           class="-mb-px border-b-2 pb-2 text-sm"
           [class]="activeTab() === tab ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary'"
           (click)="selectTab(tab)"
+          (keydown)="onTabKey($event)"
         >
           {{ 'home.tabs.' + tab | transloco }}
         </button>
@@ -109,9 +118,11 @@ type FeedTab = 'forYou' | 'following';
     }
 
     @if (activeTab() === 'following') {
-      <rd-empty-state [title]="'home.following.title' | transloco" [message]="'home.following.body' | transloco" />
+      <section id="home-panel-following" role="tabpanel" aria-labelledby="home-tab-following">
+        <rd-following-feed />
+      </section>
     } @else {
-      <section [attr.aria-label]="'home.feedTitle' | transloco" aria-live="polite">
+      <section id="home-panel-forYou" role="tabpanel" aria-labelledby="home-tab-forYou" aria-live="polite">
         @switch (store.feedStatus()) {
           @case ('error') {
             <rd-error-state [message]="'home.feedError' | transloco" (retry)="store.retryFeed()" />
@@ -152,8 +163,10 @@ export class HomePage {
   private readonly injector = inject(Injector);
   private readonly appRef = inject(ApplicationRef);
   private readonly transloco = inject(TranslocoService);
-  protected readonly lang = inject(LanguageService).lang;
   protected readonly streaks = inject(StreakStore);
+  private readonly document = inject(DOCUMENT);
+  private readonly language = inject(LanguageService);
+  protected readonly lang = this.language.lang;
 
   protected readonly tabs: FeedTab[] = ['forYou', 'following'];
   protected readonly activeTab = signal<FeedTab>('forYou');
@@ -170,6 +183,10 @@ export class HomePage {
   });
 
   constructor() {
+    // Signing out on the Following tab goes back to For you (the tab needs an account).
+    effect(() => {
+      if (this.session.isGuest() && untracked(this.activeTab) === 'following') untracked(() => this.activeTab.set('forYou'));
+    });
     const hydrating = inject(HydrationWindow).isOpen;
     void this.store.init();
     inject(Title).setTitle(`ReadIn — ${this.transloco.translate('app.tagline')}`);
@@ -211,9 +228,22 @@ export class HomePage {
 
   private reobserve: () => void = () => undefined;
 
+  /** Arrow keys move between the tabs (mirrored in RTL). */
+  protected onTabKey(event: KeyboardEvent): void {
+    const rtl = this.language.dir() === 'rtl';
+    const next = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 }[event.key];
+    if (!next) return;
+    event.preventDefault();
+    const index = (this.tabs.indexOf(this.activeTab()) + next + this.tabs.length) % this.tabs.length;
+    const tab = this.tabs[index];
+    this.selectTab(tab);
+    if (this.activeTab() === tab) afterNextRender(() => this.document.getElementById(`home-tab-${tab}`)?.focus(), { injector: this.injector });
+  }
+
   protected selectTab(tab: FeedTab): void {
     if (tab === 'following' && !this.prompt.requireAuth()) return;
     this.activeTab.set(tab);
+    if (tab === 'following') void this.store.openFollowing();
     // The sentinel element is recreated when switching back to For you.
     afterNextRender(() => this.reobserve(), { injector: this.injector });
   }

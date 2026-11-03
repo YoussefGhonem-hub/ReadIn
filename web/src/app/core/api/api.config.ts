@@ -11,6 +11,12 @@ export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL', {
 /** Set on a request to stop the error interceptor from showing a toast (the caller renders its own error state). */
 export const SILENT_ERRORS = new HttpContextToken<boolean>(() => false);
 
+/**
+ * Set on GETs that only make sense for the signed-in user (Following, Saved, collections, suggestions). SSR never makes
+ * them, so they are never in its transfer cache: the token goes out even while the page is still hydrating.
+ */
+export const WITH_SESSION = new HttpContextToken<boolean>(() => false);
+
 /** Marks the web's session calls; the API only reads (and sets) the refresh token cookie when it is present. */
 export const CLIENT_HEADER = 'X-ReadIn-Client';
 

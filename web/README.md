@@ -37,12 +37,23 @@ SSR can call the API over an internal address with `READIN_API_INTERNAL_URL` (e.
 src/app/
 ├── core/       auth (session, guards, account-setup order) · http (interceptors) · i18n (Transloco)
 │               theme (ThemeService, reader prefs) · api (typed contract-v1 services) · realtime · push · platform
+│               social (reactions, saves, collections, follows: shared optimistic state + live counters)
 ├── shared/     ui (cards, sheets, states, icons, phone field + country picker, password field, PIN input)
 │               rdoc (renderer, one component per block) · directives (BiDi) · pipes
+│               social (follow button, person row, collection sheets)
 ├── layout/     shell, top bar, side nav (desktop), bottom nav (narrow screens)
-└── features/   auth (welcome, sign in/up, forgot password, setup steps) · onboarding · home · article · settings
-                · placeholders for later phases
+└── features/   auth (welcome, sign in/up, forgot password, setup steps) · onboarding · home · article · saved
+                · settings · placeholders for later phases
 ```
+
+## Reactions, follow, saved (F10, F12, F13, F27)
+
+- **One state per article and per writer.** `core/social` keeps what the UI shows about reactions, saves and follows, so a change on a feed card also shows in the reader and on the Saved page. Fresh API copies replace it (`absorb`), except while one of your actions is still on its way. Signing out clears it.
+- **Optimistic, one request at a time.** A tap changes the UI at once. Quick taps coalesce into the latest wish, with one request per article and kind at a time. A failure rolls back to what the server last confirmed and shows the translated error code. Guests get the soft sign-in prompt instead.
+- **Live counters replace, never add.** `bindLiveCounters` listens to `/live/articles/{id}` for the open reader, and for feed cards while they are on screen (browser only). A live value that differs from the server's last value replaces it, so your own reaction is never counted twice. Without the Realtime Database the REST values stay.
+- **Personal GETs** (Following feed, Saved, collections, suggestions, who reacted) carry `WITH_SESSION`, so they keep the token while a server-rendered page is still hydrating. SSR is anonymous, so the reader loads the article again with your token once the session is restored.
+- **Collections** know an article's membership from the Saved list (`SavedArticleDto.collectionIds`) and from changes made in this session. The API has no per-article lookup, so the reader's "add to collection" sheet starts unticked for an article the Saved list hasn't loaded (adding is idempotent).
+- **e2e:** `e2e/mock-api/social.mjs` keeps reactions, saves, collections and follows per signed-in viewer (the bearer token's `sub`), and `e2e/support/social.ts` signs each test in as its own reader, so the flows run end to end in parallel.
 
 ## Rules this codebase follows
 

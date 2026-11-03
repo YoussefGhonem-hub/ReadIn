@@ -1,8 +1,10 @@
 import {
+  ApplicationRef,
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
+  Injector,
   RESPONSE_INIT,
   afterNextRender,
   computed,
@@ -10,6 +12,7 @@ import {
   inject,
   input,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { HttpContext, httpResource } from '@angular/common/http';
@@ -20,13 +23,19 @@ import { SILENT_ERRORS, isApiError } from '../../core/api/api.config';
 import { ContentApi } from '../../core/api/content.api';
 import { ArticleDetailsDto, ArticleLanguage } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
+import { SessionStore } from '../../core/auth/session.store';
+import { HydrationWindow } from '../../core/http/hydration-window';
 import { LanguageService } from '../../core/i18n/language.service';
-import { injectLiveCounts } from '../../core/realtime/live-signals';
+import { ArticleSocialStore } from '../../core/social/article-social.store';
+import { FollowStore } from '../../core/social/follow.store';
+import { bindLiveCounters } from '../../core/social/live-article';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir } from '../../shared/directives/bidi';
 import { ArticleAttachments } from '../../shared/media/article-attachments';
 import { LocalizedDatePipe, ReadingTimePipe } from '../../shared/pipes/format.pipes';
+import { CollectionPickerSheet } from '../../shared/social/collection-sheets';
+import { FollowButton } from '../../shared/social/follow-button';
 import { RDocRenderer } from '../../shared/rdoc/rdoc-renderer';
 import { hasBlock, safeHttpUrl, tableOfContents } from '../../shared/rdoc/rdoc.utils';
 import { articleLanguageForUrl, urlLangFor } from '../../shared/ui/article-link';
@@ -45,7 +54,25 @@ const TOC_MIN_HEADINGS = 3;
 /** Article reader (F04). Route: `/:lang/a/:slug` where `lang` (ar|en) selects the article version (SPEC §23). */
 @Component({
   selector: 'rd-article-page',
-  imports: [RouterLink, TranslocoPipe, BdiText, Avatar, RDocRenderer, Segmented, LinesSkeleton, EmptyState, ErrorState, ArticleToc, ArticleActionBar, ArticleAttachments, ReadingTimePipe, LocalizedDatePipe, LucideDynamicIcon],
+  imports: [
+    RouterLink,
+    TranslocoPipe,
+    BdiText,
+    Avatar,
+    RDocRenderer,
+    Segmented,
+    LinesSkeleton,
+    EmptyState,
+    ErrorState,
+    ArticleToc,
+    ArticleActionBar,
+    ArticleAttachments,
+    ReadingTimePipe,
+    LocalizedDatePipe,
+    LucideDynamicIcon,
+    FollowButton,
+    CollectionPickerSheet,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -75,9 +102,11 @@ const TOC_MIN_HEADINGS = 3;
           <button type="button" class="rd-icon-btn" [attr.aria-label]="'article.fontSize' | transloco" (click)="fontPanel.set(!fontPanel())" [attr.aria-expanded]="fontPanel()">
             <svg lucideIcon="TextCursorInput" [size]="18"></svg>
           </button>
-          <button type="button" class="rd-icon-btn hidden sm:inline-grid" [attr.aria-label]="'article.save' | transloco" (click)="prompt.requireAuth()">
-            <svg lucideIcon="Bookmark" [size]="18"></svg>
-          </button>
+          @if (article()) {
+            <button type="button" class="rd-icon-btn" data-add-to-collection [attr.aria-label]="'article.addToCollection' | transloco" (click)="openCollections()">
+              <svg lucideIcon="FolderPlus" [size]="18"></svg>
+            </button>
+          }
         </div>
       </div>
 
@@ -120,9 +149,9 @@ const TOC_MIN_HEADINGS = 3;
             </a>
             <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
           </div>
-          <button type="button" class="rd-btn rd-btn-outline ms-auto min-h-9 px-3 text-sm" (click)="prompt.requireAuth()">
-            + {{ 'article.follow' | transloco }}
-          </button>
+          <div class="ms-auto" data-author-follow>
+            <rd-follow-button [user]="a.author" [initial]="a.isFollowingAuthor" />
+          </div>
         </div>
 
         <!-- Trust row (SPEC §20) -->
@@ -215,12 +244,8 @@ const TOC_MIN_HEADINGS = 3;
     </article>
 
     @if (article(); as a) {
-      <rd-article-action-bar
-        [title]="a.title"
-        [url]="shareUrl()"
-        [reactionCount]="live()?.reactionCount ?? a.reactionCount"
-        [commentCount]="live()?.commentCount ?? a.commentCount"
-      />
+      <rd-article-action-bar [article]="a" [url]="shareUrl()" />
+      <rd-collection-picker-sheet [open]="collectionsOpen()" [article]="a" (closed)="collectionsOpen.set(false)" />
     }
   `,
 })
@@ -246,8 +271,6 @@ export class ArticlePage {
   }));
 
   protected readonly article = computed(() => (this.resource.hasValue() ? this.resource.value() : null));
-  /** Reaction and comment counts update live while the article is open (F27). */
-  protected readonly live = injectLiveCounts(() => this.article()?.id);
   protected readonly notFound = computed(() => {
     const error = this.resource.error();
     return isApiError(error) ? error.status === 404 : false;
@@ -284,16 +307,28 @@ export class ArticlePage {
   });
 
   protected readonly fontPanel = signal(false);
+  protected readonly collectionsOpen = signal(false);
   protected readonly progress = signal(0);
   private readonly articleEl = viewChild<ElementRef<HTMLElement>>('articleEl');
 
   constructor() {
     // Reading progress and active time for the "read" rule and streaks (F04, F08).
     injectReadingTracker(this.article, this.progress, () => this.articleEl()?.nativeElement);
+    const social = inject(ArticleSocialStore);
+    const follows = inject(FollowStore);
     effect(() => {
       const article = this.article();
-      if (article) this.seo.apply(article);
+      if (!article) return;
+      this.seo.apply(article);
+      // A fresh copy from the API is the truth for reactions, saves and following (F10, F12, F13).
+      untracked(() => {
+        social.absorb([article]);
+        follows.absorb(article.author.id, article.isFollowingAuthor);
+      });
     });
+    // Reaction, save and comment counts update live while the article is open (F27).
+    bindLiveCounters(() => this.article());
+    this.personalizeAfterHydration();
     effect(() => {
       // Real 404 status for crawlers when rendered on the server.
       if (this.notFound() && this.responseInit) this.responseInit.status = 404;
@@ -323,6 +358,32 @@ export class ArticlePage {
       });
       update();
     });
+  }
+
+  protected openCollections(): void {
+    if (this.prompt.requireAuth()) this.collectionsOpen.set(true);
+  }
+
+  /**
+   * SSR renders the article anonymously and hydration reuses that response, so your reaction, save and follow state
+   * are missing on a server-rendered page. Once the app is stable and you are signed in, load it again with your token.
+   */
+  private personalizeAfterHydration(): void {
+    if (!inject(HydrationWindow).isOpen) return;
+    const session = inject(SessionStore);
+    const injector = inject(Injector);
+    void inject(ApplicationRef)
+      .whenStable()
+      .then(() => {
+        const ref = effect(
+          () => {
+            if (!session.isAuthenticated()) return;
+            untracked(() => this.resource.reload());
+            ref.destroy();
+          },
+          { injector },
+        );
+      });
   }
 
   protected switchLanguage(language: ArticleLanguage): void {

@@ -1,9 +1,10 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { TEST_API, settle, setupAuthTesting, testSession, tokenTag } from '../../../testing/auth-testing';
-import { ApiError } from '../api/api.config';
+import { ApiError, WITH_SESSION } from '../api/api.config';
 import { isSessionCall } from './auth.interceptor';
+import { HydrationWindow } from './hydration-window';
 
 const unauthorized = { status: 401, statusText: 'Unauthorized' };
 
@@ -150,6 +151,25 @@ describe('authInterceptor (SPEC §9.3)', () => {
     void firstValueFrom(client.get('https://cdn.example.com/x.json'));
     await settle();
     expect(http.expectOne('https://cdn.example.com/x.json').request.headers.has('Authorization')).toBe(false);
+  });
+
+  it('while hydrating, GETs go out anonymously (SSR transfer cache), except personal ones marked WITH_SESSION', async () => {
+    const setup = setupAuthTesting({ providers: [{ provide: HydrationWindow, useValue: { isOpen: true } }] });
+    setup.auth.init();
+    setup.http.expectOne(`${TEST_API}/auth/refresh`).flush(testSession('t1'));
+    await setup.auth.whenReady();
+    const client = TestBed.inject(HttpClient);
+
+    const feed = firstValueFrom(client.get(`${TEST_API}/feed/for-you`));
+    const saved = firstValueFrom(client.get(`${TEST_API}/me/saved`, { context: new HttpContext().set(WITH_SESSION, true) }));
+    await settle();
+    const anonymous = setup.http.expectOne(`${TEST_API}/feed/for-you`);
+    expect(anonymous.request.headers.has('Authorization')).toBe(false);
+    anonymous.flush({});
+    const personal = setup.http.expectOne(`${TEST_API}/me/saved`);
+    expect(tokenTag(personal.request.headers.get('Authorization'))).toBe('t1');
+    personal.flush({});
+    await Promise.all([feed, saved]);
   });
 
   it('classifies session calls', () => {

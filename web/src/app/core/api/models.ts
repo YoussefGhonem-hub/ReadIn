@@ -226,8 +226,16 @@ export interface ArticleCardDto {
   isAiAssisted: boolean;
   versionBadge: string | null;
   publishedAt: string;
+  /** Always the sum of `reactions`. */
   reactionCount: number;
+  /** Per type (F10). */
+  reactions: ReactionCountsDto;
   commentCount: number;
+  saveCount: number;
+  /** The viewer's reaction; null for guests. */
+  myReaction: ReactionType | null;
+  /** False for guests. */
+  isSaved: boolean;
   /** Feed cards carry at most the first 10 PDF pages; article details carry all of them. */
   attachments: ArticleAttachmentsDto | null;
 }
@@ -246,8 +254,79 @@ export interface ArticleDetailsDto extends ArticleCardDto {
   sources: ArticleSourceDto[];
   reviewedBy: { displayName: string; username: string } | null;
   lastReviewedAt: string | null;
-  saveCount: number;
   readCount: number;
+  /** False for guests and on your own articles. */
+  isFollowingAuthor: boolean;
+}
+
+// ── Reactions (F10) ─────────────────────────────────────────
+
+/** 💡 ❤️ 🔥 🤯 — one per user per article. */
+export type ReactionType = 'insightful' | 'love' | 'fire' | 'mindBlown';
+export const REACTION_TYPES: readonly ReactionType[] = ['insightful', 'love', 'fire', 'mindBlown'];
+
+export type ReactionCountsDto = Record<ReactionType, number>;
+
+/** `PUT` / `DELETE /articles/{id}/reaction`. */
+export interface ArticleReactionsDto {
+  reactions: ReactionCountsDto;
+  total: number;
+  myReaction: ReactionType | null;
+}
+
+/** "Who reacted", newest first. */
+export interface ReactorDto {
+  user: AuthorDto;
+  type: ReactionType;
+  reactedAt: string;
+}
+
+// ── Saved (F13) ─────────────────────────────────────────────
+
+export interface SaveStateDto {
+  isSaved: boolean;
+  saveCount: number;
+}
+
+export interface SavedArticleDto {
+  savedAt: string;
+  collectionIds: string[];
+  article: ArticleCardDto;
+}
+
+/** A named list of saved articles (max 50 per user, names unique per user, case-insensitive). */
+export interface CollectionDto {
+  id: string;
+  /** 1–60 characters, trimmed. */
+  name: string;
+  articleCount: number;
+  createdAt: string;
+}
+
+// ── Follow (F12) ────────────────────────────────────────────
+
+export interface FollowStateDto {
+  isFollowing: boolean;
+  followerCount: number;
+}
+
+export interface UserSummaryDto {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl: string | null;
+  isVerified: boolean;
+  bio: string | null;
+  /** The viewer follows this user (false for guests). */
+  isFollowing: boolean;
+  /** This user follows the viewer (false for guests). */
+  followsYou: boolean;
+}
+
+/** Followed fields and topics (F02 interests); the same shape as `MeDto.interests`. */
+export interface InterestsDto {
+  fieldIds: string[];
+  topicIds: string[];
 }
 
 // ── Writing ─────────────────────────────────────────────────

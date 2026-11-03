@@ -1,8 +1,13 @@
 import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { API_BASE_URL, SILENT_ERRORS } from './api.config';
+import { API_BASE_URL, SILENT_ERRORS, WITH_SESSION } from './api.config';
 import { ArticleCardDto, ArticleDetailsDto, ArticleLanguage, CursorPage } from './models';
+
+export interface FeedQuery {
+  cursor?: string | null;
+  limit?: number;
+}
 
 export interface ForYouQuery {
   field?: string | null;
@@ -30,6 +35,13 @@ export class ContentApi {
     if (query.field) params = params.set('field', query.field);
     if (query.cursor) params = params.set('cursor', query.cursor);
     return this.http.get<CursorPage<ArticleCardDto>>(`${this.base}/feed/for-you`, { params, context: this.silent() });
+  }
+
+  /** `GET /feed/following` (F12, Bearer): published articles by people you follow, newest first. */
+  following(query: FeedQuery = {}): Observable<CursorPage<ArticleCardDto>> {
+    let params = new HttpParams().set('limit', String(query.limit ?? 20));
+    if (query.cursor) params = params.set('cursor', query.cursor);
+    return this.http.get<CursorPage<ArticleCardDto>>(`${this.base}/feed/following`, { params, context: this.silent().set(WITH_SESSION, true) });
   }
 
   /** Today's pick; resolves to `null` on `204 No Content` (no pick yet). */

@@ -102,7 +102,8 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | Endpoints: auth sync, me, preferences, interests, devices, fields/topics, article by slug, create/publish, for-you feed, today's article | ✅ |
 | F01 Auth, F02 Onboarding, F03 Home, F04 Reader (subset), F18 Settings: web + mobile | ✅ first slice |
 | F08 Streaks & reading stats + the F04 "read" rule (≥ 70% and ≥ 30 s, [ADR 0013](docs/adr/0013-reading-days-and-streaks.md)): web + mobile + backend, demo reading history | ✅ |
-| F10 Reactions, F12 Follow, F13 Saved: endpoints, reactions/saves on every card, Following feed, suggested writers, collections, counters recomputed by the outbox and published as live signals (F27), admin counter rebuild | ✅ backend; web + mobile next |
+| F10 Reactions, F12 Follow, F13 Saved: endpoints, reactions/saves on every card, Following feed, suggested writers, collections, counters recomputed by the outbox and published as live signals (F27), admin counter rebuild | ✅ backend; mobile next |
+| F10 Reactions, F12 Follow, F13 Saved + live counters (F27): reader action bar, who reacted, Following tab, Saved page and collections | ✅ web |
 | F05 Editor, F11 Comments, F14 Profile | ⏳ next |
 | ContentStudio `generate` (Claude), code-compile and live-link checks | ⏳ |
 | Full-text search index (needs FTS in the SQL image), SignalR, FCM sending | ⏳ Phase 2 |

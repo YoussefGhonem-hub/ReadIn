@@ -2,7 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/comm
 import { PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { catchError, from, switchMap, throwError } from 'rxjs';
-import { API_BASE_URL } from '../api/api.config';
+import { API_BASE_URL, WITH_SESSION } from '../api/api.config';
 import { AuthService } from '../auth/auth.service';
 import { HydrationWindow } from './hydration-window';
 
@@ -23,14 +23,15 @@ function withBearer<T>(req: HttpRequest<T>, token: string): HttpRequest<T> {
  * single-flight, shared by every request that failed with the same token — and retries; if the session can't be
  * renewed AuthService signs out locally and the original error goes on to the error interceptor.
  * While hydrating, GETs go out anonymously so they are answered from the SSR transfer cache; pages that personalize
- * (e.g. Home) refresh once the session is known. The server never sends a token (SSR is anonymous).
+ * (e.g. Home) refresh once the session is known; GETs marked WITH_SESSION (never in that cache) keep their token. The
+ * server never sends a token (SSR is anonymous).
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const base = inject(API_BASE_URL);
   if (!req.url.startsWith(base) || req.headers.has('Authorization')) return next(req);
   if (!isPlatformBrowser(inject(PLATFORM_ID))) return next(req);
   if (isSessionCall(req.url.slice(base.length))) return next(req);
-  if (req.method === 'GET' && inject(HydrationWindow).isOpen) return next(req);
+  if (req.method === 'GET' && !req.context.get(WITH_SESSION) && inject(HydrationWindow).isOpen) return next(req);
 
   const auth = inject(AuthService);
   return from(auth.tokenForRequest()).pipe(

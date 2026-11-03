@@ -81,6 +81,12 @@ export const CONTRACT_ERROR_CODES = [
   'attachments.asset_not_found',
   'attachments.asset_not_ready',
   'attachments.duplicate_asset',
+  // Reactions, saved and follow (F10, F12, F13)
+  'reaction.invalid',
+  'collection.name_taken',
+  'collection.limit',
+  'collection.not_found',
+  'follow.self',
 ] as const;
 
 /** Translates stable API error codes (e.g. `user.suspended`) into the active UI language. */

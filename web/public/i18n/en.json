@@ -141,6 +141,19 @@
     },
     "provider": {
       "invalid": "This sign-in method is not supported."
+    },
+    "reaction": {
+      "invalid": "This reaction isn't available."
+    },
+    "collection": {
+      "name_taken": "You already have a collection with this name.",
+      "limit": "You've reached 50 collections. Delete one first.",
+      "not_found": "This collection doesn't exist anymore.",
+      "name_required": "Write a name for the collection.",
+      "name_too_long": "Collection names are up to 60 characters."
+    },
+    "follow": {
+      "self": "You can't follow yourself."
     }
   },
   "auth": {
@@ -428,8 +441,14 @@
       "following": "Following"
     },
     "following": {
-      "title": "Follow writers and fields",
-      "body": "Articles from writers and fields you follow will show up here soon."
+      "title": "No articles from people you follow yet",
+      "body": "Follow writers and their new articles will show up here.",
+      "suggested": "Writers you might like",
+      "suggestedEmpty": "No suggestions right now. Check back soon.",
+      "suggestedError": "We couldn't load suggestions.",
+      "showFeed": "Show my feed",
+      "error": "We couldn't load your Following feed.",
+      "followsYou": "Follows you"
     },
     "feedTitle": "Articles you might like",
     "feedError": "We couldn't load articles.",
@@ -472,8 +491,23 @@
       "insightful": "Insightful",
       "love": "Love",
       "fire": "Fire",
-      "mindBlown": "Mind-blown"
-    }
+      "mindBlown": "Mind-blown",
+      "reactWith": "React: {{type}}",
+      "remove": "Remove your reaction ({{type}})",
+      "choose": "Choose a reaction",
+      "count": {
+        "one": "1 reaction",
+        "other": "{{count}} reactions"
+      },
+      "summary": "{{count}}, see who reacted",
+      "whoReacted": "Reactions",
+      "all": "All",
+      "empty": "No reactions yet",
+      "loadError": "We couldn't load reactions.",
+      "more": "Show more"
+    },
+    "following": "Following",
+    "addToCollection": "Add to collection"
   },
   "rdoc": {
     "summary": "TL;DR",
@@ -636,6 +670,57 @@
       "attachmentProblem": "Remove or retry the attachment that failed.",
       "documentTitle": "Give the document a title."
     }
+  },
+  "collections": {
+    "title": "Add to collection",
+    "body": "A saved article can be in as many collections as you like.",
+    "new": "New collection",
+    "name": "Collection name",
+    "namePlaceholder": "e.g. Interview prep",
+    "create": "Create",
+    "rename": "Rename",
+    "renameTitle": "Rename collection",
+    "delete": "Delete",
+    "deleteTitle": "Delete “{{name}}”?",
+    "deleteBody": "The collection goes away, but its articles stay in Saved.",
+    "created": "Collection created",
+    "renamed": "Collection renamed",
+    "deleted": "Collection deleted",
+    "empty": "No collections yet. Create one to group what you save.",
+    "loadError": "We couldn't load your collections.",
+    "articleCount": {
+      "one": "1 article",
+      "other": "{{count}} articles"
+    },
+    "nameRequired": "Write a name.",
+    "nameTooLong": "Up to 60 characters.",
+    "manage": "Collections",
+    "done": "Done"
+  },
+  "saved": {
+    "title": "Saved",
+    "sub": "Articles you kept for later.",
+    "search": "Search saved articles",
+    "filterByField": "Filter by field",
+    "allFields": "All fields",
+    "collections": "Collections",
+    "allSaved": "All saved",
+    "savedAt": "Saved {{time}}",
+    "empty": {
+      "title": "Nothing saved yet",
+      "body": "Tap 🔖 on any article to keep it here for later."
+    },
+    "noResults": {
+      "title": "No matches",
+      "body": "Try other words or clear the filters."
+    },
+    "emptyCollection": {
+      "title": "This collection is empty",
+      "body": "Add articles from the reader, or from your saved list here."
+    },
+    "clearFilters": "Clear filters",
+    "loadError": "We couldn't load your saved articles.",
+    "browse": "Browse articles"
   },
   "reading": {
     "days": {

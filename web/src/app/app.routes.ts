@@ -1,5 +1,5 @@
 import { Routes, UrlMatchResult, UrlSegment } from '@angular/router';
-import { accountSetupGuard, permissionGuard, setupStepGuard } from './core/auth/guards';
+import { accountSetupGuard, authGuard, permissionGuard, setupStepGuard } from './core/auth/guards';
 import { PLACEHOLDER_ROUTES } from './features/placeholders.routes';
 import { Shell } from './layout/shell';
 
@@ -49,6 +49,11 @@ export const routes: Routes = [
         matcher: profileMatcher,
         loadComponent: () => import('./shared/ui/coming-soon.page').then((m) => m.ComingSoonPage),
         data: { titleKey: 'nav.profile', phase: 1 },
+      },
+      {
+        path: 'saved',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/saved/saved.page').then((m) => m.SavedPage),
       },
       { path: 'settings', loadComponent: () => import('./features/settings/settings.page').then((m) => m.SettingsPage) },
       {

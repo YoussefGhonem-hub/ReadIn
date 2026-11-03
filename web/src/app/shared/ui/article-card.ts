@@ -1,19 +1,23 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { ArticleCardDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { LanguageService } from '../../core/i18n/language.service';
-import { injectInViewport, injectLiveCounts } from '../../core/realtime/live-signals';
-import { ToastService } from './toast/toast.service';
+import { injectInViewport } from '../../core/realtime/live-signals';
+import { ArticleSocialStore } from '../../core/social/article-social.store';
+import { bindLiveCounters } from '../../core/social/live-article';
 import { BdiText } from '../directives/bdi-text';
 import { detectDir } from '../directives/bidi';
 import { ArticleAttachments } from '../media/article-attachments';
 import { CompactNumberPipe, ReadingTimePipe } from '../pipes/format.pipes';
 import { articleLink } from './article-link';
 
-/** Feed row (F03): thumbnail, title, author, reading time, live counts, save; post attachments (F26) full width below. */
+/**
+ * Feed row (F03): thumbnail, title, author, reading time, live counts, save (F13); post attachments (F26) full width
+ * below. Content marked `rdCardFooter` goes under the card, above its link (e.g. the Saved page's actions).
+ */
 @Component({
   selector: 'rd-article-card',
   imports: [RouterLink, TranslocoPipe, BdiText, ReadingTimePipe, CompactNumberPipe, LucideDynamicIcon, ArticleAttachments],
@@ -58,26 +62,30 @@ import { articleLink } from './article-link';
           >
         </div>
       </div>
+      <!-- 44px target, laid out like the 26px icon button it replaces (negative margin). -->
       <button
         type="button"
-        class="relative z-10 self-start p-1 text-text-secondary hover:text-primary"
+        class="relative z-10 -m-[9px] self-start p-[13px] hover:text-primary"
+        [class]="state().isSaved ? 'text-primary' : 'text-text-secondary'"
+        data-card-save
+        [attr.aria-pressed]="state().isSaved"
         [attr.aria-label]="'article.save' | transloco"
         (click)="save()"
       >
-        <svg lucideIcon="Bookmark" [size]="18"></svg>
+        <svg lucideIcon="Bookmark" [size]="18" [class.fill-current]="state().isSaved" aria-hidden="true"></svg>
       </button>
     </div>
     @if (article().attachments; as attachments) {
       <!-- Above the card link so taps open the carousel / viewer instead of the article. -->
       <rd-article-attachments class="relative z-10 mt-3" [attachments]="attachments" [article]="article()" [priority]="priorityMedia()" />
     }
+    <ng-content select="[rdCardFooter]" />
   `,
 })
 export class ArticleCard {
   private readonly language = inject(LanguageService);
   private readonly prompt = inject(AuthPromptService);
-  private readonly toasts = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly social = inject(ArticleSocialStore);
 
   readonly article = input.required<ArticleCardDto>();
   /** Loads the first attachment image eagerly (the first card with media in the feed). */
@@ -88,14 +96,19 @@ export class ArticleCard {
   protected readonly titleDir = computed(() => detectDir(this.article().title) ?? 'auto');
   protected readonly fieldName = computed(() => (this.lang() === 'ar' ? this.article().field.nameAr : this.article().field.nameEn));
 
-  /** Live counters only while the card is on screen (F27), falling back to the feed values. */
-  private readonly inView = injectInViewport();
-  private readonly live = injectLiveCounts(() => (this.inView() ? this.article().id : null));
-  protected readonly reactionCount = computed(() => this.live()?.reactionCount ?? this.article().reactionCount);
-  protected readonly commentCount = computed(() => this.live()?.commentCount ?? this.article().commentCount);
+  /** The feed values with your actions and the live counters on top. */
+  protected readonly state = computed(() => this.social.state(this.article()));
+  protected readonly reactionCount = computed(() => this.state().reactionCount);
+  protected readonly commentCount = computed(() => this.state().commentCount);
 
-  /** Saving ships with F13; guests get the sign-in prompt now. */
+  constructor() {
+    // Live counters only while the card is on screen (F27).
+    const inView = injectInViewport();
+    bindLiveCounters(() => this.article(), inView);
+  }
+
+  /** Bookmark toggle (F13); guests get the sign-in prompt. */
   protected save(): void {
-    if (this.prompt.requireAuth()) this.toasts.info(this.transloco.translate('common.comingSoonShort'));
+    if (this.prompt.requireAuth()) void this.social.toggleSave(this.article());
   }
 }
