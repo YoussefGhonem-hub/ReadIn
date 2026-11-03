@@ -69,5 +69,5 @@ internal static class SeedUserStore
     }
 
     private static IQueryable<User> Query(AppDbContext db) =>
-        db.Users.IgnoreQueryFilters().Include(u => u.Roles).Include(u => u.Interests);
+        db.Users.IgnoreQueryFilters().Include(u => u.Roles).Include(u => u.Interests).Include(u => u.Expertise);
 }

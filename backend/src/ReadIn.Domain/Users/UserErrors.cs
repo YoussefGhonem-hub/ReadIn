@@ -13,6 +13,17 @@ public static class UserErrors
     public static readonly Error DeviceNotFound = Error.NotFound("user.device_not_found", "This device is not registered.");
 }
 
+/// <summary>The public profile and editing it (SPEC F14, F18).</summary>
+public static class ProfileErrors
+{
+    public static readonly Error ExpertiseInvalid =
+        Error.Validation("profile.expertise_invalid", "Choose up to 5 fields of expertise from the list.");
+    public static readonly Error AvatarInvalid =
+        Error.Validation("profile.avatar_invalid", "This image can't be used as your avatar. Upload it again.");
+    public static readonly Error StatsPrivate =
+        Error.Forbidden("profile.stats_private", "This user's reading stats are private.");
+}
+
 /// <summary>Sign up, sign in and recovery (SPEC §9). Sign-in and recovery failures are deliberately generic.</summary>
 public static class CredentialErrors
 {

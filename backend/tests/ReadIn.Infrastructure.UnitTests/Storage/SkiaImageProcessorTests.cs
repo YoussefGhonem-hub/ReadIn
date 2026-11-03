@@ -38,6 +38,29 @@ public sealed class SkiaImageProcessorTests
         images.Select(DecodedSize).Should().Equal(new SKSizeI(64, 64), new SKSizeI(128, 128), new SKSizeI(256, 256), new SKSizeI(512, 512));
     }
 
+    [Theory]
+    [InlineData(1800, 600)] // landscape: the left and right thirds are cut off
+    [InlineData(600, 1800)] // portrait: the top and bottom thirds are cut off
+    public void Avatars_keep_the_middle_of_the_image(int width, int height)
+    {
+        var set = ProcessSet(TestImages.Thirds(width, height), ImageFormat.Png, UploadPurpose.Avatar);
+
+        set.Variants.Select(i => (i.Width, i.Height)).Should().Equal((64, 64), (128, 128), (256, 256), (512, 512));
+        (set.Width, set.Height).Should().Be((600, 600), "the square side is reported for avatars");
+        foreach (var image in set.Variants)
+        {
+            using var bitmap = SKBitmap.Decode(image.Content);
+            // Away from the edges: lossy WebP may blend a pixel or two where the crop meets the cut-off thirds.
+            foreach (var (x, y) in new[] { (0.1, 0.1), (0.9, 0.1), (0.5, 0.5), (0.1, 0.9), (0.9, 0.9) })
+            {
+                var pixel = bitmap.GetPixel((int)(bitmap.Width * x), (int)(bitmap.Height * y));
+                ((int)pixel.Green).Should().BeGreaterThan(200, $"({x}, {y}) of the {bitmap.Width} px variant is the green middle third");
+                ((int)pixel.Red).Should().BeLessThan(60);
+                ((int)pixel.Blue).Should().BeLessThan(60);
+            }
+        }
+    }
+
     [Fact]
     public void Covers_keep_their_aspect_ratio_at_400_800_and_1200_wide()
     {

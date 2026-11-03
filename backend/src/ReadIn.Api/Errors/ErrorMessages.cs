@@ -41,6 +41,10 @@ public static class ErrorMessages
         ["user.username_taken"] = ("اسم المستخدم ده محجوز.", "This username is already taken."),
         ["user.interests.min_three"] = ("اختار 3 اهتمامات على الأقل.", "Choose at least 3 interests."),
         ["user.interests.unknown"] = ("فيه مجالات أو مواضيع مش موجودة.", "Some fields or topics don't exist."),
+        // Profile (F14, F18)
+        ["profile.stats_private"] = ("إحصائيات القراية بتاعته مش ظاهرة للناس.", "This user's reading stats are private."),
+        ["profile.avatar_invalid"] = ("الصورة دي مينفعش تبقى صورة بروفايل. ارفعها تاني.", "This image can't be used as your avatar. Upload it again."),
+        ["profile.expertise_invalid"] = ("اختار لحد 5 مجالات خبرة من القايمة.", "Choose up to 5 fields of expertise from the list."),
         ["field.not_found"] = ("المجال مش موجود.", "Field not found."),
         ["topic.not_in_field"] = ("الموضوع مش تابع للمجال ده.", "The topic doesn't belong to this field."),
         ["topic.not_found"] = ("الموضوع مش موجود.", "Topic not found."),

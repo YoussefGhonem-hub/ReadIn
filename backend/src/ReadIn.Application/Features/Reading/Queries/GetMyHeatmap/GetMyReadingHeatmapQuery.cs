@@ -20,13 +20,16 @@ public sealed record GetMyReadingHeatmapQuery(int Days = GetMyReadingHeatmapQuer
 internal sealed class GetMyReadingHeatmapQueryHandler(IAppDbContext db, ICurrentUser currentUser, TimeProvider clock)
     : IQueryHandler<GetMyReadingHeatmapQuery, Result<ReadingHeatmapDto>>
 {
-    public async ValueTask<Result<ReadingHeatmapDto>> Handle(GetMyReadingHeatmapQuery query, CancellationToken cancellationToken)
+    public async ValueTask<Result<ReadingHeatmapDto>> Handle(GetMyReadingHeatmapQuery query, CancellationToken cancellationToken) =>
+        await ComputeAsync(db, currentUser.RequireUserId(), query.Days, clock.GetUtcNow().UtcDateTime, cancellationToken);
+
+    /// <summary>The heatmap of <paramref name="userId"/> in their own time zone; also serves public profiles (F14).</summary>
+    internal static async Task<ReadingHeatmapDto> ComputeAsync(
+        IAppDbContext db, Guid userId, int dayCount, DateTime now, CancellationToken cancellationToken)
     {
-        var userId = currentUser.RequireUserId();
-        var now = clock.GetUtcNow().UtcDateTime;
         var timeZone = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => u.TimeZone).FirstAsync(cancellationToken);
         var today = ReadingClock.LocalDate(now, timeZone);
-        var from = today.AddDays(1 - Math.Clamp(query.Days, 1, GetMyReadingHeatmapQuery.MaxDays));
+        var from = today.AddDays(1 - Math.Clamp(dayCount, 1, GetMyReadingHeatmapQuery.MaxDays));
 
         // Freezes depend on the whole history (one per rolling 7 days), so every read day is loaded, not just the range.
         var readDays = await db.ReadingDays.AsNoTracking()

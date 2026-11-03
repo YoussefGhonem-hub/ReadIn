@@ -14,6 +14,9 @@ public sealed record InterestsDto(IReadOnlyList<Guid> FieldIds, IReadOnlyList<Gu
 /// <summary>A linked Google or Apple account, listed in Settings → Account (SPEC F18).</summary>
 public sealed record ExternalLoginDto(string Provider, string? Email, DateTime LinkedAt);
 
+/// <summary>Settings → Privacy (SPEC F18), changed with PUT /me/privacy.</summary>
+public sealed record PrivacyDto(bool PublicReadingStats);
+
 /// <summary>The signed-in user. The only DTO that carries the phone number (SPEC §9.5).</summary>
 public sealed record MeDto
 {
@@ -46,4 +49,5 @@ public sealed record MeDto
     public IReadOnlyList<string> Roles { get; init; } = [];
     public IReadOnlyList<string> Permissions { get; init; } = [];
     public InterestsDto Interests { get; init; } = new([], []);
+    public PrivacyDto Privacy { get; init; } = new(false);
 }

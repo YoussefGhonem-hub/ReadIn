@@ -1494,6 +1494,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(16)");
 
+                    b.Property<bool>("PublicReadingStats")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("RecoveryDisabled")
                         .HasColumnType("bit");
 
@@ -1622,6 +1625,24 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserDevices", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Users.UserExpertiseField", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FieldId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "FieldId");
+
+                    b.HasIndex("FieldId");
+
+                    b.ToTable("UserExpertiseFields", (string)null);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Users.UserInterest", b =>
@@ -2139,6 +2160,21 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Users.UserExpertiseField", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Taxonomy.Field", null)
+                        .WithMany()
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany("Expertise")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Users.UserInterest", b =>
                 {
                     b.HasOne("ReadIn.Domain.Taxonomy.Field", null)
@@ -2219,6 +2255,8 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("ReadIn.Domain.Users.User", b =>
                 {
                     b.Navigation("Devices");
+
+                    b.Navigation("Expertise");
 
                     b.Navigation("ExternalLogins");
 

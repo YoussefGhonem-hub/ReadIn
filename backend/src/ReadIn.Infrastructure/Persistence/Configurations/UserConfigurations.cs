@@ -49,6 +49,19 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasMany(u => u.Interests).WithOne().HasForeignKey(i => i.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.Devices).WithOne().HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.ExternalLogins).WithOne().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
+        // Cascade: the hard delete of an account relies on it.
+        builder.HasMany(u => u.Expertise).WithOne().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+/// <summary>Fields of expertise on the profile (SPEC F14): at most 5 per user, in the user's order.</summary>
+internal sealed class UserExpertiseFieldConfiguration : IEntityTypeConfiguration<UserExpertiseField>
+{
+    public void Configure(EntityTypeBuilder<UserExpertiseField> builder)
+    {
+        builder.ToTable("UserExpertiseFields");
+        builder.HasKey(e => new { e.UserId, e.FieldId });
+        builder.HasOne<Field>().WithMany().HasForeignKey(e => e.FieldId).OnDelete(DeleteBehavior.NoAction);
     }
 }
 

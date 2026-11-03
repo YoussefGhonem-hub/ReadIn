@@ -16,10 +16,13 @@ internal sealed class GetMyReadingStatsQueryHandler(IAppDbContext db, ICurrentUs
 {
     private const int TopFieldCount = 3;
 
-    public async ValueTask<Result<ReadingStatsDto>> Handle(GetMyReadingStatsQuery query, CancellationToken cancellationToken)
+    public async ValueTask<Result<ReadingStatsDto>> Handle(GetMyReadingStatsQuery query, CancellationToken cancellationToken) =>
+        await ComputeAsync(db, currentUser.RequireUserId(), currentUser.UiLanguage, clock.GetUtcNow().UtcDateTime, cancellationToken);
+
+    /// <summary>The stats of <paramref name="userId"/> in their own time zone; also serves public profiles (F14).</summary>
+    internal static async Task<ReadingStatsDto> ComputeAsync(
+        IAppDbContext db, Guid userId, string uiLanguage, DateTime now, CancellationToken cancellationToken)
     {
-        var userId = currentUser.RequireUserId();
-        var now = clock.GetUtcNow().UtcDateTime;
         var timeZone = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => u.TimeZone).FirstAsync(cancellationToken);
         var today = ReadingClock.LocalDate(now, timeZone);
 
@@ -47,7 +50,7 @@ internal sealed class GetMyReadingStatsQueryHandler(IAppDbContext db, ICurrentUs
             .Where(f => fieldIds.Contains(f.Id))
             .Select(f => new { f.Id, f.Slug, f.NameAr, f.NameEn, f.Icon, f.Color })
             .ToDictionaryAsync(f => f.Id, cancellationToken);
-        var arabic = currentUser.UiLanguage == UiLanguages.Arabic;
+        var arabic = uiLanguage == UiLanguages.Arabic;
         var topFields = fieldCounts
             .Where(c => fields.ContainsKey(c.FieldId))
             .Select(c =>

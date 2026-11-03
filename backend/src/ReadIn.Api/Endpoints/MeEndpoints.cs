@@ -32,10 +32,10 @@ internal sealed class MeEndpoints : IEndpointGroup
             .WithSummary("The signed-in user's profile, preferences, account flags, roles and permissions")
             .Produces<MeDto>();
 
-        me.MapPatch("/", async (UpdateProfileCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
-                (await sender.Send(body, ct)).ToHttp(http))
+        me.MapPatch("/", async (UpdateProfileRequest body, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(body.ToCommand(), ct)).ToHttp(http))
             .RequireRateLimiting(RateLimitPolicies.Writes)
-            .WithSummary("Update profile (name, @username, bio, avatar, links)");
+            .WithSummary("Update profile (name, @username, bio, links, avatar upload, fields of expertise)");
 
         me.MapDelete("/", async ([FromBody] DeleteAccountCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
             {
@@ -137,4 +137,48 @@ internal sealed class AdminUserEndpoints : IEndpointGroup
             .WithSummary("\"Forgot the PIN too\": temporary password, PIN cleared, sessions revoked (users.reset_password)")
             .Produces<TemporaryPasswordDto>();
     }
+}
+
+/// <summary>
+/// Body of PATCH /me (SPEC F14). The avatar is changed only when the body names it: <c>avatarAssetId</c> (an upload with
+/// purpose avatar) sets it and an explicit <c>null</c> removes it; <c>avatarUrl</c> is still accepted from the previous
+/// release. Omitting both keeps the avatar; omitting <c>expertiseFieldIds</c> keeps the fields of expertise.
+/// </summary>
+internal sealed class UpdateProfileRequest
+{
+    // Set only by the JSON deserializer when the property is in the body, null included.
+    private Guid? _avatarAssetId;
+    private bool _avatarAssetIdSent;
+    private string? _avatarUrl;
+    private bool _avatarUrlSent;
+
+    public string DisplayName { get; init; } = default!;
+    public string Username { get; init; } = default!;
+    public string? Bio { get; init; }
+    public UserLinksDto? Links { get; init; }
+
+    public Guid? AvatarAssetId
+    {
+        get => _avatarAssetId;
+        init { _avatarAssetId = value; _avatarAssetIdSent = true; }
+    }
+
+    /// <summary>Previous release: an uploaded avatar's URL or an external https image; null removes the avatar.</summary>
+    public string? AvatarUrl
+    {
+        get => _avatarUrl;
+        init { _avatarUrl = value; _avatarUrlSent = true; }
+    }
+
+    public IReadOnlyList<Guid>? ExpertiseFieldIds { get; init; }
+
+    public UpdateProfileCommand ToCommand() => new(DisplayName, Username, Bio, Links, Avatar(), ExpertiseFieldIds);
+
+    private AvatarChange? Avatar() => (_avatarAssetId, _avatarUrlSent, _avatarAssetIdSent) switch
+    {
+        ({ } assetId, _, _) => new AvatarChange(assetId, null),
+        (null, true, _) => new AvatarChange(null, _avatarUrl),
+        (null, false, true) => AvatarChange.Remove,
+        _ => null,
+    };
 }

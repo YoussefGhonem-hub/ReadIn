@@ -21,6 +21,25 @@ internal static class TestImages
         return data.ToArray();
     }
 
+    /// <summary>A PNG in three equal thirds along its long side: red, green, blue. A center square crop is all green.</summary>
+    public static byte[] Thirds(int width, int height)
+    {
+        using var bitmap = new SKBitmap(width, height);
+        using (var canvas = new SKCanvas(bitmap))
+        {
+            var landscape = width >= height;
+            var third = (landscape ? width : height) / 3f;
+            SKColor[] colors = [SKColors.Red, SKColors.Lime, SKColors.Blue];
+            for (var i = 0; i < colors.Length; i++)
+            {
+                using var paint = new SKPaint { Color = colors[i] };
+                canvas.DrawRect(landscape ? SKRect.Create(i * third, 0, third, height) : SKRect.Create(0, i * third, width, third), paint);
+            }
+        }
+        using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
+        return data.ToArray();
+    }
+
     /// <summary>
     /// A JPEG with an APP1 EXIF segment: orientation <paramref name="orientation"/> and an ImageDescription holding
     /// <paramref name="secret"/>, standing in for GPS data or a camera serial number.

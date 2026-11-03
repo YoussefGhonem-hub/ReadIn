@@ -28,6 +28,25 @@ public sealed class UserInterest
     internal static UserInterest ForTopic(Guid userId, Guid topicId) => new() { UserId = userId, TopicId = topicId };
 }
 
+/// <summary>A field of expertise on the profile (SPEC F14). <see cref="Position"/> is the user's order, 0 first.</summary>
+public sealed class UserExpertiseField
+{
+    private UserExpertiseField() { } // EF
+
+    internal UserExpertiseField(Guid userId, Guid fieldId, int position)
+    {
+        UserId = userId;
+        FieldId = fieldId;
+        Position = position;
+    }
+
+    public Guid UserId { get; private set; }
+    public Guid FieldId { get; private set; }
+    public int Position { get; private set; }
+
+    internal void MoveTo(int position) => Position = position;
+}
+
 public enum DevicePlatform
 {
     Android = 0,

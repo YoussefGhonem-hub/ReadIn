@@ -11,10 +11,14 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public const string DeletedDisplayName = "Deleted user";
     public const int MaxDisplayNameLength = 60;
 
+    /// <summary>Fields of expertise shown on the profile (SPEC F14).</summary>
+    public const int MaxExpertiseFields = 5;
+
     private readonly List<UserRole> _roles = [];
     private readonly List<UserInterest> _interests = [];
     private readonly List<UserDevice> _devices = [];
     private readonly List<ExternalLogin> _externalLogins = [];
+    private readonly List<UserExpertiseField> _expertise = [];
 
     private User() { } // EF
 
@@ -41,6 +45,9 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public ThemePreference ThemePref { get; private set; } = ThemePreference.System;
     public string TimeZone { get; private set; } = DefaultTimeZone;
     public TimeOnly ReminderTime { get; private set; } = DefaultReminderTime;
+
+    /// <summary>Privacy (SPEC F18): the reading stats card and heatmap are on the public profile. Off by default.</summary>
+    public bool PublicReadingStats { get; private set; }
 
     /// <summary>Null for accounts without phone sign in: Google/Apple only, or the official ReadIn account.</summary>
     public string? PasswordHash { get; private set; }
@@ -74,6 +81,9 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public IReadOnlyCollection<UserInterest> Interests => _interests.AsReadOnly();
     public IReadOnlyCollection<UserDevice> Devices => _devices.AsReadOnly();
     public IReadOnlyCollection<ExternalLogin> ExternalLogins => _externalLogins.AsReadOnly();
+
+    /// <summary>Unordered as loaded by EF: <see cref="UserExpertiseField.Position"/> holds the user's order.</summary>
+    public IReadOnlyCollection<UserExpertiseField> Expertise => _expertise.AsReadOnly();
 
     public DateTime CreatedAt { get; private set; }
     public Guid? CreatedBy { get; private set; }
@@ -193,6 +203,27 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
         Links = links;
         return Result.Success();
     }
+
+    /// <summary>
+    /// Replaces the fields of expertise (SPEC F14) in the given order; a repeated id counts once. Rows of fields that
+    /// stay are moved rather than re-added, so a key is never removed and inserted in the same save.
+    /// </summary>
+    public Result SetExpertise(IReadOnlyList<Guid> fieldIds)
+    {
+        var ordered = fieldIds.Distinct().ToList();
+        if (ordered.Count > MaxExpertiseFields) return ProfileErrors.ExpertiseInvalid;
+
+        _expertise.RemoveAll(e => !ordered.Contains(e.FieldId));
+        for (var position = 0; position < ordered.Count; position++)
+        {
+            var existing = _expertise.FirstOrDefault(e => e.FieldId == ordered[position]);
+            if (existing is null) _expertise.Add(new UserExpertiseField(Id, ordered[position], position));
+            else existing.MoveTo(position);
+        }
+        return Result.Success();
+    }
+
+    public void SetPrivacy(bool publicReadingStats) => PublicReadingStats = publicReadingStats;
 
     public Result SetPreferences(string uiLanguage, string articleLanguage, ThemePreference theme, string timeZone, TimeOnly reminderTime)
     {
@@ -506,6 +537,8 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
         Links = new UserLinks();
         _devices.Clear();
         _interests.Clear();
+        _expertise.Clear();
+        PublicReadingStats = false;
         _externalLogins.Clear(); // the Google/Apple account can sign up again
         RotateSecurityStamp();
     }
