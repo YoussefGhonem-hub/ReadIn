@@ -33,6 +33,9 @@ public static class RateLimitPolicies
 
     /// <summary>Clients ask once per page load or app start and on every sign in, so a few a minute is plenty.</summary>
     public const string RealtimeToken = "realtime-token";
+
+    /// <summary>The reader reports progress every ~15 s, so it has its own budget instead of sharing <see cref="Writes"/>.</summary>
+    public const string ReadingProgress = "reading-progress";
 }
 
 /// <summary>Per-IP limits of the anonymous auth endpoints (SPEC §9.5); tests raise them.</summary>

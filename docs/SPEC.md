@@ -699,9 +699,9 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
 - If the user doesn't open it, it stays as the hero card for the day.
 
 ### F08 — Streaks & Reading Stats
-- Streak +1 per day the user completes at least one article (local time zone).
-- **Streak freeze:** 1 free freeze per week, auto-used on a missed day.
-- Stats: current streak, longest streak, articles read this week/month, minutes read, top fields, **reading heatmap** (GitHub-style, last 12 months).
+- Streak +1 per day the user completes at least one article (local date in the profile time zone, see [ADR 0013](adr/0013-reading-days-and-streaks.md)).
+- **Streak freeze:** 1 free freeze per rolling 7 days, auto-used on a single missed day (two missed days in a row end the streak).
+- Stats: current streak, longest streak, articles read this week/month (last 7 / 30 days), minutes read, top fields, **reading heatmap** (GitHub-style, last 12 months).
 - Milestone celebrations (7, 30, 100, 365 days) with a shareable card.
 
 ### F09 — Learning Paths (مسارات)
@@ -1064,7 +1064,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive, IsEnabled), `Topics`, `Tags`, `UserInterests` |
 | Articles | `Articles` (AuthorId, FieldId, TopicId, Slug, Status, ReviewStatus, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, LastReviewedAt, ReviewedById, PublishedAt, ScheduledAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleRevisions`, `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive), `ArticleReviews` (ReviewerId, Decision, Notes JSON) |
 | Engagement | `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId, AuthorId, Body, IsPinned, LikeCount, EditedAt), `CommentLikes`, `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
-| Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, FreezesLeft, LastReadDate, TotalArticles, TotalMinutes), `ReadingDays` (heatmap) |
+| Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths`, `LearningPathItems` (Order), `PathEnrollments` |
 | Glossary | `GlossaryTerms` (Slug, TermEn, ExplanationAr, DefinitionEn, FieldId), `ArticleTerms` |
 | Trust & Moderation | `VerificationRequests`, `Reports`, `ModerationActions`, `AuditLogs` |
@@ -1106,7 +1106,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Comments | `GET /articles/{id}/comments?sort=top\|new` · `POST /articles/{id}/comments` · `POST /comments/{id}/replies` · `PATCH /comments/{id}` · `DELETE /comments/{id}` · `PUT /comments/{id}/like` · `POST /comments/{id}/pin` |
 | Follow | `PUT /users/{id}/follow` · `DELETE /users/{id}/follow` · `GET /users/{id}/followers` · `GET /users/{id}/following` · `PUT /fields/{id}/follow` |
 | Saved | `GET /me/saved` · `PUT /articles/{id}/save` · `DELETE /articles/{id}/save` · `CRUD /me/collections` |
-| Users | `GET /users/{username}` · `GET /users/{username}/articles` · `GET /me/stats` |
+| Users | `GET /users/{username}` · `GET /users/{username}/articles` · `GET /me/stats` · `GET /me/stats/heatmap` |
 | Taxonomy | `GET /fields` · `GET /fields/{slug}/topics` · `GET /tags?q=` |
 | Paths | `GET /paths` · `GET /paths/{slug}` · `POST /paths/{id}/enroll` |
 | Search | `GET /search?q=&type=articles\|users\|topics&field=&lang=` |

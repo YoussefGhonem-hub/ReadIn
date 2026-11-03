@@ -106,6 +106,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, ArticlesSeeder>();
         services.AddScoped<ISeeder, LearningPathsSeeder>();
         services.AddScoped<ISeeder, DemoMediaSeeder>();
+        services.AddScoped<ISeeder, DemoReadingSeeder>();
         services.AddScoped<SeedRunner>();
 
         services.AddHealthChecks().AddDbContextCheck<AppDbContext>("sql");

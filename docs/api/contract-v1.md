@@ -139,6 +139,17 @@ carry signals, never content: fetch the data itself through REST. Times are epoc
 | `/live/users/{userId}` | that user (custom token) | `unreadNotifications`, `lastNotificationAt` |
 | `/live/users/{userId}/media/{assetId}` | that user (custom token) | `{ status: processing \| ready \| failed, pagesReady, pageCount, failureReason, updatedAt }` while a PDF renders. Polling `GET /uploads/{id}` stays the contract |
 
+### Reading & streaks (Bearer) — see [ADR 0013](../adr/0013-reading-days-and-streaks.md)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| PUT | `/articles/{id}/progress` | `ReadingProgressRequest` → `200 ReadingProgressResultDto`. Completes the article at `percent ≥ 70` and ≥ 30 credited seconds. Seconds are credited up to the time that really passed since the previous report (+10 s, ≤ 600); the first report credits none. `404 article.not_found` (not published), `409 reading.conflict` (a parallel report: send it again), `429` above 60 reports a minute |
+| GET | `/me/stats` | → `200 ReadingStatsDto` (owner only) |
+| GET | `/me/stats/heatmap?days=` | → `200 ReadingHeatmapDto`. `days` 1–371, default 365 |
+
+Readers report on open (`activeSecondsDelta: 0`), every 15 s while the article is visible and the user was active in the
+last 60 s, and when they leave. A failed report keeps its seconds for the next one. Guests don't report.
+
 ## DTOs (TypeScript notation)
 
 ```ts
@@ -352,6 +363,47 @@ interface ArticleDetailsDto extends ArticleCardDto {
   reviewedBy: { displayName: string; username: string } | null;
   lastReviewedAt: string | null;
   saveCount: number; readCount: number;
+}
+
+// Reading & streaks (ADR 0013). Dates are the user's local dates, "yyyy-MM-dd".
+interface ReadingProgressRequest {
+  language: ArticleLanguage;
+  percent: number;               // 0–100, highest scroll position reached
+  lastPosition: string | null;   // ≤ 100 chars, restores the scroll position
+  activeSecondsDelta: number;    // 0–3600, active seconds since the previous report
+}
+
+interface StreakDto {
+  current: number;               // 0 once broken
+  longest: number;
+  readToday: boolean;
+  freezeAvailable: boolean;      // a freeze is ready for the next missed day (one per rolling 7 days)
+  freezePending: boolean;        // yesterday was missed; reading today uses a freeze and keeps the streak
+  today: string;
+}
+
+interface ReadingProgressResultDto {
+  percent: number;
+  completed: boolean;
+  completedNow: boolean;         // this report made the article "read"
+  streak: StreakDto | null;      // set when completedNow
+  milestone: 7 | 30 | 100 | 365 | null;  // celebrate with a shareable card
+}
+
+interface ReadingStatsDto {
+  streak: StreakDto;
+  totalArticles: number;
+  minutesRead: number;
+  articlesThisWeek: number;      // last 7 local days
+  minutesThisWeek: number;
+  articlesThisMonth: number;     // last 30 local days
+  topFields: { id: string; slug: string; name: string; icon: string; color: string; articles: number }[]; // ≤ 3, localized
+}
+
+interface ReadingHeatmapDto {
+  from: string;
+  to: string;                    // the user's local today
+  days: { date: string; articles: number; minutes: number; frozen: boolean }[]; // only days with a read or a freeze
 }
 ```
 

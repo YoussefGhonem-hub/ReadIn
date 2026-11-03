@@ -34,6 +34,8 @@ public interface IAppDbContext
 
     DbSet<ReadingProgress> ReadingProgress { get; }
     DbSet<DailyPick> DailyPicks { get; }
+    DbSet<ReadingDay> ReadingDays { get; }
+    DbSet<UserStats> UserStats { get; }
     DbSet<LearningPath> LearningPaths { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

@@ -42,6 +42,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<ReadingProgress> ReadingProgress => Set<ReadingProgress>();
     public DbSet<DailyPick> DailyPicks => Set<DailyPick>();
+    public DbSet<ReadingDay> ReadingDays => Set<ReadingDay>();
+    public DbSet<UserStats> UserStats => Set<UserStats>();
     public DbSet<LearningPath> LearningPaths => Set<LearningPath>();
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();

@@ -99,6 +99,7 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | F27 Real-time: `POST /realtime/token` (Firebase custom tokens), RTDB publisher with retry + circuit breaker (article counters, comment events, feed, unread badge, PDF status), "new articles" signal on publish | ✅ backend · web + mobile listeners in place; counters, comment events and the badge go live as F10–F13 and F17 publish them |
 | Endpoints: auth sync, me, preferences, interests, devices, fields/topics, article by slug, create/publish, for-you feed, today's article | ✅ |
 | F01 Auth, F02 Onboarding, F03 Home, F04 Reader (subset), F18 Settings: web + mobile | ✅ first slice |
+| F08 Streaks & reading stats + the F04 "read" rule (≥ 70% and ≥ 30 s, [ADR 0013](docs/adr/0013-reading-days-and-streaks.md)): web + mobile + backend, demo reading history | ✅ |
 | F05 Editor, F10 Reactions, F11 Comments, F12 Follow, F13 Saved, F14 Profile | ⏳ next |
 | ContentStudio `generate` (Claude), code-compile and live-link checks | ⏳ |
 | Full-text search index (needs FTS in the SQL image), SignalR, FCM sending | ⏳ Phase 2 |

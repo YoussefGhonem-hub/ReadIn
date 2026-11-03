@@ -802,6 +802,32 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("DailyPicks", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Reading.ReadingDay", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ActiveSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ArticlesRead")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("ReadingDays", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Reading.ReadingProgress", b =>
                 {
                     b.Property<Guid>("Id")
@@ -829,6 +855,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<int>("Percent")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -843,6 +872,37 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("ReadingProgress", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Reading.UserStats", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CurrentStreak")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly?>("LastFreezeDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("LastReadDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("LongestStreak")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalArticles")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserStats", (string)null);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Taxonomy.Field", b =>
@@ -1538,6 +1598,15 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Reading.ReadingDay", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Reading.ReadingProgress", b =>
                 {
                     b.HasOne("ReadIn.Domain.Articles.Article", null)
@@ -1549,6 +1618,15 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasOne("ReadIn.Domain.Users.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Reading.UserStats", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithOne()
+                        .HasForeignKey("ReadIn.Domain.Reading.UserStats", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
