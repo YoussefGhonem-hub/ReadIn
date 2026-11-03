@@ -143,6 +143,50 @@ come from the article's denormalized columns, which the outbox updates right aft
 | PUT | `/me/interests/topics/{topicId}` | → `200 InterestsDto` (idempotent). `404 topic.not_found` |
 | DELETE | `/me/interests/fields/{fieldId}`, `/me/interests/topics/{topicId}` | → `200 InterestsDto` (idempotent). `400 user.interests.min_three` when fewer than 3 interests would remain |
 
+### Comments (F11; writes: Bearer)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/articles/{id}/comments?sort=top\|new&cursor=&limit=` | 🌐 → `CommentPageDto`. Top-level comments, each with its first 2 replies (`replies`, oldest first). The pinned comment comes first on the first page. `top` (default) = likes + 2 × replies, then newest; `new` = newest first. `404 article.not_found` |
+| GET | `/comments/{id}/replies?cursor=&limit=` | 🌐 → `CursorPage<CommentDto>`, oldest first |
+| GET | `/comments/{id}` | 🌐 → `CommentDto` as you see it; deleted/hidden ones come back as placeholders. Refetch it after a live event |
+| POST | `/articles/{id}/comments` | `{ body }` → `201 CommentDto`. Permission `comments.create`, rate limit `comments` (10 a minute per user, `429`) |
+| POST | `/comments/{id}/replies` | `{ body }` → `201 CommentDto`. Replying to a reply joins the same thread (`parentId` is always the top-level comment). `409 comment.not_available` (deleted or hidden). Same permission and limit |
+| PATCH | `/comments/{id}` | `{ body }` → `200 CommentDto` with `editedAt`. Own comments only (`403 comment.not_owner`) |
+| DELETE | `/comments/{id}` | → `204` (idempotent). Own comments only. Soft: a top-level comment with replies becomes a placeholder |
+| PUT / DELETE | `/comments/{id}/like` | → `200 CommentLikeDto` (idempotent). Permission `reactions.create`. `409 comment.not_available` |
+| POST / DELETE | `/comments/{id}/pin` | → `200 CommentDto`. The article's author only (`403 comment.pin_not_author`); top-level and visible only (`400 comment.pin_reply`). Pinning unpins the article's previous pinned comment |
+| GET | `/users/mention-suggestions?q=&limit=8` | Bearer → `MentionCandidateDto[]`: `@username` prefix (with or without `@`) or display name, not you |
+
+Text rules: trimmed, line ends trimmed, at most one empty line in a row, 1–2000 characters (`400 comment.empty`,
+`comment.too_long`). `@username` (3–30 of a–z 0–9 _, not right after a Latin letter or digit, so emails aren't mentions;
+fine after an Arabic letter, "و@writer1") resolves to real users, at most 10, never yourself; they come back in
+`mentions`, and clients link exactly those handles. Mention notifications arrive with F17. Flood limits on top of the
+rate limit: at most 20 comments per user on one article per hour (`429 comment.article_limit`, deleted ones count), and
+not the same text (case and spacing ignored) within 10 minutes (`409 comment.duplicate`).
+
+Who sees what: readers get visible comments; a comment hidden by a moderator is shown in full only to its author and to
+moderators (`isHidden: true`). A deleted, or hidden-for-you, top-level comment that still has replies is a placeholder
+(`isDeleted` or `isHidden`, `body` and `author` null) so its replies keep their thread; otherwise it's left out. When an
+account is deleted, its comments stay with `author: null` ("Deleted user"), as the public account-deletion page promises.
+
+`Articles.CommentCount` (and the live `commentCount`) counts visible comments and replies.
+
+Live events (F27) under `/live/articles/{id}/events`: `comment.created`, `reply.created` (with `parentId`),
+`comment.updated` (edited, hidden or unhidden), `comment.deleted`, `comment.liked`, `comment.pinned` (pin or unpin), each
+with `commentId`. They carry no content: refetch `GET /comments/{commentId}`. A retried write can repeat an event, so
+dedupe by `commentId`, and skip events for your own just-made change. Events are kept 24 hours and at most 100 per article
+(hourly cleanup job).
+
+### Reports and moderation (F22 hooks in F11; Bearer, rate limit `writes`)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| POST | `/reports` | `{ targetType: "comment", targetId, reason: spam\|misinformation\|harassment\|copyright\|other, details? (≤ 500) }` → `204`. Permission `reports.create`. Reporting again is a no-op. `400 report.own_content`, `400 report.target_not_supported` (articles and users come with F22), validation `report.reason_invalid`, `404 report.target_not_found` |
+| POST | `/moderation/actions` | `{ action: hide\|unhide\|delete, targetType: "comment", targetId }` → `204`. Permission `moderation.manage` (Moderator, Admin, SuperAdmin). Hide and delete resolve the comment's open reports; every action is in the audit log. `404 comment.not_found` |
+
+The queue that lists and resolves reports comes with F22.
+
 ### Live counters (F27, SPEC §21.2)
 
 After a reaction or save change commits, an outbox handler recomputes that article's counters from SQL (idempotent:
@@ -492,6 +536,31 @@ interface ReadingHeatmapDto {
   to: string;                    // the user's local today
   days: { date: string; articles: number; minutes: number; frozen: boolean }[]; // only days with a read or a freeze
 }
+
+// Comments (F11)
+interface CommentDto {
+  id: string;
+  articleId: string;
+  parentId: string | null;       // the thread's top-level comment; null for top-level comments
+  body: string | null;           // null for placeholders; render with dir="auto"
+  author: AuthorDto | null;      // null: "Deleted user" (or a placeholder)
+  isArticleAuthor: boolean;      // the "الكاتب" badge
+  mentions: { userId: string; username: string }[];  // link exactly these @handles
+  likeCount: number;
+  likedByMe: boolean;
+  replyCount: number;            // visible replies (top-level comments)
+  isPinned: boolean;
+  createdAt: string;
+  editedAt: string | null;       // "edited"
+  isDeleted: boolean;            // placeholder of a deleted comment kept for its replies
+  isHidden: boolean;             // hidden by a moderator: placeholder for others, full text for its author and moderators
+  canEdit: boolean; canDelete: boolean; canPin: boolean; canReport: boolean; canModerate: boolean;
+  replies?: CommentDto[];        // in lists: the first 2 replies of a top-level comment
+}
+
+interface CommentPageDto { items: CommentDto[]; nextCursor: string | null; total: number } // total = article's comment count
+interface CommentLikeDto { likeCount: number; liked: boolean }
+interface MentionCandidateDto { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean }
 ```
 
 Validation codes (in `errors`) for this area: `reaction.invalid` (`type`), `validation.required` /

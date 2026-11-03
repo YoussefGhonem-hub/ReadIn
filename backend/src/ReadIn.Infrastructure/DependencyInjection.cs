@@ -76,6 +76,7 @@ public static class DependencyInjection
         services.AddScoped<ScheduledPublishingJob>();
         services.AddScoped<OrphanedUploadsCleanupJob>();
         services.AddScoped<IdentityCleanupJob>();
+        services.AddScoped<LiveEventsCleanupJob>();
 
         if (IsHangfireEnabled(configuration))
         {
@@ -109,6 +110,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, LearningPathsSeeder>();
         services.AddScoped<ISeeder, DemoMediaSeeder>();
         services.AddScoped<ISeeder, DemoReadingSeeder>();
+        services.AddScoped<ISeeder, DemoCommentsSeeder>();
         services.AddScoped<ISeeder, DemoInteractionsSeeder>();
         services.AddScoped<SeedRunner>();
 
@@ -140,6 +142,7 @@ public static class DependencyInjection
         jobs.AddOrUpdate<OrphanedUploadsCleanupJob>("uploads-orphan-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3));
         jobs.AddOrUpdate<IdentityCleanupJob>("identity-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 30));
         jobs.AddOrUpdate<DailyArticleJob>("daily-article", job => job.RunAsync(CancellationToken.None), DailyArticleJob.Schedule);
+        jobs.AddOrUpdate<LiveEventsCleanupJob>("rtdb-events-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Hourly());
     }
 
     /// <summary>

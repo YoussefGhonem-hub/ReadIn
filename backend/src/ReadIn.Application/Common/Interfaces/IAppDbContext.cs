@@ -5,6 +5,7 @@ using ReadIn.Domain.Engagement;
 using ReadIn.Domain.Identity;
 using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
+using ReadIn.Domain.Moderation;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
@@ -44,6 +45,9 @@ public interface IAppDbContext
     DbSet<Collection> Collections { get; }
     DbSet<CollectionItem> CollectionItems { get; }
     DbSet<UserFollow> UserFollows { get; }
+    DbSet<Comment> Comments { get; }
+    DbSet<CommentLike> CommentLikes { get; }
+    DbSet<Report> Reports { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

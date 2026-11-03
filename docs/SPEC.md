@@ -716,13 +716,15 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
 - Counts per reaction, list of who reacted.
 
 ### F11 — Comments & Replies
-- Threaded comments: top-level + replies (max depth 2, shown as one indented level with a connector line).
+- Threaded comments: top-level + replies (max depth 2, shown as one indented level with a connector line). Replying to a reply joins the same thread.
 - Sort: **Top** / **Newest**.
-- Like comments, reply, `@mention` users (notifies them), edit (shows "edited"), delete (soft).
+- Like comments, reply, `@mention` users (notifies them once F17 ships), edit (shows "edited"), delete (soft: a comment with replies stays as a "deleted" placeholder).
 - Writer badge "الكاتب" on the author's comments, author can **pin** one comment.
 - Mixed Arabic/English input renders correctly (`dir="auto"` per comment).
 - **Live:** new comments/replies appear without refreshing, edits/deletes update in place, and a "N تعليقات جديدة" pill appears when the user is scrolled away ([F27](#f27--real-time-updates)).
-- Rate limit: 10 comments / minute per user. Report comment.
+- Rate limit: 10 comments / minute per user, at most 20 per user on one article per hour, and not the same text twice within 10 minutes.
+- Report comment (stored for the F22 queue). Moderators hide, unhide or delete any comment from its menu (audited); a hidden comment stays visible to its author and moderators.
+- A deleted account's comments stay, shown as "Deleted user" (as the public account-deletion page promises).
 
 ### F12 — Follow
 - Follow writers and follow fields/topics.
@@ -1064,11 +1066,11 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Media | `MediaAssets` (OwnerId, Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
 | Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive, IsEnabled), `Topics`, `Tags`, `UserInterests` |
 | Articles | `Articles` (AuthorId, FieldId, TopicId, Slug, Status, ReviewStatus, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, LastReviewedAt, ReviewedById, PublishedAt, ScheduledAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleRevisions`, `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive), `ArticleReviews` (ReviewerId, Decision, Notes JSON) |
-| Engagement | `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId, AuthorId, Body, IsPinned, LikeCount, EditedAt), `CommentLikes`, `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
+| Engagement | `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths`, `LearningPathItems` (Order), `PathEnrollments` |
 | Glossary | `GlossaryTerms` (Slug, TermEn, ExplanationAr, DefinitionEn, FieldId), `ArticleTerms` |
-| Trust & Moderation | `VerificationRequests`, `Reports`, `ModerationActions`, `AuditLogs` |
+| Trust & Moderation | `VerificationRequests`, `Reports` (TargetType article/comment/user, TargetId, ReporterId, Reason, Details, Status open/resolved/dismissed; one per reporter and target), `ModerationActions`, `AuditLogs` |
 | Notifications | `Notifications` (UserId, Type, Payload JSON, IsRead), `NotificationPreferences` |
 | Infrastructure | `OutboxMessages`, `SeedHistory` (seeder name + version + checksum), Hangfire schema |
 
@@ -1104,7 +1106,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Feed | `GET /feed/today` · `GET /feed/for-you` · `GET /feed/following` · `GET /feed/continue-reading` |
 | Articles | `GET /articles/{slug}?lang=` · `POST /articles` · `PUT /articles/{id}` · `PUT /articles/{id}/translations/{lang}` · `POST /articles/{id}/submit` · `POST /articles/{id}/publish` · `POST /articles/{id}/schedule` · `DELETE /articles/{id}` · `GET /articles/{id}/revisions` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` |
 | Reactions | `PUT /articles/{id}/reaction` · `DELETE /articles/{id}/reaction` · `GET /articles/{id}/reactions` |
-| Comments | `GET /articles/{id}/comments?sort=top\|new` · `POST /articles/{id}/comments` · `POST /comments/{id}/replies` · `PATCH /comments/{id}` · `DELETE /comments/{id}` · `PUT /comments/{id}/like` · `POST /comments/{id}/pin` |
+| Comments | `GET /articles/{id}/comments?sort=top\|new` · `POST /articles/{id}/comments` · `GET /comments/{id}` · `GET /comments/{id}/replies` · `POST /comments/{id}/replies` · `PATCH /comments/{id}` · `DELETE /comments/{id}` · `PUT/DELETE /comments/{id}/like` · `POST/DELETE /comments/{id}/pin` · `GET /users/mention-suggestions?q=` |
 | Follow | `PUT /users/{id}/follow` · `DELETE /users/{id}/follow` · `GET /users/{id}/followers` · `GET /users/{id}/following` · `GET /users/suggested` · `PUT/DELETE /me/interests/fields/{id}` · `PUT/DELETE /me/interests/topics/{id}` |
 | Saved | `GET /me/saved` · `PUT /me/saved/{articleId}` · `DELETE /me/saved/{articleId}` · `CRUD /me/collections` · `PUT/DELETE /me/collections/{id}/articles/{articleId}` |
 | Users | `GET /users/{username}` · `GET /users/{username}/articles` · `GET /me/stats` · `GET /me/stats/heatmap` |

@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Logging;
@@ -38,25 +39,66 @@ internal sealed partial class RealtimeDatabaseClient(
     public Task<bool> PostAsync(string path, object value, CancellationToken cancellationToken) =>
         SendAsync(HttpMethod.Post, path, value, cancellationToken);
 
-    private async Task<bool> SendAsync(HttpMethod method, string path, object? value, CancellationToken cancellationToken)
+    /// <summary>Deletes the given children of <paramref name="path"/> in one multi-location update (null removes a child).</summary>
+    public Task<bool> DeleteChildrenAsync(string path, IReadOnlyCollection<string> keys, CancellationToken cancellationToken) =>
+        keys.Count == 0 ? Task.FromResult(true) : PatchAsync(path, keys.ToDictionary(k => k, _ => (object?)null), cancellationToken);
+
+    /// <summary>
+    /// The child keys of <paramref name="path"/> (a shallow read: values aren't downloaded); empty when there are none,
+    /// null when RTDB isn't configured or the read failed. Used by the cleanup job only.
+    /// </summary>
+    public async Task<IReadOnlyList<string>?> GetKeysAsync(string path, CancellationToken cancellationToken)
+    {
+        if (options.Value.RealtimeDatabaseBaseUrl is null) return null;
+        try
+        {
+            using var request = await RequestAsync(HttpMethod.Get, path, "shallow=true", cancellationToken);
+            using var response = await http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                LogRejected(logger, "GET", path, (int)response.StatusCode);
+                return null;
+            }
+
+            var keys = await response.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>?>(cancellationToken);
+            return keys is null ? [] : [.. keys.Keys];
+        }
+        catch (BrokenCircuitException)
+        {
+            LogCircuitOpen(logger, "GET", path);
+            return null;
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            LogFailed(logger, ex, "GET", path);
+            return null;
+        }
+    }
+
+    private async Task<HttpRequestMessage> RequestAsync(HttpMethod method, string path, string? query, CancellationToken cancellationToken)
     {
         var firebase = options.Value;
-        var baseUrl = firebase.RealtimeDatabaseBaseUrl;
-        if (baseUrl is null) return false;
+        // The emulator keeps one database per namespace; the clients connect to `demo-readin` too.
+        string[] parameters = [.. new[] { query, firebase.UseEmulator ? $"ns={Uri.EscapeDataString(firebase.ProjectId)}" : null }.OfType<string>()];
+        var url = $"{firebase.RealtimeDatabaseBaseUrl}/{path}.json" + (parameters.Length > 0 ? "?" + string.Join('&', parameters) : string.Empty);
+
+        var request = new HttpRequestMessage(method, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", firebase.UseEmulator
+            ? EmulatorAdminToken
+            : await credential.GetAccessTokenAsync(cancellationToken));
+        return request;
+    }
+
+    private async Task<bool> SendAsync(HttpMethod method, string path, object? value, CancellationToken cancellationToken)
+    {
+        if (options.Value.RealtimeDatabaseBaseUrl is null) return false;
 
         try
         {
-            var url = $"{baseUrl}/{path}.json";
-            // The emulator keeps one database per namespace; the clients connect to `demo-readin` too.
-            if (firebase.UseEmulator) url += $"?ns={Uri.EscapeDataString(firebase.ProjectId)}";
-
+            using var request = await RequestAsync(method, path, query: null, cancellationToken);
             // Bytes rather than a JsonContent stream, so a retry can send the same body again.
-            var body = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(value));
-            body.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-            using var request = new HttpRequestMessage(method, url) { Content = body };
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", firebase.UseEmulator
-                ? EmulatorAdminToken
-                : await credential.GetAccessTokenAsync(cancellationToken));
+            request.Content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(value));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
             using var response = await http.SendAsync(request, cancellationToken);
             if (response.IsSuccessStatusCode) return true;

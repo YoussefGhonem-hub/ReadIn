@@ -36,6 +36,9 @@ public static class RateLimitPolicies
 
     /// <summary>The reader reports progress every ~15 s, so it has its own budget instead of sharing <see cref="Writes"/>.</summary>
     public const string ReadingProgress = "reading-progress";
+
+    /// <summary>New comments and replies: 10 a minute per user (SPEC F11). Edits, likes and pins use <see cref="Writes"/>.</summary>
+    public const string Comments = "comments";
 }
 
 /// <summary>Per-IP limits of the anonymous auth endpoints (SPEC §9.5); tests raise them.</summary>

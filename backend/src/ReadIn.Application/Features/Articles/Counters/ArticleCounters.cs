@@ -8,11 +8,12 @@ using ReadIn.Domain.Engagement;
 namespace ReadIn.Application.Features.Articles.Counters;
 
 /// <summary>
-/// The denormalized counters on <c>Articles</c> (SPEC §16.1, F27): reactions per type and their sum, and saves. They are
+/// The denormalized counters on <c>Articles</c> (SPEC §16.1, F27): reactions per type and their sum, saves and comments
+/// (visible comments and replies: not deleted, not hidden). They are
 /// always recomputed from the rows (never incremented), so running it twice, late or after a crash gives the same
 /// numbers. Each recompute updates the columns in one SQL statement, publishes the counters of published articles to
-/// <c>/live/articles/{id}</c> and drops their cached details. <c>CommentCount</c> is published as stored (F11 owns it);
-/// the admin rebuild also recomputes <c>ReadCount</c> (F08). Called by the reactions and saves outbox handler, the admin rebuild, the demo seeder and account deletion.
+/// <c>/live/articles/{id}</c> and drops their cached details;
+/// the admin rebuild also recomputes <c>ReadCount</c> (F08). Called by the reactions, saves and comments outbox handlers, the admin rebuild, the demo seeders and account deletion.
 /// </summary>
 public sealed class ArticleCounters(IAppDbContext db, IRealtimePublisher realtime, HybridCache cache)
 {
@@ -60,14 +61,16 @@ public sealed class ArticleCounters(IAppDbContext db, IRealtimePublisher realtim
                 a.FireCount != db.Reactions.Count(r => r.ArticleId == a.Id && r.Type == ReactionType.Fire) ||
                 a.MindBlownCount != db.Reactions.Count(r => r.ArticleId == a.Id && r.Type == ReactionType.MindBlown) ||
                 a.ReactionCount != db.Reactions.Count(r => r.ArticleId == a.Id) ||
-                a.SaveCount != db.SavedArticles.Count(s => s.ArticleId == a.Id))
+                a.SaveCount != db.SavedArticles.Count(s => s.ArticleId == a.Id) ||
+                a.CommentCount != db.Comments.Count(c => c.ArticleId == a.Id && !c.IsDeleted && c.HiddenAt == null))
             .ExecuteUpdateAsync(set => set
                 .SetProperty(a => a.InsightfulCount, a => db.Reactions.Count(r => r.ArticleId == a.Id && r.Type == ReactionType.Insightful))
                 .SetProperty(a => a.LoveCount, a => db.Reactions.Count(r => r.ArticleId == a.Id && r.Type == ReactionType.Love))
                 .SetProperty(a => a.FireCount, a => db.Reactions.Count(r => r.ArticleId == a.Id && r.Type == ReactionType.Fire))
                 .SetProperty(a => a.MindBlownCount, a => db.Reactions.Count(r => r.ArticleId == a.Id && r.Type == ReactionType.MindBlown))
                 .SetProperty(a => a.ReactionCount, a => db.Reactions.Count(r => r.ArticleId == a.Id))
-                .SetProperty(a => a.SaveCount, a => db.SavedArticles.Count(s => s.ArticleId == a.Id)),
+                .SetProperty(a => a.SaveCount, a => db.SavedArticles.Count(s => s.ArticleId == a.Id))
+                .SetProperty(a => a.CommentCount, a => db.Comments.Count(c => c.ArticleId == a.Id && !c.IsDeleted && c.HiddenAt == null)),
                 ct);
 
         var rows = await db.Articles.IgnoreQueryFilters().AsNoTracking()

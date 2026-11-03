@@ -127,6 +127,13 @@ public static class ApiSetup
                     PermitLimit = 60,
                     Window = TimeSpan.FromMinutes(1),
                 }));
+            // SPEC F11: 10 comments a minute per user (comments and replies together).
+            options.AddPolicy(RateLimitPolicies.Comments, context =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromMinutes(1),
+                }));
         });
 
         services.AddResponseCompression(options =>
