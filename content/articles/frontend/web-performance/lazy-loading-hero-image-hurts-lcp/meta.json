@@ -1,0 +1,31 @@
+{
+  "slug": "lazy-loading-hero-image-hurts-lcp",
+  "field": "frontend",
+  "topic": "web-performance",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Lazy-Loading Your Hero Image Makes LCP Worse",
+      "subtitle": "A lazy image waits for CSS and layout before it's even requested, and the hero can't afford that wait."
+    },
+    "ar-EG": {
+      "title": "ليه الـ lazy loading لصورة الـ hero بيبطّأ الـ LCP؟",
+      "subtitle": "الصورة الـ lazy بتستنى الـ CSS والـ layout قبل ما تتطلب أصلًا، وصورة الـ hero ماتستحملش الانتظار ده."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "browser-and-css", "order": 8 },
+  "tags": ["LCP", "Images", "Lazy Loading", "Performance"],
+  "sources": [
+    { "title": "Optimize Largest Contentful Paint — web.dev", "url": "https://web.dev/articles/optimize-lcp" },
+    { "title": "The performance effects of too much lazy loading — web.dev", "url": "https://web.dev/articles/lcp-lazy-loading" },
+    { "title": "Browser-level image lazy loading for the web — web.dev", "url": "https://web.dev/articles/browser-level-image-lazy-loading" },
+    { "title": "Optimize resource loading with the Fetch Priority API — web.dev", "url": "https://web.dev/articles/fetch-priority" },
+    { "title": "HTML Standard: Lazy loading attributes — WHATWG", "url": "https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attributes" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

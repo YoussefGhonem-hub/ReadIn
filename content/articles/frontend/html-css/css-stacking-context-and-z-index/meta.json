@@ -1,0 +1,30 @@
+{
+  "slug": "css-stacking-context-and-z-index",
+  "field": "frontend",
+  "topic": "html-css",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "z-index: 9999 Won't Save You: Stacking Contexts Explained",
+      "subtitle": "z-index only ranks boxes inside one stacking context, and many properties quietly create a new one."
+    },
+    "ar-EG": {
+      "title": "ليه z-index: 9999 مش بيطلّع العنصر فوق؟ الـ stacking context",
+      "subtitle": "الـ z-index بيرتّب العناصر جوه stacking context واحد بس، و properties كتير بتعمل واحد جديد من غير ما تاخد بالك."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "browser-and-css", "order": 5 },
+  "tags": ["CSS", "z-index", "Stacking Context", "Layout"],
+  "sources": [
+    { "title": "Stacking context — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Positioned_layout/Stacking_context" },
+    { "title": "z-index — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/z-index" },
+    { "title": "Top layer — MDN", "url": "https://developer.mozilla.org/en-US/docs/Glossary/Top_layer" },
+    { "title": "CSS 2.2, Appendix E: Elaborate description of Stacking Contexts — W3C", "url": "https://www.w3.org/TR/CSS22/zindex.html" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

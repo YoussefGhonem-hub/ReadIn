@@ -1,0 +1,30 @@
+{
+  "slug": "css-specificity-and-the-cascade",
+  "field": "frontend",
+  "topic": "html-css",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Specificity Isn't a Points Total: How the Cascade Really Picks a Winner",
+      "subtitle": "Specificity is compared column by column, and it's only one of the questions the cascade asks."
+    },
+    "ar-EG": {
+      "title": "إزاي الـ cascade بيختار القاعدة اللي تكسب؟ الـ specificity مش مجموع نقط",
+      "subtitle": "الـ specificity بتتقارن عمود بعمود، وهي سؤال واحد من كذا سؤال بيسألهم الـ cascade."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "browser-and-css", "order": 2 },
+  "tags": ["CSS", "Specificity", "Cascade", "Cascade Layers"],
+  "sources": [
+    { "title": "Specificity — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascade/Specificity" },
+    { "title": "Introduction to the CSS cascade — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascade/Introduction" },
+    { "title": "@layer — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@layer" },
+    { "title": "CSS Cascading and Inheritance Level 5 — W3C", "url": "https://www.w3.org/TR/css-cascade-5/" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

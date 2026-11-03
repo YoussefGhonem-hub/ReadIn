@@ -1,0 +1,31 @@
+{
+  "slug": "inp-is-about-the-main-thread",
+  "field": "frontend",
+  "topic": "web-performance",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Slow Clicks Aren't a Network Problem: INP and Long Tasks",
+      "subtitle": "INP stops at the next paint, so what makes it slow is main-thread work, not the API behind the button."
+    },
+    "ar-EG": {
+      "title": "بطء الاستجابة للكليك مش مشكلة network: الـ INP والـ long tasks",
+      "subtitle": "الـ INP بيقف عند الـ paint اللي بعده، فاللي بيبطّأه شغل الـ main thread، مش الـ API اللي ورا الزرار."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "browser-and-css", "order": 10 },
+  "tags": ["INP", "Core Web Vitals", "JavaScript", "Performance"],
+  "sources": [
+    { "title": "Interaction to Next Paint (INP) — web.dev", "url": "https://web.dev/articles/inp" },
+    { "title": "Optimize Interaction to Next Paint — web.dev", "url": "https://web.dev/articles/optimize-inp" },
+    { "title": "Optimize long tasks — web.dev", "url": "https://web.dev/articles/optimize-long-tasks" },
+    { "title": "Scheduler: yield() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Scheduler/yield" },
+    { "title": "Find slow interactions in the field — web.dev", "url": "https://web.dev/articles/find-slow-interactions-in-the-field" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

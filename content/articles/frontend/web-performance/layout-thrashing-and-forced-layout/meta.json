@@ -1,0 +1,31 @@
+{
+  "slug": "layout-thrashing-and-forced-layout",
+  "field": "frontend",
+  "topic": "web-performance",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Reading offsetHeight Isn't Free: Forced Layout and Layout Thrashing",
+      "subtitle": "A geometry read right after a style write makes the browser run layout on the spot, once per read."
+    },
+    "ar-EG": {
+      "title": "قراءة الـ offsetHeight ممكن تكون مكلفة: الـ forced layout والـ layout thrashing",
+      "subtitle": "قراية أبعاد بعد ما تغيّر style على طول بتجبر المتصفح يعمل layout في ساعتها، مرة مع كل قراية."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "browser-and-css", "order": 9 },
+  "tags": ["JavaScript", "Layout", "DOM", "Performance"],
+  "sources": [
+    { "title": "Avoid large, complex layouts and layout thrashing — web.dev", "url": "https://web.dev/articles/avoid-large-complex-layouts-and-layout-thrashing" },
+    { "title": "Rendering performance — web.dev", "url": "https://web.dev/articles/rendering-performance" },
+    { "title": "Forced reflow — Chrome DevTools performance insights", "url": "https://developer.chrome.com/docs/performance/insights/forced-reflow" },
+    { "title": "Long Animation Frames API — Chrome for Developers", "url": "https://developer.chrome.com/docs/web-platform/long-animation-frames" },
+    { "title": "PerformanceScriptTiming: forcedStyleAndLayoutDuration property — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/PerformanceScriptTiming/forcedStyleAndLayoutDuration" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

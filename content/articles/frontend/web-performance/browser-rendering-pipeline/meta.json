@@ -1,0 +1,31 @@
+{
+  "slug": "browser-rendering-pipeline",
+  "field": "frontend",
+  "topic": "web-performance",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Not All CSS Changes Cost the Same: Style, Layout, Paint and Composite",
+      "subtitle": "Geometry changes re-run layout and paint, while transform and opacity can skip both."
+    },
+    "ar-EG": {
+      "title": "مش كل تغيير في الـ CSS ليه نفس التكلفة: Style و Layout و Paint و Composite",
+      "subtitle": "تغيير الأبعاد بيعيد الـ layout والـ paint، لكن الـ transform والـ opacity ممكن يعدّوا الاتنين."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "browser-and-css", "order": 6 },
+  "tags": ["CSS", "Rendering", "Performance", "Animations"],
+  "sources": [
+    { "title": "Rendering performance — web.dev", "url": "https://web.dev/articles/rendering-performance" },
+    { "title": "Stick to compositor-only properties and manage layer count — web.dev", "url": "https://web.dev/articles/stick-to-compositor-only-properties-and-manage-layer-count" },
+    { "title": "How to create high-performance CSS animations — web.dev", "url": "https://web.dev/articles/animations-guide" },
+    { "title": "Populating the page: how browsers work — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/How_browsers_work" },
+    { "title": "Discover issues with rendering performance — Chrome DevTools", "url": "https://developer.chrome.com/docs/devtools/rendering/performance" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

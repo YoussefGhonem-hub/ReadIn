@@ -1,0 +1,31 @@
+{
+  "slug": "core-web-vitals-field-vs-lab",
+  "field": "frontend",
+  "topic": "web-performance",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "A 100 Lighthouse Score Doesn't Mean You Pass Core Web Vitals",
+      "subtitle": "Lighthouse tests one load on one simulated phone; Core Web Vitals are judged on real visits at the 75th percentile."
+    },
+    "ar-EG": {
+      "title": "درجة 100 في Lighthouse مش معناها إنك ناجح في الـ Core Web Vitals",
+      "subtitle": "الـ Lighthouse بيختبر تحميلة واحدة على موبايل متمثّل، والـ Core Web Vitals بتتحكم على زيارات حقيقية عند الـ 75th percentile."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "browser-and-css", "order": 7 },
+  "tags": ["Core Web Vitals", "Lighthouse", "Performance", "CrUX"],
+  "sources": [
+    { "title": "Web Vitals — web.dev", "url": "https://web.dev/articles/vitals" },
+    { "title": "Why lab and field data can be different (and what to do about it) — web.dev", "url": "https://web.dev/articles/lab-and-field-data-differences" },
+    { "title": "How the Core Web Vitals metrics thresholds were defined — web.dev", "url": "https://web.dev/articles/defining-core-web-vitals-thresholds" },
+    { "title": "Lighthouse performance scoring — Chrome for Developers", "url": "https://developer.chrome.com/docs/lighthouse/performance/performance-scoring" },
+    { "title": "About PageSpeed Insights — Google for Developers", "url": "https://developers.google.com/speed/docs/insights/v5/about" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

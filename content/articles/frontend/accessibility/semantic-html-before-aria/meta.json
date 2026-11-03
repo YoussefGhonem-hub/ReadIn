@@ -1,0 +1,31 @@
+{
+  "slug": "semantic-html-before-aria",
+  "field": "frontend",
+  "topic": "accessibility",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "ARIA Doesn't Make a div a Button: Start with Semantic HTML",
+      "subtitle": "A role changes what assistive technology hears, not what the element does. A real button does both."
+    },
+    "ar-EG": {
+      "title": "هل إضافة role للـ div بتخلّيه زرار حقيقي؟ ابدأ بالـ semantic HTML",
+      "subtitle": "الـ role بيغيّر اللي الـ assistive technology بتسمعه، مش اللي العنصر بيعمله. والزرار الحقيقي بيعمل الاتنين."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "WCAG 2.2",
+  "learningPath": { "slug": "browser-and-css", "order": 3 },
+  "tags": ["Accessibility", "ARIA", "Semantic HTML", "WCAG"],
+  "sources": [
+    { "title": "Read Me First — ARIA Authoring Practices Guide (W3C WAI)", "url": "https://www.w3.org/WAI/ARIA/apg/practices/read-me-first/" },
+    { "title": "ARIA: button role — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/button_role" },
+    { "title": "Understanding SC 4.1.2: Name, Role, Value — WCAG 2.2 (W3C WAI)", "url": "https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html" },
+    { "title": "HTML: A good basis for accessibility — MDN", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML" },
+    { "title": "ARIA — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

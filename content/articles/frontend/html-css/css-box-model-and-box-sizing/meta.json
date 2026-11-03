@@ -1,0 +1,30 @@
+{
+  "slug": "css-box-model-and-box-sizing",
+  "field": "frontend",
+  "topic": "html-css",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "width: 200px Isn't Always 200px: The Box Model and box-sizing",
+      "subtitle": "By default, width sizes only the content; padding and border are added on top of it."
+    },
+    "ar-EG": {
+      "title": "ليه width: 200px مش دايمًا 200px؟ الـ box model و box-sizing",
+      "subtitle": "بشكل افتراضي الـ width بتحدد مقاس الـ content بس، والـ padding والـ border بيتزادوا فوقه."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "browser-and-css", "order": 1 },
+  "tags": ["CSS", "Box Model", "box-sizing", "Layout"],
+  "sources": [
+    { "title": "The box model — MDN", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/Box_model" },
+    { "title": "box-sizing — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/box-sizing" },
+    { "title": "Mastering margin collapsing — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Box_model/Margin_collapsing" },
+    { "title": "CSS Box Sizing Module Level 3: the box-sizing property — W3C", "url": "https://www.w3.org/TR/css-sizing-3/#box-sizing" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

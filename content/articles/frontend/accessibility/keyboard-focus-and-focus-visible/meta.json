@@ -1,0 +1,31 @@
+{
+  "slug": "keyboard-focus-and-focus-visible",
+  "field": "frontend",
+  "topic": "accessibility",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "outline: none Locks Out Keyboard Users: Focus Styles Done Right",
+      "subtitle": "The focus ring is the keyboard user's cursor. Restyle it with :focus-visible instead of deleting it."
+    },
+    "ar-EG": {
+      "title": "إزالة الـ outline بتقفل الموقع في وش مستخدمي الكيبورد: الـ focus styles صح",
+      "subtitle": "الـ focus ring هو الـ cursor بتاع مستخدم الكيبورد. غيّر شكله بـ :focus-visible بدل ما تمسحه."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "WCAG 2.2",
+  "learningPath": { "slug": "browser-and-css", "order": 4 },
+  "tags": ["Accessibility", "Focus", "CSS", "WCAG"],
+  "sources": [
+    { "title": "Understanding SC 2.4.7: Focus Visible — WCAG 2.2 (W3C WAI)", "url": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html" },
+    { "title": "Understanding SC 2.1.1: Keyboard — WCAG 2.2 (W3C WAI)", "url": "https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html" },
+    { "title": "Understanding SC 2.4.11: Focus Not Obscured (Minimum) — WCAG 2.2 (W3C WAI)", "url": "https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html" },
+    { "title": ":focus-visible — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/:focus-visible" },
+    { "title": "forced-colors — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/forced-colors" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

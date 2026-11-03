@@ -152,3 +152,174 @@ terms:
     definitionAr: >-
       اللي الـ import في الـ ES modules بيدّيهولك: view للقراية بس على المتغير بتاع الـ module اللي عامل export، مش نسخة
       منه. لما الـ module ده يحط قيمة جديدة، كل اللي عامل import بيشوفها؛ لكن اللي عامل import نفسه مايقدرش يغيّرها.
+  - id: css-box-model
+    term: CSS box model
+    definitionEn: >-
+      The four nested areas every element's box is made of: content, padding, border and margin. The box-sizing
+      property decides whether width and height measure the content box (the default) or the border box.
+    definitionAr: >-
+      الأربع طبقات اللي جوه بعض واللي أي box لأي element متكوّن منها: الـ content والـ padding والـ border والـ margin.
+      والـ box-sizing هي اللي بتحدد الـ width والـ height بيقيسوا الـ content box (الافتراضي) ولا الـ border box.
+  - id: margin-collapsing
+    term: Margin collapsing
+    definitionEn: >-
+      In normal block layout, adjacent vertical margins (between siblings, or between a parent and its first or last
+      child) combine into one margin the size of the largest. It doesn't happen in flex or grid containers.
+    definitionAr: >-
+      في الـ block layout العادي، الـ margins الرأسية اللي لازقة في بعض (بين elements جنب بعض، أو بين parent وأول أو آخر
+      child) بتتدمج في margin واحد قد الأكبر فيهم. وده مابيحصلش جوه flex أو grid container.
+  - id: css-specificity
+    term: Specificity (CSS)
+    definitionEn: >-
+      The weight of a selector, written ID-CLASS-TYPE: the number of IDs, then of classes, attributes and
+      pseudo-classes, then of types and pseudo-elements. Two selectors are compared column by column from the left.
+    definitionAr: >-
+      وزن الـ selector، وبيتكتب ID-CLASS-TYPE: عدد الـ IDs، وبعدين عدد الـ classes والـ attributes والـ pseudo-classes،
+      وبعدين عدد الـ types والـ pseudo-elements. وأي اتنين selectors بيتقارنوا عمود بعمود من الشمال.
+  - id: cascade-layer
+    term: Cascade layer
+    definitionEn: >-
+      A named group of CSS rules declared with @layer. For normal declarations, a later layer beats an earlier one
+      before specificity is compared, and styles outside any layer beat all layered styles. !important reverses both.
+    definitionAr: >-
+      مجموعة CSS rules ليها اسم وبتتعرّف بـ @layer. في الـ declarations العادية، الـ layer اللي بعد بيكسب اللي قبله قبل
+      ما الـ specificity تتقارن أصلًا، والـ styles اللي برّه أي layer بتكسب كل الـ layers. والـ !important بتعكس الاتنين.
+  - id: accessibility-tree
+    term: Accessibility tree
+    definitionEn: >-
+      A tree the browser builds alongside the DOM, giving each meaningful element a role, an accessible name and its
+      states. Screen readers and other assistive technologies read the page through it; ARIA attributes edit it.
+    definitionAr: >-
+      شجرة المتصفح بيبنيها جنب الـ DOM، وبيدّي فيها كل element ليه معنى role و accessible name والـ states بتاعته.
+      الـ screen readers وباقي الـ assistive technologies بيقروا الصفحة من خلالها، والـ ARIA attributes بتعدّل فيها.
+  - id: accessible-name
+    term: Accessible name
+    definitionEn: >-
+      The name assistive technology announces for an element, such as "Place order" for a button. The browser computes
+      it from the element's content, its label, or aria-label and aria-labelledby.
+    definitionAr: >-
+      الاسم اللي الـ assistive technology بتنطقه للعنصر، زي "Place order" لزرار. والمتصفح بيحسبه من المحتوى اللي جوه
+      العنصر، أو الـ label بتاعه، أو من aria-label و aria-labelledby.
+  - id: focus-indicator
+    term: Focus indicator
+    definitionEn: >-
+      The visible mark, usually an outline or "focus ring", that shows which element currently has keyboard focus.
+      WCAG 2.4.7 Focus Visible requires one for keyboard users.
+    definitionAr: >-
+      العلامة اللي بتبان، غالبًا outline أو "focus ring"، وبتوضح أنهي element عليه الـ keyboard focus دلوقتي. والـ WCAG
+      في 2.4.7 Focus Visible بتشترط وجودها لمستخدمي الكيبورد.
+  - id: forced-colors-mode
+    term: Forced colors mode
+    definitionEn: >-
+      A user setting, such as a Windows contrast theme, in which the browser replaces the page's colors with a small
+      palette the user chose. Author colors are overridden and box-shadow is removed; CSS can detect it with
+      @media (forced-colors: active).
+    definitionAr: >-
+      إعداد عند المستخدم، زي الـ contrast themes في Windows، المتصفح فيه بيبدّل ألوان الصفحة بمجموعة ألوان صغيرة المستخدم
+      اختارها. ألوان الموقع بتتلغي والـ box-shadow بيتشال، والـ CSS تقدر تعرفه بـ @media (forced-colors: active).
+  - id: stacking-context
+    term: Stacking context
+    definitionEn: >-
+      A group of elements the browser layers together and then paints as one unit inside its parent context. z-index
+      values only compete inside the same stacking context. The root element, positioned elements with a z-index,
+      sticky and fixed elements, opacity below 1 and transforms all create one.
+    definitionAr: >-
+      مجموعة elements المتصفح بيرتّبهم فوق بعض مع بعض، وبعدين يرسمهم كوحدة واحدة جوه الـ context الأب. وقيم الـ z-index
+      بتتنافس بس جوه نفس الـ stacking context. والـ root element، والـ elements الـ positioned اللي عليها z-index، والـ
+      sticky والـ fixed، والـ opacity الأقل من 1، والـ transforms، كلهم بيعملوا واحد.
+  - id: top-layer
+    term: Top layer
+    definitionEn: >-
+      A browser-managed layer that sits above every other layer of the page. Fullscreen elements, dialogs opened with
+      showModal() and popovers shown with showPopover() are rendered there, so no z-index can cover them.
+    definitionAr: >-
+      طبقة المتصفح بيديرها بنفسه وبتبقى فوق كل طبقات الصفحة. العناصر اللي في الـ fullscreen، والـ dialogs اللي اتفتحت بـ
+      showModal()، والـ popovers اللي اتعرضت بـ showPopover() بيترسموا فيها، فمفيش z-index يقدر يغطيهم.
+  - id: rendering-pipeline
+    term: Rendering pipeline (pixel pipeline)
+    definitionEn: >-
+      The work a browser does to turn a change into pixels: JavaScript, Style, Layout, Paint and Composite. A change
+      runs only the stages it needs, so a new width costs far more than a new opacity.
+    definitionAr: >-
+      الشغل اللي المتصفح بيعمله عشان يحوّل أي تغيير لـ pixels: JavaScript و Style و Layout و Paint و Composite. والتغيير
+      بيشغّل المراحل اللي محتاجها بس، فتغيير الـ width بيكلّف أكتر بكتير من تغيير الـ opacity.
+  - id: layout-reflow
+    term: Layout (reflow)
+    definitionEn: >-
+      The rendering stage that computes the size and position of every box on the page. Running it again after a
+      change is called a reflow, and one element's new geometry can move many others.
+    definitionAr: >-
+      مرحلة الرسم اللي بتحسب مقاس ومكان كل box في الصفحة. ولما تتعاد بعد أي تغيير اسمها reflow، والأبعاد الجديدة لعنصر
+      واحد ممكن تحرّك عناصر كتير غيره.
+  - id: compositor-layer
+    term: Compositor layer
+    definitionEn: >-
+      A part of the page the browser paints separately and then combines with the other layers. Changing transform or
+      opacity on an element with its own layer needs no new layout or paint. will-change: transform promotes one.
+    definitionAr: >-
+      جزء من الصفحة المتصفح بيرسمه لوحده، وبعدين يجمّعه مع باقي الـ layers. وتغيير الـ transform أو الـ opacity لعنصر
+      ليه layer لوحده مش محتاج layout ولا paint جديد. والـ will-change: transform بتعمله layer لوحده.
+  - id: core-web-vitals
+    term: Core Web Vitals
+    definitionEn: >-
+      Three metrics Google uses for page experience: LCP for loading, INP for responsiveness and CLS for visual
+      stability. A page passes when all three are good at the 75th percentile of real visits.
+    definitionAr: >-
+      تلات مقاييس جوجل بتستخدمها لتجربة الصفحة: الـ LCP للتحميل، والـ INP لسرعة الاستجابة، والـ CLS لثبات الشكل. والصفحة
+      بتنجح لما التلاتة يبقوا good عند الـ 75th percentile من الزيارات الحقيقية.
+  - id: chrome-ux-report
+    term: Chrome UX Report (CrUX)
+    definitionEn: >-
+      Google's public dataset of how real, opted-in Chrome users experience popular, public pages and origins. It feeds
+      the field data in PageSpeed Insights and Search Console.
+    definitionAr: >-
+      الـ dataset العامة بتاعة جوجل اللي فيها تجربة مستخدمين Chrome حقيقيين، موافقين على مشاركة البيانات، مع الصفحات والـ
+      origins العامة اللي عليها زيارات كفاية. ومنها بتيجي الـ field data في PageSpeed Insights و Search Console.
+  - id: largest-contentful-paint
+    term: Largest Contentful Paint (LCP)
+    definitionEn: >-
+      The Core Web Vital for loading: the time from the start of navigation until the largest image or text block in
+      the viewport is rendered. Good is 2.5 seconds or less at the 75th percentile.
+    definitionAr: >-
+      مقياس الـ Core Web Vitals الخاص بالتحميل: الوقت من أول الـ navigation لحد ما أكبر صورة أو كتلة نص في الشاشة
+      تترسم. والـ good هو 2.5 ثانية أو أقل عند الـ 75th percentile.
+  - id: preload-scanner
+    term: Preload scanner
+    definitionEn: >-
+      A secondary parser in the browser that reads the raw HTML as it arrives and starts fetching the resources it
+      finds, such as images, scripts and stylesheets, even while the main parser is blocked.
+    definitionAr: >-
+      parser تاني جوه المتصفح بيقرا الـ HTML الخام أول ما يوصل، ويبدأ يطلب الـ resources اللي بيلاقيها زي الصور والـ
+      scripts والـ stylesheets، حتى لو الـ parser الأساسي واقف.
+  - id: forced-synchronous-layout
+    term: Forced synchronous layout (forced reflow)
+    definitionEn: >-
+      Layout the browser has to run immediately, inside your JavaScript, because the code read a geometry value such as
+      offsetHeight after changing styles. Normally layout would wait and run once, later in the frame.
+    definitionAr: >-
+      layout المتصفح بيضطر يعمله في ساعتها، جوه الـ JavaScript بتاعتك، لأن الكود قرا قيمة أبعاد زي offsetHeight بعد ما
+      غيّر styles. والطبيعي إن الـ layout يستنى ويشتغل مرة واحدة بعدين في الـ frame.
+  - id: layout-thrashing
+    term: Layout thrashing
+    definitionEn: >-
+      Forcing many synchronous layouts in quick succession, typically in a loop that alternates style writes and
+      geometry reads, so the browser recomputes layout on every iteration.
+    definitionAr: >-
+      إنك تجبر المتصفح على layouts متزامنة كتير ورا بعض، غالبًا في loop بيبدّل بين كتابة styles وقراية أبعاد، فالمتصفح
+      يعيد حساب الـ layout في كل لفة.
+  - id: interaction-to-next-paint
+    term: Interaction to Next Paint (INP)
+    definitionEn: >-
+      The Core Web Vital for responsiveness: for clicks, taps and key presses, the time from the input until the next
+      frame is painted. A page reports its longest interaction, ignoring outliers; good is 200 ms or less.
+    definitionAr: >-
+      مقياس الـ Core Web Vitals الخاص بسرعة الاستجابة: في الـ clicks والـ taps والضغط على الكيبورد، الوقت من الـ input
+      لحد ما الـ frame اللي بعده يترسم. والصفحة بتسجّل أطول تفاعل فيها من غير الحالات الشاذة، والـ good هو 200 ms أو أقل.
+  - id: long-task
+    term: Long task
+    definitionEn: >-
+      A task that keeps the main thread busy for more than 50 ms. While it runs, the browser can't handle input or
+      paint, so long tasks delay interactions and animations.
+    definitionAr: >-
+      task بتشغل الـ main thread أكتر من 50 ms. وطول ما هي شغالة، المتصفح مايقدرش يتعامل مع الـ input ولا يرسم، فالـ
+      long tasks بتأخّر التفاعلات والـ animations.
