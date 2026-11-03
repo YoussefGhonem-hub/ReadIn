@@ -77,13 +77,19 @@
   // wrap, and neither does the gap after "الـ"/"لـ", so a line never ends on half of an English term or on a bare "الـ".
   const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   // Runs are found on the raw text and each piece is escaped afterwards, so trimming never cuts an entity ("Span<T>").
-  // A run may start with ".", "@", "#", "/" or a number glued to letters (.NET, @handle, #tag, /compact, 200px).
-  const isolate = (s) => s.replace(/(?:[.@#/]|\d[\d.,]*(?=[A-Za-z]))?[A-Za-z][^؀-ۿ،؛؟«»]*|(?:(?!\d[\d.,]*[A-Za-z])[^A-Za-z.@#/])+|./g, (piece) => {
-    if (!/^(?:[.@#/]|\d[\d.,]*)?[A-Za-z]/.test(piece)) return escape(piece);
-    const trimmed = piece.replace(/[\s.,:;!?'"-]+$/, "");
-    const text = escape(trimmed);
+  // A run may start with ".", "@", "#", "/", "(" or a number glued to letters (.NET, @handle, #tag, /compact, (Security), 200px).
+  const isolate = (s) => s.replace(/(?:[.@#/(]|\d[\d.,]*(?=[A-Za-z]))?[A-Za-z][^؀-ۿ،؛؟«»]*|(?:(?!\d[\d.,]*[A-Za-z])(?!\([A-Za-z])[^A-Za-z.@#/])+|./g, (piece) => {
+    if (!/^(?:[.@#/(]|\d[\d.,]*)?[A-Za-z]/.test(piece)) return escape(piece);
+    let start = 0;
+    let end = piece.replace(/[\s.,:;!?'"-]+$/, "").length;
+    // Brackets stay in pairs: one whose partner is outside the run belongs to the Arabic around it, which mirrors it.
+    const count = (c) => [...piece.slice(start, end)].filter((x) => x === c).length;
+    if (piece[start] === "(" && count(")") === 0) start = 1;
+    while (piece[end - 1] === ")" && count(")") > count("(")) end--;
+    const run = piece.slice(start, end);
+    const text = escape(run);
     // Short runs never wrap, not even at a hyphen ("fire-and-forget").
-    return `${trimmed.length <= 24 ? `<bdi class="nw">${text}</bdi>` : `<bdi>${text}</bdi>`}${escape(piece.slice(trimmed.length))}`;
+    return `${escape(piece.slice(0, start))}${run.length <= 24 ? `<bdi class="nw">${text}</bdi>` : `<bdi>${text}</bdi>`}${escape(piece.slice(end))}`;
   }).replace(/(ـ|(?:^|\s)و) (?=<bdi)/g, "$1&nbsp;"); // "الـ" and a lone "و" stay with the English term after them
 
   window.renderCover = async (d) => {
