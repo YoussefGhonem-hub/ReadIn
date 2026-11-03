@@ -35,11 +35,29 @@ abstract final class FailureCodes {
   static const userNotSynced = 'user.not_synced';
   static const userNotFound = 'user.not_found';
   static const usernameTaken = 'user.username_taken';
+  static const usernameInvalid = 'user.username_invalid';
   static const interestsMinThree = 'user.interests.min_three';
   static const fieldNotFound = 'field.not_found';
   static const articleNotFound = 'article.not_found';
   static const articleSourcesRequired = 'article.sources_required';
+  static const rateLimited = 'rate_limited';
   static const serverError = 'server.error';
+  static const validationRequired = 'validation.required';
+  static const validationMinLength = 'validation.min_length';
+  static const validationMaxLength = 'validation.max_length';
+
+  // Auth (SPEC §9, ADR 0007, ADR 0009)
+  static const authInvalidCredentials = 'auth.invalid_credentials';
+  static const authLockedOut = 'auth.locked_out';
+  static const authPhoneTaken = 'auth.phone_taken';
+  static const authPhoneUnchanged = 'auth.phone_unchanged';
+  static const authRefreshInvalid = 'auth.refresh_invalid';
+  static const authRecoveryInvalid = 'auth.recovery_invalid';
+  static const authRecoveryLocked = 'auth.recovery_locked';
+  static const authRecoveryDisabled = 'auth.recovery_disabled';
+  static const authResetTokenInvalid = 'auth.reset_token_invalid';
+  static const authWrongPassword = 'auth.wrong_password';
+  static const authPinAlreadySet = 'auth.pin_already_set';
 
   // Media (docs/api/contract-v1.md "Media", ADR 0011)
   static const mediaPurposeInvalid = 'media.purpose_invalid';
@@ -74,10 +92,4 @@ abstract final class FailureCodes {
   static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';
   static const networkTimeout = 'network.timeout';
-  static const authUnavailable = 'auth.unavailable';
-  static const authInvalidCredentials = 'auth.invalid_credentials';
-  static const authEmailInUse = 'auth.email_in_use';
-  static const authWeakPassword = 'auth.weak_password';
-  static const authInvalidEmail = 'auth.invalid_email';
-  static const authTooManyRequests = 'auth.too_many_requests';
 }

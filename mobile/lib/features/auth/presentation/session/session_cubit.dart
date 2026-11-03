@@ -5,70 +5,89 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/failure.dart';
-import '../../../../core/l10n/current_locale.dart';
 import '../../domain/entities/me.dart';
 import '../../domain/usecases/auth_usecases.dart';
 
 enum SessionStatus { unknown, guest, authenticated }
+
+/// Screens a signed-in user must pass, in this order, before anything else (SPEC §9.2).
+enum AccountGate { changePassword, setRecoveryPin, completeProfile, onboarding }
 
 class SessionState extends Equatable {
   const SessionState({this.status = SessionStatus.unknown, this.me, this.failure});
 
   final SessionStatus status;
 
-  /// The SQL Server account; null for guests, or when `/auth/sync` failed.
+  /// The account; null for guests, or while a stored session couldn't be restored (offline).
   final Me? me;
   final Failure? failure;
 
   bool get isAuthenticated => status == SessionStatus.authenticated;
 
-  /// Signed in, synced and still has to pick interests (F02).
-  bool get needsOnboarding => isAuthenticated && me != null && !me!.onboardingCompleted;
+  /// The first guard that applies: `mustChangePassword` → `mustSetRecoveryPin` → profile incomplete → onboarding.
+  AccountGate? get gate {
+    final me = this.me;
+    if (!isAuthenticated || me == null) return null;
+    if (me.mustChangePassword) return AccountGate.changePassword;
+    if (me.mustSetRecoveryPin) return AccountGate.setRecoveryPin;
+    if (!me.isProfileComplete) return AccountGate.completeProfile;
+    if (!me.onboardingCompleted) return AccountGate.onboarding;
+    return null;
+  }
 
   @override
   List<Object?> get props => [status, me, failure];
 }
 
-/// App-wide session: Firebase identity → `/auth/sync` → [Me] (SPEC §9.2).
-/// Guests can browse; interactions prompt sign-in.
+/// App-wide session (SPEC §9.3): the splash restores it with `POST /auth/refresh`, then every sign in, token refresh,
+/// account change and sign out arrives through [WatchSession]. Guests can browse and read.
 @lazySingleton
 class SessionCubit extends Cubit<SessionState> {
-  SessionCubit(this._watch, this._sync, this._getMe, this._signOut, this._locale) : super(const SessionState());
+  SessionCubit(this._watch, this._restore, this._getMe, this._signOut, this._signOutEverywhere)
+      : super(const SessionState());
 
-  final WatchAuthState _watch;
-  final SyncAccount _sync;
+  final WatchSession _watch;
+  final RestoreSession _restore;
   final GetMe _getMe;
   final SignOut _signOut;
-  final CurrentLocale _locale;
-  StreamSubscription<String?>? _subscription;
+  final SignOutEverywhere _signOutEverywhere;
+  StreamSubscription<Me?>? _subscription;
 
-  void start() {
-    _subscription ??= _watch().listen(_onUid);
-  }
-
-  Future<void> _onUid(String? uid) async {
-    if (uid == null) {
-      emit(const SessionState(status: SessionStatus.guest));
-      return;
-    }
-    final result = await _sync(uiLanguage: _locale.languageCode);
-    emit(result.fold(
-      (failure) => SessionState(status: SessionStatus.authenticated, failure: failure),
-      (me) => SessionState(status: SessionStatus.authenticated, me: me),
-    ));
-  }
-
-  /// Re-reads `/me` (e.g. after onboarding saved interests).
-  Future<void> refresh() async {
-    if (!state.isAuthenticated) return;
-    final result = state.me == null ? await _sync(uiLanguage: _locale.languageCode) : await _getMe();
+  Future<void> start() async {
+    if (_subscription != null) return;
+    _subscription = _watch().listen(_onUser);
+    final result = await _restore();
+    if (state.status != SessionStatus.unknown) return; // a change already arrived
     result.fold(
-      (failure) => emit(SessionState(status: state.status, me: state.me, failure: failure)),
-      (me) => emit(SessionState(status: SessionStatus.authenticated, me: me)),
+      (failure) => emit(_endedBy(failure)
+          ? SessionState(status: SessionStatus.guest, failure: failure)
+          // Offline with a stored session: stay signed in; the next call or [refresh] restores it.
+          : SessionState(status: SessionStatus.authenticated, failure: failure)),
+      (me) => emit(me == null ? const SessionState(status: SessionStatus.guest) : _signedIn(me)),
     );
   }
 
+  /// The refresh token was rejected or the account is suspended: the session is over.
+  static bool _endedBy(Failure failure) => failure.statusCode == 401 || failure.statusCode == 403;
+
+  void _onUser(Me? me) => emit(me == null ? const SessionState(status: SessionStatus.guest) : _signedIn(me));
+
+  static SessionState _signedIn(Me me) => SessionState(status: SessionStatus.authenticated, me: me);
+
+  /// Re-reads `/me` (after onboarding, or to retry a restore that failed offline).
+  Future<void> refresh() async {
+    if (!state.isAuthenticated) return;
+    final result = await _getMe();
+    if (result.failureOrNull case final failure?) {
+      if (state.isAuthenticated) emit(SessionState(status: state.status, me: state.me, failure: failure));
+    }
+  }
+
+  /// Unregisters push, ends the session on the server and forgets it here.
   Future<void> signOut() => _signOut();
+
+  /// Signs every other device out; null on success.
+  Future<Failure?> signOutEverywhere() async => (await _signOutEverywhere()).failureOrNull;
 
   @override
   Future<void> close() async {

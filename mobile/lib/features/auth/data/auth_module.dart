@@ -1,12 +1,11 @@
 import 'package:injectable/injectable.dart';
 
 import '../../../core/network/request_context.dart';
-import 'datasources/firebase_auth_data_source.dart';
+import 'datasources/auth_session_store.dart';
 
-/// Exposes the Firebase data source to `core/network` through the
-/// [IdTokenProvider] abstraction, so core never imports Firebase Auth.
+/// Exposes the session store to `core/network` through [SessionTokenProvider], so core never imports the auth feature.
 @module
 abstract class AuthModule {
   @lazySingleton
-  IdTokenProvider idTokenProvider(FirebaseAuthDataSource firebase) => firebase;
+  SessionTokenProvider sessionTokens(AuthSessionStore store) => store;
 }

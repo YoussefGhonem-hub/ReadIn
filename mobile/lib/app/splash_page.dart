@@ -5,7 +5,7 @@ import '../core/theme/theme_x.dart';
 import '../core/theme/tokens.g.dart';
 import '../shared/widgets/app_logo.dart';
 
-/// Shown while the session resolves (Firebase restore + `/auth/sync`).
+/// Shown while the stored session is restored (`POST /auth/refresh`, SPEC §9.3).
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
 

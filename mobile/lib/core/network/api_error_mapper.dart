@@ -42,6 +42,7 @@ abstract final class ApiErrorMapper {
         400 => FailureCodes.validationFailed,
         401 => FailureCodes.authUnauthorized,
         403 => FailureCodes.authForbidden,
+        429 => FailureCodes.rateLimited,
         _ => FailureCodes.serverError,
       };
 }

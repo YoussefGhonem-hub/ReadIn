@@ -4,7 +4,12 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/article/presentation/pages/article_page.dart';
-import '../features/auth/presentation/pages/auth_pages.dart';
+import '../features/auth/presentation/pages/account_pages.dart';
+import '../features/auth/presentation/pages/complete_profile_page.dart';
+import '../features/auth/presentation/pages/forgot_password_page.dart';
+import '../features/auth/presentation/pages/sign_in_page.dart';
+import '../features/auth/presentation/pages/sign_up_page.dart';
+import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/presentation/session/session_cubit.dart';
 import '../features/editor/presentation/pages/editor_page.dart';
 import '../features/explore/presentation/pages/explore_page.dart';
@@ -21,10 +26,17 @@ import 'splash_page.dart';
 
 abstract final class AppRoutes {
   static const splash = '/splash';
+  static const welcome = '/welcome';
   static const onboarding = '/onboarding';
   static const signIn = '/auth/sign-in';
   static const signUp = '/auth/sign-up';
   static const forgotPassword = '/auth/forgot-password';
+  static const completeProfile = '/account/complete-profile';
+  static const setRecoveryPin = '/account/recovery-pin/new';
+  static const changeRecoveryPin = '/account/recovery-pin';
+  static const changePassword = '/account/password';
+  static const changePhone = '/account/phone';
+  static const deleteAccount = '/account/delete';
   static const home = '/home';
   static const explore = '/explore';
   static const write = '/write';
@@ -35,9 +47,21 @@ abstract final class AppRoutes {
 
   /// Deep link `readin.app/a/{slug}` (SPEC §3.3, §8.2).
   static String article(String slug) => '/a/$slug';
+
+  /// Where an [AccountGate] is handled.
+  static String forGate(AccountGate gate) => switch (gate) {
+        AccountGate.changePassword => changePassword,
+        AccountGate.setRecoveryPin => setRecoveryPin,
+        AccountGate.completeProfile => completeProfile,
+        AccountGate.onboarding => onboarding,
+      };
 }
 
 /// Pure redirect logic, unit-testable without a widget tree.
+///
+/// Signed in: the account guards apply first, in the SPEC §9.2 order (change password → set PIN → complete profile →
+/// onboarding), and sign-in screens lead home. Guests can browse and read; first-time guests see Welcome, and account
+/// screens send them home.
 String? resolveRedirect({required Uri uri, required SessionState session, required AppSettings settings}) {
   final location = uri.path;
   final atSplash = location == AppRoutes.splash;
@@ -47,16 +71,28 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
 
   final target = atSplash ? (uri.queryParameters['from'] ?? AppRoutes.home) : uri.toString();
   final targetPath = Uri.parse(target).path;
-  final isAuthRoute = targetPath.startsWith('/auth');
-  final isOnboarding = targetPath == AppRoutes.onboarding;
+  final isAuthRoute = targetPath.startsWith('/auth/') || targetPath == AppRoutes.welcome;
+  final isAccountRoute = targetPath.startsWith('/account/');
   final isArticle = targetPath.startsWith('/a/');
+  String? stay() => atSplash ? target : null;
 
-  if (session.needsOnboarding && !isOnboarding) return AppRoutes.onboarding;
-  if (session.isAuthenticated && isAuthRoute) return AppRoutes.home;
-  if (!session.isAuthenticated && !settings.welcomeSeen && !isOnboarding && !isAuthRoute && !isArticle) {
-    return AppRoutes.onboarding;
+  if (session.isAuthenticated) {
+    if (session.gate case final gate?) {
+      final gateRoute = AppRoutes.forGate(gate);
+      return targetPath == gateRoute ? stay() : gateRoute;
+    }
+    // Mandatory screens that no longer apply, and the sign-in screens, lead home.
+    if (isAuthRoute || targetPath == AppRoutes.setRecoveryPin || targetPath == AppRoutes.completeProfile) {
+      return AppRoutes.home;
+    }
+    return stay();
   }
-  return atSplash ? target : null;
+
+  if (isAccountRoute || targetPath == AppRoutes.onboarding) {
+    return settings.welcomeSeen ? AppRoutes.home : AppRoutes.welcome;
+  }
+  if (!settings.welcomeSeen && !isAuthRoute && !isArticle) return AppRoutes.welcome;
+  return stay();
 }
 
 GoRouter buildRouter({required SessionCubit session, required SettingsCubit settings}) {
@@ -68,10 +104,23 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
     redirect: (context, state) => resolveRedirect(uri: state.uri, session: session.state, settings: settings.state),
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashPage()),
+      GoRoute(path: AppRoutes.welcome, builder: (_, _) => const WelcomePage()),
       GoRoute(path: AppRoutes.onboarding, builder: (_, _) => const OnboardingPage()),
-      GoRoute(path: AppRoutes.signIn, builder: (_, _) => const SignInPage()),
+      GoRoute(
+        path: AppRoutes.signIn,
+        builder: (_, state) => SignInPage(args: state.extra is SignInArgs ? state.extra! as SignInArgs : const SignInArgs()),
+      ),
       GoRoute(path: AppRoutes.signUp, builder: (_, _) => const SignUpPage()),
-      GoRoute(path: AppRoutes.forgotPassword, builder: (_, _) => const ForgotPasswordPage()),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (_, state) => ForgotPasswordPage(phone: state.extra is String ? state.extra! as String : null),
+      ),
+      GoRoute(path: AppRoutes.completeProfile, builder: (_, _) => const CompleteProfilePage()),
+      GoRoute(path: AppRoutes.setRecoveryPin, builder: (_, _) => const SetRecoveryPinPage()),
+      GoRoute(path: AppRoutes.changeRecoveryPin, builder: (_, _) => const ChangeRecoveryPinPage()),
+      GoRoute(path: AppRoutes.changePassword, builder: (_, _) => const ChangePasswordPage()),
+      GoRoute(path: AppRoutes.changePhone, builder: (_, _) => const ChangePhonePage()),
+      GoRoute(path: AppRoutes.deleteAccount, builder: (_, _) => const DeleteAccountPage()),
       GoRoute(path: AppRoutes.settings, builder: (_, _) => const SettingsPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
       GoRoute(path: '/a/:slug', builder: (_, state) => ArticlePage(slug: state.pathParameters['slug']!)),

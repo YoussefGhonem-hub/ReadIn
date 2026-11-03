@@ -18,7 +18,7 @@ void main() {
 
   const me = Me(
     id: 'u1',
-    email: 'reader1@readin.test',
+    phoneNumber: '+12025550110',
     displayName: 'Reader One',
     username: 'reader1',
     uiLanguage: 'en',
@@ -76,7 +76,7 @@ void main() {
   blocTest<SettingsCubit, AppSettings>(
     'new account adopts device settings by pushing them to the profile',
     build: build,
-    act: (cubit) => cubit.onSessionChanged(const Me(id: 'u2', email: 'new@readin.test', displayName: 'New', username: 'new')),
+    act: (cubit) => cubit.onSessionChanged(const Me(id: 'u2', phoneNumber: '+201001234567', displayName: 'New', username: 'new')),
     expect: () => <AppSettings>[],
     verify: (_) => verify(() => repository.pushPreferences(const AppSettings())).called(1),
   );

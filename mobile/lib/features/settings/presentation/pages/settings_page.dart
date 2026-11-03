@@ -6,9 +6,10 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../widgets/account_section.dart';
 import '../widgets/preference_tiles.dart';
 
-/// Settings (F18): appearance, languages, reading, account.
+/// Settings (F18): appearance, languages, reading, account (phone, password, PIN, sign out, delete).
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -16,7 +17,6 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final session = context.watch<SessionCubit>().state;
-    final me = session.me;
 
     Widget card(String title, List<Widget> children) => Padding(
           padding: const EdgeInsets.only(bottom: ReadInSpace.s4),
@@ -50,19 +50,13 @@ class SettingsPage extends StatelessWidget {
             DailyNotificationTile(),
           ]),
           card(l10n.account, [
-            Text(
-              session.isAuthenticated ? l10n.signedInAs(me?.email ?? '') : l10n.guestMode,
-              style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary),
-            ),
-            const SizedBox(height: ReadInSpace.s4),
             if (session.isAuthenticated)
-              OutlinedButton.icon(
-                icon: const Icon(Icons.logout_rounded),
-                label: Text(l10n.signOut),
-                onPressed: () => context.read<SessionCubit>().signOut(),
-              )
-            else
+              const AccountSection()
+            else ...[
+              Text(l10n.guestMode, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+              const SizedBox(height: ReadInSpace.s4),
               FilledButton(onPressed: () => context.push('/auth/sign-in'), child: Text(l10n.signIn)),
+            ],
           ]),
         ],
       ),

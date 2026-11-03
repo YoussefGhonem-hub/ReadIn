@@ -30,8 +30,13 @@ class UploadImage {
 
   final MediaRepository _repository;
 
-  Future<Result<MediaAsset>> call(PickedMediaFile file, {TransferToken? token, TransferProgress? onProgress}) =>
-      _repository.uploadImage(file, token: token, onProgress: onProgress);
+  Future<Result<MediaAsset>> call(
+    PickedMediaFile file, {
+    String purpose = 'image',
+    TransferToken? token,
+    TransferProgress? onProgress,
+  }) =>
+      _repository.uploadImage(file, purpose: purpose, token: token, onProgress: onProgress);
 }
 
 @injectable

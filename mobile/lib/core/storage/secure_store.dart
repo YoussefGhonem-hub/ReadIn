@@ -1,9 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
-/// Keychain/Keystore-backed storage for secrets (tokens, device ids).
-/// Firebase keeps its own session; this is for app-owned secrets such as the
-/// registered FCM token (F17).
+/// Keychain/Keystore-backed storage for secrets: the API refresh token (SPEC §9.3). Access tokens never leave memory.
 @lazySingleton
 class SecureStore {
   SecureStore(this._storage);

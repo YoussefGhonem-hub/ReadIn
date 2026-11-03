@@ -5,8 +5,13 @@ import '../entities/media.dart';
 abstract interface class MediaRepository {
   /// Compresses on the device (max 2048 px, JPEG q85, upright, no EXIF) and
   /// uploads with `POST /uploads/images`. Falls back to the original file when
-  /// compression fails — the server re-processes everything anyway.
-  Future<Result<MediaAsset>> uploadImage(PickedMediaFile file, {TransferToken? token, TransferProgress? onProgress});
+  /// compression fails — the server re-processes everything anyway. [purpose] is `image`, `avatar` or `cover`.
+  Future<Result<MediaAsset>> uploadImage(
+    PickedMediaFile file, {
+    String purpose = 'image',
+    TransferToken? token,
+    TransferProgress? onProgress,
+  });
 
   /// `POST /uploads/documents` → `202` with `status: processing`.
   Future<Result<MediaAsset>> uploadDocument(

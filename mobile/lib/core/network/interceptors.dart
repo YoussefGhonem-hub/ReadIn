@@ -3,33 +3,52 @@ import 'package:dio/dio.dart';
 import '../l10n/current_locale.dart';
 import 'request_context.dart';
 
-/// Adds `Authorization: Bearer <Firebase ID token>` when signed in, and retries
-/// once with a refreshed token on 401 (SPEC §9.2, §24).
-class AuthInterceptor extends QueuedInterceptor {
-  AuthInterceptor(this._tokens, this._dio);
+/// `/auth/*` calls sign in, refresh or sign out themselves, so they never get a bearer token and a `401` from them is
+/// an answer (wrong password, expired refresh token), not a reason to refresh. `logout-all` is the exception: it
+/// needs the bearer token.
+bool isAnonymousAuthCall(String path) => path.startsWith('/auth/') && path != '/auth/logout-all';
 
-  final IdTokenProvider _tokens;
+/// Calls whose response is a new session; they carry `X-Device-Name` so the session list can name this device.
+bool issuesSession(String path) => path.startsWith('/auth/') || path == '/me/password' || path == '/me/phone';
+
+/// Adds `Authorization: Bearer <access token>` and, on a `401` from any other call, refreshes once (single-flight,
+/// see [SessionTokenProvider]) and retries the call (SPEC §9.3). Queued, so calls wait while a refresh runs.
+class AuthInterceptor extends QueuedInterceptor {
+  AuthInterceptor(this._session, this._dio);
+
+  final SessionTokenProvider _session;
   final Dio _dio;
-  static const _retriedKey = 'auth_retried';
+  static const _retriedKey = 'auth.retried';
+  static const _tokenKey = 'auth.token';
 
   @override
   Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    final token = await _tokens.idToken();
-    if (token != null) options.headers['Authorization'] = 'Bearer $token';
+    if (!isAnonymousAuthCall(options.path)) {
+      final token = await _session.accessToken();
+      if (token != null) {
+        options.headers['Authorization'] = 'Bearer $token';
+        options.extra[_tokenKey] = token;
+      }
+    }
     handler.next(options);
   }
 
   @override
   Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
     final options = err.requestOptions;
-    if (err.response?.statusCode != 401 || options.extra[_retriedKey] == true) {
+    final rejected = options.extra[_tokenKey];
+    if (err.response?.statusCode != 401 ||
+        isAnonymousAuthCall(options.path) ||
+        options.extra[_retriedKey] == true ||
+        rejected is! String) {
       return handler.next(err);
     }
-    final token = await _tokens.idToken(forceRefresh: true);
+    final token = await _session.refreshAfterRejection(rejected);
     if (token == null) return handler.next(err);
     try {
       options
         ..headers['Authorization'] = 'Bearer $token'
+        ..extra[_tokenKey] = token
         ..extra[_retriedKey] = true;
       // A multipart body is finalized once sent; uploads need a fresh copy.
       final data = options.data;
@@ -38,6 +57,23 @@ class AuthInterceptor extends QueuedInterceptor {
     } on DioException catch (e) {
       handler.next(e);
     }
+  }
+}
+
+/// `X-Device-Name: Pixel 8` on calls that issue a session (SPEC §9.3).
+class DeviceNameInterceptor extends Interceptor {
+  DeviceNameInterceptor(this._device);
+
+  final DeviceNameProvider _device;
+  static const header = 'X-Device-Name';
+
+  @override
+  Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    if (issuesSession(options.path)) {
+      final name = await _device.deviceName();
+      if (name != null && name.isNotEmpty) options.headers[header] = name;
+    }
+    handler.next(options);
   }
 }
 

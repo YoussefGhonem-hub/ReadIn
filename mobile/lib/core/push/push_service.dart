@@ -11,7 +11,8 @@ import 'push_platform.dart';
 ///
 /// - Permission is asked only in context ([enable]), never on first launch.
 /// - Once granted, this device's token is registered with `POST /me/devices` on
-///   every sign-in and app start, and again when FCM rotates it; it is deleted on sign-out.
+///   every sign-in and app start, and again when FCM rotates it. On sign-out it is removed from the API
+///   ([unregister], `DELETE /me/devices/{token}`) and deleted on the device.
 /// - Foreground pushes become a local notification on Android (iOS shows them itself).
 /// - Taps, including the one that launched the app, come out of [openPaths] as app routes.
 @lazySingleton
@@ -57,6 +58,18 @@ class PushService {
     }
     await _register();
     return permission.value;
+  }
+
+  /// `DELETE /me/devices/{token}` for the token registered by this device. Called before signing out, while the
+  /// access token still works; failures are ignored (the API also drops tokens FCM reports as invalid).
+  Future<void> unregister() async {
+    final registered = _registered;
+    if (registered == null) return;
+    try {
+      await _devices.unregister(Uri.encodeComponent(registered.token));
+    } catch (error) {
+      debugPrint('Device unregistration failed: $error');
+    }
   }
 
   /// Registers this device for [userId] (null = signed out, which deletes the token).

@@ -39,7 +39,7 @@ const sampleFields = [
 
 const sampleMe = Me(
   id: 'u-1',
-  email: 'reader1@readin.test',
+  phoneNumber: '+12025550110',
   displayName: 'Youssef Hassan',
   username: 'reader1',
   onboardingCompleted: true,

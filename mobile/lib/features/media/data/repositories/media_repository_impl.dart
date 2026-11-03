@@ -24,14 +24,19 @@ class MediaRepositoryImpl implements MediaRepository {
   static const _cancelled = Err<MediaAsset>(Failure(FailureCodes.requestCancelled));
 
   @override
-  Future<Result<MediaAsset>> uploadImage(PickedMediaFile file, {TransferToken? token, TransferProgress? onProgress}) async {
+  Future<Result<MediaAsset>> uploadImage(
+    PickedMediaFile file, {
+    String purpose = 'image',
+    TransferToken? token,
+    TransferProgress? onProgress,
+  }) async {
     final compressed = await _compressor.compress(file.path);
     if (token?.isCancelled ?? false) return _cancelled;
     return _guard(() async {
       final part = compressed != null
           ? MultipartFile.fromBytes(compressed, filename: '${_baseName(file.name)}.jpg', contentType: DioMediaType('image', 'jpeg'))
           : await MultipartFile.fromFile(file.path, filename: file.name, contentType: imageMediaType(file.name));
-      final model = await _api.uploadImage(part, 'image', onSendProgress: onProgress, cancelToken: _bridge(token));
+      final model = await _api.uploadImage(part, purpose, onSendProgress: onProgress, cancelToken: _bridge(token));
       return model.toEntity();
     });
   }

@@ -12,7 +12,7 @@ import 'features/auth/presentation/session/session_cubit.dart';
 import 'features/settings/presentation/cubit/settings_cubit.dart';
 import 'shared/media/media_cache_manager.dart';
 
-/// Run with a flavor config:
+/// Run with a flavor config (add `--dart-define=DEV_DEMO_PASSWORD=…` for one-tap demo sign in in debug builds):
 ///   flutter run --dart-define-from-file=config/dev.json
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +20,8 @@ Future<void> main() async {
   await Hive.initFlutter();
   await configureDependencies();
 
-  final session = getIt<SessionCubit>()..start();
+  final session = getIt<SessionCubit>();
+  unawaited(session.start()); // splash → POST /auth/refresh → the router applies the account guards
   final push = getIt<PushService>();
   unawaited(push.start()); // never asks for permission by itself; a launch tap is kept until the router listens
   LiveSessionBridge(session, getIt<RealtimeService>(), push).start();

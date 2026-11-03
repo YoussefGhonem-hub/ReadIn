@@ -8,7 +8,6 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/push/push_service.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
-import '../../../../shared/widgets/app_logo.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
@@ -16,7 +15,8 @@ import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../../settings/presentation/widgets/preference_tiles.dart';
 import '../cubit/onboarding_cubit.dart';
 
-/// Onboarding (F02): 1. welcome · 2. interests (min 3) · 3. preferences.
+/// Onboarding (F02) for new accounts, after Complete profile: interests (min 3) and preferences. The welcome step is
+/// the Welcome screen before sign up (SPEC §9.2), so the steps are counted from 2.
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
 
@@ -71,55 +71,14 @@ class OnboardingView extends StatelessWidget {
                 ),
           body: SafeArea(
             child: switch (state.step) {
-              OnboardingStep.welcome => const _WelcomeStep(),
+              // Only while start() runs: guests never get here (the router sends them to Welcome).
+              OnboardingStep.welcome => const Center(child: CircularProgressIndicator()),
               OnboardingStep.interests => _InterestsStep(state: state),
               OnboardingStep.preferences => _PreferencesStep(state: state),
             },
           ),
         );
       },
-    );
-  }
-}
-
-class _WelcomeStep extends StatelessWidget {
-  const _WelcomeStep();
-
-  Future<void> _go(BuildContext context, String location) async {
-    await context.read<SettingsCubit>().markWelcomeSeen();
-    if (context.mounted) context.go(location);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.all(ReadInSpace.s5),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: ReadInSpace.s5),
-          const Align(alignment: AlignmentDirectional.centerStart, child: AppLogo(size: 30)),
-          const Spacer(),
-          Container(
-            height: 180,
-            decoration: BoxDecoration(color: colors.primaryContainer, borderRadius: BorderRadius.circular(ReadInRadius.sheet)),
-            alignment: Alignment.center,
-            child: Text('☕ 📖 🔥', style: context.textTheme.displaySmall),
-          ),
-          const SizedBox(height: ReadInSpace.s6),
-          Text(l10n.onboardingWelcomeTitle, style: context.textTheme.headlineMedium),
-          const SizedBox(height: ReadInSpace.s3),
-          Text(l10n.onboardingWelcomeBody, style: context.textTheme.bodyLarge?.copyWith(color: colors.textSecondary)),
-          const Spacer(),
-          FilledButton(onPressed: () => _go(context, '/auth/sign-up'), child: Text(l10n.getStarted)),
-          const SizedBox(height: ReadInSpace.s3),
-          OutlinedButton(onPressed: () => _go(context, '/auth/sign-in'), child: Text(l10n.haveAccount)),
-          const SizedBox(height: ReadInSpace.s2),
-          TextButton(onPressed: () => _go(context, '/home'), child: Text(l10n.browseAsGuest)),
-        ],
-      ),
     );
   }
 }

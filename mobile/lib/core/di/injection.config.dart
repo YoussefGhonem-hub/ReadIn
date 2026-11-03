@@ -26,13 +26,20 @@ import '../../features/article/presentation/cubit/attachment_viewer_cubit.dart'
     as _i189;
 import '../../features/auth/data/auth_module.dart' as _i360;
 import '../../features/auth/data/datasources/account_api.dart' as _i506;
-import '../../features/auth/data/datasources/firebase_auth_data_source.dart'
-    as _i492;
+import '../../features/auth/data/datasources/auth_api.dart' as _i367;
+import '../../features/auth/data/datasources/auth_session_store.dart' as _i348;
 import '../../features/auth/data/repositories/auth_repository_impl.dart'
     as _i153;
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
 import '../../features/auth/domain/usecases/auth_usecases.dart' as _i46;
-import '../../features/auth/presentation/cubit/auth_form_cubit.dart' as _i0;
+import '../../features/auth/presentation/cubit/account_security_cubits.dart'
+    as _i1021;
+import '../../features/auth/presentation/cubit/complete_profile_cubit.dart'
+    as _i245;
+import '../../features/auth/presentation/cubit/forgot_password_cubit.dart'
+    as _i104;
+import '../../features/auth/presentation/cubit/sign_in_cubit.dart' as _i329;
+import '../../features/auth/presentation/cubit/sign_up_cubit.dart' as _i102;
 import '../../features/auth/presentation/session/session_cubit.dart' as _i371;
 import '../../features/editor/data/datasources/editor_api.dart' as _i815;
 import '../../features/editor/data/repositories/editor_repository_impl.dart'
@@ -95,6 +102,8 @@ import '../config/app_config.dart' as _i650;
 import '../firebase/firebase_bootstrap.dart' as _i223;
 import '../l10n/current_locale.dart' as _i1026;
 import '../network/request_context.dart' as _i194;
+import '../phone/countries.dart' as _i115;
+import '../platform/device_name_service.dart' as _i1018;
 import '../platform/share_service.dart' as _i868;
 import '../platform/time_zone_service.dart' as _i878;
 import '../push/devices_api.dart' as _i455;
@@ -128,6 +137,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i868.ShareService>(() => _i868.ShareService());
     gh.lazySingleton<_i878.TimeZoneService>(() => _i878.TimeZoneService());
     gh.lazySingleton<_i221.ImageCompressor>(() => _i221.ImageCompressor());
+    gh.lazySingleton<_i194.DeviceNameProvider>(
+      () => _i1018.DeviceNameService(),
+    );
     gh.lazySingleton<_i271.SecureStore>(
       () => _i271.SecureStore(gh<_i558.FlutterSecureStorage>()),
     );
@@ -136,12 +148,26 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i504.PickImages(gh<_i956.MediaPicker>()),
     );
     gh.factory<_i504.PickPdf>(() => _i504.PickPdf(gh<_i956.MediaPicker>()));
+    gh.lazySingleton<_i115.PhoneCountryMemory>(
+      () => _i115.PhoneCountryMemory(gh<_i892.KeyValueStore>()),
+    );
     gh.lazySingleton<_i599.SettingsLocalDataSource>(
       () => _i599.SettingsLocalDataSource(gh<_i892.KeyValueStore>()),
+    );
+    gh.lazySingleton<_i361.Dio>(
+      () => registerModule.authDio(
+        gh<_i650.AppConfig>(),
+        gh<_i1026.CurrentLocale>(),
+        gh<_i194.DeviceNameProvider>(),
+      ),
+      instanceName: 'authDio',
     );
     await gh.singletonAsync<_i223.FirebaseStatus>(
       () => registerModule.firebase(gh<_i650.AppConfig>()),
       preResolve: true,
+    );
+    gh.lazySingleton<_i367.AuthApi>(
+      () => _i367.AuthApi(gh<_i361.Dio>(instanceName: 'authDio')),
     );
     gh.lazySingleton<_i709.PushPlatform>(
       () => _i709.FirebasePushPlatform(
@@ -155,40 +181,19 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i223.FirebaseStatus>(),
       ),
     );
-    gh.lazySingleton<_i492.FirebaseAuthDataSource>(
-      () => _i492.FirebaseAuthDataSource(gh<_i223.FirebaseStatus>()),
+    gh.lazySingleton<_i348.AuthSessionStore>(
+      () =>
+          _i348.AuthSessionStore(gh<_i367.AuthApi>(), gh<_i271.SecureStore>()),
     );
-    gh.lazySingleton<_i787.AuthRepository>(
-      () => _i153.AuthRepositoryImpl(gh<_i492.FirebaseAuthDataSource>()),
+    gh.lazySingleton<_i194.SessionTokenProvider>(
+      () => authModule.sessionTokens(gh<_i348.AuthSessionStore>()),
     );
-    gh.lazySingleton<_i194.IdTokenProvider>(
-      () => authModule.idTokenProvider(gh<_i492.FirebaseAuthDataSource>()),
-    );
-    gh.factory<_i46.WatchAuthState>(
-      () => _i46.WatchAuthState(gh<_i787.AuthRepository>()),
-    );
-    gh.factory<_i46.SignInWithEmail>(
-      () => _i46.SignInWithEmail(gh<_i787.AuthRepository>()),
-    );
-    gh.factory<_i46.SignUpWithEmail>(
-      () => _i46.SignUpWithEmail(gh<_i787.AuthRepository>()),
-    );
-    gh.factory<_i46.SendPasswordReset>(
-      () => _i46.SendPasswordReset(gh<_i787.AuthRepository>()),
-    );
-    gh.factory<_i46.SignOut>(() => _i46.SignOut(gh<_i787.AuthRepository>()));
     gh.lazySingleton<_i361.Dio>(
       () => registerModule.dio(
         gh<_i650.AppConfig>(),
-        gh<_i194.IdTokenProvider>(),
+        gh<_i194.SessionTokenProvider>(),
         gh<_i1026.CurrentLocale>(),
-      ),
-    );
-    gh.factory<_i0.AuthFormCubit>(
-      () => _i0.AuthFormCubit(
-        gh<_i46.SignInWithEmail>(),
-        gh<_i46.SignUpWithEmail>(),
-        gh<_i46.SendPasswordReset>(),
+        gh<_i194.DeviceNameProvider>(),
       ),
     );
     gh.lazySingleton<_i455.DevicesApi>(() => _i455.DevicesApi(gh<_i361.Dio>()));
@@ -208,6 +213,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i421.TaxonomyApi>(
       () => _i421.TaxonomyApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i787.AccountRepository>(
+      () => _i153.AccountRepositoryImpl(
+        gh<_i506.AccountApi>(),
+        gh<_i348.AuthSessionStore>(),
+      ),
     );
     gh.lazySingleton<_i848.DocumentFileDataSource>(
       () => _i848.DocumentFileDataSource(gh<_i361.Dio>()),
@@ -238,14 +249,39 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i954.FeedRepository>(
       () => _i198.FeedRepositoryImpl(gh<_i931.FeedApi>()),
     );
-    gh.lazySingleton<_i787.AccountRepository>(
-      () => _i153.AccountRepositoryImpl(
-        gh<_i506.AccountApi>(),
-        gh<_i878.TimeZoneService>(),
-      ),
+    gh.factory<_i46.GetMe>(() => _i46.GetMe(gh<_i787.AccountRepository>()));
+    gh.factory<_i46.CheckUsername>(
+      () => _i46.CheckUsername(gh<_i787.AccountRepository>()),
+    );
+    gh.factory<_i46.CompleteProfile>(
+      () => _i46.CompleteProfile(gh<_i787.AccountRepository>()),
+    );
+    gh.factory<_i46.SetRecoveryPin>(
+      () => _i46.SetRecoveryPin(gh<_i787.AccountRepository>()),
+    );
+    gh.factory<_i46.ChangeRecoveryPin>(
+      () => _i46.ChangeRecoveryPin(gh<_i787.AccountRepository>()),
+    );
+    gh.factory<_i46.ChangePassword>(
+      () => _i46.ChangePassword(gh<_i787.AccountRepository>()),
+    );
+    gh.factory<_i46.ChangePhoneNumber>(
+      () => _i46.ChangePhoneNumber(gh<_i787.AccountRepository>()),
+    );
+    gh.factory<_i46.DeleteAccount>(
+      () => _i46.DeleteAccount(gh<_i787.AccountRepository>()),
     );
     gh.factory<_i904.GetArticle>(
       () => _i904.GetArticle(gh<_i904.ArticleRepository>()),
+    );
+    gh.lazySingleton<_i787.AuthRepository>(
+      () => _i153.AuthRepositoryImpl(
+        gh<_i367.AuthApi>(),
+        gh<_i506.AccountApi>(),
+        gh<_i348.AuthSessionStore>(),
+        gh<_i1040.PushService>(),
+        gh<_i878.TimeZoneService>(),
+      ),
     );
     gh.lazySingleton<_i185.InterestsRepository>(
       () => _i1032.InterestsRepositoryImpl(gh<_i227.InterestsApi>()),
@@ -265,6 +301,27 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i251.GetForYouFeed>(
       () => _i251.GetForYouFeed(gh<_i954.FeedRepository>()),
+    );
+    gh.factory<_i46.WatchSession>(
+      () => _i46.WatchSession(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i46.GetAuthConfig>(
+      () => _i46.GetAuthConfig(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i46.RestoreSession>(
+      () => _i46.RestoreSession(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i46.SignIn>(() => _i46.SignIn(gh<_i787.AuthRepository>()));
+    gh.factory<_i46.Register>(() => _i46.Register(gh<_i787.AuthRepository>()));
+    gh.factory<_i46.VerifyRecoveryPin>(
+      () => _i46.VerifyRecoveryPin(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i46.ResetPassword>(
+      () => _i46.ResetPassword(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i46.SignOut>(() => _i46.SignOut(gh<_i787.AuthRepository>()));
+    gh.factory<_i46.SignOutEverywhere>(
+      () => _i46.SignOutEverywhere(gh<_i787.AuthRepository>()),
     );
     gh.factory<_i172.GetFields>(
       () => _i172.GetFields(gh<_i263.TaxonomyRepository>()),
@@ -299,6 +356,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i9.HomeCubit>(
       () => _i9.HomeCubit(gh<_i251.GetTodayArticle>(), gh<_i172.GetFields>()),
     );
+    gh.lazySingleton<_i371.SessionCubit>(
+      () => _i371.SessionCubit(
+        gh<_i46.WatchSession>(),
+        gh<_i46.RestoreSession>(),
+        gh<_i46.GetMe>(),
+        gh<_i46.SignOut>(),
+        gh<_i46.SignOutEverywhere>(),
+      ),
+    );
     gh.factory<_i279.LoadSettings>(
       () => _i279.LoadSettings(gh<_i674.SettingsRepository>()),
     );
@@ -307,6 +373,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i279.SyncPreferences>(
       () => _i279.SyncPreferences(gh<_i674.SettingsRepository>()),
+    );
+    gh.factory<_i1021.SetRecoveryPinCubit>(
+      () => _i1021.SetRecoveryPinCubit(
+        gh<_i46.GetAuthConfig>(),
+        gh<_i46.SetRecoveryPin>(),
+      ),
     );
     gh.factory<_i136.LiveFeedCubit>(
       () => _i136.LiveFeedCubit(gh<_i854.RealtimeService>()),
@@ -320,6 +392,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i535.SaveInterests>(
       () => _i535.SaveInterests(gh<_i185.InterestsRepository>()),
     );
+    gh.factory<_i104.ForgotPasswordCubit>(
+      () => _i104.ForgotPasswordCubit(
+        gh<_i46.VerifyRecoveryPin>(),
+        gh<_i46.ResetPassword>(),
+        gh<_i46.GetAuthConfig>(),
+      ),
+    );
+    gh.factory<_i329.SignInCubit>(
+      () =>
+          _i329.SignInCubit(gh<_i46.SignIn>(), gh<_i115.PhoneCountryMemory>()),
+    );
     gh.factory<_i646.FeedCubit>(
       () => _i646.FeedCubit(gh<_i251.GetForYouFeed>()),
     );
@@ -331,6 +414,19 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1065.PublishArticle>(),
       ),
     );
+    gh.factory<_i1021.ChangeRecoveryPinCubit>(
+      () => _i1021.ChangeRecoveryPinCubit(
+        gh<_i46.GetAuthConfig>(),
+        gh<_i46.ChangeRecoveryPin>(),
+      ),
+    );
+    gh.factory<_i1021.ChangePhoneCubit>(
+      () => _i1021.ChangePhoneCubit(
+        gh<_i46.GetAuthConfig>(),
+        gh<_i46.ChangePhoneNumber>(),
+        gh<_i115.PhoneCountryMemory>(),
+      ),
+    );
     gh.factory<_i189.AttachmentViewerCubit>(
       () => _i189.AttachmentViewerCubit(
         gh<_i904.GetArticle>(),
@@ -338,10 +434,28 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i868.ShareService>(),
       ),
     );
-    gh.factory<_i46.SyncAccount>(
-      () => _i46.SyncAccount(gh<_i787.AccountRepository>()),
+    gh.factory<_i245.CompleteProfileCubit>(
+      () => _i245.CompleteProfileCubit(
+        gh<_i46.CompleteProfile>(),
+        gh<_i46.CheckUsername>(),
+        gh<_i504.PickImages>(),
+        gh<_i504.UploadImage>(),
+      ),
     );
-    gh.factory<_i46.GetMe>(() => _i46.GetMe(gh<_i787.AccountRepository>()));
+    gh.factory<_i1021.DeleteAccountCubit>(
+      () => _i1021.DeleteAccountCubit(
+        gh<_i46.GetAuthConfig>(),
+        gh<_i46.DeleteAccount>(),
+      ),
+    );
+    gh.factory<_i102.SignUpCubit>(
+      () => _i102.SignUpCubit(
+        gh<_i46.Register>(),
+        gh<_i46.GetAuthConfig>(),
+        gh<_i1026.CurrentLocale>(),
+        gh<_i115.PhoneCountryMemory>(),
+      ),
+    );
     gh.factory<_i571.AttachmentsCubit>(
       () => _i571.AttachmentsCubit(
         gh<_i504.PickImages>(),
@@ -352,13 +466,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i504.DeleteUpload>(),
       ),
     );
-    gh.lazySingleton<_i371.SessionCubit>(
-      () => _i371.SessionCubit(
-        gh<_i46.WatchAuthState>(),
-        gh<_i46.SyncAccount>(),
-        gh<_i46.GetMe>(),
-        gh<_i46.SignOut>(),
-        gh<_i1026.CurrentLocale>(),
+    gh.factory<_i1021.ChangePasswordCubit>(
+      () => _i1021.ChangePasswordCubit(
+        gh<_i46.GetAuthConfig>(),
+        gh<_i46.ChangePassword>(),
       ),
     );
     gh.lazySingleton<_i792.SettingsCubit>(

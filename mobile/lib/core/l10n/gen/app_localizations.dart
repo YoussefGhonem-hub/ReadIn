@@ -476,29 +476,11 @@ abstract class AppLocalizations {
   /// **'Image unavailable'**
   String get imageUnavailable;
 
-  /// No description provided for @onboardingWelcomeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'One article a day that makes a difference'**
-  String get onboardingWelcomeTitle;
-
   /// No description provided for @onboardingWelcomeBody.
   ///
   /// In en, this message translates to:
   /// **'Short, reviewed articles in Arabic and English — one picked for you every day, in the field you love.'**
   String get onboardingWelcomeBody;
-
-  /// No description provided for @getStarted.
-  ///
-  /// In en, this message translates to:
-  /// **'Get started'**
-  String get getStarted;
-
-  /// No description provided for @haveAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'I already have an account'**
-  String get haveAccount;
 
   /// No description provided for @browseAsGuest.
   ///
@@ -602,12 +584,6 @@ abstract class AppLocalizations {
   /// **'Sign out'**
   String get signOut;
 
-  /// No description provided for @email.
-  ///
-  /// In en, this message translates to:
-  /// **'Email'**
-  String get email;
-
   /// No description provided for @password.
   ///
   /// In en, this message translates to:
@@ -626,77 +602,17 @@ abstract class AppLocalizations {
   /// **'Forgot password?'**
   String get forgotPassword;
 
-  /// No description provided for @resetPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset password'**
-  String get resetPassword;
-
-  /// No description provided for @resetPasswordBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your email and we\'ll send you a reset link.'**
-  String get resetPasswordBody;
-
-  /// No description provided for @resetPasswordSent.
-  ///
-  /// In en, this message translates to:
-  /// **'Check your inbox for a reset link.'**
-  String get resetPasswordSent;
-
-  /// No description provided for @sendResetLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Send reset link'**
-  String get sendResetLink;
-
   /// No description provided for @noAccount.
   ///
   /// In en, this message translates to:
   /// **'Don\'t have an account?'**
   String get noAccount;
 
-  /// No description provided for @alreadyHaveAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'Already have an account?'**
-  String get alreadyHaveAccount;
-
-  /// No description provided for @continueWithGoogle.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue with Google'**
-  String get continueWithGoogle;
-
-  /// No description provided for @continueWithApple.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue with Apple'**
-  String get continueWithApple;
-
-  /// No description provided for @socialSignInSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Google and Apple sign-in are coming soon.'**
-  String get socialSignInSoon;
-
-  /// No description provided for @verifyEmailSent.
-  ///
-  /// In en, this message translates to:
-  /// **'We sent a verification email to {email}.'**
-  String verifyEmailSent(String email);
-
   /// No description provided for @signInTitle.
   ///
   /// In en, this message translates to:
   /// **'Welcome back'**
   String get signInTitle;
-
-  /// No description provided for @signUpTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Join ReadIn'**
-  String get signUpTitle;
 
   /// No description provided for @signInPromptTitle.
   ///
@@ -715,24 +631,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Required'**
   String get fieldRequired;
-
-  /// No description provided for @invalidEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a valid email'**
-  String get invalidEmail;
-
-  /// No description provided for @passwordTooShort.
-  ///
-  /// In en, this message translates to:
-  /// **'At least 8 characters'**
-  String get passwordTooShort;
-
-  /// No description provided for @nameTooShort.
-  ///
-  /// In en, this message translates to:
-  /// **'At least 2 characters'**
-  String get nameTooShort;
 
   /// No description provided for @showPassword.
   ///
@@ -812,12 +710,6 @@ abstract class AppLocalizations {
   /// **'Account'**
   String get account;
 
-  /// No description provided for @signedInAs.
-  ///
-  /// In en, this message translates to:
-  /// **'Signed in as {email}'**
-  String signedInAs(String email);
-
   /// No description provided for @guestMode.
   ///
   /// In en, this message translates to:
@@ -875,7 +767,7 @@ abstract class AppLocalizations {
   /// No description provided for @errSuspended.
   ///
   /// In en, this message translates to:
-  /// **'Your account is suspended.'**
+  /// **'This account is suspended. Contact support.'**
   String get errSuspended;
 
   /// No description provided for @errNotSynced.
@@ -932,40 +824,16 @@ abstract class AppLocalizations {
   /// **'The connection timed out. Try again.'**
   String get errTimeout;
 
-  /// No description provided for @errAuthUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign-in isn\'t available right now.'**
-  String get errAuthUnavailable;
-
   /// No description provided for @errInvalidCredentials.
   ///
   /// In en, this message translates to:
-  /// **'Wrong email or password.'**
+  /// **'The phone number or password is incorrect.'**
   String get errInvalidCredentials;
-
-  /// No description provided for @errEmailInUse.
-  ///
-  /// In en, this message translates to:
-  /// **'This email already has an account.'**
-  String get errEmailInUse;
-
-  /// No description provided for @errWeakPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a stronger password.'**
-  String get errWeakPassword;
-
-  /// No description provided for @errInvalidEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'This email looks invalid.'**
-  String get errInvalidEmail;
 
   /// No description provided for @errTooManyRequests.
   ///
   /// In en, this message translates to:
-  /// **'Too many attempts. Try again later.'**
+  /// **'Too many requests. Please try again shortly.'**
   String get errTooManyRequests;
 
   /// No description provided for @errCancelled.
@@ -1537,6 +1405,726 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pages'**
   String get viewerThumbnails;
+
+  /// No description provided for @welcomeSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'I have an account, sign in'**
+  String get welcomeSignIn;
+
+  /// No description provided for @switchLanguageTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch the app language to {language}'**
+  String switchLanguageTo(String language);
+
+  /// No description provided for @continueAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueAction;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optional;
+
+  /// No description provided for @contactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get contactSupport;
+
+  /// No description provided for @signInSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your mobile number and password.'**
+  String get signInSubtitle;
+
+  /// No description provided for @phoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile number'**
+  String get phoneLabel;
+
+  /// No description provided for @createAccountLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Create one'**
+  String get createAccountLink;
+
+  /// No description provided for @passwordResetBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed. Sign in with your new password.'**
+  String get passwordResetBanner;
+
+  /// No description provided for @sessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has ended. Sign in again.'**
+  String get sessionExpired;
+
+  /// No description provided for @signUpHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your account'**
+  String get signUpHeading;
+
+  /// No description provided for @signUpCredentialsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll sign in with this number and password. We never send SMS codes.'**
+  String get signUpCredentialsBody;
+
+  /// No description provided for @confirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPasswordLabel;
+
+  /// No description provided for @currentPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get currentPasswordLabel;
+
+  /// No description provided for @newPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPasswordLabel;
+
+  /// No description provided for @ruleMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}+ characters'**
+  String ruleMinLength(int count);
+
+  /// No description provided for @ruleLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'A letter'**
+  String get ruleLetter;
+
+  /// No description provided for @ruleDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'A digit'**
+  String get ruleDigit;
+
+  /// No description provided for @ruleMet.
+  ///
+  /// In en, this message translates to:
+  /// **'done'**
+  String get ruleMet;
+
+  /// No description provided for @ruleNotMet.
+  ///
+  /// In en, this message translates to:
+  /// **'not yet'**
+  String get ruleNotMet;
+
+  /// No description provided for @passwordStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password strength: {level}'**
+  String passwordStrength(String level);
+
+  /// No description provided for @strengthWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get strengthWeak;
+
+  /// No description provided for @strengthFair.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get strengthFair;
+
+  /// No description provided for @strengthGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get strengthGood;
+
+  /// No description provided for @strengthStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get strengthStrong;
+
+  /// No description provided for @pinStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an emergency PIN'**
+  String get pinStepTitle;
+
+  /// No description provided for @pinStepBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you ever forget your password, your number and this PIN let you choose a new one. Keep it somewhere safe and don\'t share it.'**
+  String get pinStepBody;
+
+  /// No description provided for @pinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery PIN'**
+  String get pinLabel;
+
+  /// No description provided for @confirmPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN'**
+  String get confirmPinLabel;
+
+  /// No description provided for @newPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New PIN'**
+  String get newPinLabel;
+
+  /// No description provided for @showPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Show PIN'**
+  String get showPin;
+
+  /// No description provided for @hidePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide PIN'**
+  String get hidePin;
+
+  /// No description provided for @pinSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}, {filled} of {total} digits entered'**
+  String pinSemantics(String label, int filled, int total);
+
+  /// No description provided for @confirmNumberTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Is this your number?'**
+  String get confirmNumberTitle;
+
+  /// No description provided for @confirmNumberWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll use this number to sign in, and you can\'t recover your account if the number is wrong.'**
+  String get confirmNumberWarning;
+
+  /// No description provided for @confirmNumberYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, create my account'**
+  String get confirmNumberYes;
+
+  /// No description provided for @confirmNumberChangeYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, change my number'**
+  String get confirmNumberChangeYes;
+
+  /// No description provided for @completeProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile'**
+  String get completeProfileTitle;
+
+  /// No description provided for @completeProfileBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is how readers and writers will see you.'**
+  String get completeProfileBody;
+
+  /// No description provided for @usernameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get usernameLabel;
+
+  /// No description provided for @usernameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'3–30 characters: a–z, 0–9 or _'**
+  String get usernameHint;
+
+  /// No description provided for @usernameChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get usernameChecking;
+
+  /// No description provided for @usernameAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'@{username} is available'**
+  String usernameAvailable(String username);
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get addPhoto;
+
+  /// No description provided for @changePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get changePhoto;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhoto;
+
+  /// No description provided for @photoUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo…'**
+  String get photoUploading;
+
+  /// No description provided for @saveAndContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and continue'**
+  String get saveAndContinue;
+
+  /// No description provided for @forgotTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset your password'**
+  String get forgotTitle;
+
+  /// No description provided for @forgotStep1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your number and the recovery PIN you created when you signed up.'**
+  String get forgotStep1Body;
+
+  /// No description provided for @forgotPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot the PIN too?'**
+  String get forgotPin;
+
+  /// No description provided for @forgotStep2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password'**
+  String get forgotStep2Title;
+
+  /// No description provided for @forgotStep2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Every device signed in to your account will be signed out.'**
+  String get forgotStep2Body;
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get supportTitle;
+
+  /// No description provided for @supportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Without your PIN, only our support team can reset your password, after checking that the account is really yours. Email us from your account\'s number details; after the reset you\'ll choose a new password and a new PIN when you sign in.'**
+  String get supportBody;
+
+  /// No description provided for @supportEmailAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Email support'**
+  String get supportEmailAction;
+
+  /// No description provided for @copyEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy email address'**
+  String get copyEmail;
+
+  /// No description provided for @setPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your recovery PIN'**
+  String get setPinTitle;
+
+  /// No description provided for @setPinBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account needs a recovery PIN. With your number, it lets you choose a new password if you ever forget yours.'**
+  String get setPinBody;
+
+  /// No description provided for @changePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePasswordTitle;
+
+  /// No description provided for @mustChangePasswordBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password was reset. Choose a new one to continue.'**
+  String get mustChangePasswordBody;
+
+  /// No description provided for @changePasswordBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your other devices will be signed out.'**
+  String get changePasswordBody;
+
+  /// No description provided for @passwordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed.'**
+  String get passwordChanged;
+
+  /// No description provided for @changePinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change PIN'**
+  String get changePinTitle;
+
+  /// No description provided for @changePinBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm with your password, then choose the new PIN.'**
+  String get changePinBody;
+
+  /// No description provided for @pinChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery PIN changed.'**
+  String get pinChanged;
+
+  /// No description provided for @changePhoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change number'**
+  String get changePhoneTitle;
+
+  /// No description provided for @changePhoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll sign in with the new number. Your other devices will be signed out.'**
+  String get changePhoneBody;
+
+  /// No description provided for @newPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New mobile number'**
+  String get newPhoneLabel;
+
+  /// No description provided for @phoneChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Number changed.'**
+  String get phoneChanged;
+
+  /// No description provided for @phoneNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get phoneNumberLabel;
+
+  /// No description provided for @phoneVisibleToYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you can see it'**
+  String get phoneVisibleToYou;
+
+  /// No description provided for @changePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Change number'**
+  String get changePhone;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePassword;
+
+  /// No description provided for @changePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Change PIN'**
+  String get changePin;
+
+  /// No description provided for @signOutEverywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of all devices'**
+  String get signOutEverywhere;
+
+  /// No description provided for @signOutEverywhereBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every other device will be signed out. You stay signed in on this one.'**
+  String get signOutEverywhereBody;
+
+  /// No description provided for @signedOutEverywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out of all other devices.'**
+  String get signedOutEverywhere;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile and personal data are removed after 30 days. Your articles and comments stay, shown as \"Deleted user\". This can\'t be undone.'**
+  String get deleteAccountBody;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand, delete my account'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @deleteAccountButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get deleteAccountButton;
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account was deleted.'**
+  String get accountDeleted;
+
+  /// No description provided for @countryPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a country'**
+  String get countryPickerTitle;
+
+  /// No description provided for @countrySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, code or +dial code'**
+  String get countrySearchHint;
+
+  /// No description provided for @countryNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No country matches your search'**
+  String get countryNoResults;
+
+  /// No description provided for @countryButtonSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Country: {country}, +{dialCode}. Double-tap to change'**
+  String countryButtonSemantics(String country, String dialCode);
+
+  /// No description provided for @selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get selected;
+
+  /// No description provided for @devLoginOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo accounts'**
+  String get devLoginOpen;
+
+  /// No description provided for @devLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo accounts (dev only)'**
+  String get devLoginTitle;
+
+  /// No description provided for @devLoginBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Local seed users (SPEC §18.3). With DEV_DEMO_PASSWORD set, a tap signs in; otherwise it fills the number.'**
+  String get devLoginBody;
+
+  /// No description provided for @devLoginHasPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Has a recovery PIN'**
+  String get devLoginHasPin;
+
+  /// No description provided for @devLoginNoPin.
+  ///
+  /// In en, this message translates to:
+  /// **'No recovery PIN'**
+  String get devLoginNoPin;
+
+  /// No description provided for @errPhoneInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid mobile number.'**
+  String get errPhoneInvalid;
+
+  /// No description provided for @errPhoneTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'This number already has an account.'**
+  String get errPhoneTaken;
+
+  /// No description provided for @errPhoneUnchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'This is already your number.'**
+  String get errPhoneUnchanged;
+
+  /// No description provided for @errLockedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in 15 minutes.'**
+  String get errLockedOut;
+
+  /// No description provided for @errWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'The current password is incorrect.'**
+  String get errWrongPassword;
+
+  /// No description provided for @errRecoveryInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone number or PIN is incorrect.'**
+  String get errRecoveryInvalid;
+
+  /// No description provided for @errRecoveryLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in an hour.'**
+  String get errRecoveryLocked;
+
+  /// No description provided for @errRecoveryDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery is disabled for this account. Contact support.'**
+  String get errRecoveryDisabled;
+
+  /// No description provided for @errResetTokenInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Time ran out. Start again.'**
+  String get errResetTokenInvalid;
+
+  /// No description provided for @errPinAlreadySet.
+  ///
+  /// In en, this message translates to:
+  /// **'A recovery PIN is already set. Change it from Settings.'**
+  String get errPinAlreadySet;
+
+  /// No description provided for @errUsernameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 3–30 characters: a–z, 0–9 or _.'**
+  String get errUsernameInvalid;
+
+  /// No description provided for @errPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'The password is too short.'**
+  String get errPasswordTooShort;
+
+  /// No description provided for @errPasswordTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'The password is too long.'**
+  String get errPasswordTooLong;
+
+  /// No description provided for @errPasswordLetterRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one letter.'**
+  String get errPasswordLetterRequired;
+
+  /// No description provided for @errPasswordDigitRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one digit.'**
+  String get errPasswordDigitRequired;
+
+  /// No description provided for @errPasswordTooCommon.
+  ///
+  /// In en, this message translates to:
+  /// **'This password is too common. Choose another one.'**
+  String get errPasswordTooCommon;
+
+  /// No description provided for @errPasswordContainsPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'The password can\'t contain your phone number.'**
+  String get errPasswordContainsPhone;
+
+  /// No description provided for @errPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The passwords don\'t match.'**
+  String get errPasswordMismatch;
+
+  /// No description provided for @errPinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter all the digits.'**
+  String get errPinLength;
+
+  /// No description provided for @errPinDigitsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Digits only.'**
+  String get errPinDigitsOnly;
+
+  /// No description provided for @errPinWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'This PIN is easy to guess. Avoid repeated or consecutive digits, years and digits from your number or password.'**
+  String get errPinWeak;
+
+  /// No description provided for @errPinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The PINs don\'t match.'**
+  String get errPinMismatch;
+
+  /// No description provided for @errTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Too short.'**
+  String get errTooShort;
+
+  /// No description provided for @errTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Too long.'**
+  String get errTooLong;
+
+  /// No description provided for @errInvalidValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Check this field.'**
+  String get errInvalidValue;
+
+  /// No description provided for @orDivider.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get orDivider;
 }
 
 class _AppLocalizationsDelegate

@@ -21,7 +21,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cancel => 'إلغاء';
 
   @override
-  String get save => 'حفظ';
+  String get save => 'احفظ';
 
   @override
   String get done => 'تمام';
@@ -238,20 +238,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get imageUnavailable => 'الصورة مش متاحة';
 
   @override
-  String get onboardingWelcomeTitle => 'مقال كل يوم يفرق معاك';
-
-  @override
   String get onboardingWelcomeBody =>
       'مقالات قصيرة ومراجَعة بالعربي والإنجليزي — واحدة بنختارهالك كل يوم في المجال اللي بتحبه.';
 
   @override
-  String get getStarted => 'يلا نبدأ';
-
-  @override
-  String get haveAccount => 'عندي حساب';
-
-  @override
-  String get browseAsGuest => 'اتفرّج كضيف';
+  String get browseAsGuest => 'تصفح كزائر';
 
   @override
   String stepOf(int current, int total) {
@@ -310,16 +301,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get finishOnboarding => 'ابدأ القراءة';
 
   @override
-  String get signIn => 'تسجيل الدخول';
+  String get signIn => 'سجل دخول';
 
   @override
-  String get signUp => 'إنشاء حساب';
+  String get signUp => 'اعمل حساب جديد';
 
   @override
   String get signOut => 'تسجيل الخروج';
-
-  @override
-  String get email => 'الإيميل';
 
   @override
   String get password => 'كلمة السر';
@@ -331,43 +319,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get forgotPassword => 'نسيت كلمة السر؟';
 
   @override
-  String get resetPassword => 'استرجاع كلمة السر';
-
-  @override
-  String get resetPasswordBody =>
-      'اكتب الإيميل بتاعك وهنبعتلك لينك تغيّر بيه كلمة السر.';
-
-  @override
-  String get resetPasswordSent => 'بعتنالك لينك على الإيميل.';
-
-  @override
-  String get sendResetLink => 'ابعت اللينك';
-
-  @override
   String get noAccount => 'معندكش حساب؟';
 
   @override
-  String get alreadyHaveAccount => 'عندك حساب؟';
-
-  @override
-  String get continueWithGoogle => 'كمّل بـ Google';
-
-  @override
-  String get continueWithApple => 'كمّل بـ Apple';
-
-  @override
-  String get socialSignInSoon => 'الدخول بـ Google و Apple جاي قريب.';
-
-  @override
-  String verifyEmailSent(String email) {
-    return 'بعتنا إيميل تأكيد على $email.';
-  }
-
-  @override
   String get signInTitle => 'أهلاً بيك تاني';
-
-  @override
-  String get signUpTitle => 'انضم لـ ReadIn';
 
   @override
   String get signInPromptTitle => 'سجّل دخول عشان تكمّل';
@@ -378,15 +333,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fieldRequired => 'مطلوب';
-
-  @override
-  String get invalidEmail => 'اكتب إيميل صحيح';
-
-  @override
-  String get passwordTooShort => '8 حروف على الأقل';
-
-  @override
-  String get nameTooShort => 'حرفين على الأقل';
 
   @override
   String get showPassword => 'اظهر كلمة السر';
@@ -428,11 +374,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get account => 'الحساب';
 
   @override
-  String signedInAs(String email) {
-    return 'داخل بـ $email';
-  }
-
-  @override
   String get guestMode => 'انت بتتصفح كضيف';
 
   @override
@@ -463,7 +404,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errForbidden => 'معندكش صلاحية تعمل ده.';
 
   @override
-  String get errSuspended => 'حسابك موقوف.';
+  String get errSuspended => 'الحساب ده موقوف. تواصل مع الدعم';
 
   @override
   String get errNotSynced => 'معرفناش نجهّز حسابك. جرّب تاني.';
@@ -493,22 +434,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errTimeout => 'الاتصال أخد وقت كتير. جرّب تاني.';
 
   @override
-  String get errAuthUnavailable => 'تسجيل الدخول مش متاح دلوقتي.';
+  String get errInvalidCredentials => 'رقم التليفون أو كلمة السر غلط';
 
   @override
-  String get errInvalidCredentials => 'الإيميل أو كلمة السر غلط.';
-
-  @override
-  String get errEmailInUse => 'الإيميل ده عليه حساب بالفعل.';
-
-  @override
-  String get errWeakPassword => 'اختار كلمة سر أقوى.';
-
-  @override
-  String get errInvalidEmail => 'الإيميل ده شكله مش صحيح.';
-
-  @override
-  String get errTooManyRequests => 'محاولات كتير. جرّب بعد شوية.';
+  String get errTooManyRequests => 'طلبات كتير، استنى شوية وجرب تاني.';
 
   @override
   String get errCancelled => 'اتلغى.';
@@ -847,4 +776,391 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get viewerThumbnails => 'الصفحات';
+
+  @override
+  String get welcomeSignIn => 'عندي حساب، سجل دخول';
+
+  @override
+  String switchLanguageTo(String language) {
+    return 'غيّر لغة التطبيق لـ $language';
+  }
+
+  @override
+  String get continueAction => 'كمّل';
+
+  @override
+  String get edit => 'تعديل';
+
+  @override
+  String get optional => 'اختياري';
+
+  @override
+  String get contactSupport => 'تواصل مع الدعم';
+
+  @override
+  String get signInSubtitle => 'سجل دخول برقم موبايلك وكلمة السر.';
+
+  @override
+  String get phoneLabel => 'رقم الموبايل';
+
+  @override
+  String get createAccountLink => 'اعمل حساب';
+
+  @override
+  String get passwordResetBanner =>
+      'تم تغيير كلمة السر. سجل دخول بكلمة السر الجديدة';
+
+  @override
+  String get sessionExpired => 'الجلسة انتهت، سجّل دخولك تاني.';
+
+  @override
+  String get signUpHeading => 'اعمل حسابك';
+
+  @override
+  String get signUpCredentialsBody =>
+      'هتسجل دخول بالرقم ده وكلمة السر. مش هنبعتلك أكواد SMS.';
+
+  @override
+  String get confirmPasswordLabel => 'أكد كلمة السر';
+
+  @override
+  String get currentPasswordLabel => 'كلمة السر الحالية';
+
+  @override
+  String get newPasswordLabel => 'كلمة السر الجديدة';
+
+  @override
+  String ruleMinLength(int count) {
+    return '$count حروف أو أكتر';
+  }
+
+  @override
+  String get ruleLetter => 'حرف';
+
+  @override
+  String get ruleDigit => 'رقم';
+
+  @override
+  String get ruleMet => 'تمام';
+
+  @override
+  String get ruleNotMet => 'لسه';
+
+  @override
+  String passwordStrength(String level) {
+    return 'قوة كلمة السر: $level';
+  }
+
+  @override
+  String get strengthWeak => 'ضعيفة';
+
+  @override
+  String get strengthFair => 'مقبولة';
+
+  @override
+  String get strengthGood => 'كويسة';
+
+  @override
+  String get strengthStrong => 'قوية';
+
+  @override
+  String get pinStepTitle => 'اعمل PIN للطوارئ';
+
+  @override
+  String get pinStepBody =>
+      'لو نسيت كلمة السر، رقمك والـ PIN ده هيخلوك تختار كلمة سر جديدة. احفظه في مكان أمان ومتقولوش لحد.';
+
+  @override
+  String get pinLabel => 'الـ PIN';
+
+  @override
+  String get confirmPinLabel => 'أكد الـ PIN';
+
+  @override
+  String get newPinLabel => 'الـ PIN الجديد';
+
+  @override
+  String get showPin => 'اظهر الـ PIN';
+
+  @override
+  String get hidePin => 'اخفي الـ PIN';
+
+  @override
+  String pinSemantics(String label, int filled, int total) {
+    return '$label، اتكتب $filled من $total أرقام';
+  }
+
+  @override
+  String get confirmNumberTitle => 'ده رقمك؟';
+
+  @override
+  String get confirmNumberWarning =>
+      'هتستخدم الرقم ده في تسجيل الدخول، ومش هتقدر تسترجع حسابك لو الرقم غلط.';
+
+  @override
+  String get confirmNumberYes => 'صح، اعمل الحساب';
+
+  @override
+  String get confirmNumberChangeYes => 'صح، غيّر الرقم';
+
+  @override
+  String get completeProfileTitle => 'كمّل بروفايلك';
+
+  @override
+  String get completeProfileBody => 'كده القرّاء والكتّاب هيشوفوك.';
+
+  @override
+  String get usernameLabel => 'اسم المستخدم';
+
+  @override
+  String get usernameHint => 'من 3 لـ 30: a–z أو 0–9 أو _';
+
+  @override
+  String get usernameChecking => 'بنشوف…';
+
+  @override
+  String usernameAvailable(String username) {
+    return '@$username متاح';
+  }
+
+  @override
+  String get addPhoto => 'ضيف صورة';
+
+  @override
+  String get changePhoto => 'غيّر الصورة';
+
+  @override
+  String get removePhoto => 'شيل الصورة';
+
+  @override
+  String get photoUploading => 'بنرفع الصورة…';
+
+  @override
+  String get saveAndContinue => 'احفظ وكمّل';
+
+  @override
+  String get forgotTitle => 'استرجع كلمة السر';
+
+  @override
+  String get forgotStep1Body =>
+      'اكتب رقمك والـ PIN اللي عملته وانت بتعمل الحساب.';
+
+  @override
+  String get forgotPin => 'نسيت الـ PIN كمان؟';
+
+  @override
+  String get forgotStep2Title => 'اختار كلمة سر جديدة';
+
+  @override
+  String get forgotStep2Body => 'كل الأجهزة اللي داخلة على حسابك هتخرج منه.';
+
+  @override
+  String get supportTitle => 'تواصل مع الدعم';
+
+  @override
+  String get supportBody =>
+      'من غير الـ PIN، فريق الدعم بس اللي يقدر يعمل reset لكلمة السر، بعد ما نتأكد إن الحساب بتاعك. ابعتلنا إيميل فيه رقم حسابك، وبعد الـ reset هتختار كلمة سر و PIN جداد أول ما تسجل دخول.';
+
+  @override
+  String get supportEmailAction => 'ابعت إيميل للدعم';
+
+  @override
+  String get copyEmail => 'انسخ الإيميل';
+
+  @override
+  String get setPinTitle => 'اعمل PIN للطوارئ';
+
+  @override
+  String get setPinBody =>
+      'حسابك محتاج PIN للطوارئ. مع رقمك، هيخليك تختار كلمة سر جديدة لو نسيت كلمة السر.';
+
+  @override
+  String get changePasswordTitle => 'تغيير كلمة السر';
+
+  @override
+  String get mustChangePasswordBody =>
+      'كلمة السر بتاعتك اتعملها reset. اختار واحدة جديدة عشان تكمّل.';
+
+  @override
+  String get changePasswordBody => 'الأجهزة التانية هتخرج من حسابك.';
+
+  @override
+  String get passwordChanged => 'تم تغيير كلمة السر.';
+
+  @override
+  String get changePinTitle => 'تغيير الـ PIN';
+
+  @override
+  String get changePinBody => 'أكد بكلمة السر، وبعدين اختار الـ PIN الجديد.';
+
+  @override
+  String get pinChanged => 'تم تغيير الـ PIN.';
+
+  @override
+  String get changePhoneTitle => 'تغيير الرقم';
+
+  @override
+  String get changePhoneBody =>
+      'هتسجل دخول بالرقم الجديد، والأجهزة التانية هتخرج من حسابك.';
+
+  @override
+  String get newPhoneLabel => 'رقم الموبايل الجديد';
+
+  @override
+  String get phoneChanged => 'تم تغيير الرقم.';
+
+  @override
+  String get phoneNumberLabel => 'رقم التليفون';
+
+  @override
+  String get phoneVisibleToYou => 'محدش يقدر يشوفه غيرك';
+
+  @override
+  String get changePhone => 'تغيير الرقم';
+
+  @override
+  String get changePassword => 'تغيير كلمة السر';
+
+  @override
+  String get changePin => 'تغيير الـ PIN';
+
+  @override
+  String get signOutEverywhere => 'تسجيل الخروج من كل الأجهزة';
+
+  @override
+  String get signOutEverywhereBody =>
+      'كل الأجهزة التانية هتخرج من حسابك، وانت هتفضل داخل على الجهاز ده.';
+
+  @override
+  String get signedOutEverywhere => 'خرّجناك من كل الأجهزة التانية.';
+
+  @override
+  String get deleteAccount => 'حذف الحساب';
+
+  @override
+  String get deleteAccountBody =>
+      'هنمسح بروفايلك وبياناتك الشخصية بعد 30 يوم. مقالاتك وتعليقاتك هتفضل باسم \"مستخدم محذوف\". مينفعش ترجع في القرار ده.';
+
+  @override
+  String get deleteAccountConfirm => 'فاهم، امسح حسابي';
+
+  @override
+  String get deleteAccountButton => 'امسح حسابي';
+
+  @override
+  String get accountDeleted => 'تم حذف الحساب.';
+
+  @override
+  String get countryPickerTitle => 'اختار الدولة';
+
+  @override
+  String get countrySearchHint => 'دوّر بالاسم أو الكود أو مفتاح الدولة';
+
+  @override
+  String get countryNoResults => 'مفيش دولة بالاسم ده';
+
+  @override
+  String countryButtonSemantics(String country, String dialCode) {
+    return 'الدولة: $country، +$dialCode. اضغط مرتين عشان تغيّر';
+  }
+
+  @override
+  String get selected => 'مختارة';
+
+  @override
+  String get devLoginOpen => 'حسابات تجريبية';
+
+  @override
+  String get devLoginTitle => 'حسابات تجريبية (dev بس)';
+
+  @override
+  String get devLoginBody =>
+      'مستخدمين الـ seed المحليين. لو DEV_DEMO_PASSWORD متحدد، الضغطة بتدخلك على طول؛ غير كده بتكتب الرقم بس.';
+
+  @override
+  String get devLoginHasPin => 'عنده PIN';
+
+  @override
+  String get devLoginNoPin => 'معندوش PIN';
+
+  @override
+  String get errPhoneInvalid => 'رقم الموبايل ده مش صحيح.';
+
+  @override
+  String get errPhoneTaken => 'الرقم ده عليه حساب بالفعل';
+
+  @override
+  String get errPhoneUnchanged => 'ده رقمك الحالي بالفعل.';
+
+  @override
+  String get errLockedOut => 'محاولات كتير. جرّب تاني بعد 15 دقيقة';
+
+  @override
+  String get errWrongPassword => 'كلمة السر الحالية غلط.';
+
+  @override
+  String get errRecoveryInvalid => 'رقم التليفون أو الـ PIN غلط';
+
+  @override
+  String get errRecoveryLocked => 'محاولات كتير. جرّب تاني بعد ساعة.';
+
+  @override
+  String get errRecoveryDisabled =>
+      'الاسترجاع متوقف للحساب ده. تواصل مع الدعم.';
+
+  @override
+  String get errResetTokenInvalid => 'انتهت المهلة، ابدأ من الأول';
+
+  @override
+  String get errPinAlreadySet => 'عندك PIN بالفعل، غيّره من الإعدادات.';
+
+  @override
+  String get errUsernameInvalid => 'استخدم من 3 لـ 30 حرف: a–z أو 0–9 أو _.';
+
+  @override
+  String get errPasswordTooShort => 'كلمة السر قصيرة.';
+
+  @override
+  String get errPasswordTooLong => 'كلمة السر طويلة أوي.';
+
+  @override
+  String get errPasswordLetterRequired => 'ضيف حرف واحد على الأقل.';
+
+  @override
+  String get errPasswordDigitRequired => 'ضيف رقم واحد على الأقل.';
+
+  @override
+  String get errPasswordTooCommon => 'كلمة السر دي مشهورة أوي. اختار غيرها.';
+
+  @override
+  String get errPasswordContainsPhone =>
+      'كلمة السر مينفعش يكون فيها رقم موبايلك.';
+
+  @override
+  String get errPasswordMismatch => 'كلمتين السر مش زي بعض.';
+
+  @override
+  String get errPinLength => 'اكتب كل الأرقام.';
+
+  @override
+  String get errPinDigitsOnly => 'أرقام بس.';
+
+  @override
+  String get errPinWeak =>
+      'الـ PIN ده سهل يتخمّن. ابعد عن الأرقام المكررة أو المتسلسلة والسنين والأرقام اللي في موبايلك أو كلمة السر.';
+
+  @override
+  String get errPinMismatch => 'الـ PIN مش زي بعضه.';
+
+  @override
+  String get errTooShort => 'قصير أوي.';
+
+  @override
+  String get errTooLong => 'طويل أوي.';
+
+  @override
+  String get errInvalidValue => 'راجع الخانة دي.';
+
+  @override
+  String get orDivider => 'أو';
 }

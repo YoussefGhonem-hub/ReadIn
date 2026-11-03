@@ -5,3 +5,8 @@ abstract final class AppLinks {
 
   static String article(String slug) => '$webOrigin/a/${Uri.encodeComponent(slug)}';
 }
+
+/// Where "نسيت الـ PIN كمان؟" and suspended accounts are sent (SPEC §9.1): an Admin resets the password.
+abstract final class SupportContact {
+  static const email = 'support@readin.app';
+}

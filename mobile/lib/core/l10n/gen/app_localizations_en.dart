@@ -232,18 +232,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get imageUnavailable => 'Image unavailable';
 
   @override
-  String get onboardingWelcomeTitle =>
-      'One article a day that makes a difference';
-
-  @override
   String get onboardingWelcomeBody =>
       'Short, reviewed articles in Arabic and English — one picked for you every day, in the field you love.';
-
-  @override
-  String get getStarted => 'Get started';
-
-  @override
-  String get haveAccount => 'I already have an account';
 
   @override
   String get browseAsGuest => 'Browse as a guest';
@@ -314,9 +304,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOut => 'Sign out';
 
   @override
-  String get email => 'Email';
-
-  @override
   String get password => 'Password';
 
   @override
@@ -326,43 +313,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
-  String get resetPassword => 'Reset password';
-
-  @override
-  String get resetPasswordBody =>
-      'Enter your email and we\'ll send you a reset link.';
-
-  @override
-  String get resetPasswordSent => 'Check your inbox for a reset link.';
-
-  @override
-  String get sendResetLink => 'Send reset link';
-
-  @override
   String get noAccount => 'Don\'t have an account?';
 
   @override
-  String get alreadyHaveAccount => 'Already have an account?';
-
-  @override
-  String get continueWithGoogle => 'Continue with Google';
-
-  @override
-  String get continueWithApple => 'Continue with Apple';
-
-  @override
-  String get socialSignInSoon => 'Google and Apple sign-in are coming soon.';
-
-  @override
-  String verifyEmailSent(String email) {
-    return 'We sent a verification email to $email.';
-  }
-
-  @override
   String get signInTitle => 'Welcome back';
-
-  @override
-  String get signUpTitle => 'Join ReadIn';
 
   @override
   String get signInPromptTitle => 'Sign in to continue';
@@ -373,15 +327,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fieldRequired => 'Required';
-
-  @override
-  String get invalidEmail => 'Enter a valid email';
-
-  @override
-  String get passwordTooShort => 'At least 8 characters';
-
-  @override
-  String get nameTooShort => 'At least 2 characters';
 
   @override
   String get showPassword => 'Show password';
@@ -423,11 +368,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get account => 'Account';
 
   @override
-  String signedInAs(String email) {
-    return 'Signed in as $email';
-  }
-
-  @override
   String get guestMode => 'You\'re browsing as a guest';
 
   @override
@@ -458,7 +398,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errForbidden => 'You don\'t have permission to do this.';
 
   @override
-  String get errSuspended => 'Your account is suspended.';
+  String get errSuspended => 'This account is suspended. Contact support.';
 
   @override
   String get errNotSynced => 'We couldn\'t set up your account. Try again.';
@@ -489,22 +429,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errTimeout => 'The connection timed out. Try again.';
 
   @override
-  String get errAuthUnavailable => 'Sign-in isn\'t available right now.';
+  String get errInvalidCredentials =>
+      'The phone number or password is incorrect.';
 
   @override
-  String get errInvalidCredentials => 'Wrong email or password.';
-
-  @override
-  String get errEmailInUse => 'This email already has an account.';
-
-  @override
-  String get errWeakPassword => 'Choose a stronger password.';
-
-  @override
-  String get errInvalidEmail => 'This email looks invalid.';
-
-  @override
-  String get errTooManyRequests => 'Too many attempts. Try again later.';
+  String get errTooManyRequests =>
+      'Too many requests. Please try again shortly.';
 
   @override
   String get errCancelled => 'Cancelled.';
@@ -842,4 +772,396 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewerThumbnails => 'Pages';
+
+  @override
+  String get welcomeSignIn => 'I have an account, sign in';
+
+  @override
+  String switchLanguageTo(String language) {
+    return 'Switch the app language to $language';
+  }
+
+  @override
+  String get continueAction => 'Continue';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get optional => 'Optional';
+
+  @override
+  String get contactSupport => 'Contact support';
+
+  @override
+  String get signInSubtitle => 'Sign in with your mobile number and password.';
+
+  @override
+  String get phoneLabel => 'Mobile number';
+
+  @override
+  String get createAccountLink => 'Create one';
+
+  @override
+  String get passwordResetBanner =>
+      'Password changed. Sign in with your new password.';
+
+  @override
+  String get sessionExpired => 'Your session has ended. Sign in again.';
+
+  @override
+  String get signUpHeading => 'Create your account';
+
+  @override
+  String get signUpCredentialsBody =>
+      'You\'ll sign in with this number and password. We never send SMS codes.';
+
+  @override
+  String get confirmPasswordLabel => 'Confirm password';
+
+  @override
+  String get currentPasswordLabel => 'Current password';
+
+  @override
+  String get newPasswordLabel => 'New password';
+
+  @override
+  String ruleMinLength(int count) {
+    return '$count+ characters';
+  }
+
+  @override
+  String get ruleLetter => 'A letter';
+
+  @override
+  String get ruleDigit => 'A digit';
+
+  @override
+  String get ruleMet => 'done';
+
+  @override
+  String get ruleNotMet => 'not yet';
+
+  @override
+  String passwordStrength(String level) {
+    return 'Password strength: $level';
+  }
+
+  @override
+  String get strengthWeak => 'Weak';
+
+  @override
+  String get strengthFair => 'Fair';
+
+  @override
+  String get strengthGood => 'Good';
+
+  @override
+  String get strengthStrong => 'Strong';
+
+  @override
+  String get pinStepTitle => 'Create an emergency PIN';
+
+  @override
+  String get pinStepBody =>
+      'If you ever forget your password, your number and this PIN let you choose a new one. Keep it somewhere safe and don\'t share it.';
+
+  @override
+  String get pinLabel => 'Recovery PIN';
+
+  @override
+  String get confirmPinLabel => 'Confirm PIN';
+
+  @override
+  String get newPinLabel => 'New PIN';
+
+  @override
+  String get showPin => 'Show PIN';
+
+  @override
+  String get hidePin => 'Hide PIN';
+
+  @override
+  String pinSemantics(String label, int filled, int total) {
+    return '$label, $filled of $total digits entered';
+  }
+
+  @override
+  String get confirmNumberTitle => 'Is this your number?';
+
+  @override
+  String get confirmNumberWarning =>
+      'You\'ll use this number to sign in, and you can\'t recover your account if the number is wrong.';
+
+  @override
+  String get confirmNumberYes => 'Yes, create my account';
+
+  @override
+  String get confirmNumberChangeYes => 'Yes, change my number';
+
+  @override
+  String get completeProfileTitle => 'Complete your profile';
+
+  @override
+  String get completeProfileBody =>
+      'This is how readers and writers will see you.';
+
+  @override
+  String get usernameLabel => 'Username';
+
+  @override
+  String get usernameHint => '3–30 characters: a–z, 0–9 or _';
+
+  @override
+  String get usernameChecking => 'Checking…';
+
+  @override
+  String usernameAvailable(String username) {
+    return '@$username is available';
+  }
+
+  @override
+  String get addPhoto => 'Add a photo';
+
+  @override
+  String get changePhoto => 'Change photo';
+
+  @override
+  String get removePhoto => 'Remove photo';
+
+  @override
+  String get photoUploading => 'Uploading photo…';
+
+  @override
+  String get saveAndContinue => 'Save and continue';
+
+  @override
+  String get forgotTitle => 'Reset your password';
+
+  @override
+  String get forgotStep1Body =>
+      'Enter your number and the recovery PIN you created when you signed up.';
+
+  @override
+  String get forgotPin => 'Forgot the PIN too?';
+
+  @override
+  String get forgotStep2Title => 'Choose a new password';
+
+  @override
+  String get forgotStep2Body =>
+      'Every device signed in to your account will be signed out.';
+
+  @override
+  String get supportTitle => 'Contact support';
+
+  @override
+  String get supportBody =>
+      'Without your PIN, only our support team can reset your password, after checking that the account is really yours. Email us from your account\'s number details; after the reset you\'ll choose a new password and a new PIN when you sign in.';
+
+  @override
+  String get supportEmailAction => 'Email support';
+
+  @override
+  String get copyEmail => 'Copy email address';
+
+  @override
+  String get setPinTitle => 'Set your recovery PIN';
+
+  @override
+  String get setPinBody =>
+      'Your account needs a recovery PIN. With your number, it lets you choose a new password if you ever forget yours.';
+
+  @override
+  String get changePasswordTitle => 'Change password';
+
+  @override
+  String get mustChangePasswordBody =>
+      'Your password was reset. Choose a new one to continue.';
+
+  @override
+  String get changePasswordBody => 'Your other devices will be signed out.';
+
+  @override
+  String get passwordChanged => 'Password changed.';
+
+  @override
+  String get changePinTitle => 'Change PIN';
+
+  @override
+  String get changePinBody =>
+      'Confirm with your password, then choose the new PIN.';
+
+  @override
+  String get pinChanged => 'Recovery PIN changed.';
+
+  @override
+  String get changePhoneTitle => 'Change number';
+
+  @override
+  String get changePhoneBody =>
+      'You\'ll sign in with the new number. Your other devices will be signed out.';
+
+  @override
+  String get newPhoneLabel => 'New mobile number';
+
+  @override
+  String get phoneChanged => 'Number changed.';
+
+  @override
+  String get phoneNumberLabel => 'Phone number';
+
+  @override
+  String get phoneVisibleToYou => 'Only you can see it';
+
+  @override
+  String get changePhone => 'Change number';
+
+  @override
+  String get changePassword => 'Change password';
+
+  @override
+  String get changePin => 'Change PIN';
+
+  @override
+  String get signOutEverywhere => 'Sign out of all devices';
+
+  @override
+  String get signOutEverywhereBody =>
+      'Every other device will be signed out. You stay signed in on this one.';
+
+  @override
+  String get signedOutEverywhere => 'Signed out of all other devices.';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountBody =>
+      'Your profile and personal data are removed after 30 days. Your articles and comments stay, shown as \"Deleted user\". This can\'t be undone.';
+
+  @override
+  String get deleteAccountConfirm => 'I understand, delete my account';
+
+  @override
+  String get deleteAccountButton => 'Delete my account';
+
+  @override
+  String get accountDeleted => 'Your account was deleted.';
+
+  @override
+  String get countryPickerTitle => 'Choose a country';
+
+  @override
+  String get countrySearchHint => 'Search by name, code or +dial code';
+
+  @override
+  String get countryNoResults => 'No country matches your search';
+
+  @override
+  String countryButtonSemantics(String country, String dialCode) {
+    return 'Country: $country, +$dialCode. Double-tap to change';
+  }
+
+  @override
+  String get selected => 'Selected';
+
+  @override
+  String get devLoginOpen => 'Demo accounts';
+
+  @override
+  String get devLoginTitle => 'Demo accounts (dev only)';
+
+  @override
+  String get devLoginBody =>
+      'Local seed users (SPEC §18.3). With DEV_DEMO_PASSWORD set, a tap signs in; otherwise it fills the number.';
+
+  @override
+  String get devLoginHasPin => 'Has a recovery PIN';
+
+  @override
+  String get devLoginNoPin => 'No recovery PIN';
+
+  @override
+  String get errPhoneInvalid => 'Enter a valid mobile number.';
+
+  @override
+  String get errPhoneTaken => 'This number already has an account.';
+
+  @override
+  String get errPhoneUnchanged => 'This is already your number.';
+
+  @override
+  String get errLockedOut => 'Too many attempts. Try again in 15 minutes.';
+
+  @override
+  String get errWrongPassword => 'The current password is incorrect.';
+
+  @override
+  String get errRecoveryInvalid => 'The phone number or PIN is incorrect.';
+
+  @override
+  String get errRecoveryLocked => 'Too many attempts. Try again in an hour.';
+
+  @override
+  String get errRecoveryDisabled =>
+      'Recovery is disabled for this account. Contact support.';
+
+  @override
+  String get errResetTokenInvalid => 'Time ran out. Start again.';
+
+  @override
+  String get errPinAlreadySet =>
+      'A recovery PIN is already set. Change it from Settings.';
+
+  @override
+  String get errUsernameInvalid => 'Use 3–30 characters: a–z, 0–9 or _.';
+
+  @override
+  String get errPasswordTooShort => 'The password is too short.';
+
+  @override
+  String get errPasswordTooLong => 'The password is too long.';
+
+  @override
+  String get errPasswordLetterRequired => 'Add at least one letter.';
+
+  @override
+  String get errPasswordDigitRequired => 'Add at least one digit.';
+
+  @override
+  String get errPasswordTooCommon =>
+      'This password is too common. Choose another one.';
+
+  @override
+  String get errPasswordContainsPhone =>
+      'The password can\'t contain your phone number.';
+
+  @override
+  String get errPasswordMismatch => 'The passwords don\'t match.';
+
+  @override
+  String get errPinLength => 'Enter all the digits.';
+
+  @override
+  String get errPinDigitsOnly => 'Digits only.';
+
+  @override
+  String get errPinWeak =>
+      'This PIN is easy to guess. Avoid repeated or consecutive digits, years and digits from your number or password.';
+
+  @override
+  String get errPinMismatch => 'The PINs don\'t match.';
+
+  @override
+  String get errTooShort => 'Too short.';
+
+  @override
+  String get errTooLong => 'Too long.';
+
+  @override
+  String get errInvalidValue => 'Check this field.';
+
+  @override
+  String get orDivider => 'or';
 }
