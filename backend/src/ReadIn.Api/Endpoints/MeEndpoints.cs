@@ -118,7 +118,7 @@ internal sealed class UserEndpoints : IEndpointGroup
         api.MapGet("/users/username-available", async (string? u, ISender sender, CancellationToken ct) =>
                 TypedResults.Ok(await sender.Send(new CheckUsernameQuery(u), ct)))
             .AllowAnonymous()
-            .RequireRateLimiting(RateLimitPolicies.Auth)
+            .RequireRateLimiting(RateLimitPolicies.UsernameCheck)
             .WithTags("Users")
             .WithSummary("Live @username check (format + availability)")
             .Produces<UsernameAvailabilityDto>();

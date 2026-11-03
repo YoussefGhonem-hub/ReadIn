@@ -39,7 +39,7 @@ public static class RefreshCookie
         body?.RefreshToken is { Length: > 0 } token ? token : IsWebClient(http) ? http.Request.Cookies[Name] : null;
 
     public static void Clear(HttpContext http) =>
-        http.Response.Cookies.Delete(Name, Options(DateTimeOffset.UnixEpoch));
+        http.Response.Cookies.Delete(Name, Options(http, DateTimeOffset.UnixEpoch));
 
     /// <summary>Sends the session; for the web the refresh token moves from the body into the cookie.</summary>
     public static IResult ToSession(this Result<AuthSessionDto> result, HttpContext http)
@@ -55,15 +55,19 @@ public static class RefreshCookie
             return TypedResults.Ok(new SessionResponse(
                 session.AccessToken, session.AccessTokenExpiresAt, session.RefreshToken, session.RefreshTokenExpiresAt, session.User));
 
-        http.Response.Cookies.Append(Name, session.RefreshToken, Options(session.RefreshTokenExpiresAt));
+        http.Response.Cookies.Append(Name, session.RefreshToken, Options(http, session.RefreshTokenExpiresAt));
         return TypedResults.Ok(new SessionResponse(
             session.AccessToken, session.AccessTokenExpiresAt, RefreshToken: null, session.RefreshTokenExpiresAt, session.User));
     }
 
-    private static CookieOptions Options(DateTimeOffset expires) => new()
+    /// <remarks>
+    /// Always <c>Secure</c>, except for plain-HTTP requests in Development: Safari doesn't keep <c>Secure</c> cookies on
+    /// <c>http://localhost</c>, which would sign the web out on every reload there.
+    /// </remarks>
+    private static CookieOptions Options(HttpContext http, DateTimeOffset expires) => new()
     {
         HttpOnly = true,
-        Secure = true,
+        Secure = http.Request.IsHttps || !http.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment(),
         SameSite = SameSiteMode.Strict,
         Path = Path,
         Expires = expires,

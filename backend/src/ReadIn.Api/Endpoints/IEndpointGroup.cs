@@ -25,6 +25,9 @@ public static class RateLimitPolicies
     public const string SignIn = "auth-sign-in";
     public const string Register = "auth-register";
     public const string Recovery = "auth-recovery";
+
+    /// <summary>The live @username check runs while typing, so it has its own budget instead of sharing <see cref="Auth"/>.</summary>
+    public const string UsernameCheck = "username-check";
     public const string Writes = "writes";
     public const string Uploads = "uploads";
 }

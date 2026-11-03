@@ -96,6 +96,12 @@ public static class ApiSetup
                     PermitLimit = 20,
                     Window = TimeSpan.FromMinutes(1),
                 }));
+            options.AddPolicy(RateLimitPolicies.UsernameCheck, context =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 60,
+                    Window = TimeSpan.FromMinutes(1),
+                }));
             options.AddPolicy(RateLimitPolicies.Writes, context =>
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
                 {
