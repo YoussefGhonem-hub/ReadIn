@@ -1,0 +1,51 @@
+{
+  "slug": "llm-as-a-judge-has-biases",
+  "field": "ai-fundamentals",
+  "topic": "llm-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "LLM-as-a-Judge Is Biased: Position, Length and Self-Preference",
+      "subtitle": "A strong model can grade like a person on average and still lean on order, length and familiar style. Measure the judge before you trust it."
+    },
+    "ar-EG": {
+      "title": "ليه الـ LLM مش حَكَم محايد؟ الانحياز للترتيب والطول ولإجاباته هو",
+      "subtitle": "موديل قوي ممكن يقيّم زي البني آدم في المتوسط، ومع ذلك يميل للترتيب والطول والأسلوب اللي يعرفه. قيس الحَكَم قبل ما تثق فيه."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "building-with-llms", "order": 14 },
+  "tags": ["Evals", "LLM-as-a-Judge", "LLMs", "Testing"],
+  "sources": [
+    {
+      "title": "Zheng et al., Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena, arXiv:2306.05685",
+      "url": "https://arxiv.org/abs/2306.05685"
+    },
+    {
+      "title": "Wang et al., Large Language Models are not Fair Evaluators, arXiv:2305.17926",
+      "url": "https://arxiv.org/abs/2305.17926"
+    },
+    {
+      "title": "Panickssery et al., LLM Evaluators Recognize and Favor Their Own Generations, arXiv:2404.13076",
+      "url": "https://arxiv.org/abs/2404.13076"
+    },
+    {
+      "title": "Define success criteria and build evaluations — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests"
+    },
+    {
+      "title": "Demystifying evals for AI agents — Anthropic",
+      "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nJUDGE_PROMPT = (\"Question: {q}\\n\\n[A]\\n{a}\\n\\n[B]\\n{b}\\n\\n\"\n                \"Which answer is better? Reply with A or B only.\")\nCASES = [\n    NS(question=\"How do I reset my password?\",\n       new=\"Open Settings, choose Security, then press Reset. \" * 3,\n       old=\"Settings > Security > Reset.\", human=\"tie\"),\n    NS(question=\"Can I export invoices?\", new=\"Yes: Billing > Export > CSV.\",\n       old=\"I'm not sure that is possible.\", human=\"new\"),\n    NS(question=\"Why was I charged twice?\", new=\"Sorry about that!\",\n       old=\"A payment retry created a second charge; it was refunded.\", human=\"old\"),\n    NS(question=\"Is there a dark mode?\", new=\"Yes, under Appearance.\",\n       old=\"Yes, in Settings under Appearance.\", human=None),\n]\n\n\ndef _create(*, model, max_tokens, messages, **kwargs):\n    text = messages[-1][\"content\"]\n    a = text.split(\"[A]\\n\", 1)[1].split(\"\\n\\n[B]\", 1)[0]\n    b = text.split(\"[B]\\n\", 1)[1].split(\"\\n\\nWhich\", 1)[0]\n    verdict = \"A\" if len(a) >= len(b) else \"B\"  # a length-biased judge\n    blocks = [NS(type=\"thinking\", thinking=\"\"), NS(type=\"text\", text=verdict)]\n    return NS(content=blocks, stop_reason=\"end_turn\")\n\n\ndef judge(question, first, second):\n    prompt = JUDGE_PROMPT.format(q=question, a=first, b=second)\n    reply = _create(model=\"\", max_tokens=1, messages=[{\"content\": prompt}])\n    return reply.content[1].text\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=lambda **kw: NS(messages=NS(create=_create)))\n"
+    }
+  }
+}

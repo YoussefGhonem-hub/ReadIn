@@ -1,0 +1,47 @@
+{
+  "slug": "debug-rag-retrieval-first",
+  "field": "ai-fundamentals",
+  "topic": "rag",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "When RAG Answers Wrong, Check Retrieval Before Blaming the Model",
+      "subtitle": "Most wrong RAG answers are lost before the model reads a word. Find the stage that dropped the passage, then fix that stage."
+    },
+    "ar-EG": {
+      "title": "لما الـ RAG يجاوب غلط، افحص الـ Retrieval الأول قبل ما تلوم الموديل",
+      "subtitle": "إجابات RAG غلط كتير بتضيع قبل ما الموديل يقرا كلمة. دوّر على المرحلة اللي وقّعت الـ passage، وصلّح المرحلة دي."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "building-with-llms", "order": 9 },
+  "tags": ["RAG", "Retrieval", "Debugging", "LLM Evaluation"],
+  "sources": [
+    {
+      "title": "Barnett et al., Seven Failure Points When Engineering a Retrieval Augmented Generation System, arXiv:2401.05856",
+      "url": "https://arxiv.org/abs/2401.05856"
+    },
+    {
+      "title": "Introducing Contextual Retrieval — Anthropic",
+      "url": "https://www.anthropic.com/research/contextual-retrieval"
+    },
+    {
+      "title": "Es et al., Ragas: Automated Evaluation of Retrieval Augmented Generation, arXiv:2309.15217",
+      "url": "https://arxiv.org/abs/2309.15217"
+    },
+    {
+      "title": "Reduce hallucinations — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nQUESTION = \"How do I get VPN access as a contractor?\"\ncorpus_ids = {\"it/vpn-employees#1\", \"it/vpn-contractors#1\", \"it/vpn-contractors#2\",\n              \"it/laptop-setup#1\", \"hr/badges#1\"}\n_RANKED = [\"it/vpn-employees#1\", \"it/vpn-contractors#1\", \"it/laptop-setup#1\"]\n\n\ndef retrieve(question, k):\n    return [NS(id=i) for i in _RANKED[:k]]\n\n\ndef build_context(question, ranked):\n    return NS(ids=ranked[:2])\n\n\ndef build_prompt(question):\n    return \"<context>VPN for employees: install the client.</context>\\n\" + question\n\n\nwrong_answers = [\n    {\"question\": QUESTION, \"gold_id\": \"it/vpn-contractors#2\"},\n    {\"question\": \"VPN for contractors?\", \"gold_id\": \"it/vpn-contractors#1\"},\n    {\"question\": \"Parking for visitors?\", \"gold_id\": \"facilities/parking#1\"},\n    {\"question\": \"Laptop for new hires?\", \"gold_id\": \"it/laptop-setup#1\"},\n]\n\n\ndef _create(*, model, max_tokens, messages, system=None, **kwargs):\n    text = \"Install the VPN client and sign in with your employee account.\"\n    return NS(content=[NS(type=\"thinking\", thinking=\"\"), NS(type=\"text\", text=text)],\n              stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

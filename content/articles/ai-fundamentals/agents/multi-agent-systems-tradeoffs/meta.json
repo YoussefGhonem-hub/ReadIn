@@ -1,0 +1,47 @@
+{
+  "slug": "multi-agent-systems-tradeoffs",
+  "field": "ai-fundamentals",
+  "topic": "agents",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "More Agents, More Problems: When Multi-Agent Systems Pay Off",
+      "subtitle": "Parallel agents win on broad, independent work worth many times the tokens. On coupled tasks they mostly add cost and new ways to fail."
+    },
+    "ar-EG": {
+      "title": "إمتى الـ Multi-Agent يستاهل؟ زيادة عدد الـ Agents مش دايمًا أحسن",
+      "subtitle": "الـ agents اللي بتشتغل بالتوازي بتكسب في الشغل الواسع المستقل اللي يستاهل أضعاف الـ tokens. وفي المهام المترابطة غالبًا بتزوّد التكلفة وطرق فشل جديدة."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "building-with-llms", "order": 15 },
+  "tags": ["Agents", "Multi-Agent Systems", "Claude API", "Architecture"],
+  "sources": [
+    {
+      "title": "How we built our multi-agent research system — Anthropic",
+      "url": "https://www.anthropic.com/research/multi-agent-research-system"
+    },
+    {
+      "title": "Cemri et al., Why Do Multi-Agent LLM Systems Fail?, arXiv:2503.13657",
+      "url": "https://arxiv.org/abs/2503.13657"
+    },
+    {
+      "title": "Building effective agents — Anthropic",
+      "url": "https://www.anthropic.com/research/building-effective-agents"
+    },
+    {
+      "title": "Effective context engineering for AI agents — Anthropic",
+      "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "COMPETITORS = [\"Acme\", \"Globex\", \"Initech\", \"Umbrella\", \"Hooli\", \"Stark\"]\n\n\ndef plan_subtasks(question):\n    angles = [\"pricing\", \"SSO\", \"plans\", \"enterprise\", \"security\"]\n    return [f\"{name} {angle}\" for name in COMPETITORS for angle in angles]\n\n\ndef run_agent(task):\n    if \"Hooli\" in task:\n        return \"unclear | no public pricing | https://hooli.example/contact\"\n    return \"yes | Starter | https://vendor.example/pricing\"\n\n\ndef write_report(question, findings):\n    return f\"{question}\\n{len(str(findings))} characters of findings summarized.\"\n"
+    }
+  }
+}

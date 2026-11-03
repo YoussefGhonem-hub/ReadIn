@@ -1,0 +1,47 @@
+{
+  "slug": "agents-vs-workflows",
+  "field": "ai-fundamentals",
+  "topic": "agents",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Not Everything Should Be an Agent: Workflows vs Agents",
+      "subtitle": "If you can write the steps down, your code should run them. Save the agent loop for problems whose path you can't predict."
+    },
+    "ar-EG": {
+      "title": "مش كل حاجة محتاجة Agent: الفرق بين الـ Workflows والـ Agents",
+      "subtitle": "لو تقدر تكتب الخطوات، يبقى الكود بتاعك هو اللي يمشّيها. وسيب الـ agent loop للمشاكل اللي مش هتقدر تتوقع طريقها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "building-with-llms", "order": 10 },
+  "tags": ["Agents", "Workflows", "Tool Use", "Claude API"],
+  "sources": [
+    {
+      "title": "Building effective agents — Anthropic",
+      "url": "https://www.anthropic.com/research/building-effective-agents"
+    },
+    {
+      "title": "Yao et al., ReAct: Synergizing Reasoning and Acting in Language Models, arXiv:2210.03629",
+      "url": "https://arxiv.org/abs/2210.03629"
+    },
+    {
+      "title": "Yao et al., τ-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains, arXiv:2406.12045",
+      "url": "https://arxiv.org/abs/2406.12045"
+    },
+    {
+      "title": "How tool use works — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import re\nimport sys\nimport types\n\nNS = types.SimpleNamespace\nLIST_MERGED_PRS = {\"name\": \"list_merged_prs\", \"input_schema\": {\"type\": \"object\"}}\nGET_PR = {\"name\": \"get_pr\", \"input_schema\": {\"type\": \"object\"}}\nPOST_TO_SLACK = {\"name\": \"post_to_slack\", \"input_schema\": {\"type\": \"object\"}}\nSUMMARIZE_PR = \"Summarize this pull request in one line. Keep its number.\"\nWRITE_NOTES = \"Group these summaries into release notes. Keep every PR number.\"\n\n\ndef list_merged_prs(since):\n    return [NS(number=n, title=t, body=\"Details.\") for n, t in\n            [(412, \"Add CSV export\"), (415, \"Fix login timeout\"), (419, \"Faster search\")]]\n\n\ndef run_tools(content):\n    return [{\"type\": \"tool_result\", \"tool_use_id\": b.id, \"content\": \"#412, #415, #419\"}\n            for b in content if b.type == \"tool_use\"]\n\n\ndef request_approval(notes):\n    print(\"Waiting for approval:\", notes)\n\n\ndef _text(text):\n    return NS(content=[NS(type=\"thinking\", thinking=\"\"), NS(type=\"text\", text=text)],\n              stop_reason=\"end_turn\")\n\n\ndef _create(*, model, max_tokens, messages, system=None, tools=None, **kwargs):\n    if tools is not None:\n        if len(messages) == 1:\n            call = NS(type=\"tool_use\", id=\"toolu_01\", name=\"list_merged_prs\", input={})\n            return NS(content=[call], stop_reason=\"tool_use\")\n        return _text(\"Posted the release notes to #releases.\")\n    text = messages[-1][\"content\"]\n    if system == WRITE_NOTES:\n        return _text(\"New: \" + \", \".join(re.findall(r\"#\\d+\", text)))\n    return _text(text.splitlines()[0])\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

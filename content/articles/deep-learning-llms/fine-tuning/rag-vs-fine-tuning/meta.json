@@ -1,0 +1,51 @@
+{
+  "slug": "rag-vs-fine-tuning",
+  "field": "deep-learning-llms",
+  "topic": "fine-tuning",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Fine-Tuning Won't Teach Your Model Your Docs: RAG vs Fine-Tuning",
+      "subtitle": "Training on your documents teaches how they sound, not reliably what they say. Retrieve facts at request time, and fine-tune for behavior."
+    },
+    "ar-EG": {
+      "title": "إمتى RAG وإمتى Fine-tuning؟ ليه الـ Fine-tuning مش الطريقة لتعليم الموديل مستنداتك",
+      "subtitle": "الـ training على مستنداتك بيعلّم الموديل أسلوبها، مش اللي مكتوب فيها بشكل يُعتمد عليه. هات المعلومة وقت الطلب، واعمل fine-tuning للسلوك."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "building-with-llms", "order": 7 },
+  "tags": ["RAG", "Fine-Tuning", "LLMs", "Claude API"],
+  "sources": [
+    {
+      "title": "Ovadia et al., Fine-Tuning or Retrieval? Comparing Knowledge Injection in LLMs, arXiv:2312.05934",
+      "url": "https://arxiv.org/abs/2312.05934"
+    },
+    {
+      "title": "Gekhman et al., Does Fine-Tuning LLMs on New Knowledge Encourage Hallucinations?, arXiv:2405.05904",
+      "url": "https://arxiv.org/abs/2405.05904"
+    },
+    {
+      "title": "Lewis et al., Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks, arXiv:2005.11401",
+      "url": "https://arxiv.org/abs/2005.11401"
+    },
+    {
+      "title": "Zhang et al., RAFT: Adapting Language Model to Domain Specific RAG, arXiv:2403.10131",
+      "url": "https://arxiv.org/abs/2403.10131"
+    },
+    {
+      "title": "Search results — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/search-results"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nQUESTION = \"How many weeks of parental leave do we get?\"\nemployee = NS(id=\"emp_311\", groups={\"all-staff\"})\n\n\ndef search_handbook(question, user, k=5):\n    pages = [NS(source=\"kb://hr/parental-leave@v7\", title=\"Parental leave\",\n                text=\"Employees get 16 weeks of paid parental leave.\", audience=\"all-staff\")]\n    return [p for p in pages if p.audience in user.groups][:k]\n\n\ndef _create(*, model, max_tokens, messages, system=None, **kwargs):\n    content = messages[-1][\"content\"]\n    results = [c for c in content if isinstance(c, dict) and c.get(\"type\") == \"search_result\"]\n    thinking = NS(type=\"thinking\", thinking=\"\")\n    if not results:\n        return NS(content=[thinking, NS(type=\"text\", text=\"Usually 12 weeks.\", citations=None)],\n                  stop_reason=\"end_turn\")\n    cite = NS(type=\"search_result_location\", source=results[0][\"source\"],\n              title=results[0][\"title\"], search_result_index=0)\n    return NS(content=[thinking, NS(type=\"text\", text=\"You get 16 weeks of paid leave.\",\n                                    citations=[cite])], stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

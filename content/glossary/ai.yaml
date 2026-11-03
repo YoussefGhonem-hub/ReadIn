@@ -419,3 +419,34 @@ terms:
     definitionAr: >-
       إنك تبدّل الجزء القديم من محادثة طويلة أو شغل agent بملخص، عشان الشغل يكمّل بـ context أصغر. والملخص اللي بيشيل
       كتير ممكن يضيّع تفاصيل هتحتاجها بعدين.
+  - id: position-bias
+    term: Position Bias
+    definitionEn: >-
+      A model's tendency to favor an option because of where it appears, such as the first of two answers, rather than
+      because of its content. Swapping the order and comparing verdicts exposes it.
+    definitionAr: >-
+      ميل الموديل إنه يفضّل اختيار بسبب مكانه، زي أول إجابة من اتنين، مش بسبب محتواه. وبتكشفه لما تبدّل الترتيب وتقارن
+      الحُكم في المرتين.
+  - id: self-preference-bias
+    term: Self-Preference Bias
+    definitionEn: >-
+      An LLM evaluator rating text it generated itself higher than text of similar quality from other models or from
+      people.
+    definitionAr: >-
+      إن الـ LLM وهو بيقيّم يدّي النص اللي هو كتبه درجة أعلى من نص بنفس الجودة كتبه موديل تاني أو بني آدم.
+  - id: multi-agent-system
+    term: Multi-Agent System
+    definitionEn: >-
+      Several LLM agents working on one task, usually a lead agent that delegates subtasks to other agents, each with
+      its own prompt, tools and context window, and combines what they return.
+    definitionAr: >-
+      كذا LLM agent شغالين على مهمة واحدة، غالبًا agent رئيسي بيوزّع مهام فرعية على agents تانية، كل واحد ليه الـ prompt
+      والأدوات والـ context window بتوعه، وبعدين بيجمّع اللي رجعوا بيه.
+  - id: orchestrator-workers
+    term: Orchestrator-Workers
+    definitionEn: >-
+      A pattern where a central model breaks a task into subtasks at run time, hands them to worker calls or agents,
+      and combines their results. Unlike plain parallelization, the subtasks aren't fixed in advance.
+    definitionAr: >-
+      نمط فيه موديل مركزي بيقسم المهمة لمهام فرعية وقت التشغيل، ويسلّمها لـ calls أو agents شغالين تحته، وبعدين يجمّع
+      نتايجهم. وبعكس الـ parallelization العادي، المهام الفرعية مش متحددة مقدمًا.

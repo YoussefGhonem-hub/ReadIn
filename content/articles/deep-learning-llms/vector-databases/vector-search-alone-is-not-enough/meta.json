@@ -1,0 +1,51 @@
+{
+  "slug": "vector-search-alone-is-not-enough",
+  "field": "deep-learning-llms",
+  "topic": "vector-databases",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Vector Search Alone Misses: Hybrid Search and Reranking for RAG",
+      "subtitle": "Keyword and vector search fail on different queries. Run both, fuse their ranks, and let a reranker read the short list."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Vector Search لوحده مش كفاية؟ الـ Hybrid Search والـ Reranking",
+      "subtitle": "الـ keyword search والـ vector search بيغلطوا في أسئلة مختلفة. شغّل الاتنين، ادمج ترتيبهم، وخلّي reranker يقرا الـ list القصيرة."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "building-with-llms", "order": 8 },
+  "tags": ["RAG", "Vector Search", "Hybrid Search", "Reranking"],
+  "sources": [
+    {
+      "title": "Thakur et al., BEIR: A Heterogenous Benchmark for Zero-shot Evaluation of Information Retrieval Models, arXiv:2104.08663",
+      "url": "https://arxiv.org/abs/2104.08663"
+    },
+    {
+      "title": "Cormack, Clarke and Büttcher, Reciprocal Rank Fusion outperforms Condorcet and individual Rank Learning Methods, SIGIR 2009",
+      "url": "https://cormack.uwaterloo.ca/cormacksigir09-rrf.pdf"
+    },
+    {
+      "title": "Nogueira and Cho, Passage Re-ranking with BERT, arXiv:1901.04085",
+      "url": "https://arxiv.org/abs/1901.04085"
+    },
+    {
+      "title": "Introducing Contextual Retrieval — Anthropic",
+      "url": "https://www.anthropic.com/research/contextual-retrieval"
+    },
+    {
+      "title": "Lewis et al., Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks, arXiv:2005.11401",
+      "url": "https://arxiv.org/abs/2005.11401"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "_GENERIC = [\"kb/errors-overview\", \"kb/upgrade-guide\", \"kb/error-handling\",\n            \"kb/troubleshooting\", \"kb/release-notes-4-2\"]\n_VECTOR = _GENERIC + [f\"kb/page-{i}\" for i in range(30)] + [\"kb/e1047\"]\n_KEYWORD = [\"kb/e1047\", \"kb/release-notes-4-2\", \"kb/errors-overview\"]\n\n\ndef vector_search(query, k):\n    return _VECTOR[:k]\n\n\ndef keyword_search(query, k):\n    return _KEYWORD[:k]\n\n\ndef rerank(query, doc_ids):\n    best = {\"kb/e1047\": 0, \"kb/release-notes-4-2\": 1, \"kb/upgrade-guide\": 2}\n    return sorted(doc_ids, key=lambda d: best.get(d, 9))\n"
+    }
+  }
+}

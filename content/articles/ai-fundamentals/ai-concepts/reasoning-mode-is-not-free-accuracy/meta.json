@@ -1,0 +1,51 @@
+{
+  "slug": "reasoning-mode-is-not-free-accuracy",
+  "field": "ai-fundamentals",
+  "topic": "ai-concepts",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "When Extended Reasoning Helps, and When More Thinking Makes Answers Worse",
+      "subtitle": "Thinking pays off on hard multistep problems. Elsewhere it costs tokens and time, and sometimes accuracy."
+    },
+    "ar-EG": {
+      "title": "التفكير الأطول مش دقة ببلاش: إمتى الـ Reasoning بيفيد وإمتى بيضر",
+      "subtitle": "الـ thinking بيفرق في المسائل الصعبة اللي فيها خطوات كتير. وفي غيرها بيكلّفك tokens ووقت، وساعات دقة كمان."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "building-with-llms", "order": 12 },
+  "tags": ["LLMs", "Reasoning", "Claude API", "Evals"],
+  "sources": [
+    {
+      "title": "Gema et al., Inverse Scaling in Test-Time Compute, arXiv:2507.14417",
+      "url": "https://arxiv.org/abs/2507.14417"
+    },
+    {
+      "title": "Thinking — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/thinking"
+    },
+    {
+      "title": "Effort — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/effort"
+    },
+    {
+      "title": "Steering thinking — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/thinking-steering-and-cost"
+    },
+    {
+      "title": "Prompting Claude Opus 5.5 — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nTAGGER_PROMPT = \"Tag the ticket as billing, technical or account. Reply with the tag only.\"\n_THINKING = {\"low\": 40, \"medium\": 160, \"high\": 900, \"xhigh\": 2400, \"max\": 6000}\n\n\ndef load_cases(path):\n    return [{\"text\": \"Charged twice for order #5521\", \"tag\": \"billing\"},\n            {\"text\": \"The app crashes when I log in\", \"tag\": \"technical\"},\n            {\"text\": \"Please change my email address\", \"tag\": \"account\"}]\n\n\ndef _create(*, model, max_tokens, messages, system=None, output_config=None, **kwargs):\n    effort = (output_config or {}).get(\"effort\", \"medium\")\n    text = messages[-1][\"content\"].lower()\n    tag = (\"billing\" if \"charged\" in text else\n           \"account\" if \"email\" in text else \"technical\")\n    thinking = _THINKING[effort]\n    usage = NS(input_tokens=180, output_tokens=thinking + 2,\n               output_tokens_details=NS(thinking_tokens=thinking))\n    content = [NS(type=\"thinking\", thinking=\"\"), NS(type=\"text\", text=tag)]\n    return NS(content=content, stop_reason=\"end_turn\", usage=usage)\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

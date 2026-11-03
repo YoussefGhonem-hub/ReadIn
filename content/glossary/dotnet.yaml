@@ -191,3 +191,11 @@ terms:
     term: Cache stampede
     definitionEn: When a popular cache entry is missing or has just expired and many concurrent requests miss it at once, so each one rebuilds the same value and the database or API behind the cache takes the whole burst.
     definitionAr: لما entry مشهور في الـ cache يبقى مش موجود أو مدته لسه خالصة، و requests كتير في نفس اللحظة متلاقيهوش، فكل واحد فيهم يبني نفس القيمة من الأول، والداتابيز أو الـ API اللي ورا الـ cache ياخد الضربة كلها.
+  - id: sync-over-async
+    term: Sync over async
+    definitionEn: Calling an asynchronous method and then blocking the current thread until it finishes, with .Result, .Wait() or GetAwaiter().GetResult(), so the thread is held for the whole wait.
+    definitionAr: إنك تنادي async method وبعدين توقّف الـ thread الحالي لحد ما تخلص، بـ .Result أو .Wait() أو GetAwaiter().GetResult()، فالـ thread بيفضل محجوز طول فترة الانتظار.
+  - id: thread-pool-starvation
+    term: Thread pool starvation
+    definitionEn: When every thread pool thread is busy or blocked, so new work, including incoming requests and the continuations that would release the waiting threads, sits in the queue until the pool slowly adds threads.
+    definitionAr: لما كل threads الـ thread pool تبقى مشغولة أو واقفة، فالشغل الجديد، ومنه الـ requests اللي داخلة والـ continuations اللي المفروض تفك الـ threads الواقفة، يفضل مستني في الطابور لحد ما الـ pool يضيف threads واحدة واحدة.

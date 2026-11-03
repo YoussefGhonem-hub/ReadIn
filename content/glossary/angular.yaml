@@ -63,3 +63,13 @@ terms:
     definitionAr: >-
       إنك تشغّل Angular من غير zone.js. ساعتها Angular مابيعملش change detection غير لما حاجة تنبّهه، زي signal بيتقري في
       template، أو event listener في الـ template، أو markForCheck(). وده الافتراضي من أول Angular 21.
+  - id: hierarchical-injectors
+    term: Hierarchical injectors
+    definitionEn: >-
+      Angular's tree of dependency injection containers: environment injectors for the app and its routes, and element
+      injectors for components and directives that declare providers. Each injector keeps its own instances, and a
+      lookup walks up the tree until it finds a provider.
+    definitionAr: >-
+      شجرة الـ dependency injection containers في Angular: environment injectors للتطبيق والـ routes بتاعته، وelement
+      injectors للـ components والـ directives اللي بتعرّف providers. كل injector بيحتفظ بالـ instances بتاعته، والبحث
+      بيطلع لفوق في الشجرة لحد ما يلاقي provider.

@@ -1,0 +1,51 @@
+{
+  "slug": "context-engineering-for-agents",
+  "field": "ai-fundamentals",
+  "topic": "agents",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Context Engineering: Why Preloading Everything Makes Agents Worse",
+      "subtitle": "An agent's context is a working budget, not a warehouse. Give it an index, fetch details on demand and clear what's stale."
+    },
+    "ar-EG": {
+      "title": "ليه تحميل كل حاجة في الـ context مقدمًا بيخلّي الـ Agent أسوأ؟ الـ Context Engineering",
+      "subtitle": "الـ context بتاع الـ agent ميزانية شغل، مش مخزن. ادّيله فهرس، وخلّيه يجيب التفاصيل وقت ما يحتاجها، وامسح القديم."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": { "slug": "building-with-llms", "order": 13 },
+  "tags": ["Agents", "Context Engineering", "Claude API", "Tool Use"],
+  "sources": [
+    {
+      "title": "Effective context engineering for AI agents — Anthropic",
+      "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+    },
+    {
+      "title": "Context editing — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/context-editing"
+    },
+    {
+      "title": "Compaction overview — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/compaction"
+    },
+    {
+      "title": "Tool search tool — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool"
+    },
+    {
+      "title": "Managing context on the Claude Developer Platform — Anthropic",
+      "url": "https://www.anthropic.com/news/context-management"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\n\n\ndef _tool(name):\n    return {\"name\": name, \"description\": name.replace(\"_\", \" \"),\n            \"input_schema\": {\"type\": \"object\", \"properties\": {}}}\n\n\nREAD_PAGE = _tool(\"read_page\")\nSEARCH_LOGS = _tool(\"search_logs\")\nLIST_DEPLOYS = _tool(\"list_deploys\")\nALL_TOOLS = [_tool(f\"server{s}_tool{t}\") for s in range(5) for t in range(12)]\n\n\ndef load_wiki():\n    return [NS(path=f\"runbooks/page-{i}.md\", title=f\"Runbook {i}\",\n               text=\"Step one. Step two. \" * 200) for i in range(300)]\n\n\ndef _create(*, model, max_tokens, messages, system=\"\", tools=None, **kwargs):\n    size = len(system) // 4 + 300 * len(tools or [])\n    call = NS(type=\"tool_use\", id=\"toolu_01\", name=\"search_logs\", input={})\n    usage = NS(input_tokens=size, output_tokens=120)\n    return NS(content=[NS(type=\"thinking\", thinking=\"\"), call],\n              stop_reason=\"tool_use\", usage=usage)\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n        self.beta = NS(messages=NS(create=_create))\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "slug": "benchmarks-wont-pick-your-model",
+  "field": "ai-fundamentals",
+  "topic": "llm-evaluation",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Leaderboards Won't Pick Your Model: Contamination and Task-Specific Evals",
+      "subtitle": "A public score measures someone else's questions, sometimes ones the model has already seen. Choose with your own cases, costs and latency."
+    },
+    "ar-EG": {
+      "title": "ليه ترتيب الـ Leaderboard مش هيختارلك الموديل الصح؟ الـ Contamination والتقييم على مهمتك",
+      "subtitle": "الـ score العام بيقيس أسئلة حد تاني، وساعات أسئلة الموديل شافها قبل كده. اختار بحالاتك انت وتكلفتها والـ latency بتاعها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": { "slug": "building-with-llms", "order": 11 },
+  "tags": ["LLM Evaluation", "Benchmarks", "Model Selection", "LLMs"],
+  "sources": [
+    {
+      "title": "Golchin and Surdeanu, Time Travel in LLMs: Tracing Data Contamination in Large Language Models, arXiv:2308.08493",
+      "url": "https://arxiv.org/abs/2308.08493"
+    },
+    {
+      "title": "Deng et al., Investigating Data Contamination in Modern Benchmarks for Large Language Models, arXiv:2311.09783",
+      "url": "https://arxiv.org/abs/2311.09783"
+    },
+    {
+      "title": "Zhang et al., A Careful Examination of Large Language Model Performance on Grade School Arithmetic, arXiv:2405.00332",
+      "url": "https://arxiv.org/abs/2405.00332"
+    },
+    {
+      "title": "Singh et al., The Leaderboard Illusion, arXiv:2504.20879",
+      "url": "https://arxiv.org/abs/2504.20879"
+    },
+    {
+      "title": "Choosing the right model — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/about-claude/models/choosing-a-model"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nSUMMARY_PROMPT = \"Summarize the support ticket. Keep the order number and the request.\"\nCASES = [\n    {\"ticket\": \"Order 7731 arrived broken, I want a replacement.\",\n     \"must_mention\": [\"7731\", \"replacement\"]},\n    {\"ticket\": \"\\u0627\\u0644\\u0637\\u0644\\u0628 4410 \\u0645\\u0648\\u0635\\u0644\\u0634\\u060c \\u0639\\u0627\\u064a\\u0632 \\u0641\\u0644\\u0648\\u0633\\u064a.\",\n     \"must_mention\": [\"4410\", \"refund\"]},\n]\n\n\ndef load_leaderboard(category):\n    return {\"model-a\": 3.0, \"model-b\": 2.0, \"model-c\": 1.0}\n\n\ndef grade(text, must_mention):\n    return all(term in text for term in must_mention)\n\n\ndef price(model, usage):\n    rates = {\"claude-opus-5-5\": (4, 20), \"claude-sonnet-5-5\": (2, 10),\n             \"claude-haiku-5-5\": (0.1, 0.5)}\n    rate_in, rate_out = rates[model]\n    return (usage.input_tokens * rate_in + usage.output_tokens * rate_out) / 1e6\n\n\ndef _create(*, model, max_tokens, messages, system=None, **kwargs):\n    ticket = messages[-1][\"content\"]\n    number = next(w for w in ticket.split() if w.isdigit())\n    text = f\"Order {number}: customer wants a replacement or refund.\"\n    usage = NS(input_tokens=60, output_tokens=20)\n    return NS(content=[NS(type=\"thinking\", thinking=\"\"), NS(type=\"text\", text=text)],\n              usage=usage, stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

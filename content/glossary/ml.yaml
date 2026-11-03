@@ -304,3 +304,11 @@ terms:
     definitionAr: >-
       الجذر التربيعي لمتوسط مربعات الغلط في موديل regression. بيبقى بوحدات الـ target زي الـ MAE، بس التربيع بيدّي
       الغلطات الكبيرة وزن أكبر، فكام غلطة كبيرة ممكن يرفعوه فوق الـ MAE بكتير.
+  - id: pipeline
+    term: Pipeline
+    definitionEn: >-
+      In scikit-learn, a chain of preprocessing steps and a final model that behaves as one estimator. Fitting it fits
+      every step on the same rows, so cross-validation refits the whole chain on each fold's training data.
+    definitionAr: >-
+      في scikit-learn، سلسلة من خطوات الـ preprocessing وفي آخرها موديل، وبتتعامل كأنها estimator واحد. لما تعملها fit،
+      كل خطوة بتتعلّم من نفس الصفوف، فالـ cross-validation بيعيد fit للسلسلة كلها على داتا الـ training بتاعة كل fold.
