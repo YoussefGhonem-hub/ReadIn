@@ -1,0 +1,27 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "live": {
+      "articles": {
+        ".read": true,
+        ".write": false,
+        "$articleId": {
+          "events": {
+            ".indexOn": ["at"]
+          }
+        }
+      },
+      "feed": {
+        ".read": true,
+        ".write": false
+      },
+      "users": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        }
+      }
+    }
+  }
+}
