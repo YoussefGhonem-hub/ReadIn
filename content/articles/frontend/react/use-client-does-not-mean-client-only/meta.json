@@ -1,0 +1,54 @@
+{
+  "slug": "use-client-does-not-mean-client-only",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "'use client' Doesn't Mean Client-Only: Server and Client Components Explained",
+      "subtitle": "The directive decides which code ships to the browser, not where it renders: Client Components still run on the server to build the first HTML."
+    },
+    "ar-EG": {
+      "title": "هل 'use client' معناها إن الـ component للمتصفح بس؟ الـ Server والـ Client Components",
+      "subtitle": "الـ directive بيحدد أنهي كود يتبعت للمتصفح، مش هيتعمله render فين: الـ Client Components لسه بتشتغل على الـ server عشان تبني أول HTML."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 10
+  },
+  "tags": [
+    "React 19",
+    "Server Components",
+    "use client",
+    "SSR"
+  ],
+  "sources": [
+    {
+      "title": "'use client' — React Server Components Reference",
+      "url": "https://react.dev/reference/rsc/use-client"
+    },
+    {
+      "title": "Server Components — React Reference",
+      "url": "https://react.dev/reference/rsc/server-components"
+    },
+    {
+      "title": "browser — React DOM API Reference",
+      "url": "https://react.dev/reference/react-dom/browser"
+    },
+    {
+      "title": "React 19.3 — React Blog",
+      "url": "https://react.dev/blog/2026/09/09/react-19-3"
+    },
+    {
+      "title": "hydrateRoot — React DOM API Reference",
+      "url": "https://react.dev/reference/react-dom/client/hydrateRoot"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

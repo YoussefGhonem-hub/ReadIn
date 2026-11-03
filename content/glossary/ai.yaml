@@ -320,3 +320,36 @@ terms:
     definitionAr: >-
       إنك تحط في الـ prompt كام مثال محلول للمهمة، inputs ومعاها الـ outputs اللي إنت عايزها، عشان الموديل يمشي على نفس
       الـ pattern. والـ zero-shot يعني من غير أمثلة، والـ one-shot يعني مثال واحد.
+  - id: retrieval-augmented-generation
+    term: Retrieval-Augmented Generation (RAG)
+    definitionEn: >-
+      Answering a request by first searching a collection of documents for relevant passages and putting them in the
+      model's prompt, so the answer can use current or private text the model was never trained on.
+    definitionAr: >-
+      إنك تجاوب على الطلب بإنك تدوّر الأول في مجموعة مستندات على الأجزاء اللي ليها علاقة بيه وتحطها في الـ prompt
+      بتاع الموديل، عشان الإجابة تقدر تستخدم نص جديد أو خاص الموديل عمره ما اتدرّب عليه.
+  - id: fine-tuning
+    term: Fine-Tuning
+    definitionEn: >-
+      Continuing to train an already trained model on a smaller dataset for a specific task, domain or style, which
+      changes its weights. Instruction tuning is one kind of fine-tuning.
+    definitionAr: >-
+      إنك تكمّل training لموديل متدرّب قبل كده على داتا أصغر لمهمة أو مجال أو أسلوب معيّن، وده بيغيّر الـ weights
+      بتاعته. والـ instruction tuning نوع من أنواع الـ fine-tuning.
+  - id: bm25
+    term: BM25
+    definitionEn: >-
+      A keyword ranking formula that scores a passage by the query words it contains, giving rare words more weight
+      and adjusting for document length. It's the standard lexical baseline in search engines.
+    definitionAr: >-
+      معادلة ترتيب بالـ keywords بتدّي الـ passage درجة على حسب كلمات السؤال اللي فيها، والكلمات النادرة بتاخد وزن
+      أكبر، ومعاها تظبيط لطول المستند. وهي الـ baseline المعتاد للبحث بالكلمات في محركات البحث.
+  - id: reciprocal-rank-fusion
+    term: Reciprocal Rank Fusion (RRF)
+    definitionEn: >-
+      A way to merge ranked result lists from several searches: each list adds 1 / (k + rank) to a document, usually
+      with k = 60, and documents are sorted by the total. It uses positions only, so the lists' scores never need to
+      be comparable.
+    definitionAr: >-
+      طريقة لدمج كذا list نتايج مترتبة من أكتر من بحث: كل list بتزوّد المستند بـ 1 / (k + rank)، وغالبًا k = 60،
+      والمستندات بتترتب بالمجموع. بتستخدم الترتيب بس، فمش محتاج الـ scores بتاعة الـ lists تبقى قابلة للمقارنة.

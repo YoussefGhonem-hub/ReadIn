@@ -1,0 +1,55 @@
+{
+  "slug": "usedeferredvalue-is-not-a-debounce",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "useDeferredValue Is Not a Debounce: How Transitions Keep Typing Responsive",
+      "subtitle": "There's no timer inside: React renders the slow part in the background, starts right away and drops that work the moment you type again."
+    },
+    "ar-EG": {
+      "title": "ليه الـ useDeferredValue مش debounce؟ الـ Transitions وسرعة الكتابة",
+      "subtitle": "مفيش timer جوّاه: React بيعمل render للجزء التقيل في الخلفية، بيبدأ على طول، ويرمي الشغل ده أول ما تكتب حرف جديد."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 9
+  },
+  "tags": [
+    "React 19",
+    "useDeferredValue",
+    "Transitions",
+    "Performance"
+  ],
+  "sources": [
+    {
+      "title": "useDeferredValue — React API Reference",
+      "url": "https://react.dev/reference/react/useDeferredValue#how-is-deferring-a-value-different-from-debouncing-and-throttling"
+    },
+    {
+      "title": "useTransition — React API Reference",
+      "url": "https://react.dev/reference/react/useTransition"
+    },
+    {
+      "title": "startTransition — React API Reference",
+      "url": "https://react.dev/reference/react/startTransition"
+    },
+    {
+      "title": "memo — React API Reference",
+      "url": "https://react.dev/reference/react/memo"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Ticket = { id: string; subject: string };\ndeclare function TicketRows(props: { tickets: Ticket[]; query: string }): null;"
+    }
+  }
+}

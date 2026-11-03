@@ -1,0 +1,55 @@
+{
+  "slug": "use-server-is-not-for-server-components",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "'use server' Doesn't Mark Server Components: What Server Functions Really Are",
+      "subtitle": "Server Components need no directive. 'use server' turns async functions into endpoints the browser can call, with arguments it controls."
+    },
+    "ar-EG": {
+      "title": "هل 'use server' بتعمل Server Component؟ لأ، دي Server Functions",
+      "subtitle": "الـ Server Components مش محتاجة directive. الـ 'use server' بيحوّل الـ async functions لـ endpoints المتصفح يقدر يناديها بالـ arguments اللي هو عايزها."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 11
+  },
+  "tags": [
+    "React 19",
+    "Server Functions",
+    "use server",
+    "Security"
+  ],
+  "sources": [
+    {
+      "title": "Server Components — React Reference",
+      "url": "https://react.dev/reference/rsc/server-components"
+    },
+    {
+      "title": "'use server' — React Server Components Reference",
+      "url": "https://react.dev/reference/rsc/use-server"
+    },
+    {
+      "title": "Server Functions — React Reference",
+      "url": "https://react.dev/reference/rsc/server-functions"
+    },
+    {
+      "title": "Directives — React Server Components Reference",
+      "url": "https://react.dev/reference/rsc/directives"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Order = { id: string; title: string };\ntype User = { id: string };\ndeclare function requireUser(): Promise<User>;\ndeclare function findOrders(userId: string): Promise<Order[]>;\ndeclare function deleteOrder(orderId: string): Promise<void>;\ndeclare function deleteOrderOwnedBy(userId: string, orderId: string): Promise<void>;\ndeclare function OrderList(props: {\n  orders: Order[];\n  onCancel: (orderId: string) => Promise<void>;\n}): null;"
+    }
+  }
+}

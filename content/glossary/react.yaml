@@ -273,3 +273,46 @@ terms:
     definitionAr: >-
       إنك تستنى لحد ما سلسلة events تهدى لمدة ثابتة، وبعدين تعمل الحاجة مرة واحدة، زي إنك تعمل search بس بعد ما
       اليوزر يبطّل كتابة لمدة 300 ms. وكل event جديد بيبدأ الانتظار من الأول.
+  - id: server-components
+    term: Server Components
+    definitionEn: >-
+      React components that render ahead of time, at build time or per request, in a server environment separate
+      from the browser and the SSR server. Only their output reaches the client; their code is never shipped to it.
+    definitionAr: >-
+      components في React بتعمل render بدري، وقت الـ build أو مع كل request، في بيئة على الـ server منفصلة عن
+      المتصفح وعن الـ SSR server. اللي بيوصل للـ client هو الناتج بتاعها بس، والكود بتاعها عمره ما بيتبعتله.
+  - id: server-side-rendering
+    term: Server-side rendering (SSR)
+    definitionEn: >-
+      Rendering React components to HTML on the server, so the browser can show the page before the JavaScript has
+      loaded. React then hydrates that HTML in the browser to make it interactive.
+    definitionAr: >-
+      إنك تعمل render للـ components بتاعة React لـ HTML على الـ server، عشان المتصفح يعرض الصفحة قبل ما الـ
+      JavaScript يحمّل. وبعدها React بيعمل hydration للـ HTML ده في المتصفح عشان يبقى تفاعلي.
+  - id: hydration
+    term: Hydration
+    definitionEn: >-
+      React attaching to HTML that was rendered on the server: it renders the same components in the browser, adopts
+      the existing DOM nodes and attaches event handlers. The browser's first render must match the server's HTML.
+    definitionAr: >-
+      إن React يركب على HTML اتعمله render على الـ server: بيعمل render لنفس الـ components في المتصفح، وياخد الـ
+      DOM nodes الموجودة بدل ما يعمل جديدة، ويربط الـ event handlers. وأول render في المتصفح لازم يطابق الـ HTML اللي
+      جه من الـ server.
+  - id: server-function
+    term: Server Function
+    definitionEn: >-
+      An async function marked with 'use server' that client code can call. React sends its serialized arguments to
+      the server in a network request, runs it there and returns the serialized result. It used to be called a Server
+      Action.
+    definitionAr: >-
+      async function متعلّم عليها بـ 'use server' والكود اللي على الـ client يقدر يناديها. React بيبعت الـ arguments
+      بتاعتها بعد ما يعملها serialize للـ server في network request، ويشغّلها هناك، ويرجّع النتيجة serialized. وكان
+      اسمها زمان Server Action.
+  - id: suspense-boundary
+    term: Suspense boundary
+    definitionEn: >-
+      A Suspense component and the tree inside it. When a component below it suspends during render, for example by
+      reading a pending Promise with use, React shows the boundary's fallback until that content is ready.
+    definitionAr: >-
+      component من نوع Suspense ومعاه الشجرة اللي جواه. لما component تحته يعمل suspend وهو بيتعمله render، زي إنه
+      يقرا Promise لسه pending بـ use، React بيعرض الـ fallback بتاع الـ boundary لحد ما المحتوى ده يجهز.

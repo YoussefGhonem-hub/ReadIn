@@ -159,3 +159,11 @@ terms:
     term: Service lifetime
     definitionEn: How long the dependency injection container keeps an instance of a service. Singleton means one instance for the whole app, scoped means one per request, and transient means a new one every time it's resolved.
     definitionAr: المدة اللي الـ dependency injection container بيحتفظ فيها بـ instance من الـ service. الـ Singleton يعني instance واحدة للتطبيق كله، والـ scoped يعني واحدة لكل request، والـ transient يعني واحدة جديدة كل مرة تتطلب.
+  - id: captive-dependency
+    term: Captive dependency
+    definitionEn: A service held by another service that lives longer than it, such as a scoped DbContext injected into a singleton. The captured service then lives as long as its holder and is shared by everyone who uses the holder.
+    definitionAr: service ماسكها service تانية عمرها أطول منها، زي DbContext متسجل scoped ومتعمله inject في singleton. ساعتها الـ service المحبوسة بتعيش قد اللي ماسكها، وبتبقى مشتركة بين كل اللي بيستخدموه.
+  - id: cross-cutting-concern
+    term: Cross-cutting concern
+    definitionEn: Behavior that many parts of an app need but that belongs to none of them in particular, such as logging, error handling, authorization or input checks.
+    definitionAr: سلوك أجزاء كتير من التطبيق محتاجاه بس مش تبع جزء واحد فيهم بالتحديد، زي الـ logging أو التعامل مع الأخطاء أو الـ authorization أو التشييك على الـ input.

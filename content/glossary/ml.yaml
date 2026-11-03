@@ -223,3 +223,19 @@ terms:
     definitionAr: >-
       طريقة بتلف الداتا على محاور جديدة اسمها principal components، مترتبة حسب قد إيه كل واحد فيها شايل variance، عشان
       تحتفظ بأول كام واحد بس. مابتبصش على الـ target، وكل component خليط من كل الـ features الأصلية.
+  - id: concept-drift
+    term: Concept Drift
+    definitionEn: >-
+      A change over time in how the inputs relate to the label, so the same inputs start leading to different outcomes.
+      A model trained before the change loses accuracy, even if the inputs themselves look the same.
+    definitionAr: >-
+      تغيير مع الوقت في علاقة الـ inputs بالـ label، فنفس الـ inputs تبدأ تودّي لنتايج مختلفة. والموديل اللي اتدرّب قبل
+      التغيير ده بيخسر من دقته، حتى لو الـ inputs نفسها شكلها زي ما هي.
+  - id: training-serving-skew
+    term: Training-Serving Skew
+    definitionEn: >-
+      A difference between the data a model was trained on and the data it receives in production, often caused by
+      feature code or schemas that differ between the training and serving pipelines.
+    definitionAr: >-
+      فرق بين الداتا اللي الموديل اتدرّب عليها والداتا اللي بتوصله في الـ production، وغالبًا سببه إن كود الـ features أو
+      الـ schema مختلفين بين pipeline الـ training وpipeline الـ serving.

@@ -1,0 +1,51 @@
+{
+  "slug": "react-suspense-and-use-need-cached-promises",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Suspense Doesn't Wait for Your useEffect: Loading Data with use() Done Right",
+      "subtitle": "Suspense only sees components that suspend while rendering, and use() only works when it gets the same Promise on every render."
+    },
+    "ar-EG": {
+      "title": "ليه الـ Suspense مش بيستنى الـ fetch اللي في useEffect؟ تحميل الداتا بـ use() صح",
+      "subtitle": "الـ Suspense بيشوف بس الـ components اللي بتعمل suspend وهي بتعمل render، والـ use() مابيشتغلش صح غير لو أخد نفس الـ Promise في كل render."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-in-production",
+    "order": 12
+  },
+  "tags": [
+    "React 19",
+    "Suspense",
+    "use",
+    "Data fetching"
+  ],
+  "sources": [
+    {
+      "title": "<Suspense> — React API Reference",
+      "url": "https://react.dev/reference/react/Suspense"
+    },
+    {
+      "title": "use — React API Reference",
+      "url": "https://react.dev/reference/react/use"
+    },
+    {
+      "title": "Server Components — React Reference",
+      "url": "https://react.dev/reference/rsc/server-components"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Product = { id: string; name: string };\ndeclare function fetchProduct(id: string): Promise<Product>;"
+    }
+  }
+}
