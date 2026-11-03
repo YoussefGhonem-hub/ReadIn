@@ -1,0 +1,59 @@
+{
+  "slug": "dependency-inversion-is-not-a-di-container",
+  "field": "software-architecture",
+  "topic": "solid",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Dependency Inversion Is Not a DI Container (or an Interface per Class)",
+      "subtitle": "The principle decides which way dependencies point and who owns the abstraction. A container only wires objects, and an interface copied from a class keeps the detail's shape."
+    },
+    "ar-EG": {
+      "title": "الـ Dependency Inversion مش DI container ومش interface لكل class",
+      "subtitle": "المبدأ بيحدد الـ dependencies بتشاور على فين، ومين اللي يملك الـ abstraction. أما الـ container فبيوصّل الـ objects ببعض وبس، والـ interface المنسوخة من class بتفضل بشكل الـ detail."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "design-principles",
+    "order": 6
+  },
+  "tags": [
+    "SOLID",
+    "Dependency Inversion",
+    "Dependency Injection",
+    "Interfaces"
+  ],
+  "sources": [
+    {
+      "title": "The Dependency Inversion Principle — Robert C. Martin, The C++ Report (1996)",
+      "url": "https://cs.utexas.edu/~downing/papers/DIP-1996.pdf"
+    },
+    {
+      "title": "Dependency Injection Inversion — Robert C. Martin (2010)",
+      "url": "https://sites.google.com/site/unclebobconsultingllc/blogs-by-robert-martin/dependency-injection-inversion"
+    },
+    {
+      "title": "DIP in the Wild — Brett L. Schuchert, martinfowler.com (2013)",
+      "url": "https://martinfowler.com/articles/dipInTheWild.html"
+    },
+    {
+      "title": "RoleInterface — Martin Fowler, bliki (2006)",
+      "url": "https://martinfowler.com/bliki/RoleInterface.html"
+    },
+    {
+      "title": "Architectural principles — .NET Architecture Guides, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record OrderLine(decimal Price, int Qty);\npublic sealed record Order(int Id, string CustomerEmail, List<OrderLine> Lines);\npublic sealed record SmtpSettings(string Host, int Port);\npublic sealed class SmtpSender\n{\n    public Task SendAsync(string to, string subject, string html, CancellationToken ct) =>\n        Task.CompletedTask;\n}"
+    }
+  }
+}

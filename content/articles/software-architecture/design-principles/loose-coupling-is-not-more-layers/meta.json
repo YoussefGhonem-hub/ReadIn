@@ -1,0 +1,55 @@
+{
+  "slug": "loose-coupling-is-not-more-layers",
+  "field": "software-architecture",
+  "topic": "design-principles",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Coupling and Cohesion in Practice: Why More Layers Don't Mean Looser Code",
+      "subtitle": "Coupling is measured by how far a change ripples, not by how many boxes the diagram has. Keep what changes together in one module, and keep what crosses module lines small."
+    },
+    "ar-EG": {
+      "title": "الـ coupling والـ cohesion على أرض الواقع: ليه طبقات أكتر مش معناها كود أقل ارتباطًا",
+      "subtitle": "الـ coupling بيتقاس بالتغيير بيمشي لحد فين، مش بعدد المربعات في الـ diagram. خلّي اللي بيتغيّر مع بعض في module واحد، وخلّي اللي بيعدّي بين الـ modules صغير."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "design-principles",
+    "order": 7
+  },
+  "tags": [
+    "Coupling",
+    "Cohesion",
+    "Layered Architecture",
+    "Modularity"
+  ],
+  "sources": [
+    {
+      "title": "Reducing Coupling — Martin Fowler, IEEE Software (2001)",
+      "url": "https://martinfowler.com/ieeeSoftware/coupling.pdf"
+    },
+    {
+      "title": "PresentationDomainDataLayering — Martin Fowler, bliki (2015)",
+      "url": "https://martinfowler.com/bliki/PresentationDomainDataLayering.html"
+    },
+    {
+      "title": "Larry L. Constantine — Computer Pioneers, IEEE Computer Society",
+      "url": "https://history.computer.org/pioneers/constantine.html"
+    },
+    {
+      "title": "Architectural principles — .NET Architecture Guides, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "internal sealed class Order\n{\n    public int Id { get; private set; }\n    public static Order Place(int customerId, DateOnly deliverOn) => new();\n}\ninternal sealed class OrderingDb\n{\n    public List<Order> Orders { get; } = new();\n    public Task SaveChangesAsync(CancellationToken ct) => Task.CompletedTask;\n}"
+    }
+  }
+}

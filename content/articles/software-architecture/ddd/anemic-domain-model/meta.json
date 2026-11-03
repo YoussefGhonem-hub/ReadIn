@@ -1,0 +1,55 @@
+{
+  "slug": "anemic-domain-model",
+  "field": "software-architecture",
+  "topic": "ddd",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Entities Shouldn't Be Data Bags: The Anemic Domain Model Problem",
+      "subtitle": "A rule kept in a service holds only for callers that go through that service. Put the rules in the entity that owns the data, and let services coordinate."
+    },
+    "ar-EG": {
+      "title": "الـ entities مش مجرد شنط داتا: مشكلة الـ Anemic Domain Model",
+      "subtitle": "القاعدة اللي في service بتتطبق بس على اللي بيعدّي من الـ service دي. حط القواعد في الـ entity اللي بتملك الداتا، وسيب الـ services تنسّق."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "design-principles",
+    "order": 8
+  },
+  "tags": [
+    "DDD",
+    "Domain Model",
+    "Anemic Domain Model",
+    "EF Core"
+  ],
+  "sources": [
+    {
+      "title": "AnemicDomainModel — Martin Fowler, bliki (2003)",
+      "url": "https://martinfowler.com/bliki/AnemicDomainModel.html"
+    },
+    {
+      "title": "Design a microservice domain model — .NET Microservices Architecture, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/microservice-domain-model"
+    },
+    {
+      "title": "Design validations in the domain model layer — .NET Microservices Architecture, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/domain-model-layer-validations"
+    },
+    {
+      "title": "Implement the infrastructure persistence layer with Entity Framework Core — .NET Microservices Architecture, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-implementation-entity-framework-core"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public enum OrderStatus { Draft, Paid, Shipped }\npublic sealed record OrderLine(string Sku, decimal Price, int Quantity);"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "slug": "ddd-is-not-tactical-patterns",
+  "field": "software-architecture",
+  "topic": "ddd",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "DDD Is Not Folders Named Entities and Repositories: Start With Bounded Contexts",
+      "subtitle": "Entities, value objects and repositories are building blocks. Domain-Driven Design starts with the language, the core domain and the boundaries where each model applies."
+    },
+    "ar-EG": {
+      "title": "الـ DDD مش folders اسمها Entities و Repositories: ابدأ بالـ Bounded Contexts",
+      "subtitle": "الـ entities والـ value objects والـ repositories مجرد building blocks. الـ Domain-Driven Design بيبدأ باللغة، والـ core domain، والحدود اللي كل model بيتطبق جواها."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "design-principles",
+    "order": 9
+  },
+  "tags": [
+    "DDD",
+    "Bounded Context",
+    "Ubiquitous Language",
+    "Strategic Design"
+  ],
+  "sources": [
+    {
+      "title": "Domain-Driven Design Reference — Eric Evans, Domain Language (2015)",
+      "url": "https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf"
+    },
+    {
+      "title": "DomainDrivenDesign — Martin Fowler, bliki (2020)",
+      "url": "https://martinfowler.com/bliki/DomainDrivenDesign.html"
+    },
+    {
+      "title": "BoundedContext — Martin Fowler, bliki (2014)",
+      "url": "https://martinfowler.com/bliki/BoundedContext.html"
+    },
+    {
+      "title": "Use domain analysis to model microservices — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/microservices/model/domain-analysis"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public abstract class Entity { public Guid Id { get; init; } }\npublic sealed record Address(string Line1, string City);\npublic readonly record struct CustomerId(Guid Value);\npublic readonly record struct Money(decimal Amount, string Currency);\npublic enum DiscountTier { Standard, Gold }\npublic enum ServiceLevel { Standard, Priority }"
+    }
+  }
+}

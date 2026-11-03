@@ -1,0 +1,55 @@
+{
+  "slug": "yagni-and-speculative-extension-points",
+  "field": "software-architecture",
+  "topic": "design-principles",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "YAGNI Explained: The Real Cost of Designing for Imagined Requirements",
+      "subtitle": "An extension point for a future that hasn't arrived costs you to build, delays what's needed now, and slows every change until it's used or removed."
+    },
+    "ar-EG": {
+      "title": "شرح الـ YAGNI: التمن الحقيقي للتصميم عشان requirements متخيَّلة",
+      "subtitle": "الـ extension point اللي معمولة لمستقبل لسه ماجاش بتكلّفك وانت بتبنيها، وبتأخّر المطلوب دلوقتي، وبتبطّأ كل تغيير لحد ما تتستخدم أو تتشال."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "design-principles",
+    "order": 3
+  },
+  "tags": [
+    "YAGNI",
+    "Simple Design",
+    "Abstraction",
+    "Evolutionary Design"
+  ],
+  "sources": [
+    {
+      "title": "Yagni — Martin Fowler",
+      "url": "https://martinfowler.com/bliki/Yagni.html"
+    },
+    {
+      "title": "You're NOT gonna need it! — Ron Jeffries (1998)",
+      "url": "https://ronjeffries.com/xprog/articles/practices/pracnotneed/"
+    },
+    {
+      "title": "Beck Design Rules — Martin Fowler",
+      "url": "https://martinfowler.com/bliki/BeckDesignRules.html"
+    },
+    {
+      "title": "Design Stamina Hypothesis — Martin Fowler",
+      "url": "https://martinfowler.com/bliki/DesignStaminaHypothesis.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record Notification(string To, string Subject, string Body);\npublic interface IEmailSender\n{\n    Task SendAsync(string to, string subject, string body, CancellationToken ct);\n}"
+    }
+  }
+}

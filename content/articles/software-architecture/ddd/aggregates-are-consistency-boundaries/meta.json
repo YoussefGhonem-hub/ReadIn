@@ -1,0 +1,59 @@
+{
+  "slug": "aggregates-are-consistency-boundaries",
+  "field": "software-architecture",
+  "topic": "ddd",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "An Aggregate Is a Consistency Boundary, Not a Big Object Graph",
+      "subtitle": "Put inside an aggregate only what must be consistent when a transaction commits. Reference everything else by identity, and let it catch up asynchronously."
+    },
+    "ar-EG": {
+      "title": "الـ Aggregate حدود للـ consistency مش object graph كبير",
+      "subtitle": "حط جوه الـ aggregate بس اللي لازم يبقى متسق لحظة الـ commit. وأي حاجة تانية شاور عليها بالـ identity، وسيبها تلحق بعدين بشكل asynchronous."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "design-principles",
+    "order": 10
+  },
+  "tags": [
+    "DDD",
+    "Aggregates",
+    "Consistency",
+    "Transactions"
+  ],
+  "sources": [
+    {
+      "title": "DDD_Aggregate — Martin Fowler, bliki (2013)",
+      "url": "https://martinfowler.com/bliki/DDD_Aggregate.html"
+    },
+    {
+      "title": "Domain-Driven Design Reference — Eric Evans, Domain Language (2015)",
+      "url": "https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf"
+    },
+    {
+      "title": "Effective Aggregate Design, Part I: Modeling a Single Aggregate — Vaughn Vernon (2011)",
+      "url": "https://www.dddcommunity.org/wp-content/uploads/files/pdf_articles/Vernon_2011_1.pdf"
+    },
+    {
+      "title": "Effective Aggregate Design, Part II: Making Aggregates Work Together — Vaughn Vernon (2011)",
+      "url": "https://www.dddcommunity.org/wp-content/uploads/files/pdf_articles/Vernon_2011_2.pdf"
+    },
+    {
+      "title": "Use tactical DDD to design microservices — Azure Architecture Center, Microsoft Learn",
+      "url": "https://learn.microsoft.com/azure/architecture/microservices/model/tactical-domain-driven-design"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public readonly record struct CustomerId(Guid Value);\npublic readonly record struct OrderId(Guid Value)\n{\n    public static OrderId New() => new(Guid.NewGuid());\n}\npublic sealed record OrderLine(string Sku, int Quantity, decimal Price);\npublic sealed record Address(string Line1, string City);\npublic sealed class Order { }"
+    }
+  }
+}

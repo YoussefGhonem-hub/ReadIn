@@ -1,0 +1,55 @@
+{
+  "slug": "single-responsibility-is-not-do-one-thing",
+  "field": "software-architecture",
+  "topic": "solid",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Single Responsibility Doesn't Mean 'Do One Thing'",
+      "subtitle": "Robert C. Martin's SRP is about who asks for a change. 'Do one thing' is a different rule, written for functions."
+    },
+    "ar-EG": {
+      "title": "الـ Single Responsibility مش معناه إن الـ class تعمل حاجة واحدة",
+      "subtitle": "الـ SRP بتاع Robert C. Martin بيتكلم عن مين اللي بيطلب التغيير. و«اعمل حاجة واحدة» قاعدة تانية خالص، مكتوبة للـ functions."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "design-principles",
+    "order": 1
+  },
+  "tags": [
+    "SOLID",
+    "Single Responsibility",
+    "Cohesion",
+    "Software Design"
+  ],
+  "sources": [
+    {
+      "title": "The Single Responsibility Principle — Robert C. Martin, The Clean Code Blog (2014)",
+      "url": "https://blog.cleancoder.com/uncle-bob/2014/05/08/SingleReponsibilityPrinciple.html"
+    },
+    {
+      "title": "One Thing: Extract till you Drop — Robert C. Martin (2009)",
+      "url": "https://sites.google.com/site/unclebobconsultingllc/one-thing-extract-till-you-drop"
+    },
+    {
+      "title": "Solid Relevance — Robert C. Martin, The Clean Code Blog (2020)",
+      "url": "https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html"
+    },
+    {
+      "title": "Architectural principles — .NET Architecture Guides, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record TimeCard(string EmployeeId, decimal WeeklyHours, decimal ContractHours);\npublic interface IEmployeeStore { void Save(TimeCard card); }"
+    }
+  }
+}

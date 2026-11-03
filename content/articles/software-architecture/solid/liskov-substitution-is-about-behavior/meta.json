@@ -1,0 +1,55 @@
+{
+  "slug": "liskov-substitution-is-about-behavior",
+  "field": "software-architecture",
+  "topic": "solid",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Liskov Substitution Is About Behavior, Not Inheritance That Compiles",
+      "subtitle": "The compiler checks signatures. Substitutability depends on what callers can rely on: accepted inputs, promised results and the exceptions they must handle."
+    },
+    "ar-EG": {
+      "title": "الـ Liskov Substitution بيتكلم عن السلوك مش عن inheritance بيعمل compile",
+      "subtitle": "الـ compiler بيشيّك على الـ signatures. أما إن الـ type يتبدّل بأمان فده معتمد على اللي الـ callers بيعتمدوا عليه: الـ inputs المقبولة، والنتايج الموعودة، والـ exceptions اللي لازم يتعاملوا معاها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "design-principles",
+    "order": 5
+  },
+  "tags": [
+    "SOLID",
+    "Liskov Substitution",
+    "Subtyping",
+    "Inheritance"
+  ],
+  "sources": [
+    {
+      "title": "A Behavioral Notion of Subtyping — Barbara H. Liskov and Jeannette M. Wing, ACM TOPLAS (1994)",
+      "url": "https://www.cs.cmu.edu/~wing/publications/LiskovWing94.pdf"
+    },
+    {
+      "title": "Solid Relevance — Robert C. Martin, The Clean Code Blog (2020)",
+      "url": "https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html"
+    },
+    {
+      "title": "ICollection<T>.Add(T) Method — .NET API reference, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1.add"
+    },
+    {
+      "title": "ICollection<T>.IsReadOnly Property — .NET API reference, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1.isreadonly"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "csharp": "public sealed record Payment(string Id, decimal Captured);"
+    }
+  }
+}

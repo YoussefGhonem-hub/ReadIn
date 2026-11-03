@@ -1,0 +1,54 @@
+{
+  "slug": "dry-is-about-knowledge-not-code",
+  "field": "software-architecture",
+  "topic": "design-principles",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "DRY Is About Knowledge, Not Similar-Looking Code",
+      "subtitle": "Hunt and Thomas defined DRY as one authoritative home for each piece of knowledge. Look-alike code can be a coincidence, and real duplication often looks nothing alike."
+    },
+    "ar-EG": {
+      "title": "الـ DRY بيتكلم عن الـ knowledge مش عن الكود اللي شبه بعضه",
+      "subtitle": "Hunt و Thomas عرّفوا الـ DRY إن كل knowledge ليها مكان واحد هو المرجع. والكود اللي شبه بعضه ممكن يبقى صدفة، والتكرار الحقيقي ساعات مالوش أي شبه."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "design-principles",
+    "order": 2
+  },
+  "tags": [
+    "DRY",
+    "Duplication",
+    "Abstraction",
+    "Software Design"
+  ],
+  "sources": [
+    {
+      "title": "The Evils of Duplication — Dave Thomas and Andy Hunt, The Pragmatic Programmer, 20th Anniversary Edition (excerpt)",
+      "url": "https://media.pragprog.com/titles/tpp20/dry.pdf"
+    },
+    {
+      "title": "Orthogonality and the DRY Principle — A Conversation with Andy Hunt and Dave Thomas, Artima (2003)",
+      "url": "https://www.artima.com/articles/orthogonality-and-the-dry-principle"
+    },
+    {
+      "title": "Avoiding Repetition — Martin Fowler, IEEE Software (2001)",
+      "url": "https://martinfowler.com/ieeeSoftware/repetition.pdf"
+    },
+    {
+      "title": "Beck Design Rules — Martin Fowler",
+      "url": "https://martinfowler.com/bliki/BeckDesignRules.html"
+    },
+    {
+      "title": "Architectural principles — .NET Architecture Guides, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

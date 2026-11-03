@@ -1,0 +1,85 @@
+terms:
+  - id: single-responsibility-principle
+    term: Single Responsibility Principle
+    definitionEn: The S in SOLID. Robert C. Martin states it as "each software module should have one and only one reason to change", where a reason to change is a group of people, such as finance or operations, who request changes to that code.
+    definitionAr: حرف الـ S في SOLID. Robert C. Martin بيعرّفه إن الـ module يبقى ليه سبب واحد بس يتغيّر عشانه، والسبب ده هو مجموعة ناس، زي الـ finance أو الـ operations، هم اللي بيطلبوا التغيير في الكود ده.
+  - id: cohesion
+    term: Cohesion
+    definitionEn: How strongly the parts of a module belong together. High cohesion means the code inside a module changes for the same reasons and is usually changed together.
+    definitionAr: قد إيه أجزاء الـ module مترابطة مع بعض. الـ cohesion العالية معناها إن الكود اللي جوه الـ module بيتغيّر لنفس الأسباب، وغالبًا بيتغيّر مع بعض.
+  - id: coupling
+    term: Coupling
+    definitionEn: How much one module depends on another, so that changing one forces you to change, retest or redeploy the other. Loose coupling keeps those knock-on changes small.
+    definitionAr: قد إيه module معتمد على module تاني، بحيث إن تغيير واحد يجبرك تغيّر أو تعيد test أو deploy للتاني. والـ loose coupling بيخلّي التغييرات اللي بتجرّ بعضها دي قليلة.
+  - id: dry-principle
+    term: DRY (Don't Repeat Yourself)
+    definitionEn: A principle from Andy Hunt and Dave Thomas's The Pragmatic Programmer. Every piece of knowledge must have a single, unambiguous, authoritative representation within a system. It targets duplicated knowledge, such as a business rule written in two places, not just copy-pasted lines.
+    definitionAr: مبدأ من كتاب The Pragmatic Programmer بتاع Andy Hunt و Dave Thomas. كل معلومة في السيستم لازم يبقى ليها تمثيل واحد واضح هو المرجع. والمقصود الـ knowledge المتكررة، زي business rule مكتوبة في مكانين، مش بس سطور كود متنسخة.
+  - id: coincidental-duplication
+    term: Coincidental duplication
+    definitionEn: Code that looks the same but represents different knowledge, such as two validations that happen to share rules today. Merging it couples things that will need to change separately.
+    definitionAr: كود شكله واحد بس بيمثّل knowledge مختلفة، زي اتنين validations صادف إن قواعدهم واحدة النهارده. ودمجهم بيربط حاجتين هيحتاجوا يتغيّروا كل واحدة لوحدها.
+  - id: yagni
+    term: YAGNI (You Aren't Gonna Need It)
+    definitionEn: An Extreme Programming practice. Don't build a capability, or an abstraction to support it, until a real requirement needs it, because the guess is often wrong and the extra code costs effort, delay and complexity in the meantime.
+    definitionAr: ممارسة من الـ Extreme Programming. ماتبنيش capability، ولا abstraction عشانها، غير لما requirement حقيقي يحتاجها، لأن التوقع كتير بيطلع غلط، والكود الزيادة بيكلّف مجهود وتأخير وتعقيد لحد ما ييجي وقته.
+  - id: presumptive-feature
+    term: Presumptive feature
+    definitionEn: Martin Fowler's term for code that supports a feature nobody can use yet, built now because the team expects to need it later.
+    definitionAr: المصطلح اللي Martin Fowler بيستخدمه لكود بيخدم feature محدش يقدر يستخدمها لسه، اتبنى دلوقتي عشان الفريق متوقع إنه هيحتاجها بعدين.
+  - id: open-closed-principle
+    term: Open/Closed Principle
+    definitionEn: The O in SOLID, first described by Bertrand Meyer in 1988. A module should be open for extension and closed for modification, which in practice means expected kinds of change can be added with new code while code that clients depend on stays stable. It doesn't forbid fixing or improving existing code.
+    definitionAr: حرف الـ O في SOLID، وأول من وصفه Bertrand Meyer سنة 1988. الـ module يبقى مفتوح للتوسيع ومقفول للتعديل، ويعني عمليًا إن أنواع التغيير المتوقعة تتضاف بكود جديد، والكود اللي الـ clients معتمدين عليه يفضل ثابت. ومش بيمنع إنك تصلّح أو تحسّن الكود الموجود.
+  - id: protected-variation
+    term: Protected Variation
+    definitionEn: A design principle that Craig Larman describes as essentially the same as the Open/Closed Principle. Identify points of predicted variation and create a stable interface around them, so changes there don't ripple into the code that uses them.
+    definitionAr: مبدأ تصميم Craig Larman بيعتبره تقريبًا نفس الـ Open/Closed Principle. حدّد الأماكن اللي متوقع تتغيّر، واعمل حواليها interface ثابتة، عشان التغيير هناك مايتسرّبش للكود اللي بيستخدمها.
+  - id: liskov-substitution-principle
+    term: Liskov Substitution Principle
+    definitionEn: The L in SOLID, based on Barbara Liskov's work on behavioral subtyping. Code written against a type must keep working when given any subtype or implementation of it, which depends on behavior (what inputs are accepted, what results and exceptions callers can expect), not just on signatures that compile.
+    definitionAr: حرف الـ L في SOLID، ومبني على شغل Barbara Liskov عن الـ behavioral subtyping. الكود المكتوب على type لازم يفضل شغال لما تديله أي subtype أو implementation ليه، وده معتمد على السلوك (بيقبل inputs إيه، والـ callers يتوقعوا نتايج و exceptions إيه)، مش بس على signatures بتعمل compile.
+  - id: precondition
+    term: Precondition
+    definitionEn: What must be true before a method is called for it to work, such as "the amount is positive and no larger than what was captured". A subtype may accept more than its base type, never less.
+    definitionAr: الحاجة اللي لازم تبقى صح قبل ما تنادي method عشان تشتغل، زي "المبلغ موجب ومش أكبر من اللي اتخصم". والـ subtype ممكن يقبل أكتر من الـ base type، عمره ما يقبل أقل.
+  - id: postcondition
+    term: Postcondition
+    definitionEn: What a method guarantees when it returns, such as "the refund was recorded". A subtype may promise more than its base type, never less.
+    definitionAr: الحاجة اللي الـ method بتضمنها لما ترجع، زي "الـ refund اتسجّل". والـ subtype ممكن يوعد بأكتر من الـ base type، عمره ما يوعد بأقل.
+  - id: header-interface
+    term: Header interface
+    definitionEn: Martin Fowler's term for an interface that copies the public methods of one class, such as an IEmailSender extracted from SmtpEmailSender. It adds a seam but keeps that class's shape and vocabulary.
+    definitionAr: المصطلح اللي Martin Fowler بيستخدمه لـ interface بتنسخ الـ public methods بتاعة class واحدة، زي IEmailSender اتعملها extract من SmtpEmailSender. بتضيف نقطة تقدر تبدّل عندها، بس بتفضل بشكل الـ class دي وبنفس كلامها.
+  - id: role-interface
+    term: Role interface
+    definitionEn: Martin Fowler's term for an interface defined by how one consumer uses a collaborator, containing only the methods that interaction needs. One class often implements several role interfaces.
+    definitionAr: المصطلح اللي Martin Fowler بيستخدمه لـ interface بتتعرّف حسب consumer معيّن بيستخدم الـ collaborator بتاعه إزاي، وفيها بس الـ methods اللي التعامل ده محتاجها. والـ class الواحدة كتير بتعمل implement لأكتر من role interface.
+  - id: anemic-domain-model
+    term: Anemic Domain Model
+    definitionEn: Martin Fowler's name for domain objects that hold data through getters and setters but almost no behavior, while service classes carry all the business rules. It has the cost of a domain model without its benefits.
+    definitionAr: الاسم اللي Martin Fowler بيطلقه على domain objects شايلة داتا بـ getters و setters ومافيهاش behavior تقريبًا، والـ service classes هي اللي شايلة كل الـ business rules. بتدفع فيها تمن الـ domain model من غير ما تاخد فوايده.
+  - id: invariant
+    term: Invariant
+    definitionEn: A rule about an object's state that must hold whenever any code can observe it, such as "an order's total equals the sum of its lines" or "a shipped order can't get new lines".
+    definitionAr: قاعدة عن حالة الـ object لازم تبقى صح في أي وقت أي كود يقدر يشوفه فيه، زي "الـ total بتاع الـ order يساوي مجموع الـ lines" أو "الـ order اللي اتشحن مايتضافلوش lines جديدة".
+  - id: bounded-context
+    term: Bounded Context
+    definitionEn: In Domain-Driven Design, an explicit boundary, typically a subsystem or the work of one team, inside which one model and its language apply consistently. The same word, such as Customer, can mean different things in different bounded contexts.
+    definitionAr: في الـ Domain-Driven Design، حدود واضحة، غالبًا subsystem أو شغل فريق واحد، جواها model واحد واللغة بتاعته بيتطبقوا بشكل متسق. ونفس الكلمة، زي Customer، ممكن تبقى ليها معنى مختلف في كل bounded context.
+  - id: ubiquitous-language
+    term: Ubiquitous Language
+    definitionEn: Eric Evans's term for the shared, precise language that developers and domain experts build around the model inside a bounded context, and use the same way in conversation, documents and code.
+    definitionAr: المصطلح اللي Eric Evans بيستخدمه للغة المشتركة الدقيقة اللي المطورين وخبراء الـ domain بيبنوها حوالين الـ model جوه bounded context، وبيستخدموها بنفس الطريقة في الكلام والـ documents والكود.
+  - id: core-domain
+    term: Core domain
+    definitionEn: The part of the domain that gives the business its edge, such as delivery scheduling for a delivery company. DDD puts the deepest modeling and the strongest developers there, and treats generic parts, like user accounts, as candidates for off-the-shelf solutions.
+    definitionAr: الجزء من الـ domain اللي بيدّي الـ business ميزته، زي جدولة التوصيل لشركة توصيل. والـ DDD بيحط فيه أعمق modeling وأقوى مطورين، وبيعامل الأجزاء العامة، زي حسابات المستخدمين، كأجزاء ممكن تستخدم لها حلول جاهزة.
+  - id: aggregate
+    term: Aggregate
+    definitionEn: In Domain-Driven Design, a cluster of entities and value objects that is loaded, changed and saved as one unit through its root, so the rules that must hold together are checked in a single transaction. Other aggregates are referenced by identity.
+    definitionAr: في الـ Domain-Driven Design، مجموعة entities و value objects بتتحمّل وتتغيّر وتتحفظ كوحدة واحدة من خلال الـ root بتاعها، عشان القواعد اللي لازم تتحقق مع بعض تتشيّك في transaction واحدة. والـ aggregates التانية بيتشاور عليها بالـ identity بس.
+  - id: optimistic-concurrency
+    term: Optimistic concurrency
+    definitionEn: Letting two users edit the same data without locking it, and checking a version number when saving. The save based on an older version is rejected, so one of two overlapping changes fails instead of silently overwriting the other.
+    definitionAr: إنك تسيب اتنين يعدّلوا نفس الداتا من غير lock، وتشيّك على رقم version وقت الحفظ. والحفظ اللي مبني على version أقدم بيترفض، فواحد من التغييرين المتداخلين بيفشل بدل ما يكتب فوق التاني من غير ما حد ياخد باله.

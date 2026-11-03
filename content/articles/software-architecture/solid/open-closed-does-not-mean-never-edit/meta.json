@@ -1,0 +1,54 @@
+{
+  "slug": "open-closed-does-not-mean-never-edit",
+  "field": "software-architecture",
+  "topic": "solid",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Open/Closed Doesn't Mean You Never Edit Existing Code",
+      "subtitle": "Fix wrong code where it lives. Save the open/closed effort for the kinds of change that keep coming back."
+    },
+    "ar-EG": {
+      "title": "الـ Open/Closed مش معناه إنك متعدّلش الكود القديم أبدًا",
+      "subtitle": "صلّح الكود الغلط في مكانه. ووفّر مجهود الـ open/closed لأنواع التغيير اللي بترجع تاني وتالت."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": null,
+  "learningPath": {
+    "slug": "design-principles",
+    "order": 4
+  },
+  "tags": [
+    "SOLID",
+    "Open/Closed",
+    "Protected Variation",
+    "Refactoring"
+  ],
+  "sources": [
+    {
+      "title": "An Open and Closed Case — Robert C. Martin, The Clean Code Blog (2013)",
+      "url": "https://blog.cleancoder.com/uncle-bob/2013/03/08/AnOpenAndClosedCase.html"
+    },
+    {
+      "title": "The Open Closed Principle — Robert C. Martin, The Clean Code Blog (2014), quoting Bertrand Meyer's Object Oriented Software Construction (1988)",
+      "url": "https://blog.cleancoder.com/uncle-bob/2014/05/12/TheOpenClosedPrinciple.html"
+    },
+    {
+      "title": "Protected Variation: The Importance of Being Closed — Craig Larman, IEEE Software (2001)",
+      "url": "https://martinfowler.com/ieeeSoftware/protectedVariation.pdf"
+    },
+    {
+      "title": "Solid Relevance — Robert C. Martin, The Clean Code Blog (2020)",
+      "url": "https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html"
+    },
+    {
+      "title": "Architectural principles — .NET Architecture Guides, Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/architecture/modern-web-apps-azure/architectural-principles"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
