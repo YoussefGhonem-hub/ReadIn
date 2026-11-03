@@ -152,6 +152,28 @@
     },
     "follow": {
       "self": "You can't follow yourself."
+    },
+    "comment": {
+      "not_found": "This comment doesn't exist.",
+      "not_owner": "Only the author can change this comment.",
+      "not_available": "This comment was deleted or hidden.",
+      "pin_reply": "Only top-level comments can be pinned.",
+      "pin_not_author": "Only the article's author can pin comments.",
+      "pin_conflict": "Another comment was pinned at the same time. Try again.",
+      "article_limit": "You've commented a lot on this article. Try again in a while.",
+      "duplicate": "You just posted the same comment.",
+      "empty": "Write something first.",
+      "too_long": "A comment can have at most 2000 characters."
+    },
+    "report": {
+      "target_not_found": "The reported content doesn't exist.",
+      "own_content": "You can't report your own content.",
+      "target_not_supported": "Only comments can be reported for now.",
+      "target_invalid": "Unknown report target.",
+      "reason_invalid": "Choose a reason for the report."
+    },
+    "moderation": {
+      "action_invalid": "Unknown moderation action."
     }
   },
   "auth": {
@@ -786,6 +808,99 @@
       "shareText": "My reading streak on ReadIn: {{days}} 🔥",
       "keepReading": "Keep reading",
       "preparing": "Preparing your card…"
+    }
+  },
+  "comments": {
+    "title": "Comments ({{count}})",
+    "heading": "Comments",
+    "sort": {
+      "label": "Sort comments",
+      "top": "Top",
+      "new": "Newest"
+    },
+    "composer": {
+      "label": "Write a comment",
+      "placeholder": "Share your thoughts…",
+      "replyLabel": "Write a reply",
+      "replyPlaceholder": "Write a reply…",
+      "editLabel": "Edit your comment",
+      "send": "Post",
+      "reply": "Reply",
+      "save": "Save",
+      "remaining": {
+        "one": "1 character left",
+        "other": "{{count}} characters left"
+      },
+      "suggestions": "People to mention",
+      "verified": "Verified"
+    },
+    "guest": {
+      "body": "Sign in to comment and join the discussion.",
+      "signIn": "Sign in to comment"
+    },
+    "empty": {
+      "title": "No comments yet",
+      "body": "Start the discussion with the first comment."
+    },
+    "loadError": "We couldn't load the comments.",
+    "more": "More comments",
+    "moreReplies": {
+      "one": "Show 1 more reply",
+      "other": "Show {{count}} more replies"
+    },
+    "repliesError": "We couldn't load the replies. Try again",
+    "newComments": {
+      "one": "1 new comment",
+      "other": "{{count}} new comments"
+    },
+    "writer": "Author",
+    "pinned": "Pinned",
+    "edited": "edited",
+    "sending": "Posting…",
+    "deletedUser": "Deleted user",
+    "deleted": "This comment was deleted",
+    "hidden": "Hidden by moderators",
+    "hiddenNotice": "Hidden by moderators. Only you and the moderators can see it.",
+    "like": "Like",
+    "reply": "Reply",
+    "replyTo": "Reply to {{name}}",
+    "replies": "Replies to {{name}}",
+    "actions": "Comment options",
+    "edit": "Edit",
+    "delete": "Delete",
+    "report": {
+      "title": "Report comment",
+      "body": "What's wrong with this comment?",
+      "reasons": {
+        "spam": "Spam or advertising",
+        "misinformation": "Misinformation",
+        "harassment": "Harassment or abuse",
+        "copyright": "Copyright infringement",
+        "other": "Something else"
+      },
+      "details": "Details (optional)",
+      "detailsPlaceholder": "Tell us more if you like",
+      "submit": "Send report",
+      "thanks": "Thanks, we'll review it."
+    },
+    "pin": "Pin comment",
+    "unpin": "Unpin",
+    "moderation": {
+      "hide": "Hide (moderator)",
+      "unhide": "Unhide (moderator)",
+      "delete": "Delete (moderator)",
+      "hidden": "Comment hidden",
+      "unhidden": "Comment visible again",
+      "deleted": "Comment deleted"
+    },
+    "deleteSheet": {
+      "title": "Delete this comment?",
+      "body": "You can't undo this. If it has replies, a “deleted” note stays in its place.",
+      "moderatorTitle": "Delete this comment as a moderator?",
+      "moderatorBody": "It's removed for everyone and recorded in the moderation log."
+    },
+    "errors": {
+      "tooFast": "You're commenting too fast. Wait a minute and try again."
     }
   }
 }

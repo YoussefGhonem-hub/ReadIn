@@ -331,6 +331,96 @@ export interface InterestsDto {
   topicIds: string[];
 }
 
+// ── Comments (F11) ──────────────────────────────────────────
+
+/** `top` (default) = likes + 2 × replies, then newest; `new` = newest first. */
+export type CommentSort = 'top' | 'new';
+
+/** An @handle in the text that resolved to a user: clients link exactly these, other "@words" stay text. */
+export interface CommentMentionDto {
+  userId: string;
+  username: string;
+}
+
+/** A comment or reply as the viewer sees it. Placeholders (deleted, or hidden for you) have no `body` and no `author`. */
+export interface CommentDto {
+  id: string;
+  articleId: string;
+  /** The thread's top-level comment; null for top-level comments. */
+  parentId: string | null;
+  /** Null for placeholders. Render with `dir="auto"`. */
+  body: string | null;
+  /** Null: "Deleted user" (or a placeholder). */
+  author: AuthorDto | null;
+  /** The "الكاتب" badge. */
+  isArticleAuthor: boolean;
+  mentions: CommentMentionDto[];
+  likeCount: number;
+  likedByMe: boolean;
+  /** Visible replies (top-level comments). */
+  replyCount: number;
+  isPinned: boolean;
+  createdAt: string;
+  /** Set once edited ("edited"). */
+  editedAt: string | null;
+  /** Placeholder of a deleted comment kept for its replies. */
+  isDeleted: boolean;
+  /** Hidden by a moderator: a placeholder for others, the full text for its author and moderators. */
+  isHidden: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  canPin: boolean;
+  canReport: boolean;
+  canModerate: boolean;
+  /** In lists: the first 2 replies of a top-level comment, oldest first. */
+  replies?: CommentDto[];
+}
+
+/** `GET /articles/{id}/comments`. `total` is the article's comment count (visible comments and replies). */
+export interface CommentPageDto {
+  items: CommentDto[];
+  nextCursor: string | null;
+  total: number;
+}
+
+/** `PUT` / `DELETE /comments/{id}/like`. */
+export interface CommentLikeDto {
+  likeCount: number;
+  liked: boolean;
+}
+
+/** `GET /users/mention-suggestions`: someone to @mention while typing. */
+export interface MentionCandidateDto {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl: string | null;
+  isVerified: boolean;
+}
+
+// ── Reports and moderation (F22 hooks in F11) ───────────────
+
+export type ReportReason = 'spam' | 'misinformation' | 'harassment' | 'copyright' | 'other';
+export const REPORT_REASONS: readonly ReportReason[] = ['spam', 'misinformation', 'harassment', 'copyright', 'other'];
+
+/** `POST /reports` (only comments until F22). Reporting again is a no-op. */
+export interface ReportRequest {
+  targetType: 'comment';
+  targetId: string;
+  reason: ReportReason;
+  /** ≤ 500 characters. */
+  details?: string | null;
+}
+
+export type ModerationAction = 'hide' | 'unhide' | 'delete';
+
+/** `POST /moderation/actions` (permission `moderation.manage`). */
+export interface ModerationActionRequest {
+  action: ModerationAction;
+  targetType: 'comment';
+  targetId: string;
+}
+
 // ── Writing ─────────────────────────────────────────────────
 
 export interface CreateArticleRequest {

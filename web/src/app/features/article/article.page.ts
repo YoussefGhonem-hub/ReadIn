@@ -5,7 +5,9 @@ import {
   DestroyRef,
   ElementRef,
   Injector,
+  PLATFORM_ID,
   RESPONSE_INIT,
+  Type,
   afterNextRender,
   computed,
   effect,
@@ -15,6 +17,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { NgComponentOutlet, isPlatformBrowser } from '@angular/common';
 import { HttpContext, httpResource } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -73,6 +76,7 @@ const TOC_MIN_HEADINGS = 3;
     LucideDynamicIcon,
     FollowButton,
     CollectionPickerSheet,
+    NgComponentOutlet,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -227,6 +231,17 @@ const TOC_MIN_HEADINGS = 3;
             <p class="text-sm text-text-secondary">{{ 'article.noSources' | transloco }}</p>
           }
         </section>
+
+        <!-- Comments (F11): their code and data load when they near the viewport or the comment button is pressed -->
+        <section #commentsAnchor id="comments" class="mt-10 border-t border-border pt-6" style="scroll-margin-top: 5rem" aria-labelledby="comments-title">
+          @if (commentsSection(); as section) {
+            <ng-container *ngComponentOutlet="section; inputs: { article: a }" />
+          } @else {
+            <div class="min-h-56">
+              <h2 id="comments-title" class="m-0 text-lg font-semibold" tabindex="-1">{{ 'comments.title' | transloco: { count: commentCount() } }}</h2>
+            </div>
+          }
+        </section>
       } @else {
         @if (notFound()) {
           <rd-empty-state [title]="'errors.article.not_found' | transloco" [message]="'article.notFoundBody' | transloco">
@@ -245,7 +260,7 @@ const TOC_MIN_HEADINGS = 3;
     </article>
 
     @if (article(); as a) {
-      <rd-article-action-bar [article]="a" [url]="shareUrl()" />
+      <rd-article-action-bar [article]="a" [url]="shareUrl()" (commentsOpen)="openComments()" />
       <rd-collection-picker-sheet [open]="collectionsOpen()" [article]="a" (closed)="collectionsOpen.set(false)" />
     }
   `,
@@ -311,11 +326,39 @@ export class ArticlePage {
   protected readonly collectionsOpen = signal(false);
   protected readonly progress = signal(0);
   private readonly articleEl = viewChild<ElementRef<HTMLElement>>('articleEl');
+  private readonly social = inject(ArticleSocialStore);
+
+  /** The live comment count for the comments heading before the section loads (F11, F27). */
+  protected readonly commentCount = computed(() => {
+    const a = this.article();
+    return a ? this.social.state(a).commentCount : 0;
+  });
+  /** The comments section, once its lazy chunk has loaded (browser only; never during SSR). */
+  protected readonly commentsSection = signal<Type<unknown> | null>(null);
+  private readonly commentsAnchor = viewChild<ElementRef<HTMLElement>>('commentsAnchor');
+  private readonly injector = inject(Injector);
+  /** The comments chunk being (or already) loaded, shared by the viewport trigger and the button. */
+  private commentsChunk: Promise<void> | null = null;
 
   constructor() {
+    // The comments load when they near the viewport (or on the comment button). Their code is its own lazy chunk.
+    const isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+    effect((onCleanup) => {
+      const anchor = this.commentsAnchor()?.nativeElement;
+      if (!isBrowser || !anchor || this.commentsSection() || typeof IntersectionObserver === 'undefined') return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) void this.loadComments();
+        },
+        { rootMargin: '600px 0px' },
+      );
+      observer.observe(anchor);
+      onCleanup(() => observer.disconnect());
+    });
+
     // Reading progress and active time for the "read" rule and streaks (F04, F08).
     injectReadingTracker(this.article, this.progress, () => this.articleEl()?.nativeElement);
-    const social = inject(ArticleSocialStore);
+    const social = this.social;
     const follows = inject(FollowStore);
     const collections = inject(CollectionsStore);
     const hydration = inject(HydrationWindow);
@@ -367,6 +410,30 @@ export class ArticlePage {
 
   protected openCollections(): void {
     if (this.prompt.requireAuth()) this.collectionsOpen.set(true);
+  }
+
+  /** The action bar's comment button: scroll to the comments (loading them if needed) and focus their heading. */
+  protected async openComments(): Promise<void> {
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    this.commentsAnchor()?.nativeElement.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    const focusTitle = () => document.getElementById('comments-title')?.focus({ preventScroll: true });
+    if (this.commentsSection()) {
+      focusTitle();
+      return;
+    }
+    await this.loadComments();
+    // The section replaces the placeholder (and its heading) on the next render.
+    if (this.commentsSection()) afterNextRender(focusTitle, { injector: this.injector });
+  }
+
+  private loadComments(): Promise<void> {
+    this.commentsChunk ??= import('../comments/comments-section').then(
+      ({ CommentsSection }) => this.commentsSection.set(CommentsSection),
+      () => {
+        this.commentsChunk = null; // the chunk didn't load (offline): scrolling back to them or the button tries again
+      },
+    );
+    return this.commentsChunk;
   }
 
   /**

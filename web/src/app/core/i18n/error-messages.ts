@@ -87,6 +87,23 @@ export const CONTRACT_ERROR_CODES = [
   'collection.limit',
   'collection.not_found',
   'follow.self',
+  // Comments, reports and moderation (F11, F22 hooks)
+  'comment.not_found',
+  'comment.not_owner',
+  'comment.not_available',
+  'comment.pin_reply',
+  'comment.pin_not_author',
+  'comment.pin_conflict',
+  'comment.article_limit',
+  'comment.duplicate',
+  'comment.empty',
+  'comment.too_long',
+  'report.target_not_found',
+  'report.own_content',
+  'report.target_not_supported',
+  'report.target_invalid',
+  'report.reason_invalid',
+  'moderation.action_invalid',
 ] as const;
 
 /** Translates stable API error codes (e.g. `user.suspended`) into the active UI language. */

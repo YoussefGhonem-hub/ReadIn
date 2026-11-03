@@ -133,4 +133,17 @@ describe('ArticleActionBar (F10, F13)', () => {
     http = t.http;
     expect(t.$<HTMLButtonElement>('[data-reactions-summary]')!.disabled).toBe(true);
   });
+
+  it('the comment count is a button that takes you to the comments (F11)', async () => {
+    const t = await render();
+    http = t.http;
+    const opened = vi.fn();
+    t.fixture.componentInstance.commentsOpen.subscribe(opened);
+    const button = t.$<HTMLButtonElement>('[data-comment-count]')!;
+    expect(button.tagName).toBe('BUTTON');
+    expect(button.getAttribute('aria-controls')).toBe('comments');
+    expect(button.textContent).toContain('التعليقات');
+    button.click();
+    expect(opened).toHaveBeenCalledTimes(1);
+  });
 });

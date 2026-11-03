@@ -9,6 +9,7 @@ import {
   computed,
   inject,
   input,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
@@ -31,9 +32,10 @@ const HOVER_OPEN_MS = 400;
 const HOVER_CLOSE_MS = 300;
 
 /**
- * Floating action bar of the reader (F04, F10, F13): the reaction button, who reacted, comments (display only until
- * F11), save and share. The reaction button reacts 💡 on a tap and removes your reaction when you have one; holding
- * it (touch), hovering it (mouse), its ⌃ button or ArrowUp open the picker with the four reactions and their counts.
+ * Floating action bar of the reader (F04, F10, F11, F13): the reaction button, who reacted, comments (the count; a tap
+ * takes you to them), save and share. The reaction button reacts 💡 on a tap and removes your reaction when you have
+ * one; holding it (touch), hovering it (mouse), its ⌃ button or ArrowUp open the picker with the four reactions and
+ * their counts.
  * Guests get the soft sign-in prompt. Counts come from ArticleSocialStore (optimistic, live counters on top).
  */
 @Component({
@@ -136,11 +138,17 @@ const HOVER_CLOSE_MS = 300;
       </div>
 
       <div class="flex shrink-0 items-center gap-1">
-        <span class="inline-flex min-h-10 items-center gap-1.5 rounded-md bg-primary-container px-3 text-sm font-semibold text-on-primary-container" data-comment-count>
+        <button
+          type="button"
+          class="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-primary-container px-3 text-sm font-semibold text-on-primary-container"
+          aria-controls="comments"
+          data-comment-count
+          (click)="commentsOpen.emit()"
+        >
           <svg lucideIcon="MessageCircle" [size]="16" aria-hidden="true"></svg>
           {{ state().commentCount | rdCompactNumber: lang() }}
           <span class="sr-only">{{ 'article.comments' | transloco }}</span>
-        </span>
+        </button>
         <button
           type="button"
           class="rd-icon-btn h-11 w-11 border-0"
@@ -182,6 +190,8 @@ export class ArticleActionBar {
 
   readonly article = input.required<ArticleCardDto>();
   readonly url = input.required<string>();
+  /** The comment count was pressed: the reader scrolls to the comments (F11). */
+  readonly commentsOpen = output<void>();
 
   protected readonly state = computed(() => this.social.state(this.article()));
   protected readonly pickerOpen = signal(false);
