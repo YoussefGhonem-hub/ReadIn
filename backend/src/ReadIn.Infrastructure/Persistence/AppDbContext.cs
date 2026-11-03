@@ -1,0 +1,79 @@
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
+using ReadIn.Application.Common.Interfaces;
+using ReadIn.Domain.Articles;
+using ReadIn.Domain.Authorization;
+using ReadIn.Domain.Common;
+using ReadIn.Domain.Reading;
+using ReadIn.Domain.Taxonomy;
+using ReadIn.Domain.Users;
+using ReadIn.Infrastructure.Persistence.Outbox;
+using ReadIn.Infrastructure.Persistence.Seeding;
+
+namespace ReadIn.Infrastructure.Persistence;
+
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IAppDbContext
+{
+    /// <summary>Case- and accent-insensitive Arabic collation for searchable text (SPEC §16.1).</summary>
+    public const string SearchCollation = "Arabic_100_CI_AI";
+
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<Permission> Permissions => Set<Permission>();
+    public DbSet<ReviewerField> ReviewerFields => Set<ReviewerField>();
+
+    public DbSet<Field> Fields => Set<Field>();
+    public DbSet<Topic> Topics => Set<Topic>();
+    public DbSet<Tag> Tags => Set<Tag>();
+
+    public DbSet<Article> Articles => Set<Article>();
+    public DbSet<ArticleTranslation> ArticleTranslations => Set<ArticleTranslation>();
+
+    public DbSet<ReadingProgress> ReadingProgress => Set<ReadingProgress>();
+    public DbSet<DailyPick> DailyPicks => Set<DailyPick>();
+
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<SeedHistory> SeedHistory => Set<SeedHistory>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var clr = entityType.ClrType;
+
+            // Ids are generated client-side (Guid v7). Without this, EF treats a new child added to a loaded
+            // aggregate (e.g. user.SetInterests) as an existing row because its key is already set.
+            if (entityType.FindPrimaryKey()?.Properties is [{ ClrType: var keyType, Name: var keyName }] && keyType == typeof(Guid))
+                modelBuilder.Entity(clr).Property(keyName).ValueGeneratedNever();
+
+            if (typeof(ISoftDeletable).IsAssignableFrom(clr) && entityType.BaseType is null)
+            {
+                // e => !e.IsDeleted
+                var parameter = Expression.Parameter(clr, "e");
+                var filter = Expression.Lambda(
+                    Expression.Not(Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted))),
+                    parameter);
+                modelBuilder.Entity(clr).HasQueryFilter(filter);
+            }
+
+            if (typeof(IHasRowVersion).IsAssignableFrom(clr))
+                modelBuilder.Entity(clr).Property(nameof(IHasRowVersion.RowVersion)).IsRowVersion();
+
+            if (typeof(AggregateRoot).IsAssignableFrom(clr))
+                modelBuilder.Entity(clr).Ignore(nameof(AggregateRoot.DomainEvents));
+        }
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<decimal>().HavePrecision(18, 4);
+        // All timestamps are UTC (SPEC §16.1); reading them back with Kind=Utc makes the API emit "...Z".
+        configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
+    }
+}
+
+internal sealed class UtcDateTimeConverter() : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+    value => value.Kind == DateTimeKind.Local ? value.ToUniversalTime() : value,
+    value => DateTime.SpecifyKind(value, DateTimeKind.Utc));

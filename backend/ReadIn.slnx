@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ReadIn.Api/ReadIn.Api.csproj" />
+    <Project Path="src/ReadIn.Application/ReadIn.Application.csproj" />
+    <Project Path="src/ReadIn.ContentStudio/ReadIn.ContentStudio.csproj" />
+    <Project Path="src/ReadIn.Domain/ReadIn.Domain.csproj" />
+    <Project Path="src/ReadIn.Infrastructure/ReadIn.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ReadIn.Api.IntegrationTests/ReadIn.Api.IntegrationTests.csproj" />
+    <Project Path="tests/ReadIn.Application.UnitTests/ReadIn.Application.UnitTests.csproj" />
+    <Project Path="tests/ReadIn.ArchitectureTests/ReadIn.ArchitectureTests.csproj" />
+    <Project Path="tests/ReadIn.Domain.UnitTests/ReadIn.Domain.UnitTests.csproj" />
+  </Folder>
+</Solution>

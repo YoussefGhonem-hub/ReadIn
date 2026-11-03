@@ -1,0 +1,15 @@
+using Mediator;
+using ReadIn.Application.Common.Models;
+using ReadIn.Application.Common.Security;
+using ReadIn.Application.Features.Articles;
+using ReadIn.Domain.Common;
+
+namespace ReadIn.Application.Features.Feed.Queries.GetForYouFeed;
+
+/// <summary>
+/// GET /feed/for-you — signed-in users see their interests first; guests see the latest articles.
+/// Keyset-paginated over (PublishedAt DESC, Id DESC).
+/// </summary>
+[RequirePermission(Permissions.Articles.Read)]
+public sealed record GetForYouFeedQuery(string? FieldSlug, string? Cursor, int Limit, string UiLanguage)
+    : IQuery<Result<CursorPage<ArticleCardDto>>>;

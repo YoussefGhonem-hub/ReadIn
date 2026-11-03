@@ -4,18 +4,44 @@ ASP.NET Core (.NET 10) API built with **Clean Architecture**, **CQRS** (Mediator
 
 ```text
 backend/
-├── ReadIn.slnx
+├── ReadIn.slnx · Directory.Build.props · Directory.Packages.props (central versions) · global.json
 ├── src/
-│   ├── ReadIn.Domain/          # entities, aggregates, value objects, domain events
-│   ├── ReadIn.Application/     # commands, queries, validators, DTOs, Mapster configs
-│   ├── ReadIn.Infrastructure/  # EF Core, Dapper, Firebase, Hangfire, seeders
-│   ├── ReadIn.Api/             # endpoints, middleware, SignalR, auth
-│   └── ReadIn.ContentStudio/   # content pipeline CLI
+│   ├── ReadIn.Domain/          # aggregates (User, Article, Field…), value objects, domain events, Result/Error
+│   ├── ReadIn.Application/     # commands, queries, validators, DTOs, Mapster configs, pipeline behaviors, RDoc processor
+│   ├── ReadIn.Infrastructure/  # EF Core + migrations, outbox, Hangfire jobs, Firebase Admin, seeders, content repository
+│   ├── ReadIn.Api/             # minimal-API endpoints (/api/v1), Firebase JWT auth, ProblemDetails, OpenAPI + Scalar
+│   └── ReadIn.ContentStudio/   # content pipeline CLI: validate / import / generate
 └── tests/
     ├── ReadIn.Domain.UnitTests/
-    ├── ReadIn.Application.UnitTests/
-    ├── ReadIn.Api.IntegrationTests/
-    └── ReadIn.ArchitectureTests/
+    ├── ReadIn.Application.UnitTests/   # incl. Mapster config.Compile(), RDoc schema over all content
+    ├── ReadIn.Api.IntegrationTests/    # real SQL Server via Testcontainers, emulator-style tokens
+    └── ReadIn.ArchitectureTests/       # NetArchTest layer + naming rules
 ```
 
-See [SPEC §6](../docs/SPEC.md#6-backend-clean-architecture--cqrs--mapster).
+See [SPEC §6](../docs/SPEC.md#6-backend-clean-architecture--cqrs--mapster) and the [ADRs](../docs/adr).
+
+## Run
+
+```bash
+docker compose up -d                       # repo root: SQL Server on :14333 + Seq
+firebase emulators:start                   # repo root: Auth emulator on :9099
+dotnet run --project src/ReadIn.Api        # http://localhost:5080 — migrates + seeds in Development
+```
+
+- API reference: `http://localhost:5080/docs` (Scalar) · OpenAPI: `/openapi/v1.json` · Hangfire: `/hangfire` · Health: `/health`
+- Secrets come from user-secrets locally: `dotnet user-secrets set "Seed:DemoPassword" "<password>" --project src/ReadIn.Api`
+
+## Conventions
+
+- Handlers are `internal sealed` and return `Result`/`Result<T>`. Errors carry a stable `code` (e.g. `article.not_found`) that clients translate.
+- Authorization: `[RequirePermission(...)]` / `[Authenticated]` on the message, enforced by `AuthorizationBehavior`. Permissions come from SQL Server, never from Firebase claims.
+- Pipeline: Logging → Authorization → Validation → Caching (`ICachedQuery` + tags).
+- Queries use `AsNoTracking()` + `ProjectToType<T>()`. Language-aware mapping reads `LocalizedProjection.Ui` / `.Lang`.
+- Entities change only through domain methods. Domain events go to the outbox in the same transaction and are dispatched to `IDomainEventHandler<T>`.
+- Seeders are idempotent and checksum-versioned (`SeedHistory`); demo users are never seeded in Production.
+
+## Test
+
+```bash
+dotnet test --solution ReadIn.slnx         # needs Docker for the integration tests
+```

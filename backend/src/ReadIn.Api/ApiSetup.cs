@@ -1,0 +1,173 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Asp.Versioning;
+using Hangfire;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.OpenApi;
+using ReadIn.Api.Auth;
+using ReadIn.Api.Endpoints;
+using ReadIn.Api.Errors;
+using ReadIn.Application.Common.Interfaces;
+using Scalar.AspNetCore;
+
+namespace ReadIn.Api;
+
+public static class ApiSetup
+{
+    private const string CorsPolicy = "clients";
+
+    public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    {
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUser, HttpCurrentUser>();
+        services.AddFirebaseAuthentication(configuration, environment);
+
+        services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.Never;
+        });
+
+        services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
+        {
+            context.ProblemDetails.Extensions.TryAdd("code", ProblemResults.CodeForStatus(context.ProblemDetails.Status));
+            context.ProblemDetails.Extensions.TryAdd("traceId", System.Diagnostics.Activity.Current?.Id ?? context.HttpContext.TraceIdentifier);
+        });
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+
+        services.AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1);
+                options.ReportApiVersions = true;
+                options.ApiVersionReader = new UrlSegmentApiVersionReader();
+            })
+            .AddApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'V";
+                options.SubstituteApiVersionInUrl = true;
+            })
+            .AddOpenApi(options => options.Document.AddDocumentTransformer((document, _, _) =>
+        {
+            document.Info = new OpenApiInfo
+            {
+                Title = "ReadIn API",
+                Version = "v1",
+                Description = "ReadIn — مقال كل يوم يفرق معاك. Authenticate with a Firebase ID token (Bearer).",
+            };
+            document.Components ??= new OpenApiComponents();
+            document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+            document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "Firebase ID token",
+            };
+            return Task.CompletedTask;
+        }));
+
+        services.AddCors(options => options.AddPolicy(CorsPolicy, policy => policy
+            .WithOrigins(configuration.GetSection("Cors:Origins").Get<string[]>() ?? [])
+            .AllowAnyHeader()
+            .AllowAnyMethod()));
+
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 300,
+                    Window = TimeSpan.FromMinutes(1),
+                }));
+            options.AddPolicy(RateLimitPolicies.Auth, context =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 20,
+                    Window = TimeSpan.FromMinutes(1),
+                }));
+            options.AddPolicy(RateLimitPolicies.Writes, context =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 30,
+                    Window = TimeSpan.FromMinutes(1),
+                }));
+        });
+
+        services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+            options.Providers.Add<BrotliCompressionProvider>();
+            options.Providers.Add<GzipCompressionProvider>();
+        });
+
+        return services;
+    }
+
+    public static WebApplication UseApi(this WebApplication app)
+    {
+        app.UseExceptionHandler();
+        app.UseStatusCodePages();
+
+        if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
+        {
+            app.UseHsts();
+            app.UseHttpsRedirection();
+        }
+
+        app.Use(SecurityHeaders);
+        app.UseResponseCompression();
+        app.UseCors(CorsPolicy);
+        app.UseAuthentication();
+        app.Use(RejectSuspendedUsers);
+        app.UseAuthorization();
+        app.UseRateLimiter();
+
+        if (!app.Environment.IsProduction())
+        {
+            app.MapOpenApi().WithDocumentPerVersion();
+            app.MapScalarApiReference("/docs", options => options.WithTitle("ReadIn API"));
+            if (Infrastructure.DependencyInjection.IsHangfireEnabled(app.Configuration)) app.UseHangfireDashboard("/hangfire");
+        }
+
+        app.MapHealthChecks("/health").AllowAnonymous();
+
+        var versions = app.NewApiVersionSet().HasApiVersion(new ApiVersion(1)).ReportApiVersions().Build();
+        app.MapGroup("/api/v{version:apiVersion}")
+            .WithApiVersionSet(versions)
+            .HasApiVersion(new ApiVersion(1))
+            .MapEndpointGroups();
+
+        return app;
+    }
+
+    private static string PartitionKey(HttpContext context) =>
+        context.User.FindFirst(FirebaseClaims.UserId)?.Value
+        ?? context.Connection.RemoteIpAddress?.ToString()
+        ?? "anonymous";
+
+    /// <summary>Suspended users get 403 <c>user.suspended</c> on every authenticated call (SPEC §9.2 step 6).</summary>
+    private static async Task RejectSuspendedUsers(HttpContext context, RequestDelegate next)
+    {
+        if (context.User.HasClaim(ReadInClaims.Suspended, "true"))
+        {
+            await Domain.Users.UserErrors.Suspended.ToProblem(context).ExecuteAsync(context);
+            return;
+        }
+        await next(context);
+    }
+
+    private static Task SecurityHeaders(HttpContext context, RequestDelegate next)
+    {
+        var headers = context.Response.Headers;
+        headers.XContentTypeOptions = "nosniff";
+        headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        headers.XFrameOptions = "DENY";
+
+        var path = context.Request.Path;
+        if (!path.StartsWithSegments("/docs") && !path.StartsWithSegments("/hangfire") && !path.StartsWithSegments("/openapi"))
+            headers.ContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
+
+        return next(context);
+    }
+}
