@@ -2,7 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../firebase_options.dart';
+import '../../firebase_options.dart' as emulator;
+import '../../firebase_options_prod.dart' as prod;
 import '../config/app_config.dart';
 
 /// Whether Firebase initialized. The app must still launch without it
@@ -16,9 +17,15 @@ class FirebaseStatus {
 abstract final class FirebaseBootstrap {
   static const authEmulatorPort = 9099;
 
+  /// `dev` never touches the real project; only `prod` uses its options.
+  static FirebaseOptions optionsFor(Flavor flavor) => switch (flavor) {
+        Flavor.dev => emulator.DefaultFirebaseOptions.currentPlatform,
+        Flavor.prod => prod.DefaultFirebaseOptions.currentPlatform,
+      };
+
   static Future<FirebaseStatus> init(AppConfig config) async {
     try {
-      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      await Firebase.initializeApp(options: optionsFor(config.flavor));
       if (config.useFirebaseEmulator) {
         await FirebaseAuth.instance.useAuthEmulator(config.emulatorHost, authEmulatorPort);
       }

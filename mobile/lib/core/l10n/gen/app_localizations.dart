@@ -296,6 +296,12 @@ abstract class AppLocalizations {
   /// **'Try another field or check back later.'**
   String get feedEmptyBody;
 
+  /// No description provided for @feedNewArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'New articles ↑'**
+  String get feedNewArticles;
+
   /// No description provided for @endOfFeed.
   ///
   /// In en, this message translates to:
@@ -557,8 +563,20 @@ abstract class AppLocalizations {
   /// No description provided for @notificationsHint.
   ///
   /// In en, this message translates to:
-  /// **'We\'ll ask for permission when notifications launch.'**
+  /// **'We\'ll ask for permission when you turn it on.'**
   String get notificationsHint;
+
+  /// No description provided for @notificationsBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off for ReadIn in your phone\'s settings.'**
+  String get notificationsBlocked;
+
+  /// No description provided for @notificationsUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications, {count} new'**
+  String notificationsUnread(int count);
 
   /// No description provided for @finishOnboarding.
   ///

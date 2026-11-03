@@ -48,6 +48,7 @@ import '../../features/home/domain/repositories/feed_repository.dart' as _i954;
 import '../../features/home/domain/usecases/feed_usecases.dart' as _i251;
 import '../../features/home/presentation/cubit/feed_cubit.dart' as _i646;
 import '../../features/home/presentation/cubit/home_cubit.dart' as _i9;
+import '../../features/home/presentation/cubit/live_feed_cubit.dart' as _i136;
 import '../../features/media/data/datasources/device_media_picker.dart'
     as _i434;
 import '../../features/media/data/datasources/document_file_data_source.dart'
@@ -62,6 +63,8 @@ import '../../features/media/domain/repositories/media_repository.dart'
 import '../../features/media/domain/usecases/media_usecases.dart' as _i504;
 import '../../features/media/presentation/cubit/attachments_cubit.dart'
     as _i571;
+import '../../features/notifications/presentation/cubit/unread_badge_cubit.dart'
+    as _i1054;
 import '../../features/onboarding/data/datasources/interests_api.dart' as _i227;
 import '../../features/onboarding/data/repositories/interests_repository_impl.dart'
     as _i1032;
@@ -94,6 +97,12 @@ import '../l10n/current_locale.dart' as _i1026;
 import '../network/request_context.dart' as _i194;
 import '../platform/share_service.dart' as _i868;
 import '../platform/time_zone_service.dart' as _i878;
+import '../push/devices_api.dart' as _i455;
+import '../push/push_platform.dart' as _i709;
+import '../push/push_service.dart' as _i1040;
+import '../realtime/live_connection.dart' as _i887;
+import '../realtime/realtime_service.dart' as _i854;
+import '../realtime/realtime_token_api.dart' as _i894;
 import '../storage/key_value_store.dart' as _i892;
 import '../storage/secure_store.dart' as _i271;
 import 'register_module.dart' as _i291;
@@ -134,6 +143,18 @@ extension GetItInjectableX on _i174.GetIt {
       () => registerModule.firebase(gh<_i650.AppConfig>()),
       preResolve: true,
     );
+    gh.lazySingleton<_i709.PushPlatform>(
+      () => _i709.FirebasePushPlatform(
+        gh<_i650.AppConfig>(),
+        gh<_i223.FirebaseStatus>(),
+      ),
+    );
+    gh.lazySingleton<_i887.LiveConnector>(
+      () => _i887.FirebaseLiveConnector(
+        gh<_i650.AppConfig>(),
+        gh<_i223.FirebaseStatus>(),
+      ),
+    );
     gh.lazySingleton<_i492.FirebaseAuthDataSource>(
       () => _i492.FirebaseAuthDataSource(gh<_i223.FirebaseStatus>()),
     );
@@ -170,6 +191,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i46.SendPasswordReset>(),
       ),
     );
+    gh.lazySingleton<_i455.DevicesApi>(() => _i455.DevicesApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i894.RealtimeTokenApi>(
+      () => _i894.RealtimeTokenApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i462.ArticleApi>(() => _i462.ArticleApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i506.AccountApi>(() => _i506.AccountApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i815.EditorApi>(() => _i815.EditorApi(gh<_i361.Dio>()));
@@ -187,6 +212,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i848.DocumentFileDataSource>(
       () => _i848.DocumentFileDataSource(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i1040.PushService>(
+      () =>
+          _i1040.PushService(gh<_i709.PushPlatform>(), gh<_i455.DevicesApi>()),
+    );
     gh.lazySingleton<_i263.TaxonomyRepository>(
       () => _i551.TaxonomyRepositoryImpl(gh<_i421.TaxonomyApi>()),
     );
@@ -195,6 +224,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i757.MediaApi>(),
         gh<_i221.ImageCompressor>(),
         gh<_i848.DocumentFileDataSource>(),
+      ),
+    );
+    gh.lazySingleton<_i854.RealtimeService>(
+      () => _i854.RealtimeService(
+        gh<_i887.LiveConnector>(),
+        gh<_i894.RealtimeTokenApi>(),
       ),
     );
     gh.lazySingleton<_i904.ArticleRepository>(
@@ -272,6 +307,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i279.SyncPreferences>(
       () => _i279.SyncPreferences(gh<_i674.SettingsRepository>()),
+    );
+    gh.factory<_i136.LiveFeedCubit>(
+      () => _i136.LiveFeedCubit(gh<_i854.RealtimeService>()),
+    );
+    gh.factory<_i1054.UnreadBadgeCubit>(
+      () => _i1054.UnreadBadgeCubit(gh<_i854.RealtimeService>()),
     );
     gh.factory<_i284.ArticleCubit>(
       () => _i284.ArticleCubit(gh<_i904.GetArticle>()),

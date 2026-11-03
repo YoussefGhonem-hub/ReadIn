@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -10,10 +12,13 @@ import '../features/settings/presentation/cubit/settings_cubit.dart';
 import 'router.dart';
 
 class ReadInApp extends StatefulWidget {
-  const ReadInApp({super.key, required this.session, required this.settings});
+  const ReadInApp({super.key, required this.session, required this.settings, this.pushOpens});
 
   final SessionCubit session;
   final SettingsCubit settings;
+
+  /// Routes to open for tapped push notifications (SPEC §21.1).
+  final Stream<String>? pushOpens;
 
   @override
   State<ReadInApp> createState() => _ReadInAppState();
@@ -21,9 +26,18 @@ class ReadInApp extends StatefulWidget {
 
 class _ReadInAppState extends State<ReadInApp> {
   late final GoRouter _router = buildRouter(session: widget.session, settings: widget.settings);
+  StreamSubscription<String>? _pushOpens;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pushed on top of the current screen; the router's redirect waits for the session first.
+    _pushOpens = widget.pushOpens?.listen((path) => unawaited(_router.push<void>(path)));
+  }
 
   @override
   void dispose() {
+    unawaited(_pushOpens?.cancel());
     _router.dispose();
     super.dispose();
   }

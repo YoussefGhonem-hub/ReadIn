@@ -124,6 +124,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedEmptyBody => 'Try another field or check back later.';
 
   @override
+  String get feedNewArticles => 'New articles ↑';
+
+  @override
   String get endOfFeed => 'You\'re all caught up ✨';
 
   @override
@@ -287,7 +290,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsHint =>
-      'We\'ll ask for permission when notifications launch.';
+      'We\'ll ask for permission when you turn it on.';
+
+  @override
+  String get notificationsBlocked =>
+      'Notifications are off for ReadIn in your phone\'s settings.';
+
+  @override
+  String notificationsUnread(int count) {
+    return 'Notifications, $count new';
+  }
 
   @override
   String get finishOnboarding => 'Start reading';

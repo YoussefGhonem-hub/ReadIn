@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/failure_messages.dart';
 import '../../../../core/l10n/l10n_x.dart';
+import '../../../../core/push/push_service.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/app_logo.dart';
@@ -223,7 +224,7 @@ class _PreferencesStep extends StatelessWidget {
           caption: failure == null ? null : localizeFailure(l10n, failure),
           captionIsError: failure != null,
           child: FilledButton(
-            onPressed: state.submitting ? null : context.read<OnboardingCubit>().finish,
+            onPressed: state.submitting ? null : () => _finish(context),
             child: state.submitting
                 ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
                 : Text(l10n.finishOnboarding),
@@ -232,6 +233,16 @@ class _PreferencesStep extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The reminder step is where the user just chose daily notifications, so
+/// push permission is asked here, in context (SPEC §21.1), before finishing.
+Future<void> _finish(BuildContext context) async {
+  final cubit = context.read<OnboardingCubit>();
+  if (context.read<SettingsCubit>().state.dailyNotifications && getIt.isRegistered<PushService>()) {
+    await getIt<PushService>().enable();
+  }
+  await cubit.finish();
 }
 
 class _BottomBar extends StatelessWidget {

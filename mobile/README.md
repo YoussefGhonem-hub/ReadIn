@@ -8,7 +8,7 @@ Android & iOS app for ReadIn (SPEC §3.3, §8). Clean Architecture, feature-firs
 ```bash
 # 1. Local services (from the repo root)
 docker compose up -d                 # SQL Server + Seq
-firebase emulators:start             # Auth (9099) + Storage (9199), project demo-readin
+firebase emulators:start             # Auth (9099) + Realtime Database (9000), project demo-readin
 dotnet run --project backend/src/ReadIn.Api   # API on http://localhost:5080
 
 # 2. App (from mobile/)
@@ -19,13 +19,14 @@ flutter run --dart-define-from-file=config/dev.json
 
 | Define | Default (dev) | Notes |
 |---|---|---|
-| `FLAVOR` | `dev` | `dev` · `staging` · `prod` (`config/*.json`) |
+| `FLAVOR` | `dev` | `dev` = Firebase Emulator Suite · `prod` = the single real Firebase project (`config/*.json`, ADR 0005) |
 | `API_BASE_URL` | `http://10.0.2.2:5080/api/v1` (Android emulator), `http://localhost:5080/api/v1` otherwise | Override for a device on your LAN |
 | `USE_FIREBASE_EMULATOR` | `true` | Only honoured in `dev` |
 
 The app still starts when Firebase is unavailable: it logs the error and runs in guest mode.
-`lib/firebase_options.dart` is a placeholder for the emulator project; run `flutterfire configure`
-for staging/prod.
+`lib/firebase_options.dart` is the emulator project (`dev`); `lib/firebase_options_prod.dart` is the real project
+`readin-cca78` (`prod`), used only for push notifications and the Realtime Database ([docs/setup/firebase.md](../docs/setup/firebase.md)).
+Push needs `prod` (the emulator has no Cloud Messaging); live counters and the unread badge work with both.
 
 ## Code generation
 

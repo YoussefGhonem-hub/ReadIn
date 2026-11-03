@@ -127,6 +127,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get feedEmptyBody => 'جرّب مجال تاني أو ارجع بعدين.';
 
   @override
+  String get feedNewArticles => 'مقالات جديدة ↑';
+
+  @override
   String get endOfFeed => 'خلّصت كل الجديد ✨';
 
   @override
@@ -292,7 +295,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationsLabel => 'إشعار مقال النهارده';
 
   @override
-  String get notificationsHint => 'هنطلب الإذن لما الإشعارات تشتغل.';
+  String get notificationsHint => 'هنطلب الإذن لما تفعّلها.';
+
+  @override
+  String get notificationsBlocked =>
+      'إشعارات ReadIn مقفولة من إعدادات الموبايل.';
+
+  @override
+  String notificationsUnread(int count) {
+    return 'الإشعارات، $count جديدة';
+  }
 
   @override
   String get finishOnboarding => 'ابدأ القراءة';

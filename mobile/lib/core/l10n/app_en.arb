@@ -42,6 +42,7 @@
   "filterAll": "All",
   "feedEmptyTitle": "No articles here yet",
   "feedEmptyBody": "Try another field or check back later.",
+  "feedNewArticles": "New articles ↑",
   "endOfFeed": "You're all caught up ✨",
 
   "readingTime": "{minutes, plural, =1{1 min read} other{{minutes} min read}}",
@@ -97,7 +98,10 @@
   "articleLanguageLabel": "Article language",
   "reminderTimeLabel": "Daily reminder",
   "notificationsLabel": "Daily article notification",
-  "notificationsHint": "We'll ask for permission when notifications launch.",
+  "notificationsHint": "We'll ask for permission when you turn it on.",
+  "notificationsBlocked": "Notifications are off for ReadIn in your phone's settings.",
+  "notificationsUnread": "Notifications, {count} new",
+  "@notificationsUnread": { "placeholders": { "count": { "type": "int" } } },
   "finishOnboarding": "Start reading",
 
   "signIn": "Sign in",

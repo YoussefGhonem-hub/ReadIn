@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 
-enum Flavor { dev, staging, prod }
+/// `dev` = Firebase Emulator Suite + local API, `prod` = the single real Firebase project (ADR 0005).
+enum Flavor { dev, prod }
 
 /// Build-time configuration. Pass with
-/// `flutter run --dart-define-from-file=config/dev.json` (or staging/prod),
+/// `flutter run --dart-define-from-file=config/dev.json` (or prod),
 /// or override single values with `--dart-define=API_BASE_URL=...`.
 class AppConfig {
   const AppConfig({

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -9,10 +11,13 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../article/domain/entities/article.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../notifications/presentation/cubit/unread_badge_cubit.dart';
 import '../cubit/feed_cubit.dart';
 import '../cubit/home_cubit.dart';
+import '../cubit/live_feed_cubit.dart';
 import '../widgets/today_hero_card.dart';
 
 /// Home — "النهارده" (F03).
@@ -24,6 +29,8 @@ class HomePage extends StatelessWidget {
         providers: [
           BlocProvider(create: (_) => getIt<HomeCubit>()..load()),
           BlocProvider(create: (_) => getIt<FeedCubit>()..load()),
+          BlocProvider(create: (_) => getIt<LiveFeedCubit>()..start()),
+          BlocProvider(create: (_) => getIt<UnreadBadgeCubit>()),
         ],
         child: const HomeView(),
       );
@@ -43,6 +50,15 @@ class HomeView extends StatelessWidget {
 
   void _open(BuildContext context, String slug) => context.push('/a/$slug');
 
+  void _showNewArticles(BuildContext context) {
+    context.read<LiveFeedCubit>().acknowledgeNewArticles();
+    unawaited(_refresh(context));
+    final scroll = PrimaryScrollController.maybeOf(context);
+    if (scroll != null && scroll.hasClients) {
+      unawaited(scroll.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOut));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,66 +71,71 @@ class HomeView extends StatelessWidget {
             }
             return false;
           },
-          child: RefreshIndicator(
-            onRefresh: () => _refresh(context),
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(_gutter, ReadInSpace.s4, _gutter, ReadInSpace.s4),
-                  sliver: SliverToBoxAdapter(child: _HomeHeader()),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: _gutter),
-                  sliver: SliverToBoxAdapter(
-                    child: BlocBuilder<HomeCubit, HomeState>(
-                      builder: (context, state) {
-                        if (state.loading) return const _HeroSkeleton();
-                        final today = state.today;
-                        if (today == null) return const SizedBox.shrink();
-                        return TodayHeroCard(article: today, onTap: () => _open(context, today.slug));
+          child: Stack(
+            children: [
+              RefreshIndicator(
+                onRefresh: () => _refresh(context),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    const SliverPadding(
+                      padding: EdgeInsets.fromLTRB(_gutter, ReadInSpace.s4, _gutter, ReadInSpace.s4),
+                      sliver: SliverToBoxAdapter(child: _HomeHeader()),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: _gutter),
+                      sliver: SliverToBoxAdapter(
+                        child: BlocBuilder<HomeCubit, HomeState>(
+                          builder: (context, state) {
+                            if (state.loading) return const _HeroSkeleton();
+                            final today = state.today;
+                            if (today == null) return const SizedBox.shrink();
+                            return TodayHeroCard(article: today, onTap: () => _open(context, today.slug));
+                          },
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: _FieldFilterBar()),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(_gutter, 0, _gutter, ReadInSpace.s2),
+                      sliver: SliverToBoxAdapter(
+                        child: Text(context.l10n.feedForYou, style: context.textTheme.titleMedium),
+                      ),
+                    ),
+                    BlocBuilder<FeedCubit, FeedState>(
+                      builder: (context, feed) => switch (feed.status) {
+                        FeedStatus.loading => const SliverPadding(
+                            padding: EdgeInsets.symmetric(horizontal: _gutter),
+                            sliver: SliverToBoxAdapter(child: _FeedSkeleton()),
+                          ),
+                        FeedStatus.failure => SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: ErrorView(
+                              failure: feed.failure!,
+                              compact: true,
+                              onRetry: () => context.read<FeedCubit>().load(fieldSlug: feed.fieldSlug),
+                            ),
+                          ),
+                        FeedStatus.ready when feed.items.isEmpty => SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: EmptyView(title: context.l10n.feedEmptyTitle, body: context.l10n.feedEmptyBody),
+                          ),
+                        FeedStatus.ready => SliverPadding(
+                            padding: const EdgeInsets.symmetric(horizontal: _gutter),
+                            sliver: SliverList.builder(
+                              itemCount: feed.items.length + 1,
+                              itemBuilder: (context, i) => i < feed.items.length
+                                  ? _LiveArticleTile(article: feed.items[i], onTap: () => _open(context, feed.items[i].slug))
+                                  : _FeedFooter(state: feed),
+                            ),
+                          ),
                       },
                     ),
-                  ),
+                  ],
                 ),
-                const SliverToBoxAdapter(child: _FieldFilterBar()),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(_gutter, 0, _gutter, ReadInSpace.s2),
-                  sliver: SliverToBoxAdapter(
-                    child: Text(context.l10n.feedForYou, style: context.textTheme.titleMedium),
-                  ),
-                ),
-                BlocBuilder<FeedCubit, FeedState>(
-                  builder: (context, feed) => switch (feed.status) {
-                    FeedStatus.loading => const SliverPadding(
-                        padding: EdgeInsets.symmetric(horizontal: _gutter),
-                        sliver: SliverToBoxAdapter(child: _FeedSkeleton()),
-                      ),
-                    FeedStatus.failure => SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: ErrorView(
-                          failure: feed.failure!,
-                          compact: true,
-                          onRetry: () => context.read<FeedCubit>().load(fieldSlug: feed.fieldSlug),
-                        ),
-                      ),
-                    FeedStatus.ready when feed.items.isEmpty => SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: EmptyView(title: context.l10n.feedEmptyTitle, body: context.l10n.feedEmptyBody),
-                      ),
-                    FeedStatus.ready => SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: _gutter),
-                        sliver: SliverList.builder(
-                          itemCount: feed.items.length + 1,
-                          itemBuilder: (context, i) => i < feed.items.length
-                              ? ArticleCardTile(article: feed.items[i], onTap: () => _open(context, feed.items[i].slug))
-                              : _FeedFooter(state: feed),
-                        ),
-                      ),
-                  },
-                ),
-              ],
-            ),
+              ),
+              _NewArticlesBanner(onTap: () => _showNewArticles(context)),
+            ],
           ),
         ),
       ),
@@ -149,13 +170,93 @@ class _HomeHeader extends StatelessWidget {
         ),
         const StreakBadge(days: 0),
         const SizedBox(width: ReadInSpace.s2),
-        IconButton.outlined(
-          tooltip: l10n.notifications,
-          onPressed: () => context.push('/notifications'),
-          icon: const Icon(Icons.notifications_none_rounded),
-          style: IconButton.styleFrom(side: BorderSide(color: context.colors.border)),
-        ),
+        const _NotificationsButton(),
       ],
+    );
+  }
+}
+
+/// "مقالات جديدة ↑" once an article is published after the feed was loaded (F27).
+class _NewArticlesBanner extends StatelessWidget {
+  const _NewArticlesBanner({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = context.select((LiveFeedCubit c) => c.state.hasNewArticles);
+    if (!visible) return const SizedBox.shrink();
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Padding(
+        padding: const EdgeInsets.only(top: ReadInSpace.s3),
+        child: FilledButton(onPressed: onTap, child: Text(context.l10n.feedNewArticles)),
+      ),
+    );
+  }
+}
+
+/// A feed card with live counters while the list keeps it built (on or near the screen).
+class _LiveArticleTile extends StatefulWidget {
+  const _LiveArticleTile({required this.article, required this.onTap});
+
+  final ArticleCard article;
+  final VoidCallback onTap;
+
+  @override
+  State<_LiveArticleTile> createState() => _LiveArticleTileState();
+}
+
+class _LiveArticleTileState extends State<_LiveArticleTile> {
+  late final LiveFeedCubit _live = context.read<LiveFeedCubit>();
+
+  @override
+  void initState() {
+    super.initState();
+    _live.watch(widget.article.id);
+  }
+
+  @override
+  void didUpdateWidget(_LiveArticleTile old) {
+    super.didUpdateWidget(old);
+    if (old.article.id != widget.article.id) {
+      _live
+        ..unwatch(old.article.id)
+        ..watch(widget.article.id);
+    }
+  }
+
+  @override
+  void dispose() {
+    _live.unwatch(widget.article.id);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final live = context.select((LiveFeedCubit c) => c.state.counts[widget.article.id]);
+    final article = live == null
+        ? widget.article
+        : widget.article.withCounts(reactionCount: live.reactionCount, commentCount: live.commentCount);
+    return ArticleCardTile(article: article, onTap: widget.onTap);
+  }
+}
+
+/// The bell with the live unread count (F27).
+class _NotificationsButton extends StatelessWidget {
+  const _NotificationsButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final unread = context.watch<UnreadBadgeCubit>().state;
+    const bell = Icon(Icons.notifications_none_rounded);
+    return IconButton.outlined(
+      tooltip: unread > 0 ? l10n.notificationsUnread(unread) : l10n.notifications,
+      onPressed: () => context.push('/notifications'),
+      // No badge at 0, so the bell looks exactly as before.
+      icon: unread > 0 ? Badge(label: Text(unread > 9 ? '9+' : '$unread'), child: bell) : bell,
+      style: IconButton.styleFrom(side: BorderSide(color: context.colors.border)),
     );
   }
 }

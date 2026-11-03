@@ -38,6 +38,7 @@
   "filterAll": "الكل",
   "feedEmptyTitle": "مفيش مقالات هنا لسه",
   "feedEmptyBody": "جرّب مجال تاني أو ارجع بعدين.",
+  "feedNewArticles": "مقالات جديدة ↑",
   "endOfFeed": "خلّصت كل الجديد ✨",
 
   "readingTime": "{minutes, plural, =1{دقيقة قراءة} =2{دقيقتين قراءة} few{{minutes} دقايق قراءة} many{{minutes} دقيقة قراءة} other{{minutes} دقيقة قراءة}}",
@@ -85,7 +86,9 @@
   "articleLanguageLabel": "لغة المقالات",
   "reminderTimeLabel": "معاد التذكير اليومي",
   "notificationsLabel": "إشعار مقال النهارده",
-  "notificationsHint": "هنطلب الإذن لما الإشعارات تشتغل.",
+  "notificationsHint": "هنطلب الإذن لما تفعّلها.",
+  "notificationsBlocked": "إشعارات ReadIn مقفولة من إعدادات الموبايل.",
+  "notificationsUnread": "الإشعارات، {count} جديدة",
   "finishOnboarding": "ابدأ القراءة",
 
   "signIn": "تسجيل الدخول",

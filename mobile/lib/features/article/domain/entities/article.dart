@@ -75,6 +75,26 @@ class ArticleCard extends Equatable {
   /// carry at most the first 10 PDF pages.
   final ArticleAttachments? attachments;
 
+  /// The same card with live counters (F27); a null count keeps the feed value.
+  ArticleCard withCounts({int? reactionCount, int? commentCount}) => ArticleCard(
+        id: id,
+        slug: slug,
+        language: language,
+        title: title,
+        field: field,
+        author: author,
+        readingTimeMinutes: readingTimeMinutes,
+        publishedAt: publishedAt,
+        subtitle: subtitle,
+        coverUrl: coverUrl,
+        isReviewed: isReviewed,
+        isAiAssisted: isAiAssisted,
+        versionBadge: versionBadge,
+        reactionCount: reactionCount ?? this.reactionCount,
+        commentCount: commentCount ?? this.commentCount,
+        attachments: attachments,
+      );
+
   @override
   List<Object?> get props => [
         id,
