@@ -1,9 +1,12 @@
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../entities/auth_config.dart';
+import '../entities/external_credential.dart';
 import '../entities/me.dart';
 import '../repositories/auth_repository.dart';
+import '../repositories/external_identity_repository.dart';
 
 @injectable
 class WatchSession {
@@ -79,11 +82,15 @@ class ResetPassword {
 
 @injectable
 class SignOut {
-  const SignOut(this._auth);
+  const SignOut(this._auth, this._identities);
 
   final AuthRepository _auth;
+  final ExternalIdentityRepository _identities;
 
-  Future<void> call() => _auth.signOut();
+  Future<void> call() async {
+    await _auth.signOut();
+    await _identities.forget(); // the next "Continue with Google" shows the account picker again
+  }
 }
 
 @injectable
@@ -168,5 +175,98 @@ class DeleteAccount {
 
   final AccountRepository _accounts;
 
-  Future<Result<void>> call(String password) => _accounts.deleteAccount(password);
+  Future<Result<void>> call({String? password, ExternalCredential? external}) =>
+      _accounts.deleteAccount(password: password, external: external);
+}
+
+// ── Google / Apple (ADR 0012) ───────────────────────────────────────
+
+/// The Google / Apple buttons to show: configured on the server and possible on this device.
+@injectable
+class GetExternalProviders {
+  const GetExternalProviders(this._auth, this._identities);
+
+  final AuthRepository _auth;
+  final ExternalIdentityRepository _identities;
+
+  Future<List<ExternalProvider>> call() async =>
+      [for (final provider in (await _auth.getConfig()).externalProviders) if (_identities.supports(provider)) provider];
+}
+
+/// The provider's sheet; `Ok(null)` when the person closes it.
+@injectable
+class ObtainExternalCredential {
+  const ObtainExternalCredential(this._identities);
+
+  final ExternalIdentityRepository _identities;
+
+  Future<Result<ExternalCredential?>> call(ExternalProvider provider) => _identities.obtain(provider);
+}
+
+/// "Confirm it's you" for an account without a password: a fresh token of a provider linked to [me] that this device
+/// can show. `Ok(null)` when the person closes the sheet.
+@injectable
+class ConfirmWithLinkedProvider {
+  const ConfirmWithLinkedProvider(this._identities);
+
+  final ExternalIdentityRepository _identities;
+
+  /// The provider that [call] will ask, or null when none can be shown here.
+  ExternalProvider? providerFor(Me me) =>
+      me.externalLogins.map((login) => login.kind).nonNulls.where(_identities.supports).firstOrNull;
+
+  Future<Result<ExternalCredential?>> call(Me me) async {
+    final provider = providerFor(me);
+    if (provider == null) return const Err(Failure(FailureCodes.authConfirmationRequired));
+    return _identities.obtain(provider);
+  }
+}
+
+@injectable
+class SignInWithExternal {
+  const SignInWithExternal(this._auth);
+
+  final AuthRepository _auth;
+
+  Future<Result<Me>> call(
+    ExternalCredential credential, {
+    required String uiLanguage,
+    bool createAccount = false,
+    ExternalLink? link,
+  }) =>
+      _auth.signInWithExternal(credential, uiLanguage: uiLanguage, createAccount: createAccount, link: link);
+}
+
+@injectable
+class LinkExternalLogin {
+  const LinkExternalLogin(this._accounts);
+
+  final AccountRepository _accounts;
+
+  Future<Result<Me>> call(ExternalCredential credential, {String? password, ExternalCredential? external}) =>
+      _accounts.linkExternalLogin(credential, password: password, external: external);
+}
+
+@injectable
+class UnlinkExternalLogin {
+  const UnlinkExternalLogin(this._accounts);
+
+  final AccountRepository _accounts;
+
+  Future<Result<Me>> call(ExternalProvider provider) => _accounts.unlinkExternalLogin(provider);
+}
+
+@injectable
+class AddPhoneSignIn {
+  const AddPhoneSignIn(this._accounts);
+
+  final AccountRepository _accounts;
+
+  Future<Result<Me>> call({
+    required String phoneNumber,
+    required String password,
+    required String recoveryPin,
+    required ExternalCredential external,
+  }) =>
+      _accounts.addPhoneSignIn(phoneNumber: phoneNumber, password: password, recoveryPin: recoveryPin, external: external);
 }

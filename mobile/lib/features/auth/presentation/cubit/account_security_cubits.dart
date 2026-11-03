@@ -8,6 +8,8 @@ import '../../../../core/phone/countries.dart';
 import '../../../../core/phone/phone_numbers.dart';
 import '../../../../core/security/credential_rules.dart';
 import '../../domain/entities/auth_config.dart';
+import '../../domain/entities/external_credential.dart';
+import '../../domain/entities/me.dart';
 import '../../domain/usecases/auth_usecases.dart';
 import 'form_support.dart';
 
@@ -79,6 +81,17 @@ abstract class _AccountFormCubit extends Cubit<AccountFormState> {
       return emit(state.copyWith(status: FormStatus.idle, errors: split.fields, failure: () => split.general));
     }
     emit(state.copyWith(status: FormStatus.success));
+  }
+
+  /// "Confirm it's you" without a password: a linked provider's sheet, with the form busy meanwhile. Null when the
+  /// sheet was closed or failed (the failure is shown).
+  Future<ExternalCredential?> _confirmWithLinkedProvider(ConfirmWithLinkedProvider confirmWith, Me me) async {
+    emit(state.copyWith(status: FormStatus.submitting, errors: const {}, failure: () => null, confirming: false));
+    final result = await confirmWith(me);
+    if (isClosed) return null;
+    final credential = result.valueOrNull;
+    if (credential == null) emit(state.copyWith(status: FormStatus.idle, failure: () => result.failureOrNull));
+    return credential;
   }
 
   void _livePin(String pin, {String? phoneE164, String? password}) {
@@ -217,19 +230,89 @@ class ChangePhoneCubit extends _AccountFormCubit {
   }
 }
 
-/// Delete account (F01): the password and an explicit confirmation.
+/// Delete account (F01): the password, or a fresh Google / Apple token for accounts without one, and an explicit
+/// confirmation.
 @injectable
 class DeleteAccountCubit extends _AccountFormCubit {
-  DeleteAccountCubit(super.config, this._delete);
+  DeleteAccountCubit(super.config, this._delete, this._confirmWith);
 
   final DeleteAccount _delete;
+  final ConfirmWithLinkedProvider _confirmWith;
 
-  Future<void> submit({required String password, required bool confirmed}) async {
+  Future<void> submit({required String password, required bool confirmed, Me? me}) async {
     if (state.submitting || !confirmed) return;
+    if (me != null && !me.hasPassword) {
+      final external = await _confirmWithLinkedProvider(_confirmWith, me);
+      if (external == null) return;
+      return _submit(const {}, () => _delete(external: external), codeFields: const {});
+    }
     await _submit(
       Validate.collect({Fields.password: Validate.required(password)}),
-      () => _delete(password),
+      () => _delete(password: password),
       codeFields: const {FailureCodes.authWrongPassword: Fields.password},
     );
+  }
+}
+
+/// Settings → "ضيف رقم تليفون وكلمة سر" for Google / Apple-only accounts (F18): number, password and PIN, the
+/// confirm-number dialog, then a fresh token of a linked provider. The session gets fresh tokens.
+@injectable
+class AddPhoneSignInCubit extends _AccountFormCubit {
+  AddPhoneSignInCubit(super.config, this._add, this._confirmWith, this._countries);
+
+  final AddPhoneSignIn _add;
+  final ConfirmWithLinkedProvider _confirmWith;
+  final PhoneCountryMemory _countries;
+
+  // Kept out of the state on purpose (never logged or compared).
+  String? _phone;
+  String _password = '';
+  String _pin = '';
+
+  void pinChanged(String pin, {String? phoneE164, String? password}) =>
+      _livePin(pin, phoneE164: phoneE164, password: password);
+
+  /// Validates, then opens the confirm-number dialog.
+  void review({
+    required String? phoneE164,
+    required bool phoneEmpty,
+    required String password,
+    required String confirmPassword,
+    required String pin,
+    required String confirmPin,
+  }) {
+    if (state.submitting) return;
+    final normalized = RecoveryPinRules.normalize(pin);
+    final errors = Validate.collect({
+      Fields.phone: Validate.phone(empty: phoneEmpty, e164: phoneE164),
+      Fields.password: Validate.newPassword(password, state.config.password, phoneE164: phoneE164),
+      Fields.confirmPassword: Validate.confirmation(confirmPassword, password, CredentialCodes.passwordMismatch),
+      Fields.pin: Validate.newPin(normalized, state.config.pinLength, phoneE164: phoneE164, password: password),
+      Fields.confirmPin: Validate.confirmation(RecoveryPinRules.normalize(confirmPin), normalized, CredentialCodes.pinMismatch),
+    });
+    if (errors.isNotEmpty) return emit(state.copyWith(errors: errors, failure: () => null));
+    _phone = phoneE164;
+    _password = password;
+    _pin = normalized;
+    emit(state.copyWith(errors: const {}, failure: () => null, confirming: true));
+  }
+
+  void cancelConfirmation() => emit(state.copyWith(confirming: false));
+
+  /// "صح": a linked provider confirms it's the owner, then `POST /me/phone-sign-in`.
+  Future<void> confirm(Me me) async {
+    final phone = _phone;
+    if (state.submitting || phone == null) return;
+    final external = await _confirmWithLinkedProvider(_confirmWith, me);
+    if (external == null) return;
+    await _submit(
+      const {},
+      () => _add(phoneNumber: phone, password: _password, recoveryPin: _pin, external: external),
+      fieldNames: const {'recoveryPin': Fields.pin},
+      codeFields: const {FailureCodes.authPhoneTaken: Fields.phone},
+    );
+    if (state.status == FormStatus.success) {
+      if (PhoneNumbers.split(phone) case final parts?) await _countries.remember(parts.iso2);
+    }
   }
 }

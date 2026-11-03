@@ -139,12 +139,18 @@ _AuthConfigModel _$AuthConfigModelFromJson(
   password: json['password'] == null
       ? const PasswordRulesModel()
       : PasswordRulesModel.fromJson(json['password'] as Map<String, dynamic>),
+  externalProviders:
+      (json['externalProviders'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const <String>[],
 );
 
 Map<String, dynamic> _$AuthConfigModelToJson(_AuthConfigModel instance) =>
     <String, dynamic>{
       'pinLength': instance.pinLength,
       'password': instance.password.toJson(),
+      'externalProviders': instance.externalProviders,
     };
 
 _PasswordRulesModel _$PasswordRulesModelFromJson(Map<String, dynamic> json) =>

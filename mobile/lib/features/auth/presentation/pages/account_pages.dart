@@ -10,10 +10,13 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/inputs/password_field.dart';
 import '../../../../shared/widgets/inputs/phone_field.dart';
 import '../../../../shared/widgets/inputs/pin_input.dart';
+import '../../domain/entities/external_credential.dart';
+import '../../domain/entities/me.dart';
 import '../cubit/account_security_cubits.dart';
 import '../cubit/form_support.dart';
 import '../session/session_cubit.dart';
 import '../widgets/auth_widgets.dart';
+import '../widgets/external_sign_in.dart';
 import 'sign_in_page.dart';
 
 /// Pops a settings screen with a confirmation once its form succeeded.
@@ -23,6 +26,10 @@ void _popWithMessage(BuildContext context, String message) {
 }
 
 bool _succeeded(AccountFormState a, AccountFormState b) => a.status != b.status && b.status == FormStatus.success;
+
+/// The provider a Google / Apple-only account confirms with: the first linked one.
+String _linkedProviderLabel(Me me) =>
+    (me.externalLogins.map((login) => login.kind).nonNulls.firstOrNull ?? ExternalProvider.google).label;
 
 // ── Set recovery PIN (mandatory) ─────────────────────────────────────
 
@@ -392,6 +399,138 @@ class _ChangePhoneViewState extends State<ChangePhoneView> {
   }
 }
 
+// ── Add phone + password (Settings, Google / Apple-only accounts) ─────
+
+class AddPhoneSignInPage extends StatelessWidget {
+  const AddPhoneSignInPage({super.key});
+
+  @override
+  Widget build(BuildContext context) => BlocProvider(
+        create: (_) => getIt<AddPhoneSignInCubit>()..loadConfig(),
+        child: const AddPhoneSignInView(),
+      );
+}
+
+/// "ضيف رقم تليفون وكلمة سر" (F18): number, password and recovery PIN, the confirm-number dialog, then a linked provider
+/// confirms it's the owner.
+class AddPhoneSignInView extends StatefulWidget {
+  const AddPhoneSignInView({super.key});
+
+  @override
+  State<AddPhoneSignInView> createState() => _AddPhoneSignInViewState();
+}
+
+class _AddPhoneSignInViewState extends State<AddPhoneSignInView> {
+  late final _phone = PhoneFieldController(iso2: initialPhoneCountry());
+  final _password = TextEditingController();
+  final _confirmPassword = TextEditingController();
+  final _pin = TextEditingController();
+  final _confirmPin = TextEditingController();
+
+  @override
+  void dispose() {
+    _phone.dispose();
+    for (final c in [_password, _confirmPassword, _pin, _confirmPin]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _review() => context.read<AddPhoneSignInCubit>().review(
+        phoneE164: _phone.e164,
+        phoneEmpty: _phone.isEmpty,
+        password: _password.text,
+        confirmPassword: _confirmPassword.text,
+        pin: _pin.text,
+        confirmPin: _confirmPin.text,
+      );
+
+  Future<void> _confirm() async {
+    final cubit = context.read<AddPhoneSignInCubit>();
+    final me = context.read<SessionCubit>().state.me;
+    final phone = _phone.e164;
+    if (phone == null || me == null) return cubit.cancelConfirmation();
+    final answer = await showConfirmNumberDialog(context, phoneE164: phone, confirmLabel: context.l10n.confirmNumberAddYes);
+    if (answer ?? false) {
+      await cubit.confirm(me);
+    } else {
+      cubit.cancelConfirmation();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final me = context.select((SessionCubit c) => c.state.me);
+    return BlocConsumer<AddPhoneSignInCubit, AccountFormState>(
+      listenWhen: (a, b) => (!a.confirming && b.confirming) || _succeeded(a, b),
+      listener: (context, state) {
+        if (state.status == FormStatus.success) {
+          TextInput.finishAutofillContext();
+          _popWithMessage(context, l10n.phoneSignInAdded);
+        } else if (state.confirming) {
+          _confirm();
+        }
+      },
+      builder: (context, state) {
+        final busy = state.submitting;
+        return AuthScaffold(
+          title: l10n.addPhoneSignIn,
+          subtitle: l10n.addPhoneSignInBody(me == null ? ExternalProvider.google.label : _linkedProviderLabel(me)),
+          children: [
+            if (state.failure case final failure?) ...[
+              FailureBanner(failure: failure),
+              const SizedBox(height: ReadInSpace.s4),
+            ],
+            AutofillGroup(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PhoneField(
+                    controller: _phone,
+                    enabled: !busy,
+                    errorText: errorText(context, state.errors[Fields.phone]),
+                  ),
+                  const SizedBox(height: ReadInSpace.s4),
+                  NewPasswordFields(
+                    password: _password,
+                    confirm: _confirmPassword,
+                    policy: state.config.password,
+                    enabled: !busy,
+                    passwordError: errorText(context, state.errors[Fields.password]),
+                    confirmError: errorText(context, state.errors[Fields.confirmPassword]),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: ReadInSpace.s5),
+            PinInput(
+              controller: _pin,
+              label: l10n.pinLabel,
+              length: state.config.pinLength,
+              enabled: !busy,
+              errorText: errorText(context, state.errors[Fields.pin]),
+              onChanged: (pin) => context
+                  .read<AddPhoneSignInCubit>()
+                  .pinChanged(pin, phoneE164: _phone.e164, password: _password.text),
+            ),
+            const SizedBox(height: ReadInSpace.s5),
+            PinInput(
+              controller: _confirmPin,
+              label: l10n.confirmPinLabel,
+              length: state.config.pinLength,
+              enabled: !busy,
+              errorText: errorText(context, state.errors[Fields.confirmPin]),
+            ),
+            const SizedBox(height: ReadInSpace.s6),
+            SubmitButton(label: l10n.continueAction, submitting: busy, onPressed: _review),
+          ],
+        );
+      },
+    );
+  }
+}
+
 // ── Delete account (Settings) ────────────────────────────────────────
 
 class DeleteAccountPage extends StatelessWidget {
@@ -421,12 +560,19 @@ class _DeleteAccountViewState extends State<DeleteAccountView> {
     super.dispose();
   }
 
-  void _submit() => context.read<DeleteAccountCubit>().submit(password: _password.text, confirmed: _confirmed);
+  void _submit() => context.read<DeleteAccountCubit>().submit(
+        password: _password.text,
+        confirmed: _confirmed,
+        me: context.read<SessionCubit>().state.me,
+      );
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
+    final me = context.select((SessionCubit c) => c.state.me);
+    // Accounts without a password confirm with a linked Google / Apple account instead (F18).
+    final confirmWith = me == null || me.hasPassword ? null : _linkedProviderLabel(me);
     return BlocConsumer<DeleteAccountCubit, AccountFormState>(
       listenWhen: _succeeded,
       // The session has ended; the router leaves this screen.
@@ -442,12 +588,15 @@ class _DeleteAccountViewState extends State<DeleteAccountView> {
               FailureBanner(failure: failure),
               const SizedBox(height: ReadInSpace.s4),
             ],
-            PasswordField(
-              controller: _password,
-              enabled: !busy,
-              textInputAction: TextInputAction.done,
-              errorText: errorText(context, state.errors[Fields.password]),
-            ),
+            if (confirmWith != null)
+              FormBanner(message: l10n.deleteAccountWithProvider(confirmWith), tone: BannerTone.info)
+            else
+              PasswordField(
+                controller: _password,
+                enabled: !busy,
+                textInputAction: TextInputAction.done,
+                errorText: errorText(context, state.errors[Fields.password]),
+              ),
             const SizedBox(height: ReadInSpace.s3),
             CheckboxListTile(
               value: _confirmed,

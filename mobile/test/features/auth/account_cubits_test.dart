@@ -7,6 +7,7 @@ import 'package:readin/core/phone/countries.dart';
 import 'package:readin/core/security/credential_rules.dart';
 import 'package:readin/core/storage/key_value_store.dart';
 import 'package:readin/features/auth/domain/entities/auth_config.dart';
+import 'package:readin/features/auth/domain/entities/external_credential.dart';
 import 'package:readin/features/auth/domain/entities/me.dart';
 import 'package:readin/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:readin/features/auth/presentation/cubit/account_security_cubits.dart';
@@ -29,6 +30,10 @@ class MockChangePhoneNumber extends Mock implements ChangePhoneNumber {}
 
 class MockDeleteAccount extends Mock implements DeleteAccount {}
 
+class MockConfirmWithLinkedProvider extends Mock implements ConfirmWithLinkedProvider {}
+
+class MockAddPhoneSignIn extends Mock implements AddPhoneSignIn {}
+
 class MockCompleteProfile extends Mock implements CompleteProfile {}
 
 class MockCheckUsername extends Mock implements CheckUsername {}
@@ -41,10 +46,25 @@ const phone = '+201001234567';
 const wrongPassword = Failure(FailureCodes.authWrongPassword, statusCode: 400);
 const lockedOut = Failure(FailureCodes.authLockedOut, statusCode: 429);
 
+/// An account created with Google: no phone, password or PIN.
+const googleOnly = Me(
+  id: 'u-g',
+  displayName: 'Mona',
+  username: 'mona',
+  hasPassword: false,
+  hasRecoveryPin: false,
+  externalLogins: [ExternalLogin(provider: 'google', email: 'mona@gmail.com')],
+);
+const googleToken = ExternalCredential(provider: ExternalProvider.google, idToken: 'google-id-token');
+
 void main() {
   late MockGetAuthConfig config;
 
-  setUpAll(() => registerFallbackValue(const PickedMediaFile(path: 'a.jpg', name: 'a.jpg', sizeBytes: 1)));
+  setUpAll(() {
+    registerFallbackValue(const PickedMediaFile(path: 'a.jpg', name: 'a.jpg', sizeBytes: 1));
+    registerFallbackValue(sampleMe);
+    registerFallbackValue(googleToken);
+  });
 
   setUp(() {
     config = MockGetAuthConfig();
@@ -172,22 +192,134 @@ void main() {
 
   group('DeleteAccountCubit', () {
     late MockDeleteAccount delete;
-    setUp(() => delete = MockDeleteAccount());
+    late MockConfirmWithLinkedProvider confirmWith;
+    setUp(() {
+      delete = MockDeleteAccount();
+      confirmWith = MockConfirmWithLinkedProvider();
+    });
 
     blocTest<DeleteAccountCubit, AccountFormState>(
       'needs the explicit confirmation and the password',
-      setUp: () => when(() => delete('nope')).thenAnswer((_) async => const Err(wrongPassword)),
-      build: () => DeleteAccountCubit(config, delete),
+      setUp: () => when(() => delete(password: 'nope')).thenAnswer((_) async => const Err(wrongPassword)),
+      build: () => DeleteAccountCubit(config, delete, confirmWith),
       act: (cubit) async {
         await cubit.submit(password: 'nope', confirmed: false); // nothing happens
         await cubit.submit(password: '', confirmed: true);
-        await cubit.submit(password: 'nope', confirmed: true);
+        await cubit.submit(password: 'nope', confirmed: true, me: sampleMe);
       },
       expect: () => const [
         AccountFormState(errors: {Fields.password: CredentialCodes.required}),
         AccountFormState(status: FormStatus.submitting),
         AccountFormState(errors: {Fields.password: FailureCodes.authWrongPassword}),
       ],
+      verify: (_) => verifyNever(() => confirmWith(any())),
+    );
+
+    blocTest<DeleteAccountCubit, AccountFormState>(
+      'an account without a password confirms with its linked provider',
+      setUp: () {
+        when(() => confirmWith(googleOnly)).thenAnswer((_) async => const Ok(googleToken));
+        when(() => delete(external: googleToken)).thenAnswer((_) async => const Ok(null));
+      },
+      build: () => DeleteAccountCubit(config, delete, confirmWith),
+      act: (cubit) => cubit.submit(password: '', confirmed: true, me: googleOnly),
+      expect: () => const [
+        AccountFormState(status: FormStatus.submitting),
+        AccountFormState(status: FormStatus.success),
+      ],
+    );
+
+    blocTest<DeleteAccountCubit, AccountFormState>(
+      'closing the provider sheet deletes nothing',
+      setUp: () => when(() => confirmWith(googleOnly)).thenAnswer((_) async => const Ok(null)),
+      build: () => DeleteAccountCubit(config, delete, confirmWith),
+      act: (cubit) => cubit.submit(password: '', confirmed: true, me: googleOnly),
+      expect: () => const [AccountFormState(status: FormStatus.submitting), AccountFormState()],
+      verify: (_) => verifyNever(() => delete(password: any(named: 'password'), external: any(named: 'external'))),
+    );
+  });
+
+  group('AddPhoneSignInCubit', () {
+    late MockAddPhoneSignIn add;
+    late MockConfirmWithLinkedProvider confirmWith;
+    late PhoneCountryMemory countries;
+    setUp(() {
+      add = MockAddPhoneSignIn();
+      confirmWith = MockConfirmWithLinkedProvider();
+      countries = PhoneCountryMemory(InMemoryKeyValueStore());
+    });
+
+    void review(AddPhoneSignInCubit cubit, {String pin = '4831', String confirmPin = '4831'}) => cubit.review(
+          phoneE164: phone,
+          phoneEmpty: false,
+          password: 'reading4life',
+          confirmPassword: 'reading4life',
+          pin: pin,
+          confirmPin: confirmPin,
+        );
+
+    blocTest<AddPhoneSignInCubit, AccountFormState>(
+      'checks the PIN, then asks to confirm the number',
+      build: () => AddPhoneSignInCubit(config, add, confirmWith, countries),
+      act: (cubit) {
+        review(cubit, pin: '1234', confirmPin: '1234');
+        review(cubit, confirmPin: '4830');
+        review(cubit);
+      },
+      expect: () => const [
+        AccountFormState(errors: {Fields.pin: CredentialCodes.pinWeak}),
+        AccountFormState(errors: {Fields.confirmPin: CredentialCodes.pinMismatch}),
+        AccountFormState(confirming: true),
+      ],
+    );
+
+    blocTest<AddPhoneSignInCubit, AccountFormState>(
+      'confirms with the linked provider, then adds the phone sign in',
+      setUp: () {
+        when(() => confirmWith(googleOnly)).thenAnswer((_) async => const Ok(googleToken));
+        when(() => add(phoneNumber: phone, password: 'reading4life', recoveryPin: '4831', external: googleToken))
+            .thenAnswer((_) async => const Ok(sampleMe));
+      },
+      build: () => AddPhoneSignInCubit(config, add, confirmWith, countries),
+      act: (cubit) async {
+        review(cubit);
+        await cubit.confirm(googleOnly);
+      },
+      skip: 1,
+      expect: () => const [
+        AccountFormState(status: FormStatus.submitting),
+        AccountFormState(status: FormStatus.success),
+      ],
+      verify: (_) => expect(countries.initial(deviceRegion: 'US'), 'EG'),
+    );
+
+    blocTest<AddPhoneSignInCubit, AccountFormState>(
+      'auth.phone_taken lands on the number',
+      setUp: () {
+        when(() => confirmWith(googleOnly)).thenAnswer((_) async => const Ok(googleToken));
+        when(() => add(phoneNumber: phone, password: 'reading4life', recoveryPin: '4831', external: googleToken))
+            .thenAnswer((_) async => const Err(Failure(FailureCodes.authPhoneTaken, statusCode: 409)));
+      },
+      build: () => AddPhoneSignInCubit(config, add, confirmWith, countries),
+      act: (cubit) async {
+        review(cubit);
+        await cubit.confirm(googleOnly);
+      },
+      skip: 2,
+      expect: () => const [AccountFormState(errors: {Fields.phone: FailureCodes.authPhoneTaken})],
+    );
+
+    blocTest<AddPhoneSignInCubit, AccountFormState>(
+      'shows why the provider could not confirm',
+      setUp: () => when(() => confirmWith(googleOnly))
+          .thenAnswer((_) async => const Err(Failure(FailureCodes.authExternalProviderFailed))),
+      build: () => AddPhoneSignInCubit(config, add, confirmWith, countries),
+      act: (cubit) async {
+        review(cubit);
+        await cubit.confirm(googleOnly);
+      },
+      skip: 2,
+      expect: () => const [AccountFormState(failure: Failure(FailureCodes.authExternalProviderFailed))],
     );
   });
 

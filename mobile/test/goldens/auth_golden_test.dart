@@ -9,22 +9,27 @@ import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/core/phone/countries.dart';
 import 'package:readin/core/security/credential_rules.dart';
+import 'package:readin/features/auth/domain/entities/external_credential.dart';
 import 'package:readin/features/auth/domain/entities/me.dart';
 import 'package:readin/features/auth/presentation/cubit/account_security_cubits.dart';
 import 'package:readin/features/auth/presentation/cubit/complete_profile_cubit.dart';
+import 'package:readin/features/auth/presentation/cubit/external_sign_in_cubit.dart';
 import 'package:readin/features/auth/presentation/cubit/forgot_password_cubit.dart';
 import 'package:readin/features/auth/presentation/cubit/form_support.dart';
+import 'package:readin/features/auth/presentation/cubit/linked_accounts_cubit.dart';
 import 'package:readin/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:readin/features/auth/presentation/cubit/sign_up_cubit.dart';
 import 'package:readin/features/auth/presentation/pages/account_pages.dart';
 import 'package:readin/features/auth/presentation/pages/complete_profile_page.dart';
 import 'package:readin/features/auth/presentation/pages/forgot_password_page.dart';
+import 'package:readin/features/auth/presentation/pages/link_external_account_page.dart';
 import 'package:readin/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:readin/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:readin/features/auth/presentation/pages/welcome_page.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/auth/presentation/widgets/auth_widgets.dart';
 import 'package:readin/features/auth/presentation/widgets/dev_login_panel.dart';
+import 'package:readin/features/auth/presentation/widgets/external_sign_in.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/features/settings/presentation/pages/settings_page.dart';
@@ -53,6 +58,25 @@ class MockChangeRecoveryPinCubit extends MockCubit<AccountFormState> implements 
 class MockChangePhoneCubit extends MockCubit<AccountFormState> implements ChangePhoneCubit {}
 
 class MockDeleteAccountCubit extends MockCubit<AccountFormState> implements DeleteAccountCubit {}
+
+class MockAddPhoneSignInCubit extends MockCubit<AccountFormState> implements AddPhoneSignInCubit {}
+
+class MockExternalSignInCubit extends MockCubit<ExternalSignInState> implements ExternalSignInCubit {}
+
+class MockLinkedAccountsCubit extends MockCubit<LinkedAccountsState> implements LinkedAccountsCubit {}
+
+const bothProviders = [ExternalProvider.google, ExternalProvider.apple];
+
+/// An account created with Google: no phone, password or PIN yet.
+final googleOnly = Me(
+  id: 'u-3',
+  displayName: 'منى عادل',
+  username: 'mona',
+  onboardingCompleted: true,
+  hasPassword: false,
+  hasRecoveryPin: false,
+  externalLogins: [ExternalLogin(provider: 'google', email: 'mona.adel@gmail.com', linkedAt: DateTime.utc(2026, 11, 3))],
+);
 
 const reader = Me(
   id: 'u-1',
@@ -132,8 +156,84 @@ void main() {
 
   for (final variant in Variant.all) {
     testWidgets('welcome ${variant.name}', (tester) async {
-      await pumpScreen(tester, variant, const WelcomePage());
+      await pumpScreen(
+        tester,
+        variant,
+        const WelcomeView(),
+        providers: [BlocProvider<ExternalSignInCubit>.value(value: MockExternalSignInCubit()..seed(const ExternalSignInState()))],
+      );
       await expectGolden(tester, 'auth_welcome', variant);
+    });
+
+    testWidgets('welcome with Google and Apple ${variant.name}', (tester) async {
+      await pumpScreen(
+        tester,
+        variant,
+        const WelcomeView(),
+        providers: [
+          BlocProvider<ExternalSignInCubit>.value(
+            value: MockExternalSignInCubit()..seed(const ExternalSignInState(providers: bothProviders)),
+          ),
+        ],
+      );
+      await expectGolden(tester, 'auth_welcome_external', variant);
+    });
+
+    testWidgets('sign in with Google and Apple ${variant.name}', (tester) async {
+      await pumpScreen(
+        tester,
+        variant,
+        const SignInView(alternatives: [ExternalSignInButtons()]),
+        providers: [
+          BlocProvider<SignInCubit>.value(value: MockSignInCubit()..seed(const SignInState())),
+          BlocProvider<ExternalSignInCubit>.value(
+            value: MockExternalSignInCubit()
+              ..seed(const ExternalSignInState(
+                providers: bothProviders,
+                status: FormStatus.submitting,
+                busy: ExternalProvider.apple,
+              )),
+          ),
+        ],
+      );
+      await tester.drag(find.byType(ListView), const Offset(0, -400));
+      await expectGolden(tester, 'auth_sign_in_external', variant, spinning: true);
+    });
+
+    testWidgets('not linked yet ${variant.name}', (tester) async {
+      await pumpScreen(
+        tester,
+        variant,
+        Scaffold(
+          body: Builder(
+            builder: (context) => Center(
+              child: TextButton(onPressed: () => showExternalNotLinkedSheet(context), child: const Text('open')),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await expectGolden(tester, 'auth_external_not_linked', variant);
+    });
+
+    testWidgets('link to a phone account ${variant.name}', (tester) async {
+      await pumpScreen(
+        tester,
+        variant,
+        const LinkExternalAccountView(),
+        providers: [
+          BlocProvider<ExternalSignInCubit>.value(
+            value: MockExternalSignInCubit()
+              ..seed(const ExternalSignInState(
+                notLinked: ExternalCredential(provider: ExternalProvider.google, idToken: 't'),
+                linkFailure: Failure(FailureCodes.authExternalConflict, statusCode: 409),
+              )),
+          ),
+        ],
+      );
+      await tester.enterText(find.byType(TextField).first, '01001234567');
+      await expectGolden(tester, 'auth_link_external', variant);
     });
 
     testWidgets('sign in ${variant.name}', (tester) async {
@@ -399,11 +499,75 @@ void main() {
       await expectGolden(tester, 'account_delete', variant);
     });
 
+    testWidgets('delete a Google-only account ${variant.name}', (tester) async {
+      whenListen(
+        session,
+        const Stream<SessionState>.empty(),
+        initialState: SessionState(status: SessionStatus.authenticated, me: googleOnly),
+      );
+      await pumpScreen(
+        tester,
+        variant,
+        const DeleteAccountView(),
+        providers: [
+          BlocProvider<DeleteAccountCubit>.value(value: MockDeleteAccountCubit()..seed(const AccountFormState())),
+        ],
+      );
+      await expectGolden(tester, 'account_delete_external', variant);
+    });
+
+    testWidgets('add a phone number and password ${variant.name}', (tester) async {
+      whenListen(
+        session,
+        const Stream<SessionState>.empty(),
+        initialState: SessionState(status: SessionStatus.authenticated, me: googleOnly),
+      );
+      await pumpScreen(
+        tester,
+        variant,
+        const AddPhoneSignInView(),
+        providers: [
+          BlocProvider<AddPhoneSignInCubit>.value(
+            value: MockAddPhoneSignInCubit()
+              ..seed(const AccountFormState(errors: {Fields.phone: FailureCodes.authPhoneTaken})),
+          ),
+        ],
+      );
+      await tester.enterText(find.byType(TextField).first, '01001234567');
+      await expectGolden(tester, 'account_add_phone_sign_in', variant);
+    });
+
     testWidgets('settings account ${variant.name}', (tester) async {
-      await pumpScreen(tester, variant, const SettingsPage());
+      await pumpScreen(
+        tester,
+        variant,
+        const SettingsView(),
+        providers: [BlocProvider<LinkedAccountsCubit>.value(value: MockLinkedAccountsCubit()..seed(const LinkedAccountsState()))],
+      );
       await tester.drag(find.byType(ListView), const Offset(0, -2000));
       await tester.pumpAndSettle();
       await expectGolden(tester, 'settings_account', variant);
+    });
+
+    testWidgets('settings account, Google only ${variant.name}', (tester) async {
+      whenListen(
+        session,
+        const Stream<SessionState>.empty(),
+        initialState: SessionState(status: SessionStatus.authenticated, me: googleOnly),
+      );
+      await pumpScreen(
+        tester,
+        variant,
+        const SettingsView(),
+        providers: [
+          BlocProvider<LinkedAccountsCubit>.value(
+            value: MockLinkedAccountsCubit()..seed(const LinkedAccountsState(providers: bothProviders)),
+          ),
+        ],
+      );
+      await tester.drag(find.byType(ListView), const Offset(0, -2000));
+      await tester.pumpAndSettle();
+      await expectGolden(tester, 'settings_account_external', variant);
     });
 
     testWidgets('country picker ${variant.name}', (tester) async {

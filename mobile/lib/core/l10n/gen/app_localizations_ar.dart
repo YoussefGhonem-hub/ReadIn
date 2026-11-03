@@ -904,6 +904,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirmNumberChangeYes => 'صح، غيّر الرقم';
 
   @override
+  String get confirmNumberAddYes => 'صح، ضيف الرقم';
+
+  @override
   String get completeProfileTitle => 'كمّل بروفايلك';
 
   @override
@@ -1163,4 +1166,131 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get orDivider => 'أو';
+
+  @override
+  String get continueWithGoogle => 'كمّل بـ Google';
+
+  @override
+  String get continueWithApple => 'كمّل بـ Apple';
+
+  @override
+  String get externalNotLinkedTitle => 'مفيش حساب ReadIn مربوط بالحساب ده لسه';
+
+  @override
+  String get externalNotLinkedBody =>
+      'اعمل حساب جديد، أو اربطه بحسابك اللي عامله برقم تليفونك.';
+
+  @override
+  String get externalCreateAccount => 'اعمل حساب جديد';
+
+  @override
+  String get externalLinkExisting => 'عندي حساب برقم تليفون';
+
+  @override
+  String get linkAccountTitle => 'اربط حسابك';
+
+  @override
+  String linkAccountBody(String provider) {
+    return 'سجل دخول برقمك وكلمة السر مرة واحدة، وبعد كده تقدر تدخل بـ $provider كمان.';
+  }
+
+  @override
+  String get linkAccountButton => 'اربط وسجل دخول';
+
+  @override
+  String get linkedAccounts => 'الحسابات المربوطة';
+
+  @override
+  String get linkAction => 'اربط';
+
+  @override
+  String get unlinkAction => 'فك الربط';
+
+  @override
+  String get notLinked => 'مش مربوط';
+
+  @override
+  String unlinkTitle(String provider) {
+    return 'تفك ربط $provider؟';
+  }
+
+  @override
+  String unlinkBody(String provider) {
+    return 'مش هتقدر تدخل بـ $provider لحد ما تربطه تاني.';
+  }
+
+  @override
+  String providerLinked(String provider) {
+    return 'اتربط $provider';
+  }
+
+  @override
+  String providerUnlinked(String provider) {
+    return 'اتفك ربط $provider';
+  }
+
+  @override
+  String get confirmItsYou => 'أكد إنه انت';
+
+  @override
+  String linkWithPasswordBody(String provider) {
+    return 'اكتب كلمة السر عشان تربط $provider.';
+  }
+
+  @override
+  String get confirmAction => 'أكد';
+
+  @override
+  String get addPhoneSignIn => 'ضيف رقم تليفون وكلمة سر';
+
+  @override
+  String addPhoneSignInBody(String provider) {
+    return 'هتقدر تدخل برقمك وكلمة السر كمان، وتستخدم PIN الطوارئ لو نسيت كلمة السر. هتأكد بـ $provider في الآخر.';
+  }
+
+  @override
+  String get phoneSignInAdded => 'اتضاف رقم التليفون وكلمة السر';
+
+  @override
+  String deleteAccountWithProvider(String provider) {
+    return 'عشان تمسح حسابك، هتأكد بـ $provider.';
+  }
+
+  @override
+  String get errExternalNotLinked => 'مفيش حساب ReadIn مربوط بالحساب ده لسه.';
+
+  @override
+  String get errExternalInvalid => 'معرفناش نتأكد من الحساب ده. جرّب تاني.';
+
+  @override
+  String get errProviderDisabled => 'الطريقة دي مش متاحة دلوقتي.';
+
+  @override
+  String get errExternalConflict => 'في حساب تاني من نفس النوع مربوط بالفعل.';
+
+  @override
+  String get errExternalInUse => 'الحساب ده مربوط بحساب ReadIn تاني.';
+
+  @override
+  String get errExternalMismatch => 'أكد بحساب مربوط بحسابك على ReadIn.';
+
+  @override
+  String get errExternalLoginNotFound => 'الحساب ده مش مربوط.';
+
+  @override
+  String get errConfirmationRequired => 'أكد إنه انت الأول.';
+
+  @override
+  String get errLastSignInMethod =>
+      'دي الطريقة الوحيدة اللي بتدخل بيها. ضيف طريقة تانية الأول.';
+
+  @override
+  String get errPhoneSignInExists => 'حسابك عليه رقم تليفون وكلمة سر بالفعل.';
+
+  @override
+  String get errProviderInvalid => 'الطريقة دي مش مدعومة.';
+
+  @override
+  String get errExternalProviderFailed =>
+      'الدخول بـ Google أو Apple مكملش. جرّب تاني.';
 }

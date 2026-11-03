@@ -11,10 +11,12 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/inputs/password_field.dart';
 import '../../../../shared/widgets/inputs/phone_field.dart';
+import '../cubit/external_sign_in_cubit.dart';
 import '../cubit/form_support.dart';
 import '../cubit/sign_in_cubit.dart';
 import '../widgets/auth_widgets.dart';
 import '../widgets/dev_login_panel.dart';
+import '../widgets/external_sign_in.dart';
 
 /// Arguments of the Sign in route: the number to pre-fill and whether a password was just reset.
 class SignInArgs {
@@ -33,9 +35,19 @@ class SignInPage extends StatelessWidget {
   final SignInArgs args;
 
   @override
-  Widget build(BuildContext context) => BlocProvider(
-        create: (_) => getIt<SignInCubit>(),
-        child: SignInView(args: args, showDevLogin: !kReleaseMode && DevLogin.available),
+  Widget build(BuildContext context) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => getIt<SignInCubit>()),
+          BlocProvider(create: (_) => getIt<ExternalSignInCubit>()..load()),
+        ],
+        child: BlocSelector<ExternalSignInCubit, ExternalSignInState, bool>(
+          selector: (state) => state.providers.isNotEmpty,
+          builder: (_, hasProviders) => SignInView(
+            args: args,
+            showDevLogin: !kReleaseMode && DevLogin.available,
+            alternatives: [if (hasProviders) const ExternalSignInButtons()],
+          ),
+        ),
       );
 }
 

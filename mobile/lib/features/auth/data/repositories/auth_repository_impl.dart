@@ -5,6 +5,7 @@ import '../../../../core/network/api_error_mapper.dart';
 import '../../../../core/platform/time_zone_service.dart';
 import '../../../../core/push/push_service.dart';
 import '../../domain/entities/auth_config.dart';
+import '../../domain/entities/external_credential.dart';
 import '../../domain/entities/me.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/account_api.dart';
@@ -53,6 +54,24 @@ class AuthRepositoryImpl implements AuthRepository {
           recoveryPin: recoveryPin,
           uiLanguage: uiLanguage,
           timeZone: timeZone,
+        ))));
+  }
+
+  @override
+  Future<Result<Me>> signInWithExternal(
+    ExternalCredential credential, {
+    required String uiLanguage,
+    bool createAccount = false,
+    ExternalLink? link,
+  }) async {
+    final timeZone = await _timeZone.current();
+    return guardApi(() async => _session.save(await _api.external(ExternalSignInRequest(
+          credential: credential,
+          uiLanguage: uiLanguage,
+          timeZone: timeZone,
+          linkPhoneNumber: link?.phoneNumber,
+          linkPassword: link?.password,
+          createAccount: createAccount,
         ))));
   }
 
@@ -125,9 +144,33 @@ class AccountRepositoryImpl implements AccountRepository {
       );
 
   @override
-  Future<Result<void>> deleteAccount(String password) async {
-    final result = await guardApi(() => _api.deleteAccount(DeleteAccountRequest(password)));
+  Future<Result<void>> deleteAccount({String? password, ExternalCredential? external}) async {
+    final result = await guardApi(() => _api.deleteAccount(DeleteAccountRequest(password: password, external: external)));
     if (result.isOk) await _session.clear(); // the API already ended every session and dropped the device tokens
     return result;
   }
+
+  @override
+  Future<Result<Me>> linkExternalLogin(ExternalCredential credential, {String? password, ExternalCredential? external}) =>
+      guardApi(() async => _publish(await _api.linkExternalLogin(
+            LinkExternalLoginRequest(credential: credential, password: password, external: external),
+          )));
+
+  @override
+  Future<Result<Me>> unlinkExternalLogin(ExternalProvider provider) =>
+      guardApi(() async => _publish(await _api.unlinkExternalLogin(provider.name)));
+
+  @override
+  Future<Result<Me>> addPhoneSignIn({
+    required String phoneNumber,
+    required String password,
+    required String recoveryPin,
+    required ExternalCredential external,
+  }) =>
+      guardApi(() async => _session.save(await _api.addPhoneSignIn(AddPhoneSignInRequest(
+            phoneNumber: phoneNumber,
+            password: password,
+            recoveryPin: recoveryPin,
+            external: external,
+          ))));
 }

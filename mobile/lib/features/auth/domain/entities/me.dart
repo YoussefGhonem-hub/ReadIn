@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'external_credential.dart';
+
 /// The signed-in user as stored in SQL Server (`MeDto`, docs/api/contract-v1.md).
 class Me extends Equatable {
   const Me({
@@ -69,6 +71,10 @@ class Me extends Equatable {
 
   bool can(String permission) => permissions.contains(permission);
 
+  /// The linked Google / Apple sign-in of [provider], if any.
+  ExternalLogin? externalLogin(ExternalProvider provider) =>
+      externalLogins.where((login) => login.kind == provider).firstOrNull;
+
   String get firstName => displayName.trim().split(RegExp(r'\s+')).first;
 
   @override
@@ -109,6 +115,9 @@ class ExternalLogin extends Equatable {
   final String provider;
   final String? email;
   final DateTime? linkedAt;
+
+  /// Null for a provider this app version doesn't know.
+  ExternalProvider? get kind => ExternalProvider.values.asNameMap()[provider];
 
   @override
   List<Object?> get props => [provider, email, linkedAt];

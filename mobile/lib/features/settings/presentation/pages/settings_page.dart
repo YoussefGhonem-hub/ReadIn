@@ -2,16 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../auth/presentation/cubit/linked_accounts_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../widgets/account_section.dart';
 import '../widgets/preference_tiles.dart';
 
-/// Settings (F18): appearance, languages, reading, account (phone, password, PIN, sign out, delete).
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) => BlocProvider(
+        create: (_) => getIt<LinkedAccountsCubit>()..load(),
+        child: const SettingsView(),
+      );
+}
+
+/// Settings (F18): appearance, languages, reading, account (phone, password, PIN, linked accounts, sign out, delete).
+class SettingsView extends StatelessWidget {
+  const SettingsView({super.key});
 
   @override
   Widget build(BuildContext context) {

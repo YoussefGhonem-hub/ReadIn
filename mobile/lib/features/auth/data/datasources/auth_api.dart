@@ -25,6 +25,10 @@ abstract class AuthApi {
   @POST('/auth/login')
   Future<SessionModel> login(@Body() LoginRequest body);
 
+  /// Google / Apple (ADR 0012). `404 auth.external_not_linked`: ask again with `createAccount` or `link`.
+  @POST('/auth/external')
+  Future<SessionModel> external(@Body() ExternalSignInRequest body);
+
   /// Rotates the refresh token: always keep the one in the response.
   @POST('/auth/refresh')
   Future<SessionModel> refresh(@Body() RefreshRequest body);

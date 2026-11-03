@@ -900,6 +900,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmNumberChangeYes => 'Yes, change my number';
 
   @override
+  String get confirmNumberAddYes => 'Yes, add this number';
+
+  @override
   String get completeProfileTitle => 'Complete your profile';
 
   @override
@@ -1164,4 +1167,139 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orDivider => 'or';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
+  String get externalNotLinkedTitle =>
+      'No ReadIn account is linked to this account yet';
+
+  @override
+  String get externalNotLinkedBody =>
+      'Create a new account, or link it to the account you already have with your phone number.';
+
+  @override
+  String get externalCreateAccount => 'Create a new account';
+
+  @override
+  String get externalLinkExisting => 'I have an account with a phone number';
+
+  @override
+  String get linkAccountTitle => 'Link your account';
+
+  @override
+  String linkAccountBody(String provider) {
+    return 'Sign in with your number and password once. After that, $provider signs you in too.';
+  }
+
+  @override
+  String get linkAccountButton => 'Link and sign in';
+
+  @override
+  String get linkedAccounts => 'Linked accounts';
+
+  @override
+  String get linkAction => 'Link';
+
+  @override
+  String get unlinkAction => 'Unlink';
+
+  @override
+  String get notLinked => 'Not linked';
+
+  @override
+  String unlinkTitle(String provider) {
+    return 'Unlink $provider?';
+  }
+
+  @override
+  String unlinkBody(String provider) {
+    return 'You won\'t be able to sign in with $provider until you link it again.';
+  }
+
+  @override
+  String providerLinked(String provider) {
+    return '$provider linked';
+  }
+
+  @override
+  String providerUnlinked(String provider) {
+    return '$provider unlinked';
+  }
+
+  @override
+  String get confirmItsYou => 'Confirm it\'s you';
+
+  @override
+  String linkWithPasswordBody(String provider) {
+    return 'Enter your password to link $provider.';
+  }
+
+  @override
+  String get confirmAction => 'Confirm';
+
+  @override
+  String get addPhoneSignIn => 'Add a phone number and password';
+
+  @override
+  String addPhoneSignInBody(String provider) {
+    return 'You\'ll also be able to sign in with your number and password, and use a recovery PIN if you forget the password. You\'ll confirm with $provider at the end.';
+  }
+
+  @override
+  String get phoneSignInAdded => 'Phone number and password added';
+
+  @override
+  String deleteAccountWithProvider(String provider) {
+    return 'To delete your account, you\'ll confirm with $provider.';
+  }
+
+  @override
+  String get errExternalNotLinked =>
+      'No ReadIn account is linked to this account yet.';
+
+  @override
+  String get errExternalInvalid =>
+      'We couldn\'t verify that account. Try again.';
+
+  @override
+  String get errProviderDisabled =>
+      'This way of signing in isn\'t available right now.';
+
+  @override
+  String get errExternalConflict =>
+      'Your ReadIn account already has another account of this kind linked.';
+
+  @override
+  String get errExternalInUse =>
+      'This account is linked to another ReadIn account.';
+
+  @override
+  String get errExternalMismatch =>
+      'Confirm with an account that\'s linked to your ReadIn account.';
+
+  @override
+  String get errExternalLoginNotFound => 'This account isn\'t linked.';
+
+  @override
+  String get errConfirmationRequired => 'Confirm it\'s you first.';
+
+  @override
+  String get errLastSignInMethod =>
+      'This is your only way to sign in. Add another one first.';
+
+  @override
+  String get errPhoneSignInExists =>
+      'Your account already has a phone number and password.';
+
+  @override
+  String get errProviderInvalid => 'This way of signing in isn\'t supported.';
+
+  @override
+  String get errExternalProviderFailed =>
+      'Signing in with Google or Apple didn\'t finish. Try again.';
 }

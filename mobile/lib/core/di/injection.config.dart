@@ -34,14 +34,22 @@ import '../../features/auth/data/datasources/google_sign_in_data_source.dart'
     as _i811;
 import '../../features/auth/data/repositories/auth_repository_impl.dart'
     as _i153;
+import '../../features/auth/data/repositories/external_identity_repository_impl.dart'
+    as _i470;
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
+import '../../features/auth/domain/repositories/external_identity_repository.dart'
+    as _i62;
 import '../../features/auth/domain/usecases/auth_usecases.dart' as _i46;
 import '../../features/auth/presentation/cubit/account_security_cubits.dart'
     as _i1021;
 import '../../features/auth/presentation/cubit/complete_profile_cubit.dart'
     as _i245;
+import '../../features/auth/presentation/cubit/external_sign_in_cubit.dart'
+    as _i34;
 import '../../features/auth/presentation/cubit/forgot_password_cubit.dart'
     as _i104;
+import '../../features/auth/presentation/cubit/linked_accounts_cubit.dart'
+    as _i77;
 import '../../features/auth/presentation/cubit/sign_in_cubit.dart' as _i329;
 import '../../features/auth/presentation/cubit/sign_up_cubit.dart' as _i102;
 import '../../features/auth/presentation/session/session_cubit.dart' as _i371;
@@ -172,9 +180,23 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       instanceName: 'authDio',
     );
+    gh.lazySingleton<_i62.ExternalIdentityRepository>(
+      () => _i470.ExternalIdentityRepositoryImpl(
+        gh<_i811.GoogleSignInDataSource>(),
+        gh<_i815.AppleSignInDataSource>(),
+      ),
+    );
     await gh.singletonAsync<_i223.FirebaseStatus>(
       () => registerModule.firebase(gh<_i650.AppConfig>()),
       preResolve: true,
+    );
+    gh.factory<_i46.ObtainExternalCredential>(
+      () =>
+          _i46.ObtainExternalCredential(gh<_i62.ExternalIdentityRepository>()),
+    );
+    gh.factory<_i46.ConfirmWithLinkedProvider>(
+      () =>
+          _i46.ConfirmWithLinkedProvider(gh<_i62.ExternalIdentityRepository>()),
     );
     gh.lazySingleton<_i367.AuthApi>(
       () => _i367.AuthApi(gh<_i361.Dio>(instanceName: 'authDio')),
@@ -281,6 +303,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i46.DeleteAccount>(
       () => _i46.DeleteAccount(gh<_i787.AccountRepository>()),
     );
+    gh.factory<_i46.LinkExternalLogin>(
+      () => _i46.LinkExternalLogin(gh<_i787.AccountRepository>()),
+    );
+    gh.factory<_i46.UnlinkExternalLogin>(
+      () => _i46.UnlinkExternalLogin(gh<_i787.AccountRepository>()),
+    );
+    gh.factory<_i46.AddPhoneSignIn>(
+      () => _i46.AddPhoneSignIn(gh<_i787.AccountRepository>()),
+    );
     gh.factory<_i904.GetArticle>(
       () => _i904.GetArticle(gh<_i904.ArticleRepository>()),
     );
@@ -306,6 +337,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i940.EditorRepository>(
       () => _i552.EditorRepositoryImpl(gh<_i815.EditorApi>()),
     );
+    gh.factory<_i46.SignOut>(
+      () => _i46.SignOut(
+        gh<_i787.AuthRepository>(),
+        gh<_i62.ExternalIdentityRepository>(),
+      ),
+    );
+    gh.factory<_i46.GetExternalProviders>(
+      () => _i46.GetExternalProviders(
+        gh<_i787.AuthRepository>(),
+        gh<_i62.ExternalIdentityRepository>(),
+      ),
+    );
     gh.factory<_i251.GetTodayArticle>(
       () => _i251.GetTodayArticle(gh<_i954.FeedRepository>()),
     );
@@ -329,9 +372,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i46.ResetPassword>(
       () => _i46.ResetPassword(gh<_i787.AuthRepository>()),
     );
-    gh.factory<_i46.SignOut>(() => _i46.SignOut(gh<_i787.AuthRepository>()));
     gh.factory<_i46.SignOutEverywhere>(
       () => _i46.SignOutEverywhere(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i46.SignInWithExternal>(
+      () => _i46.SignInWithExternal(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i1021.DeleteAccountCubit>(
+      () => _i1021.DeleteAccountCubit(
+        gh<_i46.GetAuthConfig>(),
+        gh<_i46.DeleteAccount>(),
+        gh<_i46.ConfirmWithLinkedProvider>(),
+      ),
     );
     gh.factory<_i172.GetFields>(
       () => _i172.GetFields(gh<_i263.TaxonomyRepository>()),
@@ -444,18 +496,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i868.ShareService>(),
       ),
     );
+    gh.factory<_i34.ExternalSignInCubit>(
+      () => _i34.ExternalSignInCubit(
+        gh<_i46.GetExternalProviders>(),
+        gh<_i46.ObtainExternalCredential>(),
+        gh<_i46.SignInWithExternal>(),
+        gh<_i1026.CurrentLocale>(),
+        gh<_i115.PhoneCountryMemory>(),
+      ),
+    );
     gh.factory<_i245.CompleteProfileCubit>(
       () => _i245.CompleteProfileCubit(
         gh<_i46.CompleteProfile>(),
         gh<_i46.CheckUsername>(),
         gh<_i504.PickImages>(),
         gh<_i504.UploadImage>(),
-      ),
-    );
-    gh.factory<_i1021.DeleteAccountCubit>(
-      () => _i1021.DeleteAccountCubit(
-        gh<_i46.GetAuthConfig>(),
-        gh<_i46.DeleteAccount>(),
       ),
     );
     gh.factory<_i102.SignUpCubit>(
@@ -474,6 +529,23 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i504.UploadDocument>(),
         gh<_i504.GetUpload>(),
         gh<_i504.DeleteUpload>(),
+      ),
+    );
+    gh.factory<_i77.LinkedAccountsCubit>(
+      () => _i77.LinkedAccountsCubit(
+        gh<_i46.GetExternalProviders>(),
+        gh<_i46.ObtainExternalCredential>(),
+        gh<_i46.ConfirmWithLinkedProvider>(),
+        gh<_i46.LinkExternalLogin>(),
+        gh<_i46.UnlinkExternalLogin>(),
+      ),
+    );
+    gh.factory<_i1021.AddPhoneSignInCubit>(
+      () => _i1021.AddPhoneSignInCubit(
+        gh<_i46.GetAuthConfig>(),
+        gh<_i46.AddPhoneSignIn>(),
+        gh<_i46.ConfirmWithLinkedProvider>(),
+        gh<_i115.PhoneCountryMemory>(),
       ),
     );
     gh.factory<_i1021.ChangePasswordCubit>(

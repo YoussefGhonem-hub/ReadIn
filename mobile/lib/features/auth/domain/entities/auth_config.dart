@@ -1,19 +1,27 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/security/credential_rules.dart';
+import 'external_credential.dart';
 
-/// `GET /auth/config`: drives the PIN boxes and the password rules (SPEC §9.4). The defaults match the API's, so the
-/// forms work before the config arrives or while offline; the server re-checks everything anyway.
+/// `GET /auth/config`: drives the PIN boxes, the password rules (SPEC §9.4) and the Google / Apple buttons. The defaults
+/// match the API's, so the forms work before the config arrives or while offline; the server re-checks everything anyway.
 class AuthConfig extends Equatable {
-  const AuthConfig({this.pinLength = RecoveryPinRules.defaultLength, this.password = const PasswordPolicy()});
+  const AuthConfig({
+    this.pinLength = RecoveryPinRules.defaultLength,
+    this.password = const PasswordPolicy(),
+    this.externalProviders = const [],
+  });
 
   final int pinLength;
   final PasswordPolicy password;
 
+  /// Providers configured on the server; their buttons stay hidden otherwise (and while the config is unknown).
+  final List<ExternalProvider> externalProviders;
+
   static const defaults = AuthConfig();
 
   @override
-  List<Object?> get props => [pinLength, password];
+  List<Object?> get props => [pinLength, password, externalProviders];
 }
 
 /// `GET /users/username-available`.

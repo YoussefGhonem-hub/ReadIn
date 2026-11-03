@@ -59,6 +59,19 @@ abstract final class FailureCodes {
   static const authWrongPassword = 'auth.wrong_password';
   static const authPinAlreadySet = 'auth.pin_already_set';
 
+  // Google / Apple sign in (ADR 0012)
+  static const authExternalNotLinked = 'auth.external_not_linked';
+  static const authExternalInvalid = 'auth.external_invalid';
+  static const authProviderDisabled = 'auth.provider_disabled';
+  static const authExternalConflict = 'auth.external_conflict';
+  static const authExternalInUse = 'auth.external_in_use';
+  static const authExternalMismatch = 'auth.external_mismatch';
+  static const authExternalLoginNotFound = 'auth.external_login_not_found';
+  static const authConfirmationRequired = 'auth.confirmation_required';
+  static const authLastSignInMethod = 'auth.last_sign_in_method';
+  static const authPhoneSignInExists = 'auth.phone_sign_in_exists';
+  static const providerInvalid = 'provider.invalid';
+
   // Media (docs/api/contract-v1.md "Media", ADR 0011)
   static const mediaPurposeInvalid = 'media.purpose_invalid';
   static const mediaFileRequired = 'media.file_required';
@@ -92,4 +105,7 @@ abstract final class FailureCodes {
   static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';
   static const networkTimeout = 'network.timeout';
+
+  /// The Google / Apple sheet failed for a reason other than the person closing it.
+  static const authExternalProviderFailed = 'auth.external_provider_failed';
 }

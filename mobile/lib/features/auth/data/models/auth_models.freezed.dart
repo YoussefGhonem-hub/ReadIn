@@ -1234,7 +1234,8 @@ $MeModelCopyWith<$Res> get user {
 /// @nodoc
 mixin _$AuthConfigModel {
 
- int get pinLength; PasswordRulesModel get password;
+ int get pinLength; PasswordRulesModel get password;// Added with Google/Apple sign in; older APIs leave it out.
+ List<String> get externalProviders;
 /// Create a copy of AuthConfigModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1247,16 +1248,16 @@ $AuthConfigModelCopyWith<AuthConfigModel> get copyWith => _$AuthConfigModelCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthConfigModel&&(identical(other.pinLength, pinLength) || other.pinLength == pinLength)&&(identical(other.password, password) || other.password == password));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthConfigModel&&(identical(other.pinLength, pinLength) || other.pinLength == pinLength)&&(identical(other.password, password) || other.password == password)&&const DeepCollectionEquality().equals(other.externalProviders, externalProviders));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,pinLength,password);
+int get hashCode => Object.hash(runtimeType,pinLength,password,const DeepCollectionEquality().hash(externalProviders));
 
 @override
 String toString() {
-  return 'AuthConfigModel(pinLength: $pinLength, password: $password)';
+  return 'AuthConfigModel(pinLength: $pinLength, password: $password, externalProviders: $externalProviders)';
 }
 
 
@@ -1267,7 +1268,7 @@ abstract mixin class $AuthConfigModelCopyWith<$Res>  {
   factory $AuthConfigModelCopyWith(AuthConfigModel value, $Res Function(AuthConfigModel) _then) = _$AuthConfigModelCopyWithImpl;
 @useResult
 $Res call({
- int pinLength, PasswordRulesModel password
+ int pinLength, PasswordRulesModel password, List<String> externalProviders
 });
 
 
@@ -1284,11 +1285,12 @@ class _$AuthConfigModelCopyWithImpl<$Res>
 
 /// Create a copy of AuthConfigModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? pinLength = null,Object? password = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? pinLength = null,Object? password = null,Object? externalProviders = null,}) {
   return _then(_self.copyWith(
 pinLength: null == pinLength ? _self.pinLength : pinLength // ignore: cast_nullable_to_non_nullable
 as int,password: null == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
-as PasswordRulesModel,
+as PasswordRulesModel,externalProviders: null == externalProviders ? _self.externalProviders : externalProviders // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 /// Create a copy of AuthConfigModel
@@ -1382,10 +1384,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int pinLength,  PasswordRulesModel password)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int pinLength,  PasswordRulesModel password,  List<String> externalProviders)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthConfigModel() when $default != null:
-return $default(_that.pinLength,_that.password);case _:
+return $default(_that.pinLength,_that.password,_that.externalProviders);case _:
   return orElse();
 
 }
@@ -1403,10 +1405,10 @@ return $default(_that.pinLength,_that.password);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int pinLength,  PasswordRulesModel password)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int pinLength,  PasswordRulesModel password,  List<String> externalProviders)  $default,) {final _that = this;
 switch (_that) {
 case _AuthConfigModel():
-return $default(_that.pinLength,_that.password);case _:
+return $default(_that.pinLength,_that.password,_that.externalProviders);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1423,10 +1425,10 @@ return $default(_that.pinLength,_that.password);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int pinLength,  PasswordRulesModel password)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int pinLength,  PasswordRulesModel password,  List<String> externalProviders)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthConfigModel() when $default != null:
-return $default(_that.pinLength,_that.password);case _:
+return $default(_that.pinLength,_that.password,_that.externalProviders);case _:
   return null;
 
 }
@@ -1438,11 +1440,20 @@ return $default(_that.pinLength,_that.password);case _:
 @JsonSerializable()
 
 class _AuthConfigModel extends AuthConfigModel {
-  const _AuthConfigModel({this.pinLength = RecoveryPinRules.defaultLength, this.password = const PasswordRulesModel()}): super._();
+  const _AuthConfigModel({this.pinLength = RecoveryPinRules.defaultLength, this.password = const PasswordRulesModel(), final  List<String> externalProviders = const <String>[]}): _externalProviders = externalProviders,super._();
   factory _AuthConfigModel.fromJson(Map<String, dynamic> json) => _$AuthConfigModelFromJson(json);
 
 @override@JsonKey() final  int pinLength;
 @override@JsonKey() final  PasswordRulesModel password;
+// Added with Google/Apple sign in; older APIs leave it out.
+ final  List<String> _externalProviders;
+// Added with Google/Apple sign in; older APIs leave it out.
+@override@JsonKey() List<String> get externalProviders {
+  if (_externalProviders is EqualUnmodifiableListView) return _externalProviders;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_externalProviders);
+}
+
 
 /// Create a copy of AuthConfigModel
 /// with the given fields replaced by the non-null parameter values.
@@ -1457,16 +1468,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthConfigModel&&(identical(other.pinLength, pinLength) || other.pinLength == pinLength)&&(identical(other.password, password) || other.password == password));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthConfigModel&&(identical(other.pinLength, pinLength) || other.pinLength == pinLength)&&(identical(other.password, password) || other.password == password)&&const DeepCollectionEquality().equals(other._externalProviders, _externalProviders));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,pinLength,password);
+int get hashCode => Object.hash(runtimeType,pinLength,password,const DeepCollectionEquality().hash(_externalProviders));
 
 @override
 String toString() {
-  return 'AuthConfigModel(pinLength: $pinLength, password: $password)';
+  return 'AuthConfigModel(pinLength: $pinLength, password: $password, externalProviders: $externalProviders)';
 }
 
 
@@ -1477,7 +1488,7 @@ abstract mixin class _$AuthConfigModelCopyWith<$Res> implements $AuthConfigModel
   factory _$AuthConfigModelCopyWith(_AuthConfigModel value, $Res Function(_AuthConfigModel) _then) = __$AuthConfigModelCopyWithImpl;
 @override @useResult
 $Res call({
- int pinLength, PasswordRulesModel password
+ int pinLength, PasswordRulesModel password, List<String> externalProviders
 });
 
 
@@ -1494,11 +1505,12 @@ class __$AuthConfigModelCopyWithImpl<$Res>
 
 /// Create a copy of AuthConfigModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? pinLength = null,Object? password = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? pinLength = null,Object? password = null,Object? externalProviders = null,}) {
   return _then(_AuthConfigModel(
 pinLength: null == pinLength ? _self.pinLength : pinLength // ignore: cast_nullable_to_non_nullable
 as int,password: null == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
-as PasswordRulesModel,
+as PasswordRulesModel,externalProviders: null == externalProviders ? _self._externalProviders : externalProviders // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 

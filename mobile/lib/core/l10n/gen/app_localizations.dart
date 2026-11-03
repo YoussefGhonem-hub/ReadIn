@@ -1634,6 +1634,12 @@ abstract class AppLocalizations {
   /// **'Yes, change my number'**
   String get confirmNumberChangeYes;
 
+  /// No description provided for @confirmNumberAddYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, add this number'**
+  String get confirmNumberAddYes;
+
   /// No description provided for @completeProfileTitle.
   ///
   /// In en, this message translates to:
@@ -2125,6 +2131,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'or'**
   String get orDivider;
+
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @continueWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
+  /// No description provided for @externalNotLinkedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No ReadIn account is linked to this account yet'**
+  String get externalNotLinkedTitle;
+
+  /// No description provided for @externalNotLinkedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new account, or link it to the account you already have with your phone number.'**
+  String get externalNotLinkedBody;
+
+  /// No description provided for @externalCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new account'**
+  String get externalCreateAccount;
+
+  /// No description provided for @externalLinkExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'I have an account with a phone number'**
+  String get externalLinkExisting;
+
+  /// No description provided for @linkAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Link your account'**
+  String get linkAccountTitle;
+
+  /// No description provided for @linkAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your number and password once. After that, {provider} signs you in too.'**
+  String linkAccountBody(String provider);
+
+  /// No description provided for @linkAccountButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Link and sign in'**
+  String get linkAccountButton;
+
+  /// No description provided for @linkedAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked accounts'**
+  String get linkedAccounts;
+
+  /// No description provided for @linkAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get linkAction;
+
+  /// No description provided for @unlinkAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink'**
+  String get unlinkAction;
+
+  /// No description provided for @notLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not linked'**
+  String get notLinked;
+
+  /// No description provided for @unlinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink {provider}?'**
+  String unlinkTitle(String provider);
+
+  /// No description provided for @unlinkBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You won\'t be able to sign in with {provider} until you link it again.'**
+  String unlinkBody(String provider);
+
+  /// No description provided for @providerLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} linked'**
+  String providerLinked(String provider);
+
+  /// No description provided for @providerUnlinked.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} unlinked'**
+  String providerUnlinked(String provider);
+
+  /// No description provided for @confirmItsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you'**
+  String get confirmItsYou;
+
+  /// No description provided for @linkWithPasswordBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password to link {provider}.'**
+  String linkWithPasswordBody(String provider);
+
+  /// No description provided for @confirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirmAction;
+
+  /// No description provided for @addPhoneSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a phone number and password'**
+  String get addPhoneSignIn;
+
+  /// No description provided for @addPhoneSignInBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll also be able to sign in with your number and password, and use a recovery PIN if you forget the password. You\'ll confirm with {provider} at the end.'**
+  String addPhoneSignInBody(String provider);
+
+  /// No description provided for @phoneSignInAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number and password added'**
+  String get phoneSignInAdded;
+
+  /// No description provided for @deleteAccountWithProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'To delete your account, you\'ll confirm with {provider}.'**
+  String deleteAccountWithProvider(String provider);
+
+  /// No description provided for @errExternalNotLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'No ReadIn account is linked to this account yet.'**
+  String get errExternalNotLinked;
+
+  /// No description provided for @errExternalInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t verify that account. Try again.'**
+  String get errExternalInvalid;
+
+  /// No description provided for @errProviderDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This way of signing in isn\'t available right now.'**
+  String get errProviderDisabled;
+
+  /// No description provided for @errExternalConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ReadIn account already has another account of this kind linked.'**
+  String get errExternalConflict;
+
+  /// No description provided for @errExternalInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is linked to another ReadIn account.'**
+  String get errExternalInUse;
+
+  /// No description provided for @errExternalMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm with an account that\'s linked to your ReadIn account.'**
+  String get errExternalMismatch;
+
+  /// No description provided for @errExternalLoginNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This account isn\'t linked.'**
+  String get errExternalLoginNotFound;
+
+  /// No description provided for @errConfirmationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you first.'**
+  String get errConfirmationRequired;
+
+  /// No description provided for @errLastSignInMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your only way to sign in. Add another one first.'**
+  String get errLastSignInMethod;
+
+  /// No description provided for @errPhoneSignInExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account already has a phone number and password.'**
+  String get errPhoneSignInExists;
+
+  /// No description provided for @errProviderInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This way of signing in isn\'t supported.'**
+  String get errProviderInvalid;
+
+  /// No description provided for @errExternalProviderFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in with Google or Apple didn\'t finish. Try again.'**
+  String get errExternalProviderFailed;
 }
 
 class _AppLocalizationsDelegate

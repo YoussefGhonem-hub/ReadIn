@@ -7,9 +7,10 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/phone/phone_numbers.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import 'linked_accounts_section.dart';
 
-/// Settings → Account (F18): the phone number (owner only) and "change number", password, PIN, sign out, sign out
-/// of all devices and delete account.
+/// Settings → Account (F18): the phone number (owner only) and "change number", password, PIN (or "add a phone number
+/// and password" for Google / Apple-only accounts), linked accounts, sign out, sign out of all devices and delete account.
 class AccountSection extends StatefulWidget {
   const AccountSection({super.key});
 
@@ -57,49 +58,63 @@ class _AccountSectionState extends State<AccountSection> {
     final l10n = context.l10n;
     final colors = context.colors;
     final phone = context.select((SessionCubit c) => c.state.me?.phoneNumber);
+    final hasPassword = context.select((SessionCubit c) => c.state.me?.hasPassword ?? true);
 
     Widget progress() => const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.phone_iphone_rounded),
-          title: Text(l10n.phoneNumberLabel),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (phone != null)
-                Text(
-                  PhoneNumbers.formatE164(phone),
-                  textDirection: TextDirection.ltr,
-                  style: context.textTheme.bodyLarge?.copyWith(color: colors.textPrimary),
-                ),
-              Text(l10n.phoneVisibleToYou, style: context.textTheme.labelSmall?.copyWith(color: colors.textSecondary)),
-            ],
+        // Google / Apple-only accounts have no number, password or PIN yet (F18).
+        if (!hasPassword)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.phone_iphone_rounded),
+            title: Text(l10n.addPhoneSignIn),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            enabled: !_busy,
+            onTap: () => context.push('/account/phone-sign-in'),
+          )
+        else ...[
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.phone_iphone_rounded),
+            title: Text(l10n.phoneNumberLabel),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (phone != null)
+                  Text(
+                    PhoneNumbers.formatE164(phone),
+                    textDirection: TextDirection.ltr,
+                    style: context.textTheme.bodyLarge?.copyWith(color: colors.textPrimary),
+                  ),
+                Text(l10n.phoneVisibleToYou, style: context.textTheme.labelSmall?.copyWith(color: colors.textSecondary)),
+              ],
+            ),
+            trailing: TextButton(
+              onPressed: _busy ? null : () => context.push('/account/phone'),
+              child: Text(l10n.changePhone),
+            ),
           ),
-          trailing: TextButton(
-            onPressed: _busy ? null : () => context.push('/account/phone'),
-            child: Text(l10n.changePhone),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.password_rounded),
+            title: Text(l10n.changePassword),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            enabled: !_busy,
+            onTap: () => context.push('/account/password'),
           ),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.password_rounded),
-          title: Text(l10n.changePassword),
-          trailing: const Icon(Icons.chevron_right_rounded),
-          enabled: !_busy,
-          onTap: () => context.push('/account/password'),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.pin_outlined),
-          title: Text(l10n.changePin),
-          trailing: const Icon(Icons.chevron_right_rounded),
-          enabled: !_busy,
-          onTap: () => context.push('/account/recovery-pin'),
-        ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.pin_outlined),
+            title: Text(l10n.changePin),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            enabled: !_busy,
+            onTap: () => context.push('/account/recovery-pin'),
+          ),
+        ],
+        const LinkedAccountsSection(),
         const Divider(),
         ListTile(
           contentPadding: EdgeInsets.zero,

@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/security/credential_rules.dart';
 import '../../domain/entities/auth_config.dart';
+import '../../domain/entities/external_credential.dart';
 import '../../domain/entities/me.dart';
 
 part 'auth_models.freezed.dart';
@@ -119,6 +120,8 @@ abstract class AuthConfigModel with _$AuthConfigModel {
   const factory AuthConfigModel({
     @Default(RecoveryPinRules.defaultLength) int pinLength,
     @Default(PasswordRulesModel()) PasswordRulesModel password,
+    // Added with Google/Apple sign in; older APIs leave it out.
+    @Default(<String>[]) List<String> externalProviders,
   }) = _AuthConfigModel;
 
   factory AuthConfigModel.fromJson(Map<String, dynamic> json) => _$AuthConfigModelFromJson(json);
@@ -131,6 +134,9 @@ abstract class AuthConfigModel with _$AuthConfigModel {
           requireLetter: password.requireLetter,
           requireDigit: password.requireDigit,
         ),
+        externalProviders: [
+          for (final name in externalProviders) ?ExternalProvider.values.asNameMap()[name], // unknown ones are skipped
+        ],
       );
 }
 
@@ -277,10 +283,82 @@ class ChangePhoneRequest {
   Map<String, dynamic> toJson() => {'newPhoneNumber': newPhoneNumber, 'currentPassword': currentPassword};
 }
 
+/// `{ password?, external? }`: accounts without a password confirm with a fresh Google/Apple token.
 class DeleteAccountRequest {
-  const DeleteAccountRequest(this.password);
+  const DeleteAccountRequest({this.password, this.external});
 
+  final String? password;
+  final ExternalCredential? external;
+
+  Map<String, dynamic> toJson() => {'password': ?password, 'external': ?external?.toJson()};
+}
+
+/// `ExternalCredential`: the provider, its ID token and, for Apple, the raw nonce.
+extension ExternalCredentialJson on ExternalCredential {
+  Map<String, dynamic> toJson() => {'provider': provider.name, 'idToken': idToken, 'nonce': ?nonce};
+}
+
+/// `ExternalSignInRequest`: [createAccount] or [link] answer `auth.external_not_linked`.
+class ExternalSignInRequest {
+  const ExternalSignInRequest({
+    required this.credential,
+    this.uiLanguage,
+    this.timeZone,
+    this.linkPhoneNumber,
+    this.linkPassword,
+    this.createAccount = false,
+  });
+
+  final ExternalCredential credential;
+  final String? uiLanguage;
+  final String? timeZone;
+  final String? linkPhoneNumber;
+  final String? linkPassword;
+  final bool createAccount;
+
+  Map<String, dynamic> toJson() => {
+        ...credential.toJson(),
+        'displayName': ?credential.displayName,
+        'uiLanguage': ?uiLanguage,
+        'timeZone': ?timeZone,
+        if (linkPhoneNumber != null) 'link': {'phoneNumber': linkPhoneNumber, 'password': linkPassword},
+        if (createAccount) 'createAccount': true,
+      };
+}
+
+/// `POST /me/external-logins`: confirmed with the password or a fresh token of an already linked provider.
+class LinkExternalLoginRequest {
+  const LinkExternalLoginRequest({required this.credential, this.password, this.external});
+
+  final ExternalCredential credential;
+  final String? password;
+  final ExternalCredential? external;
+
+  Map<String, dynamic> toJson() => {
+        'credential': credential.toJson(),
+        'password': ?password,
+        'external': ?external?.toJson(),
+      };
+}
+
+/// `POST /me/phone-sign-in`: a Google/Apple-only account adds phone + password + PIN.
+class AddPhoneSignInRequest {
+  const AddPhoneSignInRequest({
+    required this.phoneNumber,
+    required this.password,
+    required this.recoveryPin,
+    required this.external,
+  });
+
+  final String phoneNumber;
   final String password;
+  final String recoveryPin;
+  final ExternalCredential external;
 
-  Map<String, dynamic> toJson() => {'password': password};
+  Map<String, dynamic> toJson() => {
+        'phoneNumber': phoneNumber,
+        'password': password,
+        'recoveryPin': recoveryPin,
+        'external': external.toJson(),
+      };
 }

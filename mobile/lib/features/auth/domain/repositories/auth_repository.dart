@@ -1,6 +1,10 @@
 import '../../../../core/errors/result.dart';
 import '../entities/auth_config.dart';
+import '../entities/external_credential.dart';
 import '../entities/me.dart';
+
+/// "I already have an account": the phone sign in that a Google / Apple identity is linked to.
+typedef ExternalLink = ({String phoneNumber, String password});
 
 /// Phone + password sign in with the API's own sessions (SPEC §9, ADR 0007). Every call that returns a session stores
 /// its tokens (the refresh token rotates every time) and reports the user through [sessionChanges].
@@ -23,6 +27,15 @@ abstract interface class AuthRepository {
     required String password,
     required String recoveryPin,
     required String uiLanguage,
+  });
+
+  /// `POST /auth/external` with a Google / Apple token (ADR 0012). `auth.external_not_linked` → ask again with
+  /// [createAccount] or [link].
+  Future<Result<Me>> signInWithExternal(
+    ExternalCredential credential, {
+    required String uiLanguage,
+    bool createAccount = false,
+    ExternalLink? link,
   });
 
   /// Forgot password, step 1: phone + recovery PIN → a 10-minute reset token.
@@ -58,6 +71,22 @@ abstract interface class AccountRepository {
   /// Other sessions end; this one gets fresh tokens.
   Future<Result<Me>> changePhoneNumber({required String newPhoneNumber, required String currentPassword});
 
-  /// Signs out everywhere; the session is forgotten locally on success.
-  Future<Result<void>> deleteAccount(String password);
+  /// Signs out everywhere; the session is forgotten locally on success. Confirmed with the [password], or with a fresh
+  /// Google / Apple token ([external]) for accounts without one.
+  Future<Result<void>> deleteAccount({String? password, ExternalCredential? external});
+
+  /// Links Google / Apple, confirmed with the [password] or a fresh token of an already linked provider ([external]).
+  Future<Result<Me>> linkExternalLogin(ExternalCredential credential, {String? password, ExternalCredential? external});
+
+  /// `auth.last_sign_in_method` when it is the only way to sign in.
+  Future<Result<Me>> unlinkExternalLogin(ExternalProvider provider);
+
+  /// A Google / Apple-only account adds phone + password + PIN, confirmed with a linked provider. Other sessions end;
+  /// this one gets fresh tokens.
+  Future<Result<Me>> addPhoneSignIn({
+    required String phoneNumber,
+    required String password,
+    required String recoveryPin,
+    required ExternalCredential external,
+  });
 }

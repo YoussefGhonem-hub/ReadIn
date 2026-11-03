@@ -42,4 +42,15 @@ abstract class AccountApi {
   /// `DELETE /me` with a JSON body.
   @DELETE('/me')
   Future<void> deleteAccount(@Body() DeleteAccountRequest body);
+
+  @POST('/me/external-logins')
+  Future<MeModel> linkExternalLogin(@Body() LinkExternalLoginRequest body);
+
+  /// `400 auth.last_sign_in_method` when it is the only way to sign in.
+  @DELETE('/me/external-logins/{provider}')
+  Future<MeModel> unlinkExternalLogin(@Path('provider') String provider);
+
+  /// `200 SessionDto` for this device; every other session ends.
+  @POST('/me/phone-sign-in')
+  Future<SessionModel> addPhoneSignIn(@Body() AddPhoneSignInRequest body);
 }

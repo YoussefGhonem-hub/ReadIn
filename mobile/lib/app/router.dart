@@ -36,6 +36,7 @@ abstract final class AppRoutes {
   static const changeRecoveryPin = '/account/recovery-pin';
   static const changePassword = '/account/password';
   static const changePhone = '/account/phone';
+  static const addPhoneSignIn = '/account/phone-sign-in';
   static const deleteAccount = '/account/delete';
   static const home = '/home';
   static const explore = '/explore';
@@ -120,6 +121,7 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.changeRecoveryPin, builder: (_, _) => const ChangeRecoveryPinPage()),
       GoRoute(path: AppRoutes.changePassword, builder: (_, _) => const ChangePasswordPage()),
       GoRoute(path: AppRoutes.changePhone, builder: (_, _) => const ChangePhonePage()),
+      GoRoute(path: AppRoutes.addPhoneSignIn, builder: (_, _) => const AddPhoneSignInPage()),
       GoRoute(path: AppRoutes.deleteAccount, builder: (_, _) => const DeleteAccountPage()),
       GoRoute(path: AppRoutes.settings, builder: (_, _) => const SettingsPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
