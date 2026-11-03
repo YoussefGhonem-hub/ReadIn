@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting.Internal;
 using ReadIn.Application.Common.Security;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
-using ReadIn.Infrastructure.Identity;
 using ReadIn.Infrastructure.Persistence;
 using ReadIn.Infrastructure.Persistence.Seeding;
 
@@ -46,7 +45,7 @@ public sealed class PersistenceTests(ApiFactory api)
     {
         using var scope = api.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var user = User.Register("it-events", "events.user@readin.test", "Events User", "events_user", null, RoleIds.Member);
+        var user = User.Register(ApiFactory.NewPhoneNumber(), "not-a-real-hash", $"events_{Guid.NewGuid():N}"[..20], RoleIds.Member);
         user.Id.Should().Be(Guid.Empty, "the domain no longer generates keys");
 
         db.Users.Add(user);
@@ -55,27 +54,25 @@ public sealed class PersistenceTests(ApiFactory api)
         user.Id.Should().NotBe(Guid.Empty);
         user.Roles.Should().ContainSingle().Which.UserId.Should().Be(user.Id, "EF Core fixes up the child's foreign key");
         var message = await db.OutboxMessages.AsNoTracking()
-            .Where(m => m.Type == typeof(UserRegisteredDomainEvent).FullName && m.Content.Contains("events.user@readin.test"))
+            .Where(m => m.Type == typeof(UserRegisteredDomainEvent).FullName && m.Content.Contains(user.Id.ToString()))
             .SingleAsync(Ct);
         JsonDocument.Parse(message.Content).RootElement.GetProperty(nameof(UserRegisteredDomainEvent.UserId)).GetGuid()
             .Should().Be(user.Id);
     }
 }
 
-/// <summary>Demo data must never reach the real Firebase project (SPEC §18.1, ADR 0005).</summary>
+/// <summary>Demo data is seeded only into local databases (SPEC §18.1).</summary>
 public sealed class SeedingRulesTests
 {
     [Theory]
-    [InlineData("Development", true, true)]
-    [InlineData("Testing", true, true)]
-    [InlineData("Development", false, false)]
-    [InlineData("Testing", false, false)]
-    [InlineData("Production", true, false)]
-    [InlineData("Staging", true, false)]
-    public void Demo_data_needs_a_local_environment_and_the_emulator(string environment, bool useEmulator, bool allowed)
+    [InlineData("Development", true)]
+    [InlineData("Testing", true)]
+    [InlineData("Production", false)]
+    [InlineData("Staging", false)]
+    public void Demo_data_needs_a_local_environment(string environment, bool allowed)
     {
         var env = new HostingEnvironment { EnvironmentName = environment };
 
-        SeedEnvironments.AllowsDemoData(env, new FirebaseOptions { UseEmulator = useEmulator }).Should().Be(allowed);
+        SeedEnvironments.AllowsDemoData(env).Should().Be(allowed);
     }
 }

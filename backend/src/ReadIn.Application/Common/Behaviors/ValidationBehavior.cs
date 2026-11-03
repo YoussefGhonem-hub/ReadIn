@@ -40,6 +40,10 @@ public static class ValidationErrors
         return Error.Validation(Code, "Validation failed.") with { Details = details };
     }
 
+    /// <summary>A validation failure found by a handler (e.g. a password rule that needs the stored phone number).</summary>
+    public static Error For(string property, IEnumerable<string> codes) =>
+        Error.Validation(Code, "Validation failed.") with { Details = new Dictionary<string, string[]> { [ToCamelCase(property)] = [.. codes] } };
+
     private static string ToCode(ValidationFailure failure) => failure.ErrorCode switch
     {
         { } code when code.Contains('.', StringComparison.Ordinal) => code,

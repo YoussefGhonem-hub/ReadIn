@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
+using ReadIn.Domain.Identity;
 using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
 using ReadIn.Domain.Reading;
@@ -15,6 +16,11 @@ public interface IAppDbContext
     DbSet<Role> Roles { get; }
     DbSet<Permission> Permissions { get; }
     DbSet<ReviewerField> ReviewerFields { get; }
+
+    DbSet<RefreshToken> RefreshTokens { get; }
+    DbSet<PasswordResetToken> PasswordResetTokens { get; }
+    DbSet<RecoveryAttempt> RecoveryAttempts { get; }
+    DbSet<AuditLog> AuditLogs { get; }
 
     DbSet<Field> Fields { get; }
     DbSet<Topic> Topics { get; }

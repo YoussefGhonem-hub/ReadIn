@@ -15,6 +15,8 @@
     <PackageVersion Include="JsonSchema.Net" Version="9.6.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.11.0" />
+    <!-- Phone number validation and E.164 formatting (Apache-2.0), SPEC §9.4. -->
+    <PackageVersion Include="libphonenumber-csharp" Version="9.0.41" />
   </ItemGroup>
 
   <ItemGroup Label="Persistence">

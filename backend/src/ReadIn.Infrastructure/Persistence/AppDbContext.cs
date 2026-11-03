@@ -4,6 +4,7 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Common;
+using ReadIn.Domain.Identity;
 using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
 using ReadIn.Domain.Reading;
@@ -23,6 +24,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<ReviewerField> ReviewerFields => Set<ReviewerField>();
+
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<RecoveryAttempt> RecoveryAttempts => Set<RecoveryAttempt>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     public DbSet<Field> Fields => Set<Field>();
     public DbSet<Topic> Topics => Set<Topic>();

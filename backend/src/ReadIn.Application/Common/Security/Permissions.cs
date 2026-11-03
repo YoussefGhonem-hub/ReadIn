@@ -45,6 +45,8 @@ public static class Permissions
     public static class Users
     {
         public const string Suspend = "users.suspend";
+        public const string ResetPassword = "users.reset_password";
+        public const string ReadPii = "users.read.pii";
     }
 
     public static class Verification
@@ -86,6 +88,8 @@ public static class Permissions
         [Reports.Create] = "Report content",
         [Moderation.Manage] = "Hide content and resolve reports",
         [Users.Suspend] = "Suspend users",
+        [Users.ResetPassword] = "Reset a user's password when the recovery PIN is lost",
+        [Users.ReadPii] = "See phone numbers",
         [Verification.Manage] = "Approve or reject writer verification",
         [Taxonomy.Manage] = "Manage fields, topics and tags",
         [Paths.Manage] = "Manage learning paths",

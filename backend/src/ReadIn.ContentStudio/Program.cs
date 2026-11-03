@@ -172,11 +172,7 @@ static IHost BuildHost()
 internal sealed class SystemCurrentUser : ICurrentUser
 {
     public bool IsAuthenticated => false;
-    public string? FirebaseUid => null;
     public Guid? UserId => SystemUsers.EditorialId;
-    public string? Email => null;
-    public string? DisplayName => "ReadIn Content Studio";
-    public string? PictureUrl => null;
     public string UiLanguage => "en";
     public IReadOnlySet<string> Roles => new HashSet<string>();
     public IReadOnlySet<string> Permissions => new HashSet<string>();

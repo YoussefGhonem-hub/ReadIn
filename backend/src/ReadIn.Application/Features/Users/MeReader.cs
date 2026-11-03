@@ -8,17 +8,17 @@ using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Users;
 
-/// <summary>Builds <see cref="MeDto"/>; shared by GET /me and POST /auth/sync.</summary>
+/// <summary>Builds <see cref="MeDto"/>; shared by GET /me and every call that starts or refreshes a session.</summary>
 internal sealed class MeReader(IAppDbContext db, IUserAccessService access, IMapper mapper, IFileStorage storage)
 {
-    public async Task<Result<MeDto>> ReadAsync(string firebaseUid, CancellationToken ct)
+    public async Task<Result<MeDto>> ReadAsync(Guid userId, CancellationToken ct)
     {
         var user = await db.Users.AsNoTracking()
             .Include(u => u.Interests)
-            .FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid, ct);
-        if (user is null) return UserErrors.NotSynced;
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+        if (user is null) return UserErrors.NotFound;
 
-        var userAccess = await access.GetAsync(firebaseUid, ct);
+        var userAccess = await access.GetAsync(userId, ct);
         var roles = userAccess?.Roles ?? [];
 
         return mapper.Map<MeDto>(user) with

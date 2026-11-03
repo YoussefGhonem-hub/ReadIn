@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Features.Auth;
 using ReadIn.Infrastructure.Content;
 using ReadIn.Infrastructure.Identity;
 using ReadIn.Infrastructure.Jobs;
@@ -30,6 +31,21 @@ public static class DependencyInjection
         services.Configure<FirebaseOptions>(configuration.GetSection(FirebaseOptions.Section));
         services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.Section));
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.Section));
+        services.Configure<AuthOptions>(configuration.GetSection(AuthOptions.Section));
+
+        // Phone + password sign in (ADR 0007). A missing pepper or an odd PIN length stops the API at startup.
+        services.AddOptions<SecurityOptions>()
+            .Bind(configuration.GetSection(SecurityOptions.Section))
+            .Validate(o => o.RecoveryPinPepper.Length >= 32, "Security:RecoveryPinPepper must be set to at least 32 characters (secrets only, ADR 0009).")
+            .ValidateOnStart();
+        services.AddOptions<RecoveryOptions>()
+            .Bind(configuration.GetSection(RecoveryOptions.Section))
+            .Validate(o => o.PinLength is >= 4 and <= 8, "Recovery:PinLength must be between 4 and 8.")
+            .ValidateOnStart();
+        services.AddMemoryCache();
+        services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
+        services.AddSingleton<IRecoveryPinHasher, PepperedPinHasher>();
+        services.AddSingleton<IAttemptThrottle, MemoryAttemptThrottle>();
 
         // Uploads live on this server's disk (ADR 0010); swap IFileStorage to move them to shared storage.
         services.AddSingleton<WwwrootFileStorage>();
@@ -53,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<OutboxJob>();
         services.AddScoped<ScheduledPublishingJob>();
         services.AddScoped<OrphanedUploadsCleanupJob>();
+        services.AddScoped<IdentityCleanupJob>();
 
         if (IsHangfireEnabled(configuration))
         {
@@ -75,7 +92,6 @@ public static class DependencyInjection
         }
 
         services.AddSingleton<ContentRepository>();
-        services.AddSingleton<IIdentityProvisioner, FirebaseIdentityProvisioner>();
 
         // Seeding order: SPEC §18.2. Glossary terms (F21) and demo interactions (F10–F13) arrive with those features.
         services.AddScoped<ISeeder, RolesAndPermissionsSeeder>();
@@ -114,6 +130,7 @@ public static class DependencyInjection
         jobs.AddOrUpdate<OutboxJob>("outbox", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
         jobs.AddOrUpdate<ScheduledPublishingJob>("publish-scheduled", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
         jobs.AddOrUpdate<OrphanedUploadsCleanupJob>("uploads-orphan-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3));
+        jobs.AddOrUpdate<IdentityCleanupJob>("identity-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 30));
     }
 
     /// <summary>

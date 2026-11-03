@@ -22,7 +22,8 @@ public static class ApiSetup
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
-        services.AddFirebaseAuthentication(configuration, environment);
+        services.AddScoped<IClientInfo, HttpClientInfo>();
+        services.AddJwtAuthentication(configuration, environment);
 
         services.ConfigureHttpJsonOptions(options =>
         {
@@ -54,7 +55,7 @@ public static class ApiSetup
             {
                 Title = "ReadIn API",
                 Version = "v1",
-                Description = "ReadIn — مقال كل يوم يفرق معاك. Authenticate with a Firebase ID token (Bearer).",
+                Description = "ReadIn — مقال كل يوم يفرق معاك. Sign in with POST /auth/login and send the access token as a Bearer token.",
             };
             document.Components ??= new OpenApiComponents();
             document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
@@ -62,7 +63,7 @@ public static class ApiSetup
             {
                 Type = SecuritySchemeType.Http,
                 Scheme = "bearer",
-                BearerFormat = "Firebase ID token",
+                BearerFormat = "JWT (15 minutes)",
             };
             return Task.CompletedTask;
         }));
@@ -70,13 +71,19 @@ public static class ApiSetup
         var origins = configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
         services.AddCors(options =>
         {
-            options.AddPolicy(CorsPolicy, policy => policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod());
+            // Credentials: the web's refresh token travels as an HttpOnly cookie on /auth calls (SPEC §9.3).
+            options.AddPolicy(CorsPolicy, policy => policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials());
             options.AddPolicy(UploadsStaticFiles.CorsPolicy, policy => policy.WithOrigins(origins).WithMethods("GET", "HEAD"));
         });
 
+        var authLimits = configuration.GetSection(AuthRateLimits.Section).Get<AuthRateLimits>() ?? new AuthRateLimits();
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            // Per IP (SPEC §9.5). The per-number limits live in the handlers, which know the number.
+            options.AddPolicy(RateLimitPolicies.SignIn, context => IpWindow(context, authLimits.SignInPerMinute, TimeSpan.FromMinutes(1)));
+            options.AddPolicy(RateLimitPolicies.Register, context => IpWindow(context, authLimits.RegisterPerHour, TimeSpan.FromHours(1)));
+            options.AddPolicy(RateLimitPolicies.Recovery, context => IpWindow(context, authLimits.RecoveryPerHour, TimeSpan.FromHours(1)));
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
                 {
@@ -153,9 +160,16 @@ public static class ApiSetup
     }
 
     private static string PartitionKey(HttpContext context) =>
-        context.User.FindFirst(FirebaseClaims.UserId)?.Value
+        context.User.FindFirst(JwtClaims.Subject)?.Value
         ?? context.Connection.RemoteIpAddress?.ToString()
         ?? "anonymous";
+
+    private static RateLimitPartition<string> IpWindow(HttpContext context, int limit, TimeSpan window) =>
+        RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "anonymous", _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = limit,
+            Window = window,
+        });
 
     /// <summary>Suspended users get 403 <c>user.suspended</c> on every authenticated call (SPEC §9.2 step 6).</summary>
     private static async Task RejectSuspendedUsers(HttpContext context, RequestDelegate next)

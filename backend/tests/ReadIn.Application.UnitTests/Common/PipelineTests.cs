@@ -118,13 +118,13 @@ public sealed class AuthorizationBehaviorTests
     }
 
     [Fact]
-    public async Task Authenticated_messages_need_a_synced_user()
+    public async Task Authenticated_messages_need_a_user_id()
     {
         var behavior = new AuthorizationBehavior<MeQuery, Result<int>>(User(true, userId: null), Access());
 
         var result = await behavior.Handle(new MeQuery(), MeOk, CancellationToken.None);
 
-        result.Error.Should().Be(UserErrors.NotSynced);
+        result.Error.Should().Be(AuthErrors.Unauthorized);
     }
 
     [Fact]

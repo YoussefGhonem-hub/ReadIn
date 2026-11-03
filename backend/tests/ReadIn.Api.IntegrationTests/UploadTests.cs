@@ -24,11 +24,10 @@ public sealed class UploadTests(ApiFactory api)
         return data.ToArray();
     }
 
-    private async Task<(HttpClient Client, JsonObject Me)> SignedInAsync(string uid)
+    private async Task<(HttpClient Client, JsonObject Me)> SignedInAsync()
     {
-        var client = api.ClientFor(uid, $"{uid}@readin.test");
-        var me = await (await client.PostAsJsonAsync("/api/v1/auth/sync", new { }, Ct)).Content.ReadFromJsonAsync<JsonObject>(Ct);
-        return (client, me!);
+        var user = await api.SignUpAsync();
+        return (user.Client, user.Me);
     }
 
     private static async Task<HttpResponseMessage> PostUploadAsync(HttpClient client, string purpose, byte[] bytes, string fileName = "photo.png")
@@ -78,7 +77,7 @@ public sealed class UploadTests(ApiFactory api)
     [Fact]
     public async Task Upload_is_stored_as_webp_and_served_with_safe_headers()
     {
-        var (client, _) = await SignedInAsync("it-uploader");
+        var (client, _) = await SignedInAsync();
 
         var response = await PostUploadAsync(client, "avatar", Png(800, 600), fileName: "../../../appsettings.json.png");
 
@@ -109,7 +108,7 @@ public sealed class UploadTests(ApiFactory api)
     [Fact]
     public async Task Non_images_and_guests_are_rejected()
     {
-        var (client, _) = await SignedInAsync("it-uploader-2");
+        var (client, _) = await SignedInAsync();
         byte[] exe = [0x4D, 0x5A, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00];
         var filesBefore = Directory.EnumerateFiles(api.UploadsPath, "*", SearchOption.AllDirectories).Count();
 
@@ -128,7 +127,7 @@ public sealed class UploadTests(ApiFactory api)
     [Fact]
     public async Task Replacing_an_avatar_deletes_the_old_files()
     {
-        var (client, me) = await SignedInAsync("it-avatar-swap");
+        var (client, me) = await SignedInAsync();
         var first = await UploadAsync(client, "avatar", Png(300, 300));
         await UpdateAvatarAsync(client, me, PathOf(first));
 
@@ -153,7 +152,7 @@ public sealed class UploadTests(ApiFactory api)
     [Fact]
     public async Task Avatars_must_be_avatar_uploads()
     {
-        var (client, me) = await SignedInAsync("it-avatar-wrong-purpose");
+        var (client, me) = await SignedInAsync();
         var cover = await UploadAsync(client, "cover", Png(1300, 500));
 
         var response = await client.PatchAsJsonAsync("/api/v1/me", new
@@ -168,7 +167,7 @@ public sealed class UploadTests(ApiFactory api)
     [Fact]
     public async Task Article_cover_and_images_are_stored_relative_and_served_absolute()
     {
-        var (client, _) = await SignedInAsync("it-article-images");
+        var (client, _) = await SignedInAsync();
         var cover = await UploadAsync(client, "cover", Png(2400, 1200));
         var image = await UploadAsync(client, "article-image", Png(1000, 500));
         var dotnet = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!
@@ -212,7 +211,7 @@ public sealed class UploadTests(ApiFactory api)
     [Fact]
     public async Task Orphan_cleanup_deletes_only_old_unreferenced_files()
     {
-        var (client, me) = await SignedInAsync("it-orphans");
+        var (client, me) = await SignedInAsync();
         var avatar = await UploadAsync(client, "avatar", Png(300, 300));
         var inDraft = await UploadAsync(client, "article-image", Png(500, 300));
         var orphan = await UploadAsync(client, "avatar", Png(300, 300));

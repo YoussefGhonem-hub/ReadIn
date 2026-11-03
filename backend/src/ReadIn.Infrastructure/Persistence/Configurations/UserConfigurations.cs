@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ReadIn.Application.Common.Security;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
@@ -13,11 +14,16 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.ToTable("Users");
         builder.HasKey(u => u.Id);
 
-        builder.Property(u => u.FirebaseUid).HasMaxLength(128).IsRequired();
-        builder.HasIndex(u => u.FirebaseUid).IsUnique();
+        // E.164; null only for anonymized accounts. Soft-deleted accounts keep their number until then (SPEC F01).
+        builder.Property(u => u.PhoneNumber).HasMaxLength(PhoneNumberRules.MaxLength).IsUnicode(false);
+        builder.HasIndex(u => u.PhoneNumber).IsUnique().HasFilter("[PhoneNumber] IS NOT NULL");
 
-        builder.Property(u => u.Email).HasMaxLength(320).IsRequired();
-        builder.HasIndex(u => u.Email).IsUnique();
+        builder.Property(u => u.Email).HasMaxLength(320);
+        builder.HasIndex(u => u.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
+
+        builder.Property(u => u.PasswordHash).HasMaxLength(256).IsUnicode(false);
+        builder.Property(u => u.SecurityStamp).HasMaxLength(64).IsUnicode(false).IsRequired();
+        builder.Property(u => u.RecoveryPinHash).HasMaxLength(256).IsUnicode(false);
 
         builder.Property(u => u.DisplayName).HasMaxLength(60).UseCollation(AppDbContext.SearchCollation).IsRequired();
         builder.Property(u => u.Username).HasMaxLength(30).UseCollation(AppDbContext.SearchCollation).IsRequired();
@@ -33,6 +39,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.TimeZone).HasMaxLength(64).IsRequired();
 
         builder.Ignore(u => u.OnboardingCompleted);
+        builder.Ignore(u => u.HasRecoveryPin);
+        builder.Ignore(u => u.CanSignIn);
 
         builder.HasMany(u => u.Roles).WithOne().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.Interests).WithOne().HasForeignKey(i => i.UserId).OnDelete(DeleteBehavior.Cascade);

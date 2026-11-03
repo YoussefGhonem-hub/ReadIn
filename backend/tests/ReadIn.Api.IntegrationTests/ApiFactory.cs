@@ -1,6 +1,7 @@
+using System.Collections.Concurrent;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
+using System.Net.Http.Json;
+using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.SqlClient;
@@ -9,8 +10,8 @@ using Testcontainers.MsSql;
 namespace ReadIn.Api.IntegrationTests;
 
 /// <summary>
-/// Boots the real API (migrations + seeders) against SQL Server 2022 in a container (SPEC §27).
-/// Firebase runs in emulator mode, so tests mint unsigned ID tokens exactly like the Auth emulator does.
+/// Boots the real API (migrations + seeders) against SQL Server 2022 in a container (SPEC §27). Users sign up and sign in
+/// through the API exactly like the clients do (ADR 0007).
 /// </summary>
 public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
@@ -19,7 +20,26 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     /// <summary>Matches the test server's address, so upload URLs point back at it.</summary>
     public const string PublicBaseUrl = "http://localhost";
 
+    public const string JwtSigningKey = "test-only-jwt-signing-key-0123456789abcdef";
+    public const string DemoPassword = "Demo-pass-2026";
+    public const string DemoPin = "4826";
+    public const string TestPassword = "Strong-pass-42";
+    public const string TestPin = "7391";
+
+    /// <summary>Seed users (SPEC §18.3).</summary>
+    public const string ReviewerPhone = "+12025550104";
+    public const string Reader1Phone = "+12025550110";
+    public const string Reader10Phone = "+12025550119";
+    public const string SuspendedPhone = "+12025550120";
+    public const string AdminPhone = "+12025550102";
+    public const string SuperAdminPhone = "+12025550101";
+
+    // Fictional 555-01XX numbers (SPEC §18.3) in area codes the seed users don't use.
+    private static readonly string[] AreaCodes = ["201", "212", "213", "305", "312", "415", "617", "646", "702", "718", "917", "206", "303", "404", "503"];
+    private static int _phoneCounter;
+
     private readonly MsSqlContainer _sql = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
+    private readonly ConcurrentDictionary<string, Task<string>> _seedSessions = new();
 
     /// <summary>A fresh uploads folder per test run, deleted afterwards.</summary>
     public string UploadsPath { get; } = Path.Combine(Path.GetTempPath(), "readin-tests", $"uploads-{Guid.NewGuid():N}");
@@ -48,41 +68,27 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Hangfire:Enabled", "false");
         builder.UseSetting("Database:MigrateOnStartup", "true");
         builder.UseSetting("Seed:RunOnStartup", "true");
+        builder.UseSetting("Seed:DemoPassword", DemoPassword);
+        builder.UseSetting("Seed:DemoPin", DemoPin);
+        builder.UseSetting("Jwt:SigningKey", JwtSigningKey);
+        builder.UseSetting("Security:RecoveryPinPepper", "test-only-recovery-pin-pepper-0123456789abcdef");
+        // Every test client shares one address; the per-number limits still apply.
+        builder.UseSetting("RateLimits:Auth:SignInPerMinute", "100000");
+        builder.UseSetting("RateLimits:Auth:RegisterPerHour", "100000");
+        builder.UseSetting("RateLimits:Auth:RecoveryPerHour", "100000");
+        // Reuse detection is tested strictly; one test turns the grace window back on.
+        builder.UseSetting("Auth:RefreshReuseGrace", "00:00:00");
         builder.UseSetting("Storage:UploadsPath", UploadsPath);
         builder.UseSetting("Storage:PublicBaseUrl", PublicBaseUrl);
         // Seed from fixture content so tests never depend on which of the real articles exist (content/).
         builder.UseSetting("Content:RootPath", Path.Combine(AppContext.BaseDirectory, "fixtures", "content"));
     }
 
-    /// <summary>An unsigned Firebase-emulator-style ID token.</summary>
-    public static string Token(string uid, string email, string? name = null, string projectId = ProjectId)
+    /// <summary>A valid, unused mobile number in the fictional range.</summary>
+    public static string NewPhoneNumber()
     {
-        static string B64(object value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value)))
-            .TrimEnd('=').Replace('+', '-').Replace('/', '_');
-
-        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        var header = B64(new { alg = "none", typ = "JWT" });
-        var payload = B64(new Dictionary<string, object?>
-        {
-            ["iss"] = $"https://securetoken.google.com/{projectId}",
-            ["aud"] = projectId,
-            ["sub"] = uid,
-            ["user_id"] = uid,
-            ["email"] = email,
-            ["name"] = name,
-            ["iat"] = now,
-            ["exp"] = now + 3600,
-            ["auth_time"] = now,
-        });
-        return $"{header}.{payload}.";
-    }
-
-    public HttpClient ClientFor(string uid, string email, string uiLanguage = "en")
-    {
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token(uid, email, "Test User"));
-        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(uiLanguage);
-        return client;
+        var n = Interlocked.Increment(ref _phoneCounter);
+        return $"+1{AreaCodes[n / 100 % AreaCodes.Length]}55501{n % 100:D2}";
     }
 
     public HttpClient GuestClient(string uiLanguage = "en")
@@ -91,6 +97,56 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(uiLanguage);
         return client;
     }
+
+    public HttpClient ClientWithToken(string accessToken, string uiLanguage = "en")
+    {
+        var client = GuestClient(uiLanguage);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return client;
+    }
+
+    /// <summary>Signs up a brand-new user (phone + <see cref="TestPassword"/> + <see cref="TestPin"/>) and signs it in.</summary>
+    public async Task<SignedInUser> SignUpAsync(string uiLanguage = "en")
+    {
+        var phone = NewPhoneNumber();
+        var response = await GuestClient(uiLanguage).PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            phoneNumber = phone,
+            password = TestPassword,
+            recoveryPin = TestPin,
+            uiLanguage,
+            timeZone = "Africa/Cairo",
+        }, TestContext.Current.CancellationToken);
+        var session = await ReadSessionAsync(response);
+        return new SignedInUser(ClientWithToken(session["accessToken"]!.GetValue<string>(), uiLanguage), session, phone);
+    }
+
+    /// <summary>A seed user, signed in once per run (sign in is limited to 5 attempts a minute per number).</summary>
+    public async Task<HttpClient> SeedUserClientAsync(string phone, string uiLanguage = "en")
+    {
+        var token = await _seedSessions.GetOrAdd(phone, async p =>
+        {
+            var response = await GuestClient().PostAsJsonAsync(
+                "/api/v1/auth/login", new { phoneNumber = p, password = DemoPassword }, TestContext.Current.CancellationToken);
+            return (await ReadSessionAsync(response))["accessToken"]!.GetValue<string>();
+        });
+        return ClientWithToken(token, uiLanguage);
+    }
+
+    public static async Task<JsonObject> ReadSessionAsync(HttpResponseMessage response)
+    {
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException($"{(int)response.StatusCode} from {response.RequestMessage?.RequestUri}: {body}");
+        return JsonNode.Parse(body)!.AsObject();
+    }
+}
+
+public sealed record SignedInUser(HttpClient Client, JsonObject Session, string PhoneNumber)
+{
+    public JsonObject Me => Session["user"]!.AsObject();
+    public Guid Id => Me["id"]!.GetValue<Guid>();
+    public string RefreshToken => Session["refreshToken"]!.GetValue<string>();
 }
 
 [CollectionDefinition(Name)]

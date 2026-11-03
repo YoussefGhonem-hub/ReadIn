@@ -3,7 +3,6 @@ using Mediator;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Domain.Common;
-using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Common.Behaviors;
 
@@ -30,7 +29,7 @@ internal sealed class AuthorizationBehavior<TMessage, TResponse>(ICurrentUser cu
         if (RequiresUser)
         {
             if (!currentUser.IsAuthenticated) return ResultFailure<TResponse>.Create(AuthErrors.Unauthorized);
-            if (currentUser.UserId is null) return ResultFailure<TResponse>.Create(UserErrors.NotSynced);
+            if (currentUser.UserId is null) return ResultFailure<TResponse>.Create(AuthErrors.Unauthorized);
         }
 
         if (RequiredPermissions.Length > 0)

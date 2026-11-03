@@ -109,29 +109,34 @@ public sealed class AccountTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task Tokens_for_another_firebase_project_are_rejected()
+    public async Task Sign_up_complete_profile_onboarding_and_preferences()
     {
-        var client = api.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", ApiFactory.Token("x", "x@readin.test", projectId: "someone-elses-project"));
+        var user = await api.SignUpAsync();
+        var client = user.Client;
 
-        (await client.GetAsync("/api/v1/me", Ct)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
+        user.Me["phoneNumber"]!.GetValue<string>().Should().Be(user.PhoneNumber);
+        user.Me["username"]!.GetValue<string>().Should().StartWith("reader_");
+        user.Me["isProfileComplete"]!.GetValue<bool>().Should().BeFalse();
+        user.Me["hasRecoveryPin"]!.GetValue<bool>().Should().BeTrue();
+        user.Me["mustSetRecoveryPin"]!.GetValue<bool>().Should().BeFalse();
+        user.Me["mustChangePassword"]!.GetValue<bool>().Should().BeFalse();
+        user.Me["roles"]!.AsArray().Select(r => r!.GetValue<string>()).Should().Equal("Member");
+        user.Me["permissions"]!.AsArray().Select(p => p!.GetValue<string>()).Should().Contain("articles.create");
+        user.Me["onboardingCompleted"]!.GetValue<bool>().Should().BeFalse();
 
-    [Fact]
-    public async Task Sign_in_sync_onboarding_and_preferences()
-    {
-        var client = api.ClientFor("it-onboarding", "onboarding.user@readin.test");
+        var username = $"onboarding_{Guid.NewGuid():N}"[..20];
+        var check = await api.GuestClient().GetFromJsonAsync<JsonObject>($"/api/v1/users/username-available?u={username}", Ct);
+        check!["available"]!.GetValue<bool>().Should().BeTrue();
+        var taken = await api.GuestClient().GetFromJsonAsync<JsonObject>("/api/v1/users/username-available?u=reader_dotnet_nope!", Ct);
+        taken!["valid"]!.GetValue<bool>().Should().BeFalse();
 
-        var beforeSync = await client.GetAsync("/api/v1/me", Ct);
-        beforeSync.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        (await TaxonomyAndContentTests.Problem(beforeSync))["code"]!.GetValue<string>().Should().Be("user.not_synced");
-
-        var me = await (await client.PostAsJsonAsync("/api/v1/auth/sync", new { uiLanguage = "en", timeZone = "Africa/Cairo" }, Ct))
-            .Content.ReadFromJsonAsync<JsonObject>(Ct);
-        me!["username"]!.GetValue<string>().Should().Be("onboarding_user");
-        me["roles"]!.AsArray().Select(r => r!.GetValue<string>()).Should().Equal("Member");
-        me["permissions"]!.AsArray().Select(p => p!.GetValue<string>()).Should().Contain("articles.create");
-        me["onboardingCompleted"]!.GetValue<bool>().Should().BeFalse();
+        var completed = await client.PutAsJsonAsync("/api/v1/me/profile/complete", new { displayName = "Onboarding User", username }, Ct);
+        completed.StatusCode.Should().Be(HttpStatusCode.OK);
+        var profile = await completed.Content.ReadFromJsonAsync<JsonObject>(Ct);
+        profile!["isProfileComplete"]!.GetValue<bool>().Should().BeTrue();
+        profile["username"]!.GetValue<string>().Should().Be(username);
+        (await api.GuestClient().GetFromJsonAsync<JsonObject>($"/api/v1/users/username-available?u={username}", Ct))!["available"]!
+            .GetValue<bool>().Should().BeFalse();
 
         var fields = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!.Select(f => f!["id"]!.GetValue<Guid>()).ToList();
 
@@ -161,11 +166,10 @@ public sealed class AccountTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task Suspended_users_get_403()
+    public async Task Suspended_users_cannot_sign_in()
     {
-        var client = api.ClientFor("demo-suspended", "suspended@readin.test");
-
-        var response = await client.GetAsync("/api/v1/me", Ct);
+        var response = await api.GuestClient().PostAsJsonAsync("/api/v1/auth/login",
+            new { phoneNumber = ApiFactory.SuspendedPhone, password = ApiFactory.DemoPassword }, Ct);
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await TaxonomyAndContentTests.Problem(response))["code"]!.GetValue<string>().Should().Be("user.suspended");
@@ -174,11 +178,13 @@ public sealed class AccountTests(ApiFactory api)
     [Fact]
     public async Task Seeded_reviewer_has_reviewer_permissions()
     {
-        var me = await api.ClientFor("demo-reviewer-dotnet", "reviewer.dotnet@readin.test").GetFromJsonAsync<JsonObject>("/api/v1/me", Ct);
+        var me = await (await api.SeedUserClientAsync(ApiFactory.ReviewerPhone)).GetFromJsonAsync<JsonObject>("/api/v1/me", Ct);
 
         me!["roles"]!.AsArray().Select(r => r!.GetValue<string>()).Should().BeEquivalentTo("Member", "VerifiedWriter", "Reviewer");
         me["permissions"]!.AsArray().Select(p => p!.GetValue<string>()).Should().Contain(["articles.review", "articles.publish.sensitive"]);
         me["isVerified"]!.GetValue<bool>().Should().BeTrue();
+        me["isProfileComplete"]!.GetValue<bool>().Should().BeTrue();
+        me["hasRecoveryPin"]!.GetValue<bool>().Should().BeTrue();
     }
 }
 
@@ -209,8 +215,7 @@ public sealed class WritingTests(ApiFactory api)
     [Fact]
     public async Task Member_creates_and_publishes_an_article()
     {
-        var client = api.ClientFor("it-writer", "it.writer@readin.test");
-        await client.PostAsJsonAsync("/api/v1/auth/sync", new { }, Ct);
+        var client = (await api.SignUpAsync()).Client;
         var dotnet = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!
             .Single(f => f!["slug"]!.GetValue<string>() == "dotnet")!["id"]!.GetValue<Guid>();
 
@@ -246,10 +251,8 @@ public sealed class WritingTests(ApiFactory api)
     [Fact]
     public async Task Others_cannot_publish_my_article()
     {
-        var author = api.ClientFor("it-author-2", "author.two@readin.test");
-        var other = api.ClientFor("it-other", "other.user@readin.test");
-        await author.PostAsJsonAsync("/api/v1/auth/sync", new { }, Ct);
-        await other.PostAsJsonAsync("/api/v1/auth/sync", new { }, Ct);
+        var author = (await api.SignUpAsync()).Client;
+        var other = (await api.SignUpAsync()).Client;
         var field = (await author.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))![0]!["id"]!.GetValue<Guid>();
 
         var created = await author.PostAsJsonAsync("/api/v1/articles", new
@@ -268,8 +271,7 @@ public sealed class WritingTests(ApiFactory api)
     [Fact]
     public async Task Invalid_rdoc_is_rejected_with_details()
     {
-        var client = api.ClientFor("it-writer-3", "writer.three.it@readin.test");
-        await client.PostAsJsonAsync("/api/v1/auth/sync", new { }, Ct);
+        var client = (await api.SignUpAsync()).Client;
         var field = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))![0]!["id"]!.GetValue<Guid>();
 
         var response = await client.PostAsJsonAsync("/api/v1/articles", new

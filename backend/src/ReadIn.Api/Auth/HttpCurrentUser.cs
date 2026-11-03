@@ -10,15 +10,7 @@ internal sealed class HttpCurrentUser(IHttpContextAccessor accessor) : ICurrentU
 
     public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated == true;
 
-    public string? FirebaseUid => Claim(FirebaseClaims.UserId) ?? Claim(FirebaseClaims.Subject);
-
-    public Guid? UserId => Guid.TryParse(Claim(ReadInClaims.UserId), out var id) ? id : null;
-
-    public string? Email => Claim(FirebaseClaims.Email);
-
-    public string? DisplayName => Claim(FirebaseClaims.Name);
-
-    public string? PictureUrl => Claim(FirebaseClaims.Picture);
+    public Guid? UserId => Guid.TryParse(Claim(JwtClaims.Subject), out var id) ? id : null;
 
     public string UiLanguage => RequestLanguage.Resolve(accessor.HttpContext);
 
@@ -30,6 +22,26 @@ internal sealed class HttpCurrentUser(IHttpContextAccessor accessor) : ICurrentU
 
     private HashSet<string> ClaimSet(string type) =>
         Principal?.FindAll(type).Select(c => c.Value).ToHashSet(StringComparer.Ordinal) ?? [];
+}
+
+/// <summary>The caller's address and device, recorded on sessions and recovery attempts (SPEC §16.2).</summary>
+internal sealed class HttpClientInfo(IHttpContextAccessor accessor) : IClientInfo
+{
+    /// <summary>Optional header with a readable device name, e.g. "Pixel 8" (mobile); the user agent otherwise.</summary>
+    public const string DeviceNameHeader = "X-Device-Name";
+
+    public string? IpAddress => accessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+
+    public string? DeviceName
+    {
+        get
+        {
+            var headers = accessor.HttpContext?.Request.Headers;
+            var name = headers?[DeviceNameHeader].ToString();
+            if (string.IsNullOrWhiteSpace(name)) name = headers?.UserAgent.ToString();
+            return string.IsNullOrWhiteSpace(name) ? null : name.Trim();
+        }
+    }
 }
 
 public static class RequestLanguage

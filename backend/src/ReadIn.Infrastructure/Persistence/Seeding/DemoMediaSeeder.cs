@@ -2,13 +2,11 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using ReadIn.Application.Common.Content;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Media;
-using ReadIn.Infrastructure.Identity;
 using ReadIn.Infrastructure.Media;
 using SkiaSharp;
 using UglyToad.PdfPig.Content;
@@ -29,7 +27,6 @@ internal sealed partial class DemoMediaSeeder(
     IFileStorage storage,
     IRDocProcessor rdoc,
     DocumentProcessingJob documents,
-    IOptions<FirebaseOptions> firebase,
     TimeProvider clock,
     ILogger<DemoMediaSeeder> logger) : ISeeder
 {
@@ -40,7 +37,7 @@ internal sealed partial class DemoMediaSeeder(
     public int Order => 9;
     public int Version => 1;
 
-    public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.AllowsDemoData(environment, firebase.Value);
+    public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.AllowsDemoData(environment);
 
     public Task<string> ComputeChecksumAsync(CancellationToken cancellationToken) =>
         Task.FromResult(SeedChecksum.Of([ImagesSlug, DocumentSlug, "v1"]));

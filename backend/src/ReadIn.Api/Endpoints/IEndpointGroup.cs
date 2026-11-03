@@ -22,6 +22,19 @@ public static class EndpointGroupExtensions
 public static class RateLimitPolicies
 {
     public const string Auth = "auth";
+    public const string SignIn = "auth-sign-in";
+    public const string Register = "auth-register";
+    public const string Recovery = "auth-recovery";
     public const string Writes = "writes";
     public const string Uploads = "uploads";
+}
+
+/// <summary>Per-IP limits of the anonymous auth endpoints (SPEC §9.5); tests raise them.</summary>
+public sealed class AuthRateLimits
+{
+    public const string Section = "RateLimits:Auth";
+
+    public int SignInPerMinute { get; set; } = 20;
+    public int RegisterPerHour { get; set; } = 3;
+    public int RecoveryPerHour { get; set; } = 10;
 }

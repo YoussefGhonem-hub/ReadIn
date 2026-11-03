@@ -8,5 +8,5 @@ internal sealed class GetMeQueryHandler(ICurrentUser currentUser, MeReader meRea
     : IQueryHandler<GetMeQuery, Result<MeDto>>
 {
     public async ValueTask<Result<MeDto>> Handle(GetMeQuery query, CancellationToken cancellationToken) =>
-        await meReader.ReadAsync(currentUser.FirebaseUid!, cancellationToken);
+        await meReader.ReadAsync(currentUser.RequireUserId(), cancellationToken);
 }

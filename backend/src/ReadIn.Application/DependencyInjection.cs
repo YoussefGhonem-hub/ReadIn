@@ -8,6 +8,7 @@ using ReadIn.Application.Common.Content;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
+using ReadIn.Application.Features.Auth;
 using ReadIn.Application.Features.Users;
 
 namespace ReadIn.Application;
@@ -41,6 +42,9 @@ public static class DependencyInjection
         services.AddSingleton<IRDocProcessor, RDocProcessor>();
         services.AddScoped<IUserAccessService, UserAccessService>();
         services.AddScoped<MeReader>();
+        services.AddScoped<SessionIssuer>();
+        services.AddScoped<AuditTrail>();
+        services.AddScoped<PasswordConfirmation>();
         services.AddScoped<UploadReferences>();
         services.AddScoped<UploadCleanup>();
         services.AddScoped<Features.Uploads.IMediaQuota, Features.Uploads.MediaQuota>();

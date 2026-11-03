@@ -6,20 +6,202 @@ namespace ReadIn.Domain.UnitTests.Users;
 public sealed class UserTests
 {
     private static readonly Guid MemberRole = Guid.NewGuid();
+    private static readonly DateTime Now = new(2026, 11, 3, 10, 0, 0, DateTimeKind.Utc);
 
-    private static User NewUser() =>
-        User.Register("uid-1", "Reader.One@ReadIn.test", "Reader One", "reader_one", null, MemberRole);
+    private static User NewUser() => User.Register("+12015550101", "password-hash", "reader_abc123", MemberRole);
 
     [Fact]
-    public void Register_normalizes_email_assigns_member_and_raises_event()
+    public void Register_starts_an_incomplete_profile_that_must_set_a_pin()
     {
         var user = NewUser();
 
-        user.Email.Should().Be("reader.one@readin.test");
+        user.PhoneNumber.Should().Be("+12015550101");
+        user.Username.Should().Be("reader_abc123");
+        user.IsProfileComplete.Should().BeFalse();
+        user.MustSetRecoveryPin.Should().BeTrue("the handler sets the PIN right after EF Core assigns the id");
+        user.CanSignIn.Should().BeTrue();
+        user.SecurityStamp.Should().NotBeNullOrWhiteSpace();
         user.HasRole(MemberRole).Should().BeTrue();
         user.UiLanguage.Should().Be(UiLanguages.Arabic);
         user.ReminderTime.Should().Be(new TimeOnly(8, 0));
         user.DomainEvents.Should().ContainSingle(e => e is UserRegisteredDomainEvent);
+    }
+
+    [Fact]
+    public void Setting_the_pin_clears_the_requirement()
+    {
+        var user = NewUser();
+
+        user.SetRecoveryPin("pin-hash", Now);
+
+        user.HasRecoveryPin.Should().BeTrue();
+        user.MustSetRecoveryPin.Should().BeFalse();
+        user.RecoveryPinSetAt.Should().Be(Now);
+    }
+
+    [Fact]
+    public void Complete_profile_validates_the_username()
+    {
+        var user = NewUser();
+
+        user.CompleteProfile("Reader One", "Bad Name", null).Error.Should().Be(UserErrors.InvalidUsername);
+        user.IsProfileComplete.Should().BeFalse();
+
+        user.CompleteProfile("  Reader One ", "reader_one", "/uploads/avatars/2026/11/x_512.webp").IsSuccess.Should().BeTrue();
+        user.IsProfileComplete.Should().BeTrue();
+        user.DisplayName.Should().Be("Reader One");
+    }
+
+    [Fact]
+    public void Five_wrong_passwords_lock_sign_in_for_15_minutes()
+    {
+        var user = NewUser();
+
+        for (var i = 0; i < 4; i++) user.RecordFailedSignIn(Now).Should().BeFalse();
+        user.RecordFailedSignIn(Now).Should().BeTrue();
+
+        user.IsLockedOutAt(Now.AddMinutes(14)).Should().BeTrue();
+        user.IsLockedOutAt(Now.AddMinutes(15)).Should().BeFalse();
+        user.FailedLoginCount.Should().Be(0, "the counter starts over after a lockout");
+    }
+
+    [Fact]
+    public void A_successful_sign_in_resets_the_counter()
+    {
+        var user = NewUser();
+        user.RecordFailedSignIn(Now);
+        user.RecordFailedSignIn(Now);
+
+        user.RecordSuccessfulSignIn();
+
+        user.FailedLoginCount.Should().Be(0);
+        user.LockoutEndAt.Should().BeNull();
+    }
+
+    [Fact]
+    public void Five_wrong_pins_lock_recovery_for_an_hour()
+    {
+        var user = NewUser();
+
+        for (var i = 0; i < 4; i++) user.RecordFailedRecovery(Now).Should().BeFalse();
+        user.RecordFailedRecovery(Now).Should().BeTrue();
+
+        user.IsRecoveryLockedAt(Now.AddMinutes(59)).Should().BeTrue();
+        user.IsRecoveryLockedAt(Now.AddHours(1)).Should().BeFalse();
+        user.RecoveryDisabled.Should().BeFalse();
+        user.DomainEvents.OfType<UserSecurityChangedDomainEvent>().Should().ContainSingle(e => e.Change == SecurityChange.RecoveryLockedOut);
+    }
+
+    [Fact]
+    public void The_third_recovery_lockout_within_7_days_disables_recovery()
+    {
+        var user = NewUser();
+
+        LockRecovery(user, Now);
+        LockRecovery(user, Now.AddDays(2));
+        user.RecoveryDisabled.Should().BeFalse();
+        LockRecovery(user, Now.AddDays(6));
+
+        user.RecoveryDisabled.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Lockouts_more_than_7_days_apart_start_a_new_window()
+    {
+        var user = NewUser();
+
+        LockRecovery(user, Now);
+        LockRecovery(user, Now.AddDays(2));
+        LockRecovery(user, Now.AddDays(10));
+
+        user.RecoveryDisabled.Should().BeFalse();
+        user.RecoveryLockoutCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void Credential_changes_rotate_the_security_stamp()
+    {
+        var user = NewUser();
+        var stamps = new List<string> { user.SecurityStamp };
+
+        user.ChangePassword("new-hash");
+        stamps.Add(user.SecurityStamp);
+        user.ChangePhoneNumber("+12015550102");
+        stamps.Add(user.SecurityStamp);
+        user.ResetPassword("reset-hash");
+        stamps.Add(user.SecurityStamp);
+        user.RotateSecurityStamp();
+        stamps.Add(user.SecurityStamp);
+
+        stamps.Should().OnlyHaveUniqueItems();
+        user.DomainEvents.OfType<UserSecurityChangedDomainEvent>().Select(e => e.Change)
+            .Should().Equal(SecurityChange.PasswordChanged, SecurityChange.PhoneNumberChanged, SecurityChange.PasswordReset);
+    }
+
+    [Fact]
+    public void Password_reset_clears_every_lockout()
+    {
+        var user = NewUser();
+        for (var i = 0; i < 5; i++) user.RecordFailedSignIn(Now);
+        user.RecordFailedRecovery(Now);
+
+        user.ResetPassword("reset-hash");
+
+        user.IsLockedOutAt(Now).Should().BeFalse();
+        user.RecoveryFailedCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void Admin_reset_forces_a_new_password_and_pin_and_reenables_recovery()
+    {
+        var user = NewUser();
+        user.SetRecoveryPin("pin-hash", Now);
+        LockRecovery(user, Now);
+        LockRecovery(user, Now);
+        LockRecovery(user, Now);
+        var stamp = user.SecurityStamp;
+
+        user.ResetByAdmin("temporary-hash");
+
+        user.MustChangePassword.Should().BeTrue();
+        user.MustSetRecoveryPin.Should().BeTrue();
+        user.HasRecoveryPin.Should().BeFalse();
+        user.RecoveryDisabled.Should().BeFalse();
+        user.IsRecoveryLockedAt(Now).Should().BeFalse();
+        user.SecurityStamp.Should().NotBe(stamp);
+    }
+
+    [Fact]
+    public void Anonymizing_removes_personal_data_and_releases_the_number()
+    {
+        var user = NewUser();
+        user.UpdateProfile("Reader One", "reader_one", "Bio", "/uploads/avatars/2026/11/x_512.webp", new UserLinks { GitHub = "https://github.com/x" });
+        user.RegisterDevice("token", DevicePlatform.Android, Now);
+
+        user.Anonymize();
+
+        user.PhoneNumber.Should().BeNull();
+        user.PasswordHash.Should().BeNull();
+        user.CanSignIn.Should().BeFalse();
+        user.DisplayName.Should().Be(User.DeletedDisplayName);
+        User.IsValidUsername(user.Username).Should().BeTrue();
+        user.Username.Should().StartWith("deleted_");
+        user.AvatarUrl.Should().BeNull();
+        user.Bio.Should().BeNull();
+        user.Devices.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Require_recovery_pin_only_flags_accounts_without_one()
+    {
+        var withPin = NewUser();
+        withPin.SetRecoveryPin("pin-hash", Now);
+        withPin.RequireRecoveryPin();
+        withPin.MustSetRecoveryPin.Should().BeFalse();
+
+        var seeded = User.CreateSeeded("+12025550119", "Reader 10", "reader10");
+        seeded.RequireRecoveryPin();
+        seeded.MustSetRecoveryPin.Should().BeTrue();
     }
 
     [Fact]
@@ -50,18 +232,6 @@ public sealed class UserTests
     [InlineData("a_very_long_username_that_exceeds_30", false)]
     public void Username_rules(string username, bool valid) => User.IsValidUsername(username).Should().Be(valid);
 
-    [Theory]
-    [InlineData("reviewer.dotnet@readin.test", "reviewer_dotnet")]
-    [InlineData("a@x.com", "reader_a")]
-    [InlineData("Ahmed.Ali+news@gmail.com", "ahmed_ali_news")]
-    public void Suggested_usernames_are_valid(string email, string expected)
-    {
-        var suggestion = User.SuggestUsername(email);
-
-        suggestion.Should().Be(expected);
-        User.IsValidUsername(suggestion).Should().BeTrue();
-    }
-
     [Fact]
     public void Preferences_validate_languages()
     {
@@ -90,23 +260,28 @@ public sealed class UserTests
     public void Temporary_suspension_expires()
     {
         var user = NewUser();
-        var now = new DateTime(2026, 11, 2, 0, 0, 0, DateTimeKind.Utc);
 
-        user.Suspend(until: now.AddDays(3));
+        user.Suspend(until: Now.AddDays(3));
 
-        user.IsSuspendedAt(now).Should().BeTrue();
-        user.IsSuspendedAt(now.AddDays(4)).Should().BeFalse();
+        user.IsSuspendedAt(Now).Should().BeTrue();
+        user.IsSuspendedAt(Now.AddDays(4)).Should().BeFalse();
     }
 
     [Fact]
     public void Registering_the_same_device_token_only_refreshes_it()
     {
         var user = NewUser();
-        var now = DateTime.UtcNow;
 
-        user.RegisterDevice("token", DevicePlatform.Android, now);
-        user.RegisterDevice("token", DevicePlatform.Android, now.AddHours(1));
+        user.RegisterDevice("token", DevicePlatform.Android, Now);
+        user.RegisterDevice("token", DevicePlatform.Android, Now.AddHours(1));
 
-        user.Devices.Should().ContainSingle().Which.LastSeenAt.Should().Be(now.AddHours(1));
+        user.Devices.Should().ContainSingle().Which.LastSeenAt.Should().Be(Now.AddHours(1));
+        user.UnregisterDevice("token").Should().BeTrue();
+        user.UnregisterDevice("token").Should().BeFalse();
+    }
+
+    private static void LockRecovery(User user, DateTime at)
+    {
+        for (var i = 0; i < AccountSecurity.MaxFailedRecoveries; i++) user.RecordFailedRecovery(at);
     }
 }

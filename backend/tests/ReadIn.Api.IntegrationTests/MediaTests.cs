@@ -22,11 +22,10 @@ public sealed class MediaTests(ApiFactory api)
 
     private static byte[] Fixture(string name) => File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "fixtures", "media", name));
 
-    private async Task<(HttpClient Client, Guid UserId)> SignedInAsync(string uid, string uiLanguage = "en")
+    private async Task<(HttpClient Client, Guid UserId)> SignedInAsync(string uiLanguage = "en")
     {
-        var client = api.ClientFor(uid, $"{uid}@readin.test", uiLanguage);
-        var me = await (await client.PostAsJsonAsync("/api/v1/auth/sync", new { }, Ct)).Content.ReadFromJsonAsync<JsonObject>(Ct);
-        return (client, me!["id"]!.GetValue<Guid>());
+        var user = await api.SignUpAsync(uiLanguage);
+        return (user.Client, user.Id);
     }
 
     private static async Task<HttpResponseMessage> PostFileAsync(HttpClient client, string endpoint, byte[] bytes, string fileName,
@@ -94,7 +93,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task An_image_upload_creates_variants_on_disk_whose_urls_work()
     {
-        var (client, _) = await SignedInAsync("it-media-image");
+        var (client, _) = await SignedInAsync();
 
         var asset = await UploadImageAsync(client, "exif-rotated.jpg");
 
@@ -125,7 +124,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task A_heic_photo_is_accepted_and_converted()
     {
-        var (client, _) = await SignedInAsync("it-media-heic");
+        var (client, _) = await SignedInAsync();
 
         var asset = await UploadImageAsync(client, "sample.heic");
 
@@ -135,7 +134,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task A_twelve_page_pdf_is_rendered_in_the_background_page_one_first()
     {
-        var (client, _) = await SignedInAsync("it-media-pdf");
+        var (client, _) = await SignedInAsync();
 
         var accepted = await UploadDocumentAsync(client);
 
@@ -169,7 +168,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task The_job_saves_page_one_before_any_other_page()
     {
-        var (client, userId) = await SignedInAsync("it-media-order");
+        var (client, userId) = await SignedInAsync();
         using var scope = api.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
@@ -197,7 +196,7 @@ public sealed class MediaTests(ApiFactory api)
     [InlineData("exif-rotated.jpg", "media.unsupported_type")]
     public async Task Bad_pdfs_are_rejected_before_anything_is_stored(string fixture, string code)
     {
-        var (client, _) = await SignedInAsync("it-media-bad-pdf-" + fixture.Split('.')[0]);
+        var (client, _) = await SignedInAsync();
         var before = Directory.Exists(api.UploadsPath) ? Directory.EnumerateFiles(api.UploadsPath, "*.pdf", SearchOption.AllDirectories).Count() : 0;
 
         var response = await PostFileAsync(client, "documents", Fixture(fixture), "renamed.pdf");
@@ -210,7 +209,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task The_password_error_is_translated()
     {
-        var (client, _) = await SignedInAsync("it-media-ar", uiLanguage: "ar");
+        var (client, _) = await SignedInAsync(uiLanguage: "ar");
 
         var response = await PostFileAsync(client, "documents", Fixture("encrypted.pdf"), "secret.pdf");
 
@@ -221,7 +220,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task Images_become_attachments_and_show_in_the_feed_and_reader()
     {
-        var (client, _) = await SignedInAsync("it-media-post");
+        var (client, _) = await SignedInAsync();
         var images = new[] { await UploadImageAsync(client), await UploadImageAsync(client, "small.png"), await UploadImageAsync(client, "sample.heic") };
         var (articleId, slug) = await CreateDraftAsync(client, "Three images from the rig");
 
@@ -256,7 +255,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task Images_and_a_pdf_cannot_be_mixed_and_an_asset_belongs_to_one_post()
     {
-        var (client, _) = await SignedInAsync("it-media-mix");
+        var (client, _) = await SignedInAsync();
         var image = await UploadImageAsync(client);
         var document = await UploadDocumentAsync(client);
         var (first, _) = await CreateDraftAsync(client, "Mixing is not allowed");
@@ -272,7 +271,7 @@ public sealed class MediaTests(ApiFactory api)
         var reused = await SetAttachmentsAsync(client, second, new { mediaAssetId = image["id"], order = 0, altText = "Rig" });
         Code(await TaxonomyAndContentTests.Problem(reused)).Should().Be("media.in_use");
 
-        var (other, _) = await SignedInAsync("it-media-mix-other");
+        var (other, _) = await SignedInAsync();
         var foreign = await SetAttachmentsAsync(client, second,
             new { mediaAssetId = (await UploadImageAsync(other))["id"], order = 0, altText = "Not mine" });
         Code(await TaxonomyAndContentTests.Problem(foreign)).Should().Be("attachments.asset_not_found");
@@ -282,7 +281,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task Downloads_follow_the_author_switch_and_the_owner_and_moderators_always_can()
     {
-        var (author, _) = await SignedInAsync("it-media-dl-author");
+        var (author, _) = await SignedInAsync();
         var document = await UploadDocumentAsync(author, allowDownload: false);
         var (articleId, slug) = await CreateDraftAsync(author, "A report to download");
         (await SetAttachmentsAsync(author, articleId, new { mediaAssetId = document["id"], order = 0, title = "Inspection Report 2026" }))
@@ -305,7 +304,7 @@ public sealed class MediaTests(ApiFactory api)
         (await author.GetFromJsonAsync<JsonObject>($"/api/v1/articles/{slug}", Ct))!["attachments"]!["document"]!["canDownload"]!
             .GetValue<bool>().Should().BeTrue("the cached copy is personalized for the author");
 
-        var (moderator, moderatorId) = await SignedInAsync("it-media-dl-moderator");
+        var (moderator, moderatorId) = await SignedInAsync();
         await GrantAsync(moderatorId, RoleIds.Moderator);
         (await moderator.GetAsync(url, Ct)).StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -329,7 +328,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task A_pdf_is_never_served_as_a_static_file()
     {
-        var (client, _) = await SignedInAsync("it-media-static");
+        var (client, _) = await SignedInAsync();
         var asset = await GetAssetAsync(client, await UploadDocumentAsync(client));
         var thumb = new Uri(asset["pages"]![0]!["thumbUrl"]!.GetValue<string>()).AbsolutePath;
         var original = thumb[..thumb.IndexOf("/pages/", StringComparison.Ordinal)] + "/original.pdf";
@@ -343,7 +342,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task Deleting_media_respects_attachments_and_deleting_the_article_removes_them()
     {
-        var (client, _) = await SignedInAsync("it-media-delete");
+        var (client, _) = await SignedInAsync();
         var loose = await UploadImageAsync(client);
         var attached = await UploadDocumentAsync(client);
         var (articleId, _) = await CreateDraftAsync(client, "A post that will be deleted");
@@ -366,7 +365,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task Orphan_cleanup_deletes_unattached_assets_older_than_a_day()
     {
-        var (client, _) = await SignedInAsync("it-media-orphans");
+        var (client, _) = await SignedInAsync();
         var abandoned = await UploadDocumentAsync(client);
         var attached = await UploadDocumentAsync(client);
         var fresh = await UploadImageAsync(client);
@@ -393,8 +392,8 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task Quotas_stop_uploads_with_a_clear_error()
     {
-        var (daily, dailyId) = await SignedInAsync("it-media-quota-daily");
-        var (storageFull, storageId) = await SignedInAsync("it-media-quota-storage");
+        var (daily, dailyId) = await SignedInAsync();
+        var (storageFull, storageId) = await SignedInAsync();
         using (var scope = api.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -422,7 +421,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task A_post_can_be_only_attachments_with_line_breaks_in_its_text()
     {
-        var (client, _) = await SignedInAsync("it-media-composer");
+        var (client, _) = await SignedInAsync();
         var image = await UploadImageAsync(client);
         var dotnet = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!.Single(f => f!["slug"]!.GetValue<string>() == "dotnet")!;
 
@@ -455,7 +454,7 @@ public sealed class MediaTests(ApiFactory api)
     [Fact]
     public async Task Alt_text_captions_and_document_titles_take_5000_characters()
     {
-        var (client, _) = await SignedInAsync("it-media-long-text");
+        var (client, _) = await SignedInAsync();
         var image = await UploadImageAsync(client);
         var document = await UploadDocumentAsync(client);
         var (imagePost, imageSlug) = await CreateDraftAsync(client, "A photo with a long description");
