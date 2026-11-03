@@ -1,0 +1,116 @@
+terms:
+  - id: heuristic
+    term: Heuristic
+    definitionEn: >-
+      A simple, quickly implemented rule that solves a problem well enough, such as "rank contacts by most recent
+      use". In machine learning projects it is often the first solution and the benchmark a model must beat.
+    definitionAr: >-
+      قاعدة بسيطة تتكتب بسرعة وبتحل المشكلة بشكل كفاية، زي "رتّب الـ contacts حسب آخر استخدام". في مشاريع الـ Machine
+      Learning غالبًا بتبقى أول حل، والمقياس اللي أي موديل لازم يغلبه.
+  - id: baseline
+    term: Baseline
+    definitionEn: >-
+      A simple reference solution, such as a heuristic or a basic model, measured on the same data as a new model. A
+      more complex model is only worth it if it beats the baseline by enough to pay for its cost.
+    definitionAr: >-
+      حل مرجعي بسيط، زي heuristic أو موديل بسيط، بتقيسه على نفس الداتا اللي بتقيس عليها الموديل الجديد. الموديل الأعقد
+      مايستاهلش غير لو غلب الـ baseline بفرق يغطّي تكلفته.
+  - id: overfitting
+    term: Overfitting
+    definitionEn: >-
+      When a model fits its training data so closely, noise included, that it predicts new data poorly. The usual sign
+      is a high training score with a much lower score on held-out data.
+    definitionAr: >-
+      لما الموديل يحفظ الـ training data بالظبط، بالـ noise اللي فيها، لدرجة إنه يتوقع وحش على داتا جديدة. العلامة المعتادة
+      إن الـ score على الـ training عالي وعلى الداتا اللي اتسابت للتقييم أقل بكتير.
+  - id: generalization
+    term: Generalization
+    definitionEn: >-
+      A model's ability to make good predictions on new data it never saw during training, which is what a model is
+      actually for. Held-out data is how you measure it.
+    definitionAr: >-
+      قدرة الموديل إنه يتوقع صح على داتا جديدة ماشافهاش وقت الـ training، ودي الحاجة اللي الموديل معمول عشانها أصلًا.
+      وبتقيسها بداتا سايبها برّه الـ training.
+  - id: cross-validation
+    term: Cross-Validation
+    definitionEn: >-
+      An evaluation method that splits the data into k parts (folds), trains on k-1 of them and scores on the one left
+      out, rotating k times. The average score estimates performance on unseen data.
+    definitionAr: >-
+      طريقة تقييم بتقسم الداتا لـ k أجزاء (folds)، وتدرّب على k-1 منهم وتقيس على الجزء اللي اتساب، وتلف كده k مرات.
+      ومتوسط الـ scores بيقدّر أداء الموديل على داتا ماشافهاش.
+  - id: feature-engineering
+    term: Feature Engineering
+    definitionEn: >-
+      Turning raw inputs into the columns a model learns from: scaling them, encoding categories, or adding computed
+      features such as powers, ratios and spline pieces. The same model can do far better or worse depending on it.
+    definitionAr: >-
+      إنك تحوّل الداتا الخام للـ columns اللي الموديل بيتعلّم منها: تعملها scaling، أو encoding للـ categories، أو تضيف
+      features محسوبة زي الأُسس والنِسب وقطع الـ spline. نفس الموديل ممكن يبقى أحسن أو أوحش بكتير على حسبها.
+  - id: r-squared
+    term: R² (coefficient of determination)
+    definitionEn: >-
+      A regression score: 1.0 is a perfect fit, 0.0 is what always predicting the average would get, and a negative
+      value means the model does worse than that average.
+    definitionAr: >-
+      score للـ regression: الـ 1.0 معناه fit كامل، والـ 0.0 هو اللي هتجيبه لو فضلت تتوقع المتوسط على طول، والقيمة
+      السالبة معناها إن الموديل أوحش من المتوسط ده.
+  - id: gradient-descent
+    term: Gradient Descent
+    definitionEn: >-
+      The training loop behind most models: compute the loss, compute its gradient with respect to the weights, and
+      move the weights a small step in the direction that lowers the loss. Repeat until the loss stops improving.
+    definitionAr: >-
+      الـ loop اللي ورا تدريب أغلب الموديلات: تحسب الـ loss، وتحسب الـ gradient بتاعه بالنسبة للـ weights، وتحرّك الـ
+      weights خطوة صغيرة في الاتجاه اللي بيقلّل الـ loss. وتكرر لحد ما الـ loss يبطّل يتحسّن.
+  - id: learning-rate
+    term: Learning Rate
+    definitionEn: >-
+      The number gradient descent multiplies the gradient by to size each weight update. Too small and training
+      crawls; too large and the loss bounces around the minimum or diverges.
+    definitionAr: >-
+      الرقم اللي الـ gradient descent بيضرب فيه الـ gradient عشان يحدد حجم كل تحديث للـ weights. لو صغير قوي التدريب
+      بيزحف، ولو كبير قوي الـ loss بيتنطط حوالين أقل نقطة أو بيفرقع.
+  - id: feature-scaling
+    term: Feature Scaling
+    definitionEn: >-
+      Transforming numeric features to comparable ranges, for example standardization (mean 0, standard deviation 1)
+      or min-max scaling to 0–1. It matters for models that compare features through distances, penalties or
+      gradient steps.
+    definitionAr: >-
+      إنك تحوّل الـ features الرقمية لمدى متقارب، زي الـ standardization (متوسط 0 وانحراف معياري 1) أو الـ min-max
+      scaling من 0 لـ 1. بيفرق مع الموديلات اللي بتقارن الـ features بالمسافات أو الـ penalties أو خطوات الـ gradient.
+  - id: one-hot-encoding
+    term: One-Hot Encoding
+    definitionEn: >-
+      Turning a categorical feature into one column per category, set to 1 for the row's category and 0 for the rest.
+      The model then learns a separate weight for each category, with no order implied between them.
+    definitionAr: >-
+      إنك تحوّل الـ categorical feature لعمود لكل category، قيمته 1 للـ category بتاعة الصف و0 لباقي الأعمدة. كده
+      الموديل بيتعلّم weight منفصل لكل category، من غير ما يفترض أي ترتيب بينهم.
+  - id: underfitting
+    term: Underfitting
+    definitionEn: >-
+      When a model is too simple, or its features too poor, to capture the pattern in the data. Training and
+      validation scores are both low and close together, and more training rows don't raise them.
+    definitionAr: >-
+      لما الموديل يبقى أبسط من اللازم، أو الـ features بتاعته ضعيفة، فمايقدرش يمسك الـ pattern اللي في الداتا. الـ
+      score على الـ training والـ validation الاتنين واطيين وقريبين من بعض، وصفوف training زيادة مابترفعهمش.
+  - id: bias-variance
+    term: Bias and Variance
+    definitionEn: >-
+      The two parts of a model's error that you can reduce. Bias is the error it keeps whichever training set it
+      gets, because it can't express the pattern; variance is how much its predictions change from one training set
+      to another. More data shrinks variance, not bias.
+    definitionAr: >-
+      الجزأين اللي تقدر تقلّلهم من الـ error بتاع الموديل. الـ bias هو الغلط اللي بيفضل موجود أيًا كانت الـ training set،
+      لأن الموديل مش قادر يعبّر عن الـ pattern؛ والـ variance هو قد إيه التوقعات بتتغيّر من training set للتانية. الداتا
+      الزيادة بتقلّل الـ variance، مش الـ bias.
+  - id: learning-curve
+    term: Learning Curve
+    definitionEn: >-
+      A plot of a model's training and validation scores against the number of training examples. Its shape shows
+      whether the model suffers from bias or variance, and whether more data would help.
+    definitionAr: >-
+      رسمة للـ score بتاع الموديل على الـ training والـ validation قصاد عدد أمثلة الـ training. شكلها بيوضّح الموديل
+      عنده مشكلة bias ولا variance، وهل داتا أكتر هتفيد ولا لأ.

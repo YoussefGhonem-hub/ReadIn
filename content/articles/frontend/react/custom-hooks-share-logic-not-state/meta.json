@@ -1,0 +1,31 @@
+{
+  "slug": "custom-hooks-share-logic-not-state",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Custom Hooks Share Logic, Not State",
+      "subtitle": "Every call to a custom Hook gets its own state. Shared data has to live in one place."
+    },
+    "ar-EG": {
+      "title": "اتنين components بيستخدموا نفس الـ custom hook؟ كده مش بيشاركوا نفس الـ state",
+      "subtitle": "كل نداء للـ custom Hook بياخد state لوحده. والداتا المشتركة لازم تعيش في مكان واحد."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": { "slug": "react-mental-models", "order": 8 },
+  "tags": ["React", "Custom Hooks", "State", "Context"],
+  "sources": [
+    { "title": "Reusing Logic with Custom Hooks — React", "url": "https://react.dev/learn/reusing-logic-with-custom-hooks" },
+    { "title": "Rules of Hooks — React", "url": "https://react.dev/reference/rules/rules-of-hooks" },
+    { "title": "Sharing State Between Components — React", "url": "https://react.dev/learn/sharing-state-between-components" },
+    { "title": "createContext — React API Reference", "url": "https://react.dev/reference/react/createContext" },
+    { "title": "useSyncExternalStore — React API Reference", "url": "https://react.dev/reference/react/useSyncExternalStore" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

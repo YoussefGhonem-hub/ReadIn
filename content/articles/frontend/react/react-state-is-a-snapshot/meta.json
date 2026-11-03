@@ -1,0 +1,35 @@
+{
+  "slug": "react-state-is-a-snapshot",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "State Is a Snapshot: Why setCount(count + 1) Twice Adds Only One",
+      "subtitle": "A setter doesn't change the variable you're holding. It queues an update for the next render."
+    },
+    "ar-EG": {
+      "title": "ليه setCount(count + 1) مرتين بتزوّد 1 بس؟ الـ state كـ snapshot",
+      "subtitle": "الـ setter مابيغيرش المتغير اللي في إيدك. هو بيحط update في طابور للـ render الجاي."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "React 19",
+  "learningPath": { "slug": "react-mental-models", "order": 3 },
+  "tags": ["React", "State", "useState", "Batching"],
+  "sources": [
+    { "title": "State as a Snapshot — React", "url": "https://react.dev/learn/state-as-a-snapshot" },
+    { "title": "Queueing a Series of State Updates — React", "url": "https://react.dev/learn/queueing-a-series-of-state-updates" },
+    { "title": "useState — React API Reference", "url": "https://react.dev/reference/react/useState" },
+    { "title": "React v18.0: Automatic Batching — React Blog", "url": "https://react.dev/blog/2022/03/29/react-v18" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare function subscribe(email: string): Promise<void>;"
+    }
+  }
+}

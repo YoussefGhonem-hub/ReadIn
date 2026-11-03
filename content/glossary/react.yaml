@@ -1,0 +1,145 @@
+terms:
+  - id: render-phase
+    term: Render phase
+    definitionEn: >-
+      The step where React calls your components to compute what the UI should look like and works out what changed
+      since the previous render. It does not touch the DOM.
+    definitionAr: >-
+      المرحلة اللي React بينادي فيها الـ components بتاعتك عشان يحسب شكل الـ UI المفروض يبقى إيه، ويعرف إيه اللي
+      اتغير عن الـ render اللي قبله. مابتلمسش الـ DOM خالص.
+  - id: commit-phase
+    term: Commit phase
+    definitionEn: >-
+      The step after rendering where React applies only the differences it found to the DOM. Nodes that did not change
+      are left exactly as they are.
+    definitionAr: >-
+      المرحلة اللي بعد الـ render، واللي React بيطبّق فيها على الـ DOM الفروق اللي لقاها وبس. أي node ماتغيرتش بتفضل
+      زي ما هي بالظبط.
+  - id: reconciliation
+    term: Reconciliation
+    definitionEn: >-
+      How React compares the new render output with the previous one, position by position in the tree, to decide
+      which nodes and state to keep, update or recreate.
+    definitionAr: >-
+      الطريقة اللي React بيقارن بيها ناتج الـ render الجديد بالقديم، مكان بمكان في الـ tree، عشان يقرر هيحتفظ بأنهي
+      nodes وstate، وهيحدّث إيه، وهيعمل إيه من الأول.
+  - id: memoization
+    term: Memoization
+    definitionEn: >-
+      Keeping the result of a calculation and reusing it while its inputs stay the same. In React, memo, useMemo and
+      useCallback do this for components, values and functions.
+    definitionAr: >-
+      إنك تحتفظ بنتيجة حساب وتعيد استخدامها طول ما المدخلات بتاعتها ماتغيرتش. في React، الـ memo والـ useMemo والـ
+      useCallback بيعملوا كده للـ components والقيم والـ functions.
+  - id: batching
+    term: Batching
+    definitionEn: >-
+      React waiting until an event handler has finished, then applying all the state updates it queued in a single
+      re-render instead of one render per update.
+    definitionAr: >-
+      إن React يستنى لحد ما الـ event handler يخلص، وبعدين يطبّق كل الـ state updates اللي اتحطت في الطابور في re-render
+      واحد بدل render لكل update.
+  - id: updater-function
+    term: Updater function
+    definitionEn: >-
+      A function passed to a state setter, like setCount(c => c + 1). React queues it and, during the next render,
+      calls it with the latest queued state to compute the next one.
+    definitionAr: >-
+      function بتديها للـ state setter، زي setCount(c => c + 1). React بيحطها في الطابور، وفي الـ render الجاي بيناديها
+      بآخر قيمة في الطابور عشان يحسب القيمة اللي بعدها.
+  - id: shallow-copy
+    term: Shallow copy
+    definitionEn: >-
+      A copy of an object or array that duplicates only the top level. Nested objects are not copied, so the copy and
+      the original still share them.
+    definitionAr: >-
+      نسخة من object أو array بتنسخ المستوى الأول بس. الـ objects اللي جواها مابتتنسخش، فالنسخة والأصل بيفضلوا شايلين
+      نفس الـ objects دي.
+  - id: react-key
+    term: Key
+    definitionEn: >-
+      A special JSX attribute that tells React which data item an element stands for among its siblings, so the item's
+      state and DOM follow it when the list changes. It must be unique among siblings and stable between renders.
+    definitionAr: >-
+      attribute خاص في JSX بيقول لـ React الـ element ده يخص أنهي عنصر في الداتا وسط اللي جنبه، عشان الـ state والـ DOM
+      بتوعه يمشوا وراه لما الـ list تتغير. لازم يكون unique بين اللي جنبه وثابت من render للي بعده.
+  - id: pure-function
+    term: Pure function
+    definitionEn: >-
+      A function that returns the same result for the same inputs and changes nothing that existed before it was
+      called. React expects components, initializers and updaters to behave this way.
+    definitionAr: >-
+      function بترجّع نفس النتيجة لنفس المدخلات، ومابتغيرش أي حاجة كانت موجودة قبل ما تتنادى. React مستني الـ components
+      والـ initializers والـ updaters يشتغلوا بالشكل ده.
+  - id: side-effect
+    term: Side effect
+    definitionEn: >-
+      Anything code does that can be observed besides returning its result, such as a network request, a DOM write,
+      writing to storage or changing a variable outside the function.
+    definitionAr: >-
+      أي حاجة الكود بيعملها وحد يقدر يلاحظها غير إنه يرجّع النتيجة، زي request على الشبكة، أو كتابة في الـ DOM أو في
+      الـ storage، أو تغيير متغير بره الـ function.
+  - id: ui-tree
+    term: UI tree
+    definitionEn: >-
+      The tree of components and elements React builds from your JSX. React keeps each component's state at its
+      position in this tree, not inside the component function.
+    definitionAr: >-
+      الشجرة اللي React بيبنيها من الـ JSX بتاعك، وفيها كل component وelement وتحت مين. React بيحفظ الـ state بتاع
+      كل component في مكانه في الشجرة دي، مش جوه الـ function نفسها.
+  - id: custom-hook
+    term: Custom Hook
+    definitionEn: >-
+      Your own function whose name starts with use and that calls other Hooks, so components can reuse stateful
+      logic. Each component that calls it gets its own independent state.
+    definitionAr: >-
+      function بتكتبها بنفسك، اسمها بيبدأ بـ use وبتنادي Hooks تانية، عشان الـ components تعيد استخدام logic فيه
+      state. وكل component بيناديها بياخد state مستقل لوحده.
+  - id: lifting-state-up
+    term: Lifting state up
+    definitionEn: >-
+      Moving state out of the components that need it into their closest common parent, then passing it down as
+      props, so there is one copy that every child reads.
+    definitionAr: >-
+      إنك تنقل الـ state من الـ components اللي محتاجاه لأقرب parent مشترك بينهم، وبعدين تبعته لتحت كـ props، عشان
+      يبقى فيه نسخة واحدة بس كل الـ children بيقروا منها.
+  - id: react-effect
+    term: Effect
+    definitionEn: >-
+      Code passed to useEffect that React runs after committing a render, to keep a system outside React in sync with
+      it. It can return a cleanup function that stops or undoes what it started.
+    definitionAr: >-
+      كود بتديه لـ useEffect وReact بيشغّله بعد ما يعمل commit للـ render، عشان يخلّي system بره React ماشي مع اللي على
+      الشاشة. وممكن يرجّع cleanup function بتوقف أو تلغي اللي هو بدأه.
+  - id: reactive-value
+    term: Reactive value
+    definitionEn: >-
+      A value declared inside a component, such as a prop, state or a variable computed from them during render. It
+      can change between renders, so an Effect that reads it must list it as a dependency.
+    definitionAr: >-
+      قيمة متعرّفة جوه الـ component، زي prop أو state أو متغير محسوب منهم أثناء الـ render. ممكن تتغير من render للتاني،
+      فأي Effect بيقراها لازم يحطها في الـ dependencies بتاعته.
+  - id: derived-state
+    term: Derived state
+    definitionEn: >-
+      A value that can be calculated from props or existing state, like a total or a filtered list. React recommends
+      calculating it during render instead of storing a copy in its own state.
+    definitionAr: >-
+      قيمة ممكن تتحسب من الـ props أو من state موجود، زي total أو list متفلترة. React بينصح تحسبها أثناء الـ render بدل
+      ما تخزّن نسخة منها في state لوحدها.
+  - id: react-ref
+    term: Ref
+    definitionEn: >-
+      A mutable object from useRef whose current property you can change without re-rendering. React returns the same
+      object on every render and never tracks changes to it.
+    definitionAr: >-
+      object بتاخده من useRef وتقدر تغيّر الـ current property بتاعته من غير re-render. React بيرجّعلك نفس الـ object
+      في كل render، ومابيتابعش أي تغيير فيه.
+  - id: escape-hatch
+    term: Escape hatch
+    definitionEn: >-
+      React's name for features like refs and Effects that let you step outside its data flow to work with things it
+      doesn't manage, such as the DOM, timers or third-party libraries.
+    definitionAr: >-
+      الاسم اللي React بيطلقه على حاجات زي الـ refs والـ Effects، اللي بتخليك تطلع بره الـ data flow بتاعه عشان تتعامل
+      مع حاجات هو مابيديرهاش، زي الـ DOM أو الـ timers أو مكتبات من بره.

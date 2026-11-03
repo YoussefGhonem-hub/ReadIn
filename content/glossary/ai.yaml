@@ -1,0 +1,153 @@
+terms:
+  - id: machine-learning
+    term: Machine Learning
+    definitionEn: >-
+      The part of AI where a program learns from example data instead of following rules a person wrote. Training
+      adjusts a model's parameters until it makes useful predictions or generates content.
+    definitionAr: >-
+      الجزء من الـ AI اللي البرنامج فيه بيتعلّم من أمثلة (داتا) بدل ما يمشي على rules حد كتبها بإيده. الـ training
+      بيظبط الـ parameters بتاعة الموديل لحد ما يطلّع توقعات أو محتوى مفيد.
+  - id: deep-learning
+    term: Deep Learning
+    definitionEn: >-
+      Machine learning with neural networks that have more than one hidden layer. The layers learn their own
+      intermediate features from raw data, so nobody has to design those features by hand.
+    definitionAr: >-
+      Machine Learning بـ neural networks فيها أكتر من hidden layer. الـ layers دي بتتعلّم الـ features بنفسها من
+      الداتا الخام، فمحدش محتاج يصمّمها بإيده.
+  - id: large-language-model
+    term: Large Language Model (LLM)
+    definitionEn: >-
+      A language model, one that estimates how likely each token is in a sequence of text, with a very large number
+      of parameters. Today's LLMs, such as Gemini or GPT, are deep neural networks built on the Transformer.
+    definitionAr: >-
+      language model، يعني موديل بيقدّر احتمال كل token في سلسلة نص، بس بعدد parameters ضخم جدًا. الـ LLMs
+      النهارده، زي Gemini وGPT، هي deep neural networks مبنية على الـ Transformer.
+  - id: token
+    term: Token
+    definitionEn: >-
+      The unit of text a language model reads and predicts: a whole word, part of a word or a single character.
+      Models measure their context and API usage in tokens, not words.
+    definitionAr: >-
+      وحدة النص اللي الـ language model بيقراها وبيتوقعها: ممكن تبقى كلمة كاملة، أو جزء من كلمة، أو حرف واحد.
+      والموديلات بتحسب الـ context واستهلاك الـ API بالـ tokens، مش بالكلمات.
+  - id: tokenizer
+    term: Tokenizer
+    definitionEn: >-
+      The component that turns text into the sequence of tokens a model reads, using a vocabulary learned from its own
+      training text. Different models can use different tokenizers, so the same text can give different token counts.
+    definitionAr: >-
+      الجزء اللي بيحوّل النص لسلسلة الـ tokens اللي الموديل بيقراها، باستخدام vocabulary اتعلّمها من نص الـ training
+      بتاعه. وكل موديل ممكن يبقى ليه tokenizer مختلف، فنفس النص ممكن يطلع بعدد tokens مختلف.
+  - id: byte-pair-encoding
+    term: Byte Pair Encoding (BPE)
+    definitionEn: >-
+      A way to build a subword vocabulary: start from single characters or bytes and repeatedly merge the most
+      frequent adjacent pair into a new token. Frequent strings end up as one token, rare ones stay in pieces.
+    definitionAr: >-
+      طريقة لبناء vocabulary من أجزاء كلمات: تبدأ من حروف أو bytes لوحدها، وتفضل تدمج أكتر pair متجاورين متكررين في
+      token جديد. الحاجات المتكررة بتبقى token واحد، والنادرة بتفضل متقطعة.
+  - id: context-window
+    term: Context Window
+    definitionEn: >-
+      All the text a model can use for one request, measured in tokens: the system prompt, the messages you send and
+      the response it generates. It's working memory for that call, not storage that survives to the next one.
+    definitionAr: >-
+      كل النص اللي الموديل يقدر يستخدمه في request واحد، ومتقاس بالـ tokens: الـ system prompt والرسايل اللي بتبعتها
+      والرد اللي بيولّده. هو ذاكرة شغل للـ call ده بس، مش مخزن بيفضل للـ call اللي بعده.
+  - id: in-context-learning
+    term: In-Context Learning
+    definitionEn: >-
+      A model following instructions or examples placed in the prompt, without any change to its weights. Remove them
+      from the next request and the behavior goes with them.
+    definitionAr: >-
+      إن الموديل يمشي على تعليمات أو أمثلة موجودة في الـ prompt، من غير أي تغيير في الـ weights بتاعته. لو شلتها من
+      الـ request اللي بعده، السلوك ده بيروح معاها.
+  - id: hallucination
+    term: Hallucination
+    definitionEn: >-
+      Fluent, confident model output that is false or unsupported: an invented fact, citation or API, or a claim that
+      contradicts the instructions or documents it was given.
+    definitionAr: >-
+      كلام بيطلّعه الموديل بثقة وبشكل مقنع، بس هو غلط أو ملوش أساس: حقيقة أو مرجع أو API متألّفين، أو كلام بيناقض
+      التعليمات أو الـ documents اللي اتدّتله.
+  - id: knowledge-cutoff
+    term: Knowledge Cutoff
+    definitionEn: >-
+      The date after which a model's training data stops, so it knows nothing newer unless the information is put in
+      its context. Some providers also state a date up to which its knowledge is most reliable.
+    definitionAr: >-
+      التاريخ اللي داتا الـ training بتاعة الموديل بتقف عنده، فمايعرفش أي حاجة أحدث إلا لو المعلومة اتحطت في الـ
+      context بتاعه. وفيه providers بتذكر كمان تاريخ تاني لحد عنده معرفة الموديل بتبقى أوثق ما يمكن.
+  - id: temperature
+    term: Temperature
+    definitionEn: >-
+      A sampling setting that divides the model's next-token scores before they become probabilities. Below 1 the top
+      tokens get almost all the probability; above 1 unlikely tokens get picked more often. It never changes the order.
+    definitionAr: >-
+      إعداد في الـ sampling بيقسم الـ scores بتاعة الـ token اللي جاي قبل ما تتحول لاحتمالات. أقل من 1 الـ tokens
+      اللي فوق بتاخد الاحتمال كله تقريبًا، وأكتر من 1 الـ tokens البعيدة بتتختار أكتر. وعمره ما بيغيّر الترتيب.
+  - id: nucleus-sampling
+    term: Nucleus Sampling (top-p)
+    definitionEn: >-
+      Picking the next token only from the smallest set of top candidates whose probabilities add up to a threshold p,
+      which cuts off the long tail of unlikely tokens.
+    definitionAr: >-
+      إنك تختار الـ token اللي جاي من أصغر مجموعة من أعلى المرشحين مجموع احتمالاتهم يوصل لحد معيّن p، فبتقص
+      الذيل الطويل بتاع الـ tokens اللي احتمالها ضعيف.
+  - id: embedding
+    term: Embedding
+    definitionEn: >-
+      A list of numbers a model computes for a piece of data, such as a sentence, placing it in a vector space where
+      items the training treated as related end up close together.
+    definitionAr: >-
+      مجموعة أرقام بيحسبها موديل لحتة داتا، زي جملة، فبيحطها في مساحة vectors الحاجات اللي الـ training اعتبرها
+      مرتبطة بتبقى فيها قريبة من بعض.
+  - id: cosine-similarity
+    term: Cosine Similarity
+    definitionEn: >-
+      A measure of how closely two vectors point in the same direction, from -1 to 1. Vector search uses it to rank
+      stored embeddings against a query; it isn't a probability or a confidence.
+    definitionAr: >-
+      مقياس لقد إيه اتنين vectors بيشاوروا على نفس الاتجاه، من -1 لـ 1. الـ vector search بيستخدمه عشان يرتّب الـ
+      embeddings المتخزنة قصاد السؤال؛ وهو مش احتمال ولا درجة ثقة.
+  - id: reranker
+    term: Reranker
+    definitionEn: >-
+      A model that reads a query and each candidate passage together and scores how relevant the passage is. It's
+      slower than comparing embeddings, so it judges a short list that vector or keyword search found first.
+    definitionAr: >-
+      موديل بيقرا السؤال وكل passage مرشحة مع بعض وبيدّي score لمدى ارتباطها. أبطأ من مقارنة الـ embeddings،
+      فبيحكم على list قصيرة الـ vector search أو الـ keyword search جابوها الأول.
+  - id: pretraining
+    term: Pretraining
+    definitionEn: >-
+      The first and largest training stage of an LLM: learning to predict the next token across a huge body of text.
+      It's where the model picks up nearly all its knowledge of facts, language and code.
+    definitionAr: >-
+      أول وأكبر مرحلة training للـ LLM: إنه يتعلّم يتوقع الـ token اللي جاي على كمية نص ضخمة. ومنها الموديل بياخد
+      تقريبًا كل معرفته بالحقايق واللغة والكود.
+  - id: base-model
+    term: Base Model
+    definitionEn: >-
+      A language model straight out of pretraining, before any instruction tuning or RLHF. It continues text the way
+      a document would continue, rather than replying as an assistant.
+    definitionAr: >-
+      language model خارج من الـ pretraining على طول، قبل أي instruction tuning أو RLHF. بيكمّل النص زي ما مستند
+      هيكمل، مش بيرد زي assistant.
+  - id: instruction-tuning
+    term: Instruction Tuning
+    definitionEn: >-
+      Supervised fine-tuning of a pretrained model on example prompts paired with good responses, so it learns to
+      answer and follow instructions in an assistant format.
+    definitionAr: >-
+      fine-tuning لموديل متدرّب مسبقًا على أمثلة prompts معاها ردود كويسة، عشان يتعلّم يجاوب ويمشي على التعليمات
+      بشكل الـ assistant.
+  - id: rlhf
+    term: RLHF (Reinforcement Learning from Human Feedback)
+    definitionEn: >-
+      A post-training method where people rank model outputs, a reward model learns to predict those rankings, and
+      reinforcement learning tunes the model toward answers the reward model scores highly.
+    definitionAr: >-
+      طريقة post-training فيها ناس بترتّب ردود الموديل، وreward model بيتعلّم يتوقع الترتيب ده، وبعدين الـ
+      reinforcement learning بيوجّه الموديل للردود اللي الـ reward model بيدّيها score عالي.

@@ -1,0 +1,36 @@
+{
+  "slug": "useeffect-is-not-a-lifecycle-method",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "useEffect Is Not a Lifecycle Method: Think in Synchronization",
+      "subtitle": "An Effect keeps something outside React in sync with what's on screen. Its dependencies describe the code."
+    },
+    "ar-EG": {
+      "title": "ليه الـ useEffect مش lifecycle method؟ فكّر بالـ synchronization",
+      "subtitle": "الـ Effect بيخلّي حاجة بره React ماشية مع اللي على الشاشة، والـ dependencies بتوصف الكود مش التوقيت."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": { "slug": "react-mental-models", "order": 9 },
+  "tags": ["React", "useEffect", "Effects", "Synchronization"],
+  "sources": [
+    { "title": "Synchronizing with Effects — React", "url": "https://react.dev/learn/synchronizing-with-effects" },
+    { "title": "Lifecycle of Reactive Effects — React", "url": "https://react.dev/learn/lifecycle-of-reactive-effects" },
+    { "title": "Removing Effect Dependencies — React", "url": "https://react.dev/learn/removing-effect-dependencies" },
+    { "title": "useEffect — React API Reference", "url": "https://react.dev/reference/react/useEffect" },
+    { "title": "exhaustive-deps — eslint-plugin-react-hooks", "url": "https://react.dev/reference/eslint-plugin-react-hooks/lints/exhaustive-deps" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare function subscribeToPrice(symbol: string, onPrice: (price: number) => void): () => void;"
+    }
+  }
+}

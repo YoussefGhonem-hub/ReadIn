@@ -1,0 +1,35 @@
+{
+  "slug": "react-state-belongs-to-tree-position",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "State Lives at a Position in the Tree, Not Inside the Component",
+      "subtitle": "React keeps state at a slot in the UI tree. Same type in the same slot keeps it; a new key starts fresh."
+    },
+    "ar-EG": {
+      "title": "مكان الـ component في الشجرة هو اللي بيحدد الـ state بتاعه، مش الـ component نفسه",
+      "subtitle": "React بيحفظ الـ state في مكان جوه الـ UI tree. نفس النوع في نفس المكان بيحتفظ بيه، و key جديد بيبدأ من الصفر."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": { "slug": "react-mental-models", "order": 7 },
+  "tags": ["React", "State", "Keys", "Reconciliation"],
+  "sources": [
+    { "title": "Preserving and Resetting State — React", "url": "https://react.dev/learn/preserving-and-resetting-state" },
+    { "title": "useState — React API Reference", "url": "https://react.dev/reference/react/useState" },
+    { "title": "You Might Not Need an Effect — React", "url": "https://react.dev/learn/you-might-not-need-an-effect" },
+    { "title": "<Activity> — React API Reference", "url": "https://react.dev/reference/react/Activity" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare function sendReply(ticketId: string, text: string): void;"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "slug": "react-state-immutability",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why Mutating State Doesn't Update the Screen in React",
+      "subtitle": "React compares state by reference. Change what's inside, and the setter sees nothing new."
+    },
+    "ar-EG": {
+      "title": "ليه تعديل الـ state مباشرةً مش بيحدّث الشاشة في React؟",
+      "subtitle": "React بيقارن الـ state بالـ reference. لو غيّرت اللي جوه، الـ setter مش هيشوف حاجة جديدة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-mental-models",
+    "order": 4
+  },
+  "tags": [
+    "React",
+    "State",
+    "Immutability",
+    "useState"
+  ],
+  "sources": [
+    {
+      "title": "Updating Objects in State — React",
+      "url": "https://react.dev/learn/updating-objects-in-state"
+    },
+    {
+      "title": "Updating Arrays in State — React",
+      "url": "https://react.dev/learn/updating-arrays-in-state"
+    },
+    {
+      "title": "useState — React API Reference",
+      "url": "https://react.dev/reference/react/useState"
+    },
+    {
+      "title": "Array.prototype.toSorted() — MDN",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type TaskViewItem = { id: string; title: string; done: boolean };\ndeclare function TaskView(props: {\n  tasks: readonly TaskViewItem[];\n  onAdd: (title: string) => void;\n  onToggle: (task: TaskViewItem) => void;\n}): null;"
+    }
+  }
+}

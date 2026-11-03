@@ -1,0 +1,36 @@
+{
+  "slug": "react-components-must-be-pure",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Render Is Not the Place for Side Effects: Why Components Must Be Pure",
+      "subtitle": "React may run your component twice, restart it or skip it. Only a pure render survives that."
+    },
+    "ar-EG": {
+      "title": "ليه الـ component لازم يكون pure؟ الـ render مش مكان للـ side effects",
+      "subtitle": "React ممكن يشغّل الـ component مرتين، أو يبدأه من الأول، أو يتخطاه. والـ render الـ pure بس هو اللي يستحمل ده."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": { "slug": "react-mental-models", "order": 6 },
+  "tags": ["React", "Purity", "Side effects", "StrictMode"],
+  "sources": [
+    { "title": "Keeping Components Pure — React", "url": "https://react.dev/learn/keeping-components-pure" },
+    { "title": "Components and Hooks must be pure — Rules of React", "url": "https://react.dev/reference/rules/components-and-hooks-must-be-pure" },
+    { "title": "StrictMode: fixing bugs found by double rendering — React", "url": "https://react.dev/reference/react/StrictMode#fixing-bugs-found-by-double-rendering-in-development" },
+    { "title": "<title> — React DOM Components", "url": "https://react.dev/reference/react-dom/components/title" },
+    { "title": "eslint-plugin-react-hooks — React", "url": "https://react.dev/reference/eslint-plugin-react-hooks" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Product = { id: string; name: string };\ndeclare function track(event: string, productId: string): void;\ndeclare function addToCart(productId: string, size: string): void;\ndeclare function SizePicker(props: { value: string; onChange: (size: string) => void }): null;"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "slug": "react-keys-are-identity",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Keys Are Identity, Not a Warning Silencer: Why Index Keys Break Lists",
+      "subtitle": "A key tells React which item a row stands for. Use the position, and state follows the position."
+    },
+    "ar-EG": {
+      "title": "ليه الـ index كـ key بيبوّظ الـ lists؟ الـ key هوية مش إسكات للـ warning",
+      "subtitle": "الـ key بيقول لـ React الـ row ده يخص أنهي عنصر. لو استخدمت المكان، الـ state هيمشي ورا المكان."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "React 19",
+  "learningPath": { "slug": "react-mental-models", "order": 5 },
+  "tags": ["React", "Keys", "Lists", "State"],
+  "sources": [
+    { "title": "Rendering Lists — React", "url": "https://react.dev/learn/rendering-lists" },
+    { "title": "Preserving and Resetting State — React", "url": "https://react.dev/learn/preserving-and-resetting-state" },
+    { "title": "Crypto: randomUUID() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

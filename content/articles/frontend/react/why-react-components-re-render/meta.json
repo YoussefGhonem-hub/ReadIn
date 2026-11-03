@@ -1,0 +1,35 @@
+{
+  "slug": "why-react-components-re-render",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Why React Components Re-render (It's Not Just Props)",
+      "subtitle": "Own state, an ancestor's render and context start a render. Changed props are a result, not a cause."
+    },
+    "ar-EG": {
+      "title": "ليه الـ component بيعمل re-render؟ الإجابة مش الـ props بس",
+      "subtitle": "الـ state بتاعه، أو render في component فوقه، أو context اتغير. أما الـ props فنتيجة مش سبب."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "React 19",
+  "learningPath": { "slug": "react-mental-models", "order": 2 },
+  "tags": ["React", "Rendering", "Performance", "memo", "Context"],
+  "sources": [
+    { "title": "Render and Commit — React", "url": "https://react.dev/learn/render-and-commit" },
+    { "title": "memo — React API Reference", "url": "https://react.dev/reference/react/memo" },
+    { "title": "useContext — React API Reference", "url": "https://react.dev/reference/react/useContext" },
+    { "title": "useState — React API Reference", "url": "https://react.dev/reference/react/useState" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "type Message = { id: string; text: string };\ndeclare function MessageList(props: { messages: Message[] }): null;\ndeclare function send(text: string): void;"
+    }
+  }
+}

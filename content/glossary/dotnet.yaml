@@ -15,3 +15,75 @@ terms:
     term: Closure
     definitionEn: A function, such as a C# lambda, together with the outer variables it captures. The C# compiler stores those variables as fields of a hidden class.
     definitionAr: function زي الـ lambda في C# ومعاها المتغيرات اللي من برّه واللي بتستخدمها. الـ C# compiler بيخزّن المتغيرات دي كـ fields في class مخفية.
+  - id: utc-offset
+    term: UTC offset
+    definitionEn: How far a local time is ahead of or behind Coordinated Universal Time (UTC) at a given moment, such as +02:00. A time zone's offset can change during the year.
+    definitionAr: الفرق بين الوقت المحلي والـ UTC في لحظة معينة، زي +02:00. والـ offset بتاع المنطقة الزمنية ممكن يتغير خلال السنة.
+  - id: daylight-saving-time
+    term: Daylight saving time
+    definitionEn: Moving local clocks forward for part of the year and back again later, so each year one local hour is skipped and another one happens twice.
+    definitionAr: إن الساعة المحلية تتقدم لفترة من السنة وبعدين ترجع تاني، فكل سنة فيه ساعة محلية بتتنط وساعة تانية بتتكرر مرتين.
+  - id: immutability
+    term: Immutability
+    definitionEn: The guarantee that an object's data can't change after it's created. To get a different value, you create a new object.
+    definitionAr: ضمان إن داتا الـ object مش هتتغير بعد ما يتعمل. لو عايز قيمة مختلفة، بتعمل object جديد.
+  - id: read-only-view
+    term: Read-only view
+    definitionEn: An object or interface that lets you read a collection but not change it through that reference, while the collection behind it can still change.
+    definitionAr: object أو interface بيخليك تقرا collection من غير ما تقدر تغيّرها من خلاله، مع إن الـ collection اللي وراه لسه ممكن تتغير.
+  - id: deferred-execution
+    term: Deferred execution
+    definitionEn: Running a LINQ query only when its results are enumerated, not when it's defined. Each new enumeration runs the query again.
+    definitionAr: إن الـ LINQ query ما تتنفذش وقت ما تكتبها، وتتنفذ بس لما حد يعمل enumeration على النتايج. وكل enumeration جديد بيشغّلها من الأول.
+  - id: materialization
+    term: Materialization
+    definitionEn: Running a lazy query once and storing its results in a real collection, for example with ToList() or ToArray(), so later reads don't run it again.
+    definitionAr: إنك تشغّل الـ query الـ lazy مرة واحدة وتخزّن نتايجها في collection حقيقية، زي بـ ToList() أو ToArray()، عشان القراية بعد كده ما تشغّلهاش تاني.
+  - id: null-state-analysis
+    term: Null-state analysis
+    definitionEn: The C# compiler's static analysis that tracks whether each expression is not-null or maybe-null and reports warnings. It runs at compile time only and adds no runtime checks.
+    definitionAr: التحليل اللي بيعمله الـ C# compiler عشان يعرف كل expression حالتها not-null ولا maybe-null ويطلّع warnings. بيشتغل وقت الـ compile بس ومش بيضيف أي checks وقت التشغيل.
+  - id: null-forgiving-operator
+    term: Null-forgiving operator
+    definitionEn: The postfix ! operator, as in name!.Length, which tells the compiler to treat an expression as not-null. It silences the warning and generates no runtime check.
+    definitionAr: الـ operator ! اللي بيتكتب بعد الـ expression، زي name!.Length، وبيقول للـ compiler يعاملها كأنها not-null. بيسكّت الـ warning ومش بيعمل أي check وقت التشغيل.
+  - id: value-equality
+    term: Value equality
+    definitionEn: Treating two objects as equal when they have the same type and their data members are equal, even if they are different instances in memory.
+    definitionAr: إنك تعتبر اتنين objects متساويين لو من نفس النوع والداتا اللي جواهم متساوية، حتى لو كانوا instances مختلفة في الـ memory.
+  - id: thread-pool
+    term: Thread pool
+    definitionEn: A set of worker threads that the .NET runtime creates and reuses for short pieces of work, such as Task.Run delegates and the code that runs after an await, so your code doesn't create a thread each time.
+    definitionAr: مجموعة threads جاهزة الـ runtime بتاع .NET بيعملها ويعيد استخدامها للشغل القصير، زي الـ delegates بتاعة Task.Run والكود اللي بيكمّل بعد الـ await، عشان الكود بتاعك ما يعملش thread جديد كل مرة.
+  - id: continuation
+    term: Continuation
+    definitionEn: The code that runs after an awaited operation completes. For an await in an async method, it's the rest of the method, which the compiler packages so it can resume later.
+    definitionAr: الكود اللي بيشتغل بعد ما العملية اللي عملتلها await تخلص. في الـ async method هو باقي الـ method، والـ compiler بيجهّزه عشان يكمّل بعدين.
+  - id: synchronization-context
+    term: SynchronizationContext
+    definitionEn: An object that decides where queued work runs. UI frameworks such as WPF and WinForms install one that sends the code after an await back to the UI thread; ASP.NET Core and console apps don't have one.
+    definitionAr: object بيحدد الشغل اللي في الطابور هيشتغل فين. الـ UI frameworks زي WPF و WinForms بتحط واحد بيرجّع الكود اللي بعد الـ await للـ UI thread، أما ASP.NET Core والـ console apps فمفيهمش.
+  - id: fire-and-forget
+    term: Fire-and-forget
+    definitionEn: Starting an asynchronous operation without awaiting it or keeping its Task, so nothing waits for it to finish and nothing observes its exceptions.
+    definitionAr: إنك تبدأ عملية asynchronous من غير ما تعملها await أو تحتفظ بالـ Task بتاعها، فمحدش بيستنى لما تخلص ومحدش بيشوف الـ exceptions اللي بتطلع منها.
+  - id: cooperative-cancellation
+    term: Cooperative cancellation
+    definitionEn: A cancellation model where the requester only signals that work should stop, and the running code checks for that signal and stops itself at a safe point. CancellationToken in .NET works this way.
+    definitionAr: طريقة للإلغاء اللي بيطلب فيها حد إن الشغل يقف بيبعت إشارة وبس، والكود الشغال هو اللي بيشيّك على الإشارة دي ويوقف نفسه عند نقطة آمنة. والـ CancellationToken في .NET شغال بالطريقة دي.
+  - id: deadlock
+    term: Deadlock
+    definitionEn: A state where two pieces of code each wait for something the other holds, so neither can continue. A blocked thread waiting for work that can only run on that same thread is a common example.
+    definitionAr: حالة فيها جزءين من الكود كل واحد مستني حاجة ماسكها التاني، فمحدش فيهم يقدر يكمّل. ومثال مشهور ليها thread واقف مستني شغل مينفعش يتنفذ غير على نفس الـ thread ده.
+  - id: gc-root
+    term: GC root
+    definitionEn: A starting point the garbage collector trusts to be alive, such as a static field, a local variable the JIT still reports, a CPU register or a GC handle. Objects reachable from a root survive; the rest are garbage.
+    definitionAr: نقطة بداية الـ garbage collector واثق إنها عايشة، زي static field، أو local variable الـ JIT لسه بيبلّغ عنه، أو CPU register، أو GC handle. أي object يتوصله من root بيفضل عايش، والباقي garbage.
+  - id: gc-generations
+    term: GC generations
+    definitionEn: The .NET GC splits the managed heap into generations 0, 1 and 2. New objects start in gen 0, survivors are promoted, and a gen 2 collection is a full collection of the whole heap.
+    definitionAr: الـ GC في .NET بيقسم الـ managed heap لـ generations 0 و 1 و 2. الـ objects الجديدة بتبدأ في gen 0، واللي يعيش بيترقّى، والـ gen 2 collection معناها collection كاملة للـ heap كله.
+  - id: large-object-heap
+    term: Large object heap (LOH)
+    definitionEn: A separate part of the managed heap for objects of 85,000 bytes or more, usually big arrays. It's collected only with generation 2 and usually isn't compacted.
+    definitionAr: جزء منفصل من الـ managed heap للـ objects اللي حجمها 85,000 byte أو أكتر، وغالبًا بتبقى arrays كبيرة. بيتعمله collection مع generation 2 بس، وعادةً مش بيتعمله compaction.

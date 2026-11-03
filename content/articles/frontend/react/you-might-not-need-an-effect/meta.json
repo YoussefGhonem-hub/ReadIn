@@ -1,0 +1,59 @@
+{
+  "slug": "you-might-not-need-an-effect",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "You Probably Don't Need That Effect: Derived State and Event Logic",
+      "subtitle": "Calculate what you can during render, and run what the user caused in the handler that caught it."
+    },
+    "ar-EG": {
+      "title": "غالبًا مش محتاج الـ Effect ده: الـ derived state والـ event handlers أولى",
+      "subtitle": "احسب اللي تقدر تحسبه أثناء الـ render، والحاجة اللي اليوزر عملها نفّذها في الـ handler بتاعها."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": {
+    "slug": "react-mental-models",
+    "order": 10
+  },
+  "tags": [
+    "React",
+    "useEffect",
+    "State",
+    "Event handlers"
+  ],
+  "sources": [
+    {
+      "title": "You Might Not Need an Effect — React",
+      "url": "https://react.dev/learn/you-might-not-need-an-effect"
+    },
+    {
+      "title": "Choosing the State Structure — React",
+      "url": "https://react.dev/learn/choosing-the-state-structure"
+    },
+    {
+      "title": "Separating Events from Effects — React",
+      "url": "https://react.dev/learn/separating-events-from-effects"
+    },
+    {
+      "title": "useMemo — React API Reference",
+      "url": "https://react.dev/reference/react/useMemo"
+    },
+    {
+      "title": "set-state-in-effect — eslint-plugin-react-hooks",
+      "url": "https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "typescript": "declare function showToast(message: string): void;\ndeclare function CartView(props: {\n  items: { id: string; price: number }[];\n  total: number;\n  onAdd: (item: { id: string; price: number }) => void;\n  onRemove: (id: string) => void;\n}): null;"
+    }
+  }
+}

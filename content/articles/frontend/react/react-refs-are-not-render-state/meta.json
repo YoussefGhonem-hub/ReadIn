@@ -1,0 +1,31 @@
+{
+  "slug": "react-refs-are-not-render-state",
+  "field": "frontend",
+  "topic": "react",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Refs Are an Escape Hatch, Not State That Skips Re-renders",
+      "subtitle": "React hands you the same ref every render and never watches it. Anything the screen shows belongs in state."
+    },
+    "ar-EG": {
+      "title": "إمتى تستخدم useRef؟ الـ ref مخرج طوارئ مش state من غير re-render",
+      "subtitle": "React بيرجّعلك نفس الـ ref في كل render ومابيراقبوش خالص. وأي حاجة بتظهر على الشاشة مكانها الـ state."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "React 19",
+  "learningPath": { "slug": "react-mental-models", "order": 11 },
+  "tags": ["React", "useRef", "Refs", "State"],
+  "sources": [
+    { "title": "Referencing Values with Refs — React", "url": "https://react.dev/learn/referencing-values-with-refs" },
+    { "title": "useRef — React API Reference", "url": "https://react.dev/reference/react/useRef" },
+    { "title": "Manipulating the DOM with Refs — React", "url": "https://react.dev/learn/manipulating-the-dom-with-refs" },
+    { "title": "refs — eslint-plugin-react-hooks", "url": "https://react.dev/reference/eslint-plugin-react-hooks/lints/refs" },
+    { "title": "React v19 — React Blog", "url": "https://react.dev/blog/2024/12/05/react-19" }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
