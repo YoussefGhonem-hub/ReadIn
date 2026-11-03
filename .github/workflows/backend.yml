@@ -1,0 +1,66 @@
+name: backend
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ["backend/**", "shared/rdoc/**", "content/**", ".github/workflows/backend.yml"]
+  pull_request:
+    paths: ["backend/**", "shared/rdoc/**", "content/**", ".github/workflows/backend.yml"]
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+
+      - name: Restore
+        run: dotnet restore ReadIn.slnx
+
+      - name: Build
+        run: dotnet build ReadIn.slnx --no-restore -c Release
+
+      # Unit + architecture + integration tests (Testcontainers uses the runner's Docker for SQL Server).
+      - name: Test
+        run: dotnet test --solution ReadIn.slnx --no-build -c Release
+
+      - name: Vulnerable packages
+        run: |
+          dotnet list ReadIn.slnx package --vulnerable --include-transitive | tee vulnerable.txt
+          if grep -q "has the following vulnerable packages" vulnerable.txt; then exit 1; fi
+
+  publish-image:
+    needs: build-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # SDK container publishing: no Dockerfile needed.
+      - name: Publish API image
+        run: >
+          dotnet publish src/ReadIn.Api -c Release /t:PublishContainer
+          -p:ContainerRegistry=ghcr.io
+          -p:ContainerRepository=${{ github.repository_owner }}/readin-api
+          -p:ContainerImageTags='"${{ github.sha }};latest"'

@@ -1,0 +1,24 @@
+name: content
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ["content/**", "shared/rdoc/**", ".github/workflows/content.yml"]
+  pull_request:
+    paths: ["content/**", "shared/rdoc/**", ".github/workflows/content.yml"]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+
+      # Schema, en/ar-EG structure parity, sources, quality and freshness (SPEC §19.3).
+      # Still to come: code compile checks (Roslyn / tsc / dart analyze) and live link checks.
+      - name: Validate articles
+        working-directory: backend
+        run: dotnet run --project src/ReadIn.ContentStudio -c Release -- validate --all

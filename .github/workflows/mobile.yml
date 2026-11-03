@@ -1,0 +1,98 @@
+name: mobile
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ["v*"]
+    paths: ["mobile/**", "design/tokens.json", "tools/tokens/**", "shared/**", ".github/workflows/mobile.yml"]
+  pull_request:
+    paths: ["mobile/**", "design/tokens.json", "tools/tokens/**", "shared/**", ".github/workflows/mobile.yml"]
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.44.1"
+
+defaults:
+  run:
+    working-directory: mobile
+
+jobs:
+  analyze-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Design tokens are up to date
+        working-directory: .
+        run: node tools/tokens/build.mjs --only mobile --check
+
+      - run: flutter pub get
+
+      - name: Generated code is up to date
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          git diff --exit-code -- lib
+
+      - run: flutter analyze
+
+      # Goldens are pixel-compared on the OS that produced the baselines (see the goldens job).
+      - name: Unit + widget tests
+        run: flutter test --exclude-tags golden
+
+  # Baselines in test/goldens/goldens were generated on Windows; font rasterization differs per OS.
+  goldens:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Golden tests (ar/en × light/dark)
+        run: flutter test --tags golden
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: golden-failures
+          path: mobile/test/**/failures/
+
+  build-android:
+    needs: [analyze-test, goldens]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # Release signing + store upload (Fastlane) come with the production Firebase project.
+      - run: flutter build apk --release --dart-define-from-file=config/prod.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: readin-android
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
