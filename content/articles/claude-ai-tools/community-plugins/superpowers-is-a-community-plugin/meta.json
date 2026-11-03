@@ -1,0 +1,54 @@
+{
+  "slug": "superpowers-is-a-community-plugin",
+  "field": "claude-ai-tools",
+  "topic": "community-plugins",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Superpowers Is a Community Plugin, Not Official: What It Adds to Claude Code",
+      "subtitle": "Community, not official: Prime Radiant builds it and Anthropic's marketplace lists it. Here's what it adds and how to review it."
+    },
+    "ar-EG": {
+      "title": "إيه هو Superpowers؟ plugin من المجتمع، مش رسمي من Anthropic، وبيضيف إيه لـ Claude Code",
+      "subtitle": "من الـ community، مش رسمي: بتعمله Prime Radiant والـ marketplace بتاع Anthropic بيعرضه. بيضيف إيه وتراجعه إزاي."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 11
+  },
+  "tags": [
+    "Claude Code",
+    "Plugins",
+    "Superpowers",
+    "Security"
+  ],
+  "sources": [
+    {
+      "title": "obra/superpowers: README and LICENSE (community plugin, MIT) — GitHub",
+      "url": "https://github.com/obra/superpowers"
+    },
+    {
+      "title": "Anthropic's marketplaces — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/plugins/anthropic-marketplaces"
+    },
+    {
+      "title": "Plugin security and trust — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/plugins/security"
+    },
+    {
+      "title": "Install and manage plugins — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/plugins/install"
+    },
+    {
+      "title": "Plugin commands reference — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/plugins/cli-reference"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

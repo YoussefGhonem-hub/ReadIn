@@ -40,3 +40,19 @@ terms:
     definitionAr: >-
       الـ function الجديدة اللي بترجع من fn.bind(obj). كل ما تتنادى بتنادي fn وهي مثبّتة this على obj، وأي call() أو
       bind() بعد كده مايقدرش يغيّر ده.
+  - id: js-closure
+    term: Closure (JavaScript)
+    definitionEn: >-
+      A function together with references to the variables of the scopes it was created in. It reads those variables
+      when it runs, so it sees their current values, not copies taken when it was created.
+    definitionAr: >-
+      function ومعاها references للمتغيرات بتاعة الـ scopes اللي اتعملت جواها. بتقرا المتغيرات دي وقت ما تشتغل، فبتشوف
+      قيمتها الحالية، مش نسخة اتاخدت لحظة ما اتعملت.
+  - id: lexical-environment
+    term: Lexical environment
+    definitionEn: >-
+      The record JavaScript creates each time a scope runs (a function call, a block, a loop iteration) to hold that
+      scope's variables, linked to the environment of the scope around it.
+    definitionAr: >-
+      الـ record اللي JavaScript بتعمله كل ما scope يشتغل (نداء function أو block أو لفة loop) عشان يشيل متغيرات الـ
+      scope ده، ومربوط بالـ environment بتاع الـ scope اللي حواليه.

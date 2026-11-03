@@ -1,0 +1,47 @@
+{
+  "slug": "agent-tools-are-not-endpoint-wrappers",
+  "field": "claude-ai-tools",
+  "topic": "claude-api",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Designing Tools for Claude: Why Thin API Wrappers Make Weak Agent Tools",
+      "subtitle": "One tool per endpoint makes Claude page, chain and juggle IDs. Shape tools around tasks and return only what the next step needs."
+    },
+    "ar-EG": {
+      "title": "ليه الـ tool الكويسة مش مجرد wrapper للـ endpoint؟ إزاي تصمم tools لـ Claude",
+      "subtitle": "tool لكل endpoint بتخلّي Claude يقلّب صفحات ويربط calls ويتلخبط في الـ IDs. صمّم الـ tools حوالين المهام ورجّع اللي الخطوة الجاية محتاجاه بس."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude API",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 6
+  },
+  "tags": [
+    "Claude API",
+    "Tool Use",
+    "AI Agents",
+    "API Design"
+  ],
+  "sources": [
+    {
+      "title": "Writing effective tools for AI agents — Anthropic Engineering",
+      "url": "https://www.anthropic.com/engineering/writing-tools-for-agents"
+    },
+    {
+      "title": "Define tools — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import types\n\nNS = types.SimpleNamespace\n_CUSTOMERS = [\n    NS(id=\"9f1c2e7a-4b1d-4c55-9a0e-2d7f61c0b8aa\", name=\"Dana Levi\",\n       email=\"dana.levi@example.com\", since=\"2021-04-02\"),\n    NS(id=\"0b7e3f19-8c2a-4e6b-b1d4-5a9c2e8f7d31\", name=\"Dana Levin\",\n       email=\"dlevin@example.com\", since=\"2023-09-17\"),\n]\n\n\ndef _search_customers(query, limit=5):\n    q = query.lower()\n    exact = [c for c in _CUSTOMERS if q in (c.name.lower(), c.email)]\n    return (exact or [c for c in _CUSTOMERS if q in c.name.lower()])[:limit]\n\n\ndef _list_transactions(customer_id, limit=20):\n    rows = [NS(date=\"2026-03-04\", amount=\"49.00 USD\", status=\"charged\"),\n            NS(date=\"2026-03-04\", amount=\"49.00 USD\", status=\"charged\"),\n            NS(date=\"2026-02-04\", amount=\"49.00 USD\", status=\"charged\")]\n    return rows[:limit]\n\n\ndef _list_notes(customer_id, status=\"open\"):\n    return [NS(text=\"Customer reports a duplicate charge after a timeout.\")]\n\n\ncrm = NS(search_customers=_search_customers,\n         list_transactions=_list_transactions, list_notes=_list_notes)\n"
+    }
+  }
+}

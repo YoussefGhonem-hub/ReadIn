@@ -182,3 +182,11 @@ terms:
     definitionAr: >-
       template ليه اسم وarguments، الـ MCP server بيعرضه والـ client بيحوّله لرسايل في المحادثة. والـ prompts اليوزر هو اللي
       بيتحكم فيها: الشخص بيختار امتى يشغّل واحد، زي slash command مثلًا، والـ server هو اللي كاتب محتواه.
+  - id: parallel-tool-use
+    term: Parallel tool use (Claude API)
+    definitionEn: >-
+      Claude calling several tools in one response, as multiple tool_use blocks in a single assistant turn. Your code
+      decides how to run them and returns every tool_result together in the next user message.
+    definitionAr: >-
+      إن Claude ينادي كذا tool في response واحد، على شكل كذا tool_use block في نفس الـ assistant turn. والكود بتاعك هو اللي
+      بيقرر يشغّلهم إزاي، وبيرجّع كل الـ tool_result مع بعض في الـ user message اللي بعدها.

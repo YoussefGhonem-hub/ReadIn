@@ -1,0 +1,59 @@
+{
+  "slug": "mcp-is-a-protocol-not-an-api",
+  "field": "claude-ai-tools",
+  "topic": "mcp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "MCP Isn't Another API: What the Model Context Protocol Actually Standardizes",
+      "subtitle": "An open protocol between AI applications and the servers that give them tools and data. Your REST API stays; MCP sits in front of it."
+    },
+    "ar-EG": {
+      "title": "يعني إيه MCP؟ مش API جديد، ده protocol بيوحّد ربط الـ AI بالأدوات والبيانات",
+      "subtitle": "protocol مفتوح بين تطبيقات الـ AI والـ servers اللي بتدّيها أدوات وداتا. الـ REST API بتاعك فاضل زي ما هو، والـ MCP بيقف قدامه."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "MCP",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 1
+  },
+  "tags": [
+    "MCP",
+    "Claude",
+    "APIs",
+    "AI Agents"
+  ],
+  "sources": [
+    {
+      "title": "What is the Model Context Protocol (MCP)? — Model Context Protocol",
+      "url": "https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro"
+    },
+    {
+      "title": "Architecture overview — Model Context Protocol",
+      "url": "https://modelcontextprotocol.io/docs/2026-07-28/learn/architecture"
+    },
+    {
+      "title": "Build an MCP server — Model Context Protocol",
+      "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-server"
+    },
+    {
+      "title": "Versioning — Model Context Protocol",
+      "url": "https://modelcontextprotocol.io/docs/2026-07-28/learn/versioning"
+    },
+    {
+      "title": "Introducing the Model Context Protocol — Anthropic",
+      "url": "https://www.anthropic.com/news/model-context-protocol"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\n\n\nclass _MCPServer:\n    def __init__(self, name):\n        self.name = name\n\n    def tool(self):\n        return lambda fn: fn\n\n    def run(self, transport=\"stdio\"):\n        print(f\"{self.name}: serving MCP over {transport}\")\n\n\nasync def _fetch_order(order_id):\n    return NS(status=\"shipped\")\n\n\nclass _Response:\n    def raise_for_status(self):\n        return None\n\n    def json(self):\n        return {\"status\": \"shipped\"}\n\n\nclass _AsyncClient:\n    async def __aenter__(self):\n        return self\n\n    async def __aexit__(self, *exc):\n        return False\n\n    async def get(self, url, **kwargs):\n        return _Response()\n\n\nsys.modules[\"mcp\"] = types.ModuleType(\"mcp\")\nsys.modules[\"mcp.server\"] = NS(MCPServer=_MCPServer)\nsys.modules[\"shop\"] = types.ModuleType(\"shop\")\nsys.modules[\"shop.db\"] = NS(fetch_order=_fetch_order)\nsys.modules[\"httpx2\"] = NS(AsyncClient=_AsyncClient)\n"
+    }
+  }
+}

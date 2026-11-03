@@ -1,0 +1,51 @@
+{
+  "slug": "claude-api-stop-reasons",
+  "field": "claude-ai-tools",
+  "topic": "claude-api",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Handling stop_reason: Why a Successful Claude API Response Can Still Be Incomplete",
+      "subtitle": "A 200 means the request was processed. The stop_reason tells you whether Claude finished, was cut off, refused or is waiting on you."
+    },
+    "ar-EG": {
+      "title": "مش كل response إجابة كاملة: إزاي تتعامل مع الـ stop_reason في Claude API",
+      "subtitle": "الـ 200 معناها إن الـ request اتعالج. والـ stop_reason هو اللي بيقولك Claude خلّص، ولا اتقطع، ولا رفض، ولا مستنيك."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Claude API",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 2
+  },
+  "tags": [
+    "Claude API",
+    "stop_reason",
+    "Python",
+    "Error Handling"
+  ],
+  "sources": [
+    {
+      "title": "Stop reasons and fallback — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons"
+    },
+    {
+      "title": "Create a Message — Claude API Reference",
+      "url": "https://platform.claude.com/docs/en/api/messages/create"
+    },
+    {
+      "title": "Refusals and fallback — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nticket = \"Customer reports a double charge on order 1042 after a timeout...\"\n\n\nclass _Log:\n    def warning(self, msg, *args):\n        print(\"WARNING \" + msg % args)\n\n\nlog = _Log()\n\n\ndef save_summary(text, complete=True):\n    print((\"saved: \" if complete else \"saved (incomplete): \") + text)\n\n\ndef queue_for_fallback(item):\n    print(\"queued for fallback model\")\n\n\ndef _create(*, model, max_tokens, messages, **kwargs):\n    if max_tokens <= 512:\n        text = \"The customer was charged twice and asked for\"\n        return NS(content=[NS(type=\"text\", text=text)],\n                  stop_reason=\"max_tokens\", stop_details=None)\n    text = \"The customer was charged twice and asked for a refund of one charge.\"\n    return NS(content=[NS(type=\"text\", text=text)],\n              stop_reason=\"end_turn\", stop_details=None)\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

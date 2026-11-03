@@ -1,0 +1,50 @@
+{
+  "slug": "independent-review-of-ai-generated-code",
+  "field": "claude-ai-tools",
+  "topic": "claude-code",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Don't Let the Author Grade Its Own Work: Reviewing AI-Generated Code",
+      "subtitle": "A same-session review shares the assumptions behind the bug. Review from a fresh context, then fix only what a failing test proves."
+    },
+    "ar-EG": {
+      "title": "متخليش اللي كتب الكود هو اللي يراجعه: إزاي تراجع كود مكتوب بالـ AI",
+      "subtitle": "المراجعة في نفس الـ session شايلة نفس الافتراضات اللي عملت الـ bug. راجع من context جديد، وصلّح بس اللي test فاشل يثبته."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 12
+  },
+  "tags": [
+    "Claude Code",
+    "Code Review",
+    "Subagents",
+    "Testing"
+  ],
+  "sources": [
+    {
+      "title": "Review locally with /code-review — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/code-review-local"
+    },
+    {
+      "title": "Best practices for Claude Code — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/best-practices"
+    },
+    {
+      "title": "Commands — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/commands"
+    },
+    {
+      "title": "Panickssery, Bowman, Feng, LLM Evaluators Recognize and Favor Their Own Generations, arXiv:2404.13076",
+      "url": "https://arxiv.org/abs/2404.13076"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}

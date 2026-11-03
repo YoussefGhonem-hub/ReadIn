@@ -1,0 +1,59 @@
+{
+  "slug": "mcp-tools-resources-prompts",
+  "field": "claude-ai-tools",
+  "topic": "mcp",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "MCP Is More Than Tools: Resources, Prompts and Who Controls Each",
+      "subtitle": "Tools are for the model, resources for the application, prompts for the user. Pick the primitive by who should decide."
+    },
+    "ar-EG": {
+      "title": "الـ MCP فيه إيه غير الـ tools؟ الـ Resources والـ Prompts ومين بيتحكم في كل واحد",
+      "subtitle": "الـ tools للموديل، والـ resources للتطبيق، والـ prompts لليوزر. اختار الـ primitive على حسب مين المفروض يقرر."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "MCP",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 5
+  },
+  "tags": [
+    "MCP",
+    "Claude Code",
+    "Python",
+    "AI Agents"
+  ],
+  "sources": [
+    {
+      "title": "Understanding MCP servers — Model Context Protocol",
+      "url": "https://modelcontextprotocol.io/docs/2026-07-28/learn/server-concepts"
+    },
+    {
+      "title": "Resources — MCP Specification 2026-07-28",
+      "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/resources"
+    },
+    {
+      "title": "Prompts — MCP Specification 2026-07-28",
+      "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/prompts"
+    },
+    {
+      "title": "Connect Claude Code to tools via MCP — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/mcp"
+    },
+    {
+      "title": "MCP connector — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/mcp-connector"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import asyncio\nimport atexit\nimport sys\nimport types\n\nNS = types.SimpleNamespace\n\n\ndef read_doc(path):\n    return f\"-- contents of {path}\"\n\n\ndef render_review(incident_id):\n    return f\"Run a blameless review of {incident_id}: timeline, impact, causes.\"\n\n\nasync def _restart(name):\n    return f\"worker {name} restarted\"\n\n\nops_api = NS(restart=_restart)\n\n\nclass _MCPServer:\n    def __init__(self, name):\n        self.name = name\n        self.tools, self.resources, self.prompts = {}, {}, {}\n\n    def tool(self):\n        def register(fn):\n            self.tools[fn.__name__] = fn\n            return fn\n        return register\n\n    def resource(self, uri):\n        def register(fn):\n            self.resources[uri] = fn\n            return fn\n        return register\n\n    def prompt(self):\n        def register(fn):\n            self.prompts[fn.__name__] = fn\n            return fn\n        return register\n\n    def run(self, transport=\"stdio\"):\n        print(f\"{self.name}: serving MCP over {transport}\")\n\n\n_servers = []\n\n\ndef _make(name):\n    server = _MCPServer(name)\n    _servers.append(server)\n    return server\n\n\n@atexit.register\ndef _report():\n    for s in _servers:\n        print(\"tools:\", sorted(s.tools), \"| resources:\", sorted(s.resources),\n              \"| prompts:\", sorted(s.prompts))\n        for fn in s.tools.values():\n            if asyncio.iscoroutinefunction(fn):\n                print(asyncio.run(fn(\"emails\")))\n\n\nsys.modules[\"mcp\"] = types.ModuleType(\"mcp\")\nsys.modules[\"mcp.server\"] = NS(MCPServer=_make)\n"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "slug": "parallel-tool-results-and-tool-errors",
+  "field": "claude-ai-tools",
+  "topic": "claude-api",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Parallel Tool Calls and Tool Errors: Getting the tool_result Shape Right",
+      "subtitle": "Every result for one assistant turn goes back in one user message, and a failing tool is reported with is_error, not thrown."
+    },
+    "ar-EG": {
+      "title": "إزاي ترجّع الـ tool_result صح؟ الـ Parallel Tool Calls والـ errors",
+      "subtitle": "كل النتايج بتاعة الـ assistant turn الواحد بترجع في user message واحدة، والـ tool اللي بتفشل بتتبلّغ بـ is_error، مش بـ exception."
+    }
+  },
+  "level": "intermediate",
+  "versionBadge": "Claude API",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 7
+  },
+  "tags": [
+    "Claude API",
+    "Tool Use",
+    "Error Handling",
+    "Python"
+  ],
+  "sources": [
+    {
+      "title": "Parallel tool use — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/parallel-tool-use"
+    },
+    {
+      "title": "Handle tool calls — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+    },
+    {
+      "title": "Troubleshooting tool use — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/troubleshooting-tool-use"
+    },
+    {
+      "title": "Tool runner (SDK) — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-runner"
+    },
+    {
+      "title": "Tools — MCP Specification 2026-07-28",
+      "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import types\n\nNS = types.SimpleNamespace\nTOOLS = [{\"name\": \"check_health\", \"description\": \"...\",\n          \"input_schema\": {\"type\": \"object\",\n                           \"properties\": {\"service\": {\"type\": \"string\"}},\n                           \"required\": [\"service\"]}}]\n\n\ndef check_health(service):\n    if service == \"payments\":\n        raise TimeoutError(\"payments health endpoint did not answer in 5 s\")\n    return \"healthy\"\n\n\nclass _Messages:\n    def create(self, *, model, max_tokens, tools, messages, **kwargs):\n        asked = [b.id for b in messages[-2][\"content\"] if b.type == \"tool_use\"]\n        content = messages[-1][\"content\"]\n        results = [b for b in content if b[\"type\"] == \"tool_result\"]\n        if [b[\"tool_use_id\"] for b in results] != asked or \\\n                content[:len(results)] != results:\n            raise ValueError(\"400 invalid_request_error: tool_use ids were \"\n                             \"found without tool_result blocks immediately after\")\n        failed = [r[\"tool_use_id\"] for r in results if r.get(\"is_error\")]\n        text = (\"checkout: healthy\\nsearch: healthy\\n\"\n                \"payments: unknown (the health check timed out)\"\n                if failed else \"All three services are healthy.\")\n        return NS(content=[NS(type=\"text\", text=text)], stop_reason=\"end_turn\")\n\n\nclient = NS(messages=_Messages())\nreply = NS(stop_reason=\"tool_use\", content=[\n    NS(type=\"text\", text=\"I'll check all three services at once.\"),\n    NS(type=\"tool_use\", id=\"toolu_01\", name=\"check_health\",\n       input={\"service\": \"checkout\"}),\n    NS(type=\"tool_use\", id=\"toolu_02\", name=\"check_health\",\n       input={\"service\": \"search\"}),\n    NS(type=\"tool_use\", id=\"toolu_03\", name=\"check_health\",\n       input={\"service\": \"payments\"}),\n])\nmessages = [\n    {\"role\": \"user\", \"content\": \"Are checkout, search and payments healthy?\"},\n    {\"role\": \"assistant\", \"content\": reply.content},\n]\n"
+    }
+  }
+}

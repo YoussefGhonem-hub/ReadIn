@@ -1,0 +1,55 @@
+{
+  "slug": "claude-api-errors-and-retries",
+  "field": "claude-ai-tools",
+  "topic": "claude-api",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Not Every Claude API Error Deserves a Retry: 400s, 429s and 529s",
+      "subtitle": "The status code says whether to fix the request or wait. The SDK already retries the transient ones; your code decides the rest."
+    },
+    "ar-EG": {
+      "title": "مش كل error في Claude API يستاهل retry: الفرق بين 400 و429 و529",
+      "subtitle": "الـ status code بيقولك تصلّح الـ request ولا تستنى. والـ SDK أصلًا بيعمل retry للأخطاء المؤقتة، والباقي قرار الكود بتاعك."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Claude API",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 3
+  },
+  "tags": [
+    "Claude API",
+    "Error Handling",
+    "Rate Limits",
+    "Python"
+  ],
+  "sources": [
+    {
+      "title": "Claude API errors — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/api/errors"
+    },
+    {
+      "title": "Rate limits — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/api/rate-limits"
+    },
+    {
+      "title": "Python SDK — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/python"
+    },
+    {
+      "title": "Streaming Messages — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/streaming"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import json\nimport sys\nimport time\nimport types\n\nNS = types.SimpleNamespace\n_sleeps = []\n\n\ndef _sleep(seconds):\n    _sleeps.append(seconds)\n    if len(_sleeps) == 3:\n        print(\"... and so on, every second, all weekend\")\n        raise SystemExit(0)\n\n\ntime.sleep = _sleep\n\n\nclass SpendCapReached(Exception):\n    pass\n\n\ndef requeue(ticket, delay):\n    print(f\"requeued in {delay}s: {ticket[:30]}\")\n\n\nclass _Response:\n    def __init__(self, status, body, headers=None):\n        self.status_code = status\n        self._body = body\n        self.headers = headers or {}\n\n    def json(self):\n        return self._body\n\n\nclass APIError(Exception):\n    pass\n\n\nclass APIStatusError(APIError):\n    def __init__(self, message, *, response):\n        super().__init__(message)\n        self.response = response\n        self.status_code = response.status_code\n\n\nclass BadRequestError(APIStatusError):\n    pass\n\n\nclass AuthenticationError(APIStatusError):\n    pass\n\n\nclass PermissionDeniedError(APIStatusError):\n    pass\n\n\nclass NotFoundError(APIStatusError):\n    pass\n\n\nclass RateLimitError(APIStatusError):\n    pass\n\n\nclass InternalServerError(APIStatusError):\n    pass\n\n\nclass APIConnectionError(APIError):\n    pass\n\n\n_PREFILL = (\"This model does not support assistant message prefill. \"\n            \"The conversation must end with a user message.\")\n\n\ndef _create(*, model, max_tokens, messages, **kwargs):\n    if messages[-1][\"role\"] == \"assistant\":\n        body = {\"type\": \"error\",\n                \"error\": {\"type\": \"invalid_request_error\", \"message\": _PREFILL},\n                \"request_id\": \"req_011CSHoEeqs5C35K2UUqR7Fy\"}\n        raise BadRequestError(f\"Error code: 400 - {json.dumps(body)}\",\n                              response=_Response(400, body))\n    body = {\"type\": \"error\",\n            \"error\": {\"type\": \"rate_limit_error\", \"message\": \"Rate limited\"}}\n    raise RateLimitError(\"Error code: 429\", response=_Response(\n        429, body, {\"retry-after\": \"20\"}))\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(\n    Anthropic=_Anthropic, APIError=APIError, APIStatusError=APIStatusError,\n    BadRequestError=BadRequestError, AuthenticationError=AuthenticationError,\n    PermissionDeniedError=PermissionDeniedError, NotFoundError=NotFoundError,\n    RateLimitError=RateLimitError, InternalServerError=InternalServerError,\n    APIConnectionError=APIConnectionError,\n)\n"
+    }
+  }
+}

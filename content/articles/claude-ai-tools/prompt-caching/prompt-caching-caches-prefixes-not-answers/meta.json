@@ -1,0 +1,55 @@
+{
+  "slug": "prompt-caching-caches-prefixes-not-answers",
+  "field": "claude-ai-tools",
+  "topic": "prompt-caching",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Prompt Caching Caches Your Prompt Prefix, Not Claude's Answers",
+      "subtitle": "The cache holds the processed start of your prompt. Claude still writes every answer from scratch, so only input gets cheaper."
+    },
+    "ar-EG": {
+      "title": "الـ Prompt Caching بيخزّن إيه؟ أول الـ prompt، مش إجابات Claude",
+      "subtitle": "الـ cache بيشيل أول الـ prompt بعد ما اتعالج. وClaude لسه بيكتب كل إجابة من الأول، فالـ input بس هو اللي بيرخص."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": "Claude API",
+  "learningPath": {
+    "slug": "building-on-claude",
+    "order": 4
+  },
+  "tags": [
+    "Claude API",
+    "Prompt Caching",
+    "Cost",
+    "Python"
+  ],
+  "sources": [
+    {
+      "title": "Prompt caching — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+    },
+    {
+      "title": "Cache diagnostics — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/cache-diagnostics"
+    },
+    {
+      "title": "Pricing — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/about-claude/pricing"
+    },
+    {
+      "title": "Rate limits — Claude API Docs",
+      "url": "https://platform.claude.com/docs/en/api/rate-limits"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z",
+  "code": {
+    "stubs": {
+      "python": "import sys\nimport types\n\nNS = types.SimpleNamespace\nFAQ_DOCUMENT = \"Acme help center. Q: How do I reset my password? A: ... \" * 120\n_cache = set()\n\n\ndef _create(*, model, max_tokens, system, messages, **kwargs):\n    prefix = \"\".join(block[\"text\"] for block in system)\n    size = len(prefix) // 4\n    if prefix in _cache:\n        usage = NS(cache_read_input_tokens=size, cache_creation_input_tokens=0)\n    else:\n        _cache.add(prefix)\n        usage = NS(cache_read_input_tokens=0, cache_creation_input_tokens=size)\n    usage.input_tokens = len(messages[-1][\"content\"]) // 4\n    usage.output_tokens = 120\n    return NS(content=[NS(type=\"text\", text=\"...\")], usage=usage,\n              stop_reason=\"end_turn\")\n\n\nclass _Anthropic:\n    def __init__(self, **kwargs):\n        self.messages = NS(create=_create)\n\n\nsys.modules[\"anthropic\"] = NS(Anthropic=_Anthropic)\n"
+    }
+  }
+}

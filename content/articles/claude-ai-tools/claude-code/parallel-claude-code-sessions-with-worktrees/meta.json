@@ -1,0 +1,54 @@
+{
+  "slug": "parallel-claude-code-sessions-with-worktrees",
+  "field": "claude-ai-tools",
+  "topic": "claude-code",
+  "status": "published",
+  "reviewStatus": "pending",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Parallel Claude Code Sessions Need Worktrees, Not Just More Terminals",
+      "subtitle": "Separate conversations still share one checkout's files, branch and index. A worktree per session keeps their edits apart."
+    },
+    "ar-EG": {
+      "title": "تشغيل كذا session من Claude Code بالتوازي محتاج worktrees، مش terminals زيادة وبس",
+      "subtitle": "المحادثات منفصلة، بس في checkout واحد بيتشاركوا نفس الملفات والـ branch والـ index. worktree لكل session بيفصل تعديلاتهم."
+    }
+  },
+  "level": "advanced",
+  "versionBadge": "Claude Code 2.x",
+  "learningPath": {
+    "slug": "claude-code-essentials",
+    "order": 13
+  },
+  "tags": [
+    "Claude Code",
+    "Git",
+    "Worktrees",
+    "Parallel Sessions"
+  ],
+  "sources": [
+    {
+      "title": "Run parallel sessions with worktrees — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/worktrees"
+    },
+    {
+      "title": "Common workflows — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/common-workflows"
+    },
+    {
+      "title": "Best practices for Claude Code — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/best-practices"
+    },
+    {
+      "title": "Checkpointing — Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/checkpointing"
+    },
+    {
+      "title": "git-worktree Documentation — Git",
+      "url": "https://git-scm.com/docs/git-worktree"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-03T00:00:00Z"
+}
