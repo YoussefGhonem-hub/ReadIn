@@ -1,0 +1,3 @@
+tags:
+  golden:
+    description: Pixel comparisons in 4 variants (ar/en × light/dark). Regenerate with `flutter test --update-goldens --tags golden`.

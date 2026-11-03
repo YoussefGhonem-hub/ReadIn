@@ -1,0 +1,96 @@
+name: readin
+description: "ReadIn — مقال كل يوم يفرق معاك. Read daily. Grow daily."
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State, DI, navigation
+  flutter_bloc: ^9.1.1
+  equatable: ^3.0.0
+  get_it: ^9.3.0
+  injectable: ^3.0.0
+  go_router: ^18.1.2
+
+  # Networking & models
+  dio: ^5.11.1
+  retrofit: ^4.10.0
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.12.0
+
+  # Storage
+  hive_ce: ^2.22.0
+  hive_ce_flutter: ^2.5.0
+  flutter_secure_storage: ^11.2.0
+
+  # i18n
+  intl: ^0.20.2
+  flutter_timezone: ^5.1.1
+
+  # Firebase
+  firebase_core: ^5.1.0
+  firebase_auth: ^7.0.1
+
+  # UI
+  re_highlight: ^0.0.3
+  cached_network_image: ^4.0.3
+  cupertino_icons: ^1.0.8
+  url_launcher: ^6.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Code generation. freezed is pinned to 3.2.5 and injectable_generator to < 3.1.3:
+  # newer releases need Dart >= 3.13 or a dart_style that conflicts with Flutter's pinned `meta`.
+  build_runner: ^2.15.1
+  injectable_generator: ">=2.10.0 <3.1.3"
+  retrofit_generator: ^10.3.3
+  freezed: 3.2.5
+  json_serializable: ^6.15.2
+
+  # Testing
+  bloc_test: ^10.0.0
+  mocktail: ^1.0.5
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  # Fonts are bundled (not fetched at runtime) so golden tests render deterministically (SPEC §15.3).
+  fonts:
+    - family: IBM Plex Sans Arabic
+      fonts:
+        - asset: assets/fonts/IBMPlexSansArabic-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexSansArabic-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexSansArabic-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSansArabic-Bold.ttf
+          weight: 700
+    - family: IBM Plex Sans
+      fonts:
+        - asset: assets/fonts/IBMPlexSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSans-Bold.ttf
+          weight: 700
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/JetBrainsMono-Medium.ttf
+          weight: 500

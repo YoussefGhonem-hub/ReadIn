@@ -1,0 +1,5 @@
+{
+  "FLAVOR": "staging",
+  "API_BASE_URL": "https://staging-api.readin.app/api/v1",
+  "USE_FIREBASE_EMULATOR": false
+}

@@ -1,0 +1,4 @@
+{
+  "FLAVOR": "dev",
+  "USE_FIREBASE_EMULATOR": true
+}
