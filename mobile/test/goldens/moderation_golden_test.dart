@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:readin/core/di/injection.dart';
 import 'package:readin/core/realtime/realtime_service.dart';
 import 'package:readin/core/theme/theme_x.dart';
 import 'package:readin/core/theme/tokens.g.dart';
@@ -25,12 +26,14 @@ import 'package:readin/features/moderation/presentation/pages/moderation_case_pa
 import 'package:readin/features/moderation/presentation/pages/moderation_page.dart';
 import 'package:readin/features/moderation/presentation/widgets/moderation_widgets.dart';
 import 'package:readin/features/moderation/presentation/widgets/report_sheet.dart';
+import 'package:readin/features/paths/presentation/cubit/article_path_cubit.dart';
 import 'package:readin/features/saved/presentation/cubit/collections_cubit.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/shared/rdoc/rdoc_document.dart';
 
 import '../helpers/moderation_fakes.dart';
+import '../helpers/path_fakes.dart';
 import '../helpers/profile_fakes.dart';
 import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
@@ -151,6 +154,10 @@ void main() {
       final settings = MockSettingsCubit()..hold(const AppSettings());
       final collections = MockCollectionsCubit()..hold(const CollectionsState());
       when(() => collections.load(force: any(named: 'force'))).thenAnswer((_) async {});
+      // The reader's trailing sections find nothing here: related articles (F04) and Next in path (F09).
+      registerNoRelatedArticles();
+      getIt.registerFactory<ArticlePathCubit>(noPathCubit);
+      addTearDown(() => getIt.unregister<ArticlePathCubit>());
 
       await pump(
         tester,
