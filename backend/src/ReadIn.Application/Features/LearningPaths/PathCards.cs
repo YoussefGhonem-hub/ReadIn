@@ -53,7 +53,7 @@ public sealed class PathCards(IAppDbContext db, IFileStorage storage, TypeAdapte
         var fieldIds = paths.Select(p => p.FieldId).Distinct().ToList();
         var fields = await db.Fields.AsNoTracking()
             .Where(f => fieldIds.Contains(f.Id))
-            .Select(f => new FieldRefDto(f.Id, f.Slug, english ? f.NameEn : f.NameAr, f.NameAr, f.NameEn))
+            .Select(f => new FieldRefDto(f.Id, f.Slug, english ? f.NameEn : f.NameAr, f.NameAr, f.NameEn, f.IsSensitive))
             .ToDictionaryAsync(f => f.Id, ct);
 
         var items = await db.LearningPathItems.AsNoTracking()

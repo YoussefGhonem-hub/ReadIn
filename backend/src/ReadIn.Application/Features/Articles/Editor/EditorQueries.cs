@@ -104,7 +104,7 @@ internal sealed class GetMyArticlesQueryHandler(IAppDbContext db, ICurrentUser c
         var source = document?.Translations.FirstOrDefault(t => t.Language == document.SourceLanguage);
         var fieldId = document is null ? row.FieldId : document.FieldId;
         var field = fieldId is { } id && fields.TryGetValue(id, out var f)
-            ? new FieldRefDto(f.Id, f.Slug, uiLanguage == UiLanguages.English ? f.NameEn : f.NameAr, f.NameAr, f.NameEn)
+            ? new FieldRefDto(f.Id, f.Slug, uiLanguage == UiLanguages.English ? f.NameEn : f.NameAr, f.NameAr, f.NameEn, f.IsSensitive)
             : null;
 
         return new MyArticleDto(

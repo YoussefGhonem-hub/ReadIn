@@ -62,6 +62,12 @@ public static class ErrorMessages
         ["article.not_published"] = ("المقال لسه ما اتنشرش، مفيش تعديلات ترجع فيها.", "This article isn't published yet, so there are no changes to discard."),
         ["article.revision_not_found"] = ("النسخة دي مش موجودة.", "Revision not found."),
         ["article.status_invalid"] = ("الحالة لازم تكون مسودة أو منشور.", "Status must be draft or published."),
+        ["article.no_content"] = ("المقال فاضي، اكتب حاجة الأول.", "The article is empty. Write something first."),
+        ["article.invalid_transition"] = ("مينفعش تعمل كده والمقال في حالته دي.", "You can't do that while the article is in this state."),
+        ["article.slug_taken"] = ("الرابط ده مستخدم لمقال تاني.", "That link is already used by another article."),
+        ["article.tags.max_five"] = ("أقصى حاجة 5 تاجز للمقال.", "An article can have at most 5 tags."),
+        ["article.language_invalid"] = ("لغة المقال دي مش مدعومة.", "That article language isn't supported."),
+        ["article.content_language_mismatch"] = ("لغة المحتوى مش زي لغة المقال.", "The content's language doesn't match the article's language."),
         // Reactions, saved articles and follows (F10, F12, F13)
         ["reaction.invalid"] = ("الرياكشن ده مش موجود.", "This reaction doesn't exist."),
         ["collection.not_found"] = ("المجموعة مش موجودة.", "Collection not found."),

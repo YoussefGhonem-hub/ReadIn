@@ -14,7 +14,11 @@ public sealed record ReactionCountsDto(int Insightful, int Love, int Fire, int M
     public int Total() => Insightful + Love + Fire + MindBlown;
 }
 
-public sealed record FieldRefDto(Guid Id, string Slug, string Name, string NameAr, string NameEn);
+/// <summary>
+/// A field (or topic) on a card. <see cref="IsSensitive"/>: readers show the health disclaimer (SPEC F04); a topic
+/// carries its field's flag.
+/// </summary>
+public sealed record FieldRefDto(Guid Id, string Slug, string Name, string NameAr, string NameEn, bool IsSensitive);
 
 public sealed record SourceDto(string Title, string Url);
 

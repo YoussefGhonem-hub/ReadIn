@@ -30,7 +30,7 @@ public sealed class ArticleMappings : IRegister
             .Map(d => d.Field, s => new FieldRefDto(
                 s.Field.Id, s.Field.Slug,
                 LocalizedProjection.Ui == "en" ? s.Field.NameEn : s.Field.NameAr,
-                s.Field.NameAr, s.Field.NameEn))
+                s.Field.NameAr, s.Field.NameEn, s.Field.IsSensitive))
             .Map(d => d.Author, s => s.Author == null ? null : new AuthorDto(
                 s.Author.Id, s.Author.DisplayName, s.Author.Username, s.Author.AvatarUrl,
                 s.Author.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)))
@@ -57,7 +57,7 @@ public sealed class ArticleMappings : IRegister
                 : new FieldRefDto(
                     s.Topic.Id, s.Topic.Slug,
                     LocalizedProjection.Ui == "en" ? s.Topic.NameEn : s.Topic.NameAr,
-                    s.Topic.NameAr, s.Topic.NameEn))
+                    s.Topic.NameAr, s.Topic.NameEn, s.Field.IsSensitive))
             .Map(d => d.Tags, s => s.Tags.Select(t => t.Tag.Name).ToList())
             .Map(d => d.Sources, s => s.Sources.OrderBy(x => x.SortOrder).Select(x => new SourceDto(x.Title, x.Url)).ToList())
             // The hide note is loaded by the handler (latest article.hide in ModerationActions).

@@ -2,6 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using ReadIn.Infrastructure.Persistence;
 
 namespace ReadIn.Api.IntegrationTests;
 
@@ -79,6 +82,102 @@ public sealed class TaxonomyAndContentTests(ApiFactory api)
 
         var slugs = new[] { first, second! }.Select(p => p["items"]![0]!["slug"]!.GetValue<string>()).ToList();
         slugs.Should().OnlyHaveUniqueItems().And.HaveCount(2);
+    }
+
+    [Fact]
+    public async Task For_you_lists_your_interests_first_then_everything_else_without_repeats_or_gaps()
+    {
+        string[] interests = ["software-architecture", "devops-cloud", "security"];
+        var reader = await api.SignUpAsync();
+        var fieldIds = new List<Guid>();
+        foreach (var slug in interests) fieldIds.Add(await reader.Client.FieldIdAsync(slug));
+        (await reader.Client.PutAsJsonAsync("/api/v1/me/interests", new { fieldIds, topicIds = Array.Empty<Guid>() }, Ct))
+            .EnsureSuccessStatusCode();
+
+        // One article in the reader's interests, then a newer one outside them. Software architecture: no other test
+        // publishes there (Today's tests count on devops-cloud and security staying as they are).
+        var writer = (await api.SignUpAsync()).Client;
+        var (inside, _) = await writer.PublishAsync(field: "software-architecture");
+        var (outside, _) = await writer.PublishAsync(field: "frontend");
+
+        var everything = await ScanForYouAsync(api.GuestClient(), 50);
+        var feed = await ScanForYouAsync(reader.Client, 50);
+
+        feed.Select(c => c.Id).Should().OnlyHaveUniqueItems()
+            .And.BeEquivalentTo(everything.Select(c => c.Id), "every published article is in For you, once");
+        var tiers = feed.Select(c => interests.Contains(c.Field) ? 0 : 1).ToList();
+        tiers.Should().Contain(0).And.Contain(1).And.BeInAscendingOrder("the articles in your interests come first");
+        foreach (var tier in new[] { 0, 1 })
+            feed.Where((_, i) => tiers[i] == tier).Select(c => c.PublishedAt).Should().BeInDescendingOrder("each group is newest first");
+        feed.FindIndex(c => c.Id == inside).Should().BeLessThan(feed.FindIndex(c => c.Id == outside));
+        everything.FindIndex(c => c.Id == outside).Should().BeLessThan(everything.FindIndex(c => c.Id == inside), "guests get the latest first");
+
+        // Pages that end exactly where the interests end, pages that cross that boundary, and small pages.
+        var interesting = tiers.Count(t => t == 0);
+        foreach (var limit in new[] { interesting, interesting + 1, 2, 7 }.Where(l => l is >= 1 and <= 50).Distinct())
+        {
+            (await ScanForYouAsync(reader.Client, limit)).Select(c => c.Id).Should()
+                .Equal(feed.Select(c => c.Id), $"pages of {limit} list the same feed");
+        }
+    }
+
+    [Fact]
+    public async Task Field_refs_say_whether_the_field_is_sensitive()
+    {
+        // Public Health is sensitive (health disclaimer, SPEC F04) and disabled in the fixture: enabled for this test only.
+        var fieldId = await SetFieldEnabledAsync("public-health", true);
+        try
+        {
+            var writer = (await api.SignUpAsync()).Client;
+            var (id, slug) = await writer.WriteAndPublishAsync(ArticleTestKit.Document(fieldId, "Washing your hands, explained"));
+            var guest = api.GuestClient();
+
+            var article = (await guest.GetFromJsonAsync<JsonObject>($"/api/v1/articles/{slug}", Ct))!;
+            article["field"]!["isSensitive"]!.GetValue<bool>().Should().BeTrue("the reader shows the health disclaimer");
+            var card = (await guest.GetFromJsonAsync<JsonObject>("/api/v1/feed/for-you?field=public-health&limit=50", Ct))!["items"]!
+                .AsArray().Single(c => c!["id"]!.GetValue<Guid>() == id)!;
+            card["field"]!["isSensitive"]!.GetValue<bool>().Should().BeTrue();
+            var mine = (await writer.GetFromJsonAsync<JsonObject>("/api/v1/me/articles?status=published", Ct))!["items"]!
+                .AsArray().Single(a => a!["id"]!.GetValue<Guid>() == id)!;
+            mine["field"]!["isSensitive"]!.GetValue<bool>().Should().BeTrue();
+        }
+        finally
+        {
+            await SetFieldEnabledAsync("public-health", false);
+        }
+
+        var other = (await api.GuestClient().GetFromJsonAsync<JsonObject>("/api/v1/articles/dependency-injection-in-aspnet-core", Ct))!;
+        other["field"]!["isSensitive"]!.GetValue<bool>().Should().BeFalse();
+        other["topic"]!["isSensitive"]!.GetValue<bool>().Should().BeFalse("a topic carries its field's flag");
+    }
+
+    private sealed record FeedCard(Guid Id, string Field, DateTime PublishedAt);
+
+    /// <summary>Pages through For you to the end.</summary>
+    private static async Task<List<FeedCard>> ScanForYouAsync(HttpClient client, int limit)
+    {
+        var cards = new List<FeedCard>();
+        string? cursor = null;
+        do
+        {
+            var page = (await client.GetFromJsonAsync<JsonObject>(
+                $"/api/v1/feed/for-you?limit={limit}" + (cursor is null ? "" : $"&cursor={cursor}"), Ct))!;
+            cards.AddRange(page["items"]!.AsArray().Select(c => new FeedCard(
+                c!["id"]!.GetValue<Guid>(), c["field"]!["slug"]!.GetValue<string>(), c["publishedAt"]!.GetValue<DateTime>())));
+            cursor = page["nextCursor"]?.GetValue<string>();
+        }
+        while (cursor is not null && cards.Count < 10_000);
+        return cards;
+    }
+
+    private async Task<Guid> SetFieldEnabledAsync(string slug, bool enabled)
+    {
+        using var scope = api.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var field = await db.Fields.SingleAsync(f => f.Slug == slug, Ct);
+        field.Update(field.NameAr, field.NameEn, field.Icon, field.Color, field.SortOrder, field.IsSensitive, field.RequiresSources, enabled);
+        await db.SaveChangesAsync(Ct);
+        return field.Id;
     }
 
     [Fact]

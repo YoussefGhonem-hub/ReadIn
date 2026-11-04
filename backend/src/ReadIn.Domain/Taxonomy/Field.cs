@@ -28,8 +28,7 @@ public sealed class Field : Entity, IAuditable
     public string Color { get; private set; } = default!;
     public int SortOrder { get; private set; }
 
-    /// <summary>Medicine / Public Health: publishing needs a VerifiedWriter and reviewer approval (SPEC F06).</summary>
-    /// <summary>Readers see a health disclaimer on this field. It never blocks publishing (SPEC F06).</summary>
+    /// <summary>Medicine / Public Health: readers see a health disclaimer (SPEC F04). It never blocks publishing (F06).</summary>
     public bool IsSensitive { get; private set; }
 
     /// <summary>Software, Medicine and Health articles must cite sources (SPEC F05).</summary>

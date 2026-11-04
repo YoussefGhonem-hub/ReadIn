@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, and the problem codes listed with `DraftProblemDto`.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid` and `article.tags.max_five`, and the problem codes listed with `DraftProblemDto`.
 
 `403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
@@ -100,7 +100,7 @@ A wrong `currentPassword` counts toward the same 15-minute lockout as sign in (`
 | Method | Path | Response |
 |---|---|---|
 | GET | `/articles/{slug}?lang=` | `ArticleDetailsDto` |
-| GET | `/feed/for-you?field=&cursor=&limit=` | `CursorPage<ArticleCardDto>`. Signed in: user's interests first. Guest: latest published. `field` is a field slug. |
+| GET | `/feed/for-you?field=&cursor=&limit=` | `CursorPage<ArticleCardDto>`. Signed in: the articles in the user's interests first, then all the other published articles, newest first within each group (the cursor remembers the group, so paging never repeats or skips an article). Guests, users without interests, and any `field` filter: latest published. `field` is a field slug. |
 | GET | `/feed/today` | `ArticleCardDto` or `204` when no pick is available yet |
 | GET | `/feed/following?cursor=&limit=` | Bearer → `CursorPage<ArticleCardDto>`: published articles by the writers you follow, newest first (the Home "Following" tab) |
 | GET | `/articles/{id}/related?lang=&limit=` | `ArticleCardDto[]`, 0–`limit` cards (1–10, default 4) for the end of the reader (F04). `lang` is the version being read; cards use it when they have it, else their source language. `404 article.not_found` when the article isn't published |
@@ -657,7 +657,10 @@ interface TopicDto { id: string; fieldId: string; slug: string; name: string; na
 
 interface AuthorDto { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean }
 
-interface FieldRefDto { id: string; slug: string; name: string; nameAr: string; nameEn: string }
+interface FieldRefDto {
+  id: string; slug: string; name: string; nameAr: string; nameEn: string;
+  isSensitive: boolean;          // Medicine, Public Health: the reader shows the health disclaimer (SPEC F04); a topic carries its field's flag
+}
 
 interface ArticleCardDto {
   id: string; slug: string;
