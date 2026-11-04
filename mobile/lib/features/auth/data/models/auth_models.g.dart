@@ -116,10 +116,14 @@ Map<String, dynamic> _$InterestsModelToJson(_InterestsModel instance) =>
 _PrivacyModel _$PrivacyModelFromJson(Map<String, dynamic> json) =>
     _PrivacyModel(
       publicReadingStats: json['publicReadingStats'] as bool? ?? false,
+      whoCanMention: json['whoCanMention'] as String?,
     );
 
 Map<String, dynamic> _$PrivacyModelToJson(_PrivacyModel instance) =>
-    <String, dynamic>{'publicReadingStats': instance.publicReadingStats};
+    <String, dynamic>{
+      'publicReadingStats': instance.publicReadingStats,
+      'whoCanMention': ?instance.whoCanMention,
+    };
 
 _SessionModel _$SessionModelFromJson(Map<String, dynamic> json) =>
     _SessionModel(

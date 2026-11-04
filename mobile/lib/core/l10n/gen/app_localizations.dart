@@ -986,6 +986,30 @@ abstract class AppLocalizations {
   /// **'Only you can see your reading stats.'**
   String get profilePublicReadingStatsOff;
 
+  /// No description provided for @profileWhoCanMention.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can mention me'**
+  String get profileWhoCanMention;
+
+  /// No description provided for @profileWhoCanMentionEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get profileWhoCanMentionEveryone;
+
+  /// No description provided for @profileWhoCanMentionFollowing.
+  ///
+  /// In en, this message translates to:
+  /// **'People I follow'**
+  String get profileWhoCanMentionFollowing;
+
+  /// No description provided for @profileWhoCanMentionNobody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody'**
+  String get profileWhoCanMentionNobody;
+
   /// No description provided for @profileReadingStatsEmpty.
   ///
   /// In en, this message translates to:
@@ -5984,6 +6008,12 @@ abstract class AppLocalizations {
   /// **'{others, plural, =0{{name} mentioned you in a comment} =1{{name} and 1 other mentioned you in a comment} other{{name} and {others} others mentioned you in a comment}}'**
   String notifMention(String name, int others);
 
+  /// No description provided for @notifMentionArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} mentioned you in an article'**
+  String notifMentionArticle(String name);
+
   /// No description provided for @notifFollowedWriterArticle.
   ///
   /// In en, this message translates to:
@@ -6179,8 +6209,14 @@ abstract class AppLocalizations {
   /// No description provided for @notificationTypeMention.
   ///
   /// In en, this message translates to:
-  /// **'Mentions in comments'**
+  /// **'Mentions'**
   String get notificationTypeMention;
+
+  /// No description provided for @notificationTypeMentionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When someone mentions you in a comment or an article'**
+  String get notificationTypeMentionHint;
 
   /// No description provided for @notificationTypeReactionsMilestone.
   ///

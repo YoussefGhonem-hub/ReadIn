@@ -50,7 +50,7 @@ class MockGetFollowLists extends Mock implements GetFollowLists {}
 
 class MockSetFollowing extends Mock implements SetFollowing {}
 
-class MockSetPublicReadingStats extends Mock implements SetPublicReadingStats {}
+class MockSetPrivacy extends Mock implements SetPrivacy {}
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
 
@@ -73,6 +73,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(_photo);
     registerFallbackValue(const ProfileUpdate(displayName: 'x', username: 'x'));
+    registerFallbackValue(const PrivacySettings());
   });
 
   group('ProfileCubit', () {
@@ -455,12 +456,14 @@ void main() {
   });
 
   group('PrivacyCubit', () {
-    late MockSetPublicReadingStats setStats;
+    late MockSetPrivacy setPrivacy;
     late MockSessionCubit session;
     late StreamController<SessionState> sessions;
 
+    const following = PrivacySettings(whoCanMention: MentionPolicy.following);
+
     setUp(() {
-      setStats = MockSetPublicReadingStats();
+      setPrivacy = MockSetPrivacy();
       session = MockSessionCubit();
       sessions = StreamController<SessionState>.broadcast();
       whenListen(session, sessions.stream, initialState: const SessionState(status: SessionStatus.authenticated, me: sampleMe));
@@ -469,25 +472,66 @@ void main() {
 
     test('starts from MeDto.privacy and applies a change at once', () async {
       final saving = Completer<Result<void>>();
-      when(() => setStats(visible: true)).thenAnswer((_) => saving.future);
-      final cubit = PrivacyCubit(setStats, session);
+      when(() => setPrivacy(const PrivacySettings(publicReadingStats: true))).thenAnswer((_) => saving.future);
+      final cubit = PrivacyCubit(setPrivacy, session);
       expect(cubit.state, const PrivacyState());
 
       final done = cubit.setPublicReadingStats(true);
       expect(cubit.state, const PrivacyState(publicReadingStats: true, pending: true));
       expect(await cubit.setPublicReadingStats(false), isNull); // ignored while saving
+      expect(await cubit.setWhoCanMention(MentionPolicy.nobody), isNull); // so is the other setting
       saving.complete(const Ok(null));
 
       expect(await done, isNull);
       expect(cubit.state, const PrivacyState(publicReadingStats: true));
-      verify(() => setStats(visible: true)).called(1);
-      verifyNever(() => setStats(visible: false));
+      verify(() => setPrivacy(const PrivacySettings(publicReadingStats: true))).called(1);
+      verifyNoMoreInteractions(setPrivacy);
+      await cubit.close();
+    });
+
+    test('starts from whoCanMention in MeDto.privacy', () async {
+      whenListen(
+        session,
+        sessions.stream,
+        initialState: const SessionState(
+          status: SessionStatus.authenticated,
+          me: Me(id: 'u-1', displayName: 'Y', username: 'reader1', publicReadingStats: true, whoCanMention: MentionPolicy.nobody),
+        ),
+      );
+      final cubit = PrivacyCubit(setPrivacy, session);
+
+      expect(cubit.state, const PrivacyState(publicReadingStats: true, whoCanMention: MentionPolicy.nobody));
+      await cubit.close();
+    });
+
+    test('who can mention me: applied at once, saved with the rest of the privacy object', () async {
+      final saving = Completer<Result<void>>();
+      when(() => setPrivacy(any())).thenAnswer((_) => saving.future);
+      final cubit = PrivacyCubit(setPrivacy, session);
+
+      final done = cubit.setWhoCanMention(MentionPolicy.following);
+      expect(cubit.state, const PrivacyState(whoCanMention: MentionPolicy.following, pending: true));
+      expect(await cubit.setWhoCanMention(MentionPolicy.nobody), isNull, reason: 'ignored while saving');
+      saving.complete(const Ok(null));
+
+      expect(await done, isNull);
+      expect(cubit.state, const PrivacyState(whoCanMention: MentionPolicy.following));
+      verify(() => setPrivacy(following)).called(1);
+      verifyNoMoreInteractions(setPrivacy);
+
+      expect(await cubit.setWhoCanMention(MentionPolicy.following), isNull, reason: 'nothing to do');
+      verifyNoMoreInteractions(setPrivacy);
+
+      // The reading stats switch keeps the mention setting it doesn't show.
+      when(() => setPrivacy(any())).thenAnswer((_) async => const Ok(null));
+      await cubit.setPublicReadingStats(true);
+      verify(() => setPrivacy(const PrivacySettings(publicReadingStats: true, whoCanMention: MentionPolicy.following))).called(1);
       await cubit.close();
     });
 
     test('rolls back when the API refuses', () async {
-      when(() => setStats(visible: true)).thenAnswer((_) async => const Err(Failure(FailureCodes.networkOffline)));
-      final cubit = PrivacyCubit(setStats, session);
+      when(() => setPrivacy(any())).thenAnswer((_) async => const Err(Failure(FailureCodes.networkOffline)));
+      final cubit = PrivacyCubit(setPrivacy, session);
 
       final failure = await cubit.setPublicReadingStats(true);
 
@@ -496,16 +540,54 @@ void main() {
       await cubit.close();
     });
 
+    test('who can mention me rolls back when the API refuses, and returns the failure to show', () async {
+      final saving = Completer<Result<void>>();
+      when(() => setPrivacy(any())).thenAnswer((_) => saving.future);
+      final cubit = PrivacyCubit(setPrivacy, session);
+      final states = <PrivacyState>[];
+      final sub = cubit.stream.listen(states.add);
+
+      final done = cubit.setWhoCanMention(MentionPolicy.nobody);
+      saving.complete(const Err(Failure(FailureCodes.validationFailed)));
+      final failure = await done;
+      await pumpEventQueue();
+
+      expect(failure?.code, FailureCodes.validationFailed);
+      expect(states, const [
+        PrivacyState(whoCanMention: MentionPolicy.nobody, pending: true),
+        PrivacyState(),
+      ]);
+      expect(cubit.state.pending, isFalse, reason: 'the choice can be tried again');
+      await sub.cancel();
+      await cubit.close();
+    });
+
     test('follows the session (another device changed it)', () async {
-      final cubit = PrivacyCubit(setStats, session);
+      final cubit = PrivacyCubit(setPrivacy, session);
 
       sessions.add(const SessionState(
         status: SessionStatus.authenticated,
-        me: Me(id: 'u-1', displayName: 'Y', username: 'reader1', publicReadingStats: true),
+        me: Me(id: 'u-1', displayName: 'Y', username: 'reader1', publicReadingStats: true, whoCanMention: MentionPolicy.following),
       ));
       await pumpEventQueue();
 
-      expect(cubit.state.publicReadingStats, isTrue);
+      expect(cubit.state, const PrivacyState(publicReadingStats: true, whoCanMention: MentionPolicy.following));
+      await cubit.close();
+    });
+
+    test('a session update while saving does not undo the change on screen', () async {
+      final saving = Completer<Result<void>>();
+      when(() => setPrivacy(any())).thenAnswer((_) => saving.future);
+      final cubit = PrivacyCubit(setPrivacy, session);
+
+      final done = cubit.setWhoCanMention(MentionPolicy.nobody);
+      sessions.add(const SessionState(status: SessionStatus.authenticated, me: sampleMe));
+      await pumpEventQueue();
+      expect(cubit.state, const PrivacyState(whoCanMention: MentionPolicy.nobody, pending: true));
+
+      saving.complete(const Ok(null));
+      await done;
+      expect(cubit.state, const PrivacyState(whoCanMention: MentionPolicy.nobody));
       await cubit.close();
     });
   });
@@ -526,14 +608,18 @@ void main() {
       verify(() => accounts.getMe()).called(1);
     });
 
-    test('SetPublicReadingStats, but not after a failure', () async {
-      when(() => profiles.setPublicReadingStats(visible: true)).thenAnswer((_) async => const Ok(null));
-      when(() => profiles.setPublicReadingStats(visible: false)).thenAnswer((_) async => const Err(Failure.unknown));
-      final useCase = SetPublicReadingStats(profiles, accounts);
+    test('SetPrivacy sends the whole object, and does not refetch after a failure', () async {
+      const saved = PrivacySettings(publicReadingStats: true, whoCanMention: MentionPolicy.following);
+      const refused = PrivacySettings(whoCanMention: MentionPolicy.nobody);
+      when(() => profiles.setPrivacy(saved)).thenAnswer((_) async => const Ok(null));
+      when(() => profiles.setPrivacy(refused)).thenAnswer((_) async => const Err(Failure.unknown));
+      final useCase = SetPrivacy(profiles, accounts);
 
-      await useCase(visible: true);
-      await useCase(visible: false);
+      expect((await useCase(saved)).isOk, isTrue);
+      expect((await useCase(refused)).failureOrNull, Failure.unknown);
 
+      verify(() => profiles.setPrivacy(saved)).called(1);
+      verify(() => profiles.setPrivacy(refused)).called(1);
       verify(() => accounts.getMe()).called(1);
     });
   });

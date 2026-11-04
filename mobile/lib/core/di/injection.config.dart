@@ -999,8 +999,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i787.AccountRepository>(),
       ),
     );
-    gh.factory<_i591.SetPublicReadingStats>(
-      () => _i591.SetPublicReadingStats(
+    gh.factory<_i591.SetPrivacy>(
+      () => _i591.SetPrivacy(
         gh<_i894.ProfileRepository>(),
         gh<_i787.AccountRepository>(),
       ),
@@ -1149,6 +1149,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i115.PhoneCountryMemory>(),
       ),
     );
+    gh.factory<_i977.PrivacyCubit>(
+      () =>
+          _i977.PrivacyCubit(gh<_i591.SetPrivacy>(), gh<_i371.SessionCubit>()),
+    );
     gh.lazySingleton<_i564.ModerationNoticesCubit>(
       () => _i564.ModerationNoticesCubit(
         gh<_i130.GetModerationNotices>(),
@@ -1159,12 +1163,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i884.StreakCubit>(
       () => _i884.StreakCubit(
         gh<_i892.GetReadingStats>(),
-        gh<_i371.SessionCubit>(),
-      ),
-    );
-    gh.factory<_i977.PrivacyCubit>(
-      () => _i977.PrivacyCubit(
-        gh<_i591.SetPublicReadingStats>(),
         gh<_i371.SessionCubit>(),
       ),
     );

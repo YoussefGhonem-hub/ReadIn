@@ -36,6 +36,7 @@ import 'package:readin/features/profile/presentation/cubit/privacy_cubit.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/features/settings/presentation/pages/settings_page.dart';
+import 'package:readin/features/settings/presentation/widgets/who_can_mention_selector.dart';
 import 'package:readin/shared/widgets/inputs/country_picker.dart';
 
 import '../helpers/test_app.dart';
@@ -157,6 +158,16 @@ void main() {
   Future<void> expectGolden(WidgetTester tester, String name, Variant variant, {bool spinning = false}) async {
     await settle(tester, spinning: spinning);
     await expectLater(find.byType(MaterialApp), matchesVariantGolden(variant, 'goldens/${name}_${variant.name}.png'));
+  }
+
+  /// Scrolls Settings to its last card. The list is built lazily, so one long drag can stop at an estimated end.
+  Future<void> scrollSettingsToEnd(WidgetTester tester) async {
+    final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    var drags = 0;
+    do {
+      await tester.drag(find.byType(ListView), const Offset(0, -2000));
+      await tester.pumpAndSettle();
+    } while (position.pixels < position.maxScrollExtent && ++drags < 5);
   }
 
   for (final variant in Variant.all) {
@@ -617,8 +628,7 @@ void main() {
           BlocProvider<PrivacyCubit>.value(value: MockPrivacyCubit()..seed(const PrivacyState())),
         ],
       );
-      await tester.drag(find.byType(ListView), const Offset(0, -2000));
-      await tester.pumpAndSettle();
+      await scrollSettingsToEnd(tester);
       await expectGolden(tester, 'settings_account', variant);
     });
 
@@ -639,9 +649,26 @@ void main() {
           BlocProvider<PrivacyCubit>.value(value: MockPrivacyCubit()..seed(const PrivacyState(publicReadingStats: true))),
         ],
       );
-      await tester.drag(find.byType(ListView), const Offset(0, -2000));
-      await tester.pumpAndSettle();
+      await scrollSettingsToEnd(tester);
       await expectGolden(tester, 'settings_account_external', variant);
+    });
+
+    // Settings → Privacy (F18): the reading stats switch, then "Who can mention me" set to people I follow.
+    testWidgets('settings privacy ${variant.name}', (tester) async {
+      await pumpScreen(
+        tester,
+        variant,
+        const SettingsView(),
+        providers: [
+          BlocProvider<LinkedAccountsCubit>.value(value: MockLinkedAccountsCubit()..seed(const LinkedAccountsState())),
+          BlocProvider<PrivacyCubit>.value(
+            value: MockPrivacyCubit()..seed(const PrivacyState(whoCanMention: MentionPolicy.following)),
+          ),
+        ],
+      );
+      await tester.scrollUntilVisible(find.byType(WhoCanMentionSelector), 300);
+      await tester.ensureVisible(find.ancestor(of: find.byType(WhoCanMentionSelector), matching: find.byType(Card)));
+      await expectGolden(tester, 'settings_privacy', variant);
     });
 
     testWidgets('country picker ${variant.name}', (tester) async {

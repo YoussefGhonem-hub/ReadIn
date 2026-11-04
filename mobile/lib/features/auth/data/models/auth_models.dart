@@ -76,6 +76,7 @@ abstract class MeModel with _$MeModel {
         interestFieldIds: interests.fieldIds,
         interestTopicIds: interests.topicIds,
         publicReadingStats: privacy.publicReadingStats,
+        whoCanMention: MentionPolicy.fromWire(privacy.whoCanMention),
       );
 }
 
@@ -101,10 +102,11 @@ abstract class InterestsModel with _$InterestsModel {
   factory InterestsModel.fromJson(Map<String, dynamic> json) => _$InterestsModelFromJson(json);
 }
 
-/// `MeDto.privacy` (F14, F18). "Who can mention me" joins it later, with comments (F11).
+/// `MeDto.privacy` (F14, F18). `whoCanMention` is `everyone` | `following` | `nobody`; older APIs leave it out
+/// (everyone).
 @freezed
 abstract class PrivacyModel with _$PrivacyModel {
-  const factory PrivacyModel({@Default(false) bool publicReadingStats}) = _PrivacyModel;
+  const factory PrivacyModel({@Default(false) bool publicReadingStats, String? whoCanMention}) = _PrivacyModel;
 
   factory PrivacyModel.fromJson(Map<String, dynamic> json) => _$PrivacyModelFromJson(json);
 }

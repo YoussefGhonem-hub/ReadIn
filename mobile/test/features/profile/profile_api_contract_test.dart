@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:readin/core/errors/failure.dart';
 import 'package:readin/features/auth/data/models/auth_models.dart';
+import 'package:readin/features/auth/domain/entities/me.dart';
 import 'package:readin/features/profile/data/datasources/profile_api.dart';
 import 'package:readin/features/profile/data/repositories/profile_repository_impl.dart';
 import 'package:readin/features/profile/domain/entities/profile.dart';
@@ -206,21 +207,49 @@ void main() {
     });
   });
 
-  test('PUT /me/privacy always sends publicReadingStats', () async {
+  test('PUT /me/privacy always sends the whole privacy object', () async {
     respond = (_) => (204, null);
 
-    await repository().setPublicReadingStats(visible: true);
-    await repository().setPublicReadingStats(visible: false);
+    final ok = await repository().setPrivacy(const PrivacySettings(publicReadingStats: true));
+    await repository().setPrivacy(const PrivacySettings(whoCanMention: MentionPolicy.following));
+    await repository().setPrivacy(const PrivacySettings(publicReadingStats: true, whoCanMention: MentionPolicy.nobody));
 
+    expect(ok.isOk, isTrue);
     expect(call(0), 'PUT /me/privacy');
-    expect(requests[0].data, {'publicReadingStats': true});
-    expect(requests[1].data, {'publicReadingStats': false});
+    expect(requests[0].data, {'publicReadingStats': true, 'whoCanMention': 'everyone'});
+    expect(requests[1].data, {'publicReadingStats': false, 'whoCanMention': 'following'});
+    expect(requests[2].data, {'publicReadingStats': true, 'whoCanMention': 'nobody'});
+  });
+
+  test('PUT /me/privacy: a refusal is the API failure', () async {
+    respond = (_) => (400, {'status': 400, 'code': 'validation.failed', 'errors': {'whoCanMention': ['validation.invalid']}});
+
+    final failure = (await repository().setPrivacy(const PrivacySettings(whoCanMention: MentionPolicy.nobody))).failureOrNull;
+
+    expect(failure?.code, 'validation.failed');
   });
 
   test('GET /me carries privacy.publicReadingStats (default false)', () {
     final base = meModel().toJson();
     expect(MeModel.fromJson(base).toEntity().publicReadingStats, isFalse);
     expect(MeModel.fromJson({...base, 'privacy': {'publicReadingStats': true}}).toEntity().publicReadingStats, isTrue);
+  });
+
+  test('GET /me carries privacy.whoCanMention (left out, null or unknown = everyone)', () {
+    final base = meModel().toJson()..remove('privacy');
+    MentionPolicy policyOf(Object? privacy) =>
+        MeModel.fromJson({...base, 'privacy': ?privacy}).toEntity().whoCanMention;
+
+    expect(policyOf(null), MentionPolicy.everyone, reason: 'no privacy object at all');
+    expect(policyOf({'publicReadingStats': true}), MentionPolicy.everyone, reason: 'an API from before the setting');
+    expect(policyOf({'publicReadingStats': false, 'whoCanMention': null}), MentionPolicy.everyone);
+    expect(policyOf({'publicReadingStats': false, 'whoCanMention': 'everyone'}), MentionPolicy.everyone);
+    expect(policyOf({'publicReadingStats': false, 'whoCanMention': 'following'}), MentionPolicy.following);
+    expect(policyOf({'publicReadingStats': false, 'whoCanMention': 'nobody'}), MentionPolicy.nobody);
+    expect(policyOf({'publicReadingStats': false, 'whoCanMention': 'verifiedOnly'}), MentionPolicy.everyone, reason: 'a newer value');
+
+    final me = MeModel.fromJson({...base, 'privacy': {'publicReadingStats': true, 'whoCanMention': 'following'}}).toEntity();
+    expect(me.privacy, const PrivacySettings(publicReadingStats: true, whoCanMention: MentionPolicy.following));
   });
 
   group('public reading stats', () {

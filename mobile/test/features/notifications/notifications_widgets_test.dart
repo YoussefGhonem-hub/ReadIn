@@ -71,8 +71,16 @@ void main() {
       ar = await AppLocalizations.delegate.load(AppLocales.ar);
     });
 
-    AppNotification row(NotificationType type, {NotificationActor? actor = ahmed, int actorCount = 1, NotificationArticle? article}) =>
-        notification('n', type, actor: actor, actorCount: actorCount, article: article);
+    AppNotification row(
+      NotificationType type, {
+      NotificationActor? actor = ahmed,
+      int actorCount = 1,
+      NotificationArticle? article,
+      NotificationComment? comment,
+    }) =>
+        notification('n', type, actor: actor, actorCount: actorCount, article: article, comment: comment);
+
+    const mentionComment = NotificationComment(id: 'c-3', excerpt: '@reader1 شوف الجزء ده');
 
     test('aggregated rows say "X and N others"', () {
       final comments = row(NotificationType.articleComment, actorCount: 10);
@@ -90,9 +98,31 @@ void main() {
     });
 
     test('a deleted actor is "Deleted user"', () {
-      final mention = row(NotificationType.mention, actor: null);
+      final mention = row(NotificationType.mention, actor: null, article: diArticle, comment: mentionComment);
       expect(notificationMessage(en, mention), 'Deleted user mentioned you in a comment');
       expect(notificationMessage(ar, mention), 'مستخدم محذوف عمل لك منشن في تعليق');
+    });
+
+    test('a mention in a comment says "in a comment"; one with no comment is in an article', () {
+      final inComment = row(NotificationType.mention, article: diArticle, comment: mentionComment);
+      expect(notificationMessage(en, inComment), 'Ahmed Samir mentioned you in a comment');
+      expect(notificationMessage(ar, inComment, name: 'أحمد'), 'أحمد عمل لك منشن في تعليق');
+
+      final inArticle = row(NotificationType.mention, article: ragArticle);
+      expect(notificationMessage(en, inArticle), 'Ahmed Samir mentioned you in an article');
+      expect(notificationMessage(ar, inArticle, name: 'أحمد'), 'أحمد عمل لك منشن في مقال');
+      expect(notificationMessage(en, row(NotificationType.mention, actor: null, article: ragArticle)), 'Deleted user mentioned you in an article');
+      expect(notificationMessage(ar, row(NotificationType.mention, actor: null, article: ragArticle)), 'مستخدم محذوف عمل لك منشن في مقال');
+    });
+
+    test('Settings: "Mentions" covers comments and articles', () {
+      expect(notificationTypeLabel(en, NotificationType.mention), 'Mentions');
+      expect(notificationTypeLabel(ar, NotificationType.mention), 'المنشن');
+      expect(notificationTypeHint(en, NotificationType.mention), 'When someone mentions you in a comment or an article');
+      expect(notificationTypeHint(ar, NotificationType.mention), 'لما حد يعمل لك منشن في تعليق أو مقال');
+      for (final type in NotificationType.configurable.where((type) => type != NotificationType.mention)) {
+        expect(notificationTypeHint(en, type), isNull, reason: '${type.wire}: the name says it all');
+      }
     });
 
     test('the other types', () {
@@ -163,6 +193,33 @@ void main() {
         await pumpView(tester, loading, variant: variant);
         expect(find.byType(NotificationTile), findsNothing);
         expect(find.text(l10n.notificationsEmptyTitle), findsNothing);
+      });
+    }
+
+    for (final variant in Variant.all) {
+      testWidgets('a mention in an article: the sentence, then the title, and no excerpt ${variant.name}', (tester) async {
+        final l10n = await AppLocalizations.delegate.load(variant.locale);
+        final mention = mixedNotifications.singleWhere((n) => n.id == 'n-article-mention');
+        expect(mention.comment, isNull);
+        await tester.pumpWidget(testApp(
+          Scaffold(body: NotificationTile(notification: mention, onTap: () {})),
+          variant: variant,
+        ));
+        await tester.pump();
+
+        final sentence = find.textContaining(l10n.notifMentionArticle('').trim(), findRichText: true);
+        expect(sentence, findsOneWidget);
+        expect(find.textContaining(ahmed.displayName, findRichText: true), findsOneWidget);
+        expect(find.textContaining(l10n.notifMention('', 0).trim(), findRichText: true), findsNothing, reason: 'not "in a comment"');
+        expect(find.text(ragArticle.title), findsOneWidget);
+        expect(
+          tester.widget<Directionality>(find.ancestor(of: find.text(ragArticle.title), matching: find.byType(Directionality)).first).textDirection,
+          TextDirection.ltr,
+          reason: 'an English title keeps its direction in either UI',
+        );
+        expect(find.byIcon(Icons.alternate_email_rounded), findsOneWidget);
+        expect(find.byKey(NotificationTile.unreadDotKey), findsNothing);
+        expect(tester.takeException(), isNull);
       });
     }
 
@@ -266,6 +323,14 @@ void main() {
         expect(find.byKey(NotificationTile.unreadDotKey), findsNWidgets(3), reason: 'read when it was opened');
       });
 
+      testWidgets('a mention in an article opens the article, not a comment', (tester) async {
+        await pumpRouter(tester);
+        await tester.scrollUntilVisible(find.textContaining('mentioned you in an article', findRichText: true), 300);
+        await tapRow(tester, 'mentioned you in an article');
+        expect(repository.calls.where((c) => c.startsWith('read')), isEmpty, reason: 'it was read already');
+        expect(find.text('article rag-vs-fine-tuning #'), findsOneWidget);
+      });
+
       testWidgets('several new followers open the follower list', (tester) async {
         await pumpRouter(tester);
         await tapRow(tester, 'started following you');
@@ -323,6 +388,11 @@ void main() {
         for (final type in NotificationType.configurable) {
           expect(find.text(notificationTypeLabel(l10n, type)), findsOneWidget);
         }
+        // Mentions cover comments and articles: the hint sits under the name, on the mention row.
+        expect(
+          find.descendant(of: find.widgetWithText(ListTile, l10n.notificationTypeMention), matching: find.text(l10n.notificationTypeMentionHint)),
+          findsOneWidget,
+        );
         expect(find.text(l10n.notificationSecurityAlerts), findsOneWidget);
         expect(find.text(l10n.quietHoursTitle), findsOneWidget);
         expect(find.text(l10n.quietHoursSwitch), findsOneWidget);

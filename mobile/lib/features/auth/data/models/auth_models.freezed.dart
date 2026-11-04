@@ -964,7 +964,7 @@ as List<String>,
 /// @nodoc
 mixin _$PrivacyModel {
 
- bool get publicReadingStats;
+ bool get publicReadingStats; String? get whoCanMention;
 /// Create a copy of PrivacyModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -977,16 +977,16 @@ $PrivacyModelCopyWith<PrivacyModel> get copyWith => _$PrivacyModelCopyWithImpl<P
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrivacyModel&&(identical(other.publicReadingStats, publicReadingStats) || other.publicReadingStats == publicReadingStats));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrivacyModel&&(identical(other.publicReadingStats, publicReadingStats) || other.publicReadingStats == publicReadingStats)&&(identical(other.whoCanMention, whoCanMention) || other.whoCanMention == whoCanMention));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicReadingStats);
+int get hashCode => Object.hash(runtimeType,publicReadingStats,whoCanMention);
 
 @override
 String toString() {
-  return 'PrivacyModel(publicReadingStats: $publicReadingStats)';
+  return 'PrivacyModel(publicReadingStats: $publicReadingStats, whoCanMention: $whoCanMention)';
 }
 
 
@@ -997,7 +997,7 @@ abstract mixin class $PrivacyModelCopyWith<$Res>  {
   factory $PrivacyModelCopyWith(PrivacyModel value, $Res Function(PrivacyModel) _then) = _$PrivacyModelCopyWithImpl;
 @useResult
 $Res call({
- bool publicReadingStats
+ bool publicReadingStats, String? whoCanMention
 });
 
 
@@ -1014,10 +1014,11 @@ class _$PrivacyModelCopyWithImpl<$Res>
 
 /// Create a copy of PrivacyModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? publicReadingStats = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? publicReadingStats = null,Object? whoCanMention = freezed,}) {
   return _then(_self.copyWith(
 publicReadingStats: null == publicReadingStats ? _self.publicReadingStats : publicReadingStats // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,whoCanMention: freezed == whoCanMention ? _self.whoCanMention : whoCanMention // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -1102,10 +1103,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool publicReadingStats)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool publicReadingStats,  String? whoCanMention)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PrivacyModel() when $default != null:
-return $default(_that.publicReadingStats);case _:
+return $default(_that.publicReadingStats,_that.whoCanMention);case _:
   return orElse();
 
 }
@@ -1123,10 +1124,10 @@ return $default(_that.publicReadingStats);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool publicReadingStats)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool publicReadingStats,  String? whoCanMention)  $default,) {final _that = this;
 switch (_that) {
 case _PrivacyModel():
-return $default(_that.publicReadingStats);case _:
+return $default(_that.publicReadingStats,_that.whoCanMention);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1143,10 +1144,10 @@ return $default(_that.publicReadingStats);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool publicReadingStats)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool publicReadingStats,  String? whoCanMention)?  $default,) {final _that = this;
 switch (_that) {
 case _PrivacyModel() when $default != null:
-return $default(_that.publicReadingStats);case _:
+return $default(_that.publicReadingStats,_that.whoCanMention);case _:
   return null;
 
 }
@@ -1158,10 +1159,11 @@ return $default(_that.publicReadingStats);case _:
 @JsonSerializable()
 
 class _PrivacyModel implements PrivacyModel {
-  const _PrivacyModel({this.publicReadingStats = false});
+  const _PrivacyModel({this.publicReadingStats = false, this.whoCanMention});
   factory _PrivacyModel.fromJson(Map<String, dynamic> json) => _$PrivacyModelFromJson(json);
 
 @override@JsonKey() final  bool publicReadingStats;
+@override final  String? whoCanMention;
 
 /// Create a copy of PrivacyModel
 /// with the given fields replaced by the non-null parameter values.
@@ -1176,16 +1178,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PrivacyModel&&(identical(other.publicReadingStats, publicReadingStats) || other.publicReadingStats == publicReadingStats));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PrivacyModel&&(identical(other.publicReadingStats, publicReadingStats) || other.publicReadingStats == publicReadingStats)&&(identical(other.whoCanMention, whoCanMention) || other.whoCanMention == whoCanMention));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicReadingStats);
+int get hashCode => Object.hash(runtimeType,publicReadingStats,whoCanMention);
 
 @override
 String toString() {
-  return 'PrivacyModel(publicReadingStats: $publicReadingStats)';
+  return 'PrivacyModel(publicReadingStats: $publicReadingStats, whoCanMention: $whoCanMention)';
 }
 
 
@@ -1196,7 +1198,7 @@ abstract mixin class _$PrivacyModelCopyWith<$Res> implements $PrivacyModelCopyWi
   factory _$PrivacyModelCopyWith(_PrivacyModel value, $Res Function(_PrivacyModel) _then) = __$PrivacyModelCopyWithImpl;
 @override @useResult
 $Res call({
- bool publicReadingStats
+ bool publicReadingStats, String? whoCanMention
 });
 
 
@@ -1213,10 +1215,11 @@ class __$PrivacyModelCopyWithImpl<$Res>
 
 /// Create a copy of PrivacyModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? publicReadingStats = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? publicReadingStats = null,Object? whoCanMention = freezed,}) {
   return _then(_PrivacyModel(
 publicReadingStats: null == publicReadingStats ? _self.publicReadingStats : publicReadingStats // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,whoCanMention: freezed == whoCanMention ? _self.whoCanMention : whoCanMention // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

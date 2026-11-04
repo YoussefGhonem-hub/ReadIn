@@ -58,8 +58,8 @@ AppNotification notification(
 }
 
 /// A mixed center: Today (an unread reply, ten commenters on an English article, three new followers) and Earlier (a
-/// mention by a deleted account, a milestone, today's article, a streak reminder, a security alert, a followed writer,
-/// a moderation warning).
+/// mention in a comment by a deleted account, a mention in an English article, a milestone, today's article, a streak
+/// reminder, a security alert, a followed writer, a moderation warning).
 final mixedNotifications = [
   notification(
     'n-reply',
@@ -97,6 +97,16 @@ final mixedNotifications = [
     article: diArticle,
     comment: const NotificationComment(id: 'c-3', excerpt: '@reader1 شوف الجزء بتاع الـ lifetime'),
     link: 'readin://a/di-dotnet#comment-c-3',
+  ),
+  // Mentioned in an article: no comment, the link opens the article itself.
+  notification(
+    'n-article-mention',
+    NotificationType.mention,
+    ago: const Duration(days: 1, hours: 1),
+    isRead: true,
+    actor: ahmed,
+    actorCount: 1,
+    article: ragArticle,
   ),
   notification('n-milestone', NotificationType.reactionsMilestone, ago: const Duration(days: 1, hours: 3), isRead: true, article: ragArticle, threshold: 50),
   notification('n-daily', NotificationType.dailyArticle, ago: const Duration(days: 1, hours: 10), isRead: true, article: diArticle),

@@ -31,6 +31,7 @@ class Me extends Equatable {
     this.interestFieldIds = const [],
     this.interestTopicIds = const [],
     this.publicReadingStats = false,
+    this.whoCanMention = MentionPolicy.everyone,
   });
 
   final String id;
@@ -73,6 +74,12 @@ class Me extends Equatable {
   /// `privacy.publicReadingStats`: other people see the reading stats card and heatmap on the profile (F14, F18).
   final bool publicReadingStats;
 
+  /// `privacy.whoCanMention`: who may @mention me in comments and articles (F18).
+  final MentionPolicy whoCanMention;
+
+  /// `MeDto.privacy`, whole: what `PUT /me/privacy` takes back.
+  PrivacySettings get privacy => PrivacySettings(publicReadingStats: publicReadingStats, whoCanMention: whoCanMention);
+
   bool can(String permission) => permissions.contains(permission);
 
   /// The linked Google / Apple sign-in of [provider], if any.
@@ -109,7 +116,41 @@ class Me extends Equatable {
         interestFieldIds,
         interestTopicIds,
         publicReadingStats,
+        whoCanMention,
       ];
+}
+
+/// `privacy.whoCanMention` (F18): who may @mention me in comments and articles. Anyone else's `@me` stays plain text,
+/// with no link and no notification.
+enum MentionPolicy {
+  everyone,
+
+  /// People I follow.
+  following,
+  nobody;
+
+  /// `everyone` | `following` | `nobody`.
+  String get wire => name;
+
+  /// [everyone], the default, when the API leaves it out (an older API) or sends a value this app version doesn't know.
+  static MentionPolicy fromWire(Object? wire) => values.where((policy) => policy.wire == wire).firstOrNull ?? everyone;
+}
+
+/// `MeDto.privacy` (F14, F18). `PUT /me/privacy` gets it back whole.
+class PrivacySettings extends Equatable {
+  const PrivacySettings({this.publicReadingStats = false, this.whoCanMention = MentionPolicy.everyone});
+
+  /// Other people see the reading stats card and heatmap on the profile (F14).
+  final bool publicReadingStats;
+  final MentionPolicy whoCanMention;
+
+  PrivacySettings copyWith({bool? publicReadingStats, MentionPolicy? whoCanMention}) => PrivacySettings(
+        publicReadingStats: publicReadingStats ?? this.publicReadingStats,
+        whoCanMention: whoCanMention ?? this.whoCanMention,
+      );
+
+  @override
+  List<Object?> get props => [publicReadingStats, whoCanMention];
 }
 
 /// A Google or Apple sign-in linked to the account (`MeDto.externalLogins`).

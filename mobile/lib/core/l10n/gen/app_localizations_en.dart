@@ -519,6 +519,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only you can see your reading stats.';
 
   @override
+  String get profileWhoCanMention => 'Who can mention me';
+
+  @override
+  String get profileWhoCanMentionEveryone => 'Everyone';
+
+  @override
+  String get profileWhoCanMentionFollowing => 'People I follow';
+
+  @override
+  String get profileWhoCanMentionNobody => 'Nobody';
+
+  @override
   String get profileReadingStatsEmpty => 'No finished articles yet.';
 
   @override
@@ -3530,6 +3542,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notifMentionArticle(String name) {
+    return '$name mentioned you in an article';
+  }
+
+  @override
   String notifFollowedWriterArticle(String name) {
     return '$name published a new article';
   }
@@ -3656,7 +3673,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationTypeCommentReply => 'Replies to your comments';
 
   @override
-  String get notificationTypeMention => 'Mentions in comments';
+  String get notificationTypeMention => 'Mentions';
+
+  @override
+  String get notificationTypeMentionHint =>
+      'When someone mentions you in a comment or an article';
 
   @override
   String get notificationTypeReactionsMilestone =>

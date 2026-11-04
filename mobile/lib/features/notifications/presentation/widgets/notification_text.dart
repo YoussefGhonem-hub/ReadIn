@@ -23,7 +23,9 @@ String notificationMessage(AppLocalizations l10n, AppNotification notification, 
     NotificationType.newFollower => l10n.notifNewFollower(actor, others),
     NotificationType.articleComment => l10n.notifArticleComment(actor, others),
     NotificationType.commentReply => l10n.notifCommentReply(actor, others),
-    NotificationType.mention => l10n.notifMention(actor, others),
+    // A mention without a comment is in an article: the author, once per article (its title follows).
+    NotificationType.mention =>
+      notification.comment == null ? l10n.notifMentionArticle(actor) : l10n.notifMention(actor, others),
     NotificationType.followedWriterArticle => l10n.notifFollowedWriterArticle(actor),
     NotificationType.reactionsMilestone => switch (notification.threshold) {
         final threshold? when threshold > 0 => l10n.notifReactionsMilestone(threshold),
@@ -67,6 +69,12 @@ String notificationTypeLabel(AppLocalizations l10n, NotificationType type) => sw
       NotificationType.streakReminder => l10n.notificationTypeStreakReminder,
       NotificationType.securityAlert => l10n.notificationSecurityAlerts,
       _ => l10n.notifications,
+    };
+
+/// What a configurable type covers, when its name alone doesn't say (Settings shows it under the name).
+String? notificationTypeHint(AppLocalizations l10n, NotificationType type) => switch (type) {
+      NotificationType.mention => l10n.notificationTypeMentionHint,
+      _ => null,
     };
 
 /// A mode as the settings menu lists it ("Push + in app"); [short] is the closed selector's ("Push").

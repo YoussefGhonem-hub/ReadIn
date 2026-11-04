@@ -1,6 +1,7 @@
 import '../../../../core/errors/result.dart';
 import '../../../../core/models/cursor_page.dart';
 import '../../../article/domain/entities/article.dart';
+import '../../../auth/domain/entities/me.dart';
 import '../entities/profile.dart';
 
 abstract interface class ProfileRepository {
@@ -15,6 +16,6 @@ abstract interface class ProfileRepository {
   /// validation codes per field.
   Future<Result<void>> updateProfile(ProfileUpdate update);
 
-  /// `PUT /me/privacy` → `204`.
-  Future<Result<void>> setPublicReadingStats({required bool visible});
+  /// `PUT /me/privacy` with the whole [privacy] object → `204`.
+  Future<Result<void>> setPrivacy(PrivacySettings privacy);
 }

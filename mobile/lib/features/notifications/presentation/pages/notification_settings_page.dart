@@ -150,6 +150,7 @@ class _TypeModeTile extends StatelessWidget {
     final l10n = context.l10n;
     final colors = context.colors;
     final label = notificationTypeLabel(l10n, type);
+    final hint = notificationTypeHint(l10n, type);
     final selectedStyle = context.textTheme.bodyMedium?.copyWith(
       color: mode == NotificationMode.off ? colors.textSecondary : colors.primary,
       fontWeight: FontWeight.w600,
@@ -157,6 +158,7 @@ class _TypeModeTile extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(label),
+      subtitle: hint == null ? null : Text(hint),
       trailing: DropdownButtonHideUnderline(
         child: DropdownButton<NotificationMode>(
           key: ValueKey('mode-${type.wire}'),

@@ -4,6 +4,7 @@ import '../../../../core/errors/result.dart';
 import '../../../../core/models/cursor_page.dart';
 import '../../../../core/network/api_error_mapper.dart';
 import '../../../article/domain/entities/article.dart';
+import '../../../auth/domain/entities/me.dart';
 import '../../domain/entities/profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_api.dart';
@@ -36,6 +37,5 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Result<void>> updateProfile(ProfileUpdate update) => guardApi(() => _api.updateProfile(UpdateProfileRequest(update)));
 
   @override
-  Future<Result<void>> setPublicReadingStats({required bool visible}) =>
-      guardApi(() => _api.setPrivacy(PrivacyRequest(publicReadingStats: visible)));
+  Future<Result<void>> setPrivacy(PrivacySettings privacy) => guardApi(() => _api.setPrivacy(PrivacyRequest(privacy)));
 }

@@ -521,6 +521,18 @@ class AppLocalizationsAr extends AppLocalizations {
       'إنت بس اللي بتشوف إحصائيات قرايتك.';
 
   @override
+  String get profileWhoCanMention => 'مين يقدر يعمل لك منشن';
+
+  @override
+  String get profileWhoCanMentionEveryone => 'أي حد';
+
+  @override
+  String get profileWhoCanMentionFollowing => 'الناس اللي بتابعهم';
+
+  @override
+  String get profileWhoCanMentionNobody => 'محدش';
+
+  @override
   String get profileReadingStatsEmpty => 'لسه مخلّصش مقالات.';
 
   @override
@@ -3574,6 +3586,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String notifMentionArticle(String name) {
+    return '$name عمل لك منشن في مقال';
+  }
+
+  @override
   String notifFollowedWriterArticle(String name) {
     return '$name نشر مقال جديد';
   }
@@ -3703,7 +3720,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationTypeCommentReply => 'ردود على تعليقاتك';
 
   @override
-  String get notificationTypeMention => 'المنشن في التعليقات';
+  String get notificationTypeMention => 'المنشن';
+
+  @override
+  String get notificationTypeMentionHint =>
+      'لما حد يعمل لك منشن في تعليق أو مقال';
 
   @override
   String get notificationTypeReactionsMilestone =>

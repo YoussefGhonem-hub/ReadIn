@@ -127,6 +127,34 @@ void main() {
       expect(page.items[4].type, NotificationType.unknown, reason: 'a newer type still lists, with generic text');
     });
 
+    test('a mention in an article has no comment and links to the article', () async {
+      respond = (_) => {
+            'items': [
+              {
+                'id': 'n-6',
+                'type': 'mention',
+                'createdAt': '2026-11-04T10:00:00Z',
+                'updatedAt': '2026-11-04T10:00:00Z',
+                'isRead': false,
+                'actor': {'id': 'u-1', 'displayName': 'Ahmed', 'username': 'ahmed', 'avatarUrl': null, 'isVerified': false},
+                'actorCount': 1,
+                'article': {'id': 'a-1', 'slug': 'rag-vs-fine-tuning', 'title': 'RAG vs fine-tuning', 'language': 'en'},
+                'comment': null,
+                'data': <String, Object?>{},
+                'link': 'readin://a/rag-vs-fine-tuning',
+              },
+            ],
+            'nextCursor': null,
+          };
+      final mention = (await repository().list()).valueOrNull!.items.single;
+
+      expect(mention.type, NotificationType.mention);
+      expect(mention.comment, isNull);
+      expect(mention.article?.slug, 'rag-vs-fine-tuning');
+      expect(mention.actor?.username, 'ahmed');
+      expect(mention.link, 'readin://a/rag-vs-fine-tuning');
+    });
+
     test('the first page has no cursor', () async {
       respond = (_) => {'items': <Object>[], 'nextCursor': null};
       final page = (await repository().list()).valueOrNull!;

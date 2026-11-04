@@ -16,6 +16,7 @@ import '../../../profile/presentation/cubit/privacy_cubit.dart';
 import '../../../profile/presentation/widgets/public_reading_stats_switch.dart';
 import '../widgets/account_section.dart';
 import '../widgets/preference_tiles.dart';
+import '../widgets/who_can_mention_selector.dart';
 
 /// A part of Settings a link can open at (`/settings?section=account`, e.g. a security alert, F17).
 enum SettingsSection {
@@ -123,8 +124,12 @@ class _SettingsViewState extends State<SettingsView> {
           ]),
           // Per-type modes and quiet hours live on the account (F17).
           if (session.isAuthenticated) card(l10n.notifications, const [_NotificationSettingsEntry()]),
-          // "Who can mention me" joins this card with comments (F11).
-          if (session.isAuthenticated) card(l10n.profilePrivacy, const [PublicReadingStatsSwitch()]),
+          if (session.isAuthenticated)
+            card(l10n.profilePrivacy, const [
+              PublicReadingStatsSwitch(),
+              SizedBox(height: ReadInSpace.s3),
+              WhoCanMentionSelector(),
+            ]),
           if (session.me?.isModerator ?? false) card(l10n.moderationTitle, const [ModerationEntryTile()]),
           card(key: _accountKey, l10n.account, [
             if (session.isAuthenticated)

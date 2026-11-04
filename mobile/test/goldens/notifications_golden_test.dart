@@ -28,9 +28,10 @@ void main() {
 
   for (final variant in Variant.all) {
     // Every kind of row: unread and read, aggregated ("Ahmed Samir and 9 others"), a deleted actor, an English article
-    // in the Arabic UI and the other way round, comment excerpts, and the actorless types.
+    // in the Arabic UI and the other way round, comment excerpts, a mention in an article (no excerpt), and the
+    // actorless types.
     testWidgets('notification center ${variant.name}', (tester) async {
-      usePhoneSurface(tester, size: const Size(390, 1260));
+      usePhoneSurface(tester, size: const Size(390, 1380));
       final cubit = MockNotificationsCubit()
         ..hold(NotificationsState(status: NotificationsStatus.ready, items: mixedNotifications));
       await tester.pumpWidget(testApp(BlocProvider<NotificationsCubit>.value(value: cubit, child: const NotificationsView()), variant: variant));
@@ -38,8 +39,9 @@ void main() {
       await expectLater(find.byType(NotificationsView), matchesVariantGolden(variant, 'goldens/notifications_center_${variant.name}.png'));
     });
 
+    // "Mentions" carries a hint under its name: it covers comments and articles.
     testWidgets('notification settings ${variant.name}', (tester) async {
-      usePhoneSurface(tester, size: const Size(390, 1000));
+      usePhoneSurface(tester, size: const Size(390, 1040));
       final cubit = MockNotificationSettingsCubit()
         ..hold(const NotificationSettingsState(
           status: NotificationSettingsStatus.ready,

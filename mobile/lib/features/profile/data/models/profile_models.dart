@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../auth/domain/entities/me.dart';
 import '../../domain/entities/profile.dart';
 
 part 'profile_models.freezed.dart';
@@ -138,11 +139,15 @@ class UpdateProfileRequest {
   }
 }
 
-/// `PUT /me/privacy` body.
+/// `PUT /me/privacy` body: the whole privacy object every time, as the web sends it (the API takes each field as
+/// optional).
 class PrivacyRequest {
-  const PrivacyRequest({required this.publicReadingStats});
+  const PrivacyRequest(this.privacy);
 
-  final bool publicReadingStats;
+  final PrivacySettings privacy;
 
-  Map<String, dynamic> toJson() => {'publicReadingStats': publicReadingStats};
+  Map<String, dynamic> toJson() => {
+        'publicReadingStats': privacy.publicReadingStats,
+        'whoCanMention': privacy.whoCanMention.wire,
+      };
 }

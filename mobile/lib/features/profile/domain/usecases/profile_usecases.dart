@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/models/cursor_page.dart';
 import '../../../article/domain/entities/article.dart';
+import '../../../auth/domain/entities/me.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../entities/profile.dart';
 import '../repositories/profile_repository.dart';
@@ -44,16 +45,17 @@ class UpdateProfile {
   }
 }
 
-/// Settings → Privacy and the own profile: "show my reading stats on my public profile" (F14, F18).
+/// Settings → Privacy and the own profile (F14, F18): "show my reading stats on my public profile" and "who can mention
+/// me". Sends the whole [PrivacySettings], then refetches `GET /me` so the session has it.
 @injectable
-class SetPublicReadingStats {
-  const SetPublicReadingStats(this._repository, this._accounts);
+class SetPrivacy {
+  const SetPrivacy(this._repository, this._accounts);
 
   final ProfileRepository _repository;
   final AccountRepository _accounts;
 
-  Future<Result<void>> call({required bool visible}) async {
-    final result = await _repository.setPublicReadingStats(visible: visible);
+  Future<Result<void>> call(PrivacySettings privacy) async {
+    final result = await _repository.setPrivacy(privacy);
     if (result.isOk) await _accounts.getMe();
     return result;
   }
