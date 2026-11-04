@@ -1345,7 +1345,7 @@ dotnet run --project src/ReadIn.ContentStudio -- import
 | Trust & freshness | Matches the plan (field, topic, level, path, version badge, titles), `status: published`, `isAiAssisted: true`, `lastReviewedAt` (the pipeline check date), 2–5 sources, a 1200×630 `cover.webp` |
 
 ### 19.4 Publishing Strategy
-- **Seed set: 300 articles** by the official **ReadIn** account, planned in `content/taxonomy.yaml` (23 learning paths across AI, ML, Claude & AI tools, .NET, React, Angular, frontend, mobile, databases, architecture, DevOps and security). Each one corrects a misconception developers commonly hold. They are published with the AI-assisted label and `reviewStatus: pending`, with staggered publish dates over the last ~120 days. They appear in the reviewer queue, and Today's article falls back to them until enough are reviewed (F07).
+- **Seed set: 300 articles** by the official **ReadIn** account, planned in `content/taxonomy.yaml` (23 learning paths across AI, ML, Claude & AI tools, .NET, React, Angular, frontend, mobile, databases, architecture, DevOps and security). Each one corrects a misconception developers commonly hold. They are published with the AI-assisted label, with staggered publish dates over the last ~120 days, and like any published article they can be Today's article (F07, ADR 0015).
 - **Launch with all 300**, organized into learning paths.
 - **Growth after launch** comes from members publishing in any field, plus more ReadIn articles when wanted (`ContentStudio generate`). There is no fixed article target.
 - Quality gates (§19.3) and the AI-assisted label keep seeded content from being thin, unlabeled mass content, which search engines penalize.
