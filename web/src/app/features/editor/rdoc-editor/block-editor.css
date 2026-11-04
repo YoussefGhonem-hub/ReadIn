@@ -76,6 +76,41 @@
   gap: 8px;
   margin-top: 8px;
 }
+/* Glossary term picker (F21): the matches under the search field. */
+.rd-ed-termlist {
+  display: grid;
+  /* One column no wider than the bar: a long definition is cut with an ellipsis, it doesn't widen the list. */
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-height: 264px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  gap: 2px;
+}
+.rd-ed-termlist:empty {
+  display: none;
+}
+.rd-ed-termopt {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--rd-radius-sm);
+  background: none;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.rd-ed-termopt:hover,
+.rd-ed-termopt:focus-visible {
+  background: var(--rd-color-surface-variant);
+}
+.rd-ed-termopt[aria-current='true'] {
+  border-color: var(--rd-color-primary);
+}
 .rd-ed-surface {
   margin-top: 16px;
 }

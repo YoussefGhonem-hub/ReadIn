@@ -1,7 +1,7 @@
 import { Editor } from '@tiptap/core';
-import { TextSelection } from '@tiptap/pm/state';
+import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 import { RDocBlockType } from '../../../shared/rdoc/rdoc.models';
-import { BLOCK_MENU, BlockKind, currentBlockDir, filterBlockMenu, insertBlock, setBlockDir } from './block-commands';
+import { BLOCK_MENU, BlockKind, currentBlockDir, filterBlockMenu, insertBlock, markTerm, setBlockDir, termTarget, unmarkTerm } from './block-commands';
 import { RDocEditorHost } from './editor-host';
 import { PmNode, editorToRDoc, rdocToEditor } from './rdoc-convert';
 import { rdocExtensions } from './rdoc-schema';
@@ -113,5 +113,77 @@ describe('block commands (slash menu, toolbar)', () => {
     expect(blocks()[0]).toMatchObject({ dir: 'ltr' });
     setBlockDir(editor, 'auto');
     expect(blocks()[0]).not.toHaveProperty('dir');
+  });
+
+  describe('glossary terms (F21)', () => {
+    const TEXT = 'استخدم Dependency Injection هنا';
+    const load = (content: Parameters<typeof rdocToEditor>[0]) => {
+      editor.commands.setContent(rdocToEditor(content) as never);
+    };
+    const select = (from: number, to: number) => editor.view.dispatch(editor.state.tr.setSelection(TextSelection.create(editor.state.doc, from, to)));
+    /** Document position of a character of the first paragraph's text. */
+    const at = (index: number) => 1 + index;
+
+    beforeEach(() => load({ version: 1, language: 'ar-EG', blocks: [{ id: 'p1', type: 'paragraph', content: [{ type: 'text', text: TEXT }] }] }));
+
+    it('marks the selected words, leaving the spaces around them as text', () => {
+      const start = TEXT.indexOf('Dependency');
+      select(at(start - 1), at(start + 'Dependency Injection'.length + 1)); // " Dependency Injection "
+      const target = termTarget(editor)!;
+      expect(target).toMatchObject({ text: 'Dependency Injection', termId: null });
+
+      expect(markTerm(editor, target, 'dependency-injection')).toBe(true);
+      expect(blocks()[0]).toMatchObject({
+        id: 'p1',
+        content: [
+          { type: 'text', text: 'استخدم ' },
+          { type: 'term', termId: 'dependency-injection', text: 'Dependency Injection' },
+          { type: 'text', text: ' هنا' },
+        ],
+      });
+    });
+
+    it('changes or removes a selected term, keeping its text', () => {
+      load({
+        version: 1,
+        language: 'ar-EG',
+        blocks: [{ id: 'p1', type: 'paragraph', content: [{ type: 'text', text: 'استخدم ' }, { type: 'term', termId: 'ioc-container', text: 'IoC' }] }],
+      });
+      editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, at('استخدم '.length))));
+      const target = termTarget(editor)!;
+      expect(target).toMatchObject({ text: 'IoC', termId: 'ioc-container' });
+
+      markTerm(editor, target, 'dependency-injection');
+      expect(blocks()[0]).toMatchObject({ content: [{ type: 'text', text: 'استخدم ' }, { type: 'term', termId: 'dependency-injection', text: 'IoC' }] });
+
+      editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, at('استخدم '.length))));
+      expect(unmarkTerm(editor, termTarget(editor)!)).toBe(true);
+      expect(blocks()[0]).toMatchObject({ content: [{ type: 'text', text: 'استخدم IoC' }] });
+    });
+
+    it('needs words in one text block: not a caret, spaces, two blocks, a mention or code', () => {
+      editor.commands.setTextSelection(at(3));
+      expect(termTarget(editor)).toBeNull();
+      select(at(TEXT.indexOf(' ')), at(TEXT.indexOf(' ') + 1));
+      expect(termTarget(editor)).toBeNull();
+
+      load({
+        version: 1,
+        language: 'ar-EG',
+        blocks: [
+          { id: 'p1', type: 'paragraph', content: [{ type: 'text', text: 'أول' }, { type: 'mention', userId: 'u1', text: '@mona' }, { type: 'text', text: 'بعد' }] },
+          { id: 'p2', type: 'paragraph', content: [{ type: 'text', text: 'تاني' }] },
+          { id: 'c1', type: 'code', lang: 'csharp', code: 'var x = 1;' },
+        ],
+      });
+      select(at(1), at(5)); // across the mention
+      expect(termTarget(editor)).toBeNull();
+      const p2 = editor.state.doc.child(0).nodeSize;
+      select(at(1), p2 + 3); // into the next paragraph
+      expect(termTarget(editor)).toBeNull();
+      const code = editor.state.doc.child(0).nodeSize + editor.state.doc.child(1).nodeSize;
+      select(code + 1, code + 4);
+      expect(termTarget(editor)).toBeNull();
+    });
   });
 });

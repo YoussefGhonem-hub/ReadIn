@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { HIDE_APP_CHROME, VARIANTS, hasScreenshot, parkMouse, restoreSessionAs, useVariant } from './support/mock-api';
-import { editorReady, insertBlock, myArticle, problemCodes, savedToServer, seededIds, signInAsAuthor, typeInEditor } from './support/editor';
+import { editorReady, insertBlock, myArticle, problemCodes, savedToServer, seededIds, signInAsAuthor, trackSavedDocument, typeInEditor } from './support/editor';
 
 /**
  * The article editor (F05) against the mock API, which keeps each writer's articles (e2e/mock-api/editor.mjs):
@@ -125,6 +125,84 @@ for (const variant of VARIANTS) {
     await page.goto('/write?tab=published');
     await expect(page.locator('[data-my-article]')).toHaveCount(1);
     await expect(page.locator('[data-my-article] [data-my-title]')).toHaveText('يعني إيه Dependency Injection؟');
+  });
+
+  test(`glossary term: select words, search the glossary, mark, change and remove — ${lang}/${theme}`, async ({ page, context, baseURL, request }) => {
+    await useVariant(context, baseURL!, variant);
+    await signInAsAuthor(page, request, variant, 'fresh');
+    const savedDocument = trackSavedDocument(page);
+    await page.goto('/write/new');
+    await editorReady(page);
+    await page.locator('[data-source-language]').getByRole('radio').first().click(); // Arabic
+    await page.locator('[data-title]').fill('يعني إيه Dependency Injection؟');
+    await typeInEditor(page, 'استخدم Dependency Injection في كل حتة.');
+
+    // A caret isn't enough: the writer selects the words first.
+    const termButton = page.locator('[data-toolbar] [data-term]');
+    await expect(termButton).toBeDisabled();
+    // Selects the words in the DOM (the text can be split over several text nodes); ProseMirror follows the selection.
+    await page.locator('[data-editor] p').first().evaluate((paragraph, words) => {
+      const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+      const nodes: Text[] = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+      const at = (offset: number): [Text, number] => {
+        for (const node of nodes) {
+          if (offset <= node.length) return [node, offset];
+          offset -= node.length;
+        }
+        throw new Error('offset');
+      };
+      const start = nodes.map((n) => n.data).join('').indexOf(words);
+      const range = document.createRange();
+      range.setStart(...at(start));
+      range.setEnd(...at(start + words.length));
+      getSelection()!.removeAllRanges();
+      getSelection()!.addRange(range);
+    }, 'Dependency Injection');
+    await expect(termButton).toBeEnabled();
+    await termButton.click();
+
+    // The picker searches for the selected words.
+    const bar = page.locator('[data-term-bar]');
+    await expect(bar.locator('[data-term-for] bdi').first()).toHaveText('Dependency Injection');
+    await expect(bar.locator('input[type="search"]')).toBeFocused();
+    await expect(bar.locator('input[type="search"]')).toHaveValue('Dependency Injection');
+    await expect(bar.locator('[data-term-option]')).toHaveCount(1);
+    await expect(bar.locator('[data-term-option="dependency-injection"]')).toContainText('Dependency Injection');
+    await parkMouse(page);
+    if (hasScreenshot(variant)) await expect(bar).toHaveScreenshot(`editor-term-picker-${lang}-${theme}.png`);
+
+    // Another search, a miss, then the pick.
+    await bar.locator('input[type="search"]').fill('ioc');
+    await expect(bar.locator('[data-term-option]')).toHaveCount(1);
+    await expect(bar.locator('[data-term-option="ioc-container"]')).toBeVisible();
+    await bar.locator('input[type="search"]').fill('kubernetes');
+    await expect(bar.locator('[data-term-status]')).toHaveText(ar ? 'مفيش مصطلح زي كده في القاموس. جرّب المصطلح بالإنجليزي.' : 'No glossary term matches. Try the English term.');
+    await bar.locator('input[type="search"]').fill('dependency');
+    await bar.locator('[data-term-option="dependency-injection"]').click();
+    await expect(bar).toHaveCount(0);
+    const term = page.locator('[data-editor] .rd-term');
+    await expect(term).toHaveText('Dependency Injection');
+    await expect(term).toHaveAttribute('data-term', 'dependency-injection');
+
+    // The draft keeps it as an RDoc term node, with the spaces around it as text.
+    await savedToServer(page);
+    const paragraph = () => savedDocument().translations[0].content.blocks[0].content;
+    expect(paragraph()).toEqual([
+      { type: 'text', text: 'استخدم ' },
+      { type: 'term', termId: 'dependency-injection', text: 'Dependency Injection' },
+      { type: 'text', text: ' في كل حتة.' },
+    ]);
+
+    // Selecting the term opens it again: Remove term keeps the words as text.
+    await term.click();
+    await expect(termButton).toHaveAttribute('aria-pressed', 'true');
+    await termButton.click();
+    await expect(bar.locator('[data-term-for]')).toContainText('dependency-injection');
+    await expect(bar.locator('[data-term-option="dependency-injection"]')).toHaveAttribute('aria-current', 'true');
+    await bar.locator('[data-term-remove]').click();
+    await expect(term).toHaveCount(0);
+    await expect(page.locator('[data-editor] p').first()).toHaveText('استخدم Dependency Injection في كل حتة.');
   });
 }
 

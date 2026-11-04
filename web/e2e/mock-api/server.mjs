@@ -651,6 +651,18 @@ const routes = [
     (q, _m, _body, req) => [200, { items: q.get('cursor') ? [] : ARTICLES.map((a) => social.personalize(a, social.viewerOf(req))), nextCursor: null }],
   ],
   [
+    // The editor's term picker: the English term or the slug, those starting with `q` first, then A–Z (as the API).
+    'GET',
+    new RegExp(`^${API}/glossary$`),
+    (q) => {
+      const query = (q.get('q') ?? '').trim().toLowerCase();
+      const matches = Object.values(GLOSSARY)
+        .filter((t) => !query || t.term.toLowerCase().includes(query) || t.slug.includes(query))
+        .sort((a, b) => Number(!a.term.toLowerCase().startsWith(query)) - Number(!b.term.toLowerCase().startsWith(query)) || a.term.localeCompare(b.term));
+      return [200, matches.slice(0, Number(q.get('limit') ?? 20)).map(({ slug, term, definitionEn }) => ({ slug, term, definitionEn }))];
+    },
+  ],
+  [
     'GET',
     new RegExp(`^${API}/glossary/([^/]+)$`),
     (_q, [, slug]) => {

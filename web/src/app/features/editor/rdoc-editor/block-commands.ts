@@ -183,6 +183,57 @@ export function currentBlockDir(editor: Editor): BlockDir | null {
   return dir === 'rtl' || dir === 'ltr' ? dir : 'auto';
 }
 
+/** The longest text a glossary term node keeps (RDoc schema). */
+export const TERM_TEXT_MAX = 200;
+
+/**
+ * What the toolbar's glossary button (F21) works on: a term node the writer selected (`termId` set), or plain text
+ * selected inside one text block (`termId` null). `from`/`to` leave out spaces around the selected words.
+ */
+export interface TermTarget {
+  from: number;
+  to: number;
+  text: string;
+  termId: string | null;
+}
+
+export function termTarget(editor: Editor): TermTarget | null {
+  const { selection, doc } = editor.state;
+  if (selection instanceof NodeSelection) {
+    const { node } = selection;
+    if (node.type.name !== 'term') return null;
+    return { from: selection.from, to: selection.to, text: String(node.attrs['text'] ?? ''), termId: String(node.attrs['termId'] ?? '') };
+  }
+  const { $from, $to, empty } = selection;
+  if (empty || !$from.sameParent($to) || !$from.parent.inlineContent || $from.parent.type.spec.code) return null;
+  // Only text: a mention, another term or a line break inside the selection can't become part of a term.
+  let onlyText = true;
+  doc.nodesBetween(selection.from, selection.to, (node) => {
+    if (node.isInline && !node.isText) onlyText = false;
+  });
+  if (!onlyText) return null;
+  const raw = doc.textBetween(selection.from, selection.to);
+  const text = raw.trim();
+  if (!text || text.length > TERM_TEXT_MAX) return null;
+  const from = selection.from + (raw.length - raw.trimStart().length);
+  return { from, to: from + text.length, text, termId: null };
+}
+
+/** Turns the target's text into a glossary term node (an existing term gets the new `termId`). */
+export function markTerm(editor: Editor, target: TermTarget, termId: string): boolean {
+  return editor
+    .chain()
+    .focus()
+    .insertContentAt({ from: target.from, to: target.to }, { type: 'term', attrs: { termId, text: target.text } })
+    .run();
+}
+
+/** Turns a glossary term node back into plain text. */
+export function unmarkTerm(editor: Editor, target: TermTarget): boolean {
+  if (target.termId === null) return false;
+  return editor.chain().focus().insertContentAt({ from: target.from, to: target.to }, { type: 'text', text: target.text }).run();
+}
+
 /** Which text-block type the toolbar shows for the current block. */
 export function currentTextKind(editor: Editor): BlockKind | null {
   const top = currentTopBlock(editor);

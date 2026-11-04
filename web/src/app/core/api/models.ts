@@ -975,6 +975,15 @@ export interface MyProgressDto {
 
 // ── Glossary (F21) ──────────────────────────────────────────
 
+/** `GET /glossary?q=&limit=`: the editor's term picker. */
+export interface GlossaryTermSummaryDto {
+  /** The RDoc `term` node's `termId`. */
+  slug: string;
+  /** The English term, always shown LTR. */
+  term: string;
+  definitionEn: string;
+}
+
 /** `GET /glossary/{slug}?lang=`. `slug` is the RDoc `term` node's `termId`. */
 export interface GlossaryTermDto {
   slug: string;

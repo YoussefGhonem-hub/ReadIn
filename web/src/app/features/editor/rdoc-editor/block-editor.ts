@@ -23,14 +23,28 @@ import { Suggestion, SuggestionKeyDownProps, SuggestionOptions, SuggestionProps 
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { CommentsApi } from '../../../core/api/comments.api';
-import { ArticleLanguage, MentionCandidateDto } from '../../../core/api/models';
+import { GlossaryApi } from '../../../core/api/glossary.api';
+import { ArticleLanguage, GlossaryTermSummaryDto, MentionCandidateDto } from '../../../core/api/models';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { BdiText } from '../../../shared/directives/bdi-text';
 import { BlockDir, RDoc } from '../../../shared/rdoc/rdoc.models';
 import { languageDir, safeHttpUrl } from '../../../shared/rdoc/rdoc.utils';
 import { Avatar } from '../../../shared/ui/avatar';
 import { ImageUploader, largestVariant } from '../image-upload';
-import { BLOCK_MENU, BlockKind, BlockMenuItem, currentBlockDir, currentTextKind, filterBlockMenu, insertBlock, setBlockDir } from './block-commands';
+import {
+  BLOCK_MENU,
+  BlockKind,
+  BlockMenuItem,
+  TermTarget,
+  currentBlockDir,
+  currentTextKind,
+  filterBlockMenu,
+  insertBlock,
+  markTerm,
+  setBlockDir,
+  termTarget,
+  unmarkTerm,
+} from './block-commands';
 import { RDocEditorHost } from './editor-host';
 import { ensureBlockIds } from './editor-plugins';
 import { PmNode, editorToRDoc, rdocToEditor } from './rdoc-convert';
@@ -40,6 +54,8 @@ import { rdocExtensions } from './rdoc-schema';
 export const CHANGE_DEBOUNCE_MS = 300;
 /** Mention suggestions are asked for this long after the last keystroke. */
 const MENTION_DEBOUNCE_MS = 250;
+/** The glossary is searched this long after the last keystroke in the term picker. */
+const TERM_DEBOUNCE_MS = 250;
 
 /** An edited version: `language` is the one the editor content was loaded for. */
 export interface ContentChange {
@@ -67,8 +83,8 @@ const MARKS = [
 let nextEditorId = 0;
 
 /**
- * The block editor (F05): Tiptap over the RDoc schema, with a toolbar (block type, marks, link, direction, insert,
- * table rows/columns, undo), a slash menu (`/`), `@` mentions and markdown shortcuts. It loads `content` (again when
+ * The block editor (F05): Tiptap over the RDoc schema, with a toolbar (block type, marks, link, glossary term (F21),
+ * direction, insert, table rows/columns, undo), a slash menu (`/`), `@` mentions and markdown shortcuts. It loads `content` (again when
  * `contentKey` changes) and reports the edited RDoc through `changed` (debounced; `flush()` reports at once).
  */
 @Component({
@@ -123,6 +139,20 @@ let nextEditorId = 0;
         (click)="openLink()"
       >
         <svg lucideIcon="Link" [size]="16" aria-hidden="true"></svg>
+      </button>
+      <button
+        type="button"
+        class="rd-ed-tool"
+        [attr.aria-label]="'editor.toolbar.term' | transloco"
+        [title]="'editor.toolbar.termHint' | transloco"
+        [attr.aria-pressed]="isActive('term')"
+        [attr.aria-expanded]="termOpen()"
+        [disabled]="!canTerm()"
+        data-term
+        (mousedown)="$event.preventDefault()"
+        (click)="openTerm()"
+      >
+        <svg lucideIcon="BookOpen" [size]="16" aria-hidden="true"></svg>
       </button>
       <span class="rd-ed-sep" aria-hidden="true"></span>
       <div class="rd-ed-dir" role="group" [attr.aria-label]="'editor.toolbar.direction' | transloco">
@@ -200,6 +230,67 @@ let nextEditorId = 0;
       </form>
     }
 
+    @if (termOpen() && termSelection(); as target) {
+      <div class="rd-ed-linkbar rd-ed-termbar" role="group" [attr.aria-label]="'editor.toolbar.term' | transloco" data-term-bar (keydown.escape)="closeTerm()">
+        <p class="m-0 w-full text-sm text-text-secondary" data-term-for>
+          {{ (target.termId ? 'editor.toolbar.termCurrent' : 'editor.toolbar.termFor') | transloco }}
+          <bdi class="font-semibold text-text-primary">{{ target.text }}</bdi>
+          @if (target.termId) {
+            <bdi dir="ltr" class="ms-1 text-xs">({{ target.termId }})</bdi>
+          }
+        </p>
+        <label class="sr-only" [for]="editorId + '-term'">{{ 'editor.toolbar.termSearch' | transloco }}</label>
+        <input
+          #termInput
+          [id]="editorId + '-term'"
+          class="rd-input min-h-9 flex-1"
+          type="search"
+          dir="ltr"
+          autocomplete="off"
+          [placeholder]="'editor.toolbar.termSearchPlaceholder' | transloco"
+          [value]="termQuery()"
+          [attr.aria-controls]="editorId + '-term-results'"
+          (input)="searchTerms(valueOf($event))"
+        />
+        @if (target.termId) {
+          <button type="button" class="rd-btn rd-btn-ghost min-h-9 px-3 text-sm" data-term-remove (click)="removeTerm()">{{ 'editor.toolbar.termRemove' | transloco }}</button>
+        }
+        <button type="button" class="rd-btn rd-btn-ghost min-h-9 px-3 text-sm" (click)="closeTerm()">{{ 'common.cancel' | transloco }}</button>
+        <ul [id]="editorId + '-term-results'" class="rd-ed-termlist" [attr.aria-label]="'editor.toolbar.termResults' | transloco" [attr.aria-busy]="termStatus() === 'loading'" data-term-results>
+          @for (term of termResults(); track term.slug) {
+            <li>
+              <button
+                type="button"
+                class="rd-ed-termopt"
+                [attr.aria-current]="term.slug === target.termId ? 'true' : null"
+                [attr.data-term-option]="term.slug"
+                (click)="applyTerm(term)"
+              >
+                <bdi dir="ltr" class="block text-sm font-semibold">{{ term.term }}</bdi>
+                <span dir="ltr" class="block truncate text-xs text-text-secondary">{{ term.definitionEn }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+        <p class="m-0 w-full text-xs text-text-secondary" aria-live="polite" data-term-status>
+          @switch (termStatus()) {
+            @case ('loading') {
+              {{ 'editor.toolbar.termSearching' | transloco }}
+            }
+            @case ('error') {
+              <span class="text-error">{{ 'editor.toolbar.termError' | transloco }}</span>
+              <button type="button" class="rd-btn rd-btn-ghost ms-2 min-h-8 px-2 text-xs" (click)="searchTerms(termQuery(), true)">{{ 'common.retry' | transloco }}</button>
+            }
+            @case ('loaded') {
+              @if (!termResults().length) {
+                {{ (termQuery().trim() ? 'editor.toolbar.termNoMatches' : 'editor.toolbar.termType') | transloco }}
+              }
+            }
+          }
+        </p>
+      </div>
+    }
+
     <div #host class="rd-ed-surface" [attr.lang]="language()" [attr.dir]="contentDir()" data-editor-surface></div>
 
     @if (blockMenu(); as menu) {
@@ -272,6 +363,7 @@ export class BlockEditor {
   private readonly transloco = inject(TranslocoService);
   private readonly uploader = inject(ImageUploader);
   private readonly comments = inject(CommentsApi);
+  private readonly glossary = inject(GlossaryApi);
   private readonly uiLang = inject(LanguageService).lang;
 
   /** The article version being edited. */
@@ -292,6 +384,7 @@ export class BlockEditor {
 
   private readonly hostEl = viewChild.required<ElementRef<HTMLElement>>('host');
   private readonly linkInput = viewChild<ElementRef<HTMLInputElement>>('linkInput');
+  private readonly termInput = viewChild<ElementRef<HTMLInputElement>>('termInput');
   private editor: Editor | null = null;
   /** Bumped on every transaction so the toolbar state recomputes. */
   private readonly tick = signal(0);
@@ -307,6 +400,14 @@ export class BlockEditor {
   protected readonly linkOpen = signal(false);
   protected readonly linkUrl = signal('');
   protected readonly linkInvalid = signal(false);
+  /** The glossary term picker: what it marks (kept while the search field has focus), the query and the matches. */
+  protected readonly termOpen = signal(false);
+  protected readonly termSelection = signal<TermTarget | null>(null);
+  protected readonly termQuery = signal('');
+  protected readonly termResults = signal<GlossaryTermSummaryDto[]>([]);
+  protected readonly termStatus = signal<'loading' | 'loaded' | 'error'>('loaded');
+  private termTimer: ReturnType<typeof setTimeout> | null = null;
+  private termSearch = 0;
 
   protected readonly textKind = computed(() => (this.tick(), this.editor ? currentTextKind(this.editor) : null));
   protected readonly blockDir = computed(() => (this.tick(), this.editor ? currentBlockDir(this.editor) : null));
@@ -321,6 +422,8 @@ export class BlockEditor {
     const { $from } = editor.state.selection;
     return $from.parent.inlineContent && !$from.parent.type.spec.code && !(editor.state.selection instanceof NodeSelection);
   });
+  /** Words selected in one text block, or a glossary term node selected. */
+  protected readonly canTerm = computed(() => (this.tick(), !!this.editor && termTarget(this.editor) !== null));
 
   private readonly host: RDocEditorHost = {
     t: (key, params) => this.transloco.translate(key, params ?? {}),
@@ -354,6 +457,7 @@ export class BlockEditor {
       });
     });
     destroyRef.onDestroy(() => {
+      if (this.termTimer) clearTimeout(this.termTimer);
       this.flush();
       this.editor?.destroy();
       this.editor = null;
@@ -410,7 +514,8 @@ export class BlockEditor {
     this.editor?.destroy();
     this.blockMenu.set(null);
     this.mentionMenu.set(null);
-    this.loadedKey = `${this.language()}|${this.contentKey()}`;
+    this.termOpen.set(false); // its positions belong to the old document
+    this.loadedKey =`${this.language()}|${this.contentKey()}`;
     this.loadedUi = this.uiLang();
     this.loadedLanguage = this.language();
     const element = this.hostEl().nativeElement;
@@ -430,7 +535,11 @@ export class BlockEditor {
           'data-editor': '',
         },
       },
-      onTransaction: () => this.tick.update((n) => n + 1),
+      onTransaction: ({ transaction }) => {
+        this.tick.update((n) => n + 1);
+        // The picker's positions are the document's before this change.
+        if (transaction.docChanged && this.termOpen()) this.closeTerm(false);
+      },
       onUpdate: () => this.scheduleEmit(),
     });
     editor.view.dispatch(ensureBlockIds(editor.state.tr, undefined).setMeta('addToHistory', false));
@@ -562,6 +671,7 @@ export class BlockEditor {
 
   protected openLink(): void {
     if (!this.editor) return;
+    this.termOpen.set(false);
     this.linkUrl.set(String(this.editor.getAttributes('link')['href'] ?? ''));
     this.linkInvalid.set(false);
     this.linkOpen.set(true);
@@ -593,6 +703,69 @@ export class BlockEditor {
   protected closeLink(): void {
     this.linkOpen.set(false);
     this.editor?.commands.focus();
+  }
+
+  // ── Glossary term (F21) ────────────────────────────────
+
+  /** Opens the picker for the selected words (searching for them) or the selected term (searching for its id). */
+  protected openTerm(): void {
+    const target = this.editor ? termTarget(this.editor) : null;
+    if (!target) return;
+    this.linkOpen.set(false);
+    this.termSelection.set(target);
+    this.termOpen.set(true);
+    this.searchTerms(target.termId ?? target.text, true);
+    afterNextRenderFocus(() => this.termInput()?.nativeElement);
+  }
+
+  /** Searches the glossary for `query` (debounced unless `now`); an older answer never replaces a newer one. */
+  protected searchTerms(query: string, now = false): void {
+    this.termQuery.set(query);
+    if (this.termTimer) clearTimeout(this.termTimer);
+    const q = query.trim();
+    const search = ++this.termSearch;
+    if (!q) {
+      this.termResults.set([]);
+      this.termStatus.set('loaded');
+      return;
+    }
+    this.termStatus.set('loading');
+    this.termTimer = setTimeout(
+      async () => {
+        this.termTimer = null;
+        try {
+          const results = await firstValueFrom(this.glossary.search(q, 8));
+          if (search !== this.termSearch) return;
+          this.termResults.set(results);
+          this.termStatus.set('loaded');
+        } catch {
+          if (search === this.termSearch) this.termStatus.set('error');
+        }
+      },
+      now ? 0 : TERM_DEBOUNCE_MS,
+    );
+  }
+
+  protected applyTerm(term: GlossaryTermSummaryDto): void {
+    const target = this.termSelection();
+    if (this.editor && target) markTerm(this.editor, target, term.slug);
+    this.closeTerm(false);
+  }
+
+  protected removeTerm(): void {
+    const target = this.termSelection();
+    if (this.editor && target) unmarkTerm(this.editor, target);
+    this.closeTerm(false);
+  }
+
+  protected closeTerm(refocus = true): void {
+    if (this.termTimer) clearTimeout(this.termTimer);
+    this.termTimer = null;
+    this.termSearch++;
+    this.termOpen.set(false);
+    this.termSelection.set(null);
+    this.termResults.set([]);
+    if (refocus) this.editor?.commands.focus();
   }
 
   // ── Slash menu and mentions (Tiptap suggestion plugins) ─
