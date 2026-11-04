@@ -88,20 +88,6 @@ class SuggestMentions {
 }
 
 @injectable
-class ReportComment {
-  const ReportComment(this._repository);
-
-  final CommentsRepository _repository;
-
-  static const maxDetailsLength = 500;
-
-  Future<Result<void>> call(String commentId, ReportReason reason, {String? details}) {
-    final trimmed = details?.trim();
-    return _repository.reportComment(commentId, reason, details: trimmed == null || trimmed.isEmpty ? null : trimmed);
-  }
-}
-
-@injectable
 class ModerateComment {
   const ModerateComment(this._repository);
 

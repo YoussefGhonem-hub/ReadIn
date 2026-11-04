@@ -52,6 +52,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/saved/saved.page').then((m) => m.SavedPage),
       },
       { path: 'settings', loadChildren: () => import('./features/settings/settings.routes') },
+      // Reports queue, cases and log (F22): moderators only, client-rendered, its own chunk.
+      {
+        path: 'moderation',
+        canActivate: [permissionGuard('moderation.manage')],
+        loadChildren: () => import('./features/moderation/moderation.routes'),
+      },
       {
         path: 'write',
         canActivate: [permissionGuard('articles.create')],

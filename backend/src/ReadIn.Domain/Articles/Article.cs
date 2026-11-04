@@ -65,6 +65,13 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public DateTime? ScheduledAt { get; private set; }
     public double QualityScore { get; private set; }
 
+    /// <summary>
+    /// Hidden by a moderator (SPEC F22): gone from every list, feed and count; only its author and moderators still open
+    /// it. No foreign key, like <c>Comments.HiddenById</c>.
+    /// </summary>
+    public DateTime? HiddenAt { get; private set; }
+    public Guid? HiddenById { get; private set; }
+
     // Denormalized counters (SPEC §16.1), recomputed from SQL by the outbox handlers after each change (F27).
 
     /// <summary>All reactions: always the sum of the four per-type counts below.</summary>
@@ -99,6 +106,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
 
     public bool IsReviewed => ReviewStatus == ReviewStatus.Approved;
     public bool IsPublished => Status == ArticleStatus.Published;
+    public bool IsHidden => HiddenAt is not null;
 
     public static Article CreateDraft(Guid authorId, Guid fieldId, Guid? topicId, string slug, Guid? id = null)
     {
@@ -296,6 +304,20 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         var detached = _attachments.Select(a => a.MediaAssetId).ToList();
         _attachments.Clear();
         return detached;
+    }
+
+    /// <summary>A moderator hides the article (SPEC F22); idempotent. Moderators never delete articles: only authors do.</summary>
+    public void Hide(Guid moderatorId, DateTime now)
+    {
+        if (IsHidden) return;
+        HiddenAt = now;
+        HiddenById = moderatorId;
+    }
+
+    public void Unhide()
+    {
+        HiddenAt = null;
+        HiddenById = null;
     }
 
     /// <summary>Used by the content importer: editorial content arrives already reviewed (SPEC §19.2).</summary>

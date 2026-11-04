@@ -2143,37 +2143,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commentsUnhidden => 'Comment visible again';
 
   @override
-  String get commentsReportTitle => 'Report comment';
-
-  @override
-  String get commentsReportBody =>
-      'Why are you reporting it? Our moderators will review it.';
-
-  @override
-  String get commentsReportSpam => 'Spam';
-
-  @override
-  String get commentsReportMisinformation => 'Misinformation';
-
-  @override
-  String get commentsReportHarassment => 'Harassment';
-
-  @override
-  String get commentsReportCopyright => 'Copyright';
-
-  @override
-  String get commentsReportOther => 'Something else';
-
-  @override
-  String get commentsReportDetails => 'Details (optional)';
-
-  @override
-  String get commentsReportSubmit => 'Send report';
-
-  @override
-  String get commentsReportThanks => 'Thanks, we\'ll review it.';
-
-  @override
   String get commentsErrRateLimited =>
       'You\'re commenting too fast. Wait a minute and try again.';
 
@@ -2212,12 +2181,475 @@ class AppLocalizationsEn extends AppLocalizations {
       'A comment can have at most 2000 characters.';
 
   @override
-  String get commentsErrReportOwnContent =>
-      'You can\'t report your own comment.';
+  String get reportTitleArticle => 'Report article';
 
   @override
-  String get commentsErrReportNotSupported => 'This can\'t be reported yet.';
+  String get reportTitleComment => 'Report comment';
 
   @override
-  String get commentsErrReportReason => 'Choose a reason.';
+  String get reportTitleUser => 'Report user';
+
+  @override
+  String get reportBody =>
+      'Why are you reporting this? Our moderators will review it.';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonMisinformation => 'Misinformation';
+
+  @override
+  String get reportReasonHarassment => 'Harassment';
+
+  @override
+  String get reportReasonCopyright => 'Copyright';
+
+  @override
+  String get reportReasonOther => 'Something else';
+
+  @override
+  String get reportDetails => 'Details (optional)';
+
+  @override
+  String get reportSubmit => 'Send report';
+
+  @override
+  String get reportThanks => 'Thanks, we\'ll review it.';
+
+  @override
+  String errSuspendedUntil(String date) {
+    return 'This account is suspended until $date. Contact support.';
+  }
+
+  @override
+  String get errSuspendedPermanently =>
+      'This account is permanently suspended. Contact support.';
+
+  @override
+  String get errReportOwnContent =>
+      'You can\'t report yourself or your own content.';
+
+  @override
+  String get errReportReason => 'Choose a reason.';
+
+  @override
+  String get errReportTargetInvalid => 'This can\'t be reported.';
+
+  @override
+  String get errReportTargetNotFound =>
+      'What you\'re reporting doesn\'t exist anymore.';
+
+  @override
+  String get errModerationActionInvalid => 'This action isn\'t available here.';
+
+  @override
+  String get errModerationSelf => 'You can\'t do this to your own account.';
+
+  @override
+  String get errModerationStaffTarget =>
+      'You can\'t warn or suspend a member of the moderation team.';
+
+  @override
+  String get errModerationNoteRequired => 'Write a note first.';
+
+  @override
+  String get errModerationDurationInvalid => 'Choose between 1 and 365 days.';
+
+  @override
+  String get errModerationNoticeNotFound =>
+      'This notice isn\'t available anymore.';
+
+  @override
+  String get articleMenu => 'Article options';
+
+  @override
+  String get articleMenuReport => 'Report article';
+
+  @override
+  String get articleMenuHide => 'Hide article';
+
+  @override
+  String get articleMenuUnhide => 'Unhide article';
+
+  @override
+  String get articleHiddenBannerTitle => 'Hidden by moderators';
+
+  @override
+  String get articleHiddenBannerBody =>
+      'Only its author and moderators can see it.';
+
+  @override
+  String get profileMenu => 'More options';
+
+  @override
+  String get profileMenuReport => 'Report user';
+
+  @override
+  String get profileMenuWarn => 'Warn';
+
+  @override
+  String get profileMenuSuspend => 'Suspend account';
+
+  @override
+  String get moderationTitle => 'Moderation';
+
+  @override
+  String get moderationQueueEntry => 'Reports';
+
+  @override
+  String moderationWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items waiting for review',
+      one: '1 item waiting for review',
+      zero: 'Nothing waiting for review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moderationNoAccessTitle => 'This page is for moderators';
+
+  @override
+  String get moderationNoAccessBody =>
+      'Your account doesn\'t have moderation access.';
+
+  @override
+  String get moderationTabOpen => 'Open';
+
+  @override
+  String get moderationTabResolved => 'Resolved';
+
+  @override
+  String get moderationTabDismissed => 'Dismissed';
+
+  @override
+  String get moderationTabLog => 'Log';
+
+  @override
+  String get moderationFilterAll => 'All';
+
+  @override
+  String get moderationFilterArticles => 'Articles';
+
+  @override
+  String get moderationFilterComments => 'Comments';
+
+  @override
+  String get moderationFilterUsers => 'Users';
+
+  @override
+  String get moderationEmptyOpenTitle => 'No open reports';
+
+  @override
+  String get moderationEmptyOpenBody => 'All clear for now.';
+
+  @override
+  String get moderationEmptyResolvedTitle => 'No resolved reports';
+
+  @override
+  String get moderationEmptyDismissedTitle => 'No dismissed reports';
+
+  @override
+  String get moderationEmptyLogTitle => 'No moderation actions yet';
+
+  @override
+  String get moderationLoadMoreFailed => 'Couldn\'t load more.';
+
+  @override
+  String get moderationTypeArticle => 'Article';
+
+  @override
+  String get moderationTypeComment => 'Comment';
+
+  @override
+  String get moderationTypeUser => 'User';
+
+  @override
+  String get moderationStateHidden => 'Hidden';
+
+  @override
+  String get moderationStateDeleted => 'Deleted';
+
+  @override
+  String get moderationStateSuspended => 'Suspended';
+
+  @override
+  String get moderationStatusOpen => 'Open';
+
+  @override
+  String get moderationStatusResolved => 'Resolved';
+
+  @override
+  String get moderationStatusDismissed => 'Dismissed';
+
+  @override
+  String moderationReportCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reports',
+      one: '1 report',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moderationLastReport(String time) {
+    return 'Last report: $time';
+  }
+
+  @override
+  String moderationClosed(String time) {
+    return 'Closed: $time';
+  }
+
+  @override
+  String moderationCommentOn(String title) {
+    return 'On “$title”';
+  }
+
+  @override
+  String moderationWarningCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count warnings',
+      one: '1 warning',
+      zero: 'No warnings',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moderationSuspendedUntil(String date) {
+    return 'Suspended until $date';
+  }
+
+  @override
+  String get moderationSuspendedForever => 'Permanently suspended';
+
+  @override
+  String get moderationCaseArticle => 'Reported article';
+
+  @override
+  String get moderationCaseComment => 'Reported comment';
+
+  @override
+  String get moderationCaseUser => 'Reported user';
+
+  @override
+  String get moderationOpenArticle => 'Open article';
+
+  @override
+  String get moderationOpenProfile => 'Open profile';
+
+  @override
+  String get moderationActions => 'Actions';
+
+  @override
+  String moderationReportsTitle(int count) {
+    return 'Reports ($count)';
+  }
+
+  @override
+  String get moderationHistory => 'History';
+
+  @override
+  String get moderationHistoryEmpty => 'No actions yet.';
+
+  @override
+  String moderationClosedBy(String name) {
+    return 'Closed by $name';
+  }
+
+  @override
+  String get moderationHideComment => 'Hide comment';
+
+  @override
+  String get moderationUnhideComment => 'Unhide comment';
+
+  @override
+  String get moderationDeleteComment => 'Delete comment';
+
+  @override
+  String get moderationWarnAuthor => 'Warn author';
+
+  @override
+  String get moderationSuspendAuthor => 'Suspend author';
+
+  @override
+  String get moderationUnsuspend => 'Lift suspension';
+
+  @override
+  String get moderationDismiss => 'Dismiss reports';
+
+  @override
+  String get moderationHideArticleTitle => 'Hide this article?';
+
+  @override
+  String get moderationHideArticleBody =>
+      'It disappears from feeds, lists and search, and only its author and moderators can open it. The author is notified.';
+
+  @override
+  String get moderationHideCommentTitle => 'Hide this comment?';
+
+  @override
+  String get moderationHideCommentBody =>
+      'Readers see “Hidden by moderators” in its place.';
+
+  @override
+  String get moderationNoteOptional => 'Note (optional)';
+
+  @override
+  String get moderationNoteLabel => 'Note';
+
+  @override
+  String get moderationNoteForUser => 'They\'ll see this note.';
+
+  @override
+  String moderationWarnTitle(String name) {
+    return 'Warn $name';
+  }
+
+  @override
+  String get moderationWarnBody =>
+      'They\'ll get a warning with your note and must acknowledge it.';
+
+  @override
+  String get moderationWarnConfirm => 'Send warning';
+
+  @override
+  String moderationSuspendTitle(String name) {
+    return 'Suspend $name';
+  }
+
+  @override
+  String get moderationSuspendBody =>
+      'They can\'t sign in or use their account until the suspension ends.';
+
+  @override
+  String get moderationSuspendDuration => 'Duration';
+
+  @override
+  String moderationDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moderationPermanent => 'Permanently';
+
+  @override
+  String get moderationSuspendConfirm => 'Suspend';
+
+  @override
+  String moderationUnsuspendTitle(String name) {
+    return 'Lift $name\'s suspension?';
+  }
+
+  @override
+  String get moderationUnsuspendBody =>
+      'They can sign in and use their account again right away.';
+
+  @override
+  String get moderationDismissTitle => 'Dismiss these reports?';
+
+  @override
+  String get moderationDismissBody =>
+      'The open reports are closed as dismissed. The content stays as it is.';
+
+  @override
+  String get moderationArticleHidden => 'Article hidden';
+
+  @override
+  String get moderationArticleUnhidden => 'Article visible again';
+
+  @override
+  String get moderationWarned => 'Warning sent';
+
+  @override
+  String get moderationSuspended => 'Account suspended';
+
+  @override
+  String get moderationUnsuspended => 'Suspension lifted';
+
+  @override
+  String get moderationDismissed => 'Reports dismissed';
+
+  @override
+  String get moderationLogCommentHide => 'Hid a comment';
+
+  @override
+  String get moderationLogCommentUnhide => 'Unhid a comment';
+
+  @override
+  String get moderationLogCommentDelete => 'Deleted a comment';
+
+  @override
+  String get moderationLogArticleHide => 'Hid an article';
+
+  @override
+  String get moderationLogArticleUnhide => 'Unhid an article';
+
+  @override
+  String get moderationLogUserWarn => 'Warned a user';
+
+  @override
+  String get moderationLogUserSuspend => 'Suspended an account';
+
+  @override
+  String get moderationLogUserUnsuspend => 'Lifted a suspension';
+
+  @override
+  String get moderationLogReportsDismiss => 'Dismissed reports';
+
+  @override
+  String get moderationLogOther => 'Moderation action';
+
+  @override
+  String moderationLogReportsClosed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Closed $count reports',
+      one: 'Closed 1 report',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moderationLogUntil(String date) {
+    return 'Until $date';
+  }
+
+  @override
+  String get noticeWarningTitle =>
+      'You received a warning from the moderation team';
+
+  @override
+  String get noticeWarningBody =>
+      'Please read the note and keep to ReadIn\'s community rules.';
+
+  @override
+  String noticeArticleHiddenTitle(String title) {
+    return 'Your article “$title” was hidden';
+  }
+
+  @override
+  String get noticeArticleHiddenBody =>
+      'Readers can\'t see it anymore. Only you and the moderators can open it.';
+
+  @override
+  String get noticeNoteLabel => 'Moderator\'s note';
+
+  @override
+  String get noticeAcknowledge => 'Got it';
 }

@@ -3,6 +3,7 @@ import { PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { catchError, from, switchMap, throwError } from 'rxjs';
 import { API_BASE_URL, WITH_SESSION } from '../api/api.config';
+import type { ProblemDetails } from '../api/models';
 import { AuthService } from '../auth/auth.service';
 import { HydrationWindow } from './hydration-window';
 
@@ -21,7 +22,8 @@ function withBearer<T>(req: HttpRequest<T>, token: string): HttpRequest<T> {
 /**
  * Adds `Authorization: Bearer <access token>` to API calls when signed in (SPEC §9.3). On a 401 it refreshes once —
  * single-flight, shared by every request that failed with the same token — and retries; if the session can't be
- * renewed AuthService signs out locally and the original error goes on to the error interceptor.
+ * renewed AuthService signs out locally and the original error goes on to the error interceptor. A `403 user.suspended`
+ * (the account was suspended while signed in, F22) ends the session and opens Sign in with the message.
  * While hydrating, GETs go out anonymously so they are answered from the SSR transfer cache; pages that personalize
  * (e.g. Home) refresh once the session is known; GETs marked WITH_SESSION (never in that cache) keep their token. The
  * server never sends a token (SSR is anonymous).
@@ -39,7 +41,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (!token) return next(req);
       return next(withBearer(req, token)).pipe(
         catchError((error: unknown) => {
-          if (!(error instanceof HttpErrorResponse) || error.status !== 401) return throwError(() => error);
+          if (!(error instanceof HttpErrorResponse)) return throwError(() => error);
+          if (error.status === 403 && suspension(error)) {
+            auth.endSuspendedSession(suspension(error));
+            return throwError(() => error);
+          }
+          if (error.status !== 401) return throwError(() => error);
           return from(auth.renewAfterUnauthorized(token)).pipe(
             switchMap((fresh) => (fresh ? next(withBearer(req, fresh)) : throwError(() => error))),
           );
@@ -48,3 +55,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     }),
   );
 };
+
+/** The `user.suspended` problem of a failed call, or null. */
+function suspension(error: HttpErrorResponse): ProblemDetails | null {
+  const body = error.error as ProblemDetails | null;
+  return body && typeof body === 'object' && body.code === 'user.suspended' ? body : null;
+}

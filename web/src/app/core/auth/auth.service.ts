@@ -1,13 +1,15 @@
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, Injector, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { isApiError } from '../api/api.config';
+import { ApiError, isApiError } from '../api/api.config';
 import { AuthApi } from '../api/auth.api';
 import { MeApi } from '../api/me.api';
 import { AccountConfirmation, ExternalCredential, ExternalSignInRequest, MeDto, RegisterRequest, SessionDto } from '../api/models';
 import { LanguageService } from '../i18n/language.service';
 import { PushService } from '../push/push.service';
 import { ThemeService } from '../theme/theme.service';
+import { AuthFlowState, SuspensionNotice } from './auth-flow';
 import { SessionStore } from './session.store';
 import { localTimeZone } from './time-zone';
 
@@ -36,6 +38,8 @@ export class AuthService {
   private readonly language = inject(LanguageService);
   private readonly theme = inject(ThemeService);
   private readonly push = inject(PushService);
+  private readonly flow = inject(AuthFlowState);
+  private readonly injector = inject(Injector);
 
   private accessToken: string | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -187,11 +191,27 @@ export class AuthService {
     this.session.setGuest();
   }
 
+  /**
+   * The account was suspended while signed in (F22): any call, or the refresh, answered `403 user.suspended`. The
+   * session ends here and Sign in opens with the message, which says until when (or that it is permanent).
+   */
+  endSuspendedSession(suspension: SuspensionNotice | null): void {
+    if (!this.accessToken) return; // another call already did
+    this.endLocalSession();
+    this.flow.suspension.set({ suspendedUntil: suspension?.suspendedUntil });
+    const router = this.injector.get(Router);
+    const current = router.url;
+    const returnUrl = current.startsWith('/auth') ? null : current;
+    void router.navigate(['/auth/sign-in'], { queryParams: returnUrl && returnUrl !== '/' ? { returnUrl } : {} }).catch(() => undefined);
+  }
+
   private async restore(): Promise<void> {
     try {
       await this.applySession(await firstValueFrom(this.api.refresh()), { profilePreferences: true });
-    } catch {
+    } catch (error) {
       this.endLocalSession(); // 401 auth.refresh_invalid: a guest (offline: browse as a guest too)
+      // A suspended account browses as a guest; Sign in says why and until when.
+      if (isSuspended(error)) this.flow.suspension.set({ suspendedUntil: error.problem?.suspendedUntil });
     } finally {
       this.resolveReady();
     }
@@ -204,7 +224,8 @@ export class AuthService {
       return session.accessToken;
     } catch (error) {
       const sessionOver = isApiError(error) && error.status >= 400 && error.status < 500 && error.status !== 429;
-      if (sessionOver) this.endLocalSession();
+      if (isSuspended(error)) this.endSuspendedSession(error.problem);
+      else if (sessionOver) this.endLocalSession();
       else if (this.accessToken) this.schedule(REFRESH_RETRY_MS); // offline or a server error: keep the session
       return null;
     }
@@ -234,6 +255,10 @@ export class AuthService {
     if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
     this.refreshTimer = null;
   }
+}
+
+function isSuspended(error: unknown): error is ApiError {
+  return isApiError(error) && error.code === 'user.suspended';
 }
 
 /**

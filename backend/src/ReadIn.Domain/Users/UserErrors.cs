@@ -11,6 +11,10 @@ public static class UserErrors
     public static readonly Error InvalidLanguage = Error.Validation("user.language_invalid", "Unsupported language.");
     public static readonly Error InterestsMinThree = Error.Validation("user.interests.min_three", "Choose at least 3 interests.");
     public static readonly Error DeviceNotFound = Error.NotFound("user.device_not_found", "This device is not registered.");
+
+    /// <summary><see cref="Suspended"/> with when it ends (SPEC F22): <c>suspendedUntil</c>, ISO UTC or null for permanent.</summary>
+    public static Error SuspendedUntil(DateTime? until) =>
+        Suspended with { Extensions = new Dictionary<string, object?> { ["suspendedUntil"] = until } };
 }
 
 /// <summary>The public profile and editing it (SPEC F14, F18).</summary>

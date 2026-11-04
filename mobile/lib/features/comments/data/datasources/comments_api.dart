@@ -2,11 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../../../moderation/data/models/moderation_models.dart';
 import '../models/comment_models.dart';
 
 part 'comments_api.g.dart';
 
-/// Comments and replies (F11), comment reports and moderator actions (F22 hooks in F11), @mention suggestions.
+/// Comments and replies (F11), moderator actions on comments (F22), @mention suggestions.
 /// Reads are public; writes need a session.
 @lazySingleton
 @RestApi()
@@ -59,9 +60,6 @@ abstract class CommentsApi {
 
   @GET('/users/mention-suggestions')
   Future<List<MentionCandidateModel>> mentionSuggestions(@Query('q') String query, @Query('limit') int limit);
-
-  @POST('/reports')
-  Future<void> report(@Body() ReportRequest body);
 
   @POST('/moderation/actions')
   Future<void> moderate(@Body() ModerationActionRequest body);

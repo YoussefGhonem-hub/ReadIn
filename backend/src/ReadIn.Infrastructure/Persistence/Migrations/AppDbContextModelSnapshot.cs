@@ -57,6 +57,12 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<int>("FireCount")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("HiddenAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("HiddenById")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("InsightfulCount")
                         .HasColumnType("int");
 
@@ -1049,6 +1055,72 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasKey("AssetId", "PageNo");
 
                     b.ToTable("MediaAssetPages", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Moderation.ModerationAction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AcknowledgedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ModeratorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("NoticeKind")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("ReportsClosed")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SuspendedUntil")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TargetLabel")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<Guid?>("TargetUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModeratorId", "CreatedAt");
+
+                    b.HasIndex("TargetUserId", "CreatedAt");
+
+                    b.HasIndex("TargetType", "TargetId", "CreatedAt");
+
+                    b.HasIndex(new[] { "TargetUserId", "AcknowledgedAt" }, "IX_ModerationActions_Notices")
+                        .HasFilter("[NoticeKind] IS NOT NULL");
+
+                    b.ToTable("ModerationActions", (string)null);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Moderation.Report", b =>

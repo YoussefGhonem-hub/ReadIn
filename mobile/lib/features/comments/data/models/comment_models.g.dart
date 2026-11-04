@@ -151,35 +151,3 @@ Map<String, dynamic> _$MentionCandidateModelToJson(
   'avatarUrl': ?instance.avatarUrl,
   'isVerified': instance.isVerified,
 };
-
-_ReportRequest _$ReportRequestFromJson(Map<String, dynamic> json) =>
-    _ReportRequest(
-      targetType: json['targetType'] as String,
-      targetId: json['targetId'] as String,
-      reason: json['reason'] as String,
-      details: json['details'] as String?,
-    );
-
-Map<String, dynamic> _$ReportRequestToJson(_ReportRequest instance) =>
-    <String, dynamic>{
-      'targetType': instance.targetType,
-      'targetId': instance.targetId,
-      'reason': instance.reason,
-      'details': ?instance.details,
-    };
-
-_ModerationActionRequest _$ModerationActionRequestFromJson(
-  Map<String, dynamic> json,
-) => _ModerationActionRequest(
-  action: json['action'] as String,
-  targetType: json['targetType'] as String,
-  targetId: json['targetId'] as String,
-);
-
-Map<String, dynamic> _$ModerationActionRequestToJson(
-  _ModerationActionRequest instance,
-) => <String, dynamic>{
-  'action': instance.action,
-  'targetType': instance.targetType,
-  'targetId': instance.targetId,
-};

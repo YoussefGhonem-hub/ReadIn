@@ -1,4 +1,4 @@
-import { pushLinkToPath, toPushMessage } from './push-message';
+import { pushLinkToPath, pushType, toPushMessage } from './push-message';
 
 const ORIGIN = 'https://readin.app';
 
@@ -52,6 +52,12 @@ describe('push messages', () => {
       expect(toPushMessage('push', ORIGIN, 'ar')).toBeNull();
       expect(toPushMessage(null, ORIGIN, 'ar')).toBeNull();
     });
+  });
+
+  it('reads the push type from its data', () => {
+    expect(pushType({ notification: { title: 'x' }, data: { type: 'moderation_notice', noticeId: 'n1' } })).toBe('moderation_notice');
+    expect(pushType({ notification: { title: 'x' } })).toBeNull();
+    expect(pushType(null)).toBeNull();
   });
 
   describe('pushLinkToPath', () => {

@@ -3,7 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { isApiError } from '../../core/api/api.config';
 import { CommentsApi } from '../../core/api/comments.api';
 import { ModerationApi } from '../../core/api/moderation.api';
-import { ArticleCardDto, AuthorDto, CommentDto, CommentSort, ModerationAction } from '../../core/api/models';
+import { ArticleCardDto, AuthorDto, CommentDto, CommentSort } from '../../core/api/models';
 import { SessionStore } from '../../core/auth/session.store';
 import { CommentEvent } from '../../core/realtime/realtime.service';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
@@ -410,7 +410,7 @@ export class CommentsStore {
   }
 
   /** Moderator hide / unhide / delete (audited). Rejects with the API error. */
-  async moderate(commentId: string, action: ModerationAction): Promise<void> {
+  async moderate(commentId: string, action: 'hide' | 'unhide' | 'delete'): Promise<void> {
     const comment = this.find(commentId);
     if (!comment) return;
     const before = this.total();

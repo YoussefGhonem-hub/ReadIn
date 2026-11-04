@@ -4,11 +4,10 @@ using ReadIn.Application.Common.Models;
 using ReadIn.Application.Features.Comments;
 using ReadIn.Application.Features.Comments.Commands;
 using ReadIn.Application.Features.Comments.Queries;
-using ReadIn.Application.Features.Moderation;
 
 namespace ReadIn.Api.Endpoints;
 
-/// <summary>Comments and replies (SPEC F11), comment reports and moderator actions (F22 hooks), @mention suggestions.</summary>
+/// <summary>Comments and replies (SPEC F11) and @mention suggestions. Reports and moderation are in <see cref="ModerationEndpoints"/>.</summary>
 internal sealed class CommentEndpoints : IEndpointGroup
 {
     public void Map(RouteGroupBuilder api)
@@ -89,20 +88,6 @@ internal sealed class CommentEndpoints : IEndpointGroup
             .RequireRateLimiting(RateLimitPolicies.Writes)
             .WithSummary("Unpin")
             .Produces<CommentDto>();
-
-        api.MapPost("/reports", async (ReportContentCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
-                (await sender.Send(body, ct)).ToHttp(http))
-            .RequireAuthorization()
-            .RequireRateLimiting(RateLimitPolicies.Writes)
-            .WithTags("Moderation")
-            .WithSummary("Report content: targetType comment; reason spam | misinformation | harassment | copyright | other");
-
-        api.MapPost("/moderation/actions", async (ModerateContentCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
-                (await sender.Send(body, ct)).ToHttp(http))
-            .RequireAuthorization()
-            .RequireRateLimiting(RateLimitPolicies.Writes)
-            .WithTags("Moderation")
-            .WithSummary("Moderators: hide | unhide | delete a comment (moderation.manage); audited");
 
         api.MapGet("/users/mention-suggestions", async (string? q, int? limit, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(new GetMentionSuggestionsQuery(q, limit ?? 8), ct)).ToHttp(http))

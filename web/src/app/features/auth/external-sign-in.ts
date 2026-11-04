@@ -183,6 +183,6 @@ export class ExternalSignIn {
   }
 
   private message(error: unknown): string {
-    return isApiError(error) ? this.errors.forCode(error.code) : this.errors.forError(error);
+    return this.errors.forError(error);
   }
 }

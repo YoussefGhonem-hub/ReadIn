@@ -2,7 +2,6 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.Articles;
-using ReadIn.Domain.Articles;
 using ReadIn.Domain.Engagement;
 
 namespace ReadIn.Application.Features.SavedArticles;
@@ -22,12 +21,15 @@ internal static class SavedArticleQueries
         await db.SavedArticles.AnyAsync(s => s.UserId == userId && s.ArticleId == articleId, ct),
         await db.SavedArticles.CountAsync(s => s.ArticleId == articleId, ct));
 
-    public static IQueryable<CollectionDto> ToDtos(this IQueryable<Collection> collections, IAppDbContext db) =>
-        collections.Select(c => new CollectionDto(
+    public static IQueryable<CollectionDto> ToDtos(this IQueryable<Collection> collections, IAppDbContext db)
+    {
+        var visible = db.Articles.Visible();
+        return collections.Select(c => new CollectionDto(
             c.Id,
             c.Name,
-            c.Items.Count(i => db.Articles.Any(a => a.Id == i.ArticleId && a.Status == ArticleStatus.Published && a.Field.IsEnabled)),
+            c.Items.Count(i => visible.Any(a => a.Id == i.ArticleId)),
             c.CreatedAt));
+    }
 
     /// <summary>Your collection, tracked with its entry for <paramref name="articleId"/> if any; null when it isn't yours.</summary>
     public static Task<Collection?> FindOwnCollectionAsync(this IAppDbContext db, Guid collectionId, Guid userId, Guid articleId, CancellationToken ct) =>

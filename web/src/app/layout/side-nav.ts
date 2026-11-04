@@ -1,8 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { SessionStore } from '../core/auth/session.store';
+import { LanguageService } from '../core/i18n/language.service';
+import { ModerationSummaryStore } from '../core/moderation/moderation-summary.store';
+import { translatePlural } from '../shared/pipes/intl';
 import { NavItem, SIDE_NAV, profilePath } from './nav-items';
 
 @Component({
@@ -22,6 +25,12 @@ import { NavItem, SIDE_NAV, profilePath } from './nav-items';
         >
           <svg [lucideIcon]="item.icon" [size]="20"></svg>
           <span>{{ item.labelKey | transloco }}</span>
+          @if (item.id === 'moderation' && moderation.total() > 0) {
+            <span class="ms-auto min-w-6 rounded-chip bg-error px-1.5 text-center text-xs font-semibold leading-5 text-on-error" aria-hidden="true" data-moderation-badge>{{
+              moderation.total() > 99 ? '99+' : moderation.total()
+            }}</span>
+            <span class="sr-only">{{ badgeLabel() }}</span>
+          }
         </a>
       }
     </nav>
@@ -29,7 +38,14 @@ import { NavItem, SIDE_NAV, profilePath } from './nav-items';
 })
 export class SideNav {
   private readonly session = inject(SessionStore);
+  private readonly transloco = inject(TranslocoService);
+  private readonly lang = inject(LanguageService).lang;
+  /** Open reports for the Moderation badge (F22). */
+  protected readonly moderation = inject(ModerationSummaryStore);
   protected readonly items = computed<NavItem[]>(() =>
-    SIDE_NAV.map((item) => (item.id === 'profile' ? { ...item, path: profilePath(this.session.username()) } : item)),
+    SIDE_NAV.filter((item) => !item.permission || this.session.permissions().has(item.permission)).map((item) =>
+      item.id === 'profile' ? { ...item, path: profilePath(this.session.username()) } : item,
+    ),
   );
+  protected readonly badgeLabel = computed(() => translatePlural(this.transloco, 'moderation.openBadge', this.moderation.total(), this.lang()));
 }

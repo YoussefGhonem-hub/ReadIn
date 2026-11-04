@@ -2043,9 +2043,275 @@ as String,
 
 
 /// @nodoc
+mixin _$ArticleModerationModel {
+
+ DateTime get hiddenAt; String? get note;
+/// Create a copy of ArticleModerationModel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ArticleModerationModelCopyWith<ArticleModerationModel> get copyWith => _$ArticleModerationModelCopyWithImpl<ArticleModerationModel>(this as ArticleModerationModel, _$identity);
+
+  /// Serializes this ArticleModerationModel to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleModerationModel&&(identical(other.hiddenAt, hiddenAt) || other.hiddenAt == hiddenAt)&&(identical(other.note, note) || other.note == note));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,hiddenAt,note);
+
+@override
+String toString() {
+  return 'ArticleModerationModel(hiddenAt: $hiddenAt, note: $note)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ArticleModerationModelCopyWith<$Res>  {
+  factory $ArticleModerationModelCopyWith(ArticleModerationModel value, $Res Function(ArticleModerationModel) _then) = _$ArticleModerationModelCopyWithImpl;
+@useResult
+$Res call({
+ DateTime hiddenAt, String? note
+});
+
+
+
+
+}
+/// @nodoc
+class _$ArticleModerationModelCopyWithImpl<$Res>
+    implements $ArticleModerationModelCopyWith<$Res> {
+  _$ArticleModerationModelCopyWithImpl(this._self, this._then);
+
+  final ArticleModerationModel _self;
+  final $Res Function(ArticleModerationModel) _then;
+
+/// Create a copy of ArticleModerationModel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? hiddenAt = null,Object? note = freezed,}) {
+  return _then(_self.copyWith(
+hiddenAt: null == hiddenAt ? _self.hiddenAt : hiddenAt // ignore: cast_nullable_to_non_nullable
+as DateTime,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ArticleModerationModel].
+extension ArticleModerationModelPatterns on ArticleModerationModel {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ArticleModerationModel value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ArticleModerationModel() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ArticleModerationModel value)  $default,){
+final _that = this;
+switch (_that) {
+case _ArticleModerationModel():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ArticleModerationModel value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ArticleModerationModel() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime hiddenAt,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ArticleModerationModel() when $default != null:
+return $default(_that.hiddenAt,_that.note);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime hiddenAt,  String? note)  $default,) {final _that = this;
+switch (_that) {
+case _ArticleModerationModel():
+return $default(_that.hiddenAt,_that.note);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime hiddenAt,  String? note)?  $default,) {final _that = this;
+switch (_that) {
+case _ArticleModerationModel() when $default != null:
+return $default(_that.hiddenAt,_that.note);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ArticleModerationModel extends ArticleModerationModel {
+  const _ArticleModerationModel({required this.hiddenAt, this.note}): super._();
+  factory _ArticleModerationModel.fromJson(Map<String, dynamic> json) => _$ArticleModerationModelFromJson(json);
+
+@override final  DateTime hiddenAt;
+@override final  String? note;
+
+/// Create a copy of ArticleModerationModel
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ArticleModerationModelCopyWith<_ArticleModerationModel> get copyWith => __$ArticleModerationModelCopyWithImpl<_ArticleModerationModel>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ArticleModerationModelToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleModerationModel&&(identical(other.hiddenAt, hiddenAt) || other.hiddenAt == hiddenAt)&&(identical(other.note, note) || other.note == note));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,hiddenAt,note);
+
+@override
+String toString() {
+  return 'ArticleModerationModel(hiddenAt: $hiddenAt, note: $note)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ArticleModerationModelCopyWith<$Res> implements $ArticleModerationModelCopyWith<$Res> {
+  factory _$ArticleModerationModelCopyWith(_ArticleModerationModel value, $Res Function(_ArticleModerationModel) _then) = __$ArticleModerationModelCopyWithImpl;
+@override @useResult
+$Res call({
+ DateTime hiddenAt, String? note
+});
+
+
+
+
+}
+/// @nodoc
+class __$ArticleModerationModelCopyWithImpl<$Res>
+    implements _$ArticleModerationModelCopyWith<$Res> {
+  __$ArticleModerationModelCopyWithImpl(this._self, this._then);
+
+  final _ArticleModerationModel _self;
+  final $Res Function(_ArticleModerationModel) _then;
+
+/// Create a copy of ArticleModerationModel
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? hiddenAt = null,Object? note = freezed,}) {
+  return _then(_ArticleModerationModel(
+hiddenAt: null == hiddenAt ? _self.hiddenAt : hiddenAt // ignore: cast_nullable_to_non_nullable
+as DateTime,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$ArticleDetailsModel {
 
- String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel get author; int get readingTimeMinutes; bool get isReviewed; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; String? get myReaction; bool get isSaved; List<String> get availableLanguages; String? get summary; Map<String, dynamic> get content; FieldRefModel? get topic; List<String> get tags; List<SourceModel> get sources; ReviewerModel? get reviewedBy; DateTime? get lastReviewedAt; int get saveCount; int get readCount; bool get isFollowingAuthor; List<String> get collectionIds;
+ String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel get author; int get readingTimeMinutes; bool get isReviewed; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; String? get myReaction; bool get isSaved; List<String> get availableLanguages; String? get summary; Map<String, dynamic> get content; FieldRefModel? get topic; List<String> get tags; List<SourceModel> get sources; ReviewerModel? get reviewedBy; DateTime? get lastReviewedAt; int get saveCount; int get readCount; bool get isFollowingAuthor; List<String> get collectionIds; ArticleModerationModel? get moderation;
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2058,16 +2324,16 @@ $ArticleDetailsModelCopyWith<ArticleDetailsModel> get copyWith => _$ArticleDetai
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleDetailsModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isReviewed, isReviewed) || other.isReviewed == isReviewed)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&const DeepCollectionEquality().equals(other.availableLanguages, availableLanguages)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other.content, content)&&(identical(other.topic, topic) || other.topic == topic)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.sources, sources)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy)&&(identical(other.lastReviewedAt, lastReviewedAt) || other.lastReviewedAt == lastReviewedAt)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.readCount, readCount) || other.readCount == readCount)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other.collectionIds, collectionIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleDetailsModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isReviewed, isReviewed) || other.isReviewed == isReviewed)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&const DeepCollectionEquality().equals(other.availableLanguages, availableLanguages)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other.content, content)&&(identical(other.topic, topic) || other.topic == topic)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.sources, sources)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy)&&(identical(other.lastReviewedAt, lastReviewedAt) || other.lastReviewedAt == lastReviewedAt)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.readCount, readCount) || other.readCount == readCount)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other.collectionIds, collectionIds)&&(identical(other.moderation, moderation) || other.moderation == moderation));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isReviewed,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,myReaction,isSaved,const DeepCollectionEquality().hash(availableLanguages),summary,const DeepCollectionEquality().hash(content),topic,const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(sources),reviewedBy,lastReviewedAt,saveCount,readCount,isFollowingAuthor,const DeepCollectionEquality().hash(collectionIds)]);
+int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isReviewed,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,myReaction,isSaved,const DeepCollectionEquality().hash(availableLanguages),summary,const DeepCollectionEquality().hash(content),topic,const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(sources),reviewedBy,lastReviewedAt,saveCount,readCount,isFollowingAuthor,const DeepCollectionEquality().hash(collectionIds),moderation]);
 
 @override
 String toString() {
-  return 'ArticleDetailsModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isReviewed: $isReviewed, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, myReaction: $myReaction, isSaved: $isSaved, availableLanguages: $availableLanguages, summary: $summary, content: $content, topic: $topic, tags: $tags, sources: $sources, reviewedBy: $reviewedBy, lastReviewedAt: $lastReviewedAt, saveCount: $saveCount, readCount: $readCount, isFollowingAuthor: $isFollowingAuthor, collectionIds: $collectionIds)';
+  return 'ArticleDetailsModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isReviewed: $isReviewed, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, myReaction: $myReaction, isSaved: $isSaved, availableLanguages: $availableLanguages, summary: $summary, content: $content, topic: $topic, tags: $tags, sources: $sources, reviewedBy: $reviewedBy, lastReviewedAt: $lastReviewedAt, saveCount: $saveCount, readCount: $readCount, isFollowingAuthor: $isFollowingAuthor, collectionIds: $collectionIds, moderation: $moderation)';
 }
 
 
@@ -2078,11 +2344,11 @@ abstract mixin class $ArticleDetailsModelCopyWith<$Res>  {
   factory $ArticleDetailsModelCopyWith(ArticleDetailsModel value, $Res Function(ArticleDetailsModel) _then) = _$ArticleDetailsModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic, List<String> tags, List<SourceModel> sources, ReviewerModel? reviewedBy, DateTime? lastReviewedAt, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic, List<String> tags, List<SourceModel> sources, ReviewerModel? reviewedBy, DateTime? lastReviewedAt, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds, ArticleModerationModel? moderation
 });
 
 
-$FieldRefModelCopyWith<$Res> get field;$AuthorModelCopyWith<$Res> get author;$ArticleAttachmentsModelCopyWith<$Res>? get attachments;$ReactionCountsModelCopyWith<$Res>? get reactions;$FieldRefModelCopyWith<$Res>? get topic;$ReviewerModelCopyWith<$Res>? get reviewedBy;
+$FieldRefModelCopyWith<$Res> get field;$AuthorModelCopyWith<$Res> get author;$ArticleAttachmentsModelCopyWith<$Res>? get attachments;$ReactionCountsModelCopyWith<$Res>? get reactions;$FieldRefModelCopyWith<$Res>? get topic;$ReviewerModelCopyWith<$Res>? get reviewedBy;$ArticleModerationModelCopyWith<$Res>? get moderation;
 
 }
 /// @nodoc
@@ -2095,7 +2361,7 @@ class _$ArticleDetailsModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = null,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? reviewedBy = freezed,Object? lastReviewedAt = freezed,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = null,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? reviewedBy = freezed,Object? lastReviewedAt = freezed,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,Object? moderation = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -2128,7 +2394,8 @@ as DateTime?,saveCount: null == saveCount ? _self.saveCount : saveCount // ignor
 as int,readCount: null == readCount ? _self.readCount : readCount // ignore: cast_nullable_to_non_nullable
 as int,isFollowingAuthor: null == isFollowingAuthor ? _self.isFollowingAuthor : isFollowingAuthor // ignore: cast_nullable_to_non_nullable
 as bool,collectionIds: null == collectionIds ? _self.collectionIds : collectionIds // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,moderation: freezed == moderation ? _self.moderation : moderation // ignore: cast_nullable_to_non_nullable
+as ArticleModerationModel?,
   ));
 }
 /// Create a copy of ArticleDetailsModel
@@ -2196,6 +2463,18 @@ $ReviewerModelCopyWith<$Res>? get reviewedBy {
 
   return $ReviewerModelCopyWith<$Res>(_self.reviewedBy!, (value) {
     return _then(_self.copyWith(reviewedBy: value));
+  });
+}/// Create a copy of ArticleDetailsModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ArticleModerationModelCopyWith<$Res>? get moderation {
+    if (_self.moderation == null) {
+    return null;
+  }
+
+  return $ArticleModerationModelCopyWith<$Res>(_self.moderation!, (value) {
+    return _then(_self.copyWith(moderation: value));
   });
 }
 }
@@ -2279,10 +2558,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  ArticleModerationModel? moderation)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel() when $default != null:
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.reviewedBy,_that.lastReviewedAt,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.reviewedBy,_that.lastReviewedAt,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.moderation);case _:
   return orElse();
 
 }
@@ -2300,10 +2579,10 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  ArticleModerationModel? moderation)  $default,) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel():
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.reviewedBy,_that.lastReviewedAt,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.reviewedBy,_that.lastReviewedAt,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.moderation);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2320,10 +2599,10 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel author,  int readingTimeMinutes,  bool isReviewed,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  ReviewerModel? reviewedBy,  DateTime? lastReviewedAt,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  ArticleModerationModel? moderation)?  $default,) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel() when $default != null:
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.reviewedBy,_that.lastReviewedAt,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isReviewed,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.reviewedBy,_that.lastReviewedAt,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.moderation);case _:
   return null;
 
 }
@@ -2335,7 +2614,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 @JsonSerializable()
 
 class _ArticleDetailsModel extends ArticleDetailsModel {
-  const _ArticleDetailsModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isReviewed = false, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.myReaction, this.isSaved = false, final  List<String> availableLanguages = const <String>[], this.summary, final  Map<String, dynamic> content = const <String, dynamic>{}, this.topic, final  List<String> tags = const <String>[], final  List<SourceModel> sources = const <SourceModel>[], this.reviewedBy, this.lastReviewedAt, this.saveCount = 0, this.readCount = 0, this.isFollowingAuthor = false, final  List<String> collectionIds = const <String>[]}): _availableLanguages = availableLanguages,_content = content,_tags = tags,_sources = sources,_collectionIds = collectionIds,super._();
+  const _ArticleDetailsModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isReviewed = false, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.myReaction, this.isSaved = false, final  List<String> availableLanguages = const <String>[], this.summary, final  Map<String, dynamic> content = const <String, dynamic>{}, this.topic, final  List<String> tags = const <String>[], final  List<SourceModel> sources = const <SourceModel>[], this.reviewedBy, this.lastReviewedAt, this.saveCount = 0, this.readCount = 0, this.isFollowingAuthor = false, final  List<String> collectionIds = const <String>[], this.moderation}): _availableLanguages = availableLanguages,_content = content,_tags = tags,_sources = sources,_collectionIds = collectionIds,super._();
   factory _ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
 
 @override final  String id;
@@ -2399,6 +2678,7 @@ class _ArticleDetailsModel extends ArticleDetailsModel {
   return EqualUnmodifiableListView(_collectionIds);
 }
 
+@override final  ArticleModerationModel? moderation;
 
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
@@ -2413,16 +2693,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleDetailsModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isReviewed, isReviewed) || other.isReviewed == isReviewed)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&const DeepCollectionEquality().equals(other._availableLanguages, _availableLanguages)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other._content, _content)&&(identical(other.topic, topic) || other.topic == topic)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._sources, _sources)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy)&&(identical(other.lastReviewedAt, lastReviewedAt) || other.lastReviewedAt == lastReviewedAt)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.readCount, readCount) || other.readCount == readCount)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other._collectionIds, _collectionIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleDetailsModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isReviewed, isReviewed) || other.isReviewed == isReviewed)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&const DeepCollectionEquality().equals(other._availableLanguages, _availableLanguages)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other._content, _content)&&(identical(other.topic, topic) || other.topic == topic)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._sources, _sources)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy)&&(identical(other.lastReviewedAt, lastReviewedAt) || other.lastReviewedAt == lastReviewedAt)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.readCount, readCount) || other.readCount == readCount)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other._collectionIds, _collectionIds)&&(identical(other.moderation, moderation) || other.moderation == moderation));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isReviewed,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,myReaction,isSaved,const DeepCollectionEquality().hash(_availableLanguages),summary,const DeepCollectionEquality().hash(_content),topic,const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_sources),reviewedBy,lastReviewedAt,saveCount,readCount,isFollowingAuthor,const DeepCollectionEquality().hash(_collectionIds)]);
+int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isReviewed,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,myReaction,isSaved,const DeepCollectionEquality().hash(_availableLanguages),summary,const DeepCollectionEquality().hash(_content),topic,const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_sources),reviewedBy,lastReviewedAt,saveCount,readCount,isFollowingAuthor,const DeepCollectionEquality().hash(_collectionIds),moderation]);
 
 @override
 String toString() {
-  return 'ArticleDetailsModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isReviewed: $isReviewed, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, myReaction: $myReaction, isSaved: $isSaved, availableLanguages: $availableLanguages, summary: $summary, content: $content, topic: $topic, tags: $tags, sources: $sources, reviewedBy: $reviewedBy, lastReviewedAt: $lastReviewedAt, saveCount: $saveCount, readCount: $readCount, isFollowingAuthor: $isFollowingAuthor, collectionIds: $collectionIds)';
+  return 'ArticleDetailsModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isReviewed: $isReviewed, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, myReaction: $myReaction, isSaved: $isSaved, availableLanguages: $availableLanguages, summary: $summary, content: $content, topic: $topic, tags: $tags, sources: $sources, reviewedBy: $reviewedBy, lastReviewedAt: $lastReviewedAt, saveCount: $saveCount, readCount: $readCount, isFollowingAuthor: $isFollowingAuthor, collectionIds: $collectionIds, moderation: $moderation)';
 }
 
 
@@ -2433,11 +2713,11 @@ abstract mixin class _$ArticleDetailsModelCopyWith<$Res> implements $ArticleDeta
   factory _$ArticleDetailsModelCopyWith(_ArticleDetailsModel value, $Res Function(_ArticleDetailsModel) _then) = __$ArticleDetailsModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic, List<String> tags, List<SourceModel> sources, ReviewerModel? reviewedBy, DateTime? lastReviewedAt, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel author, int readingTimeMinutes, bool isReviewed, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic, List<String> tags, List<SourceModel> sources, ReviewerModel? reviewedBy, DateTime? lastReviewedAt, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds, ArticleModerationModel? moderation
 });
 
 
-@override $FieldRefModelCopyWith<$Res> get field;@override $AuthorModelCopyWith<$Res> get author;@override $ArticleAttachmentsModelCopyWith<$Res>? get attachments;@override $ReactionCountsModelCopyWith<$Res>? get reactions;@override $FieldRefModelCopyWith<$Res>? get topic;@override $ReviewerModelCopyWith<$Res>? get reviewedBy;
+@override $FieldRefModelCopyWith<$Res> get field;@override $AuthorModelCopyWith<$Res> get author;@override $ArticleAttachmentsModelCopyWith<$Res>? get attachments;@override $ReactionCountsModelCopyWith<$Res>? get reactions;@override $FieldRefModelCopyWith<$Res>? get topic;@override $ReviewerModelCopyWith<$Res>? get reviewedBy;@override $ArticleModerationModelCopyWith<$Res>? get moderation;
 
 }
 /// @nodoc
@@ -2450,7 +2730,7 @@ class __$ArticleDetailsModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = null,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? reviewedBy = freezed,Object? lastReviewedAt = freezed,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = null,Object? readingTimeMinutes = null,Object? isReviewed = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? reviewedBy = freezed,Object? lastReviewedAt = freezed,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,Object? moderation = freezed,}) {
   return _then(_ArticleDetailsModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -2483,7 +2763,8 @@ as DateTime?,saveCount: null == saveCount ? _self.saveCount : saveCount // ignor
 as int,readCount: null == readCount ? _self.readCount : readCount // ignore: cast_nullable_to_non_nullable
 as int,isFollowingAuthor: null == isFollowingAuthor ? _self.isFollowingAuthor : isFollowingAuthor // ignore: cast_nullable_to_non_nullable
 as bool,collectionIds: null == collectionIds ? _self._collectionIds : collectionIds // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,moderation: freezed == moderation ? _self.moderation : moderation // ignore: cast_nullable_to_non_nullable
+as ArticleModerationModel?,
   ));
 }
 
@@ -2552,6 +2833,18 @@ $ReviewerModelCopyWith<$Res>? get reviewedBy {
 
   return $ReviewerModelCopyWith<$Res>(_self.reviewedBy!, (value) {
     return _then(_self.copyWith(reviewedBy: value));
+  });
+}/// Create a copy of ArticleDetailsModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ArticleModerationModelCopyWith<$Res>? get moderation {
+    if (_self.moderation == null) {
+    return null;
+  }
+
+  return $ArticleModerationModelCopyWith<$Res>(_self.moderation!, (value) {
+    return _then(_self.copyWith(moderation: value));
   });
 }
 }

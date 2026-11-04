@@ -1,6 +1,7 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Features.Articles;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Reading;
@@ -15,9 +16,9 @@ internal sealed class RecordReadingProgressCommandHandler(IAppDbContext db, ICur
         var userId = currentUser.RequireUserId();
         var now = clock.GetUtcNow().UtcDateTime;
 
-        var published = await db.Articles.AsNoTracking()
-            .AnyAsync(a => a.Id == command.ArticleId && a.Status == ArticleStatus.Published, cancellationToken);
-        if (!published) return ArticleErrors.NotFound;
+        // A hidden article is only read by its author and moderators (SPEC F22).
+        if (!await db.Articles.AsNoTracking().VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken))
+            return ArticleErrors.NotFound;
 
         var timeZone = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => u.TimeZone).FirstAsync(cancellationToken);
         var today = ReadingClock.LocalDate(now, timeZone);

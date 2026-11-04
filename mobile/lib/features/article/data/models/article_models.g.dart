@@ -150,6 +150,20 @@ Map<String, dynamic> _$ReviewerModelToJson(_ReviewerModel instance) =>
       'username': instance.username,
     };
 
+_ArticleModerationModel _$ArticleModerationModelFromJson(
+  Map<String, dynamic> json,
+) => _ArticleModerationModel(
+  hiddenAt: DateTime.parse(json['hiddenAt'] as String),
+  note: json['note'] as String?,
+);
+
+Map<String, dynamic> _$ArticleModerationModelToJson(
+  _ArticleModerationModel instance,
+) => <String, dynamic>{
+  'hiddenAt': instance.hiddenAt.toIso8601String(),
+  'note': ?instance.note,
+};
+
 _ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
     _ArticleDetailsModel(
       id: json['id'] as String,
@@ -212,6 +226,11 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const <String>[],
+      moderation: json['moderation'] == null
+          ? null
+          : ArticleModerationModel.fromJson(
+              json['moderation'] as Map<String, dynamic>,
+            ),
     );
 
 Map<String, dynamic> _$ArticleDetailsModelToJson(
@@ -248,4 +267,5 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'readCount': instance.readCount,
   'isFollowingAuthor': instance.isFollowingAuthor,
   'collectionIds': instance.collectionIds,
+  'moderation': ?instance.moderation?.toJson(),
 };

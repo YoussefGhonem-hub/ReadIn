@@ -16,7 +16,7 @@ internal sealed class AddToCollectionCommandHandler(IAppDbContext db, ICurrentUs
         var userId = currentUser.RequireUserId();
         var collection = await db.FindOwnCollectionAsync(command.CollectionId, userId, command.ArticleId, cancellationToken);
         if (collection is null) return CollectionErrors.NotFound;
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var now = clock.GetUtcNow().UtcDateTime;
         var wasSaved = await IsSavedAsync(userId, command.ArticleId, cancellationToken);

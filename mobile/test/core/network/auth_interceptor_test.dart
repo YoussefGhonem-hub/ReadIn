@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/network/interceptors.dart';
 import 'package:readin/core/network/request_context.dart';
 import 'package:readin/features/auth/data/datasources/auth_api.dart';
@@ -13,6 +14,7 @@ class FakeTokens implements SessionTokenProvider {
   String? current;
   String? next;
   final rejected = <String>[];
+  final suspended = <Failure>[];
 
   @override
   Future<String?> accessToken() async => current;
@@ -22,6 +24,12 @@ class FakeTokens implements SessionTokenProvider {
     rejected.add(token);
     current = next;
     return next;
+  }
+
+  @override
+  Future<void> endSuspended(Failure reason) async {
+    suspended.add(reason);
+    current = null;
   }
 }
 
@@ -123,5 +131,33 @@ void main() {
     expect(refreshes, 1);
     expect(authAdapter.requests.single.data, {'refreshToken': 'r1'});
     expect(secure.values[AuthSessionStore.refreshTokenKey], 'r2');
+  });
+
+  test('a signed-in call refused with 403 user.suspended ends the session with suspendedUntil (F22)', () async {
+    final tokens = FakeTokens('a1');
+    final adapter = ScriptedAdapter((_) => (403, {'code': 'user.suspended', 'suspendedUntil': '2026-11-09T12:00:00Z'}));
+    final dio = client(tokens, adapter);
+
+    final error = await dio.get<dynamic>('/me').then<DioException?>((_) => null, onError: (Object e) => e as DioException);
+
+    expect(error?.response?.statusCode, 403, reason: 'the caller still gets the error');
+    expect(tokens.suspended.single, Failure(FailureCodes.userSuspended, statusCode: 403, suspendedUntil: DateTime.utc(2026, 11, 9, 12)));
+    expect(tokens.rejected, isEmpty, reason: 'no refresh for a 403');
+  });
+
+  test('other 403s, and a guest refused as suspended, keep the session alone', () async {
+    final signedIn = FakeTokens('a1');
+    await expectLater(
+      client(signedIn, ScriptedAdapter((_) => (403, {'code': 'auth.forbidden'}))).get<dynamic>('/moderation/summary'),
+      throwsA(isA<DioException>()),
+    );
+    final guest = FakeTokens(null);
+    await expectLater(
+      client(guest, ScriptedAdapter((_) => (403, {'code': 'user.suspended'}))).post<dynamic>('/auth/login', data: {}),
+      throwsA(isA<DioException>()),
+    );
+
+    expect(signedIn.suspended, isEmpty);
+    expect(guest.suspended, isEmpty);
   });
 }

@@ -1,7 +1,9 @@
+import { Component, Type, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { translocoTesting } from '../testing/transloco-testing';
 import { App } from './app';
+import { ModerationNotices } from './core/moderation/moderation-notices';
 import { provideAppIcons } from './shared/ui/icons';
 
 describe('App', () => {
@@ -25,5 +27,24 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     expect(document.documentElement.getAttribute('data-theme')).toMatch(/^(system|light|dark)$/);
+  });
+
+  it('shows the moderation notice dialog once its chunk is there (F22)', async () => {
+    @Component({ selector: 'rd-fake-notice', template: '<p data-fake-notice>notice</p>' })
+    class FakeNotice {}
+    const dialog = signal<Type<unknown> | null>(null);
+    TestBed.overrideProvider(ModerationNotices, { useValue: { dialog } });
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-fake-notice]')).toBeNull();
+    dialog.set(FakeNotice);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el.querySelectorAll('[data-fake-notice]')).toHaveLength(1);
+    // Once: it stays the same dialog for every notice.
+    dialog.set(FakeNotice);
+    await fixture.whenStable();
+    expect(el.querySelectorAll('[data-fake-notice]')).toHaveLength(1);
   });
 });

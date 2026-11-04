@@ -32,12 +32,12 @@ public sealed record GetCommentQuery(Guid CommentId) : IQuery<Result<CommentDto>
 [Authenticated]
 public sealed record GetMentionSuggestionsQuery(string? Q, int Limit = 8) : IQuery<Result<IReadOnlyList<MentionCandidateDto>>>;
 
-internal sealed class GetArticleCommentsQueryHandler(IAppDbContext db, CommentReader reader)
+internal sealed class GetArticleCommentsQueryHandler(IAppDbContext db, ICurrentUser viewer, CommentReader reader)
     : IQueryHandler<GetArticleCommentsQuery, Result<CommentPageDto>>
 {
     public async ValueTask<Result<CommentPageDto>> Handle(GetArticleCommentsQuery query, CancellationToken cancellationToken)
     {
-        var article = await db.Articles.Visible().AsNoTracking()
+        var article = await db.Articles.VisibleTo(viewer).AsNoTracking()
             .Where(a => a.Id == query.ArticleId)
             .Select(a => new { a.CommentCount })
             .FirstOrDefaultAsync(cancellationToken);
@@ -96,7 +96,7 @@ internal sealed class GetArticleCommentsQueryHandler(IAppDbContext db, CommentRe
     }
 }
 
-internal sealed class GetCommentRepliesQueryHandler(IAppDbContext db, CommentReader reader)
+internal sealed class GetCommentRepliesQueryHandler(IAppDbContext db, ICurrentUser viewer, CommentReader reader)
     : IQueryHandler<GetCommentRepliesQuery, Result<CursorPage<CommentDto>>>
 {
     public async ValueTask<Result<CursorPage<CommentDto>>> Handle(GetCommentRepliesQuery query, CancellationToken cancellationToken)
@@ -104,7 +104,7 @@ internal sealed class GetCommentRepliesQueryHandler(IAppDbContext db, CommentRea
         var parent = await reader.All().Where(c => c.Id == query.CommentId)
             .Select(c => new { c.ArticleId, c.ParentId }).FirstOrDefaultAsync(cancellationToken);
         if (parent is null || parent.ParentId is not null) return CommentErrors.NotFound;
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == parent.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(viewer).AnyAsync(a => a.Id == parent.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var limit = Math.Clamp(query.Limit, 1, 50);
         var replies = reader.All().Where(c => c.ParentId == query.CommentId).Where(reader.ReadableBy());
@@ -124,13 +124,13 @@ internal sealed class GetCommentRepliesQueryHandler(IAppDbContext db, CommentRea
     }
 }
 
-internal sealed class GetCommentQueryHandler(IAppDbContext db, CommentReader reader) : IQueryHandler<GetCommentQuery, Result<CommentDto>>
+internal sealed class GetCommentQueryHandler(IAppDbContext db, ICurrentUser viewer, CommentReader reader) : IQueryHandler<GetCommentQuery, Result<CommentDto>>
 {
     public async ValueTask<Result<CommentDto>> Handle(GetCommentQuery query, CancellationToken cancellationToken)
     {
         var comment = await reader.LoadOneAsync(query.CommentId, cancellationToken);
         if (comment is null) return CommentErrors.NotFound;
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == comment.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(viewer).AnyAsync(a => a.Id == comment.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
         return comment;
     }
 }

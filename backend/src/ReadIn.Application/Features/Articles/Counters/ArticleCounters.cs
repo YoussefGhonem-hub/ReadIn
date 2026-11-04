@@ -79,7 +79,7 @@ public sealed class ArticleCounters(IAppDbContext db, IRealtimePublisher realtim
             {
                 a.Id,
                 a.Slug,
-                IsLive = a.Status == ArticleStatus.Published && !a.IsDeleted,
+                IsLive = a.Status == ArticleStatus.Published && !a.IsDeleted && a.HiddenAt == null,
                 a.InsightfulCount,
                 a.LoveCount,
                 a.FireCount,
@@ -89,7 +89,7 @@ public sealed class ArticleCounters(IAppDbContext db, IRealtimePublisher realtim
             })
             .ToListAsync(ct);
 
-        // Live signals only for what readers can see; drafts and deleted articles never reach RTDB.
+        // Live signals only for what readers can see; drafts, deleted and hidden articles never reach RTDB.
         foreach (var row in rows.Where(r => r.IsLive))
         {
             await realtime.PublishArticleCountersAsync(

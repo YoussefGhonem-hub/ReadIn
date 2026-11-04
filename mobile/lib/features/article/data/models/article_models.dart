@@ -139,6 +139,18 @@ abstract class ReviewerModel with _$ReviewerModel {
   factory ReviewerModel.fromJson(Map<String, dynamic> json) => _$ReviewerModelFromJson(json);
 }
 
+/// `ArticleDetailsDto.moderation` (F22): `{ hiddenAt, note }` while moderators keep the article hidden.
+@freezed
+abstract class ArticleModerationModel with _$ArticleModerationModel {
+  const ArticleModerationModel._();
+
+  const factory ArticleModerationModel({required DateTime hiddenAt, String? note}) = _ArticleModerationModel;
+
+  factory ArticleModerationModel.fromJson(Map<String, dynamic> json) => _$ArticleModerationModelFromJson(json);
+
+  ArticleModeration toEntity() => ArticleModeration(hiddenAt: hiddenAt, note: note);
+}
+
 /// `ArticleDetailsDto` — card fields plus reader-only fields. `content` stays
 /// raw JSON here and is parsed into [RDocDocument] when mapping to the entity.
 /// [toJson] is what the offline copy of a saved article keeps (F13, F25).
@@ -178,6 +190,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     @Default(0) int readCount,
     @Default(false) bool isFollowingAuthor,
     @Default(<String>[]) List<String> collectionIds,
+    ArticleModerationModel? moderation,
   }) = _ArticleDetailsModel;
 
   factory ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
@@ -221,5 +234,6 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         isFollowingAuthor: isFollowingAuthor,
         collectionIds: collectionIds,
         isOfflineCopy: offline,
+        moderation: moderation?.toEntity(),
       );
 }

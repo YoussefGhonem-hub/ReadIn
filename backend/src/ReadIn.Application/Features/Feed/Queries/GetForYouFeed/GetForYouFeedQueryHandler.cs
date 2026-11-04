@@ -5,7 +5,6 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Mapping;
 using ReadIn.Application.Common.Models;
 using ReadIn.Application.Features.Articles;
-using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 
 namespace ReadIn.Application.Features.Feed.Queries.GetForYouFeed;
@@ -21,7 +20,8 @@ internal sealed class GetForYouFeedQueryHandler(
     {
         var limit = Math.Clamp(query.Limit, 1, 50);
         var articles = db.Articles.AsNoTracking()
-            .Where(a => a.Status == ArticleStatus.Published && a.PublishedAt != null && a.Field.IsEnabled);
+            .Visible()
+            .Where(a => a.PublishedAt != null);
 
         string? articleLanguage = null;
         if (!string.IsNullOrWhiteSpace(query.FieldSlug))

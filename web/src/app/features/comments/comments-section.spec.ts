@@ -243,6 +243,6 @@ describe('CommentsSection (F11)', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
     expect(t.$('[data-report-sheet]')).toBeNull();
-    expect(TestBed.inject(ToastService).toasts().map((toast) => toast.message)).toEqual(['شكراً، هنراجعه.']);
+    expect(TestBed.inject(ToastService).toasts().map((toast) => toast.message)).toEqual(['شكرًا، هنراجع البلاغ']);
   });
 });

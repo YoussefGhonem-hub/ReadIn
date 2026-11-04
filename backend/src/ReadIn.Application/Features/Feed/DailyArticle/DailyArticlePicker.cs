@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Features.Articles;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Reading;
 
@@ -185,13 +186,13 @@ public sealed class DailyArticlePicker(IAppDbContext db)
             .Select(p => (Guid?)p.ArticleId)
             .FirstOrDefaultAsync(cancellationToken);
 
-    private IQueryable<Article> Published() => db.Articles.AsNoTracking()
-        .Where(a => a.Status == ArticleStatus.Published && a.Field.IsEnabled);
+    /// <summary>What readers can open (hidden articles never become anyone's pick, SPEC F22).</summary>
+    private IQueryable<Article> Readable() => db.Articles.AsNoTracking().Visible();
 
-    private IQueryable<Article> Reviewed() => Published().Where(a => a.ReviewStatus == ReviewStatus.Approved);
+    private IQueryable<Article> Reviewed() => Readable().Where(a => a.ReviewStatus == ReviewStatus.Approved);
 
     /// <summary>Fallback pool: published, not (yet) reviewed, but passed the content pipeline's automatic checks.</summary>
-    private IQueryable<Article> AutoChecked() => Published().Where(a => a.ReviewStatus != ReviewStatus.Approved && a.AutoCheckedAt != null);
+    private IQueryable<Article> AutoChecked() => Readable().Where(a => a.ReviewStatus != ReviewStatus.Approved && a.AutoCheckedAt != null);
 }
 
 /// <param name="ExcludedFieldId">The field of the last two days' picks when both were the same field.</param>

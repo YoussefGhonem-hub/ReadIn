@@ -49,7 +49,7 @@ internal sealed class RefreshSessionCommandHandler(
             await db.SaveChangesAsync(cancellationToken);
             return CredentialErrors.RefreshTokenInvalid;
         }
-        if (user.IsSuspendedAt(now)) return UserErrors.Suspended;
+        if (user.IsSuspendedAt(now)) return UserErrors.SuspendedUntil(user.SuspendedUntil);
 
         return raced
             ? await sessions.ContinueAsync(user, token.FamilyId, cancellationToken)

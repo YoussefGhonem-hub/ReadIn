@@ -3632,66 +3632,6 @@ abstract class AppLocalizations {
   /// **'Comment visible again'**
   String get commentsUnhidden;
 
-  /// No description provided for @commentsReportTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Report comment'**
-  String get commentsReportTitle;
-
-  /// No description provided for @commentsReportBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Why are you reporting it? Our moderators will review it.'**
-  String get commentsReportBody;
-
-  /// No description provided for @commentsReportSpam.
-  ///
-  /// In en, this message translates to:
-  /// **'Spam'**
-  String get commentsReportSpam;
-
-  /// No description provided for @commentsReportMisinformation.
-  ///
-  /// In en, this message translates to:
-  /// **'Misinformation'**
-  String get commentsReportMisinformation;
-
-  /// No description provided for @commentsReportHarassment.
-  ///
-  /// In en, this message translates to:
-  /// **'Harassment'**
-  String get commentsReportHarassment;
-
-  /// No description provided for @commentsReportCopyright.
-  ///
-  /// In en, this message translates to:
-  /// **'Copyright'**
-  String get commentsReportCopyright;
-
-  /// No description provided for @commentsReportOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Something else'**
-  String get commentsReportOther;
-
-  /// No description provided for @commentsReportDetails.
-  ///
-  /// In en, this message translates to:
-  /// **'Details (optional)'**
-  String get commentsReportDetails;
-
-  /// No description provided for @commentsReportSubmit.
-  ///
-  /// In en, this message translates to:
-  /// **'Send report'**
-  String get commentsReportSubmit;
-
-  /// No description provided for @commentsReportThanks.
-  ///
-  /// In en, this message translates to:
-  /// **'Thanks, we\'ll review it.'**
-  String get commentsReportThanks;
-
   /// No description provided for @commentsErrRateLimited.
   ///
   /// In en, this message translates to:
@@ -3758,23 +3698,785 @@ abstract class AppLocalizations {
   /// **'A comment can have at most 2000 characters.'**
   String get commentsErrTooLong;
 
-  /// No description provided for @commentsErrReportOwnContent.
+  /// No description provided for @reportTitleArticle.
   ///
   /// In en, this message translates to:
-  /// **'You can\'t report your own comment.'**
-  String get commentsErrReportOwnContent;
+  /// **'Report article'**
+  String get reportTitleArticle;
 
-  /// No description provided for @commentsErrReportNotSupported.
+  /// No description provided for @reportTitleComment.
   ///
   /// In en, this message translates to:
-  /// **'This can\'t be reported yet.'**
-  String get commentsErrReportNotSupported;
+  /// **'Report comment'**
+  String get reportTitleComment;
 
-  /// No description provided for @commentsErrReportReason.
+  /// No description provided for @reportTitleUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Report user'**
+  String get reportTitleUser;
+
+  /// No description provided for @reportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Why are you reporting this? Our moderators will review it.'**
+  String get reportBody;
+
+  /// No description provided for @reportReasonSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam'**
+  String get reportReasonSpam;
+
+  /// No description provided for @reportReasonMisinformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Misinformation'**
+  String get reportReasonMisinformation;
+
+  /// No description provided for @reportReasonHarassment.
+  ///
+  /// In en, this message translates to:
+  /// **'Harassment'**
+  String get reportReasonHarassment;
+
+  /// No description provided for @reportReasonCopyright.
+  ///
+  /// In en, this message translates to:
+  /// **'Copyright'**
+  String get reportReasonCopyright;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get reportReasonOther;
+
+  /// No description provided for @reportDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details (optional)'**
+  String get reportDetails;
+
+  /// No description provided for @reportSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send report'**
+  String get reportSubmit;
+
+  /// No description provided for @reportThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks, we\'ll review it.'**
+  String get reportThanks;
+
+  /// No description provided for @errSuspendedUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is suspended until {date}. Contact support.'**
+  String errSuspendedUntil(String date);
+
+  /// No description provided for @errSuspendedPermanently.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is permanently suspended. Contact support.'**
+  String get errSuspendedPermanently;
+
+  /// No description provided for @errReportOwnContent.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t report yourself or your own content.'**
+  String get errReportOwnContent;
+
+  /// No description provided for @errReportReason.
   ///
   /// In en, this message translates to:
   /// **'Choose a reason.'**
-  String get commentsErrReportReason;
+  String get errReportReason;
+
+  /// No description provided for @errReportTargetInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be reported.'**
+  String get errReportTargetInvalid;
+
+  /// No description provided for @errReportTargetNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'What you\'re reporting doesn\'t exist anymore.'**
+  String get errReportTargetNotFound;
+
+  /// No description provided for @errModerationActionInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This action isn\'t available here.'**
+  String get errModerationActionInvalid;
+
+  /// No description provided for @errModerationSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t do this to your own account.'**
+  String get errModerationSelf;
+
+  /// No description provided for @errModerationStaffTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t warn or suspend a member of the moderation team.'**
+  String get errModerationStaffTarget;
+
+  /// No description provided for @errModerationNoteRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a note first.'**
+  String get errModerationNoteRequired;
+
+  /// No description provided for @errModerationDurationInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose between 1 and 365 days.'**
+  String get errModerationDurationInvalid;
+
+  /// No description provided for @errModerationNoticeNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This notice isn\'t available anymore.'**
+  String get errModerationNoticeNotFound;
+
+  /// No description provided for @articleMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Article options'**
+  String get articleMenu;
+
+  /// No description provided for @articleMenuReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report article'**
+  String get articleMenuReport;
+
+  /// No description provided for @articleMenuHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide article'**
+  String get articleMenuHide;
+
+  /// No description provided for @articleMenuUnhide.
+  ///
+  /// In en, this message translates to:
+  /// **'Unhide article'**
+  String get articleMenuUnhide;
+
+  /// No description provided for @articleHiddenBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden by moderators'**
+  String get articleHiddenBannerTitle;
+
+  /// No description provided for @articleHiddenBannerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only its author and moderators can see it.'**
+  String get articleHiddenBannerBody;
+
+  /// No description provided for @profileMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get profileMenu;
+
+  /// No description provided for @profileMenuReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report user'**
+  String get profileMenuReport;
+
+  /// No description provided for @profileMenuWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn'**
+  String get profileMenuWarn;
+
+  /// No description provided for @profileMenuSuspend.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend account'**
+  String get profileMenuSuspend;
+
+  /// No description provided for @moderationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderation'**
+  String get moderationTitle;
+
+  /// No description provided for @moderationQueueEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get moderationQueueEntry;
+
+  /// No description provided for @moderationWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing waiting for review} =1{1 item waiting for review} other{{count} items waiting for review}}'**
+  String moderationWaiting(int count);
+
+  /// No description provided for @moderationNoAccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This page is for moderators'**
+  String get moderationNoAccessTitle;
+
+  /// No description provided for @moderationNoAccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account doesn\'t have moderation access.'**
+  String get moderationNoAccessBody;
+
+  /// No description provided for @moderationTabOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get moderationTabOpen;
+
+  /// No description provided for @moderationTabResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get moderationTabResolved;
+
+  /// No description provided for @moderationTabDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissed'**
+  String get moderationTabDismissed;
+
+  /// No description provided for @moderationTabLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get moderationTabLog;
+
+  /// No description provided for @moderationFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get moderationFilterAll;
+
+  /// No description provided for @moderationFilterArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles'**
+  String get moderationFilterArticles;
+
+  /// No description provided for @moderationFilterComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get moderationFilterComments;
+
+  /// No description provided for @moderationFilterUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Users'**
+  String get moderationFilterUsers;
+
+  /// No description provided for @moderationEmptyOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No open reports'**
+  String get moderationEmptyOpenTitle;
+
+  /// No description provided for @moderationEmptyOpenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'All clear for now.'**
+  String get moderationEmptyOpenBody;
+
+  /// No description provided for @moderationEmptyResolvedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No resolved reports'**
+  String get moderationEmptyResolvedTitle;
+
+  /// No description provided for @moderationEmptyDismissedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No dismissed reports'**
+  String get moderationEmptyDismissedTitle;
+
+  /// No description provided for @moderationEmptyLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No moderation actions yet'**
+  String get moderationEmptyLogTitle;
+
+  /// No description provided for @moderationLoadMoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load more.'**
+  String get moderationLoadMoreFailed;
+
+  /// No description provided for @moderationTypeArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Article'**
+  String get moderationTypeArticle;
+
+  /// No description provided for @moderationTypeComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get moderationTypeComment;
+
+  /// No description provided for @moderationTypeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get moderationTypeUser;
+
+  /// No description provided for @moderationStateHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get moderationStateHidden;
+
+  /// No description provided for @moderationStateDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get moderationStateDeleted;
+
+  /// No description provided for @moderationStateSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get moderationStateSuspended;
+
+  /// No description provided for @moderationStatusOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get moderationStatusOpen;
+
+  /// No description provided for @moderationStatusResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get moderationStatusResolved;
+
+  /// No description provided for @moderationStatusDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissed'**
+  String get moderationStatusDismissed;
+
+  /// No description provided for @moderationReportCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 report} other{{count} reports}}'**
+  String moderationReportCount(int count);
+
+  /// No description provided for @moderationLastReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Last report: {time}'**
+  String moderationLastReport(String time);
+
+  /// No description provided for @moderationClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed: {time}'**
+  String moderationClosed(String time);
+
+  /// No description provided for @moderationCommentOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On “{title}”'**
+  String moderationCommentOn(String title);
+
+  /// No description provided for @moderationWarningCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No warnings} =1{1 warning} other{{count} warnings}}'**
+  String moderationWarningCount(int count);
+
+  /// No description provided for @moderationSuspendedUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended until {date}'**
+  String moderationSuspendedUntil(String date);
+
+  /// No description provided for @moderationSuspendedForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently suspended'**
+  String get moderationSuspendedForever;
+
+  /// No description provided for @moderationCaseArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported article'**
+  String get moderationCaseArticle;
+
+  /// No description provided for @moderationCaseComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported comment'**
+  String get moderationCaseComment;
+
+  /// No description provided for @moderationCaseUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported user'**
+  String get moderationCaseUser;
+
+  /// No description provided for @moderationOpenArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open article'**
+  String get moderationOpenArticle;
+
+  /// No description provided for @moderationOpenProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open profile'**
+  String get moderationOpenProfile;
+
+  /// No description provided for @moderationActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get moderationActions;
+
+  /// No description provided for @moderationReportsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports ({count})'**
+  String moderationReportsTitle(int count);
+
+  /// No description provided for @moderationHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get moderationHistory;
+
+  /// No description provided for @moderationHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No actions yet.'**
+  String get moderationHistoryEmpty;
+
+  /// No description provided for @moderationClosedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed by {name}'**
+  String moderationClosedBy(String name);
+
+  /// No description provided for @moderationHideComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide comment'**
+  String get moderationHideComment;
+
+  /// No description provided for @moderationUnhideComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Unhide comment'**
+  String get moderationUnhideComment;
+
+  /// No description provided for @moderationDeleteComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete comment'**
+  String get moderationDeleteComment;
+
+  /// No description provided for @moderationWarnAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn author'**
+  String get moderationWarnAuthor;
+
+  /// No description provided for @moderationSuspendAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend author'**
+  String get moderationSuspendAuthor;
+
+  /// No description provided for @moderationUnsuspend.
+  ///
+  /// In en, this message translates to:
+  /// **'Lift suspension'**
+  String get moderationUnsuspend;
+
+  /// No description provided for @moderationDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss reports'**
+  String get moderationDismiss;
+
+  /// No description provided for @moderationHideArticleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide this article?'**
+  String get moderationHideArticleTitle;
+
+  /// No description provided for @moderationHideArticleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It disappears from feeds, lists and search, and only its author and moderators can open it. The author is notified.'**
+  String get moderationHideArticleBody;
+
+  /// No description provided for @moderationHideCommentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide this comment?'**
+  String get moderationHideCommentTitle;
+
+  /// No description provided for @moderationHideCommentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Readers see “Hidden by moderators” in its place.'**
+  String get moderationHideCommentBody;
+
+  /// No description provided for @moderationNoteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get moderationNoteOptional;
+
+  /// No description provided for @moderationNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get moderationNoteLabel;
+
+  /// No description provided for @moderationNoteForUser.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll see this note.'**
+  String get moderationNoteForUser;
+
+  /// No description provided for @moderationWarnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn {name}'**
+  String moderationWarnTitle(String name);
+
+  /// No description provided for @moderationWarnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll get a warning with your note and must acknowledge it.'**
+  String get moderationWarnBody;
+
+  /// No description provided for @moderationWarnConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Send warning'**
+  String get moderationWarnConfirm;
+
+  /// No description provided for @moderationSuspendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend {name}'**
+  String moderationSuspendTitle(String name);
+
+  /// No description provided for @moderationSuspendBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They can\'t sign in or use their account until the suspension ends.'**
+  String get moderationSuspendBody;
+
+  /// No description provided for @moderationSuspendDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get moderationSuspendDuration;
+
+  /// No description provided for @moderationDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String moderationDays(int count);
+
+  /// No description provided for @moderationPermanent.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently'**
+  String get moderationPermanent;
+
+  /// No description provided for @moderationSuspendConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend'**
+  String get moderationSuspendConfirm;
+
+  /// No description provided for @moderationUnsuspendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lift {name}\'s suspension?'**
+  String moderationUnsuspendTitle(String name);
+
+  /// No description provided for @moderationUnsuspendBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They can sign in and use their account again right away.'**
+  String get moderationUnsuspendBody;
+
+  /// No description provided for @moderationDismissTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss these reports?'**
+  String get moderationDismissTitle;
+
+  /// No description provided for @moderationDismissBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The open reports are closed as dismissed. The content stays as it is.'**
+  String get moderationDismissBody;
+
+  /// No description provided for @moderationArticleHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Article hidden'**
+  String get moderationArticleHidden;
+
+  /// No description provided for @moderationArticleUnhidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Article visible again'**
+  String get moderationArticleUnhidden;
+
+  /// No description provided for @moderationWarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning sent'**
+  String get moderationWarned;
+
+  /// No description provided for @moderationSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Account suspended'**
+  String get moderationSuspended;
+
+  /// No description provided for @moderationUnsuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspension lifted'**
+  String get moderationUnsuspended;
+
+  /// No description provided for @moderationDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports dismissed'**
+  String get moderationDismissed;
+
+  /// No description provided for @moderationLogCommentHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hid a comment'**
+  String get moderationLogCommentHide;
+
+  /// No description provided for @moderationLogCommentUnhide.
+  ///
+  /// In en, this message translates to:
+  /// **'Unhid a comment'**
+  String get moderationLogCommentUnhide;
+
+  /// No description provided for @moderationLogCommentDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted a comment'**
+  String get moderationLogCommentDelete;
+
+  /// No description provided for @moderationLogArticleHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hid an article'**
+  String get moderationLogArticleHide;
+
+  /// No description provided for @moderationLogArticleUnhide.
+  ///
+  /// In en, this message translates to:
+  /// **'Unhid an article'**
+  String get moderationLogArticleUnhide;
+
+  /// No description provided for @moderationLogUserWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Warned a user'**
+  String get moderationLogUserWarn;
+
+  /// No description provided for @moderationLogUserSuspend.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended an account'**
+  String get moderationLogUserSuspend;
+
+  /// No description provided for @moderationLogUserUnsuspend.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifted a suspension'**
+  String get moderationLogUserUnsuspend;
+
+  /// No description provided for @moderationLogReportsDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissed reports'**
+  String get moderationLogReportsDismiss;
+
+  /// No description provided for @moderationLogOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderation action'**
+  String get moderationLogOther;
+
+  /// No description provided for @moderationLogReportsClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Closed 1 report} other{Closed {count} reports}}'**
+  String moderationLogReportsClosed(int count);
+
+  /// No description provided for @moderationLogUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Until {date}'**
+  String moderationLogUntil(String date);
+
+  /// No description provided for @noticeWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You received a warning from the moderation team'**
+  String get noticeWarningTitle;
+
+  /// No description provided for @noticeWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Please read the note and keep to ReadIn\'s community rules.'**
+  String get noticeWarningBody;
+
+  /// No description provided for @noticeArticleHiddenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your article “{title}” was hidden'**
+  String noticeArticleHiddenTitle(String title);
+
+  /// No description provided for @noticeArticleHiddenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Readers can\'t see it anymore. Only you and the moderators can open it.'**
+  String get noticeArticleHiddenBody;
+
+  /// No description provided for @noticeNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderator\'s note'**
+  String get noticeNoteLabel;
+
+  /// No description provided for @noticeAcknowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get noticeAcknowledge;
 }
 
 class _AppLocalizationsDelegate

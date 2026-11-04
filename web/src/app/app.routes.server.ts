@@ -11,6 +11,8 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'settings/profile', renderMode: RenderMode.Client },
   { path: 'write', renderMode: RenderMode.Client },
   { path: 'saved', renderMode: RenderMode.Client },
+  { path: 'moderation', renderMode: RenderMode.Client },
+  { path: 'moderation/**', renderMode: RenderMode.Client },
   { path: 'notifications', renderMode: RenderMode.Client },
   { path: '**', renderMode: RenderMode.Server },
 ];

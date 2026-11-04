@@ -27,7 +27,8 @@ import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { CommentComposer } from './comment-composer';
 import { CommentErrors } from './comment-errors';
 import { provideCommentIcons } from './comment-icons';
-import { DeleteCommentSheet, ReportCommentSheet } from './comment-sheets';
+import { ReportSheet, ReportTarget } from '../../shared/moderation/report-sheet';
+import { DeleteCommentSheet } from './comment-sheets';
 import { CommentThreadView } from './comment-thread';
 import { CommentsStore } from './comments.store';
 
@@ -52,7 +53,7 @@ const NEAR_TOP_SLACK_PX = 160;
     ErrorState,
     CommentComposer,
     CommentThreadView,
-    ReportCommentSheet,
+    ReportSheet,
     DeleteCommentSheet,
   ],
   providers: [CommentsStore, provideCommentIcons()],
@@ -160,7 +161,7 @@ const NEAR_TOP_SLACK_PX = 160;
         }
       </div>
 
-      <rd-report-comment-sheet />
+      <rd-report-sheet [target]="reportTarget()" (closed)="store.closeDialog()" />
       <rd-delete-comment-sheet />
     </div>
   `,
@@ -188,6 +189,11 @@ export class CommentsSection {
       { value: 'top', label: this.transloco.translate('comments.sort.top') },
       { value: 'new', label: this.transloco.translate('comments.sort.new') },
     ];
+  });
+  /** The comment being reported, in the shared report sheet (F22). */
+  protected readonly reportTarget = computed<ReportTarget | null>(() => {
+    const dialog = this.store.dialog();
+    return dialog?.kind === 'report' ? { type: 'comment', id: dialog.comment.id } : null;
   });
   protected readonly incomingLabel = computed(() =>
     translatePlural(this.transloco, 'comments.newComments', this.store.incomingCount(), this.language.lang()),

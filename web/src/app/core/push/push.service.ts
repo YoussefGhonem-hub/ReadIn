@@ -5,14 +5,16 @@ import { firstValueFrom } from 'rxjs';
 import { MeApi } from '../api/me.api';
 import { SessionStore } from '../auth/session.store';
 import { LanguageService } from '../i18n/language.service';
+import { ModerationNotices } from '../moderation/moderation-notices';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { PUSH_CLIENT, PushPermission } from './push-client';
-import { pushLinkToPath, toPushMessage } from './push-message';
+import { pushLinkToPath, pushType, toPushMessage } from './push-message';
 
 /**
  * Web push through Firebase Cloud Messaging (SPEC §21.1). Once the user has granted permission, this browser's
  * FCM token is registered with `POST /me/devices` on every sign-in and page load (which also picks up rotated
- * tokens) and deleted on sign-out. Pushes that arrive while a tab is visible become an in-app toast.
+ * tokens) and deleted on sign-out. Pushes that arrive while a tab is visible become an in-app toast; a moderation notice
+ * (F22) opens its dialog instead, which the user acknowledges.
  */
 @Injectable({ providedIn: 'root' })
 export class PushService {
@@ -103,6 +105,10 @@ export class PushService {
   }
 
   private showInApp(payload: unknown): void {
+    if (pushType(payload) === 'moderation_notice') {
+      this.injector.get(ModerationNotices).reload();
+      return;
+    }
     const message = toPushMessage(payload, location.origin, this.language.lang());
     if (!message) return;
     const text = message.title && message.body ? `${message.title} — ${message.body}` : message.title || message.body;

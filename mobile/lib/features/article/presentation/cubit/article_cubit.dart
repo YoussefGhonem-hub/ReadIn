@@ -63,4 +63,11 @@ class ArticleCubit extends Cubit<ArticleState> {
   Future<void> retry(String preferredLanguage) async {
     if (_slug != null) await load(_slug!, preferredLanguage: preferredLanguage);
   }
+
+  /// A moderator hid the article ([moderation]) or showed it again (null) from the reader's menu (F22).
+  void setModeration(ArticleModeration? moderation) {
+    final article = state.article;
+    if (article == null || isClosed) return;
+    emit(state.copyWith(article: article.withModeration(moderation)));
+  }
 }

@@ -70,7 +70,10 @@ class SessionCubit extends Cubit<SessionState> {
   /// The refresh token was rejected or the account is suspended: the session is over.
   static bool _endedBy(Failure failure) => failure.statusCode == 401 || failure.statusCode == 403;
 
-  void _onUser(Me? me) => emit(me == null ? const SessionState(status: SessionStatus.guest) : _signedIn(me));
+  /// A session that the server ended for a suspended account keeps the `user.suspended` failure (F22): the app opens
+  /// Sign in with it, saying until when.
+  void _onUser(Me? me) =>
+      emit(me == null ? SessionState(status: SessionStatus.guest, failure: _watch.endedBy) : _signedIn(me));
 
   static SessionState _signedIn(Me me) => SessionState(status: SessionStatus.authenticated, me: me);
 

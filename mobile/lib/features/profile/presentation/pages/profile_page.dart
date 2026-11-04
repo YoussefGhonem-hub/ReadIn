@@ -12,6 +12,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../moderation/presentation/cubit/moderation_action_cubit.dart';
 import '../../../saved/presentation/cubit/saved_list_cubit.dart';
 import '../../../saved/presentation/pages/saved_page.dart';
 import '../../domain/entities/profile.dart';
@@ -20,6 +21,7 @@ import '../cubit/profile_articles_cubit.dart';
 import '../cubit/profile_cubit.dart';
 import '../profile_routes.dart';
 import '../widgets/profile_header.dart';
+import '../widgets/profile_menu.dart';
 import '../widgets/profile_tabs.dart';
 
 /// Profile (F14). Without [username] it is the Profile tab: the viewer's own profile, or the sign-in prompt for
@@ -83,6 +85,8 @@ class _ProfileProviders extends StatelessWidget {
           BlocProvider(create: (_) => getIt<ProfileArticlesCubit>(param1: username)..load()),
           BlocProvider(create: (_) => getIt<SavedListCubit>()..load()),
           BlocProvider(create: (_) => getIt<PrivacyCubit>()),
+          // Created when a moderator warns or suspends from the "⋯" menu (F22).
+          BlocProvider(create: (_) => getIt<ModerationActionCubit>()),
         ],
         child: child,
       );
@@ -145,7 +149,12 @@ class ProfileView extends StatelessWidget {
                 ? Text(isTab ? l10n.navProfile : '')
                 : Text(Bidi.ltrIsolate('@${profile.username}'), maxLines: 1, overflow: TextOverflow.ellipsis),
             automaticallyImplyLeading: !isTab,
-            actions: [if (own) const _SettingsButton()],
+            actions: [
+              if (own)
+                const _SettingsButton()
+              else if (profile != null && state.status == ProfileStatus.ready)
+                ProfileMenuButton(profile: profile),
+            ],
           ),
           body: switch (state.status) {
             ProfileStatus.loading => const SingleChildScrollView(

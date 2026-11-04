@@ -76,6 +76,14 @@ void main() {
       expect(AppRoutes.user('@mona'), '/u/mona');
     });
 
+    test('moderation needs an account; the page itself checks moderation.manage (F22)', () {
+      expect(redirect(AppRoutes.moderation, guest), AppRoutes.home);
+      expect(redirect('/moderation/article/art-7', guest), AppRoutes.home);
+      expect(redirect(AppRoutes.moderation, onboarded), isNull);
+      expect(redirect('/moderation/user/w-9', onboarded), isNull);
+      expect(redirect('/moderators', guest), isNull, reason: 'only the moderation routes');
+    });
+
     test('a session that ended (refresh rejected) is a guest', () {
       const ended = SessionState(status: SessionStatus.guest, failure: Failure('auth.refresh_invalid', statusCode: 401));
       expect(redirect('/home', ended), isNull);

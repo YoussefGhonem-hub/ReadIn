@@ -58,7 +58,7 @@ public static class ErrorMessages
         ["collection.name_taken"] = ("عندك مجموعة بنفس الاسم بالفعل.", "You already have a collection with this name."),
         ["collection.limit"] = ("وصلت لأقصى عدد مجموعات (50).", "You can have at most 50 collections."),
         ["follow.self"] = ("مينفعش تتابع نفسك.", "You can't follow yourself."),
-        // Comments (SPEC F11) and reports / moderation (F22 hooks)
+        // Comments (SPEC F11)
         ["comment.not_found"] = ("التعليق مش موجود.", "Comment not found."),
         ["comment.not_owner"] = ("التعليق ده مش بتاعك.", "Only the author can change this comment."),
         ["comment.not_available"] = ("التعليق ده اتمسح أو اتخفى.", "This comment was deleted or hidden."),
@@ -69,12 +69,18 @@ public static class ErrorMessages
         ["comment.duplicate"] = ("لسه كاتب نفس التعليق ده.", "You just posted the same comment."),
         ["comment.empty"] = ("اكتب حاجة الأول.", "Write something first."),
         ["comment.too_long"] = ("التعليق طويل أوي (أقصى حد 2000 حرف).", "A comment can have at most 2000 characters."),
+        // Reports and moderation (SPEC F22)
         ["report.target_not_found"] = ("المحتوى ده مش موجود.", "The reported content doesn't exist."),
         ["report.own_content"] = ("مينفعش تبلّغ عن حاجة إنت كاتبها.", "You can't report your own content."),
-        ["report.target_not_supported"] = ("البلاغ متاح للتعليقات بس دلوقتي.", "Only comments can be reported for now."),
         ["report.target_invalid"] = ("نوع البلاغ مش معروف.", "Unknown report target."),
         ["report.reason_invalid"] = ("اختار سبب البلاغ.", "Choose a reason for the report."),
-        ["moderation.action_invalid"] = ("الإجراء ده مش معروف.", "Unknown moderation action."),
+        ["report.status_invalid"] = ("حالة البلاغ لازم تكون مفتوح أو اتحل أو اترفض.", "The report status must be open, resolved or dismissed."),
+        ["moderation.action_invalid"] = ("الإجراء ده مينفعش على النوع ده.", "This action doesn't apply to this target."),
+        ["moderation.self"] = ("مينفعش تعمل الإجراء ده على حسابك.", "You can't take this action on your own account."),
+        ["moderation.staff_target"] = ("مينفعش تحذّر أو توقف حد من فريق الإشراف أو الإدارة.", "Moderators and admins can't be warned or suspended."),
+        ["moderation.note_required"] = ("اكتب ملاحظة توضّح السبب للمستخدم.", "Write a note that tells the user why."),
+        ["moderation.duration_invalid"] = ("مدة الإيقاف من يوم لـ 365 يوم، أو نهائي.", "A suspension lasts 1 to 365 days, or until it is lifted."),
+        ["moderation.notice_not_found"] = ("التنبيه ده مش موجود.", "Notice not found."),
         // Media (ADR 0010, ADR 0011)
         ["media.purpose_invalid"] = ("نوع الرفع لازم يكون image أو avatar أو cover.", "Purpose must be image, avatar or cover."),
         ["media.file_required"] = ("اختار ملف ترفعه.", "Choose a file to upload."),

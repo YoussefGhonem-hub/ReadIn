@@ -1,3 +1,4 @@
+import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../entities/auth_config.dart';
 import '../entities/external_credential.dart';
@@ -12,6 +13,10 @@ abstract interface class AuthRepository {
   /// The signed-in user after every session change, or null once the session has ended (signed out, the refresh
   /// token was rejected, the account was deleted).
   Stream<Me?> get sessionChanges;
+
+  /// Why the last session ended when the server ended it: the account was suspended (`user.suspended` with
+  /// `suspendedUntil`, F22). Null otherwise.
+  Failure? get sessionEndedBy;
 
   /// `GET /auth/config`, cached; the defaults when it can't be loaded.
   Future<AuthConfig> getConfig();

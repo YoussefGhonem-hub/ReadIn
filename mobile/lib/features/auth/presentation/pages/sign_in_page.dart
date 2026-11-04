@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/errors/failure.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/phone/countries.dart';
 import '../../../../core/theme/theme_x.dart';
@@ -18,12 +19,16 @@ import '../widgets/auth_widgets.dart';
 import '../widgets/dev_login_panel.dart';
 import '../widgets/external_sign_in.dart';
 
-/// Arguments of the Sign in route: the number to pre-fill and whether a password was just reset.
+/// Arguments of the Sign in route: the number to pre-fill, whether a password was just reset, and why the session
+/// ended when the app sent the user here (a suspended account, F22).
 class SignInArgs {
-  const SignInArgs({this.phone, this.passwordReset = false});
+  const SignInArgs({this.phone, this.passwordReset = false, this.endedBy});
 
   final String? phone;
   final bool passwordReset;
+
+  /// Shown as the form's banner until the first attempt (`user.suspended` says until when).
+  final Failure? endedBy;
 }
 
 /// The phone field's first country (last used → device region → Egypt).
@@ -70,6 +75,7 @@ class _SignInViewState extends State<SignInView> {
   final _password = TextEditingController();
   final _passwordFocus = FocusNode();
   late bool _passwordReset = widget.args.passwordReset;
+  late Failure? _endedBy = widget.args.endedBy;
 
   @override
   void dispose() {
@@ -79,11 +85,14 @@ class _SignInViewState extends State<SignInView> {
     super.dispose();
   }
 
-  void _submit() => context.read<SignInCubit>().submit(
-        phoneE164: _phone.e164,
-        phoneEmpty: _phone.isEmpty,
-        password: _password.text,
-      );
+  void _submit() {
+    if (_endedBy != null) setState(() => _endedBy = null);
+    context.read<SignInCubit>().submit(
+          phoneE164: _phone.e164,
+          phoneEmpty: _phone.isEmpty,
+          password: _password.text,
+        );
+  }
 
   /// Forgot password returns the number it reset; the banner then says to sign in with the new password.
   Future<void> _forgotPassword() async {
@@ -134,7 +143,7 @@ class _SignInViewState extends State<SignInView> {
               FormBanner(message: l10n.passwordResetBanner, tone: BannerTone.success),
               const SizedBox(height: ReadInSpace.s4),
             ],
-            if (state.failure case final failure?) ...[
+            if (state.failure ?? _endedBy case final failure?) ...[
               FailureBanner(failure: failure),
               const SizedBox(height: ReadInSpace.s4),
             ],

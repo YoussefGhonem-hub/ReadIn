@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/di/injection.dart';
 import 'package:readin/core/errors/failure.dart';
+import 'package:readin/core/errors/result.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/core/realtime/realtime_service.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
@@ -21,11 +22,15 @@ import 'package:readin/features/comments/presentation/widgets/comment_composer.d
 import 'package:readin/features/comments/presentation/widgets/comment_tile.dart';
 import 'package:readin/features/comments/presentation/widgets/comments_sheet.dart';
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
+import 'package:readin/features/moderation/domain/entities/moderation.dart';
+import 'package:readin/features/moderation/domain/usecases/moderation_usecases.dart';
+import 'package:readin/features/moderation/presentation/cubit/report_cubit.dart';
 import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart';
 import 'package:readin/features/saved/domain/usecases/saved_usecases.dart';
 
 import '../../helpers/comment_fixtures.dart';
 import '../../helpers/fixtures.dart';
+import '../../helpers/moderation_fakes.dart';
 import '../../helpers/social_fakes.dart';
 import '../../helpers/test_app.dart';
 
@@ -38,6 +43,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(viewer);
     registerFallbackValue(ReportReason.spam);
+    registerFallbackValue(const ModerationTargetRef.comment(''));
   });
 
   setUp(() => CommentClock.now = () => commentsNow);
@@ -346,14 +352,17 @@ void main() {
       expect(find.text('This comment was deleted or hidden.'), findsOneWidget);
     });
 
-    testWidgets('report: a reason and details, then thanks', (tester) async {
-      final cubit = await pumpSheet(tester, ready([comment('c1', body: 'Spam link')]));
-      when(() => cubit.report(any(), any(), details: any(named: 'details'))).thenAnswer((_) async => null);
+    testWidgets('report: the shared report sheet with a reason and details, then thanks', (tester) async {
+      final reports = MockModerationRepository();
+      when(() => reports.report(any(), any(), details: any(named: 'details'))).thenAnswer((_) async => const Ok<void>(null));
+      final cubit = comments(ready([comment('c1', body: 'Spam link')]));
+      await pump(tester, CommentsView(article: article, reportCubit: () => ReportCubit(SubmitReport(reports))), cubit: cubit);
 
       await tester.tap(find.byTooltip('Comment options'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Report'));
       await tester.pumpAndSettle();
+      expect(find.text('Report comment'), findsOneWidget);
       expect(find.text('Send report'), findsOneWidget);
 
       await tester.tap(find.text('Harassment'));
@@ -362,7 +371,7 @@ void main() {
       await tester.tap(find.text('Send report'));
       await tester.pumpAndSettle();
 
-      verify(() => cubit.report('c1', ReportReason.harassment, details: 'تفاصيل')).called(1);
+      verify(() => reports.report(const ModerationTargetRef.comment('c1'), ReportReason.harassment, details: 'تفاصيل')).called(1);
       expect(find.text("Thanks, we'll review it."), findsOneWidget);
     });
 

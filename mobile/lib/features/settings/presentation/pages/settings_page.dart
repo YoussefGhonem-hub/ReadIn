@@ -6,8 +6,11 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/cubit/linked_accounts_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../moderation/presentation/cubit/moderation_summary_cubit.dart';
+import '../../../moderation/presentation/widgets/moderation_entry_tile.dart';
 import '../../../profile/presentation/cubit/privacy_cubit.dart';
 import '../../../profile/presentation/widgets/public_reading_stats_switch.dart';
 import '../widgets/account_section.dart';
@@ -21,13 +24,15 @@ class SettingsPage extends StatelessWidget {
         providers: [
           BlocProvider(create: (_) => getIt<LinkedAccountsCubit>()..load()),
           BlocProvider(create: (_) => getIt<PrivacyCubit>()),
+          // App-wide (the actions keep it current); read only by moderators' Moderation entry (F22).
+          BlocProvider.value(value: getIt<ModerationSummaryCubit>()),
         ],
         child: const SettingsView(),
       );
 }
 
-/// Settings (F18): appearance, languages, reading, privacy, account (phone, password, PIN, linked accounts, sign out,
-/// delete).
+/// Settings (F18): appearance, languages, reading, privacy, moderation (moderators only, F22), account (phone, password,
+/// PIN, linked accounts, sign out, delete).
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
 
@@ -69,6 +74,7 @@ class SettingsView extends StatelessWidget {
           ]),
           // "Who can mention me" joins this card with comments (F11).
           if (session.isAuthenticated) card(l10n.profilePrivacy, const [PublicReadingStatsSwitch()]),
+          if (session.me?.isModerator ?? false) card(l10n.moderationTitle, const [ModerationEntryTile()]),
           card(l10n.account, [
             if (session.isAuthenticated)
               const AccountSection()

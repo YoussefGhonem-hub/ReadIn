@@ -170,6 +170,20 @@ class ReviewerRef extends Equatable {
   List<Object?> get props => [displayName, username];
 }
 
+/// `ArticleDetailsDto.moderation` (F22): set only while the article is hidden by moderators. Only its author and
+/// moderators can open it then, and the reader says so.
+class ArticleModeration extends Equatable {
+  const ArticleModeration({required this.hiddenAt, this.note});
+
+  final DateTime hiddenAt;
+
+  /// The moderator's note, if any.
+  final String? note;
+
+  @override
+  List<Object?> get props => [hiddenAt, note];
+}
+
 /// Reader payload (`ArticleDetailsDto`).
 class ArticleDetails extends Equatable {
   const ArticleDetails({
@@ -186,6 +200,7 @@ class ArticleDetails extends Equatable {
     this.isFollowingAuthor = false,
     this.collectionIds = const [],
     this.isOfflineCopy = false,
+    this.moderation,
   });
 
   final ArticleCard card;
@@ -211,10 +226,33 @@ class ArticleDetails extends Equatable {
   /// Served from the copy kept on this device for a saved article, because the API was unreachable (F13, F25).
   final bool isOfflineCopy;
 
+  /// Hidden by moderators (F22); null while the article is visible.
+  final ArticleModeration? moderation;
+
   /// `saveCount` moved up to the card in wave 1 (still on `ArticleDetailsDto` through inheritance).
   int get saveCount => card.saveCount;
 
   bool get hasBothLanguages => availableLanguages.contains('ar-EG') && availableLanguages.contains('en');
+
+  bool get isHidden => moderation != null;
+
+  /// The same article, hidden ([moderation]) or visible again (null), after a moderator's action.
+  ArticleDetails withModeration(ArticleModeration? moderation) => ArticleDetails(
+        card: card,
+        availableLanguages: availableLanguages,
+        content: content,
+        summary: summary,
+        topic: topic,
+        tags: tags,
+        sources: sources,
+        reviewedBy: reviewedBy,
+        lastReviewedAt: lastReviewedAt,
+        readCount: readCount,
+        isFollowingAuthor: isFollowingAuthor,
+        collectionIds: collectionIds,
+        isOfflineCopy: isOfflineCopy,
+        moderation: moderation,
+      );
 
   @override
   List<Object?> get props => [
@@ -231,5 +269,6 @@ class ArticleDetails extends Equatable {
         isFollowingAuthor,
         collectionIds,
         isOfflineCopy,
+        moderation,
       ];
 }

@@ -51,14 +51,14 @@ internal sealed class ExternalSignInCommandHandler(
 
     private async Task<Result<AuthSessionDto>> StartAsync(User user, ExternalIdentity identity, DateTime now, CancellationToken ct)
     {
-        if (user.IsSuspendedAt(now)) return UserErrors.Suspended;
+        if (user.IsSuspendedAt(now)) return UserErrors.SuspendedUntil(user.SuspendedUntil);
         user.RecordExternalSignIn(identity.Provider, now);
         return await sessions.StartAsync(user, ct);
     }
 
     private async Task<Result<AuthSessionDto>> LinkAndStartAsync(User user, ExternalIdentity identity, DateTime now, CancellationToken ct)
     {
-        if (user.IsSuspendedAt(now)) return UserErrors.Suspended;
+        if (user.IsSuspendedAt(now)) return UserErrors.SuspendedUntil(user.SuspendedUntil);
 
         var alreadyLinked = user.FindExternalLogin(identity.Provider) is not null;
         var linked = user.LinkExternalLogin(identity.Provider, identity.Subject, identity.Email, now);

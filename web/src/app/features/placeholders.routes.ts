@@ -14,6 +14,5 @@ export const PLACEHOLDER_ROUTES: Route[] = [
   { path: 'notifications', canActivate: [authGuard], loadComponent: comingSoon, data: { titleKey: 'nav.notifications', phase: 2 } },
   { path: 'verification', canActivate: [authGuard], loadComponent: comingSoon, data: { titleKey: 'nav.verification', phase: 2 } },
   { path: 'reviews', canActivate: [permissionGuard('articles.review')], loadComponent: comingSoon, data: { titleKey: 'nav.reviews', phase: 2 } },
-  { path: 'moderation', canActivate: [permissionGuard('moderation.manage')], loadComponent: comingSoon, data: { titleKey: 'nav.moderation', phase: 2 } },
   { path: 'admin', canActivate: [permissionGuard('taxonomy.manage')], loadComponent: comingSoon, data: { titleKey: 'nav.admin', phase: 2 } },
 ];

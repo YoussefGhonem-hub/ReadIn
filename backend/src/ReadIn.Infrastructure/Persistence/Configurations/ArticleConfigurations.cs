@@ -23,6 +23,7 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
 
         builder.Ignore(a => a.IsReviewed);
         builder.Ignore(a => a.IsPublished);
+        builder.Ignore(a => a.IsHidden);
 
         builder.HasOne(a => a.Author).WithMany().HasForeignKey(a => a.AuthorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(a => a.ReviewedBy).WithMany().HasForeignKey(a => a.ReviewedById).OnDelete(DeleteBehavior.NoAction);

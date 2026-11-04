@@ -24,7 +24,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { SILENT_ERRORS, isApiError } from '../../core/api/api.config';
 import { ContentApi } from '../../core/api/content.api';
-import { ArticleDetailsDto, ArticleLanguage } from '../../core/api/models';
+import { ArticleDetailsDto, ArticleLanguage, ArticleModerationDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { HydrationWindow } from '../../core/http/hydration-window';
@@ -125,6 +125,23 @@ const TOC_MIN_HEADINGS = 3;
       @if (article(); as a) {
         @if (a.language !== requestedLanguage()) {
           <p class="mb-4 rounded-md bg-callout-info p-3 text-sm" role="status">{{ 'article.fallbackNotice' | transloco }}</p>
+        }
+
+        <!-- Hidden by moderators (F22): only its author and moderators get here -->
+        @if (a.moderation; as hidden) {
+          <section class="mb-4 flex gap-3 rounded-card bg-callout-warning p-4 text-sm" role="status" aria-labelledby="hidden-banner-title" data-hidden-banner>
+            <svg lucideIcon="EyeOff" [size]="20" class="mt-0.5 shrink-0 text-callout-warning-accent" aria-hidden="true"></svg>
+            <div class="min-w-0 flex-1">
+              <h2 id="hidden-banner-title" class="m-0 text-base font-semibold">{{ 'article.hiddenBanner.title' | transloco }}</h2>
+              <p class="m-0 mt-1 text-text-secondary">
+                {{ (isAuthor() ? 'article.hiddenBanner.author' : 'article.hiddenBanner.moderator') | transloco }}
+                · {{ 'article.hiddenBanner.since' | transloco: { date: (hidden.hiddenAt | rdDate: uiLang() : 'long') } }}
+              </p>
+              @if (hidden.note) {
+                <p class="m-0 mt-2"><span class="font-semibold">{{ 'article.hiddenBanner.note' | transloco }}:</span> <rd-bdi-text [text]="hidden.note" /></p>
+              }
+            </div>
+          </section>
         }
 
         <div class="mb-2 flex flex-wrap items-center gap-2 text-xs">
@@ -263,7 +280,7 @@ const TOC_MIN_HEADINGS = 3;
     </article>
 
     @if (article(); as a) {
-      <rd-article-action-bar [article]="a" [url]="shareUrl()" (commentsOpen)="openComments()" />
+      <rd-article-action-bar [article]="a" [url]="shareUrl()" (commentsOpen)="openComments()" (moderationChange)="setModeration($event)" />
       <rd-collection-picker-sheet [open]="collectionsOpen()" [article]="a" (closed)="collectionsOpen.set(false)" />
     }
   `,
@@ -290,6 +307,9 @@ export class ArticlePage {
   }));
 
   protected readonly article = computed(() => (this.resource.hasValue() ? this.resource.value() : null));
+  private readonly session = inject(SessionStore);
+  /** You wrote it: the "hidden" banner speaks to you (F22). */
+  protected readonly isAuthor = computed(() => this.session.isAuthenticated() && this.session.me()?.id === this.article()?.author.id);
   protected readonly notFound = computed(() => {
     const error = this.resource.error();
     return isApiError(error) ? error.status === 404 : false;
@@ -409,6 +429,12 @@ export class ArticlePage {
       });
       update();
     });
+  }
+
+  /** A moderator hid or unhid the article from the "⋯" menu: the banner follows at once. */
+  protected setModeration(moderation: ArticleModerationDto | null): void {
+    const article = this.article();
+    if (article) this.resource.value.set({ ...article, moderation });
   }
 
   protected openCollections(): void {

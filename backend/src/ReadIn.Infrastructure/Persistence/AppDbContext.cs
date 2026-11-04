@@ -56,6 +56,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
     public DbSet<Report> Reports => Set<Report>();
+    public DbSet<ModerationAction> ModerationActions => Set<ModerationAction>();
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<SeedHistory> SeedHistory => Set<SeedHistory>();

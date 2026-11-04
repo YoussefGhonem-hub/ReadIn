@@ -13,11 +13,13 @@ import '../cubit/engagement_cubit.dart';
 
 /// The reader's action bar (F04): reaction (tap 💡, long press for the picker), per-type counts that open "who
 /// reacted", the comment count that opens the comments (F11), save and "add to collection". Counts follow
-/// [EngagementCubit], so the viewer's actions and live counters (F27) show at once.
+/// [EngagementCubit], so the viewer's actions and live counters (F27) show at once. The reader adds its "⋯" [menu]
+/// last (F22, F28).
 class ReaderActionBar extends StatelessWidget {
-  const ReaderActionBar({super.key, required this.article});
+  const ReaderActionBar({super.key, required this.article, this.menu});
 
   final ArticleCard article;
+  final Widget? menu;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +55,7 @@ class ReaderActionBar extends StatelessWidget {
               CommentCount(count: engagement.commentCount, onTap: () => showCommentsSheet(context, article: article)),
               SaveToggleButton(article: article),
               AddToCollectionButton(article: article),
+              ?menu,
             ],
           ),
         ),

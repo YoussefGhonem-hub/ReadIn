@@ -2,7 +2,7 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
-using ReadIn.Domain.Articles;
+using ReadIn.Application.Features.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 
@@ -36,7 +36,7 @@ internal sealed class GetSuggestedWritersQueryHandler(IAppDbContext db, ICurrent
     private Task<List<UserSummaryDto>> SuggestAsync(Guid userId, List<Guid> fieldIds, int limit, CancellationToken ct)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        var published = db.Articles.Where(a => a.Status == ArticleStatus.Published && a.Field.IsEnabled);
+        var published = db.Articles.Visible();
         if (fieldIds.Count > 0) published = published.Where(a => fieldIds.Contains(a.FieldId));
 
         return db.Users.AsNoTracking()

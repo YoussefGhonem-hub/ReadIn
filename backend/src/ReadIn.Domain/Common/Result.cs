@@ -20,6 +20,9 @@ public sealed record Error(string Code, string Description, ErrorType Type)
 {
     public IReadOnlyDictionary<string, string[]>? Details { get; init; }
 
+    /// <summary>Extra members of the problem, e.g. <c>suspendedUntil</c> on <c>user.suspended</c>.</summary>
+    public IReadOnlyDictionary<string, object?>? Extensions { get; init; }
+
     public static Error Validation(string code, string description) => new(code, description, ErrorType.Validation);
     public static Error NotFound(string code, string description) => new(code, description, ErrorType.NotFound);
     public static Error Conflict(string code, string description) => new(code, description, ErrorType.Conflict);

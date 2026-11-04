@@ -15,12 +15,14 @@ import '../../../article/domain/entities/article.dart';
 import '../../../article/presentation/cubit/engagement_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
+import '../../../moderation/domain/entities/moderation.dart';
+import '../../../moderation/presentation/cubit/report_cubit.dart';
+import '../../../moderation/presentation/widgets/report_sheet.dart';
 import '../../domain/entities/comment.dart';
 import '../cubit/comments_cubit.dart';
 import '../cubit/mention_suggestions_cubit.dart';
 import 'comment_composer.dart';
 import 'comment_tile.dart';
-import 'report_comment_sheet.dart';
 
 /// Opens an article's comments (F11) from the reader's action bar: a tall bottom sheet (drag the header down to
 /// close) with the list, the sort toggle and the composer. Live events (F27) are followed while it's open.
@@ -46,9 +48,12 @@ Future<void> showCommentsSheet(
 /// The comments sheet's content once [CommentsCubit] and [MentionSuggestionsCubit] are provided ([SessionCubit] and
 /// [EngagementCubit] come from the app).
 class CommentsView extends StatefulWidget {
-  const CommentsView({super.key, required this.article});
+  const CommentsView({super.key, required this.article, this.reportCubit});
 
   final ArticleCard article;
+
+  /// Test seam for the report sheet; the app takes the cubit from DI.
+  final ReportCubit Function()? reportCubit;
 
   @override
   State<CommentsView> createState() => _CommentsViewState();
@@ -113,12 +118,8 @@ class _CommentsViewState extends State<CommentsView> {
       case CommentMenuAction.unpin:
         _showFailure(await _cubit.setPinned(comment.id, pinned: action == CommentMenuAction.pin));
       case CommentMenuAction.report:
-        if (!requireAccount(context)) return;
-        final sent = await showReportCommentSheet(
-          context,
-          onSubmit: (reason, details) => _cubit.report(comment.id, reason, details: details),
-        );
-        if (sent) _say(l10n.commentsReportThanks);
+        // The shared report sheet (F22): the sign-in prompt for guests, then "thanks" once sent.
+        await showReportSheet(context, target: ModerationTargetRef.comment(comment.id), cubit: widget.reportCubit);
       case CommentMenuAction.hide:
       case CommentMenuAction.unhide:
         final hide = action == CommentMenuAction.hide;

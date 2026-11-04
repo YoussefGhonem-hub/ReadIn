@@ -32,6 +32,10 @@ public static class ProblemResults
             ["traceId"] = Activity.Current?.Id ?? context.TraceIdentifier,
         };
         if (error.Details is not null) extensions["errors"] = error.Details;
+        if (error.Extensions is not null)
+        {
+            foreach (var (name, value) in error.Extensions) extensions[name] = value;
+        }
 
         return TypedResults.Problem(
             title: ErrorMessages.Title(error.Code, RequestLanguage.Resolve(context)) ?? error.Description,

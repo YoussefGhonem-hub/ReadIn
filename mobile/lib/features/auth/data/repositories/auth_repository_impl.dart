@@ -1,5 +1,6 @@
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/network/api_error_mapper.dart';
 import '../../../../core/platform/time_zone_service.dart';
@@ -26,6 +27,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<Me?> get sessionChanges => _session.changes;
+
+  @override
+  Failure? get sessionEndedBy => _session.endedBy;
 
   @override
   Future<AuthConfig> getConfig() => _config ??= guardApi(() async => (await _api.config()).toEntity()).then((result) {

@@ -90,7 +90,7 @@ internal sealed class PasswordSignIn(IAppDbContext db, IPasswordHasher passwords
             return locked ? CredentialErrors.LockedOut : CredentialErrors.InvalidCredentials;
         }
 
-        if (user.IsSuspendedAt(now)) return UserErrors.Suspended;
+        if (user.IsSuspendedAt(now)) return UserErrors.SuspendedUntil(user.SuspendedUntil);
 
         user.RecordSuccessfulSignIn();
         if (check == PasswordCheck.SuccessRehashNeeded) user.UpgradePasswordHash(passwords.Hash(password));

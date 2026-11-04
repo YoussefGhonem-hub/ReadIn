@@ -5,14 +5,16 @@
  *
  * Content is stateless: per-test flows (create post, uploads, polling, publish) are stubbed in the browser with
  * `page.route` (e2e/support). Reactions, saved articles, collections and follows (social.mjs) and profiles, `GET /me`,
- * `PATCH /me`, privacy and reading stats (profiles.mjs) keep state per signed-in viewer, so those flows run against it
- * end to end. It also serves generated PNGs for every media URL and fixture builders under `/__mock`.
+ * `PATCH /me`, privacy and reading stats (profiles.mjs) and reports, the moderation queue, actions, log and notices
+ * (moderation.mjs, F22) keep state per signed-in viewer, so those flows run against it end to end. It also serves
+ * generated PNGs for every media URL and fixture builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
  */
 import { createServer } from 'node:http';
 import { crc32, deflateSync } from 'node:zlib';
 import { encode } from 'blurhash';
+import { createModeration } from './moderation.mjs';
 import { createProfiles } from './profiles.mjs';
 import { createSocial } from './social.mjs';
 
@@ -503,10 +505,12 @@ const PDF = Buffer.from(
 
 const social = createSocial({ articles: ALL_ARTICLES, writers: WRITERS, problem });
 const profiles = createProfiles({ me, articles: ALL_ARTICLES, writers: WRITERS, fields: FIELDS, social, problem, avatarVariants });
+const moderation = createModeration({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
 
 const routes = [
   ...social.routes,
   ...profiles.routes,
+  ...moderation.routes,
   ['GET', /^\/__mock\/health$/, () => [200, { ok: true }]],
   ['GET', /^\/__mock\/asset\/image$/, (q) => [200, imageAsset(q.get('seed') ?? 'upload', Number(q.get('w') ?? 1600), Number(q.get('h') ?? 1200))]],
   ['GET', /^\/__mock\/asset\/avatar$/, (q) => [200, avatarAsset(q.get('seed') ?? 'avatar')]],
@@ -546,7 +550,9 @@ const routes = [
     'GET',
     new RegExp(`^${API}/articles/([^/]+)$`),
     (_q, [, slug], _body, req) =>
-      DETAILS.has(slug) ? [200, social.personalize(DETAILS.get(slug), social.viewerOf(req))] : [404, problem(404, 'article.not_found', 'Article not found')],
+      DETAILS.has(slug)
+        ? [200, moderation.decorateArticle(social.personalize(DETAILS.get(slug), social.viewerOf(req)), social.viewerOf(req))]
+        : [404, problem(404, 'article.not_found', 'Article not found')],
   ],
   // Phone + password sessions (docs/api/contract-v1.md → Auth). The cookie is the whole session: `readin_refresh=writer`.
   ['GET', new RegExp(`^${API}/auth/config$`), () => [200, { pinLength: 4, password: { minLength: 8, maxLength: 128, requireLetter: true, requireDigit: true }, externalProviders: [] }]],

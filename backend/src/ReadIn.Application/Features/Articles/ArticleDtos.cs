@@ -82,6 +82,9 @@ public sealed record ArticleAttachmentsDto(string Kind, IReadOnlyList<ImageAttac
     public const string DocumentKind = "document";
 }
 
+/// <summary><see cref="Note"/> is the latest hide's note to the author (null when the moderator wrote none).</summary>
+public sealed record ArticleModerationDto(DateTime HiddenAt, string? Note);
+
 public sealed record ArticleDetailsDto : ArticleCardDto
 {
     public IReadOnlyList<string> AvailableLanguages { get; init; } = [];
@@ -102,6 +105,9 @@ public sealed record ArticleDetailsDto : ArticleCardDto
 
     /// <summary>The viewer's collections that hold this article; empty for guests and unsaved articles.</summary>
     public IReadOnlyList<Guid> CollectionIds { get; init; } = [];
+
+    /// <summary>Set only while a moderator hides the article (SPEC F22); then only its author and moderators open it.</summary>
+    public ArticleModerationDto? Moderation { get; init; }
 
     /// <summary>Raw RDoc from the projection; parsed into <see cref="Content"/> by the handler.</summary>
     [JsonIgnore]

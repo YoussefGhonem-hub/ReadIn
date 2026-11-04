@@ -197,7 +197,6 @@ class CommentsCubit extends Cubit<CommentsState> {
     this._delete,
     this._like,
     this._pin,
-    this._report,
     this._moderate,
     this._realtime, {
     @ignoreParam DateTime Function()? clock,
@@ -210,7 +209,6 @@ class CommentsCubit extends Cubit<CommentsState> {
   final DeleteComment _delete;
   final SetCommentLiked _like;
   final SetCommentPinned _pin;
-  final ReportComment _report;
   final ModerateComment _moderate;
   final RealtimeService _realtime;
   final DateTime Function() _clock;
@@ -466,9 +464,6 @@ class CommentsCubit extends Cubit<CommentsState> {
       return null;
     });
   }
-
-  Future<Failure?> report(String commentId, ReportReason reason, {String? details}) async =>
-      (await _report(commentId, reason, details: details)).failureOrNull;
 
   /// Moderators (F22 hooks): hide and unhide apply once the API confirms (the moderator still sees the text); delete
   /// applies at once and is restored when refused.

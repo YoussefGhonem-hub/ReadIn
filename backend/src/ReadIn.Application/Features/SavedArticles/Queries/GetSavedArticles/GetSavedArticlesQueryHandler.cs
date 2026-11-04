@@ -28,7 +28,8 @@ internal sealed class GetSavedArticlesQueryHandler(
 
         var limit = Math.Clamp(query.Limit, 1, 50);
         var saved = db.SavedArticles.AsNoTracking()
-            .Where(s => s.UserId == userId && s.Article.Status == ArticleStatus.Published && s.Article.Field.IsEnabled);
+            // ArticleVisibility.Visible() through the navigation: published, enabled field, not hidden (SPEC F22).
+            .Where(s => s.UserId == userId && s.Article.Status == ArticleStatus.Published && s.Article.Field.IsEnabled && s.Article.HiddenAt == null);
 
         if (!string.IsNullOrWhiteSpace(query.FieldSlug))
             saved = saved.Where(s => s.Article.Field.Slug == query.FieldSlug);

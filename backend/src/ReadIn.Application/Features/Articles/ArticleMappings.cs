@@ -64,6 +64,8 @@ public sealed class ArticleMappings : IRegister
             .Map(d => d.ReviewedBy, s => s.ReviewStatus == ReviewStatus.Approved && s.ReviewedBy != null
                 ? new ReviewerDto(s.ReviewedBy.DisplayName, s.ReviewedBy.Username)
                 : null)
+            // The hide note is loaded by the handler (latest article.hide in ModerationActions).
+            .Map(d => d.Moderation, s => s.HiddenAt == null ? null : new ArticleModerationDto(s.HiddenAt.Value, null))
             .Ignore(d => d.Content)
             .Ignore(d => d.IsFollowingAuthor)
             .Ignore(d => d.CollectionIds);

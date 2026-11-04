@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/errors/failure.dart';
@@ -124,5 +125,57 @@ void main() {
     expect(await store.refreshToken(), isNull);
     expect(await store.accessToken(), isNull);
     expect(users, [null]);
+  });
+
+  group('a suspended account (F22)', () {
+    DioException suspended(String path) => DioException(
+          requestOptions: RequestOptions(path: path),
+          type: DioExceptionType.badResponse,
+          response: Response<dynamic>(
+            requestOptions: RequestOptions(path: path),
+            statusCode: 403,
+            data: {'status': 403, 'code': 'user.suspended', 'suspendedUntil': '2026-11-09T12:00:00Z'},
+          ),
+        );
+
+    test('a refused refresh ends the session and keeps why', () async {
+      secure.values[AuthSessionStore.refreshTokenKey] = 'r1';
+      when(() => api.refresh(any())).thenThrow(suspended('/auth/refresh'));
+
+      await store.refresh();
+
+      expect(store.endedBy?.code, FailureCodes.userSuspended);
+      expect(store.endedBy?.suspendedUntil, DateTime.utc(2026, 11, 9, 12));
+      expect(secure.values, isEmpty);
+    });
+
+    test('a refused call ends the session once; signing in again or out forgets why', () async {
+      await store.save(session('a1', 'r1'));
+      final users = <Me?>[];
+      store.changes.listen(users.add);
+      const reason = Failure(FailureCodes.userSuspended, statusCode: 403);
+
+      await store.endSuspended(reason);
+      await store.endSuspended(reason); // a parallel call: already ended
+      await Future<void>.delayed(Duration.zero);
+
+      expect(users, [null]);
+      expect(store.endedBy, reason);
+      expect(await store.accessToken(), isNull);
+
+      await store.save(session('a2', 'r2'));
+      expect(store.endedBy, isNull);
+      await store.clear();
+      expect(store.endedBy, isNull);
+    });
+
+    test('a rejected refresh token for another reason keeps no reason', () async {
+      secure.values[AuthSessionStore.refreshTokenKey] = 'r1';
+      when(() => api.refresh(any())).thenThrow(httpError('/auth/refresh', 401, code: 'auth.refresh_invalid'));
+
+      await store.refresh();
+
+      expect(store.endedBy, isNull);
+    });
   });
 }

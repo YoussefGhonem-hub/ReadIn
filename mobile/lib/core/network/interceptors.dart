@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 
+import '../errors/failure.dart';
 import '../l10n/current_locale.dart';
+import 'api_error_mapper.dart';
 import 'request_context.dart';
 
 /// `/auth/*` calls sign in, refresh or sign out themselves, so they never get a bearer token and a `401` from them is
@@ -12,7 +14,9 @@ bool isAnonymousAuthCall(String path) => path.startsWith('/auth/') && path != '/
 bool issuesSession(String path) => path.startsWith('/auth/') || path == '/me/password' || path == '/me/phone';
 
 /// Adds `Authorization: Bearer <access token>` and, on a `401` from any other call, refreshes once (single-flight,
-/// see [SessionTokenProvider]) and retries the call (SPEC §9.3). Queued, so calls wait while a refresh runs.
+/// see [SessionTokenProvider]) and retries the call (SPEC §9.3). Queued, so calls wait while a refresh runs. A signed-in
+/// call refused with `403 user.suspended` (the account was suspended meanwhile, F22) ends the session; the error goes
+/// on to the caller.
 class AuthInterceptor extends QueuedInterceptor {
   AuthInterceptor(this._session, this._dio);
 
@@ -37,6 +41,11 @@ class AuthInterceptor extends QueuedInterceptor {
   Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
     final options = err.requestOptions;
     final rejected = options.extra[_tokenKey];
+    if (err.response?.statusCode == 403 && rejected is String) {
+      final failure = ApiErrorMapper.fromDio(err);
+      if (failure.code == FailureCodes.userSuspended) await _session.endSuspended(failure);
+      return handler.next(err);
+    }
     if (err.response?.statusCode != 401 ||
         isAnonymousAuthCall(options.path) ||
         options.extra[_retriedKey] == true ||

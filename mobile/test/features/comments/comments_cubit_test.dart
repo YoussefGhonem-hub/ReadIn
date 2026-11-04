@@ -26,7 +26,6 @@ void main() {
         DeleteComment(repository),
         SetCommentLiked(repository),
         SetCommentPinned(repository),
-        ReportComment(repository),
         ModerateComment(repository),
         realtime,
         clock: () => commentsNow,
@@ -330,14 +329,6 @@ void main() {
       expect(cubit.find('c1')!.isHidden, isTrue);
       expect(cubit.find('c1')!.body, isNotNull);
       expect(cubit.state.total, 0);
-    });
-
-    test('a report sends the reason and the trimmed details', () async {
-      when(() => repository.reportComment('c1', ReportReason.harassment, details: 'تفاصيل'))
-          .thenAnswer((_) async => const Ok<void>(null));
-
-      expect(await cubit.report('c1', ReportReason.harassment, details: '  تفاصيل  '), isNull);
-      verify(() => repository.reportComment('c1', ReportReason.harassment, details: 'تفاصيل')).called(1);
     });
   });
 

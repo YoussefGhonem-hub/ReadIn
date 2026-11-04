@@ -81,6 +81,10 @@
       },
       "username_invalid": "3–30 characters: a–z, 0–9 and _ only."
     },
+    "suspension": {
+      "until": "This account is suspended until {{date}}.",
+      "permanent": "This account is suspended permanently. Contact support."
+    },
     "field": {
       "not_found": "This field doesn't exist."
     },
@@ -168,12 +172,17 @@
     "report": {
       "target_not_found": "The reported content doesn't exist.",
       "own_content": "You can't report your own content.",
-      "target_not_supported": "Only comments can be reported for now.",
       "target_invalid": "Unknown report target.",
-      "reason_invalid": "Choose a reason for the report."
+      "reason_invalid": "Choose a reason for the report.",
+      "status_invalid": "Unknown report status."
     },
     "moderation": {
-      "action_invalid": "Unknown moderation action."
+      "action_invalid": "Unknown moderation action.",
+      "self": "You can't take this action on yourself.",
+      "staff_target": "You can't warn or suspend a member of the moderation team.",
+      "note_required": "Write a note for the user.",
+      "duration_invalid": "Pick a duration from 1 to 365 days.",
+      "notice_not_found": "This notice no longer exists."
     },
     "profile": {
       "stats_private": "These reading stats are private.",
@@ -532,7 +541,20 @@
       "more": "Show more"
     },
     "following": "Following",
-    "addToCollection": "Add to collection"
+    "addToCollection": "Add to collection",
+    "menu": {
+      "label": "Article options",
+      "report": "Report article",
+      "hide": "Hide article",
+      "unhide": "Unhide article"
+    },
+    "hiddenBanner": {
+      "title": "Hidden by moderators",
+      "author": "Only you and the moderators can see it now.",
+      "moderator": "Only its author and the moderators can see it.",
+      "since": "Since {{date}}",
+      "note": "Note from the team"
+    }
   },
   "rdoc": {
     "summary": "TL;DR",
@@ -861,6 +883,12 @@
       "save": "Save changes",
       "saved": "Profile saved ✓",
       "loadError": "We couldn’t load your profile."
+    },
+    "menu": {
+      "label": "Account options",
+      "report": "Report user",
+      "warn": "Warn",
+      "suspend": "Suspend account"
     }
   },
   "reading": {
@@ -995,21 +1023,7 @@
     "actions": "Comment options",
     "edit": "Edit",
     "delete": "Delete",
-    "report": {
-      "title": "Report comment",
-      "body": "What's wrong with this comment?",
-      "reasons": {
-        "spam": "Spam or advertising",
-        "misinformation": "Misinformation",
-        "harassment": "Harassment or abuse",
-        "copyright": "Copyright infringement",
-        "other": "Something else"
-      },
-      "details": "Details (optional)",
-      "detailsPlaceholder": "Tell us more if you like",
-      "submit": "Send report",
-      "thanks": "Thanks, we'll review it."
-    },
+    "report": "Report",
     "pin": "Pin comment",
     "unpin": "Unpin",
     "moderation": {
@@ -1028,6 +1042,231 @@
     },
     "errors": {
       "tooFast": "You're commenting too fast. Wait a minute and try again."
+    }
+  },
+  "report": {
+    "title": {
+      "article": "Report article",
+      "comment": "Report comment",
+      "user": "Report user"
+    },
+    "body": {
+      "article": "What's wrong with this article?",
+      "comment": "What's wrong with this comment?",
+      "user": "What's wrong with this account?"
+    },
+    "reasons": {
+      "spam": "Spam or advertising",
+      "misinformation": "Misinformation",
+      "harassment": "Harassment or abuse",
+      "copyright": "Copyright infringement",
+      "other": "Something else"
+    },
+    "details": "Details (optional)",
+    "detailsPlaceholder": "Tell us more if you like",
+    "submit": "Send report",
+    "thanks": "Thanks, we'll review it"
+  },
+  "moderation": {
+    "title": "Moderation",
+    "subtitle": "Reports to review and everything the team did.",
+    "openBadge": {
+      "zero": "No open reports",
+      "one": "1 open report",
+      "other": "{{count}} open reports"
+    },
+    "tabs": {
+      "label": "Report status",
+      "open": "Open",
+      "resolved": "Resolved",
+      "dismissed": "Dismissed",
+      "log": "Log"
+    },
+    "types": {
+      "label": "Content type",
+      "all": "All",
+      "article": "Articles",
+      "comment": "Comments",
+      "user": "Users"
+    },
+    "type": {
+      "article": "Article",
+      "comment": "Comment",
+      "user": "User"
+    },
+    "reasons": {
+      "spam": "Spam",
+      "misinformation": "Misinformation",
+      "harassment": "Harassment",
+      "copyright": "Copyright",
+      "other": "Other"
+    },
+    "reportCount": {
+      "zero": "No reports",
+      "one": "1 report",
+      "other": "{{count}} reports"
+    },
+    "lastReport": "Last report {{time}}",
+    "closedAt": "Closed {{time}}",
+    "state": {
+      "visible": "Visible",
+      "hidden": "Hidden",
+      "deleted": "Deleted",
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "suspendedUntil": "Suspended until {{date}}",
+    "suspendedPermanently": "Suspended permanently",
+    "warnings": {
+      "zero": "No warnings",
+      "one": "1 warning",
+      "other": "{{count}} warnings"
+    },
+    "deletedUser": "Deleted user",
+    "onArticle": "On “{{title}}”",
+    "more": "Load more",
+    "loadError": "We couldn't load the reports.",
+    "empty": {
+      "open": {
+        "title": "No open reports",
+        "body": "All clear for now. New reports show up here."
+      },
+      "resolved": {
+        "title": "Nothing resolved yet",
+        "body": "Reports the team acted on show up here."
+      },
+      "dismissed": {
+        "title": "Nothing dismissed yet",
+        "body": "Reports closed without an action show up here."
+      },
+      "log": {
+        "title": "The log is empty",
+        "body": "Every action the moderation team takes is recorded here."
+      }
+    },
+    "case": {
+      "back": "Back to reports",
+      "title": {
+        "article": "Reported article",
+        "comment": "Reported comment",
+        "user": "Reported user"
+      },
+      "open": {
+        "article": "Open the article",
+        "comment": "Open the article with this comment",
+        "user": "Open the profile"
+      },
+      "author": "Author",
+      "reports": "Reports",
+      "history": "History",
+      "noHistory": "No actions yet.",
+      "actions": "Actions",
+      "noActions": "No actions are available on this content right now.",
+      "status": {
+        "open": "Open",
+        "resolved": "Resolved",
+        "dismissed": "Dismissed"
+      },
+      "closedBy": "Closed by {{name}}",
+      "loadError": "We couldn't load this case.",
+      "notFound": {
+        "title": "This case does not exist",
+        "body": "The link may be wrong."
+      }
+    },
+    "actions": {
+      "dismiss": "Dismiss reports",
+      "hide": {
+        "article": "Hide article",
+        "comment": "Hide comment"
+      },
+      "unhide": {
+        "article": "Unhide article",
+        "comment": "Unhide comment"
+      },
+      "delete": "Delete comment",
+      "warn": "Warn",
+      "warnAuthor": "Warn the author",
+      "suspend": "Suspend account",
+      "suspendAuthor": "Suspend the author's account",
+      "unsuspend": "Lift suspension",
+      "done": {
+        "hide": "Hidden",
+        "unhide": "Visible again",
+        "delete": "Comment deleted",
+        "warn": "Warning sent",
+        "suspend": "Account suspended",
+        "unsuspend": "Suspension lifted",
+        "dismiss": "Reports dismissed"
+      }
+    },
+    "sheet": {
+      "title": {
+        "hideArticle": "Hide this article?",
+        "hideComment": "Hide this comment?",
+        "delete": "Delete this comment?",
+        "warn": "Warn {{name}}",
+        "suspend": "Suspend {{name}}",
+        "unsuspend": "Lift the suspension of {{name}}?",
+        "dismiss": "Dismiss these reports?",
+        "unhideArticle": "Unhide this article?",
+        "unhideComment": "Unhide this comment?"
+      },
+      "body": {
+        "hideArticle": "It disappears from every list and from search; only its author and moderators can open it. The author gets a notice with your note.",
+        "hideComment": "It shows as hidden; only its author and moderators can read it.",
+        "delete": "It's removed for everyone. You can't undo this.",
+        "warn": "They get a notice with this note and have to confirm they read it.",
+        "suspend": "They can't sign in or do anything until the suspension ends.",
+        "unsuspend": "They can sign in and use ReadIn again right away.",
+        "dismiss": "The open reports are closed without changing the content.",
+        "unhideArticle": "Readers can see it everywhere again.",
+        "unhideComment": "Everyone can see it again."
+      },
+      "note": "Note",
+      "noteOptional": "Note (optional)",
+      "notePlaceholder": "Briefly say why",
+      "noteForUser": "The account owner sees this note.",
+      "duration": "Duration",
+      "durations": {
+        "1": "1 day",
+        "7": "7 days",
+        "30": "30 days",
+        "permanent": "Permanent"
+      }
+    },
+    "notice": {
+      "warning": "You've received a warning from the moderators",
+      "articleHidden": "Your article “{{title}}” was hidden",
+      "articleHiddenBody": "Readers can't see it any more. You still can.",
+      "note": "Note from the team",
+      "rules": "If it happens again, the account may be suspended.",
+      "gotIt": "Got it"
+    },
+    "log": {
+      "title": "Moderation log",
+      "deletedModerator": "Deleted moderator",
+      "action": {
+        "comment.hide": "hid a comment",
+        "comment.unhide": "unhid a comment",
+        "comment.delete": "deleted a comment",
+        "article.hide": "hid an article",
+        "article.unhide": "unhid an article",
+        "user.warn": "warned a user",
+        "user.suspend": "suspended an account",
+        "user.unsuspend": "lifted a suspension",
+        "reports.dismiss": "dismissed reports"
+      },
+      "until": "until {{date}}",
+      "permanent": "permanently",
+      "reportsClosed": {
+        "zero": "No reports closed",
+        "one": "Closed 1 report",
+        "other": "Closed {{count}} reports"
+      }
+    },
+    "settings": {
+      "body": "Open reports and the moderation log"
     }
   }
 }
