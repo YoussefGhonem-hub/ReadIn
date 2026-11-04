@@ -172,3 +172,48 @@ Order:
 - **Still open, to look at under "other gaps":**
   - the web initial bundle (518 kB, over the 500 kB warning);
   - two mobile editor limits noted during F05: bidi marks while editing, and list item direction.
+
+### 6.2 F17 Notifications ✅
+Built from the contract in `docs/handoff/f17-notifications.md` by three helpers (backend, web, mobile), then reviewed,
+re-gated and committed by the main session.
+- **Backend** (f6c28dd):
+  - tables `Notifications`, `NotificationActors`, `UserNotificationSettings`, and quiet hours on `Users` (migration
+    `Notifications`);
+  - `NotificationWriter`: never about your own action; `off` / `inApp` / `all`; aggregation per group within 24 h;
+    dedupe keys; safe under outbox retries;
+  - producers: new follower, comments, replies, comment mentions, reaction milestones, new articles from followed
+    writers, security alerts, moderation notices (F22's push now goes through it), daily article, the 20:00 streak
+    reminder;
+  - `NotificationPushJob`: quiet hours, re-checks before sending, 24 h cutoff, retries, invalid tokens removed;
+  - 7 endpoints, the live badge, account deletion, demo notifications (Development only), docs.
+- **Mobile** (a111b37):
+  - the center, Settings → Notifications and the badge with a REST fallback;
+  - push taps mark read;
+  - the device-only daily switch moves to the server's `daily_article` mode;
+  - new links `/u/{username}/followers`, `/me/stats` (a reading stats page), `/settings?section=account`.
+- **Web**:
+  - `/notifications`, with a "New notifications" button while the page is open;
+  - `/settings/notifications`, the badge (live, else REST every 60 s) and the side-nav count;
+  - push and toast taps mark read; a new tab gets `?notification={id}`, which is removed before routing;
+  - mock API fixtures for `u-notified-*` viewers.
+- **Gates:**
+  - backend build clean, 1488/1488;
+  - web lint clean, 777/777 unit, SSR build OK (initial bundle 524.9 kB, was 518 kB; warning only), Playwright see below;
+  - mobile build_runner no diff, analyze clean, 1401/1401 with goldens.
+  - New baselines checked by eye: web `notifications-center-*` / `notification-settings-*` (ar-light, en-dark, desktop
+    and mobile); mobile `notifications_center_*`, `notification_settings_*`, and the 4 `settings_account*` goldens
+    (the daily switch became the "Notification settings" entry).
+- **Decisions beyond the contract:**
+  - a moderation warning links to `readin://notifications`;
+  - `moderation_notice` has no actor;
+  - entries whose comment or article is gone drop out of the list and the count;
+  - daily-article entries are written only for users with a device (as the F07 job);
+  - `readin://me/stats` opens the user's own profile on the web.
+- **Open, for "other gaps" or the user:**
+  - every new article of the official @readin account notifies its followers, so a content deploy with many articles
+    writes one entry per article per follower (pushes collapse per type);
+  - mobile's open center doesn't refresh by itself when a notification arrives (pull to refresh does; the web shows a
+    button);
+  - in Arabic titles a leading-dot word such as ".NET" shows as "NET." on mobile (the shared BiDi helper; it was
+    already in the comment goldens);
+  - the web bundle is now 524.9 kB.

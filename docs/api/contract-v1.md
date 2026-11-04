@@ -1067,7 +1067,9 @@ Tokens FCM reports as unregistered or invalid are deleted by the API.
 
 New deep links with F17: `readin://u/{username}/followers`, `readin://me/stats`, `readin://settings/account` and
 `readin://notifications` (the center), next to `readin://a/{slug}` (with an optional `#comment-{id}`) and
-`readin://u/{username}`.
+`readin://u/{username}`. Where they land: `me/stats` is the reading stats page on mobile and your own profile on the web
+(where the stats are); `settings/account` is the Account section of Settings (`/settings?section=account` on mobile,
+`/settings#account` on the web).
 
 ### Notifications (F17)
 

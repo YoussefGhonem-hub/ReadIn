@@ -1,5 +1,8 @@
 # Handoff: F17 Notifications (session readin-5e, formerly readin-4f)
 
+> **Built on dev, 2026-11-04** (backend f6c28dd, mobile a111b37, web after it; see PROGRESS.md 6.2). The contract
+> below is what was built; the live reference is now `docs/api/contract-v1.md` ("Notifications") and SPEC §21.1.
+
 Written 2026-11-04 when the user stopped all sessions but "main".
 
 ## What's done
