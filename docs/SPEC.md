@@ -691,8 +691,8 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 ### F03 — Home: "النهارده" (Today)
 - Greeting + **streak badge** 🔥 + notifications bell.
 - **Today's article (Hero card):** one published article picked for the user (see [§11 F07](#f07--daily-article-مقال-النهارده)).
-- Continue reading (resume last unfinished article).
-- Learning path progress card.
+- **Continue reading:** the most recently read unfinished article (scrolled ≥ 5%, read in the last 30 days, not today's hero), with its progress; tapping it resumes where you stopped.
+- **Learning path card:** your active path (enrolled, with an unread article, latest activity first) with its progress and the next article; without one, a short prompt to browse paths ([F09](#f09--learning-paths-مسارات)).
 - Field filter chips + feed: **For you** (interests + popularity + freshness) and **Following** tabs.
 - Feed cards show attachments: a single image, an **image carousel** or a **PDF page carousel** ([F26](#f26--post-attachments--media)).
 - Live counters on visible cards and a "مقالات جديدة ↑" banner when new articles are published ([F27](#f27--real-time-updates)).
@@ -758,6 +758,10 @@ Draft ──► Published ──► Archived
 - Curated ordered series (e.g. "أساسيات ASP.NET Core — 10 مقالات").
 - Enroll, progress bar, "next article", completion badge.
 - Paths are created by Admins (and later by Verified Writers).
+- **Pages:** paths list (All / My paths, field chips) and a path page (articles in order with read ticks; start / continue / leave). The reader ends with a "Next in path" block, and the profile has a Paths tab, private unless reading stats are public (F14, F18).
+- **Progress** is the F04 "read" rule, so articles read before enrolling count. Only articles a reader can open are counted. Enrolling when everything is read completes the path at once. The badge stays when a path grows later.
+- **Active path:** the enrolled path with an unread article and the latest activity (enrolling or reading one of its articles). It feeds the Home card (F03) and today's article (F07).
+- **Editorial paths** come from `content/taxonomy.yaml` and are read-only for admins. Admin-made paths are managed with the `paths.manage` API (screens with F23).
 
 ### F10 — Reactions
 - Four reactions: 💡 مفيد (Insightful), ❤️ (Love), 🔥 (Fire), 🤯 (Mind-blown).
@@ -1180,7 +1184,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Articles | `Articles` (AuthorId (null: the author deleted their account, §9.6), FieldId, TopicId, Slug, Status Draft/Published/Archived, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, AutoCheckedAt, PublishedAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleDrafts` (ArticleId key, DocumentJson: the editor's working copy, Version concurrency token, HasChanges, SavedAt; F05), `ArticleRevisions` (ArticleId, RevisionNumber, Title, Languages, DocumentJson: the document of one publish, CreatedBy, CreatedAt), `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive) |
 | Engagement | `Reposts` (UserId+ArticleId unique, CreatedAt), `ArticleHighlights` (UserId, ArticleId, Language, BlockId, StartOffset, EndOffset, Text, CreatedAt), `UserMutes` (MuterId+MutedUserId unique), `ContentMutes` (UserId, TargetType Field/Topic, TargetId, unique), `ArticleFeedback` (UserId+ArticleId unique, Type ShowLess, CreatedAt), `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
-| Learning | `LearningPaths`, `LearningPathItems` (Order), `PathEnrollments` |
+| Learning | `LearningPaths` (Slug, FieldId, TitleAr/En, DescriptionAr/En, SortOrder, IsPublished, IsEditorial), `LearningPathItems` (PathId + ArticleId unique, Order), `PathEnrollments` (UserId + PathId unique, EnrolledAt, LastActivityAt, CompletedAt) |
 | Glossary | `GlossaryTerms` (Slug, TermEn, ExplanationAr, DefinitionEn, FieldId), `ArticleTerms` |
 | Trust & Moderation | `VerificationRequests`, `Reports` (TargetType article/comment/user, TargetId, ReporterId, Reason, Details, Status open/resolved/dismissed; one per reporter and target), `ModerationActions`, `AuditLogs` |
 | Notifications | `Notifications` (UserId, Type, Payload JSON, IsRead), `NotificationPreferences` |

@@ -48,6 +48,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<ReadingDay> ReadingDays => Set<ReadingDay>();
     public DbSet<UserStats> UserStats => Set<UserStats>();
     public DbSet<LearningPath> LearningPaths => Set<LearningPath>();
+    public DbSet<LearningPathItem> LearningPathItems => Set<LearningPathItem>();
+    public DbSet<PathEnrollment> PathEnrollments => Set<PathEnrollment>();
 
     public DbSet<Reaction> Reactions => Set<Reaction>();
     public DbSet<SavedArticle> SavedArticles => Set<SavedArticle>();

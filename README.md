@@ -95,7 +95,8 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | Phone + password / Google / Apple auth (JWT, rotating refresh tokens, recovery PIN, account linking), SQL-backed roles & permissions | ✅ backend |
 | Seeders: roles & permissions, taxonomy, system accounts, demo users, articles | ✅ |
 | Seeders: demo interactions (reactions, saves, follows, a collection), demo comment threads (F11) and demo editor drafts + revision history (F05); deterministic, local only | ✅ |
-| Seeders: glossary, learning paths | ⏳ arrive with F21 / F09 |
+| Seeders: learning paths (editorial, from `content/taxonomy.yaml`) and demo path enrollments (local only) | ✅ |
+| Seeders: glossary | ⏳ arrives with F21 |
 | Outbox + Hangfire (immediate trigger + per-minute safety net), hourly article quality score (ranks Today's article) | ✅ |
 | F27 Real-time: `POST /realtime/token` (Firebase custom tokens), RTDB publisher with retry + circuit breaker (article counters, comment events, feed, unread badge, PDF status), "new articles" signal on publish | ✅ backend · web + mobile listeners in place; article counters are live with F10/F13, comment events and the badge go live as F11 and F17 publish them |
 | F07 Daily article: Hangfire job picks 30 min before each user's reminder time and sends one FCM push at it (ar/en); the tap opens the reader on web + mobile | ✅ |
@@ -107,5 +108,6 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | F11 Comments & replies: threads (one reply level), likes, @mentions, author pin, live updates, report + moderator hide/unhide/delete, flood limits, "Deleted user": web + mobile + backend, demo threads | ✅ |
 | F05 Editor: block editor (every RDoc block, slash menu, markdown shortcuts, per-block direction; Tiptap on web, AppFlowy on mobile), language versions, cover, tags, sources, attachments, autosave every 10 s + device backup + conflict handling, live checks, preview, publish/Update, private working copy of published articles, revision history with restore, "My articles" (drafts / published), demo drafts. No review and no scheduling ([ADR 0015](docs/adr/0015-open-publishing-and-the-editor.md)); Today's article ranks any published article by quality score | ✅ web + mobile + backend |
 | F20 Review workflow | ✖ removed (ADR 0015) |
+| F09 Learning paths + F03 Home cards: paths list (All / My paths) and path page (enroll, progress, next article, completion badge), "Next in path" at the end of the reader, profile Paths tab, Home "continue reading" + active-path cards, today's article prefers the active path's next article (F07), admin path API (`paths.manage`; screens with F23) | ✅ web + mobile + backend |
 | ContentStudio `generate` (Claude), code-compile and live-link checks | ⏳ |
 | Full-text search index (needs FTS in the SQL image), SignalR | ⏳ Phase 2 |

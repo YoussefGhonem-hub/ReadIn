@@ -9,13 +9,14 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 /// <summary>
 /// Seeder #7 (all environments): editorial learning paths (F09) from <c>learningPaths</c> in content/taxonomy.yaml.
 /// A path's items are the imported articles whose meta.json names it, in their <c>order</c>; a path without any
-/// imported article stays unpublished. Upsert by path slug.
+/// imported article stays unpublished. Upsert by path slug; paths that admins created (not in the file) are left alone.
+/// Version 2 marks the paths editorial, which makes them read-only for admins (F09).
 /// </summary>
 internal sealed partial class LearningPathsSeeder(AppDbContext db, ContentRepository content, ILogger<LearningPathsSeeder> logger) : ISeeder
 {
     public string Name => "learning-paths";
     public int Order => 7;
-    public int Version => 1;
+    public int Version => 2;
 
     public bool AppliesTo(IHostEnvironment environment) => true;
 
@@ -50,11 +51,11 @@ internal sealed partial class LearningPathsSeeder(AppDbContext db, ContentReposi
 
             if (!paths.TryGetValue(entry.Slug, out var path))
             {
-                path = new LearningPath(entry.Slug, fieldId, entry.TitleAr, entry.TitleEn, sortOrder);
+                path = LearningPath.CreateEditorial(entry.Slug, fieldId, entry.TitleAr, entry.TitleEn, sortOrder);
                 db.LearningPaths.Add(path);
             }
             path.Update(fieldId, entry.TitleAr, entry.TitleEn, entry.DescriptionAr, entry.DescriptionEn, sortOrder);
-            path.SetItems([.. members
+            path.SyncEditorial([.. members
                 .Where(m => m.Path == entry.Slug && articles.ContainsKey(m.Slug))
                 .OrderBy(m => m.Order)
                 .Select(m => (articles[m.Slug], m.Order))]);
