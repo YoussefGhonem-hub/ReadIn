@@ -45,5 +45,8 @@ describe('ProfilesApi (F14)', () => {
     expectCall('PATCH', `${TEST_API}/me`, body);
     api.updatePrivacy({ publicReadingStats: true }).subscribe();
     expectCall('PUT', `${TEST_API}/me/privacy`, { publicReadingStats: true });
+    // Each setting is optional; the clients send them all.
+    api.updatePrivacy({ publicReadingStats: false, whoCanMention: 'following' }).subscribe();
+    expectCall('PUT', `${TEST_API}/me/privacy`, { publicReadingStats: false, whoCanMention: 'following' });
   });
 });

@@ -21,11 +21,22 @@ export interface ProfileLinks {
   website?: string | null;
 }
 
-/** Settings → Privacy (F18). "Who can mention me" joins it with F11. */
+/**
+ * Who may @mention you, in comments and articles (F18): everyone, the people you follow, or nobody (you can always
+ * mention yourself). Anyone else's `@username` stays plain text: no link, no notification.
+ */
+export type MentionPolicy = 'everyone' | 'following' | 'nobody';
+
+/** Settings → Privacy (F18), in `GET /me`. */
 export interface PrivacySettingsDto {
   /** Reading stats + heatmap on the public profile (F14). Off by default. */
   publicReadingStats: boolean;
+  /** `everyone` by default (and when an API older than it leaves it out). */
+  whoCanMention: MentionPolicy;
 }
+
+/** `PUT /me/privacy`: each setting is optional (left out = unchanged), at least one is required. */
+export type UpdatePrivacyRequest = Partial<PrivacySettingsDto>;
 
 export interface MeDto {
   id: string;
@@ -1148,7 +1159,7 @@ export interface NotificationDto {
   actorCount: number;
   /** In the viewer's article language. */
   article: { id: string; slug: string; title: string; language: ArticleLanguage } | null;
-  /** ≤ 140 characters of plain text. */
+  /** ≤ 140 characters of plain text. Null for a mention in an article (`mention` names the article only). */
   comment: { id: string; parentId: string | null; excerpt: string } | null;
   data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange };
   /** `readin://…`, the same deep links as pushes. */

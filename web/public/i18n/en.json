@@ -681,6 +681,15 @@
       "title": "Privacy",
       "publicStats": "Show my reading stats on my public profile",
       "publicStatsHint": "Your streak, reading activity and top fields. Your phone number is never shown.",
+      "whoCanMention": {
+        "label": "Who can mention me",
+        "hint": "In comments and articles. If someone you haven't allowed types your @username, it stays plain text and you aren't notified.",
+        "options": {
+          "everyone": "Everyone",
+          "following": "People I follow",
+          "nobody": "Nobody"
+        }
+      },
       "signIn": "Sign in to change your privacy settings."
     },
     "notifications": {
@@ -723,7 +732,7 @@
         },
         "mention": {
           "label": "Mentions",
-          "hint": "When someone mentions you in a comment"
+          "hint": "When someone mentions you in a comment or an article"
         },
         "reactions_milestone": {
           "label": "Reaction milestones",
@@ -1758,6 +1767,7 @@
       },
       "mention": {
         "single": "{{name}} mentioned you in a comment",
+        "article": "{{name}} mentioned you in an article",
         "group": {
           "one": "{{name}} and 1 other mentioned you",
           "other": "{{name}} and {{count}} others mentioned you"

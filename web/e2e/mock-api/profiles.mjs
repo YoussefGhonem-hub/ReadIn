@@ -1,6 +1,7 @@
 /**
  * Profiles (F14) for the mock API, per the F14 contract: public profiles, the Articles tab, public reading stats,
- * `PATCH /me` and `PUT /me/privacy`, plus `GET /me` and `/me/stats` for whoever is signed in.
+ * `PATCH /me` and `PUT /me/privacy` (public reading stats and "who can mention me", step 6.3), plus `GET /me` and
+ * `/me/stats` for whoever is signed in.
  *
  * Like social.mjs, state is kept per viewer (the bearer token's `sub`), so parallel tests never see each other's
  * edits. A viewer's own profile is only visible to that viewer (as `isMe`); everyone else sees the seeded writers and
@@ -12,6 +13,7 @@ const TODAY = '2026-11-03';
 const MAX_BIO = 300;
 const MAX_EXPERTISE = 5;
 const USERNAME = /^[a-z0-9_]{3,30}$/;
+const MENTION_POLICIES = ['everyone', 'following', 'nobody'];
 
 /** What the seeded writers add on their profiles (bios come from server.mjs). About a third have public stats. */
 const WRITER_PROFILES = {
@@ -73,7 +75,7 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
       if (viewer === 'u-writer') {
         const mona = writers.find((w) => w.id === 'u-writer');
         const extra = WRITER_PROFILES['u-writer'];
-        own.set(viewer, { ...mona, links: { ...extra.links }, expertise: [...extra.expertise], joinedAt: extra.joinedAt, totalReads: extra.totalReads, avatarSeed: null, publicReadingStats: extra.publicReadingStats });
+        own.set(viewer, { ...mona, links: { ...extra.links }, expertise: [...extra.expertise], joinedAt: extra.joinedAt, totalReads: extra.totalReads, avatarSeed: null, publicReadingStats: extra.publicReadingStats, whoCanMention: 'everyone' });
       } else {
         const fresh = viewer.startsWith('u-new');
         own.set(viewer, {
@@ -88,6 +90,7 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
           totalReads: 0,
           avatarSeed: null,
           publicReadingStats: false,
+          whoCanMention: 'everyone',
         });
       }
     }
@@ -148,13 +151,15 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
     };
   }
 
+  const privacyOf = (record) => ({ publicReadingStats: record.publicReadingStats, whoCanMention: record.whoCanMention });
+
   /** `GET /me` for the signed-in viewer (the base `me()` for calls without a token, like e2e's writerMe()). */
   function meOf(viewer) {
     const base = me();
     if (!viewer) return base;
     const record = ownProfile(viewer);
     // The demo writer stays the account the auth suites expect; no test edits it.
-    if (viewer === 'u-writer') return { ...base, privacy: { publicReadingStats: record.publicReadingStats } };
+    if (viewer === 'u-writer') return { ...base, privacy: privacyOf(record) };
     return {
       ...base,
       id: viewer,
@@ -166,7 +171,7 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
       avatarUrl: avatarOf(record).avatarUrl,
       bio: record.bio ?? null,
       links: { ...record.links },
-      privacy: { publicReadingStats: record.publicReadingStats },
+      privacy: privacyOf(record),
     };
   }
 
@@ -288,9 +293,15 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
     [
       'PUT',
       new RegExp(`^${API}/me/privacy$`),
+      // Each setting is optional (left out = unchanged) but one is required; the clients send them all.
       signedIn((viewer, _q, _m, body) => {
-        if (typeof body?.publicReadingStats !== 'boolean') return validation({ publicReadingStats: ['validation.required'] });
-        ownProfile(viewer).publicReadingStats = body.publicReadingStats;
+        const { publicReadingStats, whoCanMention } = body ?? {};
+        if (publicReadingStats === undefined && whoCanMention === undefined) return validation({ '': ['validation.required'] });
+        if (publicReadingStats !== undefined && typeof publicReadingStats !== 'boolean') return validation({ publicReadingStats: ['validation.invalid'] });
+        if (whoCanMention !== undefined && !MENTION_POLICIES.includes(whoCanMention)) return validation({ whoCanMention: ['validation.invalid'] });
+        const record = ownProfile(viewer);
+        if (publicReadingStats !== undefined) record.publicReadingStats = publicReadingStats;
+        if (whoCanMention !== undefined) record.whoCanMention = whoCanMention;
         return [204, undefined];
       }),
     ],

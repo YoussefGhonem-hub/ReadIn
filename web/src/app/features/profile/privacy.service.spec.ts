@@ -18,29 +18,79 @@ describe('PrivacyService and the public-stats switch (F14, F18)', () => {
     expect(await privacy.setPublicReadingStats(false)).toBe(false);
     const req = http.expectOne(`${TEST_API}/me/privacy`);
     expect(req.request.method).toBe('PUT');
-    expect(req.request.body).toEqual({ publicReadingStats: true });
+    // The whole settings object, the others at their defaults.
+    expect(req.request.body).toEqual({ publicReadingStats: true, whoCanMention: 'everyone' });
     req.flush(null, { status: 204, statusText: 'No Content' });
     expect(await saved).toBe(true);
-    expect(session.me()!.privacy).toEqual({ publicReadingStats: true });
+    expect(session.me()!.privacy).toEqual({ publicReadingStats: true, whoCanMention: 'everyone' });
     expect(privacy.saving()).toBe(false);
     http.verify();
   });
 
   it('goes back and shows the error when the save fails', async () => {
     const { http, session, toasts } = setupSocialTesting();
-    session.patchMe({ privacy: { publicReadingStats: true } });
+    session.patchMe({ privacy: { publicReadingStats: true, whoCanMention: 'following' } });
     const privacy = TestBed.inject(PrivacyService);
     const saved = privacy.setPublicReadingStats(false);
     expect(privacy.publicReadingStats()).toBe(false);
-    http.expectOne(`${TEST_API}/me/privacy`).flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
+    const req = http.expectOne(`${TEST_API}/me/privacy`);
+    expect(req.request.body).toEqual({ publicReadingStats: false, whoCanMention: 'following' });
+    req.flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
     expect(await saved).toBe(false);
     expect(privacy.publicReadingStats()).toBe(true);
     expect(toasts.toasts()[0].kind).toBe('error');
   });
 
+  it('saves "who can mention me" at once, sending the whole settings object, and keeps it', async () => {
+    const { http, session } = setupSocialTesting();
+    session.patchMe({ privacy: { publicReadingStats: true, whoCanMention: 'everyone' } });
+    const privacy = TestBed.inject(PrivacyService);
+    expect(privacy.whoCanMention()).toBe('everyone');
+
+    const saved = privacy.setWhoCanMention('following');
+    expect(privacy.whoCanMention()).toBe('following');
+    expect(privacy.saving()).toBe(true);
+    expect(await privacy.setWhoCanMention('nobody')).toBe(false); // one save at a time
+    const req = http.expectOne(`${TEST_API}/me/privacy`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ publicReadingStats: true, whoCanMention: 'following' });
+    req.flush(null, { status: 204, statusText: 'No Content' });
+    expect(await saved).toBe(true);
+    expect(session.me()!.privacy).toEqual({ publicReadingStats: true, whoCanMention: 'following' });
+    expect(privacy.publicReadingStats()).toBe(true);
+    expect(privacy.saving()).toBe(false);
+
+    // The same choice again sends nothing.
+    expect(await privacy.setWhoCanMention('following')).toBe(true);
+    http.verify();
+  });
+
+  it('"who can mention me" is everyone when the API leaves it out', () => {
+    const { session } = setupSocialTesting();
+    session.patchMe({ privacy: { publicReadingStats: true } as never });
+    expect(TestBed.inject(PrivacyService).settings()).toEqual({ publicReadingStats: true, whoCanMention: 'everyone' });
+  });
+
+  it('"who can mention me" goes back and shows the translated error when the save fails', async () => {
+    const { http, session, toasts } = setupSocialTesting();
+    session.patchMe({ privacy: { publicReadingStats: false, whoCanMention: 'following' } });
+    const privacy = TestBed.inject(PrivacyService);
+    const saved = privacy.setWhoCanMention('nobody');
+    expect(privacy.whoCanMention()).toBe('nobody');
+    const req = http.expectOne(`${TEST_API}/me/privacy`);
+    expect(req.request.body).toEqual({ publicReadingStats: false, whoCanMention: 'nobody' });
+    req.flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
+    expect(await saved).toBe(false);
+    expect(privacy.whoCanMention()).toBe('following');
+    expect(session.me()!.privacy).toEqual({ publicReadingStats: false, whoCanMention: 'following' });
+    expect(toasts.toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'السيرفر واجه مشكلة. حاول كمان شوية.' })]);
+    expect(privacy.saving()).toBe(false);
+  });
+
   it('guests can not save', async () => {
     const { http } = setupSocialTesting({ guest: true });
     expect(await TestBed.inject(PrivacyService).setPublicReadingStats(true)).toBe(false);
+    expect(await TestBed.inject(PrivacyService).setWhoCanMention('nobody')).toBe(false);
     http.expectNone(`${TEST_API}/me/privacy`);
   });
 

@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
+import { TranslocoService } from '@jsverse/transloco';
 import { TEST_API, flushMicrotasks, problem, setupSocialTesting } from '../../../../testing/social-testing';
 import { NotificationSettingsDto } from '../../../core/api/models';
 import { PushService } from '../../../core/push/push.service';
@@ -54,6 +55,9 @@ describe('NotificationSettingsPage (F17)', () => {
     expect(typeRow('daily_article').getAttribute('data-mode')).toBe('inApp');
     expect(typeRow('new_follower').getAttribute('data-mode')).toBe('all');
     expect(typeRow('mention').textContent).toContain('المنشن');
+    // Mentions cover comments and articles.
+    expect(typeRow('mention').textContent).toContain('لما حد يعمل لك منشن في تعليق أو مقال');
+    expect(TestBed.inject(TranslocoService).translate('settings.notifications.types.mention.hint', {}, 'en')).toBe('When someone mentions you in a comment or an article');
     expect(root.querySelector('[data-notification-types]')!.textContent).toContain('تنبيهات الأمان وإشعارات فريق الإشراف مش بتتقفل');
     expect(root.querySelector<HTMLInputElement>('#quiet-start')!.value).toBe('23:00');
     expect(root.querySelector<HTMLInputElement>('#quiet-end')!.value).toBe('07:00');

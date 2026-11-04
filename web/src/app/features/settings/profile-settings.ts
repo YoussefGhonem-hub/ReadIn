@@ -4,11 +4,15 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { SessionStore } from '../../core/auth/session.store';
 import { PublicStatsSwitch } from '../profile/public-stats-switch';
+import { WhoCanMention } from './who-can-mention';
 
-/** Settings → Profile (edit / view your profile) and Privacy (F14, F18): public reading stats on or off. */
+/**
+ * Settings → Profile (edit / view your profile) and Privacy (F14, F18): public reading stats on or off, and who can
+ * mention you.
+ */
 @Component({
   selector: 'rd-profile-settings',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, PublicStatsSwitch],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, PublicStatsSwitch, WhoCanMention],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -39,6 +43,7 @@ import { PublicStatsSwitch } from '../profile/public-stats-switch';
       <h2 id="settings-privacy" class="m-0 mb-3 text-base font-semibold">{{ 'settings.privacy.title' | transloco }}</h2>
       @if (session.isAuthenticated()) {
         <rd-public-stats-switch labelKey="settings.privacy.publicStats" hintKey="settings.privacy.publicStatsHint" />
+        <rd-who-can-mention class="mt-4 border-t border-border pt-4" />
       } @else {
         <p class="m-0 text-sm text-text-secondary">{{ 'settings.privacy.signIn' | transloco }}</p>
       }

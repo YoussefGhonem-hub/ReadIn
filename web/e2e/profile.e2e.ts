@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, VARIANTS, fixture, hasScreenshot, onApi, parkMouse, pngFile, reply, useVariant } from './support/mock-api';
+import { HIDE_APP_CHROME, VARIANTS, fixture, hasScreenshot, onApi, parkMouse, pngFile, problem, reply, useVariant } from './support/mock-api';
 import { openProfile, readingStatsLoaded, signInWithLiveProfile } from './support/profile';
 import { expectSignInPrompt, openArticle, signInAsReader } from './support/social';
 
@@ -8,7 +8,7 @@ import { expectSignInPrompt, openArticle, signInAsReader } from './support/socia
 /**
  * F14 Profile end to end in ar/en × light/dark: someone else's profile (server-rendered with its meta tags, public
  * reading stats, tabs, keyboard), your own profile (Edit profile, Saved tab, the "Show on my public profile" switch and
- * Settings → Privacy), Edit profile (photo upload and removal, username check, bio counter, links, expertise, server
+ * Settings → Privacy, with "Who can mention me"), Edit profile (photo upload and removal, username check, bio counter, links, expertise, server
  * errors on their fields) and the followers / following lists (search, infinite scroll, follow). The mock API keeps
  * each reader's profile (e2e/mock-api/profiles.mjs), so reloads show what the server saved.
  */
@@ -119,10 +119,10 @@ for (const variant of VARIANTS) {
     await page.evaluate(() => window.scrollTo(0, 0));
     if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`profile-own-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
 
-    // Turn public stats on: PUT /me/privacy, kept after a reload.
+    // Turn public stats on: PUT /me/privacy (the whole settings object), kept after a reload.
     const saved = page.waitForRequest((r) => r.method() === 'PUT' && r.url().endsWith('/me/privacy'));
     await toggle.click();
-    expect((await saved).postDataJSON()).toEqual({ publicReadingStats: true });
+    expect((await saved).postDataJSON()).toEqual({ publicReadingStats: true, whoCanMention: 'everyone' });
     await expect(toggle).toHaveAttribute('aria-checked', 'true');
     await openProfile(page, '/@sara', { signedIn: true });
     await expect(page.locator('[data-profile-reading] [data-public-stats] [role="switch"]')).toHaveAttribute('aria-checked', 'true');
@@ -140,6 +140,65 @@ for (const variant of VARIANTS) {
     await page.reload();
     await expect(page.locator('[data-settings-privacy] [role="switch"]')).toHaveAttribute('aria-checked', 'false', { timeout: FIRST_RENDER_MS });
     await expect(page.locator('[data-settings-edit-profile]')).toHaveAttribute('href', '/settings/profile');
+  });
+
+  test(`settings → privacy: who can mention me — ${suffix}`, async ({ page, context, baseURL, request }) => {
+    await useVariant(context, baseURL!, variant);
+    await signInWithLiveProfile(page, request, variant);
+    const privacySaved = () => page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().endsWith('/me/privacy'));
+    const label = ar ? { everyone: 'أي حد', following: 'الناس اللي بتابعهم', nobody: 'محدش' } : { everyone: 'Everyone', following: 'People I follow', nobody: 'Nobody' };
+
+    await page.goto('/settings');
+    const card = page.locator('[data-settings-privacy]');
+    const mention = card.locator('[data-who-can-mention]');
+    const group = mention.getByRole('radiogroup', { name: ar ? 'مين يقدر يعمل لك منشن' : 'Who can mention me' });
+    const choice = (policy: keyof typeof label) => group.getByRole('radio', { name: label[policy], exact: true });
+    // Everyone by default, next to the public-stats switch.
+    await expect(mention).toHaveAttribute('data-value', 'everyone', { timeout: FIRST_RENDER_MS });
+    await expect(choice('everyone')).toHaveAttribute('aria-checked', 'true');
+    await expect(card.locator('[data-public-stats] [role="switch"]')).toHaveAttribute('aria-checked', 'false');
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    await card.scrollIntoViewIfNeeded();
+    await parkMouse(page);
+    if (hasScreenshot(variant)) await expect(card).toHaveScreenshot(`settings-privacy-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+
+    // "People I follow": saved at once with the whole settings object, kept after a reload.
+    let response = privacySaved();
+    await choice('following').click();
+    expect((await response).request().postDataJSON()).toEqual({ publicReadingStats: false, whoCanMention: 'following' });
+    expect((await response).status()).toBe(204);
+    await expect(choice('following')).toHaveAttribute('aria-checked', 'true');
+    await page.reload();
+    await expect(mention).toHaveAttribute('data-value', 'following', { timeout: FIRST_RENDER_MS });
+    await expect(choice('following')).toHaveAttribute('aria-checked', 'true');
+
+    // The public-stats switch sends it back as it is.
+    response = privacySaved();
+    await card.locator('[data-public-stats] [role="switch"]').click();
+    expect((await response).request().postDataJSON()).toEqual({ publicReadingStats: true, whoCanMention: 'following' });
+    await expect(choice('nobody')).toBeEnabled();
+
+    // Refused once: the choice goes back, with the translated error.
+    let refused = false;
+    await onApi(page, 'PUT', '/me/privacy', (route) => {
+      if (refused) return route.fallback();
+      refused = true;
+      return reply(route, 500, problem(500, 'server.error'));
+    });
+    await choice('nobody').click();
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'السيرفر واجه مشكلة. حاول كمان شوية.' : 'The server ran into a problem. Please try again shortly.');
+    await expect(choice('following')).toHaveAttribute('aria-checked', 'true');
+    await expect(choice('nobody')).toHaveAttribute('aria-checked', 'false');
+    await expect(mention).toHaveAttribute('data-value', 'following');
+
+    // "Nobody", once the API takes it again.
+    expect(refused).toBe(true);
+    response = privacySaved();
+    await choice('nobody').click();
+    expect((await response).request().postDataJSON()).toEqual({ publicReadingStats: true, whoCanMention: 'nobody' });
+    await page.reload();
+    await expect(mention).toHaveAttribute('data-value', 'nobody', { timeout: FIRST_RENDER_MS });
+    await expect(card.locator('[data-public-stats] [role="switch"]')).toHaveAttribute('aria-checked', 'true');
   });
 
   test(`edit profile: photo, username, bio, links, expertise, errors — ${suffix}`, async ({ page, context, baseURL, request }) => {

@@ -4,8 +4,9 @@
  * with their validation.
  *
  * Viewers whose id starts with `u-notified` start with 25 notifications covering every type (aggregated followers and
- * comments, a mention, a milestone, a followed writer's article, today's article, a streak reminder, a security alert, a
- * moderation warning, a reserved verification result, a deleted actor); 4 of them are unseen (the badge) and 5 unread.
+ * comments, a mention in a comment and one in an article, a milestone, a followed writer's article, today's article, a
+ * streak reminder, a security alert, a moderation warning, a reserved verification result, a deleted actor); 4 of them
+ * are unseen (the badge) and 5 unread.
  * Everyone else starts with none, so the badge of the other suites stays empty. State is per viewer, so parallel tests
  * never share it. The fixtures are relative to NOW (the tests fix the browser clock there): "today" is 2026-11-04 in
  * Africa/Cairo, the mock user's time zone.
@@ -76,6 +77,12 @@ export function createNotifications({ articles, writers, social, problem }) {
         link: 'readin://a/sleep-and-memory#comment-cm-question',
       }),
       item('n-followers', 'new_follower', minutesBefore(130), { ...fresh, actorId: 'u-omar', actorCount: 3, link: `readin://u/${me}/followers` }),
+      // A mention in an article (step 6.3): no comment, the article's link; the actor's name is Arabic.
+      item('n-article-mention', 'mention', minutesBefore(180), {
+        actorId: 'u-salma',
+        slug: 'what-is-a-transformer-ar',
+        link: 'readin://a/what-is-a-transformer-ar',
+      }),
       item('n-daily', 'daily_article', minutesBefore(240), { ...fresh, slug: 'how-readin-picks-your-daily-article', link: 'readin://a/how-readin-picks-your-daily-article' }),
       // Its replier deleted their account: "Deleted user" (actor null, still one actor).
       item('n-reply', 'comment_reply', minutesBefore(300), {
@@ -102,7 +109,7 @@ export function createNotifications({ articles, writers, social, problem }) {
       item('n-verification', 'verification_result', '2026-10-31T10:00:00Z', { link: 'readin://notifications' }),
     ];
     // Older ones, so the list has a second page.
-    for (let i = 1; i <= 14; i++) {
+    for (let i = 1; i <= 13; i++) {
       const at = new Date(Date.parse('2026-10-30T12:00:00Z') - i * 86_400_000).toISOString();
       const reader = `u-reader-${String(i + 10).padStart(2, '0')}`;
       list.push(

@@ -47,7 +47,7 @@ describe('notification view (F17)', () => {
     });
 
     it.each([
-      ['mention', 'Ahmed Samir mentioned you in a comment', 'Ahmed Samir عملك منشن في تعليق'],
+      ['mention', 'Ahmed Samir mentioned you in a comment', 'Ahmed Samir عمل لك منشن في تعليق'],
       ['followed_writer_article', 'Ahmed Samir published a new article', 'Ahmed Samir نشر مقال جديد'],
       ['daily_article', "Today's article is ready ☕", 'مقال النهارده جاهز ☕'],
       ['verification_result', "There's an update on your writer verification request", 'فيه جديد في طلب توثيقك ككاتب'],
@@ -55,6 +55,22 @@ describe('notification view (F17)', () => {
       const n = testNotification({ type });
       expect(sentence(n, 'en')).toBe(en);
       expect(sentence(n, 'ar')).toBe(ar);
+    });
+
+    it('a mention without a comment is a mention in an article (the article title is shown under it)', () => {
+      const n = testNotification({
+        type: 'mention',
+        comment: null,
+        article: { id: 'a2', slug: 'di', title: 'يعني إيه Dependency Injection؟', language: 'ar-EG' },
+        link: 'readin://a/di',
+      });
+      expect(notificationText(n, transloco, 'en')).toEqual({ before: '', actor: 'Ahmed Samir', after: ' mentioned you in an article' });
+      expect(sentence(n, 'ar')).toBe('Ahmed Samir عمل لك منشن في مقال');
+      expect(notificationIcon(n)).toBe('AtSign');
+      // No #comment: the article itself, in its own language.
+      expect(notificationPath(n, 'en', ORIGIN)).toBe('/ar/a/di');
+      // With a comment it stays a mention in a comment.
+      expect(sentence(testNotification({ type: 'mention' }), 'en')).toBe('Ahmed Samir mentioned you in a comment');
     });
 
     it('milestones and streaks count with plurals', () => {

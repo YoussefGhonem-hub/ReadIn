@@ -85,7 +85,10 @@ export class CommentsApi {
     return this.http.delete<CommentDto>(this.comment(commentId, '/pin'), { context: this.silent() });
   }
 
-  /** `GET /users/mention-suggestions?q=` (signed in): by `@username` prefix or display name, never you. */
+  /**
+   * `GET /users/mention-suggestions?q=` (signed in): by `@username` prefix or display name, never you, and only people
+   * whose "Who can mention me" lets you (comments and the article editor).
+   */
   mentionSuggestions(q: string, limit = 8): Observable<MentionCandidateDto[]> {
     const params = new HttpParams().set('q', q).set('limit', String(limit));
     return this.http.get<MentionCandidateDto[]>(`${this.base}/users/mention-suggestions`, { params, context: this.personal() });

@@ -5,10 +5,10 @@ import { API_BASE_URL, SILENT_ERRORS } from './api.config';
 import {
   ArticleCardDto,
   CursorPage,
-  PrivacySettingsDto,
   ProfileDto,
   ReadingHeatmapDto,
   ReadingStatsDto,
+  UpdatePrivacyRequest,
   UpdateProfileRequest,
 } from './models';
 import { HEATMAP_DAYS } from './reading.api';
@@ -61,8 +61,8 @@ export class ProfilesApi {
     return this.http.patch<void>(`${this.base}/me`, body, { context: this.silent() });
   }
 
-  /** `PUT /me/privacy` → `204`. */
-  updatePrivacy(body: PrivacySettingsDto): Observable<void> {
+  /** `PUT /me/privacy` → `204`: the settings it names (the clients send them all). `400 validation.failed`. */
+  updatePrivacy(body: UpdatePrivacyRequest): Observable<void> {
     return this.http.put<void>(`${this.base}/me/privacy`, body, { context: this.silent() });
   }
 }

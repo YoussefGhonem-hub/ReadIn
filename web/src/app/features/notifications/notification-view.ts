@@ -34,7 +34,8 @@ export function isActorType(type: NotificationType): boolean {
 
 /**
  * The notification's sentence in the UI language: "Ahmed and 9 others commented on your article" (CLDR plurals, so
- * Arabic gets its six forms), "Deleted user" when the actor's account is gone, a generic line for unknown types.
+ * Arabic gets its six forms), "Deleted user" when the actor's account is gone, a generic line for unknown types. A
+ * mention without a comment is a mention in an article.
  */
 export function notificationText(n: NotificationDto, transloco: TranslocoService, lang: UiLanguage): NotificationText {
   const key = `notifications.text.${n.type}`;
@@ -42,11 +43,18 @@ export function notificationText(n: NotificationDto, transloco: TranslocoService
     const name = n.actor?.displayName?.trim() || transloco.translate('common.deletedUser', {}, lang);
     const others = Math.max(0, Math.floor(n.actorCount) - 1);
     const text =
-      others > 0 ? translatePlural(transloco, `${key}.group`, others, lang, { name: NAME_MARK }) : transloco.translate(`${key}.single`, { name: NAME_MARK }, lang);
+      others > 0
+        ? translatePlural(transloco, `${key}.group`, others, lang, { name: NAME_MARK })
+        : transloco.translate(`${key}.${singleKey(n)}`, { name: NAME_MARK }, lang);
     const at = text.indexOf(NAME_MARK);
     return at < 0 ? { before: text, actor: null, after: '' } : { before: text.slice(0, at), actor: name ?? null, after: text.slice(at + NAME_MARK.length) };
   }
   return { before: plainText(n, key, transloco, lang), actor: null, after: '' };
+}
+
+/** One actor: a mention without a comment is in an article (the mentions in an article are one notification). */
+function singleKey(n: NotificationDto): 'single' | 'article' {
+  return n.type === 'mention' && !n.comment ? 'article' : 'single';
 }
 
 function plainText(n: NotificationDto, key: string, transloco: TranslocoService, lang: UiLanguage): string {

@@ -4,9 +4,10 @@ import { NOTIFICATIONS_NOW, notificationsOf, signInAsNotifiedReader } from './su
 
 /**
  * F17 Notifications end to end in ar/en × light/dark: the badge (REST fallback: the Realtime Database isn't there in
- * e2e) clears when the center opens; Today / Earlier with every type; tapping a row marks it read and opens its link;
- * "Mark all as read"; infinite scroll; Settings → Notifications (a mode per type, quiet hours with validation). The mock
- * API keeps each reader's own notifications (e2e/mock-api/notifications.mjs), so parallel tests never share state.
+ * e2e) clears when the center opens; Today / Earlier with every type (a mention in a comment and one in an article);
+ * tapping a row marks it read and opens its link; "Mark all as read"; infinite scroll; Settings → Notifications (a mode
+ * per type, quiet hours with validation). The mock API keeps each reader's own notifications
+ * (e2e/mock-api/notifications.mjs), so parallel tests never share state.
  */
 test.describe.configure({ timeout: 120_000 });
 
@@ -43,8 +44,8 @@ for (const variant of VARIANTS) {
     await expect.poll(async () => (await notificationsOf(request, me.id)).unseen).toBe(0);
 
     const today = page.locator('[data-section="today"] [data-notification]');
-    await expect(today).toHaveCount(5);
-    await expect(page.locator('[data-section="earlier"] [data-notification]')).toHaveCount(15);
+    await expect(today).toHaveCount(6);
+    await expect(page.locator('[data-section="earlier"] [data-notification]')).toHaveCount(14);
     await expect(page.locator('[data-notification][data-unread]')).toHaveCount(5);
 
     const row = (id: string) => page.locator(`[data-notification="${id}"]`);
@@ -56,6 +57,16 @@ for (const variant of VARIANTS) {
       ar ? 'Omar Fathy واتنين غيره بدأوا يتابعوك' : 'Omar Fathy and 2 others started following you',
     );
     await expect(row('n-reply').locator('[data-notification-text]')).toHaveText(ar ? 'مستخدم محذوف ردّ على تعليقك' : 'Deleted user replied to your comment');
+    // A mention in a comment, with its excerpt; a mention in an article: the article's title, no excerpt, no #comment.
+    await expect(row('n-mention').locator('[data-notification-text]')).toHaveText(ar ? 'سلمى إبراهيم عمل لك منشن في تعليق' : 'سلمى إبراهيم mentioned you in a comment');
+    await expect(row('n-mention').locator('[data-notification-comment]')).toHaveCount(1);
+    const articleMention = row('n-article-mention');
+    await expect(articleMention.locator('[data-notification-text]')).toHaveText(ar ? 'سلمى إبراهيم عمل لك منشن في مقال' : 'سلمى إبراهيم mentioned you in an article');
+    await expect(articleMention.locator('[data-notification-text] bdi')).toHaveText('سلمى إبراهيم');
+    await expect(articleMention.locator('[data-notification-article]')).toHaveText('يعني إيه Transformer في الـ AI؟');
+    await expect(articleMention.locator('[data-notification-article]')).toHaveAttribute('lang', 'ar-EG');
+    await expect(articleMention.locator('[data-notification-comment]')).toHaveCount(0);
+    await expect(articleMention).toHaveAttribute('href', '/ar/a/what-is-a-transformer-ar');
     await expect(row('n-milestone').locator('[data-notification-text]')).toHaveText(ar ? 'مقالك وصل لـ 50 تفاعل 🎉' : 'Your article reached 50 reactions 🎉');
     await expect(row('n-security')).toContainText(ar ? 'كلمة السر بتاعتك اتغيّرت' : 'Your password was changed');
     await expect(row('n-warning')).toContainText(ar ? 'وصلك تحذير من فريق الإشراف' : 'You received a warning from the moderators');
@@ -116,6 +127,8 @@ for (const variant of VARIANTS) {
 
     const type = (name: string) => page.locator(`[data-notification-type="${name}"]`);
     await expect(type('mention')).toHaveAttribute('data-mode', 'all', { timeout: FIRST_RENDER_MS });
+    // Mentions cover comments and articles.
+    await expect(type('mention')).toContainText(ar ? 'لما حد يعمل لك منشن في تعليق أو مقال' : 'When someone mentions you in a comment or an article');
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page.locator('rd-notification-settings-page')).toHaveScreenshot(`notification-settings-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
