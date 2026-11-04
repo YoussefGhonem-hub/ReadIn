@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<Features.Articles.ArticleAttachmentsReader>();
         services.AddScoped<Features.Articles.ArticleViewerStateReader>();
         services.AddScoped<Features.Articles.ArticleCards>();
+        services.AddScoped<Features.LearningPaths.PathCards>();
         services.AddScoped<Features.Articles.Counters.ArticleCounters>();
         services.AddScoped<Features.Comments.CommentReader>();
         services.AddScoped<Features.Comments.CommentPosting>();

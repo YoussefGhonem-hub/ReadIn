@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Features.LearningPaths;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Reading;
 
@@ -60,12 +61,16 @@ public sealed class DailyArticlePicker(IAppDbContext db)
             .Join(db.Articles, p => p.ArticleId, a => a.Id, (p, a) => new { p.UserId, a.FieldId })
             .ToListAsync(cancellationToken);
         var recentFields = recent.ToLookup(r => r.UserId, r => r.FieldId);
+        var pathNext = await ActivePathNext.LoadAsync(db, ids, cancellationToken);
 
         return users.ToDictionary(u => u.Id, u =>
         {
             var fields = recentFields[u.Id].ToList();
             Guid? excludedField = fields.Count == 2 && fields[0] == fields[1] ? fields[0] : null;
-            return new PickerProfile(u.Id, u.ArticleLanguagePref, u.FieldIds, u.TopicIds, excludedField);
+            return new PickerProfile(u.Id, u.ArticleLanguagePref, u.FieldIds, u.TopicIds, excludedField)
+            {
+                PathNext = pathNext.GetValueOrDefault(u.Id),
+            };
         });
     }
 
@@ -73,12 +78,16 @@ public sealed class DailyArticlePicker(IAppDbContext db)
     /// F07 algorithm: reviewed + published, in interests, not read before, 4–10 minutes, preferred language first, best
     /// quality first, never the same field 3 days in a row. Constraints relax in order when nothing matches (length, then
     /// interests), and at each step a published article that passed the content pipeline's automatic checks stands in when
-    /// no reviewed article matches (the documented fallback while seeded articles wait for human review). "Prefers the
-    /// next item in the user's active learning path" joins once path enrollment (F09) exists.
+    /// no reviewed article matches (the documented fallback while seeded articles wait for human review). Before all of
+    /// that, "prefers the next item in the user's active learning path" (F09).
     /// </summary>
     internal async Task<Guid?> PickAsync(PickerProfile profile, CancellationToken cancellationToken)
     {
         var (userId, language, fieldIds, topicIds, excludedField) = profile;
+
+        // F09: the active path's next unread article comes first, unless it would make 3 days in a row of one field.
+        // Paths are curated, so any article a reader can open qualifies (length and interests don't apply).
+        if (profile.PathNext is { } pathNext && pathNext.FieldId != excludedField) return pathNext.ArticleId;
 
         // Read = completed (≥ 70% and ≥ 30 seconds, SPEC F04), the single "read" marker.
         var completed = db.ReadingProgress.Where(r => r.UserId == userId && r.CompletedAt != null).Select(r => r.ArticleId);
@@ -200,4 +209,8 @@ internal sealed record PickerProfile(
     string ArticleLanguage,
     IReadOnlyList<Guid> FieldIds,
     IReadOnlyList<Guid> TopicIds,
-    Guid? ExcludedFieldId);
+    Guid? ExcludedFieldId)
+{
+    /// <summary>The next unread article of the user's active learning path (F09), picked first.</summary>
+    public PathNextArticle? PathNext { get; init; }
+}
