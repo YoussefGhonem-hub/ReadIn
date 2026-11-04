@@ -173,7 +173,7 @@ for (const variant of VARIANTS) {
     await karim.click();
     await expect(karim).toHaveAttribute('aria-pressed', 'true');
     await panel.locator('[data-following-refresh]').click();
-    const cards = panel.locator('rd-article-card');
+    const cards = panel.locator('rd-post-card');
     await expect(cards).toHaveCount(1);
     await expect(cards.first()).toContainText('React Server Components');
 
@@ -296,7 +296,7 @@ for (const variant of VARIANTS) {
     await page.locator('[data-home-tab="following"]').click();
     await expectSignInPrompt(page);
     await expect(page.locator('[data-home-tab="forYou"]')).toHaveAttribute('aria-selected', 'true');
-    await page.locator('rd-article-card [data-card-save]').first().click();
+    await page.locator('rd-post-card [data-card-save]').first().click();
     await expectSignInPrompt(page);
     await page.goto('/saved');
     await page.waitForURL((url) => url.pathname === '/auth/sign-in');

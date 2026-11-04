@@ -3,9 +3,9 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { FollowStore } from '../../core/social/follow.store';
 import { FollowButton } from '../../shared/social/follow-button';
 import { UserRow } from '../../shared/social/user-row';
-import { ArticleCard } from '../../shared/ui/article-card';
-import { ArticleCardSkeleton } from '../../shared/ui/skeletons';
+import { PostCardSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
+import { PostCard } from '../feed/post-card';
 import { HomeStore } from './home.store';
 
 /** Writers to follow (F12): verified first, then by followers; each with a Follow button. */
@@ -61,7 +61,7 @@ export class SuggestedWriters {
  */
 @Component({
   selector: 'rd-following-feed',
-  imports: [TranslocoPipe, ArticleCard, ArticleCardSkeleton, EmptyState, ErrorState, SuggestedWriters],
+  imports: [TranslocoPipe, PostCard, PostCardSkeleton, EmptyState, ErrorState, SuggestedWriters],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -70,9 +70,16 @@ export class SuggestedWriters {
         <rd-error-state [message]="'home.following.error' | transloco" (retry)="store.loadFollowing()" />
       }
       @case ('loaded') {
-        @for (article of store.following(); track article.id) {
-          <rd-article-card [article]="article" />
-        } @empty {
+        @if (store.following().length) {
+          <div class="flex flex-col gap-3 pt-3" data-feed>
+            @for (article of store.following(); track article.id) {
+              <rd-post-card [article]="article" />
+            }
+            @if (store.followingLoadingMore()) {
+              <rd-post-card-skeleton />
+            }
+          </div>
+        } @else {
           <div class="flex flex-col gap-4 pb-6" data-following-empty>
             <rd-empty-state [title]="'home.following.title' | transloco" [message]="'home.following.body' | transloco" />
             <rd-suggested-writers />
@@ -82,9 +89,6 @@ export class SuggestedWriters {
               </button>
             }
           </div>
-        }
-        @if (store.followingLoadingMore()) {
-          <rd-article-card-skeleton />
         }
         @if (store.followingMoreFailed()) {
           <div class="py-4 text-center">
@@ -96,9 +100,11 @@ export class SuggestedWriters {
         }
       }
       @default {
-        @for (i of [1, 2, 3]; track i) {
-          <rd-article-card-skeleton />
-        }
+        <div class="flex flex-col gap-3 pt-3">
+          @for (i of [1, 2, 3]; track i) {
+            <rd-post-card-skeleton />
+          }
+        </div>
       }
     }
     <div #sentinel class="h-px" aria-hidden="true"></div>

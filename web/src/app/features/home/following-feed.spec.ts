@@ -59,7 +59,7 @@ describe('Home → Following (F12)', () => {
     expect(req.request.params.get('limit')).toBe('20');
     req.flush({ items: [testCard(), testCard({ id: 'a2', slug: 'b', title: 'Second' })], nextCursor: null });
     await stable();
-    expect(root.querySelectorAll('rd-article-card').length).toBe(2);
+    expect(root.querySelectorAll('rd-post-card').length).toBe(2);
     expect(root.querySelector('[data-following-empty]')).toBeNull();
   });
 
@@ -87,7 +87,7 @@ describe('Home → Following (F12)', () => {
     (root.querySelector('[data-following-refresh]') as HTMLElement).click();
     http.expectOne((r) => r.url === `${TEST_API}/feed/following`).flush({ items: [testCard()], nextCursor: null });
     await stable();
-    expect(root.querySelectorAll('rd-article-card').length).toBe(1);
+    expect(root.querySelectorAll('rd-post-card').length).toBe(1);
   });
 
   it('an error offers a retry', async () => {
@@ -97,6 +97,6 @@ describe('Home → Following (F12)', () => {
     (root.querySelector('rd-error-state button') as HTMLElement).click();
     http.expectOne((r) => r.url === `${TEST_API}/feed/following`).flush({ items: [testCard()], nextCursor: null });
     await stable();
-    expect(root.querySelectorAll('rd-article-card').length).toBe(1);
+    expect(root.querySelectorAll('rd-post-card').length).toBe(1);
   });
 });

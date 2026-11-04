@@ -94,12 +94,12 @@ describe('Home → Continue reading and the learning path (F03, F09)', () => {
     expect(bar.getAttribute('aria-label')).toBe('قريت 42%');
   });
 
-  it("continue reading skips today's article (the hero shows it)", async () => {
+  it("continue reading skips today's article (its post card shows it)", async () => {
     const { $ } = await render({
       today: testCard({ id: 'c1', slug: 'slug-c1' }),
       continueReading: [testContinueReading('c1', 42), testContinueReading('c2', 10)],
     });
-    expect($('rd-today-hero')).not.toBeNull();
+    expect($('rd-post-card[data-today-card] [data-card-label]')!.textContent).toContain('مقال النهارده');
     expect($('[data-continue-reading]')!.getAttribute('href')).toBe('/ar/a/slug-c2');
   });
 

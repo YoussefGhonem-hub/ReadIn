@@ -86,10 +86,12 @@ for (const variant of VARIANTS) {
     const written = await fixture<any>(request, `/api/v1/articles/${result.slug}?lang=en`);
     const card = { ...base, id: written.id, slug: written.slug, language: written.language, title: written.title, attachments: written.attachments };
     await onApi(page, 'GET', new RegExp(`${API}/feed/for-you`), (route) => reply(route, 200, { items: [card], nextCursor: null }));
-    // Home from the top bar (the reader's Back would return to the editor the article was published from).
+    // Home from the top bar (the reader's Back would return to the editor the article was published from). The post
+    // card says how long ago the article was published: a fixed clock keeps the shot stable.
+    await page.clock.setFixedTime(new Date('2026-11-04T09:00:00Z'));
     await page.locator('rd-top-bar a[href="/"]').click();
     await page.waitForURL((url) => url.pathname === '/');
-    const feedCard = page.locator('rd-article-card').filter({ has: page.locator('[data-attachments="images"]') });
+    const feedCard = page.locator('rd-post-card').filter({ has: page.locator('[data-attachments="images"]') });
     await expect(feedCard.locator('[data-counter]')).toHaveText('1 / 3');
     await expect(feedCard.locator('[data-slide]')).toHaveCount(3);
     await expect(feedCard.locator('[data-slide]').first()).toHaveAttribute('aria-label', lang === 'ar' ? 'صورة 1 من 3' : 'Image 1 of 3');

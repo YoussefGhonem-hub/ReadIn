@@ -5,7 +5,7 @@ import { SILENT_ERRORS, WITH_SESSION } from '../../core/api/api.config';
 import { ContentApi } from '../../core/api/content.api';
 import { ArticleCardDto, ArticleLanguage } from '../../core/api/models';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
-import { ArticleCard } from '../../shared/ui/article-card';
+import { PostCard } from '../feed/post-card';
 
 /** Cards at the end of the reader (F04). */
 export const RELATED_LIMIT = 4;
@@ -16,23 +16,23 @@ export interface RelatedArticlesRef {
 }
 
 /**
- * "Related articles" at the end of the reader (F04): up to four feed cards from `GET /articles/{id}/related` for the
- * version being read, with saves and live counts like every feed card. Browser only and lazy: the request goes out
+ * "Related articles" at the end of the reader (F04): up to four post cards (F34) from `GET /articles/{id}/related` for
+ * the version being read, with reactions, comments, saves and live counts like every feed card. Browser only and lazy: the request goes out
  * when the section nears the viewport, and again for another article or version. Nothing shows while it loads, when
  * there are no related articles or when the request fails.
  */
 @Component({
   selector: 'rd-related-articles',
-  imports: [TranslocoPipe, ArticleCard],
+  imports: [TranslocoPipe, PostCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
     @if (cards().length) {
       <section class="mt-10" aria-labelledby="related-title" data-related>
         <h2 id="related-title" class="m-0 text-lg font-semibold">{{ 'article.related' | transloco }}</h2>
-        <div class="mt-1">
+        <div class="mt-4 flex flex-col gap-3">
           @for (card of cards(); track card.id) {
-            <rd-article-card [article]="card" [showAttachments]="false" />
+            <rd-post-card [article]="card" />
           }
         </div>
       </section>

@@ -8,6 +8,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   untracked,
   viewChild,
@@ -31,6 +32,13 @@ import { ReportSheet, ReportTarget } from '../../shared/moderation/report-sheet'
 import { DeleteCommentSheet } from './comment-sheets';
 import { CommentThreadView } from './comment-thread';
 import { CommentsStore } from './comments.store';
+import { FeedMemory } from '../feed/feed-memory';
+
+/** Where the section is shown: the end of the reader, a post card's inline section (F34) or its bottom sheet. */
+export type CommentsVariant = 'reader' | 'card' | 'sheet';
+
+/** A post card's inline section shows this many threads until "Show all comments" (F34). */
+export const CARD_PREVIEW_THREADS = 2;
 
 /** The list's top counts as "on screen" from this far above the viewport (it may sit under the sticky top bar). */
 const NEAR_TOP_SLACK_PX = 160;
@@ -41,6 +49,11 @@ const NEAR_TOP_SLACK_PX = 160;
  * reader (`@defer`, never during SSR); it loads on creation and again when the account changes. Live comment events
  * (F27) are followed from then until the reader closes; new comments that arrive while you are away from the top of
  * the list wait behind the "N تعليقات جديدة" pill.
+ *
+ * A post card (F34) shows it too, while its comments are open: `card` is the inline section of wide screens (the
+ * composer and the top 2 threads, then "Show all comments" lists the rest in place), `sheet` the full section in a
+ * bottom sheet on phones. There the unsent text is kept per article and account (FeedMemory), so it survives closing
+ * the comments, leaving the page and refreshing the feed.
  */
 @Component({
   selector: 'rd-comments-section',
@@ -70,19 +83,23 @@ const NEAR_TOP_SLACK_PX = 160;
   `,
   template: `
     <div [dir]="language.dir()" data-comments>
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 id="comments-title" class="m-0 text-lg font-semibold outline-none" tabindex="-1" data-comments-title>
-          {{ 'comments.title' | transloco: { count: store.total() } }}
-        </h2>
-        <rd-segmented
-          class="min-w-36"
-          [options]="sortOptions()"
-          [value]="store.sort()"
-          (valueChange)="setSort($event)"
-          [label]="'comments.sort.label' | transloco"
-          data-comments-sort
-        />
-      </div>
+      @if (variant() === 'card') {
+        <h2 [id]="titleId()" class="sr-only" tabindex="-1" data-comments-title>{{ 'comments.title' | transloco: { count: store.total() } }}</h2>
+      } @else {
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 [id]="titleId()" class="m-0 text-lg font-semibold outline-none" tabindex="-1" data-comments-title>
+            {{ 'comments.title' | transloco: { count: store.total() } }}
+          </h2>
+          <rd-segmented
+            class="min-w-36"
+            [options]="sortOptions()"
+            [value]="store.sort()"
+            (valueChange)="setSort($event)"
+            [label]="'comments.sort.label' | transloco"
+            data-comments-sort
+          />
+        </div>
+      }
 
       @if (session.isAuthenticated()) {
         <rd-comment-composer
@@ -98,7 +115,7 @@ const NEAR_TOP_SLACK_PX = 160;
       } @else if (session.isGuest()) {
         <div class="mb-2 flex flex-wrap items-center gap-3 rounded-card border border-border bg-surface p-4" data-comments-guest>
           <p class="m-0 flex-1 text-sm text-text-secondary">{{ 'comments.guest.body' | transloco }}</p>
-          <button type="button" class="rd-btn rd-btn-primary" (click)="prompt.requireAuth()">{{ 'comments.guest.signIn' | transloco }}</button>
+          <button type="button" class="rd-btn rd-btn-primary" (click)="signIn()">{{ 'comments.guest.signIn' | transloco }}</button>
         </div>
       }
 
@@ -124,11 +141,17 @@ const NEAR_TOP_SLACK_PX = 160;
           @case ('loaded') {
             @if (store.threads().length) {
               <ol class="m-0 list-none p-0">
-                @for (thread of store.threads(); track thread.comment.key) {
+                @for (thread of visibleThreads(); track thread.comment.key) {
                   <li class="border-t border-border first:border-t-0"><rd-comment-thread [thread]="thread" /></li>
                 }
               </ol>
-              @if (store.nextCursor()) {
+              @if (collapsed()) {
+                @if (store.threads().length > previewThreads || store.nextCursor()) {
+                  <button type="button" class="rd-btn rd-btn-ghost mt-1 w-full text-primary" data-show-all-comments (click)="showAll()">
+                    {{ 'feedCard.showAllComments' | transloco }}
+                  </button>
+                }
+              } @else if (store.nextCursor()) {
                 <button
                   type="button"
                   class="rd-btn rd-btn-outline mt-3 w-full"
@@ -140,6 +163,8 @@ const NEAR_TOP_SLACK_PX = 160;
                   {{ (store.moreFailed() ? 'common.retry' : 'comments.more') | transloco }}
                 </button>
               }
+            } @else if (variant() === 'card') {
+              <p class="m-0 py-3 text-center text-sm text-text-secondary" data-comments-empty>{{ 'comments.empty.body' | transloco }}</p>
             } @else {
               <rd-empty-state [title]="'comments.empty.title' | transloco" [message]="'comments.empty.body' | transloco" />
             }
@@ -177,8 +202,19 @@ export class CommentsSection {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   readonly article = input.required<ArticleCardDto>();
+  readonly variant = input<CommentsVariant>('reader');
+  /** The heading's id (`aria-labelledby` of a sheet; unique per card). */
+  readonly titleId = input('comments-title');
+  /** A guest pressed "sign in to comment" (the sign-in prompt is open). */
+  readonly guestSignIn = output<void>();
 
   protected readonly draft = signal('');
+  protected readonly previewThreads = CARD_PREVIEW_THREADS;
+  /** The card's inline section, after "Show all comments". */
+  protected readonly expandedAll = signal(false);
+  protected readonly collapsed = computed(() => this.variant() === 'card' && !this.expandedAll());
+  protected readonly visibleThreads = computed(() => (this.collapsed() ? this.store.threads().slice(0, CARD_PREVIEW_THREADS) : this.store.threads()));
+  private readonly memory = inject(FeedMemory);
   protected readonly postError = signal<string | null>(null);
   protected readonly skeletonRows = [1, 2, 3];
   private readonly list = viewChild<ElementRef<HTMLElement>>('list');
@@ -217,14 +253,20 @@ export class CommentsSection {
       untracked(() => {
         if (key === loadedFor) return;
         loadedFor = key;
-        this.draft.set('');
+        // A card's unsent text waits for you (F34); the reader starts empty.
+        this.draft.set(this.variant() === 'reader' ? '' : this.memory.draft(key));
         this.postError.set(null);
         this.store.setArticle(this.article());
         void this.store.load();
       });
     });
 
-    // Live comment events of this article (F27), browser only, until the reader closes.
+    effect(() => {
+      const text = this.draft();
+      if (loadedFor && untracked(this.variant) !== 'reader') this.memory.setDraft(loadedFor, text);
+    });
+
+    // Live comment events of this article (F27), browser only, until the reader closes (or the card's comments do).
     const realtime = inject(RealtimeService);
     effect((onCleanup) => {
       const id = articleId();
@@ -249,9 +291,21 @@ export class CommentsSection {
     }
   }
 
+  protected signIn(): void {
+    this.prompt.requireAuth();
+    this.guestSignIn.emit();
+  }
+
+  /** "Show all comments": the threads loaded so far, then the rest page by page. */
+  protected showAll(): void {
+    this.expandedAll.set(true);
+    if (this.store.threads().length <= CARD_PREVIEW_THREADS) void this.store.loadMore();
+  }
+
   protected showIncoming(): void {
     this.store.showIncoming();
-    this.document.getElementById('comments-title')?.focus({ preventScroll: true });
+    if (this.collapsed()) this.expandedAll.set(true);
+    this.document.getElementById(this.titleId())?.focus({ preventScroll: true });
     const reduce = this.document.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     this.list()?.nativeElement.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   }

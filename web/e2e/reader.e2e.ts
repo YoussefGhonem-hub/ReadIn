@@ -97,6 +97,8 @@ for (const variant of VARIANTS) {
 
   test(`reader: related articles — ${suffix}`, async ({ page, context, baseURL }) => {
     await useVariant(context, baseURL!, variant);
+    // The post cards say how long ago each article was published.
+    await page.clock.setFixedTime(new Date('2026-11-04T09:00:00Z'));
     const related: string[] = [];
     page.on('request', (r) => {
       if (r.url().includes('/related')) related.push(new URL(r.url()).pathname + new URL(r.url()).search);
@@ -109,14 +111,15 @@ for (const variant of VARIANTS) {
     await expect(section).toBeVisible();
     expect(related).toEqual(['/api/v1/articles/a-dependency-injection-ar/related?lang=ar-EG&limit=4']);
     await expect(section.locator('#related-title')).toHaveText(t('مقالات ذات صلة', 'Related articles'));
-    await expect(section.locator('rd-article-card')).toHaveCount(4);
+    // Post cards (F34), as in the feed.
+    await expect(section.locator('rd-post-card')).toHaveCount(4);
     // After the sources, before the comments.
     expect(await section.evaluate((el) => !!(document.querySelector('#sources-title')!.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
     expect(await section.evaluate((el) => !!(el.compareDocumentPosition(document.querySelector('#comments')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(section).toHaveScreenshot(`related-articles-${suffix}.png`, { stylePath: [HIDE_APP_CHROME, HIDE_READER_BAR] });
 
-    await section.locator('rd-article-card').first().locator('a').first().click();
+    await section.locator('rd-post-card').first().locator('[data-card-title]').click();
     await page.waitForURL((url) => url.pathname === '/ar/a/what-is-a-transformer-ar');
   });
 
@@ -159,7 +162,7 @@ for (const variant of VARIANTS) {
 
     // A related article, opened from this one: Back returns here.
     await page.locator('#sources-title').scrollIntoViewIfNeeded();
-    await page.locator('[data-related] rd-article-card').first().locator('a').first().click();
+    await page.locator('[data-related] rd-post-card').first().locator('[data-card-title]').click();
     await page.waitForURL((url) => url.pathname === '/ar/a/what-is-a-transformer-ar');
     await expect(page.locator('rd-article-page h1')).toContainText('Transformer');
     await back.click();

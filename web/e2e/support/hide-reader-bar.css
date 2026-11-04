@@ -1,4 +1,6 @@
-/* Element screenshots near the end of an article: the reader's floating action bar would overlap them. */
-rd-article-action-bar {
+/* Element screenshots near the end of an article: the reader's floating action bar and its reading progress bar (fixed
+   at the top of the viewport, so a tall element's stitched shot would cross it) would overlap them. */
+rd-article-action-bar,
+[data-reading-progress] {
   visibility: hidden !important;
 }

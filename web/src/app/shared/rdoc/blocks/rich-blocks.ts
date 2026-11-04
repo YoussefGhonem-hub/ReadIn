@@ -240,11 +240,12 @@ export class DividerBlockView {
 })
 export class EmbedBlockView {
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly ctx = inject(RDocContext);
   readonly block = input.required<EmbedBlock>();
 
   /** Allow-listed providers only (SPEC §13.2); the id is validated before building the embed URL. */
   protected readonly youtubeSrc = computed(() => {
-    if (this.block().provider !== 'youtube') return null;
+    if (this.block().provider !== 'youtube' || this.ctx.embedsAsLinks()) return null;
     const id = youtubeId(this.block().url);
     return id ? this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube-nocookie.com/embed/${id}`) : null;
   });

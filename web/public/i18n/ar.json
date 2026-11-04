@@ -617,6 +617,38 @@
       "prompt": "اتعلم خطوة بخطوة مع المسارات"
     }
   },
+  "feedCard": {
+    "todayLabel": "مقال النهارده",
+    "readMore": "اقرأ المزيد",
+    "readMoreLabel": "اقرأ المزيد من «{{title}}»",
+    "readFull": "اقرأ المقال كله",
+    "showLess": "عرض أقل",
+    "previewError": "معرفناش نحمّل باقي المقال.",
+    "react": "تفاعل",
+    "comment": "تعليق",
+    "commentCount": {
+      "zero": "مفيش تعليقات",
+      "one": "تعليق واحد",
+      "two": "تعليقين",
+      "few": "{{count}} تعليقات",
+      "many": "{{count}} تعليق",
+      "other": "{{count}} تعليق"
+    },
+    "showComments": "اعرض التعليقات",
+    "showAllComments": "عرض كل التعليقات",
+    "hideComments": "اقفل التعليقات",
+    "tags": "التاجات",
+    "moreTags": {
+      "zero": "مفيش تاجات تانية",
+      "one": "تاج كمان",
+      "two": "تاجين كمان",
+      "few": "{{count}} تاجات كمان",
+      "many": "{{count}} تاج كمان",
+      "other": "{{count}} تاج كمان"
+    },
+    "openCover": "افتح صورة «{{title}}»",
+    "actions": "التفاعل مع «{{title}}»"
+  },
   "article": {
     "aiAssisted": "بمساعدة AI",
     "verifiedWriter": "كاتب موثّق",

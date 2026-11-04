@@ -15,9 +15,9 @@ import { CompactNumberPipe, ReadingTimePipe } from '../pipes/format.pipes';
 import { articleLink } from './article-link';
 
 /**
- * Feed row (F03): thumbnail, title, author (opens the profile, F14), reading time, live counts, save (F13); post
- * attachments (F26) full width below. Content marked `rdCardFooter` goes under the card, above its link (e.g. the
- * Saved page's actions).
+ * Compact row, for lists people scan rather than read (F34: Saved, Next in path; feeds use the post card): thumbnail,
+ * title, author (opens the profile, F14), reading time, live counts, save (F13); post attachments (F26) full width
+ * below. Content marked `rdCardFooter` goes under the card, above its link (e.g. the Saved page's actions).
  */
 @Component({
   selector: 'rd-article-card',
@@ -86,7 +86,7 @@ import { articleLink } from './article-link';
         <svg lucideIcon="Bookmark" [size]="18" [class.fill-current]="state().isSaved" aria-hidden="true"></svg>
       </button>
     </div>
-    @if (showAttachments() && article().attachments; as attachments) {
+    @if (article().attachments; as attachments) {
       <!-- Above the card link so taps open the carousel / viewer instead of the article. -->
       <rd-article-attachments class="relative z-10 mt-3" [attachments]="attachments" [article]="article()" [priority]="priorityMedia()" />
     }
@@ -101,8 +101,6 @@ export class ArticleCard {
   readonly article = input.required<ArticleCardDto>();
   /** Loads the first attachment image eagerly (the first card with media in the feed). */
   readonly priorityMedia = input(false);
-  /** False keeps the card compact (related articles at the end of the reader): no images or PDF pages, as on mobile. */
-  readonly showAttachments = input(true);
 
   protected readonly lang = this.language.lang;
   protected readonly link = computed(() => articleLink(this.article()));

@@ -16,6 +16,9 @@ import {
   viewChild,
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { SessionStore } from '../../core/auth/session.store';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
@@ -23,39 +26,39 @@ import { HydrationWindow } from '../../core/http/hydration-window';
 import { LanguageService } from '../../core/i18n/language.service';
 import { injectNewArticles } from '../../core/realtime/live-signals';
 import { BdiText } from '../../shared/directives/bdi-text';
-import { ArticleCard } from '../../shared/ui/article-card';
-import { ArticleCardSkeleton, HeroSkeleton } from '../../shared/ui/skeletons';
+import { PostCardSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { StreakBadge } from '../../shared/ui/streak-badge';
+import { PostCard } from '../feed/post-card';
 import { StreakStore } from '../reading/streak.store';
 import { ContinueReadingCard } from './continue-reading-card';
 import { FollowingFeed } from './following-feed';
 import { HomeStore } from './home.store';
 import { LearningPathCard } from './learning-path-card';
-import { TodayHero } from './today-hero';
 
 type FeedTab = 'forYou' | 'following';
 
-/** Home — "النهارده" (F03). */
+/**
+ * Home — "النهارده" (F03): today's article and the feeds as post cards (F34), in one centered column up to 640 px.
+ * The page stays alive while you read (app.routes.ts `keepOnBack`), so Back finds it as you left it.
+ */
 @Component({
   selector: 'rd-home-page',
   imports: [
     TranslocoPipe,
     BdiText,
-    ArticleCard,
-    ArticleCardSkeleton,
-    HeroSkeleton,
+    PostCard,
+    PostCardSkeleton,
     EmptyState,
     ErrorState,
     StreakBadge,
-    TodayHero,
     FollowingFeed,
     ContinueReadingCard,
     LearningPathCard,
   ],
   providers: [HomeStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[720px] px-4 pt-5 lg:pt-8' },
+  host: { class: 'mx-auto block max-w-[640px] px-4 pt-5 lg:pt-8' },
   template: `
     <header class="mb-5 flex items-center justify-between gap-3">
       <div>
@@ -76,11 +79,11 @@ type FeedTab = 'forYou' | 'following';
     <!-- Today's article -->
     @switch (store.todayStatus()) {
       @case ('loading') {
-        <rd-hero-skeleton class="mb-6" />
+        <rd-post-card-skeleton class="mb-6" />
       }
       @case ('loaded') {
         @if (store.today(); as today) {
-          <rd-today-hero class="mb-6" [article]="today" />
+          <rd-post-card class="mb-6" [article]="today" label="feedCard.todayLabel" [priorityMedia]="!!(today.attachments || today.coverUrl)" data-today-card />
         }
       }
     }
@@ -150,14 +153,16 @@ type FeedTab = 'forYou' | 'following';
             <rd-error-state [message]="'home.feedError' | transloco" (retry)="store.retryFeed()" />
           }
           @case ('loaded') {
-            @for (article of store.items(); track article.id) {
-              <rd-article-card [article]="article" [priorityMedia]="article.id === firstMediaId()" />
-            } @empty {
-              <rd-empty-state [title]="'home.empty.title' | transloco" [message]="'home.empty.body' | transloco" />
-            }
-            @if (store.loadingMore()) {
-              <rd-article-card-skeleton />
-            }
+            <div class="flex flex-col gap-3 pt-3" data-feed>
+              @for (article of store.items(); track article.id) {
+                <rd-post-card [article]="article" [priorityMedia]="article.id === firstMediaId()" />
+              } @empty {
+                <rd-empty-state [title]="'home.empty.title' | transloco" [message]="'home.empty.body' | transloco" />
+              }
+              @if (store.loadingMore()) {
+                <rd-post-card-skeleton />
+              }
+            </div>
             @if (store.loadMoreFailed()) {
               <div class="py-4 text-center">
                 <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
@@ -168,9 +173,11 @@ type FeedTab = 'forYou' | 'following';
             }
           }
           @default {
-            @for (i of [1, 2, 3, 4]; track i) {
-              <rd-article-card-skeleton />
-            }
+            <div class="flex flex-col gap-3 pt-3">
+              @for (i of [1, 2, 3]; track i) {
+                <rd-post-card-skeleton />
+              }
+            </div>
           }
         }
         <div #sentinel class="h-px" aria-hidden="true"></div>
@@ -197,7 +204,7 @@ export class HomePage {
   protected readonly newArticles = injectNewArticles();
 
   /** The first card with attachments gets the eager, high-priority image (the rest lazy-load). */
-  protected readonly firstMediaId = computed(() => this.store.items().find((a) => a.attachments)?.id ?? null);
+  protected readonly firstMediaId = computed(() => this.store.items().find((a) => a.attachments || a.coverUrl)?.id ?? null);
   protected readonly firstName = computed(() => this.session.displayName()?.split(' ')[0] ?? null);
   protected readonly greetingKey = computed(() => {
     const hour = new Date().getHours();
@@ -236,7 +243,18 @@ export class HomePage {
     });
     const hydrating = inject(HydrationWindow).isOpen;
     void this.store.init();
-    inject(Title).setTitle(`ReadIn — ${this.transloco.translate('app.tagline')}`);
+    const title = inject(Title);
+    const applyTitle = () => title.setTitle(`ReadIn — ${this.transloco.translate('app.tagline')}`);
+    applyTitle();
+    // Back from an article puts this same page back (it was kept alive): its tab title comes back with it.
+    inject(Router)
+      .events.pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe((e) => {
+        if (e.urlAfterRedirects.split(/[?#]/)[0] === '/') applyTitle();
+      });
 
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {

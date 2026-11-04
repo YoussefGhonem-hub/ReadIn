@@ -245,4 +245,66 @@ describe('CommentsSection (F11)', () => {
     expect(t.$('[data-report-sheet]')).toBeNull();
     expect(TestBed.inject(ToastService).toasts().map((toast) => toast.message)).toEqual(['شكرًا، هنراجع البلاغ']);
   });
+
+  describe('on a post card (F34)', () => {
+    async function renderOnCard(variant: 'card' | 'sheet', page: Partial<CommentPageDto>) {
+      const realtime = { watchCommentEvents: () => () => undefined };
+      const { http: backend } = setupSocialTesting({ providers: [{ provide: RealtimeService, useValue: realtime }] });
+      const create = async () => {
+        const fixture = TestBed.createComponent(CommentsSection);
+        fixture.componentRef.setInput('article', testCard());
+        fixture.componentRef.setInput('variant', variant);
+        fixture.componentRef.setInput('titleId', 'card-comments-title-7');
+        fixture.detectChanges();
+        await fixture.whenStable();
+        backend.expectOne((r) => r.url === LIST && r.method === 'GET').flush({ items: [], nextCursor: null, total: 0, ...page });
+        for (let i = 0; i < 3; i++) {
+          await flushMicrotasks();
+          fixture.detectChanges();
+          await fixture.whenStable();
+        }
+        const root = fixture.nativeElement as HTMLElement;
+        return { fixture, root, $: <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector) };
+      };
+      return { http: backend, create };
+    }
+
+    beforeEach(() => sessionStorage.clear());
+
+    it('in place: the composer and the top 2 threads, then "Show all comments" lists the rest', async () => {
+      const t = await renderOnCard('card', { total: 3, items: [dto('c1'), dto('c2'), dto('c3')] });
+      http = t.http;
+      const { $, root } = await t.create();
+      const title = $('[data-comments-title]')!;
+      expect(title.id).toBe('card-comments-title-7');
+      expect(title.classList).toContain('sr-only');
+      expect($('[data-comments-sort]')).toBeNull();
+      expect(root.querySelectorAll('rd-comment-thread')).toHaveLength(2);
+      $('[data-show-all-comments]')!.click();
+      await flushMicrotasks();
+      TestBed.tick();
+      expect(root.querySelectorAll('rd-comment-thread')).toHaveLength(3);
+      expect($('[data-show-all-comments]')).toBeNull();
+    });
+
+    it('the sheet is the full section, titled by its own id', async () => {
+      const t = await renderOnCard('sheet', { total: 1, items: [dto('c1')] });
+      http = t.http;
+      const { $ } = await t.create();
+      expect($('#card-comments-title-7')!.textContent!.trim()).toBe('التعليقات (1)');
+      expect($('[data-comments-sort]')).not.toBeNull();
+    });
+
+    it('your unsent text waits for you when the comments open again', async () => {
+      const t = await renderOnCard('card', { total: 0, items: [] });
+      http = t.http;
+      const first = await t.create();
+      type(first.$<HTMLTextAreaElement>('[data-new-comment] textarea')!, 'لسه بكتب about DI');
+      TestBed.tick();
+      first.fixture.destroy();
+
+      const again = await t.create();
+      expect(again.$<HTMLTextAreaElement>('[data-new-comment] textarea')!.value).toBe('لسه بكتب about DI');
+    });
+  });
 });

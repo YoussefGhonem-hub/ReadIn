@@ -19,12 +19,11 @@ import { FollowStore } from '../../core/social/follow.store';
       <button
         type="button"
         data-follow
-        class="rd-btn min-h-11 shrink-0 gap-1.5 px-3 text-sm"
-        [class]="following() ? 'bg-primary-container text-on-primary-container' : 'rd-btn-outline'"
+        [class]="classes()"
         [attr.aria-pressed]="following()"
         (click)="toggle()"
       >
-        <svg [lucideIcon]="following() ? 'UserCheck' : 'UserPlus'" [size]="16" aria-hidden="true"></svg>
+        <svg [lucideIcon]="following() ? 'UserCheck' : compact() ? 'Plus' : 'UserPlus'" [size]="16" aria-hidden="true"></svg>
         {{ (following() ? 'article.following' : 'article.follow') | transloco }}
         <span class="sr-only">{{ user().displayName }}</span>
       </button>
@@ -39,9 +38,18 @@ export class FollowButton {
   readonly user = input.required<{ id: string; displayName: string }>();
   /** What the API said when the page loaded (`isFollowingAuthor`, `UserSummaryDto.isFollowing`). */
   readonly initial = input(false);
+  /** A text button in the primary color ("+ متابعة"), for the post card's header (F34). */
+  readonly compact = input(false);
 
   protected readonly isSelf = computed(() => this.session.isAuthenticated() && this.session.me()?.id === this.user().id);
   protected readonly following = computed(() => this.session.isAuthenticated() && this.follows.isFollowing(this.user().id, this.initial()));
+
+  protected readonly classes = computed(() => {
+    if (this.compact()) {
+      return 'inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md px-2 text-sm font-semibold text-primary hover:bg-primary-container';
+    }
+    return 'rd-btn min-h-11 shrink-0 gap-1.5 px-3 text-sm ' + (this.following() ? 'bg-primary-container text-on-primary-container' : 'rd-btn-outline');
+  });
 
   protected toggle(): void {
     if (!this.prompt.requireAuth()) return;

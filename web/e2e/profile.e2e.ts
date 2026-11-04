@@ -57,7 +57,7 @@ for (const variant of VARIANTS) {
     // Articles / Paths / About (Saved is only on your own profile).
     const tabs = page.locator('[data-profile-tab]');
     await expect(tabs).toHaveCount(3);
-    await expect(page.locator('[data-profile-articles] rd-article-card')).toHaveCount(4);
+    await expect(page.locator('[data-profile-articles] rd-post-card')).toHaveCount(4);
 
     // About: bio, links, fields of expertise, join date. The screenshot shows this tab (the cards' media is lazy).
     await page.locator('[data-profile-tab="about"]').click();
@@ -363,7 +363,7 @@ test.describe('profile links and states (en/light)', () => {
     await useVariant(context, baseURL!, variant);
     // Feed card → author.
     await page.goto('/');
-    await page.locator('rd-article-card [data-card-author]').first().click();
+    await page.locator('rd-post-card [data-card-author]').first().click();
     await page.waitForURL('**/@mona');
     await expect(page.locator('[data-profile-name]')).toContainText('Mona Adel', { timeout: FIRST_RENDER_MS });
 
@@ -391,6 +391,6 @@ test.describe('profile links and states (en/light)', () => {
     await page.goto('/@karim');
     await expect(page.locator('[data-profile-header]')).toBeVisible({ timeout: FIRST_RENDER_MS });
     await expect(page.locator('[data-profile-reading]')).toHaveCount(0);
-    await expect(page.locator('[data-profile-articles] rd-article-card')).toHaveCount(1);
+    await expect(page.locator('[data-profile-articles] rd-post-card')).toHaveCount(1);
   });
 });

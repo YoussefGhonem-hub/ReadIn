@@ -90,7 +90,7 @@ describe('ProfilePage (F14)', () => {
   it('tabs: Articles / Paths / About for someone else, with arrow keys mirrored in RTL', async () => {
     const { root, tabs, stable } = await render(testProfile());
     expect(tabs()).toEqual(['articles', 'paths', 'about']);
-    expect(root.querySelectorAll('[data-profile-articles] rd-article-card')).toHaveLength(2);
+    expect(root.querySelectorAll('[data-profile-articles] rd-post-card')).toHaveLength(2);
 
     const articles = root.querySelector<HTMLElement>('[data-profile-tab="articles"]')!;
     articles.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })); // RTL: the next tab

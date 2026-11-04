@@ -99,9 +99,11 @@ export class RDocRenderer {
   readonly doc = input.required<RDoc | null | undefined>();
   /** The published article this is the content of: the glossary sheet leaves it out of its article list (F21). */
   readonly articleId = input<string | null>(null);
+  /** Embeds as a link card instead of a player (a post card's preview, F34). */
+  readonly embedsAsLinks = input(false);
   protected readonly dir = computed(() => languageDir(this.doc()?.language ?? 'ar-EG'));
 
   constructor() {
-    inject(RDocContext).bind(this.doc, this.articleId);
+    inject(RDocContext).bind(this.doc, this.articleId, this.embedsAsLinks);
   }
 }

@@ -278,6 +278,29 @@ export interface ArticleCardDto {
   isSaved: boolean;
   /** Feed cards carry at most the first 10 PDF pages; article details carry all of them. */
   attachments: ArticleAttachmentsDto | null;
+  /**
+   * The served version's beginning as plain text (≤ 400 characters, cut at a word), for the post card (F34). Null only
+   * for an article not backfilled yet: the card then shows the title alone and treats `hasMore` as true.
+   */
+  excerpt: string | null;
+  /** The article has more than the excerpt shows; false only when the excerpt is the whole article. */
+  hasMore: boolean;
+  /** False for guests, on your own articles and for a deleted author. */
+  isFollowingAuthor: boolean;
+  /** At most 3 tag names, in the article's order (the same strings as on the article). */
+  tags: string[];
+  /** All the article's tags (≤ 5), for "+N". */
+  tagCount: number;
+}
+
+/** `GET /articles/{id}/preview?lang=` (F34): the first blocks, about 300 words, never cutting a block, at least one. */
+export interface ArticlePreviewDto {
+  id: string;
+  /** The version served: the requested one, else the source language. */
+  language: ArticleLanguage;
+  content: RDoc;
+  /** `content` is the whole article. */
+  isComplete: boolean;
 }
 
 export interface ArticleSourceDto {
@@ -290,11 +313,10 @@ export interface ArticleDetailsDto extends ArticleCardDto {
   summary: string | null;
   content: RDoc;
   topic: FieldRefDto | null;
+  /** All of them (the card's `tags` holds the first 3). */
   tags: string[];
   sources: ArticleSourceDto[];
   readCount: number;
-  /** False for guests and on your own articles. */
-  isFollowingAuthor: boolean;
   /** The viewer's collections that contain the article; empty for guests. */
   collectionIds: string[];
   /** The viewer's reading progress, to resume where they left off (F04); null for guests and unopened articles. */

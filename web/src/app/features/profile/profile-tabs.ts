@@ -13,8 +13,9 @@ import { detectDir } from '../../shared/directives/bidi';
 import { LocalizedDatePipe } from '../../shared/pipes/format.pipes';
 import { ArticleCard } from '../../shared/ui/article-card';
 import { FieldIcon } from '../../shared/ui/field-icon';
-import { ArticleCardSkeleton } from '../../shared/ui/skeletons';
+import { ArticleCardSkeleton, PostCardSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
+import { PostCard } from '../feed/post-card';
 import { PathCard, PathCardSkeleton } from '../paths/path-card';
 import { SavedStore } from '../saved/saved.store';
 import { fieldColor } from '../reading/reading-stats-card';
@@ -23,10 +24,13 @@ import { ProfileArticlesStore } from './profile-articles.store';
 import { PROFILE_ICONS } from './profile-icons';
 import { profileLinks } from './profile-links';
 
-/** Articles tab (F14): the user's published articles with infinite scroll. The page owns the store (SSR loads it). */
+/**
+ * Articles tab (F14): the user's published articles as post cards (F34), with infinite scroll. The page owns the
+ * store (SSR loads it).
+ */
 @Component({
   selector: 'rd-profile-articles',
-  imports: [RouterLink, TranslocoPipe, ArticleCard, ArticleCardSkeleton, EmptyState, ErrorState],
+  imports: [RouterLink, TranslocoPipe, PostCard, PostCardSkeleton, EmptyState, ErrorState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block', 'data-profile-articles': '' },
   template: `
@@ -35,9 +39,16 @@ import { profileLinks } from './profile-links';
         <rd-error-state [message]="'profile.articles.loadError' | transloco" (retry)="store.load(username())" />
       }
       @case ('loaded') {
-        @for (article of store.items(); track article.id) {
-          <rd-article-card [article]="article" />
-        } @empty {
+        @if (store.items().length) {
+          <div class="flex flex-col gap-3 pt-3">
+            @for (article of store.items(); track article.id) {
+              <rd-post-card [article]="article" />
+            }
+            @if (store.loadingMore()) {
+              <rd-post-card-skeleton />
+            }
+          </div>
+        } @else {
           @if (isMe()) {
             <rd-empty-state [title]="'profile.articles.emptyOwnTitle' | transloco" [message]="'profile.articles.emptyOwnBody' | transloco" data-articles-empty>
               @if (canWrite()) {
@@ -47,9 +58,6 @@ import { profileLinks } from './profile-links';
           } @else {
             <rd-empty-state [title]="'profile.articles.emptyTitle' | transloco" [message]="'profile.articles.emptyBody' | transloco" data-articles-empty />
           }
-        }
-        @if (store.loadingMore()) {
-          <rd-article-card-skeleton />
         }
         @if (store.loadMoreFailed()) {
           <div class="py-4 text-center">
@@ -61,9 +69,11 @@ import { profileLinks } from './profile-links';
         }
       }
       @default {
-        @for (i of [1, 2, 3]; track i) {
-          <rd-article-card-skeleton />
-        }
+        <div class="flex flex-col gap-3 pt-3">
+          @for (i of [1, 2, 3]; track i) {
+            <rd-post-card-skeleton />
+          }
+        </div>
       }
     }
     <div #sentinel class="h-px" aria-hidden="true"></div>

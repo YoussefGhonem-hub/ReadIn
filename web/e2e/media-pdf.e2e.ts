@@ -88,10 +88,12 @@ for (const variant of VARIANTS) {
     await onApi(page, 'GET', new RegExp(`${API}/feed/for-you`), (route) => reply(route, 200, { items: [feedItem], nextCursor: null }));
 
     // ── Feed card: header strip + page carousel + "+2 pages" ──
-    // Home from the top bar (the reader's Back would return to the editor the article was published from).
+    // Home from the top bar (the reader's Back would return to the editor the article was published from). The post
+    // card says how long ago the article was published: a fixed clock keeps the shot stable.
+    await page.clock.setFixedTime(new Date('2026-11-04T09:00:00Z'));
     await page.locator('rd-top-bar a[href="/"]').click();
     await page.waitForURL((url) => url.pathname === '/');
-    const card = page.locator('rd-article-card').filter({ has: page.locator('[data-attachments="document"]') });
+    const card = page.locator('rd-post-card').filter({ has: page.locator('[data-attachments="document"]') });
     await expect(card.locator('[data-document-header]')).toContainText('Kubernetes basics');
     await expect(card.locator('[data-document-header]')).toContainText(lang === 'ar' ? '12 صفحة' : '12 pages');
     await expect(card.locator('[data-counter]')).toHaveText(`1 / ${PAGE_COUNT}`);
@@ -139,7 +141,7 @@ test('the document viewer offers Download when allowed and saves the original un
   await page.goto('/settings');
   await page.locator('rd-top-bar a[href="/"]').click();
   await page.waitForURL((url) => url.pathname === '/');
-  const card = page.locator('rd-article-card').filter({ has: page.locator('[data-attachments="document"]') });
+  const card = page.locator('rd-post-card').filter({ has: page.locator('[data-attachments="document"]') });
   await card.locator('[data-slide] > button').first().click();
   const download = page.locator('[data-viewer-download]');
   await expect(download).toBeVisible();

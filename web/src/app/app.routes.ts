@@ -41,6 +41,8 @@ export const routes: Routes = [
         path: '',
         pathMatch: 'full',
         loadComponent: () => import('./features/home/home.page').then((m) => m.HomePage),
+        // Kept alive while you read; Back brings it back as you left it (features/feed/feed-route-reuse.ts, F34).
+        data: { keepOnBack: true },
       },
       {
         matcher: articleMatcher,

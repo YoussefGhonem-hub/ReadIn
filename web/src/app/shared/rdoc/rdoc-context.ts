@@ -34,13 +34,20 @@ export class RDocContext {
   private readonly terms = inject(TermSheetService);
   private doc: Signal<RDoc | null | undefined> = signal(null);
   private articleId: Signal<string | null> = signal(null);
+  private embedsLinks: Signal<boolean> = signal(false);
 
   /** Direction used when a block has no strong characters: the article language's direction. */
   readonly fallbackDir = computed<TextDir>(() => languageDir(this.doc()?.language ?? 'ar-EG'));
 
-  bind(doc: Signal<RDoc | null | undefined>, articleId: Signal<string | null> = signal(null)): void {
+  bind(doc: Signal<RDoc | null | undefined>, articleId: Signal<string | null> = signal(null), embedsAsLinks: Signal<boolean> = signal(false)): void {
     this.doc = doc;
     this.articleId = articleId;
+    this.embedsLinks = embedsAsLinks;
+  }
+
+  /** Embeds show as a link, never a player (a post card's preview, F34). */
+  embedsAsLinks(): boolean {
+    return this.embedsLinks();
   }
 
   /** `rdoc-asset://path` → Firebase Storage URL; https URLs pass through; anything else is dropped. */

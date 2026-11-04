@@ -614,6 +614,30 @@
       "prompt": "Learn step by step with learning paths"
     }
   },
+  "feedCard": {
+    "todayLabel": "Today's article",
+    "readMore": "Read more",
+    "readMoreLabel": "Read more of “{{title}}”",
+    "readFull": "Read the full article",
+    "showLess": "Show less",
+    "previewError": "We couldn't load the rest of the article.",
+    "react": "React",
+    "comment": "Comment",
+    "commentCount": {
+      "one": "1 comment",
+      "other": "{{count}} comments"
+    },
+    "showComments": "Show comments",
+    "showAllComments": "Show all comments",
+    "hideComments": "Close comments",
+    "tags": "Tags",
+    "moreTags": {
+      "one": "1 more tag",
+      "other": "{{count}} more tags"
+    },
+    "openCover": "Open the picture of “{{title}}”",
+    "actions": "Actions for “{{title}}”"
+  },
   "article": {
     "aiAssisted": "AI-assisted",
     "verifiedWriter": "Verified writer",

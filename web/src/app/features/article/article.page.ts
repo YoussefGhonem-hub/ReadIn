@@ -93,7 +93,7 @@ const TOC_MIN_HEADINGS = 3;
   host: { class: 'block' },
   template: `
     <!-- Reading progress (mirrors in RTL: fills from the inline start) -->
-    <div class="fixed inset-x-0 top-0 z-40 h-[3px] bg-transparent" aria-hidden="true">
+    <div class="fixed inset-x-0 top-0 z-40 h-[3px] bg-transparent" aria-hidden="true" data-reading-progress>
       <div class="absolute start-0 top-0 h-full bg-accent transition-[width] duration-100" [style.width.%]="progress() * 100"></div>
     </div>
 

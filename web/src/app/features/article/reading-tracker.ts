@@ -1,4 +1,4 @@
-import { DOCUMENT, Injector, PLATFORM_ID, Signal, afterNextRender, computed, effect, inject, untracked } from '@angular/core';
+import { ApplicationRef, DOCUMENT, Injector, PLATFORM_ID, Signal, afterNextRender, computed, effect, inject, untracked } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { isApiError } from '../../core/api/api.config';
@@ -21,9 +21,18 @@ export interface TrackedArticle {
   language: ArticleLanguage;
 }
 
+export interface ReadingTrackerOptions {
+  /**
+   * Send the scroll position as `lastPosition` (the reader resumes from it). Off for a post card (F34): its position
+   * means nothing to the reader, so it sends null.
+   */
+  reportPosition?: boolean;
+}
+
 interface ReadingSessionEnv {
   window: Window;
   document: Document;
+  reportPosition: boolean;
   send(articleId: string, body: ReadingProgressRequest, keepalive: boolean): Promise<ReadingProgressResultDto>;
   onResult(result: ReadingProgressResultDto): void;
 }
@@ -43,30 +52,35 @@ export function scrollFraction(el: HTMLElement, viewportHeight: number): number 
  * Must run in the reader's injection context. `progress` is the reader's scroll fraction (0..1); `element` is the
  * article, measured once when a session starts because `progress` can still describe the loading skeleton. While
  * `hold` returns true no session starts: the reader is still putting you back where you left off (F04 resume), and
- * a first report from the top would save that over your position.
+ * a first report from the top would save that over your position. A post card (F34) tracks an article shown whole in
+ * the card the same way (features/feed/card-reading.ts), without a position.
  */
 export function injectReadingTracker(
   article: () => TrackedArticle | null,
   progress: Signal<number>,
   element?: () => HTMLElement | undefined,
   hold?: () => boolean,
+  options: ReadingTrackerOptions = {},
 ): void {
   if (!isPlatformBrowser(inject(PLATFORM_ID))) return;
   const window = inject(DOCUMENT).defaultView;
   if (!window) return;
   const api = inject(ReadingApi);
   const session = inject(SessionStore);
-  const streaks = inject(StreakStore);
-  const sheets = inject(ReadingSheetsService);
   const injector = inject(Injector);
+  // The app's own injector: a last report can come back after the reader (or card) is gone.
+  const app = inject(ApplicationRef);
 
   const env: ReadingSessionEnv = {
     window,
     document: window.document,
+    reportPosition: options.reportPosition ?? true,
     send: (articleId, body, keepalive) => firstValueFrom(api.progress(articleId, body, { keepalive })),
+    // Looked up on the first result, so a post card that never reports (most of them) doesn't load your stats.
     onResult: (result) => {
-      streaks.applyProgress(result);
-      if (result.milestone) sheets.celebrate(result.milestone);
+      if (app.destroyed) return;
+      app.injector.get(StreakStore).applyProgress(result);
+      if (result.milestone) app.injector.get(ReadingSheetsService).celebrate(result.milestone);
     },
   };
 
@@ -196,7 +210,7 @@ class ReadingSession {
     const body: ReadingProgressRequest = {
       language: this.article.language,
       percent: Math.round(this.maxProgress * 100),
-      lastPosition: this.position.toFixed(4),
+      lastPosition: this.env.reportPosition ? this.position.toFixed(4) : null,
       activeSecondsDelta: seconds,
     };
     const last = this.lastSent;

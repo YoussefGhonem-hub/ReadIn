@@ -2,7 +2,7 @@ import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { API_BASE_URL, SILENT_ERRORS, WITH_SESSION } from './api.config';
-import { ArticleCardDto, ArticleDetailsDto, ArticleLanguage, CursorPage } from './models';
+import { ArticleCardDto, ArticleDetailsDto, ArticleLanguage, ArticlePreviewDto, CursorPage } from './models';
 
 export interface FeedQuery {
   cursor?: string | null;
@@ -33,6 +33,17 @@ export class ContentApi {
 
   article(slug: string, lang: ArticleLanguage): Observable<ArticleDetailsDto> {
     return this.http.get<ArticleDetailsDto>(this.articleUrl(slug, lang), { context: this.silent() });
+  }
+
+  /**
+   * `GET /articles/{id}/preview?lang=` (F34): the first blocks of the version, for a post card's "Read more". Silent:
+   * the card shows its own error state. `404 article.not_found` where the article itself would answer it.
+   */
+  preview(id: string, lang: ArticleLanguage): Observable<ArticlePreviewDto> {
+    return this.http.get<ArticlePreviewDto>(`${this.base}/articles/${encodeURIComponent(id)}/preview`, {
+      params: new HttpParams().set('lang', lang),
+      context: this.silent(),
+    });
   }
 
   forYou(query: ForYouQuery = {}): Observable<CursorPage<ArticleCardDto>> {

@@ -265,6 +265,15 @@
     color: var(--rd-color-text-secondary);
   }
 
+  /* A post card's excerpt (F34): the type of its expanded preview, so "Read more" grows the text without a jump. */
+  .rd-card-text {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--rd-color-text-primary);
+    white-space: pre-line;
+    overflow-wrap: break-word;
+  }
+
   .rd-visually-hidden {
     position: absolute !important;
     width: 1px;

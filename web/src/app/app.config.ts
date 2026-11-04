@@ -1,7 +1,7 @@
 import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay, withHttpTransferCacheOptions } from '@angular/platform-browser';
-import { TitleStrategy, provideRouter, withComponentInputBinding, withInMemoryScrolling, withRouterConfig } from '@angular/router';
+import { RouteReuseStrategy, TitleStrategy, provideRouter, withComponentInputBinding, withInMemoryScrolling, withRouterConfig } from '@angular/router';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
 import { API_INTERCEPTORS } from './core/http/api-interceptors';
@@ -9,6 +9,7 @@ import { PageTitleStrategy } from './core/i18n/page-title.strategy';
 import { provideI18n } from './core/i18n/transloco.providers';
 import { AppHistory } from './core/platform/app-history';
 import { PushService } from './core/push/push.service';
+import { FeedRouteReuse } from './features/feed/feed-route-reuse';
 import { RealtimeService } from './core/realtime/realtime.service';
 import { provideAppIcons } from './shared/ui/icons';
 
@@ -21,6 +22,8 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
       withRouterConfig({ paramsInheritanceStrategy: 'always' }),
     ),
+    // Home stays alive while you read and comes back as you left it on Back (F34).
+    { provide: RouteReuseStrategy, useExisting: FeedRouteReuse },
     // Route titles are i18n keys and follow the UI language.
     { provide: TitleStrategy, useExisting: PageTitleStrategy },
     provideHttpClient(withFetch(), withInterceptors(API_INTERCEPTORS)),

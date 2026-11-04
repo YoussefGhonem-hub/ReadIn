@@ -23,6 +23,7 @@ import { createNotifications } from './notifications.mjs';
 import { createProfiles } from './profiles.mjs';
 import { createSocial } from './social.mjs';
 import { createVerification } from './verification.mjs';
+import { excerptOf, previewOf } from './post-cards.mjs';
 
 const PORT = Number(process.env.MOCK_API_PORT ?? 5080);
 const ORIGIN = `http://localhost:${PORT}`;
@@ -248,177 +249,6 @@ function documentAttachment(asset, { canDownload = asset.allowDownload, maxPages
   };
 }
 
-/** A card as a guest sees it; `reactions` and `saves` are everyone else's (social.mjs adds the viewer's own). */
-function card({
-  slug,
-  language = 'en',
-  title,
-  attachments = null,
-  minutes = 4,
-  reactions = { insightful: 6, love: 3, fire: 2, mindBlown: 1 },
-  saves = 4,
-  comments = 3,
-  author = AUTHOR,
-  field = FIELDS[0],
-  publishedAt = '2026-11-02T08:00:00Z',
-}) {
-  return {
-    id: `a-${slug}`,
-    slug,
-    language,
-    title,
-    subtitle: null,
-    coverUrl: null,
-    field: fieldRef(field),
-    author,
-    readingTimeMinutes: minutes,
-    isAiAssisted: false,
-    versionBadge: null,
-    publishedAt,
-    reactionCount: Object.values(reactions).reduce((a, b) => a + b, 0),
-    reactions,
-    commentCount: comments,
-    saveCount: saves,
-    myReaction: null,
-    isSaved: false,
-    attachments,
-  };
-}
-
-/** `blocks` replaces the one-paragraph content (the reader e2e needs a long article with glossary terms). */
-function details(cardDto, paragraphs = ['A short post about the attached media.'], blocks = null) {
-  return {
-    ...cardDto,
-    availableLanguages: [cardDto.language],
-    summary: null,
-    content: {
-      version: 1,
-      language: cardDto.language,
-      blocks: blocks ?? paragraphs.map((text, i) => ({ id: `p${i + 1}`, type: 'paragraph', dir: 'auto', content: [{ type: 'text', text }] })),
-    },
-    topic: null,
-    tags: [],
-    sources: [{ title: 'Microsoft Learn', url: 'https://learn.microsoft.com/aspnet/core' }],
-    readCount: 0,
-    isFollowingAuthor: false,
-    collectionIds: [],
-    myProgress: null,
-  };
-}
-
-const whiteboard = [imageAsset('whiteboard', 1600, 1200), imageAsset('layers', 1200, 1600), imageAsset('diagram', 1600, 900)];
-const cheatSheet = documentAsset('cheatsheet', { pageCount: 12 });
-const portrait = imageAsset('portrait', 1200, 1600);
-
-const ARTICLES = [
-  card({
-    slug: 'clean-architecture-whiteboard',
-    title: 'Clean Architecture on one whiteboard',
-    attachments: {
-      kind: 'images',
-      images: [
-        imageAttachment(whiteboard[0], 0, 'Whiteboard with the four layers', 'The four layers, outside in'),
-        imageAttachment(whiteboard[1], 1, 'Dependency arrows pointing inwards', 'Dependencies point inwards'),
-        imageAttachment(whiteboard[2], 2, 'Use case flow diagram', null),
-      ],
-      document: null,
-    },
-  }),
-  card({
-    slug: 'dependency-injection-ar',
-    language: 'ar-EG',
-    title: 'يعني إيه Dependency Injection في ASP.NET Core؟',
-    minutes: 6,
-    reactions: { insightful: 5, love: 4, fire: 2, mindBlown: 1 },
-    saves: 9,
-  }),
-  card({
-    slug: 'aspnet-core-cheatsheet',
-    title: 'ASP.NET Core cheat sheet (PDF)',
-    attachments: { kind: 'document', images: [], document: documentAttachment(cheatSheet, { maxPages: 10 }) },
-    reactions: { insightful: 7, love: 2, fire: 3, mindBlown: 0 },
-    saves: 23,
-  }),
-  card({
-    slug: 'one-photo',
-    title: 'My desk setup for focused reading',
-    attachments: { kind: 'images', images: [imageAttachment(portrait, 0, 'A tidy desk with a laptop and a notebook', 'Less is more')], document: null },
-    reactions: { insightful: 2, love: 7, fire: 2, mindBlown: 1 },
-    saves: 2,
-  }),
-];
-
-/** Published by the other writers: in the Following feed, Saved and the reader, never in For you (its baselines). */
-const MORE_ARTICLES = [
-  card({
-    slug: 'how-readin-picks-your-daily-article',
-    title: 'How ReadIn picks your daily article',
-    author: authorOf('u-readin'),
-    publishedAt: '2026-11-03T06:00:00Z',
-    minutes: 3,
-    reactions: { insightful: 31, love: 9, fire: 4, mindBlown: 1 },
-    saves: 57,
-    comments: 14,
-  }),
-  card({
-    slug: 'react-server-components-explained',
-    title: 'React Server Components, explained without the hype',
-    author: authorOf('u-karim'),
-    publishedAt: '2026-11-02T15:00:00Z',
-    minutes: 7,
-    reactions: { insightful: 8, love: 2, fire: 5, mindBlown: 3 },
-    saves: 31,
-    comments: 6,
-  }),
-  card({
-    slug: 'readin-streaks-ar',
-    language: 'ar-EG',
-    title: 'إزاي الـ streak بيساعدك تقرا كل يوم',
-    author: authorOf('u-readin'),
-    publishedAt: '2026-11-01T09:00:00Z',
-    minutes: 4,
-    reactions: { insightful: 4, love: 6, fire: 1, mindBlown: 0 },
-    saves: 12,
-    comments: 2,
-  }),
-  card({
-    slug: 'what-is-a-transformer-ar',
-    language: 'ar-EG',
-    title: 'يعني إيه Transformer في الـ AI؟',
-    author: authorOf('u-salma'),
-    publishedAt: '2026-10-31T11:00:00Z',
-    minutes: 8,
-    reactions: { insightful: 10, love: 3, fire: 2, mindBlown: 6 },
-    saves: 40,
-    comments: 9,
-  }),
-  card({
-    slug: 'sleep-and-memory',
-    title: 'How sleep turns reading into memory',
-    author: authorOf('u-omar'),
-    field: FIELDS[1],
-    publishedAt: '2026-10-29T19:00:00Z',
-    minutes: 5,
-    reactions: { insightful: 3, love: 1, fire: 0, mindBlown: 2 },
-    saves: 8,
-    comments: 1,
-  }),
-  // Its writer deleted their account (SPEC §9.6): the article stays up with `author: null`, shown as "Deleted user".
-  card({
-    slug: 'sql-indexes-in-plain-words',
-    title: 'SQL indexes in plain words',
-    author: null,
-    publishedAt: '2026-10-27T10:00:00Z',
-    minutes: 6,
-    reactions: { insightful: 5, love: 1, fire: 1, mindBlown: 0 },
-    saves: 6,
-    comments: 2,
-  }),
-];
-const ALL_ARTICLES = [...ARTICLES, ...MORE_ARTICLES];
-
-// ── Reader (F04 resume and related articles, F21 glossary) ─────
-
 const text = (value) => ({ type: 'text', text: value });
 const term = (termId, value) => ({ type: 'term', termId, text: value });
 
@@ -451,10 +281,228 @@ const DI_BLOCKS = [
   ]).flat(),
 ];
 
+const paragraph = (id, value) => ({ id, type: 'paragraph', dir: 'auto', content: typeof value === 'string' ? [text(value)] : value });
+/** The default content: one short paragraph. */
+const SHORT_POST = [paragraph('p1', 'A short post about the attached media.')];
+
+/** Each article's content (`details().content.blocks`) and all its tags, by slug; cards carry the excerpt and 3 tags. */
+const CONTENT = new Map();
+const TAGS = new Map();
+
+/**
+ * A card as a guest sees it; `reactions` and `saves` are everyone else's (social.mjs adds the viewer's own). `blocks`
+ * is the article's content (the reader's, and the card's excerpt and preview, F34); `tags` all of its tags.
+ */
+function card({
+  slug,
+  language = 'en',
+  title,
+  attachments = null,
+  minutes = 4,
+  reactions = { insightful: 6, love: 3, fire: 2, mindBlown: 1 },
+  saves = 4,
+  comments = 3,
+  author = AUTHOR,
+  field = FIELDS[0],
+  publishedAt = '2026-11-02T08:00:00Z',
+  blocks = SHORT_POST,
+  tags = [],
+  coverUrl = null,
+}) {
+  CONTENT.set(slug, blocks);
+  TAGS.set(slug, tags);
+  return {
+    id: `a-${slug}`,
+    slug,
+    language,
+    title,
+    subtitle: null,
+    ...excerptOf(blocks),
+    coverUrl,
+    field: fieldRef(field),
+    author,
+    readingTimeMinutes: minutes,
+    isAiAssisted: false,
+    versionBadge: null,
+    publishedAt,
+    reactionCount: Object.values(reactions).reduce((a, b) => a + b, 0),
+    reactions,
+    commentCount: comments,
+    saveCount: saves,
+    myReaction: null,
+    isSaved: false,
+    isFollowingAuthor: false,
+    tags: tags.slice(0, 3),
+    tagCount: tags.length,
+    attachments,
+  };
+}
+
+/** The reader's copy: the card's content (`card({ blocks })`) and all of its tags. */
+function details(cardDto) {
+  return {
+    ...cardDto,
+    availableLanguages: [cardDto.language],
+    summary: null,
+    content: { version: 1, language: cardDto.language, blocks: CONTENT.get(cardDto.slug) ?? SHORT_POST },
+    topic: null,
+    tags: TAGS.get(cardDto.slug) ?? [],
+    sources: [{ title: 'Microsoft Learn', url: 'https://learn.microsoft.com/aspnet/core' }],
+    readCount: 0,
+    isFollowingAuthor: false,
+    collectionIds: [],
+    myProgress: null,
+  };
+}
+
+const whiteboard = [imageAsset('whiteboard', 1600, 1200), imageAsset('layers', 1200, 1600), imageAsset('diagram', 1600, 900)];
+const cheatSheet = documentAsset('cheatsheet', { pageCount: 12 });
+const portrait = imageAsset('portrait', 1200, 1600);
+
+const ARTICLES = [
+  card({
+    slug: 'clean-architecture-whiteboard',
+    title: 'Clean Architecture on one whiteboard',
+    attachments: {
+      kind: 'images',
+      images: [
+        imageAttachment(whiteboard[0], 0, 'Whiteboard with the four layers', 'The four layers, outside in'),
+        imageAttachment(whiteboard[1], 1, 'Dependency arrows pointing inwards', 'Dependencies point inwards'),
+        imageAttachment(whiteboard[2], 2, 'Use case flow diagram', null),
+      ],
+      document: null,
+    },
+  }),
+  card({
+    slug: 'dependency-injection-ar',
+    language: 'ar-EG',
+    title: 'يعني إيه Dependency Injection في ASP.NET Core؟',
+    blocks: DI_BLOCKS,
+    tags: ['ASP.NET Core', 'DI', 'dotnet'],
+    minutes: 6,
+    reactions: { insightful: 5, love: 4, fire: 2, mindBlown: 1 },
+    saves: 9,
+  }),
+  card({
+    slug: 'aspnet-core-cheatsheet',
+    title: 'ASP.NET Core cheat sheet (PDF)',
+    blocks: [paragraph('p1', 'Everything I keep looking up, on 12 pages: DI lifetimes, the middleware order and configuration. Print it.')],
+    tags: ['cheatsheet'],
+    attachments: { kind: 'document', images: [], document: documentAttachment(cheatSheet, { maxPages: 10 }) },
+    reactions: { insightful: 7, love: 2, fire: 3, mindBlown: 0 },
+    saves: 23,
+  }),
+  card({
+    slug: 'one-photo',
+    title: 'My desk setup for focused reading',
+    blocks: [
+      paragraph('p1', 'A small desk, one screen and a paper notebook. That is the whole setup.'),
+      { id: 'h1', type: 'heading', level: 2, dir: 'auto', content: [text('Why paper?')] },
+      paragraph('p2', 'Writing a summary by hand after each article is the best memory trick I know: it takes two minutes and the ideas stay.'),
+    ],
+    tags: ['desk-setup', 'focus', 'notes', 'productivity'],
+    attachments: { kind: 'images', images: [imageAttachment(portrait, 0, 'A tidy desk with a laptop and a notebook', 'Less is more')], document: null },
+    reactions: { insightful: 2, love: 7, fire: 2, mindBlown: 1 },
+    saves: 2,
+  }),
+];
+
+/** Published by the other writers: in the Following feed, Saved and the reader, never in For you (its baselines). */
+const MORE_ARTICLES = [
+  card({
+    slug: 'how-readin-picks-your-daily-article',
+    title: 'How ReadIn picks your daily article',
+    author: authorOf('u-readin'),
+    publishedAt: '2026-11-03T06:00:00Z',
+    minutes: 3,
+    reactions: { insightful: 31, love: 9, fire: 4, mindBlown: 1 },
+    saves: 57,
+    comments: 14,
+  }),
+  card({
+    slug: 'react-server-components-explained',
+    title: 'React Server Components, explained without the hype',
+    author: authorOf('u-karim'),
+    publishedAt: '2026-11-02T15:00:00Z',
+    minutes: 7,
+    reactions: { insightful: 8, love: 2, fire: 5, mindBlown: 3 },
+    saves: 31,
+    comments: 6,
+  }),
+  card({
+    slug: 'readin-streaks-ar',
+    language: 'ar-EG',
+    title: 'إزاي الـ streak بيساعدك تقرا كل يوم',
+    blocks: [
+      paragraph('p1', [text('كل يوم تخلّص فيه مقال، الـ '), { type: 'text', text: 'streak', marks: [{ type: 'bold' }] }, text(' بتاعك بيزيد يوم. ولو فوّت يوم واحد، الـ freeze بيحميه مرة كل أسبوع.')]),
+      { id: 'c1', type: 'callout', variant: 'tip', content: [text('اقرا الصبح مع القهوة ☕، 5 دقايق كفاية.')] },
+    ],
+    tags: ['streaks', 'عادات'],
+    author: authorOf('u-readin'),
+    publishedAt: '2026-11-01T09:00:00Z',
+    minutes: 4,
+    reactions: { insightful: 4, love: 6, fire: 1, mindBlown: 0 },
+    saves: 12,
+    comments: 2,
+  }),
+  card({
+    slug: 'what-is-a-transformer-ar',
+    language: 'ar-EG',
+    title: 'يعني إيه Transformer في الـ AI؟',
+    coverUrl: mediaUrl('photo', 'transformer-cover', 1200, 675),
+    blocks: [
+      paragraph(
+        'p1',
+        'الـ Transformer هو الفكرة اللي ورا ChatGPT وأغلب نماذج اللغة اللي بنستخدمها النهارده. بدل ما يقرا الجملة كلمة كلمة بالترتيب، بيبص على الكلمات كلها مرة واحدة ويقرر كل كلمة محتاجة تاخد بالها من مين.',
+      ),
+      paragraph('p2', 'الحتة دي اسمها attention، وهي اللي بتخلي الموديل يفهم إن "هو" في آخر الجملة راجعة على مين في أولها.'),
+      { id: 'code1', type: 'code', lang: 'python', code: 'scores = softmax(Q @ K.T / sqrt(d))\noutput = scores @ V' },
+      paragraph('p3', 'في المقال الجاي هنفصّص الـ Q و K و V واحدة واحدة.'),
+    ],
+    tags: ['AI', 'machine-learning', 'nlp', 'transformers', 'شرح'],
+    author: authorOf('u-salma'),
+    publishedAt: '2026-10-31T11:00:00Z',
+    minutes: 8,
+    reactions: { insightful: 10, love: 3, fire: 2, mindBlown: 6 },
+    saves: 40,
+    comments: 9,
+  }),
+  card({
+    slug: 'sleep-and-memory',
+    title: 'How sleep turns reading into memory',
+    author: authorOf('u-omar'),
+    field: FIELDS[1],
+    publishedAt: '2026-10-29T19:00:00Z',
+    minutes: 5,
+    reactions: { insightful: 3, love: 1, fire: 0, mindBlown: 2 },
+    saves: 8,
+    comments: 1,
+  }),
+  // Its writer deleted their account (SPEC §9.6): the article stays up with `author: null`, shown as "Deleted user".
+  card({
+    slug: 'sql-indexes-in-plain-words',
+    title: 'SQL indexes in plain words',
+    blocks: [
+      paragraph('p1', 'An index is the table of contents of your table: instead of reading every row, the database jumps straight to the ones you asked for.'),
+      paragraph('p2', 'It costs a little on every insert and update, so index the columns you filter and join on, not every column you have.'),
+    ],
+    tags: ['sql', 'databases'],
+    author: null,
+    publishedAt: '2026-10-27T10:00:00Z',
+    minutes: 6,
+    reactions: { insightful: 5, love: 1, fire: 1, mindBlown: 0 },
+    saves: 6,
+    comments: 2,
+  }),
+];
+const ALL_ARTICLES = [...ARTICLES, ...MORE_ARTICLES];
+
+// ── Reader (F04 resume and related articles, F21 glossary) ─────
+
 const DETAILS = new Map(
   ALL_ARTICLES.map((a) => {
     const full = a.attachments?.kind === 'document' ? { ...a, attachments: { ...a.attachments, document: documentAttachment(cheatSheet) } } : a;
-    return [a.slug, details(full, undefined, a.slug === 'dependency-injection-ar' ? DI_BLOCKS : null)];
+    return [a.slug, details(full)];
   }),
 );
 
@@ -694,6 +742,17 @@ const routes = [
       const entry = GLOSSARY[decodeURIComponent(slug)];
       if (!entry) return [404, problem(404, 'glossary.term_not_found', 'This term is not in the glossary.')];
       return [200, { ...entry, articles: entry.articles.map((s) => glossaryArticle(bySlug(s))) }];
+    },
+  ],
+  [
+    // F34: a post card's "Read more". By id, in the requested version (the mock's articles have one).
+    'GET',
+    new RegExp(`^${API}/articles/([^/]+)/preview$`),
+    (_q, [, id]) => {
+      const article = ALL_ARTICLES.find((a) => a.id === decodeURIComponent(id));
+      if (!article) return [404, problem(404, 'article.not_found', 'Article not found')];
+      const { content, isComplete } = previewOf(DETAILS.get(article.slug).content);
+      return [200, { id: article.id, language: article.language, content, isComplete }];
     },
   ],
   [

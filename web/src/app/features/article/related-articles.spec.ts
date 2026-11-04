@@ -101,22 +101,23 @@ describe('RelatedArticles (F04)', () => {
     const section = root.querySelector('[data-related]')!;
     expect(section.getAttribute('aria-labelledby')).toBe('related-title');
     expect(section.querySelector('#related-title')!.textContent!.trim()).toBe('مقالات ذات صلة');
-    const cards = [...section.querySelectorAll('rd-article-card')];
+    // Post cards (F34): the title opens the reader.
+    const cards = [...section.querySelectorAll('rd-post-card')];
     expect(cards.length).toBe(4);
-    expect(cards[0].querySelector('a')!.getAttribute('href')).toBe('/en/a/related-1');
+    expect(cards[0].querySelector('[data-card-title]')!.getAttribute('href')).toBe('/en/a/related-1');
     // Saves behave like on every feed card (F13).
     expect(cards[1].querySelector('[data-card-save]')!.getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('keeps the cards compact: no images or PDF pages, as on mobile', async () => {
+  it('shows post cards with their attachments (F34, no longer compact)', async () => {
     const { root, near, stable } = await render();
     await near();
     const image = { assetId: 'img-1', order: 0, caption: null, altText: 'Whiteboard', width: 1600, height: 1200, blurHash: null, variants: [] };
     related().flush([testCard({ id: 'r1', slug: 'with-images', attachments: { kind: 'images', images: [image], document: null } })]);
     await stable();
 
-    expect(root.querySelectorAll('[data-related] rd-article-card')).toHaveLength(1);
-    expect(root.querySelector('[data-related] rd-article-attachments')).toBeNull();
+    expect(root.querySelectorAll('[data-related] rd-post-card')).toHaveLength(1);
+    expect(root.querySelector('[data-related] rd-post-card rd-article-attachments')).not.toBeNull();
   });
 
   it('shows nothing when there are no related articles', async () => {
@@ -152,6 +153,6 @@ describe('RelatedArticles (F04)', () => {
     expect(req.request.url).toBe(`${TEST_API}/articles/a1/related?lang=ar-EG&limit=4`);
     req.flush([testCard({ id: 'r9', slug: 'related-ar', language: 'ar-EG', title: 'مقال' })]);
     await stable();
-    expect(root.querySelector('rd-article-card a')!.getAttribute('href')).toBe('/ar/a/related-ar');
+    expect(root.querySelector('rd-post-card [data-card-title]')!.getAttribute('href')).toBe('/ar/a/related-ar');
   });
 });
