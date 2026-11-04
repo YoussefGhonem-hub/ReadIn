@@ -218,7 +218,7 @@ for (const variant of VARIANTS) {
     await expect(block.locator('[data-join-path]')).toHaveCount(0);
     // After the sources, before the comments.
     expect(await page.evaluate(() => {
-      const sources = document.getElementById('sources-title')!.closest('section')!;
+      const sources = document.getElementById('sources-title')!.closest('rd-article-sources')!;
       const next = document.querySelector('rd-next-in-path')!;
       const comments = document.getElementById('comments')!;
       return sources.nextElementSibling === next && !!(next.compareDocumentPosition(comments) & Node.DOCUMENT_POSITION_FOLLOWING);
@@ -245,6 +245,8 @@ for (const variant of VARIANTS) {
     await useVariant(context, baseURL!, variant);
     await page.goto('/ar/a/dependency-injection-ar');
     await page.waitForLoadState('networkidle');
+    // The block loads as the end of the article nears the viewport.
+    await page.locator('#sources-title').scrollIntoViewIfNeeded();
     const block = page.locator('[data-next-in-path-block]');
     await expect(block).toBeVisible({ timeout: FIRST_RENDER_MS });
     await expect(block.locator('[data-next-position]')).toContainText(ar ? '2 من 3' : '2 of 3');
