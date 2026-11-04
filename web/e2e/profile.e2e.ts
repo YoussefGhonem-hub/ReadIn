@@ -80,7 +80,12 @@ for (const variant of VARIANTS) {
     await page.keyboard.press(dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight');
     await expect(page.locator('[data-profile-tab="paths"]')).toBeFocused();
     await expect(page.locator('[data-profile-tab="paths"]')).toHaveAttribute('aria-selected', 'true');
-    await expect(page.locator('[data-profile-paths]')).toContainText(ar ? 'المسارات جاية قريب' : 'Learning paths are coming');
+    // Mona's stats are public, so are her paths (F09): the one in progress first, then the one she finished.
+    const paths = page.locator('[data-profile-paths] [data-path-card]');
+    await expect(paths).toHaveCount(2);
+    await expect(paths.first()).toHaveAttribute('data-path-card', 'learn-how-to-learn');
+    await expect(paths.first().locator('[data-path-progress]')).toContainText('1/3');
+    await expect(paths.nth(1).locator('[data-path-completed]')).toBeVisible();
     await page.keyboard.press('End');
     await expect(page.locator('[data-profile-tab="about"]')).toBeFocused();
     await expect(about).toBeVisible();
