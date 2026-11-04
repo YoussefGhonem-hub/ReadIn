@@ -26,7 +26,7 @@ blocks, undo/redo).
 `D:\readin-backup-2.bundle`, created with `git bundle create --all` after a fetch of every branch. `git bundle verify`
 reports a complete history and the bundle holds 56 refs. The older `D:\readin-backup.bundle` is kept.
 
-## Step 3: merge into dev (in progress)
+## Step 3: merge into dev ✅
 Order:
 1. f04-reader
 2. f05-rebase follow-up
@@ -76,6 +76,35 @@ Order:
     - 1182/1182, after the 16 home and path goldens were regenerated and viewed in 7a93da7. They predated F05: the review
       badge, and dev's Home.
   - Pushed as 7a93da7, together with the Desktop session's SPEC commit 6d71dc7.
+- [x] **f22-moderation** merged as eade767. It was built on dev 8e60f73, before F05, F04, F09 and account deletion.
+  - Review stays removed. MarkReviewed, the review pools, the ReviewedBy mapping, `/reviews` and the review endpoints
+    were all dropped.
+  - Moderation regenerated as `20261104125936`, with an identical body.
+  - Deleted authors (`AuthorId` null):
+    - no notice is sent;
+    - only moderators see their hidden article;
+    - the web and mobile menus are null-safe.
+  - The eraser anonymizes `Articles.HiddenById` and both `ModerationActions` ids. The deletion test covers this, and
+    the §9.6 row is updated.
+  - Tag counts skip hidden articles.
+  - Gates:
+    - backend 1409/1409;
+    - web lint, 718/718 unit, build (initial 518.02 kB, still over the 500 kB warning);
+    - mobile analyze clean, 1278/1278 including goldens (the merged reader and profile goldens in e26714b, viewed);
+    - full Playwright 332/334. Two flakes:
+      - The image flow failed with `ECONNRESET`: the mock API closed idle keep-alive sockets after Node's 5 s default.
+        It now keeps them 180 s.
+      - The PDF flow failed with `attachments.asset_not_ready`: the 8 parallel runs shared one asset id in the mock's
+        registry, and a run registering "processing" turned another run's ready asset back. Each run now has its own
+        asset id (the same pictures).
+      - Both specs passed 72/72 after the fixes (4 repeats).
+      - The guest who-reacted test failed once under full-suite load (0 rows within 5 s). It passed 8/8 in isolation and
+        its mock is deterministic for guests. To watch in the next full run.
+- [x] **f17-notifications-handoff** merged as 8218128 (docs only: `docs/handoff/f17-notifications.md`, the F17 design).
+- [x] **f09-paths** handoff doc merged as 58ee834 (`docs/handoff/f09-learning-paths.md`, the only commit not on dev).
+- [x] Every other branch checked: its commits are on dev, or are older copies of commits that are (same subject, rebased
+  or squashed): f07-daily, f14, f14-backend, f14-web, f14-mobile, f14-pre-f11, live-base, social-backend, social-web,
+  social-mobile, f05-editor, account-deletion-pre-squash.
 - [ ] Not ours, left uncommitted in the shared tree:
   - `docs/SPEC.md` F31/F32: committed by the Desktop session as 6d71dc7;
   - a `.gitignore` line `mobile/test/goldens`, whose author is unknown. It must not be committed: it would hide the

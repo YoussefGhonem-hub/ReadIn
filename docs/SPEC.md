@@ -1634,11 +1634,13 @@ Deploy targets (suggested): API + SSR on a single server or container host (with
 
 - **Branches:** exactly two. `main` (production) and `dev` (all development). No `feature/*`, `fix/*` or `content/*` branches.
 - All work is committed **directly to `dev`**, one or more commits per feature. `dev` is pushed after each feature passes its quality gates: backend build + all tests (unit, integration, architecture), web lint + unit tests + SSR build, mobile `flutter analyze` + all tests including goldens, and clean `npm audit` / `dotnet list package --vulnerable`.
+- **One folder:** all work happens directly on `dev` in the one working copy (`D:\freelancer\ReadIn`). No new branches or worktrees, also for Claude Code agents (no worktree isolation). The rules for sessions are in [`CLAUDE.md`](../CLAUDE.md).
+- **Commit only your own files**, by path: `git commit -m "..." -- <paths>`. Never `git add -A`, `git add .` or `git commit -a`. Never run `git stash`, `git reset`, `git rebase`, `git switch` / `git checkout <branch>` or `git clean` in the shared folder, and never force-push.
 - **No pull requests per feature.** There is exactly **one** pull request, `dev → main`, opened only when the product owner asks for a release. Nothing is pushed to `main` directly.
 - **Conventional Commits** with scope: `feat(backend): ...`, `feat(web): ...`, `feat(mobile): ...`, `fix(...)`, `test(...)`, `refactor(...)`, `content(dotnet): ...`, `docs: ...`, `chore(ci): ...`.
 - Each feature tracks `backend`, `web` and `mobile` parts (see [§12](#12-feature-parity-matrix-web--mobile)); it is done when all three are committed to `dev`.
 - Secrets are never committed: the Firebase service-account key, `google-services.json`, `GoogleService-Info.plist`, `Jwt:SigningKey`, `Security:RecoveryPinPepper`, passwords and PINs.
-- Architecture decisions recorded as ADRs in `docs/adr/`. Existing: 0001–0012 (`0007-phone-password-authentication.md` supersedes 0001 and the auth part of 0004; `0008-firebase-scope-fcm-and-rtdb.md`; `0009-recovery-pin.md`; `0012-google-and-apple-sign-in.md` amends 0007).
+- Architecture decisions recorded as ADRs in `docs/adr/`. Existing: 0001–0016 (`0007-phone-password-authentication.md` supersedes 0001 and the auth part of 0004; `0008-firebase-scope-fcm-and-rtdb.md`; `0009-recovery-pin.md`; `0012-google-and-apple-sign-in.md` amends 0007; `0014-open-topics-and-optional-review.md`, whose review part is superseded by `0015-open-publishing-and-the-editor.md`; `0016-immediate-account-deletion.md` amends 0007 and 0012). The index is `docs/adr/README.md`.
 
 ---
 
