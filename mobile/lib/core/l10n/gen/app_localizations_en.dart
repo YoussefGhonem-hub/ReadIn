@@ -146,19 +146,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get badgeReviewed => 'Reviewed';
-
-  @override
-  String reviewedBy(String name) {
-    return 'Reviewed by $name';
-  }
-
-  @override
-  String lastReviewed(String date) {
-    return 'Last reviewed: $date';
-  }
-
-  @override
   String get aiAssisted => 'AI-assisted';
 
   @override
@@ -184,9 +171,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fontSizeXl => 'Extra large';
-
-  @override
-  String get articleLanguage => 'Article language';
 
   @override
   String get langToggleArEg => 'Arabic+EN';
@@ -233,7 +217,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingWelcomeBody =>
-      'Short, reviewed articles in Arabic and English — one picked for you every day, in the field you love.';
+      'Short articles in Arabic and English — one picked for you every day, in the field you love.';
 
   @override
   String get browseAsGuest => 'Browse as a guest';
@@ -725,25 +709,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errAttachmentsDuplicateAsset => 'The same file is attached twice.';
 
   @override
-  String get composerTitle => 'New post';
-
-  @override
   String get composerField => 'Field';
 
   @override
   String get composerFieldHint => 'Pick a field';
-
-  @override
-  String get composerTitleLabel => 'Title';
-
-  @override
-  String get composerTitleHint => 'A clear title, 5 to 150 characters';
-
-  @override
-  String get composerBodyLabel => 'Your post';
-
-  @override
-  String get composerBodyHint => 'Leave an empty line between paragraphs.';
 
   @override
   String get composerSourcesRequired => 'This field needs at least one source.';
@@ -771,30 +740,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get composerInvalidUrl => 'Enter a valid http(s) link';
 
   @override
-  String get composerPublish => 'Publish';
-
-  @override
-  String get composerPublishing => 'Publishing…';
-
-  @override
-  String get composerPublished => 'Published ✨';
-
-  @override
-  String get composerNeedField => 'Pick a field.';
-
-  @override
-  String get composerNeedTitle => 'Write a title (5 to 150 characters).';
-
-  @override
-  String get composerNeedBody => 'Write something or add an attachment.';
-
-  @override
-  String get composerNeedSources => 'Add at least one source.';
-
-  @override
-  String get composerFixSources => 'Complete or remove the unfinished sources.';
-
-  @override
   String get attachImages => 'Images';
 
   @override
@@ -811,15 +756,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get attachReorderHint =>
       'Long-press and drag to reorder. Tap an image to add alt text.';
-
-  @override
-  String get attachNeedAlt => 'Add alt text to every image.';
-
-  @override
-  String get attachBusy => 'Wait until uploads and processing finish.';
-
-  @override
-  String get attachFailed => 'Remove or retry the failed attachments.';
 
   @override
   String get attachNeedDocTitle => 'Give the document a title.';
@@ -2220,4 +2156,540 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commentsErrReportReason => 'Choose a reason.';
+
+  @override
+  String get myArticlesTitle => 'My articles';
+
+  @override
+  String get myArticlesDrafts => 'Drafts';
+
+  @override
+  String get myArticlesPublished => 'Published';
+
+  @override
+  String get myArticlesNew => 'New article';
+
+  @override
+  String get myArticlesEmptyDrafts => 'No drafts yet';
+
+  @override
+  String get myArticlesEmptyDraftsBody =>
+      'Start a new article. It saves itself while you write.';
+
+  @override
+  String get myArticlesEmptyPublished => 'Nothing published yet';
+
+  @override
+  String get myArticlesEmptyPublishedBody =>
+      'The articles you publish show up here.';
+
+  @override
+  String get untitledArticle => 'Untitled';
+
+  @override
+  String get unpublishedChanges => 'Unpublished changes';
+
+  @override
+  String myArticleEdited(String date) {
+    return 'Edited $date';
+  }
+
+  @override
+  String myArticlePublishedOn(String date) {
+    return 'Published $date';
+  }
+
+  @override
+  String get deleteArticleTitle => 'Delete this article?';
+
+  @override
+  String get deleteDraftBody => 'The draft will be deleted for good.';
+
+  @override
+  String get deletePublishedBody =>
+      'Readers won\'t see it anymore, and its link will stop working.';
+
+  @override
+  String get articleDeleted => 'Article deleted';
+
+  @override
+  String get editorNewTitle => 'New article';
+
+  @override
+  String get editorEditTitle => 'Edit article';
+
+  @override
+  String get editorTitleHint => 'Title';
+
+  @override
+  String get editorSubtitleHint => 'Subtitle (optional)';
+
+  @override
+  String get editorStartWriting => 'Write here, or type / to add a block';
+
+  @override
+  String get saveStatusSaving => 'Saving…';
+
+  @override
+  String get saveStatusSaved => 'Saved';
+
+  @override
+  String get saveStatusOffline => 'Offline, saved on this device';
+
+  @override
+  String get saveStatusFailed => 'Couldn\'t save';
+
+  @override
+  String get saveStatusUnsaved => 'Not saved yet';
+
+  @override
+  String get editorPublish => 'Publish';
+
+  @override
+  String get editorUpdate => 'Update';
+
+  @override
+  String get editorPublishing => 'Publishing…';
+
+  @override
+  String get editorPublishedMessage => 'Published';
+
+  @override
+  String get editorUpdatedMessage => 'Updated';
+
+  @override
+  String get editorPreview => 'Preview';
+
+  @override
+  String get editorSettings => 'Article settings';
+
+  @override
+  String get editorRevisions => 'Revision history';
+
+  @override
+  String get editorDiscardChanges => 'Discard changes';
+
+  @override
+  String get editorDelete => 'Delete article';
+
+  @override
+  String get editorMore => 'More';
+
+  @override
+  String get discardChangesTitle => 'Discard the unpublished changes?';
+
+  @override
+  String get discardChangesBody =>
+      'The article goes back to what readers see now.';
+
+  @override
+  String get discardAction => 'Discard';
+
+  @override
+  String get changesDiscarded => 'Changes discarded';
+
+  @override
+  String get conflictTitle => 'Edited somewhere else';
+
+  @override
+  String get conflictBody =>
+      'This article changed on another device or tab. Which version do you want to keep?';
+
+  @override
+  String get conflictReload => 'Load the saved version';
+
+  @override
+  String get conflictKeepMine => 'Keep mine';
+
+  @override
+  String get restoreBackupTitle => 'Restore unsaved changes?';
+
+  @override
+  String restoreBackupBody(String time) {
+    return 'This device kept changes from $time that weren\'t saved.';
+  }
+
+  @override
+  String get restoreAction => 'Restore';
+
+  @override
+  String get discardBackupAction => 'Don\'t restore';
+
+  @override
+  String get checksTitle => 'Before you publish';
+
+  @override
+  String get checksReady => 'Ready to publish';
+
+  @override
+  String checksCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count things to fix',
+      one: '1 thing to fix',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get checksUploading => 'Wait for the uploads to finish.';
+
+  @override
+  String get problemFieldRequired => 'Choose a field.';
+
+  @override
+  String get problemTitleLength => 'The title needs 5 to 150 characters.';
+
+  @override
+  String get problemContentEmpty => 'Write something in the article.';
+
+  @override
+  String get problemContentInvalid =>
+      'Some blocks aren\'t complete, like a step without a title.';
+
+  @override
+  String get problemImageAlt => 'An image needs alt text.';
+
+  @override
+  String get problemSourcesRequired => 'This field needs at least one source.';
+
+  @override
+  String get problemAttachmentAlt => 'An attached image needs alt text.';
+
+  @override
+  String get problemAttachmentTitle => 'The PDF needs a title.';
+
+  @override
+  String get problemAttachmentNotReady =>
+      'An attachment is still uploading, or it failed.';
+
+  @override
+  String get errDraftConflict => 'This article was changed somewhere else.';
+
+  @override
+  String get errNotPublished => 'This article isn\'t published yet.';
+
+  @override
+  String get errRevisionNotFound => 'This version doesn\'t exist anymore.';
+
+  @override
+  String get articleVersionArabic => 'Arabic';
+
+  @override
+  String get articleVersionEnglish => 'English';
+
+  @override
+  String get languageVersions => 'Language versions';
+
+  @override
+  String get sourceLanguageTag => 'Source';
+
+  @override
+  String get sourceLanguageHint =>
+      'The language you write first. Change it before adding a translation.';
+
+  @override
+  String addTranslation(String language) {
+    return 'Add the $language version';
+  }
+
+  @override
+  String removeTranslation(String language) {
+    return 'Remove the $language version';
+  }
+
+  @override
+  String get removeTranslationBody => 'Its title and text will be deleted.';
+
+  @override
+  String get removeAction => 'Remove';
+
+  @override
+  String get topicLabel => 'Topic';
+
+  @override
+  String get topicNone => 'No topic';
+
+  @override
+  String get tagsLabel => 'Tags';
+
+  @override
+  String get tagsHint => 'Type a tag and press enter';
+
+  @override
+  String tagsLimit(int count) {
+    return '$count of 5 tags';
+  }
+
+  @override
+  String removeTag(String tag) {
+    return 'Remove $tag';
+  }
+
+  @override
+  String get coverLabel => 'Cover image';
+
+  @override
+  String get coverAdd => 'Add a cover';
+
+  @override
+  String get coverChange => 'Change';
+
+  @override
+  String get coverRemove => 'Remove';
+
+  @override
+  String get coverHint => 'Shown on the article\'s card in the feed.';
+
+  @override
+  String get uploadingLabel => 'Uploading…';
+
+  @override
+  String get versionBadgeLabel => 'Version badge';
+
+  @override
+  String get versionBadgeHint => 'e.g. .NET 10';
+
+  @override
+  String get aiAssistedSwitch => 'Written with AI help';
+
+  @override
+  String get aiAssistedSwitchHint =>
+      'Readers see an “AI-assisted” label on the article.';
+
+  @override
+  String get blockParagraph => 'Text';
+
+  @override
+  String get blockHeading2 => 'Heading';
+
+  @override
+  String get blockHeading3 => 'Subheading';
+
+  @override
+  String get blockBulletList => 'Bulleted list';
+
+  @override
+  String get blockOrderedList => 'Numbered list';
+
+  @override
+  String get blockSteps => 'Steps';
+
+  @override
+  String get blockQuote => 'Quote';
+
+  @override
+  String get blockCallout => 'Callout';
+
+  @override
+  String get blockCode => 'Code';
+
+  @override
+  String get blockCodeTabs => 'Code tabs';
+
+  @override
+  String get blockTable => 'Table';
+
+  @override
+  String get blockImage => 'Image';
+
+  @override
+  String get blockDivider => 'Divider';
+
+  @override
+  String get blockEmbed => 'YouTube or Gist';
+
+  @override
+  String get blockSummary => 'TL;DR summary';
+
+  @override
+  String get addBlock => 'Add a block';
+
+  @override
+  String get blockOptions => 'Block options';
+
+  @override
+  String get blockDirection => 'Direction';
+
+  @override
+  String get dirAuto => 'Automatic';
+
+  @override
+  String get dirRtl => 'Right to left';
+
+  @override
+  String get dirLtr => 'Left to right';
+
+  @override
+  String get moveUp => 'Move up';
+
+  @override
+  String get moveDown => 'Move down';
+
+  @override
+  String get deleteBlock => 'Delete block';
+
+  @override
+  String get turnInto => 'Turn into';
+
+  @override
+  String get calloutTip => 'Tip';
+
+  @override
+  String get calloutInfo => 'Info';
+
+  @override
+  String get calloutWarning => 'Warning';
+
+  @override
+  String get calloutDanger => 'Danger';
+
+  @override
+  String get calloutTitleHint => 'Title (optional)';
+
+  @override
+  String get quoteCiteHint => 'Who said it (optional)';
+
+  @override
+  String get codeFilenameHint => 'File name (optional)';
+
+  @override
+  String get codeHint => 'Code';
+
+  @override
+  String get codeTabLabelHint => 'Tab name';
+
+  @override
+  String get addCodeTab => 'Add tab';
+
+  @override
+  String get removeCodeTab => 'Remove tab';
+
+  @override
+  String get tableAddRow => 'Add row';
+
+  @override
+  String get tableAddColumn => 'Add column';
+
+  @override
+  String get tableRemoveRow => 'Remove last row';
+
+  @override
+  String get tableRemoveColumn => 'Remove last column';
+
+  @override
+  String get stepTitleHint => 'Step title';
+
+  @override
+  String get stepContentHint => 'Details';
+
+  @override
+  String get addStep => 'Add step';
+
+  @override
+  String get removeStep => 'Remove step';
+
+  @override
+  String get listItemHint => 'List item';
+
+  @override
+  String get imageChoose => 'Choose an image';
+
+  @override
+  String get imageAltLabel => 'Alt text (required)';
+
+  @override
+  String get imageAltHelp => 'Describe the image for people who can\'t see it.';
+
+  @override
+  String get imageCaptionLabel => 'Caption (optional)';
+
+  @override
+  String get imageReplace => 'Replace image';
+
+  @override
+  String get embedUrlLabel => 'Link';
+
+  @override
+  String get embedInvalid => 'Paste a YouTube or GitHub Gist link.';
+
+  @override
+  String get formatBold => 'Bold';
+
+  @override
+  String get formatItalic => 'Italic';
+
+  @override
+  String get formatCode => 'Inline code';
+
+  @override
+  String get formatHighlight => 'Highlight';
+
+  @override
+  String get formatStrike => 'Strikethrough';
+
+  @override
+  String get formatLink => 'Link';
+
+  @override
+  String get formatLineBreak => 'Line break';
+
+  @override
+  String get formatMention => 'Mention someone';
+
+  @override
+  String get linkDialogTitle => 'Link';
+
+  @override
+  String get linkUrlLabel => 'URL (http or https)';
+
+  @override
+  String get linkRemove => 'Remove link';
+
+  @override
+  String get linkInvalid => 'Use an http or https link.';
+
+  @override
+  String get slashNoMatches => 'No block with that name';
+
+  @override
+  String get previewTitle => 'Preview';
+
+  @override
+  String get previewInFeed => 'In the feed';
+
+  @override
+  String get previewLight => 'Light';
+
+  @override
+  String get previewDark => 'Dark';
+
+  @override
+  String get revisionsEmpty =>
+      'No versions yet. Every publish and update adds one.';
+
+  @override
+  String revisionLabel(int number) {
+    return 'Version $number';
+  }
+
+  @override
+  String get revisionFirst => 'First publish';
+
+  @override
+  String get revisionRestore => 'Restore this version';
+
+  @override
+  String revisionRestoreTitle(int number) {
+    return 'Restore version $number?';
+  }
+
+  @override
+  String get revisionRestoreBody =>
+      'It replaces what\'s in the editor now. Readers see it only after you press Update.';
+
+  @override
+  String get revisionRestored =>
+      'Version restored. Press Update to publish it.';
 }

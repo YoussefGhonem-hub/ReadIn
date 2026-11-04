@@ -210,6 +210,8 @@ class AttachmentsCubit extends Cubit<AttachmentsState> {
     final doc = state.document?.localId == localId ? state.document : null;
     final phase = image?.phase ?? doc?.phase;
     if (phase == null || !phase.isProblem) return;
+    // A seeded attachment has no file on this device to upload again: remove it and add the file anew.
+    if ((image?.file.path ?? doc?.file.path ?? '').isEmpty) return;
     _stopPolling(localId);
     final staleAsset = image?.asset?.id ?? doc?.asset?.id;
     if (staleAsset != null) unawaited(_deleteQuietly(staleAsset));
@@ -244,6 +246,54 @@ class AttachmentsCubit extends Cubit<AttachmentsState> {
     _cancelAll();
     emit(AttachmentsState(noticeSeq: state.noticeSeq));
   }
+
+  /// Shows the attachments of an article being edited (F05): [items] are its `document.attachments` and [media]
+  /// their uploads, already on the server. Processing PDFs are polled like fresh ones.
+  void seed(List<AttachmentItem> items, List<MediaAsset> media) {
+    _cancelAll();
+    final byId = {for (final m in media) m.id: m};
+    final sorted = [...items]..sort((a, b) => a.order.compareTo(b.order));
+    final pdf = sorted.where((i) => i.title != null || byId[i.mediaAssetId]?.kind == MediaKind.document).firstOrNull;
+    if (pdf != null) {
+      final asset = byId[pdf.mediaAssetId] ??
+          MediaAsset(id: pdf.mediaAssetId, kind: MediaKind.document, status: MediaStatus.ready, purpose: 'document');
+      final name = asset.title ?? pdf.title ?? 'document.pdf';
+      final draft = DocumentDraft(
+        localId: _nextId(),
+        file: PickedMediaFile(path: '', name: name.toLowerCase().endsWith('.pdf') ? name : '$name.pdf', sizeBytes: asset.sizeBytes > 0 ? asset.sizeBytes : null),
+        title: pdf.title ?? '',
+        allowDownload: pdf.allowDownload ?? false,
+        phase: _phaseOf(asset),
+        asset: asset,
+      );
+      emit(AttachmentsState(document: draft, noticeSeq: state.noticeSeq));
+    } else {
+      final images = [
+        for (final item in sorted.take(AttachmentLimits.maxImages))
+          ImageDraft(
+            localId: _nextId(),
+            file: PickedMediaFile(path: '', name: item.mediaAssetId),
+            asset: byId[item.mediaAssetId] ?? MediaAsset(id: item.mediaAssetId, kind: MediaKind.image, status: MediaStatus.ready),
+            phase: _phaseOf(byId[item.mediaAssetId]),
+            caption: item.caption ?? '',
+            altText: item.altText ?? '',
+          ),
+      ];
+      emit(AttachmentsState(images: images, noticeSeq: state.noticeSeq));
+    }
+    for (final (localId, asset) in [
+      for (final i in state.images) (i.localId, i.asset),
+      if (state.document != null) (state.document!.localId, state.document!.asset),
+    ]) {
+      if (asset != null && asset.isProcessing) _schedulePoll(localId, asset.id);
+    }
+  }
+
+  static UploadPhase _phaseOf(MediaAsset? asset) => switch (asset?.status) {
+        MediaStatus.failed => UploadPhase.failed,
+        MediaStatus.uploading || MediaStatus.processing => UploadPhase.processing,
+        _ => UploadPhase.ready,
+      };
 
   // ── Internals ─────────────────────────────────────────────
 

@@ -11,7 +11,8 @@ import '../features/auth/presentation/pages/sign_in_page.dart';
 import '../features/auth/presentation/pages/sign_up_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/presentation/session/session_cubit.dart';
-import '../features/editor/presentation/pages/editor_page.dart';
+import '../features/editor/presentation/pages/article_editor_page.dart';
+import '../features/editor/presentation/pages/my_articles_page.dart';
 import '../features/explore/presentation/pages/explore_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/notifications/presentation/pages/notifications_page.dart';
@@ -45,7 +46,7 @@ abstract final class AppRoutes {
   static const deleteAccount = '/account/delete';
   static const home = '/home';
   static const explore = '/explore';
-  static const write = '/write';
+  static const write = EditorRoutes.myArticles;
   static const saved = '/saved';
   static const profile = '/profile';
   static const settings = '/settings';
@@ -82,7 +83,9 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
   final target = atSplash ? (uri.queryParameters['from'] ?? AppRoutes.home) : uri.toString();
   final targetPath = Uri.parse(target).path;
   final isAuthRoute = targetPath.startsWith('/auth/') || targetPath == AppRoutes.welcome;
-  final isAccountRoute = targetPath.startsWith('/account/') || targetPath == AppRoutes.editProfile;
+  // The editor (F05) needs an account like the account screens; the Write tab itself shows the sign-in prompt.
+  final isAccountRoute =
+      targetPath.startsWith('/account/') || targetPath == AppRoutes.editProfile || targetPath.startsWith('${AppRoutes.write}/');
   // Shared links open for first-time guests too, without Welcome first.
   final isArticle = targetPath.startsWith('/a/') || targetPath.startsWith('/u/');
   String? stay() => atSplash ? target : null;
@@ -136,6 +139,9 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.settings, builder: (_, _) => const SettingsPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
       GoRoute(path: '/a/:slug', builder: (_, state) => ArticlePage(slug: state.pathParameters['slug']!)),
+      // The editor (F05), full screen above the tabs: a new article, or one of mine.
+      GoRoute(path: EditorRoutes.newArticle, builder: (_, _) => const ArticleEditorPage()),
+      GoRoute(path: '${AppRoutes.write}/:id', builder: (_, state) => ArticleEditorPage(articleId: state.pathParameters['id'])),
       GoRoute(
         path: '/u/:username',
         builder: (_, state) => ProfilePage(username: state.pathParameters['username']!),
@@ -160,7 +166,7 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
         branches: [
           StatefulShellBranch(routes: [GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage())]),
           StatefulShellBranch(routes: [GoRoute(path: AppRoutes.explore, builder: (_, _) => const ExplorePage())]),
-          StatefulShellBranch(routes: [GoRoute(path: AppRoutes.write, builder: (_, _) => const EditorPage())]),
+          StatefulShellBranch(routes: [GoRoute(path: AppRoutes.write, builder: (_, _) => const MyArticlesPage())]),
           StatefulShellBranch(routes: [GoRoute(path: AppRoutes.saved, builder: (_, _) => const SavedPage())]),
           StatefulShellBranch(routes: [GoRoute(path: AppRoutes.profile, builder: (_, _) => const ProfilePage())]),
         ],

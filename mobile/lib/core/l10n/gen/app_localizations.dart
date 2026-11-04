@@ -320,24 +320,6 @@ abstract class AppLocalizations {
   /// **'By {name}'**
   String byAuthor(String name);
 
-  /// No description provided for @badgeReviewed.
-  ///
-  /// In en, this message translates to:
-  /// **'Reviewed'**
-  String get badgeReviewed;
-
-  /// No description provided for @reviewedBy.
-  ///
-  /// In en, this message translates to:
-  /// **'Reviewed by {name}'**
-  String reviewedBy(String name);
-
-  /// No description provided for @lastReviewed.
-  ///
-  /// In en, this message translates to:
-  /// **'Last reviewed: {date}'**
-  String lastReviewed(String date);
-
   /// No description provided for @aiAssisted.
   ///
   /// In en, this message translates to:
@@ -391,12 +373,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Extra large'**
   String get fontSizeXl;
-
-  /// No description provided for @articleLanguage.
-  ///
-  /// In en, this message translates to:
-  /// **'Article language'**
-  String get articleLanguage;
 
   /// No description provided for @langToggleArEg.
   ///
@@ -479,7 +455,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWelcomeBody.
   ///
   /// In en, this message translates to:
-  /// **'Short, reviewed articles in Arabic and English — one picked for you every day, in the field you love.'**
+  /// **'Short articles in Arabic and English — one picked for you every day, in the field you love.'**
   String get onboardingWelcomeBody;
 
   /// No description provided for @browseAsGuest.
@@ -1340,12 +1316,6 @@ abstract class AppLocalizations {
   /// **'The same file is attached twice.'**
   String get errAttachmentsDuplicateAsset;
 
-  /// No description provided for @composerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'New post'**
-  String get composerTitle;
-
   /// No description provided for @composerField.
   ///
   /// In en, this message translates to:
@@ -1357,30 +1327,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick a field'**
   String get composerFieldHint;
-
-  /// No description provided for @composerTitleLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Title'**
-  String get composerTitleLabel;
-
-  /// No description provided for @composerTitleHint.
-  ///
-  /// In en, this message translates to:
-  /// **'A clear title, 5 to 150 characters'**
-  String get composerTitleHint;
-
-  /// No description provided for @composerBodyLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Your post'**
-  String get composerBodyLabel;
-
-  /// No description provided for @composerBodyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Leave an empty line between paragraphs.'**
-  String get composerBodyHint;
 
   /// No description provided for @composerSourcesRequired.
   ///
@@ -1430,54 +1376,6 @@ abstract class AppLocalizations {
   /// **'Enter a valid http(s) link'**
   String get composerInvalidUrl;
 
-  /// No description provided for @composerPublish.
-  ///
-  /// In en, this message translates to:
-  /// **'Publish'**
-  String get composerPublish;
-
-  /// No description provided for @composerPublishing.
-  ///
-  /// In en, this message translates to:
-  /// **'Publishing…'**
-  String get composerPublishing;
-
-  /// No description provided for @composerPublished.
-  ///
-  /// In en, this message translates to:
-  /// **'Published ✨'**
-  String get composerPublished;
-
-  /// No description provided for @composerNeedField.
-  ///
-  /// In en, this message translates to:
-  /// **'Pick a field.'**
-  String get composerNeedField;
-
-  /// No description provided for @composerNeedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Write a title (5 to 150 characters).'**
-  String get composerNeedTitle;
-
-  /// No description provided for @composerNeedBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Write something or add an attachment.'**
-  String get composerNeedBody;
-
-  /// No description provided for @composerNeedSources.
-  ///
-  /// In en, this message translates to:
-  /// **'Add at least one source.'**
-  String get composerNeedSources;
-
-  /// No description provided for @composerFixSources.
-  ///
-  /// In en, this message translates to:
-  /// **'Complete or remove the unfinished sources.'**
-  String get composerFixSources;
-
   /// No description provided for @attachImages.
   ///
   /// In en, this message translates to:
@@ -1507,24 +1405,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Long-press and drag to reorder. Tap an image to add alt text.'**
   String get attachReorderHint;
-
-  /// No description provided for @attachNeedAlt.
-  ///
-  /// In en, this message translates to:
-  /// **'Add alt text to every image.'**
-  String get attachNeedAlt;
-
-  /// No description provided for @attachBusy.
-  ///
-  /// In en, this message translates to:
-  /// **'Wait until uploads and processing finish.'**
-  String get attachBusy;
-
-  /// No description provided for @attachFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove or retry the failed attachments.'**
-  String get attachFailed;
 
   /// No description provided for @attachNeedDocTitle.
   ///
@@ -3775,6 +3655,1002 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a reason.'**
   String get commentsErrReportReason;
+
+  /// No description provided for @myArticlesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My articles'**
+  String get myArticlesTitle;
+
+  /// No description provided for @myArticlesDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'Drafts'**
+  String get myArticlesDrafts;
+
+  /// No description provided for @myArticlesPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get myArticlesPublished;
+
+  /// No description provided for @myArticlesNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New article'**
+  String get myArticlesNew;
+
+  /// No description provided for @myArticlesEmptyDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'No drafts yet'**
+  String get myArticlesEmptyDrafts;
+
+  /// No description provided for @myArticlesEmptyDraftsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new article. It saves itself while you write.'**
+  String get myArticlesEmptyDraftsBody;
+
+  /// No description provided for @myArticlesEmptyPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing published yet'**
+  String get myArticlesEmptyPublished;
+
+  /// No description provided for @myArticlesEmptyPublishedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The articles you publish show up here.'**
+  String get myArticlesEmptyPublishedBody;
+
+  /// No description provided for @untitledArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled'**
+  String get untitledArticle;
+
+  /// No description provided for @unpublishedChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpublished changes'**
+  String get unpublishedChanges;
+
+  /// No description provided for @myArticleEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited {date}'**
+  String myArticleEdited(String date);
+
+  /// No description provided for @myArticlePublishedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Published {date}'**
+  String myArticlePublishedOn(String date);
+
+  /// No description provided for @deleteArticleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this article?'**
+  String get deleteArticleTitle;
+
+  /// No description provided for @deleteDraftBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The draft will be deleted for good.'**
+  String get deleteDraftBody;
+
+  /// No description provided for @deletePublishedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Readers won\'t see it anymore, and its link will stop working.'**
+  String get deletePublishedBody;
+
+  /// No description provided for @articleDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Article deleted'**
+  String get articleDeleted;
+
+  /// No description provided for @editorNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New article'**
+  String get editorNewTitle;
+
+  /// No description provided for @editorEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit article'**
+  String get editorEditTitle;
+
+  /// No description provided for @editorTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get editorTitleHint;
+
+  /// No description provided for @editorSubtitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle (optional)'**
+  String get editorSubtitleHint;
+
+  /// No description provided for @editorStartWriting.
+  ///
+  /// In en, this message translates to:
+  /// **'Write here, or type / to add a block'**
+  String get editorStartWriting;
+
+  /// No description provided for @saveStatusSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get saveStatusSaving;
+
+  /// No description provided for @saveStatusSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get saveStatusSaved;
+
+  /// No description provided for @saveStatusOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline, saved on this device'**
+  String get saveStatusOffline;
+
+  /// No description provided for @saveStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save'**
+  String get saveStatusFailed;
+
+  /// No description provided for @saveStatusUnsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved yet'**
+  String get saveStatusUnsaved;
+
+  /// No description provided for @editorPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get editorPublish;
+
+  /// No description provided for @editorUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get editorUpdate;
+
+  /// No description provided for @editorPublishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Publishing…'**
+  String get editorPublishing;
+
+  /// No description provided for @editorPublishedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get editorPublishedMessage;
+
+  /// No description provided for @editorUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get editorUpdatedMessage;
+
+  /// No description provided for @editorPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get editorPreview;
+
+  /// No description provided for @editorSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Article settings'**
+  String get editorSettings;
+
+  /// No description provided for @editorRevisions.
+  ///
+  /// In en, this message translates to:
+  /// **'Revision history'**
+  String get editorRevisions;
+
+  /// No description provided for @editorDiscardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes'**
+  String get editorDiscardChanges;
+
+  /// No description provided for @editorDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete article'**
+  String get editorDelete;
+
+  /// No description provided for @editorMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get editorMore;
+
+  /// No description provided for @discardChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard the unpublished changes?'**
+  String get discardChangesTitle;
+
+  /// No description provided for @discardChangesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The article goes back to what readers see now.'**
+  String get discardChangesBody;
+
+  /// No description provided for @discardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discardAction;
+
+  /// No description provided for @changesDiscarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes discarded'**
+  String get changesDiscarded;
+
+  /// No description provided for @conflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited somewhere else'**
+  String get conflictTitle;
+
+  /// No description provided for @conflictBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This article changed on another device or tab. Which version do you want to keep?'**
+  String get conflictBody;
+
+  /// No description provided for @conflictReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Load the saved version'**
+  String get conflictReload;
+
+  /// No description provided for @conflictKeepMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep mine'**
+  String get conflictKeepMine;
+
+  /// No description provided for @restoreBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore unsaved changes?'**
+  String get restoreBackupTitle;
+
+  /// No description provided for @restoreBackupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This device kept changes from {time} that weren\'t saved.'**
+  String restoreBackupBody(String time);
+
+  /// No description provided for @restoreAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restoreAction;
+
+  /// No description provided for @discardBackupAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t restore'**
+  String get discardBackupAction;
+
+  /// No description provided for @checksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you publish'**
+  String get checksTitle;
+
+  /// No description provided for @checksReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to publish'**
+  String get checksReady;
+
+  /// No description provided for @checksCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 thing to fix} other{{count} things to fix}}'**
+  String checksCount(int count);
+
+  /// No description provided for @checksUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the uploads to finish.'**
+  String get checksUploading;
+
+  /// No description provided for @problemFieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a field.'**
+  String get problemFieldRequired;
+
+  /// No description provided for @problemTitleLength.
+  ///
+  /// In en, this message translates to:
+  /// **'The title needs 5 to 150 characters.'**
+  String get problemTitleLength;
+
+  /// No description provided for @problemContentEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Write something in the article.'**
+  String get problemContentEmpty;
+
+  /// No description provided for @problemContentInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Some blocks aren\'t complete, like a step without a title.'**
+  String get problemContentInvalid;
+
+  /// No description provided for @problemImageAlt.
+  ///
+  /// In en, this message translates to:
+  /// **'An image needs alt text.'**
+  String get problemImageAlt;
+
+  /// No description provided for @problemSourcesRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field needs at least one source.'**
+  String get problemSourcesRequired;
+
+  /// No description provided for @problemAttachmentAlt.
+  ///
+  /// In en, this message translates to:
+  /// **'An attached image needs alt text.'**
+  String get problemAttachmentAlt;
+
+  /// No description provided for @problemAttachmentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The PDF needs a title.'**
+  String get problemAttachmentTitle;
+
+  /// No description provided for @problemAttachmentNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'An attachment is still uploading, or it failed.'**
+  String get problemAttachmentNotReady;
+
+  /// No description provided for @errDraftConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This article was changed somewhere else.'**
+  String get errDraftConflict;
+
+  /// No description provided for @errNotPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'This article isn\'t published yet.'**
+  String get errNotPublished;
+
+  /// No description provided for @errRevisionNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This version doesn\'t exist anymore.'**
+  String get errRevisionNotFound;
+
+  /// No description provided for @articleVersionArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get articleVersionArabic;
+
+  /// No description provided for @articleVersionEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get articleVersionEnglish;
+
+  /// No description provided for @languageVersions.
+  ///
+  /// In en, this message translates to:
+  /// **'Language versions'**
+  String get languageVersions;
+
+  /// No description provided for @sourceLanguageTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get sourceLanguageTag;
+
+  /// No description provided for @sourceLanguageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The language you write first. Change it before adding a translation.'**
+  String get sourceLanguageHint;
+
+  /// No description provided for @addTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the {language} version'**
+  String addTranslation(String language);
+
+  /// No description provided for @removeTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the {language} version'**
+  String removeTranslation(String language);
+
+  /// No description provided for @removeTranslationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its title and text will be deleted.'**
+  String get removeTranslationBody;
+
+  /// No description provided for @removeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeAction;
+
+  /// No description provided for @topicLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic'**
+  String get topicLabel;
+
+  /// No description provided for @topicNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No topic'**
+  String get topicNone;
+
+  /// No description provided for @tagsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get tagsLabel;
+
+  /// No description provided for @tagsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a tag and press enter'**
+  String get tagsHint;
+
+  /// No description provided for @tagsLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 5 tags'**
+  String tagsLimit(int count);
+
+  /// No description provided for @removeTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {tag}'**
+  String removeTag(String tag);
+
+  /// No description provided for @coverLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover image'**
+  String get coverLabel;
+
+  /// No description provided for @coverAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a cover'**
+  String get coverAdd;
+
+  /// No description provided for @coverChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get coverChange;
+
+  /// No description provided for @coverRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get coverRemove;
+
+  /// No description provided for @coverHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown on the article\'s card in the feed.'**
+  String get coverHint;
+
+  /// No description provided for @uploadingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get uploadingLabel;
+
+  /// No description provided for @versionBadgeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version badge'**
+  String get versionBadgeLabel;
+
+  /// No description provided for @versionBadgeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. .NET 10'**
+  String get versionBadgeHint;
+
+  /// No description provided for @aiAssistedSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Written with AI help'**
+  String get aiAssistedSwitch;
+
+  /// No description provided for @aiAssistedSwitchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Readers see an “AI-assisted” label on the article.'**
+  String get aiAssistedSwitchHint;
+
+  /// No description provided for @blockParagraph.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get blockParagraph;
+
+  /// No description provided for @blockHeading2.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get blockHeading2;
+
+  /// No description provided for @blockHeading3.
+  ///
+  /// In en, this message translates to:
+  /// **'Subheading'**
+  String get blockHeading3;
+
+  /// No description provided for @blockBulletList.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulleted list'**
+  String get blockBulletList;
+
+  /// No description provided for @blockOrderedList.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbered list'**
+  String get blockOrderedList;
+
+  /// No description provided for @blockSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get blockSteps;
+
+  /// No description provided for @blockQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote'**
+  String get blockQuote;
+
+  /// No description provided for @blockCallout.
+  ///
+  /// In en, this message translates to:
+  /// **'Callout'**
+  String get blockCallout;
+
+  /// No description provided for @blockCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get blockCode;
+
+  /// No description provided for @blockCodeTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Code tabs'**
+  String get blockCodeTabs;
+
+  /// No description provided for @blockTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get blockTable;
+
+  /// No description provided for @blockImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get blockImage;
+
+  /// No description provided for @blockDivider.
+  ///
+  /// In en, this message translates to:
+  /// **'Divider'**
+  String get blockDivider;
+
+  /// No description provided for @blockEmbed.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube or Gist'**
+  String get blockEmbed;
+
+  /// No description provided for @blockSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'TL;DR summary'**
+  String get blockSummary;
+
+  /// No description provided for @addBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a block'**
+  String get addBlock;
+
+  /// No description provided for @blockOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Block options'**
+  String get blockOptions;
+
+  /// No description provided for @blockDirection.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction'**
+  String get blockDirection;
+
+  /// No description provided for @dirAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get dirAuto;
+
+  /// No description provided for @dirRtl.
+  ///
+  /// In en, this message translates to:
+  /// **'Right to left'**
+  String get dirRtl;
+
+  /// No description provided for @dirLtr.
+  ///
+  /// In en, this message translates to:
+  /// **'Left to right'**
+  String get dirLtr;
+
+  /// No description provided for @moveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get moveUp;
+
+  /// No description provided for @moveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get moveDown;
+
+  /// No description provided for @deleteBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete block'**
+  String get deleteBlock;
+
+  /// No description provided for @turnInto.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn into'**
+  String get turnInto;
+
+  /// No description provided for @calloutTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip'**
+  String get calloutTip;
+
+  /// No description provided for @calloutInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get calloutInfo;
+
+  /// No description provided for @calloutWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get calloutWarning;
+
+  /// No description provided for @calloutDanger.
+  ///
+  /// In en, this message translates to:
+  /// **'Danger'**
+  String get calloutDanger;
+
+  /// No description provided for @calloutTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (optional)'**
+  String get calloutTitleHint;
+
+  /// No description provided for @quoteCiteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Who said it (optional)'**
+  String get quoteCiteHint;
+
+  /// No description provided for @codeFilenameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'File name (optional)'**
+  String get codeFilenameHint;
+
+  /// No description provided for @codeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get codeHint;
+
+  /// No description provided for @codeTabLabelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab name'**
+  String get codeTabLabelHint;
+
+  /// No description provided for @addCodeTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tab'**
+  String get addCodeTab;
+
+  /// No description provided for @removeCodeTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove tab'**
+  String get removeCodeTab;
+
+  /// No description provided for @tableAddRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Add row'**
+  String get tableAddRow;
+
+  /// No description provided for @tableAddColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add column'**
+  String get tableAddColumn;
+
+  /// No description provided for @tableRemoveRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove last row'**
+  String get tableRemoveRow;
+
+  /// No description provided for @tableRemoveColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove last column'**
+  String get tableRemoveColumn;
+
+  /// No description provided for @stepTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Step title'**
+  String get stepTitleHint;
+
+  /// No description provided for @stepContentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get stepContentHint;
+
+  /// No description provided for @addStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Add step'**
+  String get addStep;
+
+  /// No description provided for @removeStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove step'**
+  String get removeStep;
+
+  /// No description provided for @listItemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'List item'**
+  String get listItemHint;
+
+  /// No description provided for @imageChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an image'**
+  String get imageChoose;
+
+  /// No description provided for @imageAltLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Alt text (required)'**
+  String get imageAltLabel;
+
+  /// No description provided for @imageAltHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the image for people who can\'t see it.'**
+  String get imageAltHelp;
+
+  /// No description provided for @imageCaptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Caption (optional)'**
+  String get imageCaptionLabel;
+
+  /// No description provided for @imageReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace image'**
+  String get imageReplace;
+
+  /// No description provided for @embedUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get embedUrlLabel;
+
+  /// No description provided for @embedInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a YouTube or GitHub Gist link.'**
+  String get embedInvalid;
+
+  /// No description provided for @formatBold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get formatBold;
+
+  /// No description provided for @formatItalic.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get formatItalic;
+
+  /// No description provided for @formatCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Inline code'**
+  String get formatCode;
+
+  /// No description provided for @formatHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight'**
+  String get formatHighlight;
+
+  /// No description provided for @formatStrike.
+  ///
+  /// In en, this message translates to:
+  /// **'Strikethrough'**
+  String get formatStrike;
+
+  /// No description provided for @formatLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get formatLink;
+
+  /// No description provided for @formatLineBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Line break'**
+  String get formatLineBreak;
+
+  /// No description provided for @formatMention.
+  ///
+  /// In en, this message translates to:
+  /// **'Mention someone'**
+  String get formatMention;
+
+  /// No description provided for @linkDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get linkDialogTitle;
+
+  /// No description provided for @linkUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'URL (http or https)'**
+  String get linkUrlLabel;
+
+  /// No description provided for @linkRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove link'**
+  String get linkRemove;
+
+  /// No description provided for @linkInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use an http or https link.'**
+  String get linkInvalid;
+
+  /// No description provided for @slashNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No block with that name'**
+  String get slashNoMatches;
+
+  /// No description provided for @previewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get previewTitle;
+
+  /// No description provided for @previewInFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'In the feed'**
+  String get previewInFeed;
+
+  /// No description provided for @previewLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get previewLight;
+
+  /// No description provided for @previewDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get previewDark;
+
+  /// No description provided for @revisionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No versions yet. Every publish and update adds one.'**
+  String get revisionsEmpty;
+
+  /// No description provided for @revisionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {number}'**
+  String revisionLabel(int number);
+
+  /// No description provided for @revisionFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'First publish'**
+  String get revisionFirst;
+
+  /// No description provided for @revisionRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this version'**
+  String get revisionRestore;
+
+  /// No description provided for @revisionRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore version {number}?'**
+  String revisionRestoreTitle(int number);
+
+  /// No description provided for @revisionRestoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It replaces what\'s in the editor now. Readers see it only after you press Update.'**
+  String get revisionRestoreBody;
+
+  /// No description provided for @revisionRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Version restored. Press Update to publish it.'**
+  String get revisionRestored;
 }
 
 class _AppLocalizationsDelegate

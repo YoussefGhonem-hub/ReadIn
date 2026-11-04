@@ -66,8 +66,6 @@ class TodayHeroCard extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       InfoTag(label: article.field.nameFor(lang)),
-                      if (article.isReviewed)
-                        InfoTag(label: l10n.badgeReviewed, icon: Icons.check_rounded, tone: InfoTagTone.success),
                       Text(l10n.readingTime(article.readingTimeMinutes), style: context.textTheme.bodySmall),
                     ],
                   ),

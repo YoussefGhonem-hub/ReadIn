@@ -73,8 +73,6 @@ class _Summary extends StatelessWidget {
                 runSpacing: ReadInSpace.s1,
                 children: [
                   InfoTag(label: article.field.nameFor(lang)),
-                  if (article.isReviewed)
-                    InfoTag(label: l10n.badgeReviewed, icon: Icons.check_rounded, tone: InfoTagTone.success),
                 ],
               ),
               const SizedBox(height: ReadInSpace.s1),

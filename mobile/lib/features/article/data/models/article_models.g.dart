@@ -69,7 +69,6 @@ _ArticleCardModel _$ArticleCardModelFromJson(Map<String, dynamic> json) =>
       field: FieldRefModel.fromJson(json['field'] as Map<String, dynamic>),
       author: AuthorModel.fromJson(json['author'] as Map<String, dynamic>),
       readingTimeMinutes: (json['readingTimeMinutes'] as num?)?.toInt() ?? 1,
-      isReviewed: json['isReviewed'] as bool? ?? false,
       isAiAssisted: json['isAiAssisted'] as bool? ?? false,
       versionBadge: json['versionBadge'] as String?,
       publishedAt: DateTime.parse(json['publishedAt'] as String),
@@ -101,7 +100,6 @@ Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
       'field': instance.field.toJson(),
       'author': instance.author.toJson(),
       'readingTimeMinutes': instance.readingTimeMinutes,
-      'isReviewed': instance.isReviewed,
       'isAiAssisted': instance.isAiAssisted,
       'versionBadge': ?instance.versionBadge,
       'publishedAt': instance.publishedAt.toIso8601String(),
@@ -138,18 +136,6 @@ _SourceModel _$SourceModelFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$SourceModelToJson(_SourceModel instance) =>
     <String, dynamic>{'title': instance.title, 'url': instance.url};
 
-_ReviewerModel _$ReviewerModelFromJson(Map<String, dynamic> json) =>
-    _ReviewerModel(
-      displayName: json['displayName'] as String,
-      username: json['username'] as String,
-    );
-
-Map<String, dynamic> _$ReviewerModelToJson(_ReviewerModel instance) =>
-    <String, dynamic>{
-      'displayName': instance.displayName,
-      'username': instance.username,
-    };
-
 _ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
     _ArticleDetailsModel(
       id: json['id'] as String,
@@ -161,7 +147,6 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
       field: FieldRefModel.fromJson(json['field'] as Map<String, dynamic>),
       author: AuthorModel.fromJson(json['author'] as Map<String, dynamic>),
       readingTimeMinutes: (json['readingTimeMinutes'] as num?)?.toInt() ?? 1,
-      isReviewed: json['isReviewed'] as bool? ?? false,
       isAiAssisted: json['isAiAssisted'] as bool? ?? false,
       versionBadge: json['versionBadge'] as String?,
       publishedAt: DateTime.parse(json['publishedAt'] as String),
@@ -198,12 +183,6 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
               ?.map((e) => SourceModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <SourceModel>[],
-      reviewedBy: json['reviewedBy'] == null
-          ? null
-          : ReviewerModel.fromJson(json['reviewedBy'] as Map<String, dynamic>),
-      lastReviewedAt: json['lastReviewedAt'] == null
-          ? null
-          : DateTime.parse(json['lastReviewedAt'] as String),
       saveCount: (json['saveCount'] as num?)?.toInt() ?? 0,
       readCount: (json['readCount'] as num?)?.toInt() ?? 0,
       isFollowingAuthor: json['isFollowingAuthor'] as bool? ?? false,
@@ -226,7 +205,6 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'field': instance.field.toJson(),
   'author': instance.author.toJson(),
   'readingTimeMinutes': instance.readingTimeMinutes,
-  'isReviewed': instance.isReviewed,
   'isAiAssisted': instance.isAiAssisted,
   'versionBadge': ?instance.versionBadge,
   'publishedAt': instance.publishedAt.toIso8601String(),
@@ -242,8 +220,6 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'topic': ?instance.topic?.toJson(),
   'tags': instance.tags,
   'sources': instance.sources.map((e) => e.toJson()).toList(),
-  'reviewedBy': ?instance.reviewedBy?.toJson(),
-  'lastReviewedAt': ?instance.lastReviewedAt?.toIso8601String(),
   'saveCount': instance.saveCount,
   'readCount': instance.readCount,
   'isFollowingAuthor': instance.isFollowingAuthor,

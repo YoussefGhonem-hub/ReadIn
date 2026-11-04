@@ -69,13 +69,22 @@ import '../../features/comments/presentation/cubit/comments_cubit.dart'
     as _i921;
 import '../../features/comments/presentation/cubit/mention_suggestions_cubit.dart'
     as _i360;
-import '../../features/editor/data/datasources/editor_api.dart' as _i815;
-import '../../features/editor/data/repositories/editor_repository_impl.dart'
-    as _i552;
-import '../../features/editor/domain/repositories/editor_repository.dart'
-    as _i940;
-import '../../features/editor/domain/usecases/publish_usecases.dart' as _i1065;
-import '../../features/editor/presentation/cubit/composer_cubit.dart' as _i485;
+import '../../features/editor/data/datasources/article_editor_api.dart'
+    as _i880;
+import '../../features/editor/data/datasources/editor_backup_store.dart'
+    as _i853;
+import '../../features/editor/data/repositories/article_editor_repository_impl.dart'
+    as _i303;
+import '../../features/editor/domain/repositories/article_editor_repository.dart'
+    as _i413;
+import '../../features/editor/domain/usecases/editor_usecases.dart' as _i866;
+import '../../features/editor/presentation/cubit/article_editor_cubit.dart'
+    as _i840;
+import '../../features/editor/presentation/cubit/my_articles_cubit.dart'
+    as _i700;
+import '../../features/editor/presentation/cubit/revisions_cubit.dart' as _i836;
+import '../../features/editor/presentation/cubit/tag_suggestions_cubit.dart'
+    as _i655;
 import '../../features/follow/data/datasources/follow_api.dart' as _i73;
 import '../../features/follow/data/repositories/follow_repository_impl.dart'
     as _i299;
@@ -232,6 +241,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i271.SecureStore>(
       () => _i271.SecureStore(gh<_i558.FlutterSecureStorage>()),
     );
+    gh.lazySingleton<_i413.EditorBackupStore>(
+      () => _i853.HiveEditorBackupStore(),
+    );
     gh.lazySingleton<_i956.MediaPicker>(() => _i434.DeviceMediaPicker());
     gh.factory<_i504.PickImages>(
       () => _i504.PickImages(gh<_i956.MediaPicker>()),
@@ -309,7 +321,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1070.CommentsApi>(
       () => _i1070.CommentsApi(gh<_i361.Dio>()),
     );
-    gh.lazySingleton<_i815.EditorApi>(() => _i815.EditorApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i880.ArticleEditorApi>(
+      () => _i880.ArticleEditorApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i73.FollowApi>(() => _i73.FollowApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i931.FeedApi>(() => _i931.FeedApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i757.MediaApi>(() => _i757.MediaApi(gh<_i361.Dio>()));
@@ -464,15 +478,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i724.ManageCollections>(
       () => _i724.ManageCollections(gh<_i105.SavedRepository>()),
     );
+    gh.lazySingleton<_i413.ArticleEditorRepository>(
+      () => _i303.ArticleEditorRepositoryImpl(gh<_i880.ArticleEditorApi>()),
+    );
     gh.lazySingleton<_i674.SettingsRepository>(
       () => _i955.SettingsRepositoryImpl(
         gh<_i599.SettingsLocalDataSource>(),
         gh<_i741.PreferencesApi>(),
         gh<_i878.TimeZoneService>(),
       ),
-    );
-    gh.lazySingleton<_i940.EditorRepository>(
-      () => _i552.EditorRepositoryImpl(gh<_i815.EditorApi>()),
     );
     gh.factory<_i46.SignOut>(
       () => _i46.SignOut(
@@ -525,6 +539,39 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factoryParam<_i529.ProfileArticlesCubit, String, dynamic>(
       (username, _) =>
           _i529.ProfileArticlesCubit(gh<_i591.GetUserArticles>(), username),
+    );
+    gh.factory<_i866.GetMyArticles>(
+      () => _i866.GetMyArticles(gh<_i413.ArticleEditorRepository>()),
+    );
+    gh.factory<_i866.CreateArticle>(
+      () => _i866.CreateArticle(gh<_i413.ArticleEditorRepository>()),
+    );
+    gh.factory<_i866.GetArticleForEdit>(
+      () => _i866.GetArticleForEdit(gh<_i413.ArticleEditorRepository>()),
+    );
+    gh.factory<_i866.SaveDraft>(
+      () => _i866.SaveDraft(gh<_i413.ArticleEditorRepository>()),
+    );
+    gh.factory<_i866.DiscardChanges>(
+      () => _i866.DiscardChanges(gh<_i413.ArticleEditorRepository>()),
+    );
+    gh.factory<_i866.PublishArticle>(
+      () => _i866.PublishArticle(gh<_i413.ArticleEditorRepository>()),
+    );
+    gh.factory<_i866.GetRevisions>(
+      () => _i866.GetRevisions(gh<_i413.ArticleEditorRepository>()),
+    );
+    gh.factory<_i866.GetRevision>(
+      () => _i866.GetRevision(gh<_i413.ArticleEditorRepository>()),
+    );
+    gh.factory<_i866.RestoreRevision>(
+      () => _i866.RestoreRevision(gh<_i413.ArticleEditorRepository>()),
+    );
+    gh.factory<_i866.DeleteArticle>(
+      () => _i866.DeleteArticle(gh<_i413.ArticleEditorRepository>()),
+    );
+    gh.factory<_i866.SuggestTags>(
+      () => _i866.SuggestTags(gh<_i413.ArticleEditorRepository>()),
     );
     gh.factory<_i892.ReportReadingProgress>(
       () => _i892.ReportReadingProgress(gh<_i634.ReadingRepository>()),
@@ -580,6 +627,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i172.GetTopics>(
       () => _i172.GetTopics(gh<_i263.TaxonomyRepository>()),
     );
+    gh.factoryParam<_i836.RevisionsCubit, String, dynamic>(
+      (articleId, _) => _i836.RevisionsCubit(
+        gh<_i866.GetRevisions>(),
+        gh<_i866.GetRevision>(),
+        articleId,
+      ),
+    );
     gh.factory<_i504.UploadImage>(
       () => _i504.UploadImage(gh<_i459.MediaRepository>()),
     );
@@ -594,15 +648,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i504.DownloadDocument>(
       () => _i504.DownloadDocument(gh<_i459.MediaRepository>()),
-    );
-    gh.factory<_i1065.CreateArticleDraft>(
-      () => _i1065.CreateArticleDraft(gh<_i940.EditorRepository>()),
-    );
-    gh.factory<_i1065.SetArticleAttachments>(
-      () => _i1065.SetArticleAttachments(gh<_i940.EditorRepository>()),
-    );
-    gh.factory<_i1065.PublishArticle>(
-      () => _i1065.PublishArticle(gh<_i940.EditorRepository>()),
     );
     gh.factory<_i9.HomeCubit>(
       () => _i9.HomeCubit(gh<_i251.GetTodayArticle>(), gh<_i172.GetFields>()),
@@ -675,14 +720,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i646.FeedCubit>(
       () => _i646.FeedCubit(gh<_i251.GetForYouFeed>()),
     );
-    gh.factory<_i485.ComposerCubit>(
-      () => _i485.ComposerCubit(
-        gh<_i172.GetFields>(),
-        gh<_i1065.CreateArticleDraft>(),
-        gh<_i1065.SetArticleAttachments>(),
-        gh<_i1065.PublishArticle>(),
-      ),
-    );
     gh.factory<_i1021.ChangeRecoveryPinCubit>(
       () => _i1021.ChangeRecoveryPinCubit(
         gh<_i46.GetAuthConfig>(),
@@ -723,6 +760,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i504.UploadImage>(),
       ),
     );
+    gh.factory<_i840.ArticleEditorCubit>(
+      () => _i840.ArticleEditorCubit(
+        gh<_i866.CreateArticle>(),
+        gh<_i866.GetArticleForEdit>(),
+        gh<_i866.SaveDraft>(),
+        gh<_i866.DiscardChanges>(),
+        gh<_i866.PublishArticle>(),
+        gh<_i866.RestoreRevision>(),
+        gh<_i866.DeleteArticle>(),
+        gh<_i172.GetFields>(),
+        gh<_i172.GetTopics>(),
+        gh<_i504.UploadImage>(),
+        gh<_i413.EditorBackupStore>(),
+      ),
+    );
     gh.factory<_i102.SignUpCubit>(
       () => _i102.SignUpCubit(
         gh<_i46.Register>(),
@@ -739,6 +791,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i892.GetReadingStats>(),
         gh<_i371.SessionCubit>(),
       ),
+    );
+    gh.factory<_i655.TagSuggestionsCubit>(
+      () => _i655.TagSuggestionsCubit(gh<_i866.SuggestTags>()),
     );
     gh.factory<_i921.CommentsCubit>(
       () => _i921.CommentsCubit(
@@ -785,6 +840,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i509.FollowsCubit>(
       () => _i509.FollowsCubit(gh<_i537.SetFollowing>()),
+    );
+    gh.factory<_i700.MyArticlesCubit>(
+      () => _i700.MyArticlesCubit(
+        gh<_i866.GetMyArticles>(),
+        gh<_i866.DeleteArticle>(),
+        gh<_i413.EditorBackupStore>(),
+      ),
     );
     gh.factory<_i977.PrivacyCubit>(
       () => _i977.PrivacyCubit(

@@ -166,11 +166,17 @@ class _ArticleViewState extends State<ArticleView> {
                           failure: state.failure!,
                           onRetry: () => context.read<ArticleCubit>().retry(settings.state.articleLanguage),
                         ),
-                      ArticleStatus.ready => _ReaderBody(
+                      ArticleStatus.ready => ReaderBody(
                           article: article!,
                           controller: _scroll,
                           bodyFontSize: _fontSizeFor(fontSize),
                           onTerm: _showTerm,
+                          authorAction: FollowButton(
+                            userId: article.card.author.id,
+                            name: article.card.author.displayName,
+                            initiallyFollowing: article.isFollowingAuthor,
+                            dense: true,
+                          ),
                         ),
                     },
                   ),
@@ -262,20 +268,35 @@ class _OfflineCopyBanner extends StatelessWidget {
   }
 }
 
-class _ReaderBody extends StatelessWidget {
-  const _ReaderBody({required this.article, required this.controller, required this.bodyFontSize, required this.onTerm});
+/// The article as readers see it: header, trust row, TL;DR, content, attachments and sources. The editor's preview
+/// (F05) renders the same widget.
+class ReaderBody extends StatelessWidget {
+  const ReaderBody({
+    super.key,
+    required this.article,
+    required this.bodyFontSize,
+    this.controller,
+    this.onTerm,
+    this.authorAction,
+    this.leading,
+  });
 
   final ArticleDetails article;
-  final ScrollController controller;
+  final ScrollController? controller;
   final double bodyFontSize;
-  final ValueChanged<RTerm> onTerm;
+  final ValueChanged<RTerm>? onTerm;
+
+  /// At the end of the author row (the follow button).
+  final Widget? authorAction;
+
+  /// Above the header (the editor preview shows the feed card there).
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
     final direction = RDocScope.directionForLanguage(article.card.language);
     final showSummary = article.summary != null && article.summary!.isNotEmpty && !article.content.hasSummaryBlock;
     const gutter = EdgeInsets.symmetric(horizontal: ReadInSpace.s5);
-    final author = article.card.author;
 
     return RDocScope(
       baseDirection: direction,
@@ -286,18 +307,14 @@ class _ReaderBody extends StatelessWidget {
         builder: (context) => CustomScrollView(
           controller: controller,
           slivers: [
+            if (leading != null) SliverToBoxAdapter(child: leading),
             SliverPadding(
               padding: gutter.copyWith(top: ReadInSpace.s2),
               sliver: SliverToBoxAdapter(
                 child: ArticleHeader(
                   article: article,
                   titleScale: RDocScope.of(context).scale,
-                  authorAction: FollowButton(
-                    userId: author.id,
-                    name: author.displayName,
-                    initiallyFollowing: article.isFollowingAuthor,
-                    dense: true,
-                  ),
+                  authorAction: authorAction,
                 ),
               ),
             ),

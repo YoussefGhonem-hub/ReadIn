@@ -46,7 +46,6 @@ class ArticleCard extends Equatable {
     required this.publishedAt,
     this.subtitle,
     this.coverUrl,
-    this.isReviewed = false,
     this.isAiAssisted = false,
     this.versionBadge,
     this.reactionCount = 0,
@@ -69,7 +68,6 @@ class ArticleCard extends Equatable {
   final FieldRef field;
   final Author author;
   final int readingTimeMinutes;
-  final bool isReviewed;
   final bool isAiAssisted;
 
   /// e.g. `.NET 10`.
@@ -113,7 +111,6 @@ class ArticleCard extends Equatable {
         publishedAt: publishedAt,
         subtitle: subtitle,
         coverUrl: coverUrl,
-        isReviewed: isReviewed,
         isAiAssisted: isAiAssisted,
         versionBadge: versionBadge,
         reactionCount: reactionCount ?? this.reactionCount,
@@ -136,7 +133,6 @@ class ArticleCard extends Equatable {
         field,
         author,
         readingTimeMinutes,
-        isReviewed,
         isAiAssisted,
         versionBadge,
         publishedAt,
@@ -160,16 +156,6 @@ class ArticleSource extends Equatable {
   List<Object?> get props => [title, url];
 }
 
-class ReviewerRef extends Equatable {
-  const ReviewerRef({required this.displayName, required this.username});
-
-  final String displayName;
-  final String username;
-
-  @override
-  List<Object?> get props => [displayName, username];
-}
-
 /// Reader payload (`ArticleDetailsDto`).
 class ArticleDetails extends Equatable {
   const ArticleDetails({
@@ -180,8 +166,6 @@ class ArticleDetails extends Equatable {
     this.topic,
     this.tags = const [],
     this.sources = const [],
-    this.reviewedBy,
-    this.lastReviewedAt,
     this.readCount = 0,
     this.isFollowingAuthor = false,
     this.collectionIds = const [],
@@ -197,8 +181,6 @@ class ArticleDetails extends Equatable {
   final FieldRef? topic;
   final List<String> tags;
   final List<ArticleSource> sources;
-  final ReviewerRef? reviewedBy;
-  final DateTime? lastReviewedAt;
   final int readCount;
 
   /// The viewer follows the author (F12); false for guests and on your own articles.
@@ -225,8 +207,6 @@ class ArticleDetails extends Equatable {
         topic,
         tags,
         sources,
-        reviewedBy,
-        lastReviewedAt,
         readCount,
         isFollowingAuthor,
         collectionIds,

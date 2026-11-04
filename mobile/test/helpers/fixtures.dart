@@ -23,7 +23,6 @@ ArticleCard sampleCard(int i, {String language = 'ar-EG'}) => ArticleCard(
       author: editorial,
       readingTimeMinutes: 4 + i,
       publishedAt: DateTime.utc(2026, 10, 12),
-      isReviewed: i.isOdd,
       isAiAssisted: true,
       versionBadge: i.isOdd ? '.NET 10' : null,
       reactionCount: 120 - i * 7,

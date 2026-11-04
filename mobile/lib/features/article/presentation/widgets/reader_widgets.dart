@@ -128,8 +128,8 @@ class ArticleHeader extends StatelessWidget {
   }
 }
 
-/// Trust row (SPEC §11 F04, §20): reviewed by, last reviewed, version badge,
-/// AI-assisted label (never hidden).
+/// Trust row (SPEC §11 F04, §20): version badge and AI-assisted label (never
+/// hidden). There is no review step (user decision, 2026-11-03).
 class TrustRow extends StatelessWidget {
   const TrustRow({super.key, required this.article});
 
@@ -139,16 +139,7 @@ class TrustRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final card = article.card;
-    final lang = Localizations.localeOf(context).languageCode;
     final items = <Widget>[
-      if (card.isReviewed)
-        InfoTag(
-          label: article.reviewedBy == null ? l10n.badgeReviewed : l10n.reviewedBy(article.reviewedBy!.displayName),
-          icon: Icons.check_rounded,
-          tone: InfoTagTone.success,
-        ),
-      if (article.lastReviewedAt != null)
-        InfoTag(label: l10n.lastReviewed(formatMonthYear(article.lastReviewedAt!, lang)), tone: InfoTagTone.neutral),
       if (card.versionBadge != null && card.versionBadge!.isNotEmpty) InfoTag(label: card.versionBadge!),
       if (card.isAiAssisted) InfoTag(label: l10n.aiAssisted, icon: Icons.auto_awesome_outlined, tone: InfoTagTone.accent),
     ];

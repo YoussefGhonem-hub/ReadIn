@@ -40,6 +40,16 @@ abstract final class FailureCodes {
   static const fieldNotFound = 'field.not_found';
   static const articleNotFound = 'article.not_found';
   static const articleSourcesRequired = 'article.sources_required';
+
+  // Article editor (F05 contract): conflicts, and the publish checks (DraftProblemCode).
+  static const articleDraftConflict = 'article.draft_conflict';
+  static const articleNotPublished = 'article.not_published';
+  static const articleRevisionNotFound = 'article.revision_not_found';
+  static const articleFieldRequired = 'article.field_required';
+  static const articleTitleLength = 'article.title_length';
+  static const articleContentEmpty = 'article.content_empty';
+  static const articleContentInvalid = 'article.content_invalid';
+  static const articleImageAltRequired = 'article.image_alt_required';
   static const rateLimited = 'rate_limited';
   static const serverError = 'server.error';
   static const validationRequired = 'validation.required';

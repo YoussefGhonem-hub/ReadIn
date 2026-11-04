@@ -54,7 +54,6 @@ ArticleCard cardWithImages(int count, {String language = 'ar-EG'}) {
     author: base.author,
     readingTimeMinutes: base.readingTimeMinutes,
     publishedAt: base.publishedAt,
-    isReviewed: base.isReviewed,
     reactionCount: base.reactionCount,
     commentCount: base.commentCount,
     attachments: ArticleAttachments(

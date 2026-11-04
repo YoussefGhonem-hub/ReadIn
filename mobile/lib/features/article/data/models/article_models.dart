@@ -75,7 +75,6 @@ abstract class ArticleCardModel with _$ArticleCardModel {
     required FieldRefModel field,
     required AuthorModel author,
     @Default(1) int readingTimeMinutes,
-    @Default(false) bool isReviewed,
     @Default(false) bool isAiAssisted,
     String? versionBadge,
     required DateTime publishedAt,
@@ -100,7 +99,6 @@ abstract class ArticleCardModel with _$ArticleCardModel {
         field: field.toEntity(),
         author: author.toEntity(),
         readingTimeMinutes: readingTimeMinutes,
-        isReviewed: isReviewed,
         isAiAssisted: isAiAssisted,
         versionBadge: versionBadge,
         publishedAt: publishedAt,
@@ -132,13 +130,6 @@ abstract class SourceModel with _$SourceModel {
   factory SourceModel.fromJson(Map<String, dynamic> json) => _$SourceModelFromJson(json);
 }
 
-@freezed
-abstract class ReviewerModel with _$ReviewerModel {
-  const factory ReviewerModel({required String displayName, required String username}) = _ReviewerModel;
-
-  factory ReviewerModel.fromJson(Map<String, dynamic> json) => _$ReviewerModelFromJson(json);
-}
-
 /// `ArticleDetailsDto` — card fields plus reader-only fields. `content` stays
 /// raw JSON here and is parsed into [RDocDocument] when mapping to the entity.
 /// [toJson] is what the offline copy of a saved article keeps (F13, F25).
@@ -156,7 +147,6 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     required FieldRefModel field,
     required AuthorModel author,
     @Default(1) int readingTimeMinutes,
-    @Default(false) bool isReviewed,
     @Default(false) bool isAiAssisted,
     String? versionBadge,
     required DateTime publishedAt,
@@ -172,8 +162,6 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     FieldRefModel? topic,
     @Default(<String>[]) List<String> tags,
     @Default(<SourceModel>[]) List<SourceModel> sources,
-    ReviewerModel? reviewedBy,
-    DateTime? lastReviewedAt,
     @Default(0) int saveCount,
     @Default(0) int readCount,
     @Default(false) bool isFollowingAuthor,
@@ -192,7 +180,6 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         field: field.toEntity(),
         author: author.toEntity(),
         readingTimeMinutes: readingTimeMinutes,
-        isReviewed: isReviewed,
         isAiAssisted: isAiAssisted,
         versionBadge: versionBadge,
         publishedAt: publishedAt,
@@ -213,10 +200,6 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         topic: topic?.toEntity(),
         tags: tags,
         sources: [for (final s in sources) ArticleSource(title: s.title, url: s.url)],
-        reviewedBy: reviewedBy == null
-            ? null
-            : ReviewerRef(displayName: reviewedBy!.displayName, username: reviewedBy!.username),
-        lastReviewedAt: lastReviewedAt,
         readCount: readCount,
         isFollowingAuthor: isFollowingAuthor,
         collectionIds: collectionIds,
