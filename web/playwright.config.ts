@@ -9,7 +9,7 @@ const APP_PORT = Number(process.env['E2E_APP_PORT'] ?? 4280);
 const MOCK_API_PORT = Number(process.env['E2E_MOCK_PORT'] ?? 5180);
 
 /**
- * E2E + visual tests (SPEC §27): every screen is captured in ar/en × light/dark.
+ * E2E + visual tests (SPEC §27): every screen runs and is captured in ar/light and en/dark.
  * Run: `npm run e2e`. It starts the mock API (e2e/mock-api/server.mjs) on :5180, which answers SSR and browser calls
  * with fixtures, and `ng serve --configuration e2e` on :4280 (the development build pointed at the mock, see
  * src/environments/environment.e2e.ts).

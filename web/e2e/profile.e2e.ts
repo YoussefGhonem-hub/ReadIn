@@ -356,8 +356,8 @@ for (const variant of VARIANTS) {
   });
 }
 
-test.describe('profile links and states (en/light)', () => {
-  const variant = VARIANTS[2];
+test.describe('profile links and states (en/dark)', () => {
+  const variant = VARIANTS[1];
 
   test('author names and photos open the profile', async ({ page, context, baseURL, request }) => {
     await useVariant(context, baseURL!, variant);

@@ -15,7 +15,7 @@ interface ShiftLog {
 // Scrolling the whole feed takes a while when the full suite shares the dev server; the CLS score doesn't depend on it.
 test.describe.configure({ timeout: 60_000 });
 
-for (const variant of [VARIANTS[0], VARIANTS[3]]) {
+for (const variant of VARIANTS) {
   test(`feed with image attachments has CLS < 0.01 — ${variant.lang}/${variant.theme}`, async ({ page, context, baseURL }) => {
     await useVariant(context, baseURL!, variant);
     await page.addInitScript(() => {

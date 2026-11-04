@@ -10,7 +10,7 @@ npm start                 # http://localhost:4200 (dev server with SSR)
 npm run build             # production SSR build → dist/readin-web
 npm run serve:ssr         # serve the production build (PORT, default 4000)
 npm test                  # unit tests (Vitest, headless)
-npm run e2e               # Playwright visual tests: ar/en × light/dark
+npm run e2e               # Playwright e2e + visual tests: ar/light and en/dark
 npm run tokens            # regenerate src/styles/tokens*.css from design/tokens.json
 npm run tokens:check      # CI: fail if generated tokens are stale
 ```

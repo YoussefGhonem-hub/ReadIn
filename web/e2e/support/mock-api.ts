@@ -19,18 +19,16 @@ export interface Variant {
   dir: 'rtl' | 'ltr';
 }
 
-/** SPEC §15.5 rule 9: every screen in ar/en × light/dark. */
+/**
+ * SPEC §15.5 rule 9 and §27: the flows run in ar/light and en/dark, which between them cover both directions and both
+ * themes, each with its screenshot. Don't add the other two combinations back (CLAUDE.md).
+ */
 export const VARIANTS: readonly Variant[] = [
   { lang: 'ar', theme: 'light', dir: 'rtl' },
-  { lang: 'ar', theme: 'dark', dir: 'rtl' },
-  { lang: 'en', theme: 'light', dir: 'ltr' },
   { lang: 'en', theme: 'dark', dir: 'ltr' },
 ];
 
-/**
- * SPEC §27: screenshot baselines exist only for ar/light and en/dark, which between them cover both directions and both
- * themes. The other two variants run the same flow and assertions, without a screenshot.
- */
+/** Screenshot baselines exist for ar/light and en/dark: every variant in {@link VARIANTS}. */
 export function hasScreenshot({ lang, theme }: Pick<Variant, 'lang' | 'theme'>): boolean {
   return (lang === 'ar' && theme === 'light') || (lang === 'en' && theme === 'dark');
 }

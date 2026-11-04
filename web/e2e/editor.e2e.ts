@@ -236,7 +236,7 @@ for (const variant of VARIANTS) {
 }
 
 test.describe('published articles', () => {
-  const variant = VARIANTS[2]; // en/light
+  const variant = VARIANTS[1]; // en/dark
 
   test('edit a published article → Update; readers see the new version', async ({ page, context, baseURL, request }) => {
     await useVariant(context, baseURL!, variant);

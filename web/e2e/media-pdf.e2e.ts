@@ -131,7 +131,7 @@ for (const variant of VARIANTS) {
 }
 
 test('the document viewer offers Download when allowed and saves the original under its title', async ({ page, context, baseURL, request }) => {
-  await useVariant(context, baseURL!, VARIANTS[2]);
+  await useVariant(context, baseURL!, VARIANTS[1]); // en/dark
   const feed = await fixture<any>(request, '/api/v1/feed/for-you');
   const item = feed.items.find((a: any) => a.attachments?.kind === 'document');
   item.attachments.document = { ...item.attachments.document, allowDownload: true, canDownload: true };

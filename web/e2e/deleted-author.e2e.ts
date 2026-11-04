@@ -47,7 +47,7 @@ test.describe('server-rendered, as crawlers and guests see it', () => {
   test.use({ javaScriptEnabled: false });
 
   test('shows “Deleted user” and leaves the author out of the structured data', async ({ page, context, baseURL }) => {
-    await useVariant(context, baseURL!, VARIANTS[2]);
+    await useVariant(context, baseURL!, VARIANTS[1]); // en/dark
     const response = await page.goto(PATH);
     expect(response!.status()).toBe(200);
     await expect(page.locator('[data-byline] [data-deleted-author]')).toHaveText('Deleted user');

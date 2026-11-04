@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       e2e:
-        description: Run the Playwright ar/en × light/dark visual suite
+        description: Run the Playwright suite (ar/light and en/dark)
         type: boolean
         default: false
 
