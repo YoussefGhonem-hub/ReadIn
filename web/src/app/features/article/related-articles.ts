@@ -32,7 +32,7 @@ export interface RelatedArticlesRef {
         <h2 id="related-title" class="m-0 text-lg font-semibold">{{ 'article.related' | transloco }}</h2>
         <div class="mt-1">
           @for (card of cards(); track card.id) {
-            <rd-article-card [article]="card" />
+            <rd-article-card [article]="card" [showAttachments]="false" />
           }
         </div>
       </section>

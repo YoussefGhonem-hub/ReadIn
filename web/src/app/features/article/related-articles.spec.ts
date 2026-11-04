@@ -108,6 +108,17 @@ describe('RelatedArticles (F04)', () => {
     expect(cards[1].querySelector('[data-card-save]')!.getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('keeps the cards compact: no images or PDF pages, as on mobile', async () => {
+    const { root, near, stable } = await render();
+    await near();
+    const image = { assetId: 'img-1', order: 0, caption: null, altText: 'Whiteboard', width: 1600, height: 1200, blurHash: null, variants: [] };
+    related().flush([testCard({ id: 'r1', slug: 'with-images', attachments: { kind: 'images', images: [image], document: null } })]);
+    await stable();
+
+    expect(root.querySelectorAll('[data-related] rd-article-card')).toHaveLength(1);
+    expect(root.querySelector('[data-related] rd-article-attachments')).toBeNull();
+  });
+
   it('shows nothing when there are no related articles', async () => {
     const { root, near, stable } = await render();
     await near();

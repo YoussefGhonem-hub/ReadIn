@@ -86,7 +86,7 @@ import { articleLink } from './article-link';
         <svg lucideIcon="Bookmark" [size]="18" [class.fill-current]="state().isSaved" aria-hidden="true"></svg>
       </button>
     </div>
-    @if (article().attachments; as attachments) {
+    @if (showAttachments() && article().attachments; as attachments) {
       <!-- Above the card link so taps open the carousel / viewer instead of the article. -->
       <rd-article-attachments class="relative z-10 mt-3" [attachments]="attachments" [article]="article()" [priority]="priorityMedia()" />
     }
@@ -101,6 +101,8 @@ export class ArticleCard {
   readonly article = input.required<ArticleCardDto>();
   /** Loads the first attachment image eagerly (the first card with media in the feed). */
   readonly priorityMedia = input(false);
+  /** False keeps the card compact (related articles at the end of the reader): no images or PDF pages, as on mobile. */
+  readonly showAttachments = input(true);
 
   protected readonly lang = this.language.lang;
   protected readonly link = computed(() => articleLink(this.article()));
