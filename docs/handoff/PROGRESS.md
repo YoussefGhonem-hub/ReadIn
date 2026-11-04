@@ -284,3 +284,35 @@ Built by three helpers from one contract, then reviewed, re-gated and committed 
 - **For the user:** set `Storage__PrivatePath` on the server (outside the app folder is safest), back that folder up with
   the database (deployment.md §8), and redeploy `public/` to Firebase Hosting so the updated privacy pages go live.
 - **Left for 6.6:** in Arabic, mobile shows ".NET" as "NET." and a mixed Arabic/Latin file name in the wrong order.
+
+### 6.5 F24 Share links and app links ✅ (setup by hand pending)
+Built by the main session.
+- **Sharing:** the web (already) and now the mobile reader share the article's web URL in the version being read,
+  `https://{domain}/{ar|en}/a/{slug}`. The mobile attachment viewer shared `/a/{slug}`, which the web doesn't serve;
+  it now shares the same URL.
+- **The domain is configuration:** web `siteUrl` (environment.ts), mobile `WEB_ORIGIN` (config/prod.json and dev.json,
+  default `https://readin.app`). Android's App Links host is read from the same dart-define by
+  `android/app/build.gradle.kts`; a value that isn't an https origin fails the build.
+- **Opening links:**
+  - Android: the intent filter covers `/ar/a/` and `/en/a/` on that host;
+  - the router and push links map `/ar/a/{slug}` and `/en/a/{slug}` to `/a/{slug}?lang=ar-EG|en`, and accept only the
+    configured host;
+  - the web's SSR server serves `/.well-known/assetlinks.json` (404 until `ANDROID_CERT_SHA256` is set) and
+    `/.well-known/apple-app-site-association` (default app id `7A25UFD8VC.app.readin.readin`).
+- **iOS:** no code change. The Associated Domains entitlement names the domain and needs the capability on the App ID;
+  the steps are in docs/setup/app-links.md.
+- **Commits:** mobile 16074e6, web c4abcdf, docs after them.
+- **Gates:**
+  - mobile build_runner no diff, analyze clean, 1537/1537 with goldens;
+  - web lint clean, 834/834 unit (91 files), SSR build OK (initial 526.15 kB, unchanged), full Playwright 420/420
+    (15.4 min, `--workers=2`), which also covers 6.4;
+  - checked by hand: a debug APK built with a test `WEB_ORIGIN` has that host in the merged manifest, a bad value stops
+    the build, and the production SSR build serves both files (JSON, no redirect; a bad fingerprint is logged and
+    skipped).
+- **Not verified:** a real App Link or Universal Link opening the app (needs the domain, the signing fingerprints and
+  the iOS entitlement); no iOS build was run.
+- **For the user:** the checklist in docs/setup/app-links.md (domain, `siteUrl`, `WEB_ORIGIN`, `ANDROID_CERT_SHA256`,
+  Associated Domains, no redirect on `/.well-known/*`). Release builds are still signed with the debug key.
+- **Not built:** the F24 quote card (share a selected quote as an image). It needs your go-ahead.
+- **Checked and dropped from 6.6:** mobile's verification screen does show ".NET" and Arabic file names correctly;
+  the small screenshots misled me (checked at 4×).

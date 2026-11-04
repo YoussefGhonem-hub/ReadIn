@@ -156,7 +156,7 @@ These rules apply to **every** feature, commit and code review.
 | Architecture | **Clean Architecture**, feature-first (data / domain / presentation) |
 | State | **flutter_bloc** (Cubit/Bloc) |
 | DI | `get_it` + `injectable` |
-| Navigation | `go_router` (deep links: `readin.app/a/{slug}`) |
+| Navigation | `go_router` (App Links / Universal Links: the web's `{domain}/{ar|en}/a/{slug}`, F24) |
 | Networking | `dio` + `retrofit` + interceptors |
 | Models | `freezed` + `json_serializable` |
 | Local storage | `hive_ce` (cache, offline saved articles), `flutter_secure_storage` (tokens) |
@@ -873,8 +873,14 @@ Draft ──► Published ──► Archived
 - Available on **web and mobile** (mobile uses a compact layout).
 
 ### F24 — Sharing
-- Share article link (deep link opens app if installed, otherwise web).
-- Share a **quote card**: select text → generate an image (light/dark) for social media.
+- Share article link (deep link opens app if installed, otherwise web). **Built.** Setup: [docs/setup/app-links.md](setup/app-links.md).
+  - The link is the web's canonical URL of the version being read, `https://{domain}/{ar|en}/a/{slug}`, on the web
+    (`siteUrl`) and on mobile (the reader's share button and the attachment viewer; `WEB_ORIGIN` in `config/prod.json`).
+  - Android App Links (intent filter on `/ar/a/` and `/en/a/`, host from `WEB_ORIGIN`) and iOS Universal Links open it
+    in the app, in that version (`/a/{slug}?lang=`). The web's SSR server serves `/.well-known/assetlinks.json` and
+    `/.well-known/apple-app-site-association` from its environment (`ANDROID_CERT_SHA256`, `ANDROID_APP_ID`,
+    `IOS_APP_IDS`). The domain, the signing fingerprints and the iOS Associated Domains entitlement are set by hand.
+- Share a **quote card**: select text → generate an image (light/dark) for social media. **Not built.**
 
 ### F25 — Offline & Resilience (mobile + web PWA basics)
 - Today's article and saved articles cached for offline reading.
