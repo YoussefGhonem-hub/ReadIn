@@ -65,6 +65,9 @@ public static class DependencyInjection
         // Uploads live on this server's disk (ADR 0010); swap IFileStorage to move them to shared storage.
         services.AddSingleton<WwwrootFileStorage>();
         services.AddSingleton<IFileStorage>(sp => sp.GetRequiredService<WwwrootFileStorage>());
+        // Files that are never public (verification proofs, SPEC F19): outside wwwroot and the uploads folder.
+        services.AddSingleton<LocalPrivateFileStorage>();
+        services.AddSingleton<IPrivateFileStorage>(sp => sp.GetRequiredService<LocalPrivateFileStorage>());
         services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
         services.AddMedia(configuration, IsHangfireEnabled(configuration));
         services.AddPush(configuration, environment);
@@ -85,6 +88,7 @@ public static class DependencyInjection
         services.AddScoped<OutboxJob>();
         services.AddScoped<ArticleQualityJob>();
         services.AddScoped<OrphanedUploadsCleanupJob>();
+        services.AddScoped<VerificationProofsCleanupJob>();
         services.AddScoped<IdentityCleanupJob>();
         services.AddScoped<LiveEventsCleanupJob>();
         services.AddScoped<NotificationPushJob>();
@@ -130,6 +134,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, DemoInteractionsSeeder>();
         services.AddScoped<ISeeder, DemoReportsSeeder>();
         services.AddScoped<ISeeder, DemoNotificationsSeeder>();
+        services.AddScoped<ISeeder, DemoVerificationSeeder>();
         services.AddScoped<SeedRunner>();
 
         services.AddHealthChecks().AddDbContextCheck<AppDbContext>("sql");
@@ -160,6 +165,7 @@ public static class DependencyInjection
         jobs.AddOrUpdate<ArticleQualityJob>("article-quality", job => job.RunAsync(CancellationToken.None), Cron.Hourly(10));
         jobs.Trigger("article-quality"); // scores are fresh right after a deploy, not only at the next hour
         jobs.AddOrUpdate<OrphanedUploadsCleanupJob>("uploads-orphan-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3));
+        jobs.AddOrUpdate<VerificationProofsCleanupJob>("verification-proofs-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 15));
         jobs.AddOrUpdate<IdentityCleanupJob>("identity-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 30));
         jobs.AddOrUpdate<DailyArticleJob>("daily-article", job => job.RunAsync(CancellationToken.None), DailyArticleJob.Schedule);
         jobs.AddOrUpdate<LiveEventsCleanupJob>("rtdb-events-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Hourly());
@@ -185,6 +191,39 @@ public static class DependencyInjection
             var message = $"The uploads folder '{storage.RootPath}' is not writable. Create it and give the app's identity "
                 + "write permission (docs/setup/deployment.md), or point Storage:UploadsPath at a writable folder.";
             services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(DependencyInjection)).LogCritical(ex, "{Message}", message);
+            throw new InvalidOperationException(message, ex);
+        }
+    }
+
+    /// <summary>
+    /// Checks the private folder (verification proofs, SPEC F19) at startup: it must not overlap the web root or the uploads
+    /// folder, and must be writable. Fails fast with a clear message otherwise, so a misconfigured server never starts.
+    /// </summary>
+    /// <returns>The absolute path of the private folder.</returns>
+    public static string PreparePrivateStorage(this IServiceProvider services)
+    {
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(DependencyInjection));
+        LocalPrivateFileStorage storage;
+        try
+        {
+            storage = services.GetRequiredService<LocalPrivateFileStorage>();
+        }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogCritical(ex, "{Message}", ex.Message);
+            throw;
+        }
+
+        try
+        {
+            storage.EnsureWritable();
+            return storage.RootPath;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            var message = $"The private folder '{storage.RootPath}' is not writable. Create it and give the app's identity "
+                + "write permission (docs/setup/deployment.md), or point Storage:PrivatePath at a writable folder outside wwwroot.";
+            logger.LogCritical(ex, "{Message}", message);
             throw new InvalidOperationException(message, ex);
         }
     }

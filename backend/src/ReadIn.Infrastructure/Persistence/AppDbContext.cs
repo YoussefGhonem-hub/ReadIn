@@ -14,6 +14,7 @@ using ReadIn.Domain.Notifications;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
+using ReadIn.Domain.Verification;
 using ReadIn.Infrastructure.Persistence.Outbox;
 using ReadIn.Infrastructure.Persistence.Seeding;
 
@@ -64,6 +65,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
     public DbSet<Report> Reports => Set<Report>();
     public DbSet<ModerationAction> ModerationActions => Set<ModerationAction>();
+    public DbSet<VerificationRequest> VerificationRequests => Set<VerificationRequest>();
 
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationActor> NotificationActors => Set<NotificationActor>();

@@ -271,6 +271,52 @@ public sealed class AccountDeletionTests(ApiFactory api)
         Path.Combine(api.UploadsPath, path["/uploads/".Length..].Replace('/', Path.DirectorySeparatorChar));
 
     [Fact]
+    public async Task Verification_requests_and_their_private_files_go_and_decisions_lose_the_reviewer()
+    {
+        // F19: the leaving account is an admin who decided someone's request, and has requests of its own.
+        var leaving = await api.UserAsync("Leaving Admin");
+        await InDbAsync(async db =>
+        {
+            (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == leaving.Id, Ct)).GrantRole(Application.Common.Security.RoleIds.Admin);
+            return await db.SaveChangesAsync(Ct);
+        });
+        using (var scope = api.Services.CreateScope())
+            await scope.ServiceProvider.GetRequiredService<Application.Common.Security.IUserAccessService>().InvalidateAsync(leaving.Id, Ct);
+        var writer = await api.UserAsync();
+        var fieldId = await writer.Client.FieldIdAsync("dotnet");
+
+        var decided = await SubmitVerificationAsync(writer.Client, fieldId, file: null);
+        (await leaving.Client.PostAsync($"/api/v1/admin/verification-requests/{decided}/approve", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var own = await SubmitVerificationAsync(leaving.Client, fieldId,
+            await File.ReadAllBytesAsync(Path.Combine(AppContext.BaseDirectory, "fixtures", "media", "small.png"), Ct));
+        var proof = Path.Combine(api.PrivatePath, "verification", $"{own}.png");
+        File.Exists(proof).Should().BeTrue();
+
+        (await DeleteAccountAsync(leaving.Client, new { password = ApiFactory.TestPassword })).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        (await InDbAsync(db => db.VerificationRequests.CountAsync(r => r.UserId == leaving.Id, Ct))).Should().Be(0, "its requests go with it");
+        File.Exists(proof).Should().BeFalse("its proof files are deleted right after the commit");
+        var kept = await InDbAsync(db => db.VerificationRequests.AsNoTracking().SingleAsync(r => r.Id == decided, Ct));
+        (kept.Status, kept.DecidedById, kept.DecidedAt is null).Should().Be((Domain.Verification.VerificationStatus.Approved, null, false),
+            "the decision stays without the reviewer");
+        (await writer.Client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!["isVerified"]!.GetValue<bool>().Should().BeTrue();
+    }
+
+    private static async Task<Guid> SubmitVerificationAsync(HttpClient client, Guid fieldId, byte[]? file)
+    {
+        using var form = new MultipartFormDataContent
+        {
+            { new StringContent(fieldId.ToString()), "fieldId" },
+            { new StringContent("Engineer"), "jobTitle" },
+            { new StringContent("https://github.com/someone"), "proofUrl" },
+        };
+        if (file is not null) form.Add(new ByteArrayContent(file), "proof", "card.png");
+        var response = await client.PostAsync("/api/v1/verification-requests", form, Ct);
+        response.StatusCode.Should().Be(HttpStatusCode.Created, await response.Content.ReadAsStringAsync(Ct));
+        return (await response.Content.ReadFromJsonAsync<JsonObject>(Ct))!["id"]!.GetValue<Guid>();
+    }
+
+    [Fact]
     public async Task The_old_token_stops_working_and_a_retry_still_answers_204()
     {
         var user = await api.SignUpAsync();

@@ -17,6 +17,22 @@ public sealed class StorageOptions
 
     /// <summary>Public origin of the API that serves <c>/uploads</c>, e.g. <c>https://api.readin.app</c>.</summary>
     public string PublicBaseUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Folder of the files that must never be public (writer verification proofs, SPEC F19). Relative paths resolve
+    /// against the content root. It must be outside the web root and the uploads folder (the API refuses to start
+    /// otherwise), survive deployments and be backed up (docs/setup/deployment.md).
+    /// </summary>
+    public string PrivatePath { get; set; } = "App_Data/private";
+
+    /// <summary>The uploads folder as an absolute path (<see cref="UploadsPath"/> against the content root).</summary>
+    public string UploadsRoot(string contentRootPath) => FullPath(contentRootPath, UploadsPath);
+
+    /// <summary>The private folder as an absolute path (<see cref="PrivatePath"/> against the content root).</summary>
+    public string PrivateRoot(string contentRootPath) => FullPath(contentRootPath, PrivatePath);
+
+    private static string FullPath(string contentRootPath, string path) =>
+        Path.TrimEndingDirectorySeparator(Path.GetFullPath(Path.Combine(contentRootPath, path)));
 }
 
 /// <summary>A file below the uploads folder.</summary>
@@ -41,7 +57,7 @@ public sealed class WwwrootFileStorage : IFileStorage
         if (!Uri.TryCreate(settings.PublicBaseUrl, UriKind.Absolute, out var publicBase) || publicBase.Scheme is not ("http" or "https"))
             throw new InvalidOperationException("Storage:PublicBaseUrl must be an absolute http(s) URL, e.g. https://api.readin.app.");
 
-        RootPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(Path.Combine(environment.ContentRootPath, settings.UploadsPath)));
+        RootPath = settings.UploadsRoot(environment.ContentRootPath);
         _publicBaseUrl = settings.PublicBaseUrl.TrimEnd('/');
     }
 

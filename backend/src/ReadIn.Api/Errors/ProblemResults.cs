@@ -52,6 +52,7 @@ public static class ProblemResults
         StatusCodes.Status405MethodNotAllowed => "route.method_not_allowed",
         StatusCodes.Status409Conflict => "concurrency.conflict",
         StatusCodes.Status413PayloadTooLarge => "request.too_large",
+        StatusCodes.Status415UnsupportedMediaType => "request.unsupported_media_type",
         StatusCodes.Status429TooManyRequests => "rate_limited",
         _ => "server.error",
     };

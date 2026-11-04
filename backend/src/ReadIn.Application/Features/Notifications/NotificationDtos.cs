@@ -39,10 +39,12 @@ public sealed record NotificationCommentDto(Guid Id, Guid? ParentId, string Exce
 /// <param name="Threshold"><c>reactions_milestone</c>: 10, 50 or 100.</param>
 /// <param name="StreakDays"><c>streak_reminder</c>: the streak the user keeps by reading today.</param>
 /// <param name="SecurityChange"><c>security_alert</c>: what changed.</param>
+/// <param name="Approved"><c>verification_result</c> (F19): approved (true) or rejected (false).</param>
 public sealed record NotificationDataDto(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? Threshold,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? StreakDays,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] SecurityChange? SecurityChange);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] SecurityChange? SecurityChange,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] bool? Approved = null);
 
 /// <summary>GET /me/notifications/unread-count: the badge without the Realtime Database.</summary>
 public sealed record UnreadNotificationsDto(int Unread);

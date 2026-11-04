@@ -38,14 +38,16 @@ services:
   # Build the image first: dotnet publish backend/src/ReadIn.Api -c Release /t:PublishContainer
   #   -p:ContainerRepository=readin-api -p:ContainerImageTag=local
   # Uploads live in the named volume `api-uploads`, so they survive rebuilds (ADR 0010, docs/setup/deployment.md).
-  # `docker compose down -v` deletes that volume and every uploaded image.
+  # Private files (writer verification proofs, SPEC F19) live in `api-private`, which nothing serves.
+  # `docker compose down -v` deletes both volumes, every uploaded image and every proof file.
   api-uploads-init:
     image: busybox:1.37
     profiles: ["api"]
     # The .NET image runs as the non-root `app` user (UID 1654); a new named volume belongs to root.
-    command: ["chown", "-R", "1654:1654", "/uploads"]
+    command: ["chown", "-R", "1654:1654", "/uploads", "/private"]
     volumes:
       - api-uploads:/uploads
+      - api-private:/private
 
   api:
     image: ${READIN_API_IMAGE:-readin-api:local}
@@ -67,8 +69,10 @@ services:
       - "5080:8080"
     volumes:
       - api-uploads:/app/wwwroot/uploads
+      - api-private:/app/App_Data/private
 
 volumes:
   sqlserver-data:
   seq-data:
   api-uploads:
+  api-private:

@@ -11,6 +11,7 @@ using ReadIn.Api.Endpoints;
 using ReadIn.Api.Errors;
 using ReadIn.Api.Uploads;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Infrastructure;
 using Scalar.AspNetCore;
 
 namespace ReadIn.Api;
@@ -163,6 +164,8 @@ public static class ApiSetup
         app.UseResponseCompression();
         // Public images: their own CORS policy, no auth and no rate limiting (ADR 0010).
         app.UseUploads();
+        // Verification proofs (SPEC F19): never served as files; the API refuses to start if the folder could be.
+        app.Services.PreparePrivateStorage();
         app.UseCors(CorsPolicy);
         app.UseAuthentication();
         app.Use(RejectSuspendedUsers);

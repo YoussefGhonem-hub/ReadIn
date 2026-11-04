@@ -17,6 +17,7 @@ lives **inside the app folder**, so the one rule of every deployment is:
 | `dotnet publish` never ships anything from `wwwroot/uploads` (`CopyToPublishDirectory="Never"`) | `backend/src/ReadIn.Api/ReadIn.Api.csproj` |
 | At startup the API creates the folder and its `avatars/`, `covers/`, `articles/` sub-folders and writes a probe file. If it can't, it logs a critical error and **refuses to start** | `PrepareUploadsFolder()` in `ReadIn.Infrastructure/DependencyInjection.cs` |
 | Docker: the folder is a named volume | `docker-compose.yml` (`api` profile) |
+| Private files (verification proofs) live in a separate folder that the API refuses to start with if it overlaps `wwwroot` or the uploads folder | `PreparePrivateStorage()` in `ReadIn.Infrastructure/DependencyInjection.cs`, [section 8](#8-private-files-verification-proofs) |
 
 Check the publish exclusion yourself before the first deployment:
 
@@ -154,6 +155,7 @@ param(
     [string] $SqlInstance = "localhost",
     [string] $Database    = "ReadIn",
     [string] $UploadsPath = "C:\inetpub\readin-api\wwwroot\uploads",
+    [string] $PrivatePath = "D:\ReadIn\data\private",   # Storage:PrivatePath (section 8)
     [string] $BackupRoot  = "E:\Backups\ReadIn",
     [int]    $KeepDays    = 14
 )
@@ -172,6 +174,10 @@ if ($LASTEXITCODE -ne 0) { throw "Database backup failed (sqlcmd exit $LASTEXITC
 # 2. Then the uploads (robocopy exit codes below 8 mean success).
 robocopy $UploadsPath (Join-Path $target "uploads") /E /COPY:DAT /R:2 /W:5 /NP /NFL /NDL | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "Uploads copy failed (robocopy exit $LASTEXITCODE)." }
+
+# 2b. And the private files (verification proofs). The backup folder must be as protected as the folder itself.
+robocopy $PrivatePath (Join-Path $target "private") /E /COPY:DAT /R:2 /W:5 /NP /NFL /NDL | Out-Null
+if ($LASTEXITCODE -ge 8) { throw "Private files copy failed (robocopy exit $LASTEXITCODE)." }
 
 # 3. Retention.
 Get-ChildItem $BackupRoot -Directory |
@@ -200,7 +206,8 @@ or your cloud backup agent).
 1. Stop the API (stop the app pool / container).
 2. Restore the database from `<run>\ReadIn.bak` (`RESTORE DATABASE [ReadIn] FROM DISK = N'…' WITH REPLACE`).
 3. Replace the uploads folder with `<run>\uploads` from the **same** run:
-   `robocopy "<run>\uploads" "C:\inetpub\readin-api\wwwroot\uploads" /MIR`.
+   `robocopy "<run>\uploads" "C:\inetpub\readin-api\wwwroot\uploads" /MIR`, and the private folder with `<run>\private`:
+   `robocopy "<run>\private" "D:\ReadIn\data\private" /MIR`.
 4. Start the API. Check a few avatars and covers in the app.
 
 ## 7. Limitation: one server
@@ -208,3 +215,47 @@ or your cloud backup agent).
 Local uploads only work with **one** API instance: a second instance would not see the first one's files.
 Before scaling out (or moving images to a CDN-backed bucket), swap the `IFileStorage` implementation for shared or
 cloud storage. Stored paths stay valid, so no data migration is needed. Steps: [ADR 0010 → Migration path](../adr/0010-uploads-in-wwwroot.md#migration-path).
+
+## 8. Private files (verification proofs)
+
+Writer verification (SPEC F19) lets users upload proof of their expertise: a certificate or a syndicate card, as a PDF,
+JPEG, PNG or WebP of at most 10 MB. These are **personal documents**. They never go to `wwwroot`, never get a public
+URL and are never served as static files: only `GET /admin/verification-requests/{id}/proof` reads them, for admins with
+`verification.manage`, as an attachment with `Cache-Control: no-store`.
+
+| Key | Default | Notes |
+|---|---|---|
+| `Storage:PrivatePath` | `App_Data/private` | Relative to the content root, or an absolute path. Proofs are stored as `verification/{requestId}{.ext}` below it. |
+
+On a server, set `Storage__PrivatePath` to a folder **outside the app folder**, e.g. `D:\ReadIn\data\private` or
+`/var/lib/readin/private`, next to (not inside) the uploads folder. Then no deploy tool can delete it and no web server
+setting can expose it.
+
+What the API checks at startup (`PreparePrivateStorage()`), refusing to start with a clear log message otherwise:
+
+- the folder is not the web root (`wwwroot`) or inside it, and the web root is not inside it;
+- the folder is not the uploads folder (`Storage:UploadsPath`) or inside it, and the uploads folder is not inside it;
+- the folder (and its `verification/` sub-folder) can be created and written.
+
+Rules for every environment:
+
+- **Permissions.** IIS / Windows Server: give the app pool identity **modify** on this folder only, like the uploads
+  folder (`icacls "D:\ReadIn\data\private" /grant "IIS AppPool\ReadInApi:(OI)(CI)M"`). Never add an IIS virtual
+  directory or a static-file handler for it. Linux: owned by the service account, mode `700`.
+- **Deployments.** The default `App_Data/private` is inside the app folder: a mirror deployment (`robocopy /MIR`,
+  `rsync --delete`, Web Deploy "Remove additional files at destination") deletes it unless it is excluded the same way
+  as `wwwroot/uploads` in section 3 (`/XD "C:\inetpub\readin-api\App_Data"`, `--exclude 'App_Data/'`,
+  `<AbsolutePath>App_Data</AbsolutePath>`). Pointing `Storage__PrivatePath` outside the app folder avoids this
+  altogether. The repo ships nothing in `App_Data`.
+- **Docker.** The container's file system is thrown away on every rebuild, and the non-root `app` user (UID 1654) can't
+  create folders in `/app`. Mount a named volume for it and give it to UID 1654, like the uploads volume:
+  `api-private:/app/App_Data/private` (or set `Storage__PrivatePath` to the mount point). The local `api` profile in
+  `docker-compose.yml` does this.
+- **Backups.** Back the folder up with the database and the uploads, on the same schedule (the script in section 6
+  does), and keep the backup as protected as the folder. Restore it from the same run as the database.
+- **Retention.** A proof is deleted as soon as its request is approved or rejected, when the request is withdrawn and
+  when the account is deleted (SPEC §9.6), so the folder only holds proofs of pending requests. The daily
+  `verification-proofs-cleanup` job (03:15 UTC) deletes files no request points at any more and that are older than
+  24 hours (a delete that failed, or a file from a restore), plus stale `.tmp` leftovers.
+- **One server.** Like the uploads (section 7): with more than one API instance, swap `IPrivateFileStorage` for shared
+  private storage (e.g. a private blob container with no public access) before scaling out.

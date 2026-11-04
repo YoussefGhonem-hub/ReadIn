@@ -65,6 +65,9 @@ public static class DependencyInjection
         services.AddScoped<Features.Articles.Editor.ArticleDrafts>();
         services.AddScoped<Features.Glossary.ArticleTermsIndex>();
         services.AddScoped<Features.Moderation.ModerationReader>();
+        services.AddScoped<Features.Verification.VerificationReader>();
+        services.AddScoped<Features.Verification.VerificationProofFiles>();
+        services.AddScoped<Features.Verification.VerificationDecisions>();
         services.AddScoped<Features.Notifications.NotificationBadge>();
         services.AddScoped<Features.Notifications.NotificationWriter>();
         services.AddScoped<Features.Notifications.NotificationPusher>();

@@ -9,15 +9,17 @@ backend/
 │   ├── ReadIn.Domain/          # aggregates (User, Article, Field…), value objects, domain events, Result/Error
 │   ├── ReadIn.Application/     # commands, queries, validators, DTOs, Mapster configs, pipeline behaviors, RDoc processor
 │   ├── ReadIn.Infrastructure/  # EF Core + migrations, outbox, Hangfire jobs, Firebase Admin, seeders, content repository,
-│   │                           #   upload storage (wwwroot/uploads) + SkiaSharp image processing
+│   │                           #   upload storage (wwwroot/uploads) + SkiaSharp image processing,
+│   │                           #   private storage (App_Data/private: verification proofs, never served)
 │   ├── ReadIn.Api/             # minimal-API endpoints (/api/v1), JWT auth, ProblemDetails, OpenAPI + Scalar
 │   └── ReadIn.ContentStudio/   # content pipeline CLI: compose drafts, validate (schema, structure, parity, compile
 │                               #   and link checks), plan-status, import (content/AUTHORING.md)
 └── tests/
     ├── ReadIn.Domain.UnitTests/
     ├── ReadIn.Application.UnitTests/   # incl. Mapster config.Compile(), RDoc schema over all content
-    ├── ReadIn.Infrastructure.UnitTests/ # image processing (magic bytes, limits, EXIF) and upload storage (path traversal)
-    ├── ReadIn.Api.IntegrationTests/    # real SQL Server via Testcontainers, emulator-style tokens, temp uploads folder,
+    ├── ReadIn.Infrastructure.UnitTests/ # image processing (magic bytes, limits, EXIF), upload and private storage (path traversal,
+    │                                   #   the private folder never overlaps wwwroot or the uploads folder)
+    ├── ReadIn.Api.IntegrationTests/    # real SQL Server via Testcontainers, emulator-style tokens, temp uploads and private folders,
     │                                   #   seeders over fixture content (tests/fixtures/content)
     ├── ReadIn.ContentStudio.Tests/     # draft composer, editorial rules, Roslyn snippet checks
     └── ReadIn.ArchitectureTests/       # NetArchTest layer + naming rules
@@ -36,6 +38,9 @@ dotnet run --project src/ReadIn.Api        # http://localhost:5080 — migrates 
 - API reference: `http://localhost:5080/docs` (Scalar) · OpenAPI: `/openapi/v1.json` · Hangfire: `/hangfire` · Health: `/health`
 - Uploaded images are stored in `src/ReadIn.Api/wwwroot/uploads` (git-ignored, never published) and served at `/uploads`.
   Deploying and backing them up: [docs/setup/deployment.md](../docs/setup/deployment.md) ([ADR 0010](../docs/adr/0010-uploads-in-wwwroot.md)).
+- Writer verification proofs (F19) are private: `Storage:PrivatePath` (default `src/ReadIn.Api/App_Data/private`), never
+  under `wwwroot`, never served; the API refuses to start if that folder overlaps the web root or the uploads folder.
+  Locally the Development seeder puts demo proofs there. Servers: [deployment.md §8](../docs/setup/deployment.md#8-private-files-verification-proofs).
 - Secrets come from user-secrets locally: `dotnet user-secrets set "Seed:DemoPassword" "<password>" --project src/ReadIn.Api`
   and `Seed:DemoPin` (a non-weak 4-digit PIN). `appsettings.Development.json` has a Development-only `Jwt:SigningKey` and
   `Security:RecoveryPinPepper`; on servers both come from the secret store (at least 32 characters each, and the API refuses to

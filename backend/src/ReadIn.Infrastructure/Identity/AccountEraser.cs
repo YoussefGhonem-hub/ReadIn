@@ -20,13 +20,14 @@ namespace ReadIn.Infrastructure.Identity;
 /// and reports it resolved lose the moderator,
 /// audit stamps lose the account id, and audit entries of actions the account took on other accounts stay without its
 /// IP address. The deletion itself is recorded as <see cref="AuditActions.AccountDeleted"/>
-/// with the account id and time only. Right after the commit: uploaded files, the Realtime Database node, the cached
+/// with the account id and time only. Right after the commit: uploaded files, private verification proofs (F19), the Realtime Database node, the cached
 /// details of the articles that stay, and the counters of the articles the account reacted to or saved. A file that fails
 /// to delete is picked up by <see cref="Jobs.OrphanedUploadsCleanupJob"/>.
 /// </summary>
 internal sealed partial class AccountEraser(
     AppDbContext db,
     IFileStorage files,
+    IPrivateFileStorage privateFiles,
     IRealtimeAccountData realtime,
     ArticleCounters counters,
     HybridCache cache,
@@ -36,6 +37,7 @@ internal sealed partial class AccountEraser(
     public async Task<bool> EraseAsync(Guid userId, CancellationToken cancellationToken)
     {
         List<string> paths = [];
+        List<string> proofs = [];
         List<string> keptSlugs = [];
         List<Guid> engaged = [];
         var deletedArticles = 0;
@@ -96,6 +98,15 @@ internal sealed partial class AccountEraser(
             await db.ModerationActions
                 .Where(m => m.TargetUserId == userId)
                 .ExecuteUpdateAsync(s => s.SetProperty(m => m.TargetUserId, (Guid?)null), ct);
+            // F19: requests the account decided as an admin keep their decision without the reviewer; its own requests
+            // go with the row (cascade), and their private proof files right after the commit.
+            await db.VerificationRequests
+                .Where(r => r.DecidedById == userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(r => r.DecidedById, (Guid?)null), ct);
+            proofs = await db.VerificationRequests
+                .Where(r => r.UserId == userId && r.ProofFilePath != null)
+                .Select(r => r.ProofFilePath!)
+                .ToListAsync(ct);
             await ClearAuditStampsAsync(userId, ct);
 
             // The account's deleted comments (by it or a moderator) stay only as the placeholder that keeps their replies
@@ -182,6 +193,17 @@ internal sealed partial class AccountEraser(
                 LogFileNotDeleted(logger, ex, path);
             }
         }
+        foreach (var proof in proofs)
+        {
+            try
+            {
+                await privateFiles.DeleteAsync(proof, cancellationToken);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                LogProofNotDeleted(logger, ex, proof);
+            }
+        }
         await realtime.DeleteLiveDataAsync(userId, cancellationToken);
 
         // The account is gone by now; what's left only refreshes derived data, so a failure is logged, never reported.
@@ -222,6 +244,9 @@ internal sealed partial class AccountEraser(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Could not delete {Path} of a deleted account; the orphaned uploads job will")]
     private static partial void LogFileNotDeleted(ILogger logger, Exception exception, string path);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Could not delete the private file {Path} of a deleted account; the verification proofs cleanup job will")]
+    private static partial void LogProofNotDeleted(ILogger logger, Exception exception, string path);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Account {UserId} was deleted, but refreshing cached articles or counters failed; the admin rebuild fixes counters")]
     private static partial void LogRefreshFailed(ILogger logger, Exception exception, Guid userId);

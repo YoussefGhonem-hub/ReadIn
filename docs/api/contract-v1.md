@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media and notification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, and the problem codes listed with `DraftProblemDto`.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, and the problem codes listed with `DraftProblemDto`.
 
 `403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
@@ -241,6 +241,49 @@ Every `/moderation/*` route needs `moderation.manage` (Moderator, Admin, SuperAd
 - A suspension blocks the account at once (`403 user.suspended` with `suspendedUntil`, see Errors), and a temporary one
   ends by itself at `suspendedUntil`.
 
+### Writer verification (F19; Bearer) — SPEC F19
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/me/verification` | → `VerificationStatusDto`: `isVerified` (has the `VerifiedWriter` role), `canRequest` (not verified, not suspended, nothing pending) and `request`, the latest request whatever its status (`null` when there was none) |
+| POST | `/verification-requests` | `multipart/form-data`: `fieldId`, `jobTitle`, `proofUrl?`, `note?`, `proof?` (file) → `201 MyVerificationRequestDto` (`Location: /api/v1/me/verification`). Rate limit `writes`. Rules below |
+| DELETE | `/me/verification` | Withdraws the pending request: it is deleted with its file → `204`. Rate limit `writes`. `404 verification.not_found` when nothing is pending |
+| GET | `/admin/verification-requests?status=&cursor=&limit=` | → `CursorPage<AdminVerificationRequestDto>`. `status` = `pending` (default, oldest first) \| `approved` \| `rejected` (most recently decided first). `limit` 1–50 (default 20). Validation `verification.status_invalid` |
+| GET | `/admin/verification-requests/{id}` | → `AdminVerificationRequestDto`. `404 verification.not_found` |
+| GET | `/admin/verification-requests/{id}/proof` | → `200` the file, with its stored `Content-Type` (`application/pdf` \| `image/jpeg` \| `image/png` \| `image/webp`), `Content-Disposition: attachment; filename="verification-proof-{id}{.ext}"`, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`. `404 verification.proof_not_found` when the request has no file (URL only, or decided: the file is gone), `404 verification.not_found` |
+| POST | `/admin/verification-requests/{id}/approve` | → `204`. Rate limit `writes`. The user gets the `VerifiedWriter` role at once (refresh `GET /me` to show the badge), the proof file is deleted, `verification_result` is written. `409 verification.already_decided`, `404 verification.not_found` |
+| POST | `/admin/verification-requests/{id}/reject` | `{ reason }` (5–500 characters after trimming, required; validation `validation.required` / `validation.length` on `reason`) → `204`. Rate limit `writes`. The proof file is deleted, `verification_result` is written. `409 verification.already_decided`, `404 verification.not_found` |
+
+Every `/admin/verification-requests` route needs `verification.manage` (Admin, SuperAdmin; `403 auth.forbidden`
+otherwise, also for moderators). A suspended account gets `403 user.suspended` on every route, as elsewhere.
+
+`POST /verification-requests`, checked in this order:
+
+- Validation (`400 validation.failed`): `jobTitle` required, 2–100 characters after trimming (`validation.required`,
+  `validation.length`); `proofUrl` an absolute `https://` URL (`validation.url`) of at most 500 characters
+  (`validation.max_length`); `note` at most 500 (`validation.max_length`). Blank `proofUrl` / `note` count as missing.
+- `409 verification.already_verified` (the user has the `VerifiedWriter` role), then `409 verification.already_pending`
+  (one pending request per user, also for two submits at once).
+- `400 verification.field_invalid`: `fieldId` missing, not a GUID, unknown or disabled (`GET /fields`).
+- `400 verification.proof_required`: neither `proofUrl` nor `proof`. Both are allowed.
+- `400 verification.proof_invalid`: the file is empty, larger than 10 MB, or not a PDF, JPEG, PNG or WebP **by its
+  bytes** (the file name and the part's `Content-Type` are ignored; HEIC, GIF and the rest are refused). A body far
+  over the limit gets the same answer (the server stops reading it). Clients should check type and size first.
+- A body that isn't `multipart/form-data` (e.g. JSON): `415 request.unsupported_media_type`.
+- The file is stored privately as `verification/{id}{.ext}` (never under `/uploads`, never at a public URL). Its name
+  is kept only for display (`proofFileName`), sanitized: no folders, control or direction-override characters,
+  at most 120 characters.
+
+Retention: the proof file is deleted when the request is approved or rejected (`proofFileName` and `proof` become
+`null`); the decision, the reason and `proofUrl` stay. A rejected user can send a new request; `GET /me/verification`
+then shows the new one. The reason is only shown on the verification page, never in the notification or its push.
+
+Error codes: `verification.proof_required`, `verification.proof_invalid`, `verification.field_invalid`,
+`verification.already_pending`, `verification.already_verified`, `verification.already_decided`,
+`verification.not_found`, `verification.proof_not_found`, `verification.status_invalid` (validation, `status`).
+`request.unsupported_media_type` (415) is new and general: any endpoint answering 415 (a JSON body sent to a multipart
+upload) now carries it instead of `server.error`.
+
 ### Notifications (F17; Bearer) — SPEC F17, §21.1
 
 Reads are unthrottled; writes use the `writes` rate limit (30 a minute).
@@ -270,7 +313,7 @@ accounts get nothing):
 | `streak_reminder` | 20:00 your time, your streak is ≥ 1 and you haven't read today | no | `readin://me/stats` |
 | `security_alert` | password, PIN or phone changed, password reset, recovery locked, Google/Apple linked or unlinked, phone sign in added | no | `readin://settings/account` |
 | `moderation_notice` | a moderator warned you or hid your article (F22) | no | the hidden article `readin://a/{slug}`, a warning `readin://notifications` (the app shows the notice from `GET /me/moderation-notices`) |
-| `verification_result` | reserved for F19 (nothing writes it yet): render a generic text | | `readin://notifications` |
+| `verification_result` | an admin approved or rejected your verification request (F19): `data.approved` `true` / `false`, no actor, no article. Without `data.approved` (never written now) render a generic text | no | `readin://verification` |
 
 - One entry per recipient per comment: `mention` > `comment_reply` > `article_comment`. An edit only tells users it
   mentions for the first time.
@@ -890,6 +933,43 @@ interface ModerationNoticeDto {
   createdAt: string;
 }
 
+// Writer verification (F19)
+type VerificationStatus = 'pending' | 'approved' | 'rejected';
+
+interface VerificationStatusDto {
+  isVerified: boolean;           // has the VerifiedWriter role (the badge)
+  canRequest: boolean;           // not verified, not suspended and nothing pending: show the form
+  request: MyVerificationRequestDto | null; // the latest request, whatever its status
+}
+
+interface MyVerificationRequestDto {
+  id: string;
+  status: VerificationStatus;
+  field: { id: string; slug: string; name: string }; // name in Accept-Language
+  jobTitle: string;
+  proofUrl: string | null;
+  proofFileName: string | null;  // the uploaded file's (sanitized) name while pending; null once decided (the file is deleted)
+  note: string | null;
+  submittedAt: string;
+  decidedAt: string | null;
+  rejectionReason: string | null; // rejected only
+}
+
+interface AdminVerificationRequestDto {
+  id: string;
+  status: VerificationStatus;
+  user: { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean };
+  field: { id: string; slug: string; name: string };
+  jobTitle: string;
+  proofUrl: string | null;
+  proof: { fileName: string; contentType: string; sizeBytes: number } | null; // download: GET …/{id}/proof (with the session)
+  note: string | null;
+  submittedAt: string;
+  decidedAt: string | null;
+  decidedBy: { id: string; username: string } | null; // null while pending, or once that admin deleted their account
+  rejectionReason: string | null;
+}
+
 // Notifications (F17)
 type NotificationType = 'new_follower' | 'article_comment' | 'comment_reply' | 'mention' | 'reactions_milestone'
   | 'followed_writer_article' | 'daily_article' | 'streak_reminder' | 'security_alert' | 'verification_result' | 'moderation_notice';
@@ -906,11 +986,14 @@ interface NotificationDto {
   actorCount: number;            // distinct actors (≥ 1 when actor-based, 0 otherwise): "X and {actorCount - 1} others"
   article: { id: string; slug: string; title: string; language: ArticleLanguage } | null; // your article language, else the source
   comment: { id: string; parentId: string | null; excerpt: string } | null;              // excerpt ≤ 140 chars, plain text, one line; null for a mention in an article
-  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange };    // only the keys that apply
+  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange; approved?: boolean }; // only the keys that apply; approved: verification_result
   link: string;                  // readin://… (the same as the push's data.link)
 }
 // actor: also set for followed_writer_article (the writer); null for reactions_milestone, daily_article, streak_reminder,
-// security_alert, moderation_notice (moderators stay anonymous), and when every actor deleted their account ("Deleted user").
+// security_alert, moderation_notice (moderators stay anonymous), verification_result (admins stay anonymous), and when every
+// actor deleted their account ("Deleted user").
+// verification_result: data.approved true = "You're now a verified writer ✓" / "بقيت كاتب موثّق ✓"; false = "Your
+// verification request wasn't approved" / "طلب التوثيق بتاعك ماتقبلش"; missing = the generic text.
 // moderation_notice: article set = "your article was hidden", article null = "you received a warning".
 
 type NotificationMode = 'all' | 'inApp' | 'off';
@@ -1100,6 +1183,9 @@ New deep links with F17: `readin://u/{username}/followers`, `readin://me/stats`,
 (where the stats are); `settings/account` is the Account section of Settings (`/settings?section=account` on mobile,
 `/settings#account` on the web).
 
+New deep link with F19: `readin://verification`, the writer verification page (`/verification` on the web,
+`/settings/verification` on mobile).
+
 ### Notifications (F17)
 
 Every notification type except `daily_article` is pushed by the notification push job (every minute, and right after
@@ -1128,6 +1214,7 @@ an entry is written), for entries whose type is on `all`:
 | `followed_writer_article` | "{name} نشر مقال جديد" / "{name} published a new article" | the article's title |
 | `streak_reminder` | "متضيّعش الـ streak بتاعك 🔥" / "Don't lose your streak 🔥" | "الـ streak بتاعك {n} يوم…" / "Your streak is {n} days. Read an article today to keep it going." |
 | `security_alert` | "تنبيه أمان" / "Security alert" | what changed, e.g. "Your password was changed. If this wasn't you, reset it now." |
+| `verification_result` | approved: "بقيت كاتب موثّق ✓" / "You're now a verified writer ✓"; rejected: "طلب التوثيق بتاعك ماتقبلش" / "Your verification request wasn't approved" | approved: empty; rejected: "افتحه عشان تعرف السبب" / "Open it to see why" (never the reason). `data.link` = `readin://verification`; collapse key `verification_result` |
 | `moderation_notice` | as below | as below |
 
 `{n}` is the number of other actors (one other: "وشخص تاني" / "and 1 other"); names are wrapped in Unicode isolates

@@ -48,6 +48,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     /// <summary>A fresh uploads folder per test run, deleted afterwards.</summary>
     public string UploadsPath { get; } = Path.Combine(Path.GetTempPath(), "readin-tests", $"uploads-{Guid.NewGuid():N}");
 
+    /// <summary>A fresh private folder (verification proofs, F19) per test run, outside the uploads folder; deleted afterwards.</summary>
+    public string PrivatePath { get; } = Path.Combine(Path.GetTempPath(), "readin-tests", $"private-{Guid.NewGuid():N}");
+
     public async ValueTask InitializeAsync()
     {
         await _sql.StartAsync();
@@ -59,6 +62,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         await base.DisposeAsync();
         await _sql.DisposeAsync();
         if (Directory.Exists(UploadsPath)) Directory.Delete(UploadsPath, recursive: true);
+        if (Directory.Exists(PrivatePath)) Directory.Delete(PrivatePath, recursive: true);
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -85,6 +89,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         // Reuse detection is tested strictly; one test turns the grace window back on.
         builder.UseSetting("Auth:RefreshReuseGrace", "00:00:00");
         builder.UseSetting("Storage:UploadsPath", UploadsPath);
+        builder.UseSetting("Storage:PrivatePath", PrivatePath);
         builder.UseSetting("Storage:PublicBaseUrl", PublicBaseUrl);
         // Seed from fixture content so tests never depend on which of the real articles exist (content/).
         builder.UseSetting("Content:RootPath", Path.Combine(AppContext.BaseDirectory, "fixtures", "content"));

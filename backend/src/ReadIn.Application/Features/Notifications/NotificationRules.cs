@@ -105,6 +105,9 @@ public static class NotificationLinks
     public const string Stats = "readin://me/stats";
     public const string Account = "readin://settings/account";
 
+    /// <summary>The writer verification page (F19): its status, and a rejection's reason.</summary>
+    public const string Verification = "readin://verification";
+
     public static string Article(string slug) => $"readin://a/{Uri.EscapeDataString(slug)}";
 
     public static string Comment(string slug, Guid commentId) => $"{Article(slug)}#comment-{commentId}";
@@ -129,6 +132,7 @@ public static class NotificationLinks
             // A hidden article opens the article (its author sees the "hidden by moderators" banner); a warning opens the
             // center, and the app shows the notice itself from GET /me/moderation-notices.
             NotificationTypes.ModerationNotice => articleSlug is null ? Center : Article(articleSlug),
+            NotificationTypes.VerificationResult => Verification,
             _ => Center,
         };
 }
@@ -143,6 +147,12 @@ public static class NotificationTexts
     public const string ModerationWarningTitleEn = "You received a warning from the moderators";
     public const string ArticleHiddenTitleAr = "فريق الإشراف خفى مقالك";
     public const string ArticleHiddenTitleEn = "The moderators hid your article";
+    public const string VerificationApprovedTitleAr = "بقيت كاتب موثّق ✓";
+    public const string VerificationApprovedTitleEn = "You're now a verified writer ✓";
+    public const string VerificationRejectedTitleAr = "طلب التوثيق بتاعك ماتقبلش";
+    public const string VerificationRejectedTitleEn = "Your verification request wasn't approved";
+    public const string VerificationRejectedBodyAr = "افتحه عشان تعرف السبب";
+    public const string VerificationRejectedBodyEn = "Open it to see why";
 
     /// <param name="ActorName">The latest actor's display name; null when they deleted their account.</param>
     /// <param name="ActorCount">Distinct actors.</param>
@@ -190,8 +200,15 @@ public static class NotificationTexts
             NotificationTypes.ModerationNotice => input.Data.NoticeKind == NoticeKinds.ArticleHidden
                 ? (english ? ArticleHiddenTitleEn : ArticleHiddenTitleAr, input.NoticeLabel ?? input.NoticeNote ?? article)
                 : (english ? ModerationWarningTitleEn : ModerationWarningTitleAr, input.NoticeNote ?? string.Empty),
-            NotificationTypes.VerificationResult => (english ? "Your verification request has an answer" : "طلب التوثيق بتاعك اترد عليه",
-                string.Empty),
+            // The reason of a rejection is only on the verification page, never in a push.
+            NotificationTypes.VerificationResult => input.Data.Approved switch
+            {
+                true => (english ? VerificationApprovedTitleEn : VerificationApprovedTitleAr, string.Empty),
+                false => english
+                    ? (VerificationRejectedTitleEn, VerificationRejectedBodyEn)
+                    : (VerificationRejectedTitleAr, VerificationRejectedBodyAr),
+                null => (english ? "Your verification request has an answer" : "طلب التوثيق بتاعك اترد عليه", string.Empty),
+            },
             _ => ("ReadIn", string.Empty),
         };
     }

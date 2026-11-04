@@ -11,6 +11,7 @@ using ReadIn.Domain.Notifications;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
+using ReadIn.Domain.Verification;
 
 namespace ReadIn.Application.Common.Interfaces;
 
@@ -56,6 +57,7 @@ public interface IAppDbContext
     DbSet<CommentLike> CommentLikes { get; }
     DbSet<Report> Reports { get; }
     DbSet<ModerationAction> ModerationActions { get; }
+    DbSet<VerificationRequest> VerificationRequests { get; }
 
     DbSet<Notification> Notifications { get; }
     DbSet<NotificationActor> NotificationActors { get; }

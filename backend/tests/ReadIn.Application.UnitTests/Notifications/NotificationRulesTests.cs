@@ -139,7 +139,7 @@ public sealed class NotificationRulesTests
         NotificationLinks.For(NotificationTypes.SecurityAlert, 0, null, "me", null, null).Should().Be("readin://settings/account");
         NotificationLinks.For(NotificationTypes.ModerationNotice, 0, null, "me", "hidden-one", null).Should().Be("readin://a/hidden-one");
         NotificationLinks.For(NotificationTypes.ModerationNotice, 0, null, "me", null, null).Should().Be("readin://notifications");
-        NotificationLinks.For(NotificationTypes.VerificationResult, 0, null, "me", null, null).Should().Be("readin://notifications");
+        NotificationLinks.For(NotificationTypes.VerificationResult, 0, null, "me", null, null).Should().Be("readin://verification");
         NotificationLinks.Article("مقال عربي").Should().Be("readin://a/%D9%85%D9%82%D8%A7%D9%84%20%D8%B9%D8%B1%D8%A8%D9%8A");
     }
 

@@ -5,9 +5,9 @@ using ReadIn.Domain.Users;
 namespace ReadIn.Application.Features.Notifications;
 
 /// <summary>
-/// What <c>Notifications.Data</c> holds, as JSON (SPEC F17). <see cref="Threshold"/>, <see cref="StreakDays"/> and
-/// <see cref="SecurityChange"/> reach clients (<see cref="NotificationDataDto"/>); the moderation notice's id and kind
-/// stay on the server for the push.
+/// What <c>Notifications.Data</c> holds, as JSON (SPEC F17). <see cref="Threshold"/>, <see cref="StreakDays"/>,
+/// <see cref="SecurityChange"/> and <see cref="Approved"/> reach clients (<see cref="NotificationDataDto"/>); the
+/// moderation notice's id and kind stay on the server for the push.
 /// </summary>
 public sealed record NotificationData
 {
@@ -27,6 +27,9 @@ public sealed record NotificationData
     /// <summary><c>warning</c> | <c>article_hidden</c> (F22).</summary>
     public string? NoticeKind { get; init; }
 
+    /// <summary><c>verification_result</c> (F19): the request was approved (true) or rejected (false).</summary>
+    public bool? Approved { get; init; }
+
     public string? Serialize() => this == Empty ? null : JsonSerializer.Serialize(this, Json);
 
     /// <summary>Unreadable or missing data is empty rather than an error: the entry still shows.</summary>
@@ -43,7 +46,7 @@ public sealed record NotificationData
         }
     }
 
-    public NotificationDataDto ToDto() => new(Threshold, StreakDays, SecurityChange);
+    public NotificationDataDto ToDto() => new(Threshold, StreakDays, SecurityChange, Approved);
 
     /// <summary>The camelCase name clients get (<c>passwordChanged</c>), also used in dedupe keys.</summary>
     public static string Name(SecurityChange change) => JsonNamingPolicy.CamelCase.ConvertName(change.ToString());

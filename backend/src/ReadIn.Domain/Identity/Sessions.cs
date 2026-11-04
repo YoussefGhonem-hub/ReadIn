@@ -138,6 +138,10 @@ public static class AuditActions
     public const string SignedOutEverywhere = "auth.signed_out_everywhere";
     public const string RefreshTokenReused = "auth.refresh_token_reused";
     public const string AdminPasswordReset = "admin.password_reset";
+
+    // Writer verification (SPEC F19): an admin approved (VerifiedWriter role granted) or rejected a user's request.
+    public const string VerificationApproved = "admin.verification_approved";
+    public const string VerificationRejected = "admin.verification_rejected";
     public const string AccountDeleted = "account.deleted";
 
     // Moderator actions on a user's content or account (SPEC F11, F22); the moderation log is ModerationActions.
