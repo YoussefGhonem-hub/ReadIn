@@ -166,7 +166,7 @@ These rules apply to **every** feature, commit and code review.
 | Firebase | `firebase_messaging` (+ `flutter_local_notifications`), `firebase_database`, and `firebase_auth` **only** for `signInWithCustomToken` to read the Realtime Database (never for user sign-in). No Firebase Storage, Crashlytics or Analytics. |
 | Phone input | `phone_numbers_parser` + bundled-asset flags |
 | Images | `flutter_image_compress` (before upload), `cached_network_image`, `flutter_blurhash` |
-| Testing | `flutter_test`, `bloc_test`, `mocktail`, golden tests (RTL/LTR × light/dark; baselines in `ar/light` and `en/dark`), `integration_test` |
+| Testing | `flutter_test`, `bloc_test`, `mocktail`, golden tests in `ar/light` and `en/dark` (both directions, both themes), `integration_test` |
 
 ### 3.4 Shared / Tooling
 - **Design tokens** defined once in `design/tokens.json` and generated for CSS variables (web) and Dart `ThemeExtension` (mobile).
@@ -1354,7 +1354,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 6. Code highlighting has matching light/dark themes (Shiki / re_highlight).
 7. No theme flash on web (theme resolved before first paint, SSR reads the `theme` cookie).
 8. Shareable quote cards, emails and push images exist in light and dark variants.
-9. **Every UI change is covered by screenshots in `ar/light` and `en/dark`** for web and mobile: Playwright screenshots on web, golden tests on mobile. The two cover both directions and both themes. The flows and widget tests still run in all four combinations (ar/en × light/dark), and only the screenshot is skipped in `ar/dark` and `en/light`.
+9. **Every UI change is covered by screenshots in `ar/light` and `en/dark`** for web and mobile: Playwright screenshots on web, golden tests on mobile. The two cover both directions and both themes, so Playwright flows and mobile golden tests run only in those two. Mobile widget and logic tests still run in all four combinations (ar/en × light/dark).
 
 ---
 
@@ -1720,7 +1720,7 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
 | Integration | API + SQL Server via Testcontainers, Realtime Database emulator, temporary uploads folder | API client contract tests | Repository + Dio mocks |
 | Security rules | Realtime Database rules tests (`@firebase/rules-unit-testing`) | — | — |
 | Architecture | NetArchTest (layer rules, naming, sealed handlers) | ESLint boundaries | `import_lint` rules |
-| UI / Visual | — | Playwright flows in ar/en × light/dark, screenshots in `ar/light` and `en/dark` | Golden tests in ar/en × light/dark, baselines in `ar/light` and `en/dark` |
+| UI / Visual | — | Playwright flows and screenshots in `ar/light` and `en/dark` | Golden tests in `ar/light` and `en/dark`; widget tests in ar/en × light/dark |
 | E2E | — | Playwright critical flows | `integration_test` critical flows |
 | BiDi | RDoc text extraction tests | Mixed-text fixtures | Mixed-text fixtures |
 | Post card (F34) | Excerpt rules, `preview` cut at block boundaries and visibility | Expand, react and comment without leaving the feed, scroll position kept, mixed-text excerpts, screenshots in `ar/light` and `en/dark` | The same flows, comment sheet, goldens in `ar/light` and `en/dark` |
@@ -1778,7 +1778,7 @@ Uploads live inside the API folder, so deployments must never delete them:
 | Workflow | Trigger | Steps |
 |---|---|---|
 | `backend.yml` | changes in `backend/**` | restore → build → test (Testcontainers) → architecture tests → publish image |
-| `web.yml` | changes in `web/**` | install → lint → test → Playwright (ar/en × light/dark, screenshots in ar/light and en/dark) → build SSR |
+| `web.yml` | changes in `web/**` | install → lint → test → Playwright (ar/light and en/dark) → build SSR |
 | `mobile.yml` | changes in `mobile/**` | analyze → test → golden tests → build APK/IPA (release on tags) |
 | `content.yml` | changes in `content/**` | RDoc schema validation → code compile checks → link checks |
 
@@ -1821,7 +1821,7 @@ A feature is **done** only when:
 - [ ] **Web** implemented and tested.
 - [ ] **Mobile** implemented and tested.
 - [ ] Works in **Arabic (RTL)** and **English (LTR)**, including mixed-text content.
-- [ ] Works in **Light** and **Dark** mode in both languages: the tests run all four combinations, with Playwright screenshots (web) and goldens (mobile) in `ar/light` and `en/dark`.
+- [ ] Works in **Light** and **Dark** mode in both languages: Playwright flows and screenshots (web) and goldens (mobile) run in `ar/light` and `en/dark`; mobile widget tests run all four combinations.
 - [ ] Empty, loading and error states designed and implemented.
 - [ ] Accessibility checks pass (contrast, labels, font scaling).
 - [ ] Seed data updated so the feature is visible in development.
