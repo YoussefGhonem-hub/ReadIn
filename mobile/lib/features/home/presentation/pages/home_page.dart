@@ -19,11 +19,14 @@ import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/cubit/suggested_writers_cubit.dart';
 import '../../../follow/presentation/widgets/suggested_writers.dart';
 import '../../../notifications/presentation/cubit/unread_badge_cubit.dart';
+import '../../../paths/presentation/path_routes.dart';
+import '../../../paths/presentation/widgets/home_path_card.dart';
 import '../../../reading/presentation/widgets/home_streak_badge.dart';
 import '../../../saved/presentation/widgets/save_button.dart';
 import '../cubit/feed_cubit.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/live_feed_cubit.dart';
+import '../widgets/continue_reading_card.dart';
 import '../widgets/today_hero_card.dart';
 
 /// The two feeds of Home (F03): "For you" and "Following" (F12).
@@ -126,7 +129,15 @@ class _HomeViewState extends State<HomeView> {
     if (suggested.started && _signedIn) unawaited(suggested.load());
   }
 
-  void _open(String slug) => context.push('/a/$slug');
+  void _open(String slug) => unawaited(_push('/a/$slug'));
+
+  /// Opens [location] over Home. Back on Home (from the reader or a path), the Continue reading and learning path
+  /// cards refresh: reading moved them on (F03).
+  Future<void> _push(String location) async {
+    final home = context.read<HomeCubit>();
+    await context.push<void>(location);
+    if (mounted) unawaited(home.refreshProgress());
+  }
 
   void _showNewArticles() {
     context.read<LiveFeedCubit>().acknowledgeNewArticles();
@@ -183,6 +194,10 @@ class _HomeViewState extends State<HomeView> {
                                 },
                               ),
                             ),
+                          ),
+                          SliverPadding(
+                            padding: const EdgeInsets.symmetric(horizontal: _gutter),
+                            sliver: SliverToBoxAdapter(child: _ProgressCards(onPush: (location) => unawaited(_push(location)))),
                           ),
                           SliverPadding(
                             padding: const EdgeInsets.fromLTRB(_gutter, ReadInSpace.s4, _gutter, 0),
@@ -252,6 +267,47 @@ class _HomeHeader extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Under Today's article (F03): "Continue reading" (signed in, not the hero's article), then the learning path in
+/// progress, or the slim "explore paths" prompt when there is none (and for guests). Nothing while Home loads.
+class _ProgressCards extends StatelessWidget {
+  const _ProgressCards({required this.onPush});
+
+  /// Opens a location over Home (Home refreshes these cards when it comes back).
+  final ValueChanged<String> onPush;
+
+  @override
+  Widget build(BuildContext context) => BlocBuilder<HomeCubit, HomeState>(
+        buildWhen: (a, b) => (a.loading, a.today?.id, a.resume, a.activePath) != (b.loading, b.today?.id, b.resume, b.activePath),
+        builder: (context, state) {
+          if (state.loading) return const SizedBox.shrink();
+          final resume = state.resume;
+          final path = state.activePath;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (state.today != null) const SizedBox(height: ReadInSpace.s4),
+              if (resume != null) ...[
+                ContinueReadingCard(
+                  item: resume,
+                  // The version they were reading; the reader resumes from their last position.
+                  onTap: () => onPush(Uri(path: '/a/${resume.article.slug}', queryParameters: {'lang': resume.language}).toString()),
+                ),
+                const SizedBox(height: ReadInSpace.s3),
+              ],
+              if (path != null)
+                ActivePathCard(
+                  path: path,
+                  onOpenPath: () => onPush(PathRoutes.of(path.slug)),
+                  onOpenNext: (next) => onPush('/a/${next.slug}'),
+                )
+              else
+                PathsPromptRow(onTap: () => onPush(PathRoutes.list)),
+            ],
+          );
+        },
+      );
 }
 
 /// "For you" | "Following" (F03).

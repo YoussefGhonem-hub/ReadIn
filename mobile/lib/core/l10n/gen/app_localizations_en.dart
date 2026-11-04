@@ -476,11 +476,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileWriteFirst => 'Write an article';
 
   @override
-  String get profilePathsTitle => 'Learning paths are coming';
+  String get profilePathsEmptyTitle => 'No paths yet';
 
   @override
-  String get profilePathsBody =>
-      'Hand-picked series of articles to learn a topic step by step. We\'re building them now.';
+  String get profilePathsEmptyOwnBody =>
+      'Join a learning path and your progress shows up here.';
+
+  @override
+  String get profilePathsEmptyBody =>
+      'The learning paths they join show up here.';
+
+  @override
+  String get profilePathsPrivateTitle => 'Learning paths are private';
+
+  @override
+  String get profilePathsPrivateBody =>
+      'This reader keeps their reading activity private.';
 
   @override
   String get profileNotFoundTitle => 'This profile isn\'t available';
@@ -2823,4 +2834,162 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errDeletionUnavailable =>
       'We couldn\'t finish deleting your account, so nothing was deleted. Try again in a few minutes.';
+
+  @override
+  String get continueReading => 'Continue reading';
+
+  @override
+  String continueReadingProgress(int percent) {
+    return '$percent% read';
+  }
+
+  @override
+  String get pathsTitle => 'Learning paths';
+
+  @override
+  String get pathsTabAll => 'All paths';
+
+  @override
+  String get pathsTabMine => 'My paths';
+
+  @override
+  String get pathsPrompt => 'Learn step by step with learning paths';
+
+  @override
+  String get pathsBrowse => 'Explore learning paths';
+
+  @override
+  String get pathsEmptyTitle => 'No learning paths here yet';
+
+  @override
+  String get pathsEmptyBody =>
+      'We\'re putting the first ones together. Check back soon.';
+
+  @override
+  String get myPathsEmptyTitle => 'You haven\'t started a path yet';
+
+  @override
+  String get myPathsEmptyBody =>
+      'Pick a path and learn a topic one article at a time.';
+
+  @override
+  String get myPathsGuestTitle => 'Keep track of your paths';
+
+  @override
+  String get myPathsGuestBody =>
+      'Create a free account to join paths and pick up where you left off.';
+
+  @override
+  String pathArticleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles',
+      one: '1 article',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes min',
+      one: '1 min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathProgressSemantics(int read, int total) {
+    return '$read of $total articles read';
+  }
+
+  @override
+  String get pathCompleted => 'Completed';
+
+  @override
+  String get pathCompletedCelebration => 'Path completed 🎉';
+
+  @override
+  String get pathStart => 'Start path';
+
+  @override
+  String pathContinue(String title) {
+    return 'Continue: $title';
+  }
+
+  @override
+  String get pathReadAgain => 'Read again';
+
+  @override
+  String pathNext(String title) {
+    return 'Next: $title';
+  }
+
+  @override
+  String get pathUpNext => 'Up next';
+
+  @override
+  String get pathItemRead => 'Read';
+
+  @override
+  String get pathMenu => 'Path options';
+
+  @override
+  String get pathLeave => 'Leave path';
+
+  @override
+  String get pathLeaveTitle => 'Leave this path?';
+
+  @override
+  String get pathLeaveBody =>
+      'Your reading history stays. Join again any time and your progress comes back.';
+
+  @override
+  String get pathLeft => 'You left the path';
+
+  @override
+  String get pathJoin => 'Join path';
+
+  @override
+  String get pathJoined => 'You joined the path';
+
+  @override
+  String pathFrom(String title) {
+    return 'From the path: $title';
+  }
+
+  @override
+  String pathPosition(int position, int total) {
+    return '$position of $total';
+  }
+
+  @override
+  String get pathNextInPath => 'Next in path';
+
+  @override
+  String get pathLastArticle => 'This is the last article in the path';
+
+  @override
+  String get pathNotFoundTitle => 'This path isn\'t available';
+
+  @override
+  String get pathNotFoundBody =>
+      'It may have been removed, or the link is wrong.';
+
+  @override
+  String get errPathNotFound => 'This path doesn\'t exist or was removed.';
+
+  @override
+  String get errPathSlugTaken => 'Another path already uses this link.';
+
+  @override
+  String get errPathEditorial =>
+      'Editorial paths are managed in the content files.';
+
+  @override
+  String get errPathItemsInvalid =>
+      'Check the path\'s articles: 1 to 100 published articles, each one once.';
 }

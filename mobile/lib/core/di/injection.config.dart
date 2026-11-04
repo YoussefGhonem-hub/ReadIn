@@ -141,6 +141,17 @@ import '../../features/onboarding/domain/repositories/interests_repository.dart'
 import '../../features/onboarding/domain/usecases/save_interests.dart' as _i535;
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart'
     as _i807;
+import '../../features/paths/data/datasources/paths_api.dart' as _i88;
+import '../../features/paths/data/repositories/paths_repository_impl.dart'
+    as _i904;
+import '../../features/paths/domain/repositories/paths_repository.dart'
+    as _i755;
+import '../../features/paths/domain/usecases/path_usecases.dart' as _i924;
+import '../../features/paths/presentation/cubit/article_path_cubit.dart'
+    as _i512;
+import '../../features/paths/presentation/cubit/path_details_cubit.dart'
+    as _i745;
+import '../../features/paths/presentation/cubit/path_list_cubit.dart' as _i835;
 import '../../features/profile/data/datasources/profile_api.dart' as _i191;
 import '../../features/profile/data/repositories/profile_repository_impl.dart'
     as _i334;
@@ -348,6 +359,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i227.InterestsApi>(
       () => _i227.InterestsApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i88.PathsApi>(() => _i88.PathsApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i191.ProfileApi>(() => _i191.ProfileApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i824.ReactionsApi>(
       () => _i824.ReactionsApi(gh<_i361.Dio>()),
@@ -372,6 +384,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1040.PushService>(
       () =>
           _i1040.PushService(gh<_i709.PushPlatform>(), gh<_i455.DevicesApi>()),
+    );
+    gh.lazySingleton<_i755.PathsRepository>(
+      () => _i904.PathsRepositoryImpl(gh<_i88.PathsApi>()),
     );
     gh.lazySingleton<_i263.TaxonomyRepository>(
       () => _i551.TaxonomyRepositoryImpl(gh<_i421.TaxonomyApi>()),
@@ -531,6 +546,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i251.GetFollowingFeed>(
       () => _i251.GetFollowingFeed(gh<_i954.FeedRepository>()),
     );
+    gh.factory<_i251.GetContinueReading>(
+      () => _i251.GetContinueReading(gh<_i954.FeedRepository>()),
+    );
     gh.factoryParam<_i529.ProfileArticlesCubit, String, dynamic>(
       (username, _) =>
           _i529.ProfileArticlesCubit(gh<_i591.GetUserArticles>(), username),
@@ -606,6 +624,25 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i27.GetReactors>(
       () => _i27.GetReactors(gh<_i315.ReactionsRepository>()),
     );
+    gh.factory<_i924.GetPaths>(
+      () => _i924.GetPaths(gh<_i755.PathsRepository>()),
+    );
+    gh.factory<_i924.GetPath>(() => _i924.GetPath(gh<_i755.PathsRepository>()));
+    gh.factory<_i924.GetArticlePath>(
+      () => _i924.GetArticlePath(gh<_i755.PathsRepository>()),
+    );
+    gh.factory<_i924.GetUserPaths>(
+      () => _i924.GetUserPaths(gh<_i755.PathsRepository>()),
+    );
+    gh.factory<_i924.GetMyPaths>(
+      () => _i924.GetMyPaths(gh<_i755.PathsRepository>()),
+    );
+    gh.factory<_i924.GetActivePath>(
+      () => _i924.GetActivePath(gh<_i755.PathsRepository>()),
+    );
+    gh.factory<_i924.SetPathEnrollment>(
+      () => _i924.SetPathEnrollment(gh<_i755.PathsRepository>()),
+    );
     gh.factory<_i360.MentionSuggestionsCubit>(
       () => _i360.MentionSuggestionsCubit(gh<_i788.SuggestMentions>()),
     );
@@ -637,8 +674,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i504.DownloadDocument>(
       () => _i504.DownloadDocument(gh<_i459.MediaRepository>()),
     );
-    gh.factory<_i9.HomeCubit>(
-      () => _i9.HomeCubit(gh<_i251.GetTodayArticle>(), gh<_i172.GetFields>()),
+    gh.factory<_i835.AllPathsCubit>(
+      () => _i835.AllPathsCubit(gh<_i924.GetPaths>()),
     );
     gh.factory<_i279.LoadSettings>(
       () => _i279.LoadSettings(gh<_i674.SettingsRepository>()),
@@ -673,8 +710,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i284.ArticleCubit>(
       () => _i284.ArticleCubit(gh<_i904.GetArticle>()),
     );
+    gh.factoryParam<_i835.UserPathsCubit, String, dynamic>(
+      (username, _) => _i835.UserPathsCubit(gh<_i924.GetUserPaths>(), username),
+    );
     gh.factory<_i535.SaveInterests>(
       () => _i535.SaveInterests(gh<_i185.InterestsRepository>()),
+    );
+    gh.factory<_i745.PathDetailsCubit>(
+      () => _i745.PathDetailsCubit(
+        gh<_i924.GetPath>(),
+        gh<_i924.SetPathEnrollment>(),
+      ),
     );
     gh.factory<_i646.FollowingFeedCubit>(
       () => _i646.FollowingFeedCubit(gh<_i251.GetFollowingFeed>()),
@@ -758,6 +804,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i692.RelatedArticlesCubit>(
       () => _i692.RelatedArticlesCubit(gh<_i938.GetRelatedArticles>()),
     );
+    gh.factory<_i512.ArticlePathCubit>(
+      () => _i512.ArticlePathCubit(
+        gh<_i924.GetArticlePath>(),
+        gh<_i924.SetPathEnrollment>(),
+      ),
+    );
     gh.factory<_i245.CompleteProfileCubit>(
       () => _i245.CompleteProfileCubit(
         gh<_i46.CompleteProfile>(),
@@ -826,6 +878,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i46.LinkExternalLogin>(),
         gh<_i46.UnlinkExternalLogin>(),
       ),
+    );
+    gh.factory<_i835.MyPathsCubit>(
+      () => _i835.MyPathsCubit(gh<_i924.GetMyPaths>()),
     );
     gh.factory<_i1021.AddPhoneSignInCubit>(
       () => _i1021.AddPhoneSignInCubit(
@@ -914,6 +969,15 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i460.DeleteAccountCubit(
         gh<_i46.DeleteAccount>(),
         gh<_i46.ConfirmWithLinkedProvider>(),
+      ),
+    );
+    gh.factory<_i9.HomeCubit>(
+      () => _i9.HomeCubit(
+        gh<_i251.GetTodayArticle>(),
+        gh<_i172.GetFields>(),
+        gh<_i251.GetContinueReading>(),
+        gh<_i924.GetActivePath>(),
+        gh<_i371.SessionCubit>(),
       ),
     );
     gh.factory<_i1021.ChangeRecoveryPinCubit>(

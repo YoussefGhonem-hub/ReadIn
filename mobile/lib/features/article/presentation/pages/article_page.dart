@@ -17,6 +17,7 @@ import '../../../../shared/widgets/state_views.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../glossary/presentation/widgets/glossary_sheet.dart';
+import '../../../paths/presentation/widgets/next_in_path.dart';
 import '../../../reading/presentation/tracking/reading_tracking.dart';
 import '../../../saved/presentation/cubit/collections_cubit.dart';
 import '../../../settings/domain/entities/app_settings.dart';
@@ -33,16 +34,19 @@ import '../widgets/related_articles_section.dart';
 
 /// Article reader (F04). Deep link: `readin.app/a/{slug}`.
 class ArticlePage extends StatelessWidget {
-  const ArticlePage({super.key, required this.slug, this.anchor});
+  const ArticlePage({super.key, required this.slug, this.anchor, this.language});
 
   final String slug;
 
   /// The block or comment the link points at (`#…`); null opens the article where the reader left it.
   final String? anchor;
 
+  /// The version to open (`?lang=`, e.g. Continue reading's); null = the preferred article language.
+  final String? language;
+
   @override
   Widget build(BuildContext context) {
-    final preferred = context.read<SettingsCubit>().state.articleLanguage;
+    final preferred = language ?? context.read<SettingsCubit>().state.articleLanguage;
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<ArticleCubit>()..load(slug, preferredLanguage: preferred)),
@@ -221,7 +225,10 @@ class _ArticleViewState extends State<ArticleView> {
                             controller: _scroll,
                             bodyFontSize: _fontSizeFor(fontSize),
                             onTerm: (term) => unawaited(_showTerm(term)),
-                            trailing: [RelatedArticlesSection(article: article.card)],
+                            trailing: [
+                              NextInPathSliver(articleId: article.card.id),
+                              RelatedArticlesSection(article: article.card),
+                            ],
                             // Nobody can follow a deleted account (SPEC §9.6).
                             authorAction: switch (article.card.author) {
                               final author? => FollowButton(

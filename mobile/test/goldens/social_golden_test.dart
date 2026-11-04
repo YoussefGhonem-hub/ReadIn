@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:readin/core/di/injection.dart';
 import 'package:readin/core/realtime/realtime_service.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/presentation/cubit/article_cubit.dart';
@@ -24,6 +25,7 @@ import 'package:readin/features/home/presentation/cubit/live_feed_cubit.dart';
 import 'package:readin/features/home/presentation/pages/home_page.dart';
 import 'package:readin/features/home/presentation/widgets/today_hero_card.dart';
 import 'package:readin/features/notifications/presentation/cubit/unread_badge_cubit.dart';
+import 'package:readin/features/paths/presentation/cubit/article_path_cubit.dart';
 import 'package:readin/features/reactions/presentation/cubit/reactors_cubit.dart';
 import 'package:readin/features/reactions/presentation/widgets/reaction_picker.dart';
 import 'package:readin/features/reactions/presentation/widgets/who_reacted_sheet.dart';
@@ -39,6 +41,7 @@ import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart'
 import 'package:readin/shared/rdoc/rdoc_document.dart';
 
 import '../helpers/fixtures.dart';
+import '../helpers/path_fakes.dart';
 import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
 
@@ -320,6 +323,9 @@ void main() {
       whenListen(articleCubit, const Stream<ArticleState>.empty(), initialState: ArticleState(status: ArticleStatus.ready, article: article));
       whenListen(liveCubit, const Stream<LiveArticleCounts?>.empty(), initialState: null);
       whenListen(settings, const Stream<AppSettings>.empty(), initialState: const AppSettings());
+      // The article is in no learning path: "Next in path" renders nothing (F09).
+      getIt.registerFactory<ArticlePathCubit>(noPathCubit);
+      addTearDown(() => getIt.unregister<ArticlePathCubit>());
 
       await pump(
         tester,
