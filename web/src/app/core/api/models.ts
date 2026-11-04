@@ -694,6 +694,98 @@ export interface ReadingHeatmapDto {
   days: HeatmapDayDto[];
 }
 
+// ── Learning paths (F09) ────────────────────────────────────
+
+/** A published path as a card: `/paths`, `/me/paths`, `/me/paths/active`, `/users/{username}/paths`. */
+export interface PathCardDto {
+  id: string;
+  slug: string;
+  /** In the UI language (Accept-Language). */
+  title: string;
+  /** In the UI language. */
+  description: string | null;
+  field: FieldRefDto;
+  /** Articles a reader can open, in path order. */
+  articleCount: number;
+  /** Sum of their reading times (source language). */
+  readingTimeMinutes: number;
+  /** Absolute; the first article's cover. */
+  coverUrl: string | null;
+  /** Signed-in callers (also when not enrolled); null for guests. */
+  progress: PathProgressDto | null;
+  /** Null when not enrolled, and for guests. */
+  enrollment: PathEnrollmentDto | null;
+}
+
+export interface PathProgressDto {
+  /** Articles of this path you have read (F04 "read": ≥ 70% and ≥ 30 s). */
+  readCount: number;
+  /** = articleCount. */
+  total: number;
+  /** floor(readCount * 100 / total), 0–100. */
+  percent: number;
+  /** The first unread article in path order; null when all are read. */
+  next: PathArticleRefDto | null;
+}
+
+export interface PathEnrollmentDto {
+  enrolledAt: string;
+  /** Set once every article was read while enrolled (the completion badge). It stays when the path later grows. */
+  completedAt: string | null;
+}
+
+export interface PathArticleRefDto {
+  id: string;
+  slug: string;
+  /** In your article language preference (falls back to the source language). */
+  title: string;
+  /** The version the title is in. */
+  language: ArticleLanguage;
+  /** 1-based place in the path. */
+  position: number;
+  readingTimeMinutes: number;
+}
+
+export interface PathItemDto {
+  /** 1-based, dense. */
+  position: number;
+  article: ArticleCardDto;
+  /** False for guests. */
+  isRead: boolean;
+}
+
+/** `GET /paths/{slug}`. `404 path.not_found`. */
+export interface PathDetailsDto extends PathCardDto {
+  /** Path order. */
+  items: PathItemDto[];
+}
+
+/** `GET /articles/{id}/path` (the reader's "Next in path" block); `204` when the article is in no published path. */
+export interface ArticlePathDto {
+  /** In several paths: the one you're enrolled in with the latest activity, else the first in editorial order. */
+  path: PathCardDto;
+  /** This article's place in the path, 1-based. */
+  position: number;
+  total: number;
+  previous: PathArticleRefDto | null;
+  /** The following article in path order (read or not); null on the last one. */
+  next: ArticleCardDto | null;
+}
+
+// ── Continue reading (F03) ──────────────────────────────────
+
+/** `GET /me/continue-reading`: an unfinished article you read in the last 30 days. */
+export interface ContinueReadingDto {
+  /** In the language you were reading (`language`). */
+  article: ArticleCardDto;
+  /** 5–100, how far you scrolled. */
+  percent: number;
+  /** The version you were reading. */
+  language: ArticleLanguage;
+  /** Last progress report. */
+  updatedAt: string;
+}
+
 /** RFC 9457 ProblemDetails with ReadIn's stable `code` (SPEC §6.5, §17.1). */
 export interface ProblemDetails {
   type?: string;

@@ -179,6 +179,12 @@
       "stats_private": "These reading stats are private.",
       "avatar_invalid": "This photo can't be used. Upload it again.",
       "expertise_invalid": "Pick up to 5 fields from the list."
+    },
+    "path": {
+      "not_found": "This path doesn't exist.",
+      "slug_taken": "Another path already uses this slug.",
+      "editorial": "This path is managed in the content files and can't be changed here.",
+      "items_invalid": "The path's articles aren't valid: 1–100 published articles, no repeats."
     }
   },
   "auth": {
