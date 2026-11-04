@@ -27,6 +27,14 @@ export const VARIANTS: readonly Variant[] = [
   { lang: 'en', theme: 'dark', dir: 'ltr' },
 ];
 
+/**
+ * SPEC §27: screenshot baselines exist only for ar/light and en/dark, which between them cover both directions and both
+ * themes. The other two variants run the same flow and assertions, without a screenshot.
+ */
+export function hasScreenshot({ lang, theme }: Pick<Variant, 'lang' | 'theme'>): boolean {
+  return (lang === 'ar' && theme === 'light') || (lang === 'en' && theme === 'dark');
+}
+
 export async function useVariant(context: BrowserContext, baseURL: string, { lang, theme }: Variant): Promise<void> {
   const { hostname } = new URL(baseURL);
   await context.addCookies([

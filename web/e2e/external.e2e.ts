@@ -1,5 +1,5 @@
 import { Page, expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, VARIANTS, onApi, problem, reply, restoreSessionAs, sessionFor, useVariant, writerMe } from './support/mock-api';
+import { HIDE_APP_CHROME, VARIANTS, hasScreenshot, onApi, problem, reply, restoreSessionAs, sessionFor, useVariant, writerMe } from './support/mock-api';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- request bodies are plain JSON */
 
@@ -86,7 +86,7 @@ for (const variant of VARIANTS) {
     const sheet = page.locator('[data-not-linked]');
     await expect(sheet).toBeVisible();
     expect(bodies[0]).toMatchObject({ provider: 'google', idToken: GOOGLE_TOKEN, uiLanguage: lang });
-    await expect(page).toHaveScreenshot(`google-not-linked-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`google-not-linked-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
     await sheet.locator('[data-create]').click();
     await page.waitForURL('**/auth/complete-profile');
     expect(bodies[1]).toMatchObject({ provider: 'google', idToken: GOOGLE_TOKEN, createAccount: true });
@@ -117,6 +117,6 @@ for (const variant of VARIANTS) {
     await expect(account.locator('[data-open="phone"]')).toHaveCount(0);
     await expect(account.locator('[data-provider="google"] [data-provider-status]')).toHaveText('mona@gmail.com');
     await account.scrollIntoViewIfNeeded();
-    await expect(account).toHaveScreenshot(`settings-google-only-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(account).toHaveScreenshot(`settings-google-only-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
   });
 }

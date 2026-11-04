@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { hasScreenshot } from './support/mock-api';
 
 /**
- * Visual regression for Home in the 4 required variants (SPEC §15.5 rule 9, §27): ar/en × light/dark.
+ * Home in the 4 required variants (SPEC §15.5 rule 9, §27): ar/en × light/dark, with a screenshot in ar/light and en/dark.
  * Theme and UI language come from the `theme` / `lang` cookies, exactly like a returning user, so the SSR
  * output is checked for flash-free theming as well.
  */
@@ -31,6 +32,6 @@ for (const { lang, theme, dir } of variants) {
 
     // Wait for the feed to settle (articles, empty or error state), then capture.
     await page.waitForLoadState('networkidle');
-    await expect(page).toHaveScreenshot(`home-${lang}-${theme}.png`, { fullPage: true });
+    if (hasScreenshot({ lang, theme })) await expect(page).toHaveScreenshot(`home-${lang}-${theme}.png`, { fullPage: true });
   });
 }

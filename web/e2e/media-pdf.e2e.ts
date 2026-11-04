@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
-import { API, HIDE_APP_CHROME, VARIANTS, fixture, imagesLoaded, multipartField, onApi, parkMouse, reply, signInAsWriter, useVariant } from './support/mock-api';
+import { API, HIDE_APP_CHROME, VARIANTS, fixture, hasScreenshot, imagesLoaded, multipartField, onApi, parkMouse, reply, signInAsWriter, useVariant } from './support/mock-api';
 import { editorReady, publish, trackSavedDocument, typeInEditor } from './support/editor';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- DTOs come from the mock API as plain JSON */
@@ -71,7 +71,7 @@ for (const variant of VARIANTS) {
     await page.locator('[data-title]').focus();
     await parkMouse(page);
     await imagesLoaded(page.locator('[data-doc-preview]'));
-    await expect(page.locator('#ed-attachments')).toHaveScreenshot(`editor-pdf-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page.locator('#ed-attachments')).toHaveScreenshot(`editor-pdf-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
 
     // ── Publish ──
     const result = await publish(page);
@@ -97,7 +97,7 @@ for (const variant of VARIANTS) {
     await card.scrollIntoViewIfNeeded();
     await parkMouse(page);
     await imagesLoaded(card);
-    await expect(card).toHaveScreenshot(`feed-card-pdf-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(card).toHaveScreenshot(`feed-card-pdf-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
 
     // ── Document viewer ──
     const fetchesBefore = articleFetches;
@@ -113,7 +113,7 @@ for (const variant of VARIANTS) {
     await imagesLoaded(viewer.locator('[data-viewer-current]'));
     await imagesLoaded(viewer.locator('[data-viewer-thumbnails]'));
     await parkMouse(page);
-    await expect(page).toHaveScreenshot(`viewer-pdf-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`viewer-pdf-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
 
     await viewer.locator('[data-viewer-thumbnails] button').nth(11).click();
     await expect(viewer.locator('[data-viewer-counter]')).toHaveText(`12 / ${PAGE_COUNT}`);

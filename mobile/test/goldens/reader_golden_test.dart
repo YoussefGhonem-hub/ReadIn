@@ -35,7 +35,7 @@ void main() {
       ));
       await tester.pump();
 
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/reader_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/reader_${variant.name}.png'));
     });
   }
 }

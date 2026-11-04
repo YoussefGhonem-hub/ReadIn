@@ -53,7 +53,7 @@ void main() {
         variant: variant,
       ));
       await tester.pump();
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/glossary_sheet_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/glossary_sheet_${variant.name}.png'));
     });
 
     testWidgets('related articles ${variant.name}', (tester) async {
@@ -85,7 +85,7 @@ void main() {
         variant: variant,
       ));
       await tester.pump();
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/related_articles_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/related_articles_${variant.name}.png'));
     });
   }
 }

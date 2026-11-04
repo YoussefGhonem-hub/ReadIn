@@ -1,5 +1,5 @@
 import { Page, expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, HIDE_READER_BAR, VARIANTS, onApi, parkMouse, reply, useVariant } from './support/mock-api';
+import { HIDE_APP_CHROME, HIDE_READER_BAR, VARIANTS, hasScreenshot, onApi, parkMouse, reply, useVariant } from './support/mock-api';
 import { openArticle, signInAsReader } from './support/social';
 
 /**
@@ -60,7 +60,7 @@ for (const variant of VARIANTS) {
     await expect(rows.first()).toHaveAttribute('href', '/en/a/clean-architecture-whiteboard');
     expect(lookups).toEqual(['/api/v1/glossary/dependency-injection?lang=ar-EG']);
     await parkMouse(page);
-    await expect(dialog).toHaveScreenshot(`glossary-sheet-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(dialog).toHaveScreenshot(`glossary-sheet-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
 
     // Keyboard: focus stays inside, Escape closes and gives focus back to the term.
     for (let i = 0; i < 6; i++) {
@@ -114,7 +114,7 @@ for (const variant of VARIANTS) {
     expect(await section.evaluate((el) => !!(document.querySelector('#sources-title')!.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
     expect(await section.evaluate((el) => !!(el.compareDocumentPosition(document.querySelector('#comments')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
     await parkMouse(page);
-    await expect(section).toHaveScreenshot(`related-articles-${suffix}.png`, { stylePath: [HIDE_APP_CHROME, HIDE_READER_BAR] });
+    if (hasScreenshot(variant)) await expect(section).toHaveScreenshot(`related-articles-${suffix}.png`, { stylePath: [HIDE_APP_CHROME, HIDE_READER_BAR] });
 
     await section.locator('rd-article-card').first().locator('a').first().click();
     await page.waitForURL((url) => url.pathname === '/ar/a/what-is-a-transformer-ar');
@@ -145,7 +145,7 @@ for (const variant of VARIANTS) {
     await expect.poll(() => reports.length).toBeGreaterThan(0);
     expect(Math.abs(Number(reports[0].lastPosition) - 0.5)).toBeLessThan(0.002);
     expect(reports[0].percent).toBe(50);
-    await expect(toast).toHaveScreenshot(`resume-toast-${suffix}.png`);
+    if (hasScreenshot(variant)) await expect(toast).toHaveScreenshot(`resume-toast-${suffix}.png`);
 
     await toast.locator('[data-toast-action]').click();
     await expect(toast).toHaveCount(0);

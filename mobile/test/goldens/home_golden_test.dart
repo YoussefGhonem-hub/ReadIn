@@ -118,7 +118,7 @@ void main() {
   for (final variant in Variant.all) {
     testWidgets('home ${variant.name}', (tester) async {
       await pumpHome(tester, variant, progressCards: true);
-      await expectLater(find.byType(HomeView), matchesGoldenFile('goldens/home_${variant.name}.png'));
+      await expectLater(find.byType(HomeView), matchesVariantGolden(variant, 'goldens/home_${variant.name}.png'));
     });
   }
 
@@ -133,7 +133,7 @@ void main() {
       );
       await tester.pump(); // delivers the new state
       await tester.pump(); // draws it
-      await expectLater(find.byType(HomeView), matchesGoldenFile('goldens/home_live_${variant.name}.png'));
+      await expectLater(find.byType(HomeView), matchesVariantGolden(variant, 'goldens/home_live_${variant.name}.png'));
     });
   }
 }

@@ -127,7 +127,7 @@ void main() {
       when(() => cubit.ensureLoaded(any())).thenAnswer((_) async {});
       await tester.pumpWidget(testApp(BlocProvider<MyArticlesCubit>.value(value: cubit, child: const MyArticlesView()), variant: variant));
       await tester.pump();
-      await expectLater(find.byType(MyArticlesView), matchesGoldenFile('goldens/editor_my_articles_${variant.name}.png'));
+      await expectLater(find.byType(MyArticlesView), matchesVariantGolden(variant, 'goldens/editor_my_articles_${variant.name}.png'));
     });
 
     testWidgets('my articles, published ${variant.name}', (tester) async {
@@ -146,7 +146,7 @@ void main() {
         variant: variant,
       ));
       await tester.pump();
-      await expectLater(find.byType(MyArticlesView), matchesGoldenFile('goldens/editor_my_articles_published_${variant.name}.png'));
+      await expectLater(find.byType(MyArticlesView), matchesVariantGolden(variant, 'goldens/editor_my_articles_published_${variant.name}.png'));
     });
 
     testWidgets('editor ${variant.name}', (tester) async {
@@ -164,7 +164,7 @@ void main() {
         variant: variant,
       ));
       await tester.pump();
-      await expectLater(find.byType(ArticleEditorView), matchesGoldenFile('goldens/editor_${variant.name}.png'));
+      await expectLater(find.byType(ArticleEditorView), matchesVariantGolden(variant, 'goldens/editor_${variant.name}.png'));
     });
 
     for (final (name, attachments) in [('images', _imagesState), ('pdf', _pdfState)]) {
@@ -182,7 +182,7 @@ void main() {
           variant: variant,
         ));
         await tester.pump();
-        await expectLater(find.byType(ArticleSettingsPanel), matchesGoldenFile('goldens/editor_settings_${name}_${variant.name}.png'));
+        await expectLater(find.byType(ArticleSettingsPanel), matchesVariantGolden(variant, 'goldens/editor_settings_${name}_${variant.name}.png'));
       });
     }
 
@@ -213,7 +213,7 @@ void main() {
         variant: variant,
       ));
       await tester.pump();
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/editor_checks_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/editor_checks_${variant.name}.png'));
     });
 
     testWidgets('preview ${variant.name}', (tester) async {
@@ -237,7 +237,7 @@ void main() {
         variant: variant,
       ));
       await tester.pump();
-      await expectLater(find.byType(ArticlePreviewPage), matchesGoldenFile('goldens/editor_preview_${variant.name}.png'));
+      await expectLater(find.byType(ArticlePreviewPage), matchesVariantGolden(variant, 'goldens/editor_preview_${variant.name}.png'));
     });
 
     testWidgets('revisions ${variant.name}', (tester) async {
@@ -252,7 +252,7 @@ void main() {
         variant: variant,
       ));
       await tester.pump();
-      await expectLater(find.byType(RevisionsPage), matchesGoldenFile('goldens/editor_revisions_${variant.name}.png'));
+      await expectLater(find.byType(RevisionsPage), matchesVariantGolden(variant, 'goldens/editor_revisions_${variant.name}.png'));
     });
   }
 }

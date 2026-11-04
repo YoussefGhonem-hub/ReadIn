@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, VARIANTS, fixture, onApi, parkMouse, pngFile, reply, useVariant } from './support/mock-api';
+import { HIDE_APP_CHROME, VARIANTS, fixture, hasScreenshot, onApi, parkMouse, pngFile, reply, useVariant } from './support/mock-api';
 import { openProfile, readingStatsLoaded, signInWithLiveProfile } from './support/profile';
 import { expectSignInPrompt, openArticle, signInAsReader } from './support/social';
 
@@ -67,7 +67,7 @@ for (const variant of VARIANTS) {
     await expect(about.locator('[data-profile-joined]')).toContainText(ar ? 'يناير' : 'January 2026');
     await parkMouse(page);
     await page.evaluate(() => window.scrollTo(0, 0));
-    await expect(page).toHaveScreenshot(`profile-other-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`profile-other-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
 
     // Follow asks a guest to sign in.
     await header.locator('[data-profile-follow] [data-follow]').click();
@@ -117,7 +117,7 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-profile-reading] rd-reading-stats-card')).toContainText(ar ? 'قريت النهارده' : 'You read today');
     await parkMouse(page);
     await page.evaluate(() => window.scrollTo(0, 0));
-    await expect(page).toHaveScreenshot(`profile-own-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`profile-own-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
 
     // Turn public stats on: PUT /me/privacy, kept after a reload.
     const saved = page.waitForRequest((r) => r.method() === 'PUT' && r.url().endsWith('/me/privacy'));
@@ -165,7 +165,7 @@ for (const variant of VARIANTS) {
     await expect(form.locator('[data-bio-count]')).toHaveText(/^\s*\d+ \/ 300\s*$/);
     await parkMouse(page);
     await page.evaluate(() => window.scrollTo(0, 0));
-    await expect(page).toHaveScreenshot(`edit-profile-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`edit-profile-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
 
     // A new photo: uploaded with purpose=avatar, previewed from its 256 px variant.
     await form.locator('[data-avatar-input]').setInputFiles(await pngFile(request, 'portrait.png', 600, 600));
@@ -258,7 +258,7 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-people-list="followers"]')).toHaveAttribute('aria-current', 'page');
     await parkMouse(page);
     await page.evaluate(() => window.scrollTo(0, 0));
-    await expect(page).toHaveScreenshot(`followers-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`followers-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
 
     // Follow someone from the list.
     const first = people.first();

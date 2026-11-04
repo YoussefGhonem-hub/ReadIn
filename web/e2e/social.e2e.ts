@@ -1,5 +1,5 @@
 import { Page, expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, HIDE_COMMENTS, VARIANTS, imagesLoaded, parkMouse, useVariant } from './support/mock-api';
+import { HIDE_APP_CHROME, HIDE_COMMENTS, VARIANTS, hasScreenshot, imagesLoaded, parkMouse, useVariant } from './support/mock-api';
 import { expectSignInPrompt, openArticle, signInAsReader } from './support/social';
 
 /**
@@ -46,7 +46,7 @@ for (const variant of VARIANTS) {
     await expect(picker.locator('[data-reaction="insightful"]')).toHaveAttribute('aria-checked', 'true');
     await expect(picker.locator('[data-reaction-count="insightful"]')).toHaveText('9');
     await parkMouse(page);
-    await expect(page).toHaveScreenshot(`reaction-picker-${suffix}.png`, {
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`reaction-picker-${suffix}.png`, {
       clip: await pickerArea(page),
       stylePath: [HIDE_APP_CHROME, HIDE_COMMENTS],
     });
@@ -83,7 +83,7 @@ for (const variant of VARIANTS) {
     await expect(sheet.locator('[role="tab"]')).toHaveCount(5);
     await expect(sheet.locator('[data-reactors-tab="fire"]')).toContainText('5');
     await parkMouse(page);
-    await expect(page.locator('rd-reactors-sheet section[role="dialog"]')).toHaveScreenshot(`who-reacted-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page.locator('rd-reactors-sheet section[role="dialog"]')).toHaveScreenshot(`who-reacted-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
     await sheet.locator('[data-reactors-tab="fire"]').click();
     await expect(sheet.locator('[data-reactor]')).toHaveCount(5);
     await expect(sheet.locator('[data-reactors-tab="fire"]')).toHaveAttribute('aria-selected', 'true');
@@ -114,7 +114,7 @@ for (const variant of VARIANTS) {
     await expect(deepWork.locator('input')).toBeChecked();
     await expect(deepWork).toContainText(lang === 'ar' ? 'مقال واحد' : '1 article');
     await parkMouse(page);
-    await expect(page.locator('rd-collection-picker-sheet section[role="dialog"]')).toHaveScreenshot(`add-to-collection-${suffix}.png`, {
+    if (hasScreenshot(variant)) await expect(page.locator('rd-collection-picker-sheet section[role="dialog"]')).toHaveScreenshot(`add-to-collection-${suffix}.png`, {
       stylePath: HIDE_APP_CHROME,
     });
     await collections.locator('[data-collections-done]').click();
@@ -166,7 +166,7 @@ for (const variant of VARIANTS) {
     await expect(panel.locator('[data-user="u-salma"]')).toContainText(lang === 'ar' ? 'بيتابعك' : 'Follows you');
     await expect(panel.locator('[data-following-refresh]')).toHaveCount(0);
     await parkMouse(page);
-    await expect(panel).toHaveScreenshot(`following-empty-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(panel).toHaveScreenshot(`following-empty-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
 
     // Follow Karim, then show the feed: his article is in it.
     const karim = panel.locator('[data-user="u-karim"] [data-follow]');
@@ -201,7 +201,7 @@ for (const variant of VARIANTS) {
     await parkMouse(page);
     await imagesLoaded(items.first());
     await page.evaluate(() => window.scrollTo(0, 0));
-    await expect(page).toHaveScreenshot(`saved-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`saved-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
 
     // Field chips.
     await page.locator('[data-field-chip="medicine"]').click();

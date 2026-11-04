@@ -127,4 +127,18 @@ Order:
 - `tools/locks/lock.mjs` exists but no hook enforces it. Installing a hook needs `.claude/settings.json`, which is left
   alone.
 
-## Step 5: screenshots only in ar/light and en/dark (next)
+## Step 5: screenshots only in ar/light and en/dark ✅
+- Web: `hasScreenshot(variant)` in `e2e/support/mock-api.ts` guards every `toHaveScreenshot`. The specs still run all
+  four variants with every assertion; ar/dark and en/light just take no screenshot. 196 baselines deleted, 196 kept.
+- Mobile: `matchesVariantGolden(variant, path)` in `test/helpers/test_app.dart` compares the image for ar/light and
+  en/dark. The other two variants still build and lay out each screen, so an exception or an overflow fails them.
+  170 baselines deleted, 170 kept.
+- SPEC §8.2, §15.5 rule 9, §27, the CI table and the done checklist say so.
+- Gates:
+  - mobile analyze clean, 1278/1278;
+  - web lint clean, e2e type-check clean;
+  - full Playwright 304/334. The 30 failures were all in the Pixel 7 project at the end of a run that overlapped a
+    heavy repo-wide file search: 1 px full-page height differences and a few timeouts. The same specs (paths, profile,
+    reader, social) passed 82/82 when rerun on their own. The next full run is at the Step 6 gate.
+
+## Step 6: remaining work (in progress)

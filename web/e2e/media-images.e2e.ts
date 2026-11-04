@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { API, HIDE_APP_CHROME, VARIANTS, fixture, imagesLoaded, onApi, parkMouse, pngFile, reply, signInAsWriter, uploadedFileName, useVariant } from './support/mock-api';
+import { API, HIDE_APP_CHROME, VARIANTS, fixture, hasScreenshot, imagesLoaded, onApi, parkMouse, pngFile, reply, signInAsWriter, uploadedFileName, useVariant } from './support/mock-api';
 import { editorReady, publish, trackSavedDocument, typeInEditor } from './support/editor';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- DTOs come from the mock API as plain JSON */
@@ -65,7 +65,7 @@ for (const variant of VARIANTS) {
     await page.locator('[data-title]').focus(); // no focus ring on the cards
     await parkMouse(page);
     await imagesLoaded(page.locator('[data-image-list]'));
-    await expect(page.locator('#ed-attachments')).toHaveScreenshot(`editor-images-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page.locator('#ed-attachments')).toHaveScreenshot(`editor-images-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
 
     // ── Publish → article ──
     const result = await publish(page);
@@ -95,7 +95,7 @@ for (const variant of VARIANTS) {
     await feedCard.scrollIntoViewIfNeeded();
     await parkMouse(page);
     await imagesLoaded(feedCard);
-    await expect(feedCard).toHaveScreenshot(`feed-card-images-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(feedCard).toHaveScreenshot(`feed-card-images-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
 
     // ── Full-screen viewer ──
     await feedCard.locator('[data-slide] > button').first().click();
@@ -106,7 +106,7 @@ for (const variant of VARIANTS) {
     await expect(viewer.locator('[data-viewer-download]')).toHaveCount(0); // images have no download
     await imagesLoaded(viewer.locator('[data-viewer-current]'));
     await parkMouse(page);
-    await expect(page).toHaveScreenshot(`viewer-images-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`viewer-images-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
 
     // Arrow keys follow the reading direction.
     await page.keyboard.press(dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight');

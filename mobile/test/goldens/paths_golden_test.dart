@@ -78,14 +78,14 @@ void main() {
         [...appStores(), BlocProvider<AllPathsCubit>.value(value: all), BlocProvider<MyPathsCubit>.value(value: mine)],
         const PathsView(),
       );
-      await expectLater(find.byType(PathsView), matchesGoldenFile('goldens/paths_list_${variant.name}.png'));
+      await expectLater(find.byType(PathsView), matchesVariantGolden(variant, 'goldens/paths_list_${variant.name}.png'));
     });
 
     testWidgets('path page ${variant.name}', (tester) async {
       final details = samplePathDetails(readCount: 2, enrolled: true, language: languageOf(variant)).withPath(pathsFor(variant).first);
       final cubit = MockPathDetailsCubit()..hold(PathDetailsState(status: PathDetailsStatus.ready, details: details));
       await pump(tester, variant, [...appStores(), BlocProvider<PathDetailsCubit>.value(value: cubit)], const PathView(), height: 1240);
-      await expectLater(find.byType(PathView), matchesGoldenFile('goldens/path_page_${variant.name}.png'));
+      await expectLater(find.byType(PathView), matchesVariantGolden(variant, 'goldens/path_page_${variant.name}.png'));
     });
 
     testWidgets('next in path ${variant.name}', (tester) async {
@@ -117,7 +117,7 @@ void main() {
           ),
         ),
       );
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/path_next_in_path_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/path_next_in_path_${variant.name}.png'));
     });
 
     testWidgets('profile paths ${variant.name}', (tester) async {
@@ -130,7 +130,7 @@ void main() {
       await tester.tap(find.text(l10n.profileTabPaths));
       await tester.pumpAndSettle();
 
-      await expectLater(find.byType(ProfileView), matchesGoldenFile('goldens/profile_paths_${variant.name}.png'));
+      await expectLater(find.byType(ProfileView), matchesVariantGolden(variant, 'goldens/profile_paths_${variant.name}.png'));
     });
   }
 }

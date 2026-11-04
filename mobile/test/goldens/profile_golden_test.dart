@@ -48,12 +48,12 @@ void main() {
 
     testWidgets('own profile ${variant.name}', (tester) async {
       await pump(tester, variant, [...appStores(), ...profileScreen(ownProfile, articles: articles)], const ProfileView(isTab: true));
-      await expectLater(find.byType(ProfileView), matchesGoldenFile('goldens/profile_own_${variant.name}.png'));
+      await expectLater(find.byType(ProfileView), matchesVariantGolden(variant, 'goldens/profile_own_${variant.name}.png'));
     });
 
     testWidgets('other profile ${variant.name}', (tester) async {
       await pump(tester, variant, [...appStores(), ...profileScreen(otherProfile, articles: articles)], const ProfileView());
-      await expectLater(find.byType(ProfileView), matchesGoldenFile('goldens/profile_other_${variant.name}.png'));
+      await expectLater(find.byType(ProfileView), matchesVariantGolden(variant, 'goldens/profile_other_${variant.name}.png'));
     });
 
     testWidgets('profile about with public reading stats ${variant.name}', (tester) async {
@@ -75,7 +75,7 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => stats.load(username: 'mona_dev')).called(1);
-      await expectLater(find.byType(ProfileView), matchesGoldenFile('goldens/profile_about_${variant.name}.png'));
+      await expectLater(find.byType(ProfileView), matchesVariantGolden(variant, 'goldens/profile_about_${variant.name}.png'));
     });
 
     testWidgets('edit profile ${variant.name}', (tester) async {
@@ -92,7 +92,7 @@ void main() {
           errors: const {ProfileFields.website: FailureCodes.validationUrl},
         ));
       await pump(tester, variant, [...appStores(), BlocProvider<EditProfileCubit>.value(value: cubit)], const EditProfileView(), height: 1400);
-      await expectLater(find.byType(EditProfileView), matchesGoldenFile('goldens/profile_edit_${variant.name}.png'));
+      await expectLater(find.byType(EditProfileView), matchesVariantGolden(variant, 'goldens/profile_edit_${variant.name}.png'));
     });
 
     testWidgets('followers list ${variant.name}', (tester) async {
@@ -105,7 +105,7 @@ void main() {
         appStores(),
         FollowListsView(profile: otherProfile, cubitFor: (kind) => kind == FollowListKind.followers ? followers : following),
       );
-      await expectLater(find.byType(FollowListsView), matchesGoldenFile('goldens/profile_followers_${variant.name}.png'));
+      await expectLater(find.byType(FollowListsView), matchesVariantGolden(variant, 'goldens/profile_followers_${variant.name}.png'));
     });
   }
 }

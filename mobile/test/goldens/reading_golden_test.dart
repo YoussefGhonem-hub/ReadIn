@@ -31,7 +31,7 @@ void main() {
   for (final variant in Variant.all) {
     testWidgets('reading stats card ${variant.name}', (tester) async {
       await pump(tester, variant, ReadingStatsView(stats: sampleStats()));
-      await expectLater(find.byType(ReadingStatsView), matchesGoldenFile('goldens/reading_stats_card_${variant.name}.png'));
+      await expectLater(find.byType(ReadingStatsView), matchesVariantGolden(variant, 'goldens/reading_stats_card_${variant.name}.png'));
     });
   }
 
@@ -45,7 +45,7 @@ void main() {
       await pump(tester, variant, ReadingStatsView(stats: stats));
       await expectLater(
         find.byType(ReadingStatsView),
-        matchesGoldenFile('goldens/reading_stats_card_pending_${variant.name}.png'),
+        matchesVariantGolden(variant, 'goldens/reading_stats_card_pending_${variant.name}.png'),
       );
     });
   }
@@ -53,14 +53,14 @@ void main() {
   for (final variant in Variant.all) {
     testWidgets('reading heatmap ${variant.name}', (tester) async {
       await pump(tester, variant, ReadingHeatmapView(heatmap: sampleHeatmap()), height: 260);
-      await expectLater(find.byType(ReadingHeatmapView), matchesGoldenFile('goldens/reading_heatmap_${variant.name}.png'));
+      await expectLater(find.byType(ReadingHeatmapView), matchesVariantGolden(variant, 'goldens/reading_heatmap_${variant.name}.png'));
     });
   }
 
   for (final variant in Variant.all) {
     testWidgets('milestone card ${variant.name}', (tester) async {
       await pump(tester, variant, const MilestoneShareCard(days: 30), height: 420);
-      await expectLater(find.byType(MilestoneShareCard), matchesGoldenFile('goldens/reading_milestone_card_${variant.name}.png'));
+      await expectLater(find.byType(MilestoneShareCard), matchesVariantGolden(variant, 'goldens/reading_milestone_card_${variant.name}.png'));
     });
   }
 
@@ -83,7 +83,7 @@ void main() {
         ),
         height: 120,
       );
-      await expectLater(find.byKey(const ValueKey('badges')), matchesGoldenFile('goldens/reading_streak_badges_${variant.name}.png'));
+      await expectLater(find.byKey(const ValueKey('badges')), matchesVariantGolden(variant, 'goldens/reading_streak_badges_${variant.name}.png'));
     });
   }
 }

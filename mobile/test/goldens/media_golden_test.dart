@@ -41,12 +41,12 @@ void main() {
 
     testWidgets('feed card with an image carousel ${variant.name}', (tester) async {
       await pumpCard(tester, variant, ArticleCardTile(article: cardWithImages(3, language: language), onTap: () {}), height: 600);
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/feed_card_images_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/feed_card_images_${variant.name}.png'));
     });
 
     testWidgets('feed card with a PDF ${variant.name}', (tester) async {
       await pumpCard(tester, variant, ArticleCardTile(article: cardWithDocument(language: language), onTap: () {}));
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/feed_card_pdf_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/feed_card_pdf_${variant.name}.png'));
     });
 
     testWidgets('full-screen document viewer ${variant.name}', (tester) async {
@@ -62,7 +62,7 @@ void main() {
         variant: variant,
       ));
       await tester.pump();
-      await expectLater(find.byType(DocumentViewerView), matchesGoldenFile('goldens/viewer_document_${variant.name}.png'));
+      await expectLater(find.byType(DocumentViewerView), matchesVariantGolden(variant, 'goldens/viewer_document_${variant.name}.png'));
     });
   }
 }

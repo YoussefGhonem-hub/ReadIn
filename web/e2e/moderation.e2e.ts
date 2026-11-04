@@ -1,5 +1,5 @@
 import { Page, expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, MOCK_PASSWORD, MOCK_PHONE, VARIANTS, onApi, parkMouse, problem, reply, useVariant } from './support/mock-api';
+import { HIDE_APP_CHROME, MOCK_PASSWORD, MOCK_PHONE, VARIANTS, hasScreenshot, onApi, parkMouse, problem, reply, useVariant } from './support/mock-api';
 import { reportOf, signInAsModerator, signInAsWarnedReader } from './support/moderation';
 import { openProfile } from './support/profile';
 import { expectSignInPrompt, openArticle, signInAsReader } from './support/social';
@@ -60,7 +60,7 @@ for (const variant of VARIANTS) {
     await sheet.locator('[data-report-details]').fill('The study it cites found the opposite.');
     await expect(sheet.locator('[data-report-count]')).toHaveText('38/500');
     await parkMouse(page);
-    await expect(page.locator('rd-report-sheet section[role="dialog"]')).toHaveScreenshot(`report-sheet-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page.locator('rd-report-sheet section[role="dialog"]')).toHaveScreenshot(`report-sheet-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
     await sheet.locator('[data-report-submit]').click();
     await expect(sheet).toHaveCount(0);
     await expect(page.locator('rd-toast-host')).toContainText(ar ? 'شكرًا، هنراجع البلاغ' : "Thanks, we'll review it");
@@ -116,7 +116,7 @@ for (const variant of VARIANTS) {
     if (testInfo.project.name === 'desktop') await expect(page.locator('rd-side-nav [data-moderation-badge]')).toHaveText('4');
     await expect(page.locator('[data-type-chip="article"]')).toContainText('2');
     await parkMouse(page);
-    await expect(page.locator('rd-moderation-queue-page')).toHaveScreenshot(`moderation-queue-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page.locator('rd-moderation-queue-page')).toHaveScreenshot(`moderation-queue-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
 
     // The type filter is in the URL.
     await page.locator('[data-type-chip="comment"]').click();
@@ -131,7 +131,7 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-report]')).toHaveCount(3);
     await expect(page.locator('[data-case-link]')).toHaveAttribute('href', '/en/a/sleep-and-memory');
     await parkMouse(page);
-    await expect(page.locator('rd-moderation-case-page')).toHaveScreenshot(`moderation-case-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page.locator('rd-moderation-case-page')).toHaveScreenshot(`moderation-case-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
     await page.locator('[data-case-action="hide"]').click();
     await confirmAction(page, 'Misleading health claims.', ar ? 'اتخفى' : 'Hidden');
     await expect(page.locator('[data-case-status]')).toHaveText(ar ? 'اتحل' : 'Resolved');

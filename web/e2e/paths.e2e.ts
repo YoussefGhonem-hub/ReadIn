@@ -1,5 +1,5 @@
 import { Page, expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, HIDE_COMMENTS, VARIANTS, imagesLoaded, parkMouse, useVariant } from './support/mock-api';
+import { HIDE_APP_CHROME, HIDE_COMMENTS, VARIANTS, hasScreenshot, imagesLoaded, parkMouse, useVariant } from './support/mock-api';
 import { expectSignInPrompt, signInAsReader } from './support/social';
 
 /**
@@ -49,7 +49,7 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-path-progress]')).toHaveCount(0);
     await imagesLoaded(page.locator('[data-paths-list]'));
     await parkMouse(page);
-    await expect(page).toHaveScreenshot(`paths-list-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`paths-list-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
 
     // Field chips come from the paths in the list and filter it here.
     await page.locator('[data-path-field-chip="medicine"]').click();
@@ -89,7 +89,7 @@ for (const variant of VARIANTS) {
     await expect(items.first().locator('a')).toHaveAttribute('href', '/en/a/clean-architecture-whiteboard');
     await imagesLoaded(page.locator('[data-path-header]'));
     await parkMouse(page);
-    await expect(page).toHaveScreenshot(`path-guest-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`path-guest-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
 
     await page.locator('[data-path-start]').click();
     await expectSignInPrompt(page);
@@ -118,7 +118,7 @@ for (const variant of VARIANTS) {
     await expect(cont).toContainText('ASP.NET Core cheat sheet (PDF)');
     await imagesLoaded(page.locator('[data-path-header]'));
     await parkMouse(page);
-    await expect(page).toHaveScreenshot(`path-enrolled-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`path-enrolled-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
 
     // Leave path: ⋯ → Leave → confirm. The progress stays; Start is back, also after a reload.
     await page.locator('[data-path-menu]').click();
@@ -150,7 +150,7 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-read-tick]')).toHaveCount(2);
     await expect(page.locator('[data-path-again]')).toHaveAttribute('href', '/ar/a/what-is-a-transformer-ar');
     await parkMouse(page);
-    await expect(page).toHaveScreenshot(`path-completed-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`path-completed-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
   });
 
   test(`home: Continue reading and your learning path — ${suffix}`, async ({ page, context, baseURL, request }) => {
@@ -174,7 +174,7 @@ for (const variant of VARIANTS) {
     // The two cards (the greeting's 🔥 badge loads on its own schedule, so it stays out of the shot).
     const top = (await resume.boundingBox())!;
     const bottom = (await path.boundingBox())!;
-    await expect(page).toHaveScreenshot(`home-signed-in-${suffix}.png`, {
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`home-signed-in-${suffix}.png`, {
       clip: { x: 0, y: top.y - 16, width: page.viewportSize()!.width, height: bottom.y + bottom.height + 32 - top.y },
       stylePath: HIDE_APP_CHROME,
     });
@@ -224,7 +224,7 @@ for (const variant of VARIANTS) {
       return sources.nextElementSibling === next && !!(next.compareDocumentPosition(comments) & Node.DOCUMENT_POSITION_FOLLOWING);
     })).toBe(true);
     await parkMouse(page);
-    await expect(block).toHaveScreenshot(`next-in-path-${suffix}.png`, { stylePath: [HIDE_APP_CHROME, HIDE_COMMENTS] });
+    if (hasScreenshot(variant)) await expect(block).toHaveScreenshot(`next-in-path-${suffix}.png`, { stylePath: [HIDE_APP_CHROME, HIDE_COMMENTS] });
 
     // The last article of a finished path: no next card, and 🎉.
     await page.goto('/en/a/how-readin-picks-your-daily-article');

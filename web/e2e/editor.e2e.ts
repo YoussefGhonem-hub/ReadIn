@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, VARIANTS, parkMouse, restoreSessionAs, useVariant } from './support/mock-api';
+import { HIDE_APP_CHROME, VARIANTS, hasScreenshot, parkMouse, restoreSessionAs, useVariant } from './support/mock-api';
 import { editorReady, insertBlock, myArticle, problemCodes, savedToServer, seededIds, signInAsAuthor, typeInEditor } from './support/editor';
 
 /**
@@ -29,7 +29,7 @@ for (const variant of VARIANTS) {
     await expect(myArticle(page, ids.draft).locator('[data-my-title]')).toHaveText('يعني إيه Clean Architecture؟');
     await expect(myArticle(page, ids.untitled).locator('[data-my-title]')).toHaveText(ar ? 'بدون عنوان' : 'Untitled');
     await parkMouse(page);
-    await expect(page.locator('rd-my-articles-page')).toHaveScreenshot(`my-articles-drafts-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page.locator('rd-my-articles-page')).toHaveScreenshot(`my-articles-drafts-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
 
     // Published, with the "unpublished changes" chip.
     await page.locator('[data-my-tab="published"]').click();
@@ -38,7 +38,7 @@ for (const variant of VARIANTS) {
     await expect(myArticle(page, ids.changed).locator('[data-unpublished-chip]')).toHaveText(ar ? 'تعديلات مش منشورة' : 'Unpublished changes');
     await expect(myArticle(page, ids.published).locator('[data-unpublished-chip]')).toHaveCount(0);
     await parkMouse(page);
-    await expect(page.locator('rd-my-articles-page')).toHaveScreenshot(`my-articles-published-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(page.locator('rd-my-articles-page')).toHaveScreenshot(`my-articles-published-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
 
     // Delete asks in the page first; Cancel keeps the article.
     await page.locator('[data-my-tab="draft"]').click();
@@ -97,7 +97,7 @@ for (const variant of VARIANTS) {
 
     await page.locator('[data-title]').focus();
     await parkMouse(page);
-    await expect(page.locator('rd-article-editor')).toHaveScreenshot(`editor-${lang}-${theme}.png`, {
+    if (hasScreenshot(variant)) await expect(page.locator('rd-article-editor')).toHaveScreenshot(`editor-${lang}-${theme}.png`, {
       stylePath: HIDE_APP_CHROME,
       mask: [page.locator('[data-save-status]')],
     });

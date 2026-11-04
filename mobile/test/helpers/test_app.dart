@@ -25,7 +25,16 @@ class Variant {
     Variant(AppLocales.en, Brightness.light),
     Variant(AppLocales.en, Brightness.dark),
   ];
+
+  /// Golden baselines exist only for ar/light and en/dark (SPEC §27): both directions and both themes.
+  bool get hasGolden =>
+      (locale == AppLocales.ar && brightness == Brightness.light) ||
+      (locale == AppLocales.en && brightness == Brightness.dark);
 }
+
+/// [matchesGoldenFile] for the variants with a baseline. ar/dark and en/light still build and lay out the same screen in
+/// the same test, so an exception or an overflow there fails it, but they have no image to compare.
+Matcher matchesVariantGolden(Variant variant, String path) => variant.hasGolden ? matchesGoldenFile(path) : anything;
 
 /// Wraps [child] in a themed, localized MaterialApp.
 Widget testApp(Widget child, {Variant variant = const Variant(AppLocales.ar, Brightness.light)}) => MaterialApp(

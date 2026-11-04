@@ -156,7 +156,7 @@ void main() {
 
   Future<void> expectGolden(WidgetTester tester, String name, Variant variant, {bool spinning = false}) async {
     await settle(tester, spinning: spinning);
-    await expectLater(find.byType(MaterialApp), matchesGoldenFile('goldens/${name}_${variant.name}.png'));
+    await expectLater(find.byType(MaterialApp), matchesVariantGolden(variant, 'goldens/${name}_${variant.name}.png'));
   }
 
   for (final variant in Variant.all) {

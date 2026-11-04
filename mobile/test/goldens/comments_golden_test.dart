@@ -163,7 +163,7 @@ void main() {
         ),
         size: const Size(390, 1480),
       );
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/comment_items_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/comment_items_${variant.name}.png'));
     });
 
     testWidgets('comment composer ${variant.name}', (tester) async {
@@ -188,7 +188,7 @@ void main() {
         ),
         size: const Size(390, 480),
       );
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/comment_composer_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/comment_composer_${variant.name}.png'));
     });
 
     testWidgets('comments empty ${variant.name}', (tester) async {
@@ -199,7 +199,7 @@ void main() {
         state: const CommentsState(status: CommentsStatus.ready, total: 0),
         size: const Size(390, 640),
       );
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/comments_empty_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/comments_empty_${variant.name}.png'));
     });
 
     testWidgets('comments sheet with new comments ${variant.name}', (tester) async {
@@ -217,7 +217,7 @@ void main() {
         signedIn: false,
         size: const Size(390, 844),
       );
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/comments_sheet_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/comments_sheet_${variant.name}.png'));
     });
   }
 }

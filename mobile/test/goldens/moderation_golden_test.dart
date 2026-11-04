@@ -102,7 +102,7 @@ void main() {
       await tester.enterText(find.byType(TextField), 'بيشتم الكاتب في كل تعليق وبيحط links لكورسات مدفوعة');
       FocusManager.instance.primaryFocus?.unfocus();
       await tester.pumpAndSettle();
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/moderation_report_sheet_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/moderation_report_sheet_${variant.name}.png'));
     });
 
     testWidgets('moderation queue ${variant.name}', (tester) async {
@@ -121,7 +121,7 @@ void main() {
         size: const Size(390, 1180),
       );
       await tester.pumpAndSettle();
-      await expectLater(find.byType(ModerationPage), matchesGoldenFile('goldens/moderation_queue_${variant.name}.png'));
+      await expectLater(find.byType(ModerationPage), matchesVariantGolden(variant, 'goldens/moderation_queue_${variant.name}.png'));
     });
 
     testWidgets('moderation case ${variant.name}', (tester) async {
@@ -138,7 +138,7 @@ void main() {
           BlocProvider<ModerationActionCubit>.value(value: actions),
         ],
       );
-      await expectLater(find.byType(ModerationCaseView), matchesGoldenFile('goldens/moderation_case_${variant.name}.png'));
+      await expectLater(find.byType(ModerationCaseView), matchesVariantGolden(variant, 'goldens/moderation_case_${variant.name}.png'));
     });
 
     testWidgets('hidden article ${variant.name}', (tester) async {
@@ -171,7 +171,7 @@ void main() {
           BlocProvider<CollectionsCubit>.value(value: collections),
         ],
       );
-      await expectLater(find.byType(ArticleView), matchesGoldenFile('goldens/moderation_hidden_article_${variant.name}.png'));
+      await expectLater(find.byType(ArticleView), matchesVariantGolden(variant, 'goldens/moderation_hidden_article_${variant.name}.png'));
     });
   }
 }

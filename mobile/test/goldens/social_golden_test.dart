@@ -142,7 +142,7 @@ void main() {
         ),
         size: const Size(390, 300),
       );
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/reader_action_bar_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/reader_action_bar_${variant.name}.png'));
     });
 
     testWidgets('reaction picker ${variant.name}', (tester) async {
@@ -152,7 +152,7 @@ void main() {
         Scaffold(body: Center(child: ReactionPicker(selected: ReactionType.love, onSelected: (_) {}))),
         size: const Size(390, 160),
       );
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/reaction_picker_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/reaction_picker_${variant.name}.png'));
     });
 
     testWidgets('who reacted ${variant.name}', (tester) async {
@@ -181,7 +181,7 @@ void main() {
         ),
         size: const Size(390, 560),
       );
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/who_reacted_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/who_reacted_${variant.name}.png'));
     });
 
     testWidgets('follow button states ${variant.name}', (tester) async {
@@ -206,7 +206,7 @@ void main() {
         ),
         size: const Size(390, 220),
       );
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/follow_button_states_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/follow_button_states_${variant.name}.png'));
     });
 
     Future<void> pumpSaved(WidgetTester tester, SavedListState list, {int tab = 0, CollectionsState? collectionsState}) async {
@@ -230,7 +230,7 @@ void main() {
         tester,
         SavedListState(status: SavedListStatus.ready, items: sampleSaved(language: language), fields: sampleFields),
       );
-      await expectLater(find.byType(SavedView), matchesGoldenFile('goldens/saved_list_${variant.name}.png'));
+      await expectLater(find.byType(SavedView), matchesVariantGolden(variant, 'goldens/saved_list_${variant.name}.png'));
     });
 
     testWidgets('saved list offline, one collection ${variant.name}', (tester) async {
@@ -244,18 +244,18 @@ void main() {
           filter: const SavedFilter(collectionId: 'c-1'),
         ),
       );
-      await expectLater(find.byType(SavedView), matchesGoldenFile('goldens/saved_list_offline_${variant.name}.png'));
+      await expectLater(find.byType(SavedView), matchesVariantGolden(variant, 'goldens/saved_list_offline_${variant.name}.png'));
     });
 
     testWidgets('saved empty ${variant.name}', (tester) async {
       await pumpSaved(tester, const SavedListState(status: SavedListStatus.ready, fields: sampleFields));
-      await expectLater(find.byType(SavedView), matchesGoldenFile('goldens/saved_empty_${variant.name}.png'));
+      await expectLater(find.byType(SavedView), matchesVariantGolden(variant, 'goldens/saved_empty_${variant.name}.png'));
     });
 
     testWidgets('saved collections ${variant.name}', (tester) async {
       await pumpSaved(tester, const SavedListState(status: SavedListStatus.ready), tab: 1);
       await tester.pumpAndSettle();
-      await expectLater(find.byType(SavedView), matchesGoldenFile('goldens/saved_collections_${variant.name}.png'));
+      await expectLater(find.byType(SavedView), matchesVariantGolden(variant, 'goldens/saved_collections_${variant.name}.png'));
     });
 
     testWidgets('saved collections empty ${variant.name}', (tester) async {
@@ -266,7 +266,7 @@ void main() {
         collectionsState: const CollectionsState(status: CollectionsStatus.ready),
       );
       await tester.pumpAndSettle();
-      await expectLater(find.byType(SavedView), matchesGoldenFile('goldens/saved_collections_empty_${variant.name}.png'));
+      await expectLater(find.byType(SavedView), matchesVariantGolden(variant, 'goldens/saved_collections_empty_${variant.name}.png'));
     });
 
     testWidgets('following tab, nobody followed yet ${variant.name}', (tester) async {
@@ -306,7 +306,7 @@ void main() {
           BlocProvider<StreakCubit>.value(value: streak),
         ],
       );
-      await expectLater(find.byType(HomeView), matchesGoldenFile('goldens/home_following_empty_${variant.name}.png'));
+      await expectLater(find.byType(HomeView), matchesVariantGolden(variant, 'goldens/home_following_empty_${variant.name}.png'));
     });
 
     Future<void> pumpReader(WidgetTester tester, ArticleCard card) async {
@@ -343,14 +343,14 @@ void main() {
 
     testWidgets('reader with follow and actions ${variant.name}', (tester) async {
       await pumpReader(tester, engagedCard(1, myReaction: ReactionType.insightful, language: language));
-      await expectLater(find.byType(ArticleView), matchesGoldenFile('goldens/reader_social_${variant.name}.png'));
+      await expectLater(find.byType(ArticleView), matchesVariantGolden(variant, 'goldens/reader_social_${variant.name}.png'));
     });
 
     // SPEC §9.6: a deleted account's published articles stay up under "Deleted user".
     testWidgets('reader by a deleted user ${variant.name}', (tester) async {
       await pumpReader(tester, engagedCard(1, myReaction: ReactionType.insightful, language: language, authorDeleted: true));
       expect(find.byType(FollowButton), findsNothing);
-      await expectLater(find.byType(ArticleView), matchesGoldenFile('goldens/reader_deleted_author_${variant.name}.png'));
+      await expectLater(find.byType(ArticleView), matchesVariantGolden(variant, 'goldens/reader_deleted_author_${variant.name}.png'));
     });
 
     testWidgets("today's article and a feed card by a deleted user ${variant.name}", (tester) async {
@@ -377,7 +377,7 @@ void main() {
         ),
         size: const Size(390, 560),
       );
-      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/feed_cards_deleted_author_${variant.name}.png'));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/feed_cards_deleted_author_${variant.name}.png'));
     });
   }
 }

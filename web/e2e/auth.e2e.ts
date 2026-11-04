@@ -6,6 +6,7 @@ import {
   MOCK_PHONE,
   VARIANTS,
   Variant,
+  hasScreenshot,
   onApi,
   problem,
   reply,
@@ -20,7 +21,8 @@ import {
 /**
  * Auth v1.1 end to end (SPEC §9, F01, F18) in ar/en × light/dark: Welcome → Sign in (generic error) → Forgot password
  * (phone + PIN → new password) → Sign in with the banner; Create account (3 steps) → Complete profile → Onboarding;
- * the mandatory change-password and set-PIN screens; Settings → Account. Every screen gets a screenshot.
+ * the mandatory change-password and set-PIN screens; Settings → Account. Every screen gets a screenshot in ar/light and
+ * en/dark (SPEC §27).
  */
 test.describe.configure({ timeout: 90_000 });
 
@@ -48,15 +50,15 @@ async function imagesSettled(page: Page): Promise<void> {
   );
 }
 
-async function snap(page: Page, name: string): Promise<void> {
+async function snap(page: Page, variant: Variant, name: string): Promise<void> {
   await page.mouse.move(1, 1);
   await imagesSettled(page);
-  await expect(page).toHaveScreenshot(name, { fullPage: true, stylePath: HIDE_APP_CHROME });
+  if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(name, { fullPage: true, stylePath: HIDE_APP_CHROME });
 }
 
-async function snapViewport(page: Page, name: string): Promise<void> {
+async function snapViewport(page: Page, variant: Variant, name: string): Promise<void> {
   await imagesSettled(page);
-  await expect(page).toHaveScreenshot(name, { stylePath: HIDE_APP_CHROME });
+  if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(name, { stylePath: HIDE_APP_CHROME });
 }
 
 /** Types a PIN into the boxes (the focus moves on by itself). */
@@ -95,7 +97,7 @@ for (const variant of VARIANTS) {
     await page.goto('/auth');
     await expect(page.locator('html')).toHaveAttribute('dir', dir);
     await expect(page.locator('[data-welcome]')).toBeVisible({ timeout: FIRST_RENDER_MS });
-    await snap(page, `welcome-${suffix}.png`);
+    await snap(page, variant, `welcome-${suffix}.png`);
 
     // ── Sign in: the country picker, then one generic error for a wrong password ──
     await page.locator('[data-sign-in]').click();
@@ -105,7 +107,7 @@ for (const variant of VARIANTS) {
     await expect(picker).toBeVisible();
     await picker.locator('[role="combobox"]').fill(lang === 'ar' ? 'السعو' : 'sau');
     await expect(picker.locator('[role="option"]').first()).toHaveAttribute('data-country', 'SA');
-    await snapViewport(page, `country-picker-${suffix}.png`);
+    await snapViewport(page, variant, `country-picker-${suffix}.png`);
     await page.keyboard.press('Escape');
     await expect(picker).toHaveCount(0);
 
@@ -116,7 +118,7 @@ for (const variant of VARIANTS) {
     await page.locator('form [data-submit]').click();
     await expect(page.locator('[data-error]')).toBeVisible();
     expect(loginBodies[0]).toEqual({ phoneNumber: MOCK_PHONE, password: 'wrong-password-1' });
-    await snap(page, `sign-in-error-${suffix}.png`);
+    await snap(page, variant, `sign-in-error-${suffix}.png`);
 
     // ── Forgot password: the number comes along ──
     await page.locator('[data-forgot]').click();
@@ -124,12 +126,12 @@ for (const variant of VARIANTS) {
     await expect(page.locator('#forgot-phone')).toHaveValue('10 01234567');
     await page.locator('[data-forgot-pin]').click();
     await expect(page.locator('[data-support]')).toBeVisible();
-    await snapViewport(page, `contact-support-${suffix}.png`);
+    await snapViewport(page, variant, `contact-support-${suffix}.png`);
     await page.keyboard.press('Escape');
     await expect(page.locator('[data-support]')).toHaveCount(0);
 
     await typePin(page, 'forgot-pin', GOOD_PIN);
-    await snap(page, `forgot-verify-${suffix}.png`);
+    await snap(page, variant, `forgot-verify-${suffix}.png`);
     await page.locator('[data-step-verify] [data-submit]').click();
     await expect(page.locator('[data-step-reset]')).toBeVisible();
     expect(verifyBody).toEqual({ phoneNumber: MOCK_PHONE, pin: GOOD_PIN });
@@ -137,7 +139,7 @@ for (const variant of VARIANTS) {
     await page.locator('#forgot-new-password').fill(NEW_PASSWORD);
     await page.locator('#forgot-confirm').fill(NEW_PASSWORD);
     await expect(page.locator('[data-rule][data-met="true"]')).toHaveCount(3);
-    await snap(page, `forgot-reset-${suffix}.png`);
+    await snap(page, variant, `forgot-reset-${suffix}.png`);
     await page.locator('[data-step-reset] [data-submit]').click();
 
     // ── Back on Sign in: number pre-filled, banner, then in with the new password ──
@@ -145,7 +147,7 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-banner]')).toBeVisible();
     await expect(page.locator('#sign-in-phone')).toHaveValue('10 01234567');
     expect(resetBody).toEqual({ resetToken: 'reset-token-1', newPassword: NEW_PASSWORD });
-    await snap(page, `sign-in-reset-${suffix}.png`);
+    await snap(page, variant, `sign-in-reset-${suffix}.png`);
 
     await page.locator('#sign-in-password').fill(NEW_PASSWORD);
     await page.locator('form [data-submit]').click();
@@ -186,7 +188,7 @@ for (const variant of VARIANTS) {
     await page.locator('#sign-up-password').fill(STRONG_PASSWORD);
     await page.locator('#sign-up-confirm').fill(STRONG_PASSWORD);
     await expect(page.locator('[data-rule][data-met="true"]')).toHaveCount(3);
-    await snap(page, `sign-up-account-${suffix}.png`);
+    await snap(page, variant, `sign-up-account-${suffix}.png`);
     await page.locator('[data-step-1] [data-submit]').click();
 
     // Step 2: the recovery PIN; a weak one is refused live
@@ -197,14 +199,14 @@ for (const variant of VARIANTS) {
     await page.keyboard.type(GOOD_PIN);
     await typePin(page, 'sign-up-pin-confirm', GOOD_PIN);
     await expect(page.locator('#sign-up-pin-error')).toHaveCount(0);
-    await snap(page, `sign-up-pin-${suffix}.png`);
+    await snap(page, variant, `sign-up-pin-${suffix}.png`);
     await page.locator('[data-step-2] [data-submit]').click();
 
     // Step 3: confirm the number (large, LTR)
     const dialog = page.locator('[data-confirm-phone]');
     await expect(dialog).toBeVisible();
     await expect(dialog.locator('[data-phone]')).toHaveText('+20 10 01234567');
-    await snapViewport(page, `sign-up-confirm-${suffix}.png`);
+    await snapViewport(page, variant, `sign-up-confirm-${suffix}.png`);
 
     // The number is taken → back to step 1 with a Sign in action; "Edit" keeps everything typed.
     await dialog.locator('[data-confirm]').click();
@@ -224,7 +226,7 @@ for (const variant of VARIANTS) {
     await page.locator('#profile-username').fill('Mona_Adel!');
     await expect(page.locator('#profile-username')).toHaveValue('mona_adel');
     await expect(page.locator('[data-username-status]')).toHaveClass(/text-success/);
-    await snap(page, `complete-profile-${suffix}.png`);
+    await snap(page, variant, `complete-profile-${suffix}.png`);
     await page.locator('[data-complete-profile] [data-submit]').click();
 
     await page.waitForURL('**/onboarding');
@@ -255,7 +257,7 @@ for (const variant of VARIANTS) {
     await page.locator('#must-current').fill('Temp-Pass-9912');
     await page.locator('#must-new').fill(NEW_PASSWORD);
     await page.locator('#must-confirm').fill(NEW_PASSWORD);
-    await snap(page, `must-change-password-${suffix}.png`);
+    await snap(page, variant, `must-change-password-${suffix}.png`);
     await page.locator('[data-change-password] [data-submit]').click();
 
     // Then the PIN, which can't be skipped (the last digits of the number are refused).
@@ -266,7 +268,7 @@ for (const variant of VARIANTS) {
     await page.waitForURL((url) => url.pathname === '/auth/recovery-pin');
     await typePin(page, 'set-pin', '4567');
     await expect(page.locator('#set-pin-error')).toBeVisible();
-    await snap(page, `set-pin-${suffix}.png`);
+    await snap(page, variant, `set-pin-${suffix}.png`);
     await page.locator('#set-pin-0').click();
     await page.keyboard.type(GOOD_PIN);
     await typePin(page, 'set-pin-confirm', GOOD_PIN);
@@ -299,7 +301,7 @@ for (const variant of VARIANTS) {
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     await account.scrollIntoViewIfNeeded();
     await imagesSettled(page);
-    await expect(account).toHaveScreenshot(`settings-account-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    if (hasScreenshot(variant)) await expect(account).toHaveScreenshot(`settings-account-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
 
     // Change number: new number + password → the confirm-number dialog → saved
     await account.locator('[data-open="phone"]').click();
@@ -308,7 +310,7 @@ for (const variant of VARIANTS) {
     await page.locator('[data-change-phone] [data-submit]').click();
     const dialog = page.locator('[data-confirm-phone]');
     await expect(dialog.locator('[data-phone]')).toHaveText('+966 50 123 4567');
-    await snapViewport(page, `settings-change-phone-${suffix}.png`);
+    await snapViewport(page, variant, `settings-change-phone-${suffix}.png`);
     await dialog.locator('[data-confirm]').click();
     await expect(dialog).toHaveCount(0);
     expect(phoneBody).toEqual({ newPhoneNumber: '+966501234567', currentPassword: MOCK_PASSWORD });
@@ -321,7 +323,7 @@ for (const variant of VARIANTS) {
     await typePin(page, 'change-pin-confirm', GOOD_PIN);
     await page.locator('[data-change-pin] [data-submit]').click();
     await expect(page.locator('#change-pin-password-error')).toBeVisible();
-    await snapViewport(page, `settings-change-pin-${suffix}.png`);
+    await snapViewport(page, variant, `settings-change-pin-${suffix}.png`);
     await page.keyboard.press('Escape');
 
     // Sign out (the API no longer restores the session afterwards)
