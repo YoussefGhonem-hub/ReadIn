@@ -41,12 +41,15 @@ export function scrollFraction(el: HTMLElement, viewportHeight: number): number 
  * 15 s, when the tab is hidden and when the reader closes. Browser only, signed-in users only.
  *
  * Must run in the reader's injection context. `progress` is the reader's scroll fraction (0..1); `element` is the
- * article, measured once when a session starts because `progress` can still describe the loading skeleton.
+ * article, measured once when a session starts because `progress` can still describe the loading skeleton. While
+ * `hold` returns true no session starts: the reader is still putting you back where you left off (F04 resume), and
+ * a first report from the top would save that over your position.
  */
 export function injectReadingTracker(
   article: () => TrackedArticle | null,
   progress: Signal<number>,
   element?: () => HTMLElement | undefined,
+  hold?: () => boolean,
 ): void {
   if (!isPlatformBrowser(inject(PLATFORM_ID))) return;
   const window = inject(DOCUMENT).defaultView;
@@ -71,7 +74,7 @@ export function injectReadingTracker(
   const target = computed<TrackedArticle | null>(
     () => {
       const current = article();
-      return current && session.isAuthenticated() ? { id: current.id, language: current.language } : null;
+      return current && session.isAuthenticated() && !hold?.() ? { id: current.id, language: current.language } : null;
     },
     { equal: (a, b) => a?.id === b?.id && a?.language === b?.language },
   );

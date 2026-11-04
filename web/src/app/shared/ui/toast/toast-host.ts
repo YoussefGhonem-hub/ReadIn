@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
-import { Toast, ToastService } from './toast.service';
+import { Toast, ToastAction, ToastService } from './toast.service';
 
 @Component({
   selector: 'rd-toast-host',
@@ -36,6 +36,9 @@ import { Toast, ToastService } from './toast.service';
         } @else {
           <p class="m-0 flex-1" dir="auto">{{ toast.message }}</p>
         }
+        @if (toast.action; as action) {
+          <button type="button" class="shrink-0 font-semibold text-primary hover:underline" data-toast-action (click)="run(toast, action)">{{ action.label }}</button>
+        }
         <button
           type="button"
           class="text-text-secondary hover:text-text-primary"
@@ -51,6 +54,11 @@ import { Toast, ToastService } from './toast.service';
 export class ToastHost {
   protected readonly toasts = inject(ToastService);
   private readonly router = inject(Router);
+
+  protected run(toast: Toast, action: ToastAction): void {
+    this.toasts.dismiss(toast.id);
+    action.run();
+  }
 
   protected open(event: MouseEvent, toast: Toast): void {
     event.preventDefault();

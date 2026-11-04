@@ -278,6 +278,8 @@ export interface ArticleDetailsDto extends ArticleCardDto {
   isFollowingAuthor: boolean;
   /** The viewer's collections that contain the article; empty for guests. */
   collectionIds: string[];
+  /** The viewer's reading progress, to resume where they left off (F04); null for guests and unopened articles. */
+  myProgress: MyProgressDto | null;
 }
 
 // ── Reactions (F10) ─────────────────────────────────────────
@@ -692,6 +694,42 @@ export interface ReadingHeatmapDto {
   /** The user's local today. */
   to: string;
   days: HeatmapDayDto[];
+}
+
+/** `ArticleDetailsDto.myProgress`: what the reader reached on one version (contract "Resume (F04)"). */
+export interface MyProgressDto {
+  /** The version the progress was recorded on. */
+  language: ArticleLanguage;
+  /** 0–100, the highest scroll position reached. */
+  percent: number;
+  /** As sent in `ReadingProgressRequest`, e.g. "0.4523". */
+  lastPosition: string | null;
+  /** Set once the article counts as read. */
+  completedAt: string | null;
+}
+
+// ── Glossary (F21) ──────────────────────────────────────────
+
+/** `GET /glossary/{slug}?lang=`. `slug` is the RDoc `term` node's `termId`. */
+export interface GlossaryTermDto {
+  slug: string;
+  /** The English term, always shown LTR. */
+  term: string;
+  definitionEn: string;
+  /** Egyptian Arabic with English terms (SPEC §14 BiDi rules apply). */
+  explanationAr: string;
+  /** ≤ 6 published articles that use the term, best first; the reader drops the open one and shows ≤ 5. */
+  articles: GlossaryArticleDto[];
+}
+
+export interface GlossaryArticleDto {
+  id: string;
+  slug: string;
+  /** The language of `title` (the `lang` asked for when the article has it). */
+  language: ArticleLanguage;
+  title: string;
+  readingTimeMinutes: number;
+  field: FieldRefDto;
 }
 
 /** RFC 9457 ProblemDetails with ReadIn's stable `code` (SPEC §6.5, §17.1). */

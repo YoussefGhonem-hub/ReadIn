@@ -1,24 +1,36 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { translocoTesting } from '../testing/transloco-testing';
 import { App } from './app';
+import { TermSheetService } from './shared/rdoc/rdoc-context';
 import { provideAppIcons } from './shared/ui/icons';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App, translocoTesting()],
-      providers: [provideRouter([]), provideAppIcons()],
+      providers: [provideRouter([]), provideAppIcons(), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
   });
 
-  it('creates the root with toast host, sign-in prompt and term sheet', async () => {
+  it('creates the root with toast host and sign-in prompt; the term sheet comes with the first tapped term', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('rd-toast-host')).not.toBeNull();
     expect(el.querySelector('rd-sign-in-prompt')).not.toBeNull();
-    expect(el.querySelector('rd-term-sheet')).not.toBeNull();
+    expect(el.querySelector('rd-term-sheet')).toBeNull();
+
+    TestBed.inject(TermSheetService).open({ termId: 'dependency-injection', text: 'DI', language: 'en', articleId: null });
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(el.querySelector('rd-term-sheet [role="dialog"]')).not.toBeNull();
+    });
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne((r) => r.url.endsWith('/glossary/dependency-injection')).flush(null, { status: 404, statusText: 'Not Found' });
+    http.verify();
   });
 
   it('applies the theme attribute on startup', async () => {

@@ -277,7 +277,8 @@ function card({
   };
 }
 
-function details(cardDto, paragraphs = ['A short post about the attached media.']) {
+/** `blocks` replaces the one-paragraph content (the reader e2e needs a long article with glossary terms). */
+function details(cardDto, paragraphs = ['A short post about the attached media.'], blocks = null) {
   return {
     ...cardDto,
     availableLanguages: [cardDto.language],
@@ -285,7 +286,7 @@ function details(cardDto, paragraphs = ['A short post about the attached media.'
     content: {
       version: 1,
       language: cardDto.language,
-      blocks: paragraphs.map((text, i) => ({ id: `p${i + 1}`, type: 'paragraph', dir: 'auto', content: [{ type: 'text', text }] })),
+      blocks: blocks ?? paragraphs.map((text, i) => ({ id: `p${i + 1}`, type: 'paragraph', dir: 'auto', content: [{ type: 'text', text }] })),
     },
     topic: null,
     tags: [],
@@ -295,6 +296,7 @@ function details(cardDto, paragraphs = ['A short post about the attached media.'
     readCount: 0,
     isFollowingAuthor: false,
     collectionIds: [],
+    myProgress: null,
   };
 }
 
@@ -398,12 +400,72 @@ const MORE_ARTICLES = [
 ];
 const ALL_ARTICLES = [...ARTICLES, ...MORE_ARTICLES];
 
+// ── Reader (F04 resume and related articles, F21 glossary) ─────
+
+const text = (value) => ({ type: 'text', text: value });
+const term = (termId, value) => ({ type: 'term', termId, text: value });
+
+/**
+ * "يعني إيه Dependency Injection": long enough to scroll (resume), with glossary terms: `dependency-injection` and
+ * `ioc-container` are in the glossary, `service-locator` isn't (404).
+ */
+const DI_BLOCKS = [
+  {
+    id: 'p1',
+    type: 'paragraph',
+    dir: 'auto',
+    content: [text('لو بتسمع عن '), term('dependency-injection', 'Dependency Injection'), text(' لأول مرة، الفكرة أبسط مما تتخيل: الـ class ما يعملش الحاجات اللي محتاجها بنفسه.')],
+  },
+  ...Array.from({ length: 6 }, (_, section) => [
+    { id: `h${section + 1}`, type: 'heading', level: 2, dir: 'auto', content: [text(`الجزء ${section + 1}: إزاي الـ container بيشتغل`)] },
+    ...Array.from({ length: 4 }, (_, i) => ({
+      id: `s${section + 1}p${i + 1}`,
+      type: 'paragraph',
+      dir: 'auto',
+      content:
+        section === 0 && i === 0
+          ? [text('الـ '), term('ioc-container', 'IoC container'), text(' هو اللي بيعمل الـ objects ويوصّلها لبعض. وفيه أسلوب تاني اسمه '), term('service-locator', 'Service Locator'), text(' بس ليه عيوب.')]
+          : [
+              text(
+                `فقرة ${i + 1}: في ASP.NET Core بتسجّل الـ services في Program.cs، وبعدين الـ framework بيدّيها للـ constructor لما يحتاجها. ده بيخلي الكود أسهل في الـ testing والتغيير، ومش محتاج تعرف التفاصيل كلها من الأول.`,
+              ),
+            ],
+    })),
+  ]).flat(),
+];
+
 const DETAILS = new Map(
   ALL_ARTICLES.map((a) => {
     const full = a.attachments?.kind === 'document' ? { ...a, attachments: { ...a.attachments, document: documentAttachment(cheatSheet) } } : a;
-    return [a.slug, details(full)];
+    return [a.slug, details(full, undefined, a.slug === 'dependency-injection-ar' ? DI_BLOCKS : null)];
   }),
 );
+
+const bySlug = (slug) => ALL_ARTICLES.find((a) => a.slug === slug);
+const glossaryArticle = ({ id, slug, language, title, readingTimeMinutes, field }) => ({ id, slug, language, title, readingTimeMinutes, field });
+
+/** `GET /glossary/{slug}`. `articles` holds the article that uses the term too: the reader leaves it out. */
+const GLOSSARY = {
+  'dependency-injection': {
+    slug: 'dependency-injection',
+    term: 'Dependency Injection',
+    definitionEn: 'A technique where an object receives the objects it depends on from outside instead of creating them itself.',
+    explanationAr: 'إن الـ class ياخد الحاجات اللي محتاجها (dependencies) من بره، بدل ما يعملها بنفسه بـ new. كده تقدر تبدّلها بسهولة في الـ testing.',
+    articles: ['dependency-injection-ar', 'clean-architecture-whiteboard', 'aspnet-core-cheatsheet', 'what-is-a-transformer-ar'],
+  },
+  'ioc-container': {
+    slug: 'ioc-container',
+    term: 'IoC container',
+    definitionEn: 'A framework component that creates objects and supplies their dependencies.',
+    explanationAr: 'الجزء من الـ framework اللي بيعمل الـ objects ويوصّل كل واحد بالـ dependencies بتاعته.',
+    articles: ['dependency-injection-ar'],
+  },
+};
+
+/** `GET /articles/{id}/related`: only the reader e2e's article has some, so the other reader screenshots don't change. */
+const RELATED = {
+  'a-dependency-injection-ar': ['what-is-a-transformer-ar', 'react-server-components-explained', 'readin-streaks-ar', 'how-readin-picks-your-daily-article'],
+};
 
 /** The demo account (a fictional Egyptian mobile number). Sign in with MOCK_PASSWORD. */
 const MOCK_PHONE = '+201001234567';
@@ -541,6 +603,23 @@ const routes = [
     'GET',
     new RegExp(`^${API}/feed/for-you$`),
     (q, _m, _body, req) => [200, { items: q.get('cursor') ? [] : ARTICLES.map((a) => social.personalize(a, social.viewerOf(req))), nextCursor: null }],
+  ],
+  [
+    'GET',
+    new RegExp(`^${API}/glossary/([^/]+)$`),
+    (_q, [, slug]) => {
+      const entry = GLOSSARY[decodeURIComponent(slug)];
+      if (!entry) return [404, problem(404, 'glossary.term_not_found', 'This term is not in the glossary.')];
+      return [200, { ...entry, articles: entry.articles.map((s) => glossaryArticle(bySlug(s))) }];
+    },
+  ],
+  [
+    'GET',
+    new RegExp(`^${API}/articles/([^/]+)/related$`),
+    (q, [, id], _body, req) => {
+      const limit = Math.min(10, Math.max(1, Number(q.get('limit') ?? 4)));
+      return [200, (RELATED[id] ?? []).slice(0, limit).map((s) => social.personalize(bySlug(s), social.viewerOf(req)))];
+    },
   ],
   [
     'GET',

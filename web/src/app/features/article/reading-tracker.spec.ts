@@ -29,7 +29,7 @@ const fail = (status: number, code = 'unknown'): Reply => throwError(() => new A
 
 let visibility: DocumentVisibilityState = 'visible';
 
-function setup(options: { signedIn?: boolean; replies?: (() => Reply)[] } = {}) {
+function setup(options: { signedIn?: boolean; replies?: (() => Reply)[]; hold?: () => boolean } = {}) {
   const replies = [...(options.replies ?? [])];
   const api = {
     progress: vi.fn<(id: string, body: ReadingProgressRequest, options?: { keepalive?: boolean }) => Reply>(() => (replies.shift() ?? ok)()),
@@ -51,7 +51,7 @@ function setup(options: { signedIn?: boolean; replies?: (() => Reply)[] } = {}) 
   const progress = signal(0);
   // The reader's own injector: destroying it is leaving the article.
   const reader = createEnvironmentInjector([], TestBed.inject(EnvironmentInjector));
-  runInInjectionContext(reader, () => injectReadingTracker(article, progress));
+  runInInjectionContext(reader, () => injectReadingTracker(article, progress, undefined, options.hold));
   TestBed.tick();
 
   const bodies = () => api.progress.mock.calls.map(([, body]) => body);
@@ -236,6 +236,23 @@ describe('injectReadingTracker', () => {
     TestBed.tick();
     await advance(60_000);
     expect(seconds()).toEqual([0]);
+  });
+
+  it('waits while held (the reader is resuming your position), then reports from where you are', async () => {
+    const held = signal(true);
+    const { bodies, progress } = setup({ hold: held });
+    await advance(REPORT_INTERVAL_MS * 2);
+    expect(bodies()).toEqual([]);
+
+    // Resumed at 45%: the first report keeps that position instead of saving the top over it.
+    progress.set(0.45);
+    held.set(false);
+    TestBed.tick();
+    await advance(0);
+    expect(bodies()).toEqual([{ language: 'ar-EG', percent: 45, lastPosition: '0.4500', activeSecondsDelta: 0 }]);
+
+    await advance(REPORT_INTERVAL_MS);
+    expect(bodies()[1]).toMatchObject({ percent: 45, lastPosition: '0.4500', activeSecondsDelta: 15 });
   });
 
   it('starts a new session for another language of the article', async () => {

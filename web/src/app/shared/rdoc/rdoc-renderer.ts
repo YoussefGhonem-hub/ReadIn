@@ -97,9 +97,11 @@ import {
 })
 export class RDocRenderer {
   readonly doc = input.required<RDoc | null | undefined>();
+  /** The published article this is the content of: the glossary sheet leaves it out of its article list (F21). */
+  readonly articleId = input<string | null>(null);
   protected readonly dir = computed(() => languageDir(this.doc()?.language ?? 'ar-EG'));
 
   constructor() {
-    inject(RDocContext).bind(this.doc);
+    inject(RDocContext).bind(this.doc, this.articleId);
   }
 }

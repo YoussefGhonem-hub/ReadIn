@@ -1,8 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/** The suite runs on its own ports, so a local API on :5080 or `npm start` on :4200 can keep running. */
-const APP_PORT = 4280;
-const MOCK_API_PORT = 5180;
+/**
+ * The suite runs on its own ports, so a local API on :5080 or `npm start` on :4200 can keep running. Another checkout
+ * running the suite at the same time picks others: `E2E_APP_PORT=4310 E2E_MOCK_PORT=5310 npm run e2e` (the app gets
+ * them through `--define`, see src/environments/environment.e2e.ts).
+ */
+const APP_PORT = Number(process.env['E2E_APP_PORT'] ?? 4280);
+const MOCK_API_PORT = Number(process.env['E2E_MOCK_PORT'] ?? 5180);
 
 /**
  * E2E + visual tests (SPEC §27): every screen is captured in ar/en × light/dark.
@@ -38,7 +42,7 @@ export default defineConfig({
           timeout: 30_000,
         },
         {
-          command: `npx ng serve --configuration e2e --port ${APP_PORT}`,
+          command: `npx ng serve --configuration e2e --port ${APP_PORT} --define ngE2eAppPort=${APP_PORT} --define ngE2eMockPort=${MOCK_API_PORT}`,
           url: `http://localhost:${APP_PORT}`,
           reuseExistingServer: !process.env['CI'],
           timeout: 180_000,
