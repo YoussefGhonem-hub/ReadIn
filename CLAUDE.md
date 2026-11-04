@@ -20,15 +20,25 @@ and what is next is in [docs/handoff/PROGRESS.md](docs/handoff/PROGRESS.md).
 - Demo users and demo data are seeded only into the emulators and the local database, never into the real Firebase
   project.
 
+## Tests: what to run when
+- **While working:** run only the tests for what you changed: the affected test projects or files, and the Playwright
+  specs for the screens you touched (`npx playwright test e2e/x.e2e.ts`).
+- **Once per feature, before pushing it:** the full gates below, all of them.
+- Playwright runs its flows in `ar/light` and `en/dark` only (SPEC §27): together they cover both directions and both
+  themes. Don't add the other two combinations back.
+- Playwright workers: 4 to 6 when no other build or test run is using the machine (`--workers=4`), 2 when one is. If
+  failures appear that pass when re-run alone (timeouts, flakes), lower the count and run again; never treat them as
+  passing.
+
 ## Gates before every push
 - **Backend**, from `backend/`: `dotnet build ReadIn.slnx`, then `dotnet test --solution ReadIn.slnx --no-build`.
-  `dotnet test tests/X` runs zero tests here. Docker must be running (Testcontainers SQL Server). Keep SQL Server on host
-  port 14333.
-- **Web**: `npm run lint`, `npm test`, `npm run build` (SSR), and Playwright for what changed. When another e2e run is
-  active, use other ports: `E2E_APP_PORT=4310 E2E_MOCK_PORT=5310 npx playwright test …`. Under load, use `--workers=2`.
+  Always the whole suite: backend tests are never cut down. `dotnet test tests/X` runs zero tests here. Docker must be
+  running (Testcontainers SQL Server). Keep SQL Server on host port 14333.
+- **Web**: `npm run lint`, `npm test`, `npm run build` (SSR), and the full Playwright suite. When another e2e run is
+  active, use other ports: `E2E_APP_PORT=4310 E2E_MOCK_PORT=5310 npx playwright test …`.
 - **Mobile**: `flutter analyze` and `flutter test`, goldens included. Generated code must match
   `dart run build_runner build` (CI checks it).
-- Fix failures. Never skip, delete or weaken a test to make it pass.
+- Fix failures. Never skip, delete or weaken a test to make it pass, and never delete a test that checks behaviour.
 
 ## Generated code and migrations
 - EF migrations: one at a time. Generate on top of `dev`'s latest snapshot (`dotnet ef migrations add <Name> --project

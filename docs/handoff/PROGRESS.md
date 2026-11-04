@@ -316,3 +316,66 @@ Built by the main session.
 - **Not built:** the F24 quote card (share a selected quote as an image). It needs your go-ahead.
 - **Checked and dropped from 6.6:** mobile's verification screen does show ".NET" and Arabic file names correctly;
   the small screenshots misled me (checked at 4×).
+
+### 6.6 Other gaps ✅ (final gates run together with F34)
+Four read-only audits (account/settings/profile/follow; home/reader/editor/lifecycle/daily; reactions/comments/saved/
+realtime/offline; attachments and ar/en text) compared the SPEC with the three clients. Built from them:
+- **Backend** bb1a0cd:
+  - `FieldRefDto.isSensitive` (Medicine, Public Health; a topic carries its field's flag) for the health disclaimer;
+  - For you no longer hides articles outside your interests: your interests first, then the rest, newest first within
+    each, with a cursor that carries the group (older cursors still work);
+  - Arabic and English titles for six `article.*` error codes.
+- **Mobile** 942968a and fc66dd8:
+  - "New notifications" button while the center is open, as on the web;
+  - reader: health disclaimer (also in the editor preview), table of contents from 3 headings, tappable @mentions,
+    tags as chips;
+  - Settings → Your interests (follow fields and topics after onboarding);
+  - preference saves that report failures;
+  - guests can't change article language or reminder time (their reader opens the version for the app language);
+  - guests see Report in the comment menu;
+  - the editor can add or remove a dark-mode image;
+  - messages for the missing error codes, plural streak texts, the web's "مصري + EN" label and greeting hours.
+- **Web** 5e85997 (committed locally; pushed with F34 after the final gates):
+  - reader and editor preview: health disclaimer;
+  - Settings → Your interests (chips shared with onboarding);
+  - Arabic reading time as a plural;
+  - messages for the missing error codes;
+  - route titles as i18n keys ("… — ReadIn", following the UI language);
+  - plural aria labels, localized file sizes and carousel role descriptions;
+  - the reader's Back returns to the previous app page, else Home;
+  - 32 baselines refreshed for the reading time, file size and the Settings row.
+- **Gates so far:**
+  - backend 1645/1645;
+  - mobile 1593/1593 with goldens, analyze clean, generated code unchanged;
+  - web lint clean, 854/854 unit, SSR build OK (initial 527.65 kB, budget warning only);
+  - Playwright: the helper's full run passed 460/460. The lead's run was stopped at 105/460 (no failures so far) to
+    start F34; the full suite runs once at the end.
+- **Left (small, not done):**
+  - the verification form and the admin proof preview still say "KB/MB";
+  - seven error codes (`article.translation_*`, `reading.conflict`, `user.*_invalid`) have no server title;
+  - mobile onboarding opens at "Step 2 of 3";
+  - reading stats sit above the tabs on the web but in About on mobile;
+  - mobile doesn't keep saved articles' images for offline use.
+- **Needs your decision:**
+  - SPEC features that aren't built:
+    - F28 mute and "show less" (+ Settings → Muted);
+    - F29 repost (+ profile tab);
+    - F30 highlights;
+    - F31 writer categories;
+    - F32 tag pages;
+    - F33 article PDF;
+    - F24 quote card;
+    - F25 offline (cached Today's article, offline queue for reactions and saves, web PWA);
+    - F15 Explore and F16 Search (both "coming soon");
+    - F23 admin console beyond verification;
+  - what the F04 "reading mode toggle" should be;
+  - one Arabic term: mobile says "الـ streak / الـ freeze / الـ Tags", the web "السلسلة / التجميد / التاجز";
+  - the official @readin account writes one notification per new article per follower: keep it, group it per day,
+    or skip it for that account;
+  - For you popularity: SPEC F03 says interests + popularity + freshness; today it is interests first, then newest;
+  - live PDF status: both clients poll every 2 s (contract-v1 says polling stays), while the SPEC also mentions the
+    live signal;
+  - the daily upload quota counts only uploads that still exist, so deleting frees the allowance (on purpose in the
+    code).
+- **Checked and not bugs:** ".NET" in Arabic titles and notification texts on mobile renders correctly (6× crops); the
+  "📚" before "المصادر" is an empty box only in goldens (the test emoji font isn't on that text style).
