@@ -1,3 +1,5 @@
+import '../config/app_links.dart';
+
 /// `data.type` of the daily-article push (SPEC F07, docs/api/contract-v1.md).
 const dailyArticlePushType = 'daily_article';
 
@@ -20,11 +22,12 @@ String? pushNotificationId(Map<String, dynamic> data) {
 }
 
 /// Maps a push or notification link to an in-app route (SPEC §21.1, F17). Deep links
-/// (`readin://a/{slug}#comment-{id}`, which keeps the comment anchor), App Links (`https://readin.app/a/{slug}`,
-/// `https://readin.app/ar/a/{slug}`), profiles (`readin://u/{username}`, `https://readin.app/@{username}`) and their
-/// followers (`readin://u/{username}/followers`), the own reading stats (`readin://me/stats`), the account settings
-/// (`readin://settings/account`), writer verification (`readin://verification`, F19), the notification center and app
-/// paths open the matching screen; anything else returns null, so a push can never open an arbitrary location.
+/// (`readin://a/{slug}#comment-{id}`, which keeps the comment anchor), the web's article links
+/// (`https://{domain}/ar/a/{slug}`, `/en/a/{slug}`, opened in that version; [AppLinks.webHost] only), profiles
+/// (`readin://u/{username}`, `https://{domain}/@{username}`) and their followers (`readin://u/{username}/followers`), the own reading stats
+/// (`readin://me/stats`), the account settings (`readin://settings/account`), writer verification
+/// (`readin://verification`, F19), the notification center and app paths open the matching screen; anything else
+/// returns null, so a push can never open an arbitrary location.
 String? pushLinkToPath(String? link) {
   final text = link?.trim() ?? '';
   if (text.isEmpty) return null;
@@ -34,7 +37,7 @@ String? pushLinkToPath(String? link) {
   final List<String> segments;
   if (uri.scheme == 'readin') {
     segments = [uri.host, ...uri.pathSegments];
-  } else if (uri.scheme == 'https' && uri.host == 'readin.app') {
+  } else if (uri.scheme == 'https' && uri.host == AppLinks.webHost) {
     segments = uri.pathSegments;
   } else if (!uri.hasScheme && !uri.hasAuthority && text.startsWith('/')) {
     segments = uri.pathSegments;
@@ -42,13 +45,10 @@ String? pushLinkToPath(String? link) {
     return null;
   }
 
-  var parts = segments.where((s) => s.isNotEmpty).toList();
-  // Web article URLs carry the article language: /ar/a/{slug}, /en/a/{slug}.
-  if (parts.length == 3 && (parts[0] == 'ar' || parts[0] == 'en') && parts[1] == 'a') parts = parts.sublist(1);
-  if (parts.length == 2 && parts[0] == 'a') {
-    final anchor = _commentAnchor.hasMatch(uri.fragment) ? '#${uri.fragment}' : '';
-    return '/a/${Uri.encodeComponent(parts[1])}$anchor';
-  }
+  final parts = segments.where((s) => s.isNotEmpty).toList();
+  // Web article URLs carry the article language: /ar/a/{slug}, /en/a/{slug} (F24).
+  if (_webArticle(parts, uri.fragment) case final path?) return path;
+  if (parts.length == 2 && parts[0] == 'a') return _article(parts[1], fragment: uri.fragment);
   if (parts.length == 1 && parts[0] == 'notifications') return '/notifications';
   // Profiles (F14): the app's /u/{username} and the web's /@{username} (e.g. a "new follower" push), and a profile's
   // followers (several new followers, F17).
@@ -65,6 +65,23 @@ String? pushLinkToPath(String? link) {
   // A verification result (F19): the web's /verification is Settings → Writer verification here.
   if (parts.length == 1 && parts[0] == 'verification') return '/settings/verification';
   return null;
+}
+
+/// The app's route for a web article link, `/ar/a/{slug}` or `/en/a/{slug}`, which App Links and Universal Links hand to
+/// the router (F24): `/a/{slug}?lang=ar-EG|en`, so the reader opens the version that was shared. Null for any other
+/// path.
+String? webArticleRoute(Uri uri) => _webArticle(uri.pathSegments.where((s) => s.isNotEmpty).toList(), uri.fragment);
+
+String? _webArticle(List<String> parts, String fragment) {
+  if (parts.length != 3 || parts[1] != 'a' || (parts[0] != 'ar' && parts[0] != 'en')) return null;
+  return _article(parts[2], language: parts[0] == 'en' ? 'en' : 'ar-EG', fragment: fragment);
+}
+
+/// `/a/{slug}`, with `?lang=` when given and the anchor only when it is a comment's.
+String _article(String slug, {String? language, required String fragment}) {
+  final query = language == null ? '' : '?lang=$language';
+  final anchor = _commentAnchor.hasMatch(fragment) ? '#$fragment' : '';
+  return '/a/${Uri.encodeComponent(slug)}$query$anchor';
 }
 
 final _handle = RegExp(r'^[A-Za-z0-9_.]{1,30}$');

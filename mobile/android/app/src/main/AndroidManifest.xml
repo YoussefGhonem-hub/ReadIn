@@ -29,13 +29,16 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- App Links: https://readin.app/a/{slug} opens the article (SPEC §3.3).
-                 Verification needs /.well-known/assetlinks.json on readin.app. -->
+            <!-- App Links (SPEC F24): the web's article links, https://{domain}/ar/a/{slug} and /en/a/{slug}, open the
+                 article in the app. The host is the WEB_ORIGIN dart-define (android/app/build.gradle.kts); Android
+                 verifies it with /.well-known/assetlinks.json on that domain (docs/setup/app-links.md). -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="https" android:host="readin.app" android:pathPrefix="/a/"/>
+                <data android:scheme="https" android:host="${appLinkHost}"/>
+                <data android:pathPrefix="/ar/a/"/>
+                <data android:pathPrefix="/en/a/"/>
             </intent-filter>
         </activity>
         <!-- Background pushes use the channel the app creates at start (PushPlatform). -->

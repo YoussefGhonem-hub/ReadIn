@@ -22,6 +22,7 @@ flutter run --dart-define-from-file=config/dev.json
 | `FLAVOR` | `dev` | `dev` = Firebase Emulator Suite · `prod` = the single real Firebase project (`config/*.json`, ADR 0005) |
 | `API_BASE_URL` | `http://10.0.2.2:5080/api/v1` (Android emulator), `http://localhost:5080/api/v1` otherwise | Override for a device on your LAN |
 | `USE_FIREBASE_EMULATOR` | `true` | Only honoured in `dev` |
+| `WEB_ORIGIN` | `https://readin.app` | The web's origin: the article links the app shares, and the only host whose links it opens (Android App Links host, set by `android/app/build.gradle.kts`). See [docs/setup/app-links.md](../docs/setup/app-links.md) |
 | `DEV_DEMO_PASSWORD` | empty | Debug builds of `dev` only: the API's `Seed:DemoPassword`, so the dev login panel signs in with one tap. Never pass it to a release build |
 
 The app still starts when Firebase is unavailable: it logs the error and runs without push and live updates.

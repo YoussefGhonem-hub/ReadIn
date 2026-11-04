@@ -1,7 +1,29 @@
+import java.net.URI
+import java.util.Base64
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// App Links (SPEC F24, docs/setup/app-links.md): the web domain is the WEB_ORIGIN dart-define (config/prod.json), the
+// same value the app uses for the links it shares. Flutter hands every dart-define to Gradle as base64 "KEY=value".
+val dartDefines: Map<String, String> = (project.findProperty("dart-defines") as String?)
+    ?.split(",")
+    ?.mapNotNull { encoded ->
+        val entry = String(Base64.getDecoder().decode(encoded), Charsets.UTF_8)
+        val separator = entry.indexOf('=')
+        if (separator > 0) entry.substring(0, separator) to entry.substring(separator + 1) else null
+    }
+    ?.toMap()
+    ?: emptyMap()
+val webOrigin: String = dartDefines["WEB_ORIGIN"]?.trim()?.trimEnd('/') ?: "https://readin.app"
+val appLinkHost: String = URI(webOrigin).let { uri ->
+    require(uri.scheme == "https" && !uri.host.isNullOrBlank() && uri.path.isNullOrEmpty() && uri.query == null) {
+        "WEB_ORIGIN must be an https origin such as https://readin.app, without a path (got '$webOrigin')."
+    }
+    uri.host.lowercase()
 }
 
 android {
@@ -25,6 +47,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // The host of the App Links intent filter (AndroidManifest.xml).
+        manifestPlaceholders["appLinkHost"] = appLinkHost
     }
 
     buildTypes {

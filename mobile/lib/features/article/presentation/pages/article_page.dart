@@ -30,6 +30,7 @@ import '../cubit/article_live_cubit.dart';
 import '../cubit/engagement_cubit.dart';
 import '../widgets/article_attachments_view.dart';
 import '../widgets/article_menu.dart';
+import '../widgets/article_share_button.dart';
 import '../widgets/reader_action_bar.dart';
 import '../widgets/reader_resume.dart';
 import '../widgets/reader_widgets.dart';
@@ -311,13 +312,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           IconButton(tooltip: l10n.fontSize, icon: const Icon(Icons.format_size_rounded), onPressed: onFontSize),
-          IconButton(
-            tooltip: l10n.share,
-            icon: const Icon(Icons.ios_share_rounded),
-            onPressed: a == null
-                ? null
-                : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.comingSoonTitle))),
-          ),
+          ArticleShareButton(article: a?.card),
         ],
       ),
     );

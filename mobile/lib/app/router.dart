@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/push/push_links.dart';
 import '../features/article/presentation/pages/article_page.dart';
 import '../features/auth/presentation/pages/account_pages.dart';
 import '../features/auth/presentation/pages/complete_profile_page.dart';
@@ -69,7 +70,7 @@ abstract final class AppRoutes {
   static const editProfile = ProfileRoutes.edit;
   static const paths = PathRoutes.list;
 
-  /// Deep link `readin.app/a/{slug}` (SPEC §3.3, §8.2).
+  /// The reader. Shared web links (`https://{domain}/{ar|en}/a/{slug}`, F24) arrive here as `/a/{slug}?lang=`.
   static String article(String slug) => '/a/$slug';
 
   /// Anyone's profile (F14).
@@ -101,6 +102,10 @@ abstract final class AppRoutes {
 /// screens send them home, except Delete account, which sends them to Sign in: the session ends there when the account
 /// is deleted (the screen then shows Sign in with "Your account was deleted.") or had already ended elsewhere.
 String? resolveRedirect({required Uri uri, required SessionState session, required AppSettings settings}) {
+  // The web's article links (/ar/a/{slug}, /en/a/{slug}) arrive through App Links and Universal Links (F24): they open
+  // the reader in the version that was shared.
+  if (webArticleRoute(uri) case final article?) return article;
+
   final location = uri.path;
   final atSplash = location == AppRoutes.splash;
   if (session.status == SessionStatus.unknown) {

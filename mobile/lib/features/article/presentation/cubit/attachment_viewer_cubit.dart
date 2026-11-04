@@ -99,7 +99,7 @@ class AttachmentViewerCubit extends Cubit<AttachmentViewerState> {
 
   Future<void> shareLink({Rect? origin}) async {
     try {
-      await _share.shareLink(AppLinks.article(_slug), subject: _title, origin: origin);
+      await _share.shareLink(AppLinks.article(_slug, language: _language), subject: _title, origin: origin);
     } on Object {
       // The share sheet is best effort.
     }

@@ -45,6 +45,21 @@ void main() {
     expect(redirect('/splash', onboarded), '/home');
   });
 
+  group('web article links (F24)', () {
+    test('open the reader in the shared version, before anything else, for everyone', () {
+      for (final session in [const SessionState(), guest, onboarded]) {
+        expect(redirect('/ar/a/di-in-dotnet', session, fresh), '/a/di-in-dotnet?lang=ar-EG');
+        expect(redirect('https://readin.app/en/a/di-in-dotnet#comment-3', session), '/a/di-in-dotnet?lang=en#comment-3');
+      }
+    });
+
+    test('then follow the usual rules: the splash first, and no Welcome for a first-time guest', () {
+      expect(redirect('/a/di-in-dotnet?lang=en', const SessionState()), '/splash?from=%2Fa%2Fdi-in-dotnet%3Flang%3Den');
+      expect(redirect('/splash?from=%2Fa%2Fdi-in-dotnet%3Flang%3Den', guest, fresh), '/a/di-in-dotnet?lang=en');
+      expect(redirect('/a/di-in-dotnet?lang=en', guest, fresh), isNull);
+    });
+  });
+
   group('guests', () {
     test('first-time guests see Welcome, except on article deep links and sign-in screens', () {
       expect(redirect('/home', guest, fresh), AppRoutes.welcome);

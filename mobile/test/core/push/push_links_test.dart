@@ -19,8 +19,11 @@ void main() {
       'readin://verification': '/settings/verification',
       'https://readin.app/verification': '/settings/verification',
       'https://readin.app/a/my-post': '/a/my-post',
-      'https://readin.app/en/a/my-post': '/a/my-post',
-      '/ar/a/my-post': '/a/my-post',
+      // The web's article links (F24) open the version that was shared, and keep a comment anchor.
+      'https://readin.app/en/a/my-post': '/a/my-post?lang=en',
+      'https://readin.app/ar/a/my-post#comment-9': '/a/my-post?lang=ar-EG#comment-9',
+      'https://READIN.app/ar/a/my-post#b-p40': '/a/my-post?lang=ar-EG',
+      '/ar/a/my-post': '/a/my-post?lang=ar-EG',
       // Profiles (F14): the app's /u/{username} and the web's /@{username}.
       'readin://u/mona_dev': '/u/mona_dev',
       'https://readin.app/@Mona_Dev': '/u/mona_dev',
@@ -32,6 +35,11 @@ void main() {
 
     for (final link in [
       'https://evil.example/a/x',
+      // Only the configured web host (WEB_ORIGIN), never a look-alike, and only https.
+      'https://readin.app.evil.example/ar/a/x',
+      'https://www.readin.app/ar/a/x',
+      'http://readin.app/ar/a/x',
+      'https://readin.app/fr/a/x',
       '//evil.example/a/x',
       'javascript:alert(1)',
       'readin://settings/danger',
@@ -49,6 +57,20 @@ void main() {
     ]) {
       test('drops ${link ?? 'null'}', () => expect(pushLinkToPath(link), isNull));
     }
+  });
+
+  group('webArticleRoute', () {
+    test('maps the web\x27s article links, which App Links hand to the router, to the reader in that version', () {
+      expect(webArticleRoute(Uri.parse('https://readin.app/en/a/rag-vs-fine-tuning')), '/a/rag-vs-fine-tuning?lang=en');
+      expect(webArticleRoute(Uri.parse('/ar/a/rag-vs-fine-tuning')), '/a/rag-vs-fine-tuning?lang=ar-EG');
+      expect(webArticleRoute(Uri.parse('/ar/a/%D9%85%D9%82%D8%A7%D9%84#comment-7')), '/a/%D9%85%D9%82%D8%A7%D9%84?lang=ar-EG#comment-7');
+    });
+
+    test('leaves every other path alone', () {
+      for (final path in ['/a/x', '/fr/a/x', '/ar/b/x', '/ar/a', '/ar/a/x/y', '/home', '/']) {
+        expect(webArticleRoute(Uri.parse(path)), isNull, reason: path);
+      }
+    });
   });
 
   group('pushDataLink', () {

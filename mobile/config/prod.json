@@ -1,5 +1,6 @@
 {
   "FLAVOR": "prod",
   "API_BASE_URL": "https://api.readin.app/api/v1",
-  "USE_FIREBASE_EMULATOR": false
+  "USE_FIREBASE_EMULATOR": false,
+  "WEB_ORIGIN": "https://readin.app"
 }

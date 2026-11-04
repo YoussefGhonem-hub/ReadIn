@@ -1,4 +1,5 @@
 {
   "FLAVOR": "dev",
-  "USE_FIREBASE_EMULATOR": true
+  "USE_FIREBASE_EMULATOR": true,
+  "WEB_ORIGIN": "https://readin.app"
 }

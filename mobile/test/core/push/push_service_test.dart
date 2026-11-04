@@ -189,7 +189,8 @@ void main() {
       ..add(const PushPayload());
     await settle();
 
-    expect(paths, ['/a/launch-post', '/a/my-post', '/notifications']);
+    // The web's /ar/a/ link opens the Arabic version (F24).
+    expect(paths, ['/a/launch-post', '/a/my-post?lang=ar-EG', '/notifications']);
   });
 
   group('daily-article push (F07)', () {
