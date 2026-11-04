@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { Meta, Title } from '@angular/platform-browser';
 import { NEVER } from 'rxjs';
+import { testPathCard, testProgress } from '../../../testing/paths-testing';
 import { testProfile } from '../../../testing/profile-testing';
 import { TEST_API, flushMicrotasks, problem, setupSocialTesting, testCard } from '../../../testing/social-testing';
 import { ProfileDto } from '../../core/api/models';
@@ -94,7 +95,9 @@ describe('ProfilePage (F14)', () => {
     articles.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })); // RTL: the next tab
     await stable();
     expect(root.querySelector('[data-profile-tab="paths"]')!.getAttribute('aria-selected')).toBe('true');
-    expect(root.querySelector('[data-profile-paths]')!.textContent).toContain('المسارات جاية قريب');
+    // Private reading stats: their paths are private too (no request).
+    expect(root.querySelector('[data-profile-paths] [data-paths-private]')!.textContent).toContain('المسارات دي خاصة');
+    http.expectNone((r) => r.url.endsWith('/paths'));
 
     (root.querySelector('[data-profile-tab="about"]') as HTMLElement).click();
     await stable();
@@ -135,6 +138,42 @@ describe('ProfilePage (F14)', () => {
   it('an unknown user is a not-found state', async () => {
     const { root } = await render({ status: 404, code: 'user.not_found' });
     expect(root.querySelector('[data-profile-not-found]')!.textContent).toContain('المستخدم ده مش موجود');
+  });
+
+  it('Paths tab with public stats: their enrolled paths with progress and completion badges (F09)', async () => {
+    const { root, stable } = await render(testProfile({ readingStatsVisible: true }));
+    (root.querySelector('[data-profile-tab="paths"]') as HTMLElement).click();
+    await stable();
+    http.expectOne(`${TEST_API}/users/karim/paths`).flush([
+      testPathCard({ ...testProgress(1, { enrolled: true }) }),
+      testPathCard({ id: 'p2', slug: 'ai', title: 'AI from scratch', ...testProgress(4, { completed: true }) }),
+    ]);
+    await flushMicrotasks();
+    TestBed.tick();
+    // Covers without an image ask for the fields' icons.
+    http.match(`${TEST_API}/fields`).forEach((r) => r.flush([]));
+    await stable();
+    const cards = root.querySelectorAll('[data-profile-paths] [data-path-card]');
+    expect(cards).toHaveLength(2);
+    expect(cards[0].querySelector('[data-path-progress]')!.textContent).toContain('1/4');
+    expect(cards[1].querySelector('[data-path-completed]')).not.toBeNull();
+  });
+
+  it('Paths tab: empty on your own profile leads to /paths; a 403 shows the private state', async () => {
+    const own = await render(testProfile({ id: 'user-1', username: 'mona', isMe: true, readingStatsVisible: true }));
+    (own.root.querySelector('[data-profile-tab="paths"]') as HTMLElement).click();
+    await own.stable();
+    http.expectOne(`${TEST_API}/users/mona/paths`).flush([]);
+    await own.stable();
+    expect(own.root.querySelector('[data-paths-empty]')!.textContent).toContain('المسارات اللي هتبدأها هتظهر هنا.');
+    expect(own.root.querySelector('[data-browse-paths]')!.getAttribute('href')).toBe('/paths');
+
+    const other = await render(testProfile({ readingStatsVisible: true }));
+    (other.root.querySelector('[data-profile-tab="paths"]') as HTMLElement).click();
+    await other.stable();
+    http.expectOne(`${TEST_API}/users/karim/paths`).flush(problem(403, 'profile.stats_private'), { status: 403, statusText: 'Forbidden' });
+    await other.stable();
+    expect(other.root.querySelector('[data-paths-private]')).not.toBeNull();
   });
 
   it('a failed load offers a retry', async () => {

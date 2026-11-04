@@ -1,8 +1,11 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
-import { ProfileDto } from '../../core/api/models';
+import { firstValueFrom } from 'rxjs';
+import { isApiError } from '../../core/api/api.config';
+import { PathCardDto, ProfileDto } from '../../core/api/models';
+import { PathsApi } from '../../core/api/paths.api';
 import { SessionStore } from '../../core/auth/session.store';
 import { LanguageService } from '../../core/i18n/language.service';
 import { BdiText } from '../../shared/directives/bdi-text';
@@ -12,6 +15,7 @@ import { ArticleCard } from '../../shared/ui/article-card';
 import { FieldIcon } from '../../shared/ui/field-icon';
 import { ArticleCardSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
+import { PathCard, PathCardSkeleton } from '../paths/path-card';
 import { SavedStore } from '../saved/saved.store';
 import { fieldColor } from '../reading/reading-stats-card';
 import { loadMoreNearEnd } from './infinite-scroll';
@@ -214,12 +218,82 @@ export class ProfileAbout {
   protected readonly bioDir = computed(() => detectDir(this.profile().bio) ?? 'auto');
 }
 
-/** Paths tab: learning paths are F09 (Phase 2), so there is nothing to list yet. */
+/**
+ * Paths tab (F09, F14): the user's enrolled paths with their progress and completion badges, in progress first. Shown
+ * under the same rule as the reading stats (yours, or made public); otherwise the private state.
+ */
 @Component({
   selector: 'rd-profile-paths',
-  imports: [TranslocoPipe, EmptyState],
+  imports: [RouterLink, TranslocoPipe, EmptyState, ErrorState, PathCard, PathCardSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block', 'data-profile-paths': '' },
-  template: `<rd-empty-state [title]="'profile.paths.title' | transloco" [message]="'profile.paths.body' | transloco" />`,
+  host: { class: 'block py-4', 'data-profile-paths': '' },
+  template: `
+    @if (!visible() || status() === 'private') {
+      <rd-empty-state [title]="'profile.paths.privateTitle' | transloco" [message]="'profile.paths.privateBody' | transloco" data-paths-private />
+    } @else {
+      @switch (status()) {
+        @case ('error') {
+          <rd-error-state [message]="'profile.paths.loadError' | transloco" (retry)="load()" />
+        }
+        @case ('loaded') {
+          <ul class="m-0 flex list-none flex-col gap-3 p-0">
+            @for (path of paths(); track path.id) {
+              <li><rd-path-card [path]="path" /></li>
+            }
+          </ul>
+          @if (!paths().length) {
+            <rd-empty-state
+              [title]="'profile.paths.emptyTitle' | transloco"
+              [message]="(isMe() ? 'profile.paths.emptyOwnBody' : 'profile.paths.emptyBody') | transloco"
+              data-paths-empty
+            >
+              @if (isMe()) {
+                <a routerLink="/paths" class="rd-btn rd-btn-primary mt-3" data-browse-paths>{{ 'profile.paths.browse' | transloco }}</a>
+              }
+            </rd-empty-state>
+          }
+        }
+        @default {
+          <div class="flex flex-col gap-3" aria-busy="true">
+            @for (i of [1, 2]; track i) {
+              <rd-path-card-skeleton />
+            }
+          </div>
+        }
+      }
+    }
+  `,
 })
-export class ProfilePaths {}
+export class ProfilePaths {
+  private readonly api = inject(PathsApi);
+
+  readonly username = input.required<string>();
+  readonly isMe = input(false);
+  /** `ProfileDto.readingStatsVisible` (or your own profile): the API answers 403 otherwise. */
+  readonly visible = input(false);
+
+  protected readonly status = signal<'loading' | 'loaded' | 'error' | 'private'>('loading');
+  protected readonly paths = signal<PathCardDto[]>([]);
+  private generation = 0;
+
+  constructor() {
+    effect(() => {
+      if (this.visible()) untracked(() => void this.load());
+    });
+  }
+
+  /** `GET /users/{username}/paths`; a 403 (stats made private meanwhile) shows the private state. */
+  protected async load(): Promise<void> {
+    const generation = ++this.generation;
+    const username = this.username();
+    this.status.set('loading');
+    try {
+      const paths = await firstValueFrom(this.api.userPaths(username));
+      if (generation !== this.generation) return;
+      this.paths.set(paths);
+      this.status.set('loaded');
+    } catch (error) {
+      if (generation === this.generation) this.status.set(isApiError(error) && error.code === 'profile.stats_private' ? 'private' : 'error');
+    }
+  }
+}

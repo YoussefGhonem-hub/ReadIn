@@ -865,8 +865,13 @@
       "openAll": "Open Saved"
     },
     "paths": {
-      "title": "Learning paths are coming",
-      "body": "Curated series of articles, step by step. Paths will show up here once they launch."
+      "emptyTitle": "No paths yet",
+      "emptyOwnBody": "The paths you start will show up here.",
+      "emptyBody": "The paths they follow will show up here.",
+      "browse": "Browse paths",
+      "privateTitle": "These paths are private",
+      "privateBody": "Only the account owner can see their reading stats and paths.",
+      "loadError": "We couldn’t load the paths."
     },
     "about": {
       "bio": "Bio",
