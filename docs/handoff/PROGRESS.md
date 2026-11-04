@@ -217,3 +217,36 @@ re-gated and committed by the main session.
   - in Arabic titles a leading-dot word such as ".NET" shows as "NET." on mobile (the shared BiDi helper; it was
     already in the comment goldens);
   - the web bundle is now 524.9 kB.
+
+### 6.3 Mentions in articles, mention notifications, "who can mention me" ✅
+Built by three helpers from one contract, then reviewed, re-gated and committed by the main session.
+- **The setting** (SPEC F18): `whoCanMention` = everyone (default) / people I follow / nobody, in Settings → Privacy on
+  web and mobile. `GET /me` returns it; `PUT /me/privacy` takes either field.
+- **One rule everywhere:** A may mention B when B is A, B allows everyone, or B allows people B follows and B follows A.
+  B must also be an active account. It applies to:
+  - mention suggestions (comments and the editor);
+  - comment mentions (create, reply, edit): a handle you may not mention stays plain text, with no link and no
+    notification;
+  - article publish and Update, in every language version: allowed mentions keep the link, with the user's current
+    `@username` (the reader links by that text, so it can't be forged or go stale); the rest become plain text. At most
+    20 people per article, as comments have 10 (the lead added this cap).
+- **Notifications:** an article mention is a `mention` entry with no comment, once per user per article
+  (`mention:article:{articleId}`), so an Update tells only newly mentioned users. Push "X mentioned you in an article"
+  with the article title; the clients show the same text. The notification setting is now "Mentions" (comments and
+  articles).
+- **Commits:**
+  - backend fc99162 (migration `MentionPrivacy`);
+  - mobile 0fba479;
+  - web after it.
+- **Gates:**
+  - backend 1520/1520;
+  - mobile build_runner no diff, analyze clean, 1436/1436 with goldens;
+  - web lint clean, 786/786 unit, SSR build OK (524.94 kB), Playwright for profile, notifications, auth, external and
+    media-pdf.
+  - New and changed baselines checked by eye:
+    - web `settings-privacy-*`, `notifications-center-*` and `notification-settings-*`;
+    - mobile `settings_privacy_*`, `notifications_center_*`, `notification_settings_*` and `settings_account*` (those
+      scroll to the end again).
+- **Small differences left on purpose:**
+  - the web shows a hint under "Who can mention me"; mobile has none;
+  - the web's Arabic comment-mention text now says "عمل لك", as mobile does.
