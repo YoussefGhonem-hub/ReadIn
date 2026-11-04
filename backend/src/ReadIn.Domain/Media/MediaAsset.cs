@@ -41,7 +41,8 @@ public sealed class MediaAsset : AggregateRoot, IAuditable
 
     private MediaAsset() { } // EF
 
-    public Guid OwnerId { get; private set; }
+    /// <summary>Null once the owner deleted their account and the asset stayed with one of their published articles (SPEC §9.6).</summary>
+    public Guid? OwnerId { get; private set; }
     public MediaKind Kind { get; private set; }
     public MediaPurpose Purpose { get; private set; }
     public MediaStatus Status { get; private set; }

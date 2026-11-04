@@ -15,6 +15,7 @@ internal sealed class ExternalCredentialValidator : AbstractValidator<ExternalCr
         RuleFor(c => c.Provider).Must(ExternalProviders.IsKnown).WithErrorCode(ProviderInvalid);
         RuleFor(c => c.IdToken).NotEmpty().MaximumLength(8192);
         RuleFor(c => c.Nonce).MaximumLength(256);
+        RuleFor(c => c.AuthorizationCode).MaximumLength(1024);
     }
 }
 

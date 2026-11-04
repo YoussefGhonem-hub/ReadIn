@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../features/article/presentation/pages/article_page.dart';
 import '../features/auth/presentation/pages/account_pages.dart';
 import '../features/auth/presentation/pages/complete_profile_page.dart';
+import '../features/auth/presentation/pages/delete_account_page.dart';
 import '../features/auth/presentation/pages/forgot_password_page.dart';
 import '../features/auth/presentation/pages/sign_in_page.dart';
 import '../features/auth/presentation/pages/sign_up_page.dart';
@@ -72,7 +73,8 @@ abstract final class AppRoutes {
 ///
 /// Signed in: the account guards apply first, in the SPEC §9.2 order (change password → set PIN → complete profile →
 /// onboarding), and sign-in screens lead home. Guests can browse and read; first-time guests see Welcome, and account
-/// screens send them home.
+/// screens send them home, except Delete account, which sends them to Sign in: the session ends there when the account
+/// is deleted (the screen then shows Sign in with "Your account was deleted.") or had already ended elsewhere.
 String? resolveRedirect({required Uri uri, required SessionState session, required AppSettings settings}) {
   final location = uri.path;
   final atSplash = location == AppRoutes.splash;
@@ -102,6 +104,7 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
     return stay();
   }
 
+  if (targetPath == AppRoutes.deleteAccount) return AppRoutes.signIn;
   if (isAccountRoute || targetPath == AppRoutes.onboarding) {
     return settings.welcomeSeen ? AppRoutes.home : AppRoutes.welcome;
   }

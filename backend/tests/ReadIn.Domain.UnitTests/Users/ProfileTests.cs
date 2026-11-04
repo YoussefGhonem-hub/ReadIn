@@ -81,17 +81,4 @@ public sealed class ProfileTests
         user.SetPrivacy(publicReadingStats: false);
         user.PublicReadingStats.Should().BeFalse();
     }
-
-    [Fact]
-    public void Anonymizing_removes_the_expertise_and_makes_the_stats_private()
-    {
-        var user = NewUser();
-        user.SetExpertise([Fields[0], Fields[1]]);
-        user.SetPrivacy(publicReadingStats: true);
-
-        user.Anonymize(DateTime.UtcNow);
-
-        user.Expertise.Should().BeEmpty();
-        user.PublicReadingStats.Should().BeFalse();
-    }
 }

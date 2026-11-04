@@ -74,7 +74,7 @@ export function tokenTag(authorization: string | null): string | null {
  * are fakes, so the tests see exactly which HTTP calls the session makes.
  */
 export function setupAuthTesting(options: { platform?: 'browser' | 'server'; providers?: unknown[] } = {}) {
-  const push = { unregisterDevice: vi.fn(async () => undefined) };
+  const push = { unregisterDevice: vi.fn(async () => undefined), forgetDevice: vi.fn(async () => undefined) };
   const theme = { setPreference: vi.fn(), resolved: signal<'light' | 'dark'>('light') };
   const lang = signal<'ar' | 'en'>('ar');
   const language = { lang, setLanguage: vi.fn(async () => undefined), dir: computed(() => (lang() === 'ar' ? 'rtl' : 'ltr')) };

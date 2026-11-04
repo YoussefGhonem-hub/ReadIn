@@ -36,6 +36,7 @@ import 'package:readin/features/saved/presentation/widgets/save_button.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/shared/rdoc/rdoc_document.dart';
+import 'package:readin/shared/widgets/badges.dart';
 
 import '../helpers/fixtures.dart';
 import '../helpers/social_fakes.dart';
@@ -362,12 +363,13 @@ void main() {
       WidgetTester tester, {
       bool offline = false,
       List<String> collectionIds = const [],
+      bool authorDeleted = false,
     }) async {
       final article = ArticleDetails(
-        card: engagedCard(1, language: 'en', isSaved: collectionIds.isNotEmpty),
+        card: engagedCard(1, language: 'en', isSaved: collectionIds.isNotEmpty, authorDeleted: authorDeleted),
         availableLanguages: const ['en'],
         content: RDocDocument.fromJson(detailsJson(1, language: 'en')['content'] as Map<String, dynamic>),
-        isFollowingAuthor: true,
+        isFollowingAuthor: !authorDeleted,
         collectionIds: collectionIds,
         isOfflineCopy: offline,
       );
@@ -402,6 +404,23 @@ void main() {
       expect(find.text('💡 30'), findsOneWidget);
       expect(find.text('❤️ 3'), findsNothing, reason: 'replaced, not added');
       expect(find.bySemanticsLabel('9 comments'), findsOneWidget);
+    });
+
+    testWidgets('a deleted author reads as "Deleted user", with nobody to follow; the rest still works (SPEC §9.6)',
+        (tester) async {
+      final live = await pumpReader(tester, authorDeleted: true);
+      expect(find.text('Deleted user'), findsOneWidget);
+      expect(find.byType(GenericAvatar), findsOneWidget);
+      expect(find.byType(FollowButton), findsNothing);
+      expect(follows.state.users, isEmpty, reason: 'no follow to seed');
+      expect(find.textContaining('@'), findsNothing);
+      expect(find.textContaining('null'), findsNothing);
+      expect(engagement.state.overlays, isNotEmpty, reason: 'counters are seeded as usual');
+
+      live.add(const LiveArticleCounts(reactions: {ReactionType.insightful: 30}, commentCount: 9));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('💡 30'), findsOneWidget);
     });
 
     testWidgets('an offline copy says so and seeds nothing', (tester) async {

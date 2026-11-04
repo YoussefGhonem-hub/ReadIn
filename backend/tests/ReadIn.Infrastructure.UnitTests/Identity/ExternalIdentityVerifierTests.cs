@@ -24,7 +24,7 @@ public sealed class ExternalIdentityVerifierTests
         new ExternalAuthOptions
         {
             Google = new ExternalProviderOptions { ClientIds = [GoogleClient, "ios-client.apps.googleusercontent.com"] },
-            Apple = new ExternalProviderOptions { ClientIds = appleClients ?? [AppleClient] },
+            Apple = new AppleProviderOptions { ClientIds = appleClients ?? [AppleClient] },
         },
         provider =>
         {
@@ -63,7 +63,8 @@ public sealed class ExternalIdentityVerifierTests
         var result = await Verifier().VerifyAsync(ExternalProviders.Google, Token(), nonce: null, Ct);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(new ExternalIdentity(ExternalProviders.Google, "provider-user-1", "mona@example.com", EmailVerified: true, Name: "Mona"));
+        result.Value.Should().Be(new ExternalIdentity(
+            ExternalProviders.Google, "provider-user-1", "mona@example.com", EmailVerified: true, Name: "Mona", ClientId: GoogleClient));
     }
 
     [Fact]

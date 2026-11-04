@@ -4,7 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { FakeApple, FakeGoogle, installProviderSdks } from '../../../testing/external-testing';
 import { API_BASE_URL } from '../api/api.config';
-import { EXTERNAL_CLIENT_IDS, ExternalIdentityService, appleDisplayName, createNonce } from './external-identity.service';
+import { EXTERNAL_CLIENT_IDS, ExternalIdentityService, appleDisplayName, createNonce, credentialOf } from './external-identity.service';
 
 const API = 'https://api.test/api/v1';
 
@@ -109,6 +109,16 @@ describe('ExternalIdentityService (ADR 0012)', () => {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
       expect(sdks.apple.config!.nonce).toBe(expected);
+    });
+
+    it("passes Apple's one-time authorization code on, so the API can revoke Apple's token on deletion", async () => {
+      const { service } = setup();
+      const result = await service.signInWithApple();
+      expect(result).toMatchObject({ provider: 'apple', authorizationCode: 'apple-auth-code' });
+      expect(credentialOf(result!)).toEqual({ provider: 'apple', idToken: 'apple-id-token', nonce: result!.nonce, authorizationCode: 'apple-auth-code' });
+
+      sdks.apple.next = { authorization: { id_token: 'apple-id-token-2' } }; // no code: nothing made up
+      expect(credentialOf((await service.signInWithApple())!)).not.toHaveProperty('authorizationCode');
     });
 
     it('does nothing when the popup is closed', async () => {

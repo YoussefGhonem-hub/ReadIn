@@ -393,6 +393,17 @@ const MORE_ARTICLES = [
     saves: 8,
     comments: 1,
   }),
+  // Its writer deleted their account (SPEC §9.6): the article stays up with `author: null`, shown as "Deleted user".
+  card({
+    slug: 'sql-indexes-in-plain-words',
+    title: 'SQL indexes in plain words',
+    author: null,
+    publishedAt: '2026-10-27T10:00:00Z',
+    minutes: 6,
+    reactions: { insightful: 5, love: 1, fire: 1, mindBlown: 0 },
+    saves: 6,
+    comments: 2,
+  }),
 ];
 const ALL_ARTICLES = [...ARTICLES, ...MORE_ARTICLES];
 

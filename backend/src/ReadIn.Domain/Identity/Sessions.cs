@@ -139,7 +139,6 @@ public static class AuditActions
     public const string RefreshTokenReused = "auth.refresh_token_reused";
     public const string AdminPasswordReset = "admin.password_reset";
     public const string AccountDeleted = "account.deleted";
-    public const string AccountAnonymized = "account.anonymized";
 
     // Moderator actions on comments (SPEC F11, F22).
     public const string CommentHidden = "moderation.comment_hidden";

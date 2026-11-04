@@ -22,7 +22,11 @@ public sealed record AuthSessionDto(
     MeDto User);
 
 /// <summary>A Google or Apple ID token from the client SDK, plus the raw nonce for Apple (SPEC §9.1).</summary>
-public sealed record ExternalCredentialDto(string Provider, string IdToken, string? Nonce = null);
+/// <param name="AuthorizationCode">
+/// Apple only: the one-time code that comes with the ID token. Exchanged for a refresh token so the account's Apple
+/// authorization can be revoked when it is deleted (SPEC F01).
+/// </param>
+public sealed record ExternalCredentialDto(string Provider, string IdToken, string? Nonce = null, string? AuthorizationCode = null);
 
 /// <summary>Step 1 of "forgot password": a correct phone + PIN returns a 10-minute, single-use reset token.</summary>
 public sealed record PasswordResetTokenDto(string ResetToken, DateTime ExpiresAt);

@@ -172,6 +172,7 @@ public sealed class ArticleRevision
     /// <summary>Comma-separated languages of the version, source first.</summary>
     public string Languages { get; private set; } = default!;
     public string DocumentJson { get; private set; } = default!;
+    /// <summary>The editor; null once that account was deleted (SPEC F01), the revision itself stays with the article.</summary>
     public Guid? CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
 }
@@ -206,7 +207,7 @@ public sealed record AttachmentCandidate(
     Guid MediaAssetId,
     Media.MediaKind Kind,
     Media.MediaStatus Status,
-    Guid OwnerId,
+    Guid? OwnerId,
     int Order,
     string? Caption,
     string? AltText);
@@ -219,4 +220,4 @@ public sealed record ReactionCounts(int Insightful, int Love, int Fire, int Mind
     public int Total => Insightful + Love + Fire + MindBlown;
 }
 
-public sealed record ArticlePublishedDomainEvent(Guid ArticleId, Guid AuthorId, Guid FieldId, string Slug) : DomainEvent;
+public sealed record ArticlePublishedDomainEvent(Guid ArticleId, Guid? AuthorId, Guid FieldId, string Slug) : DomainEvent;

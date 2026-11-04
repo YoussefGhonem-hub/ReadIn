@@ -139,6 +139,36 @@ describe('PushService', () => {
     expect(meApi.unregisterDevice).toHaveBeenCalledTimes(1);
   });
 
+  it('after the account is deleted, deletes the FCM token without calling the API, once', async () => {
+    const client = new FakePushClient();
+    client.current = 'granted';
+    const { service, session, meApi } = await setup(client);
+    await signIn(session);
+
+    await service.forgetDevice();
+    expect(client.deleteToken).toHaveBeenCalledTimes(1);
+    expect(meApi.unregisterDevice).not.toHaveBeenCalled(); // the API already dropped the account's devices
+
+    session.setGuest(); // the session ends right after: no second deletion
+    TestBed.tick();
+    await flush();
+    expect(client.deleteToken).toHaveBeenCalledTimes(1);
+  });
+
+  it('also deletes a token an earlier page load registered, and does nothing without permission', async () => {
+    const granted = new FakePushClient();
+    granted.current = 'granted'; // nothing registered from this page, but the browser may hold a token
+    const first = await setup(granted);
+    await first.service.forgetDevice();
+    expect(granted.deleteToken).toHaveBeenCalledTimes(1);
+
+    TestBed.resetTestingModule();
+    const neverAsked = new FakePushClient();
+    const second = await setup(neverAsked);
+    await second.service.forgetDevice();
+    expect(neverAsked.deleteToken).not.toHaveBeenCalled();
+  });
+
   it('shows a foreground push as a toast that opens the post', async () => {
     const { client, toasts } = await setup();
     client.worker!({

@@ -36,19 +36,21 @@ class ReadingProgressBar extends StatelessWidget {
   }
 }
 
-/// Field tag, title, subtitle and byline.
+/// Field tag, title, subtitle and byline. A deleted author's byline is "Deleted user" with a neutral avatar and the
+/// date only: no @username, verified mark or [authorAction] (SPEC §9.6).
 class ArticleHeader extends StatelessWidget {
   const ArticleHeader({super.key, required this.article, required this.titleScale, this.authorAction});
 
   final ArticleDetails article;
   final double titleScale;
 
-  /// At the end of the author row: the follow button (F12).
+  /// At the end of the author row: the follow button (F12). Never shown for a deleted author.
   final Widget? authorAction;
 
   @override
   Widget build(BuildContext context) {
     final card = article.card;
+    final author = card.author;
     final l10n = context.l10n;
     final uiLang = Localizations.localeOf(context).languageCode;
     final articleDir = card.language.startsWith('ar') ? TextDirection.rtl : TextDirection.ltr;
@@ -87,40 +89,54 @@ class ArticleHeader extends StatelessWidget {
         const SizedBox(height: ReadInSpace.s4),
         Row(
           children: [
-            // Avatar and byline open the author's profile (F14).
-            Expanded(
-              child: ProfileLink(
-                username: card.author.username,
-                child: Row(
+            if (author == null) ...[
+              // A deleted account's articles stay up under "Deleted user" (SPEC §9.6), with no profile link.
+              const GenericAvatar(size: 36),
+              const SizedBox(width: ReadInSpace.s2),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    UserAvatar(name: card.author.displayName, url: card.author.avatarUrl, size: 36),
-                    const SizedBox(width: ReadInSpace.s2),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: BidiText(card.author.displayName, style: context.textTheme.labelLarge, overflow: TextOverflow.ellipsis),
-                              ),
-                              if (card.author.isVerified) ...[const SizedBox(width: 4), const VerifiedMark()],
-                            ],
-                          ),
-                          Text(
-                            // Isolated handle: in RTL, a bare "@readin · 8" would show as "readin · 8@".
-                            '${Bidi.ltrIsolate('@${card.author.username}')} · ${formatDate(card.publishedAt, uiLang)}',
-                            style: meta,
-                            textDirection: Directionality.of(context),
-                          ),
-                        ],
-                      ),
-                    ),
+                    Text(l10n.deletedUser, style: context.textTheme.labelLarge?.copyWith(color: context.colors.textSecondary)),
+                    Text(formatDate(card.publishedAt, uiLang), style: meta, textDirection: Directionality.of(context)),
                   ],
                 ),
               ),
-            ),
-            if (authorAction != null) ...[const SizedBox(width: ReadInSpace.s2), authorAction!],
+            ] else
+              // Avatar and byline open the author's profile (F14).
+              Expanded(
+                child: ProfileLink(
+                  username: author.username,
+                  child: Row(
+                    children: [
+                      UserAvatar(name: author.displayName, url: author.avatarUrl, size: 36),
+                      const SizedBox(width: ReadInSpace.s2),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: BidiText(author.displayName, style: context.textTheme.labelLarge, overflow: TextOverflow.ellipsis),
+                                ),
+                                if (author.isVerified) ...[const SizedBox(width: 4), const VerifiedMark()],
+                              ],
+                            ),
+                            Text(
+                              // Isolated handle: in RTL, a bare "@readin · 8" would show as "readin · 8@".
+                              '${Bidi.ltrIsolate('@${author.username}')} · ${formatDate(card.publishedAt, uiLang)}',
+                              style: meta,
+                              textDirection: Directionality.of(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (author != null && authorAction != null) ...[const SizedBox(width: ReadInSpace.s2), authorAction!],
           ],
         ),
       ],

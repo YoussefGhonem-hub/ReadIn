@@ -52,6 +52,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/saved/saved.page').then((m) => m.SavedPage),
       },
       { path: 'settings', loadChildren: () => import('./features/settings/settings.routes') },
+      {
+        // Delete account (SPEC F01): in the app, two taps from Settings, as the stores require.
+        path: 'settings/delete-account',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/settings/account/delete-account.page').then((m) => m.DeleteAccountPage),
+      },
       // My articles and the editor (F05).
       { path: 'write', canActivate: [permissionGuard('articles.create')], loadChildren: () => import('./features/editor/editor.routes') },
       ...PLACEHOLDER_ROUTES,

@@ -67,7 +67,9 @@ _ArticleCardModel _$ArticleCardModelFromJson(Map<String, dynamic> json) =>
       subtitle: json['subtitle'] as String?,
       coverUrl: json['coverUrl'] as String?,
       field: FieldRefModel.fromJson(json['field'] as Map<String, dynamic>),
-      author: AuthorModel.fromJson(json['author'] as Map<String, dynamic>),
+      author: json['author'] == null
+          ? null
+          : AuthorModel.fromJson(json['author'] as Map<String, dynamic>),
       readingTimeMinutes: (json['readingTimeMinutes'] as num?)?.toInt() ?? 1,
       isAiAssisted: json['isAiAssisted'] as bool? ?? false,
       versionBadge: json['versionBadge'] as String?,
@@ -98,7 +100,7 @@ Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
       'subtitle': ?instance.subtitle,
       'coverUrl': ?instance.coverUrl,
       'field': instance.field.toJson(),
-      'author': instance.author.toJson(),
+      'author': ?instance.author?.toJson(),
       'readingTimeMinutes': instance.readingTimeMinutes,
       'isAiAssisted': instance.isAiAssisted,
       'versionBadge': ?instance.versionBadge,
@@ -145,7 +147,9 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
       subtitle: json['subtitle'] as String?,
       coverUrl: json['coverUrl'] as String?,
       field: FieldRefModel.fromJson(json['field'] as Map<String, dynamic>),
-      author: AuthorModel.fromJson(json['author'] as Map<String, dynamic>),
+      author: json['author'] == null
+          ? null
+          : AuthorModel.fromJson(json['author'] as Map<String, dynamic>),
       readingTimeMinutes: (json['readingTimeMinutes'] as num?)?.toInt() ?? 1,
       isAiAssisted: json['isAiAssisted'] as bool? ?? false,
       versionBadge: json['versionBadge'] as String?,
@@ -203,7 +207,7 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'subtitle': ?instance.subtitle,
   'coverUrl': ?instance.coverUrl,
   'field': instance.field.toJson(),
-  'author': instance.author.toJson(),
+  'author': ?instance.author?.toJson(),
   'readingTimeMinutes': instance.readingTimeMinutes,
   'isAiAssisted': instance.isAiAssisted,
   'versionBadge': ?instance.versionBadge,

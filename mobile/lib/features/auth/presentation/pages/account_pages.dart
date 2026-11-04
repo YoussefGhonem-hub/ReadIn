@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
-import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/inputs/password_field.dart';
 import '../../../../shared/widgets/inputs/phone_field.dart';
@@ -524,95 +523,6 @@ class _AddPhoneSignInViewState extends State<AddPhoneSignInView> {
             ),
             const SizedBox(height: ReadInSpace.s6),
             SubmitButton(label: l10n.continueAction, submitting: busy, onPressed: _review),
-          ],
-        );
-      },
-    );
-  }
-}
-
-// ── Delete account (Settings) ────────────────────────────────────────
-
-class DeleteAccountPage extends StatelessWidget {
-  const DeleteAccountPage({super.key});
-
-  @override
-  Widget build(BuildContext context) => BlocProvider(
-        create: (_) => getIt<DeleteAccountCubit>(),
-        child: const DeleteAccountView(),
-      );
-}
-
-class DeleteAccountView extends StatefulWidget {
-  const DeleteAccountView({super.key});
-
-  @override
-  State<DeleteAccountView> createState() => _DeleteAccountViewState();
-}
-
-class _DeleteAccountViewState extends State<DeleteAccountView> {
-  final _password = TextEditingController();
-  bool _confirmed = false;
-
-  @override
-  void dispose() {
-    _password.dispose();
-    super.dispose();
-  }
-
-  void _submit() => context.read<DeleteAccountCubit>().submit(
-        password: _password.text,
-        confirmed: _confirmed,
-        me: context.read<SessionCubit>().state.me,
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final colors = context.colors;
-    final me = context.select((SessionCubit c) => c.state.me);
-    // Accounts without a password confirm with a linked Google / Apple account instead (F18).
-    final confirmWith = me == null || me.hasPassword ? null : _linkedProviderLabel(me);
-    return BlocConsumer<DeleteAccountCubit, AccountFormState>(
-      listenWhen: _succeeded,
-      // The session has ended; the router leaves this screen.
-      listener: (context, _) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.accountDeleted))),
-      builder: (context, state) {
-        final busy = state.submitting;
-        return AuthScaffold(
-          title: l10n.deleteAccount,
-          children: [
-            FormBanner(message: l10n.deleteAccountBody, tone: BannerTone.warning),
-            const SizedBox(height: ReadInSpace.s5),
-            if (state.failure case final failure?) ...[
-              FailureBanner(failure: failure),
-              const SizedBox(height: ReadInSpace.s4),
-            ],
-            if (confirmWith != null)
-              FormBanner(message: l10n.deleteAccountWithProvider(confirmWith), tone: BannerTone.info)
-            else
-              PasswordField(
-                controller: _password,
-                enabled: !busy,
-                textInputAction: TextInputAction.done,
-                errorText: errorText(context, state.errors[Fields.password]),
-              ),
-            const SizedBox(height: ReadInSpace.s3),
-            CheckboxListTile(
-              value: _confirmed,
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              title: Text(l10n.deleteAccountConfirm),
-              onChanged: busy ? null : (value) => setState(() => _confirmed = value ?? false),
-            ),
-            const SizedBox(height: ReadInSpace.s4),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: colors.error, foregroundColor: colors.onError),
-              onPressed: !_confirmed || busy ? null : _submit,
-              child: busy
-                  ? SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: colors.onError))
-                  : Text(l10n.deleteAccountButton),
-            ),
           ],
         );
       },

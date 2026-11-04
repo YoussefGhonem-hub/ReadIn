@@ -14,6 +14,7 @@ internal sealed class ExternalSignInCommandHandler(
     PasswordSignIn passwordSignIn,
     SessionIssuer sessions,
     AuditTrail audit,
+    AppleTokens appleTokens,
     TimeProvider clock)
     : ICommandHandler<ExternalSignInCommand, Result<AuthSessionDto>>
 {
@@ -32,31 +33,34 @@ internal sealed class ExternalSignInCommandHandler(
             var owner = await passwordSignIn.AuthenticateAsync(link.PhoneNumber, link.Password, cancellationToken);
             if (owner.IsFailure) return owner.Error;
             if (linked is not null && linked.Id != owner.Value.Id) return CredentialErrors.ExternalInUse;
-            return await LinkAndStartAsync(owner.Value, identity, now, cancellationToken);
+            return await LinkAndStartAsync(owner.Value, identity, command.AuthorizationCode, now, cancellationToken);
         }
 
-        if (linked is not null) return await StartAsync(linked, identity, now, cancellationToken);
+        if (linked is not null) return await StartAsync(linked, identity, command.AuthorizationCode, now, cancellationToken);
 
         // Only provider-verified addresses are ever stored in Users.Email, so a verified match is the same person (SPEC §9.1).
         if (identity is { EmailVerified: true, Email: { } email })
         {
             var byEmail = await db.Users.Include(u => u.ExternalLogins)
                 .FirstOrDefaultAsync(u => u.Email == email && !u.IsSystemAccount, cancellationToken);
-            if (byEmail is not null) return await LinkAndStartAsync(byEmail, identity, now, cancellationToken);
+            if (byEmail is not null) return await LinkAndStartAsync(byEmail, identity, command.AuthorizationCode, now, cancellationToken);
         }
 
         if (!command.CreateAccount) return CredentialErrors.ExternalNotLinked;
         return await RegisterAsync(command, identity, now, cancellationToken);
     }
 
-    private async Task<Result<AuthSessionDto>> StartAsync(User user, ExternalIdentity identity, DateTime now, CancellationToken ct)
+    private async Task<Result<AuthSessionDto>> StartAsync(
+        User user, ExternalIdentity identity, string? authorizationCode, DateTime now, CancellationToken ct)
     {
         if (user.IsSuspendedAt(now)) return UserErrors.Suspended;
         user.RecordExternalSignIn(identity.Provider, now);
+        await appleTokens.CaptureAsync(user, identity, authorizationCode, ct);
         return await sessions.StartAsync(user, ct);
     }
 
-    private async Task<Result<AuthSessionDto>> LinkAndStartAsync(User user, ExternalIdentity identity, DateTime now, CancellationToken ct)
+    private async Task<Result<AuthSessionDto>> LinkAndStartAsync(
+        User user, ExternalIdentity identity, string? authorizationCode, DateTime now, CancellationToken ct)
     {
         if (user.IsSuspendedAt(now)) return UserErrors.Suspended;
 
@@ -64,6 +68,7 @@ internal sealed class ExternalSignInCommandHandler(
         var linked = user.LinkExternalLogin(identity.Provider, identity.Subject, identity.Email, now);
         if (linked.IsFailure) return linked.Error;
         if (!alreadyLinked) audit.Record(AuditActions.ExternalLoginLinked, user.Id);
+        await appleTokens.CaptureAsync(user, identity, authorizationCode, ct);
 
         try
         {
@@ -96,6 +101,7 @@ internal sealed class ExternalSignInCommandHandler(
             NewAccounts.ValidTimeZoneOrNull(command.TimeZone));
         db.Users.Add(user);
         audit.Record(AuditActions.ExternalSignUp, user.Id);
+        await appleTokens.CaptureAsync(user, identity, command.AuthorizationCode, ct);
 
         try
         {

@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { TEST_API, settle, setupAuthTesting, testMe, testSession, tokenTag } from '../../../testing/auth-testing';
+import { AuthFlowState } from './auth-flow';
 import { MIN_REFRESH_DELAY_MS, REFRESH_AHEAD_MS, REFRESH_RETRY_MS, tokenLifetimeMs } from './auth.service';
 
 const unauthorized = { status: 401, statusText: 'Unauthorized' };
@@ -233,17 +234,36 @@ describe('AuthService (SPEC §9.3, ADR 0007)', () => {
       expect(tokenTag(`Bearer ${auth.token()}`)).toBe('t2');
     });
 
-    it('delete account ends the session locally', async () => {
-      const { auth, http, session } = await signedIn();
+    it('delete account: on 204 deletes the push token, forgets the hand-offs and ends the session locally', async () => {
+      const { auth, http, session, push } = await signedIn();
+      const flow = TestBed.inject(AuthFlowState);
+      flow.phone.set('+201001234567');
       const done = auth.deleteAccount({ password: 'pass-1234' });
       await settle();
       const call = http.expectOne(`${TEST_API}/me`);
       expect(call.request.method).toBe('DELETE');
       expect(call.request.withCredentials).toBe(true);
+      expect(call.request.headers.get('X-ReadIn-Client')).toBe('web');
+      expect(tokenTag(call.request.headers.get('Authorization'))).toBe('t1');
       expect(call.request.body).toEqual({ password: 'pass-1234' });
       call.flush(null, { status: 204, statusText: 'No Content' });
       await done;
+      expect(push.forgetDevice).toHaveBeenCalledTimes(1);
+      expect(push.unregisterDevice).not.toHaveBeenCalled(); // the API already dropped the devices
+      expect(flow.phone()).toBeNull();
       expect(session.isGuest()).toBe(true);
+      expect(auth.token()).toBeNull();
+    });
+
+    it('delete account: a refusal changes nothing locally', async () => {
+      const { auth, http, session, push } = await signedIn();
+      const done = auth.deleteAccount({ password: 'wrong-1234' });
+      await settle();
+      http.expectOne(`${TEST_API}/me`).flush({ code: 'auth.wrong_password' }, { status: 400, statusText: 'Bad Request' });
+      await expect(done).rejects.toMatchObject({ code: 'auth.wrong_password' });
+      expect(push.forgetDevice).not.toHaveBeenCalled();
+      expect(session.isAuthenticated()).toBe(true);
+      expect(tokenTag(`Bearer ${auth.token()}`)).toBe('t1');
     });
   });
 });

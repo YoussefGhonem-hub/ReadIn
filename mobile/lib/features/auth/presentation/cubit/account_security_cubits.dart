@@ -13,7 +13,7 @@ import '../../domain/entities/me.dart';
 import '../../domain/usecases/auth_usecases.dart';
 import 'form_support.dart';
 
-/// State of the account security forms: set / change PIN, change password, change number, delete account.
+/// State of the account security forms: set / change PIN, change password, change number, add phone + password.
 class AccountFormState extends Equatable {
   const AccountFormState({
     this.config = AuthConfig.defaults,
@@ -227,30 +227,6 @@ class ChangePhoneCubit extends _AccountFormCubit {
     if (state.status == FormStatus.success) {
       if (PhoneNumbers.split(phone) case final parts?) await _countries.remember(parts.iso2);
     }
-  }
-}
-
-/// Delete account (F01): the password, or a fresh Google / Apple token for accounts without one, and an explicit
-/// confirmation.
-@injectable
-class DeleteAccountCubit extends _AccountFormCubit {
-  DeleteAccountCubit(super.config, this._delete, this._confirmWith);
-
-  final DeleteAccount _delete;
-  final ConfirmWithLinkedProvider _confirmWith;
-
-  Future<void> submit({required String password, required bool confirmed, Me? me}) async {
-    if (state.submitting || !confirmed) return;
-    if (me != null && !me.hasPassword) {
-      final external = await _confirmWithLinkedProvider(_confirmWith, me);
-      if (external == null) return;
-      return _submit(const {}, () => _delete(external: external), codeFields: const {});
-    }
-    await _submit(
-      Validate.collect({Fields.password: Validate.required(password)}),
-      () => _delete(password: password),
-      codeFields: const {FailureCodes.authWrongPassword: Fields.password},
-    );
   }
 }
 

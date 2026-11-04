@@ -74,6 +74,11 @@ export function profileAvatar(profile: Pick<ProfileDto, 'avatarUrl' | 'avatarVar
               <svg lucideIcon="Pencil" [size]="16" aria-hidden="true"></svg>
               {{ 'profile.editProfile' | transloco }}
             </a>
+            <!-- Narrow screens have no side nav: Settings (and Delete account at its end) stays one tap from Profile. -->
+            <a routerLink="/settings" class="rd-btn rd-btn-outline min-h-11 gap-1.5 px-4 text-sm" data-profile-settings>
+              <svg lucideIcon="Settings" [size]="16" aria-hidden="true"></svg>
+              {{ 'nav.settings' | transloco }}
+            </a>
           } @else {
             <span class="contents" data-profile-follow><rd-follow-button [user]="p" [initial]="p.isFollowing" /></span>
           }

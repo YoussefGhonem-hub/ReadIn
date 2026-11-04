@@ -82,15 +82,16 @@ public sealed class ExternalLoginTests
     }
 
     [Fact]
-    public void Deleting_releases_the_identities_and_anonymizing_marks_the_account()
+    public void Keeps_the_provider_token_on_the_linked_identity_only()
     {
         var user = GoogleUser();
 
-        user.ReleaseExternalLogins();
-        user.ExternalLogins.Should().BeEmpty();
+        user.StoreProviderToken(ExternalProviders.Apple, "app.readin.readin", "v1.secret");
+        user.ExternalLogins.Should().OnlyContain(l => l.ProviderRefreshToken == null, "Apple isn't linked");
 
-        user.Anonymize(Now);
-        user.AnonymizedAt.Should().Be(Now);
-        user.Email.Should().BeNull();
+        user.StoreProviderToken(ExternalProviders.Google, "client", "v1.secret");
+        var login = user.FindExternalLogin(ExternalProviders.Google)!;
+        login.ProviderRefreshToken.Should().Be("v1.secret");
+        login.ProviderClientId.Should().Be("client");
     }
 }

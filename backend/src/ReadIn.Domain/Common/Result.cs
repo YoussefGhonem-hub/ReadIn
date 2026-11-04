@@ -11,6 +11,9 @@ public enum ErrorType
     Unauthorized,
     TooManyRequests,
     Failure,
+
+    /// <summary>A dependency (e.g. Apple's token service) didn't answer; nothing changed, so the client can retry.</summary>
+    Unavailable,
 }
 
 /// <summary>
@@ -30,6 +33,7 @@ public sealed record Error(string Code, string Description, ErrorType Type)
     public static Error Unauthorized(string code, string description) => new(code, description, ErrorType.Unauthorized);
     public static Error TooManyRequests(string code, string description) => new(code, description, ErrorType.TooManyRequests);
     public static Error Failure(string code, string description) => new(code, description, ErrorType.Failure);
+    public static Error Unavailable(string code, string description) => new(code, description, ErrorType.Unavailable);
 }
 
 public class Result

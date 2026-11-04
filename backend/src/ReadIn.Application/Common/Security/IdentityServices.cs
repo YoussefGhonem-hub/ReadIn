@@ -44,14 +44,25 @@ internal sealed class IdentityConfirmation(PasswordConfirmation passwords, IExte
 {
     public async Task<Error?> ConfirmAsync(User user, string? password, ExternalCredentialDto? external, CancellationToken ct)
     {
-        if (!string.IsNullOrEmpty(password)) return await passwords.ConfirmAsync(user, password, ct);
+        var confirmed = await ConfirmWithIdentityAsync(user, password, external, ct);
+        return confirmed.IsFailure ? confirmed.Error : null;
+    }
+
+    /// <summary>Like <see cref="ConfirmAsync"/>, and returns the Google/Apple identity it was confirmed with (null for the password).</summary>
+    public async Task<Result<ExternalIdentity?>> ConfirmWithIdentityAsync(
+        User user, string? password, ExternalCredentialDto? external, CancellationToken ct)
+    {
+        if (!string.IsNullOrEmpty(password))
+        {
+            if (await passwords.ConfirmAsync(user, password, ct) is { } error) return error;
+            return Result.Success<ExternalIdentity?>(null);
+        }
         if (external is null) return CredentialErrors.ConfirmationRequired;
 
         var identity = await externalIdentities.VerifyAsync(external.Provider, external.IdToken, external.Nonce, ct);
         if (identity.IsFailure) return identity.Error;
-        return user.FindExternalLogin(identity.Value.Provider)?.Subject == identity.Value.Subject
-            ? null
-            : CredentialErrors.ExternalMismatch;
+        if (user.FindExternalLogin(identity.Value.Provider)?.Subject != identity.Value.Subject) return CredentialErrors.ExternalMismatch;
+        return identity.Value;
     }
 }
 

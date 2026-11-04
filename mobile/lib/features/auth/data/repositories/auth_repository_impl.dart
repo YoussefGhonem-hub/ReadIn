@@ -9,6 +9,7 @@ import '../../domain/entities/external_credential.dart';
 import '../../domain/entities/me.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/account_api.dart';
+import '../datasources/account_device_data.dart';
 import '../datasources/auth_api.dart';
 import '../datasources/auth_session_store.dart';
 import '../models/auth_models.dart';
@@ -97,10 +98,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
 @LazySingleton(as: AccountRepository)
 class AccountRepositoryImpl implements AccountRepository {
-  AccountRepositoryImpl(this._api, this._session);
+  AccountRepositoryImpl(this._api, this._session, this._device);
 
   final AccountApi _api;
   final AuthSessionStore _session;
+  final AccountDeviceData _device;
 
   Me _publish(MeModel model) {
     final me = model.toEntity();
@@ -146,7 +148,12 @@ class AccountRepositoryImpl implements AccountRepository {
   @override
   Future<Result<void>> deleteAccount({String? password, ExternalCredential? external}) async {
     final result = await guardApi(() => _api.deleteAccount(DeleteAccountRequest(password: password, external: external)));
-    if (result.isOk) await _session.clear(); // the API already ended every session and dropped the device tokens
+    if (result.isOk) {
+      // 204: the account is gone, with every session and device token. Forget what this device kept for it; the
+      // session goes last, because ending it leaves the screen. Nothing happens here on a failure: never queued.
+      await _device.forget();
+      await _session.clear();
+    }
     return result;
   }
 

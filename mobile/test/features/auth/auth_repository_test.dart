@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/platform/time_zone_service.dart';
 import 'package:readin/core/push/push_service.dart';
 import 'package:readin/features/auth/data/datasources/account_api.dart';
+import 'package:readin/features/auth/data/datasources/account_device_data.dart';
 import 'package:readin/features/auth/data/datasources/auth_api.dart';
 import 'package:readin/features/auth/data/datasources/auth_session_store.dart';
 import 'package:readin/features/auth/data/models/auth_models.dart';
@@ -17,6 +18,7 @@ const appleToken = ExternalCredential(
   provider: ExternalProvider.apple,
   idToken: 'apple-id-token',
   nonce: 'raw-nonce',
+  authorizationCode: 'apple-authorization-code',
   displayName: 'Mona Adel',
 );
 
@@ -27,6 +29,8 @@ class MockAccountApi extends Mock implements AccountApi {}
 class MockPushService extends Mock implements PushService {}
 
 class MockTimeZone extends Mock implements TimeZoneService {}
+
+class MockAccountDeviceData extends Mock implements AccountDeviceData {}
 
 void main() {
   setUpAll(() {
@@ -47,6 +51,7 @@ void main() {
   late AuthSessionStore store;
   late AuthRepositoryImpl auth;
   late AccountRepositoryImpl accounts;
+  late MockAccountDeviceData device;
   late List<Me?> changes;
 
   setUp(() {
@@ -58,7 +63,9 @@ void main() {
     final timeZone = MockTimeZone();
     when(timeZone.current).thenAnswer((_) async => 'Africa/Cairo');
     auth = AuthRepositoryImpl(api, account, store, push, timeZone);
-    accounts = AccountRepositoryImpl(account, store);
+    device = MockAccountDeviceData();
+    when(() => device.forget()).thenAnswer((_) async {});
+    accounts = AccountRepositoryImpl(account, store, device);
     changes = [];
     store.changes.listen(changes.add);
   });
@@ -135,27 +142,79 @@ void main() {
     expect(secure.values[AuthSessionStore.refreshTokenKey], 'r3');
   });
 
-  test('deleting the account forgets the session; a wrong password keeps it', () async {
+  test('a deleted account is forgotten on this device: its data first, then the session', () async {
     await store.save(session('a1', 'r1'));
-    when(() => account.deleteAccount(any())).thenThrow(httpError('/me', 400, code: 'auth.wrong_password'));
-    final wrong = await accounts.deleteAccount(password: 'nope');
-    expect(wrong.failureOrNull?.code, 'auth.wrong_password');
-    expect(secure.values, isNotEmpty);
-
     when(() => account.deleteAccount(any())).thenAnswer((_) async {});
+    when(() => device.forget()).thenAnswer((_) async {
+      expect(secure.values, isNotEmpty, reason: 'the session ends last: ending it leaves the screen');
+    });
+
     expect((await accounts.deleteAccount(password: 'right-pass1')).isOk, isTrue);
+
+    verify(() => device.forget()).called(1);
     expect(secure.values, isEmpty);
-    expect(verify(() => account.deleteAccount(captureAny())).captured.last.toJson(), {'password': 'right-pass1'});
+    expect(await store.accessToken(), isNull);
+    await Future<void>.delayed(Duration.zero);
+    expect(changes.last, isNull);
+    expect(verify(() => account.deleteAccount(captureAny())).captured.single.toJson(), {'password': 'right-pass1'});
   });
 
-  test('an account without a password is deleted with a fresh Google / Apple token', () async {
+  test('a failed deletion keeps everything: wrong password, Apple unreachable, offline (never queued)', () async {
+    await store.save(session('a1', 'r1'));
+    for (final error in [
+      httpError('/me', 400, code: 'auth.wrong_password'),
+      httpError('/me', 503, code: 'account.deletion_unavailable'),
+      offline('/me'),
+    ]) {
+      when(() => account.deleteAccount(any())).thenThrow(error);
+      final result = await accounts.deleteAccount(password: 'nope-12345');
+      expect(result.isOk, isFalse);
+    }
+
+    expect(
+      verify(() => account.deleteAccount(captureAny())).captured.map((r) => (r as DeleteAccountRequest).password),
+      ['nope-12345', 'nope-12345', 'nope-12345'],
+    );
+    verifyNever(() => device.forget());
+    expect(secure.values[AuthSessionStore.refreshTokenKey], 'r1');
+    expect(await store.accessToken(), 'a1');
+  });
+
+  test('an account without a password is deleted with a fresh Google / Apple token, Apple with its code', () async {
     when(() => account.deleteAccount(any())).thenAnswer((_) async {});
 
     await accounts.deleteAccount(external: appleToken);
 
     expect(verify(() => account.deleteAccount(captureAny())).captured.single.toJson(), {
-      'external': {'provider': 'apple', 'idToken': 'apple-id-token', 'nonce': 'raw-nonce'},
+      'external': {
+        'provider': 'apple',
+        'idToken': 'apple-id-token',
+        'nonce': 'raw-nonce',
+        'authorizationCode': 'apple-authorization-code',
+      },
     });
+  });
+
+  test("Apple's authorization code also goes with a link and with adding phone + password", () {
+    expect(const LinkExternalLoginRequest(credential: appleToken, external: appleToken).toJson(), {
+      'credential': {
+        'provider': 'apple',
+        'idToken': 'apple-id-token',
+        'nonce': 'raw-nonce',
+        'authorizationCode': 'apple-authorization-code',
+      },
+      'external': {
+        'provider': 'apple',
+        'idToken': 'apple-id-token',
+        'nonce': 'raw-nonce',
+        'authorizationCode': 'apple-authorization-code',
+      },
+    });
+    expect(
+      const AddPhoneSignInRequest(phoneNumber: '+201001234567', password: 'pw', recoveryPin: '4831', external: appleToken)
+          .toJson()['external'],
+      containsPair('authorizationCode', 'apple-authorization-code'),
+    );
   });
 
   test('Google / Apple sign in sends the token, the language and the time zone, and stores the session', () async {
@@ -169,6 +228,7 @@ void main() {
       'provider': 'apple',
       'idToken': 'apple-id-token',
       'nonce': 'raw-nonce',
+      'authorizationCode': 'apple-authorization-code',
       'displayName': 'Mona Adel',
       'uiLanguage': 'ar',
       'timeZone': 'Africa/Cairo',

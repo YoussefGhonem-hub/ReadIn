@@ -100,4 +100,7 @@ class PhoneCountryMemory {
   }
 
   Future<void> remember(String iso2) => _store.write(_key, iso2);
+
+  /// Forgets the remembered country (it came from a deleted account's number).
+  Future<void> forget() => _store.delete(_key);
 }

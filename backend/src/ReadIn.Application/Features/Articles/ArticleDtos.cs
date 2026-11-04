@@ -30,7 +30,8 @@ public record ArticleCardDto
     public string? Subtitle { get; init; }
     public string? CoverUrl { get; init; }
     public FieldRefDto Field { get; init; } = default!;
-    public AuthorDto Author { get; init; } = default!;
+    /// <summary>Null when the author deleted their account; clients show "Deleted user" (SPEC §9.6).</summary>
+    public AuthorDto? Author { get; init; }
     public int ReadingTimeMinutes { get; init; }
     public bool IsAiAssisted { get; init; }
     public string? VersionBadge { get; init; }

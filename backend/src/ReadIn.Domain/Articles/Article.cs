@@ -31,7 +31,8 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
 
     private Article() { } // EF
 
-    public Guid AuthorId { get; private set; }
+    /// <summary>Null once the author deleted their account: published articles stay, shown as by a deleted user (SPEC §9.6).</summary>
+    public Guid? AuthorId { get; private set; }
     public Guid FieldId { get; private set; }
     public Guid? TopicId { get; private set; }
     public string Slug { get; private set; } = default!;
@@ -61,7 +62,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public int ReadCount { get; private set; }
 
     // Read-side navigations for query projections only; domain behavior never uses them.
-    public Users.User Author { get; private set; } = default!;
+    public Users.User? Author { get; private set; }
     public Field Field { get; private set; } = default!;
     public Topic? Topic { get; private set; }
 
@@ -194,7 +195,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public Result SetAttachments(IReadOnlyList<AttachmentCandidate> items)
     {
         if (items.Select(i => i.MediaAssetId).Distinct().Count() != items.Count) return AttachmentErrors.DuplicateAsset;
-        if (items.Any(i => i.OwnerId != AuthorId)) return AttachmentErrors.AssetNotFound;
+        if (AuthorId is null || items.Any(i => i.OwnerId != AuthorId)) return AttachmentErrors.AssetNotFound;
         if (items.Select(i => i.Kind).Distinct().Count() > 1) return AttachmentErrors.MixedKinds;
 
         var documents = items.Count(i => i.Kind == MediaKind.Document);

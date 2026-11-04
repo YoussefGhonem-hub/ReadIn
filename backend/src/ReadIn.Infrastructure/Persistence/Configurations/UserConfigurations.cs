@@ -75,6 +75,9 @@ internal sealed class ExternalLoginConfiguration : IEntityTypeConfiguration<Exte
         builder.Property(l => l.Provider).HasMaxLength(16).IsUnicode(false).IsRequired();
         builder.Property(l => l.Subject).HasMaxLength(255).IsUnicode(false).IsRequired();
         builder.Property(l => l.Email).HasMaxLength(320);
+        // Apple refresh token, AES-GCM encrypted (SPEC F01); never read back except to revoke it.
+        builder.Property(l => l.ProviderRefreshToken).HasMaxLength(2048).IsUnicode(false);
+        builder.Property(l => l.ProviderClientId).HasMaxLength(255).IsUnicode(false);
         builder.HasIndex(l => new { l.Provider, l.Subject }).IsUnique();
         builder.HasIndex(l => new { l.UserId, l.Provider }).IsUnique();
     }

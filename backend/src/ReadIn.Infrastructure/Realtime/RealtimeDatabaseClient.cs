@@ -39,6 +39,10 @@ internal sealed partial class RealtimeDatabaseClient(
     public Task<bool> PostAsync(string path, object value, CancellationToken cancellationToken) =>
         SendAsync(HttpMethod.Post, path, value, cancellationToken);
 
+    /// <summary>Removes <paramref name="path"/> and everything under it.</summary>
+    public Task<bool> DeleteAsync(string path, CancellationToken cancellationToken) =>
+        SendAsync(HttpMethod.Delete, path, null, cancellationToken);
+
     /// <summary>Deletes the given children of <paramref name="path"/> in one multi-location update (null removes a child).</summary>
     public Task<bool> DeleteChildrenAsync(string path, IReadOnlyCollection<string> keys, CancellationToken cancellationToken) =>
         keys.Count == 0 ? Task.FromResult(true) : PatchAsync(path, keys.ToDictionary(k => k, _ => (object?)null), cancellationToken);

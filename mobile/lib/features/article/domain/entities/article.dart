@@ -66,7 +66,10 @@ class ArticleCard extends Equatable {
   final String? subtitle;
   final String? coverUrl;
   final FieldRef field;
-  final Author author;
+
+  /// Null once the author deleted their account: the article stays up under "Deleted user", with no name, handle,
+  /// photo or profile (SPEC §9.6).
+  final Author? author;
   final int readingTimeMinutes;
   final bool isAiAssisted;
 

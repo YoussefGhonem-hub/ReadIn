@@ -32,6 +32,7 @@ import '../../features/article/presentation/cubit/engagement_cubit.dart'
     as _i226;
 import '../../features/auth/data/auth_module.dart' as _i360;
 import '../../features/auth/data/datasources/account_api.dart' as _i506;
+import '../../features/auth/data/datasources/account_device_data.dart' as _i881;
 import '../../features/auth/data/datasources/apple_sign_in_data_source.dart'
     as _i815;
 import '../../features/auth/data/datasources/auth_api.dart' as _i367;
@@ -50,6 +51,8 @@ import '../../features/auth/presentation/cubit/account_security_cubits.dart'
     as _i1021;
 import '../../features/auth/presentation/cubit/complete_profile_cubit.dart'
     as _i245;
+import '../../features/auth/presentation/cubit/delete_account_cubit.dart'
+    as _i460;
 import '../../features/auth/presentation/cubit/external_sign_in_cubit.dart'
     as _i34;
 import '../../features/auth/presentation/cubit/forgot_password_cubit.dart'
@@ -346,6 +349,14 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i153.AccountRepositoryImpl(
         gh<_i506.AccountApi>(),
         gh<_i348.AuthSessionStore>(),
+        gh<_i881.AccountDeviceData>(),
+      ),
+    );
+    gh.lazySingleton<_i881.AccountDeviceData>(
+      () => _i881.AccountDeviceData(
+        gh<_i1040.PushService>(),
+        gh<_i811.GoogleSignInDataSource>(),
+        gh<_i115.PhoneCountryMemory>(),
       ),
     );
     gh.lazySingleton<_i848.DocumentFileDataSource>(
@@ -611,9 +622,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i27.GetReactors>(
       () => _i27.GetReactors(gh<_i315.ReactionsRepository>()),
     );
-    gh.factory<_i1021.DeleteAccountCubit>(
-      () => _i1021.DeleteAccountCubit(
-        gh<_i46.GetAuthConfig>(),
+    gh.factory<_i460.DeleteAccountCubit>(
+      () => _i460.DeleteAccountCubit(
         gh<_i46.DeleteAccount>(),
         gh<_i46.ConfirmWithLinkedProvider>(),
       ),

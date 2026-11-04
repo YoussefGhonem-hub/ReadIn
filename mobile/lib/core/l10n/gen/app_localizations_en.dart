@@ -152,6 +152,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verifiedWriter => 'Verified writer';
 
   @override
+  String get deletedUser => 'Deleted user';
+
+  @override
   String get tldr => 'TL;DR';
 
   @override
@@ -1160,14 +1163,114 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccount => 'Delete account';
 
   @override
-  String get deleteAccountBody =>
-      'Your profile and personal data are removed after 30 days. Your articles and comments stay, shown as \"Deleted user\". This can\'t be undone.';
+  String get deleteAccountTitle => 'Delete your account';
+
+  @override
+  String get deleteAccountLead =>
+      'This permanently deletes your ReadIn account. You can\'t undo it, and we can\'t restore it.';
+
+  @override
+  String get deleteAccountDeletedHeading => 'We delete right away';
+
+  @override
+  String get deleteAccountDeletedProfile =>
+      'Your profile: name, @username, photo, bio and links';
+
+  @override
+  String get deleteAccountDeletedContact =>
+      'Your phone number, email, password and recovery PIN';
+
+  @override
+  String get deleteAccountDeletedSignIns =>
+      'Your Google and Apple sign-in links. We also revoke ReadIn\'s access at Apple.';
+
+  @override
+  String get deleteAccountDeletedDrafts =>
+      'Your drafts and any article that isn\'t published, with their images and PDFs, and every other photo or file you uploaded';
+
+  @override
+  String get deleteAccountDeletedActivity =>
+      'Your interests, reading progress, stats, reactions, saved articles and follows';
+
+  @override
+  String get deleteAccountDeletedDevices =>
+      'Your devices and notification tokens, so no notification reaches you';
+
+  @override
+  String get deleteAccountDeletedSecurityLog =>
+      'Your security log: sign-ins and account changes';
+
+  @override
+  String get deleteAccountKeptHeading => 'What we keep, and why';
+
+  @override
+  String get deleteAccountKeptPublished =>
+      'Your published articles and comments stay up under “Deleted user”, with the images and PDFs they show: no name, @username or photo, and nothing that links them to you. That keeps links and discussions other readers rely on working. To take an article down, delete it before you delete your account.';
+
+  @override
+  String get deleteAccountKeptRecord =>
+      'A record that this account was deleted: its internal ID and the time, nothing that identifies you. It proves the deletion happened.';
+
+  @override
+  String get deleteAccountKeptBackups =>
+      'Database backups may still hold your data for up to 14 days, until they\'re overwritten.';
+
+  @override
+  String get deleteAccountKeptReviews =>
+      'Edits you made on other writers\' articles stay with those articles, without your name.';
+
+  @override
+  String get deleteAccountAfter =>
+      'Afterwards, this phone number, email, Google or Apple account can create a new ReadIn account, which starts empty.';
+
+  @override
+  String get deleteAccountByEmail => 'Delete by email instead';
+
+  @override
+  String get deleteAccountPasswordBody =>
+      'Enter your password to delete your account.';
+
+  @override
+  String get deleteAccountProviderBody =>
+      'Sign in again with the account that\'s linked to ReadIn.';
+
+  @override
+  String get confirmWithGoogle => 'Confirm with Google';
+
+  @override
+  String get confirmWithApple => 'Confirm with Apple';
+
+  @override
+  String get confirmedWithGoogle => 'Confirmed with Google';
+
+  @override
+  String get confirmedWithApple => 'Confirmed with Apple';
+
+  @override
+  String get deleteAccountAppleUnavailable =>
+      'This account is linked to Apple. Confirm with Apple from the ReadIn iPhone app, or email us to delete it.';
 
   @override
   String get deleteAccountConfirm => 'I understand, delete my account';
 
   @override
   String get deleteAccountButton => 'Delete my account';
+
+  @override
+  String get deletingAccount => 'Deleting your account…';
+
+  @override
+  String get deleteAccountDialogTitle => 'Delete your account forever?';
+
+  @override
+  String get deleteAccountDialogBody => 'This can\'t be undone.';
+
+  @override
+  String get deleteAccountDialogConfirm => 'Delete forever';
+
+  @override
+  String get deleteAccountOffline =>
+      'You\'re offline. Connect to the internet to delete your account.';
 
   @override
   String get accountDeleted => 'Your account was deleted.';
@@ -1372,11 +1475,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get phoneSignInAdded => 'Phone number and password added';
-
-  @override
-  String deleteAccountWithProvider(String provider) {
-    return 'To delete your account, you\'ll confirm with $provider.';
-  }
 
   @override
   String get errExternalNotLinked =>
@@ -2692,4 +2790,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get revisionRestored =>
       'Version restored. Press Update to publish it.';
+
+  @override
+  String get errAppleConfirmationRequired =>
+      'This account is linked to Apple. Confirm with Apple to delete it.';
+
+  @override
+  String get errDeletionUnavailable =>
+      'We couldn\'t finish deleting your account, so nothing was deleted. Try again in a few minutes.';
 }

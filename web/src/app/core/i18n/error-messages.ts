@@ -34,6 +34,9 @@ export const CONTRACT_ERROR_CODES = [
   'auth.phone_sign_in_exists',
   'auth.confirmation_required',
   'auth.external_mismatch',
+  // Delete account (SPEC F01): Apple must be confirmed so its token can be revoked; Apple unreachable → nothing deleted
+  'auth.apple_confirmation_required',
+  'account.deletion_unavailable',
   'provider.invalid',
   'phone.invalid',
   'password.too_short',

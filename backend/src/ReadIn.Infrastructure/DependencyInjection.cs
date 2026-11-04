@@ -50,7 +50,17 @@ public static class DependencyInjection
         services.AddSingleton<IAttemptThrottle, MemoryAttemptThrottle>();
         services.AddRealtime(configuration);
         services.Configure<ExternalAuthOptions>(configuration.GetSection(ExternalAuthOptions.Section));
+        // The Sign in with Apple key may come as SIWA_KEY_BASE64 (secrets only, never in the repo).
+        services.PostConfigure<ExternalAuthOptions>(o =>
+            o.Apple.PrivateKeyBase64 = string.IsNullOrWhiteSpace(o.Apple.PrivateKeyBase64) ? configuration["SIWA_KEY_BASE64"] : o.Apple.PrivateKeyBase64);
         services.AddSingleton<IExternalIdentityVerifier, OidcExternalIdentityVerifier>();
+        services.AddHttpClient<IAppleTokenService, AppleTokenService>(http =>
+        {
+            http.BaseAddress = new Uri("https://appleid.apple.com/");
+            http.Timeout = TimeSpan.FromSeconds(10);
+        });
+        services.AddSingleton<IProviderTokenProtector, AesGcmProviderTokenProtector>();
+        services.AddScoped<IAccountEraser, AccountEraser>();
 
         // Uploads live on this server's disk (ADR 0010); swap IFileStorage to move them to shared storage.
         services.AddSingleton<WwwrootFileStorage>();

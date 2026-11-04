@@ -46,7 +46,7 @@ import { ThemeService } from '../../../core/theme/theme.service';
                 d="M16.37 1.43c0 1.14-.49 2.27-1.18 3.08-.74.9-1.99 1.57-2.99 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.57-2.27 1.2-2.98.81-.94 2.15-1.64 3.25-1.68.03.13.06.28.06.43zm4.56 15.71c-.03.07-.46 1.58-1.52 3.12-.94 1.34-1.94 2.71-3.43 2.71-1.52 0-1.9-.88-3.63-.88-1.7 0-2.3.91-3.67.91-1.38 0-2.33-1.26-3.43-2.8C3.96 18.38 2.93 15.57 2.93 12.92c0-4.28 2.8-6.55 5.55-6.55 1.45 0 2.68.95 3.6.95.87 0 2.22-1.01 3.9-1.01.62 0 2.89.06 4.38 2.19-.13.09-2.38 1.37-2.38 4.19 0 3.26 2.85 4.42 2.95 4.45z"
               />
             </svg>
-            <span>{{ 'auth.external.apple' | transloco }}</span>
+            <span>{{ appleLabel() ?? ('auth.external.apple' | transloco) }}</span>
           </button>
         }
       </div>
@@ -59,6 +59,8 @@ export class ExternalButtons {
   readonly busy = input(false);
   /** GIS button wording: "Continue with Google" or "Sign in with Google". */
   readonly text = input<'continue_with' | 'signin_with'>('continue_with');
+  /** Apple button wording when it confirms an action (e.g. "Confirm with Apple"); default "Continue with Apple". */
+  readonly appleLabel = input<string | null>(null);
   readonly credential = output<ExternalResult>();
 
   private readonly external = inject(ExternalIdentityService);

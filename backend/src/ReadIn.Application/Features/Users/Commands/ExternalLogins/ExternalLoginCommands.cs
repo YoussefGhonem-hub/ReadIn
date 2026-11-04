@@ -34,6 +34,7 @@ internal sealed class LinkExternalLoginCommandHandler(
     IdentityConfirmation confirmation,
     IExternalIdentityVerifier externalIdentities,
     AuditTrail audit,
+    AppleTokens appleTokens,
     MeReader meReader,
     TimeProvider clock)
     : ICommandHandler<LinkExternalLoginCommand, Result<MeDto>>
@@ -58,6 +59,7 @@ internal sealed class LinkExternalLoginCommandHandler(
         var linked = user.LinkExternalLogin(identity.Provider, identity.Subject, identity.Email, clock.GetUtcNow().UtcDateTime);
         if (linked.IsFailure) return linked.Error;
         audit.Record(AuditActions.ExternalLoginLinked, userId);
+        await appleTokens.CaptureAsync(user, identity, credential.AuthorizationCode, cancellationToken);
 
         try
         {

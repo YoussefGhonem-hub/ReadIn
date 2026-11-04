@@ -79,11 +79,13 @@ class _ArticleViewState extends State<ArticleView> {
 
   /// A loaded article is the newest state of its counters, the author follow and its collections ("add to
   /// collection" opens with them ticked); then live counters follow it. A device copy (offline) is older than
-  /// anything the app knows, so it seeds nothing.
+  /// anything the app knows, so it seeds nothing. A deleted author has no follow to seed.
   void _onArticle(ArticleDetails article) {
     if (!article.isOfflineCopy) {
       context.read<EngagementCubit>().seed([article.card]);
-      context.read<FollowsCubit>().seed({article.card.author.id: article.isFollowingAuthor});
+      if (article.card.author case final author?) {
+        context.read<FollowsCubit>().seed({author.id: article.isFollowingAuthor});
+      }
       context.read<CollectionsCubit>().seedArticle(article.card.id, article.collectionIds);
     }
     context.read<ArticleLiveCubit>().watch(article.card.id);
@@ -171,12 +173,16 @@ class _ArticleViewState extends State<ArticleView> {
                           controller: _scroll,
                           bodyFontSize: _fontSizeFor(fontSize),
                           onTerm: _showTerm,
-                          authorAction: FollowButton(
-                            userId: article.card.author.id,
-                            name: article.card.author.displayName,
-                            initiallyFollowing: article.isFollowingAuthor,
-                            dense: true,
-                          ),
+                          // Nobody can follow a deleted account (SPEC §9.6).
+                          authorAction: switch (article.card.author) {
+                            final author? => FollowButton(
+                                userId: author.id,
+                                name: author.displayName,
+                                initiallyFollowing: article.isFollowingAuthor,
+                                dense: true,
+                              ),
+                            null => null,
+                          },
                         ),
                     },
                   ),

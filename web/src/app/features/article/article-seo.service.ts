@@ -81,7 +81,7 @@ export class ArticleSeoService {
   }
 
   private structuredData(article: ArticleDetailsDto, url: string, description: string): Record<string, unknown> {
-    const authorUrl = `${environment.siteUrl}/@${article.author.username}`;
+    const { author } = article;
     return {
       '@context': 'https://schema.org',
       '@type': 'Article',
@@ -92,7 +92,8 @@ export class ArticleSeoService {
       datePublished: article.publishedAt,
       dateModified: article.publishedAt,
       ...(article.coverUrl ? { image: [article.coverUrl] } : {}),
-      author: { '@type': 'Person', name: article.author.displayName, url: authorUrl },
+      // A deleted account's articles stay up without an author (SPEC §9.6): nothing may point back to the person.
+      ...(author ? { author: { '@type': 'Person', name: author.displayName, url: `${environment.siteUrl}/@${author.username}` } } : {}),
       publisher: { '@type': 'Organization', name: 'ReadIn', url: environment.siteUrl },
       keywords: article.tags.join(', '),
       isAccessibleForFree: true,

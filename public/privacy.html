@@ -185,12 +185,12 @@
       <h2 id="ar-storage">4. أين نحفظ البيانات ومدة الاحتفاظ بها</h2>
       <p>نحفظ حسابك ومحتواك في قاعدة بيانات <bdi>ReadIn</bdi> وملفاته على خوادم نديرها. تُحفظ إشارات التحديثات الحية في <bdi>Firebase Realtime Database</bdi> في بلجيكا. قد يعالج <bdi>Firebase Cloud Messaging</bdi> البيانات في أي مكان لدى <bdi>Google</bdi> فيه منشآت، ويعمل <bdi>Firebase Authentication</bdi> من الولايات المتحدة. كل الاتصالات مشفّرة عبر <bdi>HTTPS</bdi>.</p>
       <ul>
-        <li><strong>بيانات الحساب والمحتوى:</strong> طوال وجود حسابك.</li>
+        <li><strong>بيانات الحساب والمحتوى:</strong> طوال وجود حسابك. المقالات والتعليقات المنشورة تبقى بعد حذف الحساب باسم «مستخدم محذوف» حتى تُحذف، بدون أي شيء يربطها بك (<a href="#ar-delete">القسم 6</a>).</li>
         <li><strong>جلسات الدخول</strong> (تدوم حتى 30 يومًا) <strong>ورموز استرداد كلمة المرور:</strong> تُحذف بعد 7 أيام من انتهائها.</li>
         <li><strong>محاولات رمز الاسترداد (مع عنوان <bdi>IP</bdi>):</strong> 30 يومًا.</li>
         <li><strong>رمز الإشعارات:</strong> حتى تسجّل الخروج من الجهاز، أو يتوقف الرمز عن العمل، أو تحذف حسابك.</li>
         <li><strong>أحداث التحديثات الحية في <bdi>Firebase</bdi>:</strong> 24 ساعة.</li>
-        <li><strong>الحسابات المحذوفة:</strong> تُمسح البيانات الشخصية بعد 30 يومًا من الحذف (انظر <a href="#ar-delete">البند 6</a>).</li>
+        <li><strong>الحسابات المحذوفة:</strong> نحذف كل شيء فورًا، ما عدا سجلًا بأن الحساب حُذف (معرّفه الداخلي ووقت الحذف، بدون أي بيانات تدل عليك) والنسخ الاحتياطية لمدة أقصاها 14 يومًا (انظر <a href="#ar-delete">البند 6</a>).</li>
         <li><strong>النسخ الاحتياطية:</strong> تُحذف بعد 14 يومًا.</li>
         <li><strong>سجل أحداث الأمان:</strong> نحتفظ به ما دام ضروريًا لحماية الحسابات والتعامل مع بلاغات إساءة الاستخدام.</li>
       </ul>
@@ -207,10 +207,10 @@
 
       <h2 id="ar-delete">6. كيف تطلب حذف حسابك</h2>
       <ul>
-        <li><strong>من التطبيق:</strong> افتح «حسابي» ← أيقونة الإعدادات ← «الحساب» ← «حذف الحساب»، ثم اكتب كلمة المرور (أو أكّد بحساب <bdi>Google</bdi> أو <bdi>Apple</bdi> إذا لم تكن لديك كلمة مرور)، وعلّم على «فاهم، امسح حسابي»، واضغط «امسح حسابي».</li>
+        <li><strong>من التطبيق:</strong> افتح «حسابي» ← أيقونة الإعدادات ← «حذف الحساب» في آخر الصفحة، ثم أكّد بكلمة المرور أو بحساب <bdi>Google</bdi> أو <bdi>Apple</bdi> المرتبط، وعلّم على «فاهم، احذف حسابي»، واضغط «احذف حسابي» ثم «احذف نهائيًا».</li>
         <li><strong>بالبريد الإلكتروني:</strong> راسلنا على <a href="mailto:youssef.fcaih@gmail.com?subject=Delete%20my%20ReadIn%20account"><bdi>youssef.fcaih@gmail.com</bdi></a> واذكر رقم الهاتف أو اسم المستخدم أو البريد المرتبط بحساب <bdi>Google</bdi> أو <bdi>Apple</bdi>. ننفذ الطلب خلال 30 يومًا.</li>
       </ul>
-      <p><strong>ماذا يحدث بعد الحذف:</strong> فورًا نسجّل خروجك من كل الأجهزة، ونوقف الإشعارات، ونفك ربط <bdi>Google</bdi> و<bdi>Apple</bdi>. بعد 30 يومًا نمسح رقم الهاتف والبريد وكلمة المرور ورمز الاسترداد والاسم واسم المستخدم والصورة والنبذة والروابط والاهتمامات وبيانات الأجهزة. تبقى مقالاتك وتعليقاتك باسم «مستخدم محذوف». إذا أردت إزالتها أيضًا، احذفها قبل حذف حسابك أو اطلب ذلك في رسالتك.</p>
+      <p><strong>ماذا يحدث بعد الحذف:</strong> يُحذف حسابك فورًا ولا يمكن التراجع عن ذلك. نلغي صلاحية <bdi>ReadIn</bdi> لدى <bdi>Apple</bdi>، ونسجّل خروجك من كل الأجهزة، ونحذف ملفك الشخصي ورقم الهاتف والبريد وكلمة المرور ورمز الاسترداد، ومسوداتك ومقالاتك غير المنشورة مع ملفاتها، وصورك وملفاتك المرفوعة الأخرى، واهتماماتك وسجل قراءتك وتفاعلاتك ومحفوظاتك ومتابعاتك، وأجهزتك ورموز الإشعارات، وسجل أحداث الأمان الخاص بحسابك. <strong>مقالاتك المنشورة وتعليقاتك تبقى منشورة باسم «مستخدم محذوف»</strong>، مع الصور وملفات <bdi>PDF</bdi> التي تعرضها، بدون اسمك أو صورتك وبدون أي شيء يربطها بك؛ احذفها قبل حذف حسابك إذا أردت إزالتها. لا نحتفظ عنك إلا بسجل بأن الحساب حُذف (معرّفه الداخلي ووقت الحذف) وبالنسخ الاحتياطية لمدة أقصاها 14 يومًا. تعديلاتك على مقالات كتّاب آخرين تبقى معها بدون اسمك.</p>
       <p>التفاصيل الكاملة في <a href="/delete-account" data-page="/delete-account">صفحة حذف الحساب</a>.</p>
 
       <h2 id="ar-children">7. الأطفال</h2>
@@ -326,12 +326,12 @@
       <h2 id="en-storage">4. Where we store data and how long we keep it</h2>
       <p>Your account and content are stored in ReadIn's database and file storage on servers we operate. Live-update signals are stored in the Firebase Realtime Database in Belgium. Firebase Cloud Messaging may process data wherever Google has facilities, and Firebase Authentication runs in the United States. All connections are encrypted with HTTPS.</p>
       <ul>
-        <li><strong>Account data and content:</strong> for as long as your account exists.</li>
+        <li><strong>Account data and content:</strong> for as long as your account exists. Published articles and comments stay after the account is deleted, under “Deleted user”, until they're removed, with nothing that links them to you (<a href="#en-delete">section 6</a>).</li>
         <li><strong>Sign-in sessions</strong> (they last up to 30 days) <strong>and password reset tokens:</strong> deleted 7 days after they expire or end.</li>
         <li><strong>Recovery PIN attempts (with IP address):</strong> 30 days.</li>
         <li><strong>Push notification token:</strong> until you sign out on that device, the token stops working, or you delete your account.</li>
         <li><strong>Live-update events in Firebase:</strong> 24 hours.</li>
-        <li><strong>Deleted accounts:</strong> personal data is erased 30 days after deletion (see <a href="#en-delete">section 6</a>).</li>
+        <li><strong>Deleted accounts:</strong> everything is deleted right away, except a record that the account was deleted (its internal ID and the time, nothing that identifies you) and backups for up to 14 days (see <a href="#en-delete">section 6</a>).</li>
         <li><strong>Backups:</strong> deleted after 14 days.</li>
         <li><strong>Security event log:</strong> kept for as long as needed to protect accounts and handle abuse reports.</li>
       </ul>
@@ -348,10 +348,10 @@
 
       <h2 id="en-delete">6. How to delete your account</h2>
       <ul>
-        <li><strong>In the app:</strong> open Profile → the settings icon → Account → Delete account. Enter your password (or confirm with Google or Apple if you don't have one), tick "I understand, delete my account" and tap "Delete my account".</li>
+        <li><strong>In the app:</strong> open Profile → the settings icon → Delete account (at the bottom). Confirm with your password or your linked Google or Apple account, tick "I understand, delete my account", tap "Delete my account", then "Delete forever".</li>
         <li><strong>By email:</strong> write to <a href="mailto:youssef.fcaih@gmail.com?subject=Delete%20my%20ReadIn%20account">youssef.fcaih@gmail.com</a> with your phone number, @username, or the email of your linked Google or Apple account. We'll do it within 30 days.</li>
       </ul>
-      <p><strong>What happens next:</strong> right away, you're signed out on every device, notifications stop, and Google and Apple sign-in are unlinked. After 30 days, we erase your phone number, email, password, recovery PIN, name, username, photo, bio, links, interests and device data. Your articles and comments stay, shown as "Deleted user". If you want them removed too, delete them before deleting your account, or ask in your email.</p>
+      <p><strong>What happens next:</strong> your account is deleted right away, and it can't be undone. We revoke ReadIn's access with Apple, sign you out on every device, and delete your profile, phone number, email, password, recovery PIN, your drafts and unpublished articles with their files, your other uploaded images and files, your interests, reading history, reactions, saved articles and follows, your devices and push tokens, and the security log about your account. <strong>Your published articles and comments stay up under “Deleted user”</strong>, with the images and PDFs they show, without your name or photo and with nothing that links them to you; delete them before you delete your account if you want them gone. About you, we keep only a record that the account was deleted (its internal ID and the time) and, for up to 14 days, backup copies. Edits you made on other writers' articles stay with them, without your name.</p>
       <p>Full details are on the <a href="/delete-account" data-page="/delete-account">account deletion page</a>.</p>
 
       <h2 id="en-children">7. Children</h2>

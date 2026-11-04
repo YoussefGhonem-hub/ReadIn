@@ -127,6 +127,26 @@ void main() {
     expect(registered, ['android:fcm-token-1']);
   });
 
+  test('a deleted account: the token is deleted on the device, registered or not, and nothing registers again', () async {
+    await push.start();
+    await push.followUser('user-1'); // no permission yet: never registered
+    await push.forgetDevice();
+    expect(platform.deletes, 1);
+
+    platform.current = PushPermission.granted;
+    platform.refreshes.add('fcm-token-2'); // FCM hands out a new token after the delete
+    await settle();
+    await push.followUser(null); // the session ends right after: no second delete
+    expect(registered, isEmpty);
+    expect(platform.deletes, 1);
+  });
+
+  test('forgetting the device without Cloud Messaging does nothing', () async {
+    platform.supported = false;
+    await push.forgetDevice();
+    expect(platform.deletes, 0);
+  });
+
   test('deletes the token on sign-out', () async {
     platform.current = PushPermission.granted;
     await push.start();

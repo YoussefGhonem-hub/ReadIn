@@ -85,6 +85,11 @@ export interface ExternalCredential {
   idToken: string;
   /** The RAW nonce (Apple): Apple was given its SHA-256 hex. */
   nonce?: string;
+  /**
+   * Apple's one-time `authorization.code`. The API exchanges it for a refresh token it can revoke when the account is
+   * deleted (Apple requires that), so it goes along with every Apple sign in, link and confirmation.
+   */
+  authorizationCode?: string;
 }
 
 export interface ExternalSignInRequest extends ExternalCredential {
@@ -98,7 +103,7 @@ export interface ExternalSignInRequest extends ExternalCredential {
   createAccount?: boolean;
 }
 
-/** Confirms a sensitive action: the password, or (accounts without one) a fresh token of a linked provider. */
+/** Confirms a sensitive action: exactly one of the password or a fresh sign in of a linked provider. */
 export interface AccountConfirmation {
   password?: string;
   external?: ExternalCredential;
@@ -239,7 +244,8 @@ export interface ArticleCardDto {
   subtitle: string | null;
   coverUrl: string | null;
   field: FieldRefDto;
-  author: AuthorDto;
+  /** Null when the author deleted their account (SPEC §9.6): shown as "Deleted user", with no name, photo, profile or follow. */
+  author: AuthorDto | null;
   readingTimeMinutes: number;
   isAiAssisted: boolean;
   versionBadge: string | null;

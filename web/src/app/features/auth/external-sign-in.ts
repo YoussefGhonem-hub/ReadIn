@@ -6,7 +6,7 @@ import { isApiError } from '../../core/api/api.config';
 import { ExternalSignInRequest } from '../../core/api/models';
 import { postAuthUrl } from '../../core/auth/account-setup';
 import { AuthService } from '../../core/auth/auth.service';
-import { ExternalIdentityService, ExternalResult } from '../../core/auth/external-identity.service';
+import { ExternalIdentityService, ExternalResult, credentialOf } from '../../core/auth/external-identity.service';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { BottomSheet } from '../../shared/ui/bottom-sheet';
 import { ExternalButtons } from '../../shared/ui/external/external-buttons';
@@ -169,12 +169,7 @@ export class ExternalSignIn {
   }
 
   private request(result: ExternalResult): ExternalSignInRequest {
-    return {
-      provider: result.provider,
-      idToken: result.idToken,
-      ...(result.nonce ? { nonce: result.nonce } : {}),
-      ...(result.displayName ? { displayName: result.displayName } : {}),
-    };
+    return { ...credentialOf(result), ...(result.displayName ? { displayName: result.displayName } : {}) };
   }
 
   private async finish(request: ExternalSignInRequest): Promise<void> {

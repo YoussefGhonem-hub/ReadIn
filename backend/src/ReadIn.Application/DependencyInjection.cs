@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<AuditTrail>();
         services.AddScoped<PasswordConfirmation>();
         services.AddScoped<IdentityConfirmation>();
+        services.AddScoped<AppleTokens>();
         services.AddScoped<PasswordSignIn>();
         services.AddScoped<Features.Feed.DailyArticle.DailyArticlePicker>();
         services.AddScoped<Features.Feed.DailyArticle.DailyArticleDelivery>();

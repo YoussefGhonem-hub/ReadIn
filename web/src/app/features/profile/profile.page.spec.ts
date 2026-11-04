@@ -59,6 +59,7 @@ describe('ProfilePage (F14)', () => {
     expect(header.querySelector('[data-profile-name] svg')!.getAttribute('aria-label')).toBe('كاتب موثّق');
     expect(header.querySelector('[data-profile-username]')!.getAttribute('dir')).toBe('ltr');
     expect(header.querySelector('[data-profile-username]')!.textContent).toBe('@karim');
+    expect(header.querySelector('[data-profile-settings]')).toBeNull();
     expect(header.querySelector('[data-follows-you]')!.textContent).toContain('بيتابعك');
     expect(header.querySelector('[data-profile-follow] [data-follow]')).not.toBeNull();
     expect(header.querySelector('[data-edit-profile]')).toBeNull();
@@ -106,6 +107,8 @@ describe('ProfilePage (F14)', () => {
   it('your own profile: Edit profile, a Saved tab, reading stats with the public switch', async () => {
     const { root, tabs, stable } = await render(testProfile({ id: 'user-1', username: 'mona', isMe: true, followsYou: false, readingStatsVisible: true }), { articles: 0 });
     expect(root.querySelector('[data-edit-profile]')!.getAttribute('href')).toBe('/settings/profile');
+    // Narrow screens have no side nav: Settings (and Delete account at its end) is one tap away.
+    expect(root.querySelector('[data-profile-settings]')!.getAttribute('href')).toBe('/settings');
     expect(root.querySelector('[data-profile-follow]')).toBeNull();
     expect(root.querySelector('[data-follows-you]')).toBeNull();
     expect(tabs()).toEqual(['articles', 'saved', 'paths', 'about']);

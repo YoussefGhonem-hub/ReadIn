@@ -190,4 +190,25 @@ void main() {
       expect(page.items.single.reactions.total, 16);
     });
   });
+
+  group('deleted author (SPEC §9.6)', () {
+    test("today, the feeds and Saved parse author: null; the article isn't dropped", () async {
+      respond = (options) => switch (options.path) {
+            '/feed/today' => detailsJson(0, authorDeleted: true),
+            '/me/saved' => {
+                'items': [
+                  {'savedAt': '2026-11-02T08:00:00Z', 'article': detailsJson(1, authorDeleted: true)},
+                ],
+              },
+            _ => {'items': [detailsJson(2, authorDeleted: true), detailsJson(3)], 'nextCursor': null},
+          };
+      final feeds = FeedRepositoryImpl(FeedApi(dio));
+
+      expect((await feeds.getToday()).valueOrNull!.author, isNull);
+      expect([for (final card in (await feeds.getForYou()).valueOrNull!.items) card.author?.username], [null, 'editorial']);
+      expect((await feeds.getFollowing()).valueOrNull!.items.first.author, isNull);
+      final saved = await SavedApi(dio).getSaved(null, null, null, null, 20);
+      expect(saved.items.single.toEntity().article.author, isNull);
+    });
+  });
 }
