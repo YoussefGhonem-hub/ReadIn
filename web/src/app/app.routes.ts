@@ -51,6 +51,8 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () => import('./features/saved/saved.page').then((m) => m.SavedPage),
       },
+      // Learning paths (F09): public, server-rendered (app.routes.server.ts → `**`).
+      { path: 'paths', loadChildren: () => import('./features/paths/paths.routes') },
       { path: 'settings', loadChildren: () => import('./features/settings/settings.routes') },
       {
         path: 'write',
