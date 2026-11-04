@@ -485,6 +485,22 @@ class AppLocalizationsAr extends AppLocalizations {
       'سلاسل مقالات متنقية تتعلم بيها موضوع خطوة بخطوة. بنجهزها دلوقتي.';
 
   @override
+  String get profilePathsEmptyTitle => 'مفيش مسارات لسه';
+
+  @override
+  String get profilePathsEmptyOwnBody => 'انضم لمسار وتقدّمك هيظهر هنا.';
+
+  @override
+  String get profilePathsEmptyBody => 'المسارات اللي هينضم لها هتظهر هنا.';
+
+  @override
+  String get profilePathsPrivateTitle => 'المسارات خاصة';
+
+  @override
+  String get profilePathsPrivateBody =>
+      'صاحب الحساب مخلّي نشاط القراءة بتاعه خاص.';
+
+  @override
   String get profileNotFoundTitle => 'الحساب ده مش متاح';
 
   @override
@@ -2245,4 +2261,164 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get commentsErrReportReason => 'اختار سبب.';
+
+  @override
+  String get continueReading => 'كمّل القراءة';
+
+  @override
+  String continueReadingProgress(int percent) {
+    return 'قريت $percent%';
+  }
+
+  @override
+  String get pathsTitle => 'المسارات';
+
+  @override
+  String get pathsTabAll => 'كل المسارات';
+
+  @override
+  String get pathsTabMine => 'مساراتي';
+
+  @override
+  String get pathsPrompt => 'اتعلم خطوة بخطوة مع المسارات';
+
+  @override
+  String get pathsBrowse => 'استكشف المسارات';
+
+  @override
+  String get pathsEmptyTitle => 'مفيش مسارات هنا لسه';
+
+  @override
+  String get pathsEmptyBody => 'بنجهّز أول المسارات. ارجع قريب.';
+
+  @override
+  String get myPathsEmptyTitle => 'لسه مبدأتش أي مسار';
+
+  @override
+  String get myPathsEmptyBody => 'اختار مسار واتعلم موضوع مقال ورا مقال.';
+
+  @override
+  String get myPathsGuestTitle => 'تابع مساراتك';
+
+  @override
+  String get myPathsGuestBody =>
+      'اعمل حساب مجاني عشان تنضم للمسارات وتكمّل من مكان ما وقفت.';
+
+  @override
+  String pathArticleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مقال',
+      many: '$count مقال',
+      few: '$count مقالات',
+      two: 'مقالين',
+      one: 'مقال واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes دقيقة',
+      many: '$minutes دقيقة',
+      few: '$minutes دقايق',
+      two: 'دقيقتين',
+      one: 'دقيقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pathProgressSemantics(int read, int total) {
+    return 'قريت $read من $total';
+  }
+
+  @override
+  String get pathCompleted => 'خلصت المسار';
+
+  @override
+  String get pathCompletedCelebration => 'خلصت المسار 🎉';
+
+  @override
+  String get pathStart => 'ابدأ المسار';
+
+  @override
+  String pathContinue(String title) {
+    return 'كمّل: $title';
+  }
+
+  @override
+  String get pathReadAgain => 'اقرأ من الأول';
+
+  @override
+  String pathNext(String title) {
+    return 'التالي: $title';
+  }
+
+  @override
+  String get pathUpNext => 'التالي';
+
+  @override
+  String get pathItemRead => 'اتقرا';
+
+  @override
+  String get pathMenu => 'اختيارات المسار';
+
+  @override
+  String get pathLeave => 'سيب المسار';
+
+  @override
+  String get pathLeaveTitle => 'تسيب المسار ده؟';
+
+  @override
+  String get pathLeaveBody =>
+      'تاريخ قراءتك هيفضل زي ما هو، ولو رجعت للمسار تاني هتلاقي تقدّمك مكانه.';
+
+  @override
+  String get pathLeft => 'سيبت المسار';
+
+  @override
+  String get pathJoin => 'انضم للمسار';
+
+  @override
+  String get pathJoined => 'انضميت للمسار';
+
+  @override
+  String pathFrom(String title) {
+    return 'من مسار: $title';
+  }
+
+  @override
+  String pathPosition(int position, int total) {
+    return '$position من $total';
+  }
+
+  @override
+  String get pathNextInPath => 'التالي في المسار';
+
+  @override
+  String get pathLastArticle => 'ده آخر مقال في المسار';
+
+  @override
+  String get pathNotFoundTitle => 'المسار ده مش متاح';
+
+  @override
+  String get pathNotFoundBody => 'ممكن يكون اتشال، أو اللينك غلط.';
+
+  @override
+  String get errPathNotFound => 'المسار ده مش موجود أو اتشال.';
+
+  @override
+  String get errPathSlugTaken => 'فيه مسار تاني بيستخدم اللينك ده.';
+
+  @override
+  String get errPathEditorial => 'مسارات التحرير بتتعدّل من ملفات المحتوى.';
+
+  @override
+  String get errPathItemsInvalid =>
+      'راجع مقالات المسار: من 1 لـ 100 مقال منشور، كل مقال مرة واحدة.';
 }

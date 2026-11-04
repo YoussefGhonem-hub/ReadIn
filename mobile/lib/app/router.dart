@@ -16,6 +16,9 @@ import '../features/explore/presentation/pages/explore_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/notifications/presentation/pages/notifications_page.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
+import '../features/paths/presentation/pages/path_page.dart';
+import '../features/paths/presentation/pages/paths_page.dart';
+import '../features/paths/presentation/path_routes.dart';
 import '../features/profile/domain/entities/profile.dart';
 import '../features/profile/presentation/cubit/follow_list_cubit.dart';
 import '../features/profile/presentation/pages/edit_profile_page.dart';
@@ -51,12 +54,16 @@ abstract final class AppRoutes {
   static const settings = '/settings';
   static const notifications = '/notifications';
   static const editProfile = ProfileRoutes.edit;
+  static const paths = PathRoutes.list;
 
   /// Deep link `readin.app/a/{slug}` (SPEC §3.3, §8.2).
   static String article(String slug) => '/a/$slug';
 
   /// Anyone's profile (F14).
   static String user(String username) => ProfileRoutes.of(username);
+
+  /// A learning path (F09).
+  static String path(String slug) => PathRoutes.of(slug);
 
   /// Where an [AccountGate] is handled.
   static String forGate(AccountGate gate) => switch (gate) {
@@ -136,6 +143,11 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.settings, builder: (_, _) => const SettingsPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
       GoRoute(path: '/a/:slug', builder: (_, state) => ArticlePage(slug: state.pathParameters['slug']!)),
+      GoRoute(
+        path: AppRoutes.paths,
+        builder: (_, state) => PathsPage(initialTab: PathRoutes.tabOf(state.uri)),
+        routes: [GoRoute(path: ':slug', builder: (_, state) => PathPage(slug: state.pathParameters['slug']!))],
+      ),
       GoRoute(
         path: '/u/:username',
         builder: (_, state) => ProfilePage(username: state.pathParameters['username']!),

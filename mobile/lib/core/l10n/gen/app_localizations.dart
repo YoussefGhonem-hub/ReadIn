@@ -908,6 +908,36 @@ abstract class AppLocalizations {
   /// **'Hand-picked series of articles to learn a topic step by step. We\'re building them now.'**
   String get profilePathsBody;
 
+  /// No description provided for @profilePathsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No paths yet'**
+  String get profilePathsEmptyTitle;
+
+  /// No description provided for @profilePathsEmptyOwnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a learning path and your progress shows up here.'**
+  String get profilePathsEmptyOwnBody;
+
+  /// No description provided for @profilePathsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The learning paths they join show up here.'**
+  String get profilePathsEmptyBody;
+
+  /// No description provided for @profilePathsPrivateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning paths are private'**
+  String get profilePathsPrivateTitle;
+
+  /// No description provided for @profilePathsPrivateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This reader keeps their reading activity private.'**
+  String get profilePathsPrivateBody;
+
   /// No description provided for @profileNotFoundTitle.
   ///
   /// In en, this message translates to:
@@ -3775,6 +3805,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a reason.'**
   String get commentsErrReportReason;
+
+  /// No description provided for @continueReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue reading'**
+  String get continueReading;
+
+  /// No description provided for @continueReadingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% read'**
+  String continueReadingProgress(int percent);
+
+  /// No description provided for @pathsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning paths'**
+  String get pathsTitle;
+
+  /// No description provided for @pathsTabAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All paths'**
+  String get pathsTabAll;
+
+  /// No description provided for @pathsTabMine.
+  ///
+  /// In en, this message translates to:
+  /// **'My paths'**
+  String get pathsTabMine;
+
+  /// No description provided for @pathsPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn step by step with learning paths'**
+  String get pathsPrompt;
+
+  /// No description provided for @pathsBrowse.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore learning paths'**
+  String get pathsBrowse;
+
+  /// No description provided for @pathsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No learning paths here yet'**
+  String get pathsEmptyTitle;
+
+  /// No description provided for @pathsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re putting the first ones together. Check back soon.'**
+  String get pathsEmptyBody;
+
+  /// No description provided for @myPathsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t started a path yet'**
+  String get myPathsEmptyTitle;
+
+  /// No description provided for @myPathsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a path and learn a topic one article at a time.'**
+  String get myPathsEmptyBody;
+
+  /// No description provided for @myPathsGuestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep track of your paths'**
+  String get myPathsGuestTitle;
+
+  /// No description provided for @myPathsGuestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a free account to join paths and pick up where you left off.'**
+  String get myPathsGuestBody;
+
+  /// No description provided for @pathArticleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 article} other{{count} articles}}'**
+  String pathArticleCount(int count);
+
+  /// No description provided for @pathMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =1{1 min} other{{minutes} min}}'**
+  String pathMinutes(int minutes);
+
+  /// No description provided for @pathProgressSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{read} of {total} articles read'**
+  String pathProgressSemantics(int read, int total);
+
+  /// No description provided for @pathCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get pathCompleted;
+
+  /// No description provided for @pathCompletedCelebration.
+  ///
+  /// In en, this message translates to:
+  /// **'Path completed 🎉'**
+  String get pathCompletedCelebration;
+
+  /// No description provided for @pathStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start path'**
+  String get pathStart;
+
+  /// No description provided for @pathContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue: {title}'**
+  String pathContinue(String title);
+
+  /// No description provided for @pathReadAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Read again'**
+  String get pathReadAgain;
+
+  /// No description provided for @pathNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {title}'**
+  String pathNext(String title);
+
+  /// No description provided for @pathUpNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get pathUpNext;
+
+  /// No description provided for @pathItemRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get pathItemRead;
+
+  /// No description provided for @pathMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Path options'**
+  String get pathMenu;
+
+  /// No description provided for @pathLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave path'**
+  String get pathLeave;
+
+  /// No description provided for @pathLeaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this path?'**
+  String get pathLeaveTitle;
+
+  /// No description provided for @pathLeaveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reading history stays. Join again any time and your progress comes back.'**
+  String get pathLeaveBody;
+
+  /// No description provided for @pathLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'You left the path'**
+  String get pathLeft;
+
+  /// No description provided for @pathJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join path'**
+  String get pathJoin;
+
+  /// No description provided for @pathJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined the path'**
+  String get pathJoined;
+
+  /// No description provided for @pathFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From the path: {title}'**
+  String pathFrom(String title);
+
+  /// No description provided for @pathPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'{position} of {total}'**
+  String pathPosition(int position, int total);
+
+  /// No description provided for @pathNextInPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Next in path'**
+  String get pathNextInPath;
+
+  /// No description provided for @pathLastArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the last article in the path'**
+  String get pathLastArticle;
+
+  /// No description provided for @pathNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This path isn\'t available'**
+  String get pathNotFoundTitle;
+
+  /// No description provided for @pathNotFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It may have been removed, or the link is wrong.'**
+  String get pathNotFoundBody;
+
+  /// No description provided for @errPathNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This path doesn\'t exist or was removed.'**
+  String get errPathNotFound;
+
+  /// No description provided for @errPathSlugTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Another path already uses this link.'**
+  String get errPathSlugTaken;
+
+  /// No description provided for @errPathEditorial.
+  ///
+  /// In en, this message translates to:
+  /// **'Editorial paths are managed in the content files.'**
+  String get errPathEditorial;
+
+  /// No description provided for @errPathItemsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the path\'s articles: 1 to 100 published articles, each one once.'**
+  String get errPathItemsInvalid;
 }
 
 class _AppLocalizationsDelegate
