@@ -124,6 +124,7 @@ These rules apply to **every** feature, commit and code review.
 | File storage | **`wwwroot/uploads`** on the API server (Development and Production), behind `IFileStorage` |
 | Image processing | **SkiaSharp** (resize, WebP, strip EXIF), **BlurHash** placeholders |
 | PDF processing | **PDFtoImage** (PDFium, page rendering) + **PdfPig** (metadata, text extraction) |
+| PDF export ([F33](#f33--download-article-pdf-تحميل-المقال-pdf)) | **PuppeteerSharp** + headless Chromium, with the fonts bundled in the API |
 | Background jobs | **Hangfire** (SQL Server storage): daily article push, streak reset, link checks, article quality score |
 | Caching | `HybridCache` (in-memory + optional Redis) |
 | Logging | **Serilog** (console + Seq in dev, App Insights / file in prod) |
@@ -650,6 +651,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 |---|:-:|:-:|:-:|:-:|:-:|:-:|
 | `articles.read` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `articles.create` | | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `articles.export_pdf` (own articles only, [F33](#f33--download-article-pdf-تحميل-المقال-pdf)) | | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `articles.feature` | | | | | ✅ | ✅ |
 | `comments.create` / `reactions.create` / `reposts.create` / `highlights.create` | | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `follows.manage` / `saved.manage` | | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -712,6 +714,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Remembers the last scroll position: on open, the reader goes back to where you left off (unless you finished the article or the link points at a block) and offers "Start over". Marks the article as "read" when ≥ 70% scrolled **and** ≥ 30 seconds spent.
 - Related articles + "Next in path" at the end. Related ranks the same topic first, then the same field, then shared tags and glossary terms; it skips your own articles, puts the ones you've read last, and leaves the article's path neighbours to "Next in path".
 - Report article (from the "⋯" menu).
+- Download PDF of your own article (from the "⋯" menu, [F33](#f33--download-article-pdf-تحميل-المقال-pdf)).
 - Highlights: mark sentences, see popular ones, hide them ([F30](#f30--highlights)).
 
 ### F05 — Article Editor (Write)
@@ -727,7 +730,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - **Publish now.** There is no scheduling and no review: anyone publishes in any field ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)). The reader URL (slug) is fixed at the first publish.
 - Revision history: one revision per publish, with preview and restore into the working copy.
 - Live checks: missing field, title length (5–150), empty content, missing sources, missing alt text (image blocks and attachments), attachments still processing, reading time. Saving never fails because the article is unfinished; publishing is blocked while any check fails.
-- **My articles** (opened from Write): Drafts and Published tabs, each article with Edit and Delete, plus New article.
+- **My articles** (opened from Write): Drafts and Published tabs, each article with Edit and Delete, plus New article. Published articles also have Download PDF ([F33](#f33--download-article-pdf-تحميل-المقال-pdf)).
 
 ### F06 — Article Lifecycle
 ```text
@@ -927,6 +930,7 @@ The reader's action bar has a "⋯" menu (web + mobile). Guests get a sign-in pr
 | **تابع الكاتب** (Follow author) | Follow or unfollow ([F12](#f12--follow)). Hidden on your own article. |
 | **كتم الكاتب** (Mute author) | Hides the writer's articles and comments from you. Removes your follow of them. Hidden on your own article. Undo from the toast. |
 | **كتم المواضيع** (Mute topics) | A sheet with the article's field and topic, each with a toggle. Undo by toggling it back. |
+| **تحميل PDF** (Download PDF) | Downloads your article as a PDF ([F33](#f33--download-article-pdf-تحميل-المقال-pdf)). Shown only on your own article. |
 | **الإبلاغ عن المقال** (Report article) | Opens the report sheet with reason + details ([F22](#f22--reporting--moderation)). Shown in the error color, hidden on your own article. |
 
 **What muting changes:**
@@ -1031,6 +1035,62 @@ Tags are shared across the platform, so an article can be found by any tag on it
 - Users with `taxonomy.manage` can rename, merge and hide tags (F23). A hidden tag can't be picked and its page returns 404.
 - A daily job deletes user-created tags that have had no articles for 30 days. System tags from `content/taxonomy.yaml` stay.
 
+### F33 — Download Article PDF (تحميل المقال PDF)
+A writer can download their own article as a clean, well-organized PDF that carries the ReadIn logo. The backend builds the file, so web and mobile get exactly the same result.
+
+**Who and what**
+- Any author, for their own articles, with no verification needed. For anyone else the endpoint answers `404 article.not_found`.
+- Published and archived articles only. The PDF shows the published version, even when a working copy has unpublished edits (F05). Drafts have no PDF.
+- One PDF per language. In the reader it is the version on screen. In My articles, an article with two versions asks which one.
+- An article hidden by moderators (F22) can't be downloaded, because the file carries the ReadIn logo: `409 article.pdf_hidden`.
+
+**Where**
+- Reader: "تحميل PDF" (Download PDF) in the "⋯" menu, on your own article only (F28).
+- My articles (F05): the same action on each article in the Published tab.
+- While the file is built the action shows "بنجهز الـ PDF…". A failure shows an error with "حاول تاني". With no connection it says internet is needed.
+- Web: a normal browser download. Mobile: the system share sheet, to save the file or send it, with no storage permission.
+- File name: `{slug}-{lang}.pdf`, sent with RFC 5987 `filename*` so Arabic slugs work, and `readin-article.pdf` as the ASCII fallback.
+
+**Page layout**
+- A4 portrait on white paper, always the light theme, whatever theme the app uses. Colors are the light tokens in §15.2.
+- Direction follows the article language (`ar-EG` RTL, `en` LTR), not the app language. Labels in the file ("المصادر" / "Sources") follow it too.
+- **Logo:** the approved `docs/design/app-store/logo/lockup.png` (R + ر mark with the ReadIn wordmark), copied into the API's resources, never redrawn or recolored. 32 mm wide at the top of the first page and 18 mm wide in every page's footer. No watermark over the text.
+- **First page:** logo, title, writer's name with the verified badge, publish date, reading time, field and topic, tags, the health disclaimer on Medicine and Public Health articles (§20), then the cover image. No phone number or other private data.
+- **Footer on every page:** a thin line, then the logo, `readin.app` and the page number as `2 / 5`.
+- **End of the article:** attachments, Sources with their full clickable URLs, then "منشور على ReadIn" (Published on ReadIn) with a link to the article.
+- **Left out:** comments, reactions, counters, related articles, highlights and app buttons.
+- **Text:** the fonts in §15.3. Body 11.5 pt with line height 1.8, H2 17 pt, H3 14 pt, code 9.5 pt.
+
+| Content | In the PDF |
+|---|---|
+| `paragraph`, `heading`, lists | Each block keeps its own direction (§14.2) |
+| `summary` | Tinted box at the top of the content |
+| `steps`, `quote`, `divider` | Numbered steps with their titles, a quote with its source, a thin line |
+| `callout` | Tinted box with a bundled SVG icon per variant, not an emoji |
+| `code` | Always LTR on a light background, with the filename above it. Long lines wrap and are never cut. `highlightLines` get a tinted background. No syntax colors in the first version |
+| `codeTabs` | Every tab printed one after the other under its label, because paper has no tabs |
+| `table` | Full content width with wrapping text. The header repeats on each page and a row never splits |
+| `image` | Up to the content width from the 1600 variant (cover: 1200), never upscaled, on one page with its caption. `darkSrc` is ignored and `alt` becomes the PDF's alternative text |
+| `embed` | A card with the provider name and the full clickable link. The server fetches nothing from it |
+| `term`, `mention`, `link` | Plain text, `@username` linked to the profile, and a clickable link |
+| Image attachments | Printed after the content, each with its caption |
+| PDF attachment | A card with its title, page count and a link to the article. Its pages are not merged into the file |
+
+**No-bug rules** (each one has a test in §27, and a failure blocks the release)
+1. **Arabic and mixed text:** letters connected and in the right order, and English, numbers and punctuation inside Arabic in the right place, using the same rules and shared fixtures as §14.2.
+2. **No empty squares:** IBM Plex Sans Arabic, IBM Plex Sans, JetBrains Mono, Noto Sans (fallback) and Noto Color Emoji ship with the API and are embedded in the file. Nothing depends on fonts installed on the server.
+3. **Nothing cut off:** long URLs, long words, code, tables and images stay inside the margins.
+4. **Clean page breaks:** a heading stays with the lines after it, and an image stays with its caption. Callouts, list items, table rows and code of up to 20 lines don't split. Paragraphs keep at least 2 lines on each side of a break. Longer code and tables continue on the next page. There are no blank pages, including at the end.
+5. **Real text:** text can be selected and searched, links can be clicked, and pages are never images.
+6. **A proper document:** tagged PDF, bookmarks from H2 and H3, and title, author and language in the metadata. Western digits everywhere (§14.2). There is no contents page, since the bookmarks cover it.
+7. **Small file:** a typical article stays under 5 MB.
+
+**How it's built**
+- `GET /articles/{id}/pdf?lang=`: `IArticlePdfRenderer` in Infrastructure turns RDoc into print HTML with all text HTML-encoded, and **headless Chromium** (through **PuppeteerSharp**) prints it. Chromium is the engine browsers use for Arabic shaping, BiDi and page breaks, which is the hard part of this feature. Building on the device would give two different files, and a pure .NET PDF library would have to prove all of that again.
+- The footer template gets its own inline font and logo, because Chromium doesn't pass the page's fonts to it.
+- **Built in the request, nothing stored:** only owners use it, and its input is validated RDoc rather than an uploaded file. The PDF is streamed and discarded, so there is no table, no file on disk and nothing new in §9.6.
+- **Limits:** at most 2 builds at a time; a request waits up to 30 seconds, then `503 article.pdf_busy`. A build has 60 seconds, then `500 article.pdf_failed`, and Chromium restarts if it crashed. 10 PDFs per user per hour: `429 article.pdf_limit`.
+
 ---
 
 ## 12. Feature Parity Matrix (Web + Mobile)
@@ -1069,6 +1129,7 @@ Tags are shared across the platform, so an article can be found by any tag on it
 | F30 | Highlights | ✅ | ✅ | 1 |
 | F31 | Writer Categories | ✅ | ✅ | 1 |
 | F32 | Tags | ✅ | ✅ | 1 |
+| F33 | Download Article PDF | ✅ | ✅ | 2 |
 
 **Process:** each feature is one GitHub issue with three sub-tasks (`backend`, `web`, `mobile`). The issue closes only when all three are committed to `dev` (see [§29](#29-git-workflow--conventions)).
 
@@ -1285,7 +1346,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Me | `GET /me` (incl. `hasRecoveryPin`, `mustSetRecoveryPin`, `mustChangePassword`, `isProfileComplete`, `privacy`) · `PATCH /me` (incl. `avatarAssetId`, `expertiseFieldIds`) · `PUT /me/privacy` · `PUT /me/profile/complete` · `PUT /me/password` · `PUT /me/phone` · `POST /me/recovery-pin` (first set) · `PUT /me/recovery-pin` (change) · `PUT /me/preferences` · `PUT /me/interests` · `POST /me/devices` · `DELETE /me/devices/{token}` · `DELETE /me` · `GET /users/username-available?u=` |
 | Real-time | `POST /realtime/token` (Firebase custom token, used only to read the Realtime Database) |
 | Feed | `GET /feed/today` · `GET /feed/for-you` · `GET /feed/following` · `GET /feed/continue-reading` |
-| Articles | `GET /articles/{slug}?lang=` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` |
+| Articles | `GET /articles/{slug}?lang=` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` · `GET /articles/{id}/pdf?lang=` (own article, F33) |
 | Editor (F05) | `GET /me/articles?status=draft\|published` · `POST /articles` (new draft) · `GET /articles/{id}/edit` · `PUT /articles/{id}/draft` (autosave, `baseVersion`) · `DELETE /articles/{id}/draft` (discard) · `POST /articles/{id}/publish` (publish or Update) · `GET /articles/{id}/revisions` · `GET /articles/{id}/revisions/{n}` · `POST /articles/{id}/revisions/{n}/restore` · `DELETE /articles/{id}` |
 | Reactions | `PUT /articles/{id}/reaction` · `DELETE /articles/{id}/reaction` · `GET /articles/{id}/reactions` |
 | Reposts | `PUT /articles/{id}/repost` · `DELETE /articles/{id}/repost` (idempotent, return `{ repostCount, isReposted }`) · `GET /users/{username}/reposts` |
@@ -1525,6 +1586,7 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
   - PDFs are **never** served as static files: only via `GET /documents/{assetId}/download` with permission checks (published post or owner; `AllowDownload` or owner/moderator), `Content-Disposition: attachment`, `nosniff` and `Content-Security-Policy: sandbox`.
   - PDF processing runs in background jobs on a dedicated Hangfire `media` queue: at most 2 jobs at a time, a 2-minute timeout per job (`media.processing_timeout`), PDFium calls serialized, and pages rendered at most 200 DPI and 1080 × 4320 px so a crafted page size can't exhaust memory. Encrypted (even owner-password-only) and corrupted PDFs are rejected in the request, before anything is stored.
   - Quotas: 50 uploads per user per rolling day, 200 MB stored per user (`Media:*` settings), `409 media.quota_daily` / `media.quota_storage`.
+- **PDF export (F33):** Chromium runs with its sandbox on, JavaScript off and every network request blocked. The API reads fonts, the logo and images from its own disk by asset id and inlines them, so article content can't make the server fetch anything. The response has `Content-Type: application/pdf`, `Content-Disposition: attachment`, `nosniff` and `Cache-Control: private, no-store`.
 - **Firebase:** the Realtime Database rules allow no client writes; the service-account key lives only in secrets.
 - CORS restricted to app origins (with credentials for the web origin), HTTPS only, HSTS, security headers (CSP, X-Content-Type-Options, Referrer-Policy).
 - Secrets in user-secrets (dev) and a secret store (production), never in the repo: `Jwt:SigningKey`, `Security:RecoveryPinPepper`, seed passwords/PIN, the Firebase service-account JSON. `google-services.json` and `GoogleService-Info.plist` are git-ignored.
@@ -1570,6 +1632,7 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
 | UI / Visual | — | Playwright screenshots: ar/en × light/dark | Golden tests: ar/en × light/dark |
 | E2E | — | Playwright critical flows | `integration_test` critical flows |
 | BiDi | RDoc text extraction tests | Mixed-text fixtures | Mixed-text fixtures |
+| PDF (F33) | Built from `shared/rdoc/` fixtures with every block type, mixed text, emoji, a very long URL, a wide table, long code and a tall image. PdfPig checks embedded fonts, text, links, metadata and no blank pages. Page images are compared with baselines, one Arabic and one English, since the file is always light | Menu item (own article only) and download flow | Menu item (own article only) and share sheet |
 
 **Critical flows (E2E on both platforms):** sign up (phone + password + PIN) → complete profile → onboarding → read today's article → react → comment → reply → save → follow writer → switch theme → switch article language → sign out → forgot password (phone + PIN) → sign in with the new password.
 
@@ -1628,6 +1691,8 @@ Uploads live inside the API folder, so deployments must never delete them:
 
 Deploy targets (suggested): API + SSR on a single server or container host (with the uploads rules in [§28.3](#283-uploads-in-production-wwwrootuploads)), SQL Server, mobile via Play Console / App Store Connect (Fastlane).
 
+The API host and `backend.yml` need Chromium and its system libraries for F33, installed with the image or server setup and never downloaded at runtime. Steps go in [`docs/setup/deployment.md`](setup/deployment.md) when F33 is built.
+
 ---
 
 ## 29. Git Workflow & Conventions
@@ -1650,7 +1715,7 @@ Deploy targets (suggested): API + SSR on a single server or container host (with
 |---|---|
 | **0 — Foundation** | Repo, solution skeleton, CI, design tokens, RDoc schema, Firebase project + emulators, seeders for roles/fields/users |
 | **1 — MVP** | F01–F07, F10–F14, F18, F26–F32 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
-| **2 — Growth** | F08, F09, F15–F17, F19, F22–F24 |
+| **2 — Growth** | F08, F09, F15–F17, F19, F22–F24, F33 |
 | **3 — Depth** | F21, F25, email digest, quizzes at the end of articles, text-to-speech, AI translation for user articles |
 
 ---
