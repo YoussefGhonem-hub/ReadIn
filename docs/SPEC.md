@@ -894,7 +894,7 @@ The reader's action bar has a "⋯" menu (web + mobile). Guests get a sign-in pr
 - A muted writer's activity sends you no notifications.
 - Opening a direct link still works, so the reader can reach the Unmute action. A banner says "انت كاتم الكاتب ده" with "إلغاء الكتم".
 - Muting is private: the muted writer is not told and keeps seeing your content.
-- This is how the app meets the App Store's requirement to let people block abusive users (Guideline 1.2).
+- Mute is ReadIn's answer to the App Store's requirement to let people block abusive users (Guideline 1.2). Apple's review decides whether it is enough; if not, a separate Block action is needed.
 
 **Settings → Muted (F18):** one list of muted writers, fields and topics, each with an unmute action.
 
