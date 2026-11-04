@@ -33,7 +33,7 @@ ReadIn is a bilingual (Arabic + English) knowledge platform that helps you read 
 | [`web/`](web) | Angular web app |
 | [`mobile/`](mobile) | Flutter mobile app |
 | [`content/`](content) | Taxonomy, glossary, learning paths and seeded articles |
-| [`firebase/`](firebase) | Realtime Database rules (emulator config and the `live` database target in `firebase.json` / `.firebaserc`) |
+| [`firebase/`](firebase) | Realtime Database rules (emulator config and the `live` database target in `firebase.json`; `.firebaserc` aliases: `default` = emulator, `prod` = the real project) |
 | [`.github/`](.github/workflows) | CI: backend, web, mobile, content |
 
 📄 **Start here:** [docs/SPEC.md](docs/SPEC.md). Section numbers (§) in the code and docs refer to it.
@@ -41,6 +41,8 @@ ReadIn is a bilingual (Arabic + English) knowledge platform that helps you read 
 ## Local setup
 
 **Prerequisites:** .NET SDK 10, Node 24, Flutter 3.44+, Docker, Firebase CLI (+ Java 21 for the Realtime Database emulator).
+
+Local development and all tests run against the **Firebase Emulator Suite**; the one real Firebase project is only for the deployed app. To create and connect it, follow [docs/setup/firebase.md](docs/setup/firebase.md).
 
 ```bash
 # 1. SQL Server 2022 (host port 14333) + Seq (http://localhost:5341)
@@ -108,4 +110,4 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | F05 Editor: block editor (every RDoc block, slash menu, markdown shortcuts, per-block direction; Tiptap on web, AppFlowy on mobile), language versions, cover, tags, sources, attachments, autosave every 10 s + device backup + conflict handling, live checks, preview, publish/Update, private working copy of published articles, revision history with restore, "My articles" (drafts / published), demo drafts. No review and no scheduling ([ADR 0015](docs/adr/0015-open-publishing-and-the-editor.md)); Today's article ranks any published article by quality score | ✅ web + mobile + backend |
 | F20 Review workflow | ✖ removed (ADR 0015) |
 | ContentStudio `generate` (Claude), code-compile and live-link checks | ⏳ |
-| Full-text search index (needs FTS in the SQL image), SignalR | ⏳ Phase 2 |
+| Full-text search index (needs FTS in the SQL image) | ⏳ Phase 2 |

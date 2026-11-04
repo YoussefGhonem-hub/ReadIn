@@ -36,6 +36,7 @@ artifacts/
 node_modules/
 web/dist/
 web/.angular/
+docs/design/app-store
 web/coverage/
 web/test-results/
 web/playwright-report/
