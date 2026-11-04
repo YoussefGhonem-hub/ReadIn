@@ -1,0 +1,5 @@
+- **Branches:** exactly two. `main` (production) and `dev` (all development). No `feature/*`, `fix/*` or `content/*` branches.
+- **One folder, shared:** every session (people and Claude Code agents) works directly on `dev` in the one working copy (`D:\freelancer\ReadIn`). No new branches or worktrees, and no worktree isolation for agents. The rules for sessions are in [`CLAUDE.md`](../CLAUDE.md).
+- **File locks:** a session locks a file before editing it; if another session holds the lock, it waits until that session commits the file. A PreToolUse hook on Edit/Write in `.claude/settings.json` enforces this with `tools/locks/lock.mjs`, and the locks are released after `git commit`.
+- **Commit only your own files**, by path: `git commit -m "..." -- <paths>`. Never `git add -A`, `git add .` or `git commit -a`.
+- **Never** run `git stash`, `git reset`, `git rebase`, `git checkout <branch>` / `git switch` or `git clean` in the shared folder: they change other sessions' work. Never force-push.
