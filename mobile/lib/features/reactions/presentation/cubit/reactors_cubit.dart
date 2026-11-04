@@ -41,12 +41,17 @@ class ReactorsCubit extends Cubit<ReactorsState> {
   String? _articleId;
   ReactionType? _type;
 
+  /// Bumped by every [load]: an answer to an older load (or to a page of it) is dropped, so a slow first answer can't
+  /// replace a newer list, and a page can't be appended to the list of a newer load.
+  int _generation = 0;
+
   Future<void> load(String articleId, {ReactionType? type}) async {
     _articleId = articleId;
     _type = type;
+    final generation = ++_generation;
     emit(const ReactorsState());
     final result = await _getReactors(articleId, type: type);
-    if (isClosed) return;
+    if (isClosed || generation != _generation) return;
     emit(result.fold(
       (failure) => ReactorsState(status: ReactorsStatus.failure, failure: failure),
       (page) => ReactorsState(status: ReactorsStatus.ready, items: page.items, nextCursor: page.nextCursor),
@@ -60,9 +65,10 @@ class ReactorsCubit extends Cubit<ReactorsState> {
   Future<void> loadMore() async {
     final articleId = _articleId;
     if (articleId == null || state.status != ReactorsStatus.ready || state.loadingMore || !state.hasMore) return;
+    final generation = _generation;
     emit(ReactorsState(status: state.status, items: state.items, nextCursor: state.nextCursor, loadingMore: true));
     final result = await _getReactors(articleId, type: _type, cursor: state.nextCursor);
-    if (isClosed) return;
+    if (isClosed || generation != _generation) return;
     emit(result.fold(
       (failure) => ReactorsState(status: state.status, items: state.items, nextCursor: state.nextCursor, loadMoreFailure: failure),
       (page) => ReactorsState(status: state.status, items: [...state.items, ...page.items], nextCursor: page.nextCursor),

@@ -16,6 +16,7 @@ import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/features/home/domain/repositories/feed_repository.dart';
 import 'package:readin/features/home/domain/usecases/feed_usecases.dart';
 import 'package:readin/features/home/presentation/cubit/feed_cubit.dart';
+import 'package:readin/features/reactions/domain/entities/reactions.dart';
 import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart';
 import 'package:readin/features/reactions/presentation/cubit/reactors_cubit.dart';
 import 'package:readin/features/saved/domain/entities/saved.dart';
@@ -75,6 +76,34 @@ void main() {
         ReactorsState(status: ReactorsStatus.ready, items: sampleReactors),
       ],
     );
+
+    test('a slow answer to an older load never replaces the newer list, nor gets its page appended', () async {
+      final slowFirst = Completer<Result<CursorPage<Reactor>>>();
+      final slowPage = Completer<Result<CursorPage<Reactor>>>();
+      var firstLoads = 0;
+      when(() => repository.getReactors('a-1', type: null, cursor: null, limit: 20)).thenAnswer((_) {
+        if (firstLoads++ == 0) return slowFirst.future;
+        return Future.value(Ok(CursorPage(items: sampleReactors.take(1).toList(), nextCursor: 'c2')));
+      });
+      when(() => repository.getReactors('a-1', type: null, cursor: 'c2', limit: 20)).thenAnswer((_) => slowPage.future);
+      final cubit = ReactorsCubit(GetReactors(repository));
+      addTearDown(cubit.close);
+
+      final first = cubit.load('a-1');
+      await cubit.retry(); // the newer load answers first
+      final fresh = ReactorsState(status: ReactorsStatus.ready, items: sampleReactors.take(1).toList(), nextCursor: 'c2');
+      expect(cubit.state, fresh);
+      slowFirst.complete(Ok(CursorPage(items: sampleReactors)));
+      await first;
+      expect(cubit.state, fresh);
+
+      // A page asked for, then a reload: the old page is dropped.
+      final more = cubit.loadMore();
+      await cubit.retry();
+      slowPage.complete(Ok(CursorPage(items: sampleReactors.skip(1).toList())));
+      await more;
+      expect(cubit.state, fresh);
+    });
   });
 
   group('Following feed (F03, F12)', () {
