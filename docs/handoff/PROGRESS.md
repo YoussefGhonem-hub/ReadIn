@@ -379,3 +379,49 @@ realtime/offline; attachments and ar/en text) compared the SPEC with the three c
     code).
 - **Checked and not bugs:** ".NET" in Arabic titles and notification texts on mobile renders correctly (6× crops); the
   "📚" before "المصادر" is an empty box only in goldens (the test emoji font isn't on that text style).
+
+## F34 Post-style feed card ✅
+The user approved it on 2026-11-04 (SPEC 2edf779, written by the SPEC session). Built by three helpers in parallel
+(backend, web, mobile; no shared files), reviewed and committed by the main session.
+- **Backend** 679f348:
+  - migration `PostCardExcerpts`: `ArticleTranslations.Excerpt` (≤ 400 chars, cut at a word) and `ExcerptHasMore`,
+    computed by `RDocProcessor` on every write;
+  - existing rows filled by the `article-excerpts-backfill` Hangfire job, triggered at startup;
+  - `ArticleCardDto` adds `excerpt`, `hasMore`, `isFollowingAuthor`, up to 3 `tags` and `tagCount`;
+  - `GET /articles/{id}/preview?lang=`: whole blocks up to ~300 words, `isComplete`, the details' visibility, cached
+    per article and language.
+- **Mobile** 1d3c717 and **web** cc0cc5e:
+  - the post card on Home (Today's article labeled, replacing the hero), For you, Following, profile Articles and
+    Related articles (this reverses fa3169d);
+  - Read more expands in place with the reader's renderer;
+  - React, Comment and Share from the card: inline comments on wide web screens, a sheet on phones;
+  - state kept on Back (web: Home only; mobile: Home and profile);
+  - unsent comments kept;
+  - a whole article read in the card counts under the F04 rule.
+  The compact row stays in Saved, paths, Next in path and Continue reading. The web's unused Today hero and its spec
+  were removed (the post card spec covers the same checks).
+- **Not built (other features):** Repost, the repost label and count (F29), mute (F28), tag links (F32). Field pages,
+  Explore and Search don't exist yet, so they have no cards.
+- **Decisions to know:**
+  - Follow stays visible after a tap, showing "Following" so it can be undone;
+  - the excerpt follows the article language's direction, and the title its first strong character (SPEC §14.2);
+  - the web's whole Home column is now 640 px wide;
+  - initial web bundle 533.49 kB (was 527.65 kB): the card's `@defer` parts.
+- **Final gates (run once for 6.6 + F34, as the user asked):**
+  - backend 1670/1670, no pending model changes;
+  - web lint clean, 888/888 unit, SSR build OK (533.49 kB), full Playwright 264/264;
+  - mobile build_runner no diff, analyze clean, 1446/1446 with goldens.
+
+## Faster tests (user request, 2026-11-04)
+- Playwright runs its flows and screenshots in `ar/light` and `en/dark` only, with 4 workers when the machine is free.
+  Mobile goldens likewise; mobile widget and logic tests keep all four combinations, and backend tests are never cut.
+- While working: only the tests for what changed (mobile without goldens). The full gates run once per feature before
+  pushing (CLAUDE.md "Tests: what to run when"; SPEC §15.5 rule 9 and §27).
+- **Times:**
+
+  | Suite | Before | After |
+  |---|---|---|
+  | Playwright, full | 15.4 min: 420 tests, 4 combinations, 2 workers (last full run, step 6.5). With F34 that suite had 500 tests | 6.0 min: 264 tests, 2 combinations, 4 workers |
+  | Mobile `flutter test`, full | 124 s: 1646 tests | 84 s: 1446 tests (all 200 golden images still compared) |
+  | Mobile goldens only | 58 s: 400 runs | 32 s: 200 runs |
+  | Mobile while working (no goldens) | n/a | 58 s: 1246 tests |
