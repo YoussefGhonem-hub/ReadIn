@@ -50,6 +50,7 @@ import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { ArticleActionBar } from './article-action-bar';
 import { ArticleSeoService } from './article-seo.service';
 import { ArticleToc } from './article-toc';
+import { NextInPath } from './next-in-path';
 import { injectReadingTracker } from './reading-tracker';
 
 /** Show the TOC once an article has this many headings ("long articles", F04). */
@@ -71,6 +72,7 @@ const TOC_MIN_HEADINGS = 3;
     ArticleToc,
     ArticleActionBar,
     ArticleAttachments,
+    NextInPath,
     ReadingTimePipe,
     LocalizedDatePipe,
     LucideDynamicIcon,
@@ -234,6 +236,7 @@ const TOC_MIN_HEADINGS = 3;
             <p class="text-sm text-text-secondary">{{ 'article.noSources' | transloco }}</p>
           }
         </section>
+        <rd-next-in-path [articleId]="a.id" />
 
         <!-- Comments (F11): their code and data load when they near the viewport or the comment button is pressed -->
         <section #commentsAnchor id="comments" class="mt-10 border-t border-border pt-6" style="scroll-margin-top: 5rem" aria-labelledby="comments-title">
