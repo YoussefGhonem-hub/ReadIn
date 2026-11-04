@@ -82,7 +82,7 @@ ReadIn is a bilingual (Arabic + English) knowledge platform where **anyone can p
 
 Rules that apply to every field:
 - **There is no review**: anyone publishes directly ([F06](#f06--article-lifecycle), [ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
-- Admins can add fields and topics at any time ([F23](#f23--admin-console)); free tags (max 5) cover anything more specific.
+- Admins can add fields and topics at any time ([F23](#f23--admin-console)); free tags (max 5, [F32](#f32--tags-التاجات)) cover anything more specific, and writers can organize their own articles into personal categories ([F31](#f31--writer-categories-أقسام-الكاتب)).
 - Open publishing still follows the community guidelines: illegal or harmful content can be reported and removed ([F22](#f22--reporting--moderation)).
 - The 300 seeded articles are software only ([§19](#19-content-pipeline-300-seed-articles)). That is launch content, not a limit on what people can publish.
 
@@ -717,7 +717,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 ### F05 — Article Editor (Write)
 - Block-based rich editor producing **RDoc**: all block types in [§13](#13-article-content-format-rdoc), slash menu (`/`) to insert blocks, markdown shortcuts.
 - Per-block automatic direction (`dir="auto"`) with manual override, code blocks forced LTR.
-- Cover image upload (compressed on the device, processed by the backend, stored in `wwwroot/uploads`), field, topic, tags (max 5).
+- Cover image upload (compressed on the device, processed by the backend, stored in `wwwroot/uploads`), field, topic, an optional personal category ([F31](#f31--writer-categories-أقسام-الكاتب)), and tags: pick existing ones or create new ones, max 5 ([F32](#f32--tags-التاجات)).
 - **Attachments:** 1–10 images **or** one PDF ([F26](#f26--post-attachments--media)). The attachment bar is one reusable component (web) / widget (mobile); attachments are part of the draft and go live with it.
 - **Sources** list (title + URL). Required in fields with `RequiresSources` on (software, Medicine, Public Health, Engineering), optional in the others.
 - Second language version: add `en` or `ar-EG` translation of the same article.
@@ -794,7 +794,7 @@ Draft ──► Published ──► Archived
 ### F14 — Profile
 - Avatar, display name, username (`@handle`), verified badge, bio (mixed text), links (GitHub, LinkedIn, website), fields of expertise.
 - Stats: articles, followers, following, total reads.
-- Tabs: **Articles** / **Reposts** / **Saved** (own profile only, with a Highlights section) / **Paths** / **About**.
+- Tabs: **Articles** (all published articles, newest first) / **Categories** ([F31](#f31--writer-categories-أقسام-الكاتب)) / **Reposts** / **Saved** (own profile only, with a Highlights section) / **Paths** / **About**.
 - Reading stats card + heatmap (own profile, optional public).
 - Edit profile, including avatar upload (compressed, square-cropped variants 64/128/256/512).
 - The phone number is never shown on public profiles.
@@ -971,6 +971,61 @@ Readers mark sentences in an article. Everyone sees the popular ones.
 
 **Saved list:** the profile's **Saved** tab gets a **Highlights** section: `GET /me/highlights`, newest first, grouped by article, tapping opens the article at the block.
 
+
+### F31 — Writer Categories (أقسام الكاتب)
+A writer's own way to organize their articles. It is separate from:
+- **Fields and topics:** platform-wide. Every article still has a field.
+- **Collections (F13):** private lists of articles someone saved.
+- **Learning paths (F09):** curated, ordered series.
+
+**Creating and using**
+- The editor's metadata panel has an optional **القسم** (Category) picker: the writer's own categories, plus "＋ قسم جديد" to create one on the spot.
+- An article has **zero or one** category, and it applies to the article in all its language versions.
+- Only the owner can see the picker or use a category (`category.not_owner`).
+- Changing an article's category applies immediately. It needs no republish and creates no revision.
+
+**Managing** (own profile → Categories)
+- Create, rename, reorder and delete.
+- Names: 1–40 characters, plain text, mixed Arabic/English with `dir="auto"`, unique per writer ignoring case and Arabic normalization (§22). At most 50 categories per writer (`category.limit`).
+- Deleting asks for confirmation and shows how many articles are in the category. The articles stay published and become uncategorized.
+
+**On the profile (web + mobile, for everyone including guests)**
+- **Articles tab:** all the writer's published articles, newest first, regardless of category, like a Facebook profile feed.
+- **Categories tab (الأقسام):** one card per category with its name and published-article count, in the writer's order. Tapping opens the category page, newest first with cursor paging. Articles with no category appear last, under "مقالات تانية".
+- Visitors see only published articles, and empty categories are hidden from them. The owner also sees empty categories.
+- Category page: `/@{username}/c/{slug}` on web (server-rendered) and `/u/{username}/c/{slug}` on mobile. The slug is generated once from the name (Arabic allowed), is unique per writer, and doesn't change on rename, so links keep working.
+- **Reader:** the author row shows "في قسم {name}", which links to the category page.
+
+**Edge cases**
+- Articles hidden by moderation (F22) are not listed or counted.
+- Offensive category names are handled by reporting the user (F22); a moderator can clear the name.
+- Categories are deleted with the writer's account, and the articles that stay lose their category (§9.6).
+- The demo seed gives some writers categories, so the feature is visible in development.
+
+### F32 — Tags (التاجات)
+Tags are shared across the platform, so an article can be found by any tag on it, from any writer.
+
+**Adding** (editor metadata panel)
+- Type in the tag field to get suggestions from existing tags, most used first (`GET /tags?q=`).
+- Pick a suggestion, or press Enter or comma. If nothing matches, the writer creates a new tag ("إنشاء تاج جديد"), usable by everyone from then on.
+- At most **5 tags per article** (`article.too_many_tags`). Tags are optional.
+
+**Rules**
+- 2–30 characters: letters, digits, spaces and `- _ . + #`, so `C#`, `.NET` and `C++` work. A leading `#` is removed and extra spaces are collapsed.
+- Tags are compared ignoring case and with Arabic normalization (§22), so `AI` and `ai` are one tag. The first spelling is kept.
+- At most 20 new tags per user per day (`tag.limit`), to limit spam.
+
+**Tag page**
+- Every tag on the reader and on article cards is tappable, and it opens the tag page.
+- Web: `/tags/{slug}` (server-rendered). Mobile: `/tags/:slug`, with deep links. Guests can open it.
+- It shows the tag's name, its article count and **all published articles with that tag, from all writers**, newest first, with cursor paging and the normal article cards.
+- Articles hidden by moderation (F22) are excluded, and muted writers and topics are too once F28 ships.
+- An empty tag shows an empty state, and on web it is `noindex`.
+
+**Upkeep**
+- Users with `taxonomy.manage` can rename, merge and hide tags (F23). A hidden tag can't be picked and its page returns 404.
+- A daily job deletes user-created tags that have had no articles for 30 days. System tags from `content/taxonomy.yaml` stay.
+
 ---
 
 ## 12. Feature Parity Matrix (Web + Mobile)
@@ -1007,6 +1062,8 @@ Readers mark sentences in an article. Everyone sees the popular ones.
 | F28 | Article Menu, Mute & Show Less | ✅ | ✅ | 1 |
 | F29 | Repost | ✅ | ✅ | 1 |
 | F30 | Highlights | ✅ | ✅ | 1 |
+| F31 | Writer Categories | ✅ | ✅ | 1 |
+| F32 | Tags | ✅ | ✅ | 1 |
 
 **Process:** each feature is one GitHub issue with three sub-tasks (`backend`, `web`, `mobile`). The issue closes only when all three are committed to `dev` (see [§29](#29-git-workflow--conventions)).
 
@@ -1180,8 +1237,8 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId (null once a deleted account's asset stays with its published article), Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
-| Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive (shows the health disclaimer, never blocks publishing), RequiresSources, IsEnabled), `Topics`, `Tags`, `UserInterests` |
-| Articles | `Articles` (AuthorId (null: the author deleted their account, §9.6), FieldId, TopicId, Slug, Status Draft/Published/Archived, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, AutoCheckedAt, PublishedAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleDrafts` (ArticleId key, DocumentJson: the editor's working copy, Version concurrency token, HasChanges, SavedAt; F05), `ArticleRevisions` (ArticleId, RevisionNumber, Title, Languages, DocumentJson: the document of one publish, CreatedBy, CreatedAt), `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive) |
+| Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive (shows the health disclaimer, never blocks publishing), RequiresSources, IsEnabled), `Topics`, `Tags` (Slug, Name, NormalizedName, CreatedById (null: system tag), IsHidden), `ArticleTags`, `WriterCategories` (UserId, Name, NormalizedName, Slug, SortOrder; UserId+Slug unique, UserId+NormalizedName unique), `UserInterests` |
+| Articles | `Articles` (AuthorId (null: the author deleted their account, §9.6), FieldId, TopicId, WriterCategoryId (null: no category), Slug, Status Draft/Published/Archived, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, AutoCheckedAt, PublishedAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleDrafts` (ArticleId key, DocumentJson: the editor's working copy, Version concurrency token, HasChanges, SavedAt; F05), `ArticleRevisions` (ArticleId, RevisionNumber, Title, Languages, DocumentJson: the document of one publish, CreatedBy, CreatedAt), `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive) |
 | Engagement | `Reposts` (UserId+ArticleId unique, CreatedAt), `ArticleHighlights` (UserId, ArticleId, Language, BlockId, StartOffset, EndOffset, Text, CreatedAt), `UserMutes` (MuterId+MutedUserId unique), `ContentMutes` (UserId, TargetType Field/Topic, TargetId, unique), `ArticleFeedback` (UserId+ArticleId unique, Type ShowLess, CreatedAt), `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths` (Slug, FieldId, TitleAr/En, DescriptionAr/En, SortOrder, IsPublished, IsEditorial), `LearningPathItems` (PathId + ArticleId unique, Order), `PathEnrollments` (UserId + PathId unique, EnrolledAt, LastActivityAt, CompletedAt) |
@@ -1197,6 +1254,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 - `Comments(ArticleId, ParentId, CreatedAt)`.
 - `ReadingProgress(UserId, ArticleId)` unique.
 - `Reactions(ArticleId, Type)`, `UserFollows(FolloweeId)`.
+- `Articles(WriterCategoryId, PublishedAt DESC)` and `ArticleTags(TagId, ArticleId)`, for the category and tag pages.
 - Full-Text index on `ArticleTranslations(SearchText)`, `MediaAssets(ExtractedText)` and `Users(DisplayName, Username)` (created with F16 Search; the columns and their collation exist already).
 - `Users(PhoneNumber)` unique, `RefreshTokens(TokenHash)` unique, `RefreshTokens(UserId, RevokedAt)`, `UserExternalLogins(Provider, Subject)` unique, `UserExternalLogins(UserId, Provider)` unique.
 - `ArticleAttachments(MediaAssetId)` unique (an asset belongs to one post), `MediaAssets(OwnerId, CreatedAt)` (quotas), `MediaAssets(CreatedAt)` (orphan cleanup).
@@ -1231,7 +1289,9 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Follow | `PUT /users/{id}/follow` · `DELETE /users/{id}/follow` · `GET /users/{id}/followers` · `GET /users/{id}/following` · `GET /users/suggested` · `PUT/DELETE /me/interests/fields/{id}` · `PUT/DELETE /me/interests/topics/{id}` |
 | Saved | `GET /me/saved` · `PUT /me/saved/{articleId}` · `DELETE /me/saved/{articleId}` · `CRUD /me/collections` · `PUT/DELETE /me/collections/{id}/articles/{articleId}` |
 | Users | `GET /users/{username}` · `GET /users/{username}/articles` · `GET /users/{username}/stats` · `GET /users/{username}/stats/heatmap` (public reading stats only, F18) · `GET /me/stats` · `GET /me/stats/heatmap` |
-| Taxonomy | `GET /fields` · `GET /fields/{slug}/topics` · `GET /tags?q=` |
+| Taxonomy | `GET /fields` · `GET /fields/{slug}/topics` |
+| Tags | `GET /tags?q=` (most used first) · `GET /tags/{slug}` · `GET /tags/{slug}/articles?cursor=` · `/admin/tags` (rename, merge, hide) |
+| Writer categories | `GET /users/{username}/categories` · `GET /users/{username}/categories/{slug}/articles?cursor=` · `GET` / `POST /me/categories` · `PATCH` / `DELETE /me/categories/{id}` · `PUT /me/categories/order` · `PUT /articles/{id}/category` (`{ categoryId \| null }`) |
 | Paths | `GET /paths` · `GET /paths/{slug}` · `POST /paths/{id}/enroll` |
 | Search | `GET /search?q=&type=articles\|users\|topics&field=&lang=` |
 | Glossary | `GET /glossary/{slug}` · `GET /glossary?q=` |
@@ -1437,7 +1497,7 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
 ## 23. SEO
 
 - Angular **SSR** for public pages: articles, profiles, fields, paths, glossary terms.
-- Clean URLs: `/ar/a/{slug}`, `/en/a/{slug}`, `/@{username}`, `/f/{field}`, `/paths/{slug}`.
+- Clean URLs: `/ar/a/{slug}`, `/en/a/{slug}`, `/@{username}`, `/@{username}/c/{slug}`, `/f/{field}`, `/tags/{slug}`, `/paths/{slug}`.
 - `hreflang` between `ar` and `en` versions, canonical URLs.
 - `schema.org/Article` structured data (author, datePublished, dateModified).
 - Dynamic `sitemap.xml` (split per language), `robots.txt`, Open Graph + Twitter cards with generated cover images.
@@ -1580,7 +1640,7 @@ Deploy targets (suggested): API + SSR on a single server or container host (with
 | Phase | Scope |
 |---|---|
 | **0 — Foundation** | Repo, solution skeleton, CI, design tokens, RDoc schema, Firebase project + emulators, seeders for roles/fields/users |
-| **1 — MVP** | F01–F07, F10–F14, F18, F26–F30 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
+| **1 — MVP** | F01–F07, F10–F14, F18, F26–F32 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
 | **2 — Growth** | F08, F09, F15–F17, F19, F22–F24 |
 | **3 — Depth** | F21, F25, email digest, quizzes at the end of articles, text-to-speech, AI translation for user articles |
 
