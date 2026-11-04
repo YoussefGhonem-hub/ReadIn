@@ -70,10 +70,11 @@ public sealed class DailyArticlePicker(IAppDbContext db)
     }
 
     /// <summary>
-    /// F07 algorithm: any published article (ADR 0015), in interests, not read before, 4–10 minutes, preferred language
-    /// first, best <see cref="Article.QualityScore"/> first, never the same field 3 days in a row. Constraints relax in
-    /// order when nothing matches (length, then interests). "Prefers the next item in the user's active learning path"
-    /// joins once path enrollment (F09) exists.
+    /// F07 algorithm: any published article (ADR 0015), in interests, not read before, in the preferred article
+    /// language, 4–10 minutes, best <see cref="Article.QualityScore"/> first, never the same field 3 days in a row.
+    /// Constraints relax in order when nothing matches (length, then interests); only when no unread article has the
+    /// preferred language at all does the pick fall back to another language (served in its source language).
+    /// "Prefers the next item in the user's active learning path" joins once path enrollment (F09) exists.
     /// </summary>
     internal async Task<Guid?> PickAsync(PickerProfile profile, CancellationToken cancellationToken)
     {
@@ -86,8 +87,14 @@ public sealed class DailyArticlePicker(IAppDbContext db)
         var unread = Published().Where(a => a.AuthorId != userId && !completed.Contains(a.Id));
         var hasInterests = fieldIds.Count + topicIds.Count > 0;
 
+        var inLanguage = unread.Where(a => a.Translations.Any(t => t.Language == language));
+
         IQueryable<Article>[] attempts =
         [
+            Narrow(inLanguage, strictLength: true, interests: hasInterests, excludedField),
+            Narrow(inLanguage, strictLength: false, interests: hasInterests, excludedField),
+            Narrow(inLanguage, strictLength: false, interests: false, excludedField: null),
+            // No unread article has the preferred language: the same order, in any language.
             Narrow(unread, strictLength: true, interests: hasInterests, excludedField),
             Narrow(unread, strictLength: false, interests: hasInterests, excludedField),
             Narrow(unread, strictLength: false, interests: false, excludedField: null),
@@ -96,8 +103,7 @@ public sealed class DailyArticlePicker(IAppDbContext db)
         foreach (var candidates in attempts)
         {
             var pick = await candidates
-                .OrderByDescending(a => a.Translations.Any(t => t.Language == language))
-                .ThenByDescending(a => a.QualityScore)
+                .OrderByDescending(a => a.QualityScore)
                 .ThenByDescending(a => a.PublishedAt)
                 .Select(a => (Guid?)a.Id)
                 .FirstOrDefaultAsync(cancellationToken);

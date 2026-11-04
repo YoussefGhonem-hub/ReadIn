@@ -20,7 +20,7 @@ public sealed class ContentSeedingTests(ApiFactory api)
     private static readonly CancellationToken Ct = TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Pipeline_articles_are_published_by_the_official_account_and_wait_for_a_human_review()
+    public async Task Pipeline_articles_are_published_by_the_official_account_as_AI_assisted_without_review()
     {
         var article = (await api.GuestClient().GetFromJsonAsync<JsonObject>($"/api/v1/articles/{Slug}?lang=en", Ct))!;
 
@@ -103,5 +103,29 @@ public sealed class ContentSeedingTests(ApiFactory api)
         var today = await client.GetFromJsonAsync<JsonObject>("/api/v1/feed/today", Ct);
 
         today!["slug"]!.GetValue<string>().Should().Be(Slug, "any published article can be Today's article (ADR 0015)");
+    }
+
+    [Fact]
+    public async Task Today_keeps_the_readers_article_language_before_relaxing_length_and_interests()
+    {
+        // None of these fields has a fixture article; the only article in the reader's interests is English-only.
+        var writer = (await api.SignUpAsync()).Client;
+        var (englishOnly, _) = await writer.WriteAndPublishAsync(ArticleTestKit.Document(
+            await writer.FieldIdAsync("machine-learning"), "Bias and variance, without the myths"));
+
+        var reader = (await api.SignUpAsync()).Client;
+        var fields = new List<Guid>();
+        foreach (var slug in new[] { "machine-learning", "deep-learning-llms", "claude-ai-tools" })
+            fields.Add(await reader.FieldIdAsync(slug));
+        (await reader.PutAsJsonAsync("/api/v1/me/interests", new { fieldIds = fields, topicIds = Array.Empty<Guid>() }, Ct)).EnsureSuccessStatusCode();
+        (await reader.PutAsJsonAsync("/api/v1/me/preferences",
+                new { uiLanguage = "ar", articleLanguage = "ar-EG", theme = "light", timeZone = "Africa/Cairo", reminderTime = "07:30" }, Ct))
+            .EnsureSuccessStatusCode();
+
+        var today = await reader.GetFromJsonAsync<JsonObject>("/api/v1/feed/today", Ct);
+
+        // SPEC F07: the language is matched first; length, then interests, relax before it does.
+        today!["id"]!.GetValue<Guid>().Should().NotBe(englishOnly);
+        today["language"]!.GetValue<string>().Should().Be("ar-EG");
     }
 }
