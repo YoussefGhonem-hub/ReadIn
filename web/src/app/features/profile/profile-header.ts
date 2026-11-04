@@ -11,6 +11,7 @@ import { detectDir } from '../../shared/directives/bidi';
 import { CompactNumberPipe } from '../../shared/pipes/format.pipes';
 import { FollowButton } from '../../shared/social/follow-button';
 import { PROFILE_ICONS } from './profile-icons';
+import { ProfileMenu } from './profile-menu';
 import { profileLinks } from './profile-links';
 
 /** `src` + `srcset` for the profile photo (80 px box; the 512 px variant is only used on this page, SPEC §25). */
@@ -28,12 +29,13 @@ export function profileAvatar(profile: Pick<ProfileDto, 'avatarUrl' | 'avatarVar
 }
 
 /**
- * Profile header (F14): photo, name, verified badge, @username (always LTR), "Follows you", Follow or Edit profile, the
- * bio (its own direction), links (open in a new tab) and the stats row, where followers and following open the lists.
+ * Profile header (F14): photo, name, verified badge, @username (always LTR), "Follows you", Follow and "⋯" (report and
+ * moderate, F22) or Edit profile, the bio (its own direction), links (open in a new tab) and the stats row, where
+ * followers and following open the lists.
  */
 @Component({
   selector: 'rd-profile-header',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, CompactNumberPipe, FollowButton],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, CompactNumberPipe, FollowButton, ProfileMenu],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block', 'data-profile-header': '' },
   styles: `
@@ -81,6 +83,7 @@ export function profileAvatar(profile: Pick<ProfileDto, 'avatarUrl' | 'avatarVar
             </a>
           } @else {
             <span class="contents" data-profile-follow><rd-follow-button [user]="p" [initial]="p.isFollowing" /></span>
+            <rd-profile-menu [profile]="p" />
           }
         </div>
       </div>

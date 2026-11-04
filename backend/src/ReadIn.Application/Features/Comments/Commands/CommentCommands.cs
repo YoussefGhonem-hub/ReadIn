@@ -40,7 +40,7 @@ internal sealed class PostCommentCommandHandler(
     public async ValueTask<Result<CommentDto>> Handle(PostCommentCommand command, CancellationToken cancellationToken)
     {
         var userId = currentUser.RequireUserId();
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var prepared = await posting.PrepareAsync(command.Body, userId, cancellationToken);
         if (prepared.IsFailure) return prepared.Error;
@@ -64,7 +64,7 @@ internal sealed class PostReplyCommandHandler(
         var userId = currentUser.RequireUserId();
         var target = await db.Comments.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == command.CommentId, cancellationToken);
         if (target is null) return CommentErrors.NotFound;
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == target.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == target.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var prepared = await posting.PrepareAsync(command.Body, userId, cancellationToken);
         if (prepared.IsFailure) return prepared.Error;
@@ -130,7 +130,7 @@ internal sealed class SetCommentLikeCommandHandler(IAppDbContext db, ICurrentUse
         var comment = await db.Comments.AsNoTracking().FirstOrDefaultAsync(c => c.Id == command.CommentId, cancellationToken);
         if (comment is null) return CommentErrors.NotFound;
         if (!comment.IsVisible) return CommentErrors.NotAvailable;
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == comment.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == comment.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var existing = await db.CommentLikes.FirstOrDefaultAsync(l => l.CommentId == comment.Id && l.UserId == userId, cancellationToken);
         var changed = false;
@@ -173,7 +173,7 @@ internal sealed class SetCommentPinCommandHandler(IAppDbContext db, ICurrentUser
         var comment = await db.Comments.FirstOrDefaultAsync(c => c.Id == command.CommentId, cancellationToken);
         if (comment is null) return CommentErrors.NotFound;
 
-        var authorId = await db.Articles.Visible().Where(a => a.Id == comment.ArticleId).Select(a => (Guid?)a.AuthorId).FirstOrDefaultAsync(cancellationToken);
+        var authorId = await db.Articles.VisibleTo(currentUser).Where(a => a.Id == comment.ArticleId).Select(a => (Guid?)a.AuthorId).FirstOrDefaultAsync(cancellationToken);
         if (authorId is null) return ArticleErrors.NotFound;
         if (authorId != userId) return CommentErrors.PinNotArticleAuthor;
 

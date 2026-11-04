@@ -180,6 +180,7 @@ public sealed class AccountDeletionTests(ApiFactory api)
         var leaving = await api.UserAsync("Leaving Commenter");
         var reader = await api.UserAsync();
         var (article, _) = await reader.Client.PublishAsync();
+        var (hidden, _) = await reader.Client.PublishAsync();
 
         var kept = await CommentAsync(leaving.Client, article, "A comment that stays");
         var removed = await CommentAsync(leaving.Client, article, "A comment its author deleted");
@@ -188,10 +189,17 @@ public sealed class AccountDeletionTests(ApiFactory api)
         (await leaving.Client.PutAsync($"/api/v1/comments/{liked}/like", null, Ct)).EnsureSuccessStatusCode();
         (await leaving.Client.PostAsJsonAsync("/api/v1/reports", new { targetType = "comment", targetId = liked, reason = "spam" }, Ct)).EnsureSuccessStatusCode();
         (await reader.Client.PostAsJsonAsync("/api/v1/reports", new { targetType = "comment", targetId = kept, reason = "spam" }, Ct)).EnsureSuccessStatusCode();
-        // As if the account were a moderator: it hid the reader's comment and resolved the report on its own comment.
+        // As if the account were a moderator: it hid the reader's comment and article and resolved the report on its own
+        // comment. The moderation log (F22) names it both as the moderator and as a warned user.
         await InDbAsync(async db =>
         {
             await db.Comments.Where(c => c.Id == liked).ExecuteUpdateAsync(s => s.SetProperty(c => c.HiddenById, leaving.Id), Ct);
+            var now = DateTime.UtcNow;
+            (await db.Articles.SingleAsync(a => a.Id == hidden, Ct)).Hide(leaving.Id, now);
+            db.ModerationActions.Add(Domain.Moderation.ModerationAction.OnArticle(
+                Domain.Moderation.ModerationActionTypes.ArticleHide, hidden, reader.Id, "Hidden", leaving.Id, null, 0, now));
+            db.ModerationActions.Add(Domain.Moderation.ModerationAction.Warning(leaving.Id, "leaving", reader.Id, "Be kind", 0, now));
+            await db.SaveChangesAsync(Ct);
             return await db.Reports.Where(r => r.TargetId == kept).ExecuteUpdateAsync(s => s.SetProperty(r => r.ResolvedById, leaving.Id), Ct);
         });
         (await InDbAsync(db => db.Comments.Where(c => c.Id == kept).Select(c => c.CreatedBy).SingleAsync(Ct))).Should().Be(leaving.Id);
@@ -209,6 +217,9 @@ public sealed class AccountDeletionTests(ApiFactory api)
                 .Where(c => c.Id == kept || c.Id == removed || c.Id == liked).ToDictionaryAsync(c => c.Id, Ct),
             Likes = await db.CommentLikes.CountAsync(l => l.UserId == leaving.Id, Ct),
             Reports = await db.Reports.AsNoTracking().Where(r => r.ReporterId == leaving.Id || r.TargetId == kept).ToListAsync(Ct),
+            Hidden = await db.Articles.IgnoreQueryFilters().AsNoTracking().Where(a => a.Id == hidden)
+                .Select(a => new { a.HiddenAt, a.HiddenById }).SingleAsync(Ct),
+            Log = await db.ModerationActions.AsNoTracking().Where(m => m.TargetId == hidden || m.TargetId == leaving.Id).ToListAsync(Ct),
         });
         (left.Comments[kept].AuthorId, left.Comments[kept].CreatedBy, left.Comments[kept].UpdatedBy).Should().Be((null, null, null));
         left.Comments[removed].Body.Should().BeEmpty("a comment its author deleted keeps no text");
@@ -216,6 +227,11 @@ public sealed class AccountDeletionTests(ApiFactory api)
         left.Likes.Should().Be(0);
         left.Reports.Should().ContainSingle("the account's own reports go, reports on what stays stay")
             .Which.Should().Match<Domain.Moderation.Report>(r => r.TargetId == kept && r.ResolvedById == null);
+        left.Hidden.HiddenAt.Should().NotBeNull("the article stays hidden");
+        left.Hidden.HiddenById.Should().BeNull();
+        left.Log.Should().HaveCount(2, "the moderation log keeps its entries")
+            .And.OnlyContain(m => m.ModeratorId != leaving.Id && m.TargetUserId != leaving.Id);
+        left.Log.Should().ContainSingle(m => m.ModeratorId == null).And.ContainSingle(m => m.TargetUserId == null);
     }
 
     private static async Task<Guid> CommentAsync(HttpClient client, Guid articleId, string body)

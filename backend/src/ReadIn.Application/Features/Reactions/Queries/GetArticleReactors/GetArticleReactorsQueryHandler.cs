@@ -11,12 +11,12 @@ using ReadIn.Domain.Engagement;
 
 namespace ReadIn.Application.Features.Reactions.Queries.GetArticleReactors;
 
-internal sealed class GetArticleReactorsQueryHandler(IAppDbContext db, IFileStorage storage)
+internal sealed class GetArticleReactorsQueryHandler(IAppDbContext db, ICurrentUser viewer, IFileStorage storage)
     : IQueryHandler<GetArticleReactorsQuery, Result<CursorPage<ReactorDto>>>
 {
     public async ValueTask<Result<CursorPage<ReactorDto>>> Handle(GetArticleReactorsQuery query, CancellationToken cancellationToken)
     {
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == query.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(viewer).AnyAsync(a => a.Id == query.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var limit = Math.Clamp(query.Limit, 1, 50);
         var reactions = db.Reactions.AsNoTracking().Where(r => r.ArticleId == query.ArticleId);

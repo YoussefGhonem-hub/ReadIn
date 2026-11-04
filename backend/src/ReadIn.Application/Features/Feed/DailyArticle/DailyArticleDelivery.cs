@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ReadIn.Application.Common.Interfaces;
-using ReadIn.Domain.Articles;
+using ReadIn.Application.Features.Articles;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Users;
 
@@ -107,7 +107,8 @@ public sealed partial class DailyArticleDelivery(
 
             var articleIds = due.Select(d => d.Pick.ArticleId).Distinct().ToList();
             var articles = await db.Articles.AsNoTracking()
-                .Where(a => articleIds.Contains(a.Id) && a.Status == ArticleStatus.Published)
+                .Visible()
+                .Where(a => articleIds.Contains(a.Id))
                 .Select(a => new
                 {
                     a.Id,
@@ -126,7 +127,7 @@ public sealed partial class DailyArticleDelivery(
             var batch = new List<(DailyPick Pick, PushNotification Notification)>(due.Count);
             foreach (var row in due)
             {
-                // An article unpublished since the pick gets no push (the hero card disappears with it).
+                // An article unpublished or hidden since the pick gets no push (the hero card disappears with it).
                 if (!articles.TryGetValue(row.Pick.ArticleId, out var article)) continue;
                 var userTokens = tokens[row.Pick.UserId].Distinct(StringComparer.Ordinal).ToList();
                 if (userTokens.Count == 0 || InQuietHours(QuietHoursOf(row.Pick.UserId), localNow)) continue;

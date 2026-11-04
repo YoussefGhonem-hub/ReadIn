@@ -21,7 +21,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       if (!(error instanceof HttpErrorResponse)) return throwError(() => error);
       const apiError = ApiError.from(error);
       if (isBrowser && !req.context.get(SILENT_ERRORS)) {
-        toasts.error(messages.forCode(apiError.code, apiError.problem?.title));
+        toasts.error(messages.forError(apiError));
       }
       return throwError(() => apiError);
     }),

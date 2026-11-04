@@ -618,7 +618,7 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 | The account's comments (F11) | `Comments` | **Anonymized**: `AuthorId` set to null by the foreign key, `CreatedBy` and `UpdatedBy` cleared; shown as "Deleted user". Its comments that were already deleted (by it or a moderator) keep only the placeholder: their text is erased | Replies and discussions keep their context |
 | The account's comment likes, mentions of it | `CommentLikes`, `CommentMentions` | **Deleted** (cascade); the like counts of the comments it liked are recomputed in the same transaction | |
 | Reports it filed; reports about the account, its deleted articles and the comments on them | `Reports` | **Deleted** | Their target is gone |
-| Comments it hid and reports it resolved as a moderator | `Comments.HiddenById`, `Reports.ResolvedById` | **Anonymized**: the link to the account is removed | The moderation decision stays |
+| Comments and articles it hid, reports it resolved, and moderation log entries it made or that name it | `Comments.HiddenById`, `Articles.HiddenById`, `Reports.ResolvedById`, `ModerationActions.ModeratorId` / `TargetUserId` | **Anonymized**: the link to the account is removed | The moderation decision stays |
 | Security log entries about the account (sign ins, password, PIN and phone changes…) | `AuditLogs` | **Deleted** | They hold IP addresses |
 | Revisions made on other writers' articles | `ArticleRevisions.CreatedBy` | **Anonymized**: the link to the account is removed; the article keeps its history | Other people's content stays intact |
 | Moderation actions the account took on other accounts | `AuditLogs` (actor) | **Anonymized**: kept without the IP address | Accountability for actions on other people's accounts |
@@ -841,9 +841,14 @@ Draft ──► Published ──► Archived
 - Seeded with 500+ software terms from `content/glossary/*.yaml` (one file per writing group; term ids are unique across files and are the RDoc `termId`). Which articles use which term (`ArticleTerms`) is rebuilt from the content on seeding and on publish.
 
 ### F22 — Reporting & Moderation
-- Report article/comment/user with reason (spam, misinformation, harassment, copyright, other). You can't report your own content; reporting the same thing twice is a no-op.
-- Moderation queue: hide/unhide content, warn, suspend (temporary/permanent) users, resolve reports.
-- Full **audit log** of moderation actions.
+**Built.** API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Reports and moderation").
+- Report article/comment/user with reason (spam, misinformation, harassment, copyright, other) and optional details (≤ 500). You can't report your own content or yourself; reporting the same thing twice is a no-op. A suspended user can be reported.
+- **Moderation queue** (`moderation.manage`; web `/moderation`, mobile Settings → "الإشراف", nav badge with the open count): open / resolved / dismissed tabs, type filter, one item per target with its reason counts; open cases with the most reports first. A case shows the target, every report and its history.
+- **Actions:** hide/unhide articles and comments, delete comments (moderators never delete articles), warn, suspend (1–365 days or permanent; `users.suspend`) and unsuspend users, dismiss reports. Hide, delete, warn and suspend resolve the target's reports (and optionally those of the content an author is warned for); dismiss closes them without touching the content. A note is required to warn or suspend. Nobody warns or suspends themselves or staff (holders of `moderation.manage`); staff content can be hidden.
+- **Hidden article:** gone from every list, feed, count, today's pick, profile, saved list and collection; only its author and moderators open it, with a "Hidden by moderators" banner.
+- **Suspension:** the account is blocked at once (`403 user.suspended` on every call and on sign in, with when it ends); a temporary suspension ends by itself.
+- **Notices:** a warning or a hidden article is a notice (dialog with "فهمت") the user acknowledges, with a push.
+- Full **moderation log** (`ModerationActions`) of every action that changed something; actions on a user's content or account are also in `AuditLogs`.
 
 ### F23 — Admin Console
 - Dashboard: daily active readers, articles read, new users, top articles, streak retention.
@@ -1238,12 +1243,12 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId (null once a deleted account's asset stays with its published article), Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
 | Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive (shows the health disclaimer, never blocks publishing), RequiresSources, IsEnabled), `Topics`, `Tags` (Slug, Name, NormalizedName, CreatedById (null: system tag), IsHidden), `ArticleTags`, `WriterCategories` (UserId, Name, NormalizedName, Slug, SortOrder; UserId+Slug unique, UserId+NormalizedName unique), `UserInterests` |
-| Articles | `Articles` (AuthorId (null: the author deleted their account, §9.6), FieldId, TopicId, WriterCategoryId (null: no category), Slug, Status Draft/Published/Archived, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, AutoCheckedAt, PublishedAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleDrafts` (ArticleId key, DocumentJson: the editor's working copy, Version concurrency token, HasChanges, SavedAt; F05), `ArticleRevisions` (ArticleId, RevisionNumber, Title, Languages, DocumentJson: the document of one publish, CreatedBy, CreatedAt), `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive) |
+| Articles | `Articles` (AuthorId (null: the author deleted their account, §9.6), FieldId, TopicId, WriterCategoryId (null: no category), Slug, Status Draft/Published/Archived, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, AutoCheckedAt, PublishedAt, QualityScore, counters, HiddenAt + HiddenById (hidden by a moderator, F22; no FK)), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleDrafts` (ArticleId key, DocumentJson: the editor's working copy, Version concurrency token, HasChanges, SavedAt; F05), `ArticleRevisions` (ArticleId, RevisionNumber, Title, Languages, DocumentJson: the document of one publish, CreatedBy, CreatedAt), `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive) |
 | Engagement | `Reposts` (UserId+ArticleId unique, CreatedAt), `ArticleHighlights` (UserId, ArticleId, Language, BlockId, StartOffset, EndOffset, Text, CreatedAt), `UserMutes` (MuterId+MutedUserId unique), `ContentMutes` (UserId, TargetType Field/Topic, TargetId, unique), `ArticleFeedback` (UserId+ArticleId unique, Type ShowLess, CreatedAt), `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths` (Slug, FieldId, TitleAr/En, DescriptionAr/En, SortOrder, IsPublished, IsEditorial), `LearningPathItems` (PathId + ArticleId unique, Order), `PathEnrollments` (UserId + PathId unique, EnrolledAt, LastActivityAt, CompletedAt) |
 | Glossary | `GlossaryTerms` (Slug = the RDoc `termId` unique, TermEn, DefinitionEn, ExplanationAr), `ArticleTerms` (ArticleId + TermId key; rebuilt from the content's `term` nodes) |
-| Trust & Moderation | `VerificationRequests`, `Reports` (TargetType article/comment/user, TargetId, ReporterId, Reason, Details, Status open/resolved/dismissed; one per reporter and target), `ModerationActions`, `AuditLogs` |
+| Trust & Moderation | `VerificationRequests`, `Reports` (TargetType article/comment/user, TargetId, ReporterId, Reason, Details, Status open/resolved/dismissed, ResolvedAt, ResolvedById (resolved or dismissed by); one per reporter and target), `ModerationActions` (the moderation log, F22: Action `varchar(32)` e.g. `article.hide`, TargetType, TargetId, TargetUserId, ModeratorId, TargetLabel ≤ 200 (title / first 80 characters / @username at the time), Note ≤ 500, SuspendedUntil, ReportsClosed, CreatedAt, NoticeKind warning/article_hidden (a notice the user acknowledges), AcknowledgedAt; no FKs to Users, account deletion nulls them), `AuditLogs` |
 | Notifications | `Notifications` (UserId, Type, Payload JSON, IsRead), `NotificationPreferences` |
 | Infrastructure | `OutboxMessages`, `SeedHistory` (seeder name + version + checksum), Hangfire schema |
 
@@ -1252,6 +1257,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 - `Articles(FieldId, Status, QualityScore DESC)`.
 - `ArticleTranslations(ArticleId, Language)` unique.
 - `Comments(ArticleId, ParentId, CreatedAt)`.
+- `Reports(Status, TargetType, TargetId)` (the queue), `ModerationActions(TargetType, TargetId, CreatedAt)`, `(TargetUserId, CreatedAt)`, `(ModeratorId, CreatedAt)` and `(TargetUserId, AcknowledgedAt)` filtered on `NoticeKind IS NOT NULL` (notices).
 - `ReadingProgress(UserId, ArticleId)` unique.
 - `Reactions(ArticleId, Type)`, `UserFollows(FolloweeId)`.
 - `Articles(WriterCategoryId, PublishedAt DESC)` and `ArticleTags(TagId, ArticleId)`, for the category and tag pages.
@@ -1298,7 +1304,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Notifications | `GET /notifications` · `POST /notifications/read` · `GET/PUT /me/notification-preferences` |
 | Uploads & media | `POST /uploads/images` (purpose `image` \| `avatar` \| `cover`; `article-image` is still accepted) · `POST /uploads/documents` (PDF, `202` + processing) · `GET /uploads/{id}` (status, variants, pages) · `DELETE /uploads/{id}` · `GET /documents/{assetId}/download` (attachments are part of the editor draft) — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) |
 | Trust | `POST /verification-requests` |
-| Moderation | `POST /reports` · `GET /moderation/reports` · `POST /moderation/actions` |
+| Moderation | `POST /reports` · `GET /moderation/summary` · `GET /moderation/reports?status=&type=` · `GET /moderation/reports/{targetType}/{targetId}` · `POST /moderation/actions` · `GET /moderation/actions` (log) · `GET /me/moderation-notices` · `POST /me/moderation-notices/{id}/acknowledge` |
 | Admin | `/admin/users`, `POST /admin/users/{id}/reset-password`, `/admin/roles`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests`, `/admin/dashboard`, `/admin/content-pipeline`, `POST /admin/realtime/rebuild-counters` |
 
 ---
@@ -1323,6 +1329,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | 7 | Learning paths (`learningPaths` in `taxonomy.yaml` + each article's `learningPath`) | All |
 | 8 | Glossary terms (`content/glossary/*.yaml`, upserted by term id) and the article-term index, rebuilt when a glossary file or an article changes | All |
 | 9 | Demo interactions (follows, reactions, comments, saves, reading history, streaks, sample image/PDF attachments) | Local only |
+| 10 | Demo reports (`demo-reports`, F22): open, resolved and dismissed reports on demo articles, comments and a user, and a warning notice for reader7 | Development only |
 
 ### 18.3 Seed Users
 Users are created in SQL Server only (no Firebase Auth). Phone numbers use the reserved fictional range **+1 202 555 01XX** (555-0100 to 555-0199 are reserved for fiction, so they never belong to a real person).

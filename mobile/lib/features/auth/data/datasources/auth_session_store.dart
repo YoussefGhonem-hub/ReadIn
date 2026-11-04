@@ -33,13 +33,19 @@ class AuthSessionStore implements SessionTokenProvider {
   String? _refreshToken;
   bool _refreshTokenLoaded = false;
   Future<Result<Me?>>? _refreshing;
+  Failure? _endedBy;
   final _changes = StreamController<Me?>.broadcast();
 
   /// The user after every session change; null when the session ended.
   Stream<Me?> get changes => _changes.stream;
 
+  /// Why the last session ended when the server ended it for a suspended account (`user.suspended`, F22). Null after a
+  /// sign out or any other ending, and once a new session starts.
+  Failure? get endedBy => _endedBy;
+
   /// Stores a session returned by sign in, sign up, refresh, sign out everywhere, a password or a phone change.
   Future<Me> save(SessionModel session) async {
+    _endedBy = null;
     _accessToken = session.accessToken;
     _accessTokenExpiresAt = session.accessTokenExpiresAt;
     if (session.refreshToken case final token? when token.isNotEmpty) {
@@ -55,8 +61,9 @@ class AuthSessionStore implements SessionTokenProvider {
   /// A new copy of the user without new tokens (complete profile, set PIN, `GET /me`).
   void updateUser(Me me) => _changes.add(me);
 
-  /// Forgets the session on this device.
-  Future<void> clear() async {
+  /// Forgets the session on this device. [reason]: the server ended it (see [endedBy]).
+  Future<void> clear({Failure? reason}) async {
+    _endedBy = reason;
     _accessToken = null;
     _accessTokenExpiresAt = null;
     _refreshToken = null;
@@ -92,11 +99,19 @@ class AuthSessionStore implements SessionTokenProvider {
       return Ok(await save(await _api.refresh(RefreshRequest(token))));
     } on DioException catch (e) {
       final failure = ApiErrorMapper.fromDio(e);
-      if (failure.statusCode == 401 || failure.statusCode == 403) await clear();
+      if (failure.statusCode == 401 || failure.statusCode == 403) await clear(reason: _suspension(failure));
       return Err(failure);
     } on Object catch (e) {
       return Err(Failure(FailureCodes.serverError, message: '$e'));
     }
+  }
+
+  static Failure? _suspension(Failure failure) => failure.code == FailureCodes.userSuspended ? failure : null;
+
+  @override
+  Future<void> endSuspended(Failure reason) async {
+    if (_accessToken == null && await refreshToken() == null) return; // already ended by a parallel call
+    await clear(reason: _suspension(reason));
   }
 
   bool get _accessTokenFresh {

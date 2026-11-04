@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:readin/core/errors/failure.dart';
+import 'package:readin/core/l10n/formatters.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/core/theme/app_theme.dart';
 import 'package:readin/features/auth/presentation/cubit/forgot_password_cubit.dart';
@@ -118,5 +120,29 @@ void main() {
     expect(find.text('or'), findsOneWidget);
     expect(tester.getTopLeft(find.text('Continue with X')).dy, greaterThan(tester.getTopLeft(find.byType(OrDivider)).dy));
     expect(find.text('Demo accounts'), findsOneWidget);
+  });
+
+  group('a suspended account (F22)', () {
+    testWidgets('sent here after a suspension: says until when, with contact support, until the next attempt', (tester) async {
+      final until = DateTime.utc(2026, 11, 9, 12);
+      final reason = Failure(FailureCodes.userSuspended, statusCode: 403, suspendedUntil: until);
+      await pump(tester, const SignInState(), view: SignInView(args: SignInArgs(endedBy: reason)));
+      final message = 'This account is suspended until ${formatDateTime(until, 'en')}. Contact support.';
+
+      expect(find.text(message), findsOneWidget);
+      expect(find.text('Contact support'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField).at(0), '010 0123 4567');
+      await tester.enterText(find.byType(TextField).at(1), 'reading4life');
+      await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+      await tester.pump();
+      expect(find.text(message), findsNothing);
+    });
+
+    testWidgets('signing in to a permanently suspended account says so', (tester) async {
+      await pump(tester, const SignInState(failure: Failure(FailureCodes.userSuspended, statusCode: 403)));
+
+      expect(find.text('This account is permanently suspended. Contact support.'), findsOneWidget);
+    });
   });
 }

@@ -18,6 +18,7 @@ import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../glossary/presentation/widgets/glossary_sheet.dart';
 import '../../../paths/presentation/widgets/next_in_path.dart';
+import '../../../moderation/presentation/cubit/moderation_action_cubit.dart';
 import '../../../reading/presentation/tracking/reading_tracking.dart';
 import '../../../saved/presentation/cubit/collections_cubit.dart';
 import '../../../settings/domain/entities/app_settings.dart';
@@ -27,6 +28,7 @@ import '../cubit/article_cubit.dart';
 import '../cubit/article_live_cubit.dart';
 import '../cubit/engagement_cubit.dart';
 import '../widgets/article_attachments_view.dart';
+import '../widgets/article_menu.dart';
 import '../widgets/reader_action_bar.dart';
 import '../widgets/reader_resume.dart';
 import '../widgets/reader_widgets.dart';
@@ -51,6 +53,8 @@ class ArticlePage extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => getIt<ArticleCubit>()..load(slug, preferredLanguage: preferred)),
         BlocProvider(create: (_) => getIt<ArticleLiveCubit>()),
+        // Created when a moderator hides or unhides from the menu (F22).
+        BlocProvider(create: (_) => getIt<ModerationActionCubit>()),
       ],
       child: ReadingTracking(child: ArticleView(anchor: anchor)),
     );
@@ -243,7 +247,8 @@ class _ArticleViewState extends State<ArticleView> {
                         ),
                     },
                   ),
-                  if (state.status == ArticleStatus.ready) ReaderActionBar(article: article!.card),
+                  if (state.status == ArticleStatus.ready)
+                    ReaderActionBar(article: article!.card, menu: ArticleMenuButton(article: article)),
                 ],
               );
             },
@@ -365,6 +370,8 @@ class ReaderBody extends StatelessWidget {
     final showSummary = article.summary != null && article.summary!.isNotEmpty && !article.content.hasSummaryBlock;
     const gutter = EdgeInsets.symmetric(horizontal: ReadInSpace.s5);
 
+    final moderation = article.moderation;
+
     return RDocScope(
       baseDirection: direction,
       bodyFontSize: bodyFontSize,
@@ -374,6 +381,12 @@ class ReaderBody extends StatelessWidget {
         builder: (context) => CustomScrollView(
           controller: controller,
           slivers: [
+            // Only its author and moderators can open a hidden article (F22).
+            if (moderation != null)
+              SliverPadding(
+                padding: gutter.copyWith(top: ReadInSpace.s2),
+                sliver: SliverToBoxAdapter(child: HiddenArticleBanner(moderation: moderation)),
+              ),
             if (leading != null) SliverToBoxAdapter(child: leading),
             SliverPadding(
               padding: gutter.copyWith(top: ReadInSpace.s2),

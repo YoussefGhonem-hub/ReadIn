@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 /// (e.g. `article.not_found`, `network.offline`) that the UI maps to ar/en text
 /// via `localizeFailure` — never show raw server messages to users.
 class Failure extends Equatable {
-  const Failure(this.code, {this.statusCode, this.message, this.fieldErrors = const {}});
+  const Failure(this.code, {this.statusCode, this.message, this.fieldErrors = const {}, this.suspendedUntil});
 
   /// Stable error code (see docs/api/contract-v1.md).
   final String code;
@@ -16,10 +16,13 @@ class Failure extends Equatable {
   /// Validation errors: field name → list of error codes.
   final Map<String, List<String>> fieldErrors;
 
+  /// `user.suspended` only (F22): when the suspension ends; null = permanent.
+  final DateTime? suspendedUntil;
+
   static const unknown = Failure(FailureCodes.serverError);
 
   @override
-  List<Object?> get props => [code, statusCode, message, fieldErrors];
+  List<Object?> get props => [code, statusCode, message, fieldErrors, suspendedUntil];
 
   @override
   String toString() => 'Failure($code, status: $statusCode, message: $message)';
@@ -134,7 +137,7 @@ abstract final class FailureCodes {
   static const collectionNotFound = 'collection.not_found';
   static const followSelf = 'follow.self';
 
-  // Comments, reports and moderation (F11, F22 hooks)
+  // Comments (F11)
   static const commentNotFound = 'comment.not_found';
   static const commentNotOwner = 'comment.not_owner';
   static const commentNotAvailable = 'comment.not_available';
@@ -145,10 +148,18 @@ abstract final class FailureCodes {
   static const commentDuplicate = 'comment.duplicate';
   static const commentEmpty = 'comment.empty';
   static const commentTooLong = 'comment.too_long';
+
+  // Reports and moderation (F22)
   static const reportOwnContent = 'report.own_content';
-  static const reportTargetNotSupported = 'report.target_not_supported';
   static const reportReasonInvalid = 'report.reason_invalid';
+  static const reportTargetInvalid = 'report.target_invalid';
   static const reportTargetNotFound = 'report.target_not_found';
+  static const moderationActionInvalid = 'moderation.action_invalid';
+  static const moderationSelf = 'moderation.self';
+  static const moderationStaffTarget = 'moderation.staff_target';
+  static const moderationNoteRequired = 'moderation.note_required';
+  static const moderationDurationInvalid = 'moderation.duration_invalid';
+  static const moderationNoticeNotFound = 'moderation.notice_not_found';
 
   // Glossary (F21)
   static const glossaryTermNotFound = 'glossary.term_not_found';

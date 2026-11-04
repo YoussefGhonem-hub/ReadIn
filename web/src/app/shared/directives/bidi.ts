@@ -19,6 +19,14 @@ export function detectDir(text: string | null | undefined): TextDir | null {
   return null;
 }
 
+/**
+ * Wraps a name or title in Unicode isolates (FSI … PDI) for interpolation into a translated sentence, so an English
+ * title inside "مقالك «…» اتخفى" keeps its own direction and doesn't pull the quotes and words around it.
+ */
+export function isolate(text: string | null | undefined): string {
+  return text ? `\u2068${text}\u2069` : '';
+}
+
 export function hasRtl(text: string): boolean {
   return RTL_CHAR.test(text);
 }

@@ -1,6 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
+import { intlLocale } from '../../shared/pipes/intl';
 import { isApiError } from '../api/api.config';
+import type { ProblemDetails } from '../api/models';
+import type { UiLanguage } from './language.service';
 
 /**
  * Stable error codes from docs/api/contract-v1.md. Each one has an `errors.{code}` string in public/i18n/ar.json and
@@ -99,7 +102,7 @@ export const CONTRACT_ERROR_CODES = [
   'collection.limit',
   'collection.not_found',
   'follow.self',
-  // Comments, reports and moderation (F11, F22 hooks)
+  // Comments (F11)
   'comment.not_found',
   'comment.not_owner',
   'comment.not_available',
@@ -110,12 +113,18 @@ export const CONTRACT_ERROR_CODES = [
   'comment.duplicate',
   'comment.empty',
   'comment.too_long',
+  // Reports and moderation (F22)
   'report.target_not_found',
   'report.own_content',
-  'report.target_not_supported',
   'report.target_invalid',
   'report.reason_invalid',
+  'report.status_invalid',
   'moderation.action_invalid',
+  'moderation.self',
+  'moderation.staff_target',
+  'moderation.note_required',
+  'moderation.duration_invalid',
+  'moderation.notice_not_found',
   // Profile (F14)
   'profile.stats_private',
   'profile.avatar_invalid',
@@ -139,7 +148,24 @@ export class ErrorMessages {
     return fallback || this.transloco.translate('errors.unknown');
   }
 
+  /** Like {@link forCode}; a suspended account (`user.suspended`) also says until when, or that it is permanent. */
   forError(error: unknown): string {
-    return isApiError(error) ? this.forCode(error.code, error.problem?.title) : this.transloco.translate('errors.unknown');
+    if (!isApiError(error)) return this.transloco.translate('errors.unknown');
+    if (error.code === 'user.suspended') return this.suspended(error.problem);
+    return this.forCode(error.code, error.problem?.title);
+  }
+
+  /**
+   * The `user.suspended` message (F22): "موقوف لحد {date}" from the problem's `suspendedUntil`, "موقوف نهائيًا" when it
+   * is null, and the plain message when the API sent no end at all.
+   */
+  suspended(problem: Pick<ProblemDetails, 'suspendedUntil'> | null | undefined): string {
+    if (!problem || problem.suspendedUntil === undefined) return this.forCode('user.suspended');
+    if (problem.suspendedUntil === null) return this.transloco.translate('errors.suspension.permanent');
+    const until = new Date(problem.suspendedUntil);
+    if (Number.isNaN(until.getTime())) return this.forCode('user.suspended');
+    const lang = this.transloco.getActiveLang() as UiLanguage;
+    const date = new Intl.DateTimeFormat(intlLocale(lang), { dateStyle: 'long', timeStyle: 'short' }).format(until);
+    return this.transloco.translate('errors.suspension.until', { date });
   }
 }

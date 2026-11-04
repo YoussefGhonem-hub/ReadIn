@@ -15,6 +15,9 @@ class WatchSession {
   final AuthRepository _auth;
 
   Stream<Me?> call() => _auth.sessionChanges;
+
+  /// Read when the stream says the session ended: the server ended it for a suspended account (F22), else null.
+  Failure? get endedBy => _auth.sessionEndedBy;
 }
 
 @injectable

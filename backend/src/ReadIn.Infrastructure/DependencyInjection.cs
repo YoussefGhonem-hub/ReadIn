@@ -124,6 +124,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, DemoCommentsSeeder>();
         services.AddScoped<ISeeder, DemoEditorSeeder>();
         services.AddScoped<ISeeder, DemoInteractionsSeeder>();
+        services.AddScoped<ISeeder, DemoReportsSeeder>();
         services.AddScoped<SeedRunner>();
 
         services.AddHealthChecks().AddDbContextCheck<AppDbContext>("sql");

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -198,12 +199,18 @@ public static class ApiSetup
             Window = window,
         });
 
-    /// <summary>Suspended users get 403 <c>user.suspended</c> on every authenticated call (SPEC §9.2 step 6).</summary>
+    /// <summary>
+    /// Suspended users get 403 <c>user.suspended</c> on every authenticated call (SPEC §9.2 step 6), with
+    /// <c>suspendedUntil</c> (null = permanent) so clients can say when it ends (F22).
+    /// </summary>
     private static async Task RejectSuspendedUsers(HttpContext context, RequestDelegate next)
     {
         if (context.User.HasClaim(ReadInClaims.Suspended, "true"))
         {
-            await Domain.Users.UserErrors.Suspended.ToProblem(context).ExecuteAsync(context);
+            DateTime? until = context.User.FindFirst(ReadInClaims.SuspendedUntil)?.Value is { } value
+                ? DateTime.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
+                : null;
+            await Domain.Users.UserErrors.SuspendedUntil(until).ToProblem(context).ExecuteAsync(context);
             return;
         }
         await next(context);

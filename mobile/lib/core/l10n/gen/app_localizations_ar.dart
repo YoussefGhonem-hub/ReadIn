@@ -2232,36 +2232,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commentsUnhidden => 'التعليق ظهر تاني';
 
   @override
-  String get commentsReportTitle => 'بلّغ عن تعليق';
-
-  @override
-  String get commentsReportBody => 'بتبلّغ عنه ليه؟ المشرفين هيراجعوه.';
-
-  @override
-  String get commentsReportSpam => 'سبام';
-
-  @override
-  String get commentsReportMisinformation => 'معلومات غلط';
-
-  @override
-  String get commentsReportHarassment => 'إساءة أو تنمّر';
-
-  @override
-  String get commentsReportCopyright => 'حقوق ملكية';
-
-  @override
-  String get commentsReportOther => 'حاجة تانية';
-
-  @override
-  String get commentsReportDetails => 'تفاصيل (اختياري)';
-
-  @override
-  String get commentsReportSubmit => 'ابعت البلاغ';
-
-  @override
-  String get commentsReportThanks => 'شكراً، هنراجعه.';
-
-  @override
   String get commentsErrRateLimited =>
       'انت بتعلّق بسرعة. استنى دقيقة وجرّب تاني.';
 
@@ -3013,4 +2983,486 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get errPathItemsInvalid =>
       'راجع مقالات المسار: من 1 لـ 100 مقال منشور، كل مقال مرة واحدة.';
+
+  @override
+  String get reportTitleArticle => 'الإبلاغ عن المقال';
+
+  @override
+  String get reportTitleComment => 'الإبلاغ عن التعليق';
+
+  @override
+  String get reportTitleUser => 'الإبلاغ عن المستخدم';
+
+  @override
+  String get reportBody => 'بتبلّغ ليه؟ فريق الإشراف هيراجع البلاغ.';
+
+  @override
+  String get reportReasonSpam => 'سبام';
+
+  @override
+  String get reportReasonMisinformation => 'معلومات غلط';
+
+  @override
+  String get reportReasonHarassment => 'إساءة أو تنمّر';
+
+  @override
+  String get reportReasonCopyright => 'حقوق ملكية';
+
+  @override
+  String get reportReasonOther => 'حاجة تانية';
+
+  @override
+  String get reportDetails => 'تفاصيل (اختياري)';
+
+  @override
+  String get reportSubmit => 'ابعت البلاغ';
+
+  @override
+  String get reportThanks => 'شكرًا، هنراجع البلاغ';
+
+  @override
+  String errSuspendedUntil(String date) {
+    return 'الحساب ده موقوف لحد $date. تواصل مع الدعم';
+  }
+
+  @override
+  String get errSuspendedPermanently =>
+      'الحساب ده موقوف نهائيًا. تواصل مع الدعم';
+
+  @override
+  String get errReportOwnContent =>
+      'مينفعش تبلّغ عن نفسك أو عن حاجة انت كاتبها.';
+
+  @override
+  String get errReportReason => 'اختار سبب.';
+
+  @override
+  String get errReportTargetInvalid => 'مينفعش تبلّغ عن ده.';
+
+  @override
+  String get errReportTargetNotFound => 'اللي بتبلّغ عنه مبقاش موجود.';
+
+  @override
+  String get errModerationActionInvalid => 'الإجراء ده مش متاح هنا.';
+
+  @override
+  String get errModerationSelf => 'مينفعش تعمل كده في حسابك.';
+
+  @override
+  String get errModerationStaffTarget =>
+      'مينفعش تحذّر أو توقف حد من فريق الإشراف.';
+
+  @override
+  String get errModerationNoteRequired => 'اكتب ملاحظة الأول.';
+
+  @override
+  String get errModerationDurationInvalid => 'اختار مدة من يوم لـ 365 يوم.';
+
+  @override
+  String get errModerationNoticeNotFound => 'التنبيه ده مبقاش موجود.';
+
+  @override
+  String get articleMenu => 'اختيارات المقال';
+
+  @override
+  String get articleMenuReport => 'الإبلاغ عن المقال';
+
+  @override
+  String get articleMenuHide => 'إخفاء المقال';
+
+  @override
+  String get articleMenuUnhide => 'إظهار المقال';
+
+  @override
+  String get articleHiddenBannerTitle => 'المشرفين خبّوا المقال ده';
+
+  @override
+  String get articleHiddenBannerBody => 'مش ظاهر غير لكاتبه وللمشرفين.';
+
+  @override
+  String get profileMenu => 'اختيارات تانية';
+
+  @override
+  String get profileMenuReport => 'الإبلاغ عن المستخدم';
+
+  @override
+  String get profileMenuWarn => 'تحذير';
+
+  @override
+  String get profileMenuSuspend => 'إيقاف الحساب';
+
+  @override
+  String get moderationTitle => 'الإشراف';
+
+  @override
+  String get moderationQueueEntry => 'البلاغات';
+
+  @override
+  String moderationWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حاجة مستنية مراجعة',
+      many: '$count حاجة مستنية مراجعة',
+      few: '$count حاجات مستنية مراجعة',
+      two: 'حاجتين مستنيين مراجعة',
+      one: 'حاجة واحدة مستنية مراجعة',
+      zero: 'مفيش حاجة مستنية مراجعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moderationNoAccessTitle => 'الصفحة دي للمشرفين بس';
+
+  @override
+  String get moderationNoAccessBody => 'حسابك مالوش صلاحية الإشراف.';
+
+  @override
+  String get moderationTabOpen => 'مفتوحة';
+
+  @override
+  String get moderationTabResolved => 'اتحلّت';
+
+  @override
+  String get moderationTabDismissed => 'اترفضت';
+
+  @override
+  String get moderationTabLog => 'السجل';
+
+  @override
+  String get moderationFilterAll => 'الكل';
+
+  @override
+  String get moderationFilterArticles => 'مقالات';
+
+  @override
+  String get moderationFilterComments => 'تعليقات';
+
+  @override
+  String get moderationFilterUsers => 'مستخدمين';
+
+  @override
+  String get moderationEmptyOpenTitle => 'مفيش بلاغات مفتوحة';
+
+  @override
+  String get moderationEmptyOpenBody => 'كله تمام دلوقتي.';
+
+  @override
+  String get moderationEmptyResolvedTitle => 'مفيش بلاغات اتحلّت';
+
+  @override
+  String get moderationEmptyDismissedTitle => 'مفيش بلاغات اترفضت';
+
+  @override
+  String get moderationEmptyLogTitle => 'لسه مفيش إجراءات';
+
+  @override
+  String get moderationLoadMoreFailed => 'مقدرناش نحمّل أكتر.';
+
+  @override
+  String get moderationTypeArticle => 'مقال';
+
+  @override
+  String get moderationTypeComment => 'تعليق';
+
+  @override
+  String get moderationTypeUser => 'مستخدم';
+
+  @override
+  String get moderationStateHidden => 'متخبّي';
+
+  @override
+  String get moderationStateDeleted => 'اتمسح';
+
+  @override
+  String get moderationStateSuspended => 'موقوف';
+
+  @override
+  String get moderationStatusOpen => 'مفتوح';
+
+  @override
+  String get moderationStatusResolved => 'اتحل';
+
+  @override
+  String get moderationStatusDismissed => 'اترفض';
+
+  @override
+  String moderationReportCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count بلاغ',
+      many: '$count بلاغ',
+      few: '$count بلاغات',
+      two: 'بلاغين',
+      one: 'بلاغ واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moderationLastReport(String time) {
+    return 'آخر بلاغ $time';
+  }
+
+  @override
+  String moderationClosed(String time) {
+    return 'اتقفل $time';
+  }
+
+  @override
+  String moderationCommentOn(String title) {
+    return 'على «$title»';
+  }
+
+  @override
+  String moderationWarningCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تحذير',
+      many: '$count تحذير',
+      few: '$count تحذيرات',
+      two: 'تحذيرين',
+      one: 'تحذير واحد',
+      zero: 'مفيش تحذيرات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moderationSuspendedUntil(String date) {
+    return 'موقوف لحد $date';
+  }
+
+  @override
+  String get moderationSuspendedForever => 'موقوف نهائيًا';
+
+  @override
+  String get moderationCaseArticle => 'مقال عليه بلاغات';
+
+  @override
+  String get moderationCaseComment => 'تعليق عليه بلاغات';
+
+  @override
+  String get moderationCaseUser => 'مستخدم عليه بلاغات';
+
+  @override
+  String get moderationOpenArticle => 'افتح المقال';
+
+  @override
+  String get moderationOpenProfile => 'افتح البروفايل';
+
+  @override
+  String get moderationActions => 'الإجراءات';
+
+  @override
+  String moderationReportsTitle(int count) {
+    return 'البلاغات ($count)';
+  }
+
+  @override
+  String get moderationHistory => 'السجل';
+
+  @override
+  String get moderationHistoryEmpty => 'لسه مفيش إجراءات.';
+
+  @override
+  String moderationClosedBy(String name) {
+    return 'قفله $name';
+  }
+
+  @override
+  String get moderationHideComment => 'إخفاء التعليق';
+
+  @override
+  String get moderationUnhideComment => 'إظهار التعليق';
+
+  @override
+  String get moderationDeleteComment => 'مسح التعليق';
+
+  @override
+  String get moderationWarnAuthor => 'تحذير الكاتب';
+
+  @override
+  String get moderationSuspendAuthor => 'إيقاف حساب الكاتب';
+
+  @override
+  String get moderationUnsuspend => 'رجّع الحساب';
+
+  @override
+  String get moderationDismiss => 'ارفض البلاغات';
+
+  @override
+  String get moderationHideArticleTitle => 'تخفي المقال ده؟';
+
+  @override
+  String get moderationHideArticleBody =>
+      'هيختفي من الفيد والقوايم والبحث، ومحدش هيقدر يفتحه غير كاتبه والمشرفين. كاتبه هيوصله تنبيه.';
+
+  @override
+  String get moderationHideCommentTitle => 'تخفي التعليق ده؟';
+
+  @override
+  String get moderationHideCommentBody =>
+      'القرّاء هيشوفوا مكانه «المشرفين خبّوا التعليق ده».';
+
+  @override
+  String get moderationNoteOptional => 'ملاحظة (اختياري)';
+
+  @override
+  String get moderationNoteLabel => 'ملاحظة';
+
+  @override
+  String get moderationNoteForUser => 'الملاحظة دي هتوصله.';
+
+  @override
+  String moderationWarnTitle(String name) {
+    return 'تحذير $name';
+  }
+
+  @override
+  String get moderationWarnBody =>
+      'هيوصله تحذير فيه ملاحظتك، ولازم يأكد إنه شافه.';
+
+  @override
+  String get moderationWarnConfirm => 'ابعت التحذير';
+
+  @override
+  String moderationSuspendTitle(String name) {
+    return 'إيقاف حساب $name';
+  }
+
+  @override
+  String get moderationSuspendBody =>
+      'مش هيقدر يدخل على حسابه ولا يستخدمه لحد ما الإيقاف يخلص.';
+
+  @override
+  String get moderationSuspendDuration => 'المدة';
+
+  @override
+  String moderationDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوم',
+      many: '$count يوم',
+      few: '$count أيام',
+      two: 'يومين',
+      one: 'يوم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moderationPermanent => 'نهائي';
+
+  @override
+  String get moderationSuspendConfirm => 'أوقف الحساب';
+
+  @override
+  String moderationUnsuspendTitle(String name) {
+    return 'ترجّع حساب $name؟';
+  }
+
+  @override
+  String get moderationUnsuspendBody =>
+      'هيقدر يدخل ويستخدم حسابه تاني على طول.';
+
+  @override
+  String get moderationDismissTitle => 'ترفض البلاغات دي؟';
+
+  @override
+  String get moderationDismissBody =>
+      'البلاغات المفتوحة هتتقفل على إنها اترفضت، والمحتوى هيفضل زي ما هو.';
+
+  @override
+  String get moderationArticleHidden => 'المقال اتخبّى';
+
+  @override
+  String get moderationArticleUnhidden => 'المقال ظهر تاني';
+
+  @override
+  String get moderationWarned => 'التحذير اتبعت';
+
+  @override
+  String get moderationSuspended => 'الحساب اتوقف';
+
+  @override
+  String get moderationUnsuspended => 'الحساب رجع';
+
+  @override
+  String get moderationDismissed => 'البلاغات اترفضت';
+
+  @override
+  String get moderationLogCommentHide => 'خبّى تعليق';
+
+  @override
+  String get moderationLogCommentUnhide => 'ظهّر تعليق';
+
+  @override
+  String get moderationLogCommentDelete => 'مسح تعليق';
+
+  @override
+  String get moderationLogArticleHide => 'خبّى مقال';
+
+  @override
+  String get moderationLogArticleUnhide => 'ظهّر مقال';
+
+  @override
+  String get moderationLogUserWarn => 'حذّر مستخدم';
+
+  @override
+  String get moderationLogUserSuspend => 'وقّف حساب';
+
+  @override
+  String get moderationLogUserUnsuspend => 'رجّع حساب';
+
+  @override
+  String get moderationLogReportsDismiss => 'رفض بلاغات';
+
+  @override
+  String get moderationLogOther => 'إجراء إشراف';
+
+  @override
+  String moderationLogReportsClosed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'قفل $count بلاغ',
+      many: 'قفل $count بلاغ',
+      few: 'قفل $count بلاغات',
+      two: 'قفل بلاغين',
+      one: 'قفل بلاغ واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moderationLogUntil(String date) {
+    return 'لحد $date';
+  }
+
+  @override
+  String get noticeWarningTitle => 'وصلك تحذير من فريق الإشراف';
+
+  @override
+  String get noticeWarningBody =>
+      'اقرا الملاحظة وخليك ماشي على قواعد مجتمع ReadIn.';
+
+  @override
+  String noticeArticleHiddenTitle(String title) {
+    return 'مقالك «$title» اتخفى';
+  }
+
+  @override
+  String get noticeArticleHiddenBody =>
+      'القرّاء مبقوش شايفينه. انت والمشرفين بس اللي تقدروا تفتحوه.';
+
+  @override
+  String get noticeNoteLabel => 'ملاحظة المشرف';
+
+  @override
+  String get noticeAcknowledge => 'فهمت';
 }

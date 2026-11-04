@@ -16,7 +16,7 @@ internal sealed class RemoveFromCollectionCommandHandler(IAppDbContext db, ICurr
         var userId = currentUser.RequireUserId();
         var collection = await db.FindOwnCollectionAsync(command.CollectionId, userId, command.ArticleId, cancellationToken);
         if (collection is null) return CollectionErrors.NotFound;
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         if (!collection.RemoveArticle(command.ArticleId)) return Result.Success();
         try

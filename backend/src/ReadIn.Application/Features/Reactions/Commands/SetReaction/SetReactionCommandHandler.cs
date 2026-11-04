@@ -14,7 +14,7 @@ internal sealed class SetReactionCommandHandler(IAppDbContext db, ICurrentUser c
     public async ValueTask<Result<ArticleReactionsDto>> Handle(SetReactionCommand command, CancellationToken cancellationToken)
     {
         if (!ReactionTypes.TryParse(command.Type, out var type)) throw new InvalidOperationException("The validator checks the type.");
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var userId = currentUser.RequireUserId();
         var existing = await db.Reactions.FirstOrDefaultAsync(r => r.UserId == userId && r.ArticleId == command.ArticleId, cancellationToken);

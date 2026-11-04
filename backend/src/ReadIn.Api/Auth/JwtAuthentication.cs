@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -105,7 +106,12 @@ public static class JwtAuthentication
         var claims = new List<Claim>();
         claims.AddRange(userAccess.Roles.Select(r => new Claim(ReadInClaims.Role, r)));
         claims.AddRange(userAccess.Permissions.Select(p => new Claim(ReadInClaims.Permission, p)));
-        if (userAccess.IsSuspendedAt(clock.GetUtcNow().UtcDateTime)) claims.Add(new Claim(ReadInClaims.Suspended, "true"));
+        if (userAccess.IsSuspendedAt(clock.GetUtcNow().UtcDateTime))
+        {
+            claims.Add(new Claim(ReadInClaims.Suspended, "true"));
+            if (userAccess.SuspendedUntil is { } until)
+                claims.Add(new Claim(ReadInClaims.SuspendedUntil, until.ToString("O", CultureInfo.InvariantCulture)));
+        }
         principal.AddIdentity(new ClaimsIdentity(claims));
     }
 }
@@ -153,4 +159,7 @@ public static class ReadInClaims
     public const string Role = "readin:role";
     public const string Permission = "readin:permission";
     public const string Suspended = "readin:suspended";
+
+    /// <summary>When a temporary suspension ends (ISO round trip); absent for a permanent one.</summary>
+    public const string SuspendedUntil = "readin:suspended_until";
 }

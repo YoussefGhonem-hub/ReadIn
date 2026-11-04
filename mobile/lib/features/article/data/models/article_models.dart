@@ -148,6 +148,18 @@ abstract class MyProgressModel with _$MyProgressModel {
       MyProgress(language: language, percent: percent, lastPosition: lastPosition, completedAt: completedAt);
 }
 
+/// `ArticleDetailsDto.moderation` (F22): `{ hiddenAt, note }` while moderators keep the article hidden.
+@freezed
+abstract class ArticleModerationModel with _$ArticleModerationModel {
+  const ArticleModerationModel._();
+
+  const factory ArticleModerationModel({required DateTime hiddenAt, String? note}) = _ArticleModerationModel;
+
+  factory ArticleModerationModel.fromJson(Map<String, dynamic> json) => _$ArticleModerationModelFromJson(json);
+
+  ArticleModeration toEntity() => ArticleModeration(hiddenAt: hiddenAt, note: note);
+}
+
 /// `ArticleDetailsDto` — card fields plus reader-only fields. `content` stays
 /// raw JSON here and is parsed into [RDocDocument] when mapping to the entity.
 /// [toJson] is what the offline copy of a saved article keeps (F13, F25).
@@ -185,6 +197,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     @Default(false) bool isFollowingAuthor,
     @Default(<String>[]) List<String> collectionIds,
     MyProgressModel? myProgress,
+    ArticleModerationModel? moderation,
   }) = _ArticleDetailsModel;
 
   factory ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
@@ -224,5 +237,6 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         collectionIds: collectionIds,
         myProgress: myProgress?.toEntity(),
         isOfflineCopy: offline,
+        moderation: moderation?.toEntity(),
       );
 }

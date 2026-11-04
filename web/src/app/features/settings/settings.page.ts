@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
@@ -8,6 +9,7 @@ import { PreferencesService } from '../../core/auth/preferences.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService, UiLanguage } from '../../core/i18n/language.service';
+import { ModerationSummaryStore } from '../../core/moderation/moderation-summary.store';
 import { PushService } from '../../core/push/push.service';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
@@ -18,11 +20,11 @@ import { ProfileSettings } from './profile-settings';
 
 /**
  * Settings (F18): theme, UI language, article language, reminder time, push notifications, font size, profile and
- * privacy, account.
+ * privacy, Moderation for moderators (F22; the side nav isn't there on narrow screens), account.
  */
 @Component({
   selector: 'rd-settings-page',
-  imports: [FormsModule, TranslocoPipe, Segmented, LucideDynamicIcon, AccountSettings, ProfileSettings],
+  imports: [FormsModule, RouterLink, TranslocoPipe, Segmented, LucideDynamicIcon, AccountSettings, ProfileSettings],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
   template: `
@@ -104,6 +106,21 @@ import { ProfileSettings } from './profile-settings';
     <!-- Profile and privacy (F14, F18) -->
     <rd-profile-settings />
 
+    <!-- Moderation (F22), for moderators -->
+    @if (moderation.canModerate()) {
+      <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="settings-moderation" data-settings-moderation>
+        <h2 id="settings-moderation" class="m-0 mb-2 text-base font-semibold">{{ 'moderation.title' | transloco }}</h2>
+        <a routerLink="/moderation" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline">
+          <svg lucideIcon="ShieldAlert" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+          <span class="flex-1">{{ 'moderation.settings.body' | transloco }}</span>
+          @if (moderation.total() > 0) {
+            <span class="min-w-6 rounded-chip bg-error px-1.5 text-center text-xs font-semibold leading-5 text-on-error" data-moderation-badge>{{ moderation.total() }}</span>
+          }
+          <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+        </a>
+      </section>
+    }
+
     <!-- Account (F18): phone, password, PIN, sign out, sign out everywhere, delete -->
     <rd-account-settings />
   `,
@@ -114,6 +131,7 @@ export class SettingsPage {
   protected readonly readerPrefs = inject(ReaderPrefsService);
   protected readonly session = inject(SessionStore);
   protected readonly push = inject(PushService);
+  protected readonly moderation = inject(ModerationSummaryStore);
   private readonly preferences = inject(PreferencesService);
   private readonly toasts = inject(ToastService);
   private readonly errors = inject(ErrorMessages);

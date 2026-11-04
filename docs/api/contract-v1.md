@@ -29,6 +29,10 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 
 Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor and media codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, and the problem codes listed with `DraftProblemDto`.
 
+`403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
+`suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
+"موقوف نهائيًا".
+
 ## Endpoints
 
 ### Auth 🌐 (SPEC §9, ADR 0007, ADR 0009, ADR 0012)
@@ -110,6 +114,10 @@ articles), so "add to collection" can show its ticks.
 then tags and glossary terms in common; ties go to the higher quality score, then the newest. Never included: the
 article itself and its direct neighbours in a learning path (the "Next in path" block shows those). For a signed-in
 caller, their own articles are left out and articles they have already read come last.
+An article **hidden by a moderator** (F22) is left out of every list, feed, count and today's pick. `GET /articles/{slug}`
+and what is done on it (comments, replies, likes, pins, reactions, saves, progress) answer `404 article.not_found` to
+everyone but its author and moderators; they get it with `moderation: { hiddenAt, note }` (the latest hide's note) for the
+"Hidden by moderators" banner. `moderation` is `null` otherwise.
 
 ### Reactions (F10; writes: Bearer, permission `reactions.create`, rate limit `writes`)
 
@@ -186,14 +194,44 @@ with `commentId`. They carry no content: refetch `GET /comments/{commentId}`. A 
 dedupe by `commentId`, and skip events for your own just-made change. Events are kept 24 hours and at most 100 per article
 (hourly cleanup job).
 
-### Reports and moderation (F22 hooks in F11; Bearer, rate limit `writes`)
+### Reports and moderation (F22; Bearer)
 
 | Method | Path | Body → Response |
 |---|---|---|
-| POST | `/reports` | `{ targetType: "comment", targetId, reason: spam\|misinformation\|harassment\|copyright\|other, details? (≤ 500) }` → `204`. Permission `reports.create`. Reporting again is a no-op. `400 report.own_content`, `400 report.target_not_supported` (articles and users come with F22), validation `report.reason_invalid`, `404 report.target_not_found` |
-| POST | `/moderation/actions` | `{ action: hide\|unhide\|delete, targetType: "comment", targetId }` → `204`. Permission `moderation.manage` (Moderator, Admin, SuperAdmin). Hide and delete resolve the comment's open reports; every action is in the audit log. `404 comment.not_found` |
+| POST | `/reports` | `{ targetType: "article"\|"comment"\|"user", targetId, reason: spam\|misinformation\|harassment\|copyright\|other, details? (≤ 500) }` → `204`. Permission `reports.create`, rate limit `writes`. Reporting the same target again is a no-op. `400 report.own_content` (your article or comment, or yourself), `404 report.target_not_found` (unknown or deleted; a hidden article and its comments for anyone but its author and moderators), validation `report.target_invalid`, `report.reason_invalid`. A suspended user can be reported |
+| GET | `/moderation/summary` | → `{ open: { article, comment, user, total } }`: targets with open reports (the nav badge) |
+| GET | `/moderation/reports?status=&type=&cursor=&limit=` | → `CursorPage<ModerationQueueItemDto>`, one item per target. `status` = `open` (default) \| `resolved` \| `dismissed`; `type` = `article` \| `comment` \| `user` (optional). Open: most reports first, then the most recent report. Resolved and dismissed: most recently closed first. `limit` 1–50 (default 20). Validation `report.status_invalid`, `report.target_invalid` |
+| GET | `/moderation/reports/{targetType}/{targetId}` | → `ModerationCaseDto`. `404 report.target_not_found` when nobody reported it |
+| POST | `/moderation/actions` | `ModerationActionRequest` → `204`. Rate limit `writes`. Rules below |
+| GET | `/moderation/actions?targetUserId=&moderatorId=&targetType=&cursor=&limit=` | → `CursorPage<ModerationActionDto>`, newest first (the log). `limit` 1–50 (default 20) |
+| GET | `/me/moderation-notices` | Any signed-in user → `{ items: ModerationNoticeDto[] }`: unacknowledged warnings and hidden articles, oldest first. Show each as a dialog on start |
+| POST | `/me/moderation-notices/{id}/acknowledge` | → `204` ("فهمت"; idempotent). `404 moderation.notice_not_found` for someone else's notice |
 
-The queue that lists and resolves reports comes with F22.
+Every `/moderation/*` route needs `moderation.manage` (Moderator, Admin, SuperAdmin; `403 auth.forbidden` otherwise).
+
+`ModerationActionRequest`: `{ action, targetType, targetId, note?, durationDays?, resolveReportsOf?: { targetType, targetId } }`.
+
+| Target | Actions |
+|---|---|
+| `comment` | `hide`, `unhide`, `delete`, `dismiss` |
+| `article` | `hide`, `unhide`, `dismiss` (moderators never delete articles) |
+| `user` | `warn`, `suspend`, `unsuspend` (both need `users.suspend`, `403 auth.forbidden` otherwise), `dismiss` |
+
+- Any other pair, or an unknown action or type: `400 moderation.action_invalid`.
+- `note` (≤ 500, validation `validation.max_length`) is required for `warn` and `suspend` (`400 moderation.note_required`); it
+  is shown to the user for `warn` and an article `hide`.
+- `durationDays` is for `suspend` only: 1–365, or `null`/omitted for a permanent suspension (`400 moderation.duration_invalid`).
+- `warn`, `suspend`, `unsuspend` on yourself: `400 moderation.self`; on a user with `moderation.manage` (or a system
+  account): `403 moderation.staff_target`. Hiding a moderator's article or comment is allowed.
+- `404 article.not_found` / `comment.not_found` / `user.not_found` for an unknown or deleted target (a deleted target can
+  still be `dismiss`ed).
+- `hide`, `delete`, `warn` and `suspend` resolve the target's open reports, and those of `resolveReportsOf` (e.g. warn the
+  author from an article case). `dismiss` closes the target's open reports as dismissed and changes nothing else.
+- Repeating an action that changes nothing (hide a hidden article, unsuspend an active user) is `204` and logs nothing.
+- Every action that changed something is a `ModerationActionDto` in the log; actions on a user's content or account are
+  also in the audit log. `warn` and an article `hide` are notices to the user (`GET /me/moderation-notices`) with a push.
+- A suspension blocks the account at once (`403 user.suspended` with `suspendedUntil`, see Errors), and a temporary one
+  ends by itself at `suspendedUntil`.
 
 ### Profile (F14) 🌐 (Bearer optional)
 
@@ -708,6 +746,73 @@ interface ArticleDetailsDto extends ArticleCardDto {
   isFollowingAuthor: boolean;    // false for guests and on your own articles
   collectionIds: string[];       // the caller's collections that hold it, oldest entry first; [] for guests and unsaved articles
   myProgress: MyProgressDto | null; // the caller's reading progress (F04 resume); null for guests and unopened articles
+  moderation: { hiddenAt: string; note: string | null } | null; // hidden by a moderator (only its author and moderators see it)
+}
+
+// Reports and moderation (F22)
+type ReportReason = 'spam' | 'misinformation' | 'harassment' | 'copyright' | 'other';
+type ModerationTargetType = 'article' | 'comment' | 'user';
+type ReportStatus = 'open' | 'resolved' | 'dismissed';
+
+interface ModerationQueueItemDto {
+  targetType: ModerationTargetType;
+  targetId: string;
+  status: ReportStatus;          // the status filtered on
+  reportCount: number;           // reports in this status
+  reasons: Partial<Record<ReportReason, number>>;
+  firstReportedAt: string;
+  lastReportedAt: string;
+  closedAt: string | null;       // resolved/dismissed lists
+  target: ModerationTargetDto;
+}
+
+interface ModerationTargetDto {  // the fields of the other target types are null
+  state: 'visible' | 'hidden' | 'deleted' | 'active' | 'suspended'; // article/comment: visible|hidden|deleted; user: active|suspended|deleted
+  author: AuthorDto | null;      // article/comment author (null = deleted user); for a user target: the user
+  title: string | null; slug: string | null; language: string | null;                                       // article
+  body: string | null; articleId: string | null; articleSlug: string | null; articleTitle: string | null;    // comment
+  suspendedUntil: string | null; // user: while suspended (null = permanent)
+  warningCount: number | null;   // user: warnings so far
+}
+
+interface ModerationReportDto {
+  id: string;
+  reporter: UserSummaryDto | null; // null = the reporter deleted their account
+  reason: ReportReason;
+  details: string | null;
+  status: ReportStatus;
+  createdAt: string;
+  closedAt: string | null;
+  closedBy: UserSummaryDto | null;
+}
+
+interface ModerationCaseDto {
+  item: ModerationQueueItemDto;  // status = open if any open report, else the latest closed status
+  reports: ModerationReportDto[]; // all statuses, newest first
+  history: ModerationActionDto[]; // actions on this target and, for article/comment, on its author's account; newest first (≤ 100)
+}
+
+interface ModerationActionDto {
+  id: string;
+  action: 'comment.hide' | 'comment.unhide' | 'comment.delete' | 'article.hide' | 'article.unhide'
+        | 'user.warn' | 'user.suspend' | 'user.unsuspend' | 'reports.dismiss';
+  targetType: ModerationTargetType;
+  targetId: string;
+  targetLabel: string | null;    // article title / first 80 characters of the comment / @username, at the time
+  targetUser: UserSummaryDto | null; // the affected user (author or user target)
+  moderator: UserSummaryDto | null;  // null = the moderator deleted their account
+  note: string | null;
+  suspendedUntil: string | null; // user.suspend: when it ends (null = permanent)
+  reportsClosed: number;
+  createdAt: string;
+}
+
+interface ModerationNoticeDto {
+  id: string;
+  kind: 'warning' | 'article_hidden';
+  note: string | null;
+  article: { id: string; slug: string; title: string } | null; // article_hidden
+  createdAt: string;
 }
 
 interface MyProgressDto {
@@ -908,6 +1013,26 @@ Sent once a day at the user's `reminderTime`, in their `timeZone`, for the artic
 
 No push when the user already read that day's article, when the account is suspended or has no device, or when the push
 would be more than 2 hours late (the article stays the hero card either way).
+
+### Moderation notice (`moderation_notice`, SPEC F22)
+
+Sent once, best effort, when a moderator warns the user or hides their article. The notice itself waits in
+`GET /me/moderation-notices` either way, so a lost push loses nothing.
+
+```jsonc
+{
+  "notification": { "title": "فريق الإشراف خفى مقالك", "body": "<article title>" }, // en: "The moderators hid your article"
+  // warning: title "وصلك تحذير من فريق الإشراف" (en: "You received a warning from the moderators"), body = the note
+  "data": {
+    "type": "moderation_notice",
+    "noticeId": "0a1b2c3d-…",
+    "kind": "article_hidden",    // | "warning"
+    "articleId": "…", "slug": "rag-vs-fine-tuning", "link": "readin://a/rag-vs-fine-tuning" // article_hidden only
+  }
+}
+```
+
+A warning has no `link`: the app opens and shows the notice. Collapse key and tag `moderation_notice`, TTL 7 days.
 
 ## Local development
 

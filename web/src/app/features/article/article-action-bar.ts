@@ -16,12 +16,13 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
-import { ArticleCardDto, REACTION_TYPES, ReactionType } from '../../core/api/models';
+import { ArticleModerationDto, REACTION_TYPES, ReactionType } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
 import { CompactNumberPipe, translatePlural } from '../../shared/pipes/format.pipes';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { ArticleMenu, MenuArticle } from './article-menu';
 import { REACTION_EMOJI } from './reactions';
 import { ReactorsSheet } from './reactors-sheet';
 
@@ -33,14 +34,14 @@ const HOVER_CLOSE_MS = 300;
 
 /**
  * Floating action bar of the reader (F04, F10, F11, F13): the reaction button, who reacted, comments (the count; a tap
- * takes you to them), save and share. The reaction button reacts 💡 on a tap and removes your reaction when you have
+ * takes you to them), save, share and the "⋯" menu (F22 report and moderation; F28 adds more). The reaction button reacts 💡 on a tap and removes your reaction when you have
  * one; holding it (touch), hovering it (mouse), its ⌃ button or ArrowUp open the picker with the four reactions and
  * their counts.
  * Guests get the soft sign-in prompt. Counts come from ArticleSocialStore (optimistic, live counters on top).
  */
 @Component({
   selector: 'rd-article-action-bar',
-  imports: [TranslocoPipe, CompactNumberPipe, LucideDynamicIcon, ReactorsSheet],
+  imports: [TranslocoPipe, CompactNumberPipe, LucideDynamicIcon, ReactorsSheet, ArticleMenu],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'fixed inset-x-0 bottom-0 z-30 block border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-raised',
@@ -163,6 +164,7 @@ const HOVER_CLOSE_MS = 300;
         <button type="button" class="rd-icon-btn h-11 w-11 border-0" [attr.aria-label]="'common.share' | transloco" (click)="share()">
           <svg lucideIcon="Share2" [size]="18" aria-hidden="true"></svg>
         </button>
+        <rd-article-menu [article]="article()" (moderationChange)="moderationChange.emit($event)" />
       </div>
     </div>
 
@@ -188,10 +190,12 @@ export class ArticleActionBar {
   protected readonly emoji = REACTION_EMOJI;
   protected readonly reactionTypes = REACTION_TYPES;
 
-  readonly article = input.required<ArticleCardDto>();
+  readonly article = input.required<MenuArticle>();
   readonly url = input.required<string>();
   /** The comment count was pressed: the reader scrolls to the comments (F11). */
   readonly commentsOpen = output<void>();
+  /** A moderator hid the article (its new state) or made it visible again (null), from the "⋯" menu (F22). */
+  readonly moderationChange = output<ArticleModerationDto | null>();
 
   protected readonly state = computed(() => this.social.state(this.article()));
   protected readonly pickerOpen = signal(false);

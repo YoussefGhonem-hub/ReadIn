@@ -151,4 +151,18 @@ void main() {
     expect(cubit.state.failure?.code, FailureCodes.networkTimeout);
     await cubit.close();
   });
+
+  test('a session the server ended for a suspended account keeps why (F22)', () async {
+    when(() => restore()).thenAnswer((_) async => const Ok(sampleMe));
+    final suspended = Failure(FailureCodes.userSuspended, statusCode: 403, suspendedUntil: DateTime.utc(2026, 11, 9));
+    final cubit = build();
+    await cubit.start();
+
+    when(() => watch.endedBy).thenReturn(suspended);
+    changes.add(null);
+    await pumpEventQueue();
+
+    expect(cubit.state, SessionState(status: SessionStatus.guest, failure: suspended));
+    await cubit.close();
+  });
 }

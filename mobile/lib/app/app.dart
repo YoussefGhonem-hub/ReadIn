@@ -5,11 +5,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/di/injection.dart';
+import '../core/errors/failure.dart';
 import '../core/l10n/l10n_x.dart';
 import '../core/theme/app_theme.dart';
 import '../features/article/presentation/cubit/engagement_cubit.dart';
+import '../features/auth/presentation/pages/sign_in_page.dart';
 import '../features/auth/presentation/session/session_cubit.dart';
+import '../features/auth/presentation/session/suspended_session_listener.dart';
 import '../features/follow/presentation/cubit/follows_cubit.dart';
+import '../features/moderation/presentation/cubit/moderation_notices_cubit.dart';
+import '../features/moderation/presentation/widgets/moderation_notices_host.dart';
 import '../features/reading/presentation/cubit/streak_cubit.dart';
 import '../features/saved/presentation/cubit/collections_cubit.dart';
 import '../features/settings/domain/entities/app_settings.dart';
@@ -67,28 +72,44 @@ class _ReadInAppState extends State<ReadInApp> {
         BlocProvider.value(value: widget.social.engagement),
         BlocProvider.value(value: widget.social.follows),
         BlocProvider.value(value: widget.social.collections),
+        BlocProvider.value(value: getIt<ModerationNoticesCubit>()), // follows the session itself (F22)
       ],
       child: BlocListener<SessionCubit, SessionState>(
         listenWhen: (a, b) => a.me != b.me,
         listener: (context, state) => context.read<SettingsCubit>().onSessionChanged(state.me),
-        child: BlocBuilder<SettingsCubit, AppSettings>(
-          builder: (context, settings) {
-            final cubit = context.read<SettingsCubit>();
-            final locale = cubit.locale;
-            return MaterialApp.router(
-              title: 'ReadIn',
-              debugShowCheckedModeBanner: false,
-              theme: AppTheme.light(locale),
-              darkTheme: AppTheme.dark(locale),
-              themeMode: cubit.themeMode,
-              locale: locale,
-              supportedLocales: AppLocales.supported,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              routerConfig: _router,
-            );
-          },
+        child: SuspendedSessionListener(
+          onSuspended: _openSignIn,
+          child: BlocBuilder<SettingsCubit, AppSettings>(
+            builder: (context, settings) {
+              final cubit = context.read<SettingsCubit>();
+              final locale = cubit.locale;
+              return MaterialApp.router(
+                title: 'ReadIn',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.light(locale),
+                darkTheme: AppTheme.dark(locale),
+                themeMode: cubit.themeMode,
+                locale: locale,
+                supportedLocales: AppLocales.supported,
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                routerConfig: _router,
+                // Warnings and hidden-article notices over whatever screen is open, once past the splash (F22).
+                builder: (context, child) => ModerationNoticesHost(
+                  navigatorKey: _router.routerDelegate.navigatorKey,
+                  changes: _router.routerDelegate,
+                  canShow: () => _router.routerDelegate.currentConfiguration.uri.path != AppRoutes.splash,
+                  child: child!,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
   }
+
+  /// The server ended the session of a suspended account (F22): Sign in says until when, over the current screen.
+  void _openSignIn(Failure reason) => WidgetsBinding.instance.addPostFrameCallback(
+        (_) => unawaited(_router.push<void>(AppRoutes.signIn, extra: SignInArgs(endedBy: reason))),
+      );
 }

@@ -23,7 +23,7 @@ public sealed record Error(string Code, string Description, ErrorType Type)
 {
     public IReadOnlyDictionary<string, string[]>? Details { get; init; }
 
-    /// <summary>Extra ProblemDetails members, e.g. the editor's <c>problems</c> list (F05).</summary>
+    /// <summary>Extra ProblemDetails members, e.g. the editor's <c>problems</c> list (F05) or <c>suspendedUntil</c> on <c>user.suspended</c> (F22).</summary>
     public IReadOnlyDictionary<string, object?>? Extensions { get; init; }
 
     public static Error Validation(string code, string description) => new(code, description, ErrorType.Validation);

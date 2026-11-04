@@ -44,7 +44,7 @@ src/app/
 │               social (follow button, person row, collection sheets)
 ├── layout/     shell, top bar, side nav (desktop), bottom nav (narrow screens)
 └── features/   auth (welcome, sign in/up, forgot password, setup steps) · onboarding · home · article · saved
-                · settings · placeholders for later phases
+                · settings · moderation (queue, cases, log, notices) · placeholders for later phases
 ```
 
 ## Reactions, follow, saved (F10, F12, F13, F27)
@@ -55,6 +55,15 @@ src/app/
 - **Personal GETs** (Following feed, Saved, collections, suggestions, who reacted) carry `WITH_SESSION`, so they keep the token while a server-rendered page is still hydrating. SSR is anonymous, so the reader loads the article again with your token once the session is restored.
 - **Collections** know an article's membership from the API (`SavedArticleDto.collectionIds` on the Saved list, `ArticleDetailsDto.collectionIds` in the reader) and from changes made in this session; an older copy never undoes a change still on its way. The API reports a bad name with the generic `validation.required` / `validation.max_length` on `errors.name`; the sheets show them as the collection-name messages.
 - **e2e:** `e2e/mock-api/social.mjs` keeps reactions, saves, collections and follows per signed-in viewer (the bearer token's `sub`), and `e2e/support/social.ts` signs each test in as its own reader, so the flows run end to end in parallel.
+
+## Reporting and moderation (F22)
+
+- **One report sheet** (`shared/moderation/report-sheet.ts`) for articles, comments and users: a reason, optional details (≤ 500) and the thanks toast. It opens from the reader's "⋯" menu (`features/article/article-menu.ts`, which F28 extends), the comment menu and the "⋯" on someone else's profile. Guests get the sign-in prompt.
+- **Moderator actions** go through one confirmation sheet (`shared/moderation/moderation-action-sheet.ts`): a note (required to warn and suspend, which the user sees), the suspension length (1, 7, 30 days or permanent), then `POST /moderation/actions`. A hidden article shows a banner to its author and moderators (`ArticleDetailsDto.moderation`).
+- **`/moderation`** (permission `moderation.manage`, client-rendered, its own lazy chunk): the queue with Open / Resolved / Dismissed and the type filter in the URL, `/moderation/{type}/{id}` for a case, `/moderation/log`. The side nav item (and Settings → Moderation on narrow screens) shows the open count from `GET /moderation/summary` (`core/moderation/moderation-summary.store.ts`).
+- **Notices:** once a signed-in account has finished its setup steps, `core/moderation/moderation-notices.ts` asks for `GET /me/moderation-notices`; only when there are some does the dialog's chunk load, one notice at a time until "Got it" acknowledges it. A `moderation_notice` push that arrives while the app is open loads them again instead of showing a toast.
+- **Suspended accounts:** `ErrorMessages.forError` turns `user.suspended` into "suspended until {date}" or "permanently" from the problem's `suspendedUntil`. A call (or refresh) answered `403 user.suspended` ends the session and opens Sign in with that message.
+- **e2e:** `e2e/mock-api/moderation.mjs` gives each moderator (`u-mod-*`) their own copy of the seeded queue and gives `u-warned-*` readers two notices; `e2e/support/moderation.ts` signs in as them.
 
 ## Rules this codebase follows
 

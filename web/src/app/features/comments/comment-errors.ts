@@ -18,13 +18,17 @@ export function commentErrorKey(error: unknown): string {
   return `errors.${error.code}`;
 }
 
-/** Translates {@link commentErrorKey}; unknown codes fall back to the API's title, then to "something went wrong". */
+/**
+ * Translates {@link commentErrorKey}; unknown codes fall back to the API's title, then to "something went wrong". A
+ * suspended account's message says until when.
+ */
 @Injectable({ providedIn: 'root' })
 export class CommentErrors {
   private readonly transloco = inject(TranslocoService);
   private readonly errors = inject(ErrorMessages);
 
   message(error: unknown): string {
+    if (isApiError(error) && error.code === 'user.suspended') return this.errors.forError(error); // says until when
     const key = commentErrorKey(error);
     if (key.startsWith('errors.')) return this.errors.forCode(key.slice('errors.'.length), isApiError(error) ? error.problem?.title : null);
     return this.transloco.translate(key);

@@ -1,6 +1,6 @@
 import type { AppIconName } from '../shared/ui/icons';
 
-export type NavId = 'home' | 'explore' | 'write' | 'saved' | 'profile' | 'notifications' | 'search' | 'paths' | 'settings';
+export type NavId = 'home' | 'explore' | 'write' | 'saved' | 'profile' | 'notifications' | 'search' | 'paths' | 'settings' | 'moderation';
 
 export interface NavItem {
   id: NavId;
@@ -9,6 +9,8 @@ export interface NavItem {
   /** Absolute path; `profile` is resolved at runtime from the signed-in user. */
   path: string;
   exact?: boolean;
+  /** Shown only to accounts with this permission (SPEC §10.2). */
+  permission?: string;
 }
 
 const ITEMS: Record<NavId, NavItem> = {
@@ -21,6 +23,7 @@ const ITEMS: Record<NavId, NavItem> = {
   search: { id: 'search', labelKey: 'nav.search', icon: 'Search', path: '/search' },
   paths: { id: 'paths', labelKey: 'nav.paths', icon: 'Route', path: '/paths' },
   settings: { id: 'settings', labelKey: 'nav.settings', icon: 'Settings', path: '/settings' },
+  moderation: { id: 'moderation', labelKey: 'nav.moderation', icon: 'ShieldAlert', path: '/moderation', permission: 'moderation.manage' },
 };
 
 /** Same five destinations as the mobile app's bottom navigation (SPEC §7.2). */
@@ -36,6 +39,7 @@ export const SIDE_NAV: readonly NavItem[] = [
   ITEMS.write,
   ITEMS.profile,
   ITEMS.settings,
+  ITEMS.moderation,
 ];
 
 export function profilePath(username: string | null): string {

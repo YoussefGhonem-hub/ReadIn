@@ -53,7 +53,7 @@ internal sealed class ExternalSignInCommandHandler(
     private async Task<Result<AuthSessionDto>> StartAsync(
         User user, ExternalIdentity identity, string? authorizationCode, DateTime now, CancellationToken ct)
     {
-        if (user.IsSuspendedAt(now)) return UserErrors.Suspended;
+        if (user.IsSuspendedAt(now)) return UserErrors.SuspendedUntil(user.SuspendedUntil);
         user.RecordExternalSignIn(identity.Provider, now);
         await appleTokens.CaptureAsync(user, identity, authorizationCode, ct);
         return await sessions.StartAsync(user, ct);
@@ -62,7 +62,7 @@ internal sealed class ExternalSignInCommandHandler(
     private async Task<Result<AuthSessionDto>> LinkAndStartAsync(
         User user, ExternalIdentity identity, string? authorizationCode, DateTime now, CancellationToken ct)
     {
-        if (user.IsSuspendedAt(now)) return UserErrors.Suspended;
+        if (user.IsSuspendedAt(now)) return UserErrors.SuspendedUntil(user.SuspendedUntil);
 
         var alreadyLinked = user.FindExternalLogin(identity.Provider) is not null;
         var linked = user.LinkExternalLogin(identity.Provider, identity.Subject, identity.Email, now);

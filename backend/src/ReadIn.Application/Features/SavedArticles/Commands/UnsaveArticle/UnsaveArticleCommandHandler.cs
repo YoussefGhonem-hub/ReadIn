@@ -12,7 +12,7 @@ internal sealed class UnsaveArticleCommandHandler(IAppDbContext db, ICurrentUser
 {
     public async ValueTask<Result<SaveStateDto>> Handle(UnsaveArticleCommand command, CancellationToken cancellationToken)
     {
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var userId = currentUser.RequireUserId();
         var articleId = command.ArticleId;

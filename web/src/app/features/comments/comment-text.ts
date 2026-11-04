@@ -5,8 +5,6 @@ import { TextDir, detectDir } from '../../shared/directives/bidi';
 export const COMMENT_MAX_LENGTH = 2000;
 /** The character counter appears for the last 200 characters. */
 export const COMMENT_COUNTER_FROM = COMMENT_MAX_LENGTH - 200;
-/** Optional report details. */
-export const REPORT_DETAILS_MAX_LENGTH = 500;
 
 /**
  * The API's mention rule (CommentText.Mention): `@` + 3–30 of a–z 0–9 _, not right after a Latin letter, digit, `_`,

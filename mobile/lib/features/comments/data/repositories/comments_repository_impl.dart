@@ -4,6 +4,7 @@ import '../../../../core/errors/result.dart';
 import '../../../../core/models/cursor_page.dart';
 import '../../../../core/network/api_error_mapper.dart';
 import '../../../article/domain/entities/article.dart';
+import '../../../moderation/data/models/moderation_models.dart';
 import '../../domain/entities/comment.dart';
 import '../../domain/repositories/comments_repository.dart';
 import '../datasources/comments_api.dart';
@@ -56,11 +57,6 @@ class CommentsRepositoryImpl implements CommentsRepository {
   @override
   Future<Result<List<Author>>> mentionSuggestions(String query, {int limit = 8}) =>
       guardApi(() async => [for (final m in await _api.mentionSuggestions(query, limit)) m.toEntity()]);
-
-  @override
-  Future<Result<void>> reportComment(String commentId, ReportReason reason, {String? details}) => guardApi(
-        () => _api.report(ReportRequest(targetType: _comment, targetId: commentId, reason: reason.name, details: details)),
-      );
 
   @override
   Future<Result<void>> moderateComment(String commentId, ModerationAction action) => guardApi(

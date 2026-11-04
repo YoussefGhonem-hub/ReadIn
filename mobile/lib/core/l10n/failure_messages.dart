@@ -1,10 +1,18 @@
 import '../errors/failure.dart';
 import '../security/credential_rules.dart';
+import 'formatters.dart';
 import 'gen/app_localizations.dart';
 
 /// Maps a [Failure.code] to a translated message. Unknown codes fall back to
-/// the generic server error — raw server text is never shown to users.
-String localizeFailure(AppLocalizations l10n, Failure failure) => localizeErrorCode(l10n, failure.code);
+/// the generic server error — raw server text is never shown to users. A suspended account (`user.suspended`, F22)
+/// also says until when, or that it is permanent.
+String localizeFailure(AppLocalizations l10n, Failure failure) => failure.code == FailureCodes.userSuspended
+    ? localizeSuspension(l10n, failure.suspendedUntil)
+    : localizeErrorCode(l10n, failure.code);
+
+/// "This account is suspended until {date}" (local time), or "permanently" when [until] is null.
+String localizeSuspension(AppLocalizations l10n, DateTime? until) =>
+    until == null ? l10n.errSuspendedPermanently : l10n.errSuspendedUntil(formatDateTime(until, l10n.localeName));
 
 /// For actions without a form (react, save, follow, collections): a validation failure shows its first field error
 /// (e.g. `reaction.invalid`) instead of "check the highlighted fields".
@@ -136,10 +144,16 @@ String localizeErrorCode(AppLocalizations l10n, String code) => switch (code) {
       FailureCodes.commentDuplicate => l10n.commentsErrDuplicate,
       FailureCodes.commentEmpty => l10n.commentsErrEmpty,
       FailureCodes.commentTooLong => l10n.commentsErrTooLong,
-      FailureCodes.reportOwnContent => l10n.commentsErrReportOwnContent,
-      FailureCodes.reportTargetNotSupported => l10n.commentsErrReportNotSupported,
-      FailureCodes.reportReasonInvalid => l10n.commentsErrReportReason,
-      FailureCodes.reportTargetNotFound => l10n.commentsErrNotFound,
+      FailureCodes.reportOwnContent => l10n.errReportOwnContent,
+      FailureCodes.reportReasonInvalid => l10n.errReportReason,
+      FailureCodes.reportTargetInvalid => l10n.errReportTargetInvalid,
+      FailureCodes.reportTargetNotFound => l10n.errReportTargetNotFound,
+      FailureCodes.moderationActionInvalid => l10n.errModerationActionInvalid,
+      FailureCodes.moderationSelf => l10n.errModerationSelf,
+      FailureCodes.moderationStaffTarget => l10n.errModerationStaffTarget,
+      FailureCodes.moderationNoteRequired => l10n.errModerationNoteRequired,
+      FailureCodes.moderationDurationInvalid => l10n.errModerationDurationInvalid,
+      FailureCodes.moderationNoticeNotFound => l10n.errModerationNoticeNotFound,
       FailureCodes.pathNotFound => l10n.errPathNotFound,
       FailureCodes.pathSlugTaken => l10n.errPathSlugTaken,
       FailureCodes.pathEditorial => l10n.errPathEditorial,

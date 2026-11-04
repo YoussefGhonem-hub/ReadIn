@@ -60,6 +60,8 @@ public sealed class ArticleMappings : IRegister
                     s.Topic.NameAr, s.Topic.NameEn))
             .Map(d => d.Tags, s => s.Tags.Select(t => t.Tag.Name).ToList())
             .Map(d => d.Sources, s => s.Sources.OrderBy(x => x.SortOrder).Select(x => new SourceDto(x.Title, x.Url)).ToList())
+            // The hide note is loaded by the handler (latest article.hide in ModerationActions).
+            .Map(d => d.Moderation, s => s.HiddenAt == null ? null : new ArticleModerationDto(s.HiddenAt.Value, null))
             .Ignore(d => d.Content)
             .Ignore(d => d.IsFollowingAuthor)
             .Ignore(d => d.CollectionIds);

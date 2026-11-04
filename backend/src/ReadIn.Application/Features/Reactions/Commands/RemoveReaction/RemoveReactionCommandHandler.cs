@@ -12,7 +12,7 @@ internal sealed class RemoveReactionCommandHandler(IAppDbContext db, ICurrentUse
 {
     public async ValueTask<Result<ArticleReactionsDto>> Handle(RemoveReactionCommand command, CancellationToken cancellationToken)
     {
-        if (!await db.Articles.Visible().AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var userId = currentUser.RequireUserId();
         var reaction = await db.Reactions.FirstOrDefaultAsync(r => r.UserId == userId && r.ArticleId == command.ArticleId, cancellationToken);

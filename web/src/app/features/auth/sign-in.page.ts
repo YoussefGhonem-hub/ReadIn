@@ -4,7 +4,6 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
-import { isApiError } from '../../core/api/api.config';
 import { postAuthUrl, safeReturnUrl } from '../../core/auth/account-setup';
 import { AuthFlowState } from '../../core/auth/auth-flow';
 import { AuthService } from '../../core/auth/auth.service';
@@ -18,9 +17,10 @@ import { ExternalSignIn } from './external-sign-in';
 
 /**
  * Sign in (SPEC §9.2): phone + password. One generic error for a wrong number or password (it never says whether
- * the number exists); lockout, suspended and rate-limit messages; after a reset, the number is pre-filled with a
- * banner, and after an account deletion a banner says it was deleted. Then the account-setup guards apply (change
- * password → PIN → profile → onboarding).
+ * the number exists); lockout, suspended (until when, or permanently) and rate-limit messages; after a reset, the number
+ * is pre-filled with a banner, and after an account deletion a banner says it was deleted. A session that ended because
+ * the account was suspended (F22) lands here with that message. Then the account-setup guards apply (change password →
+ * PIN → profile → onboarding).
  */
 @Component({
   selector: 'rd-sign-in-page',
@@ -102,7 +102,7 @@ export class SignInPage {
   /** Shown once: after a password reset, or after the account was deleted. */
   protected readonly banner = signal(this.flow.takeBanner());
   protected readonly busy = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly error = signal<string | null>(this.suspensionMessage());
   private readonly submitted = signal(false);
   private readonly serverPhoneError = signal<string | null>(null);
   /** Re-evaluates the template checks below on every change. */
@@ -164,10 +164,16 @@ export class SignInPage {
     } catch (error) {
       const phoneCodes = fieldErrors(error, 'phoneNumber');
       if (phoneCodes.length) this.serverPhoneError.set(`errors.${phoneCodes[0]}`);
-      else this.error.set(isApiError(error) ? this.errors.forCode(error.code) : this.errors.forError(error));
+      else this.error.set(this.errors.forError(error));
     } finally {
       this.busy.set(false);
     }
+  }
+
+  /** The suspension that ended your session, if that is how you got here. */
+  private suspensionMessage(): string | null {
+    const suspension = this.flow.takeSuspension();
+    return suspension ? this.errors.suspended(suspension) : null;
   }
 
   private useSeedUser(phone: string, password: string | null): void {

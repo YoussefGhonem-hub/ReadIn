@@ -54,6 +54,7 @@ public interface IAppDbContext
     DbSet<Comment> Comments { get; }
     DbSet<CommentLike> CommentLikes { get; }
     DbSet<Report> Reports { get; }
+    DbSet<ModerationAction> ModerationActions { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

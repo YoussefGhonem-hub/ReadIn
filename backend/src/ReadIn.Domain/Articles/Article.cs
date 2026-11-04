@@ -49,6 +49,13 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     /// <summary>Ranks articles for Today's article (F07, ADR 0015); recomputed by the quality job.</summary>
     public double QualityScore { get; private set; }
 
+    /// <summary>
+    /// Hidden by a moderator (SPEC F22): gone from every list, feed and count; only its author and moderators still open
+    /// it. No foreign key, like <c>Comments.HiddenById</c>.
+    /// </summary>
+    public DateTime? HiddenAt { get; private set; }
+    public Guid? HiddenById { get; private set; }
+
     // Denormalized counters (SPEC §16.1), recomputed from SQL by the outbox handlers after each change (F27).
 
     /// <summary>All reactions: always the sum of the four per-type counts below.</summary>
@@ -83,6 +90,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public byte[] RowVersion { get; private set; } = [];
 
     public bool IsPublished => Status == ArticleStatus.Published;
+    public bool IsHidden => HiddenAt is not null;
 
     /// <param name="sourceLanguage">Set by the first <see cref="AddTranslation"/>; the editor passes it for a draft that has none yet.</param>
     public static Article CreateDraft(Guid authorId, Guid fieldId, Guid? topicId, string slug, Guid? id = null, string? sourceLanguage = null)
@@ -259,6 +267,20 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         var detached = _attachments.Select(a => a.MediaAssetId).ToList();
         _attachments.Clear();
         return detached;
+    }
+
+    /// <summary>A moderator hides the article (SPEC F22); idempotent. Moderators never delete articles: only authors do.</summary>
+    public void Hide(Guid moderatorId, DateTime now)
+    {
+        if (IsHidden) return;
+        HiddenAt = now;
+        HiddenById = moderatorId;
+    }
+
+    public void Unhide()
+    {
+        HiddenAt = null;
+        HiddenById = null;
     }
 
     /// <summary>Content-pipeline articles passed every automatic check (SPEC §19.3) on <paramref name="checkedAt"/>.</summary>

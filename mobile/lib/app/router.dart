@@ -16,6 +16,10 @@ import '../features/editor/presentation/pages/article_editor_page.dart';
 import '../features/editor/presentation/pages/my_articles_page.dart';
 import '../features/explore/presentation/pages/explore_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
+import '../features/moderation/domain/entities/moderation.dart';
+import '../features/moderation/presentation/moderation_routes.dart';
+import '../features/moderation/presentation/pages/moderation_case_page.dart';
+import '../features/moderation/presentation/pages/moderation_page.dart';
 import '../features/notifications/presentation/pages/notifications_page.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../features/paths/presentation/pages/path_page.dart';
@@ -55,6 +59,7 @@ abstract final class AppRoutes {
   static const profile = '/profile';
   static const settings = '/settings';
   static const notifications = '/notifications';
+  static const moderation = ModerationRoutes.home;
   static const editProfile = ProfileRoutes.edit;
   static const paths = PathRoutes.list;
 
@@ -99,9 +104,13 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
   final target = atSplash ? (uri.queryParameters['from'] ?? AppRoutes.home) : uri.toString();
   final targetPath = Uri.parse(target).path;
   final isAuthRoute = targetPath.startsWith('/auth/') || targetPath == AppRoutes.welcome;
-  // The editor (F05) needs an account like the account screens; the Write tab itself shows the sign-in prompt.
-  final isAccountRoute =
-      targetPath.startsWith('/account/') || targetPath == AppRoutes.editProfile || targetPath.startsWith('${AppRoutes.write}/');
+  // The editor (F05) and moderation (F22) need an account like the account screens; the Write tab itself shows the
+  // sign-in prompt.
+  final isAccountRoute = targetPath.startsWith('/account/') ||
+      targetPath == AppRoutes.editProfile ||
+      targetPath.startsWith('${AppRoutes.write}/') ||
+      targetPath == AppRoutes.moderation ||
+      targetPath.startsWith('${AppRoutes.moderation}/');
   // Shared links open for first-time guests too, without Welcome first.
   final isArticle = targetPath.startsWith('/a/') || targetPath.startsWith('/u/');
   String? stay() => atSplash ? target : null;
@@ -170,6 +179,19 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
         path: AppRoutes.paths,
         builder: (_, state) => PathsPage(initialTab: PathRoutes.tabOf(state.uri)),
         routes: [GoRoute(path: ':slug', builder: (_, state) => PathPage(slug: state.pathParameters['slug']!))],
+      ),
+      GoRoute(
+        path: AppRoutes.moderation,
+        builder: (_, _) => const ModerationPage(),
+        routes: [
+          GoRoute(
+            path: ':type/:id',
+            builder: (_, state) => switch (enumFromWire(ModerationTargetType.values, state.pathParameters['type'])) {
+              final type? => ModerationCasePage(target: ModerationTargetRef(type, state.pathParameters['id']!)),
+              null => const ModerationPage(),
+            },
+          ),
+        ],
       ),
       GoRoute(
         path: '/u/:username',

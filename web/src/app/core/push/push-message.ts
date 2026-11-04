@@ -27,6 +27,12 @@ export function toPushMessage(raw: unknown, origin: string, fallbackLang: 'ar' |
   return { title: title ?? '', body, path: pushLinkToPath(link, origin, lang) };
 }
 
+/** The push's `data.type` (e.g. `moderation_notice`, F22), or null. */
+export function pushType(raw: unknown): string | null {
+  if (!raw || typeof raw !== 'object') return null;
+  return text((raw as RawPush).data?.['type']);
+}
+
 /**
  * Turns a push link into an in-app path. Deep links (`readin://a/{slug}#comment-{id}`) map to the web routes;
  * same-origin URLs and absolute paths are kept; anything else is dropped, so a push can never open another site.

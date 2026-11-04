@@ -3,6 +3,7 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
+using ReadIn.Application.Features.Articles;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Media;
@@ -23,9 +24,8 @@ internal sealed class GetDocumentDownloadQueryHandler(IAppDbContext db, ICurrent
         var privileged = (asset.OwnerId is not null && currentUser.UserId == asset.OwnerId) || currentUser.Permissions.Contains(Permissions.Moderation.Manage);
         if (!privileged)
         {
-            var published = await db.Articles.AsNoTracking().AnyAsync(a =>
-                a.Status == ArticleStatus.Published && a.Field.IsEnabled && a.Attachments.Any(x => x.MediaAssetId == query.AssetId),
-                cancellationToken);
+            var published = await db.Articles.AsNoTracking().Visible()
+                .AnyAsync(a => a.Attachments.Any(x => x.MediaAssetId == query.AssetId), cancellationToken);
             if (!published) return MediaErrors.NotFound;
             if (!asset.AllowDownload) return MediaErrors.DownloadNotAllowed;
         }

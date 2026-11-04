@@ -44,7 +44,9 @@ internal sealed class GetTodayArticleQueryHandler(
     private async Task<ArticleCardDto?> CardAsync(Guid articleId, string uiLanguage, string? articleLanguage, CancellationToken ct)
     {
         using var _ = LocalizedProjection.Begin(uiLanguage, articleLanguage);
+        // A pick hidden by a moderator since (SPEC F22) is no hero card any more.
         var card = await db.Articles.AsNoTracking()
+            .Visible()
             .Where(a => a.Id == articleId)
             .ProjectToType<ArticleCardDto>(mapping)
             .FirstOrDefaultAsync(ct);

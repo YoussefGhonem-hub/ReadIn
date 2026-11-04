@@ -6,6 +6,7 @@ import { MeApi } from '../api/me.api';
 import { MeDto } from '../api/models';
 import { SessionStore } from '../auth/session.store';
 import { LanguageService } from '../i18n/language.service';
+import { ModerationNotices } from '../moderation/moderation-notices';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { PUSH_CLIENT, PushClient, PushPermission, WorkerMessage } from './push-client';
 import { PushService } from './push.service';
@@ -35,18 +36,20 @@ const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 async function setup(client = new FakePushClient()) {
   const meApi = { registerDevice: vi.fn(() => of(undefined)), unregisterDevice: vi.fn(() => of(undefined)) };
+  const notices = { reload: vi.fn() };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
       { provide: PUSH_CLIENT, useValue: client },
       { provide: MeApi, useValue: meApi },
+      { provide: ModerationNotices, useValue: notices },
       { provide: LanguageService, useValue: { lang: signal('ar') } },
       { provide: PLATFORM_ID, useValue: 'browser' },
     ],
   });
   const service = TestBed.inject(PushService);
   await service.init();
-  return { service, client, meApi, session: TestBed.inject(SessionStore), toasts: TestBed.inject(ToastService) };
+  return { service, client, meApi, notices, session: TestBed.inject(SessionStore), toasts: TestBed.inject(ToastService) };
 }
 
 async function signIn(session: SessionStore, id = 'user-1'): Promise<void> {
@@ -177,6 +180,17 @@ describe('PushService', () => {
     });
 
     expect(toasts.toasts()).toEqual([expect.objectContaining({ kind: 'info', message: 'أحمد رد عليك — تعليق جميل', link: '/ar/a/my-post#comment-9' })]);
+  });
+
+  it('a moderation notice push opens the notice dialog instead of a toast (F22)', async () => {
+    const { client, toasts, notices } = await setup();
+    client.worker!({
+      type: 'push',
+      payload: { notification: { title: 'وصلك تحذير من فريق الإشراف' }, data: { type: 'moderation_notice', noticeId: 'n1', kind: 'warning' } },
+    });
+
+    expect(notices.reload).toHaveBeenCalledTimes(1);
+    expect(toasts.toasts()).toEqual([]);
   });
 
   it('routes a tapped notification and ignores links to other sites', async () => {

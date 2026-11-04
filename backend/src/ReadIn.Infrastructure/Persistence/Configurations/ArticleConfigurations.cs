@@ -22,6 +22,7 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
 
         builder.Ignore(a => a.IsPublished);
         builder.Ignore(a => a.CurrentDraftVersion);
+        builder.Ignore(a => a.IsHidden);
 
         // Optional: account deletion unlinks published articles itself, in its one transaction (SPEC §9.6).
         builder.HasOne(a => a.Author).WithMany().HasForeignKey(a => a.AuthorId).OnDelete(DeleteBehavior.Restrict);

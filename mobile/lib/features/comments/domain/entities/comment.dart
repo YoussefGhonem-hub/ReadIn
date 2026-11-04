@@ -190,8 +190,5 @@ enum CommentSort {
   final String wire;
 }
 
-/// Why a comment is reported (F22).
-enum ReportReason { spam, misinformation, harassment, copyright, other }
-
 /// What a moderator does to a comment (F22 hooks in F11).
 enum ModerationAction { hide, unhide, delete }

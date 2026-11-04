@@ -139,28 +139,3 @@ abstract class MentionCandidateModel with _$MentionCandidateModel {
   Author toEntity() =>
       Author(id: id, displayName: displayName, username: username, avatarUrl: avatarUrl, isVerified: isVerified);
 }
-
-/// `POST /reports` body.
-@freezed
-abstract class ReportRequest with _$ReportRequest {
-  const factory ReportRequest({
-    required String targetType,
-    required String targetId,
-    required String reason,
-    String? details,
-  }) = _ReportRequest;
-
-  factory ReportRequest.fromJson(Map<String, dynamic> json) => _$ReportRequestFromJson(json);
-}
-
-/// `POST /moderation/actions` body.
-@freezed
-abstract class ModerationActionRequest with _$ModerationActionRequest {
-  const factory ModerationActionRequest({
-    required String action,
-    required String targetType,
-    required String targetId,
-  }) = _ModerationActionRequest;
-
-  factory ModerationActionRequest.fromJson(Map<String, dynamic> json) => _$ModerationActionRequestFromJson(json);
-}

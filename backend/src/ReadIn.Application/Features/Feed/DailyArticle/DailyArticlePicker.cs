@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.LearningPaths;
+using ReadIn.Application.Features.Articles;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Reading;
 
@@ -93,7 +94,7 @@ public sealed class DailyArticlePicker(IAppDbContext db)
         var completed = db.ReadingProgress.Where(r => r.UserId == userId && r.CompletedAt != null).Select(r => r.ArticleId);
 
         // A writer never gets their own article as Today's article.
-        var unread = Published().Where(a => a.AuthorId != userId && !completed.Contains(a.Id));
+        var unread = Readable().Where(a => a.AuthorId != userId && !completed.Contains(a.Id));
         var hasInterests = fieldIds.Count + topicIds.Count > 0;
 
         var inLanguage = unread.Where(a => a.Translations.Any(t => t.Language == language));
@@ -136,7 +137,7 @@ public sealed class DailyArticlePicker(IAppDbContext db)
     /// <summary>Guests get a stable daily rotation over the best published articles.</summary>
     public async Task<Guid?> PickForGuestAsync(DateTime utcNow, CancellationToken cancellationToken)
     {
-        var top = await TopAsync(Published(), cancellationToken);
+        var top = await TopAsync(Readable(), cancellationToken);
         if (top.Count == 0) return null;
 
         var dayNumber = DateOnly.FromDateTime(utcNow).DayNumber;
@@ -195,8 +196,8 @@ public sealed class DailyArticlePicker(IAppDbContext db)
             .Select(p => (Guid?)p.ArticleId)
             .FirstOrDefaultAsync(cancellationToken);
 
-    private IQueryable<Article> Published() => db.Articles.AsNoTracking()
-        .Where(a => a.Status == ArticleStatus.Published && a.Field.IsEnabled);
+    /// <summary>What readers can open (hidden articles never become anyone's pick, SPEC F22).</summary>
+    private IQueryable<Article> Readable() => db.Articles.AsNoTracking().Visible();
 }
 
 /// <param name="ExcludedFieldId">The field of the last two days' picks when both were the same field.</param>

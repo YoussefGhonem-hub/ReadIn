@@ -196,7 +196,8 @@ internal sealed class SearchTagsQueryHandler(IAppDbContext db) : IQueryHandler<S
         var tags = db.Tags.AsNoTracking();
         if (text.Length > 0) tags = tags.Where(t => t.Name.StartsWith(text) || (slug.Length > 0 && t.Slug.StartsWith(slug)));
 
-        var published = db.Articles.Where(a => a.Status == ArticleStatus.Published);
+        // Hidden articles (F22) count for nothing, like everywhere readers look.
+        var published = db.Articles.Visible();
         var found = await tags
             .Select(t => new { t.Slug, t.Name, Count = published.Count(a => a.Tags.Any(x => x.TagId == t.Id)) })
             .OrderByDescending(t => t.Count).ThenBy(t => t.Name)

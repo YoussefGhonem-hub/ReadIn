@@ -7,6 +7,7 @@ import 'package:readin/features/comments/data/datasources/comments_api.dart';
 import 'package:readin/features/comments/data/models/comment_models.dart';
 import 'package:readin/features/comments/data/repositories/comments_repository_impl.dart';
 import 'package:readin/features/comments/domain/entities/comment.dart';
+import 'package:readin/features/moderation/data/models/moderation_models.dart';
 
 import '../../helpers/fake_auth.dart';
 
@@ -46,7 +47,6 @@ void main() {
 
     setUpAll(() {
       registerFallbackValue(const CommentBodyRequest(body: ''));
-      registerFallbackValue(const ReportRequest(targetType: '', targetId: '', reason: ''));
       registerFallbackValue(const ModerationActionRequest(action: '', targetType: '', targetId: ''));
     });
 
@@ -120,15 +120,11 @@ void main() {
       expect((await repository.setPinned('c1', pinned: false)).valueOrNull?.isPinned, isFalse);
     });
 
-    test('reports and moderator actions target comments', () async {
-      when(() => api.report(any())).thenAnswer((_) async {});
+    test('moderator actions target comments', () async {
       when(() => api.moderate(any())).thenAnswer((_) async {});
 
-      await repository.reportComment('c1', ReportReason.misinformation, details: 'مصدر غلط');
       await repository.moderateComment('c1', ModerationAction.unhide);
 
-      verify(() => api.report(const ReportRequest(targetType: 'comment', targetId: 'c1', reason: 'misinformation', details: 'مصدر غلط')))
-          .called(1);
       verify(() => api.moderate(const ModerationActionRequest(action: 'unhide', targetType: 'comment', targetId: 'c1'))).called(1);
     });
 
@@ -155,12 +151,10 @@ void main() {
       when(() => api.postComment(any(), any())).thenThrow(problem(409, 'comment.duplicate'));
       when(() => api.postReply(any(), any())).thenThrow(problem(429, 'comment.article_limit'));
       when(() => api.deleteComment(any())).thenThrow(problem(403, 'comment.not_owner'));
-      when(() => api.report(any())).thenThrow(problem(400, 'report.own_content'));
 
       expect((await repository.postComment('a-1', 'x')).failureOrNull, const Failure(FailureCodes.commentDuplicate, statusCode: 409));
       expect((await repository.postReply('c1', 'x')).failureOrNull?.code, FailureCodes.commentArticleLimit);
       expect((await repository.deleteComment('c1')).failureOrNull?.code, FailureCodes.commentNotOwner);
-      expect((await repository.reportComment('c1', ReportReason.spam)).failureOrNull?.code, FailureCodes.reportOwnContent);
     });
   });
 
@@ -210,7 +204,7 @@ void main() {
       respond = (options) => switch ((options.method, options.uri.path)) {
             (_, final p) when p.endsWith('/like') => {'likeCount': 1, 'liked': true},
             ('DELETE', final p) when p.endsWith('/c1') => (204, null),
-            (_, final p) when p.endsWith('/reports') || p.endsWith('/moderation/actions') => (204, null),
+            (_, final p) when p.endsWith('/moderation/actions') => (204, null),
             _ => commentJson('c1'),
           };
 
@@ -222,7 +216,6 @@ void main() {
       await repository.setLiked('c1', liked: false);
       await repository.setPinned('c1', pinned: true);
       await repository.setPinned('c1', pinned: false);
-      final reported = await repository.reportComment('c1', ReportReason.spam);
       final moderated = await repository.moderateComment('c1', ModerationAction.hide);
 
       expect([for (var i = 0; i < requests.length; i++) call(i)], [
@@ -234,14 +227,11 @@ void main() {
         'DELETE /comments/c1/like',
         'POST /comments/c1/pin',
         'DELETE /comments/c1/pin',
-        'POST /reports',
         'POST /moderation/actions',
       ]);
       expect(requests[0].data, {'body': 'سلام'});
       expect(requests[2].data, {'body': 'تعديل'});
-      expect(requests[8].data, {'targetType': 'comment', 'targetId': 'c1', 'reason': 'spam'}, reason: 'no details: left out');
-      expect(requests[9].data, {'action': 'hide', 'targetType': 'comment', 'targetId': 'c1'});
-      expect(reported.isOk, isTrue);
+      expect(requests[8].data, {'action': 'hide', 'targetType': 'comment', 'targetId': 'c1'}, reason: 'no note: left out');
       expect(moderated.isOk, isTrue);
     });
   });

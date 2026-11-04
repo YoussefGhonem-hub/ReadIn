@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Engagement;
-using ReadIn.Domain.Moderation;
 using ReadIn.Domain.Users;
 
 namespace ReadIn.Infrastructure.Persistence.Configurations;
@@ -61,24 +60,5 @@ internal sealed class CommentLikeConfiguration : IEntityTypeConfiguration<Commen
         builder.HasIndex(l => l.UserId);
         builder.HasOne<User>().WithMany().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne<Comment>().WithMany().HasForeignKey(l => l.CommentId).OnDelete(DeleteBehavior.Cascade);
-    }
-}
-
-internal sealed class ReportConfiguration : IEntityTypeConfiguration<Report>
-{
-    public void Configure(EntityTypeBuilder<Report> builder)
-    {
-        builder.ToTable("Reports");
-        builder.HasKey(r => r.Id);
-        builder.Property(r => r.TargetType).HasConversion<string>().HasMaxLength(20);
-        builder.Property(r => r.Reason).HasConversion<string>().HasMaxLength(20);
-        builder.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
-        builder.Property(r => r.Details).HasMaxLength(Report.MaxDetailsLength);
-
-        // One report per user and target; reporting again changes nothing.
-        builder.HasIndex(r => new { r.ReporterId, r.TargetType, r.TargetId }).IsUnique();
-        // The F22 queue: open reports, grouped by target.
-        builder.HasIndex(r => new { r.Status, r.TargetType, r.TargetId });
-        builder.HasOne<User>().WithMany().HasForeignKey(r => r.ReporterId).OnDelete(DeleteBehavior.Cascade);
     }
 }

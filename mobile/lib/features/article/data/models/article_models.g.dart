@@ -156,6 +156,20 @@ Map<String, dynamic> _$MyProgressModelToJson(_MyProgressModel instance) =>
       'completedAt': ?instance.completedAt?.toIso8601String(),
     };
 
+_ArticleModerationModel _$ArticleModerationModelFromJson(
+  Map<String, dynamic> json,
+) => _ArticleModerationModel(
+  hiddenAt: DateTime.parse(json['hiddenAt'] as String),
+  note: json['note'] as String?,
+);
+
+Map<String, dynamic> _$ArticleModerationModelToJson(
+  _ArticleModerationModel instance,
+) => <String, dynamic>{
+  'hiddenAt': instance.hiddenAt.toIso8601String(),
+  'note': ?instance.note,
+};
+
 _ArticleDetailsModel _$ArticleDetailsModelFromJson(
   Map<String, dynamic> json,
 ) => _ArticleDetailsModel(
@@ -215,6 +229,11 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(
   myProgress: json['myProgress'] == null
       ? null
       : MyProgressModel.fromJson(json['myProgress'] as Map<String, dynamic>),
+  moderation: json['moderation'] == null
+      ? null
+      : ArticleModerationModel.fromJson(
+          json['moderation'] as Map<String, dynamic>,
+        ),
 );
 
 Map<String, dynamic> _$ArticleDetailsModelToJson(
@@ -249,4 +268,5 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'isFollowingAuthor': instance.isFollowingAuthor,
   'collectionIds': instance.collectionIds,
   'myProgress': ?instance.myProgress?.toJson(),
+  'moderation': ?instance.moderation?.toJson(),
 };

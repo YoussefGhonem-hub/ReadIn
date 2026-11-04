@@ -2,7 +2,9 @@ import { HttpClient, HttpContext } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { TEST_API, settle, setupAuthTesting, testSession, tokenTag } from '../../../testing/auth-testing';
+import { Router } from '@angular/router';
 import { ApiError, WITH_SESSION } from '../api/api.config';
+import { AuthFlowState } from '../auth/auth-flow';
 import { isSessionCall } from './auth.interceptor';
 import { HydrationWindow } from './hydration-window';
 
@@ -170,6 +172,44 @@ describe('authInterceptor (SPEC §9.3)', () => {
     expect(tokenTag(personal.request.headers.get('Authorization'))).toBe('t1');
     personal.flush({});
     await Promise.all([feed, saved]);
+  });
+
+  it('a call answered 403 user.suspended ends the session and opens Sign in with the end of the suspension (F22)', async () => {
+    const { client, http, session } = await signedIn();
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    vi.spyOn(router, 'url', 'get').mockReturnValue('/en/a/clean-architecture');
+    const suspended = { code: 'user.suspended', status: 403, title: 'This account is suspended.', suspendedUntil: '2026-11-10T14:30:00Z' };
+
+    const first = firstValueFrom(client.put(`${TEST_API}/articles/a1/reaction`, { type: 'love' }));
+    const second = firstValueFrom(client.get(`${TEST_API}/me/saved`));
+    await settle();
+    http.expectOne(`${TEST_API}/articles/a1/reaction`).flush(suspended, { status: 403, statusText: 'Forbidden' });
+    http.expectOne(`${TEST_API}/me/saved`).flush(suspended, { status: 403, statusText: 'Forbidden' });
+    await expect(first).rejects.toMatchObject({ code: 'user.suspended' });
+    await expect(second).rejects.toMatchObject({ code: 'user.suspended' });
+
+    expect(session.isGuest()).toBe(true);
+    expect(TestBed.inject(AuthFlowState).suspension()).toEqual({ suspendedUntil: '2026-11-10T14:30:00Z' });
+    // Once, even though two calls bounced.
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith(['/auth/sign-in'], { queryParams: { returnUrl: '/en/a/clean-architecture' } });
+    http.verify();
+  });
+
+  it('a refresh refused with user.suspended ends the session the same way (F22)', async () => {
+    const { client, http, session } = await signedIn();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const done = firstValueFrom(client.get(`${TEST_API}/me`));
+    await settle();
+    http.expectOne(`${TEST_API}/me`).flush({}, unauthorized);
+    await settle(10);
+    http.expectOne(`${TEST_API}/auth/refresh`).flush({ code: 'user.suspended', suspendedUntil: null }, { status: 403, statusText: 'Forbidden' });
+    await expect(done).rejects.toBeInstanceOf(ApiError);
+    expect(session.isGuest()).toBe(true);
+    expect(TestBed.inject(AuthFlowState).suspension()).toEqual({ suspendedUntil: null });
+    expect(navigate).toHaveBeenCalledTimes(1);
+    http.verify();
   });
 
   it('classifies session calls', () => {

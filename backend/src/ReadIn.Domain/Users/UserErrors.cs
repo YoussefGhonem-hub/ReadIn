@@ -15,6 +15,9 @@ public static class UserErrors
     /// <summary>Apple's token service didn't answer (or isn't configured), so nothing was deleted (SPEC F01).</summary>
     public static readonly Error DeletionUnavailable = Error.Unavailable(
         "account.deletion_unavailable", "We couldn't finish deleting your account, so nothing was deleted. Try again in a few minutes.");
+    /// <summary><see cref="Suspended"/> with when it ends (SPEC F22): <c>suspendedUntil</c>, ISO UTC or null for permanent.</summary>
+    public static Error SuspendedUntil(DateTime? until) =>
+        Suspended with { Extensions = new Dictionary<string, object?> { ["suspendedUntil"] = until } };
 }
 
 /// <summary>The public profile and editing it (SPEC F14, F18).</summary>

@@ -253,7 +253,9 @@ public sealed class CommentsTests(ApiFactory api)
         (await reporter.Client.PostAsJsonAsync("/api/v1/reports", Report(), Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         (await reporter.Client.PostAsJsonAsync("/api/v1/reports", Report(), Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         (await CodeAsync(await author.Client.PostAsJsonAsync("/api/v1/reports", Report(), Ct))).Should().Be("report.own_content");
-        (await CodeAsync(await reporter.Client.PostAsJsonAsync("/api/v1/reports", Report(type: "article"), Ct))).Should().Be("report.target_not_supported");
+        (await CodeAsync(await reporter.Client.PostAsJsonAsync("/api/v1/reports", Report(type: "article"), Ct)))
+            .Should().Be("report.target_not_found", "the id is a comment's, not an article's");
+        (await reporter.Client.PostAsJsonAsync("/api/v1/reports", Report(type: "photo"), Ct)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await reporter.Client.PostAsJsonAsync("/api/v1/reports", Report(reason: "rude"), Ct)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         using var scope = api.Services.CreateScope();

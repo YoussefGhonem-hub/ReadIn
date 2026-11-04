@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Features.Articles;
 using ReadIn.Domain.Articles;
 
 namespace ReadIn.Application.Features.Realtime.EventHandlers;
@@ -16,7 +17,8 @@ internal sealed class ArticlePublishedLiveFeedEventHandler(IAppDbContext db, IRe
     {
         // The for-you feed's filter (GetForYouFeedQueryHandler), served by the (Status, PublishedAt DESC) index.
         var latest = await db.Articles
-            .Where(a => a.Status == ArticleStatus.Published && a.PublishedAt != null && a.Field.IsEnabled)
+            .Visible()
+            .Where(a => a.PublishedAt != null)
             .MaxAsync(a => a.PublishedAt, cancellationToken);
 
         if (latest is { } publishedAt) await realtime.PublishFeedAsync(publishedAt, cancellationToken);

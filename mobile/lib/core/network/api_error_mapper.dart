@@ -33,10 +33,19 @@ abstract final class ApiErrorMapper {
           if (value is List) errors['$key'] = value.map((v) => '$v').toList();
         });
       }
-      return Failure(code, statusCode: status, message: body['title'] as String?, fieldErrors: errors);
+      return Failure(
+        code,
+        statusCode: status,
+        message: body['title'] as String?,
+        fieldErrors: errors,
+        suspendedUntil: code == FailureCodes.userSuspended ? _date(body['suspendedUntil']) : null,
+      );
     }
     return Failure(_codeForStatus(status), statusCode: status);
   }
+
+  /// The `suspendedUntil` extension of `user.suspended` (F22): ISO 8601 UTC, or null for a permanent suspension.
+  static DateTime? _date(Object? value) => value is String ? DateTime.tryParse(value) : null;
 
   static String _codeForStatus(int? status) => switch (status) {
         400 => FailureCodes.validationFailed,

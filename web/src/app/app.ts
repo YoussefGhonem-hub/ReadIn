@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, Type, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Type, ViewContainerRef, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
+import { ModerationNotices } from './core/moderation/moderation-notices';
 import { ThemeService } from './core/theme/theme.service';
 import { TermSheetService } from './shared/rdoc/rdoc-context';
 import { SignInPrompt } from './shared/ui/sign-in-prompt';
@@ -17,11 +18,14 @@ import { ToastHost } from './shared/ui/toast/toast-host';
     @if (termSheet(); as sheet) {
       <ng-container *ngComponentOutlet="sheet" />
     }
+    <!-- Moderation notices (F22): their dialog's code loads only when there are some -->
+    <ng-container #notices />
   `,
 })
 export class App {
   /** The glossary sheet (F21): its own chunk, loaded on the first tapped term (a `@defer` block would add its runtime to the initial bundle). */
   protected readonly termSheet = signal<Type<unknown> | null>(null);
+  private readonly noticeHost = viewChild.required('notices', { read: ViewContainerRef });
 
   constructor() {
     // Resolve the theme from the cookie up front so SSR renders <html data-theme>.
@@ -36,6 +40,16 @@ export class App {
         ({ TermSheet }) => this.termSheet.set(TermSheet),
         () => (loading = false), // offline: the next tap tries again
       );
+    });
+
+    // The notice dialog is created once its lazy chunk has loaded (ModerationNotices loads it only when there are some).
+    const notices = inject(ModerationNotices);
+    effect(() => {
+      const dialog = notices.dialog();
+      const host = this.noticeHost();
+      untracked(() => {
+        if (dialog && host.length === 0) host.createComponent(dialog);
+      });
     });
   }
 }

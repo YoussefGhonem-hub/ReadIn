@@ -283,6 +283,11 @@ export interface ArticleDetailsDto extends ArticleCardDto {
   collectionIds: string[];
   /** The viewer's reading progress, to resume where they left off (F04); null for guests and unopened articles. */
   myProgress: MyProgressDto | null;
+  /**
+   * Non-null only while the article is hidden by moderators (F22): then only its author and moderators get it at all,
+   * and the reader shows a "hidden" banner. Missing from an API older than F22.
+   */
+  moderation?: ArticleModerationDto | null;
 }
 
 // ── Reactions (F10) ─────────────────────────────────────────
@@ -422,27 +427,158 @@ export interface MentionCandidateDto {
   isVerified: boolean;
 }
 
-// ── Reports and moderation (F22 hooks in F11) ───────────────
+// ── Reports and moderation (F22) ────────────────────────────
 
 export type ReportReason = 'spam' | 'misinformation' | 'harassment' | 'copyright' | 'other';
 export const REPORT_REASONS: readonly ReportReason[] = ['spam', 'misinformation', 'harassment', 'copyright', 'other'];
 
-/** `POST /reports` (only comments until F22). Reporting again is a no-op. */
+export type ModerationTargetType = 'article' | 'comment' | 'user';
+export const MODERATION_TARGET_TYPES: readonly ModerationTargetType[] = ['article', 'comment', 'user'];
+
+export type ReportStatus = 'open' | 'resolved' | 'dismissed';
+export const REPORT_STATUSES: readonly ReportStatus[] = ['open', 'resolved', 'dismissed'];
+
+/**
+ * `POST /reports` → 204 (permission `reports.create`). Not your own content or yourself (`report.own_content`);
+ * reporting the same target again is a no-op 204.
+ */
 export interface ReportRequest {
-  targetType: 'comment';
+  targetType: ModerationTargetType;
   targetId: string;
   reason: ReportReason;
   /** ≤ 500 characters. */
   details?: string | null;
 }
 
-export type ModerationAction = 'hide' | 'unhide' | 'delete';
+export type ModerationAction = 'hide' | 'unhide' | 'delete' | 'warn' | 'suspend' | 'unsuspend' | 'dismiss';
 
-/** `POST /moderation/actions` (permission `moderation.manage`). */
+/**
+ * `POST /moderation/actions` → 204 (permission `moderation.manage`; suspend / unsuspend also `users.suspend`).
+ * Allowed: comment hide/unhide/delete/dismiss · article hide/unhide/dismiss · user warn/suspend/unsuspend/dismiss.
+ */
 export interface ModerationActionRequest {
   action: ModerationAction;
-  targetType: 'comment';
+  targetType: ModerationTargetType;
   targetId: string;
+  /** ≤ 500; required for warn and suspend (`moderation.note_required`). */
+  note?: string;
+  /** Suspend only: 1–365 days; null or left out = permanent (`moderation.duration_invalid`). */
+  durationDays?: number | null;
+  /** Also resolve these open reports (e.g. warning the author from an article's case). */
+  resolveReportsOf?: { targetType: ModerationTargetType; targetId: string };
+}
+
+/** `GET /moderation/summary`: targets with open reports (the nav badge). */
+export interface ModerationSummaryDto {
+  open: { article: number; comment: number; user: number; total: number };
+}
+
+/**
+ * What a case is about. article/comment: visible|hidden|deleted; user: active|suspended|deleted. The fields of the
+ * other target types are null (the API sends them as null rather than leaving them out).
+ */
+export interface ModerationTargetDto {
+  state: 'visible' | 'hidden' | 'deleted' | 'active' | 'suspended';
+  /** The article's or comment's author (null = deleted account); for a user target, the user. */
+  author: AuthorDto | null;
+  // article
+  title?: string | null;
+  slug?: string | null;
+  language?: string | null;
+  // comment
+  body?: string | null;
+  articleId?: string | null;
+  articleSlug?: string | null;
+  articleTitle?: string | null;
+  // user
+  /** When `state = suspended`; null = permanent. */
+  suspendedUntil?: string | null;
+  /** Warn actions on this user so far. */
+  warningCount?: number | null;
+}
+
+/** One target in the queue, with its reports in `status` grouped. */
+export interface ModerationQueueItemDto {
+  targetType: ModerationTargetType;
+  targetId: string;
+  /** The status the list is filtered on. */
+  status: ReportStatus;
+  /** Reports in this status. */
+  reportCount: number;
+  reasons: Partial<Record<ReportReason, number>>;
+  firstReportedAt: string;
+  lastReportedAt: string;
+  /** Resolved and dismissed lists. */
+  closedAt: string | null;
+  target: ModerationTargetDto;
+}
+
+export interface ModerationReportDto {
+  id: string;
+  /** Null: the reporter deleted their account. */
+  reporter: UserSummaryDto | null;
+  reason: ReportReason;
+  details: string | null;
+  status: ReportStatus;
+  createdAt: string;
+  closedAt: string | null;
+  closedBy: UserSummaryDto | null;
+}
+
+/** A row of the moderation log (SPEC §16 `ModerationActions`). */
+export type ModerationLogAction =
+  | 'comment.hide'
+  | 'comment.unhide'
+  | 'comment.delete'
+  | 'article.hide'
+  | 'article.unhide'
+  | 'user.warn'
+  | 'user.suspend'
+  | 'user.unsuspend'
+  | 'reports.dismiss';
+
+export interface ModerationActionDto {
+  id: string;
+  action: ModerationLogAction;
+  targetType: ModerationTargetType;
+  targetId: string;
+  /** Article title, the first 80 characters of a comment or @username, as it was at the time. */
+  targetLabel: string | null;
+  /** The affected user (the author, or the user target). */
+  targetUser: UserSummaryDto | null;
+  /** Null: the moderator's account was deleted. */
+  moderator: UserSummaryDto | null;
+  note: string | null;
+  /** `user.suspend`: when it ends (null = permanent). */
+  suspendedUntil: string | null;
+  reportsClosed: number;
+  createdAt: string;
+}
+
+/** `GET /moderation/reports/{targetType}/{targetId}`. */
+export interface ModerationCaseDto {
+  /** `status` is open while any report is open, else the latest closed status. */
+  item: ModerationQueueItemDto;
+  /** All statuses, newest first. */
+  reports: ModerationReportDto[];
+  /** Actions on the target and, for an article or comment, on its author; newest first. */
+  history: ModerationActionDto[];
+}
+
+/** A warning, or "your article was hidden", for the affected user to acknowledge. */
+export interface ModerationNoticeDto {
+  id: string;
+  kind: 'warning' | 'article_hidden';
+  note: string | null;
+  /** `article_hidden`. */
+  article: { id: string; slug: string; title: string } | null;
+  createdAt: string;
+}
+
+/** Set on a hidden article (only its author and moderators can open it). */
+export interface ArticleModerationDto {
+  hiddenAt: string;
+  note: string | null;
 }
 
 // ── Profile (F14) ───────────────────────────────────────────
@@ -962,4 +1098,6 @@ export interface ProblemDetails {
   code?: string;
   traceId?: string;
   errors?: Record<string, string[]>;
+  /** `user.suspended` (F22): when the suspension ends (ISO, UTC), or null when it is permanent. */
+  suspendedUntil?: string | null;
 }

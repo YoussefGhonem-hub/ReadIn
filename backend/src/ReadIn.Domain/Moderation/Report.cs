@@ -27,8 +27,8 @@ public enum ReportStatus
 }
 
 /// <summary>
-/// A user's report of content (SPEC F22). F11 files comment reports; the moderation queue that reviews and resolves them
-/// comes with F22. One report per user and target: reporting again is a no-op.
+/// A user's report of an article, a comment or a user (SPEC F22). One report per user and target: reporting again is a
+/// no-op. Moderators close it from the queue: resolved when they acted on the target, dismissed when they didn't.
 /// </summary>
 public sealed class Report
 {
@@ -44,7 +44,11 @@ public sealed class Report
     public string? Details { get; private set; }
     public ReportStatus Status { get; private set; }
     public DateTime CreatedAt { get; private set; }
+
+    /// <summary>When it was resolved or dismissed.</summary>
     public DateTime? ResolvedAt { get; private set; }
+
+    /// <summary>The moderator who resolved or dismissed it.</summary>
     public Guid? ResolvedById { get; private set; }
 
     public static Report File(ReportTargetType targetType, Guid targetId, Guid reporterId, ReportReason reason, string? details, DateTime now) =>
@@ -59,11 +63,16 @@ public sealed class Report
             CreatedAt = now,
         };
 
-    /// <summary>A moderator acted on the reported content, e.g. hid or deleted the comment.</summary>
-    public void Resolve(Guid moderatorId, DateTime now)
+    /// <summary>A moderator acted on the reported target, e.g. hid the comment or warned the user.</summary>
+    public void Resolve(Guid moderatorId, DateTime now) => Close(ReportStatus.Resolved, moderatorId, now);
+
+    /// <summary>A moderator closed the report without touching the target.</summary>
+    public void Dismiss(Guid moderatorId, DateTime now) => Close(ReportStatus.Dismissed, moderatorId, now);
+
+    private void Close(ReportStatus status, Guid moderatorId, DateTime now)
     {
         if (Status != ReportStatus.Open) return;
-        Status = ReportStatus.Resolved;
+        Status = status;
         ResolvedAt = now;
         ResolvedById = moderatorId;
     }
@@ -73,5 +82,4 @@ public static class ReportErrors
 {
     public static readonly Error TargetNotFound = Error.NotFound("report.target_not_found", "The reported content doesn't exist.");
     public static readonly Error OwnContent = Error.Validation("report.own_content", "You can't report your own content.");
-    public static readonly Error TargetNotSupported = Error.Validation("report.target_not_supported", "Only comments can be reported for now.");
 }

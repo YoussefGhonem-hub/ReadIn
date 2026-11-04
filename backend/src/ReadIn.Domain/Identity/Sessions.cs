@@ -140,8 +140,13 @@ public static class AuditActions
     public const string AdminPasswordReset = "admin.password_reset";
     public const string AccountDeleted = "account.deleted";
 
-    // Moderator actions on comments (SPEC F11, F22).
+    // Moderator actions on a user's content or account (SPEC F11, F22); the moderation log is ModerationActions.
     public const string CommentHidden = "moderation.comment_hidden";
     public const string CommentUnhidden = "moderation.comment_unhidden";
     public const string CommentDeleted = "moderation.comment_deleted";
+    public const string ArticleHidden = "moderation.article_hidden";
+    public const string ArticleUnhidden = "moderation.article_unhidden";
+    public const string UserWarned = "moderation.user_warned";
+    public const string UserSuspended = "moderation.user_suspended";
+    public const string UserUnsuspended = "moderation.user_unsuspended";
 }

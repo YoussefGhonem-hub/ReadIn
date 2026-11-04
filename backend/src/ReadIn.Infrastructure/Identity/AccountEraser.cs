@@ -85,6 +85,17 @@ internal sealed partial class AccountEraser(
             await db.Reports
                 .Where(r => r.ResolvedById == userId)
                 .ExecuteUpdateAsync(s => s.SetProperty(r => r.ResolvedById, (Guid?)null), ct);
+            // F22: articles it hid stay hidden, and the moderation log keeps every entry it made or that names it, without
+            // the link to the account (ModerationActions has no foreign keys, so nothing cascades).
+            await db.Articles.IgnoreQueryFilters()
+                .Where(a => a.HiddenById == userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.HiddenById, (Guid?)null), ct);
+            await db.ModerationActions
+                .Where(m => m.ModeratorId == userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(m => m.ModeratorId, (Guid?)null), ct);
+            await db.ModerationActions
+                .Where(m => m.TargetUserId == userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(m => m.TargetUserId, (Guid?)null), ct);
             await ClearAuditStampsAsync(userId, ct);
 
             // The account's deleted comments (by it or a moderator) stay only as the placeholder that keeps their replies

@@ -131,6 +131,27 @@ import '../../features/media/domain/repositories/media_repository.dart'
 import '../../features/media/domain/usecases/media_usecases.dart' as _i504;
 import '../../features/media/presentation/cubit/attachments_cubit.dart'
     as _i571;
+import '../../features/moderation/data/datasources/moderation_api.dart'
+    as _i320;
+import '../../features/moderation/data/repositories/moderation_repository_impl.dart'
+    as _i378;
+import '../../features/moderation/domain/entities/moderation.dart' as _i662;
+import '../../features/moderation/domain/repositories/moderation_repository.dart'
+    as _i106;
+import '../../features/moderation/domain/usecases/moderation_usecases.dart'
+    as _i130;
+import '../../features/moderation/presentation/cubit/moderation_action_cubit.dart'
+    as _i100;
+import '../../features/moderation/presentation/cubit/moderation_case_cubit.dart'
+    as _i151;
+import '../../features/moderation/presentation/cubit/moderation_list_cubit.dart'
+    as _i437;
+import '../../features/moderation/presentation/cubit/moderation_notices_cubit.dart'
+    as _i564;
+import '../../features/moderation/presentation/cubit/moderation_summary_cubit.dart'
+    as _i789;
+import '../../features/moderation/presentation/cubit/report_cubit.dart'
+    as _i956;
 import '../../features/notifications/presentation/cubit/unread_badge_cubit.dart'
     as _i1054;
 import '../../features/onboarding/data/datasources/interests_api.dart' as _i227;
@@ -356,6 +377,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i931.FeedApi>(() => _i931.FeedApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i757.MediaApi>(() => _i757.MediaApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i320.ModerationApi>(
+      () => _i320.ModerationApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i227.InterestsApi>(
       () => _i227.InterestsApi(gh<_i361.Dio>()),
     );
@@ -384,6 +408,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1040.PushService>(
       () =>
           _i1040.PushService(gh<_i709.PushPlatform>(), gh<_i455.DevicesApi>()),
+    );
+    gh.lazySingleton<_i106.ModerationRepository>(
+      () => _i378.ModerationRepositoryImpl(gh<_i320.ModerationApi>()),
     );
     gh.lazySingleton<_i755.PathsRepository>(
       () => _i904.PathsRepositoryImpl(gh<_i88.PathsApi>()),
@@ -485,6 +512,30 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i878.TimeZoneService>(),
       ),
     );
+    gh.factory<_i130.SubmitReport>(
+      () => _i130.SubmitReport(gh<_i106.ModerationRepository>()),
+    );
+    gh.factory<_i130.GetModerationSummary>(
+      () => _i130.GetModerationSummary(gh<_i106.ModerationRepository>()),
+    );
+    gh.factory<_i130.GetModerationQueue>(
+      () => _i130.GetModerationQueue(gh<_i106.ModerationRepository>()),
+    );
+    gh.factory<_i130.GetModerationCase>(
+      () => _i130.GetModerationCase(gh<_i106.ModerationRepository>()),
+    );
+    gh.factory<_i130.TakeModerationAction>(
+      () => _i130.TakeModerationAction(gh<_i106.ModerationRepository>()),
+    );
+    gh.factory<_i130.GetModerationLog>(
+      () => _i130.GetModerationLog(gh<_i106.ModerationRepository>()),
+    );
+    gh.factory<_i130.GetModerationNotices>(
+      () => _i130.GetModerationNotices(gh<_i106.ModerationRepository>()),
+    );
+    gh.factory<_i130.AcknowledgeModerationNotice>(
+      () => _i130.AcknowledgeModerationNotice(gh<_i106.ModerationRepository>()),
+    );
     gh.factory<_i86.GetGlossaryTerm>(
       () => _i86.GetGlossaryTerm(gh<_i268.GlossaryRepository>()),
     );
@@ -531,11 +582,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i788.SuggestMentions>(
       () => _i788.SuggestMentions(gh<_i670.CommentsRepository>()),
     );
-    gh.factory<_i788.ReportComment>(
-      () => _i788.ReportComment(gh<_i670.CommentsRepository>()),
-    );
     gh.factory<_i788.ModerateComment>(
       () => _i788.ModerateComment(gh<_i670.CommentsRepository>()),
+    );
+    gh.factoryParam<_i437.ModerationQueueCubit, _i662.ReportStatus, dynamic>(
+      (status, _) =>
+          _i437.ModerationQueueCubit(gh<_i130.GetModerationQueue>(), status),
+    );
+    gh.factory<_i437.ModerationLogCubit>(
+      () => _i437.ModerationLogCubit(gh<_i130.GetModerationLog>()),
     );
     gh.factory<_i251.GetTodayArticle>(
       () => _i251.GetTodayArticle(gh<_i954.FeedRepository>()),
@@ -643,6 +698,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i924.SetPathEnrollment>(
       () => _i924.SetPathEnrollment(gh<_i755.PathsRepository>()),
     );
+    gh.factory<_i921.CommentsCubit>(
+      () => _i921.CommentsCubit(
+        gh<_i788.GetComments>(),
+        gh<_i788.PostComment>(),
+        gh<_i788.EditComment>(),
+        gh<_i788.DeleteComment>(),
+        gh<_i788.SetCommentLiked>(),
+        gh<_i788.SetCommentPinned>(),
+        gh<_i788.ModerateComment>(),
+        gh<_i854.RealtimeService>(),
+      ),
+    );
     gh.factory<_i360.MentionSuggestionsCubit>(
       () => _i360.MentionSuggestionsCubit(gh<_i788.SuggestMentions>()),
     );
@@ -686,6 +753,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i279.SyncPreferences>(
       () => _i279.SyncPreferences(gh<_i674.SettingsRepository>()),
     );
+    gh.lazySingleton<_i789.ModerationSummaryCubit>(
+      () => _i789.ModerationSummaryCubit(gh<_i130.GetModerationSummary>()),
+    );
     gh.factory<_i591.UpdateProfile>(
       () => _i591.UpdateProfile(
         gh<_i894.ProfileRepository>(),
@@ -720,6 +790,12 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i745.PathDetailsCubit(
         gh<_i924.GetPath>(),
         gh<_i924.SetPathEnrollment>(),
+      ),
+    );
+    gh.factory<_i100.ModerationActionCubit>(
+      () => _i100.ModerationActionCubit(
+        gh<_i130.TakeModerationAction>(),
+        gh<_i789.ModerationSummaryCubit>(),
       ),
     );
     gh.factory<_i646.FollowingFeedCubit>(
@@ -810,6 +886,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i924.SetPathEnrollment>(),
       ),
     );
+    gh.factory<_i151.ModerationCaseCubit>(
+      () => _i151.ModerationCaseCubit(gh<_i130.GetModerationCase>()),
+    );
     gh.factory<_i245.CompleteProfileCubit>(
       () => _i245.CompleteProfileCubit(
         gh<_i46.CompleteProfile>(),
@@ -844,21 +923,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i226.EngagementCubit>(
       () => _i226.EngagementCubit(gh<_i27.SetReaction>(), gh<_i724.SetSaved>()),
     );
+    gh.factory<_i956.ReportCubit>(
+      () => _i956.ReportCubit(gh<_i130.SubmitReport>()),
+    );
     gh.factory<_i655.TagSuggestionsCubit>(
       () => _i655.TagSuggestionsCubit(gh<_i866.SuggestTags>()),
-    );
-    gh.factory<_i921.CommentsCubit>(
-      () => _i921.CommentsCubit(
-        gh<_i788.GetComments>(),
-        gh<_i788.PostComment>(),
-        gh<_i788.EditComment>(),
-        gh<_i788.DeleteComment>(),
-        gh<_i788.SetCommentLiked>(),
-        gh<_i788.SetCommentPinned>(),
-        gh<_i788.ReportComment>(),
-        gh<_i788.ModerateComment>(),
-        gh<_i854.RealtimeService>(),
-      ),
     );
     gh.factory<_i571.AttachmentsCubit>(
       () => _i571.AttachmentsCubit(
@@ -1005,6 +1074,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i172.GetFields>(),
         gh<_i226.EngagementCubit>(),
         gh<_i272.CollectionsCubit>(),
+      ),
+    );
+    gh.lazySingleton<_i564.ModerationNoticesCubit>(
+      () => _i564.ModerationNoticesCubit(
+        gh<_i130.GetModerationNotices>(),
+        gh<_i130.AcknowledgeModerationNotice>(),
+        gh<_i371.SessionCubit>(),
       ),
     );
     gh.lazySingleton<_i884.StreakCubit>(
