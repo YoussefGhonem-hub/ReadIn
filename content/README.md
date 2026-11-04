@@ -24,11 +24,11 @@ Every article is published by the official **ReadIn** account with the "AI-assis
 | Status | What the importer does |
 |---|---|
 | `generated`, `failed` | Skipped |
-| `auto-checked` | Imported and submitted to the reviewer queue |
-| `approved`, `published` | Published. With `reviewStatus: pending` it also waits in the reviewer queue; the "Reviewed by" badge only appears once a human reviewer approves it, it is never faked. |
+| `auto-checked` | Imported as a draft of the official account, not published |
+| `approved`, `published` | Published with the "AI-assisted" label. There is no review ([ADR 0015](../docs/adr/0015-open-publishing-and-the-editor.md)): `reviewStatus`, `reviewer` and `reviewedAt` are ignored, and the validator rejects any claimed review. |
 
-`publishAt` in the future schedules the article (drip publishing, SPEC §19.4). Otherwise new articles get staggered
-publish dates over the last ~120 days, following the plan.
+`publishAt` in the past keeps that date, and one in the future publishes now: there is no scheduling (ADR 0015). Otherwise
+new articles get staggered publish dates over the last ~120 days, following the plan.
 
 ## Validate before committing
 

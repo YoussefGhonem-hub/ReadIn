@@ -22,7 +22,7 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 /// <item><c>cover.webp</c> goes through the image pipeline (400/800/1200 + BlurHash, ADR 0011).</item>
 /// <item>New articles get staggered publish dates over the last ~120 days (plan order, interleaved across learning
 /// paths), so the feed isn't 300 articles published in the same second.</item>
-/// <item><c>reviewStatus</c> and <c>reviewer</c> in meta.json are ignored: there is no review (ADR 0015).</item>
+/// <item><c>reviewStatus</c>, <c>reviewer</c> and <c>reviewedAt</c> in meta.json are ignored: there is no review (ADR 0015).</item>
 /// <item>An article of the official account whose folder was removed is archived.</item>
 /// </list>
 /// </summary>
@@ -61,7 +61,7 @@ internal sealed partial class ArticlesSeeder(
         {
             var meta = await content.ReadMetaAsync(folder, cancellationToken);
             slugs.Add(meta.Slug);
-            if (!meta.IsPublishable && !meta.IsReviewable) continue;
+            if (!meta.IsPublishable && !meta.IsDraft) continue;
 
             var checksum = FolderChecksum(folder);
             var entry = history.GetValueOrDefault(HistoryPrefix + meta.Slug);
@@ -144,7 +144,7 @@ internal sealed partial class ArticlesSeeder(
         if (meta.IsPublishable && !article.IsPublished)
         {
             // Staggered dates are in the past; a date in the future publishes now (there is no scheduling, ADR 0015).
-            var publishAt = meta.PublishAt ?? meta.ReviewedAt ?? schedule.GetValueOrDefault(meta.Slug, Now);
+            var publishAt = meta.PublishAt ?? schedule.GetValueOrDefault(meta.Slug, Now);
             var published = article.Publish(field, publishAt < Now ? publishAt : Now);
             if (published.IsFailure) return published.Error;
         }

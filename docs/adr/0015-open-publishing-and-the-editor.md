@@ -84,5 +84,7 @@ over the 30 best. `AutoCheckedAt` (content pipeline) is kept but no longer used 
   per-language revision rows. Only content re-imports created those rows, and git already versions that content.
 - Each autosave writes the whole document. Articles are small (≤ 2000 blocks, ≤ 500 000 characters per language), so
   this is simpler than diffs and keeps restore and conflict handling trivial.
-- The content pipeline's meta.json still has `reviewStatus`/`lastReviewedAt`. The importer ignores `reviewStatus` and
-  stores `lastReviewedAt` as `AutoCheckedAt` until ContentStudio drops them.
+- The content pipeline's 300 seeded meta.json files keep `"reviewStatus": "pending"`, because editing them would re-import
+  every article. The importer ignores it, and ContentStudio no longer asks for it: new files leave it out, and any
+  claimed review (another `reviewStatus`, a `reviewer`, a `reviewedAt`) fails validation. `lastReviewedAt` is the
+  generation date, stored as `AutoCheckedAt`.

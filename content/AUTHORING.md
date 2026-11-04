@@ -132,8 +132,9 @@ tags as inline code (`` `<bdi>` ``).
 - No invented statistics, benchmarks or quotes; a number appears only if a cited source has it. Original explanations,
   no text copied from the sources.
 - Claude / AI-tools articles match the current official docs; community tools are labeled "community, not official".
-- `meta.json`: `"status": "published"`, `"reviewStatus": "pending"`, `"isAiAssisted": true`, `lastReviewedAt` = the
-  generation date, no `reviewer` (a "Reviewed by" badge is never faked).
+- `meta.json`: `"status": "published"`, `"isAiAssisted": true`, `lastReviewedAt` = the generation date. There is no
+  review (ADR 0015): no `reviewStatus`, `reviewer` or `reviewedAt` (older files keep `"reviewStatus": "pending"`, which
+  is ignored).
 
 ## meta.json
 
@@ -143,7 +144,6 @@ tags as inline code (`` `<bdi>` ``).
   "field": "dotnet",
   "topic": "csharp",
   "status": "published",
-  "reviewStatus": "pending",
   "sourceLanguage": "en",
   "translations": {
     "en": { "title": "<titleEn from the plan>", "subtitle": "One line under the title" },

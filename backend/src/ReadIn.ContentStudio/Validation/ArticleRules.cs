@@ -81,9 +81,12 @@ public static partial class ArticleRules
             yield return (Severity.Error, "meta", $"Folder must be content/articles/{expectedFolder.Replace('\\', '/')}/.");
 
         if (m.Status != "published") yield return (Severity.Error, "meta", "status must be \"published\".");
-        if (m.ReviewStatus != "pending") yield return (Severity.Error, "trust", "reviewStatus must be \"pending\" (no human review yet).");
+        // There is no review (ADR 0015). Older files carry "reviewStatus": "pending", which the importer ignores; nothing may
+        // claim a review.
+        if (m.ReviewStatus is not null and not "pending")
+            yield return (Severity.Error, "trust", "There is no review (ADR 0015): leave reviewStatus out (older files may keep \"pending\").");
         if (m.Reviewer is not null || m.ReviewedAt is not null)
-            yield return (Severity.Error, "trust", "Seeded articles must not name a reviewer: a \"Reviewed by\" badge is never faked.");
+            yield return (Severity.Error, "trust", "There is no review (ADR 0015): an article never names a reviewer or a review date, it is never faked.");
         if (!m.IsAiAssisted) yield return (Severity.Error, "trust", "isAiAssisted must be true.");
         if (m.LastReviewedAt is null) yield return (Severity.Error, "trust", "lastReviewedAt (generation date) is required.");
         if (!Levels.Contains(m.Level)) yield return (Severity.Error, "meta", $"level must be beginner, intermediate or advanced.");

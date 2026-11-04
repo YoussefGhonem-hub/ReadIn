@@ -176,12 +176,21 @@ public sealed record ArticleMeta
     public string Level { get; init; } = "beginner";
     public List<string> Tags { get; init; } = [];
     public List<SourceEntry> Sources { get; init; } = [];
-    public string? Reviewer { get; init; }
-    public DateTime? ReviewedAt { get; init; }
+
+    /// <summary>A date in the past keeps that publish date; a future one publishes now (no scheduling, ADR 0015).</summary>
     public DateTime? PublishAt { get; init; }
 
-    /// <summary>Kept for the ContentStudio rules only; there is no review since ADR 0015, so the importer ignores it.</summary>
+    /// <summary>
+    /// <c>reviewStatus</c>, <c>reviewer</c> and <c>reviewedAt</c> are read only so the ContentStudio rules can reject a
+    /// claimed review: there is no review since ADR 0015, and the importer ignores them.
+    /// </summary>
     public string? ReviewStatus { get; init; }
+
+    /// <inheritdoc cref="ReviewStatus"/>
+    public string? Reviewer { get; init; }
+
+    /// <inheritdoc cref="ReviewStatus"/>
+    public DateTime? ReviewedAt { get; init; }
 
     public PathRef? LearningPath { get; init; }
 
@@ -191,7 +200,9 @@ public sealed record ArticleMeta
     public CodeMeta? Code { get; init; }
 
     public bool IsPublishable => Status is "approved" or "published";
-    public bool IsReviewable => Status is "auto-checked";
+
+    /// <summary>Imported as a draft of the official account, not published.</summary>
+    public bool IsDraft => Status is "auto-checked";
 }
 
 public sealed record TranslationMeta(string Title, string? Subtitle);

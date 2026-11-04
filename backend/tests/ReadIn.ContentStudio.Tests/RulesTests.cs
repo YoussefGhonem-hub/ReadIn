@@ -84,9 +84,25 @@ public sealed class RulesTests
 
         var trust = Messages(Article(En, En.Replace("Summary.", "ملخص.").Replace("Hook.", "مقدمة."), meta), "trust");
 
-        trust.Should().Contain(m => m.Contains("reviewStatus must be \"pending\""))
+        trust.Should().Contain(m => m.Contains("leave reviewStatus out"))
             .And.Contain(m => m.Contains("never faked"))
             .And.Contain(m => m.Contains("isAiAssisted"));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("pending")] // what the older files carry; the importer ignores it
+    public void ReviewStatus_can_be_left_out_since_there_is_no_review(string? reviewStatus)
+    {
+        var meta = new ArticleMeta
+        {
+            Slug = "sample", Field = "dotnet", Topic = "csharp", Status = "published", ReviewStatus = reviewStatus,
+            LastReviewedAt = new DateTime(2026, 11, 3, 0, 0, 0, DateTimeKind.Utc),
+        };
+
+        var trust = Messages(Article(En, En.Replace("Summary.", "ملخص.").Replace("Hook.", "مقدمة."), meta), "trust");
+
+        trust.Should().BeEmpty();
     }
 
     [Fact]
