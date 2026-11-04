@@ -61,7 +61,7 @@ validate.SetAction(async (parse, ct) =>
         foreach (var s in stats.Skipped) Console.WriteLine($"  - {s.Slug} {s.Block} ({s.Lang}): {s.Reason}");
     }
     if (request.Links)
-        Console.WriteLine($"Links: {stats.LinksChecked} checked ({stats.LinksFromCache} from cache), {stats.LinkFailures.Count} failed");
+        Console.WriteLine($"Links: {stats.LinksChecked} checked ({stats.LinksFromCache} from cache), {stats.LinkFailures.Count} failed, {stats.LinksRateLimited.Count} rate-limited (warnings)");
 
     var errors = findings.Count(f => f.Severity == Severity.Error);
     Console.WriteLine(errors == 0

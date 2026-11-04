@@ -12,6 +12,9 @@ public sealed class ValidationStats
     public int LinksFromCache { get; set; }
     public List<string> LinkFailures { get; } = [];
 
+    /// <summary>Links whose host answered 429 after the retries: warnings, not failures.</summary>
+    public List<string> LinksRateLimited { get; } = [];
+
     /// <summary>Words and reading time per article and language (the reader's formula, SPEC §13.5).</summary>
     public List<(string Slug, string Language, int Words, int Minutes)> Lengths { get; } = [];
 

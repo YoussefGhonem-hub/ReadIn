@@ -188,12 +188,23 @@ public sealed partial class ContentValidator(ContentRepository content, IRDocPro
 
         foreach (var (slug, url) in list)
         {
-            var r = results[url];
-            if (r.Ok) continue;
-            var why = r.Error ?? $"HTTP {r.Status}";
-            stats.LinkFailures.Add($"{slug}: {url} ({why})");
-            findings.Add(new(slug, Severity.Error, "links", $"{url} → {why}"));
+            if (LinkFinding(slug, url, results[url]) is not { } finding) continue;
+            if (finding.Severity == Severity.Error) stats.LinkFailures.Add($"{slug}: {url} ({results[url].Error ?? $"HTTP {results[url].Status}"})");
+            else stats.LinksRateLimited.Add($"{slug}: {url}");
+            findings.Add(finding);
         }
+    }
+
+    /// <summary>
+    /// A dead link is an error. A host that still answers 429 after the retries is a warning: it limits automated
+    /// requests, which doesn't mean the page is gone, and the link is checked again on the next run.
+    /// </summary>
+    internal static Finding? LinkFinding(string slug, string url, LinkResult r)
+    {
+        if (r.Ok) return null;
+        if (r.RateLimited)
+            return new(slug, Severity.Warning, "links", $"{url} → HTTP 429 (the site limits automated requests; not verified this run)");
+        return new(slug, Severity.Error, "links", $"{url} → {r.Error ?? $"HTTP {r.Status}"}");
     }
 
     // ── Plan (content/taxonomy.yaml) ────────────────────────────
