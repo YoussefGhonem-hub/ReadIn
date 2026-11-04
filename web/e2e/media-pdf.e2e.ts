@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { API, HIDE_APP_CHROME, VARIANTS, fixture, imagesLoaded, multipartField, onApi, parkMouse, reply, signInAsWriter, useVariant } from './support/mock-api';
 import { editorReady, publish, trackSavedDocument, typeInEditor } from './support/editor';
@@ -21,7 +22,11 @@ for (const variant of VARIANTS) {
 
   test(`post with a PDF → processing → page carousel → viewer (no download) — ${lang}/${theme}`, async ({ page, context, baseURL, request }) => {
     await useVariant(context, baseURL!, variant);
-    const doc = (query: string) => fixture<any>(request, `/__mock/asset/document?seed=k8s&pages=${PAGE_COUNT}&title=Kubernetes%20basics&${query}`);
+    // The same pictures in every run, but an asset id of its own: the mock API keeps the latest state of each asset, and a
+    // run in parallel registering "processing" must not turn this run's ready asset back (attachments.asset_not_ready).
+    const assetId = `asset-k8s-${randomUUID()}`;
+    const doc = (query: string) =>
+      fixture<any>(request, `/__mock/asset/document?seed=k8s&id=${assetId}&pages=${PAGE_COUNT}&title=Kubernetes%20basics&${query}`);
     const accepted = await doc('ready=0&status=processing');
     const pollStates = [await doc('ready=3&status=processing'), await doc('ready=12&status=ready')];
 

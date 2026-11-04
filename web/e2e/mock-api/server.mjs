@@ -180,10 +180,10 @@ function imageAsset(seed, width = 1600, height = 1200) {
   };
 }
 
-function documentAsset(seed, { pageCount = 12, pagesReady = pageCount, status = 'ready', title = 'ASP.NET Core cheat sheet', allowDownload = false } = {}) {
+function documentAsset(seed, { pageCount = 12, pagesReady = pageCount, status = 'ready', title = 'ASP.NET Core cheat sheet', allowDownload = false, id } = {}) {
   const pages = Array.from({ length: pagesReady }, (_, i) => page(seed, i + 1));
   return {
-    id: `asset-${seed}`,
+    id: id ?? `asset-${seed}`,
     kind: 'document',
     purpose: 'document',
     status,
@@ -626,6 +626,8 @@ const routes = [
           status: q.get('status') ?? 'ready',
           title: q.get('title') ?? 'Document',
           allowDownload: q.get('allowDownload') === 'true',
+          // Tests running in parallel register their own states (processing, then ready) for the same pictures.
+          id: q.get('id') ?? undefined,
         }),
       ),
     ],
@@ -737,5 +739,11 @@ const server = createServer(async (req, res) => {
     send(req, res, 500, problem(500, 'server.error', String(error)));
   }
 });
+
+// A test's `request` context keeps its sockets between calls that can be a minute apart (a whole UI flow). Node's
+// default 5 s keep-alive closes them in between, and a call that reuses a socket as it closes fails with ECONNRESET.
+// Keep idle sockets longer than a test (120 s, playwright.config.ts and the suites' own timeouts).
+server.keepAliveTimeout = 180_000;
+server.headersTimeout = 181_000;
 
 server.listen(PORT, () => console.log(`ReadIn mock API on ${ORIGIN}${API}`));
