@@ -55,7 +55,7 @@ class ArticleMenuButton extends StatelessWidget {
     final colors = context.colors;
     final me = context.select((SessionCubit c) => c.state.me);
     final items = articleMenuItems(
-      own: me != null && me.id == article.card.author.id,
+      own: me != null && me.id == article.card.author?.id,
       moderator: me?.isModerator ?? false,
       hidden: article.isHidden,
     );

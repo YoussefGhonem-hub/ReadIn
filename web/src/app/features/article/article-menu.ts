@@ -91,7 +91,7 @@ export class ArticleMenu {
   protected readonly reporting = signal<ReportTarget | null>(null);
   protected readonly moderating = signal<ModerationActionDraft | null>(null);
 
-  private readonly isOwn = computed(() => this.session.isAuthenticated() && this.session.me()?.id === this.article().author.id);
+  private readonly isOwn = computed(() => this.session.isAuthenticated() && this.session.me()?.id === this.article().author?.id);
   private readonly isModerator = computed(() => this.session.permissions().has('moderation.manage'));
 
   protected readonly items = computed<ArticleMenuItem[]>(() => {
