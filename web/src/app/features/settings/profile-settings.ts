@@ -4,15 +4,16 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { SessionStore } from '../../core/auth/session.store';
 import { PublicStatsSwitch } from '../profile/public-stats-switch';
+import { VerificationRow } from './verification-row';
 import { WhoCanMention } from './who-can-mention';
 
 /**
- * Settings → Profile (edit / view your profile) and Privacy (F14, F18): public reading stats on or off, and who can
- * mention you.
+ * Settings → Profile (edit / view your profile, writer verification: F19) and Privacy (F14, F18): public reading stats
+ * on or off, and who can mention you.
  */
 @Component({
   selector: 'rd-profile-settings',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, PublicStatsSwitch, WhoCanMention],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, PublicStatsSwitch, VerificationRow, WhoCanMention],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -35,6 +36,8 @@ import { WhoCanMention } from './who-can-mention';
               <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
             </a>
           </li>
+          <!-- Writer verification (F19) -->
+          <li><rd-verification-row /></li>
         </ul>
       </section>
     }

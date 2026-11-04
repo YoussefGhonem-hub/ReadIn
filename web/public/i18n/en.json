@@ -17,7 +17,8 @@
     "settings": "Settings",
     "verification": "Writer verification",
     "moderation": "Moderation",
-    "admin": "Admin console"
+    "admin": "Admin console",
+    "verificationRequests": "Verification requests"
   },
   "topbar": {
     "streakLabel": "Reading streak",
@@ -212,6 +213,16 @@
       "type_invalid": "This notification type doesn't exist.",
       "mode_invalid": "Choose All, In app or Off.",
       "quiet_hours_invalid": "Pick a start and an end time (HH:mm) that are different."
+    },
+    "verification": {
+      "proof_required": "Add a link or a file as proof.",
+      "proof_invalid": "The proof file has to be a PDF, JPEG, PNG or WebP of up to 10 MB.",
+      "already_pending": "You already have a request under review.",
+      "already_verified": "You're already a verified writer.",
+      "field_invalid": "Pick a field from the list.",
+      "not_found": "This request doesn't exist anymore.",
+      "proof_not_found": "The proof file isn't there anymore.",
+      "already_decided": "This request was already decided."
     }
   },
   "auth": {
@@ -748,6 +759,20 @@
         "end": "To"
       },
       "loadError": "We couldn't load your notification settings."
+    },
+    "verification": {
+      "label": "Writer verification",
+      "hint": "A ✓ badge next to your name",
+      "status": {
+        "verified": "Verified ✓",
+        "pending": "Under review",
+        "rejected": "Not approved",
+        "none": "Request it"
+      }
+    },
+    "admin": {
+      "title": "Admin",
+      "verification": "Review writers' verification requests"
     }
   },
   "comingSoon": {
@@ -1801,12 +1826,159 @@
         "other": "There was a security change on your account",
         "hint": "Wasn't you? Check your account settings now."
       },
-      "verification_result": "There's an update on your writer verification request",
+      "verification_result": {
+        "approved": "You're now a verified writer ✓",
+        "rejected": "Your verification request wasn't approved",
+        "other": "There's an update on your writer verification request",
+        "hint": "Open it to see why"
+      },
       "moderation_notice": {
         "articleHidden": "The moderators hid your article",
         "warning": "You received a warning from the moderators"
       },
       "other": "You have a new notification"
+    }
+  },
+  "verification": {
+    "title": "Writer verification",
+    "intro": "Verified writers get a ✓ badge next to their name. Tell us your field and show us your work.",
+    "back": "Settings",
+    "loadError": "We couldn't load your verification status.",
+    "approvedOn": "approved on {{date}}",
+    "sent": "Request sent ✓",
+    "withdrawn": "Request withdrawn",
+    "verified": {
+      "title": "You're a verified writer ✓",
+      "body": "Readers see the ✓ badge next to your name."
+    },
+    "pending": {
+      "title": "Your request is under review",
+      "body": "Sent on {{date}}. We'll notify you as soon as it's decided.",
+      "withdraw": "Withdraw request"
+    },
+    "rejected": {
+      "title": "Your request wasn't approved",
+      "decided": "Decided on {{date}}",
+      "reason": "Reason",
+      "again": "Request again"
+    },
+    "unavailable": {
+      "title": "You can't request verification right now",
+      "body": "If your account is suspended, you can ask once the suspension ends."
+    },
+    "summary": {
+      "field": "Field",
+      "jobTitle": "Job title",
+      "proofUrl": "Proof link",
+      "proofFile": "Proof file",
+      "note": "Note"
+    },
+    "withdrawSheet": {
+      "title": "Withdraw your request?",
+      "body": "Your request and its file will be deleted. You can send a new one any time.",
+      "confirm": "Withdraw"
+    },
+    "form": {
+      "title": "Request verification",
+      "againTitle": "Send a new request",
+      "field": "Field",
+      "fieldPlaceholder": "Pick your field",
+      "fieldsError": "We couldn't load the fields.",
+      "jobTitle": "Job title",
+      "jobTitlePlaceholder": "e.g. Backend engineer at Vodafone",
+      "proof": "Proof",
+      "proofHint": "A link, a file, or both. Only the ReadIn team sees them.",
+      "proofUrl": "Link (LinkedIn, GitHub, …)",
+      "file": "Certificate or syndicate card",
+      "attach": "Attach a file",
+      "fileHint": "PDF, JPEG, PNG or WebP, up to 10 MB.",
+      "removeFile": "Remove the file",
+      "note": "Note (optional)",
+      "notePlaceholder": "Anything that helps us review it",
+      "privacy": "The file is deleted as soon as your request is decided.",
+      "submit": "Send request",
+      "sending": "Sending…",
+      "errors": {
+        "fieldRequired": "Pick your field.",
+        "jobTitleLength": "Write a job title of 2 to 100 characters.",
+        "proofUrlInvalid": "Write a full link that starts with https:// (up to 500 characters).",
+        "proofRequired": "Add a link or a file as proof.",
+        "fileType": "Pick a PDF, JPEG, PNG or WebP file.",
+        "fileSize": "The file is larger than 10 MB.",
+        "noteTooLong": "The note is too long (up to 500 characters)."
+      }
+    },
+    "admin": {
+      "title": "Verification requests",
+      "subtitle": "Check each writer's proof, then approve or reject it with a reason.",
+      "tabs": {
+        "label": "Request status",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "loadError": "We couldn't load the requests.",
+      "more": "Show more",
+      "submitted": "Sent {{time}}",
+      "decided": "Decided {{time}}",
+      "pick": "Pick a request to review it.",
+      "back": "All requests",
+      "empty": {
+        "pending": {
+          "title": "No requests to review",
+          "body": "New requests show up here."
+        },
+        "approved": {
+          "title": "No approved requests yet",
+          "body": "Requests you approve show up here."
+        },
+        "rejected": {
+          "title": "No rejected requests",
+          "body": "Requests you reject show up here."
+        }
+      },
+      "detail": {
+        "label": "The request",
+        "submitted": "Sent",
+        "noFile": "No file, a link only.",
+        "fileDeleted": "The proof file is deleted once a request is decided.",
+        "loadError": "We couldn't load this request."
+      },
+      "proof": {
+        "loading": "Loading the file…",
+        "error": "We couldn't load the file.",
+        "gone": "The file isn't there anymore.",
+        "open": "Open",
+        "openImage": "Open the image in a new tab",
+        "openPdf": "Open the PDF",
+        "unsupported": "Can't be previewed",
+        "alt": "Proof: {{name}}"
+      },
+      "decidedBy": {
+        "approved": "Approved by {{name}} on {{date}}",
+        "rejected": "Rejected by {{name}} on {{date}}",
+        "deleted": "a deleted account"
+      },
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveSheet": {
+        "title": "Approve {{name}}?",
+        "body": "They get the Verified writer role and the ✓ badge, and their proof file is deleted."
+      },
+      "rejectSheet": {
+        "title": "Reject this request?",
+        "body": "{{name}} sees your reason on their verification page. The proof file is deleted.",
+        "reason": "Reason",
+        "placeholder": "e.g. The certificate doesn't show your name.",
+        "hint": "At least 5 characters. The writer sees it."
+      },
+      "approved": "{{name}} is now a verified writer ✓",
+      "rejected": "Request rejected"
     }
   }
 }

@@ -1,6 +1,6 @@
 import type { AppIconName } from '../shared/ui/icons';
 
-export type NavId = 'home' | 'explore' | 'write' | 'saved' | 'profile' | 'notifications' | 'search' | 'paths' | 'settings' | 'moderation';
+export type NavId = 'home' | 'explore' | 'write' | 'saved' | 'profile' | 'notifications' | 'search' | 'paths' | 'settings' | 'moderation' | 'verificationRequests';
 
 export interface NavItem {
   id: NavId;
@@ -24,6 +24,13 @@ const ITEMS: Record<NavId, NavItem> = {
   paths: { id: 'paths', labelKey: 'nav.paths', icon: 'Route', path: '/paths' },
   settings: { id: 'settings', labelKey: 'nav.settings', icon: 'Settings', path: '/settings' },
   moderation: { id: 'moderation', labelKey: 'nav.moderation', icon: 'ShieldAlert', path: '/moderation', permission: 'moderation.manage' },
+  verificationRequests: {
+    id: 'verificationRequests',
+    labelKey: 'nav.verificationRequests',
+    icon: 'BadgeCheck',
+    path: '/admin/verification',
+    permission: 'verification.manage',
+  },
 };
 
 /** Same five destinations as the mobile app's bottom navigation (SPEC §7.2). */
@@ -40,6 +47,7 @@ export const SIDE_NAV: readonly NavItem[] = [
   ITEMS.profile,
   ITEMS.settings,
   ITEMS.moderation,
+  ITEMS.verificationRequests,
 ];
 
 export function profilePath(username: string | null): string {

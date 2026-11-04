@@ -9,7 +9,7 @@ import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir } from '../../shared/directives/bidi';
 import { RelativeTimePipe } from '../../shared/pipes/format.pipes';
 import { Avatar } from '../../shared/ui/avatar';
-import { isActorType, notificationIcon, notificationText } from './notification-view';
+import { isActorType, notificationIcon, notificationText, verificationOutcome } from './notification-view';
 
 /**
  * One row of the notification center (F17): who (avatar with the type's icon, "Deleted user" for a gone account) or the
@@ -57,6 +57,10 @@ import { isActorType, notificationIcon, notificationText } from './notification-
         @if (n.type === 'security_alert') {
           <span class="mt-0.5 block text-sm text-text-secondary">{{ 'notifications.text.security_alert.hint' | transloco }}</span>
         }
+        @if (rejected()) {
+          <!-- The reason is on the verification page only, never in the notification. -->
+          <span class="mt-0.5 block text-sm text-text-secondary" data-notification-hint>{{ 'notifications.text.verification_result.hint' | transloco }}</span>
+        }
         <time class="mt-1 block text-xs text-text-secondary" [attr.datetime]="n.updatedAt">{{ n.updatedAt | rdRelativeTime: lang() }}</time>
       </span>
       @if (!n.isRead) {
@@ -88,6 +92,8 @@ export class NotificationItem {
   readonly opened = output<void>();
 
   protected readonly actorBased = computed(() => isActorType(this.notification().type));
+  /** A rejected verification request (F19): "Open it to see why". */
+  protected readonly rejected = computed(() => this.notification().type === 'verification_result' && verificationOutcome(this.notification()) === 'rejected');
   protected readonly icon = computed(() => notificationIcon(this.notification()));
   protected readonly text = computed(() => notificationText(this.notification(), this.transloco, this.lang()));
   protected readonly titleDir = computed(() => (this.notification().article?.language === 'ar-EG' ? 'rtl' : 'ltr'));
@@ -101,6 +107,8 @@ export class NotificationItem {
       case 'security_alert':
       case 'moderation_notice':
         return 'bg-callout-danger text-error';
+      case 'verification_result':
+        return this.rejected() ? 'bg-callout-warning text-text-primary' : 'bg-primary-container text-on-primary-container';
       default:
         return 'bg-primary-container text-on-primary-container';
     }

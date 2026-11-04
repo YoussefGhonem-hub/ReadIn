@@ -139,6 +139,15 @@ export const CONTRACT_ERROR_CODES = [
   'notification.type_invalid',
   'notification.mode_invalid',
   'notification.quiet_hours_invalid',
+  // Writer verification (F19)
+  'verification.proof_required',
+  'verification.proof_invalid',
+  'verification.already_pending',
+  'verification.already_verified',
+  'verification.field_invalid',
+  'verification.not_found',
+  'verification.proof_not_found',
+  'verification.already_decided',
 ] as const;
 
 /** Translates stable API error codes (e.g. `user.suspended`) into the active UI language. */

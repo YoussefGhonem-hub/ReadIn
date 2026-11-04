@@ -74,6 +74,18 @@ export const routes: Routes = [
       },
       // `readin://me/stats` (the streak reminder, F17): your reading stats are on your own profile.
       { path: 'me/stats', canActivate: [myStatsGuard], children: [] },
+      // Writer verification (F19): your request; `readin://verification` lands here.
+      {
+        path: 'verification',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/verification/verification.page').then((m) => m.VerificationPage),
+      },
+      // Reviewing verification requests (F19): admins only, client-rendered, its own chunk. The rest of /admin is to come.
+      {
+        path: 'admin/verification',
+        canActivate: [permissionGuard('verification.manage')],
+        loadComponent: () => import('./features/admin/verification/admin-verification.page').then((m) => m.AdminVerificationPage),
+      },
       // My articles and the editor (F05).
       { path: 'write', canActivate: [permissionGuard('articles.create')], loadChildren: () => import('./features/editor/editor.routes') },
       ...PLACEHOLDER_ROUTES,

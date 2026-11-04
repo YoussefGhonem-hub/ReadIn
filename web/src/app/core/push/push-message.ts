@@ -50,9 +50,9 @@ export function pushNotificationId(raw: unknown): string | null {
 /**
  * Turns a push or notification link into an in-app path. Deep links map to the web routes (SPEC §23):
  * `readin://a/{slug}#comment-{id}` → `/{lang}/a/{slug}#comment-{id}`, `readin://u/{username}[/followers]` →
- * `/@{username}[/followers]`, `readin://settings/account` → `/settings#account`, and the rest to the same path
- * (`readin://notifications`, `readin://me/stats`). Same-origin URLs and absolute paths are kept; anything else is
- * dropped, so a push can never open another site.
+ * `/@{username}[/followers]`, `readin://settings/account` → `/settings#account`, `readin://verification` →
+ * `/verification` (F19), and the rest to the same path (`readin://notifications`, `readin://me/stats`). Same-origin URLs
+ * and absolute paths are kept; anything else is dropped, so a push can never open another site.
  */
 export function pushLinkToPath(link: string | null | undefined, origin: string, lang: 'ar' | 'en'): string | null {
   if (!link) return null;
@@ -70,6 +70,7 @@ function deepLinkToPath(rest: string, lang: 'ar' | 'en'): string | null {
   if (rest.startsWith('a/')) return `/${lang}/${rest}`;
   if (rest.startsWith('u/')) return rest.length > 2 ? safePath(`/@${rest.slice(2)}`) : null;
   if (rest === 'settings/account') return '/settings#account';
+  if (rest === 'verification') return '/verification';
   return safePath(`/${rest}`);
 }
 

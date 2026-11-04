@@ -69,12 +69,22 @@ function plainText(n: NotificationDto, key: string, transloco: TranslocoService,
     }
     case 'moderation_notice':
       return transloco.translate(`${key}.${n.article ? 'articleHidden' : 'warning'}`, {}, lang);
-    case 'daily_article':
     case 'verification_result':
+      return transloco.translate(`${key}.${verificationOutcome(n)}`, {}, lang);
+    case 'daily_article':
       return transloco.translate(key, {}, lang);
     default:
       return transloco.translate('notifications.text.other', {}, lang);
   }
+}
+
+/**
+ * A writer verification result (F19) by `data.approved`: approved, rejected, or (an API older than F19 left it out) the
+ * general line.
+ */
+export function verificationOutcome(n: Pick<NotificationDto, 'data'>): 'approved' | 'rejected' | 'other' {
+  const approved = n.data?.approved;
+  return approved === true ? 'approved' : approved === false ? 'rejected' : 'other';
 }
 
 /** The Lucide icon for the type (lazy ones are in notification-icons.ts). */
@@ -99,7 +109,7 @@ export function notificationIcon(n: NotificationDto): string {
     case 'security_alert':
       return 'ShieldAlert';
     case 'verification_result':
-      return 'BadgeCheck';
+      return verificationOutcome(n) === 'rejected' ? 'BadgeX' : 'BadgeCheck';
     case 'moderation_notice':
       return n.article ? 'EyeOff' : 'TriangleAlert';
     default:

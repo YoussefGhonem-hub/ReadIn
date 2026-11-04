@@ -20,8 +20,8 @@ import { ProfileSettings } from './profile-settings';
 
 /**
  * Settings (F18): theme, UI language, article language, reminder time, font size, notifications (push in this browser
- * and a link to the notification preferences, F17), profile and privacy, Moderation for moderators (F22; the side nav
- * isn't there on narrow screens), account.
+ * and a link to the notification preferences, F17), profile (with writer verification, F19) and privacy, Moderation for
+ * moderators (F22; the side nav isn't there on narrow screens), verification requests for admins (F19), account.
  */
 @Component({
   selector: 'rd-settings-page',
@@ -128,6 +128,18 @@ import { ProfileSettings } from './profile-settings';
           @if (moderation.total() > 0) {
             <span class="min-w-6 rounded-chip bg-error px-1.5 text-center text-xs font-semibold leading-5 text-on-error" data-moderation-badge>{{ moderation.total() }}</span>
           }
+          <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+        </a>
+      </section>
+    }
+
+    <!-- Admin (F19): verification requests, for admins (the side nav isn't there on narrow screens) -->
+    @if (session.hasPermission('verification.manage')) {
+      <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="settings-admin" data-settings-admin>
+        <h2 id="settings-admin" class="m-0 mb-2 text-base font-semibold">{{ 'settings.admin.title' | transloco }}</h2>
+        <a routerLink="/admin/verification" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline" data-settings-verification-requests>
+          <svg lucideIcon="BadgeCheck" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+          <span class="flex-1">{{ 'settings.admin.verification' | transloco }}</span>
           <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
         </a>
       </section>

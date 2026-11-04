@@ -1122,7 +1122,7 @@ export type NotificationType =
   | 'daily_article'
   | 'streak_reminder'
   | 'security_alert'
-  /** Reserved for F19 (writer verification): rendered with a generic text, nothing sends it yet. */
+  /** F19: an admin approved or rejected your writer verification request (`data.approved`). */
   | 'verification_result'
   | 'moderation_notice';
 
@@ -1161,7 +1161,8 @@ export interface NotificationDto {
   article: { id: string; slug: string; title: string; language: ArticleLanguage } | null;
   /** ≤ 140 characters of plain text. Null for a mention in an article (`mention` names the article only). */
   comment: { id: string; parentId: string | null; excerpt: string } | null;
-  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange };
+  /** `approved`: `verification_result` only (F19), left out by an API older than it. */
+  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange; approved?: boolean };
   /** `readin://…`, the same deep links as pushes. */
   link: string;
 }
@@ -1187,6 +1188,76 @@ export interface QuietHoursDto {
 export interface NotificationSettingsDto {
   quietHours: QuietHoursDto;
   types: Partial<Record<ConfigurableNotificationType, NotificationMode>>;
+}
+
+// ── Writer verification (F19) ───────────────────────────────
+
+export type VerificationStatus = 'pending' | 'approved' | 'rejected';
+export const VERIFICATION_STATUSES: readonly VerificationStatus[] = ['pending', 'approved', 'rejected'];
+
+export interface VerificationFieldDto {
+  id: string;
+  slug: string;
+  /** In the request's UI language. */
+  name: string;
+}
+
+/** Your latest request (`GET /me/verification`, `POST /verification-requests`). */
+export interface MyVerificationRequestDto {
+  id: string;
+  status: VerificationStatus;
+  field: VerificationFieldDto;
+  jobTitle: string;
+  proofUrl: string | null;
+  /** The uploaded file's (sanitized) name; null without a file, and once the request is decided (the file is deleted). */
+  proofFileName: string | null;
+  note: string | null;
+  submittedAt: string;
+  decidedAt: string | null;
+  /** Rejected only: the reviewer's reason, shown on the verification page (never in the push). */
+  rejectionReason: string | null;
+}
+
+/** `GET /me/verification`. `canRequest`: signed in, not verified, not suspended, nothing pending. */
+export interface VerificationStatusDto {
+  isVerified: boolean;
+  canRequest: boolean;
+  /** The latest request, or null. */
+  request: MyVerificationRequestDto | null;
+}
+
+/** `POST /verification-requests` (multipart). At least one of `proofUrl` / `proof`. */
+export interface VerificationSubmission {
+  fieldId: string;
+  jobTitle: string;
+  proofUrl: string | null;
+  note: string | null;
+  proof: File | null;
+}
+
+/** The uploaded proof as an admin sees it before the decision; `GET …/{id}/proof` streams it. */
+export interface VerificationProofDto {
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+}
+
+/** A request in the admin review (`GET /admin/verification-requests`, `/{id}`). */
+export interface AdminVerificationRequestDto {
+  id: string;
+  status: VerificationStatus;
+  user: { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean };
+  field: VerificationFieldDto;
+  jobTitle: string;
+  proofUrl: string | null;
+  /** Null without a file, and after the decision (the file is deleted then). */
+  proof: VerificationProofDto | null;
+  note: string | null;
+  submittedAt: string;
+  decidedAt: string | null;
+  /** Null while pending, and when the reviewer's account was deleted. */
+  decidedBy: { id: string; username: string } | null;
+  rejectionReason: string | null;
 }
 
 /** RFC 9457 ProblemDetails with ReadIn's stable `code` (SPEC §6.5, §17.1). */

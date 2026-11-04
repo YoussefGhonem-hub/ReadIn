@@ -87,6 +87,8 @@ describe('push messages', () => {
       ['readin://u/mona/followers', '/@mona/followers'],
       ['readin://me/stats', '/me/stats'],
       ['readin://settings/account', '/settings#account'],
+      // F19: a writer verification result opens your verification page.
+      ['readin://verification', '/verification'],
       ['/ar/a/slug#comment-1', '/ar/a/slug#comment-1'],
       [`${ORIGIN}/@mona?tab=articles`, '/@mona?tab=articles'],
     ])('maps %s to %s', (link, path) => {

@@ -3,7 +3,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { translocoTesting } from '../../../testing/transloco-testing';
 import { testNotification } from '../../../testing/notifications-testing';
 import { NotificationDto } from '../../core/api/models';
-import { dayKey, notificationIcon, notificationPath, notificationText } from './notification-view';
+import { dayKey, notificationIcon, notificationPath, notificationText, verificationOutcome } from './notification-view';
 
 const ORIGIN = 'https://readin.app';
 
@@ -50,11 +50,29 @@ describe('notification view (F17)', () => {
       ['mention', 'Ahmed Samir mentioned you in a comment', 'Ahmed Samir عمل لك منشن في تعليق'],
       ['followed_writer_article', 'Ahmed Samir published a new article', 'Ahmed Samir نشر مقال جديد'],
       ['daily_article', "Today's article is ready ☕", 'مقال النهارده جاهز ☕'],
-      ['verification_result', "There's an update on your writer verification request", 'فيه جديد في طلب توثيقك ككاتب'],
     ] as const)('%s', (type, en, ar) => {
       const n = testNotification({ type });
       expect(sentence(n, 'en')).toBe(en);
       expect(sentence(n, 'ar')).toBe(ar);
+    });
+
+    it('a writer verification result says approved or not by data.approved; without it, the general line (F19)', () => {
+      const result = (approved?: boolean) =>
+        testNotification({ type: 'verification_result', actor: null, actorCount: 0, article: null, comment: null, data: approved === undefined ? {} : { approved }, link: 'readin://verification' });
+      expect(sentence(result(true), 'en')).toBe("You're now a verified writer ✓");
+      expect(sentence(result(true), 'ar')).toBe('بقيت كاتب موثّق ✓');
+      expect(sentence(result(false), 'en')).toBe("Your verification request wasn't approved");
+      expect(sentence(result(false), 'ar')).toBe('طلب التوثيق بتاعك ماتقبلش');
+      expect(sentence(result(), 'en')).toBe("There's an update on your writer verification request");
+      expect(sentence(result(), 'ar')).toBe('فيه جديد في طلب توثيقك ككاتب');
+      expect(notificationIcon(result(true))).toBe('BadgeCheck');
+      expect(notificationIcon(result(false))).toBe('BadgeX');
+      expect(notificationIcon(result())).toBe('BadgeCheck');
+      // The reason is never in the notification: it opens the verification page.
+      expect(notificationPath(result(false), 'ar', ORIGIN)).toBe('/verification');
+      expect(verificationOutcome(result(true))).toBe('approved');
+      expect(verificationOutcome(result(false))).toBe('rejected');
+      expect(verificationOutcome(result())).toBe('other');
     });
 
     it('a mention without a comment is a mention in an article (the article title is shown under it)', () => {
@@ -118,6 +136,7 @@ describe('notification view (F17)', () => {
       ['readin://u/sara/followers', '/@sara/followers'],
       ['readin://me/stats', '/me/stats'],
       ['readin://settings/account', '/settings#account'],
+      ['readin://verification', '/verification'],
       ['https://evil.example/x', null],
       // A moderation warning: the center itself, so its dialog opens instead.
       ['readin://notifications', null],

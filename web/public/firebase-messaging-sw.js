@@ -78,6 +78,7 @@ function toPath(link, lang) {
     if (rest.startsWith('a/')) return `/${lang}/${rest}`;
     if (rest.startsWith('u/')) return rest.length > 2 ? safePath(`/@${rest.slice(2)}`) : null;
     if (rest === 'settings/account') return '/settings#account';
+    if (rest === 'verification') return '/verification';
     return safePath(`/${rest}`);
   }
   if (link.startsWith('/')) return safePath(link);

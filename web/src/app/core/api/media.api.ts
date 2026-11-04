@@ -60,7 +60,7 @@ export class MediaApi {
 }
 
 /** With `responseType: 'blob'` the ProblemDetails body arrives as a Blob; parse it so the stable `code` is kept. */
-async function withBlobProblem(error: unknown): Promise<unknown> {
+export async function withBlobProblem(error: unknown): Promise<unknown> {
   if (!isApiError(error) || !(error.problem instanceof Blob)) return error;
   try {
     const problem = JSON.parse(await (error.problem as Blob).text()) as ProblemDetails;

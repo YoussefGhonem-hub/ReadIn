@@ -1,7 +1,7 @@
 import { PLATFORM_ID, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { MeApi } from '../api/me.api';
 import { MeDto } from '../api/models';
 import { SessionStore } from '../auth/session.store';
@@ -194,6 +194,35 @@ describe('PushService', () => {
 
     expect(notices.reload).toHaveBeenCalledTimes(1);
     expect(toasts.toasts()).toEqual([]);
+  });
+
+  it('a writer verification result reads `me` again, so an approval shows the badge, and still shows its toast (F19)', async () => {
+    const { client, toasts, meApi, session } = await setup();
+    await signIn(session);
+    const verified = { id: 'user-1', displayName: 'Mona', isVerified: true, roles: ['Member', 'VerifiedWriter'] } as MeDto;
+    Object.assign(meApi, { get: vi.fn(() => of(verified)) });
+    client.worker!({
+      type: 'push',
+      payload: { notification: { title: 'بقيت كاتب موثّق ✓' }, data: { type: 'verification_result', notificationId: 'n-5', link: 'readin://verification' } },
+    });
+    await flush();
+
+    expect((meApi as unknown as { get: ReturnType<typeof vi.fn> }).get).toHaveBeenCalledWith({ silent: true });
+    expect(session.me()?.isVerified).toBe(true);
+    expect(toasts.toasts()).toEqual([expect.objectContaining({ kind: 'info', message: 'بقيت كاتب موثّق ✓', link: '/verification' })]);
+  });
+
+  it('a verification result for an account that signed out meanwhile changes nothing (F19)', async () => {
+    const { client, meApi, session } = await setup();
+    await signIn(session);
+    const answer = new Subject<MeDto>();
+    Object.assign(meApi, { get: vi.fn(() => answer) });
+    client.worker!({ type: 'push', payload: { notification: { title: 'x' }, data: { type: 'verification_result' } } });
+    session.setGuest();
+    answer.next({ id: 'user-1', isVerified: true } as MeDto);
+    await flush();
+
+    expect(session.me()).toBeNull();
   });
 
   it('routes a tapped notification and ignores links to other sites', async () => {

@@ -6,8 +6,9 @@
  * The feed is stateless: uploads and polling are stubbed in the browser with `page.route` (e2e/support). Reactions,
  * saved articles, collections and follows (social.mjs), profiles, `GET /me`, `PATCH /me`, privacy and reading stats
  * (profiles.mjs), the article editor with My articles (editor.mjs), learning paths + continue reading (paths.mjs) and
- * reports, the moderation queue, actions, log and notices (moderation.mjs, F22) and the notification center with its
- * settings (notifications.mjs, F17) keep state per signed-in viewer, so those flows run against it end to end. It also
+ * reports, the moderation queue, actions, log and notices (moderation.mjs, F22), the notification center with its
+ * settings (notifications.mjs, F17) and writer verification with its admin review (verification.mjs, F19) keep state per
+ * signed-in viewer, so those flows run against it end to end. It also
  * serves generated PNGs for every media URL and fixture builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
@@ -21,6 +22,7 @@ import { createModeration } from './moderation.mjs';
 import { createNotifications } from './notifications.mjs';
 import { createProfiles } from './profiles.mjs';
 import { createSocial } from './social.mjs';
+import { createVerification } from './verification.mjs';
 
 const PORT = Number(process.env.MOCK_API_PORT ?? 5080);
 const ORIGIN = `http://localhost:${PORT}`;
@@ -597,6 +599,14 @@ const editor = createEditor({
 });
 const moderation = createModeration({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
 const notifications = createNotifications({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
+const verification = createVerification({
+  writers: WRITERS,
+  social,
+  fields: FIELDS,
+  problem,
+  proofPng: (seed) => mediaPng('photo', `proof-${seed}`, 640, 420),
+  pdf: PDF,
+});
 
 const routes = [
   // Before profiles.mjs: `/users/mention-suggestions` is not a username.
@@ -609,12 +619,22 @@ const routes = [
       return [200, found.slice(0, Number(q.get('limit') ?? 8)).map(({ id, displayName, username, avatarUrl, isVerified }) => ({ id, displayName, username, avatarUrl, isVerified }))];
     },
   ],
+  // Before profiles.mjs: an approved verification request (F19) makes `GET /me` verified.
+  [
+    'GET',
+    new RegExp(`^${API}/me$`),
+    (_q, _m, _body, req) => {
+      const viewer = social.viewerOf(req);
+      return [200, verification.decorateMe(profiles.meOf(viewer), viewer)];
+    },
+  ],
   ...editor.routes,
   ...social.routes,
   ...profiles.routes,
   ...paths.routes,
   ...moderation.routes,
   ...notifications.routes,
+  ...verification.routes,
   ['GET', /^\/__mock\/health$/, () => [200, { ok: true }]],
   ['GET', /^\/__mock\/asset\/image$/, (q) => [200, registered(imageAsset(q.get('seed') ?? 'upload', Number(q.get('w') ?? 1600), Number(q.get('h') ?? 1200)))]],
   ['GET', /^\/__mock\/asset\/avatar$/, (q) => [200, avatarAsset(q.get('seed') ?? 'avatar')]],
@@ -729,12 +749,44 @@ const routes = [
   ],
 ];
 
-async function readJson(req) {
+/**
+ * `multipart/form-data` (verification requests, F19) → `{ fields: { name: value }, files: { name: { filename,
+ * contentType, data } } }`. Enough for the mock: no nested parts, no transfer encodings.
+ */
+function parseMultipart(buffer, boundary) {
+  const fields = {};
+  const files = {};
+  const delimiter = Buffer.from(`--${boundary}`);
+  let start = buffer.indexOf(delimiter);
+  while (start !== -1) {
+    const next = buffer.indexOf(delimiter, start + delimiter.length);
+    if (next === -1) break;
+    // A part: CRLF, its headers, CRLF CRLF, its body, CRLF (then the next delimiter).
+    const part = buffer.subarray(start + delimiter.length + 2, next - 2);
+    const split = part.indexOf('\r\n\r\n');
+    if (split !== -1) {
+      const headers = part.subarray(0, split).toString('utf8');
+      const data = part.subarray(split + 4);
+      const name = /name="([^"]*)"/.exec(headers)?.[1];
+      const filename = /filename="([^"]*)"/.exec(headers)?.[1];
+      if (name && filename !== undefined) files[name] = { filename, contentType: /content-type:\s*([^\r\n]+)/i.exec(headers)?.[1] ?? null, data };
+      else if (name) fields[name] = data.toString('utf8');
+    }
+    start = next;
+  }
+  return { fields, files };
+}
+
+/** The request body: JSON, or a parsed multipart form. */
+async function readBody(req) {
   if (req.method === 'GET' || req.method === 'HEAD') return null;
   const chunks = [];
   for await (const part of req) chunks.push(part);
+  const buffer = Buffer.concat(chunks);
+  const boundary = /^multipart\/form-data;.*boundary="?([^";]+)"?/i.exec(req.headers['content-type'] ?? '')?.[1];
+  if (boundary) return parseMultipart(buffer, boundary);
   try {
-    return JSON.parse(Buffer.concat(chunks).toString('utf8') || 'null');
+    return JSON.parse(buffer.toString('utf8') || 'null');
   } catch {
     return null;
   }
@@ -747,7 +799,7 @@ const server = createServer(async (req, res) => {
     for (const [method, pattern, handler] of routes) {
       const match = method === req.method ? pattern.exec(url.pathname) : null;
       if (!match) continue;
-      const [status, body, headers] = handler(url.searchParams, match, await readJson(req), req);
+      const [status, body, headers] = handler(url.searchParams, match, await readBody(req), req);
       return send(req, res, status, status === 204 ? Buffer.alloc(0) : body, headers);
     }
     send(req, res, 404, problem(404, 'not_found', `No mock for ${req.method} ${url.pathname}`));

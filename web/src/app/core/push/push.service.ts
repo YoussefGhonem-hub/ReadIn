@@ -15,8 +15,9 @@ import { NOTIFICATION_PARAM, pushLinkToPath, pushType, toPushMessage } from './p
  * Web push through Firebase Cloud Messaging (SPEC §21.1). Once the user has granted permission, this browser's
  * FCM token is registered with `POST /me/devices` on every sign-in and page load (which also picks up rotated
  * tokens) and deleted on sign-out and when the account is deleted. Pushes that arrive while a tab is visible become an
- * in-app toast; a moderation notice (F22) opens its dialog instead, which the user acknowledges. Tapping a push or its
- * toast marks its notification read (F17, `data.notificationId`), also when the tap opened a new tab.
+ * in-app toast; a moderation notice (F22) opens its dialog instead, which the user acknowledges; a writer verification
+ * result (F19) reads `me` again, so an approval shows the badge at once. Tapping a push or its toast marks its
+ * notification read (F17, `data.notificationId`), also when the tap opened a new tab.
  */
 @Injectable({ providedIn: 'root' })
 export class PushService {
@@ -108,6 +109,17 @@ export class PushService {
     }
   }
 
+  /** `GET /me` again, for the same account only (signed out or switched meanwhile: dropped). Failures are ignored. */
+  private async refreshMe(): Promise<void> {
+    const userId = this.userId();
+    try {
+      const me = await firstValueFrom(this.meApi.get({ silent: true }));
+      if (userId && this.userId() === me.id) this.session.setMe(me);
+    } catch {
+      /* the badge shows on the next page load */
+    }
+  }
+
   private async unregister(): Promise<void> {
     this.registered = null;
     try {
@@ -123,6 +135,8 @@ export class PushService {
       this.injector.get(ModerationNotices).reload();
       return;
     }
+    // A writer verification result (F19): an approval adds the badge, so `me` is read again.
+    if (pushType(payload) === 'verification_result') void this.refreshMe();
     const message = toPushMessage(payload, location.origin, this.language.lang());
     if (!message) return;
     const text = message.title && message.body ? `${message.title} — ${message.body}` : message.title || message.body;
