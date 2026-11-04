@@ -47,7 +47,6 @@ internal sealed partial class DemoUsersSeeder(
         Guid[] Roles,
         string Bio,
         string[] Interests,
-        string[]? ReviewerFields = null,
         bool Suspended = false,
         bool HasPin = true,
         string[]? Expertise = null,
@@ -61,13 +60,12 @@ internal sealed partial class DemoUsersSeeder(
             Expertise: ["software-architecture"]),
         new("+12025550103", "moderator", "Moderator User", [RoleIds.Moderator], "Moderator — بحافظ إن النقاش يفضل محترم ومفيد.", ["dotnet", "security", "devops-cloud"],
             Expertise: ["security"]),
-        new("+12025550104", "reviewer.dotnet", ".NET Reviewer", [RoleIds.Member, RoleIds.VerifiedWriter, RoleIds.Reviewer],
-            "Senior .NET engineer. براجع مقالات ASP.NET Core و Clean Architecture.", ["dotnet", "software-architecture", "databases"],
-            ["dotnet", "software-architecture"],
+        // The handles (and so the usernames) predate ADR 0015, which removed reviewing; other demo seeders find users by them.
+        new("+12025550104", "reviewer.dotnet", ".NET Writer", [RoleIds.Member, RoleIds.VerifiedWriter],
+            "Senior .NET engineer. بكتب عن ASP.NET Core و Clean Architecture.", ["dotnet", "software-architecture", "databases"],
             Expertise: ["dotnet", "software-architecture", "databases"], Links: Link.GitHub | Link.LinkedIn | Link.Website, PublicStats: true),
-        new("+12025550105", "reviewer.ai", "AI Reviewer", [RoleIds.Member, RoleIds.VerifiedWriter, RoleIds.Reviewer],
-            "ML engineer. بشتغل على LLMs و RAG، وبراجع مقالات الـ AI.", ["ai-fundamentals", "machine-learning", "claude-ai-tools"],
-            ["ai-fundamentals", "machine-learning", "claude-ai-tools"],
+        new("+12025550105", "reviewer.ai", "AI Writer", [RoleIds.Member, RoleIds.VerifiedWriter],
+            "ML engineer. بشتغل على LLMs و RAG، وبكتب عن الـ AI.", ["ai-fundamentals", "machine-learning", "claude-ai-tools"],
             Expertise: ["machine-learning", "ai-fundamentals", "claude-ai-tools"], Links: Link.GitHub | Link.LinkedIn),
         new("+12025550106", "writer.verified", "Verified Writer", [RoleIds.Member, RoleIds.VerifiedWriter],
             "Flutter developer بكتب عن الـ mobile architecture.", ["mobile", "frontend", "software-architecture"],
@@ -92,7 +90,7 @@ internal sealed partial class DemoUsersSeeder(
 
     public string Name => "demo-users";
     public int Order => 4;
-    public int Version => 3;
+    public int Version => 4;
 
     public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.AllowsDemoData(environment);
 
@@ -128,12 +126,6 @@ internal sealed partial class DemoUsersSeeder(
             var avatar = demo.Avatar ? await AvatarAsync(user, demo.Handle, now, cancellationToken) : null;
             user.UpdateProfile(demo.DisplayName, username, demo.Bio, avatar, LinksFor(username, demo.Links));
 
-            foreach (var slug in demo.ReviewerFields ?? [])
-            {
-                if (fieldIds.TryGetValue(slug, out var fieldId) &&
-                    !await db.ReviewerFields.AnyAsync(r => r.UserId == user.Id && r.FieldId == fieldId, cancellationToken))
-                    db.ReviewerFields.Add(new ReviewerField(user.Id, fieldId));
-            }
             await db.SaveChangesAsync(cancellationToken);
             if (previousAvatar != avatar) await uploads.ReleaseAsync(previousAvatar, cancellationToken);
         }

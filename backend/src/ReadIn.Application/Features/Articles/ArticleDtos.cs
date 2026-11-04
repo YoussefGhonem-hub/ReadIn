@@ -18,8 +18,6 @@ public sealed record FieldRefDto(Guid Id, string Slug, string Name, string NameA
 
 public sealed record SourceDto(string Title, string Url);
 
-public sealed record ReviewerDto(string DisplayName, string Username);
-
 public record ArticleCardDto
 {
     public Guid Id { get; init; }
@@ -32,9 +30,9 @@ public record ArticleCardDto
     public string? Subtitle { get; init; }
     public string? CoverUrl { get; init; }
     public FieldRefDto Field { get; init; } = default!;
-    public AuthorDto Author { get; init; } = default!;
+    /// <summary>Null when the author deleted their account; clients show "Deleted user" (SPEC §9.6).</summary>
+    public AuthorDto? Author { get; init; }
     public int ReadingTimeMinutes { get; init; }
-    public bool IsReviewed { get; init; }
     public bool IsAiAssisted { get; init; }
     public string? VersionBadge { get; init; }
     public DateTime? PublishedAt { get; init; }
@@ -93,8 +91,6 @@ public sealed record ArticleDetailsDto : ArticleCardDto
     public FieldRefDto? Topic { get; init; }
     public IReadOnlyList<string> Tags { get; init; } = [];
     public IReadOnlyList<SourceDto> Sources { get; init; } = [];
-    public ReviewerDto? ReviewedBy { get; init; }
-    public DateTime? LastReviewedAt { get; init; }
     public int ReadCount { get; init; }
 
     /// <summary>The viewer follows the author; false for guests and on your own articles.</summary>

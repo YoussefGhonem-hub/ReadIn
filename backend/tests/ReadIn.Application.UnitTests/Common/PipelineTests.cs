@@ -154,11 +154,19 @@ public sealed class RoleMatrixTests
         RoleMatrix.Roles.Single(r => r.Name == RoleNames.Guest).Permissions.Should().Equal(Permissions.Articles.Read);
 
     [Fact]
-    public void Moderators_cannot_review_articles()
+    public void Moderators_moderate_and_suspend()
     {
         var moderator = RoleMatrix.Roles.Single(r => r.Name == RoleNames.Moderator).Permissions;
 
-        moderator.Should().Contain([Permissions.Moderation.Manage, Permissions.Users.Suspend])
-            .And.NotContain(Permissions.Articles.Review);
+        moderator.Should().Contain([Permissions.Moderation.Manage, Permissions.Users.Suspend]);
+    }
+
+    [Fact]
+    public void Every_member_may_write_and_publish_and_there_is_no_reviewer_role()
+    {
+        RoleMatrix.Roles.Where(r => r.Name != RoleNames.Guest).Should()
+            .OnlyContain(r => r.Permissions.Contains(Permissions.Articles.Create), "anyone publishes in any field (ADR 0015)");
+        RoleMatrix.Roles.Select(r => r.Name).Should().NotContain("Reviewer");
+        Permissions.All.Keys.Should().NotContain(["articles.review", "articles.publish.sensitive"]);
     }
 }

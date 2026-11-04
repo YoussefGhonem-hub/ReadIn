@@ -50,7 +50,17 @@ public static class DependencyInjection
         services.AddSingleton<IAttemptThrottle, MemoryAttemptThrottle>();
         services.AddRealtime(configuration);
         services.Configure<ExternalAuthOptions>(configuration.GetSection(ExternalAuthOptions.Section));
+        // The Sign in with Apple key may come as SIWA_KEY_BASE64 (secrets only, never in the repo).
+        services.PostConfigure<ExternalAuthOptions>(o =>
+            o.Apple.PrivateKeyBase64 = string.IsNullOrWhiteSpace(o.Apple.PrivateKeyBase64) ? configuration["SIWA_KEY_BASE64"] : o.Apple.PrivateKeyBase64);
         services.AddSingleton<IExternalIdentityVerifier, OidcExternalIdentityVerifier>();
+        services.AddHttpClient<IAppleTokenService, AppleTokenService>(http =>
+        {
+            http.BaseAddress = new Uri("https://appleid.apple.com/");
+            http.Timeout = TimeSpan.FromSeconds(10);
+        });
+        services.AddSingleton<IProviderTokenProtector, AesGcmProviderTokenProtector>();
+        services.AddScoped<IAccountEraser, AccountEraser>();
 
         // Uploads live on this server's disk (ADR 0010); swap IFileStorage to move them to shared storage.
         services.AddSingleton<WwwrootFileStorage>();
@@ -73,7 +83,7 @@ public static class DependencyInjection
 
         services.AddScoped<OutboxProcessor>();
         services.AddScoped<OutboxJob>();
-        services.AddScoped<ScheduledPublishingJob>();
+        services.AddScoped<ArticleQualityJob>();
         services.AddScoped<OrphanedUploadsCleanupJob>();
         services.AddScoped<IdentityCleanupJob>();
         services.AddScoped<LiveEventsCleanupJob>();
@@ -112,6 +122,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, DemoMediaSeeder>();
         services.AddScoped<ISeeder, DemoReadingSeeder>();
         services.AddScoped<ISeeder, DemoCommentsSeeder>();
+        services.AddScoped<ISeeder, DemoEditorSeeder>();
         services.AddScoped<ISeeder, DemoInteractionsSeeder>();
         services.AddScoped<SeedRunner>();
 
@@ -139,7 +150,9 @@ public static class DependencyInjection
 
         var jobs = services.GetRequiredService<IRecurringJobManager>();
         jobs.AddOrUpdate<OutboxJob>("outbox", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
-        jobs.AddOrUpdate<ScheduledPublishingJob>("publish-scheduled", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
+        jobs.RemoveIfExists("publish-scheduled"); // scheduling was removed (ADR 0015)
+        jobs.AddOrUpdate<ArticleQualityJob>("article-quality", job => job.RunAsync(CancellationToken.None), Cron.Hourly(10));
+        jobs.Trigger("article-quality"); // scores are fresh right after a deploy, not only at the next hour
         jobs.AddOrUpdate<OrphanedUploadsCleanupJob>("uploads-orphan-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3));
         jobs.AddOrUpdate<IdentityCleanupJob>("identity-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 30));
         jobs.AddOrUpdate<DailyArticleJob>("daily-article", job => job.RunAsync(CancellationToken.None), DailyArticleJob.Schedule);

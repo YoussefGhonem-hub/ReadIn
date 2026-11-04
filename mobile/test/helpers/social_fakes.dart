@@ -109,22 +109,26 @@ class FakeArticleOfflineStore implements ArticleOfflineStore {
   void remember(ArticleDetailsModel article) => _recent[article.id] = article;
 }
 
-/// `ArticleDetailsDto` JSON of [sampleCard] `i`, the way the API sends it.
+/// `ArticleDetailsDto` JSON of [sampleCard] `i`, the way the API sends it. [authorDeleted]: `author: null` (SPEC §9.6).
 Map<String, dynamic> detailsJson(
   int i, {
   String language = 'ar-EG',
   bool isSaved = false,
   bool withWave1 = true,
   List<String> collectionIds = const [],
+  bool authorDeleted = false,
 }) {
-  final card = sampleCard(i, language: language);
+  final card = sampleCard(i, language: language, authorDeleted: authorDeleted);
+  final author = card.author;
   return {
     'id': card.id,
     'slug': card.slug,
     'language': language,
     'title': card.title,
     'field': {'id': card.field.id, 'slug': card.field.slug, 'nameAr': card.field.nameAr, 'nameEn': card.field.nameEn},
-    'author': {'id': card.author.id, 'displayName': card.author.displayName, 'username': card.author.username, 'isVerified': true},
+    'author': author == null
+        ? null
+        : {'id': author.id, 'displayName': author.displayName, 'username': author.username, 'isVerified': true},
     'readingTimeMinutes': card.readingTimeMinutes,
     'publishedAt': '2026-10-12T00:00:00Z',
     'reactionCount': 16,
@@ -142,18 +146,24 @@ Map<String, dynamic> detailsJson(
       'reactions': {'insightful': 12, 'love': 3, 'fire': 1, 'mindBlown': 0},
       'myReaction': 'love',
       'isSaved': isSaved,
-      'isFollowingAuthor': true,
+      'isFollowingAuthor': author != null,
       'collectionIds': collectionIds,
     },
   };
 }
 
-ArticleDetailsModel detailsModel(int i, {String language = 'ar-EG', bool isSaved = false}) =>
-    ArticleDetailsModel.fromJson(detailsJson(i, language: language, isSaved: isSaved));
+ArticleDetailsModel detailsModel(int i, {String language = 'ar-EG', bool isSaved = false, bool authorDeleted = false}) =>
+    ArticleDetailsModel.fromJson(detailsJson(i, language: language, isSaved: isSaved, authorDeleted: authorDeleted));
 
 /// A card with per-type counts, the way wave 1 feeds send it.
-ArticleCard engagedCard(int i, {ReactionType? myReaction, bool isSaved = false, String language = 'ar-EG'}) =>
-    sampleCard(i, language: language).copyWithEngagement(
+ArticleCard engagedCard(
+  int i, {
+  ReactionType? myReaction,
+  bool isSaved = false,
+  String language = 'ar-EG',
+  bool authorDeleted = false,
+}) =>
+    sampleCard(i, language: language, authorDeleted: authorDeleted).copyWithEngagement(
       reactions: const ReactionCounts(insightful: 12, love: 3, fire: 1),
       reactionCount: 16,
       commentCount: 4,

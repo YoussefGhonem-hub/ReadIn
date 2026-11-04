@@ -304,9 +304,14 @@ class DeleteAccountRequest {
   Map<String, dynamic> toJson() => {'password': ?password, 'external': ?external?.toJson()};
 }
 
-/// `ExternalCredential`: the provider, its ID token and, for Apple, the raw nonce.
+/// `ExternalCredential`: the provider, its ID token and, for Apple, the raw nonce and the one-time authorization code.
 extension ExternalCredentialJson on ExternalCredential {
-  Map<String, dynamic> toJson() => {'provider': provider.name, 'idToken': idToken, 'nonce': ?nonce};
+  Map<String, dynamic> toJson() => {
+        'provider': provider.name,
+        'idToken': idToken,
+        'nonce': ?nonce,
+        'authorizationCode': ?authorizationCode,
+      };
 }
 
 /// `ExternalSignInRequest`: [createAccount] or [link] answer `auth.external_not_linked`.

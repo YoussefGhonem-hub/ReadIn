@@ -67,13 +67,18 @@ void main() {
     test('account screens and onboarding need an account', () {
       expect(redirect(AppRoutes.changePassword, guest), AppRoutes.home);
       expect(redirect(AppRoutes.setRecoveryPin, guest), AppRoutes.home);
-      expect(redirect(AppRoutes.deleteAccount, guest), AppRoutes.home);
       expect(redirect(AppRoutes.onboarding, guest), AppRoutes.home);
       expect(redirect(AppRoutes.onboarding, guest, fresh), AppRoutes.welcome);
       expect(redirect(AppRoutes.editProfile, guest), AppRoutes.home);
       expect(redirect(AppRoutes.editProfile, onboarded), isNull);
       expect(redirect(AppRoutes.user('@mona'), onboarded), isNull);
       expect(AppRoutes.user('@mona'), '/u/mona');
+    });
+
+    test('a session that ends on Delete account leads to Sign in (deleted, or already ended elsewhere)', () {
+      expect(redirect(AppRoutes.deleteAccount, guest), AppRoutes.signIn);
+      expect(redirect(AppRoutes.deleteAccount, guest, fresh), AppRoutes.signIn);
+      expect(redirect(AppRoutes.signIn, guest, fresh), isNull);
     });
 
     test('a session that ended (refresh rejected) is a guest', () {

@@ -18,7 +18,6 @@ public interface IAppDbContext
     DbSet<User> Users { get; }
     DbSet<Role> Roles { get; }
     DbSet<Permission> Permissions { get; }
-    DbSet<ReviewerField> ReviewerFields { get; }
 
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<PasswordResetToken> PasswordResetTokens { get; }
@@ -34,6 +33,8 @@ public interface IAppDbContext
     DbSet<Article> Articles { get; }
     DbSet<ArticleTranslation> ArticleTranslations { get; }
     DbSet<ArticleAttachment> ArticleAttachments { get; }
+    DbSet<ArticleDraft> ArticleDrafts { get; }
+    DbSet<ArticleRevision> ArticleRevisions { get; }
 
     DbSet<MediaAsset> MediaAssets { get; }
 

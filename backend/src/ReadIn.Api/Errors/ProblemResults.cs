@@ -23,6 +23,7 @@ public static class ProblemResults
             ErrorType.Forbidden => StatusCodes.Status403Forbidden,
             ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
             ErrorType.TooManyRequests => StatusCodes.Status429TooManyRequests,
+            ErrorType.Unavailable => StatusCodes.Status503ServiceUnavailable,
             _ => StatusCodes.Status500InternalServerError,
         };
 
@@ -32,6 +33,7 @@ public static class ProblemResults
             ["traceId"] = Activity.Current?.Id ?? context.TraceIdentifier,
         };
         if (error.Details is not null) extensions["errors"] = error.Details;
+        foreach (var (key, value) in error.Extensions ?? new Dictionary<string, object?>()) extensions[key] = value;
 
         return TypedResults.Problem(
             title: ErrorMessages.Title(error.Code, RequestLanguage.Resolve(context)) ?? error.Description,

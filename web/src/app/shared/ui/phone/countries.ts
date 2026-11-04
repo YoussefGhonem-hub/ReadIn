@@ -106,6 +106,11 @@ export function rememberCountry(iso2: string): void {
   if (countryByIso(iso2)) storage()?.setItem(LAST_USED_KEY, iso2.toUpperCase());
 }
 
+/** Forgets it again (the account was deleted, and its number's country with it). */
+export function forgetCountry(): void {
+  storage()?.removeItem(LAST_USED_KEY);
+}
+
 /** Region of the first browser language that has one, e.g. "ar-SA" → "SA". */
 export function browserRegion(languages: readonly string[]): string | null {
   for (const language of languages) {

@@ -29,7 +29,7 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AuthorId")
+                    b.Property<Guid?>("AuthorId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("AutoCheckedAt")
@@ -66,9 +66,6 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("LastReviewedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("LoveCount")
                         .HasColumnType("int");
 
@@ -87,14 +84,6 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<int>("ReadCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("ReviewStatus")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<Guid?>("ReviewedById")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -103,9 +92,6 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("SaveCount")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("ScheduledAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -138,8 +124,6 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorId");
-
-                    b.HasIndex("ReviewedById");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -181,6 +165,33 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("ArticleAttachments", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Articles.ArticleDraft", b =>
+                {
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DocumentJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("HasChanges")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("SavedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
+                    b.HasKey("ArticleId");
+
+                    b.ToTable("ArticleDrafts", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ArticleDrafts_DocumentJson_IsJson", "ISJSON([DocumentJson]) = 1");
+                        });
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Articles.ArticleRevision", b =>
                 {
                     b.Property<Guid>("Id")
@@ -190,27 +201,23 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ArticleId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ContentJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("CreatedBy")
+                    b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Language")
+                    b.Property<string>("DocumentJson")
                         .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Languages")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("RevisionNumber")
                         .HasColumnType("int");
-
-                    b.Property<string>("Subtitle")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -226,7 +233,7 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.ToTable("ArticleRevisions", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ArticleRevisions_ContentJson_IsJson", "ISJSON([ContentJson]) = 1");
+                            t.HasCheckConstraint("CK_ArticleRevisions_DocumentJson_IsJson", "ISJSON([DocumentJson]) = 1");
                         });
                 });
 
@@ -1018,7 +1025,7 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<long>("OriginalSizeBytes")
                         .HasColumnType("bigint");
 
-                    b.Property<Guid>("OwnerId")
+                    b.Property<Guid?>("OwnerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("PageCount")
@@ -1436,6 +1443,16 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(16)");
 
+                    b.Property<string>("ProviderClientId")
+                        .HasMaxLength(255)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ProviderRefreshToken")
+                        .HasMaxLength(2048)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(2048)");
+
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -1456,29 +1473,11 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("UserExternalLogins", (string)null);
                 });
 
-            modelBuilder.Entity("ReadIn.Domain.Users.ReviewerField", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("FieldId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("UserId", "FieldId");
-
-                    b.HasIndex("FieldId");
-
-                    b.ToTable("ReviewerFields", (string)null);
-                });
-
             modelBuilder.Entity("ReadIn.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("AnonymizedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("ArticleLanguagePref")
                         .IsRequired()
@@ -1810,19 +1809,13 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasOne("ReadIn.Domain.Users.User", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ReadIn.Domain.Taxonomy.Field", "Field")
                         .WithMany()
                         .HasForeignKey("FieldId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("ReadIn.Domain.Users.User", "ReviewedBy")
-                        .WithMany()
-                        .HasForeignKey("ReviewedById")
-                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("ReadIn.Domain.Taxonomy.Topic", "Topic")
                         .WithMany()
@@ -1832,8 +1825,6 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Navigation("Author");
 
                     b.Navigation("Field");
-
-                    b.Navigation("ReviewedBy");
 
                     b.Navigation("Topic");
                 });
@@ -1855,10 +1846,19 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Navigation("MediaAsset");
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Articles.ArticleDraft", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Articles.Article", null)
+                        .WithOne("Draft")
+                        .HasForeignKey("ReadIn.Domain.Articles.ArticleDraft", "ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Articles.ArticleRevision", b =>
                 {
                     b.HasOne("ReadIn.Domain.Articles.Article", null)
-                        .WithMany("Revisions")
+                        .WithMany()
                         .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1866,8 +1866,7 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasOne("ReadIn.Domain.Users.User", null)
                         .WithMany()
                         .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Articles.ArticleSource", b =>
@@ -2115,8 +2114,7 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasOne("ReadIn.Domain.Users.User", null)
                         .WithMany()
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Media.MediaAssetPage", b =>
@@ -2203,21 +2201,6 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ReadIn.Domain.Users.ReviewerField", b =>
-                {
-                    b.HasOne("ReadIn.Domain.Taxonomy.Field", null)
-                        .WithMany()
-                        .HasForeignKey("FieldId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("ReadIn.Domain.Users.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ReadIn.Domain.Users.UserDevice", b =>
                 {
                     b.HasOne("ReadIn.Domain.Users.User", null)
@@ -2280,7 +2263,7 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("Attachments");
 
-                    b.Navigation("Revisions");
+                    b.Navigation("Draft");
 
                     b.Navigation("Sources");
 

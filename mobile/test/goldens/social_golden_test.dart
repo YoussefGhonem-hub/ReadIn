@@ -12,6 +12,7 @@ import 'package:readin/features/article/presentation/cubit/article_cubit.dart';
 import 'package:readin/features/article/presentation/cubit/article_live_cubit.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/article/presentation/pages/article_page.dart';
+import 'package:readin/features/article/presentation/widgets/article_card_tile.dart';
 import 'package:readin/features/article/presentation/widgets/reader_action_bar.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
@@ -21,6 +22,7 @@ import 'package:readin/features/home/presentation/cubit/feed_cubit.dart';
 import 'package:readin/features/home/presentation/cubit/home_cubit.dart';
 import 'package:readin/features/home/presentation/cubit/live_feed_cubit.dart';
 import 'package:readin/features/home/presentation/pages/home_page.dart';
+import 'package:readin/features/home/presentation/widgets/today_hero_card.dart';
 import 'package:readin/features/notifications/presentation/cubit/unread_badge_cubit.dart';
 import 'package:readin/features/reactions/presentation/cubit/reactors_cubit.dart';
 import 'package:readin/features/reactions/presentation/widgets/reaction_picker.dart';
@@ -31,6 +33,7 @@ import 'package:readin/features/saved/domain/entities/saved.dart';
 import 'package:readin/features/saved/presentation/cubit/collections_cubit.dart';
 import 'package:readin/features/saved/presentation/cubit/saved_list_cubit.dart';
 import 'package:readin/features/saved/presentation/pages/saved_page.dart';
+import 'package:readin/features/saved/presentation/widgets/save_button.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/shared/rdoc/rdoc_document.dart';
@@ -303,9 +306,8 @@ void main() {
       await expectLater(find.byType(HomeView), matchesGoldenFile('goldens/home_following_empty_${variant.name}.png'));
     });
 
-    testWidgets('reader with follow and actions ${variant.name}', (tester) async {
+    Future<void> pumpReader(WidgetTester tester, ArticleCard card) async {
       registerNoRelatedArticles();
-      final card = engagedCard(1, myReaction: ReactionType.insightful, language: language);
       final article = ArticleDetails(
         card: card,
         availableLanguages: [language],
@@ -331,7 +333,45 @@ void main() {
           BlocProvider<CollectionsCubit>.value(value: collections(const CollectionsState())),
         ],
       );
+    }
+
+    testWidgets('reader with follow and actions ${variant.name}', (tester) async {
+      await pumpReader(tester, engagedCard(1, myReaction: ReactionType.insightful, language: language));
       await expectLater(find.byType(ArticleView), matchesGoldenFile('goldens/reader_social_${variant.name}.png'));
+    });
+
+    // SPEC §9.6: a deleted account's published articles stay up under "Deleted user".
+    testWidgets('reader by a deleted user ${variant.name}', (tester) async {
+      await pumpReader(tester, engagedCard(1, myReaction: ReactionType.insightful, language: language, authorDeleted: true));
+      expect(find.byType(FollowButton), findsNothing);
+      await expectLater(find.byType(ArticleView), matchesGoldenFile('goldens/reader_deleted_author_${variant.name}.png'));
+    });
+
+    testWidgets("today's article and a feed card by a deleted user ${variant.name}", (tester) async {
+      await pump(
+        tester,
+        variant,
+        Scaffold(
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TodayHeroCard(article: sampleCard(0, language: language, authorDeleted: true), onTap: () {}),
+                  const SizedBox(height: 16),
+                  Builder(builder: (context) {
+                    final card = engagedCard(1, language: language, authorDeleted: true);
+                    return ArticleCardTile(article: card, onTap: () {}, actions: [SaveToggleButton(article: card)]);
+                  }),
+                ],
+              ),
+            ),
+          ),
+        ),
+        size: const Size(390, 560),
+      );
+      await expectLater(find.byType(Scaffold), matchesGoldenFile('goldens/feed_cards_deleted_author_${variant.name}.png'));
     });
   }
 }

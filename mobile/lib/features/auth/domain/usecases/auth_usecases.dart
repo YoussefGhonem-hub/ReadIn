@@ -169,6 +169,8 @@ class ChangePhoneNumber {
       _accounts.changePhoneNumber(newPhoneNumber: newPhoneNumber, currentPassword: currentPassword);
 }
 
+/// Deletes the account for good, right away (SPEC F01). On success this device has forgotten the account and its
+/// session; on a failure nothing changed and nothing is retried by itself.
 @injectable
 class DeleteAccount {
   const DeleteAccount(this._accounts);
@@ -212,12 +214,24 @@ class ConfirmWithLinkedProvider {
   final ExternalIdentityRepository _identities;
 
   /// The provider that [call] will ask, or null when none can be shown here.
-  ExternalProvider? providerFor(Me me) =>
-      me.externalLogins.map((login) => login.kind).nonNulls.where(_identities.supports).firstOrNull;
+  ExternalProvider? providerFor(Me me) => providersFor(me).firstOrNull;
+
+  /// Every provider linked to [me] that this device can show, in the order they were linked.
+  List<ExternalProvider> providersFor(Me me) =>
+      me.externalLogins.map((login) => login.kind).nonNulls.where(_identities.supports).toList();
+
+  /// Whether this device can show [provider]'s sheet (Apple: iOS only for now).
+  bool supports(ExternalProvider provider) => _identities.supports(provider);
 
   Future<Result<ExternalCredential?>> call(Me me) async {
     final provider = providerFor(me);
     if (provider == null) return const Err(Failure(FailureCodes.authConfirmationRequired));
+    return _identities.obtain(provider);
+  }
+
+  /// The sheet of one [provider]: a button the person chose, or Apple when the server asks for it.
+  Future<Result<ExternalCredential?>> using(ExternalProvider provider) async {
+    if (!_identities.supports(provider)) return const Err(Failure(FailureCodes.authConfirmationRequired));
     return _identities.obtain(provider);
   }
 }

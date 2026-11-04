@@ -90,6 +90,29 @@ public sealed class GlossaryTests(ApiFactory api)
     }
 
     [Fact]
+    public async Task Updating_a_published_article_updates_its_terms()
+    {
+        var writer = await api.UserAsync("Glossary Editor");
+        var article = await PublishWithTermAsync(writer.Client, "service-lifetime", "Lifetimes");
+        (await Listed(article.Id, "service-lifetime")).Should().BeTrue();
+
+        // Swap the term in the working copy and publish the update ("already published" path, F05).
+        var edit = await writer.Client.EditAsync(article.Id);
+        var document = edit["document"]!.AsObject();
+        document["translations"]![0]!["content"]!["blocks"] = JsonSerializerHelper.ToNode(new[] { TermParagraph("dependency-injection", "DI") });
+        (await writer.Client.SaveDraftAsync(article.Id, edit["version"]!.GetValue<int>(), document)).EnsureSuccessStatusCode();
+        await (await writer.Client.PublishCurrentAsync(article.Id)).PublishedSlugAsync();
+
+        (await Listed(article.Id, "service-lifetime")).Should().BeFalse("the update dropped the term and cleared the cached term");
+        (await Listed(article.Id, "dependency-injection")).Should().BeTrue();
+    }
+
+    /// <summary>Whether the term lists the article (fetched as a guest, so through the cache).</summary>
+    private async Task<bool> Listed(Guid articleId, string term) =>
+        (await api.GuestClient().GetAsync($"/api/v1/glossary/{term}?lang=en", Ct).OkJsonAsync())["articles"]!.AsArray()
+            .Any(a => a!["id"]!.GetValue<Guid>() == articleId);
+
+    [Fact]
     public async Task Re_running_the_seeder_keeps_the_index()
     {
         using var scope = api.Services.CreateScope();
@@ -107,33 +130,16 @@ public sealed class GlossaryTests(ApiFactory api)
     }
 
     /// <summary>Publishes an English article whose only paragraph uses the glossary term <paramref name="termId"/>.</summary>
-    private static async Task<(Guid Id, string Slug)> PublishWithTermAsync(HttpClient author, string termId, string text)
+    private static async Task<(Guid Id, string Slug)> PublishWithTermAsync(HttpClient author, string termId, string text) =>
+        await author.WriteAndPublishAsync(ArticleTestKit.Document(
+            await author.FieldIdAsync("dotnet"),
+            $"Glossary test {Guid.NewGuid():N}",
+            blocks: [TermParagraph(termId, text)],
+            sources: [new { title = "Example", url = "https://example.com" }]));
+
+    private static object TermParagraph(string termId, string text) => new
     {
-        var created = await author.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = await author.FieldIdAsync("dotnet"),
-            language = "en",
-            title = $"Glossary test {Guid.NewGuid():N}",
-            content = new
-            {
-                version = 1,
-                language = "en",
-                blocks = new object[]
-                {
-                    new
-                    {
-                        id = "p1", type = "paragraph", dir = "auto",
-                        content = new object[] { new { type = "text", text = "About " }, new { type = "term", termId, text } },
-                    },
-                },
-            },
-            sources = new[] { new { title = "Example", url = "https://example.com" } },
-            isAiAssisted = false,
-        }, Ct);
-        created.StatusCode.Should().Be(HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
-        var body = (await created.Content.ReadFromJsonAsync<JsonObject>(Ct))!;
-        var id = body["id"]!.GetValue<Guid>();
-        (await author.PostAsync($"/api/v1/articles/{id}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
-        return (id, body["slug"]!.GetValue<string>());
-    }
+        id = "p1", type = "paragraph", dir = "auto",
+        content = new object[] { new { type = "text", text = "About " }, new { type = "term", termId, text } },
+    };
 }

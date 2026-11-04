@@ -16,8 +16,10 @@ using ReadIn.Application.Features.Users.Commands.UnregisterDevice;
 using ReadIn.Application.Features.Users.Commands.UpdateInterests;
 using ReadIn.Application.Features.Users.Commands.UpdatePreferences;
 using ReadIn.Application.Features.Users.Commands.UpdateProfile;
+using ReadIn.Application.Features.Users.Queries.AccountDeleted;
 using ReadIn.Application.Features.Users.Queries.CheckUsername;
 using ReadIn.Application.Features.Users.Queries.GetMe;
+using ReadIn.Domain.Common;
 
 namespace ReadIn.Api.Endpoints;
 
@@ -39,12 +41,26 @@ internal sealed class MeEndpoints : IEndpointGroup
 
         me.MapDelete("/", async ([FromBody] DeleteAccountCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
             {
+                if (http.User.Identity?.IsAuthenticated != true)
+                {
+                    // A retry after a lost response: the token is genuine but its account is already deleted, so the answer
+                    // is the same 204. Without a token, or with an ended session, it stays 401.
+                    if (http.Items[JwtAuthentication.DeletedAccountItem] is not Guid deleted ||
+                        !await sender.Send(new AccountDeletedQuery(deleted), ct))
+                        return Error.Unauthorized("auth.unauthorized", "Sign in to continue.").ToProblem(http);
+                    RefreshCookie.Clear(http);
+                    return TypedResults.NoContent();
+                }
+
                 var result = await sender.Send(body, ct);
                 if (result.IsSuccess) RefreshCookie.Clear(http);
                 return result.ToHttp(http);
             })
+            .AllowAnonymous()
             .RequireRateLimiting(RateLimitPolicies.Auth)
-            .WithSummary("Delete the account (password, or Google/Apple for accounts without one); personal data is removed after 30 days");
+            .WithSummary("Delete the account for good (password, or Google/Apple), revoking Apple tokens first; a retry answers 204 too")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         me.MapPut("/profile/complete", async (CompleteProfileCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(body, ct)).ToHttp(http))

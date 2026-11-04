@@ -19,7 +19,8 @@ public sealed record ExternalSignInCommand(
     string? UiLanguage = null,
     string? TimeZone = null,
     PhoneAccountLinkDto? Link = null,
-    bool CreateAccount = false) : ICommand<Result<AuthSessionDto>>;
+    bool CreateAccount = false,
+    string? AuthorizationCode = null) : ICommand<Result<AuthSessionDto>>;
 
 /// <summary>Proves the person owns an existing phone account, so the Google/Apple identity is added to it.</summary>
 public sealed record PhoneAccountLinkDto(string PhoneNumber, string Password);
@@ -28,7 +29,7 @@ internal sealed class ExternalSignInCommandValidator : AbstractValidator<Externa
 {
     public ExternalSignInCommandValidator()
     {
-        RuleFor(c => new ExternalCredentialDto(c.Provider, c.IdToken, c.Nonce))
+        RuleFor(c => new ExternalCredentialDto(c.Provider, c.IdToken, c.Nonce, c.AuthorizationCode))
             .SetValidator(new ExternalCredentialValidator())
             .OverridePropertyName(string.Empty);
         RuleFor(c => c.DisplayName).MaximumLength(200);

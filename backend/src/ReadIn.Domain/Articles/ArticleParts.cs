@@ -42,6 +42,8 @@ public sealed class ArticleTranslation
     public bool IsSource { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
+    internal void MarkSource(bool isSource) => IsSource = isSource;
+
     internal void Update(string title, string? subtitle, ArticleContent content, DateTime now)
     {
         Title = title;
@@ -103,30 +105,75 @@ public sealed class ArticleSource
     }
 }
 
+/// <summary>One language version for <see cref="Article.ReplaceTranslations"/>: processed content only (SPEC §13.5).</summary>
+public sealed record TranslationVersion(string Language, string Title, string? Subtitle, ArticleContent Content);
+
+/// <summary>
+/// The editor's working copy (F05): the whole editor document as JSON, saved by autosave. <see cref="Version"/> guards
+/// against two devices overwriting each other; <see cref="HasChanges"/> says a published article has unpublished edits.
+/// </summary>
+public sealed class ArticleDraft
+{
+    private ArticleDraft() { } // EF
+
+    internal ArticleDraft(Guid articleId, string documentJson, DateTime now)
+    {
+        ArticleId = articleId;
+        DocumentJson = documentJson;
+        Version = 1;
+        SavedAt = now;
+    }
+
+    public Guid ArticleId { get; private set; }
+    public string DocumentJson { get; private set; } = default!;
+    public int Version { get; private set; }
+    public bool HasChanges { get; internal set; }
+    public DateTime SavedAt { get; private set; }
+
+    internal void Replace(string documentJson, bool hasChanges, DateTime now)
+    {
+        DocumentJson = documentJson;
+        HasChanges = hasChanges;
+        Version++;
+        SavedAt = now;
+    }
+
+    internal void Publish(string documentJson, DateTime now)
+    {
+        DocumentJson = documentJson;
+        HasChanges = false;
+        SavedAt = now;
+    }
+}
+
+/// <summary>A published version of an article (F05 revision history): the editor document as it went live.</summary>
 public sealed class ArticleRevision
 {
     private ArticleRevision() { } // EF
 
-    internal ArticleRevision(Guid articleId, ArticleTranslation snapshot, int number, Guid editorId, DateTime now)
+    public ArticleRevision(Guid articleId, int number, string title, IEnumerable<string> languages, string documentJson, Guid? editorId, DateTime now)
     {
         ArticleId = articleId;
-        Language = snapshot.Language;
-        Title = snapshot.Title;
-        Subtitle = snapshot.Subtitle;
-        ContentJson = snapshot.ContentJson;
         RevisionNumber = number;
+        Title = title;
+        Languages = string.Join(',', languages);
+        DocumentJson = documentJson;
         CreatedBy = editorId;
         CreatedAt = now;
     }
 
     public Guid Id { get; private set; }
     public Guid ArticleId { get; private set; }
-    public string Language { get; private set; } = default!;
-    public string Title { get; private set; } = default!;
-    public string? Subtitle { get; private set; }
-    public string ContentJson { get; private set; } = default!;
     public int RevisionNumber { get; private set; }
-    public Guid CreatedBy { get; private set; }
+
+    /// <summary>The source-language title at that time, for the history list.</summary>
+    public string Title { get; private set; } = default!;
+
+    /// <summary>Comma-separated languages of the version, source first.</summary>
+    public string Languages { get; private set; } = default!;
+    public string DocumentJson { get; private set; } = default!;
+    /// <summary>The editor; null once that account was deleted (SPEC F01), the revision itself stays with the article.</summary>
+    public Guid? CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
 }
 
@@ -160,7 +207,7 @@ public sealed record AttachmentCandidate(
     Guid MediaAssetId,
     Media.MediaKind Kind,
     Media.MediaStatus Status,
-    Guid OwnerId,
+    Guid? OwnerId,
     int Order,
     string? Caption,
     string? AltText);
@@ -173,8 +220,4 @@ public sealed record ReactionCounts(int Insightful, int Love, int Fire, int Mind
     public int Total => Insightful + Love + Fire + MindBlown;
 }
 
-public sealed record ArticlePublishedDomainEvent(Guid ArticleId, Guid AuthorId, Guid FieldId, string Slug) : DomainEvent;
-
-public sealed record ArticleSubmittedDomainEvent(Guid ArticleId, Guid FieldId) : DomainEvent;
-
-public sealed record ArticleReviewedDomainEvent(Guid ArticleId, Guid AuthorId, bool Approved) : DomainEvent;
+public sealed record ArticlePublishedDomainEvent(Guid ArticleId, Guid? AuthorId, Guid FieldId, string Slug) : DomainEvent;

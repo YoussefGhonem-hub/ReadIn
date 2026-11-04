@@ -11,6 +11,6 @@ internal static class ArticleUrls
         (TCard)((ArticleCardDto)card with
         {
             CoverUrl = storage.ToPublicUrl(card.CoverUrl),
-            Author = card.Author with { AvatarUrl = storage.ToPublicUrl(card.Author.AvatarUrl) },
+            Author = card.Author is { } author ? author with { AvatarUrl = storage.ToPublicUrl(author.AvatarUrl) } : null,
         });
 }

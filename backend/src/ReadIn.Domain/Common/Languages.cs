@@ -23,6 +23,13 @@ public static class ArticleLanguages
     public static readonly IReadOnlyList<string> All = [EgyptianArabic, English];
 
     public static bool IsValid(string? value) => value is EgyptianArabic or English;
+
+    /// <summary>
+    /// The version a guest gets on cards (they have no <c>ArticleLanguagePref</c>): the one that matches the UI, so an
+    /// Arabic page shows Egyptian Arabic titles where a translation exists; the source language stays the fallback.
+    /// </summary>
+    public static string ForUi(string? uiLanguage) =>
+        UiLanguages.Normalize(uiLanguage) == UiLanguages.English ? English : EgyptianArabic;
 }
 
 public enum ThemePreference

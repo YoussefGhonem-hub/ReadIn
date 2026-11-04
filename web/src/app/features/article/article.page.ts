@@ -37,17 +37,18 @@ import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../c
 import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir } from '../../shared/directives/bidi';
 import { ArticleAttachments } from '../../shared/media/article-attachments';
-import { LocalizedDatePipe, ReadingTimePipe } from '../../shared/pipes/format.pipes';
+import { LocalizedDatePipe } from '../../shared/pipes/format.pipes';
 import { CollectionPickerSheet } from '../../shared/social/collection-sheets';
 import { FollowButton } from '../../shared/social/follow-button';
 import { RDocRenderer } from '../../shared/rdoc/rdoc-renderer';
-import { hasBlock, safeHttpUrl, tableOfContents } from '../../shared/rdoc/rdoc.utils';
+import { hasBlock, tableOfContents } from '../../shared/rdoc/rdoc.utils';
 import { articleLanguageForUrl, urlLangFor } from '../../shared/ui/article-link';
 import { Avatar } from '../../shared/ui/avatar';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { LinesSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { ArticleActionBar } from './article-action-bar';
+import { ArticleCover, ArticleHeadline, ArticleSources, ArticleTrustRow } from './article-parts';
 import { ArticleSeoService } from './article-seo.service';
 import { ArticleToc } from './article-toc';
 import { injectReadingTracker } from './reading-tracker';
@@ -73,7 +74,10 @@ const TOC_MIN_HEADINGS = 3;
     ArticleToc,
     ArticleActionBar,
     ArticleAttachments,
-    ReadingTimePipe,
+    ArticleCover,
+    ArticleHeadline,
+    ArticleTrustRow,
+    ArticleSources,
     LocalizedDatePipe,
     LucideDynamicIcon,
     FollowButton,
@@ -130,68 +134,50 @@ const TOC_MIN_HEADINGS = 3;
           <p class="mb-4 rounded-md bg-callout-info p-3 text-sm" role="status">{{ 'article.fallbackNotice' | transloco }}</p>
         }
 
-        <div class="mb-2 flex flex-wrap items-center gap-2 text-xs">
-          <span class="rd-tag"><rd-bdi-text [text]="uiLang() === 'ar' ? a.field.nameAr : a.field.nameEn" /></span>
-          @if (a.topic; as topic) {
-            <span class="text-text-secondary"><rd-bdi-text [text]="uiLang() === 'ar' ? topic.nameAr : topic.nameEn" /></span>
-          }
-          <span class="text-text-secondary">· {{ a.readingTimeMinutes | rdReadingTime: uiLang() }}</span>
-        </div>
-
-        <h1 class="m-0 text-[28px] font-semibold leading-snug tracking-tight lg:text-[32px]" [attr.dir]="titleDir()" [attr.lang]="a.language">
-          <rd-bdi-text [text]="a.title" />
-        </h1>
-        @if (a.subtitle) {
-          <p class="mt-2 text-lg text-text-secondary" [attr.dir]="subtitleDir()" [attr.lang]="a.language"><rd-bdi-text [text]="a.subtitle" /></p>
+        @if (a.coverUrl) {
+          <rd-article-cover [url]="a.coverUrl" />
         }
+        <rd-article-headline
+          [field]="uiLang() === 'ar' ? a.field.nameAr : a.field.nameEn"
+          [topic]="a.topic ? (uiLang() === 'ar' ? a.topic.nameAr : a.topic.nameEn) : null"
+          [minutes]="a.readingTimeMinutes"
+          [title]="a.title"
+          [subtitle]="a.subtitle"
+          [language]="a.language"
+          [uiLang]="uiLang()"
+        />
 
         <!-- Byline -->
-        <div class="mt-5 flex items-center gap-3">
-          <!-- The name below is the link for keyboards and screen readers; the photo is the same link for taps. -->
-          <a [routerLink]="'/@' + a.author.username" class="flex shrink-0 rounded-full" tabindex="-1" aria-hidden="true" data-author-avatar>
-            <rd-avatar [name]="a.author.displayName" [src]="a.author.avatarUrl" [size]="40" />
-          </a>
-          <div class="min-w-0">
-            <a [routerLink]="'/@' + a.author.username" class="inline-flex items-center gap-1 font-semibold text-text-primary no-underline">
-              {{ a.author.displayName }}
-              @if (a.author.isVerified) {
-                <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
-              }
+        <div class="mt-5 flex items-center gap-3" data-byline>
+          @if (a.author; as author) {
+            <!-- The name below is the link for keyboards and screen readers; the photo is the same link for taps. -->
+            <a [routerLink]="'/@' + author.username" class="flex shrink-0 rounded-full" tabindex="-1" aria-hidden="true" data-author-avatar>
+              <rd-avatar [name]="author.displayName" [src]="author.avatarUrl" [size]="40" />
             </a>
-            <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
-          </div>
-          <div class="ms-auto" data-author-follow>
-            <rd-follow-button [user]="a.author" [initial]="a.isFollowingAuthor" />
-          </div>
+            <div class="min-w-0">
+              <a [routerLink]="'/@' + author.username" class="inline-flex items-center gap-1 font-semibold text-text-primary no-underline">
+                {{ author.displayName }}
+                @if (author.isVerified) {
+                  <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                }
+              </a>
+              <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
+            </div>
+            <div class="ms-auto" data-author-follow>
+              <rd-follow-button [user]="author" [initial]="a.isFollowingAuthor" />
+            </div>
+          } @else {
+            <!-- The author deleted their account (SPEC §9.6): no name, photo, profile link or follow. -->
+            <rd-avatar [generic]="true" [size]="40" />
+            <div class="min-w-0">
+              <span class="font-semibold text-text-secondary" data-deleted-author>{{ 'common.deletedUser' | transloco }}</span>
+              <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
+            </div>
+          }
         </div>
 
         <!-- Trust row (SPEC §20) -->
-        <ul class="my-5 flex list-none flex-wrap items-center gap-x-3 gap-y-2 border-y border-border p-0 py-3 text-xs text-text-secondary">
-          @if (a.author.isVerified) {
-            <li class="inline-flex items-center gap-1 font-semibold text-success">
-              <svg lucideIcon="BadgeCheck" [size]="14" aria-hidden="true"></svg>{{ 'article.verifiedWriter' | transloco }}
-            </li>
-          }
-          @if (a.isReviewed) {
-            <li class="inline-flex items-center gap-1 font-semibold text-success">
-              <svg lucideIcon="ShieldCheck" [size]="14" aria-hidden="true"></svg>
-              @if (a.reviewedBy; as reviewer) {
-                {{ 'article.reviewedBy' | transloco: { name: reviewer.displayName } }}
-              } @else {
-                {{ 'article.reviewed' | transloco }}
-              }
-            </li>
-          }
-          @if (a.lastReviewedAt) {
-            <li>{{ 'article.lastReviewed' | transloco: { date: (a.lastReviewedAt | rdDate: uiLang() : 'monthYear') } }}</li>
-          }
-          @if (a.versionBadge) {
-            <li><span class="rd-tag rd-tag-neutral" dir="ltr">{{ a.versionBadge }}</span></li>
-          }
-          @if (a.isAiAssisted) {
-            <li class="inline-flex items-center gap-1"><svg lucideIcon="Bot" [size]="14" aria-hidden="true"></svg>{{ 'article.aiAssisted' | transloco }}</li>
-          }
-        </ul>
+        <rd-article-trust-row [verified]="!!a.author?.isVerified" [versionBadge]="a.versionBadge" [aiAssisted]="a.isAiAssisted" />
 
         @if (a.summary && !hasSummaryBlock()) {
           <aside class="rd-summary mb-6" role="note" [attr.dir]="summaryDir()" [attr.lang]="a.language">
@@ -220,23 +206,7 @@ const TOC_MIN_HEADINGS = 3;
         }
 
         <!-- Sources (mandatory for technical content, SPEC §20) -->
-        <section class="mt-10" aria-labelledby="sources-title">
-          <h2 id="sources-title" class="mb-3 text-lg font-semibold">📚 {{ 'article.sources' | transloco }}</h2>
-          @if (sources().length) {
-            <ol class="m-0 flex flex-col gap-2 ps-5 text-sm">
-              @for (source of sources(); track source.url) {
-                <li>
-                  <a [href]="source.url" target="_blank" rel="nofollow noopener noreferrer" class="inline-flex items-center gap-1 text-link underline underline-offset-2" dir="auto">
-                    <rd-bdi-text [text]="source.title" />
-                    <svg lucideIcon="ExternalLink" [size]="13" class="rd-flip-rtl shrink-0" aria-hidden="true"></svg>
-                  </a>
-                </li>
-              }
-            </ol>
-          } @else {
-            <p class="text-sm text-text-secondary">{{ 'article.noSources' | transloco }}</p>
-          }
-        </section>
+        <rd-article-sources [sources]="a.sources" />
 
         <rd-related-articles [article]="a" />
 
@@ -300,17 +270,9 @@ export class ArticlePage {
     return isApiError(error) ? error.status === 404 : false;
   });
 
-  protected readonly titleDir = computed(() => detectDir(this.article()?.title) ?? 'auto');
-  protected readonly subtitleDir = computed(() => detectDir(this.article()?.subtitle) ?? 'auto');
   protected readonly summaryDir = computed(() => detectDir(this.article()?.summary) ?? 'auto');
   protected readonly toc = computed(() => tableOfContents(this.article()?.content));
   protected readonly hasSummaryBlock = computed(() => hasBlock(this.article()?.content, 'summary'));
-  protected readonly sources = computed(() =>
-    (this.article()?.sources ?? []).flatMap((s) => {
-      const url = safeHttpUrl(s.url);
-      return url ? [{ title: s.title || url, url }] : [];
-    }),
-  );
   protected readonly shareUrl = computed(() => {
     const a = this.article();
     return a ? this.seo.articleUrl(a.slug, a.language) : '';
@@ -386,7 +348,8 @@ export class ArticlePage {
       // A fresh copy from the API is the truth for reactions, saves, following and collections (F10, F12, F13).
       untracked(() => {
         social.absorb([article]);
-        follows.absorb(article.author.id, article.isFollowingAuthor);
+        // A deleted author (null) can't be followed.
+        if (article.author) follows.absorb(article.author.id, article.isFollowingAuthor);
         // The copy served while hydrating is the anonymous SSR one: no collections yet.
         if (!hydration.isOpen) collections.learnArticle(article.id, article.collectionIds);
       });

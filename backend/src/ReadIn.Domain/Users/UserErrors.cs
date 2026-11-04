@@ -11,6 +11,10 @@ public static class UserErrors
     public static readonly Error InvalidLanguage = Error.Validation("user.language_invalid", "Unsupported language.");
     public static readonly Error InterestsMinThree = Error.Validation("user.interests.min_three", "Choose at least 3 interests.");
     public static readonly Error DeviceNotFound = Error.NotFound("user.device_not_found", "This device is not registered.");
+
+    /// <summary>Apple's token service didn't answer (or isn't configured), so nothing was deleted (SPEC F01).</summary>
+    public static readonly Error DeletionUnavailable = Error.Unavailable(
+        "account.deletion_unavailable", "We couldn't finish deleting your account, so nothing was deleted. Try again in a few minutes.");
 }
 
 /// <summary>The public profile and editing it (SPEC F14, F18).</summary>
@@ -73,6 +77,12 @@ public static class CredentialErrors
         Error.Validation("auth.confirmation_required", "Confirm it's you with your password or with Google or Apple.");
     public static readonly Error ExternalMismatch =
         Error.Validation("auth.external_mismatch", "Use the Google or Apple account that is linked to ReadIn.");
+    /// <summary>
+    /// Deleting an account linked to Apple needs an Apple token to revoke: when none is stored, the client confirms with Apple
+    /// (a fresh authorization code) instead of the password (SPEC F01).
+    /// </summary>
+    public static readonly Error AppleConfirmationRequired =
+        Error.Validation("auth.apple_confirmation_required", "This account is linked to Apple. Confirm with Apple to delete it.");
 
     /// <summary>Per-number limits (SPEC §9.5): 5 sign-in attempts a minute, 5 recovery attempts an hour.</summary>
     public static readonly Error TooManyAttempts =

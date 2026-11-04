@@ -20,7 +20,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([t
 /**
  * Bottom sheet on narrow screens, centered dialog on wide ones. Closes on scrim click and Escape (unless
  * `dismissible` is off, e.g. while a request is running), keeps focus inside while open and gives it back to the
- * element that opened it.
+ * element that opened it. Focus starts on the panel, or on the element marked `data-initial-focus`.
  */
 @Component({
   selector: 'rd-bottom-sheet',
@@ -84,7 +84,9 @@ export class BottomSheet {
           const active = this.document.activeElement;
           this.opener ??= active instanceof HTMLElement && !panel.nativeElement.contains(active) ? active : null;
           queueMicrotask(() => {
-            if (!panel.nativeElement.contains(this.document.activeElement)) panel.nativeElement.focus();
+            if (panel.nativeElement.contains(this.document.activeElement)) return;
+            // A confirmation can name its safe choice (e.g. Cancel) as the initial focus.
+            (panel.nativeElement.querySelector<HTMLElement>('[data-initial-focus]') ?? panel.nativeElement).focus();
           });
         } else if (!open && this.opener) {
           const opener = this.opener;

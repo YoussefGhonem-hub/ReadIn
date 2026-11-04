@@ -11,7 +11,6 @@ public static class RoleNames
     public const string Guest = "Guest";
     public const string Member = "Member";
     public const string VerifiedWriter = "VerifiedWriter";
-    public const string Reviewer = "Reviewer";
     public const string Moderator = "Moderator";
     public const string Admin = "Admin";
     public const string SuperAdmin = "SuperAdmin";
@@ -22,7 +21,6 @@ public static class RoleIds
     public static readonly Guid Guest = new("0195f3a0-0000-7000-8000-00000000a001");
     public static readonly Guid Member = new("0195f3a0-0000-7000-8000-00000000a002");
     public static readonly Guid VerifiedWriter = new("0195f3a0-0000-7000-8000-00000000a003");
-    public static readonly Guid Reviewer = new("0195f3a0-0000-7000-8000-00000000a004");
     public static readonly Guid Moderator = new("0195f3a0-0000-7000-8000-00000000a005");
     public static readonly Guid Admin = new("0195f3a0-0000-7000-8000-00000000a006");
     public static readonly Guid SuperAdmin = new("0195f3a0-0000-7000-8000-00000000a007");
@@ -43,9 +41,7 @@ public static class RoleMatrix
     [
         new(RoleIds.Guest, RoleNames.Guest, "Not signed in. Can browse and read published articles.", [P.Articles.Read]),
         new(RoleIds.Member, RoleNames.Member, "Default for every signed-up user.", MemberPermissions),
-        new(RoleIds.VerifiedWriter, RoleNames.VerifiedWriter, "Identity/expertise verified writer.", MemberPermissions),
-        new(RoleIds.Reviewer, RoleNames.Reviewer, "Reviews articles in assigned fields.",
-            [.. MemberPermissions, P.Articles.Review]),
+        new(RoleIds.VerifiedWriter, RoleNames.VerifiedWriter, "Identity/expertise verified writer (badge only; anyone may publish).", MemberPermissions),
         new(RoleIds.Moderator, RoleNames.Moderator, "Handles reports, hides content, suspends users.",
             [.. MemberPermissions, P.Moderation.Manage, P.Users.Suspend]),
         new(RoleIds.Admin, RoleNames.Admin, "Manages taxonomy, paths, verification, featured content and roles.",

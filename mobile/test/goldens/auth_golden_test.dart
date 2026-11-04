@@ -13,6 +13,7 @@ import 'package:readin/features/auth/domain/entities/external_credential.dart';
 import 'package:readin/features/auth/domain/entities/me.dart';
 import 'package:readin/features/auth/presentation/cubit/account_security_cubits.dart';
 import 'package:readin/features/auth/presentation/cubit/complete_profile_cubit.dart';
+import 'package:readin/features/auth/presentation/cubit/delete_account_cubit.dart';
 import 'package:readin/features/auth/presentation/cubit/external_sign_in_cubit.dart';
 import 'package:readin/features/auth/presentation/cubit/forgot_password_cubit.dart';
 import 'package:readin/features/auth/presentation/cubit/form_support.dart';
@@ -21,6 +22,7 @@ import 'package:readin/features/auth/presentation/cubit/sign_in_cubit.dart';
 import 'package:readin/features/auth/presentation/cubit/sign_up_cubit.dart';
 import 'package:readin/features/auth/presentation/pages/account_pages.dart';
 import 'package:readin/features/auth/presentation/pages/complete_profile_page.dart';
+import 'package:readin/features/auth/presentation/pages/delete_account_page.dart';
 import 'package:readin/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:readin/features/auth/presentation/pages/link_external_account_page.dart';
 import 'package:readin/features/auth/presentation/pages/sign_in_page.dart';
@@ -58,7 +60,7 @@ class MockChangeRecoveryPinCubit extends MockCubit<AccountFormState> implements 
 
 class MockChangePhoneCubit extends MockCubit<AccountFormState> implements ChangePhoneCubit {}
 
-class MockDeleteAccountCubit extends MockCubit<AccountFormState> implements DeleteAccountCubit {}
+class MockDeleteAccountCubit extends MockCubit<DeleteAccountState> implements DeleteAccountCubit {}
 
 class MockAddPhoneSignInCubit extends MockCubit<AccountFormState> implements AddPhoneSignInCubit {}
 
@@ -490,33 +492,98 @@ void main() {
       await expectGolden(tester, 'account_change_phone', variant);
     });
 
+    Future<void> pumpDeleteAccount(WidgetTester tester, DeleteAccountState state) => pumpScreen(
+          tester,
+          variant,
+          const DeleteAccountView(),
+          providers: [BlocProvider<DeleteAccountCubit>.value(value: MockDeleteAccountCubit()..seed(state))],
+        );
+
+    testWidgets('delete account, what happens ${variant.name}', (tester) async {
+      await pumpDeleteAccount(tester, const DeleteAccountState());
+      await expectGolden(tester, 'account_delete_review', variant);
+    });
+
+    testWidgets('delete account, what happens (end) ${variant.name}', (tester) async {
+      await pumpDeleteAccount(tester, const DeleteAccountState());
+      await tester.drag(find.byType(ListView), const Offset(0, -2000));
+      await expectGolden(tester, 'account_delete_review_end', variant);
+    });
+
     testWidgets('delete account ${variant.name}', (tester) async {
-      await pumpScreen(
+      await pumpDeleteAccount(
         tester,
-        variant,
-        const DeleteAccountView(),
-        providers: [
-          BlocProvider<DeleteAccountCubit>.value(value: MockDeleteAccountCubit()..seed(const AccountFormState())),
-        ],
+        const DeleteAccountState(step: DeleteAccountStep.confirm, understood: true, providers: [ExternalProvider.apple]),
       );
+      await tester.enterText(find.byType(TextField), 'reading4life');
       await expectGolden(tester, 'account_delete', variant);
     });
 
     testWidgets('delete a Google-only account ${variant.name}', (tester) async {
-      whenListen(
-        session,
-        const Stream<SessionState>.empty(),
-        initialState: SessionState(status: SessionStatus.authenticated, me: googleOnly),
+      await pumpDeleteAccount(
+        tester,
+        const DeleteAccountState(step: DeleteAccountStep.confirm, hasPassword: false, providers: bothProviders),
       );
+      await expectGolden(tester, 'account_delete_external', variant);
+    });
+
+    testWidgets('delete account, deleting ${variant.name}', (tester) async {
+      await pumpDeleteAccount(
+        tester,
+        const DeleteAccountState(
+          step: DeleteAccountStep.confirm,
+          hasPassword: false,
+          providers: bothProviders,
+          understood: true,
+          confirmedWith: ExternalProvider.apple,
+          status: FormStatus.submitting,
+        ),
+      );
+      await expectGolden(tester, 'account_delete_submitting', variant, spinning: true);
+    });
+
+    testWidgets('delete account, offline ${variant.name}', (tester) async {
+      await pumpDeleteAccount(
+        tester,
+        const DeleteAccountState(
+          step: DeleteAccountStep.confirm,
+          understood: true,
+          failure: Failure(FailureCodes.networkOffline),
+        ),
+      );
+      await expectGolden(tester, 'account_delete_offline', variant);
+    });
+
+    testWidgets('delete account, Apple only on Android ${variant.name}', (tester) async {
+      await pumpDeleteAccount(tester, const DeleteAccountState(step: DeleteAccountStep.confirm, hasPassword: false));
+      await expectGolden(tester, 'account_delete_apple_unavailable', variant);
+    });
+
+    testWidgets('delete account, last confirmation ${variant.name}', (tester) async {
       await pumpScreen(
         tester,
         variant,
-        const DeleteAccountView(),
-        providers: [
-          BlocProvider<DeleteAccountCubit>.value(value: MockDeleteAccountCubit()..seed(const AccountFormState())),
-        ],
+        Scaffold(
+          body: Builder(
+            builder: (context) => Center(
+              child: TextButton(onPressed: () => showDeleteAccountDialog(context), child: const Text('open')),
+            ),
+          ),
+        ),
       );
-      await expectGolden(tester, 'account_delete_external', variant);
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await expectGolden(tester, 'account_delete_dialog', variant);
+    });
+
+    testWidgets('sign in after deleting the account ${variant.name}', (tester) async {
+      await pumpScreen(
+        tester,
+        variant,
+        const SignInView(args: SignInArgs(accountDeleted: true)),
+        providers: [BlocProvider<SignInCubit>.value(value: MockSignInCubit()..seed(const SignInState()))],
+      );
+      await expectGolden(tester, 'auth_sign_in_account_deleted', variant);
     });
 
     testWidgets('add a phone number and password ${variant.name}', (tester) async {

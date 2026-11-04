@@ -10,7 +10,7 @@ ReadIn is a bilingual (Arabic + English) knowledge platform that helps you read 
 ## Highlights
 - Mixed Arabic/English articles that never break the layout (per-block direction, code always LTR).
 - Daily article at your chosen time, streaks and learning paths.
-- Verified writers, reviewed articles, sources and tested code.
+- Verified writers, mandatory sources and tested code; anyone can publish (no review, [ADR 0015](docs/adr/0015-open-publishing-and-the-editor.md)).
 - Every article in two versions: Egyptian Arabic + English terms, and English only.
 - Every feature on **Web and Mobile**, in **Arabic and English**, in **Light and Dark** mode.
 
@@ -66,7 +66,7 @@ cd web && npm ci && npm start
 cd mobile && flutter pub get && flutter run --dart-define-from-file=config/dev.json
 ```
 
-Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+12025550110` (reader1), `+12025550106` (verified writer), `+12025550104` (.NET reviewer), `+12025550102` (admin) or `+12025550101` (SuperAdmin). These are fictional 555-01XX numbers. `+12025550119` (reader10) has no PIN and shows the mandatory "set PIN" screen.
+Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+12025550110` (reader1), `+12025550106` (verified writer), `+12025550104` (.NET writer), `+12025550102` (admin) or `+12025550101` (SuperAdmin). These are fictional 555-01XX numbers. `+12025550119` (reader10) has no PIN and shows the mandatory "set PIN" screen.
 
 > Port 1433 is often taken by a locally installed SQL Server, so the container is published on **14333**.
 
@@ -94,13 +94,13 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | Backend skeleton (Domain / Application / Infrastructure / Api / ContentStudio) | ✅ |
 | Phone + password / Google / Apple auth (JWT, rotating refresh tokens, recovery PIN, account linking), SQL-backed roles & permissions | ✅ backend |
 | Seeders: roles & permissions, taxonomy, system accounts, demo users, articles | ✅ |
-| Seeders: demo interactions (reactions, saves, follows, a collection) and demo comment threads (F11); deterministic, local only | ✅ |
+| Seeders: demo interactions (reactions, saves, follows, a collection), demo comment threads (F11) and demo editor drafts + revision history (F05); deterministic, local only | ✅ |
 | Seeders: glossary (F21: 500+ terms from `content/glossary/*.yaml`, plus the index of which articles use each term) | ✅ |
 | Seeders: learning paths | ⏳ arrive with F09 |
-| Outbox + Hangfire (immediate trigger + per-minute safety net), scheduled publishing | ✅ |
+| Outbox + Hangfire (immediate trigger + per-minute safety net), hourly article quality score (ranks Today's article) | ✅ |
 | F27 Real-time: `POST /realtime/token` (Firebase custom tokens), RTDB publisher with retry + circuit breaker (article counters, comment events, feed, unread badge, PDF status), "new articles" signal on publish | ✅ backend · web + mobile listeners in place; article counters are live with F10/F13, comment events and the badge go live as F11 and F17 publish them |
 | F07 Daily article: Hangfire job picks 30 min before each user's reminder time and sends one FCM push at it (ar/en); the tap opens the reader on web + mobile | ✅ |
-| Endpoints: auth sync, me, preferences, interests, devices, fields/topics, article by slug, create/publish, for-you feed, today's article | ✅ |
+| Endpoints: auth sync, me, preferences, interests, devices, fields/topics, article by slug, editor (drafts, autosave, publish/update, revisions), for-you feed, today's article | ✅ |
 | F01 Auth, F02 Onboarding, F03 Home, F04 Reader (subset), F18 Settings: web + mobile | ✅ first slice |
 | F08 Streaks & reading stats + the F04 "read" rule (≥ 70% and ≥ 30 s, [ADR 0013](docs/adr/0013-reading-days-and-streaks.md)): web + mobile + backend, demo reading history | ✅ |
 | F10 Reactions, F12 Follow, F13 Saved: reactions/saves on every card, reader action bar, who reacted, Following feed + suggested writers, Saved page with collections (offline copies on mobile), counters recomputed by the outbox and live (F27), admin counter rebuild, demo interactions | ✅ web + mobile + backend |
@@ -108,6 +108,7 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | F11 Comments & replies: threads (one reply level), likes, @mentions, author pin, live updates, report + moderator hide/unhide/delete, flood limits, "Deleted user": web + mobile + backend, demo threads | ✅ |
 | F26 Post attachments & media: 1–10 images or one PDF per post, responsive image variants, PDF page previews, carousel + full-screen viewer, composer attachment bar: web + mobile + backend | ✅ |
 | F04 Reader, the rest: related articles at the end (topic → field → shared tags and terms; your own skipped, read ones last), resume where you left off with "Start over", glossary taps open a definition sheet (F21: Arabic + English, articles that use the term), `GET /glossary?q=` for the editor: web + mobile + backend | ✅ · "Next in path" comes with F09, "Report article" with F22, marking terms in the editor after F05 |
-| F05 Editor | ⏳ next |
+| F05 Editor: block editor (every RDoc block, slash menu, markdown shortcuts, per-block direction; Tiptap on web, AppFlowy on mobile), language versions, cover, tags, sources, attachments, autosave every 10 s + device backup + conflict handling, live checks, preview, publish/Update, private working copy of published articles, revision history with restore, "My articles" (drafts / published), demo drafts. No review and no scheduling ([ADR 0015](docs/adr/0015-open-publishing-and-the-editor.md)); Today's article ranks any published article by quality score | ✅ web + mobile + backend |
+| F20 Review workflow | ✖ removed (ADR 0015) |
 | ContentStudio `generate` (Claude), code-compile and live-link checks | ⏳ |
 | Full-text search index (needs FTS in the SQL image), SignalR | ⏳ Phase 2 |

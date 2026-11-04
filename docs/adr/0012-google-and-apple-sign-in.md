@@ -3,6 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-11-03
 - **Amends:** [0007](0007-phone-password-authentication.md) (which ruled out Google/Apple)
+- **Amended by:** [0016](0016-immediate-account-deletion.md): immediate deletion with Apple token revocation
 
 ## Context
 
@@ -48,8 +49,9 @@ that doesn't verify anything Google or Apple don't already sign.
 - Google/Apple-only accounts have no phone, password or PIN, so `mustSetRecoveryPin` is false; recovery goes through the
   provider. They can add phone + password + PIN later (`POST /me/phone-sign-in`, confirmed with the provider). Sensitive
   actions that need the password accept a fresh provider token instead (`DELETE /me` with `external`).
-- Deleting an account releases its Google/Apple identities at once, so they can sign up again; the phone number stays
-  reserved until the account is anonymized 30 days later, as before.
+- Deleting an account removes its Google/Apple identities with it, after revoking its Apple tokens, so they can sign up
+  again at once ([0016](0016-immediate-account-deletion.md); this first said the phone number stayed reserved for 30 days).
+  Apple sign in and link also send the `authorizationCode`, exchanged for a refresh token that is kept encrypted for that.
 
 ## Consequences
 

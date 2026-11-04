@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:readin/features/article/data/models/article_models.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
 
+import '../../helpers/fixtures.dart';
 import '../../helpers/social_fakes.dart';
 
 void main() {
@@ -54,6 +55,47 @@ void main() {
       expect(card.reactions.of(ReactionType.mindBlown), 3);
       expect(card.reactionCount, 6);
       expect(card.myReaction, ReactionType.mindBlown);
+    });
+  });
+
+  group('deleted author (SPEC §9.6)', () {
+    test('a card and the reader parse author: null as no author', () {
+      final json = detailsJson(1, authorDeleted: true);
+      expect(json.containsKey('author'), isTrue, reason: 'the API sends the key with null');
+
+      final details = ArticleDetailsModel.fromJson(json).toEntity();
+      expect(details.card.author, isNull);
+      expect(details.isFollowingAuthor, isFalse);
+      expect(ArticleCardModel.fromJson(json).toEntity().author, isNull);
+    });
+
+    test('a missing author key parses the same', () {
+      final json = detailsJson(1, authorDeleted: true)..remove('author');
+      expect(ArticleCardModel.fromJson(json).toEntity().author, isNull);
+      expect(ArticleDetailsModel.fromJson(json).toCard().author, isNull);
+    });
+
+    test('the offline copy of a deleted author round-trips without an author', () {
+      final model = ArticleDetailsModel.fromJson(detailsJson(1, isSaved: true, authorDeleted: true));
+      final stored = model.toJson();
+      expect(stored.containsKey('author'), isFalse, reason: 'null fields are left out of the copy');
+
+      final copy = ArticleDetailsModel.fromJson(jsonDecode(jsonEncode(stored)) as Map<String, dynamic>);
+      expect(copy, model);
+      expect(copy.toEntity(offline: true).card.author, isNull);
+    });
+
+    test('copyWith clears and sets the author', () {
+      final model = detailsModel(1);
+      expect(model.copyWith(author: null).author, isNull);
+      expect(model.copyWith(author: null).copyWith(author: model.author).author, model.author);
+      expect(model.copyWith.author, isNotNull);
+      expect(model.copyWith(author: null).copyWith.author, isNull);
+    });
+
+    test('engagement updates keep the missing author', () {
+      final card = sampleCard(1, authorDeleted: true).copyWithEngagement(reactionCount: 3, isSaved: true);
+      expect(card.author, isNull);
     });
   });
 

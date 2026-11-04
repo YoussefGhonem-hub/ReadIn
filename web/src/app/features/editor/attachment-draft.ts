@@ -1,9 +1,9 @@
 import { HttpEventType } from '@angular/common/http';
 import { Injectable, OnDestroy, computed, inject, signal } from '@angular/core';
-import { EMPTY, Observable, Subscription, catchError, defer, switchMap, takeWhile, timer } from 'rxjs';
+import { EMPTY, Observable, Subscription, catchError, defer, firstValueFrom, switchMap, takeWhile, timer } from 'rxjs';
 import { isApiError } from '../../core/api/api.config';
 import { MediaApi } from '../../core/api/media.api';
-import { MediaAssetDto, SetAttachmentsRequest } from '../../core/api/models';
+import { DraftAttachment, MediaAssetDto } from '../../core/api/models';
 import { ImageCompressor } from '../../shared/media/image-compressor';
 
 export const MAX_IMAGES = 10;
@@ -27,7 +27,8 @@ export type UploadStatus = 'compressing' | 'uploading' | 'processing' | 'ready' 
 interface DraftUpload {
   /** Local id (stable while the item is in the draft). */
   id: string;
-  file: File;
+  /** The picked file; null for an attachment loaded with a saved article (it can't be uploaded again). */
+  file: File | null;
   status: UploadStatus;
   /** Upload progress 0..1. */
   progress: number;
@@ -73,10 +74,10 @@ export function titleFromFileName(name: string): string {
 }
 
 /**
- * Attachment state for a post (F26): either up to 10 images or one PDF, never both. Owns the uploads (compress →
+ * Attachment state of an article (F26): either up to 10 images or one PDF, never both. Owns the uploads (compress →
  * upload with progress → ready; PDFs then poll `GET /uploads/{id}` every 2 s while processing), cancel/retry/remove,
- * reordering, captions, alt text and the document settings. Hosts (the composer, later the block editor) provide it
- * and read `blockers`/`toRequest()` to gate and send `PUT /articles/{id}/attachments`.
+ * reordering, captions, alt text and the document settings. The editor provides it, `load()`s the saved attachments
+ * and writes `draftAttachments()` into the draft (`document.attachments`), which autosave sends.
  */
 @Injectable()
 export class AttachmentDraft implements OnDestroy {
@@ -110,6 +111,99 @@ export class AttachmentDraft implements OnDestroy {
   });
   private readonly subscriptions = new Map<string, Subscription>();
   private nextId = 1;
+  /** Bumped by every load, so an older {@link loadResolving} never overwrites a newer one. */
+  private loads = 0;
+
+  /** The ready attachments as the draft stores them, in display order (uploads in progress are left out). */
+  readonly draftAttachments = computed<DraftAttachment[]>(() => {
+    const doc = this._document();
+    if (doc?.asset) return [{ mediaAssetId: doc.asset.id, order: 0, title: doc.title.trim(), allowDownload: doc.allowDownload }];
+    return this._images()
+      .filter((i) => i.asset)
+      .map((image, order) => ({ mediaAssetId: image.asset!.id, order, caption: image.caption.trim() || null, altText: image.altText.trim() }));
+  });
+
+  /**
+   * Replaces the attachments with the saved ones (`document.attachments` + the `media` of `ArticleEditDto`). A PDF still
+   * being prepared is polled again; an attachment whose asset is missing is skipped.
+   */
+  load(attachments: readonly DraftAttachment[], media: readonly MediaAssetDto[]): void {
+    this.loads++;
+    this.reset();
+    const assets = new Map(media.map((m) => [m.id, m]));
+    const items = [...attachments]
+      .sort((a, b) => a.order - b.order)
+      .flatMap((item) => {
+        const asset = assets.get(item.mediaAssetId);
+        return asset ? [{ item, asset }] : [];
+      });
+    const pdf = items.find(({ asset }) => asset.kind === 'document');
+    if (pdf) {
+      const { item, asset } = pdf;
+      this._document.set({
+        id: `doc-${this.nextId++}`,
+        file: null,
+        status: 'processing',
+        progress: 1,
+        asset: null,
+        errorCode: null,
+        title: item.title ?? asset.title ?? '',
+        allowDownload: !!item.allowDownload,
+      });
+      this.applyDocumentAsset(asset);
+      if (asset.status === 'processing' || asset.status === 'uploading') this.poll(asset.id);
+      return;
+    }
+    this._images.set(
+      items
+        .filter(({ asset }) => asset.kind === 'image')
+        .map(({ item, asset }) => ({
+          id: `img-${this.nextId++}`,
+          file: null,
+          status: asset.status === 'failed' ? 'failed' : 'ready',
+          progress: 1,
+          asset,
+          errorCode: asset.status === 'failed' ? (asset.failureReason ?? 'media.processing_failed') : null,
+          previewUrl: null,
+          caption: item.caption ?? '',
+          altText: item.altText ?? '',
+        })),
+    );
+  }
+
+  /**
+   * Like {@link load}, but first asks `GET /uploads/{id}` for assets `media` doesn't have (a local backup can name
+   * uploads the server copy doesn't know yet). A newer load wins over one still waiting.
+   */
+  async loadResolving(attachments: readonly DraftAttachment[], media: readonly MediaAssetDto[]): Promise<void> {
+    const known = new Map(media.map((m) => [m.id, m]));
+    const missing = attachments.map((a) => a.mediaAssetId).filter((id) => !known.has(id));
+    if (!missing.length) {
+      this.load(attachments, media);
+      return;
+    }
+    const ticket = ++this.loads;
+    const found = await Promise.all(missing.map((id) => firstValueFrom(this.media.get(id)).catch(() => null)));
+    if (ticket !== this.loads) return;
+    for (const asset of found) if (asset) known.set(asset.id, asset);
+    this.load(attachments, [...known.values()]);
+  }
+
+  /** The local id of the attachment with this asset (live checks point at assets). */
+  localIdOf(mediaAssetId: string | null): string | null {
+    if (!mediaAssetId) return null;
+    const doc = this._document();
+    if (doc?.asset?.id === mediaAssetId) return doc.id;
+    return this._images().find((i) => i.asset?.id === mediaAssetId)?.id ?? null;
+  }
+
+  private reset(): void {
+    this.subscriptions.forEach((s) => s.unsubscribe());
+    this.subscriptions.clear();
+    this._images().forEach((i) => revoke(i.previewUrl));
+    this._images.set([]);
+    this._document.set(null);
+  }
 
   // ── Images ───────────────────────────────────────────────
 
@@ -154,7 +248,7 @@ export class AttachmentDraft implements OnDestroy {
     this.stop(id);
     revoke(image.previewUrl);
     this._images.update((list) => list.filter((i) => i.id !== id));
-    this.deleteAsset(image.asset);
+    if (image.file) this.deleteAsset(image.asset); // a saved attachment may still be live: the server cleans it up
   }
 
   /** Moves an image from one position to another (drag and drop, or the keyboard move buttons). */
@@ -185,7 +279,7 @@ export class AttachmentDraft implements OnDestroy {
 
   retryImage(id: string): void {
     const image = this._images().find((i) => i.id === id);
-    if (!image || !PROBLEM.includes(image.status)) return;
+    if (!image?.file || !PROBLEM.includes(image.status)) return;
     this.startImage(id);
   }
 
@@ -193,14 +287,15 @@ export class AttachmentDraft implements OnDestroy {
     this.stop(id);
     this.patchImage(id, { status: 'compressing', progress: 0, errorCode: null });
     const image = this._images().find((i) => i.id === id);
-    if (!image) return;
+    if (!image?.file) return;
+    const file = image.file;
 
-    const subscription = compressWithAbort(this.compressor, image.file)
+    const subscription = compressWithAbort(this.compressor, file)
       .pipe(
         switchMap((blob) => {
           if (blob.size > MAX_IMAGE_BYTES) throw { code: 'media.too_large' };
           this.patchImage(id, { status: 'uploading' });
-          return this.media.uploadImage(blob, image.file.name);
+          return this.media.uploadImage(blob, file.name);
         }),
       )
       .subscribe({
@@ -253,7 +348,7 @@ export class AttachmentDraft implements OnDestroy {
     if (!doc) return;
     this.stop(doc.id);
     this._document.set(null);
-    this.deleteAsset(doc.asset);
+    if (doc.file) this.deleteAsset(doc.asset);
   }
 
   setDocumentTitle(title: string): void {
@@ -274,7 +369,7 @@ export class AttachmentDraft implements OnDestroy {
   /** Uploads the same file again (a failed processing run leaves a failed asset behind, which is deleted). */
   retryDocument(): void {
     const doc = this._document();
-    if (!doc || !PROBLEM.includes(doc.status)) return;
+    if (!doc?.file || !PROBLEM.includes(doc.status)) return;
     this.deleteAsset(doc.asset);
     this.patchDocument({ asset: null });
     this.startDocument();
@@ -282,10 +377,11 @@ export class AttachmentDraft implements OnDestroy {
 
   private startDocument(): void {
     const doc = this._document();
-    if (!doc) return;
+    if (!doc?.file) return;
+    const file = doc.file;
     this.stop(doc.id);
     this.patchDocument({ status: 'uploading', progress: 0, errorCode: null });
-    const subscription = this.media.uploadDocument(doc.file, doc.file.name, doc.title.trim() || titleFromFileName(doc.file.name), doc.allowDownload).subscribe({
+    const subscription = this.media.uploadDocument(file, file.name, doc.title.trim() || titleFromFileName(file.name), doc.allowDownload).subscribe({
       next: (event) => {
         if (event.type === HttpEventType.UploadProgress) {
           this.patchDocument({ progress: event.total ? event.loaded / event.total : 0 });
@@ -324,26 +420,6 @@ export class AttachmentDraft implements OnDestroy {
 
   private patchDocument(patch: Partial<DraftDocument>): void {
     this._document.update((doc) => (doc ? { ...doc, ...patch } : doc));
-  }
-
-  // ── Output ───────────────────────────────────────────────
-
-  /** `SetAttachmentsRequest` for the ready attachments, in display order. */
-  toRequest(): SetAttachmentsRequest {
-    const doc = this._document();
-    if (doc?.asset) {
-      return { items: [{ mediaAssetId: doc.asset.id, order: 0, title: doc.title.trim(), allowDownload: doc.allowDownload }] };
-    }
-    return {
-      items: this._images()
-        .filter((i) => i.asset)
-        .map((image, order) => ({
-          mediaAssetId: image.asset!.id,
-          order,
-          caption: image.caption.trim() || null,
-          altText: image.altText.trim(),
-        })),
-    };
   }
 
   ngOnDestroy(): void {

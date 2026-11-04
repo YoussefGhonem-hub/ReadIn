@@ -120,7 +120,7 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
 
   function profileDto(record, viewer, uiLang) {
     const isMe = viewer === record.id;
-    const published = articles.filter((a) => a.author.id === record.id).length;
+    const published = articles.filter((a) => a.author?.id === record.id).length;
     const followsYou = !!viewer && !isMe && !!record.followsEveryone;
     return {
       id: record.id,
@@ -312,7 +312,7 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
         const viewer = social.viewerOf(req);
         const record = lookup(username, viewer);
         if (!record) return notFound();
-        const items = articles.filter((a) => a.author.id === record.id).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+        const items = articles.filter((a) => a.author?.id === record.id).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
         const offset = Number(q.get('cursor') ?? 0) || 0;
         const limit = Math.min(50, Math.max(1, Number(q.get('limit') ?? 20) || 20));
         return [200, { items: items.slice(offset, offset + limit).map((a) => social.personalize(a, viewer)), nextCursor: offset + limit < items.length ? String(offset + limit) : null }];

@@ -601,7 +601,7 @@ export class CommentsStore {
       parentId,
       body,
       author: me,
-      isArticleAuthor: me.id === article.author.id,
+      isArticleAuthor: me.id === article.author?.id,
       mentions: [],
       likeCount: 0,
       likedByMe: false,

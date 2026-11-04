@@ -23,7 +23,7 @@ internal sealed class GetForYouFeedQueryHandler(
         var articles = db.Articles.AsNoTracking()
             .Where(a => a.Status == ArticleStatus.Published && a.PublishedAt != null && a.Field.IsEnabled);
 
-        string? articleLanguage = null;
+        var articleLanguage = ArticleLanguages.ForUi(query.UiLanguage);
         if (!string.IsNullOrWhiteSpace(query.FieldSlug))
         {
             articles = articles.Where(a => a.Field.Slug == query.FieldSlug);
@@ -41,7 +41,7 @@ internal sealed class GetForYouFeedQueryHandler(
                 })
                 .FirstOrDefaultAsync(ct);
 
-            articleLanguage = user?.ArticleLanguagePref;
+            articleLanguage = user?.ArticleLanguagePref ?? articleLanguage;
             if (user is not null && string.IsNullOrWhiteSpace(query.FieldSlug) && user.FieldIds.Count + user.TopicIds.Count > 0)
             {
                 var interesting = articles.Where(a =>

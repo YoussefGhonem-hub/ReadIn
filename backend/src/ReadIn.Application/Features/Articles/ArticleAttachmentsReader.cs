@@ -21,7 +21,7 @@ public sealed class ArticleAttachmentsReader(IAppDbContext db, IFileStorage stor
         string? Caption,
         string? AltText,
         MediaKind Kind,
-        Guid OwnerId,
+        Guid? OwnerId,
         int? Width,
         int? Height,
         string? BlurHash,
@@ -84,10 +84,13 @@ public sealed class ArticleAttachmentsReader(IAppDbContext db, IFileStorage stor
         });
     }
 
-    /// <summary>The author's switch, or the owner and moderators who may always download (ADR 0011).</summary>
-    public static bool CanDownload(bool allowDownload, Guid ownerId, ICurrentUser? viewer) =>
+    /// <summary>
+    /// The author's switch, or the owner and moderators who may always download (ADR 0011). An asset whose owner deleted
+    /// their account has no owner left, so only the switch and moderators count (never null == null for a guest).
+    /// </summary>
+    public static bool CanDownload(bool allowDownload, Guid? ownerId, ICurrentUser? viewer) =>
         allowDownload
-        || (viewer is not null && (viewer.UserId == ownerId || viewer.Permissions.Contains(Permissions.Moderation.Manage)));
+        || (viewer is not null && ((ownerId is not null && viewer.UserId == ownerId) || viewer.Permissions.Contains(Permissions.Moderation.Manage)));
 }
 
 internal static class ArticleAttachmentsExtensions
@@ -101,7 +104,7 @@ internal static class ArticleAttachmentsExtensions
     public static TCard PersonalizedFor<TCard>(this TCard card, ICurrentUser viewer) where TCard : ArticleCardDto
     {
         if (card.Attachments?.Document is not { CanDownload: false } document) return card;
-        if (!ArticleAttachmentsReader.CanDownload(document.AllowDownload, card.Author.Id, viewer)) return card;
+        if (!ArticleAttachmentsReader.CanDownload(document.AllowDownload, card.Author?.Id, viewer)) return card;
         return (TCard)((ArticleCardDto)card with
         {
             Attachments = card.Attachments with { Document = document with { CanDownload = true } },

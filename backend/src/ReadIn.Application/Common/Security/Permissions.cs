@@ -7,7 +7,6 @@ public static class Permissions
     {
         public const string Read = "articles.read";
         public const string Create = "articles.create";
-        public const string Review = "articles.review";
         public const string Feature = "articles.feature";
     }
 
@@ -77,7 +76,6 @@ public static class Permissions
     {
         [Articles.Read] = "Read published articles",
         [Articles.Create] = "Write and publish own articles",
-        [Articles.Review] = "Review articles in assigned fields",
         [Articles.Feature] = "Feature articles",
         [Comments.Create] = "Comment and reply",
         [Reactions.Create] = "React to articles",

@@ -41,8 +41,7 @@ public sealed class TaxonomyAndContentTests(ApiFactory api)
         article["title"]!.GetValue<string>().Should().StartWith("يعني إيه Dependency Injection");
         article["content"]!["language"]!.GetValue<string>().Should().Be("ar-EG");
         article["availableLanguages"]!.AsArray().Select(l => l!.GetValue<string>()).Should().BeEquivalentTo("en", "ar-EG");
-        article["isReviewed"]!.GetValue<bool>().Should().BeTrue();
-        article["reviewedBy"]!["username"]!.GetValue<string>().Should().Be("reviewer_dotnet");
+        article.ContainsKey("reviewedBy").Should().BeFalse("there is no review (ADR 0015)");
         article["isAiAssisted"]!.GetValue<bool>().Should().BeTrue();
         article["versionBadge"]!.GetValue<string>().Should().Be(".NET 10");
         article["sources"]!.AsArray().Should().HaveCount(3);
@@ -88,6 +87,34 @@ public sealed class TaxonomyAndContentTests(ApiFactory api)
         var response = await api.GuestClient().GetAsync("/api/v1/feed/today", Ct);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Theory]
+    [InlineData("ar", "ar-EG", "يعني إيه RAG")]
+    [InlineData("en", "en", "What is RAG")]
+    public async Task Guest_cards_come_in_the_ui_language(string uiLanguage, string language, string title)
+    {
+        // Only the fixtures live in ai-fundamentals and on the official account, so what-is-rag is on the first page.
+        var client = api.GuestClient(uiLanguage);
+        var feed = await client.GetFromJsonAsync<JsonObject>("/api/v1/feed/for-you?field=ai-fundamentals&limit=50", Ct);
+        var profile = await client.GetFromJsonAsync<JsonObject>("/api/v1/users/readin/articles?limit=50", Ct);
+
+        foreach (var page in new[] { feed!, profile! })
+        {
+            var card = page["items"]!.AsArray().Single(c => c!["slug"]!.GetValue<string>() == "what-is-rag")!;
+            card["language"]!.GetValue<string>().Should().Be(language);
+            card["title"]!.GetValue<string>().Should().StartWith(title);
+        }
+    }
+
+    [Fact]
+    public async Task A_guest_today_card_is_in_egyptian_arabic_when_the_ui_is_arabic_and_a_translation_exists()
+    {
+        var client = api.GuestClient("ar");
+        var card = await client.GetFromJsonAsync<JsonObject>("/api/v1/feed/today", Ct);
+        var arabic = await client.GetFromJsonAsync<JsonObject>($"/api/v1/articles/{card!["slug"]!.GetValue<string>()}?lang=ar-EG", Ct);
+
+        card["language"]!.GetValue<string>().Should().Be(arabic!["language"]!.GetValue<string>());
     }
 
     internal static async Task<JsonObject> Problem(HttpResponseMessage response) =>
@@ -197,12 +224,15 @@ public sealed class AccountTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task Seeded_reviewer_has_reviewer_permissions()
+    public async Task The_seeded_dotnet_writer_is_a_verified_writer_with_no_review_permissions()
     {
         var me = await (await api.SeedUserClientAsync(ApiFactory.ReviewerPhone)).GetFromJsonAsync<JsonObject>("/api/v1/me", Ct);
 
-        me!["roles"]!.AsArray().Select(r => r!.GetValue<string>()).Should().BeEquivalentTo("Member", "VerifiedWriter", "Reviewer");
-        me["permissions"]!.AsArray().Select(p => p!.GetValue<string>()).Should().Contain("articles.review");
+        me!["roles"]!.AsArray().Select(r => r!.GetValue<string>()).Should().BeEquivalentTo("Member", "VerifiedWriter");
+        me["displayName"]!.GetValue<string>().Should().Be(".NET Writer");
+        var permissions = me["permissions"]!.AsArray().Select(p => p!.GetValue<string>()).ToList();
+        permissions.Should().Contain("articles.create");
+        permissions.Should().NotContain(["articles.review", "articles.publish.sensitive"], "there is no review (ADR 0015)");
         me["isVerified"]!.GetValue<bool>().Should().BeTrue();
         me["isProfileComplete"]!.GetValue<bool>().Should().BeTrue();
         me["hasRecoveryPin"]!.GetValue<bool>().Should().BeTrue();
@@ -213,17 +243,6 @@ public sealed class AccountTests(ApiFactory api)
 public sealed class WritingTests(ApiFactory api)
 {
     private static readonly CancellationToken Ct = TestContext.Current.CancellationToken;
-
-    private static object Content(string text) => new
-    {
-        version = 1,
-        language = "en",
-        blocks = new object[]
-        {
-            new { id = "p1", type = "paragraph", content = new[] { new { type = "text", text } } },
-            new { id = "c1", type = "callout", variant = "tip", content = new[] { new { type = "text", text = "A tip." } } },
-        },
-    };
 
     [Fact]
     public async Task Guests_cannot_write()
@@ -237,74 +256,63 @@ public sealed class WritingTests(ApiFactory api)
     public async Task Member_creates_and_publishes_an_article()
     {
         var client = (await api.SignUpAsync()).Client;
-        var dotnet = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!
-            .Single(f => f!["slug"]!.GetValue<string>() == "dotnet")!["id"]!.GetValue<Guid>();
+        var dotnet = await client.FieldIdAsync("dotnet");
 
-        var noSources = await client.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = dotnet, language = "en", title = "Records in C# without sources",
-            content = Content("Records are great."), isAiAssisted = false,
-        }, Ct);
-        var draftId = (await noSources.Content.ReadFromJsonAsync<JsonObject>(Ct))!["id"]!.GetValue<Guid>();
-        var publishWithoutSources = await client.PostAsync($"/api/v1/articles/{draftId}/publish", null, Ct);
+        var draft = await client.CreateDraftAsync(ArticleTestKit.Document(dotnet, "Records in C# without sources",
+            blocks: [ArticleTestKit.Paragraph("Records are great.")], sources: []));
+        var draftId = draft["id"]!.GetValue<Guid>();
+        draft.ProblemCodes().Should().Equal("article.sources_required");
+        var publishWithoutSources = await client.PublishDraftAsync(draftId, draft["version"]!.GetValue<int>());
         publishWithoutSources.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await TaxonomyAndContentTests.Problem(publishWithoutSources))["code"]!.GetValue<string>().Should().Be("article.sources_required");
 
-        var created = await client.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = dotnet, language = "en", title = "Records in C#: value equality made easy",
-            content = Content("Records give you value equality. ‮"),
-            tags = new[] { "C#", "c#", "Records" },
-            sources = new[] { new { title = "Records — Microsoft Learn", url = "https://learn.microsoft.com/dotnet/csharp/fundamentals/types/records" } },
-            isAiAssisted = false,
-        }, Ct);
-        created.StatusCode.Should().Be(HttpStatusCode.Created);
-        var id = (await created.Content.ReadFromJsonAsync<JsonObject>(Ct))!["id"]!.GetValue<Guid>();
-
-        (await client.PostAsync($"/api/v1/articles/{id}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var created = await client.CreateDraftAsync(ArticleTestKit.Document(dotnet, "Records in C#: value equality made easy",
+            blocks: [ArticleTestKit.Paragraph("Records give you value equality. ‮")],
+            tags: ["C#", "c#", "Records"],
+            sources: [new { title = "Records — Microsoft Learn", url = "https://learn.microsoft.com/dotnet/csharp/fundamentals/types/records" }]));
+        var published = await client.PublishDraftAsync(created["id"]!.GetValue<Guid>(), created["version"]!.GetValue<int>());
+        (await published.PublishedSlugAsync()).Should().Be("records-in-csharp-value-equality-made-easy");
 
         var article = await api.GuestClient().GetFromJsonAsync<JsonObject>("/api/v1/articles/records-in-csharp-value-equality-made-easy", Ct);
         article!["tags"]!.AsArray().Select(t => t!.GetValue<string>()).Should().BeEquivalentTo("C#", "Records");
-        article["isReviewed"]!.GetValue<bool>().Should().BeFalse("published without review shows no Reviewed badge");
+        article.ContainsKey("isReviewed").Should().BeFalse("there is no review (ADR 0015)");
         article["content"]!["blocks"]![0]!["content"]![0]!["text"]!.GetValue<string>().Should().NotContain("‮");
     }
 
     [Fact]
-    public async Task Others_cannot_publish_my_article()
+    public async Task Others_cannot_see_or_publish_my_article()
     {
         var author = (await api.SignUpAsync()).Client;
         var other = (await api.SignUpAsync()).Client;
         var field = (await author.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))![0]!["id"]!.GetValue<Guid>();
+        var draft = await author.CreateDraftAsync(ArticleTestKit.Document(field, "Ownership matters here", blocks: [ArticleTestKit.Paragraph("Mine.")]));
+        var id = draft["id"]!.GetValue<Guid>();
 
-        var created = await author.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = field, language = "en", title = "Ownership matters here", content = Content("Mine."), isAiAssisted = false,
-            sources = new[] { new { title = "Source", url = "https://example.com/source" } },
-        }, Ct);
-        var id = (await created.Content.ReadFromJsonAsync<JsonObject>(Ct))!["id"]!.GetValue<Guid>();
+        var response = await other.PublishDraftAsync(id, draft["version"]!.GetValue<int>());
 
-        var response = await other.PostAsync($"/api/v1/articles/{id}/publish", null, Ct);
-
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        (await TaxonomyAndContentTests.Problem(response))["code"]!.GetValue<string>().Should().Be("article.not_owner");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound, "someone else's draft does not exist for you");
+        (await TaxonomyAndContentTests.Problem(response))["code"]!.GetValue<string>().Should().Be("article.not_found");
+        (await other.GetAsync($"/api/v1/articles/{id}/edit", Ct)).StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
-    public async Task Invalid_rdoc_is_rejected_with_details()
+    public async Task Invalid_rdoc_is_saved_as_a_draft_but_never_published()
     {
         var client = (await api.SignUpAsync()).Client;
         var field = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))![0]!["id"]!.GetValue<Guid>();
+        var document = ArticleTestKit.Document(field, "Raw HTML is never allowed");
+        document["translations"]![0]!["content"] = JsonNode.Parse(
+            """{ "version": 1, "language": "en", "blocks": [{ "id": "p1", "type": "paragraph", "content": [{ "type": "text", "text": "Fine." }] }, { "id": "x", "type": "html", "html": "<script>alert(1)</script>" }] }""");
 
-        var response = await client.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = field, language = "en", title = "Raw HTML is never allowed",
-            content = JsonSerializer.Deserialize<JsonElement>("""{ "version": 1, "language": "en", "blocks": [{ "id": "x", "type": "html", "html": "<script>alert(1)</script>" }] }"""),
-            isAiAssisted = false,
-        }, Ct);
+        var draft = await client.CreateDraftAsync(document);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        var problem = await TaxonomyAndContentTests.Problem(response);
+        var problem = draft["checks"]!["problems"]!.AsArray().Should().ContainSingle().Which!;
         problem["code"]!.GetValue<string>().Should().Be("article.content_invalid");
-        problem["errors"]!.AsObject().Should().NotBeEmpty();
+        problem["blockId"]!.GetValue<string>().Should().Be("x", "the client can point at the block the schema rejected");
+        var publish = await client.PublishDraftAsync(draft["id"]!.GetValue<Guid>(), draft["version"]!.GetValue<int>());
+        publish.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var body = await TaxonomyAndContentTests.Problem(publish);
+        body["code"]!.GetValue<string>().Should().Be("article.content_invalid");
+        body["problems"]!.AsArray().Should().ContainSingle();
     }
 }

@@ -12,7 +12,8 @@ import { pushLinkToPath, toPushMessage } from './push-message';
 /**
  * Web push through Firebase Cloud Messaging (SPEC §21.1). Once the user has granted permission, this browser's
  * FCM token is registered with `POST /me/devices` on every sign-in and page load (which also picks up rotated
- * tokens) and deleted on sign-out. Pushes that arrive while a tab is visible become an in-app toast.
+ * tokens) and deleted on sign-out and when the account is deleted. Pushes that arrive while a tab is visible become an
+ * in-app toast.
  */
 @Injectable({ providedIn: 'root' })
 export class PushService {
@@ -74,6 +75,15 @@ export class PushService {
       /* offline: the API drops the token once FCM reports it invalid */
     }
     await this.unregister();
+  }
+
+  /**
+   * The account was deleted: the API already dropped its devices, so nothing is sent to it (the token couldn't call it
+   * anyway). The FCM token on this browser is deleted too, also one registered by an earlier page load, so no push
+   * for the deleted account can reach it.
+   */
+  async forgetDevice(): Promise<void> {
+    if (this.registered || this._permission() === 'granted') await this.unregister();
   }
 
   private async sync(userId: string | null, permission: PushPermission): Promise<void> {

@@ -72,6 +72,19 @@ class PushService {
     }
   }
 
+  /// The account was deleted (the API already dropped its device tokens): this device stops registering for it and its
+  /// FCM token is deleted, whether or not it was registered, so nothing sent to the old token can arrive. Best effort.
+  Future<void> forgetDevice() async {
+    _userId = null;
+    _registered = null;
+    if (!_platform.isSupported) return;
+    try {
+      await _platform.deleteToken();
+    } catch (error) {
+      debugPrint('Could not delete the push token: $error');
+    }
+  }
+
   /// Registers this device for [userId] (null = signed out, which deletes the token).
   Future<void> followUser(String? userId) async {
     if (userId == _userId) return;

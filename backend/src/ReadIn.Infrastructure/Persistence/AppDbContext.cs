@@ -26,7 +26,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
-    public DbSet<ReviewerField> ReviewerFields => Set<ReviewerField>();
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
@@ -42,6 +41,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Article> Articles => Set<Article>();
     public DbSet<ArticleTranslation> ArticleTranslations => Set<ArticleTranslation>();
     public DbSet<ArticleAttachment> ArticleAttachments => Set<ArticleAttachment>();
+    public DbSet<ArticleDraft> ArticleDrafts => Set<ArticleDraft>();
+    public DbSet<ArticleRevision> ArticleRevisions => Set<ArticleRevision>();
 
     public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
 

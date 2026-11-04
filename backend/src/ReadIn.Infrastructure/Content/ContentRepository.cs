@@ -180,12 +180,12 @@ public sealed record ArticleMeta
     public DateTime? ReviewedAt { get; init; }
     public DateTime? PublishAt { get; init; }
 
-    /// <summary><c>pending</c> = published and waiting for a human reviewer; a "Reviewed by" badge is never faked.</summary>
+    /// <summary>Kept for the ContentStudio rules only; there is no review since ADR 0015, so the importer ignores it.</summary>
     public string? ReviewStatus { get; init; }
 
     public PathRef? LearningPath { get; init; }
 
-    /// <summary>When the content was generated or last re-verified by the pipeline (shown as "Last reviewed").</summary>
+    /// <summary>When the content was generated or last re-verified by the pipeline; stored as <c>Articles.AutoCheckedAt</c>.</summary>
     public DateTime? LastReviewedAt { get; init; }
 
     public CodeMeta? Code { get; init; }

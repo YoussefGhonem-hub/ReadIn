@@ -42,6 +42,12 @@ Push needs `prod` (the emulator has no Cloud Messaging); live counters and the u
   password → set recovery PIN → complete profile → onboarding → the requested page. Guests browse and read.
 - **Sign out:** `DELETE /me/devices/{token}` → `POST /auth/logout` → forget the tokens; the live connection signs out
   of Firebase and the FCM token is deleted as the session ends (`LiveSessionBridge`).
+- **Delete account** (Settings → Account, the last red row; immediate and final): what is deleted and kept → confirm
+  it's you (the password, or a fresh Google / Apple sign in; Apple's sheet opens by itself on
+  `auth.apple_confirmation_required`) → "I understand" and a last dialog → `DELETE /me`. On `204` the device forgets the
+  account (`AccountDeviceData`: FCM token deleted on the device, cached images, temporary files, the remembered Google
+  account and phone country), then the session, and Sign in says "تم حذف حسابك.". A failure deletes nothing; Retry is
+  the person's choice, never queued. Every Apple credential (sign in, link, delete) carries `authorizationCode`.
 - **Shared inputs** (`lib/shared/widgets/inputs/`): phone field + country picker (bundled flags, `phone_numbers_parser`,
   E.164, always LTR), password field with strength meter and rules checklist, PIN boxes. The rules mirror the API's
   (`lib/core/security/credential_rules.dart`); the server re-checks everything.

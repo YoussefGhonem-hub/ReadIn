@@ -75,6 +75,9 @@ internal sealed class ExternalLoginConfiguration : IEntityTypeConfiguration<Exte
         builder.Property(l => l.Provider).HasMaxLength(16).IsUnicode(false).IsRequired();
         builder.Property(l => l.Subject).HasMaxLength(255).IsUnicode(false).IsRequired();
         builder.Property(l => l.Email).HasMaxLength(320);
+        // Apple refresh token, AES-GCM encrypted (SPEC F01); never read back except to revoke it.
+        builder.Property(l => l.ProviderRefreshToken).HasMaxLength(2048).IsUnicode(false);
+        builder.Property(l => l.ProviderClientId).HasMaxLength(255).IsUnicode(false);
         builder.HasIndex(l => new { l.Provider, l.Subject }).IsUnique();
         builder.HasIndex(l => new { l.UserId, l.Provider }).IsUnique();
     }
@@ -115,17 +118,6 @@ internal sealed class UserDeviceConfiguration : IEntityTypeConfiguration<UserDev
         builder.Property(d => d.Token).HasMaxLength(4096).IsRequired();
         builder.Property(d => d.Platform).HasConversion<string>().HasMaxLength(10);
         builder.HasIndex(d => d.UserId);
-    }
-}
-
-internal sealed class ReviewerFieldConfiguration : IEntityTypeConfiguration<ReviewerField>
-{
-    public void Configure(EntityTypeBuilder<ReviewerField> builder)
-    {
-        builder.ToTable("ReviewerFields");
-        builder.HasKey(r => new { r.UserId, r.FieldId });
-        builder.HasOne<User>().WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne<Field>().WithMany().HasForeignKey(r => r.FieldId).OnDelete(DeleteBehavior.NoAction);
     }
 }
 

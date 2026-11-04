@@ -7,7 +7,6 @@ public sealed class ArticleTests
 {
     private static readonly DateTime Now = new(2026, 11, 2, 8, 0, 0, DateTimeKind.Utc);
     private static readonly Guid AuthorId = Guid.NewGuid();
-    private static readonly Guid ReviewerId = Guid.NewGuid();
 
     private static ArticleContent Content(int words = 900) =>
         new("{}", "text", "text", null, ReadingTimeMinutes: 5, WordCount: words);
@@ -58,7 +57,7 @@ public sealed class ArticleTests
     }
 
     [Fact]
-    public void Non_sensitive_article_can_be_published_without_review()
+    public void Any_article_publishes_directly_without_review()
     {
         var field = SoftwareField();
         var article = Draft(field);
@@ -68,7 +67,6 @@ public sealed class ArticleTests
         result.IsSuccess.Should().BeTrue();
         article.Status.Should().Be(ArticleStatus.Published);
         article.PublishedAt.Should().Be(Now);
-        article.IsReviewed.Should().BeFalse();
         article.DomainEvents.Should().ContainSingle(e => e is ArticlePublishedDomainEvent);
     }
 
@@ -83,91 +81,159 @@ public sealed class ArticleTests
     }
 
     [Fact]
-    public void Health_fields_can_be_published_without_review()
+    public void Sensitive_fields_publish_directly_too()
     {
         var field = SensitiveField();
         var article = Draft(field);
 
         article.Publish(field, Now).IsSuccess.Should().BeTrue();
         article.Status.Should().Be(ArticleStatus.Published);
-        article.IsReviewed.Should().BeFalse();
     }
 
     [Fact]
-    public void Authors_cannot_approve_their_own_article()
-    {
-        var article = Draft(SoftwareField());
-        article.SubmitForReview();
-
-        article.Approve(AuthorId, Now).Error.Should().Be(ArticleErrors.CannotReviewOwnArticle);
-    }
-
-    [Fact]
-    public void Review_flow_moves_through_the_lifecycle()
-    {
-        var article = Draft(SoftwareField());
-
-        article.SubmitForReview();
-        article.Status.Should().Be(ArticleStatus.Submitted);
-        article.StartReview();
-        article.Status.Should().Be(ArticleStatus.InReview);
-        article.RequestChanges(ReviewerId);
-        article.Status.Should().Be(ArticleStatus.ChangesRequested);
-        article.SubmitForReview();
-        article.Approve(ReviewerId, Now);
-
-        article.Status.Should().Be(ArticleStatus.Approved);
-        article.ReviewedById.Should().Be(ReviewerId);
-        article.LastReviewedAt.Should().Be(Now);
-    }
-
-    [Fact]
-    public void Approve_without_a_pending_review_is_a_conflict()
-    {
-        var article = Draft(SoftwareField());
-
-        article.Approve(ReviewerId, Now).Error.Should().Be(ArticleErrors.NotPendingReview);
-    }
-
-    [Fact]
-    public void Significant_edit_of_a_published_article_creates_a_revision_and_resets_the_reviewed_badge()
+    public void Publishing_again_is_an_update_that_keeps_the_first_date_and_raises_no_new_event()
     {
         var field = SoftwareField();
         var article = Draft(field);
-        article.SubmitForReview();
-        article.Approve(ReviewerId, Now);
+        article.Publish(field, Now);
+        var events = article.DomainEvents.Count;
+
+        article.Publish(field, Now.AddDays(3)).IsSuccess.Should().BeTrue();
+
+        article.PublishedAt.Should().Be(Now);
+        article.DomainEvents.Should().HaveCount(events);
+    }
+
+    [Fact]
+    public void A_first_publish_starts_with_the_quality_score_of_a_new_article()
+    {
+        var field = SoftwareField();
+        var article = Draft(field);
+
         article.Publish(field, Now);
 
-        article.UpdateTranslation("en", "Dependency Injection v2", null, Content(words: 1500), AuthorId, Now.AddDays(1));
-
-        article.Revisions.Should().ContainSingle().Which.Title.Should().Be("Dependency Injection");
-        article.IsReviewed.Should().BeFalse();
-        article.ReviewedById.Should().BeNull();
+        article.QualityScore.Should().BeApproximately(ArticleQuality.Score(0, 0, 0, 0, 0, 0), 1e-9);
     }
 
     [Fact]
-    public void Small_edit_keeps_the_reviewed_badge()
+    public void Replacing_translations_updates_adds_removes_and_sets_the_source()
+    {
+        var article = Draft(SoftwareField());
+        article.AddTranslation("ar-EG", "الـ DI", null, Content());
+
+        var result = article.ReplaceTranslations("ar-EG", [new TranslationVersion("ar-EG", " الـ DI ببساطة ", "مقدمة", Content(1000))], Now);
+
+        result.IsSuccess.Should().BeTrue();
+        article.SourceLanguage.Should().Be("ar-EG");
+        var only = article.Translations.Should().ContainSingle().Which;
+        only.Language.Should().Be("ar-EG");
+        only.Title.Should().Be("الـ DI ببساطة");
+        only.Subtitle.Should().Be("مقدمة");
+        only.IsSource.Should().BeTrue();
+        only.WordCount.Should().Be(1000);
+
+        article.ReplaceTranslations("ar-EG", [new("ar-EG", "الـ DI", null, Content()), new("en", "DI", null, Content())], Now);
+        article.Translations.Select(t => (t.Language, t.IsSource)).Should().BeEquivalentTo([("ar-EG", true), ("en", false)]);
+    }
+
+    [Fact]
+    public void Replacing_translations_needs_the_source_language_and_distinct_languages()
+    {
+        var article = Draft(SoftwareField());
+
+        article.ReplaceTranslations("ar-EG", [new("en", "DI", null, Content())], Now).Error.Should().Be(ArticleErrors.TranslationNotFound);
+        article.ReplaceTranslations("en", [new("en", "A", null, Content()), new("en", "B", null, Content())], Now)
+            .Error.Should().Be(ArticleErrors.TranslationExists);
+        article.ReplaceTranslations("en", [], Now).Error.Should().Be(ArticleErrors.NoContent);
+        article.Translations.Should().ContainSingle().Which.Title.Should().Be("Dependency Injection");
+    }
+
+    [Fact]
+    public void Autosave_needs_the_current_version_and_bumps_it()
+    {
+        var article = Article.CreateDraft(AuthorId, Guid.NewGuid(), null, "draft-x", sourceLanguage: "ar-EG");
+        article.CurrentDraftVersion.Should().Be(0);
+
+        article.SaveDraft("""{"a":1}""", baseVersion: 0, Now).IsSuccess.Should().BeTrue();
+        article.SaveDraft("""{"a":2}""", baseVersion: 1, Now.AddSeconds(10)).IsSuccess.Should().BeTrue();
+
+        article.SaveDraft("""{"a":3}""", baseVersion: 1, Now.AddSeconds(20)).Error.Should().Be(ArticleErrors.DraftConflict);
+        article.CurrentDraftVersion.Should().Be(2);
+        article.Draft!.DocumentJson.Should().Be("""{"a":2}""");
+        article.Draft.SavedAt.Should().Be(Now.AddSeconds(10));
+        article.Draft.HasChanges.Should().BeFalse("a never-published draft has nothing published to differ from");
+    }
+
+    [Fact]
+    public void Editing_a_published_article_marks_unpublished_changes_until_the_next_publish()
     {
         var field = SoftwareField();
         var article = Draft(field);
-        article.SubmitForReview();
-        article.Approve(ReviewerId, Now);
         article.Publish(field, Now);
 
-        article.UpdateTranslation("en", "Dependency Injection", null, Content(words: 950), AuthorId, Now.AddDays(1));
+        article.SaveDraft("""{"edit":1}""", baseVersion: 0, Now.AddHours(1));
+        article.Draft!.HasChanges.Should().BeTrue();
 
-        article.IsReviewed.Should().BeTrue();
+        article.MarkDraftPublished("""{"live":1}""", Now.AddHours(2));
+        article.Draft.HasChanges.Should().BeFalse();
+        article.Draft.DocumentJson.Should().Be("""{"live":1}""");
+        article.CurrentDraftVersion.Should().Be(1, "publishing does not change the version the editor holds");
     }
 
     [Fact]
-    public void Scheduling_in_the_past_is_rejected()
+    public void Discarding_resets_the_working_copy_and_is_only_for_published_articles()
     {
         var field = SoftwareField();
         var article = Draft(field);
+        article.SaveDraft("""{"edit":1}""", 0, Now);
 
-        article.Schedule(field, Now.AddMinutes(-1), Now).Error.Should().Be(ArticleErrors.ScheduleInPast);
-        article.Schedule(field, Now.AddDays(1), Now).IsSuccess.Should().BeTrue();
-        article.Status.Should().Be(ArticleStatus.Scheduled);
+        article.DiscardDraft("""{"live":1}""", 1, Now).Error.Should().Be(ArticleErrors.NotPublished);
+
+        article.Publish(field, Now);
+        article.SaveDraft("""{"edit":2}""", 1, Now.AddHours(1));
+        article.DiscardDraft("""{"live":1}""", 1, Now).Error.Should().Be(ArticleErrors.DraftConflict);
+        article.DiscardDraft("""{"live":1}""", 2, Now.AddHours(2)).IsSuccess.Should().BeTrue();
+
+        article.Draft!.HasChanges.Should().BeFalse();
+        article.Draft.DocumentJson.Should().Be("""{"live":1}""");
+        article.CurrentDraftVersion.Should().Be(3);
+    }
+
+    [Fact]
+    public void Restoring_a_revision_puts_it_in_the_working_copy()
+    {
+        var field = SoftwareField();
+        var article = Draft(field);
+        article.Publish(field, Now);
+
+        article.RestoreDraft("""{"revision":1}""", baseVersion: 0, Now.AddDays(1)).IsSuccess.Should().BeTrue();
+
+        article.Draft!.DocumentJson.Should().Be("""{"revision":1}""");
+        article.Draft.HasChanges.Should().BeTrue();
+        article.RestoreDraft("""{"revision":2}""", baseVersion: 0, Now).Error.Should().Be(ArticleErrors.DraftConflict);
+    }
+
+    [Fact]
+    public void The_slug_is_fixed_at_the_first_publish()
+    {
+        var field = SoftwareField();
+        var article = Draft(field);
+        article.AssignSlug("dependency-injection");
+        article.Publish(field, Now);
+
+        article.Slug.Should().Be("dependency-injection");
+        article.Invoking(a => a.AssignSlug("other")).Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Auto_checked_records_the_pipeline_date()
+    {
+        var article = Article.CreateDraft(Guid.NewGuid(), Guid.NewGuid(), topicId: null, "hashing-is-not-encryption");
+        var checkedAt = Now.AddDays(-1);
+
+        article.MarkAutoChecked(checkedAt);
+
+        article.AutoCheckedAt.Should().Be(checkedAt);
     }
 
     [Fact]

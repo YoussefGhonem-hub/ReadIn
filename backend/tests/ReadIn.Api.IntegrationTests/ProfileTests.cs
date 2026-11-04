@@ -169,16 +169,8 @@ public sealed class ProfileTests(ApiFactory api)
         var second = await writer.Client.PublishAsync();
         await SetReadCountAsync(first.Id, 7);
         await SetReadCountAsync(second.Id, 5);
-        (await writer.Client.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = await writer.Client.FieldIdAsync("dotnet"), language = "en", title = "A draft that doesn't count",
-            content = new
-            {
-                version = 1, language = "en",
-                blocks = new object[] { new { id = "p1", type = "paragraph", dir = "auto", content = new[] { new { type = "text", text = "Not yet." } } } },
-            },
-            isAiAssisted = false,
-        }, Ct)).StatusCode.Should().Be(HttpStatusCode.Created);
+        await writer.Client.CreateDraftAsync(ArticleTestKit.Document(
+            await writer.Client.FieldIdAsync("dotnet"), "A draft that doesn't count", blocks: [ArticleTestKit.Paragraph("Not yet.")]));
 
         var alice = await api.UserAsync();
         var bob = await api.UserAsync();

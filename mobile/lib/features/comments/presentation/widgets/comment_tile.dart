@@ -216,28 +216,6 @@ void _openProfile(BuildContext context, String username) {
   if (router != null) unawaited(router.push<void>(ProfileRoutes.of(username)));
 }
 
-/// The avatar of a deleted account or a placeholder: no initial, no photo.
-class GenericAvatar extends StatelessWidget {
-  const GenericAvatar({super.key, this.size = 32});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: colors.surfaceVariant,
-        border: context.isDark ? Border.all(color: colors.border) : null,
-      ),
-      child: Icon(Icons.person_outline_rounded, size: size * 0.6, color: colors.textSecondary),
-    );
-  }
-}
-
 class _Placeholder extends StatelessWidget {
   const _Placeholder({required this.comment, required this.avatarSize});
 

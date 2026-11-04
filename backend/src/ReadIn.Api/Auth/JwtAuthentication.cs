@@ -27,6 +27,12 @@ public sealed class JwtOptions
 
 public static class JwtAuthentication
 {
+    /// <summary>
+    /// Set on the request when a genuine, unexpired token belongs to an account that no longer exists, so a retried
+    /// <c>DELETE /me</c> can confirm the deletion (SPEC F01). Every other endpoint just sees an anonymous request.
+    /// </summary>
+    public const string DeletedAccountItem = "readin.deleted_account";
+
     /// <summary>Marks the committed Development key and pepper, so they can never be used on a server.</summary>
     private const string DevelopmentMarker = "dev-only";
 
@@ -88,6 +94,7 @@ public static class JwtAuthentication
 
         var access = context.HttpContext.RequestServices.GetRequiredService<IUserAccessService>();
         var userAccess = await access.GetAsync(userId, context.HttpContext.RequestAborted);
+        if (userAccess is null) context.HttpContext.Items[DeletedAccountItem] = userId;
         if (userAccess is null || userAccess.SecurityStamp != principal.FindFirst(JwtClaims.SecurityStamp)?.Value)
         {
             context.Fail("The session has ended.");

@@ -4,7 +4,9 @@ import 'package:equatable/equatable.dart';
 ///
 /// The API validates and sanitizes RDoc before storing it, so parsing here is
 /// lenient: unknown block types are skipped (forward compatibility) and
-/// missing optional attributes fall back to defaults.
+/// missing optional attributes fall back to defaults. [toJson] writes the
+/// schema form back (the editor's autosave): every attribute round-trips,
+/// except that `dir: "auto"` (the default) and empty `marks` are left out.
 class RDocDocument extends Equatable {
   const RDocDocument({required this.version, required this.language, required this.blocks});
 
@@ -25,7 +27,16 @@ class RDocDocument extends Equatable {
         ],
       );
 
+  Map<String, dynamic> toJson() => {
+        'version': version,
+        'language': language,
+        'blocks': [for (final b in blocks) b.toJson()],
+      };
+
   bool get hasSummaryBlock => blocks.any((b) => b is RSummary);
+
+  RDocDocument copyWith({String? language, List<RBlock>? blocks}) =>
+      RDocDocument(version: version, language: language ?? this.language, blocks: blocks ?? this.blocks);
 
   @override
   List<Object?> get props => [version, language, blocks];
@@ -49,6 +60,8 @@ class RMark extends Equatable {
     return RMark(type, href: json['href'] as String?);
   }
 
+  Map<String, dynamic> toJson() => {'type': type.name, if (type == RMarkType.link) 'href': href ?? ''};
+
   @override
   List<Object?> get props => [type, href];
 }
@@ -57,6 +70,8 @@ sealed class RInline extends Equatable {
   const RInline();
 
   String get plainText;
+
+  Map<String, dynamic> toJson();
 
   static RInline? tryParse(Map<String, dynamic> json) => switch (json['type']) {
         'text' => RText(
@@ -76,6 +91,8 @@ sealed class RInline extends Equatable {
         for (final n in (raw as List? ?? const []))
           if (n is Map<String, dynamic>) ?RInline.tryParse(n),
       ];
+
+  static List<Map<String, dynamic>> listToJson(List<RInline> nodes) => [for (final n in nodes) n.toJson()];
 }
 
 class RText extends RInline {
@@ -89,6 +106,13 @@ class RText extends RInline {
 
   @override
   String get plainText => text;
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'type': 'text',
+        'text': text,
+        if (marks.isNotEmpty) 'marks': [for (final m in marks) m.toJson()],
+      };
 
   @override
   List<Object?> get props => [text, marks];
@@ -105,6 +129,9 @@ class RTerm extends RInline {
   String get plainText => text;
 
   @override
+  Map<String, dynamic> toJson() => {'type': 'term', 'termId': termId, 'text': text};
+
+  @override
   List<Object?> get props => [termId, text];
 }
 
@@ -118,6 +145,9 @@ class RMention extends RInline {
   String get plainText => text;
 
   @override
+  Map<String, dynamic> toJson() => {'type': 'mention', 'userId': userId, 'text': text};
+
+  @override
   List<Object?> get props => [userId, text];
 }
 
@@ -128,12 +158,20 @@ class RHardBreak extends RInline {
   String get plainText => '\n';
 
   @override
+  Map<String, dynamic> toJson() => const {'type': 'hardBreak'};
+
+  @override
   List<Object?> get props => const [];
 }
 
 String plainTextOf(List<RInline> nodes) => nodes.map((n) => n.plainText).join();
 
 // ── Blocks ──────────────────────────────────────────────────
+
+/// `dir` is left out when it is the default.
+Map<String, dynamic> _dir(String dir) => dir == 'auto' ? const {} : {'dir': dir};
+
+List<List<Map<String, dynamic>>> _itemsToJson(List<List<RInline>> items) => [for (final i in items) RInline.listToJson(i)];
 
 sealed class RBlock extends Equatable {
   const RBlock(this.id);
@@ -142,6 +180,9 @@ sealed class RBlock extends Equatable {
 
   /// RDoc `type` value, e.g. `paragraph`, `codeTabs`.
   String get type;
+
+  /// The schema form of this block.
+  Map<String, dynamic> toJson();
 
   static RBlock? tryParse(Map<String, dynamic> j) {
     final id = j['id'] as String? ?? '';
@@ -169,6 +210,7 @@ sealed class RBlock extends Equatable {
           code: j['code'] as String? ?? '',
           filename: j['filename'] as String?,
           highlightLines: [for (final n in (j['highlightLines'] as List? ?? const [])) (n as num).toInt()],
+          compile: j['compile'] as bool?,
         ),
       'codeTabs' => RCodeTabs(id, tabs: [
           for (final t in (j['tabs'] as List? ?? const []))
@@ -178,6 +220,7 @@ sealed class RBlock extends Equatable {
                 lang: t['lang'] as String? ?? 'plaintext',
                 code: t['code'] as String? ?? '',
                 filename: t['filename'] as String?,
+                compile: t['compile'] as bool?,
               ),
         ]),
       'table' => RTable(
@@ -215,6 +258,9 @@ class RParagraph extends RBlock {
   String get type => 'paragraph';
 
   @override
+  Map<String, dynamic> toJson() => {'id': id, 'type': type, ..._dir(dir), 'content': RInline.listToJson(content)};
+
+  @override
   List<Object?> get props => [id, dir, content];
 }
 
@@ -228,6 +274,10 @@ class RHeading extends RBlock {
 
   @override
   String get type => 'heading';
+
+  @override
+  Map<String, dynamic> toJson() =>
+      {'id': id, 'type': type, 'level': level, ..._dir(dir), 'content': RInline.listToJson(content)};
 
   @override
   List<Object?> get props => [id, level, dir, content];
@@ -244,6 +294,9 @@ class RList extends RBlock {
   String get type => ordered ? 'orderedList' : 'bulletList';
 
   @override
+  Map<String, dynamic> toJson() => {'id': id, 'type': type, ..._dir(dir), 'items': _itemsToJson(items)};
+
+  @override
   List<Object?> get props => [id, ordered, dir, items];
 }
 
@@ -252,6 +305,8 @@ class RStep extends Equatable {
 
   final String title;
   final List<RInline> content;
+
+  Map<String, dynamic> toJson() => {'title': title, 'content': RInline.listToJson(content)};
 
   @override
   List<Object?> get props => [title, content];
@@ -267,6 +322,9 @@ class RSteps extends RBlock {
   String get type => 'steps';
 
   @override
+  Map<String, dynamic> toJson() => {'id': id, 'type': type, ..._dir(dir), 'items': [for (final s in items) s.toJson()]};
+
+  @override
   List<Object?> get props => [id, dir, items];
 }
 
@@ -279,6 +337,10 @@ class RQuote extends RBlock {
 
   @override
   String get type => 'quote';
+
+  @override
+  Map<String, dynamic> toJson() =>
+      {'id': id, 'type': type, ..._dir(dir), 'content': RInline.listToJson(content), 'cite': ?cite};
 
   @override
   List<Object?> get props => [id, dir, content, cite];
@@ -298,12 +360,22 @@ class RCallout extends RBlock {
   String get type => 'callout';
 
   @override
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        'variant': variant.name,
+        'title': ?title,
+        ..._dir(dir),
+        'content': RInline.listToJson(content),
+      };
+
+  @override
   List<Object?> get props => [id, variant, title, dir, content];
 }
 
 /// Always rendered LTR, even inside RTL articles (SPEC §14.2 rule 3).
 class RCode extends RBlock {
-  const RCode(super.id, {required this.lang, required this.code, this.filename, this.highlightLines = const []});
+  const RCode(super.id, {required this.lang, required this.code, this.filename, this.highlightLines = const [], this.compile});
 
   final String lang;
   final String code;
@@ -312,23 +384,41 @@ class RCode extends RBlock {
   /// 1-based line numbers to emphasize.
   final List<int> highlightLines;
 
+  /// `false` skips the content pipeline's compile check (SPEC §19.3); kept as written.
+  final bool? compile;
+
   @override
   String get type => 'code';
 
   @override
-  List<Object?> get props => [id, lang, code, filename, highlightLines];
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        'lang': lang,
+        'filename': ?filename,
+        if (highlightLines.isNotEmpty) 'highlightLines': highlightLines,
+        'code': code,
+        'compile': ?compile,
+      };
+
+  @override
+  List<Object?> get props => [id, lang, code, filename, highlightLines, compile];
 }
 
 class RCodeTab extends Equatable {
-  const RCodeTab({required this.label, required this.lang, required this.code, this.filename});
+  const RCodeTab({required this.label, required this.lang, required this.code, this.filename, this.compile});
 
   final String label;
   final String lang;
   final String code;
   final String? filename;
+  final bool? compile;
+
+  Map<String, dynamic> toJson() =>
+      {'label': label, 'lang': lang, 'filename': ?filename, 'code': code, 'compile': ?compile};
 
   @override
-  List<Object?> get props => [label, lang, code, filename];
+  List<Object?> get props => [label, lang, code, filename, compile];
 }
 
 class RCodeTabs extends RBlock {
@@ -338,6 +428,9 @@ class RCodeTabs extends RBlock {
 
   @override
   String get type => 'codeTabs';
+
+  @override
+  Map<String, dynamic> toJson() => {'id': id, 'type': type, 'tabs': [for (final t in tabs) t.toJson()]};
 
   @override
   List<Object?> get props => [id, tabs];
@@ -352,6 +445,15 @@ class RTable extends RBlock {
 
   @override
   String get type => 'table';
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        ..._dir(dir),
+        'header': _itemsToJson(header),
+        'rows': [for (final r in rows) _itemsToJson(r)],
+      };
 
   @override
   List<Object?> get props => [id, dir, header, rows];
@@ -373,6 +475,18 @@ class RImage extends RBlock {
   String get type => 'image';
 
   @override
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        'src': src,
+        'darkSrc': ?darkSrc,
+        'alt': alt,
+        'caption': ?caption,
+        'width': ?width,
+        'height': ?height,
+      };
+
+  @override
   List<Object?> get props => [id, src, darkSrc, alt, caption, width, height];
 }
 
@@ -381,6 +495,9 @@ class RDivider extends RBlock {
 
   @override
   String get type => 'divider';
+
+  @override
+  Map<String, dynamic> toJson() => {'id': id, 'type': type};
 
   @override
   List<Object?> get props => [id];
@@ -397,6 +514,9 @@ class REmbed extends RBlock {
   String get type => 'embed';
 
   @override
+  Map<String, dynamic> toJson() => {'id': id, 'type': type, 'provider': provider, 'url': url};
+
+  @override
   List<Object?> get props => [id, provider, url];
 }
 
@@ -409,6 +529,9 @@ class RSummary extends RBlock {
 
   @override
   String get type => 'summary';
+
+  @override
+  Map<String, dynamic> toJson() => {'id': id, 'type': type, ..._dir(dir), 'content': RInline.listToJson(content)};
 
   @override
   List<Object?> get props => [id, dir, content];

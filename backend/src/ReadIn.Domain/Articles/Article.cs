@@ -4,29 +4,18 @@ using ReadIn.Domain.Taxonomy;
 
 namespace ReadIn.Domain.Articles;
 
+/// <summary>Draft → Published → Archived (SPEC F06); stored by name.</summary>
 public enum ArticleStatus
 {
-    Draft = 0,
-    Submitted = 1,
-    InReview = 2,
-    ChangesRequested = 3,
-    Approved = 4,
-    Scheduled = 5,
-    Published = 6,
-    Archived = 7,
-}
-
-public enum ReviewStatus
-{
-    None = 0,
-    Pending = 1,
-    Approved = 2,
-    ChangesRequested = 3,
+    Draft,
+    Published,
+    Archived,
 }
 
 /// <summary>
-/// Article aggregate (SPEC §6.6, F06). Lifecycle and review are two axes: a non-sensitive article may be
-/// published without review (no "Reviewed" badge) and reviewed later; sensitive fields require approval first.
+/// Article aggregate (SPEC §6.6, F06). Anyone may publish in any field; there is no review (ADR 0015). The editor (F05)
+/// works on a private <see cref="ArticleDraft"/>: readers only ever see the published translations, which a publish
+/// replaces with the working copy.
 /// </summary>
 public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRowVersion
 {
@@ -35,34 +24,29 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public const int MaxCaptionLength = 5000;
     public const int MaxAltTextLength = 5000;
 
-    /// <summary>Word-count change ratio above which an edit resets the "Reviewed" badge (SPEC §10.2).</summary>
-    public const double SignificantChangeRatio = 0.15;
-
     private readonly List<ArticleTranslation> _translations = [];
     private readonly List<ArticleTag> _tags = [];
     private readonly List<ArticleSource> _sources = [];
-    private readonly List<ArticleRevision> _revisions = [];
     private readonly List<ArticleAttachment> _attachments = [];
 
     private Article() { } // EF
 
-    public Guid AuthorId { get; private set; }
+    /// <summary>Null once the author deleted their account: published articles stay, shown as by a deleted user (SPEC §9.6).</summary>
+    public Guid? AuthorId { get; private set; }
     public Guid FieldId { get; private set; }
     public Guid? TopicId { get; private set; }
     public string Slug { get; private set; } = default!;
     public ArticleStatus Status { get; private set; }
-    public ReviewStatus ReviewStatus { get; private set; }
     public string SourceLanguage { get; private set; } = default!;
     public string? CoverUrl { get; private set; }
     public bool IsAiAssisted { get; private set; }
     public string? VersionBadge { get; private set; }
-    public DateTime? LastReviewedAt { get; private set; }
 
-    /// <summary>When the content pipeline last validated this article (SPEC §19.3); Today's article falls back to these (F07).</summary>
+    /// <summary>When the content pipeline last validated this article (SPEC §19.3).</summary>
     public DateTime? AutoCheckedAt { get; private set; }
-    public Guid? ReviewedById { get; private set; }
     public DateTime? PublishedAt { get; private set; }
-    public DateTime? ScheduledAt { get; private set; }
+
+    /// <summary>Ranks articles for Today's article (F07, ADR 0015); recomputed by the quality job.</summary>
     public double QualityScore { get; private set; }
 
     // Denormalized counters (SPEC §16.1), recomputed from SQL by the outbox handlers after each change (F27).
@@ -78,16 +62,17 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public int ReadCount { get; private set; }
 
     // Read-side navigations for query projections only; domain behavior never uses them.
-    public Users.User Author { get; private set; } = default!;
+    public Users.User? Author { get; private set; }
     public Field Field { get; private set; } = default!;
     public Topic? Topic { get; private set; }
-    public Users.User? ReviewedBy { get; private set; }
 
     public IReadOnlyCollection<ArticleTranslation> Translations => _translations.AsReadOnly();
     public IReadOnlyCollection<ArticleTag> Tags => _tags.AsReadOnly();
     public IReadOnlyCollection<ArticleSource> Sources => _sources.AsReadOnly();
-    public IReadOnlyCollection<ArticleRevision> Revisions => _revisions.AsReadOnly();
     public IReadOnlyCollection<ArticleAttachment> Attachments => _attachments.AsReadOnly();
+
+    /// <summary>The editor's working copy (F05); null until the article is first edited in the editor.</summary>
+    public ArticleDraft? Draft { get; private set; }
 
     public DateTime CreatedAt { get; private set; }
     public Guid? CreatedBy { get; private set; }
@@ -97,21 +82,21 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public DateTime? DeletedAt { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
-    public bool IsReviewed => ReviewStatus == ReviewStatus.Approved;
     public bool IsPublished => Status == ArticleStatus.Published;
 
-    public static Article CreateDraft(Guid authorId, Guid fieldId, Guid? topicId, string slug, Guid? id = null)
+    /// <param name="sourceLanguage">Set by the first <see cref="AddTranslation"/>; the editor passes it for a draft that has none yet.</param>
+    public static Article CreateDraft(Guid authorId, Guid fieldId, Guid? topicId, string slug, Guid? id = null, string? sourceLanguage = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(slug);
         return new Article
         {
             Id = id ?? Guid.Empty,
+            SourceLanguage = sourceLanguage!,
             AuthorId = authorId,
             FieldId = fieldId,
             TopicId = topicId,
             Slug = slug,
             Status = ArticleStatus.Draft,
-            ReviewStatus = ReviewStatus.None,
         };
     }
 
@@ -126,28 +111,55 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         return Result.Success();
     }
 
-    /// <summary>
-    /// Updates a translation. Editing a published article stores a revision first and resets the
-    /// "Reviewed" badge when the content changed significantly (SPEC §10.2).
-    /// </summary>
-    public Result UpdateTranslation(string language, string title, string? subtitle, ArticleContent content, Guid editorId, DateTime now)
+    public Result UpdateTranslation(string language, string title, string? subtitle, ArticleContent content, DateTime now)
     {
         var translation = _translations.FirstOrDefault(t => t.Language == language);
         if (translation is null) return ArticleErrors.TranslationNotFound;
 
-        if (IsPublished)
-        {
-            _revisions.Add(new ArticleRevision(Id, translation, _revisions.Count + 1, editorId, now));
-
-            if (IsReviewed && IsSignificantChange(translation.WordCount, content.WordCount))
-            {
-                ReviewStatus = ReviewStatus.None;
-                ReviewedById = null;
-            }
-        }
-
         translation.Update(title.Trim(), subtitle?.Trim(), content, now);
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Makes the published translations exactly <paramref name="versions"/> (one per language, 1–2): existing languages
+    /// are updated, new ones added and missing ones removed; <paramref name="sourceLanguage"/> becomes the source.
+    /// </summary>
+    public Result ReplaceTranslations(string sourceLanguage, IReadOnlyList<TranslationVersion> versions, DateTime now)
+    {
+        if (versions.Count == 0) return ArticleErrors.NoContent;
+        if (versions.Any(v => !ArticleLanguages.IsValid(v.Language)) || !ArticleLanguages.IsValid(sourceLanguage))
+            return ArticleErrors.InvalidLanguage;
+        if (versions.Select(v => v.Language).Distinct().Count() != versions.Count) return ArticleErrors.TranslationExists;
+        if (versions.All(v => v.Language != sourceLanguage)) return ArticleErrors.TranslationNotFound;
+
+        _translations.RemoveAll(t => versions.All(v => v.Language != t.Language));
+        foreach (var version in versions)
+        {
+            var existing = _translations.FirstOrDefault(t => t.Language == version.Language);
+            if (existing is null)
+                _translations.Add(new ArticleTranslation(Id, version.Language, version.Title.Trim(), version.Subtitle?.Trim(), version.Content, false));
+            else
+                existing.Update(version.Title.Trim(), version.Subtitle?.Trim(), version.Content, now);
+        }
+
+        SourceLanguage = sourceLanguage;
+        foreach (var translation in _translations) translation.MarkSource(translation.Language == sourceLanguage);
+        return Result.Success();
+    }
+
+    /// <summary>Moves the article to another field and topic; the caller checks that the topic belongs to the field.</summary>
+    public void SetTaxonomy(Guid fieldId, Guid? topicId)
+    {
+        FieldId = fieldId;
+        TopicId = topicId;
+    }
+
+    /// <summary>The reader URL is fixed at the first publish (F05); until then the slug is a private placeholder.</summary>
+    public void AssignSlug(string slug)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(slug);
+        if (PublishedAt is not null) throw new InvalidOperationException("A published article keeps its slug.");
+        Slug = slug;
     }
 
     public void SetMetadata(string? coverUrl, string? versionBadge, bool isAiAssisted)
@@ -183,7 +195,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public Result SetAttachments(IReadOnlyList<AttachmentCandidate> items)
     {
         if (items.Select(i => i.MediaAssetId).Distinct().Count() != items.Count) return AttachmentErrors.DuplicateAsset;
-        if (items.Any(i => i.OwnerId != AuthorId)) return AttachmentErrors.AssetNotFound;
+        if (AuthorId is null || items.Any(i => i.OwnerId != AuthorId)) return AttachmentErrors.AssetNotFound;
         if (items.Select(i => i.Kind).Distinct().Count() > 1) return AttachmentErrors.MixedKinds;
 
         var documents = items.Count(i => i.Kind == MediaKind.Document);
@@ -215,69 +227,20 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
-    public Result SubmitForReview()
-    {
-        if (Status is not (ArticleStatus.Draft or ArticleStatus.ChangesRequested or ArticleStatus.Published))
-            return ArticleErrors.InvalidTransition(Status, ArticleStatus.Submitted);
-        if (_translations.Count == 0) return ArticleErrors.NoContent;
-
-        if (Status != ArticleStatus.Published) Status = ArticleStatus.Submitted;
-        ReviewStatus = ReviewStatus.Pending;
-        Raise(() => new ArticleSubmittedDomainEvent(Id, FieldId));
-        return Result.Success();
-    }
-
-    public Result StartReview()
-    {
-        if (ReviewStatus != ReviewStatus.Pending) return ArticleErrors.NotPendingReview;
-        if (Status == ArticleStatus.Submitted) Status = ArticleStatus.InReview;
-        return Result.Success();
-    }
-
-    public Result Approve(Guid reviewerId, DateTime now)
-    {
-        if (ReviewStatus != ReviewStatus.Pending) return ArticleErrors.NotPendingReview;
-        if (reviewerId == AuthorId) return ArticleErrors.CannotReviewOwnArticle;
-
-        ReviewStatus = ReviewStatus.Approved;
-        ReviewedById = reviewerId;
-        LastReviewedAt = now;
-        if (Status is ArticleStatus.Submitted or ArticleStatus.InReview) Status = ArticleStatus.Approved;
-        Raise(() => new ArticleReviewedDomainEvent(Id, AuthorId, Approved: true));
-        return Result.Success();
-    }
-
-    public Result RequestChanges(Guid reviewerId)
-    {
-        if (ReviewStatus != ReviewStatus.Pending) return ArticleErrors.NotPendingReview;
-        if (reviewerId == AuthorId) return ArticleErrors.CannotReviewOwnArticle;
-
-        ReviewStatus = ReviewStatus.ChangesRequested;
-        if (Status is ArticleStatus.Submitted or ArticleStatus.InReview) Status = ArticleStatus.ChangesRequested;
-        Raise(() => new ArticleReviewedDomainEvent(Id, AuthorId, Approved: false));
-        return Result.Success();
-    }
-
+    /// <summary>
+    /// Makes the article live (SPEC F06): the first call publishes it, later calls are the editor's "Update" of a
+    /// published article and keep its first publish date. Every field may publish directly (ADR 0015).
+    /// </summary>
     public Result Publish(Field field, DateTime now)
     {
         var check = EnsureCanGoLive(field);
         if (check.IsFailure) return check;
+        if (IsPublished) return Result.Success();
 
         Status = ArticleStatus.Published;
         PublishedAt ??= now;
-        ScheduledAt = null;
+        QualityScore = ArticleQuality.Score(ReactionCount, CommentCount, SaveCount, ReadCount, ReadCount, (now - PublishedAt.Value).TotalHours);
         Raise(() => new ArticlePublishedDomainEvent(Id, AuthorId, FieldId, Slug));
-        return Result.Success();
-    }
-
-    public Result Schedule(Field field, DateTime publishAt, DateTime now)
-    {
-        if (publishAt <= now) return ArticleErrors.ScheduleInPast;
-        var check = EnsureCanGoLive(field);
-        if (check.IsFailure) return check;
-
-        Status = ArticleStatus.Scheduled;
-        ScheduledAt = publishAt;
         return Result.Success();
     }
 
@@ -298,24 +261,8 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         return detached;
     }
 
-    /// <summary>Used by the content importer: editorial content arrives already reviewed (SPEC §19.2).</summary>
-    public void MarkReviewed(Guid reviewerId, DateTime reviewedAt)
-    {
-        ReviewStatus = ReviewStatus.Approved;
-        ReviewedById = reviewerId;
-        LastReviewedAt = reviewedAt;
-        if (Status is ArticleStatus.Draft or ArticleStatus.Submitted or ArticleStatus.InReview) Status = ArticleStatus.Approved;
-    }
-
-    /// <summary>
-    /// Content-pipeline articles passed every automatic check (SPEC §19.3) on <paramref name="checkedAt"/>, which also
-    /// becomes the "Last reviewed" date until a human reviews them. It never sets a reviewer: no badge is faked.
-    /// </summary>
-    public void MarkAutoChecked(DateTime checkedAt)
-    {
-        AutoCheckedAt = checkedAt;
-        if (ReviewStatus != ReviewStatus.Approved) LastReviewedAt = checkedAt;
-    }
+    /// <summary>Content-pipeline articles passed every automatic check (SPEC §19.3) on <paramref name="checkedAt"/>.</summary>
+    public void MarkAutoChecked(DateTime checkedAt) => AutoCheckedAt = checkedAt;
 
     public void SetQualityScore(double score) => QualityScore = score;
 
@@ -335,6 +282,53 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         ReadCount = reads;
     }
 
+    /// <summary>
+    /// Autosave (F05): replaces the working copy when <paramref name="baseVersion"/> is the version the editor last saw,
+    /// so a second device never silently overwrites the first. A published article now has unpublished changes.
+    /// </summary>
+    public Result SaveDraft(string documentJson, int baseVersion, DateTime now)
+    {
+        if (CurrentDraftVersion != baseVersion) return ArticleErrors.DraftConflict;
+        SetDraft(documentJson, hasChanges: IsPublished, now);
+        return Result.Success();
+    }
+
+    /// <summary>"Discard changes": the working copy becomes <paramref name="liveDocumentJson"/>, the published version again.</summary>
+    public Result DiscardDraft(string liveDocumentJson, int baseVersion, DateTime now)
+    {
+        if (!IsPublished) return ArticleErrors.NotPublished;
+        if (CurrentDraftVersion != baseVersion) return ArticleErrors.DraftConflict;
+        SetDraft(liveDocumentJson, hasChanges: false, now);
+        return Result.Success();
+    }
+
+    /// <summary>Restoring a revision copies it into the working copy; readers see it only after the next publish.</summary>
+    public Result RestoreDraft(string revisionDocumentJson, int baseVersion, DateTime now)
+    {
+        if (CurrentDraftVersion != baseVersion) return ArticleErrors.DraftConflict;
+        SetDraft(revisionDocumentJson, hasChanges: IsPublished, now);
+        return Result.Success();
+    }
+
+    /// <summary>After a publish the working copy is what readers see: no unpublished changes, same version.</summary>
+    public void MarkDraftPublished(string publishedDocumentJson, DateTime now)
+    {
+        if (Draft is null) Draft = new ArticleDraft(Id, publishedDocumentJson, now);
+        else Draft.Publish(publishedDocumentJson, now);
+    }
+
+    /// <summary>Deleting the article drops its working copy (F05).</summary>
+    public void DeleteDraft() => Draft = null;
+
+    /// <summary>0 while the article has no working copy yet (it was created outside the editor).</summary>
+    public int CurrentDraftVersion => Draft?.Version ?? 0;
+
+    private void SetDraft(string documentJson, bool hasChanges, DateTime now)
+    {
+        if (Draft is null) Draft = new ArticleDraft(Id, documentJson, now) { HasChanges = hasChanges };
+        else Draft.Replace(documentJson, hasChanges, now);
+    }
+
     private Result EnsureCanGoLive(Field field)
     {
         if (field.Id != FieldId) throw new ArgumentException("Field does not match the article.", nameof(field));
@@ -342,11 +336,5 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         if (_translations.Count == 0) return ArticleErrors.NoContent;
         if (field.RequiresSources && _sources.Count == 0) return ArticleErrors.SourcesRequired;
         return Result.Success();
-    }
-
-    private static bool IsSignificantChange(int oldWords, int newWords)
-    {
-        if (oldWords == 0) return newWords > 0;
-        return Math.Abs(newWords - oldWords) / (double)oldWords > SignificantChangeRatio;
     }
 }

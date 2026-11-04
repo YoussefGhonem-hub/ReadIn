@@ -18,12 +18,14 @@ import '../widgets/auth_widgets.dart';
 import '../widgets/dev_login_panel.dart';
 import '../widgets/external_sign_in.dart';
 
-/// Arguments of the Sign in route: the number to pre-fill and whether a password was just reset.
+/// Arguments of the Sign in route: the number to pre-fill, whether a password was just reset and whether the account was
+/// just deleted on this device.
 class SignInArgs {
-  const SignInArgs({this.phone, this.passwordReset = false});
+  const SignInArgs({this.phone, this.passwordReset = false, this.accountDeleted = false});
 
   final String? phone;
   final bool passwordReset;
+  final bool accountDeleted;
 }
 
 /// The phone field's first country (last used → device region → Egypt).
@@ -130,6 +132,11 @@ class _SignInViewState extends State<SignInView> {
             ],
           ),
           children: [
+            // Read from the arguments (not kept): Delete account replaces this route's arguments once it's done.
+            if (widget.args.accountDeleted && !_passwordReset && state.failure == null) ...[
+              FormBanner(message: l10n.accountDeleted, tone: BannerTone.success),
+              const SizedBox(height: ReadInSpace.s4),
+            ],
             if (_passwordReset && state.failure == null) ...[
               FormBanner(message: l10n.passwordResetBanner, tone: BannerTone.success),
               const SizedBox(height: ReadInSpace.s4),

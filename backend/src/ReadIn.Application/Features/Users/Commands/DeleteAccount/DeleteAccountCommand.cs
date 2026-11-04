@@ -5,14 +5,16 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Auth;
 using ReadIn.Domain.Common;
-using ReadIn.Domain.Identity;
+using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Users.Commands.DeleteAccount;
 
 /// <summary>
-/// Delete account (SPEC F01): confirmed with the password, or with a fresh Google/Apple token for accounts without one.
-/// The account is soft-deleted and signed out everywhere at once, and its Google/Apple identities are released so they can
-/// sign up again; its personal data is removed after 30 days, and its articles and comments stay as "Deleted user".
+/// Delete account (SPEC F01): confirmed with the password, or with a fresh Google/Apple sign in (the only option without a
+/// password, and the one that also lets Apple's token be revoked when none is stored). Apple tokens are revoked first, then
+/// everything in the data map (SPEC §9.6) is deleted at once, in one transaction: there is no grace period and nothing to
+/// restore. Every session ends with the account, and the phone number, email and Google/Apple identities can sign up again
+/// right away as a new account. A failure leaves the account as it was.
 /// </summary>
 [Authenticated]
 public sealed record DeleteAccountCommand(string? Password = null, ExternalCredentialDto? External = null) : ICommand<Result>;
@@ -30,25 +32,28 @@ internal sealed class DeleteAccountCommandHandler(
     IAppDbContext db,
     ICurrentUser currentUser,
     IdentityConfirmation confirmation,
-    SessionIssuer sessions,
-    IUserAccessService access,
-    AuditTrail audit)
+    AppleTokens appleTokens,
+    IRealtimeAccountData realtime,
+    IAccountEraser eraser,
+    IUserAccessService access)
     : ICommandHandler<DeleteAccountCommand, Result>
 {
     public async ValueTask<Result> Handle(DeleteAccountCommand command, CancellationToken cancellationToken)
     {
         var userId = currentUser.RequireUserId();
-        var user = await db.Users.Include(u => u.Devices).Include(u => u.ExternalLogins).FirstAsync(u => u.Id == userId, cancellationToken);
+        var user = await db.Users.Include(u => u.ExternalLogins).FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        if (user is null) return Result.Success(); // deleted by an earlier request: same outcome
 
-        if (await confirmation.ConfirmAsync(user, command.Password, command.External, cancellationToken) is { } error) return error;
+        var confirmed = await confirmation.ConfirmWithIdentityAsync(user, command.Password, command.External, cancellationToken);
+        if (confirmed.IsFailure) return confirmed.Error;
 
-        foreach (var token in user.Devices.Select(d => d.Token).ToList()) user.UnregisterDevice(token); // no more pushes
-        user.ReleaseExternalLogins();
-        user.RotateSecurityStamp();
-        await sessions.RevokeAllAsync(userId, cancellationToken);
-        db.Users.Remove(user); // soft delete (SPEC §16.1)
-        audit.Record(AuditActions.AccountDeleted, userId);
-        await db.SaveChangesAsync(cancellationToken);
+        var revoked = await appleTokens.RevokeAsync(user, confirmed.Value, command.External?.AuthorizationCode, cancellationToken);
+        if (revoked.IsFailure) return revoked.Error;
+
+        var forgotten = await realtime.DeleteIdentityAsync(userId, cancellationToken);
+        if (forgotten.IsFailure) return forgotten.Error;
+
+        await eraser.EraseAsync(userId, cancellationToken);
         await access.InvalidateAsync(userId, cancellationToken);
         return Result.Success();
     }

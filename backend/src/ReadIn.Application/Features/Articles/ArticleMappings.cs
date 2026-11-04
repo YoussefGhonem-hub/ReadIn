@@ -31,10 +31,9 @@ public sealed class ArticleMappings : IRegister
                 s.Field.Id, s.Field.Slug,
                 LocalizedProjection.Ui == "en" ? s.Field.NameEn : s.Field.NameAr,
                 s.Field.NameAr, s.Field.NameEn))
-            .Map(d => d.Author, s => new AuthorDto(
+            .Map(d => d.Author, s => s.Author == null ? null : new AuthorDto(
                 s.Author.Id, s.Author.DisplayName, s.Author.Username, s.Author.AvatarUrl,
                 s.Author.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)))
-            .Map(d => d.IsReviewed, s => s.ReviewStatus == ReviewStatus.Approved)
             // The denormalized counters on Articles (F27); ReactionCount and SaveCount map by name.
             .Map(d => d.Reactions, s => new ReactionCountsDto(s.InsightfulCount, s.LoveCount, s.FireCount, s.MindBlownCount))
             // Loaded after the projection: attachments by ArticleAttachmentsReader (absolute URLs, page limits), the
@@ -61,9 +60,6 @@ public sealed class ArticleMappings : IRegister
                     s.Topic.NameAr, s.Topic.NameEn))
             .Map(d => d.Tags, s => s.Tags.Select(t => t.Tag.Name).ToList())
             .Map(d => d.Sources, s => s.Sources.OrderBy(x => x.SortOrder).Select(x => new SourceDto(x.Title, x.Url)).ToList())
-            .Map(d => d.ReviewedBy, s => s.ReviewStatus == ReviewStatus.Approved && s.ReviewedBy != null
-                ? new ReviewerDto(s.ReviewedBy.DisplayName, s.ReviewedBy.Username)
-                : null)
             .Ignore(d => d.Content)
             .Ignore(d => d.IsFollowingAuthor)
             .Ignore(d => d.CollectionIds);

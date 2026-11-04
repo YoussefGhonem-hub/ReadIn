@@ -153,6 +153,37 @@ class AttachmentsState extends Equatable {
 
   bool get canPublish => blockers.isEmpty;
 
+  /// Something is uploading or being processed (publishing waits for it).
+  bool get isBusy => blockers.contains(AttachmentBlocker.busy);
+
+  /// The uploads by id (for the publish checks).
+  Map<String, MediaAsset> get assetsById => {
+        for (final i in images)
+          if (i.asset != null) i.asset!.id: i.asset!,
+        if (document?.asset != null) document!.asset!.id: document!.asset!,
+      };
+
+  /// `ArticleDraftDocument.attachments` (F05): every item that has an upload, in display order (0-based `order`).
+  /// Unlike [requestItems], a draft keeps the ones still processing; the publish checks flag them.
+  List<AttachmentItem> get draftItems {
+    final doc = document;
+    if (doc != null) {
+      final asset = doc.asset;
+      if (asset == null) return const [];
+      return [AttachmentItem(mediaAssetId: asset.id, order: 0, title: doc.title.trim(), allowDownload: doc.allowDownload)];
+    }
+    final uploaded = [for (final i in images) if (i.asset != null) i];
+    return [
+      for (final (i, image) in uploaded.indexed)
+        AttachmentItem(
+          mediaAssetId: image.asset!.id,
+          order: i,
+          caption: image.caption.trim().isEmpty ? null : image.caption.trim(),
+          altText: image.altText.trim(),
+        ),
+    ];
+  }
+
   /// `SetAttachmentsRequest.items` in display order (0-based `order`).
   List<AttachmentItem> get requestItems {
     final doc = document;

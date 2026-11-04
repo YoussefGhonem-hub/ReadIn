@@ -141,7 +141,7 @@ public sealed class ReaderTests(ApiFactory api)
         read["completedNow"]!.GetValue<bool>().Should().BeTrue();
     }
 
-    /// <summary>Creates and publishes an English article as <paramref name="author"/>, optionally using a glossary term.</summary>
+    /// <summary>Writes and publishes an English article as <paramref name="author"/>, optionally using a glossary term.</summary>
     private static async Task<(Guid Id, string Slug)> PublishAsync(
         HttpClient author, string field, string topic, string[]? tags = null, string? termId = null)
     {
@@ -150,26 +150,13 @@ public sealed class ReaderTests(ApiFactory api)
             ? [new { type = "text", text = "Related reading." }]
             : [new { type = "text", text = "Related reading about " }, new { type = "term", termId, text = termId }];
 
-        var created = await author.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = await author.FieldIdAsync(field),
-            topicId = topics.Single(t => t!["slug"]!.GetValue<string>() == topic)!["id"]!.GetValue<Guid>(),
-            language = "en",
-            title = $"Reader test {Guid.NewGuid():N}",
-            content = new
-            {
-                version = 1,
-                language = "en",
-                blocks = new object[] { new { id = "p1", type = "paragraph", dir = "auto", content } },
-            },
-            tags = tags ?? [],
-            sources = new[] { new { title = "Example", url = "https://example.com" } },
-            isAiAssisted = false,
-        }, Ct);
-        created.StatusCode.Should().Be(HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
-        var body = (await created.Content.ReadFromJsonAsync<JsonObject>(Ct))!;
-        var id = body["id"]!.GetValue<Guid>();
-        (await author.PostAsync($"/api/v1/articles/{id}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
-        return (id, body["slug"]!.GetValue<string>());
+        var document = ArticleTestKit.Document(
+            await author.FieldIdAsync(field),
+            $"Reader test {Guid.NewGuid():N}",
+            blocks: [new { id = "p1", type = "paragraph", dir = "auto", content }],
+            sources: [new { title = "Example", url = "https://example.com" }],
+            tags: tags);
+        document["topicId"] = topics.Single(t => t!["slug"]!.GetValue<string>() == topic)!["id"]!.GetValue<Guid>();
+        return await author.WriteAndPublishAsync(document);
     }
 }

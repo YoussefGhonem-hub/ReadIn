@@ -77,6 +77,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Jwt:SigningKey", JwtSigningKey);
         builder.UseSetting("Security:RecoveryPinPepper", "test-only-recovery-pin-pepper-0123456789abcdef");
         // Every test client shares one address; the per-number limits still apply.
+        // Every guest request of the suite shares one partition (TestServer has no remote IP).
+        builder.UseSetting("RateLimits:GlobalPerMinute", "100000");
         builder.UseSetting("RateLimits:Auth:SignInPerMinute", "100000");
         builder.UseSetting("RateLimits:Auth:RegisterPerHour", "100000");
         builder.UseSetting("RateLimits:Auth:RecoveryPerHour", "100000");
@@ -90,6 +92,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         {
             services.Replace(ServiceDescriptor.Singleton<IExternalIdentityVerifier, FakeExternalIdentityVerifier>());
             services.Replace(ServiceDescriptor.Singleton<IRealtimePublisher>(Realtime));
+            services.Replace(ServiceDescriptor.Singleton<IAppleTokenService, FakeAppleTokenService>());
+            services.Replace(ServiceDescriptor.Singleton<IRealtimeAccountData, FakeRealtimeAccountData>());
         });
     }
 

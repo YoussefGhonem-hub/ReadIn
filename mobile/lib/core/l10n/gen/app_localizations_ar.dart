@@ -152,23 +152,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get badgeReviewed => 'مراجَع';
-
-  @override
-  String reviewedBy(String name) {
-    return 'اتراجع بواسطة $name';
-  }
-
-  @override
-  String lastReviewed(String date) {
-    return 'آخر مراجعة: $date';
-  }
-
-  @override
   String get aiAssisted => 'بمساعدة AI';
 
   @override
   String get verifiedWriter => 'كاتب موثّق';
+
+  @override
+  String get deletedUser => 'مستخدم محذوف';
 
   @override
   String get tldr => 'الخلاصة';
@@ -190,9 +180,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fontSizeXl => 'كبير جداً';
-
-  @override
-  String get articleLanguage => 'لغة المقال';
 
   @override
   String get langToggleArEg => 'مصري+EN';
@@ -255,7 +242,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingWelcomeBody =>
-      'مقالات قصيرة ومراجَعة بالعربي والإنجليزي — واحدة بنختارهالك كل يوم في المجال اللي بتحبه.';
+      'مقالات قصيرة بالعربي والإنجليزي — واحدة بنختارهالك كل يوم في المجال اللي بتحبه.';
 
   @override
   String get browseAsGuest => 'تصفح كزائر';
@@ -738,25 +725,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errAttachmentsDuplicateAsset => 'نفس الملف مرفق مرتين.';
 
   @override
-  String get composerTitle => 'منشور جديد';
-
-  @override
   String get composerField => 'المجال';
 
   @override
   String get composerFieldHint => 'اختار المجال';
-
-  @override
-  String get composerTitleLabel => 'العنوان';
-
-  @override
-  String get composerTitleHint => 'عنوان واضح، من 5 لـ 150 حرف';
-
-  @override
-  String get composerBodyLabel => 'المنشور';
-
-  @override
-  String get composerBodyHint => 'سيب سطر فاضي بين كل فقرة والتانية.';
 
   @override
   String get composerSourcesRequired => 'المجال ده محتاج مصدر واحد على الأقل.';
@@ -784,30 +756,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get composerInvalidUrl => 'اكتب لينك صحيح بيبدأ بـ http';
 
   @override
-  String get composerPublish => 'انشر';
-
-  @override
-  String get composerPublishing => 'بننشر…';
-
-  @override
-  String get composerPublished => 'اتنشر ✨';
-
-  @override
-  String get composerNeedField => 'اختار المجال.';
-
-  @override
-  String get composerNeedTitle => 'اكتب عنوان (من 5 لـ 150 حرف).';
-
-  @override
-  String get composerNeedBody => 'اكتب حاجة أو ضيف مرفق.';
-
-  @override
-  String get composerNeedSources => 'ضيف مصدر واحد على الأقل.';
-
-  @override
-  String get composerFixSources => 'كمّل أو امسح المصادر الناقصة.';
-
-  @override
   String get attachImages => 'صور';
 
   @override
@@ -824,15 +772,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get attachReorderHint =>
       'اضغط مطوّل واسحب عشان ترتّب. دوس على الصورة عشان تكتب وصفها.';
-
-  @override
-  String get attachNeedAlt => 'اكتب وصف (Alt text) لكل صورة.';
-
-  @override
-  String get attachBusy => 'استنى لحد ما الرفع والتجهيز يخلصوا.';
-
-  @override
-  String get attachFailed => 'امسح المرفقات اللي فشلت أو جرّبها تاني.';
 
   @override
   String get attachNeedDocTitle => 'اكتب عنوان للملف.';
@@ -1240,17 +1179,116 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteAccount => 'حذف الحساب';
 
   @override
-  String get deleteAccountBody =>
-      'هنمسح بروفايلك وبياناتك الشخصية بعد 30 يوم. مقالاتك وتعليقاتك هتفضل باسم \"مستخدم محذوف\". مينفعش ترجع في القرار ده.';
+  String get deleteAccountTitle => 'احذف حسابك';
 
   @override
-  String get deleteAccountConfirm => 'فاهم، امسح حسابي';
+  String get deleteAccountLead =>
+      'ده بيحذف حسابك على ReadIn نهائيًا. مينفعش ترجع فيه، ومش هنقدر نرجّعه.';
 
   @override
-  String get deleteAccountButton => 'امسح حسابي';
+  String get deleteAccountDeletedHeading => 'هنحذف فورًا';
 
   @override
-  String get accountDeleted => 'تم حذف الحساب.';
+  String get deleteAccountDeletedProfile =>
+      'بروفايلك: الاسم واسم المستخدم والصورة والنبذة والروابط';
+
+  @override
+  String get deleteAccountDeletedContact =>
+      'رقم تليفونك وإيميلك وكلمة السر ورمز الاسترداد';
+
+  @override
+  String get deleteAccountDeletedSignIns =>
+      'ربط حسابك بجوجل وأبل، وبنلغي صلاحية ReadIn عند أبل كمان.';
+
+  @override
+  String get deleteAccountDeletedDrafts =>
+      'المسودات وأي مقال مش منشور، بالصور وملفات الـ PDF اللي فيها، وأي صورة أو ملف تاني رفعته';
+
+  @override
+  String get deleteAccountDeletedActivity =>
+      'اهتماماتك وتقدّمك في القراية وإحصائياتك وتفاعلاتك والمقالات المحفوظة واللي بتتابعهم';
+
+  @override
+  String get deleteAccountDeletedDevices =>
+      'أجهزتك ورموز الإشعارات، فمش هيوصلك أي إشعار';
+
+  @override
+  String get deleteAccountDeletedSecurityLog =>
+      'سجل الأمان بتاع حسابك: تسجيلات الدخول وتغييرات الحساب';
+
+  @override
+  String get deleteAccountKeptHeading => 'اللي بنحتفظ بيه وليه';
+
+  @override
+  String get deleteAccountKeptPublished =>
+      'مقالاتك المنشورة وتعليقاتك بتفضل موجودة باسم «مستخدم محذوف»، بالصور وملفات الـ PDF اللي فيها: من غير اسمك أو اسم المستخدم أو صورتك، ومن غير أي حاجة تربطها بيك. ده عشان الروابط والنقاشات اللي غيرك معتمد عليها تفضل شغالة. لو عايز تشيل مقال، احذفه قبل ما تحذف حسابك.';
+
+  @override
+  String get deleteAccountKeptRecord =>
+      'سجل إن الحساب ده اتحذف: الـ ID الداخلي ووقت الحذف بس، من غير أي حاجة تعرّف بيك. بيثبت إن الحذف حصل.';
+
+  @override
+  String get deleteAccountKeptBackups =>
+      'النسخ الاحتياطية من قاعدة البيانات ممكن يفضل فيها بياناتك لحد 14 يوم، لحد ما تتمسح.';
+
+  @override
+  String get deleteAccountKeptReviews =>
+      'تعديلاتك على مقالات كتّاب تانيين بتفضل مع المقالات دي، من غير اسمك.';
+
+  @override
+  String get deleteAccountAfter =>
+      'بعد الحذف، رقم التليفون أو الإيميل أو حساب جوجل أو أبل ده يقدر يعمل حساب جديد على ReadIn، وهيبدأ فاضي.';
+
+  @override
+  String get deleteAccountByEmail => 'احذفه بالإيميل بدل كده';
+
+  @override
+  String get deleteAccountPasswordBody => 'اكتب كلمة السر عشان تحذف حسابك.';
+
+  @override
+  String get deleteAccountProviderBody =>
+      'سجّل دخول تاني بالحساب المربوط بـ ReadIn.';
+
+  @override
+  String get confirmWithGoogle => 'أكّد بجوجل';
+
+  @override
+  String get confirmWithApple => 'أكّد بأبل';
+
+  @override
+  String get confirmedWithGoogle => 'اتأكدنا إنه انت بجوجل';
+
+  @override
+  String get confirmedWithApple => 'اتأكدنا إنه انت بأبل';
+
+  @override
+  String get deleteAccountAppleUnavailable =>
+      'حسابك مربوط بأبل. أكّد بأبل من تطبيق ReadIn على الآيفون، أو ابعتلنا إيميل نحذفه.';
+
+  @override
+  String get deleteAccountConfirm => 'فاهم، احذف حسابي';
+
+  @override
+  String get deleteAccountButton => 'احذف حسابي';
+
+  @override
+  String get deletingAccount => 'بنحذف حسابك…';
+
+  @override
+  String get deleteAccountDialogTitle => 'تحذف حسابك نهائيًا؟';
+
+  @override
+  String get deleteAccountDialogBody => 'مينفعش ترجع في الخطوة دي.';
+
+  @override
+  String get deleteAccountDialogConfirm => 'احذف نهائيًا';
+
+  @override
+  String get deleteAccountOffline =>
+      'انت مش متصل بالإنترنت. اتصل الأول عشان تحذف حسابك.';
+
+  @override
+  String get accountDeleted => 'تم حذف حسابك.';
 
   @override
   String get countryPickerTitle => 'اختار الدولة';
@@ -1449,11 +1487,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get phoneSignInAdded => 'اتضاف رقم التليفون وكلمة السر';
-
-  @override
-  String deleteAccountWithProvider(String provider) {
-    return 'عشان تمسح حسابك، هتأكد بـ $provider.';
-  }
 
   @override
   String get errExternalNotLinked => 'مفيش حساب ReadIn مربوط بالحساب ده لسه.';
@@ -2261,4 +2294,545 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get commentsErrReportReason => 'اختار سبب.';
+
+  @override
+  String get myArticlesTitle => 'مقالاتي';
+
+  @override
+  String get myArticlesDrafts => 'المسودات';
+
+  @override
+  String get myArticlesPublished => 'المنشورة';
+
+  @override
+  String get myArticlesNew => 'مقال جديد';
+
+  @override
+  String get myArticlesEmptyDrafts => 'مفيش مسودات لسه';
+
+  @override
+  String get myArticlesEmptyDraftsBody =>
+      'ابدأ مقال جديد، وهو بيتحفظ لوحده وانت بتكتب.';
+
+  @override
+  String get myArticlesEmptyPublished => 'لسه منشرتش حاجة';
+
+  @override
+  String get myArticlesEmptyPublishedBody => 'المقالات اللي هتنشرها هتظهر هنا.';
+
+  @override
+  String get untitledArticle => 'بدون عنوان';
+
+  @override
+  String get unpublishedChanges => 'تعديلات متنشرتش';
+
+  @override
+  String myArticleEdited(String date) {
+    return 'اتعدّل $date';
+  }
+
+  @override
+  String myArticlePublishedOn(String date) {
+    return 'اتنشر $date';
+  }
+
+  @override
+  String get deleteArticleTitle => 'تمسح المقال ده؟';
+
+  @override
+  String get deleteDraftBody => 'المسودة هتتمسح خالص.';
+
+  @override
+  String get deletePublishedBody =>
+      'القرّاء مش هيشوفوه تاني، واللينك بتاعه هيبطل يفتح.';
+
+  @override
+  String get articleDeleted => 'المقال اتمسح';
+
+  @override
+  String get editorNewTitle => 'مقال جديد';
+
+  @override
+  String get editorEditTitle => 'تعديل المقال';
+
+  @override
+  String get editorTitleHint => 'العنوان';
+
+  @override
+  String get editorSubtitleHint => 'عنوان فرعي (اختياري)';
+
+  @override
+  String get editorStartWriting => 'اكتب هنا، أو اكتب / عشان تضيف بلوك';
+
+  @override
+  String get saveStatusSaving => 'جاري الحفظ…';
+
+  @override
+  String get saveStatusSaved => 'اتحفظ';
+
+  @override
+  String get saveStatusOffline => 'مفيش نت، اتحفظ على الجهاز';
+
+  @override
+  String get saveStatusFailed => 'معرفناش نحفظ';
+
+  @override
+  String get saveStatusUnsaved => 'لسه متحفظش';
+
+  @override
+  String get editorPublish => 'انشر';
+
+  @override
+  String get editorUpdate => 'حدّث';
+
+  @override
+  String get editorPublishing => 'بننشر…';
+
+  @override
+  String get editorPublishedMessage => 'اتنشر';
+
+  @override
+  String get editorUpdatedMessage => 'اتحدّث';
+
+  @override
+  String get editorPreview => 'معاينة';
+
+  @override
+  String get editorSettings => 'إعدادات المقال';
+
+  @override
+  String get editorRevisions => 'النسخ السابقة';
+
+  @override
+  String get editorDiscardChanges => 'الغي التعديلات';
+
+  @override
+  String get editorDelete => 'امسح المقال';
+
+  @override
+  String get editorMore => 'المزيد';
+
+  @override
+  String get discardChangesTitle => 'تلغي التعديلات اللي متنشرتش؟';
+
+  @override
+  String get discardChangesBody => 'المقال هيرجع زي ما القرّاء شايفينه دلوقتي.';
+
+  @override
+  String get discardAction => 'الغيها';
+
+  @override
+  String get changesDiscarded => 'التعديلات اتلغت';
+
+  @override
+  String get conflictTitle => 'المقال اتعدّل من مكان تاني';
+
+  @override
+  String get conflictBody =>
+      'المقال ده اتغيّر من جهاز أو تاب تاني. عايز تكمّل بأنهي نسخة؟';
+
+  @override
+  String get conflictReload => 'حمّل النسخة المحفوظة';
+
+  @override
+  String get conflictKeepMine => 'خلّي نسختي';
+
+  @override
+  String get restoreBackupTitle => 'ترجّع التعديلات اللي متحفظتش؟';
+
+  @override
+  String restoreBackupBody(String time) {
+    return 'الجهاز ده محتفظ بتعديلات من $time متحفظتش.';
+  }
+
+  @override
+  String get restoreAction => 'رجّعها';
+
+  @override
+  String get discardBackupAction => 'مترجّعهاش';
+
+  @override
+  String get checksTitle => 'قبل ما تنشر';
+
+  @override
+  String get checksReady => 'جاهز للنشر';
+
+  @override
+  String checksCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حاجة محتاجة تتظبط',
+      few: '$count حاجات محتاجة تتظبط',
+      two: 'حاجتين محتاجين يتظبطوا',
+      one: 'حاجة واحدة محتاجة تتظبط',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get checksUploading => 'استنى لما الرفع يخلص.';
+
+  @override
+  String get problemFieldRequired => 'اختار المجال.';
+
+  @override
+  String get problemTitleLength => 'العنوان لازم يكون من 5 لـ 150 حرف.';
+
+  @override
+  String get problemContentEmpty => 'اكتب محتوى للمقال.';
+
+  @override
+  String get problemContentInvalid =>
+      'في بلوكات مش مكتملة، زي خطوة من غير عنوان.';
+
+  @override
+  String get problemImageAlt => 'في صورة محتاجة وصف (alt text).';
+
+  @override
+  String get problemSourcesRequired => 'المجال ده محتاج مصدر واحد على الأقل.';
+
+  @override
+  String get problemAttachmentAlt => 'في صورة مرفقة محتاجة وصف (alt text).';
+
+  @override
+  String get problemAttachmentTitle => 'ملف الـ PDF محتاج عنوان.';
+
+  @override
+  String get problemAttachmentNotReady => 'في مرفق لسه بيترفع، أو رفعه فشل.';
+
+  @override
+  String get errDraftConflict => 'المقال ده اتعدّل من مكان تاني.';
+
+  @override
+  String get errNotPublished => 'المقال ده لسه متنشرش.';
+
+  @override
+  String get errRevisionNotFound => 'النسخة دي مبقتش موجودة.';
+
+  @override
+  String get articleVersionArabic => 'العربي';
+
+  @override
+  String get articleVersionEnglish => 'الإنجليزي';
+
+  @override
+  String get languageVersions => 'نسخ اللغات';
+
+  @override
+  String get sourceLanguageTag => 'الأصل';
+
+  @override
+  String get sourceLanguageHint =>
+      'اللغة اللي هتكتب بيها الأول. غيّرها قبل ما تضيف ترجمة.';
+
+  @override
+  String addTranslation(String language) {
+    return 'ضيف النسخة بـ$language';
+  }
+
+  @override
+  String removeTranslation(String language) {
+    return 'شيل النسخة بـ$language';
+  }
+
+  @override
+  String get removeTranslationBody => 'العنوان والكلام بتوعها هيتمسحوا.';
+
+  @override
+  String get removeAction => 'شيل';
+
+  @override
+  String get topicLabel => 'الموضوع';
+
+  @override
+  String get topicNone => 'من غير موضوع';
+
+  @override
+  String get tagsLabel => 'الـ Tags';
+
+  @override
+  String get tagsHint => 'اكتب tag ودوس Enter';
+
+  @override
+  String tagsLimit(int count) {
+    return '$count من 5';
+  }
+
+  @override
+  String removeTag(String tag) {
+    return 'شيل $tag';
+  }
+
+  @override
+  String get coverLabel => 'صورة الغلاف';
+
+  @override
+  String get coverAdd => 'ضيف غلاف';
+
+  @override
+  String get coverChange => 'غيّر';
+
+  @override
+  String get coverRemove => 'شيل';
+
+  @override
+  String get coverHint => 'بتظهر على كارت المقال في الصفحة الرئيسية.';
+
+  @override
+  String get uploadingLabel => 'بنرفع…';
+
+  @override
+  String get versionBadgeLabel => 'شارة الإصدار';
+
+  @override
+  String get versionBadgeHint => 'مثلاً .NET 10';
+
+  @override
+  String get aiAssistedSwitch => 'اتكتب بمساعدة AI';
+
+  @override
+  String get aiAssistedSwitchHint =>
+      'القرّاء هيشوفوا علامة «AI-assisted» على المقال.';
+
+  @override
+  String get blockParagraph => 'نص';
+
+  @override
+  String get blockHeading2 => 'عنوان';
+
+  @override
+  String get blockHeading3 => 'عنوان فرعي';
+
+  @override
+  String get blockBulletList => 'قايمة نقط';
+
+  @override
+  String get blockOrderedList => 'قايمة مرقّمة';
+
+  @override
+  String get blockSteps => 'خطوات';
+
+  @override
+  String get blockQuote => 'اقتباس';
+
+  @override
+  String get blockCallout => 'ملاحظة (Callout)';
+
+  @override
+  String get blockCode => 'كود';
+
+  @override
+  String get blockCodeTabs => 'كود بأكتر من لغة';
+
+  @override
+  String get blockTable => 'جدول';
+
+  @override
+  String get blockImage => 'صورة';
+
+  @override
+  String get blockDivider => 'فاصل';
+
+  @override
+  String get blockEmbed => 'YouTube أو Gist';
+
+  @override
+  String get blockSummary => 'الخلاصة (TL;DR)';
+
+  @override
+  String get addBlock => 'ضيف بلوك';
+
+  @override
+  String get blockOptions => 'خيارات البلوك';
+
+  @override
+  String get blockDirection => 'الاتجاه';
+
+  @override
+  String get dirAuto => 'تلقائي';
+
+  @override
+  String get dirRtl => 'من اليمين للشمال';
+
+  @override
+  String get dirLtr => 'من الشمال لليمين';
+
+  @override
+  String get moveUp => 'لفوق';
+
+  @override
+  String get moveDown => 'لتحت';
+
+  @override
+  String get deleteBlock => 'امسح البلوك';
+
+  @override
+  String get turnInto => 'حوّله لـ';
+
+  @override
+  String get calloutTip => 'نصيحة';
+
+  @override
+  String get calloutInfo => 'معلومة';
+
+  @override
+  String get calloutWarning => 'تحذير';
+
+  @override
+  String get calloutDanger => 'خطر';
+
+  @override
+  String get calloutTitleHint => 'عنوان (اختياري)';
+
+  @override
+  String get quoteCiteHint => 'مين قالها (اختياري)';
+
+  @override
+  String get codeFilenameHint => 'اسم الملف (اختياري)';
+
+  @override
+  String get codeHint => 'الكود';
+
+  @override
+  String get codeTabLabelHint => 'اسم التاب';
+
+  @override
+  String get addCodeTab => 'ضيف تاب';
+
+  @override
+  String get removeCodeTab => 'شيل التاب';
+
+  @override
+  String get tableAddRow => 'ضيف صف';
+
+  @override
+  String get tableAddColumn => 'ضيف عمود';
+
+  @override
+  String get tableRemoveRow => 'شيل آخر صف';
+
+  @override
+  String get tableRemoveColumn => 'شيل آخر عمود';
+
+  @override
+  String get stepTitleHint => 'عنوان الخطوة';
+
+  @override
+  String get stepContentHint => 'التفاصيل';
+
+  @override
+  String get addStep => 'ضيف خطوة';
+
+  @override
+  String get removeStep => 'شيل الخطوة';
+
+  @override
+  String get listItemHint => 'عنصر';
+
+  @override
+  String get imageChoose => 'اختار صورة';
+
+  @override
+  String get imageAltLabel => 'وصف الصورة (alt text) — مطلوب';
+
+  @override
+  String get imageAltHelp => 'اوصف الصورة للي مش قادر يشوفها.';
+
+  @override
+  String get imageCaptionLabel => 'تعليق (اختياري)';
+
+  @override
+  String get imageReplace => 'غيّر الصورة';
+
+  @override
+  String get embedUrlLabel => 'اللينك';
+
+  @override
+  String get embedInvalid => 'حط لينك YouTube أو GitHub Gist.';
+
+  @override
+  String get formatBold => 'عريض';
+
+  @override
+  String get formatItalic => 'مايل';
+
+  @override
+  String get formatCode => 'كود في السطر';
+
+  @override
+  String get formatHighlight => 'تظليل';
+
+  @override
+  String get formatStrike => 'شطب';
+
+  @override
+  String get formatLink => 'لينك';
+
+  @override
+  String get formatLineBreak => 'سطر جديد في نفس البلوك';
+
+  @override
+  String get formatMention => 'منشن لحد';
+
+  @override
+  String get linkDialogTitle => 'لينك';
+
+  @override
+  String get linkUrlLabel => 'اللينك (http أو https)';
+
+  @override
+  String get linkRemove => 'شيل اللينك';
+
+  @override
+  String get linkInvalid => 'استخدم لينك http أو https.';
+
+  @override
+  String get slashNoMatches => 'مفيش بلوك بالاسم ده';
+
+  @override
+  String get previewTitle => 'معاينة';
+
+  @override
+  String get previewInFeed => 'في الصفحة الرئيسية';
+
+  @override
+  String get previewLight => 'فاتح';
+
+  @override
+  String get previewDark => 'غامق';
+
+  @override
+  String get revisionsEmpty => 'لسه مفيش نسخ. كل نشر أو تحديث بيعمل نسخة.';
+
+  @override
+  String revisionLabel(int number) {
+    return 'النسخة $number';
+  }
+
+  @override
+  String get revisionFirst => 'أول نشر';
+
+  @override
+  String get revisionRestore => 'رجّع النسخة دي';
+
+  @override
+  String revisionRestoreTitle(int number) {
+    return 'ترجّع النسخة $number؟';
+  }
+
+  @override
+  String get revisionRestoreBody =>
+      'هتحل محل اللي في المحرر دلوقتي. القرّاء مش هيشوفوها غير لما تدوس «حدّث».';
+
+  @override
+  String get revisionRestored => 'النسخة رجعت. دوس «حدّث» عشان تتنشر.';
+
+  @override
+  String get errAppleConfirmationRequired =>
+      'حسابك مربوط بأبل. أكّد بأبل عشان تحذفه.';
+
+  @override
+  String get errDeletionUnavailable =>
+      'معرفناش نكمّل حذف حسابك، فمفيش حاجة اتحذفت. جرّب تاني بعد شوية.';
 }

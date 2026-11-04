@@ -15,14 +15,14 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 /// <summary>
 /// Seeder #6 (all environments, Production included): imports git-versioned articles (SPEC §19.2 step 6) under the
 /// official "ReadIn" account. Status-aware: <c>approved</c>/<c>published</c> → published with the AI-assisted label;
-/// <c>auto-checked</c> → submitted to the reviewer queue; <c>generated</c>/<c>failed</c> → skipped.
+/// <c>auto-checked</c> → kept as a draft of the official account; <c>generated</c>/<c>failed</c> → skipped.
 /// <list type="bullet">
 /// <item>Upsert by slug, and versioned per article: a <see cref="SeedHistory"/> row (<c>article:{slug}</c>) holds the
 /// checksum of its files, so only changed articles are re-imported.</item>
 /// <item><c>cover.webp</c> goes through the image pipeline (400/800/1200 + BlurHash, ADR 0011).</item>
 /// <item>New articles get staggered publish dates over the last ~120 days (plan order, interleaved across learning
 /// paths), so the feed isn't 300 articles published in the same second.</item>
-/// <item><c>reviewStatus: pending</c> puts the article in the reviewer queue; no "Reviewed by" badge is ever faked.</item>
+/// <item><c>reviewStatus</c> and <c>reviewer</c> in meta.json are ignored: there is no review (ADR 0015).</item>
 /// <item>An article of the official account whose folder was removed is archived.</item>
 /// </list>
 /// </summary>
@@ -129,7 +129,7 @@ internal sealed partial class ArticlesSeeder(
                 ? article.AddTranslation(language, titles.Title, titles.Subtitle, processed.Value.Content)
                 : existing.ContentJson == processed.Value.Content.Json && existing.Title == titles.Title && existing.Subtitle == titles.Subtitle
                     ? Result.Success()
-                    : article.UpdateTranslation(language, titles.Title, titles.Subtitle, processed.Value.Content, SystemUsers.EditorialId, Now);
+                    : article.UpdateTranslation(language, titles.Title, titles.Subtitle, processed.Value.Content, Now);
             if (applied.IsFailure) return applied.Error;
         }
 
@@ -141,10 +141,13 @@ internal sealed partial class ArticlesSeeder(
         var tagged = article.SetTags(await UpsertTagsAsync(meta.Tags, ct));
         if (tagged.IsFailure) return tagged.Error;
 
-        var lifecycle = meta.IsPublishable
-            ? await PublishAsync(article, field, meta, schedule.GetValueOrDefault(meta.Slug, Now), ct)
-            : SubmitForReview(article);
-        if (lifecycle.IsFailure) return lifecycle.Error;
+        if (meta.IsPublishable && !article.IsPublished)
+        {
+            // Staggered dates are in the past; a date in the future publishes now (there is no scheduling, ADR 0015).
+            var publishAt = meta.PublishAt ?? meta.ReviewedAt ?? schedule.GetValueOrDefault(meta.Slug, Now);
+            var published = article.Publish(field, publishAt < Now ? publishAt : Now);
+            if (published.IsFailure) return published.Error;
+        }
 
         // Pipeline content passed every automatic check before it could be committed (CI runs `validate --all`).
         if (meta.LastReviewedAt is { } checkedAt) article.MarkAutoChecked(checkedAt);
@@ -164,31 +167,6 @@ internal sealed partial class ArticlesSeeder(
         var asset = await SeedImages.ImportAsync(images, storage, db, SystemUsers.EditorialId, UploadPurpose.Cover, bytes, Now, ct);
         return asset.IsFailure ? asset.Error : SeedImages.Pick(asset.Value, CoverWidth);
     }
-
-    private async Task<Result> PublishAsync(Article article, Field field, ArticleMeta meta, DateTime scheduled, CancellationToken ct)
-    {
-        if (meta.Reviewer is not null && !article.IsReviewed)
-        {
-            var reviewerId = await db.Users.Where(u => u.Email == meta.Reviewer).Select(u => (Guid?)u.Id).FirstOrDefaultAsync(ct);
-            if (reviewerId is { } id)
-                article.MarkReviewed(id, meta.ReviewedAt ?? Now);
-            else
-                LogReviewerMissing(logger, meta.Slug, meta.Reviewer); // Never fake a "Reviewed by" badge.
-        }
-
-        if (!article.IsPublished)
-        {
-            var publishAt = meta.PublishAt ?? meta.ReviewedAt ?? scheduled;
-            var published = publishAt > Now ? article.Schedule(field, publishAt, Now) : article.Publish(field, publishAt);
-            if (published.IsFailure) return published;
-        }
-
-        // Published without a human review: it waits in the reviewer queue (F20) with no "Reviewed" badge.
-        return meta.ReviewStatus == "pending" && article.ReviewStatus == ReviewStatus.None ? article.SubmitForReview() : Result.Success();
-    }
-
-    private static Result SubmitForReview(Article article) =>
-        article.Status is ArticleStatus.Draft or ArticleStatus.ChangesRequested ? article.SubmitForReview() : Result.Success();
 
     /// <summary>
     /// First-publish dates for planned articles: the plan is interleaved across learning paths (every path's 1st
@@ -263,8 +241,6 @@ internal sealed partial class ArticlesSeeder(
     [LoggerMessage(Level = LogLevel.Error, Message = "Article '{Slug}' was not imported: {Code} — {Details}")]
     private static partial void LogImportFailed(ILogger logger, string slug, string code, string details);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Article '{Slug}': reviewer {Reviewer} does not exist here; imported without the Reviewed badge")]
-    private static partial void LogReviewerMissing(ILogger logger, string slug, string reviewer);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Article '{Slug}' has no content folder any more; archived")]
     private static partial void LogArchived(ILogger logger, string slug);

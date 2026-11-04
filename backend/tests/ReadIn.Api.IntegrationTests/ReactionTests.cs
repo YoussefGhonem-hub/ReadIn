@@ -73,13 +73,9 @@ public sealed class ReactionTests(ApiFactory api)
     public async Task Unpublished_and_unknown_articles_are_not_found()
     {
         var author = await api.UserAsync();
-        var created = await author.Client.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = await author.Client.FieldIdAsync("frontend"), language = "en", title = "A draft nobody can react to",
-            content = new { version = 1, language = "en", blocks = new object[] { new { id = "p1", type = "paragraph", content = new[] { new { type = "text", text = "Draft." } } } } },
-            isAiAssisted = false,
-        }, Ct);
-        var draftId = (await created.Content.ReadFromJsonAsync<JsonObject>(Ct))!["id"]!.GetValue<Guid>();
+        var draft = await author.Client.CreateDraftAsync(ArticleTestKit.Document(
+            await author.Client.FieldIdAsync("frontend"), "A draft nobody can react to", blocks: [ArticleTestKit.Paragraph("Draft.")]));
+        var draftId = draft["id"]!.GetValue<Guid>();
 
         await author.Client.ReactAsync(draftId, "love").ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
         await author.Client.ReactAsync(Guid.NewGuid(), "love").ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
@@ -207,7 +203,7 @@ public sealed class ReactionTests(ApiFactory api)
         var card = await author.Client.FindInForYouAsync(articleId);
 
         card.Select(p => p.Key).Should().Equal(
-            "id", "slug", "language", "title", "subtitle", "coverUrl", "field", "author", "readingTimeMinutes", "isReviewed",
+            "id", "slug", "language", "title", "subtitle", "coverUrl", "field", "author", "readingTimeMinutes",
             "isAiAssisted", "versionBadge", "publishedAt", "reactionCount", "reactions", "commentCount", "saveCount", "myReaction",
             "isSaved", "attachments");
         card["reactions"]!.AsObject().Select(p => p.Key).Should().Equal("insightful", "love", "fire", "mindBlown");

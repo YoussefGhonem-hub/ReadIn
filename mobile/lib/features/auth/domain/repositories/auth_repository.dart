@@ -71,8 +71,10 @@ abstract interface class AccountRepository {
   /// Other sessions end; this one gets fresh tokens.
   Future<Result<Me>> changePhoneNumber({required String newPhoneNumber, required String currentPassword});
 
-  /// Signs out everywhere; the session is forgotten locally on success. Confirmed with the [password], or with a fresh
-  /// Google / Apple token ([external]) for accounts without one.
+  /// `DELETE /me`: deletes the account for good, right away, confirmed with the [password] or with a fresh Google /
+  /// Apple token of a linked identity ([external]; Apple's carries the authorization code so its token can be revoked).
+  /// On success everything this device kept for the account is forgotten (push token, cached images, temporary files),
+  /// then the session. A failure changes nothing here and is never retried by itself.
   Future<Result<void>> deleteAccount({String? password, ExternalCredential? external});
 
   /// Links Google / Apple, confirmed with the [password] or a fresh token of an already linked provider ([external]).

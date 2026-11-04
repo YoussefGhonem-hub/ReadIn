@@ -93,11 +93,13 @@ class _ArticleViewState extends State<ArticleView> {
 
   /// A loaded article is the newest state of its counters, the author follow and its collections ("add to
   /// collection" opens with them ticked); then live counters follow it. A device copy (offline) is older than
-  /// anything the app knows, so it seeds nothing.
+  /// anything the app knows, so it seeds nothing. A deleted author has no follow to seed.
   void _onArticle(ArticleDetails article) {
     if (!article.isOfflineCopy) {
       context.read<EngagementCubit>().seed([article.card]);
-      context.read<FollowsCubit>().seed({article.card.author.id: article.isFollowingAuthor});
+      if (article.card.author case final author?) {
+        context.read<FollowsCubit>().seed({author.id: article.isFollowingAuthor});
+      }
       context.read<CollectionsCubit>().seedArticle(article.card.id, article.collectionIds);
     }
     context.read<ArticleLiveCubit>().watch(article.card.id);
@@ -214,11 +216,22 @@ class _ArticleViewState extends State<ArticleView> {
                       ArticleStatus.ready => NotificationListener<Notification>(
                           // While resuming, the jumps stay between the reader and its resume.
                           onNotification: (notification) => _resume?.onNotification(notification) ?? false,
-                          child: _ReaderBody(
+                          child: ReaderBody(
                             article: article!,
                             controller: _scroll,
                             bodyFontSize: _fontSizeFor(fontSize),
                             onTerm: (term) => unawaited(_showTerm(term)),
+                            trailing: [RelatedArticlesSection(article: article.card)],
+                            // Nobody can follow a deleted account (SPEC §9.6).
+                            authorAction: switch (article.card.author) {
+                              final author? => FollowButton(
+                                  userId: author.id,
+                                  name: author.displayName,
+                                  initiallyFollowing: article.isFollowingAuthor,
+                                  dense: true,
+                                ),
+                              null => null,
+                            },
                           ),
                         ),
                     },
@@ -311,20 +324,39 @@ class _OfflineCopyBanner extends StatelessWidget {
   }
 }
 
-class _ReaderBody extends StatelessWidget {
-  const _ReaderBody({required this.article, required this.controller, required this.bodyFontSize, required this.onTerm});
+/// The article as readers see it: header, trust row, TL;DR, content, attachments and sources. The editor's preview
+/// (F05) renders the same widget.
+class ReaderBody extends StatelessWidget {
+  const ReaderBody({
+    super.key,
+    required this.article,
+    required this.bodyFontSize,
+    this.controller,
+    this.onTerm,
+    this.authorAction,
+    this.leading,
+    this.trailing = const [],
+  });
 
   final ArticleDetails article;
-  final ScrollController controller;
+  final ScrollController? controller;
   final double bodyFontSize;
-  final ValueChanged<RTerm> onTerm;
+  final ValueChanged<RTerm>? onTerm;
+
+  /// At the end of the author row (the follow button).
+  final Widget? authorAction;
+
+  /// Above the header (the editor preview shows the feed card there).
+  final Widget? leading;
+
+  /// Slivers after the sources: the reader's end-of-article sections (related articles). The editor preview has none.
+  final List<Widget> trailing;
 
   @override
   Widget build(BuildContext context) {
     final direction = RDocScope.directionForLanguage(article.card.language);
     final showSummary = article.summary != null && article.summary!.isNotEmpty && !article.content.hasSummaryBlock;
     const gutter = EdgeInsets.symmetric(horizontal: ReadInSpace.s5);
-    final author = article.card.author;
 
     return RDocScope(
       baseDirection: direction,
@@ -335,18 +367,14 @@ class _ReaderBody extends StatelessWidget {
         builder: (context) => CustomScrollView(
           controller: controller,
           slivers: [
+            if (leading != null) SliverToBoxAdapter(child: leading),
             SliverPadding(
               padding: gutter.copyWith(top: ReadInSpace.s2),
               sliver: SliverToBoxAdapter(
                 child: ArticleHeader(
                   article: article,
                   titleScale: RDocScope.of(context).scale,
-                  authorAction: FollowButton(
-                    userId: author.id,
-                    name: author.displayName,
-                    initiallyFollowing: article.isFollowingAuthor,
-                    dense: true,
-                  ),
+                  authorAction: authorAction,
                 ),
               ),
             ),
@@ -374,7 +402,7 @@ class _ReaderBody extends StatelessWidget {
               padding: gutter.copyWith(top: ReadInSpace.s4, bottom: ReadInSpace.s8),
               sliver: SliverToBoxAdapter(child: SourcesSection(sources: article.sources, onOpen: openExternalLink)),
             ),
-            RelatedArticlesSection(article: article.card),
+            ...trailing,
           ],
         ),
       ),

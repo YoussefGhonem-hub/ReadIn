@@ -29,22 +29,8 @@ internal static class SocialTestKit
         this HttpClient author, string? title = null, string field = "dotnet", string language = "en")
     {
         title ??= $"Social test {Guid.NewGuid():N}";
-        var created = await author.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = await author.FieldIdAsync(field), language, title,
-            content = new
-            {
-                version = 1, language,
-                blocks = new object[] { new { id = "p1", type = "paragraph", dir = "auto", content = new[] { new { type = "text", text = "Reactions, saves and follows." } } } },
-            },
-            sources = new[] { new { title = "ReadIn", url = "https://readin.app" } },
-            isAiAssisted = false,
-        }, Ct);
-        created.StatusCode.Should().Be(HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
-        var body = (await created.Content.ReadFromJsonAsync<JsonObject>(Ct))!;
-        var id = body["id"]!.GetValue<Guid>();
-        (await author.PostAsync($"/api/v1/articles/{id}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
-        return (id, body["slug"]!.GetValue<string>());
+        return await author.WriteAndPublishAsync(ArticleTestKit.Document(
+            await author.FieldIdAsync(field), title, language, [ArticleTestKit.Paragraph("Reactions, saves and follows.")]));
     }
 
     public static async Task<JsonObject> OkJsonAsync(this Task<HttpResponseMessage> request)

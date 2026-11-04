@@ -23,6 +23,7 @@ class TodayHeroCard extends StatelessWidget {
     final l10n = context.l10n;
     final lang = Localizations.localeOf(context).languageCode;
     final titleDir = Bidi.detect(article.title) ?? Directionality.of(context);
+    final author = article.author;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -66,8 +67,6 @@ class TodayHeroCard extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       InfoTag(label: article.field.nameFor(lang)),
-                      if (article.isReviewed)
-                        InfoTag(label: l10n.badgeReviewed, icon: Icons.check_rounded, tone: InfoTagTone.success),
                       Text(l10n.readingTime(article.readingTimeMinutes), style: context.textTheme.bodySmall),
                     ],
                   ),
@@ -82,22 +81,32 @@ class TodayHeroCard extends StatelessWidget {
                   const SizedBox(height: ReadInSpace.s3),
                   Row(
                     children: [
-                      // The author's avatar and name open their profile (F14); the rest of the card opens the article.
-                      ExcludeSemantics(
-                        child: ProfileLink(
-                          username: article.author.username,
-                          child: UserAvatar(name: article.author.displayName, url: article.author.avatarUrl, size: 26),
+                      if (author == null) ...[
+                        // A deleted account's articles stay up under "Deleted user" (SPEC §9.6), with no profile link.
+                        const GenericAvatar(size: 26),
+                        const SizedBox(width: ReadInSpace.s2),
+                        Flexible(
+                          child: Text(l10n.deletedUser,
+                              style: context.textTheme.labelMedium?.copyWith(color: colors.textSecondary),
+                              overflow: TextOverflow.ellipsis),
                         ),
-                      ),
-                      const SizedBox(width: ReadInSpace.s2),
-                      Flexible(
-                        child: ProfileLink(
-                          username: article.author.username,
-                          child: BidiText(article.author.displayName,
-                              style: context.textTheme.labelMedium, overflow: TextOverflow.ellipsis),
+                      ] else ...[
+                        // The author's avatar and name open their profile (F14); the rest of the card opens the article.
+                        ExcludeSemantics(
+                          child: ProfileLink(
+                            username: author.username,
+                            child: UserAvatar(name: author.displayName, url: author.avatarUrl, size: 26),
+                          ),
                         ),
-                      ),
-                      if (article.author.isVerified) ...[const SizedBox(width: 4), const VerifiedMark(size: 13)],
+                        const SizedBox(width: ReadInSpace.s2),
+                        Flexible(
+                          child: ProfileLink(
+                            username: author.username,
+                            child: BidiText(author.displayName, style: context.textTheme.labelMedium, overflow: TextOverflow.ellipsis),
+                          ),
+                        ),
+                      ],
+                      if (author?.isVerified ?? false) ...[const SizedBox(width: 4), const VerifiedMark(size: 13)],
                       const Spacer(),
                       Text(l10n.todayArticleCta, style: context.textTheme.labelMedium?.copyWith(color: colors.primary)),
                       Icon(Icons.chevron_right_rounded, size: 18, color: colors.primary),

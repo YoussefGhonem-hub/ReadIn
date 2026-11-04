@@ -40,6 +40,16 @@ abstract final class FailureCodes {
   static const fieldNotFound = 'field.not_found';
   static const articleNotFound = 'article.not_found';
   static const articleSourcesRequired = 'article.sources_required';
+
+  // Article editor (F05 contract): conflicts, and the publish checks (DraftProblemCode).
+  static const articleDraftConflict = 'article.draft_conflict';
+  static const articleNotPublished = 'article.not_published';
+  static const articleRevisionNotFound = 'article.revision_not_found';
+  static const articleFieldRequired = 'article.field_required';
+  static const articleTitleLength = 'article.title_length';
+  static const articleContentEmpty = 'article.content_empty';
+  static const articleContentInvalid = 'article.content_invalid';
+  static const articleImageAltRequired = 'article.image_alt_required';
   static const rateLimited = 'rate_limited';
   static const serverError = 'server.error';
   static const validationRequired = 'validation.required';
@@ -71,6 +81,13 @@ abstract final class FailureCodes {
   static const authLastSignInMethod = 'auth.last_sign_in_method';
   static const authPhoneSignInExists = 'auth.phone_sign_in_exists';
   static const providerInvalid = 'provider.invalid';
+
+  // Delete account (`DELETE /me`)
+  /// The account is linked to Apple and the server has no Apple token to revoke: confirm with Apple.
+  static const authAppleConfirmationRequired = 'auth.apple_confirmation_required';
+
+  /// `503`: Apple couldn't be reached, so nothing was deleted.
+  static const accountDeletionUnavailable = 'account.deletion_unavailable';
 
   // Media (docs/api/contract-v1.md "Media", ADR 0011)
   static const mediaPurposeInvalid = 'media.purpose_invalid';
@@ -143,4 +160,7 @@ abstract final class FailureCodes {
 
   /// The Google / Apple sheet failed for a reason other than the person closing it.
   static const authExternalProviderFailed = 'auth.external_provider_failed';
+
+  /// Deleting needs a fresh Apple sign in, which this device can't show (Android): the iPhone app, or email.
+  static const authAppleUnavailable = 'auth.apple_unavailable';
 }

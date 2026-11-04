@@ -77,6 +77,7 @@ public static class ApiSetup
         });
 
         var authLimits = configuration.GetSection(AuthRateLimits.Section).Get<AuthRateLimits>() ?? new AuthRateLimits();
+        var globalPerMinute = configuration.GetValue("RateLimits:GlobalPerMinute", 300);
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -87,7 +88,7 @@ public static class ApiSetup
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 300,
+                    PermitLimit = globalPerMinute,
                     Window = TimeSpan.FromMinutes(1),
                 }));
             options.AddPolicy(RateLimitPolicies.Auth, context =>

@@ -173,26 +173,19 @@ public sealed class UploadTests(ApiFactory api)
         var dotnet = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!
             .Single(f => f!["slug"]!.GetValue<string>() == "dotnet")!["id"]!.GetValue<Guid>();
 
-        var created = await client.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = dotnet, language = "en", title = "Images live next to the API",
-            coverUrl = PathOf(cover),
-            content = new
-            {
-                version = 1, language = "en",
-                blocks = new object[]
-                {
-                    new { id = "p1", type = "paragraph", content = new[] { new { type = "text", text = "A diagram follows." } } },
-                    // The absolute (http) URL from the upload response is accepted and stored as rdoc-asset://.
-                    new { id = "i1", type = "image", src = UrlOf(image), alt = "Diagram" },
-                },
-            },
-            sources = new[] { new { title = "Static files", url = "https://learn.microsoft.com/aspnet/core/fundamentals/static-files" } },
-            isAiAssisted = false,
-        }, Ct);
-        created.StatusCode.Should().Be(HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
-        var id = (await created.Content.ReadFromJsonAsync<JsonObject>(Ct))!["id"]!.GetValue<Guid>();
-        (await client.PostAsync($"/api/v1/articles/{id}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var draft = await client.CreateDraftAsync(ArticleTestKit.Document(dotnet, "Images live next to the API",
+            blocks:
+            [
+                ArticleTestKit.Paragraph("A diagram follows."),
+                // The absolute (http) URL from the upload response is accepted and stored as rdoc-asset://.
+                new { id = "i1", type = "image", src = UrlOf(image), alt = "Diagram" },
+            ],
+            sources: [new { title = "Static files", url = "https://learn.microsoft.com/aspnet/core/fundamentals/static-files" }],
+            coverUrl: UrlOf(cover)));
+        var id = draft["id"]!.GetValue<Guid>();
+        draft["document"]!["coverUrl"]!.GetValue<string>().Should().Be(UrlOf(cover), "the editor gets public URLs back");
+        draft["document"]!["translations"]![0]!["content"]!["blocks"]![1]!["src"]!.GetValue<string>().Should().Be(UrlOf(image));
+        await (await client.PublishDraftAsync(id, draft["version"]!.GetValue<int>())).PublishedSlugAsync();
 
         using (var scope = api.Services.CreateScope())
         {
@@ -219,16 +212,8 @@ public sealed class UploadTests(ApiFactory api)
         await UpdateAvatarAsync(client, me, PathOf(avatar));
 
         var field = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))![0]!["id"]!.GetValue<Guid>();
-        (await client.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = field, language = "en", title = "A draft that keeps its image",
-            content = new
-            {
-                version = 1, language = "en",
-                blocks = new object[] { new { id = "i1", type = "image", src = "rdoc-asset:/" + PathOf(inDraft), alt = "Kept" } },
-            },
-            isAiAssisted = false,
-        }, Ct)).StatusCode.Should().Be(HttpStatusCode.Created);
+        await client.CreateDraftAsync(ArticleTestKit.Document(field, "A draft that keeps its image",
+            blocks: [new { id = "i1", type = "image", src = "rdoc-asset:/" + PathOf(inDraft), alt = "Kept" }]));
 
         var stray = Path.Combine(api.UploadsPath, "avatars", "notes.txt");
         await File.WriteAllTextAsync(stray, "not ours", Ct);

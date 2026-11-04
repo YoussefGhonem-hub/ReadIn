@@ -36,21 +36,23 @@ class ExternalProviderIcon extends StatelessWidget {
 }
 
 /// "كمّل بـ Google" (outlined, with the G mark) and "كمّل بـ Apple" (black, white in dark mode, as Apple's guidelines
-/// ask). [busy] shows a spinner instead of the mark.
+/// ask). [busy] shows a spinner instead of the mark; [label] replaces "Continue with …" (e.g. "Confirm with Apple").
 class ExternalProviderButton extends StatelessWidget {
-  const ExternalProviderButton({super.key, required this.provider, required this.onPressed, this.busy = false});
+  const ExternalProviderButton({super.key, required this.provider, required this.onPressed, this.busy = false, this.label});
 
   final ExternalProvider provider;
   final VoidCallback? onPressed;
   final bool busy;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final label = switch (provider) {
-      ExternalProvider.google => l10n.continueWithGoogle,
-      ExternalProvider.apple => l10n.continueWithApple,
-    };
+    final label = this.label ??
+        switch (provider) {
+          ExternalProvider.google => l10n.continueWithGoogle,
+          ExternalProvider.apple => l10n.continueWithApple,
+        };
     final dark = Theme.of(context).brightness == Brightness.dark;
     final appleBackground = dark ? Colors.white : Colors.black;
     final appleForeground = dark ? Colors.black : Colors.white;

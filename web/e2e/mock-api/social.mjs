@@ -125,7 +125,8 @@ export function createSocial({ articles, writers, problem }) {
     if (!byId.has(dto.id)) return dto;
     const result = { ...dto, ...countsOf(dto.id, viewer) };
     if ('isFollowingAuthor' in dto) {
-      result.isFollowingAuthor = !!viewer && viewer !== dto.author.id && stateOf(viewer).follows.has(dto.author.id);
+      // `author` is null once the writer deleted their account: nobody follows them.
+      result.isFollowingAuthor = !!viewer && !!dto.author && viewer !== dto.author.id && stateOf(viewer).follows.has(dto.author.id);
     }
     if ('collectionIds' in dto) {
       // The viewer's collections containing the article (empty for guests and unsaved articles).
@@ -399,7 +400,7 @@ export function createSocial({ articles, writers, problem }) {
       'GET',
       new RegExp(`^${API}/feed/following$`),
       signedIn((viewer, state, q) => {
-        const items = articles.filter((a) => state.follows.has(a.author.id)).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+        const items = articles.filter((a) => a.author && state.follows.has(a.author.id)).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
         return [200, page(items, q, (a) => personalize(a, viewer))];
       }),
     ],

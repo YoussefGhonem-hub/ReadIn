@@ -12,6 +12,7 @@ class BidiTextField extends StatefulWidget {
     required this.controller,
     this.decoration = const InputDecoration(),
     this.onChanged,
+    this.onSubmitted,
     this.maxLength,
     this.counterWithin,
     this.minLines,
@@ -29,6 +30,7 @@ class BidiTextField extends StatefulWidget {
   final TextEditingController controller;
   final InputDecoration decoration;
   final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
   final int? maxLength;
 
   /// With [maxLength]: show the character counter only when this close to the limit (long limits such as 5000
@@ -100,6 +102,7 @@ class _BidiTextFieldState extends State<BidiTextField> {
         focusNode: widget.focusNode,
         decoration: widget.decoration,
         onChanged: widget.onChanged,
+        onSubmitted: widget.onSubmitted,
         maxLength: widget.maxLength,
         buildCounter: widget.counterWithin == null ? null : _nearLimitCounter,
         minLines: widget.minLines,

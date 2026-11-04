@@ -4,19 +4,22 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { ExternalProvider } from '../../../core/api/models';
 import { AuthService } from '../../../core/auth/auth.service';
-import { ExternalIdentityService } from '../../../core/auth/external-identity.service';
+import { ExternalIdentityService, PROVIDER_NAMES } from '../../../core/auth/external-identity.service';
 import { SessionStore } from '../../../core/auth/session.store';
 import { Avatar } from '../../../shared/ui/avatar';
 import { formatPhoneForDisplay } from '../../../shared/ui/phone/phone-number';
-import { ChangePasswordSheet, ChangePhoneSheet, ChangePinSheet, DeleteAccountSheet, SignOutEverywhereSheet } from './account-sheets';
-import { AddPhoneSignInSheet, LinkProviderSheet, PROVIDER_NAMES, UnlinkProviderSheet } from './external-sheets';
+import { environment } from '../../../../environments/environment';
+import { ChangePasswordSheet, ChangePhoneSheet, ChangePinSheet, SignOutEverywhereSheet } from './account-sheets';
+import { AddPhoneSignInSheet, LinkProviderSheet, UnlinkProviderSheet } from './external-sheets';
 
-type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'delete' | 'addPhone';
+type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'addPhone';
 
 /**
  * Settings → Account (F18): the phone number (shown to its owner only) with "change number", change password,
- * change PIN, linked Google/Apple accounts, sign out, sign out of all devices and delete account. Google/Apple-only
- * accounts get "add phone + password" instead of the number, password and PIN rows. Guests get a sign-in prompt.
+ * change PIN, linked Google/Apple accounts, sign out, sign out of all devices and, last on the Settings screen, the
+ * red "Delete account" row that opens the in-app deletion flow (with the public page's email route next to it).
+ * Google/Apple-only accounts get "add phone + password" instead of the number, password and PIN rows. Guests get a
+ * sign-in prompt.
  */
 @Component({
   selector: 'rd-account-settings',
@@ -29,7 +32,6 @@ type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'delete' | 'ad
     ChangePasswordSheet,
     ChangePinSheet,
     SignOutEverywhereSheet,
-    DeleteAccountSheet,
     AddPhoneSignInSheet,
     LinkProviderSheet,
     UnlinkProviderSheet,
@@ -142,12 +144,21 @@ type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'delete' | 'ad
           </button>
         </div>
 
-        <div class="mt-6 border-t border-border pt-4">
+        <!-- Delete account (SPEC F01): the last row of Settings, in the app; the email route stays as a secondary link. -->
+        <div class="mt-6 border-t border-border pt-4" data-danger-zone>
           <h3 class="m-0 text-sm font-semibold text-error">{{ 'account.dangerZone' | transloco }}</h3>
-          <p class="m-0 mt-1 text-xs text-text-secondary">{{ 'account.delete.hint' | transloco }}</p>
-          <button type="button" class="rd-btn rd-btn-ghost mt-2 px-0 text-error" (click)="sheet.set('delete')" data-open="delete">
-            <svg lucideIcon="Trash2" [size]="16" aria-hidden="true"></svg>{{ 'account.delete.action' | transloco }}
-          </button>
+          <a
+            routerLink="/settings/delete-account"
+            class="mt-2 flex min-h-12 items-center gap-3 rounded-md border border-error px-3 font-semibold text-error no-underline hover:bg-callout-danger"
+            data-delete-account
+          >
+            <svg lucideIcon="Trash2" [size]="18" class="shrink-0" aria-hidden="true"></svg>
+            <span class="min-w-0 flex-1">{{ 'account.delete.action' | transloco }}</span>
+            <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0" aria-hidden="true"></svg>
+          </a>
+          <a [href]="deletionPageUrl" target="_blank" rel="noopener" class="mt-2 inline-block text-xs text-text-secondary underline underline-offset-2" data-delete-by-email>
+            {{ 'account.delete.byEmail' | transloco }}
+          </a>
         </div>
       } @else {
         <p class="m-0 mb-4 text-sm text-text-secondary">{{ 'settings.guestHint' | transloco }}</p>
@@ -159,7 +170,6 @@ type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'delete' | 'ad
     <rd-change-password-sheet [open]="sheet() === 'password'" (closed)="sheet.set(null)" />
     <rd-change-pin-sheet [open]="sheet() === 'pin'" (closed)="sheet.set(null)" />
     <rd-sign-out-everywhere-sheet [open]="sheet() === 'signOutEverywhere'" (closed)="sheet.set(null)" />
-    <rd-delete-account-sheet [open]="sheet() === 'delete'" (closed)="sheet.set(null)" />
     <rd-add-phone-sign-in-sheet [open]="sheet() === 'addPhone'" (closed)="sheet.set(null)" />
     <rd-link-provider-sheet [provider]="linkProvider()" (closed)="linkProvider.set(null)" />
     <rd-unlink-provider-sheet [provider]="unlinkProvider()" (closed)="unlinkProvider.set(null)" />
@@ -177,6 +187,7 @@ export class AccountSettings {
   protected readonly hasPassword = computed(() => this.session.me()?.hasPassword ?? true);
   protected readonly linkProvider = signal<ExternalProvider | null>(null);
   protected readonly unlinkProvider = signal<ExternalProvider | null>(null);
+  protected readonly deletionPageUrl = environment.accountDeletionUrl;
   private readonly external = inject(ExternalIdentityService);
 
   /** Google and Apple rows: the ones this web build offers, plus any already linked (so they can be unlinked). */

@@ -1,6 +1,6 @@
 # 0014 — Open topics, and review is always optional
 
-- **Status:** Accepted
+- **Status:** Accepted; the "optional review" part is superseded by [ADR 0015](0015-open-publishing-and-the-editor.md) (review removed)
 - **Date:** 2026-11-04
 - **Relates to:** SPEC §1.4 (fields), §10 (permissions), F06 (lifecycle), F20 (review), §19 (seed plan), §20 (trust)
 

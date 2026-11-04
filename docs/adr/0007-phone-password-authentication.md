@@ -3,7 +3,8 @@
 - **Status:** Accepted
 - **Date:** 2026-11-03
 - **Supersedes:** [0001](0001-firebase-auth-sql-server-roles.md) and the auth part of [0004](0004-firebase-js-sdk-on-web.md)
-- **Amended by:** [0012](0012-google-and-apple-sign-in.md): Google and Apple sign in were added on the same accounts and sessions
+- **Amended by:** [0012](0012-google-and-apple-sign-in.md): Google and Apple sign in were added on the same accounts and sessions;
+  [0016](0016-immediate-account-deletion.md): account deletion is immediate and for good
 
 ## Context
 
@@ -34,8 +35,8 @@ Server, with two sources of truth for one account.
 - **Limits** (SPEC §9.5): 5 wrong passwords lock the account for 15 minutes. Per IP: 20 sign-ins a minute, 3 sign-ups
   an hour, 10 recovery calls an hour (ASP.NET Core rate limiter, `RateLimits:Auth`). Per number: 5 sign-ins a minute
   (in-memory, `IAttemptThrottle`) and 5 recovery attempts an hour (`RecoveryAttempts`).
-- **Account deletion:** soft delete with the password, every session revoked; a daily job anonymizes the account after
-  30 days, so the content stays as "Deleted user" and the number becomes free again.
+- **Account deletion:** confirmed with the password; immediate and for good since [0016](0016-immediate-account-deletion.md)
+  (it was a soft delete anonymized after 30 days). The number can sign up again right away.
 - **Seeding:** demo users and the local SuperAdmin get `Seed:DemoPassword` and `Seed:DemoPin` (local only). The
   production SuperAdmin gets `Seed:SuperAdminPhone` + `Seed:SuperAdminPassword` and must change the password and set a
   PIN on first sign in.

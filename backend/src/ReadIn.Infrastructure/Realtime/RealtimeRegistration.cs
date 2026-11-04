@@ -16,6 +16,7 @@ internal static class RealtimeRegistration
     public static IServiceCollection AddRealtime(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IRealtimeTokenIssuer, FirebaseRealtimeTokenIssuer>();
+        services.AddScoped<IRealtimeAccountData, FirebaseRealtimeAccountData>();
         services.AddSingleton<IRealtimeDatabaseCredential, GoogleRealtimeDatabaseCredential>();
         services.AddHttpClient<RealtimeDatabaseClient>().AddStandardResilienceHandler(ConfigureResilience);
 

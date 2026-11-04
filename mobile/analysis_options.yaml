@@ -6,6 +6,8 @@ analyzer:
     - "**/*.freezed.dart"
     - "**/*.config.dart"
     - "lib/core/l10n/gen/**"
+    # Vendored packages are upstream code (packages/appflowy_editor/README.vendored.md).
+    - "packages/**"
   errors:
     invalid_annotation_target: ignore
 
