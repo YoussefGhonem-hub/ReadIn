@@ -718,7 +718,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Highlights: mark sentences, see popular ones, hide them ([F30](#f30--highlights)).
 
 ### F05 — Article Editor (Write)
-- Block-based rich editor producing **RDoc**: all block types in [§13](#13-article-content-format-rdoc), slash menu (`/`) to insert blocks, markdown shortcuts.
+- Block-based rich editor producing **RDoc**: all block types in [§13](#13-article-content-format-rdoc), slash menu (`/`) to insert blocks, markdown shortcuts, `@` mentions, and a glossary button that marks the selected words as a term ([F21](#f21--glossary-قاموس-المصطلحات): search the glossary, pick; select a term to change or remove it).
 - Per-block automatic direction (`dir="auto"`) with manual override, code blocks forced LTR.
 - Cover image upload (compressed on the device, processed by the backend, stored in `wwwroot/uploads`), field, topic, an optional personal category ([F31](#f31--writer-categories-أقسام-الكاتب)), and tags: pick existing ones or create new ones, max 5 ([F32](#f32--tags-التاجات)).
 - **Attachments:** 1–10 images **or** one PDF ([F26](#f26--post-attachments--media)). The attachment bar is one reusable component (web) / widget (mobile); attachments are part of the draft and go live with it.

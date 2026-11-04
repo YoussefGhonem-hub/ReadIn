@@ -326,7 +326,7 @@ export const Mention = Node.create({
   renderText: ({ node }) => String(node.attrs['text'] ?? ''),
 });
 
-/** Glossary term (F21): kept exactly as it came; there is no UI to add one yet. */
+/** Glossary term (F21): an atom; the toolbar's glossary button adds, changes and removes it (block-commands `markTerm`). */
 const Term = Node.create({
   name: 'term',
   group: 'inline',
