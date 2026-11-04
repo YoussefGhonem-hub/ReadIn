@@ -697,10 +697,11 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 
 ### F03 — Home: "النهارده" (Today)
 - Greeting + **streak badge** 🔥 + notifications bell.
-- **Today's article (Hero card):** one published article picked for the user (see [§11 F07](#f07--daily-article-مقال-النهارده)).
+- **Today's article:** one published article picked for the user (see [§11 F07](#f07--daily-article-مقال-النهارده)), shown first as a post card labeled "مقال النهارده" ([F34](#f34--post-style-feed-card-كارت-البوست)).
 - **Continue reading:** the most recently read unfinished article (scrolled ≥ 5%, read in the last 30 days, not today's hero), with its progress; tapping it resumes where you stopped.
 - **Learning path card:** your active path (enrolled, with an unread article, latest activity first) with its progress and the next article; without one, a short prompt to browse paths ([F09](#f09--learning-paths-مسارات)).
 - Field filter chips + feed: **For you** (interests + popularity + freshness) and **Following** tabs.
+- Feed items are **post cards** ([F34](#f34--post-style-feed-card-كارت-البوست)): the beginning of the article with "اقرأ المزيد", and reacting and commenting without leaving the feed.
 - Feed cards show attachments: a single image, an **image carousel** or a **PDF page carousel** ([F26](#f26--post-attachments--media)).
 - Live counters on visible cards and a "مقالات جديدة ↑" banner when new articles are published ([F27](#f27--real-time-updates)).
 - Infinite scroll with cursor pagination, skeleton loading, pull to refresh.
@@ -717,7 +718,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Attachments (image carousel or PDF page carousel) with a full-screen viewer ([F26](#f26--post-attachments--media)).
 - Floating action bar: reactions, comments, repost ([F29](#f29--repost)), save, share, and a "⋯" menu ([F28](#f28--article-menu-mute--show-less)). Reaction and comment counts update live ([F27](#f27--real-time-updates)).
 - Remembers the last scroll position: on open, the reader goes back to where you left off (unless you finished the article or the link points at a block) and offers "Start over". Marks the article as "read" when ≥ 70% scrolled **and** ≥ 30 seconds spent.
-- Related articles + "Next in path" at the end. Related ranks the same topic first, then the same field, then shared tags and glossary terms; it skips your own articles, puts the ones you've read last, and leaves the article's path neighbours to "Next in path".
+- Related articles + "Next in path" at the end. Related ranks the same topic first, then the same field, then shared tags and glossary terms; it skips your own articles, puts the ones you've read last, and leaves the article's path neighbours to "Next in path". Related articles are post cards ([F34](#f34--post-style-feed-card-كارت-البوست)).
 - Report article (from the "⋯" menu).
 - Download PDF of your own article (from the "⋯" menu, [F33](#f33--download-article-pdf-تحميل-المقال-pdf)).
 - Highlights: mark sentences, see popular ones, hide them ([F30](#f30--highlights)).
@@ -786,6 +787,7 @@ Draft ──► Published ──► Archived
 - Rate limit: 10 comments / minute per user, at most 20 per user on one article per hour, and not the same text twice within 10 minutes.
 - Report comment (stored for the F22 queue). Moderators hide, unhide or delete any comment from its menu (audited); a hidden comment stays visible to its author and moderators.
 - A deleted account's comments stay, shown as "Deleted user" (as the public account-deletion page promises).
+- Comments can also be read and written from a feed card, without opening the article ([F34](#f34--post-style-feed-card-كارت-البوست)).
 
 ### F12 — Follow
 - Follow writers and follow fields/topics.
@@ -931,7 +933,7 @@ A post/article has **either** 1–10 images **or** exactly one PDF (never both),
 Powered by **Firebase Realtime Database**, written only by the backend ([§21.2](#212-real-time-firebase-realtime-database)).
 - Reader: reaction and comment counts update live.
 - Comments: new comments/replies appear live with a short highlight, edits/deletes/likes update in place, "N تعليقات جديدة" pill when scrolled away.
-- Feed: live counters on visible cards only, "مقالات جديدة ↑" banner.
+- Feed: live counters on visible cards only, comments only while open on a card (F34), "مقالات جديدة ↑" banner.
 - Notification bell: live unread badge.
 - Upload processing status for the user's own PDFs.
 - The user's own optimistic actions are not counted twice.
@@ -1045,7 +1047,7 @@ Tags are shared across the platform, so an article can be found by any tag on it
 **Tag page**
 - Every tag on the reader and on article cards is tappable, and it opens the tag page.
 - Web: `/tags/{slug}` (server-rendered). Mobile: `/tags/:slug`, with deep links. Guests can open it.
-- It shows the tag's name, its article count and **all published articles with that tag, from all writers**, newest first, with cursor paging and the normal article cards.
+- It shows the tag's name, its article count and **all published articles with that tag, from all writers**, newest first, with cursor paging and post cards (F34).
 - Articles hidden by moderation (F22) are excluded, and muted writers and topics are too once F28 ships.
 - An empty tag shows an empty state, and on web it is `noindex`.
 
@@ -1109,6 +1111,58 @@ A writer can download their own article as a clean, well-organized PDF that carr
 - **Built in the request, nothing stored:** only owners use it, and its input is validated RDoc rather than an uploaded file. The PDF is streamed and discarded, so there is no table, no file on disk and nothing new in §9.6.
 - **Limits:** at most 2 builds at a time; a request waits up to 30 seconds, then `503 article.pdf_busy`. A build has 60 seconds, then `500 article.pdf_failed`, and Chromium restarts if it crashed. 10 PDFs per user per hour: `429 article.pdf_limit`.
 
+### F34 — Post-style Feed Card (كارت البوست)
+Articles appear in lists as social posts, like on LinkedIn and Facebook, not as a title next to a small image. People read the beginning, react and comment while scrolling, without leaving the feed. This replaces the current article row on web and mobile. Only the layout is similar to those apps: colors and logo stay ReadIn's (§15), with no LinkedIn blue.
+
+**The card, top to bottom**
+
+| Part | Content |
+|---|---|
+| Label (optional) | "مقال النهارده" (F07) or "أعاد نشره {name}" (F29) |
+| Header | Avatar, name with the verified badge (or "Deleted user", with no profile link or follow). Under it: field · time since publishing · reading time. On the other side: "متابعة" (Follow) when you don't follow the writer and it isn't your article, Save, and "⋯" (F28) |
+| Text | Title (up to 3 lines), then the beginning of the article, cut at 4 lines with "… اقرأ المزيد" (Read more) at the end of the last line. The button has its own `<bdi>`, so it never covers text or breaks mixed text (§14.2) |
+| Media | Attachments if there are any (F26), otherwise the cover at full width (16:9). With neither there is no image at all, and the old placeholder icon is gone |
+| Tags | Up to 3 tags (F32), then "+N" |
+| Counts | Up to 3 reaction emojis with the total (opens who reacted), and on the other side "12 تعليق · 3 إعادة نشر" (opens the comments) |
+| Action bar | تفاعل (React), تعليق (Comment), إعادة نشر (Repost, F29), مشاركة (Share, F24). Always visible |
+
+Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when that feature ships.
+
+**Tapping:** the title opens the reader, the text expands it, an image opens the viewer (F26), the writer opens the profile. The action bar never leaves the feed. The whole card is no longer one big link.
+
+**Read more**
+- Tapping expands the card in place. The first expansion loads `GET /articles/{id}/preview?lang=`: about the first 300 words as real RDoc blocks, never cutting a block, always at least one.
+- The card shows them with the reader's own renderer, so formatting, code, tables, images, glossary terms and BiDi look the same as in the reader. Embeds show as a link.
+- If the article is longer, the end of the text shows "اقرأ المقال كله" (Read the full article), which opens the reader.
+- "عرض أقل" (Show less) collapses it. Expanding only grows downward and moves nothing on screen. Collapsing brings the card's top back into view if it scrolled off.
+- With no more text than the collapsed lines, there is no button.
+- **Counting as read:** expanding alone is not a read. An article shown complete in the card counts under the F04 rule (70% seen and 30 seconds) through `PUT /articles/{id}/progress`, so short articles count toward streaks (F08). A cut-off article counts only in the reader.
+
+**React and comment while scrolling**
+- **React:** a tap gives 💡 or removes your reaction. A long press on mobile, or hover or the keyboard on web, opens the four reactions (F10). It updates at once and rolls back on failure.
+- **Comment on wide screens:** a section opens in place under the card, with the input, the top 2 comments and "عرض كل التعليقات", which loads more in place.
+- **Comment on phones (app and narrow web):** a bottom sheet with the full comments, and the feed stays where it was behind it.
+- All F11 rules apply: replies, mentions, mixed text, rate limits, editing and live updates.
+- Guests get the sign-in prompt, then return to the same place in the feed.
+- Hidden, muted and deleted content follows the same rules as everywhere (F22, F28).
+
+**While scrolling**
+- Expanded cards, open comments, unsent comment text and the scroll position survive scrolling away and coming back from the reader or a profile. Pull to refresh resets them, except unsent text.
+- New articles never push the list: only the "مقالات جديدة ↑" banner appears (F03).
+- Counters are live on visible cards. Comments subscribe only while open (F27).
+
+**Where it's used**
+- **Post card:** Home (Today's article, For you, Following), field pages, Explore lists, profile Articles and Reposts, category pages (F31), tag pages (F32) and Related articles (F04).
+- **Compact row stays** in lists people scan rather than read: Search results, Continue reading, learning path lists and "Next in path", My articles, Saved and the moderation queue.
+- **Layout:** on web, one centered column up to 640 px wide. On mobile, full width. Cards are separated by a gap on `color.bg`.
+
+**Data**
+- `ArticleTranslations.Excerpt`: up to 400 characters of plain text, cut at a word, taken in order from the summary, paragraphs, lists, steps, quotes and callouts. Headings, code, tables, images and embeds are skipped. It is computed on publish (§13.5) and backfilled for existing articles.
+- `ArticleCardDto` adds `excerpt`, `hasMore`, `isFollowingAuthor` and up to 3 `tags`.
+- `preview` answers `404 article.not_found` wherever the article itself would, and is cached like article details.
+
+**Accessibility:** every action is a real button with a label in both languages and reachable by keyboard, Read more has `aria-expanded`, focus stays on the card when it expands, and "reduce motion" is respected (§26).
+
 ---
 
 ## 12. Feature Parity Matrix (Web + Mobile)
@@ -1148,6 +1202,7 @@ A writer can download their own article as a clean, well-organized PDF that carr
 | F31 | Writer Categories | ✅ | ✅ | 1 |
 | F32 | Tags | ✅ | ✅ | 1 |
 | F33 | Download Article PDF | ✅ | ✅ | 2 |
+| F34 | Post-style Feed Card | ✅ | ✅ | 1 |
 
 **Process:** each feature is one GitHub issue with three sub-tasks (`backend`, `web`, `mobile`). The issue closes only when all three are committed to `dev` (see [§29](#29-git-workflow--conventions)).
 
@@ -1219,7 +1274,7 @@ A writer can download their own article as a clean, well-organized PDF that carr
 On save, the backend:
 1. Validates against the JSON Schema (unknown types/attributes rejected).
 2. Sanitizes links (http/https only, `rel="nofollow ugc"` for user content) and embed URLs (allow-list).
-3. Extracts **plain text** (for search + reading time), **headings** (TOC), **terms** used, **code languages**.
+3. Extracts **plain text** (for search + reading time), the **excerpt** (feed cards, F34), **headings** (TOC), **terms** used, **code languages**.
 4. Calculates reading time (Arabic ≈ 180 wpm, English ≈ 230 wpm, code blocks counted separately).
 
 ---
@@ -1256,7 +1311,7 @@ They are independent: an English UI user can read `ar-EG` articles and vice vers
 - **Name:** ReadIn (always written in English, also in the Arabic UI).
 - **Taglines:** "ReadIn — مقال كل يوم يفرق معاك" / "Read daily. Grow daily."
 - **Logo:** approved logo in `docs/design/`. Must not resemble LinkedIn (no LinkedIn blue, no identical "in" box).
-- **Mood:** calm, premium, editorial. "Medium meets Duolingo".
+- **Mood:** calm, premium, editorial. "Medium meets Duolingo". Lists feel like a social feed of posts ([F34](#f34--post-style-feed-card-كارت-البوست)), and the reader stays calm and editorial.
 
 ### 15.2 Color Tokens
 | Token | Light | Dark | Usage |
@@ -1322,7 +1377,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId (null once a deleted account's asset stays with its published article), Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
 | Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive (shows the health disclaimer, never blocks publishing), RequiresSources, IsEnabled), `Topics`, `Tags` (Slug, Name, NormalizedName, CreatedById (null: system tag), IsHidden), `ArticleTags`, `WriterCategories` (UserId, Name, NormalizedName, Slug, SortOrder; UserId+Slug unique, UserId+NormalizedName unique), `UserInterests` |
-| Articles | `Articles` (AuthorId (null: the author deleted their account, §9.6), FieldId, TopicId, WriterCategoryId (null: no category), Slug, Status Draft/Published/Archived, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, AutoCheckedAt, PublishedAt, QualityScore, counters, HiddenAt + HiddenById (hidden by a moderator, F22; no FK)), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleDrafts` (ArticleId key, DocumentJson: the editor's working copy, Version concurrency token, HasChanges, SavedAt; F05), `ArticleRevisions` (ArticleId, RevisionNumber, Title, Languages, DocumentJson: the document of one publish, CreatedBy, CreatedAt), `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive) |
+| Articles | `Articles` (AuthorId (null: the author deleted their account, §9.6), FieldId, TopicId, WriterCategoryId (null: no category), Slug, Status Draft/Published/Archived, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, AutoCheckedAt, PublishedAt, QualityScore, counters, HiddenAt + HiddenById (hidden by a moderator, F22; no FK)), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, Excerpt, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleDrafts` (ArticleId key, DocumentJson: the editor's working copy, Version concurrency token, HasChanges, SavedAt; F05), `ArticleRevisions` (ArticleId, RevisionNumber, Title, Languages, DocumentJson: the document of one publish, CreatedBy, CreatedAt), `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive) |
 | Engagement | `Reposts` (UserId+ArticleId unique, CreatedAt), `ArticleHighlights` (UserId, ArticleId, Language, BlockId, StartOffset, EndOffset, Text, CreatedAt), `UserMutes` (MuterId+MutedUserId unique), `ContentMutes` (UserId, TargetType Field/Topic, TargetId, unique), `ArticleFeedback` (UserId+ArticleId unique, Type ShowLess, CreatedAt), `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths` (Slug, FieldId, TitleAr/En, DescriptionAr/En, SortOrder, IsPublished, IsEditorial), `LearningPathItems` (PathId + ArticleId unique, Order), `PathEnrollments` (UserId + PathId unique, EnrolledAt, LastActivityAt, CompletedAt) |
@@ -1365,7 +1420,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Me | `GET /me` (incl. `hasRecoveryPin`, `mustSetRecoveryPin`, `mustChangePassword`, `isProfileComplete`, `privacy`) · `PATCH /me` (incl. `avatarAssetId`, `expertiseFieldIds`) · `PUT /me/privacy` · `PUT /me/profile/complete` · `PUT /me/password` · `PUT /me/phone` · `POST /me/recovery-pin` (first set) · `PUT /me/recovery-pin` (change) · `PUT /me/preferences` · `PUT /me/interests` · `POST /me/devices` · `DELETE /me/devices/{token}` · `DELETE /me` · `GET /users/username-available?u=` |
 | Real-time | `POST /realtime/token` (Firebase custom token, used only to read the Realtime Database) |
 | Feed | `GET /feed/today` · `GET /feed/for-you` · `GET /feed/following` · `GET /feed/continue-reading` |
-| Articles | `GET /articles/{slug}?lang=` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` · `GET /articles/{id}/pdf?lang=` (own article, F33) |
+| Articles | `GET /articles/{slug}?lang=` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` · `GET /articles/{id}/pdf?lang=` (own article, F33) · `GET /articles/{id}/preview?lang=` (first ~300 words as RDoc + `isComplete`, F34) |
 | Editor (F05) | `GET /me/articles?status=draft\|published` · `POST /articles` (new draft) · `GET /articles/{id}/edit` · `PUT /articles/{id}/draft` (autosave, `baseVersion`) · `DELETE /articles/{id}/draft` (discard) · `POST /articles/{id}/publish` (publish or Update) · `GET /articles/{id}/revisions` · `GET /articles/{id}/revisions/{n}` · `POST /articles/{id}/revisions/{n}/restore` · `DELETE /articles/{id}` |
 | Reactions | `PUT /articles/{id}/reaction` · `DELETE /articles/{id}/reaction` · `GET /articles/{id}/reactions` |
 | Reposts | `PUT /articles/{id}/repost` · `DELETE /articles/{id}/repost` (idempotent, return `{ repostCount, isReposted }`) · `GET /users/{username}/reposts` |
@@ -1634,7 +1689,7 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
 
 ## 25. Performance & Scalability
 
-- Feeds via Dapper with covering indexes, cursor pagination, cached per user for 60s.
+- Feeds via Dapper with covering indexes, cursor pagination, cached per user for 60s. Feed cards carry only the stored excerpt, and the rest of the text loads when a card is expanded (F34). Long feeds keep only cards near the screen rendered, without losing their state.
 - Article details cached (`HybridCache`, tag-invalidated on update).
 - Denormalized counters updated asynchronously via outbox.
 - Images: compressed on the device before upload, served from `wwwroot/uploads` as WebP variants with `srcset`, lazy loading, BlurHash placeholders and immutable caching (see [F26](#f26--post-attachments--media) for budgets). A CDN can be put in front of `/uploads` later without code changes.
@@ -1668,6 +1723,7 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
 | UI / Visual | — | Playwright flows in ar/en × light/dark, screenshots in `ar/light` and `en/dark` | Golden tests in ar/en × light/dark, baselines in `ar/light` and `en/dark` |
 | E2E | — | Playwright critical flows | `integration_test` critical flows |
 | BiDi | RDoc text extraction tests | Mixed-text fixtures | Mixed-text fixtures |
+| Post card (F34) | Excerpt rules, `preview` cut at block boundaries and visibility | Expand, react and comment without leaving the feed, scroll position kept, mixed-text excerpts, screenshots in `ar/light` and `en/dark` | The same flows, comment sheet, goldens in `ar/light` and `en/dark` |
 | PDF (F33) | Built from `shared/rdoc/` fixtures with every block type, mixed text, emoji, a very long URL, a wide table, long code and a tall image. PdfPig checks embedded fonts, text, links, metadata and no blank pages. Page images are compared with baselines, one Arabic and one English, since the file is always light | Menu item (own article only) and download flow | Menu item (own article only) and share sheet |
 
 **Critical flows (E2E on both platforms):** sign up (phone + password + PIN) → complete profile → onboarding → read today's article → react → comment → reply → save → follow writer → switch theme → switch article language → sign out → forgot password (phone + PIN) → sign in with the new password.
@@ -1751,7 +1807,7 @@ The API host and `backend.yml` need Chromium and its system libraries for F33, i
 | Phase | Scope |
 |---|---|
 | **0 — Foundation** | Repo, solution skeleton, CI, design tokens, RDoc schema, Firebase project + emulators, seeders for roles/fields/users |
-| **1 — MVP** | F01–F07, F10–F14, F18, F26–F32 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
+| **1 — MVP** | F01–F07, F10–F14, F18, F26–F32, F34 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
 | **2 — Growth** | F08, F09, F15–F17, F19, F22–F24, F33 |
 | **3 — Depth** | F21, F25, email digest, quizzes at the end of articles, text-to-speech, AI translation for user articles |
 
