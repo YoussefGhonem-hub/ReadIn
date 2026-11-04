@@ -5,8 +5,9 @@
  *
  * The feed is stateless: uploads and polling are stubbed in the browser with `page.route` (e2e/support). Reactions,
  * saved articles, collections and follows (social.mjs), profiles, `GET /me`, `PATCH /me`, privacy and reading stats
- * (profiles.mjs) and the article editor with My articles (editor.mjs) keep state per signed-in viewer, so those flows run
- * against it end to end. It also serves generated PNGs for every media URL and fixture builders under `/__mock`.
+ * (profiles.mjs), the article editor with My articles (editor.mjs) and learning paths + continue reading (paths.mjs)
+ * keep state per signed-in viewer, so those flows run against it end to end. It also serves generated PNGs for every
+ * media URL and fixture builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
  */
@@ -14,6 +15,7 @@ import { createServer } from 'node:http';
 import { crc32, deflateSync } from 'node:zlib';
 import { encode } from 'blurhash';
 import { createEditor } from './editor.mjs';
+import { createPaths } from './paths.mjs';
 import { createProfiles } from './profiles.mjs';
 import { createSocial } from './social.mjs';
 
@@ -574,6 +576,7 @@ const PDF = Buffer.from(
 
 const social = createSocial({ articles: ALL_ARTICLES, writers: WRITERS, problem });
 const profiles = createProfiles({ me, articles: ALL_ARTICLES, writers: WRITERS, fields: FIELDS, social, problem, avatarVariants });
+const paths = createPaths({ articles: ALL_ARTICLES, fields: FIELDS, social, profiles, mediaUrl, problem });
 
 /** Every asset a test fetched from `/__mock/asset/*` (then "uploaded" through `page.route`), so drafts can list their media. */
 const assets = new Map();
@@ -604,6 +607,7 @@ const routes = [
   ...editor.routes,
   ...social.routes,
   ...profiles.routes,
+  ...paths.routes,
   ['GET', /^\/__mock\/health$/, () => [200, { ok: true }]],
   ['GET', /^\/__mock\/asset\/image$/, (q) => [200, registered(imageAsset(q.get('seed') ?? 'upload', Number(q.get('w') ?? 1600), Number(q.get('h') ?? 1200)))]],
   ['GET', /^\/__mock\/asset\/avatar$/, (q) => [200, avatarAsset(q.get('seed') ?? 'avatar')]],

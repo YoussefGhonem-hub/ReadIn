@@ -10,7 +10,6 @@ const comingSoon = () => import('../shared/ui/coming-soon.page').then((m) => m.C
 export const PLACEHOLDER_ROUTES: Route[] = [
   { path: 'explore', loadComponent: comingSoon, data: { titleKey: 'nav.explore', phase: 2 } },
   { path: 'search', loadComponent: comingSoon, data: { titleKey: 'nav.search', phase: 2 } },
-  { path: 'paths', loadComponent: comingSoon, data: { titleKey: 'nav.paths', phase: 2 } },
   { path: 'notifications', canActivate: [authGuard], loadComponent: comingSoon, data: { titleKey: 'nav.notifications', phase: 2 } },
   { path: 'verification', canActivate: [authGuard], loadComponent: comingSoon, data: { titleKey: 'nav.verification', phase: 2 } },
   { path: 'moderation', canActivate: [permissionGuard('moderation.manage')], loadComponent: comingSoon, data: { titleKey: 'nav.moderation', phase: 2 } },

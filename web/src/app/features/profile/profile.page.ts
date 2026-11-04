@@ -101,7 +101,7 @@ export type ProfileTab = 'articles' | 'saved' | 'paths' | 'about';
             <rd-profile-saved />
           }
           @case ('paths') {
-            <rd-profile-paths />
+            <rd-profile-paths [username]="p.username" [isMe]="isMe()" [visible]="statsVisible()" />
           }
           @case ('about') {
             <rd-profile-about [profile]="p" [isMe]="isMe()" />

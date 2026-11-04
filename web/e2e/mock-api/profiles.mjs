@@ -331,5 +331,6 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
     ],
   ];
 
-  return { routes };
+  // paths.mjs answers `/users/{username}/paths` under the same visibility rule as the reading stats.
+  return { routes, lookup, statsVisible: visible };
 }

@@ -51,6 +51,7 @@ import { ArticleActionBar } from './article-action-bar';
 import { ArticleCover, ArticleHeadline, ArticleSources, ArticleTrustRow } from './article-parts';
 import { ArticleSeoService } from './article-seo.service';
 import { ArticleToc } from './article-toc';
+import { NextInPath } from './next-in-path';
 import { injectReadingTracker } from './reading-tracker';
 import { RelatedArticles } from './related-articles';
 import { injectResumePosition } from './resume-position';
@@ -78,6 +79,7 @@ const TOC_MIN_HEADINGS = 3;
     ArticleHeadline,
     ArticleTrustRow,
     ArticleSources,
+    NextInPath,
     LocalizedDatePipe,
     LucideDynamicIcon,
     FollowButton,
@@ -207,6 +209,7 @@ const TOC_MIN_HEADINGS = 3;
 
         <!-- Sources (mandatory for technical content, SPEC §20) -->
         <rd-article-sources [sources]="a.sources" />
+        <rd-next-in-path [articleId]="a.id" />
 
         <rd-related-articles [article]="a" />
 

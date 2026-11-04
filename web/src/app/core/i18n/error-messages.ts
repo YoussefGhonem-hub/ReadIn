@@ -120,6 +120,11 @@ export const CONTRACT_ERROR_CODES = [
   'profile.stats_private',
   'profile.avatar_invalid',
   'profile.expertise_invalid',
+  // Learning paths (F09)
+  'path.not_found',
+  'path.slug_taken',
+  'path.editorial',
+  'path.items_invalid',
 ] as const;
 
 /** Translates stable API error codes (e.g. `user.suspended`) into the active UI language. */

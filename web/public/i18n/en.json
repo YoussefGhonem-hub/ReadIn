@@ -191,6 +191,12 @@
       "stats_private": "These reading stats are private.",
       "avatar_invalid": "This photo can't be used. Upload it again.",
       "expertise_invalid": "Pick up to 5 fields from the list."
+    },
+    "path": {
+      "not_found": "This path doesn't exist.",
+      "slug_taken": "Another path already uses this slug.",
+      "editorial": "This path is managed in the content files and can't be changed here.",
+      "items_invalid": "The path's articles aren't valid: 1–100 published articles, no repeats."
     }
   },
   "auth": {
@@ -524,7 +530,16 @@
       "body": "Try another field or check back soon."
     },
     "endOfFeed": "You're all caught up 🎉 Come back tomorrow for more.",
-    "newArticles": "New articles ↑"
+    "newArticles": "New articles ↑",
+    "continueReading": {
+      "title": "Continue reading",
+      "percent": "{{percent}}% read"
+    },
+    "path": {
+      "label": "Your learning path",
+      "next": "Next:",
+      "prompt": "Learn step by step with learning paths"
+    }
   },
   "article": {
     "aiAssisted": "AI-assisted",
@@ -1052,6 +1067,60 @@
     "loadError": "We couldn't load your saved articles.",
     "browse": "Browse articles"
   },
+  "paths": {
+    "title": "Learning paths",
+    "sub": "Curated series of articles that teach you something new, step by step.",
+    "tabs": {
+      "label": "Paths",
+      "all": "All paths",
+      "mine": "My paths"
+    },
+    "filterByField": "Filter by field",
+    "allFields": "All fields",
+    "progress": "{{read}}/{{total}}",
+    "progressLabel": "{{read}} of {{total}} read",
+    "completed": "✓ Completed",
+    "joined": "You joined the path ✓",
+    "empty": {
+      "title": "No paths yet",
+      "body": "New paths will show up here as soon as they’re out."
+    },
+    "mineEmpty": {
+      "title": "You haven’t started a path yet",
+      "body": "Pick a path and start with its first article.",
+      "browse": "Browse all paths"
+    },
+    "loadError": "We couldn’t load the paths.",
+    "detail": {
+      "start": "Start path",
+      "continue": "Continue:",
+      "readAgain": "Read again",
+      "completedTitle": "Path completed 🎉",
+      "completedBody": "You read every article in this path. Come back to any of them whenever you like.",
+      "actions": "Path options",
+      "leave": "Leave path",
+      "leaveTitle": "Leave “{{title}}”?",
+      "leaveBody": "The articles you read stay counted. Join again any time and your progress will still be there.",
+      "left": "You left the path",
+      "items": "Articles in this path",
+      "read": "Read",
+      "upNext": "Up next",
+      "loadError": "We couldn’t load this path.",
+      "notFoundTitle": "This path doesn’t exist",
+      "notFoundBody": "The link may be wrong, or the path was removed.",
+      "backToPaths": "Back to paths",
+      "metaDescription": "A learning path on ReadIn: {{articles}} in {{field}}."
+    },
+    "next": {
+      "label": "Learning path",
+      "fromPath": "From the path:",
+      "position": "{{position}} of {{total}}",
+      "title": "Next in path",
+      "last": "This is the last article in the path",
+      "completed": "🎉 Path completed",
+      "join": "Join path"
+    }
+  },
   "profile": {
     "editProfile": "Edit profile",
     "followsYou": "Follows you",
@@ -1090,8 +1159,13 @@
       "openAll": "Open Saved"
     },
     "paths": {
-      "title": "Learning paths are coming",
-      "body": "Curated series of articles, step by step. Paths will show up here once they launch."
+      "emptyTitle": "No paths yet",
+      "emptyOwnBody": "The paths you start will show up here.",
+      "emptyBody": "The paths they follow will show up here.",
+      "browse": "Browse paths",
+      "privateTitle": "These paths are private",
+      "privateBody": "Only the account owner can see their reading stats and paths.",
+      "loadError": "We couldn’t load the paths."
     },
     "about": {
       "bio": "Bio",
