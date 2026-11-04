@@ -191,14 +191,14 @@ re-gated and committed by the main session.
   - push taps mark read;
   - the device-only daily switch moves to the server's `daily_article` mode;
   - new links `/u/{username}/followers`, `/me/stats` (a reading stats page), `/settings?section=account`.
-- **Web**:
+- **Web** (30eb301):
   - `/notifications`, with a "New notifications" button while the page is open;
   - `/settings/notifications`, the badge (live, else REST every 60 s) and the side-nav count;
   - push and toast taps mark read; a new tab gets `?notification={id}`, which is removed before routing;
   - mock API fixtures for `u-notified-*` viewers.
 - **Gates:**
   - backend build clean, 1488/1488;
-  - web lint clean, 777/777 unit, SSR build OK (initial bundle 524.9 kB, was 518 kB; warning only), Playwright see below;
+  - web lint clean, 777/777 unit, SSR build OK (initial bundle 524.9 kB, was 518 kB; warning only), full Playwright 366/366 (14.2 min, `--workers=2`), the first fully green run since Step 5;
   - mobile build_runner no diff, analyze clean, 1401/1401 with goldens.
   - New baselines checked by eye: web `notifications-center-*` / `notification-settings-*` (ar-light, en-dark, desktop
     and mobile); mobile `notifications_center_*`, `notification_settings_*`, and the 4 `settings_account*` goldens
