@@ -615,7 +615,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 | `articles.create` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `articles.review` | | | | ✅ | | ✅ | ✅ |
 | `articles.feature` | | | | | | ✅ | ✅ |
-| `comments.create` / `reactions.create` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `comments.create` / `reactions.create` / `reposts.create` / `highlights.create` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `follows.manage` / `saved.manage` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `reports.create` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `moderation.manage` (hide content, resolve reports) | | | | | ✅ | ✅ | ✅ |
@@ -672,10 +672,11 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - **Health disclaimer** on Medicine and Public Health articles: "المعلومات دي للتوعية ولا تغني عن استشارة الطبيب" (for awareness only, not a substitute for a doctor).
 - Font size control (S / M / L / XL), reading mode toggle.
 - Attachments (image carousel or PDF page carousel) with a full-screen viewer ([F26](#f26--post-attachments--media)).
-- Floating action bar: reactions, comments, save, share. Reaction and comment counts update live ([F27](#f27--real-time-updates)).
+- Floating action bar: reactions, comments, repost ([F29](#f29--repost)), save, share, and a "⋯" menu ([F28](#f28--article-menu-mute--show-less)). Reaction and comment counts update live ([F27](#f27--real-time-updates)).
 - Remembers the last scroll position. Marks the article as "read" when ≥ 70% scrolled **and** ≥ 30 seconds spent.
 - Related articles + "Next in path" at the end.
-- Report article.
+- Report article (from the "⋯" menu).
+- Highlights: mark sentences, see popular ones, hide them ([F30](#f30--highlights)).
 
 ### F05 — Article Editor (Write)
 - Block-based rich editor producing **RDoc**: all block types in [§13](#13-article-content-format-rdoc), slash menu (`/`) to insert blocks, markdown shortcuts.
@@ -754,7 +755,7 @@ Draft ────────────────────────�
 ### F14 — Profile
 - Avatar, display name, username (`@handle`), verified badge, bio (mixed text), links (GitHub, LinkedIn, website), fields of expertise.
 - Stats: articles, followers, following, total reads.
-- Tabs: **Articles** / **Saved** (own profile only) / **Paths** / **About**.
+- Tabs: **Articles** / **Reposts** / **Saved** (own profile only, with a Highlights section) / **Paths** / **About**.
 - Reading stats card + heatmap (own profile, optional public).
 - Edit profile, including avatar upload (compressed, square-cropped variants 64/128/256/512).
 - The phone number is never shown on public profiles.
@@ -778,6 +779,8 @@ Draft ────────────────────────�
 - UI language: العربية / English.
 - Article language preference, daily reminder time, notification preferences, font size.
 - Privacy: public reading stats on/off, who can mention me.
+- **Muted:** muted writers, fields and topics, with unmute ([F28](#f28--article-menu-mute--show-less)).
+- Show or hide highlights ([F30](#f30--highlights)).
 - **Account:**
   - Phone number (visible to the owner only) + "تغيير الرقم" (new number + current password + confirm-number dialog).
   - "تغيير كلمة السر" (current + new + confirm).
@@ -802,7 +805,7 @@ Draft ────────────────────────�
 - Seeded with 500+ software terms.
 
 ### F22 — Reporting & Moderation
-- Report article/comment/user with reason (spam, misinformation, harassment, copyright, other).
+- Report article/comment/user with reason (spam, misinformation, harassment, copyright, other). You can't report your own content; reporting the same thing twice is a no-op.
 - Moderation queue: hide/unhide content, warn, suspend (temporary/permanent) users, resolve reports.
 - Full **audit log** of moderation actions.
 
@@ -872,6 +875,66 @@ Powered by **Firebase Realtime Database**, written only by the backend ([§21.2]
 - The user's own optimistic actions are not counted twice.
 - If the Realtime Database is unavailable, everything still works through the REST API; only live updates are missing.
 
+
+### F28 — Article Menu, Mute & Show Less
+The reader's action bar has a "⋯" menu (web + mobile). Guests get a sign-in prompt for every item in it.
+
+| Menu item | What it does |
+|---|---|
+| **قلّل من النوع ده** (Show less like this) | Removes this article from your feeds and lowers its topic (or its field if it has no topic) in **For you** for 90 days. Undo from the confirmation toast. |
+| **إخفاء الـ Highlights** (Hide highlights) | Turns highlights on or off ([F30](#f30--highlights)). Also `Ctrl + /` on web. |
+| **تابع الكاتب** (Follow author) | Follow or unfollow ([F12](#f12--follow)). Hidden on your own article. |
+| **كتم الكاتب** (Mute author) | Hides the writer's articles and comments from you. Removes your follow of them. Hidden on your own article. Undo from the toast. |
+| **كتم المواضيع** (Mute topics) | A sheet with the article's field and topic, each with a toggle. Undo by toggling it back. |
+| **الإبلاغ عن المقال** (Report article) | Opens the report sheet with reason + details ([F22](#f22--reporting--moderation)). Shown in the error color, hidden on your own article. |
+
+**What muting changes:**
+- Muted writers, fields and topics disappear from For you, Following, Today's article, Related, Explore, Search and article lists on field pages.
+- Comments and replies by a muted writer are collapsed to "تعليق من شخص كتمته" with a "عرض" action. Replies under them stay.
+- A muted writer's activity sends you no notifications.
+- Opening a direct link still works, so the reader can reach the Unmute action. A banner says "انت كاتم الكاتب ده" with "إلغاء الكتم".
+- Muting is private: the muted writer is not told and keeps seeing your content.
+- This is how the app meets the App Store's requirement to let people block abusive users (Guideline 1.2).
+
+**Settings → Muted (F18):** one list of muted writers, fields and topics, each with an unmute action.
+
+### F29 — Repost
+- Action bar: a repost button with a count, next to comments. Tap to repost, tap again to undo (optimistic, with rollback on failure). Requires sign-in.
+- One repost per user per article. You can't repost your own article (`repost.own_article`).
+- **Following feed:** an article a followed writer reposted appears at the time of the repost, labeled "أعاد نشره {name}". If several people you follow reposted it, it appears once, at the newest repost, labeled "{name} و N غيره". Articles you already got from a writer you follow aren't repeated.
+- **Profile:** a **Reposts** tab, newest first.
+- **Notification:** the author gets `article.reposted` (aggregated, respects preferences and mutes).
+- **Live:** `repostCount` is added to `/live/articles/{id}` and updates like other counters ([F27](#f27--real-time-updates)).
+- Article cards and details include `repostCount` and `isReposted`.
+- Muted writers' reposts don't appear, and neither do reposts of articles by muted writers or in muted fields and topics.
+
+### F30 — Highlights
+Readers mark sentences in an article. Everyone sees the popular ones.
+
+**Creating**
+- Select text in a paragraph, heading, list item, quote, callout or summary block. A small toolbar offers **Highlight**. Selecting inside an existing highlight of yours offers **Remove**. Requires sign-in.
+- A highlight stays inside one block: a selection across blocks is clipped to the first one. Code and table blocks can't be highlighted.
+- 3–1,000 characters, at most 100 highlights per user per article.
+
+**Storage**
+- `ArticleHighlights`: `UserId`, `ArticleId`, `Language`, `BlockId`, `StartOffset`, `EndOffset`, `Text`, `CreatedAt`.
+- Offsets count UTF-16 code units in the block's **plain text**, without any BiDi isolate characters a renderer inserts. Web and mobile must produce the same offsets for the same selection (shared fixtures in `shared/rdoc/highlight-fixtures.json`).
+- `Text` is checked by the server against the current translation's block. A wrong offset or text is rejected (`highlight.text_mismatch`).
+- Language-specific: `ar-EG` highlights only show on the `ar-EG` version.
+- If the author later edits the block, a highlight whose text no longer matches at its offsets is not returned.
+
+**Reading**
+- Your own highlights: amber underline with a soft background.
+- Popular highlights: the same range marked by at least 3 readers, shown with a lighter underline. Tapping one shows "N قارئ علّموا الجملة دي". At most 5 popular highlights per article, most marked first.
+- Muted users' highlights don't count for you. Neither a highlighter's name nor who marked what is ever shown to others.
+- All colors work in light and dark mode, and highlights never break mixed Arabic/English text direction.
+
+**Hide highlights**
+- The menu item (and `Ctrl + /` on web) hides or shows all highlight marks.
+- Stored as `ShowHighlights` in the profile preferences (F18), default on, synced across devices. Guests can see popular highlights and hide them locally.
+
+**Saved list:** the profile's **Saved** tab gets a **Highlights** section: `GET /me/highlights`, newest first, grouped by article, tapping opens the article at the block.
+
 ---
 
 ## 12. Feature Parity Matrix (Web + Mobile)
@@ -905,6 +968,9 @@ Powered by **Firebase Realtime Database**, written only by the backend ([§21.2]
 | F25 | Offline | ✅ | ✅ | 3 |
 | F26 | Post Attachments & Media | ✅ | ✅ | 1 |
 | F27 | Real-time Updates | ✅ | ✅ | 1 |
+| F28 | Article Menu, Mute & Show Less | ✅ | ✅ | 1 |
+| F29 | Repost | ✅ | ✅ | 1 |
+| F30 | Highlights | ✅ | ✅ | 1 |
 
 **Process:** each feature is one GitHub issue with three sub-tasks (`backend`, `web`, `mobile`). The issue closes only when all three are committed to `dev` (see [§29](#29-git-workflow--conventions)).
 
@@ -1080,7 +1146,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Media | `MediaAssets` (OwnerId, Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
 | Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive (shows the health disclaimer, never blocks publishing), RequiresSources, IsEnabled), `Topics`, `Tags`, `UserInterests` |
 | Articles | `Articles` (AuthorId, FieldId, TopicId, Slug, Status, ReviewStatus, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, LastReviewedAt, ReviewedById, PublishedAt, ScheduledAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleRevisions`, `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive), `ArticleReviews` (ReviewerId, Decision, Notes JSON) |
-| Engagement | `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
+| Engagement | `Reposts` (UserId+ArticleId unique, CreatedAt), `ArticleHighlights` (UserId, ArticleId, Language, BlockId, StartOffset, EndOffset, Text, CreatedAt), `UserMutes` (MuterId+MutedUserId unique), `ContentMutes` (UserId, TargetType Field/Topic, TargetId, unique), `ArticleFeedback` (UserId+ArticleId unique, Type ShowLess, CreatedAt), `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths`, `LearningPathItems` (Order), `PathEnrollments` |
 | Glossary | `GlossaryTerms` (Slug, TermEn, ExplanationAr, DefinitionEn, FieldId), `ArticleTerms` |
@@ -1120,6 +1186,9 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Feed | `GET /feed/today` · `GET /feed/for-you` · `GET /feed/following` · `GET /feed/continue-reading` |
 | Articles | `GET /articles/{slug}?lang=` · `POST /articles` · `PUT /articles/{id}` · `PUT /articles/{id}/translations/{lang}` · `POST /articles/{id}/submit` · `POST /articles/{id}/publish` · `POST /articles/{id}/schedule` · `DELETE /articles/{id}` · `GET /articles/{id}/revisions` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` |
 | Reactions | `PUT /articles/{id}/reaction` · `DELETE /articles/{id}/reaction` · `GET /articles/{id}/reactions` |
+| Reposts | `PUT /articles/{id}/repost` · `DELETE /articles/{id}/repost` (idempotent, return `{ repostCount, isReposted }`) · `GET /users/{username}/reposts` |
+| Mute & feedback | `PUT` / `DELETE /users/{id}/mute` · `PUT` / `DELETE /me/mutes/fields/{id}` · `PUT` / `DELETE /me/mutes/topics/{id}` · `GET /me/mutes` · `PUT` / `DELETE /articles/{id}/show-less` |
+| Highlights | `GET /articles/{id}/highlights?lang=` (returns `{ mine[], popular[] }`) · `POST /articles/{id}/highlights` · `DELETE /highlights/{id}` · `GET /me/highlights` |
 | Comments | `GET /articles/{id}/comments?sort=top\|new` · `POST /articles/{id}/comments` · `GET /comments/{id}` · `GET /comments/{id}/replies` · `POST /comments/{id}/replies` · `PATCH /comments/{id}` · `DELETE /comments/{id}` · `PUT/DELETE /comments/{id}/like` · `POST/DELETE /comments/{id}/pin` · `GET /users/mention-suggestions?q=` |
 | Follow | `PUT /users/{id}/follow` · `DELETE /users/{id}/follow` · `GET /users/{id}/followers` · `GET /users/{id}/following` · `GET /users/suggested` · `PUT/DELETE /me/interests/fields/{id}` · `PUT/DELETE /me/interests/topics/{id}` |
 | Saved | `GET /me/saved` · `PUT /me/saved/{articleId}` · `DELETE /me/saved/{articleId}` · `CRUD /me/collections` · `PUT/DELETE /me/collections/{id}/articles/{articleId}` |
@@ -1475,7 +1544,7 @@ Deploy targets (suggested): API + SSR on a single server or container host (with
 | Phase | Scope |
 |---|---|
 | **0 — Foundation** | Repo, solution skeleton, CI, design tokens, RDoc schema, Firebase project + emulators, seeders for roles/fields/users |
-| **1 — MVP** | F01–F07, F10–F14, F18, F26, F27 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
+| **1 — MVP** | F01–F07, F10–F14, F18, F26–F30 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
 | **2 — Growth** | F08, F09, F15–F17, F19, F20, F22–F24 |
 | **3 — Depth** | F21, F25, email digest, quizzes at the end of articles, text-to-speech, AI translation for user articles |
 
