@@ -73,9 +73,15 @@ export class RealtimeService {
 
   private readonly _state = signal<RealtimeState>('disconnected');
   private readonly _unreadNotifications = signal(0);
+  private readonly _unreadLive = signal(false);
   readonly state = this._state.asReadonly();
   /** `/live/users/{id}/unreadNotifications`; 0 for guests and until the first value arrives. */
   readonly unreadNotifications = this._unreadNotifications.asReadonly();
+  /**
+   * True once the signed-in user's badge has a value from the Realtime Database. Until then (connecting, no custom
+   * token, SDK blocked) the badge comes from `GET /me/notifications/unread-count` (NotificationBadge).
+   */
+  readonly unreadLive = this._unreadLive.asReadonly();
 
   /** Follows the signed-in user's badge. Called once from an app initializer. */
   init(): void {
@@ -85,7 +91,10 @@ export class RealtimeService {
       (onCleanup) => {
         const userId = this.userId();
         const current = ++generation;
-        untracked(() => this._unreadNotifications.set(0));
+        untracked(() => {
+          this._unreadNotifications.set(0);
+          this._unreadLive.set(false);
+        });
         if (!userId) return;
 
         const isCurrent = () => current === generation;
@@ -161,8 +170,18 @@ export class RealtimeService {
     }
     if (!isCurrent()) return null;
     return connection.onValue(`live/users/${userId}/unreadNotifications`, (value) => {
-      if (isCurrent()) this._unreadNotifications.set(toCount(value) ?? 0);
+      if (!isCurrent()) return;
+      this._unreadNotifications.set(toCount(value) ?? 0);
+      this._unreadLive.set(true);
     });
+  }
+
+  /**
+   * The notification center was opened (`POST /me/notifications/seen`): the badge shows 0 at once. The API then
+   * publishes 0 too, or a higher count when something new arrived meanwhile, which replaces this.
+   */
+  clearUnreadNotifications(): void {
+    this._unreadNotifications.set(0);
   }
 
   /** Subscribes once connected. The returned function also works before that, and is a no-op during SSR. */

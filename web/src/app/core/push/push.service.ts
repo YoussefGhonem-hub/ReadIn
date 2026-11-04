@@ -6,15 +6,17 @@ import { MeApi } from '../api/me.api';
 import { SessionStore } from '../auth/session.store';
 import { LanguageService } from '../i18n/language.service';
 import { ModerationNotices } from '../moderation/moderation-notices';
+import { NotificationBadge } from '../notifications/notification-badge';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { PUSH_CLIENT, PushPermission } from './push-client';
-import { pushLinkToPath, pushType, toPushMessage } from './push-message';
+import { NOTIFICATION_PARAM, pushLinkToPath, pushType, toPushMessage } from './push-message';
 
 /**
  * Web push through Firebase Cloud Messaging (SPEC §21.1). Once the user has granted permission, this browser's
  * FCM token is registered with `POST /me/devices` on every sign-in and page load (which also picks up rotated
  * tokens) and deleted on sign-out and when the account is deleted. Pushes that arrive while a tab is visible become an
- * in-app toast; a moderation notice (F22) opens its dialog instead, which the user acknowledges.
+ * in-app toast; a moderation notice (F22) opens its dialog instead, which the user acknowledges. Tapping a push or its
+ * toast marks its notification read (F17, `data.notificationId`), also when the tap opened a new tab.
  */
 @Injectable({ providedIn: 'root' })
 export class PushService {
@@ -26,6 +28,7 @@ export class PushService {
   private readonly language = inject(LanguageService);
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
+  private readonly badge = inject(NotificationBadge);
 
   private readonly userId = computed(() => (this.session.isAuthenticated() ? (this.session.me()?.id ?? null) : null));
   /** The user and token last sent to the API from this page. */
@@ -37,12 +40,13 @@ export class PushService {
   /** Called once from an app initializer. Never asks for permission by itself. */
   init(): Promise<void> {
     if (!this.isBrowser) return Promise.resolve();
+    this.takeTappedNotification();
     return this.client.isSupported().then((supported) => {
       if (!supported) return;
       this._permission.set(this.client.permission());
       this.client.onWorkerMessage((message) => {
         if (message.type === 'push') this.showInApp(message.payload);
-        else this.open(message.path);
+        else this.open(message.path, message.notificationId);
       });
       effect(
         () => {
@@ -114,6 +118,7 @@ export class PushService {
   }
 
   private showInApp(payload: unknown): void {
+    void this.badge.refresh(); // the live badge updates by itself; the REST fallback has to ask
     if (pushType(payload) === 'moderation_notice') {
       this.injector.get(ModerationNotices).reload();
       return;
@@ -121,12 +126,41 @@ export class PushService {
     const message = toPushMessage(payload, location.origin, this.language.lang());
     if (!message) return;
     const text = message.title && message.body ? `${message.title} — ${message.body}` : message.title || message.body;
-    this.toasts.info(text, message.path);
+    const id = message.notificationId;
+    this.toasts.info(text, message.path, null, id ? () => void this.badge.markRead(id) : null);
   }
 
   /** A notification was tapped while this tab was open. */
-  private open(path: string): void {
+  private open(path: string, notificationId: string | null): void {
+    if (notificationId) void this.badge.markRead(notificationId);
     const safe = pushLinkToPath(path, location.origin, this.language.lang());
     if (safe) void this.router.navigateByUrl(safe);
+  }
+
+  /**
+   * A tapped push opened this tab (the worker adds `?notification={id}`): the parameter leaves the address before the
+   * router reads it, and the notification is marked read once the session is restored (nothing to do for a guest).
+   */
+  private takeTappedNotification(): void {
+    const url = new URL(location.href);
+    if (!url.searchParams.has(NOTIFICATION_PARAM)) return;
+    const id = url.searchParams.get(NOTIFICATION_PARAM)?.trim();
+    url.searchParams.delete(NOTIFICATION_PARAM);
+    history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    if (!id) return;
+    let done = false;
+    const watcher = effect(
+      () => {
+        const resolved = this.session.isResolved();
+        const userId = this.userId();
+        if (!resolved || done) return;
+        done = true;
+        untracked(() => {
+          watcher.destroy();
+          if (userId) void this.badge.markRead(id);
+        });
+      },
+      { injector: this.injector, manualCleanup: true },
+    );
   }
 }

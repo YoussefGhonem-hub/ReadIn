@@ -10,21 +10,22 @@ import { SessionStore } from '../../core/auth/session.store';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService, UiLanguage } from '../../core/i18n/language.service';
 import { ModerationSummaryStore } from '../../core/moderation/moderation-summary.store';
-import { PushService } from '../../core/push/push.service';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { AccountSettings } from './account/account-settings';
+import { PushPermissionRow } from './notifications/push-permission-row';
 import { ProfileSettings } from './profile-settings';
 
 /**
- * Settings (F18): theme, UI language, article language, reminder time, push notifications, font size, profile and
- * privacy, Moderation for moderators (F22; the side nav isn't there on narrow screens), account.
+ * Settings (F18): theme, UI language, article language, reminder time, font size, notifications (push in this browser
+ * and a link to the notification preferences, F17), profile and privacy, Moderation for moderators (F22; the side nav
+ * isn't there on narrow screens), account.
  */
 @Component({
   selector: 'rd-settings-page',
-  imports: [FormsModule, RouterLink, TranslocoPipe, Segmented, LucideDynamicIcon, AccountSettings, ProfileSettings],
+  imports: [FormsModule, RouterLink, TranslocoPipe, Segmented, LucideDynamicIcon, AccountSettings, ProfileSettings, PushPermissionRow],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
   template: `
@@ -89,18 +90,29 @@ import { ProfileSettings } from './profile-settings';
             {{ 'common.save' | transloco }}
           </button>
         </div>
-        <div class="mt-5 flex items-center justify-between gap-3 text-sm">
-          <div>
-            <div class="font-semibold">{{ 'settings.push.title' | transloco }}</div>
-            <div class="text-text-secondary">{{ 'settings.push.' + push.permission() | transloco }}</div>
-          </div>
-          @if (push.permission() === 'default') {
-            <button type="button" class="rd-btn rd-btn-outline min-h-9 shrink-0 px-3 text-sm" (click)="push.enable()">
-              {{ 'settings.push.enable' | transloco }}
-            </button>
-          }
-        </div>
       </fieldset>
+    </section>
+
+    <!-- Notifications (F17): push in this browser, and what you get (its own page) -->
+    <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="notifications" data-settings-notifications>
+      <h2 id="notifications" class="m-0 mb-2 text-base font-semibold">{{ 'settings.notifications.title' | transloco }}</h2>
+      @if (session.isAuthenticated()) {
+        <ul class="m-0 list-none divide-y divide-border p-0">
+          <li class="py-3"><rd-push-permission-row /></li>
+          <li>
+            <a routerLink="/settings/notifications" class="flex min-h-14 items-center gap-3 text-sm text-text-primary no-underline" data-settings-notification-preferences>
+              <svg lucideIcon="Bell" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+              <span class="min-w-0 flex-1">
+                <span class="block">{{ 'settings.notifications.preferences' | transloco }}</span>
+                <span class="block text-xs text-text-secondary">{{ 'settings.notifications.preferencesHint' | transloco }}</span>
+              </span>
+              <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+            </a>
+          </li>
+        </ul>
+      } @else {
+        <p class="m-0 text-sm text-text-secondary">{{ 'settings.notifications.signIn' | transloco }}</p>
+      }
     </section>
 
     <!-- Profile and privacy (F14, F18) -->
@@ -130,7 +142,6 @@ export class SettingsPage {
   protected readonly language = inject(LanguageService);
   protected readonly readerPrefs = inject(ReaderPrefsService);
   protected readonly session = inject(SessionStore);
-  protected readonly push = inject(PushService);
   protected readonly moderation = inject(ModerationSummaryStore);
   private readonly preferences = inject(PreferencesService);
   private readonly toasts = inject(ToastService);

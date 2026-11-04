@@ -11,8 +11,8 @@ export const PUSH_WORKER_SCOPE = '/firebase-cloud-messaging-push-scope';
 export type WorkerMessage =
   /** A push that arrived while this tab was visible, so the worker showed no notification. */
   | { type: 'push'; payload: unknown }
-  /** A notification was tapped while this tab was open: route to `path`. */
-  | { type: 'open'; path: string };
+  /** A notification was tapped while this tab was open: route to `path` and mark its notification read (F17). */
+  | { type: 'open'; path: string; notificationId: string | null };
 
 const WORKER_MESSAGE_TYPES: Record<string, WorkerMessage['type']> = { 'readin:push': 'push', 'readin:open': 'open' };
 
@@ -69,10 +69,12 @@ const browserPushClient: PushClient = {
 
   onWorkerMessage(next) {
     const listener = (event: MessageEvent) => {
-      const data = event.data as { type?: unknown; payload?: unknown; path?: unknown } | null;
+      const data = event.data as { type?: unknown; payload?: unknown; path?: unknown; notificationId?: unknown } | null;
       const type = typeof data?.type === 'string' ? WORKER_MESSAGE_TYPES[data.type] : undefined;
       if (type === 'push') next({ type, payload: data?.payload });
-      else if (type === 'open' && typeof data?.path === 'string') next({ type, path: data.path });
+      else if (type === 'open' && typeof data?.path === 'string') {
+        next({ type, path: data.path, notificationId: typeof data.notificationId === 'string' && data.notificationId ? data.notificationId : null });
+      }
     };
     navigator.serviceWorker.addEventListener('message', listener);
     navigator.serviceWorker.startMessages();

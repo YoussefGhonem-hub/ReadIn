@@ -5,7 +5,7 @@ import { testMe } from '../../../testing/auth-testing';
 import { MeDto } from '../api/models';
 import { nextSetupStep, postAuthUrl, safeReturnUrl } from './account-setup';
 import { AuthService } from './auth.service';
-import { accountSetupGuard, authGuard, guestOnlyGuard, permissionGuard, setupStepGuard } from './guards';
+import { accountSetupGuard, authGuard, guestOnlyGuard, myStatsGuard, permissionGuard, setupStepGuard } from './guards';
 import { SessionStore } from './session.store';
 
 type Guard = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => unknown;
@@ -138,5 +138,13 @@ describe('guards', () => {
     setup(testMe({ permissions: ['articles.read'] }));
     expect(await run(permissionGuard('articles.create'), '/write')).toBe('/');
     expect(await run(authGuard, '/saved')).toBe(true);
+  });
+
+  it('myStatsGuard opens your own profile (readin://me/stats, F17); guests sign in first', async () => {
+    setup(testMe({ username: 'mona' }));
+    expect(await run(myStatsGuard, '/me/stats')).toBe('/@mona');
+    TestBed.resetTestingModule();
+    setup(null);
+    expect(await run(myStatsGuard, '/me/stats')).toBe('/auth/sign-in?returnUrl=%2Fme%2Fstats');
   });
 });

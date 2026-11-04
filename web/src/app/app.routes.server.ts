@@ -15,5 +15,6 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'moderation', renderMode: RenderMode.Client },
   { path: 'moderation/**', renderMode: RenderMode.Client },
   { path: 'notifications', renderMode: RenderMode.Client },
+  { path: 'me/**', renderMode: RenderMode.Client },
   { path: '**', renderMode: RenderMode.Server },
 ];

@@ -6,6 +6,8 @@
  */
 const PUSH_MESSAGE_TYPE = 'readin:push';
 const OPEN_MESSAGE_TYPE = 'readin:open';
+/** A new tab learns which notification to mark read from this query parameter (NOTIFICATION_PARAM in push-message.ts). */
+const NOTIFICATION_PARAM = 'notification';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
@@ -23,8 +25,9 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const path = (event.notification.data && event.notification.data.path) || '/notifications';
-  event.waitUntil(openPath(path));
+  const data = event.notification.data || {};
+  const path = data.path || '/notifications';
+  event.waitUntil(openPath(path, text(data.notificationId)));
 });
 
 async function deliver(payload) {
@@ -48,27 +51,34 @@ async function deliver(payload) {
     dir: 'auto',
     // Same tag = the newer push replaces the older one (e.g. "Ahmed and 9 others reacted").
     tag: text(data.tag) || undefined,
-    data: { path: toPath(link, lang) },
+    // The notification-center row (F17): tapping the push marks it read.
+    data: { path: toPath(link, lang), notificationId: text(data.notificationId) },
   });
 }
 
-async function openPath(path) {
+async function openPath(path, notificationId) {
   const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
   const tab = windows.find((client) => new URL(client.url).origin === self.location.origin);
   if (tab) {
-    // This worker does not control the page (its scope is separate), so the open tab routes itself.
-    tab.postMessage({ type: OPEN_MESSAGE_TYPE, path });
+    // This worker does not control the page (its scope is separate), so the open tab routes itself and marks it read.
+    tab.postMessage({ type: OPEN_MESSAGE_TYPE, path, notificationId });
     await tab.focus();
     return;
   }
-  await self.clients.openWindow(new URL(path, self.location.origin).href);
+  const url = new URL(path, self.location.origin);
+  if (notificationId) url.searchParams.set(NOTIFICATION_PARAM, notificationId);
+  await self.clients.openWindow(url.href);
 }
 
+/** Deep links → web routes, as pushLinkToPath in push-message.ts. */
 function toPath(link, lang) {
   if (!link) return null;
   if (link.startsWith('readin://')) {
     const rest = link.slice('readin://'.length);
-    return rest.startsWith('a/') ? `/${lang}/${rest}` : safePath(`/${rest}`);
+    if (rest.startsWith('a/')) return `/${lang}/${rest}`;
+    if (rest.startsWith('u/')) return rest.length > 2 ? safePath(`/@${rest.slice(2)}`) : null;
+    if (rest === 'settings/account') return '/settings#account';
+    return safePath(`/${rest}`);
   }
   if (link.startsWith('/')) return safePath(link);
   try {

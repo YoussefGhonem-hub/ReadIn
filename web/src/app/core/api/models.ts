@@ -1098,6 +1098,86 @@ export interface ContinueReadingDto {
   updatedAt: string;
 }
 
+// ── Notifications (F17, SPEC §21.1) ───────────────────────────
+
+/** The notification's `type`, also the push's `data.type`. */
+export type NotificationType =
+  | 'new_follower'
+  | 'article_comment'
+  | 'comment_reply'
+  | 'mention'
+  | 'reactions_milestone'
+  | 'followed_writer_article'
+  | 'daily_article'
+  | 'streak_reminder'
+  | 'security_alert'
+  /** Reserved for F19 (writer verification): rendered with a generic text, nothing sends it yet. */
+  | 'verification_result'
+  | 'moderation_notice';
+
+/** What changed on the account (`security_alert`); the API's `SecurityChange`, camelCase. */
+export type SecurityChange =
+  | 'passwordChanged'
+  | 'passwordReset'
+  | 'recoveryPinChanged'
+  | 'phoneNumberChanged'
+  | 'recoveryLockedOut'
+  | 'externalLoginLinked'
+  | 'externalLoginUnlinked'
+  | 'phoneSignInAdded';
+
+export interface NotificationActorDto {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl: string | null;
+  isVerified: boolean;
+}
+
+/** `GET /me/notifications`, newest activity (`updatedAt`) first. */
+export interface NotificationDto {
+  id: string;
+  type: NotificationType;
+  createdAt: string;
+  /** Last activity: aggregated rows move up when someone else joins. */
+  updatedAt: string;
+  isRead: boolean;
+  /** The latest actor; null when that account was deleted ("Deleted user") or the type has none. */
+  actor: NotificationActorDto | null;
+  /** Distinct actors (≥ 1 when actor-based): "X and {actorCount - 1} others". */
+  actorCount: number;
+  /** In the viewer's article language. */
+  article: { id: string; slug: string; title: string; language: ArticleLanguage } | null;
+  /** ≤ 140 characters of plain text. */
+  comment: { id: string; parentId: string | null; excerpt: string } | null;
+  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange };
+  /** `readin://…`, the same deep links as pushes. */
+  link: string;
+}
+
+export interface UnreadNotificationsDto {
+  unread: number;
+}
+
+/** all = push + the notification center; inApp = the center only; off = nothing. */
+export type NotificationMode = 'all' | 'inApp' | 'off';
+
+/** The types a user can configure: security alerts, moderation notices and verification results always arrive. */
+export type ConfigurableNotificationType = Exclude<NotificationType, 'security_alert' | 'verification_result' | 'moderation_notice'>;
+
+export interface QuietHoursDto {
+  enabled: boolean;
+  /** "HH:mm" in the user's time zone. */
+  start: string;
+  end: string;
+}
+
+/** `GET`/`PUT /me/notification-settings`. A PUT sends only the types it changes (absent = unchanged). */
+export interface NotificationSettingsDto {
+  quietHours: QuietHoursDto;
+  types: Partial<Record<ConfigurableNotificationType, NotificationMode>>;
+}
+
 /** RFC 9457 ProblemDetails with ReadIn's stable `code` (SPEC §6.5, §17.1). */
 export interface ProblemDetails {
   type?: string;

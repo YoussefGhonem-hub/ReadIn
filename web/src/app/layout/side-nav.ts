@@ -5,6 +5,7 @@ import { LucideDynamicIcon } from '@lucide/angular';
 import { SessionStore } from '../core/auth/session.store';
 import { LanguageService } from '../core/i18n/language.service';
 import { ModerationSummaryStore } from '../core/moderation/moderation-summary.store';
+import { NotificationBadge } from '../core/notifications/notification-badge';
 import { translatePlural } from '../shared/pipes/intl';
 import { NavItem, SIDE_NAV, profilePath } from './nav-items';
 
@@ -31,6 +32,12 @@ import { NavItem, SIDE_NAV, profilePath } from './nav-items';
             }}</span>
             <span class="sr-only">{{ badgeLabel() }}</span>
           }
+          @if (item.id === 'notifications' && notifications.count() > 0) {
+            <span class="ms-auto min-w-6 rounded-chip bg-accent px-1.5 text-center text-xs font-semibold leading-5 text-on-accent" aria-hidden="true" data-notifications-badge>{{
+              notifications.count() > 99 ? '99+' : notifications.count()
+            }}</span>
+            <span class="sr-only">{{ notificationsBadgeLabel() }}</span>
+          }
         </a>
       }
     </nav>
@@ -48,4 +55,7 @@ export class SideNav {
     ),
   );
   protected readonly badgeLabel = computed(() => translatePlural(this.transloco, 'moderation.openBadge', this.moderation.total(), this.lang()));
+  /** Unseen notifications (F17). */
+  protected readonly notifications = inject(NotificationBadge);
+  protected readonly notificationsBadgeLabel = computed(() => translatePlural(this.transloco, 'notifications.badge', this.notifications.count(), this.lang()));
 }

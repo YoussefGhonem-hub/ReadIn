@@ -134,6 +134,11 @@ export const CONTRACT_ERROR_CODES = [
   'path.slug_taken',
   'path.editorial',
   'path.items_invalid',
+  // Notifications (F17)
+  'notification.not_found',
+  'notification.type_invalid',
+  'notification.mode_invalid',
+  'notification.quiet_hours_invalid',
 ] as const;
 
 /** Translates stable API error codes (e.g. `user.suspended`) into the active UI language. */

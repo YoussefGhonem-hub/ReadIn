@@ -81,6 +81,19 @@ export function setupStepGuard(step: SetupStep): CanActivateFn {
   };
 }
 
+/**
+ * `/me/stats`, where the streak reminder's `readin://me/stats` lands (F17): the web shows your reading stats on your own
+ * profile, so it redirects there. Guests sign in first.
+ */
+export const myStatsGuard: CanActivateFn = async (_route, state) => {
+  if (onServer()) return true;
+  const router = inject(Router);
+  const session = inject(SessionStore);
+  await inject(AuthService).whenReady();
+  const username = session.isAuthenticated() ? session.username() : null;
+  return username ? router.createUrlTree([`/@${username}`]) : signInTree(router, state.url);
+};
+
 /** Endpoint-style permission check on the client (SPEC §10.2). The API still enforces it. */
 export function permissionGuard(permission: string): CanActivateFn {
   return async (_route, state) => {

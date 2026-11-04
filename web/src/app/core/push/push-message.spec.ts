@@ -1,4 +1,4 @@
-import { pushLinkToPath, pushType, toPushMessage } from './push-message';
+import { pushLinkToPath, pushNotificationId, pushType, toPushMessage } from './push-message';
 
 const ORIGIN = 'https://readin.app';
 
@@ -10,7 +10,7 @@ describe('push messages', () => {
         ORIGIN,
         'ar',
       );
-      expect(message).toEqual({ title: 'أحمد رد عليك', body: 'تعليق جميل', path: '/en/a/my-post#comment-9' });
+      expect(message).toEqual({ title: 'أحمد رد عليك', body: 'تعليق جميل', path: '/en/a/my-post#comment-9', notificationId: null });
     });
 
     it('falls back to data-only payloads and the UI language', () => {
@@ -18,6 +18,7 @@ describe('push messages', () => {
         title: 'Daily article',
         body: 'Ready',
         path: '/ar/a/today',
+        notificationId: null,
       });
     });
 
@@ -38,6 +39,7 @@ describe('push messages', () => {
         title: 'مقال النهارده جاهز ☕',
         body: 'RAG ولا Fine-tuning؟',
         path: '/en/a/rag-vs-fine-tuning',
+        notificationId: null,
       });
     });
 
@@ -54,6 +56,22 @@ describe('push messages', () => {
     });
   });
 
+  it('carries the notification-center row behind the push (F17)', () => {
+    const push = {
+      notification: { title: 'أحمد و9 غيره علّقوا على مقالك' },
+      data: { type: 'article_comment', notificationId: '6f1c0000-0000-0000-0000-000000000009', link: 'readin://a/clean-code#comment-c9', lang: 'ar' },
+    };
+    expect(toPushMessage(push, ORIGIN, 'en')).toEqual({
+      title: 'أحمد و9 غيره علّقوا على مقالك',
+      body: '',
+      path: '/ar/a/clean-code#comment-c9',
+      notificationId: '6f1c0000-0000-0000-0000-000000000009',
+    });
+    expect(pushNotificationId(push)).toBe('6f1c0000-0000-0000-0000-000000000009');
+    expect(pushNotificationId({ data: { notificationId: '  ' } })).toBeNull();
+    expect(pushNotificationId(null)).toBeNull();
+  });
+
   it('reads the push type from its data', () => {
     expect(pushType({ notification: { title: 'x' }, data: { type: 'moderation_notice', noticeId: 'n1' } })).toBe('moderation_notice');
     expect(pushType({ notification: { title: 'x' } })).toBeNull();
@@ -64,13 +82,18 @@ describe('push messages', () => {
     it.each([
       ['readin://a/slug', '/ar/a/slug'],
       ['readin://notifications', '/notifications'],
+      // F17's deep links: a profile, its followers, your reading stats, your account settings.
+      ['readin://u/salma', '/@salma'],
+      ['readin://u/mona/followers', '/@mona/followers'],
+      ['readin://me/stats', '/me/stats'],
+      ['readin://settings/account', '/settings#account'],
       ['/ar/a/slug#comment-1', '/ar/a/slug#comment-1'],
       [`${ORIGIN}/@mona?tab=articles`, '/@mona?tab=articles'],
     ])('maps %s to %s', (link, path) => {
       expect(pushLinkToPath(link, ORIGIN, 'ar')).toBe(path);
     });
 
-    it.each([['https://evil.example/phish'], ['//evil.example'], ['/\\evil.example'], ['readin:///evil.example'], ['javascript:alert(1)'], ['']])(
+    it.each([['https://evil.example/phish'], ['//evil.example'], ['/\\evil.example'], ['readin:///evil.example'], ['readin://u/'], ['javascript:alert(1)'], ['']])(
       'drops %s so a push can never open another site',
       (link) => {
         expect(pushLinkToPath(link, ORIGIN, 'ar')).toBeNull();

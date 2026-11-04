@@ -6,8 +6,9 @@
  * The feed is stateless: uploads and polling are stubbed in the browser with `page.route` (e2e/support). Reactions,
  * saved articles, collections and follows (social.mjs), profiles, `GET /me`, `PATCH /me`, privacy and reading stats
  * (profiles.mjs), the article editor with My articles (editor.mjs), learning paths + continue reading (paths.mjs) and
- * reports, the moderation queue, actions, log and notices (moderation.mjs, F22) keep state per signed-in viewer, so those
- * flows run against it end to end. It also serves generated PNGs for every media URL and fixture builders under `/__mock`.
+ * reports, the moderation queue, actions, log and notices (moderation.mjs, F22) and the notification center with its
+ * settings (notifications.mjs, F17) keep state per signed-in viewer, so those flows run against it end to end. It also
+ * serves generated PNGs for every media URL and fixture builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
  */
@@ -17,6 +18,7 @@ import { encode } from 'blurhash';
 import { createEditor } from './editor.mjs';
 import { createPaths } from './paths.mjs';
 import { createModeration } from './moderation.mjs';
+import { createNotifications } from './notifications.mjs';
 import { createProfiles } from './profiles.mjs';
 import { createSocial } from './social.mjs';
 
@@ -594,6 +596,7 @@ const editor = createEditor({
   author: (viewer) => (viewer === 'u-writer' ? AUTHOR : { id: viewer, displayName: 'Mona Adel', username: 'mona', avatarUrl: null, isVerified: true }),
 });
 const moderation = createModeration({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
+const notifications = createNotifications({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
 
 const routes = [
   // Before profiles.mjs: `/users/mention-suggestions` is not a username.
@@ -611,6 +614,7 @@ const routes = [
   ...profiles.routes,
   ...paths.routes,
   ...moderation.routes,
+  ...notifications.routes,
   ['GET', /^\/__mock\/health$/, () => [200, { ok: true }]],
   ['GET', /^\/__mock\/asset\/image$/, (q) => [200, registered(imageAsset(q.get('seed') ?? 'upload', Number(q.get('w') ?? 1600), Number(q.get('h') ?? 1200)))]],
   ['GET', /^\/__mock\/asset\/avatar$/, (q) => [200, avatarAsset(q.get('seed') ?? 'avatar')]],

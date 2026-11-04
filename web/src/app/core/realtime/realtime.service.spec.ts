@@ -221,6 +221,26 @@ describe('RealtimeService', () => {
       expect(api.token).toHaveBeenCalledTimes(1);
     });
 
+    it('says when the badge is live, and clears it at once when the center opens (F17)', async () => {
+      const { service, session, connection } = setup();
+      service.init();
+      signIn(session);
+      TestBed.tick();
+      await flush();
+      expect(service.unreadLive()).toBe(false); // nothing from the database yet: the REST fallback counts
+
+      connection.emit('live/users/user-1/unreadNotifications', 3);
+      expect(service.unreadLive()).toBe(true);
+      service.clearUnreadNotifications();
+      expect(service.unreadNotifications()).toBe(0);
+      connection.emit('live/users/user-1/unreadNotifications', 1); // something new after "seen"
+      expect(service.unreadNotifications()).toBe(1);
+
+      session.setGuest();
+      TestBed.tick();
+      expect(service.unreadLive()).toBe(false);
+    });
+
     it('keeps the badge at 0 when no token can be issued', async () => {
       const { service, session, connection } = setup({ token: () => throwError(() => new Error('404')) });
       service.init();
@@ -231,6 +251,7 @@ describe('RealtimeService', () => {
       expect(connection.signIn).not.toHaveBeenCalled();
       expect(connection.listenerCount('live/users/user-1/unreadNotifications')).toBe(0);
       expect(service.unreadNotifications()).toBe(0);
+      expect(service.unreadLive()).toBe(false); // so the badge comes from GET /me/notifications/unread-count
     });
   });
 

@@ -1,5 +1,5 @@
 import { Routes, UrlMatchResult, UrlSegment } from '@angular/router';
-import { accountSetupGuard, authGuard, permissionGuard, setupStepGuard } from './core/auth/guards';
+import { accountSetupGuard, authGuard, myStatsGuard, permissionGuard, setupStepGuard } from './core/auth/guards';
 import { PLACEHOLDER_ROUTES } from './features/placeholders.routes';
 import { Shell } from './layout/shell';
 
@@ -66,6 +66,14 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () => import('./features/settings/account/delete-account.page').then((m) => m.DeleteAccountPage),
       },
+      // The notification center (F17): signed-in only, client-rendered, its own chunk.
+      {
+        path: 'notifications',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/notifications/notifications.page').then((m) => m.NotificationsPage),
+      },
+      // `readin://me/stats` (the streak reminder, F17): your reading stats are on your own profile.
+      { path: 'me/stats', canActivate: [myStatsGuard], children: [] },
       // My articles and the editor (F05).
       { path: 'write', canActivate: [permissionGuard('articles.create')], loadChildren: () => import('./features/editor/editor.routes') },
       ...PLACEHOLDER_ROUTES,

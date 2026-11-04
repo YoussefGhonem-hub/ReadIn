@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { SessionStore } from '../core/auth/session.store';
-import { RealtimeService } from '../core/realtime/realtime.service';
+import { LanguageService } from '../core/i18n/language.service';
+import { NotificationBadge, notificationsLabel } from '../core/notifications/notification-badge';
 import { StreakStore } from '../features/reading/streak.store';
 import { Avatar } from '../shared/ui/avatar';
 import { StreakBadge } from '../shared/ui/streak-badge';
@@ -27,10 +28,10 @@ import { profilePath } from './nav-items';
         <a routerLink="/search" class="rd-icon-btn hidden sm:inline-grid" [attr.aria-label]="'nav.search' | transloco">
           <svg lucideIcon="Search" [size]="18"></svg>
         </a>
-        <a routerLink="/notifications" class="rd-icon-btn relative" [attr.aria-label]="'nav.notifications' | transloco">
+        <a routerLink="/notifications" class="rd-icon-btn relative" [attr.aria-label]="notificationsLabel()" data-notifications-link>
           <svg lucideIcon="Bell" [size]="18"></svg>
-          @if (realtime.unreadNotifications() > 0) {
-            <span class="absolute -end-1 -top-1 h-2.5 w-2.5 rounded-full bg-accent" aria-hidden="true"></span>
+          @if (badge.count() > 0) {
+            <span class="absolute -end-1 -top-1 h-2.5 w-2.5 rounded-full bg-accent" aria-hidden="true" data-unread-badge></span>
           }
         </a>
         @if (session.isAuthenticated()) {
@@ -46,8 +47,13 @@ import { profilePath } from './nav-items';
 })
 export class TopBar {
   protected readonly session = inject(SessionStore);
-  protected readonly realtime = inject(RealtimeService);
+  /** Unseen notifications (F17): live, or from the REST fallback. */
+  protected readonly badge = inject(NotificationBadge);
   protected readonly streaks = inject(StreakStore);
+  private readonly transloco = inject(TranslocoService);
+  private readonly lang = inject(LanguageService).lang;
+  /** "Notifications" or "Notifications, 3 new": the dot alone says nothing to a screen reader. */
+  protected readonly notificationsLabel = computed(() => notificationsLabel(this.transloco, this.lang(), this.badge.count()));
   protected profileLink(): string {
     return profilePath(this.session.username());
   }

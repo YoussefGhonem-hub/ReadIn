@@ -206,6 +206,12 @@
       "slug_taken": "Another path already uses this slug.",
       "editorial": "This path is managed in the content files and can't be changed here.",
       "items_invalid": "The path's articles aren't valid: 1–100 published articles, no repeats."
+    },
+    "notification": {
+      "not_found": "This notification no longer exists.",
+      "type_invalid": "This notification type doesn't exist.",
+      "mode_invalid": "Choose All, In app or Off.",
+      "quiet_hours_invalid": "Pick a start and an end time (HH:mm) that are different."
     }
   },
   "auth": {
@@ -656,7 +662,7 @@
     "articleLanguage": "Article language",
     "reminderTime": "Daily article reminder",
     "push": {
-      "title": "Notifications",
+      "title": "Push in this browser",
       "default": "Get today's article, replies and new followers.",
       "granted": "Notifications are on in this browser ✓",
       "denied": "Notifications are blocked. Allow them in your browser's site settings.",
@@ -676,6 +682,63 @@
       "publicStats": "Show my reading stats on my public profile",
       "publicStatsHint": "Your streak, reading activity and top fields. Your phone number is never shown.",
       "signIn": "Sign in to change your privacy settings."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "preferences": "Notification preferences",
+      "preferencesHint": "What you get, and quiet hours",
+      "signIn": "Sign in to choose which notifications you get.",
+      "back": "Settings",
+      "typesTitle": "What you get",
+      "modesHint": "All: a push and the notification center. In app: the notification center only.",
+      "modes": {
+        "all": "All",
+        "inApp": "In app",
+        "off": "Off"
+      },
+      "types": {
+        "daily_article": {
+          "label": "Today's article",
+          "hint": "At your reminder time"
+        },
+        "streak_reminder": {
+          "label": "Streak reminder",
+          "hint": "At 8 PM, if you haven't read anything that day"
+        },
+        "followed_writer_article": {
+          "label": "Writers you follow",
+          "hint": "When one of them publishes a new article"
+        },
+        "new_follower": {
+          "label": "New followers",
+          "hint": "When someone follows you"
+        },
+        "article_comment": {
+          "label": "Comments",
+          "hint": "On your articles"
+        },
+        "comment_reply": {
+          "label": "Replies",
+          "hint": "To your comments"
+        },
+        "mention": {
+          "label": "Mentions",
+          "hint": "When someone mentions you in a comment"
+        },
+        "reactions_milestone": {
+          "label": "Reaction milestones",
+          "hint": "When an article of yours reaches 10, 50 or 100 reactions"
+        }
+      },
+      "alwaysOn": "Security alerts and moderation notices can't be turned off, and security alerts arrive even during quiet hours.",
+      "quietHours": {
+        "title": "Quiet hours",
+        "toggle": "Mute pushes during these hours",
+        "hint": "They arrive when quiet hours end. Security alerts still arrive.",
+        "start": "From",
+        "end": "To"
+      },
+      "loadError": "We couldn't load your notification settings."
     }
   },
   "comingSoon": {
@@ -1647,6 +1710,93 @@
     },
     "settings": {
       "body": "Open reports and the moderation log"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "allRead": "All notifications marked as read ✓",
+    "today": "Today",
+    "earlier": "Earlier",
+    "unread": "Unread",
+    "newItems": "New notifications — show them",
+    "loadError": "We couldn't load your notifications.",
+    "end": "You're all caught up ✓",
+    "empty": {
+      "title": "No notifications yet",
+      "body": "New followers, replies, mentions and today's article show up here."
+    },
+    "badge": {
+      "one": "1 new notification",
+      "other": "{{count}} new notifications"
+    },
+    "badgeLabel": {
+      "one": "Notifications, 1 new",
+      "other": "Notifications, {{count}} new"
+    },
+    "text": {
+      "new_follower": {
+        "single": "{{name}} started following you",
+        "group": {
+          "one": "{{name}} and 1 other started following you",
+          "other": "{{name}} and {{count}} others started following you"
+        }
+      },
+      "article_comment": {
+        "single": "{{name}} commented on your article",
+        "group": {
+          "one": "{{name}} and 1 other commented on your article",
+          "other": "{{name}} and {{count}} others commented on your article"
+        }
+      },
+      "comment_reply": {
+        "single": "{{name}} replied to your comment",
+        "group": {
+          "one": "{{name}} and 1 other replied to your comment",
+          "other": "{{name}} and {{count}} others replied to your comment"
+        }
+      },
+      "mention": {
+        "single": "{{name}} mentioned you in a comment",
+        "group": {
+          "one": "{{name}} and 1 other mentioned you",
+          "other": "{{name}} and {{count}} others mentioned you"
+        }
+      },
+      "followed_writer_article": {
+        "single": "{{name}} published a new article",
+        "group": {
+          "one": "{{name}} and 1 other published new articles",
+          "other": "{{name}} and {{count}} others published new articles"
+        }
+      },
+      "reactions_milestone": {
+        "one": "Your article got its first reaction 🎉",
+        "other": "Your article reached {{count}} reactions 🎉"
+      },
+      "daily_article": "Today's article is ready ☕",
+      "streak_reminder": {
+        "one": "Your streak is 1 day. Read something today to keep it 🔥",
+        "other": "Your streak is {{count}} days. Read something today to keep it 🔥"
+      },
+      "security_alert": {
+        "passwordChanged": "Your password was changed",
+        "passwordReset": "Your password was reset with your recovery PIN",
+        "recoveryPinChanged": "Your recovery PIN was changed",
+        "phoneNumberChanged": "Your phone number was changed",
+        "recoveryLockedOut": "Too many wrong PIN attempts, so account recovery is locked for a while",
+        "externalLoginLinked": "A Google or Apple account was linked to your account",
+        "externalLoginUnlinked": "A Google or Apple account was unlinked from your account",
+        "phoneSignInAdded": "Phone and password sign-in was added to your account",
+        "other": "There was a security change on your account",
+        "hint": "Wasn't you? Check your account settings now."
+      },
+      "verification_result": "There's an update on your writer verification request",
+      "moderation_notice": {
+        "articleHidden": "The moderators hid your article",
+        "warning": "You received a warning from the moderators"
+      },
+      "other": "You have a new notification"
     }
   }
 }

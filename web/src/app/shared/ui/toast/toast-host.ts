@@ -63,6 +63,7 @@ export class ToastHost {
   protected open(event: MouseEvent, toast: Toast): void {
     event.preventDefault();
     this.toasts.dismiss(toast.id);
+    toast.opened?.();
     if (toast.link) void this.router.navigateByUrl(toast.link);
   }
 }

@@ -7,6 +7,7 @@ import { MeDto } from '../api/models';
 import { SessionStore } from '../auth/session.store';
 import { LanguageService } from '../i18n/language.service';
 import { ModerationNotices } from '../moderation/moderation-notices';
+import { NotificationBadge } from '../notifications/notification-badge';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { PUSH_CLIENT, PushClient, PushPermission, WorkerMessage } from './push-client';
 import { PushService } from './push.service';
@@ -37,19 +38,21 @@ const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 async function setup(client = new FakePushClient()) {
   const meApi = { registerDevice: vi.fn(() => of(undefined)), unregisterDevice: vi.fn(() => of(undefined)) };
   const notices = { reload: vi.fn() };
+  const badge = { refresh: vi.fn(async () => undefined), markRead: vi.fn(async () => undefined) };
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
       { provide: PUSH_CLIENT, useValue: client },
       { provide: MeApi, useValue: meApi },
       { provide: ModerationNotices, useValue: notices },
+      { provide: NotificationBadge, useValue: badge },
       { provide: LanguageService, useValue: { lang: signal('ar') } },
       { provide: PLATFORM_ID, useValue: 'browser' },
     ],
   });
   const service = TestBed.inject(PushService);
   await service.init();
-  return { service, client, meApi, notices, session: TestBed.inject(SessionStore), toasts: TestBed.inject(ToastService) };
+  return { service, client, meApi, notices, badge, session: TestBed.inject(SessionStore), toasts: TestBed.inject(ToastService) };
 }
 
 async function signIn(session: SessionStore, id = 'user-1'): Promise<void> {
@@ -197,10 +200,72 @@ describe('PushService', () => {
     const { client } = await setup();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
 
-    client.worker!({ type: 'open', path: '//evil.example' });
-    client.worker!({ type: 'open', path: '/ar/a/my-post#comment-9' });
+    client.worker!({ type: 'open', path: '//evil.example', notificationId: null });
+    client.worker!({ type: 'open', path: '/ar/a/my-post#comment-9', notificationId: null });
 
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith('/ar/a/my-post#comment-9');
+  });
+
+  describe('push tap marks its notification read (F17)', () => {
+    afterEach(() => history.replaceState(null, '', '/'));
+
+    it('a tapped notification in an open tab: read, then routed', async () => {
+      const { client, badge } = await setup();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+      client.worker!({ type: 'open', path: '/@salma', notificationId: 'n-7' });
+
+      expect(badge.markRead).toHaveBeenCalledWith('n-7');
+      expect(navigate).toHaveBeenCalledWith('/@salma');
+    });
+
+    it('a foreground push refreshes the badge; tapping its toast marks it read', async () => {
+      const { client, badge, toasts } = await setup();
+      client.worker!({
+        type: 'push',
+        payload: { notification: { title: 'Ahmed replied to your comment' }, data: { type: 'comment_reply', notificationId: 'n-9', link: 'readin://a/my-post#comment-3' } },
+      });
+      expect(badge.refresh).toHaveBeenCalledTimes(1);
+
+      const [toast] = toasts.toasts();
+      expect(toast).toMatchObject({ link: '/ar/a/my-post#comment-3' });
+      expect(badge.markRead).not.toHaveBeenCalled();
+      toast.opened!();
+      expect(badge.markRead).toHaveBeenCalledWith('n-9');
+    });
+
+    it('a push without a notification id opens without marking anything', async () => {
+      const { client, badge, toasts } = await setup();
+      vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      client.worker!({ type: 'push', payload: { notification: { title: 'Hi' }, data: { link: 'readin://notifications' } } });
+      expect(toasts.toasts()[0].opened).toBeNull();
+      client.worker!({ type: 'open', path: '/notifications', notificationId: null });
+      expect(badge.markRead).not.toHaveBeenCalled();
+    });
+
+    it('a tap that opened this tab: the id leaves the address and is marked read once signed in', async () => {
+      history.replaceState(null, '', '/en/a/my-post?ref=x&notification=n-42#comment-1');
+      const { badge, session } = await setup();
+
+      expect(location.pathname + location.search + location.hash).toBe('/en/a/my-post?ref=x#comment-1');
+      TestBed.tick();
+      expect(badge.markRead).not.toHaveBeenCalled(); // the session isn't restored yet
+
+      await signIn(session);
+      expect(badge.markRead).toHaveBeenCalledExactlyOnceWith('n-42');
+      session.patchMe({ displayName: 'Mona A.' });
+      TestBed.tick();
+      expect(badge.markRead).toHaveBeenCalledTimes(1);
+    });
+
+    it('a guest has nothing to mark', async () => {
+      history.replaceState(null, '', '/notifications?notification=n-42');
+      const { badge, session } = await setup();
+      expect(location.search).toBe('');
+      session.setGuest();
+      TestBed.tick();
+      expect(badge.markRead).not.toHaveBeenCalled();
+    });
   });
 });
