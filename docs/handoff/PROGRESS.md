@@ -105,7 +105,26 @@ Order:
 - [x] Every other branch checked: its commits are on dev, or are older copies of commits that are (same subject, rebased
   or squashed): f07-daily, f14, f14-backend, f14-web, f14-mobile, f14-pre-f11, live-base, social-backend, social-web,
   social-mobile, f05-editor, account-deletion-pre-squash.
-- [ ] Not ours, left uncommitted in the shared tree:
+- [x] Not ours, left uncommitted in the shared tree:
   - `docs/SPEC.md` F31/F32: committed by the Desktop session as 6d71dc7;
   - a `.gitignore` line `mobile/test/goldens`, whose author is unknown. It must not be committed: it would hide the
     baselines.
+
+## Step 4: clean up ✅
+- All 12 worktrees removed with `git worktree remove` (no `--force`), all of them clean. Git could not delete three
+  folders (D:/raa, D:/re, D:/rf) because of Windows' long paths in `mobile/build` and `node_modules`. It had already
+  unregistered them, and the leftover files were deleted with `rm -rf`. D:/raa had been kept for the Google sign-in
+  device test, which now runs from dev.
+- Branches deleted locally and on origin; only `dev` and `main` are left.
+  - Merged: account-deletion, auth-v1.1-all, f04-reader, f05-rebase, f08-streaks, f09-paths, f09-web, f09-mobile,
+    f11-comments, f14, f17-notifications-handoff, f22-moderation, f27-realtime, merge-f09-paths, wave1.
+  - Superseded (older copies of commits that are on dev): f07-daily, f14-backend, f14-web, f14-mobile, f14-pre-f11,
+    live-base, social-backend, social-web, social-mobile, f05-editor, account-deletion-pre-squash. Every one of them is
+    in `D:\readin-backup-2.bundle`.
+  - No branch had to be kept.
+- `CLAUDE.md` (new) and SPEC §29: all work happens directly on `dev` in `D:\freelancer\ReadIn`, with no new branches or
+  worktrees (agents too). Commit only your own files, by path.
+- `tools/locks/lock.mjs` exists but no hook enforces it. Installing a hook needs `.claude/settings.json`, which is left
+  alone.
+
+## Step 5: screenshots only in ar/light and en/dark (next)
