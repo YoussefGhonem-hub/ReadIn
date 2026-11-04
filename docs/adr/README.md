@@ -8,7 +8,7 @@ One file per decision: `NNNN-short-title.md` (Context, Decision, Consequences).
 - [0004 — Firebase JS SDK directly on web (instead of `@angular/fire`)](0004-firebase-js-sdk-on-web.md)
 - [0005 — One real Firebase project; the Emulator Suite for everything else](0005-single-firebase-project.md)
 - [0006 — EF Core sequential GUIDs for primary keys (instead of `Guid.CreateVersion7()`)](0006-sequential-guids.md)
-- [0007 — Phone number + password, with the API's own JWT sessions](0007-phone-password-authentication.md) (amended by 0012, 0014)
+- [0007 — Phone number + password, with the API's own JWT sessions](0007-phone-password-authentication.md) (amended by 0012, 0016)
 - [0008 — Firebase only for Cloud Messaging and the Realtime Database](0008-firebase-scope-fcm-and-rtdb.md)
 - [0009 — Recovery PIN instead of SMS for forgotten passwords](0009-recovery-pin.md)
 - [0010 — Uploads stored on the API server (`wwwroot/uploads`)](0010-uploads-in-wwwroot.md)
