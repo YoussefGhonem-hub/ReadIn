@@ -10,6 +10,7 @@ import {
   computed,
   effect,
   inject,
+  linkedSignal,
   signal,
   untracked,
   viewChild,
@@ -27,8 +28,10 @@ import { ArticleCardSkeleton, HeroSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { StreakBadge } from '../../shared/ui/streak-badge';
 import { StreakStore } from '../reading/streak.store';
+import { ContinueReadingCard } from './continue-reading-card';
 import { FollowingFeed } from './following-feed';
 import { HomeStore } from './home.store';
+import { LearningPathCard } from './learning-path-card';
 import { TodayHero } from './today-hero';
 
 type FeedTab = 'forYou' | 'following';
@@ -36,7 +39,20 @@ type FeedTab = 'forYou' | 'following';
 /** Home — "النهارده" (F03). */
 @Component({
   selector: 'rd-home-page',
-  imports: [TranslocoPipe, BdiText, ArticleCard, ArticleCardSkeleton, HeroSkeleton, EmptyState, ErrorState, StreakBadge, TodayHero, FollowingFeed],
+  imports: [
+    TranslocoPipe,
+    BdiText,
+    ArticleCard,
+    ArticleCardSkeleton,
+    HeroSkeleton,
+    EmptyState,
+    ErrorState,
+    StreakBadge,
+    TodayHero,
+    FollowingFeed,
+    ContinueReadingCard,
+    LearningPathCard,
+  ],
   providers: [HomeStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[720px] px-4 pt-5 lg:pt-8' },
@@ -68,6 +84,12 @@ type FeedTab = 'forYou' | 'following';
         }
       }
     }
+
+    <!-- Continue reading (signed in) and your learning path, or the way to the paths (F03, F09) -->
+    @if (continueItem(); as item) {
+      <rd-continue-reading-card class="mb-3" [item]="item" />
+    }
+    <rd-learning-path-card class="mb-6" [path]="store.activePath()" [loading]="pathLoading()" />
 
     <!-- Field chips (they filter For you; the Following feed has no field filter) -->
     @if (activeTab() === 'forYou') {
@@ -181,8 +203,33 @@ export class HomePage {
     const hour = new Date().getHours();
     return hour >= 5 && hour < 12 ? 'home.greeting.morning' : 'home.greeting.evening';
   });
+  /**
+   * The most recent unfinished article that isn't today's pick (the hero already shows that one). Waits for the first
+   * answer about today's pick, so the card doesn't switch articles once it arrives.
+   */
+  protected readonly continueItem = computed(() => {
+    if (!this.session.isAuthenticated() || !this.heroSettled()) return null;
+    const heroId = this.store.today()?.id ?? null;
+    return this.store.continueReading().find((item) => item.article.id !== heroId) ?? null;
+  });
+  /** True once today's pick answered (or failed) for the first time; a refresh keeps it. */
+  private readonly heroSettled = linkedSignal<string, boolean>({
+    source: () => this.store.todayStatus(),
+    computation: (status, previous) => !!previous?.value || status === 'loaded' || status === 'error',
+  });
+  /** Signed in, until `/me/paths/active` answers: a placeholder the size of the path card. */
+  protected readonly pathLoading = computed(() => {
+    const status = this.store.activePathStatus();
+    return this.session.isAuthenticated() && (status === 'idle' || status === 'loading');
+  });
 
   constructor() {
+    // Continue reading and the active path follow the session (signing out clears them). Coming back to Home builds
+    // a new page and store, so both are fresh after reading.
+    effect(() => {
+      this.session.isAuthenticated();
+      untracked(() => void this.store.loadPersonal());
+    });
     // Signing out on the Following tab goes back to For you (the tab needs an account).
     effect(() => {
       if (this.session.isGuest() && untracked(this.activeTab) === 'following') untracked(() => this.activeTab.set('forYou'));

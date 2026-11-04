@@ -2,9 +2,12 @@ import { PendingTasks, inject } from '@angular/core';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { firstValueFrom } from 'rxjs';
 import { ContentApi } from '../../core/api/content.api';
+import { ContinueReadingApi } from '../../core/api/continue-reading.api';
 import { FollowsApi } from '../../core/api/follows.api';
-import { ArticleCardDto, FieldDto, UserSummaryDto } from '../../core/api/models';
+import { ArticleCardDto, ContinueReadingDto, FieldDto, PathCardDto, UserSummaryDto } from '../../core/api/models';
+import { PathsApi } from '../../core/api/paths.api';
 import { TaxonomyApi } from '../../core/api/taxonomy.api';
+import { SessionStore } from '../../core/auth/session.store';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
 import { FollowStore } from '../../core/social/follow.store';
 
@@ -29,10 +32,18 @@ interface HomeState {
   /** Writers to follow, shown when the Following feed is empty. */
   suggested: UserSummaryDto[];
   suggestedStatus: LoadStatus;
+  /** Signed in: unfinished articles, most recent first (F03 "Continue reading"). */
+  continueReading: ContinueReadingDto[];
+  continueStatus: LoadStatus;
+  /** Signed in: your enrolled path in progress, or null (F09). */
+  activePath: PathCardDto | null;
+  activePathStatus: LoadStatus;
 }
 
 const PAGE_SIZE = 20;
 const SUGGESTED_LIMIT = 10;
+/** More than the one card Home shows, so it can skip today's article (the hero). */
+export const CONTINUE_READING_LIMIT = 3;
 
 /** Home (F03) feature state: today's pick, field chips, the cursor-paginated For-you feed and the Following tab. */
 export const HomeStore = signalStore(
@@ -53,6 +64,10 @@ export const HomeStore = signalStore(
     followingMoreFailed: false,
     suggested: [],
     suggestedStatus: 'idle',
+    continueReading: [],
+    continueStatus: 'idle',
+    activePath: null,
+    activePathStatus: 'idle',
   }),
   withMethods(
     (
@@ -63,6 +78,9 @@ export const HomeStore = signalStore(
       social = inject(ArticleSocialStore),
       follows = inject(FollowStore),
       tasks = inject(PendingTasks),
+      session = inject(SessionStore),
+      continueApi = inject(ContinueReadingApi),
+      paths = inject(PathsApi),
     ) => {
       // PendingTasks keeps SSR waiting until state is patched, not just until the HTTP call ends.
       const loadFields = () =>
@@ -122,13 +140,49 @@ export const HomeStore = signalStore(
         }
       };
 
+      // Continue reading and the active path (F03, F09): signed in only, browser only. A reload keeps the cards on
+      // screen; a failure hides "Continue reading" and shows the "explore paths" row instead of a path.
+      const loadContinueReading = async () => {
+        if (store.continueStatus() !== 'loaded') patchState(store, { continueStatus: 'loading' });
+        try {
+          patchState(store, { continueReading: await firstValueFrom(continueApi.list(CONTINUE_READING_LIMIT)), continueStatus: 'loaded' });
+        } catch {
+          patchState(store, { continueReading: [], continueStatus: 'error' });
+        }
+      };
+
+      const loadActivePath = async () => {
+        if (store.activePathStatus() !== 'loaded') patchState(store, { activePathStatus: 'loading' });
+        try {
+          patchState(store, { activePath: await firstValueFrom(paths.active()), activePathStatus: 'loaded' });
+        } catch {
+          patchState(store, { activePath: null, activePathStatus: 'error' });
+        }
+      };
+
+      const clearPersonal = () => patchState(store, { continueReading: [], continueStatus: 'idle', activePath: null, activePathStatus: 'idle' });
+
+      /** Single-flight: the session watcher and a refresh right after it share one pair of requests. */
+      let personal: Promise<unknown> | null = null;
+      const loadPersonal = (): Promise<unknown> => {
+        if (!session.isAuthenticated()) {
+          clearPersonal();
+          return Promise.resolve();
+        }
+        personal ??= Promise.all([loadContinueReading(), loadActivePath()]).finally(() => (personal = null));
+        return personal;
+      };
+
       return {
         init(): Promise<unknown> {
           return Promise.all([loadFields(), loadToday(), loadFeed()]);
         },
+        /** "New articles" and the personalized reload: today's pick, the feed and (signed in) the two personal cards. */
         refresh(): Promise<unknown> {
-          return Promise.all([loadToday(), loadFeed()]);
+          return Promise.all([loadToday(), loadFeed(), loadPersonal()]);
         },
+        /** Signed in: Continue reading and the active path (signed out: clears them). */
+        loadPersonal,
         retryFeed: loadFeed,
         loadFollowing,
         loadSuggested,

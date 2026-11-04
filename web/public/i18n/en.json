@@ -488,7 +488,16 @@
       "body": "Try another field or check back soon."
     },
     "endOfFeed": "You're all caught up 🎉 Come back tomorrow for more.",
-    "newArticles": "New articles ↑"
+    "newArticles": "New articles ↑",
+    "continueReading": {
+      "title": "Continue reading",
+      "percent": "{{percent}}% read"
+    },
+    "path": {
+      "label": "Your learning path",
+      "next": "Next:",
+      "prompt": "Learn step by step with learning paths"
+    }
   },
   "article": {
     "reviewed": "Reviewed",
