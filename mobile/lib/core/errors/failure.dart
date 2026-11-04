@@ -133,6 +133,12 @@ abstract final class FailureCodes {
   static const reportReasonInvalid = 'report.reason_invalid';
   static const reportTargetNotFound = 'report.target_not_found';
 
+  // Learning paths (F09); the last three come from the admin endpoints only.
+  static const pathNotFound = 'path.not_found';
+  static const pathSlugTaken = 'path.slug_taken';
+  static const pathEditorial = 'path.editorial';
+  static const pathItemsInvalid = 'path.items_invalid';
+
   // Client-side
   static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';
