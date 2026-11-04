@@ -32,20 +32,35 @@ class ArticleMenuButton extends StatelessWidget {
 
   final ArticleDetails article;
 
+  @override
+  Widget build(BuildContext context) => ArticleMenuView(
+        card: article.card,
+        hidden: article.isHidden,
+        // The moderator still sees it, now with the banner and the note they gave.
+        onModerated: context.read<ArticleCubit>().setModeration,
+      );
+}
+
+/// "⋯" for one article: the reader's ([ArticleMenuButton]) and the post card's header (F34). Hiding and unhiding need
+/// an [ModerationActionCubit] above; [onModerated] then gets the article's new moderation (null once visible again).
+class ArticleMenuView extends StatelessWidget {
+  const ArticleMenuView({super.key, required this.card, required this.hidden, required this.onModerated});
+
+  final ArticleCard card;
+  final bool hidden;
+  final ValueChanged<ArticleModeration?> onModerated;
+
   Future<void> _onSelected(BuildContext context, ArticleMenuItem item) async {
-    final target = ModerationTargetRef.article(article.card.id);
+    final target = ModerationTargetRef.article(card.id);
     switch (item) {
       case ArticleMenuItem.report:
         await showReportSheet(context, target: target);
       case ArticleMenuItem.hide:
-        final cubit = context.read<ArticleCubit>();
-        // The moderator still sees it, now with the banner and the note they gave.
         if (await ModerationFlows.hideWithNote(context, target) case final note?) {
-          cubit.setModeration(ArticleModeration(hiddenAt: DateTime.now().toUtc(), note: note.isEmpty ? null : note));
+          onModerated(ArticleModeration(hiddenAt: DateTime.now().toUtc(), note: note.isEmpty ? null : note));
         }
       case ArticleMenuItem.unhide:
-        final cubit = context.read<ArticleCubit>();
-        if (await ModerationFlows.unhide(context, target)) cubit.setModeration(null);
+        if (await ModerationFlows.unhide(context, target)) onModerated(null);
     }
   }
 
@@ -55,9 +70,9 @@ class ArticleMenuButton extends StatelessWidget {
     final colors = context.colors;
     final me = context.select((SessionCubit c) => c.state.me);
     final items = articleMenuItems(
-      own: me != null && me.id == article.card.author?.id,
+      own: me != null && me.id == card.author?.id,
       moderator: me?.isModerator ?? false,
-      hidden: article.isHidden,
+      hidden: hidden,
     );
     if (items.isEmpty) return const SizedBox.shrink();
     return PopupMenuButton<ArticleMenuItem>(

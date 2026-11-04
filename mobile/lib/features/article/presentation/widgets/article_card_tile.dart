@@ -11,16 +11,17 @@ import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../domain/entities/article.dart';
 import 'article_attachments_view.dart';
 
-/// Compact feed row (mockup "article-card"): thumbnail, title, author ·
+/// Compact article row (mockup "article-card"): thumbnail, title, author ·
 /// reading time, reaction/comment counts, then the post's images or PDF
-/// pages full width (F26).
+/// pages full width (F26). Lists people scan rather than read keep it (Saved,
+/// learning paths, "Next in path", the editor's preview); feeds show the post
+/// card instead (F34).
 class ArticleCardTile extends StatelessWidget {
   const ArticleCardTile({
     super.key,
     required this.article,
     required this.onTap,
     this.actions = const [],
-    this.showAttachments = true,
   });
 
   final ArticleCard article;
@@ -28,9 +29,6 @@ class ArticleCardTile extends StatelessWidget {
 
   /// Buttons at the end of the counters line, e.g. save (F13).
   final List<Widget> actions;
-
-  /// False keeps the row compact (related articles at the end of the reader): no images or PDF pages.
-  final bool showAttachments;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +38,7 @@ class ArticleCardTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s3),
         decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.border))),
-        child: article.attachments == null || !showAttachments
+        child: article.attachments == null
             ? _Summary(article: article, actions: actions)
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

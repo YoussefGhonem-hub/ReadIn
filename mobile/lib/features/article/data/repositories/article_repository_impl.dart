@@ -38,4 +38,8 @@ class ArticleRepositoryImpl implements ArticleRepository {
   @override
   Future<Result<List<ArticleCard>>> getRelated(String articleId, {String? language, int limit = 4}) =>
       guardApi(() async => [for (final m in await _api.getRelated(articleId, language, limit)) m.toEntity()]);
+
+  @override
+  Future<Result<ArticlePreview>> getPreview(String articleId, {String? language}) =>
+      guardApi(() async => (await _api.getPreview(articleId, language)).toEntity());
 }

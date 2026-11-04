@@ -7,15 +7,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/di/injection.dart';
+import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/core/realtime/realtime_service.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/presentation/cubit/article_cubit.dart';
 import 'package:readin/features/article/presentation/cubit/article_live_cubit.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/article/presentation/pages/article_page.dart';
-import 'package:readin/features/article/presentation/widgets/article_card_tile.dart';
+import 'package:readin/features/article/presentation/widgets/post_card.dart';
 import 'package:readin/features/article/presentation/widgets/reader_action_bar.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
+import 'package:readin/features/comments/presentation/widgets/comment_body.dart';
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/features/follow/presentation/cubit/suggested_writers_cubit.dart';
 import 'package:readin/features/follow/presentation/widgets/follow_button.dart';
@@ -23,7 +25,6 @@ import 'package:readin/features/home/presentation/cubit/feed_cubit.dart';
 import 'package:readin/features/home/presentation/cubit/home_cubit.dart';
 import 'package:readin/features/home/presentation/cubit/live_feed_cubit.dart';
 import 'package:readin/features/home/presentation/pages/home_page.dart';
-import 'package:readin/features/home/presentation/widgets/today_hero_card.dart';
 import 'package:readin/features/notifications/presentation/cubit/unread_badge_cubit.dart';
 import 'package:readin/features/paths/presentation/cubit/article_path_cubit.dart';
 import 'package:readin/features/reactions/presentation/cubit/reactors_cubit.dart';
@@ -35,13 +36,13 @@ import 'package:readin/features/saved/domain/entities/saved.dart';
 import 'package:readin/features/saved/presentation/cubit/collections_cubit.dart';
 import 'package:readin/features/saved/presentation/cubit/saved_list_cubit.dart';
 import 'package:readin/features/saved/presentation/pages/saved_page.dart';
-import 'package:readin/features/saved/presentation/widgets/save_button.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/shared/rdoc/rdoc_document.dart';
 
 import '../helpers/fixtures.dart';
 import '../helpers/path_fakes.dart';
+import '../helpers/post_card_fixtures.dart';
 import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
 
@@ -69,8 +70,14 @@ class MockSettingsCubit extends MockCubit<AppSettings> implements SettingsCubit 
 
 /// Reactions, follow and Saved (wave 1: F10, F12, F13) in ar/en × light/dark (SPEC §8.2).
 void main() {
-  setUp(() => HomeView.clock = () => DateTime(2026, 11, 2, 9));
-  tearDown(() => HomeView.clock = DateTime.now);
+  setUp(() {
+    HomeView.clock = () => DateTime(2026, 11, 2, 9);
+    CommentClock.now = () => DateTime.utc(2026, 11, 2, 12); // post cards: "3 days ago"
+  });
+  tearDown(() {
+    HomeView.clock = DateTime.now;
+    CommentClock.now = DateTime.now;
+  });
 
   String languageOf(Variant variant) => variant.locale.languageCode == 'en' ? 'en' : 'ar-EG';
 
@@ -353,29 +360,39 @@ void main() {
       await expectLater(find.byType(ArticleView), matchesVariantGolden(variant, 'goldens/reader_deleted_author_${variant.name}.png'));
     });
 
+    // Both are post cards since F34 (Today's article was the hero card, the feed card the compact row).
     testWidgets("today's article and a feed card by a deleted user ${variant.name}", (tester) async {
       await pump(
         tester,
         variant,
         Scaffold(
           body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Builder(
+              builder: (context) => ListView(
+                padding: const EdgeInsets.symmetric(vertical: postCardGap),
                 children: [
-                  TodayHeroCard(article: sampleCard(0, language: language, authorDeleted: true), onTap: () {}),
-                  const SizedBox(height: 16),
-                  Builder(builder: (context) {
-                    final card = engagedCard(1, language: language, authorDeleted: true);
-                    return ArticleCardTile(article: card, onTap: () {}, actions: [SaveToggleButton(article: card)]);
-                  }),
+                  PostCard(
+                    label: context.l10n.todayArticle,
+                    article: postCard(0, language: language, authorDeleted: true, cover: false, tags: const [], tagCount: 0),
+                  ),
+                  const SizedBox(height: postCardGap),
+                  PostCard(
+                    article: postCard(
+                      1,
+                      language: language,
+                      authorDeleted: true,
+                      cover: false,
+                      reactions: const ReactionCounts(insightful: 12, love: 3, fire: 1),
+                      reactionCount: 16,
+                      commentCount: 4,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
         ),
-        size: const Size(390, 560),
+        size: const Size(390, 760),
       );
       await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/feed_cards_deleted_author_${variant.name}.png'));
     });

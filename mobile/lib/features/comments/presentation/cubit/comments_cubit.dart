@@ -13,6 +13,7 @@ import '../../../article/domain/entities/article.dart';
 import '../../domain/entities/comment.dart';
 import '../../domain/entities/comment_text.dart';
 import '../../domain/usecases/comment_usecases.dart';
+import 'comment_drafts.dart';
 
 enum CommentsStatus { loading, ready, failure }
 
@@ -200,6 +201,7 @@ class CommentsCubit extends Cubit<CommentsState> {
     this._moderate,
     this._realtime, {
     @ignoreParam DateTime Function()? clock,
+    this._drafts,
   })  : _clock = clock ?? DateTime.now,
         super(const CommentsState());
 
@@ -212,6 +214,7 @@ class CommentsCubit extends Cubit<CommentsState> {
   final ModerateComment _moderate;
   final RealtimeService _realtime;
   final DateTime Function() _clock;
+  final CommentDrafts? _drafts;
 
   /// How long a comment that arrived live stays highlighted.
   static const highlightFor = Duration(seconds: 2);
@@ -340,6 +343,14 @@ class CommentsCubit extends Cubit<CommentsState> {
   }
 
   // ── Composer ─────────────────────────────────────────────────────
+
+  /// The viewer's unsent comment on this article, kept while the sheet was closed (F34).
+  String get draft => _articleId == null ? '' : _drafts?.of(_articleId!) ?? '';
+
+  /// Keeps the composer's text for the next time the sheet opens; blank text forgets it.
+  void saveDraft(String text) {
+    if (_articleId case final articleId?) _drafts?.put(articleId, text);
+  }
 
   void startReply(Comment comment) => emit(state.copyWith(target: () => ComposerTarget.reply(comment)));
 

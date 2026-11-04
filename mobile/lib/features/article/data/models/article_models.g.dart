@@ -91,6 +91,13 @@ _ArticleCardModel _$ArticleCardModelFromJson(Map<String, dynamic> json) =>
       saveCount: (json['saveCount'] as num?)?.toInt() ?? 0,
       myReaction: json['myReaction'] as String?,
       isSaved: json['isSaved'] as bool? ?? false,
+      excerpt: json['excerpt'] as String?,
+      hasMore: json['hasMore'] as bool? ?? false,
+      isFollowingAuthor: json['isFollowingAuthor'] as bool? ?? false,
+      tags:
+          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+          const <String>[],
+      tagCount: (json['tagCount'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
@@ -114,7 +121,30 @@ Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
       'saveCount': instance.saveCount,
       'myReaction': ?instance.myReaction,
       'isSaved': instance.isSaved,
+      'excerpt': ?instance.excerpt,
+      'hasMore': instance.hasMore,
+      'isFollowingAuthor': instance.isFollowingAuthor,
+      'tags': instance.tags,
+      'tagCount': instance.tagCount,
     };
+
+_ArticlePreviewModel _$ArticlePreviewModelFromJson(Map<String, dynamic> json) =>
+    _ArticlePreviewModel(
+      id: json['id'] as String,
+      language: json['language'] as String,
+      content:
+          json['content'] as Map<String, dynamic>? ?? const <String, dynamic>{},
+      isComplete: json['isComplete'] as bool? ?? false,
+    );
+
+Map<String, dynamic> _$ArticlePreviewModelToJson(
+  _ArticlePreviewModel instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'language': instance.language,
+  'content': instance.content,
+  'isComplete': instance.isComplete,
+};
 
 _ArticleCardPageModel _$ArticleCardPageModelFromJson(
   Map<String, dynamic> json,

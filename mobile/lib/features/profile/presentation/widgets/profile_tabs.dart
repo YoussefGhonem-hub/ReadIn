@@ -14,10 +14,9 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/field_style.dart';
 import '../../../../shared/widgets/state_views.dart';
-import '../../../article/domain/entities/article.dart';
-import '../../../article/presentation/cubit/engagement_cubit.dart';
-import '../../../article/presentation/widgets/article_card_tile.dart';
+import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
+import '../../../article/presentation/widgets/post_card.dart';
 import '../../../home/presentation/cubit/feed_cubit.dart';
 import '../../../paths/domain/entities/learning_path.dart';
 import '../../../paths/presentation/cubit/path_list_cubit.dart';
@@ -25,7 +24,6 @@ import '../../../paths/presentation/pages/paths_page.dart';
 import '../../../paths/presentation/path_routes.dart';
 import '../../../reading/presentation/widgets/reading_heatmap.dart';
 import '../../../reading/presentation/widgets/reading_stats_card.dart';
-import '../../../saved/presentation/widgets/save_button.dart';
 import '../../domain/entities/profile.dart';
 import '../cubit/profile_articles_cubit.dart';
 import '../cubit/profile_cubit.dart';
@@ -35,8 +33,6 @@ import 'public_reading_stats_switch.dart';
 /// The first sliver of every tab: room for the pinned tab bar of the profile's [NestedScrollView].
 Widget profileTabOverlap(BuildContext context) =>
     SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context));
-
-const _gutter = EdgeInsets.symmetric(horizontal: ReadInSpace.s5);
 
 // ── Articles ────────────────────────────────────────────────────────────────
 
@@ -57,8 +53,10 @@ class _ProfileArticlesTabState extends State<ProfileArticlesTab> with AutomaticK
   @override
   bool get wantKeepAlive => true;
 
+  /// Pull to refresh: the cards show collapsed again (F34).
   Future<void> _refresh() async {
     final profile = context.read<ProfileCubit?>();
+    context.read<PostCardsCubit?>()?.reset();
     await Future.wait([context.read<ProfileArticlesCubit>().refresh(), ?profile?.refresh()]);
   }
 
@@ -82,20 +80,25 @@ class _ProfileArticlesTabState extends State<ProfileArticlesTab> with AutomaticK
               slivers: [
                 profileTabOverlap(context),
                 ...switch (feed.status) {
-                  FeedStatus.loading => [const SliverPadding(padding: _gutter, sliver: SliverToBoxAdapter(child: ArticleListSkeleton()))],
+                  FeedStatus.loading => [
+                      SliverList.list(children: [
+                        for (var i = 0; i < 3; i++) const Padding(padding: EdgeInsets.only(bottom: postCardGap), child: PostCardSkeleton()),
+                      ]),
+                    ],
                   FeedStatus.failure => [
                       SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: feed.failure!, onRetry: cubit.load)),
                     ],
                   FeedStatus.ready when feed.items.isEmpty => [
                       SliverFillRemaining(hasScrollBody: false, child: _ArticlesEmpty(profile: widget.profile, onWrite: widget.onWrite)),
                     ],
+                  // Post cards full width, one after another on the background (F34).
                   FeedStatus.ready => [
                       SliverPadding(
-                        padding: _gutter,
+                        padding: const EdgeInsets.only(top: postCardGap),
                         sliver: SliverList.builder(
                           itemCount: feed.items.length + 1,
                           itemBuilder: (context, i) => i < feed.items.length
-                              ? _ProfileArticleTile(article: feed.items[i])
+                              ? Padding(padding: const EdgeInsets.only(bottom: postCardGap), child: PostCard(article: feed.items[i]))
                               : _ListFooter(loadingMore: feed.loadingMore, failure: feed.loadMoreFailure, onRetry: cubit.loadMore),
                         ),
                       ),
@@ -106,23 +109,6 @@ class _ProfileArticlesTabState extends State<ProfileArticlesTab> with AutomaticK
           ),
         ),
       ),
-    );
-  }
-}
-
-/// A card with the newest counters and the viewer's save (F13).
-class _ProfileArticleTile extends StatelessWidget {
-  const _ProfileArticleTile({required this.article});
-
-  final ArticleCard article;
-
-  @override
-  Widget build(BuildContext context) {
-    final engagement = context.select((EngagementCubit c) => c.state.of(article));
-    return ArticleCardTile(
-      article: engagement.applyTo(article),
-      onTap: () => context.push('/a/${article.slug}'),
-      actions: [SaveToggleButton(article: article)],
     );
   }
 }

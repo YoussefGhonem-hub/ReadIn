@@ -18,8 +18,10 @@ import 'package:readin/features/article/domain/repositories/article_repository.d
 import 'package:readin/features/article/domain/usecases/get_related_articles.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/article/presentation/cubit/related_articles_cubit.dart';
+import 'package:readin/features/article/presentation/widgets/post_card.dart';
 import 'package:readin/features/article/presentation/widgets/related_articles_section.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
+import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart';
 import 'package:readin/features/saved/domain/usecases/saved_usecases.dart';
 import 'package:readin/features/saved/presentation/widgets/save_button.dart';
@@ -118,6 +120,12 @@ void main() {
 
     tearDown(() => engagement.close());
 
+    MockFollowsCubit follows() {
+      final cubit = MockFollowsCubit();
+      whenListen(cubit, const Stream<FollowsState>.empty(), initialState: const FollowsState());
+      return cubit;
+    }
+
     MockSessionCubit session() {
       final cubit = MockSessionCubit();
       whenListen(cubit, const Stream<SessionState>.empty(), initialState: const SessionState(status: SessionStatus.authenticated, me: sampleMe));
@@ -138,6 +146,7 @@ void main() {
           providers: [
             BlocProvider<SessionCubit>.value(value: session()),
             BlocProvider<EngagementCubit>.value(value: engagement),
+            BlocProvider<FollowsCubit>.value(value: follows()),
           ],
           child: Scaffold(body: section(article)),
         ),
@@ -146,11 +155,13 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('shows "Related articles" and the compact cards with a save button each', (tester) async {
+    // Post cards again since F34 (they were compact rows, fa3169d).
+    testWidgets('shows "Related articles" and the post cards with a save button each', (tester) async {
       when(() => repository.getRelated('art-1', language: 'en', limit: 4)).thenAnswer((_) async => Ok(related));
       await pump(tester, engagedCard(1, language: 'en'));
 
       expect(find.text('Related articles'), findsOneWidget);
+      expect(find.byType(PostCard), findsNWidgets(4));
       expect(find.byType(SaveToggleButton), findsNWidgets(4));
       // The cards' counters and saves now live in the shared engagement state (F10, F13).
       expect(engagement.state.overlays.keys, containsAll(['art-2', 'art-3', 'art-4', 'art-5']));
@@ -191,6 +202,7 @@ void main() {
               providers: [
                 BlocProvider<SessionCubit>.value(value: session()),
                 BlocProvider<EngagementCubit>.value(value: engagement),
+                BlocProvider<FollowsCubit>.value(value: follows()),
               ],
               child: Scaffold(body: section(engagedCard(1, language: 'en'))),
             ),
@@ -215,6 +227,9 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
+      // Post cards are taller than the old rows: bring its title (which opens the reader) on screen first.
+      await tester.ensureVisible(find.textContaining('Transient'));
+      await tester.pumpAndSettle();
       await tester.tap(find.textContaining('Transient'));
       await tester.pumpAndSettle();
       expect(opened, ['article-5']);

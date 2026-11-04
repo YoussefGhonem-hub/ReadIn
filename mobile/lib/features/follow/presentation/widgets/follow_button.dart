@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
+import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
@@ -11,7 +12,14 @@ import '../cubit/follows_cubit.dart';
 /// Follow / Following for one writer (F12). Hidden on the viewer's own profile and articles; guests see "Follow" and
 /// get the sign-in prompt. Applies at once and rolls back on failure.
 class FollowButton extends StatelessWidget {
-  const FollowButton({super.key, required this.userId, required this.name, this.initiallyFollowing = false, this.dense = false});
+  const FollowButton({
+    super.key,
+    required this.userId,
+    required this.name,
+    this.initiallyFollowing = false,
+    this.dense = false,
+    this.text = false,
+  });
 
   final String userId;
 
@@ -21,6 +29,9 @@ class FollowButton extends StatelessWidget {
   /// What the screen loaded (`isFollowingAuthor`, `UserSummaryDto.isFollowing`) until the store knows better.
   final bool initiallyFollowing;
   final bool dense;
+
+  /// A text button with no fill (the post card's header, F34).
+  final bool text;
 
   Future<void> _toggle(BuildContext context) async {
     if (!requireAccount(context)) return;
@@ -40,6 +51,7 @@ class FollowButton extends StatelessWidget {
       pending: pending,
       name: name,
       dense: dense,
+      text: text,
       onPressed: () => _toggle(context),
     );
   }
@@ -55,12 +67,16 @@ class FollowButtonView extends StatelessWidget {
     required this.onPressed,
     this.pending = false,
     this.dense = false,
+    this.text = false,
   });
 
   final bool following;
   final bool pending;
   final String name;
   final bool dense;
+
+  /// "+ Follow" / "✓ Following" as a text button in the primary color (the post card's header, F34).
+  final bool text;
   final VoidCallback onPressed;
 
   @override
@@ -76,7 +92,20 @@ class FollowButtonView extends StatelessWidget {
       toggled: following,
       label: following ? l10n.unfollowName(name) : l10n.followName(name),
       excludeSemantics: true,
-      child: following
+      child: text
+          ? TextButton.icon(
+              onPressed: onTap,
+              icon: Icon(following ? Icons.check_rounded : Icons.add_rounded, size: 18),
+              label: label,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2),
+                minimumSize: const Size(48, 44),
+                foregroundColor: following ? colors.textSecondary : colors.primary,
+                disabledForegroundColor: colors.textSecondary,
+                textStyle: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            )
+          : following
           ? OutlinedButton.icon(
               onPressed: onTap,
               icon: const Icon(Icons.check_rounded, size: 18),

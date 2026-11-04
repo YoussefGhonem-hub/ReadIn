@@ -840,7 +840,7 @@ as int,
 /// @nodoc
 mixin _$ArticleCardModel {
 
- String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel? get author; int get readingTimeMinutes; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; int get saveCount; String? get myReaction; bool get isSaved;
+ String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel? get author; int get readingTimeMinutes; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; int get saveCount; String? get myReaction; bool get isSaved; String? get excerpt; bool get hasMore; bool get isFollowingAuthor; List<String> get tags; int get tagCount;
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -853,16 +853,16 @@ $ArticleCardModelCopyWith<ArticleCardModel> get copyWith => _$ArticleCardModelCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleCardModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleCardModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&(identical(other.excerpt, excerpt) || other.excerpt == excerpt)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.tagCount, tagCount) || other.tagCount == tagCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,saveCount,myReaction,isSaved]);
+int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,saveCount,myReaction,isSaved,excerpt,hasMore,isFollowingAuthor,const DeepCollectionEquality().hash(tags),tagCount]);
 
 @override
 String toString() {
-  return 'ArticleCardModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, saveCount: $saveCount, myReaction: $myReaction, isSaved: $isSaved)';
+  return 'ArticleCardModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, saveCount: $saveCount, myReaction: $myReaction, isSaved: $isSaved, excerpt: $excerpt, hasMore: $hasMore, isFollowingAuthor: $isFollowingAuthor, tags: $tags, tagCount: $tagCount)';
 }
 
 
@@ -873,7 +873,7 @@ abstract mixin class $ArticleCardModelCopyWith<$Res>  {
   factory $ArticleCardModelCopyWith(ArticleCardModel value, $Res Function(ArticleCardModel) _then) = _$ArticleCardModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved, String? excerpt, bool hasMore, bool isFollowingAuthor, List<String> tags, int tagCount
 });
 
 
@@ -890,7 +890,7 @@ class _$ArticleCardModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,Object? excerpt = freezed,Object? hasMore = null,Object? isFollowingAuthor = null,Object? tags = null,Object? tagCount = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -911,7 +911,12 @@ as ArticleAttachmentsModel?,reactions: freezed == reactions ? _self.reactions : 
 as ReactionCountsModel?,saveCount: null == saveCount ? _self.saveCount : saveCount // ignore: cast_nullable_to_non_nullable
 as int,myReaction: freezed == myReaction ? _self.myReaction : myReaction // ignore: cast_nullable_to_non_nullable
 as String?,isSaved: null == isSaved ? _self.isSaved : isSaved // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,excerpt: freezed == excerpt ? _self.excerpt : excerpt // ignore: cast_nullable_to_non_nullable
+as String?,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
+as bool,isFollowingAuthor: null == isFollowingAuthor ? _self.isFollowingAuthor : isFollowingAuthor // ignore: cast_nullable_to_non_nullable
+as bool,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
+as List<String>,tagCount: null == tagCount ? _self.tagCount : tagCount // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 /// Create a copy of ArticleCardModel
@@ -1041,10 +1046,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor,  List<String> tags,  int tagCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ArticleCardModel() when $default != null:
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount);case _:
   return orElse();
 
 }
@@ -1062,10 +1067,10 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor,  List<String> tags,  int tagCount)  $default,) {final _that = this;
 switch (_that) {
 case _ArticleCardModel():
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1082,10 +1087,10 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor,  List<String> tags,  int tagCount)?  $default,) {final _that = this;
 switch (_that) {
 case _ArticleCardModel() when $default != null:
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount);case _:
   return null;
 
 }
@@ -1097,7 +1102,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 @JsonSerializable()
 
 class _ArticleCardModel extends ArticleCardModel {
-  const _ArticleCardModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.saveCount = 0, this.myReaction, this.isSaved = false}): super._();
+  const _ArticleCardModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.saveCount = 0, this.myReaction, this.isSaved = false, this.excerpt, this.hasMore = false, this.isFollowingAuthor = false, final  List<String> tags = const <String>[], this.tagCount = 0}): _tags = tags,super._();
   factory _ArticleCardModel.fromJson(Map<String, dynamic> json) => _$ArticleCardModelFromJson(json);
 
 @override final  String id;
@@ -1119,6 +1124,17 @@ class _ArticleCardModel extends ArticleCardModel {
 @override@JsonKey() final  int saveCount;
 @override final  String? myReaction;
 @override@JsonKey() final  bool isSaved;
+@override final  String? excerpt;
+@override@JsonKey() final  bool hasMore;
+@override@JsonKey() final  bool isFollowingAuthor;
+ final  List<String> _tags;
+@override@JsonKey() List<String> get tags {
+  if (_tags is EqualUnmodifiableListView) return _tags;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_tags);
+}
+
+@override@JsonKey() final  int tagCount;
 
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
@@ -1133,16 +1149,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleCardModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleCardModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&(identical(other.excerpt, excerpt) || other.excerpt == excerpt)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.tagCount, tagCount) || other.tagCount == tagCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,saveCount,myReaction,isSaved]);
+int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,saveCount,myReaction,isSaved,excerpt,hasMore,isFollowingAuthor,const DeepCollectionEquality().hash(_tags),tagCount]);
 
 @override
 String toString() {
-  return 'ArticleCardModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, saveCount: $saveCount, myReaction: $myReaction, isSaved: $isSaved)';
+  return 'ArticleCardModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, saveCount: $saveCount, myReaction: $myReaction, isSaved: $isSaved, excerpt: $excerpt, hasMore: $hasMore, isFollowingAuthor: $isFollowingAuthor, tags: $tags, tagCount: $tagCount)';
 }
 
 
@@ -1153,7 +1169,7 @@ abstract mixin class _$ArticleCardModelCopyWith<$Res> implements $ArticleCardMod
   factory _$ArticleCardModelCopyWith(_ArticleCardModel value, $Res Function(_ArticleCardModel) _then) = __$ArticleCardModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved, String? excerpt, bool hasMore, bool isFollowingAuthor, List<String> tags, int tagCount
 });
 
 
@@ -1170,7 +1186,7 @@ class __$ArticleCardModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,Object? excerpt = freezed,Object? hasMore = null,Object? isFollowingAuthor = null,Object? tags = null,Object? tagCount = null,}) {
   return _then(_ArticleCardModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -1191,7 +1207,12 @@ as ArticleAttachmentsModel?,reactions: freezed == reactions ? _self.reactions : 
 as ReactionCountsModel?,saveCount: null == saveCount ? _self.saveCount : saveCount // ignore: cast_nullable_to_non_nullable
 as int,myReaction: freezed == myReaction ? _self.myReaction : myReaction // ignore: cast_nullable_to_non_nullable
 as String?,isSaved: null == isSaved ? _self.isSaved : isSaved // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,excerpt: freezed == excerpt ? _self.excerpt : excerpt // ignore: cast_nullable_to_non_nullable
+as String?,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
+as bool,isFollowingAuthor: null == isFollowingAuthor ? _self.isFollowingAuthor : isFollowingAuthor // ignore: cast_nullable_to_non_nullable
+as bool,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
+as List<String>,tagCount: null == tagCount ? _self.tagCount : tagCount // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -1241,6 +1262,284 @@ $ReactionCountsModelCopyWith<$Res>? get reactions {
     return _then(_self.copyWith(reactions: value));
   });
 }
+}
+
+
+/// @nodoc
+mixin _$ArticlePreviewModel {
+
+ String get id; String get language; Map<String, dynamic> get content; bool get isComplete;
+/// Create a copy of ArticlePreviewModel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ArticlePreviewModelCopyWith<ArticlePreviewModel> get copyWith => _$ArticlePreviewModelCopyWithImpl<ArticlePreviewModel>(this as ArticlePreviewModel, _$identity);
+
+  /// Serializes this ArticlePreviewModel to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticlePreviewModel&&(identical(other.id, id) || other.id == id)&&(identical(other.language, language) || other.language == language)&&const DeepCollectionEquality().equals(other.content, content)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,language,const DeepCollectionEquality().hash(content),isComplete);
+
+@override
+String toString() {
+  return 'ArticlePreviewModel(id: $id, language: $language, content: $content, isComplete: $isComplete)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ArticlePreviewModelCopyWith<$Res>  {
+  factory $ArticlePreviewModelCopyWith(ArticlePreviewModel value, $Res Function(ArticlePreviewModel) _then) = _$ArticlePreviewModelCopyWithImpl;
+@useResult
+$Res call({
+ String id, String language, Map<String, dynamic> content, bool isComplete
+});
+
+
+
+
+}
+/// @nodoc
+class _$ArticlePreviewModelCopyWithImpl<$Res>
+    implements $ArticlePreviewModelCopyWith<$Res> {
+  _$ArticlePreviewModelCopyWithImpl(this._self, this._then);
+
+  final ArticlePreviewModel _self;
+  final $Res Function(ArticlePreviewModel) _then;
+
+/// Create a copy of ArticlePreviewModel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? language = null,Object? content = null,Object? isComplete = null,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
+as String,content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,isComplete: null == isComplete ? _self.isComplete : isComplete // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ArticlePreviewModel].
+extension ArticlePreviewModelPatterns on ArticlePreviewModel {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ArticlePreviewModel value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ArticlePreviewModel() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ArticlePreviewModel value)  $default,){
+final _that = this;
+switch (_that) {
+case _ArticlePreviewModel():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ArticlePreviewModel value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ArticlePreviewModel() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String language,  Map<String, dynamic> content,  bool isComplete)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ArticlePreviewModel() when $default != null:
+return $default(_that.id,_that.language,_that.content,_that.isComplete);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String language,  Map<String, dynamic> content,  bool isComplete)  $default,) {final _that = this;
+switch (_that) {
+case _ArticlePreviewModel():
+return $default(_that.id,_that.language,_that.content,_that.isComplete);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String language,  Map<String, dynamic> content,  bool isComplete)?  $default,) {final _that = this;
+switch (_that) {
+case _ArticlePreviewModel() when $default != null:
+return $default(_that.id,_that.language,_that.content,_that.isComplete);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ArticlePreviewModel extends ArticlePreviewModel {
+  const _ArticlePreviewModel({required this.id, required this.language, final  Map<String, dynamic> content = const <String, dynamic>{}, this.isComplete = false}): _content = content,super._();
+  factory _ArticlePreviewModel.fromJson(Map<String, dynamic> json) => _$ArticlePreviewModelFromJson(json);
+
+@override final  String id;
+@override final  String language;
+ final  Map<String, dynamic> _content;
+@override@JsonKey() Map<String, dynamic> get content {
+  if (_content is EqualUnmodifiableMapView) return _content;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_content);
+}
+
+@override@JsonKey() final  bool isComplete;
+
+/// Create a copy of ArticlePreviewModel
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ArticlePreviewModelCopyWith<_ArticlePreviewModel> get copyWith => __$ArticlePreviewModelCopyWithImpl<_ArticlePreviewModel>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ArticlePreviewModelToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticlePreviewModel&&(identical(other.id, id) || other.id == id)&&(identical(other.language, language) || other.language == language)&&const DeepCollectionEquality().equals(other._content, _content)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,language,const DeepCollectionEquality().hash(_content),isComplete);
+
+@override
+String toString() {
+  return 'ArticlePreviewModel(id: $id, language: $language, content: $content, isComplete: $isComplete)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ArticlePreviewModelCopyWith<$Res> implements $ArticlePreviewModelCopyWith<$Res> {
+  factory _$ArticlePreviewModelCopyWith(_ArticlePreviewModel value, $Res Function(_ArticlePreviewModel) _then) = __$ArticlePreviewModelCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String language, Map<String, dynamic> content, bool isComplete
+});
+
+
+
+
+}
+/// @nodoc
+class __$ArticlePreviewModelCopyWithImpl<$Res>
+    implements _$ArticlePreviewModelCopyWith<$Res> {
+  __$ArticlePreviewModelCopyWithImpl(this._self, this._then);
+
+  final _ArticlePreviewModel _self;
+  final $Res Function(_ArticlePreviewModel) _then;
+
+/// Create a copy of ArticlePreviewModel
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? language = null,Object? content = null,Object? isComplete = null,}) {
+  return _then(_ArticlePreviewModel(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
+as String,content: null == content ? _self._content : content // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,isComplete: null == isComplete ? _self.isComplete : isComplete // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
 }
 
 

@@ -5,12 +5,15 @@ import 'package:readin/core/l10n/formatters.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/presentation/widgets/article_card_tile.dart';
+import 'package:readin/features/article/presentation/widgets/post_card.dart';
 import 'package:readin/features/article/presentation/widgets/reader_widgets.dart';
-import 'package:readin/features/home/presentation/widgets/today_hero_card.dart';
+import 'package:readin/features/follow/presentation/widgets/follow_button.dart';
+import 'package:readin/features/profile/presentation/widgets/profile_link.dart';
 import 'package:readin/shared/rdoc/rdoc_view.dart';
 import 'package:readin/shared/widgets/badges.dart';
 
 import '../../helpers/fixtures.dart';
+import '../../helpers/post_card_fixtures.dart';
 import '../../helpers/test_app.dart';
 
 void main() {
@@ -89,14 +92,18 @@ void main() {
       expect(opened, 1);
     });
 
-    testWidgets("today's article says it too, with the neutral avatar", (tester) async {
+    // Today's article is a post card under its label since F34 (it was the hero card).
+    testWidgets("today's article says it too, with the neutral avatar and no follow", (tester) async {
       await tester.pumpWidget(testApp(
-        Scaffold(body: TodayHeroCard(article: sampleCard(0, authorDeleted: true), onTap: () {})),
+        withCardStores(Scaffold(body: ListView(children: [PostCard(article: postCard(0, authorDeleted: true), label: 'مقال النهارده')]))),
         variant: ar,
       ));
 
+      expect(find.text('مقال النهارده'), findsOneWidget);
       expect(find.text('مستخدم محذوف'), findsOneWidget);
       expect(find.byType(GenericAvatar), findsOneWidget);
+      expect(find.byType(FollowButton), findsNothing);
+      expect(find.byType(ProfileLink), findsNothing, reason: 'no profile to open');
       expectNoAuthorLeft();
     });
   });

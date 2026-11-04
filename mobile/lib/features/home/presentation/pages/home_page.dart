@@ -13,8 +13,9 @@ import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/domain/entities/article.dart';
 import '../../../article/presentation/cubit/engagement_cubit.dart';
-import '../../../article/presentation/widgets/article_card_tile.dart';
+import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
+import '../../../article/presentation/widgets/post_card.dart';
 import '../../../auth/domain/entities/me.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
@@ -25,12 +26,10 @@ import '../../../notifications/presentation/cubit/unread_badge_cubit.dart';
 import '../../../paths/presentation/path_routes.dart';
 import '../../../paths/presentation/widgets/home_path_card.dart';
 import '../../../reading/presentation/widgets/home_streak_badge.dart';
-import '../../../saved/presentation/widgets/save_button.dart';
 import '../cubit/feed_cubit.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/live_feed_cubit.dart';
 import '../widgets/continue_reading_card.dart';
-import '../widgets/today_hero_card.dart';
 
 /// The two feeds of Home (F03): "For you" and "Following" (F12).
 enum HomeFeedTab { forYou, following }
@@ -48,6 +47,8 @@ class HomePage extends StatelessWidget {
           BlocProvider(create: (_) => getIt<FollowingFeedCubit>()),
           BlocProvider(create: (_) => getIt<SuggestedWritersCubit>()),
           BlocProvider(create: (_) => getIt<LiveFeedCubit>()..start()),
+          // The expanded post cards of every list on Home, kept while the reader or a profile is open (F34).
+          BlocProvider(create: (_) => getIt<PostCardsCubit>()),
           // App-wide: the notification center zeroes it (F17).
           BlocProvider.value(value: getIt<UnreadBadgeCubit>()),
         ],
@@ -119,10 +120,14 @@ class _HomeViewState extends State<HomeView> {
     unawaited(context.read<FollowingFeedCubit>().load());
   }
 
-  Future<void> _refresh() => Future.wait([
-        context.read<HomeCubit>().load(refresh: true),
-        if (_tab == HomeFeedTab.forYou || _signedIn) _activeFeed.refresh(),
-      ]);
+  /// Pull to refresh: the cards show collapsed again (F34); unsent comments stay.
+  Future<void> _refresh() {
+    context.read<PostCardsCubit?>()?.reset();
+    return Future.wait([
+      context.read<HomeCubit>().load(refresh: true),
+      if (_tab == HomeFeedTab.forYou || _signedIn) _activeFeed.refresh(),
+    ]);
+  }
 
   static bool _sameInterests(Me? a, Me? b) =>
       a == null ||
@@ -195,15 +200,21 @@ class _HomeViewState extends State<HomeView> {
                             padding: EdgeInsets.fromLTRB(_gutter, ReadInSpace.s4, _gutter, ReadInSpace.s4),
                             sliver: SliverToBoxAdapter(child: _HomeHeader()),
                           ),
-                          SliverPadding(
-                            padding: const EdgeInsets.symmetric(horizontal: _gutter),
-                            sliver: SliverToBoxAdapter(
+                          // Today's article (F07) as a post card under its label, full width (F34).
+                          SliverToBoxAdapter(
+                            child: EngagementSeeder<HomeCubit, HomeState>(
+                              cards: (state) => [?state.today],
                               child: BlocBuilder<HomeCubit, HomeState>(
+                                buildWhen: (a, b) => (a.loading, a.today) != (b.loading, b.today),
                                 builder: (context, state) {
-                                  if (state.loading) return const _HeroSkeleton();
+                                  if (state.loading) return const PostCardSkeleton();
                                   final today = state.today;
                                   if (today == null) return const SizedBox.shrink();
-                                  return TodayHeroCard(article: today, onTap: () => _open(today.slug));
+                                  return _LiveArticleTile(
+                                    article: today,
+                                    label: context.l10n.todayArticle,
+                                    onTap: () => _open(today.slug),
+                                  );
                                 },
                               ),
                             ),
@@ -384,12 +395,10 @@ class _ArticleFeedSliver<C extends ArticleFeedCubit> extends StatelessWidget {
   /// Centre [empty] in the space left (a message), or let it scroll at its own height (a list of suggestions).
   final bool emptyFillsRemaining;
 
-  static const _gutter = EdgeInsets.symmetric(horizontal: ReadInSpace.s5);
-
   @override
   Widget build(BuildContext context) => BlocBuilder<C, FeedState>(
         builder: (context, feed) => switch (feed.status) {
-          FeedStatus.loading => const SliverPadding(padding: _gutter, sliver: SliverToBoxAdapter(child: _FeedSkeleton())),
+          FeedStatus.loading => const SliverToBoxAdapter(child: _FeedSkeleton()),
           FeedStatus.failure => SliverFillRemaining(
               hasScrollBody: false,
               child: ErrorView(
@@ -401,14 +410,15 @@ class _ArticleFeedSliver<C extends ArticleFeedCubit> extends StatelessWidget {
           FeedStatus.ready when feed.items.isEmpty => emptyFillsRemaining
               ? SliverFillRemaining(hasScrollBody: false, child: empty)
               : SliverToBoxAdapter(child: empty),
-          FeedStatus.ready => SliverPadding(
-              padding: _gutter,
-              sliver: SliverList.builder(
-                itemCount: feed.items.length + 1,
-                itemBuilder: (context, i) => i < feed.items.length
-                    ? _LiveArticleTile(article: feed.items[i], onTap: () => onOpen(feed.items[i].slug))
-                    : _FeedFooter(state: feed, onRetry: context.read<C>().loadMore),
-              ),
+          // Post cards full width, one after another on the background (F34).
+          FeedStatus.ready => SliverList.builder(
+              itemCount: feed.items.length + 1,
+              itemBuilder: (context, i) => i < feed.items.length
+                  ? Padding(
+                      padding: const EdgeInsets.only(bottom: postCardGap),
+                      child: _LiveArticleTile(article: feed.items[i], onTap: () => onOpen(feed.items[i].slug)),
+                    )
+                  : _FeedFooter(state: feed, onRetry: context.read<C>().loadMore),
             ),
         },
       );
@@ -503,14 +513,17 @@ class _NewArticlesBanner extends StatelessWidget {
   }
 }
 
-/// A feed card with the newest counters and the viewer's save (F13), live while the list keeps it built (on or near
-/// the screen, F27). [LiveFeedCubit] owns the subscription; its values go to [EngagementCubit], where they replace
-/// the counts.
+/// A post card (F34) with the newest counters and the viewer's reaction and save, live while the list keeps it built
+/// (on or near the screen, F27). [LiveFeedCubit] owns the subscription; its values go to [EngagementCubit], where
+/// they replace the counts.
 class _LiveArticleTile extends StatefulWidget {
-  const _LiveArticleTile({required this.article, required this.onTap});
+  const _LiveArticleTile({required this.article, required this.onTap, this.label});
 
   final ArticleCard article;
   final VoidCallback onTap;
+
+  /// "مقال النهارده" on Today's article.
+  final String? label;
 
   @override
   State<_LiveArticleTile> createState() => _LiveArticleTileState();
@@ -544,15 +557,10 @@ class _LiveArticleTileState extends State<_LiveArticleTile> {
   @override
   Widget build(BuildContext context) {
     final id = widget.article.id;
-    final engagement = context.select((EngagementCubit c) => c.state.of(widget.article));
     return BlocListener<LiveFeedCubit, LiveFeedState>(
       listenWhen: (a, b) => b.counts[id] != null && !identical(a.counts[id], b.counts[id]),
       listener: (context, state) => context.read<EngagementCubit>().applyLive(id, state.counts[id]!),
-      child: ArticleCardTile(
-        article: engagement.applyTo(widget.article),
-        onTap: widget.onTap,
-        actions: [SaveToggleButton(article: widget.article)],
-      ),
+      child: PostCard(article: widget.article, label: widget.label, onOpen: widget.onTap),
     );
   }
 }
@@ -665,63 +673,13 @@ class _FeedFooter extends StatelessWidget {
   }
 }
 
-class _HeroSkeleton extends StatelessWidget {
-  const _HeroSkeleton();
-
-  @override
-  Widget build(BuildContext context) => const Card(
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SkeletonBox(height: 128, radius: 0),
-            Padding(
-              padding: EdgeInsets.all(ReadInSpace.s4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SkeletonBox(width: 120),
-                  SizedBox(height: ReadInSpace.s3),
-                  SkeletonBox(height: 18),
-                  SizedBox(height: ReadInSpace.s2),
-                  SkeletonBox(width: 200, height: 18),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-}
-
 class _FeedSkeleton extends StatelessWidget {
   const _FeedSkeleton();
 
   @override
   Widget build(BuildContext context) => Column(
         children: [
-          for (var i = 0; i < 4; i++)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: ReadInSpace.s3),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SkeletonBox(width: 64, height: 64, radius: ReadInRadius.md),
-                  SizedBox(width: ReadInSpace.s3),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SkeletonBox(width: 70),
-                        SizedBox(height: ReadInSpace.s2),
-                        SkeletonBox(),
-                        SizedBox(height: ReadInSpace.s2),
-                        SkeletonBox(width: 140),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          for (var i = 0; i < 3; i++) const Padding(padding: EdgeInsets.only(bottom: postCardGap), child: PostCardSkeleton()),
         ],
       );
 }

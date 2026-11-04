@@ -24,15 +24,16 @@ import '../cubit/mention_suggestions_cubit.dart';
 import 'comment_composer.dart';
 import 'comment_tile.dart';
 
-/// Opens an article's comments (F11) from the reader's action bar: a tall bottom sheet (drag the header down to
-/// close) with the list, the sort toggle and the composer. Live events (F27) are followed while it's open.
-Future<void> showCommentsSheet(
+/// Opens an article's comments (F11) from the reader's action bar or a post card (F34): a tall bottom sheet (drag the
+/// header down to close) with the list, the sort toggle and the composer. Live events (F27) are followed while it's
+/// open. Completes with why it closed when a link inside closed it (a profile), else null.
+Future<CommentsSheetExit?> showCommentsSheet(
   BuildContext context, {
   required ArticleCard article,
   CommentsCubit Function()? comments,
   MentionSuggestionsCubit Function()? mentions,
 }) =>
-    showModalBottomSheet<void>(
+    showModalBottomSheet<CommentsSheetExit>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

@@ -10,7 +10,14 @@ import 'social_fakes.dart';
 
 class MockCommentsRepository extends Mock implements CommentsRepository {}
 
-class MockCommentsCubit extends MockCubit<CommentsState> implements CommentsCubit {}
+class MockCommentsCubit extends MockCubit<CommentsState> implements CommentsCubit {
+  /// No unsent comment kept from an earlier sheet (F34); tests that need one stub [draft].
+  @override
+  String get draft => (super.noSuchMethod(Invocation.getter(#draft)) as String?) ?? '';
+
+  @override
+  void saveDraft(String text) => super.noSuchMethod(Invocation.method(#saveDraft, [text]));
+}
 
 class MockMentionSuggestionsCubit extends MockCubit<List<Author>> implements MentionSuggestionsCubit {}
 

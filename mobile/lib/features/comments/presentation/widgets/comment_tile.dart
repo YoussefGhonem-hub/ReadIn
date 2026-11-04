@@ -215,9 +215,17 @@ class _Avatar extends StatelessWidget {
   }
 }
 
+/// Why the comments sheet closed, when it wasn't the viewer closing it.
+enum CommentsSheetExit {
+  /// A profile opened from the comments: a post card opens them again once the viewer is back (F34).
+  openedProfile,
+}
+
 /// Comments open in a bottom sheet: close it first so the profile isn't pushed underneath, as "who reacted" does.
 void _closeSheet(BuildContext context) {
-  if (ModalRoute.of(context) is ModalBottomSheetRoute) unawaited(Navigator.of(context).maybePop());
+  if (ModalRoute.of(context) is ModalBottomSheetRoute) {
+    unawaited(Navigator.of(context).maybePop(CommentsSheetExit.openedProfile));
+  }
 }
 
 void _openProfile(BuildContext context, String username) {

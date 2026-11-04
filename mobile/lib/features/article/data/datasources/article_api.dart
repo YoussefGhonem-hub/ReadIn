@@ -18,4 +18,8 @@ abstract class ArticleApi {
   /// Cards for the end of the reader (F04). `lang` is the version being read.
   @GET('/articles/{id}/related')
   Future<List<ArticleCardModel>> getRelated(@Path('id') String id, @Query('lang') String? lang, @Query('limit') int limit);
+
+  /// The beginning of the article as RDoc, for "Read more" on a post card (F34). Anonymous allowed.
+  @GET('/articles/{id}/preview')
+  Future<ArticlePreviewModel> getPreview(@Path('id') String id, @Query('lang') String? lang);
 }

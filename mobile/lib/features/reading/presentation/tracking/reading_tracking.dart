@@ -12,6 +12,16 @@ import '../cubit/streak_cubit.dart';
 import '../widgets/milestone_sheet.dart';
 import 'reading_tracker.dart';
 
+/// A report the server accepted, in the reader or a post card (F34): a read it completed moves the streak (F08), and a
+/// milestone gets its celebration sheet over the screen of [target] (asked only then: the reader may be gone).
+void celebrateReading(ReadingProgressResult result, {StreakCubit? streak, required BuildContext? Function() target}) {
+  if (result.completedNow && result.streak != null) streak?.apply(result.streak!);
+  final milestone = result.milestone;
+  if (milestone == null) return;
+  final context = target();
+  if (context != null && context.mounted) unawaited(showMilestoneSheet(context, milestone));
+}
+
 /// Connects the article reader to a [ReadingTracker] (F04 "read" rule, F08): wrap the reader below its
 /// [ArticleCubit]. Tracking starts once the article is ready, reads the reader's vertical scroll from the scroll
 /// notifications that bubble up, counts pointer activity, follows the app lifecycle and whether another screen covers
@@ -73,14 +83,9 @@ class _ReadingTrackingState extends State<ReadingTracking> {
     )..start();
   }
 
-  void _onResult(ReadingProgressResult result) {
-    if (result.completedNow && result.streak != null) _streak.apply(result.streak!);
-    final milestone = result.milestone;
-    if (milestone == null) return;
-    // The final report is sent after the reader closed: celebrate over whatever screen is showing then.
-    final target = mounted ? context : _rootNavigator?.context;
-    if (target != null && target.mounted) unawaited(showMilestoneSheet(target, milestone));
-  }
+  // The final report is sent after the reader closed: celebrate over whatever screen is showing then.
+  void _onResult(ReadingProgressResult result) =>
+      celebrateReading(result, streak: _streak, target: () => mounted ? context : _rootNavigator?.context);
 
   bool _onNotification(Notification notification) {
     final metrics = switch (notification) {

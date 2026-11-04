@@ -32,7 +32,9 @@ class CommentComposer extends StatefulWidget {
 }
 
 class _CommentComposerState extends State<CommentComposer> {
-  late final _controller = TextEditingController(text: widget.initialText);
+  // The unsent text from the last time the sheet was open comes back (F34).
+  late final _controller =
+      TextEditingController(text: widget.initialText.isNotEmpty ? widget.initialText : context.read<CommentsCubit>().draft);
   final _focus = FocusNode();
   MentionQuery? _mention;
   String? _prefill;
@@ -51,6 +53,9 @@ class _CommentComposerState extends State<CommentComposer> {
   }
 
   void _onChanged() {
+    final cubit = context.read<CommentsCubit>();
+    // An edit's text is the comment's, and a reply's "@handle " alone isn't written yet: neither is an unsent comment.
+    if (!(cubit.state.target?.isEdit ?? false)) cubit.saveDraft(_controller.text == _prefill ? '' : _controller.text);
     final selection = _controller.selection;
     final mention = selection.isCollapsed ? CommentText.activeMention(_controller.text, selection.baseOffset) : null;
     if (mention != _mention) {
@@ -77,8 +82,9 @@ class _CommentComposerState extends State<CommentComposer> {
       // Replying to a reply mentions its author (the API joins the thread either way).
       final author = target.comment.author;
       final mention = target.comment.isReply && author != null && author.id != myId ? '@${author.username} ' : '';
-      if (_controller.text.isEmpty || _controller.text == _prefill) _setText(mention);
+      final replace = _controller.text.isEmpty || _controller.text == _prefill;
       _prefill = mention;
+      if (replace) _setText(mention);
     }
     _focus.requestFocus();
   }

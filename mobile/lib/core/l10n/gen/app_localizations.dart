@@ -6698,6 +6698,54 @@ abstract class AppLocalizations {
   /// **'Remove the dark mode version'**
   String get imageDarkRemove;
 
+  /// No description provided for @postReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more'**
+  String get postReadMore;
+
+  /// No description provided for @postShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get postShowLess;
+
+  /// No description provided for @postReadFullArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the full article'**
+  String get postReadFullArticle;
+
+  /// No description provided for @postReact.
+  ///
+  /// In en, this message translates to:
+  /// **'React'**
+  String get postReact;
+
+  /// No description provided for @postComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get postComment;
+
+  /// No description provided for @postOpenArticleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the article'**
+  String get postOpenArticleHint;
+
+  /// No description provided for @postCoverImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover image, opens it full screen'**
+  String get postCoverImage;
+
+  /// No description provided for @postMoreTags.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more tag} other{{count} more tags}}'**
+  String postMoreTags(int count);
+
   /// No description provided for @errInterestsUnknown.
   ///
   /// In en, this message translates to:

@@ -6,7 +6,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/core/theme/app_theme.dart';
-import 'package:readin/features/article/presentation/widgets/article_card_tile.dart';
+import 'package:readin/features/article/domain/entities/article.dart';
+import 'package:readin/features/article/presentation/widgets/post_card.dart';
 import 'package:readin/features/auth/presentation/cubit/complete_profile_cubit.dart' show UsernameStatus;
 import 'package:readin/features/auth/presentation/cubit/form_support.dart';
 import 'package:readin/features/auth/presentation/widgets/auth_widgets.dart';
@@ -25,6 +26,7 @@ import 'package:readin/features/profile/presentation/widgets/public_reading_stat
 import 'package:readin/features/reactions/presentation/widgets/who_reacted_sheet.dart';
 
 import '../../helpers/fixtures.dart';
+import '../../helpers/post_card_fixtures.dart';
 import '../../helpers/profile_fakes.dart';
 import '../../helpers/profile_fixtures.dart';
 import '../../helpers/social_fakes.dart';
@@ -44,13 +46,15 @@ void main() {
 
   group('ProfileView', () {
     testWidgets('own profile: edit, settings and the Saved tab; no follow button', (tester) async {
-      await pump(tester, [...appStores(), ...profileScreen(ownProfile, articles: [sampleCard(0)])], const ProfileView(isTab: true));
+      // Their own article, as a post card (F34): no Follow on it either.
+      const me = Author(id: 'u-1', displayName: 'Youssef Hassan', username: 'reader1');
+      await pump(tester, [...appStores(), ...profileScreen(ownProfile, articles: [postCard(0, author: me, cover: false)])], const ProfileView(isTab: true));
 
       expect(find.text(l10n.editProfile), findsOneWidget);
       expect(find.byTooltip(l10n.settings), findsOneWidget);
       expect(find.text(l10n.profileTabSaved), findsOneWidget);
       expect(find.byType(FollowButtonView), findsNothing);
-      expect(find.byType(ArticleCardTile), findsOneWidget);
+      expect(find.byType(PostCard), findsOneWidget);
       expect(find.text(l10n.followsYou), findsNothing);
     });
 

@@ -112,6 +112,72 @@ void main() {
     });
   });
 
+  group('post card fields (F34)', () {
+    test('a feed card carries its excerpt, hasMore, the follow and up to 3 of its tags', () {
+      final card = ArticleCardModel.fromJson({
+        ...detailsJson(2),
+        'excerpt': 'لو انت شغال بـ ASP.NET Core، أكيد شفت الـ DI في كل حتة.',
+        'hasMore': true,
+        'isFollowingAuthor': true,
+        'tags': ['dotnet', 'DI', 'ASP.NET Core'],
+        'tagCount': 5,
+      }).toEntity();
+      expect(card.excerpt, startsWith('لو انت شغال'));
+      expect(card.hasMore, isTrue);
+      expect(card.isFollowingAuthor, isTrue);
+      expect(card.tags, ['dotnet', 'DI', 'ASP.NET Core']);
+      expect(card.tagCount, 5);
+    });
+
+    test('an API without them still parses: no excerpt means "Read more" loads the beginning', () {
+      final card = ArticleCardModel.fromJson({...detailsJson(2)}..remove('isFollowingAuthor')).toEntity();
+      expect(card.excerpt, isNull);
+      expect(card.hasMore, isFalse);
+      expect(card.continuesAfterExcerpt, isTrue);
+      expect(card.isFollowingAuthor, isFalse);
+      expect(card.tags, isEmpty);
+      expect(card.tagCount, 0);
+    });
+
+    test('more than 3 tags keep the first 3; tagCount never says fewer than sent; a blank excerpt is none', () {
+      final card = ArticleCardModel.fromJson({
+        ...detailsJson(2),
+        'excerpt': '  ',
+        'tags': ['a', 'b', 'c', 'd'],
+        'tagCount': 0,
+      }).toEntity();
+      expect(card.tags, ['a', 'b', 'c']);
+      expect(card.tagCount, 4);
+      expect(card.excerpt, isNull);
+    });
+
+    test('engagement updates keep the post card fields', () {
+      final card = ArticleCardModel.fromJson({...detailsJson(2), 'excerpt': 'Short.', 'tags': ['dotnet'], 'tagCount': 1}).toEntity();
+      final updated = card.copyWithEngagement(commentCount: 9);
+      expect(updated.excerpt, 'Short.');
+      expect(updated.tags, ['dotnet']);
+      expect(updated.tagCount, 1);
+    });
+
+    test('the preview parses its RDoc and whether it is the whole article', () {
+      final preview = ArticlePreviewModel.fromJson({
+        'id': 'art-2',
+        'language': 'en',
+        'isComplete': true,
+        'content': {
+          'version': 1,
+          'language': 'en',
+          'blocks': [
+            {'type': 'paragraph', 'id': 'p1', 'content': [{'type': 'text', 'text': 'Hello'}]},
+          ],
+        },
+      }).toEntity();
+      expect(preview.language, 'en');
+      expect(preview.isComplete, isTrue);
+      expect(preview.content.blocks, hasLength(1));
+    });
+  });
+
   group('ReactionCounts', () {
     const counts = ReactionCounts(insightful: 2, love: 1);
 

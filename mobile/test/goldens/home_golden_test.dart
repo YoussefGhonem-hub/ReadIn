@@ -2,12 +2,15 @@
 library;
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/realtime/realtime_service.dart';
+import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
+import 'package:readin/features/comments/presentation/widgets/comment_body.dart';
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/features/follow/presentation/cubit/suggested_writers_cubit.dart';
 import 'package:readin/features/home/presentation/cubit/feed_cubit.dart';
@@ -19,9 +22,12 @@ import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart
 import 'package:readin/features/reading/domain/entities/reading.dart';
 import 'package:readin/features/reading/presentation/cubit/streak_cubit.dart';
 import 'package:readin/features/saved/domain/usecases/saved_usecases.dart';
+import 'package:readin/shared/widgets/app_network_image.dart';
 
+import '../helpers/fake_media.dart';
 import '../helpers/fixtures.dart';
 import '../helpers/path_fixtures.dart';
+import '../helpers/post_card_fixtures.dart';
 import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
 
@@ -41,8 +47,17 @@ class MockStreakCubit extends MockCubit<Streak?> implements StreakCubit {}
 
 /// Home ("النهارده") in the 4 mandatory variants: ar/en × light/dark (SPEC §8.2).
 void main() {
-  setUp(() => HomeView.clock = () => DateTime(2026, 11, 2, 9));
-  tearDown(() => HomeView.clock = DateTime.now);
+  setUpAll(FakeMedia.install);
+  setUp(() {
+    HomeView.clock = () => DateTime(2026, 11, 2, 9);
+    CommentClock.now = () => DateTime.utc(2026, 11, 2, 12); // post cards: "3 days ago"
+    AppNetworkImage.providerFactory = FakeImageProvider.new;
+  });
+  tearDown(() {
+    HomeView.clock = DateTime.now;
+    CommentClock.now = DateTime.now;
+    AppNetworkImage.providerFactory = NetworkImage.new;
+  });
 
   Future<EngagementCubit> pumpHome(
     WidgetTester tester,
@@ -59,12 +74,13 @@ void main() {
     final session = MockSessionCubit();
     final follows = MockFollowsCubit();
     final en = variant.locale.languageCode == 'en';
+    final language = en ? 'en' : 'ar-EG';
     // F03: Continue reading (the first item is the hero, so the second shows) and the learning path in progress.
     // Without them, the "explore paths" prompt.
     whenListen(home, const Stream<HomeState>.empty(),
         initialState: HomeState(
           loading: false,
-          today: sampleCard(1),
+          today: postCard(1, language: language, reactions: const ReactionCounts(insightful: 40, love: 6, fire: 3), reactionCount: 49, commentCount: 12),
           fields: sampleFields,
           continueReading: progressCards ? [sampleContinueReading(1), sampleContinueReading(2, percent: 64)] : const [],
           activePath: progressCards
@@ -74,7 +90,12 @@ void main() {
     whenListen(feed, const Stream<FeedState>.empty(),
         initialState: FeedState(
           status: FeedStatus.ready,
-          items: [sampleCard(2), sampleCard(3).copyWithEngagement(isSaved: true), sampleCard(4)],
+          // Post cards (F34): mixed text with images, a short one shown whole, then one by a writer the viewer follows.
+          items: [
+            attachmentsPostCard(language: language),
+            shortPostCard(language: language),
+            postCard(4, language: language, cover: false, isFollowingAuthor: true, isSaved: true),
+          ],
           nextCursor: 'c',
         ));
     whenListen(following, const Stream<FeedState>.empty(), initialState: const FeedState());
@@ -126,9 +147,9 @@ void main() {
   for (final variant in Variant.all) {
     testWidgets('home live ${variant.name}', (tester) async {
       final engagement = await pumpHome(tester, variant, live: const LiveFeedState(hasNewArticles: true), unread: 3);
-      // What the card's live subscription hands over once the feed is on screen.
+      // What the card's live subscription hands over once it is on screen: Today's article, the card in view (F34).
       engagement.applyLive(
-        sampleCard(2).id,
+        sampleCard(1).id,
         const LiveArticleCounts(reactions: {ReactionType.insightful: 40, ReactionType.love: 2}, commentCount: 12),
       );
       await tester.pump(); // delivers the new state

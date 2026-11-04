@@ -20,9 +20,12 @@ class ArticleShareButton extends StatelessWidget {
     return IconButton(
       tooltip: context.l10n.share,
       icon: const Icon(Icons.ios_share_rounded),
-      onPressed: a == null ? null : () => _share(a, _originOf(context)),
+      onPressed: a == null ? null : () => share(context, a),
     );
   }
+
+  /// Opens the share sheet for [article], anchored on [context]'s widget (the post card's "Share" too, F34).
+  static Future<void> share(BuildContext context, ArticleCard article) => _share(article, _originOf(context));
 
   static Future<void> _share(ArticleCard article, Rect? origin) async {
     try {

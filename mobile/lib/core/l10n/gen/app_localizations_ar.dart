@@ -4030,6 +4030,41 @@ class AppLocalizationsAr extends AppLocalizations {
   String get imageDarkRemove => 'شيل نسخة الوضع الغامق';
 
   @override
+  String get postReadMore => 'اقرأ المزيد';
+
+  @override
+  String get postShowLess => 'عرض أقل';
+
+  @override
+  String get postReadFullArticle => 'اقرأ المقال كله';
+
+  @override
+  String get postReact => 'تفاعل';
+
+  @override
+  String get postComment => 'تعليق';
+
+  @override
+  String get postOpenArticleHint => 'بيفتح المقال';
+
+  @override
+  String get postCoverImage => 'صورة الغلاف، بتفتحها بالحجم الكامل';
+
+  @override
+  String postMoreTags(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تاج كمان',
+      many: '$count تاج كمان',
+      few: '$count تاجز كمان',
+      two: 'تاجين كمان',
+      one: 'تاج كمان',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get errInterestsUnknown => 'فيه مجالات أو مواضيع مش موجودة.';
 
   @override

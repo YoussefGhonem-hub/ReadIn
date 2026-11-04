@@ -23,6 +23,8 @@ import '../../features/article/data/repositories/article_repository_impl.dart'
 import '../../features/article/domain/repositories/article_repository.dart'
     as _i904;
 import '../../features/article/domain/usecases/get_article.dart' as _i904;
+import '../../features/article/domain/usecases/get_article_preview.dart'
+    as _i563;
 import '../../features/article/domain/usecases/get_related_articles.dart'
     as _i938;
 import '../../features/article/presentation/cubit/article_cubit.dart' as _i284;
@@ -32,6 +34,8 @@ import '../../features/article/presentation/cubit/attachment_viewer_cubit.dart'
     as _i189;
 import '../../features/article/presentation/cubit/engagement_cubit.dart'
     as _i226;
+import '../../features/article/presentation/cubit/post_cards_cubit.dart'
+    as _i789;
 import '../../features/article/presentation/cubit/related_articles_cubit.dart'
     as _i692;
 import '../../features/auth/data/auth_module.dart' as _i360;
@@ -72,6 +76,8 @@ import '../../features/comments/data/repositories/comments_repository_impl.dart'
 import '../../features/comments/domain/repositories/comments_repository.dart'
     as _i670;
 import '../../features/comments/domain/usecases/comment_usecases.dart' as _i788;
+import '../../features/comments/presentation/cubit/comment_drafts.dart'
+    as _i539;
 import '../../features/comments/presentation/cubit/comments_cubit.dart'
     as _i921;
 import '../../features/comments/presentation/cubit/mention_suggestions_cubit.dart'
@@ -515,6 +521,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i904.GetArticle>(
       () => _i904.GetArticle(gh<_i904.ArticleRepository>()),
     );
+    gh.factory<_i563.GetArticlePreview>(
+      () => _i563.GetArticlePreview(gh<_i904.ArticleRepository>()),
+    );
     gh.factory<_i938.GetRelatedArticles>(
       () => _i938.GetRelatedArticles(gh<_i904.ArticleRepository>()),
     );
@@ -703,6 +712,22 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i866.SuggestTags>(
       () => _i866.SuggestTags(gh<_i413.ArticleEditorRepository>()),
     );
+    gh.factory<_i789.PostCardsCubit>(
+      () => _i789.PostCardsCubit(gh<_i563.GetArticlePreview>()),
+    );
+    gh.factory<_i921.CommentsCubit>(
+      () => _i921.CommentsCubit(
+        gh<_i788.GetComments>(),
+        gh<_i788.PostComment>(),
+        gh<_i788.EditComment>(),
+        gh<_i788.DeleteComment>(),
+        gh<_i788.SetCommentLiked>(),
+        gh<_i788.SetCommentPinned>(),
+        gh<_i788.ModerateComment>(),
+        gh<_i854.RealtimeService>(),
+        drafts: gh<_i539.CommentDrafts>(),
+      ),
+    );
     gh.factory<_i892.ReportReadingProgress>(
       () => _i892.ReportReadingProgress(gh<_i634.ReadingRepository>()),
     );
@@ -736,18 +761,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i924.SetPathEnrollment>(
       () => _i924.SetPathEnrollment(gh<_i755.PathsRepository>()),
-    );
-    gh.factory<_i921.CommentsCubit>(
-      () => _i921.CommentsCubit(
-        gh<_i788.GetComments>(),
-        gh<_i788.PostComment>(),
-        gh<_i788.EditComment>(),
-        gh<_i788.DeleteComment>(),
-        gh<_i788.SetCommentLiked>(),
-        gh<_i788.SetCommentPinned>(),
-        gh<_i788.ModerateComment>(),
-        gh<_i854.RealtimeService>(),
-      ),
     );
     gh.factory<_i360.MentionSuggestionsCubit>(
       () => _i360.MentionSuggestionsCubit(gh<_i788.SuggestMentions>()),
@@ -1226,6 +1239,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i295.WithdrawVerificationRequest>(),
         gh<_i371.SessionCubit>(),
       ),
+    );
+    gh.lazySingleton<_i539.CommentDrafts>(
+      () => _i539.CommentDrafts(gh<_i371.SessionCubit>()),
+      dispose: (i) => i.dispose(),
     );
     gh.factory<_i280.InterestsCubit>(
       () => _i280.InterestsCubit(

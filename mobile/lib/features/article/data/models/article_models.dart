@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../shared/rdoc/rdoc_document.dart';
@@ -60,8 +62,9 @@ abstract class ReactionCountsModel with _$ReactionCountsModel {
   ReactionCounts toEntity() => ReactionCounts(insightful: insightful, love: love, fire: fire, mindBlown: mindBlown);
 }
 
-/// `ArticleCardDto`. The wave 1 fields (`reactions`, `saveCount`, `myReaction`, `isSaved`) have defaults, so an API
-/// that doesn't send them yet still parses. `author` is null when the author deleted their account (SPEC §9.6).
+/// `ArticleCardDto`. The wave 1 fields (`reactions`, `saveCount`, `myReaction`, `isSaved`) and the post card's
+/// (`excerpt`, `hasMore`, `isFollowingAuthor`, `tags`, `tagCount`, F34) have defaults, so an API that doesn't send them
+/// yet still parses. `author` is null when the author deleted their account (SPEC §9.6).
 @freezed
 abstract class ArticleCardModel with _$ArticleCardModel {
   const ArticleCardModel._();
@@ -86,6 +89,11 @@ abstract class ArticleCardModel with _$ArticleCardModel {
     @Default(0) int saveCount,
     String? myReaction,
     @Default(false) bool isSaved,
+    String? excerpt,
+    @Default(false) bool hasMore,
+    @Default(false) bool isFollowingAuthor,
+    @Default(<String>[]) List<String> tags,
+    @Default(0) int tagCount,
   }) = _ArticleCardModel;
 
   factory ArticleCardModel.fromJson(Map<String, dynamic> json) => _$ArticleCardModelFromJson(json);
@@ -110,6 +118,33 @@ abstract class ArticleCardModel with _$ArticleCardModel {
         saveCount: saveCount,
         myReaction: reactionTypeFromWire(myReaction),
         isSaved: isSaved,
+        excerpt: excerpt == null || excerpt!.trim().isEmpty ? null : excerpt,
+        hasMore: hasMore,
+        isFollowingAuthor: isFollowingAuthor,
+        tags: tags.take(ArticleCard.maxCardTags).toList(),
+        tagCount: math.max(tagCount, tags.length),
+      );
+}
+
+/// `ArticlePreviewDto` (F34): `content` stays raw JSON here and is parsed into [RDocDocument] for the entity.
+@freezed
+abstract class ArticlePreviewModel with _$ArticlePreviewModel {
+  const ArticlePreviewModel._();
+
+  const factory ArticlePreviewModel({
+    required String id,
+    required String language,
+    @Default(<String, dynamic>{}) Map<String, dynamic> content,
+    @Default(false) bool isComplete,
+  }) = _ArticlePreviewModel;
+
+  factory ArticlePreviewModel.fromJson(Map<String, dynamic> json) => _$ArticlePreviewModelFromJson(json);
+
+  ArticlePreview toEntity() => ArticlePreview(
+        id: id,
+        language: language,
+        content: content.isEmpty ? RDocDocument.empty : RDocDocument.fromJson(content),
+        isComplete: isComplete,
       );
 }
 
@@ -223,6 +258,9 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         saveCount: saveCount,
         myReaction: reactionTypeFromWire(myReaction),
         isSaved: isSaved,
+        isFollowingAuthor: isFollowingAuthor,
+        tags: tags.take(ArticleCard.maxCardTags).toList(),
+        tagCount: tags.length,
       );
 
   ArticleDetails toEntity({bool offline = false}) => ArticleDetails(

@@ -3976,6 +3976,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get imageDarkRemove => 'Remove the dark mode version';
 
   @override
+  String get postReadMore => 'Read more';
+
+  @override
+  String get postShowLess => 'Show less';
+
+  @override
+  String get postReadFullArticle => 'Read the full article';
+
+  @override
+  String get postReact => 'React';
+
+  @override
+  String get postComment => 'Comment';
+
+  @override
+  String get postOpenArticleHint => 'Opens the article';
+
+  @override
+  String get postCoverImage => 'Cover image, opens it full screen';
+
+  @override
+  String postMoreTags(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more tags',
+      one: '1 more tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get errInterestsUnknown => 'Some fields or topics don\'t exist.';
 
   @override

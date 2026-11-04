@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/errors/failure.dart';
 import 'package:readin/features/article/data/datasources/article_api.dart';
+import 'package:readin/features/article/data/models/article_models.dart';
 import 'package:readin/features/article/data/repositories/article_repository_impl.dart';
 
 import '../../helpers/fake_auth.dart';
@@ -45,6 +46,22 @@ void main() {
     expect(article.isOfflineCopy, isTrue);
     expect(article.card.language, 'ar-EG', reason: 'the language kept on the device');
     expect(article.content.blocks, isNotEmpty);
+  });
+
+  test('the preview (F34) asks for the version the card shows; a hidden article is not found', () async {
+    when(() => api.getPreview('art-1', 'en')).thenAnswer(
+      (_) async => ArticlePreviewModel.fromJson({
+        'id': 'art-1',
+        'language': 'en',
+        'isComplete': false,
+        'content': {'version': 1, 'language': 'en', 'blocks': <Object>[]},
+      }),
+    );
+    final preview = (await repository.getPreview('art-1', language: 'en')).valueOrNull!;
+    expect((preview.id, preview.language, preview.isComplete), ('art-1', 'en', false));
+
+    when(() => api.getPreview('art-2', 'ar-EG')).thenThrow(httpError('/articles/art-2/preview', 404, code: 'article.not_found'));
+    expect((await repository.getPreview('art-2', language: 'ar-EG')).failureOrNull!.code, FailureCodes.articleNotFound);
   });
 
   test('offline without a copy, or any other error, stays a failure', () async {

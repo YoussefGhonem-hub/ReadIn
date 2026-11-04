@@ -58,7 +58,15 @@ class ArticleCard extends Equatable {
     this.saveCount = 0,
     this.myReaction,
     this.isSaved = false,
+    this.excerpt,
+    this.hasMore = false,
+    this.isFollowingAuthor = false,
+    this.tags = const [],
+    this.tagCount = 0,
   });
+
+  /// The post card shows this many tags, then "+N" (F34).
+  static const maxCardTags = 3;
 
   final String id;
   final String slug;
@@ -97,6 +105,25 @@ class ArticleCard extends Equatable {
   /// The viewer saved this article (F13); false for guests.
   final bool isSaved;
 
+  /// The beginning of the served version as plain text, at most 400 characters cut at a word (F34). Null only for an
+  /// article the server hasn't computed it for yet: the post card then shows the title alone.
+  final String? excerpt;
+
+  /// The article has more than [excerpt] shows: cut text, later blocks, or blocks the excerpt skips (F34).
+  final bool hasMore;
+
+  /// The viewer follows the author (F12); false for guests, their own articles and a deleted author.
+  final bool isFollowingAuthor;
+
+  /// At most [maxCardTags] tag names, in the article's order (F34).
+  final List<String> tags;
+
+  /// All the article's tags (at most 5), for "+N".
+  final int tagCount;
+
+  /// "Read more" applies however short the excerpt is: the article goes on after it, or it has no excerpt yet.
+  bool get continuesAfterExcerpt => excerpt == null || hasMore;
+
   /// The same card with newer counters or viewer state (optimistic actions, live counters F27).
   ArticleCard copyWithEngagement({
     ReactionCounts? reactions,
@@ -126,6 +153,11 @@ class ArticleCard extends Equatable {
         saveCount: saveCount ?? this.saveCount,
         myReaction: myReaction != null ? myReaction() : this.myReaction,
         isSaved: isSaved ?? this.isSaved,
+        excerpt: excerpt,
+        hasMore: hasMore,
+        isFollowingAuthor: isFollowingAuthor,
+        tags: tags,
+        tagCount: tagCount,
       );
 
   @override
@@ -149,7 +181,31 @@ class ArticleCard extends Equatable {
         saveCount,
         myReaction,
         isSaved,
+        excerpt,
+        hasMore,
+        isFollowingAuthor,
+        tags,
+        tagCount,
       ];
+}
+
+/// `ArticlePreviewDto` (F34): the beginning of an article as RDoc, for "Read more" on a post card.
+class ArticlePreview extends Equatable {
+  const ArticlePreview({required this.id, required this.language, required this.content, required this.isComplete});
+
+  final String id;
+
+  /// The version served: the one asked for, else the source language.
+  final String language;
+
+  /// The article's first blocks, in order, until about 300 words: never a cut block, at least one.
+  final RDocDocument content;
+
+  /// [content] is the whole article.
+  final bool isComplete;
+
+  @override
+  List<Object?> get props => [id, language, content, isComplete];
 }
 
 class ArticleSource extends Equatable {

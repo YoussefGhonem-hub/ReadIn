@@ -11,6 +11,7 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../moderation/presentation/cubit/moderation_action_cubit.dart';
 import '../../../saved/presentation/cubit/saved_list_cubit.dart';
@@ -87,6 +88,8 @@ class _ProfileProviders extends StatelessWidget {
           BlocProvider(create: (_) => getIt<PrivacyCubit>()),
           // Created when a moderator warns or suspends from the "⋯" menu (F22).
           BlocProvider(create: (_) => getIt<ModerationActionCubit>()),
+          // The expanded post cards of the Articles tab, kept while the reader is open (F34).
+          BlocProvider(create: (_) => getIt<PostCardsCubit>()),
         ],
         child: child,
       );

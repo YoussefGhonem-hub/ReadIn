@@ -8,12 +8,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/errors/result.dart';
 import 'package:readin/core/theme/theme_x.dart';
+import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/domain/repositories/article_repository.dart';
 import 'package:readin/features/article/domain/usecases/get_related_articles.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/article/presentation/cubit/related_articles_cubit.dart';
 import 'package:readin/features/article/presentation/widgets/related_articles_section.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
+import 'package:readin/features/comments/presentation/widgets/comment_body.dart';
+import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/features/glossary/presentation/cubit/glossary_search_cubit.dart';
 import 'package:readin/features/glossary/presentation/cubit/glossary_term_cubit.dart';
 import 'package:readin/features/glossary/presentation/widgets/glossary_sheet.dart';
@@ -21,6 +24,7 @@ import 'package:readin/features/glossary/presentation/widgets/glossary_term_pick
 
 import '../helpers/fixtures.dart';
 import '../helpers/glossary_fixtures.dart';
+import '../helpers/post_card_fixtures.dart';
 import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
 
@@ -92,20 +96,26 @@ void main() {
       await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/editor_term_picker_${variant.name}.png'));
     });
 
+    // Post cards since F34 (they were compact rows).
     testWidgets('related articles ${variant.name}', (tester) async {
-      usePhoneSurface(tester, size: const Size(390, 520));
+      CommentClock.now = () => DateTime.utc(2026, 11, 2, 12);
+      addTearDown(() => CommentClock.now = DateTime.now);
+      usePhoneSurface(tester, size: const Size(390, 900));
       final repository = MockArticleRepository();
       when(() => repository.getRelated('art-1', language: 'ar-EG', limit: 4))
-          .thenAnswer((_) async => Ok([for (var i = 2; i < 5; i++) engagedCard(i, isSaved: i == 3)]));
+          .thenAnswer((_) async => Ok([for (var i = 2; i < 5; i++) postCard(i, cover: false, isSaved: i == 3, reactionCount: 3, reactions: const ReactionCounts(insightful: 3))]));
       final session = MockSessionCubit();
       final engagement = MockEngagementCubit();
       whenListen(session, const Stream<SessionState>.empty(), initialState: const SessionState(status: SessionStatus.authenticated, me: sampleMe));
       whenListen(engagement, const Stream<EngagementState>.empty(), initialState: const EngagementState());
+      final follows = MockFollowsCubit();
+      whenListen(follows, const Stream<FollowsState>.empty(), initialState: const FollowsState());
       await tester.pumpWidget(testApp(
         MultiBlocProvider(
           providers: [
             BlocProvider<SessionCubit>.value(value: session),
             BlocProvider<EngagementCubit>.value(value: engagement),
+            BlocProvider<FollowsCubit>.value(value: follows),
           ],
           child: Scaffold(
             body: CustomScrollView(

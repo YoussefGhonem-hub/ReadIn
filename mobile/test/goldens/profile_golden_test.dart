@@ -9,7 +9,10 @@ import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/di/injection.dart';
 import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
+import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/auth/presentation/cubit/complete_profile_cubit.dart' show UsernameStatus;
+import 'package:readin/features/comments/presentation/widgets/comment_body.dart';
+import 'package:readin/features/profile/domain/entities/profile.dart';
 import 'package:readin/features/profile/presentation/cubit/edit_profile_cubit.dart';
 import 'package:readin/features/profile/presentation/cubit/follow_list_cubit.dart';
 import 'package:readin/features/profile/presentation/pages/edit_profile_page.dart';
@@ -19,10 +22,10 @@ import 'package:readin/features/reading/presentation/cubit/reading_heatmap_cubit
 import 'package:readin/features/reading/presentation/cubit/reading_stats_cubit.dart';
 
 import '../helpers/fixtures.dart';
+import '../helpers/post_card_fixtures.dart';
 import '../helpers/profile_fakes.dart';
 import '../helpers/profile_fixtures.dart';
 import '../helpers/reading_fixtures.dart';
-import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
 
 class MockReadingStatsCubit extends MockCubit<ReadingStatsState> implements ReadingStatsCubit {}
@@ -40,19 +43,36 @@ void main() {
     await tester.pump();
   }
 
-  tearDown(() => getIt.reset());
+  setUp(() => CommentClock.now = () => DateTime.utc(2026, 11, 2, 12)); // post cards: "3 days ago"
+  tearDown(() {
+    CommentClock.now = DateTime.now;
+    getIt.reset();
+  });
 
   for (final variant in Variant.all) {
     final language = languageOf(variant);
-    final articles = [for (var i = 0; i < 3; i++) engagedCard(i, isSaved: i == 1, language: language)];
+    // The profile's own articles as post cards (F34), by its writer: no Follow on them.
+    List<ArticleCard> articlesBy(UserProfile profile) => [
+          for (var i = 0; i < 3; i++)
+            postCard(
+              i,
+              language: language,
+              cover: false,
+              isSaved: i == 1,
+              author: Author(id: profile.id, displayName: profile.displayName, username: profile.username, isVerified: profile.isVerified),
+              reactions: const ReactionCounts(insightful: 12, love: 3, fire: 1),
+              reactionCount: 16,
+              commentCount: 4,
+            ),
+        ];
 
     testWidgets('own profile ${variant.name}', (tester) async {
-      await pump(tester, variant, [...appStores(), ...profileScreen(ownProfile, articles: articles)], const ProfileView(isTab: true));
+      await pump(tester, variant, [...appStores(), ...profileScreen(ownProfile, articles: articlesBy(ownProfile))], const ProfileView(isTab: true));
       await expectLater(find.byType(ProfileView), matchesVariantGolden(variant, 'goldens/profile_own_${variant.name}.png'));
     });
 
     testWidgets('other profile ${variant.name}', (tester) async {
-      await pump(tester, variant, [...appStores(), ...profileScreen(otherProfile, articles: articles)], const ProfileView());
+      await pump(tester, variant, [...appStores(), ...profileScreen(otherProfile, articles: articlesBy(otherProfile))], const ProfileView());
       await expectLater(find.byType(ProfileView), matchesVariantGolden(variant, 'goldens/profile_other_${variant.name}.png'));
     });
 
