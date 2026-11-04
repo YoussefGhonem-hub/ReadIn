@@ -33,7 +33,8 @@ import { ProgressBar } from '../../shared/ui/progress-bar';
           <span class="font-semibold text-primary">{{ 'home.continueReading.title' | transloco }}</span>
           <span class="rd-tag rd-tag-neutral"><rd-bdi-text [text]="field()" /></span>
         </span>
-        <span class="mt-1 block truncate text-[15px] font-semibold leading-snug" [attr.dir]="titleDir()" [attr.lang]="item().language" data-continue-title
+        <!-- A whole-pixel line height keeps the card's height an integer, so the feed below never sits on a sub-pixel. -->
+        <span class="mt-1 block truncate text-[15px] font-semibold leading-5" [attr.dir]="titleDir()" [attr.lang]="item().language" data-continue-title
           ><rd-bdi-text [text]="a.title"
         /></span>
         <rd-progress-bar class="mt-2" [value]="item().percent" [label]="'home.continueReading.percent' | transloco: { percent: item().percent }" />
