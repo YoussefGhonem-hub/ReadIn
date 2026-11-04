@@ -98,11 +98,17 @@ A wrong `currentPassword` counts toward the same 15-minute lockout as sign in (`
 | GET | `/feed/for-you?field=&cursor=&limit=` | `CursorPage<ArticleCardDto>`. Signed in: user's interests first. Guest: latest published. `field` is a field slug. |
 | GET | `/feed/today` | `ArticleCardDto` or `204` when no pick is available yet |
 | GET | `/feed/following?cursor=&limit=` | Bearer → `CursorPage<ArticleCardDto>`: published articles by the writers you follow, newest first (the Home "Following" tab) |
+| GET | `/articles/{id}/related?lang=&limit=` | `ArticleCardDto[]`, 0–`limit` cards (1–10, default 4) for the end of the reader (F04). `lang` is the version being read; cards use it when they have it, else their source language. `404 article.not_found` when the article isn't published |
 
 Every card (for you, today, following, saved) carries the article's counters and, for a signed-in caller, their own
 `myReaction` / `isSaved` (`null` / `false` for guests). `ArticleDetailsDto` adds `isFollowingAuthor` (`false` for guests
 and on your own articles) and `collectionIds`, your collections that hold the article (`[]` for guests and unsaved
 articles), so "add to collection" can show its ticks.
+
+**Related articles (F04).** Ranked by what they share with the article: the same topic first, then the same field,
+then tags and glossary terms in common; ties go to the higher quality score, then the newest. Never included: the
+article itself and its direct neighbours in a learning path (the "Next in path" block shows those). For a signed-in
+caller, their own articles are left out and articles they have already read come last.
 
 ### Reactions (F10; writes: Bearer, permission `reactions.create`, rate limit `writes`)
 
@@ -282,6 +288,22 @@ carry signals, never content: fetch the data itself through REST. Times are epoc
 
 Readers report on open (`activeSecondsDelta: 0`), every 15 s while the article is visible and the user was active in the
 last 60 s, and when they leave. A failed report keeps its seconds for the next one. Guests don't report.
+
+**Resume (F04).** `lastPosition` is the scroll position as a fraction of the article's scrollable range, written with
+four decimals (`"0.4523"`), on web and mobile alike. `ArticleDetailsDto.myProgress` gives it back to the signed-in
+reader. On open, the reader scrolls back to it when all of these hold: `myProgress` is set, `completedAt` is null, its
+`language` is the version being shown, the link has no block anchor, the value is between 0.05 and 0.95, and the
+reader hasn't scrolled yet. It then shows a toast ("كمّلنا من مكان ما وقفت" / "Picked up where you left off") with a
+"Start over" action that scrolls to the top.
+
+### Glossary (F21) 🌐
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/glossary/{slug}?lang=` | `GlossaryTermDto`. `slug` is the RDoc `term` node's `termId`. `lang` is the version being read and picks the titles of `articles`. `404 glossary.term_not_found` |
+| GET | `/glossary?q=&limit=` | `GlossaryTermSummaryDto[]`: matches on the English term or the slug, those starting with `q` first, then A–Z. `limit` 1–50, default 20; an empty `q` lists from A. For the editor's term picker |
+
+Glossary terms come from `content/glossary/*.yaml`; there are no write endpoints yet.
 
 ## DTOs (TypeScript notation)
 
@@ -551,7 +573,34 @@ interface ArticleDetailsDto extends ArticleCardDto {
   readCount: number;             // saveCount comes from ArticleCardDto
   isFollowingAuthor: boolean;    // false for guests and on your own articles
   collectionIds: string[];       // the caller's collections that hold it, oldest entry first; [] for guests and unsaved articles
+  myProgress: MyProgressDto | null; // the caller's reading progress (F04 resume); null for guests and unopened articles
 }
+
+interface MyProgressDto {
+  language: ArticleLanguage;     // the version the progress was recorded on
+  percent: number;               // highest percent reached, 0–100
+  lastPosition: string | null;   // as sent in ReadingProgressRequest, e.g. "0.4523"
+  completedAt: string | null;    // set once the article counts as read
+}
+
+// Glossary (F21)
+interface GlossaryTermDto {
+  slug: string;                  // the RDoc termId, e.g. "dependency-injection"
+  term: string;                  // English term, always shown LTR
+  definitionEn: string;
+  explanationAr: string;         // Egyptian Arabic with English terms (SPEC §14 BiDi rules apply)
+  articles: GlossaryArticleDto[]; // ≤ 6 published articles that use the term, best first; the reader drops the open one and shows ≤ 5
+}
+
+interface GlossaryArticleDto {
+  id: string; slug: string;
+  language: ArticleLanguage;     // language of `title`
+  title: string;
+  readingTimeMinutes: number;
+  field: FieldRefDto;
+}
+
+interface GlossaryTermSummaryDto { slug: string; term: string; definitionEn: string }
 
 // Reading & streaks (ADR 0013). Dates are the user's local dates, "yyyy-MM-dd".
 interface ReadingProgressRequest {

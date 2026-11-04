@@ -1,0 +1,15 @@
+# Integration-test glossary (SPEC F21). dependency-injection is used by the fixture DI article; service-lifetime only
+# by articles GlossaryTests publishes, and context-window only by articles ReaderTests publishes, so their counts are exact.
+terms:
+  - id: dependency-injection
+    term: Dependency Injection
+    definitionEn: A design where a class receives the objects it depends on from outside instead of creating them itself.
+    definitionAr: إن الـ class ياخد الحاجات اللي محتاجها من برّه بدل ما يعملها بنفسه.
+  - id: service-lifetime
+    term: Service lifetime
+    definitionEn: How long the DI container keeps an instance of a service, such as singleton, scoped or transient.
+    definitionAr: الـ DI container بيحتفظ بالـ instance بتاع الـ service قد إيه، زي singleton أو scoped أو transient.
+  - id: context-window
+    term: Context window
+    definitionEn: The amount of text, measured in tokens, that a language model can take into account at once.
+    definitionAr: كمية النص بالـ tokens اللي الـ language model يقدر ياخدها في اعتباره مرة واحدة.

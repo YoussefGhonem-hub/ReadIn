@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Engagement;
+using ReadIn.Domain.Glossary;
 using ReadIn.Domain.Identity;
 using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
@@ -27,6 +28,8 @@ public interface IAppDbContext
     DbSet<Field> Fields { get; }
     DbSet<Topic> Topics { get; }
     DbSet<Tag> Tags { get; }
+    DbSet<GlossaryTerm> GlossaryTerms { get; }
+    DbSet<ArticleTerm> ArticleTerms { get; }
 
     DbSet<Article> Articles { get; }
     DbSet<ArticleTranslation> ArticleTranslations { get; }

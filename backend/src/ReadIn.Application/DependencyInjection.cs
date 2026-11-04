@@ -59,6 +59,7 @@ public static class DependencyInjection
         services.AddScoped<Features.Articles.Counters.ArticleCounters>();
         services.AddScoped<Features.Comments.CommentReader>();
         services.AddScoped<Features.Comments.CommentPosting>();
+        services.AddScoped<Features.Glossary.ArticleTermsIndex>();
         services.AddScoped<
             IQueryPersonalizer<Features.Articles.Queries.GetArticleBySlug.GetArticleBySlugQuery, Domain.Common.Result<Features.Articles.ArticleDetailsDto>>,
             Features.Articles.Queries.GetArticleBySlug.ArticleDetailsPersonalizer>();

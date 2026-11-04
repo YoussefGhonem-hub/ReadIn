@@ -58,6 +58,16 @@ public sealed class ContentRepository(IOptions<ContentOptions> options, IHostEnv
         return await JsonDocument.ParseAsync(stream, cancellationToken: ct);
     }
 
+    /// <summary>content/glossary/*.yaml: one file per writing group, term ids unique across files (SPEC F21).</summary>
+    public IEnumerable<string> GlossaryFiles()
+    {
+        var glossary = Path.Combine(Root, "glossary");
+        return Directory.Exists(glossary) ? Directory.EnumerateFiles(glossary, "*.yaml").Order(StringComparer.Ordinal) : [];
+    }
+
+    public async Task<GlossaryFile> ReadGlossaryAsync(string file, CancellationToken ct) =>
+        Yaml.Deserialize<GlossaryFile>(await File.ReadAllTextAsync(file, ct)) ?? new GlossaryFile();
+
     public async Task<string> HashFilesAsync(IEnumerable<string> files, CancellationToken ct)
     {
         var parts = new List<string>();
@@ -198,3 +208,17 @@ public sealed record CodeMeta
 }
 
 public sealed record SourceEntry(string Title, string Url);
+
+/// <summary>A content/glossary/*.yaml file: <c>terms: [{ id, term, definitionEn, definitionAr }]</c>.</summary>
+public sealed class GlossaryFile
+{
+    public List<GlossaryEntry> Terms { get; set; } = [];
+}
+
+public sealed class GlossaryEntry
+{
+    public string Id { get; set; } = default!;
+    public string Term { get; set; } = default!;
+    public string DefinitionEn { get; set; } = default!;
+    public string DefinitionAr { get; set; } = default!;
+}

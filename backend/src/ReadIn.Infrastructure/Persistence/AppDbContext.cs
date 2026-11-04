@@ -5,6 +5,7 @@ using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Engagement;
+using ReadIn.Domain.Glossary;
 using ReadIn.Domain.Identity;
 using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
@@ -35,6 +36,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Field> Fields => Set<Field>();
     public DbSet<Topic> Topics => Set<Topic>();
     public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<GlossaryTerm> GlossaryTerms => Set<GlossaryTerm>();
+    public DbSet<ArticleTerm> ArticleTerms => Set<ArticleTerm>();
 
     public DbSet<Article> Articles => Set<Article>();
     public DbSet<ArticleTranslation> ArticleTranslations => Set<ArticleTranslation>();

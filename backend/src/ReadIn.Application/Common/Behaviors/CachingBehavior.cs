@@ -19,6 +19,7 @@ public static class CacheTags
     public const string Taxonomy = "taxonomy";
     public const string Feed = "feed";
     public const string Articles = "articles";
+    public const string Glossary = "glossary";
 
     public static string Article(string slug) => $"article:{slug}";
 }

@@ -58,6 +58,7 @@ public static class ErrorMessages
         ["collection.name_taken"] = ("عندك مجموعة بنفس الاسم بالفعل.", "You already have a collection with this name."),
         ["collection.limit"] = ("وصلت لأقصى عدد مجموعات (50).", "You can have at most 50 collections."),
         ["follow.self"] = ("مينفعش تتابع نفسك.", "You can't follow yourself."),
+        ["glossary.term_not_found"] = ("المصطلح ده مش في القاموس.", "This term isn't in the glossary."),
         // Comments (SPEC F11) and reports / moderation (F22 hooks)
         ["comment.not_found"] = ("التعليق مش موجود.", "Comment not found."),
         ["comment.not_owner"] = ("التعليق ده مش بتاعك.", "Only the author can change this comment."),
