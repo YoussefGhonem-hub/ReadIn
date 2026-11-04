@@ -22,6 +22,7 @@ import 'package:readin/features/follow/domain/entities/follow.dart';
 import 'package:readin/features/follow/domain/usecases/follow_usecases.dart';
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/features/follow/presentation/widgets/follow_button.dart';
+import 'package:readin/features/paths/presentation/cubit/article_path_cubit.dart';
 import 'package:readin/features/reactions/domain/entities/reactions.dart';
 import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart';
 import 'package:readin/features/reactions/presentation/cubit/reactors_cubit.dart';
@@ -38,6 +39,7 @@ import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart'
 import 'package:readin/shared/rdoc/rdoc_document.dart';
 
 import '../helpers/fixtures.dart';
+import '../helpers/path_fakes.dart';
 import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
 
@@ -377,6 +379,9 @@ void main() {
       final liveCubit = _StreamLiveCubit(live.stream);
       whenListen(articleCubit, const Stream<ArticleState>.empty(), initialState: ArticleState(status: ArticleStatus.ready, article: article));
       whenListen(settings, const Stream<AppSettings>.empty(), initialState: const AppSettings());
+      // The article is in no learning path: "Next in path" renders nothing (F09).
+      getIt.registerFactory<ArticlePathCubit>(noPathCubit);
+      addTearDown(() => getIt.unregister<ArticlePathCubit>());
       await pump(
         tester,
         const ArticleView(),

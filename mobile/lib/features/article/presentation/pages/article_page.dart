@@ -15,6 +15,7 @@ import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
+import '../../../paths/presentation/widgets/next_in_path.dart';
 import '../../../reading/presentation/tracking/reading_tracking.dart';
 import '../../../saved/presentation/cubit/collections_cubit.dart';
 import '../../../settings/domain/entities/app_settings.dart';
@@ -325,6 +326,7 @@ class _ReaderBody extends StatelessWidget {
               padding: gutter.copyWith(top: ReadInSpace.s4, bottom: ReadInSpace.s8),
               sliver: SliverToBoxAdapter(child: SourcesSection(sources: article.sources, onOpen: openExternalLink)),
             ),
+            NextInPathSliver(articleId: article.card.id),
           ],
         ),
       ),
