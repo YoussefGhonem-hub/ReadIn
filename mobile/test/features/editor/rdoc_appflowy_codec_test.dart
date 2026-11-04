@@ -88,5 +88,42 @@ void main() {
         RText('c', marks: [RMark(RMarkType.link, href: 'https://readin.app'), RMark(RMarkType.highlight)]),
       ]);
     });
+
+    test('a mention or a term is one placeholder character carrying its id and text, and comes back the same', () {
+      const content = [
+        RText('شكراً لـ '),
+        RMention(userId: 'u1', text: '@mona'),
+        RText(' على '),
+        RTerm(termId: 'di', text: 'Dependency Injection'),
+        RMention(userId: 'u1', text: '@mona'),
+        RMention(userId: 'u1', text: '@mona'),
+      ];
+      final delta = RDocAppFlowyCodec.deltaFor(content);
+      final text = delta.toPlainText();
+      // One character each, whatever the length of the name.
+      expect(text, 'شكراً لـ ${RDocNodeKeys.placeholder} على ${RDocNodeKeys.placeholder * 3}');
+      final mention = delta.whereType<TextInsert>().firstWhere((op) => op.text == RDocNodeKeys.placeholder).attributes;
+      expect(mention, {
+        RDocNodeKeys.mention: {'userId': 'u1', 'text': '@mona'},
+      });
+      expect(RDocAppFlowyCodec.atomOf(mention), (mention: true, id: 'u1', text: '@mona'));
+      // Two equal mentions side by side may share one run: still two mentions.
+      final merged = Delta()
+        ..insert('a ')
+        ..insert(RDocNodeKeys.placeholder * 2, attributes: RDocAppFlowyCodec.mentionAttributes(userId: 'u2', text: '@sara'));
+      expect(RDocAppFlowyCodec.inlinesFrom(merged), const [
+        RText('a '),
+        RMention(userId: 'u2', text: '@sara'),
+        RMention(userId: 'u2', text: '@sara'),
+      ]);
+      expect(RDocAppFlowyCodec.inlinesFrom(delta), content);
+      // Marks put on a mention don't make it text.
+      final bolded = Delta()
+        ..insert(RDocNodeKeys.placeholder, attributes: {
+          ...RDocAppFlowyCodec.termAttributes(termId: 'di', text: 'DI'),
+          AppFlowyRichTextKeys.bold: true,
+        });
+      expect(RDocAppFlowyCodec.inlinesFrom(bolded), const [RTerm(termId: 'di', text: 'DI')]);
+    });
   });
 }

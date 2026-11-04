@@ -11,6 +11,8 @@ import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../comments/presentation/cubit/mention_suggestions_cubit.dart';
 import '../../domain/entities/editor_entities.dart';
+import '../block_editor/block_editor_controller.dart';
+import '../block_editor/block_editor_surface.dart';
 import '../block_editor/block_kinds_ui.dart';
 import '../block_editor/inline_formatter.dart';
 import '../cubit/article_editor_cubit.dart';
@@ -226,8 +228,10 @@ class ChecksList extends StatelessWidget {
   }
 }
 
-/// The editor's toolbar above the keyboard: "Add a block", block options, formatting for the text the writer is in,
-/// and, while one is typed, the `@mention` suggestions or the slash menu's blocks.
+
+/// The editor's toolbar above the keyboard: "Add a block", block options, undo and redo, formatting for the text the
+/// writer is in (a structured block's field in [focus] first, else [formatter]), the table tools while a table cell
+/// is in focus, and, while one is typed, the `@mention` suggestions or the slash menu's blocks.
 class EditorToolbar extends StatelessWidget {
   const EditorToolbar({
     super.key,
@@ -235,6 +239,9 @@ class EditorToolbar extends StatelessWidget {
     required this.onAddBlock,
     required this.onBlockOptions,
     required this.enabled,
+    this.focus,
+    this.history,
+    this.onTableTool,
   });
 
   final InlineFormatter? formatter;
@@ -244,18 +251,24 @@ class EditorToolbar extends StatelessWidget {
   final VoidCallback onBlockOptions;
   final bool enabled;
 
+  /// The field of a structured block in focus (a table cell, a step's text).
+  final EditorFocus? focus;
+  final UndoRedo? history;
+  final ValueChanged<TableTool>? onTableTool;
+
   @override
   Widget build(BuildContext context) {
-    final formatter = this.formatter;
-    if (formatter == null) return const SizedBox.shrink();
     final l10n = context.l10n;
     final colors = context.colors;
     return ListenableBuilder(
-      listenable: formatter,
+      listenable: Listenable.merge([formatter, focus, history]),
       builder: (context, _) {
-        final canFormat = enabled && formatter.canFormat;
-        final mention = canFormat ? formatter.activeMention : null;
-        final slash = canFormat ? formatter.slashQuery : null;
+        final formatter = focus?.active ?? this.formatter;
+        final canFormat = enabled && (formatter?.canFormat ?? false);
+        final mention = canFormat ? formatter!.activeMention : null;
+        final slash = canFormat ? formatter!.slashQuery : null;
+        final cell = focus?.cell;
+        final history = this.history;
         final suggestions = context.watch<MentionSuggestionsCubit>().state;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted) context.read<MentionSuggestionsCubit>().search(mention?.query);
@@ -265,11 +278,19 @@ class EditorToolbar extends StatelessWidget {
         Widget mark(RMarkType type, IconData icon, String tooltip) => IconButton(
               key: ValueKey('format-${type.name}'),
               tooltip: tooltip,
-              isSelected: canFormat && formatter.hasMark(type),
+              isSelected: canFormat && formatter!.hasMark(type),
               color: colors.textSecondary,
               selectedIcon: Icon(icon, color: colors.primary),
-              onPressed: canFormat ? () => formatter.toggleMark(type) : null,
+              onPressed: canFormat ? () => formatter!.toggleMark(type) : null,
               icon: Icon(icon),
+            );
+
+        Widget tableTool(TableTool tool, Widget icon, String tooltip, {Color? color}) => IconButton(
+              key: ValueKey('table-${tool.name}'),
+              tooltip: tooltip,
+              color: color ?? colors.textSecondary,
+              onPressed: enabled && onTableTool != null ? () => onTableTool!(tool) : null,
+              icon: icon,
             );
 
         return Material(
@@ -292,7 +313,7 @@ class EditorToolbar extends StatelessWidget {
                           title: BidiText(user.displayName),
                           subtitle: Text('@${user.username}', textDirection: TextDirection.ltr),
                           onTap: () {
-                            formatter.insertMention(mention, userId: user.id, text: '@${user.username}');
+                            formatter!.insertMention(mention, userId: user.id, text: '@${user.username}');
                             context.read<MentionSuggestionsCubit>().clear();
                           },
                         ),
@@ -317,10 +338,32 @@ class EditorToolbar extends StatelessWidget {
                                 dense: true,
                                 leading: Icon(kind.icon, size: 20),
                                 title: Text(kind.label(l10n)),
-                                onTap: () => formatter.applySlash(kind),
+                                onTap: () => formatter!.applySlash(kind),
                               ),
                           ],
                         ),
+                ),
+              if (cell != null)
+                DecoratedBox(
+                  key: const ValueKey('table-tools'),
+                  decoration: BoxDecoration(border: Border(top: BorderSide(color: colors.border))),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(start: ReadInSpace.s2, end: ReadInSpace.s1),
+                          child: Text(l10n.tableTools, style: context.textTheme.labelMedium?.copyWith(color: colors.textSecondary)),
+                        ),
+                        tableTool(TableTool.addRow, const _TableToolIcon(Icons.table_rows_outlined, add: true), l10n.tableAddRow),
+                        tableTool(TableTool.addColumn, const _TableToolIcon(Icons.view_column_outlined, add: true), l10n.tableAddColumn),
+                        tableTool(TableTool.deleteRow, const _TableToolIcon(Icons.table_rows_outlined, add: false), l10n.tableDeleteRow),
+                        tableTool(TableTool.deleteColumn, const _TableToolIcon(Icons.view_column_outlined, add: false), l10n.tableDeleteColumn),
+                        tableTool(TableTool.deleteTable, const Icon(Icons.delete_outline_rounded), l10n.tableDelete, color: colors.error),
+                      ],
+                    ),
+                  ),
                 ),
               DecoratedBox(
                 decoration: BoxDecoration(border: Border(top: BorderSide(color: colors.border))),
@@ -343,6 +386,23 @@ class EditorToolbar extends StatelessWidget {
                         onPressed: enabled ? onBlockOptions : null,
                         icon: const Icon(Icons.tune_rounded),
                       ),
+                      if (history != null) ...[
+                        // Both icons mirror in RTL (matchTextDirection).
+                        IconButton(
+                          key: const ValueKey('toolbar-undo'),
+                          tooltip: l10n.undo,
+                          color: colors.textSecondary,
+                          onPressed: enabled && history.canUndo ? history.undo : null,
+                          icon: const Icon(Icons.undo_rounded),
+                        ),
+                        IconButton(
+                          key: const ValueKey('toolbar-redo'),
+                          tooltip: l10n.redo,
+                          color: colors.textSecondary,
+                          onPressed: enabled && history.canRedo ? history.redo : null,
+                          icon: const Icon(Icons.redo_rounded),
+                        ),
+                      ],
                       mark(RMarkType.bold, Icons.format_bold_rounded, l10n.formatBold),
                       mark(RMarkType.italic, Icons.format_italic_rounded, l10n.formatItalic),
                       mark(RMarkType.strike, Icons.format_strikethrough_rounded, l10n.formatStrike),
@@ -352,23 +412,23 @@ class EditorToolbar extends StatelessWidget {
                         key: const ValueKey('format-link'),
                         tooltip: l10n.formatLink,
                         color: colors.textSecondary,
-                        isSelected: canFormat && formatter.link != null,
+                        isSelected: canFormat && formatter!.link != null,
                         selectedIcon: Icon(Icons.link_rounded, color: colors.primary),
-                        onPressed: canFormat && formatter.hasRange ? () => _editLink(context, formatter) : null,
+                        onPressed: canFormat && formatter!.hasRange ? () => _editLink(context, formatter) : null,
                         icon: const Icon(Icons.link_rounded),
                       ),
                       IconButton(
                         key: const ValueKey('format-mention'),
                         tooltip: l10n.formatMention,
                         color: colors.textSecondary,
-                        onPressed: canFormat ? formatter.startMention : null,
+                        onPressed: canFormat ? formatter!.startMention : null,
                         icon: const Icon(Icons.alternate_email_rounded),
                       ),
                       IconButton(
                         key: const ValueKey('format-line-break'),
                         tooltip: l10n.formatLineBreak,
                         color: colors.textSecondary,
-                        onPressed: canFormat ? formatter.insertHardBreak : null,
+                        onPressed: canFormat ? formatter!.insertHardBreak : null,
                         icon: const Icon(Icons.keyboard_return_rounded),
                       ),
                     ],
@@ -470,3 +530,30 @@ Future<bool> confirmDialog(
   return result ?? false;
 }
 
+
+/// A table tool's icon: rows or columns with a small plus or minus.
+class _TableToolIcon extends StatelessWidget {
+  const _TableToolIcon(this.icon, {required this.add});
+
+  final IconData icon;
+  final bool add;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+        dimension: 24,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(icon),
+            PositionedDirectional(
+              end: -4,
+              bottom: -4,
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: context.colors.surface, shape: BoxShape.circle),
+                child: Icon(add ? Icons.add_circle_rounded : Icons.remove_circle_rounded, size: 13),
+              ),
+            ),
+          ],
+        ),
+      );
+}

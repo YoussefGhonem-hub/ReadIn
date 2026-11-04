@@ -4,9 +4,10 @@ import '../../../../core/bidi/bidi.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/rdoc/blocks/media_blocks.dart';
 import '../../../../shared/rdoc/blocks/text_blocks.dart';
 import '../../../../shared/rdoc/editing/block_editing.dart';
-import '../../../../shared/rdoc/editing/inline_editing.dart';
+import '../../../../shared/rdoc/editing/table_editing.dart';
 import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../../shared/widgets/app_network_image.dart';
 import '../../domain/entities/editor_entities.dart';
@@ -14,7 +15,8 @@ import 'block_editor_surface.dart';
 import 'block_kinds_ui.dart';
 import 'inline_text_controller.dart';
 
-/// The editor of a structured block in its sheet: steps, code, code tabs, table, image or embed.
+/// A structured block edited in place, inside the editor (as the web editor's node views): steps, code, code tabs,
+/// table, image or embed. Every change goes to [BlockEditorScope.host].
 class StructuredBlockEditor extends StatelessWidget {
   const StructuredBlockEditor({super.key, required this.block});
 
@@ -53,8 +55,8 @@ InputDecoration bareDecoration({String? hintText, TextStyle? hintStyle}) => Inpu
       focusedErrorBorder: InputBorder.none,
     );
 
-/// A borderless multi-line field over RDoc inline content ([InlineTextController]). The toolbar formats the one
-/// in focus.
+/// A borderless multi-line field over RDoc inline content ([InlineTextController]): a table cell, a step's text. The
+/// toolbar formats the one in focus; a table cell also tells it which [cell] it is, for the table tools.
 class InlineField extends StatefulWidget {
   const InlineField({
     super.key,
@@ -68,6 +70,7 @@ class InlineField extends StatefulWidget {
     this.primary = false,
     this.focusNode,
     this.fieldKey,
+    this.cell,
   });
 
   final String blockId;
@@ -82,6 +85,7 @@ class InlineField extends StatefulWidget {
   final bool primary;
   final FocusNode? focusNode;
   final Key? fieldKey;
+  final TablePosition? cell;
 
   @override
   State<InlineField> createState() => _InlineFieldState();
@@ -115,14 +119,14 @@ class _InlineFieldState extends State<InlineField> {
     _controller.onSplit = widget.onSplit;
     _controller.onNodesChanged = widget.onChanged;
     _controller.nodes = widget.nodes;
+    if (_focus.hasFocus && oldWidget.cell != widget.cell) _onFocus();
   }
 
   void _onFocus() {
     final scope = _scope;
     if (scope == null) return;
     if (_focus.hasFocus) {
-      scope.controller.focusedBlockId = widget.blockId;
-      scope.editorContext.focus.activate(widget.blockId, _controller);
+      scope.editorContext.focus.activate(widget.blockId, _controller, cell: widget.cell);
     } else {
       scope.editorContext.focus.deactivate(_controller);
     }
@@ -158,7 +162,7 @@ class _InlineFieldState extends State<InlineField> {
 }
 
 /// A plain text attribute (step title, cite, callout title, code, alt text…). Follows its content's direction
-/// unless [direction] is given.
+/// unless [direction] is given. A value changed from outside (undo, a reload) replaces the text even while typing.
 class PlainField extends StatefulWidget {
   const PlainField({
     super.key,
@@ -176,6 +180,7 @@ class PlainField extends StatefulWidget {
     this.decorated = false,
     this.keyboardType,
     this.primaryFor,
+    this.fieldKey,
   });
 
   final String value;
@@ -196,6 +201,7 @@ class PlainField extends StatefulWidget {
 
   /// Registers as this block's first field.
   final String? primaryFor;
+  final Key? fieldKey;
 
   @override
   State<PlainField> createState() => _PlainFieldState();
@@ -203,6 +209,7 @@ class PlainField extends StatefulWidget {
 
 class _PlainFieldState extends State<PlainField> {
   late final _controller = TextEditingController(text: widget.value);
+  late String _sent = widget.value;
   final _focus = FocusNode();
   BlockEditorScope? _scope;
 
@@ -216,7 +223,10 @@ class _PlainFieldState extends State<PlainField> {
   @override
   void didUpdateWidget(PlainField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.value != _controller.text && !_focus.hasFocus) _controller.text = widget.value;
+    if (widget.value != _controller.text && (widget.value != _sent || !_focus.hasFocus)) {
+      _sent = widget.value;
+      _controller.value = TextEditingValue(text: widget.value, selection: TextSelection.collapsed(offset: widget.value.length));
+    }
   }
 
   @override
@@ -232,6 +242,7 @@ class _PlainFieldState extends State<PlainField> {
     final style = widget.style ?? context.textTheme.bodyMedium!;
     final direction = widget.direction ?? Bidi.detect(_controller.text) ?? Directionality.of(context);
     return TextField(
+      key: widget.fieldKey,
       controller: _controller,
       focusNode: _focus,
       enabled: BlockEditorScope.of(context).editorContext.enabled,
@@ -249,6 +260,7 @@ class _PlainFieldState extends State<PlainField> {
           ? InputDecoration(labelText: widget.label, hintText: widget.hint, helperText: widget.helper, errorText: widget.errorText, isDense: true)
           : bareDecoration(hintText: widget.hint, hintStyle: style.copyWith(color: context.colors.textSecondary)),
       onChanged: (v) {
+        _sent = v;
         setState(() {}); // direction follows the text
         widget.onChanged(v);
       },
@@ -258,10 +270,13 @@ class _PlainFieldState extends State<PlainField> {
 
 // ── Steps ──────────────────────────────────────────────────
 
+/// Numbered steps: each step's title and text in place, add and remove steps.
 class StepsBlockEditor extends StatelessWidget {
   const StepsBlockEditor({super.key, required this.block});
 
   final RSteps block;
+
+  static const _maxSteps = 50;
 
   @override
   Widget build(BuildContext context) {
@@ -270,7 +285,7 @@ class StepsBlockEditor extends StatelessWidget {
     final l10n = context.l10n;
     final dir = _dirOf(context, block);
     final style = rdocBodyStyle(context, dir);
-    void set(List<RStep> items) => scope.controller.replace(RSteps(block.id, dir: block.dir, items: items));
+    void set(List<RStep> items) => scope.host.replace(RSteps(block.id, dir: block.dir, items: items));
     return Directionality(
       textDirection: dir,
       child: Column(
@@ -296,6 +311,7 @@ class StepsBlockEditor extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         PlainField(
+                          fieldKey: ValueKey('${block.id}-step-title-$i'),
                           value: block.items[i].title,
                           hint: l10n.stepTitleHint,
                           maxLength: DraftLimits.maxPlainText,
@@ -305,6 +321,7 @@ class StepsBlockEditor extends StatelessWidget {
                           onChanged: (v) => set([...block.items]..[i] = RStep(title: v, content: block.items[i].content)),
                         ),
                         InlineField(
+                          fieldKey: ValueKey('${block.id}-step-body-$i'),
                           blockId: block.id,
                           nodes: block.items[i].content,
                           style: style,
@@ -317,20 +334,22 @@ class StepsBlockEditor extends StatelessWidget {
                   ),
                   if (block.items.length > 1)
                     IconButton(
+                      key: ValueKey('${block.id}-step-remove-$i'),
                       tooltip: l10n.removeStep,
                       visualDensity: VisualDensity.compact,
                       iconSize: 18,
-                      onPressed: () => set([...block.items]..removeAt(i)),
+                      onPressed: scope.editorContext.enabled ? () => set([...block.items]..removeAt(i)) : null,
                       icon: const Icon(Icons.close_rounded),
                     ),
                 ],
               ),
             ),
-          if (block.items.length < 50)
+          if (block.items.length < _maxSteps)
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
-                onPressed: () => set([...block.items, const RStep(title: '', content: [])]),
+                key: ValueKey('${block.id}-step-add'),
+                onPressed: scope.editorContext.enabled ? () => set([...block.items, const RStep(title: '', content: [])]) : null,
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: Text(l10n.addStep),
               ),
@@ -368,10 +387,11 @@ class _CodeSurface extends StatelessWidget {
 }
 
 class _LangPicker extends StatelessWidget {
-  const _LangPicker({required this.value, required this.onChanged});
+  const _LangPicker({required this.value, required this.onChanged, this.pickerKey});
 
   final String value;
   final ValueChanged<String> onChanged;
+  final Key? pickerKey;
 
   @override
   Widget build(BuildContext context) {
@@ -379,13 +399,14 @@ class _LangPicker extends StatelessWidget {
     final style = codeTextStyle(size: 13, color: colors.codeText);
     return DropdownButtonHideUnderline(
       child: DropdownButton<String>(
+        key: pickerKey,
         value: value,
         isDense: true,
         dropdownColor: colors.codeBg,
         iconEnabledColor: colors.codeText,
         style: style,
         items: [
-          for (final lang in {...codeLanguages, value}) DropdownMenuItem(value: lang, child: Text(lang, style: style)),
+          for (final lang in {...codeLanguages, value}) DropdownMenuItem(value: lang, child: Text(codeLanguageName(lang), style: style)),
         ],
         onChanged: BlockEditorScope.of(context).editorContext.enabled ? (v) => onChanged(v ?? value) : null,
       ),
@@ -393,6 +414,7 @@ class _LangPicker extends StatelessWidget {
   }
 }
 
+/// A code block: the language and file name in its header, the code below (Enter adds a line; no marks).
 class CodeBlockEditor extends StatelessWidget {
   const CodeBlockEditor({super.key, required this.block});
 
@@ -412,29 +434,34 @@ class CodeBlockEditor extends StatelessWidget {
     final scope = BlockEditorScope.of(context);
     final colors = context.colors;
     final l10n = context.l10n;
-    final code = codeTextStyle(color: colors.codeText);
     return _CodeSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              _LangPicker(value: block.lang, onChanged: (v) => scope.controller.replace(_with(lang: v))),
+              _LangPicker(
+                pickerKey: ValueKey('${block.id}-lang'),
+                value: block.lang,
+                onChanged: (v) => scope.host.replace(_with(lang: v)),
+              ),
               const SizedBox(width: ReadInSpace.s3),
               Expanded(
                 child: PlainField(
+                  fieldKey: ValueKey('${block.id}-filename'),
                   value: block.filename ?? '',
                   hint: l10n.codeFilenameHint,
                   maxLength: 200,
                   direction: TextDirection.ltr,
                   style: codeTextStyle(size: 13, color: colors.codeText),
-                  onChanged: (v) => scope.controller.replace(_with(filename: () => v.isEmpty ? null : v)),
+                  onChanged: (v) => scope.host.replace(_with(filename: () => v.isEmpty ? null : v)),
                 ),
               ),
             ],
           ),
           Divider(color: colors.codeBorder, height: ReadInSpace.s4),
           PlainField(
+            fieldKey: ValueKey('${block.id}-code'),
             value: block.code,
             hint: l10n.codeHint,
             primaryFor: block.id,
@@ -442,8 +469,8 @@ class CodeBlockEditor extends StatelessWidget {
             maxLines: null,
             minLines: 2,
             keyboardType: TextInputType.multiline,
-            style: code,
-            onChanged: (v) => scope.controller.replace(_with(code: v)),
+            style: codeTextStyle(color: colors.codeText),
+            onChanged: (v) => scope.host.replace(_with(code: v)),
           ),
         ],
       ),
@@ -451,10 +478,14 @@ class CodeBlockEditor extends StatelessWidget {
   }
 }
 
+/// Code tabs: a tab strip (switch, add up to 8), and the active tab's name, language, file name and code in place.
+/// Removing the last tab removes the block.
 class CodeTabsBlockEditor extends StatefulWidget {
   const CodeTabsBlockEditor({super.key, required this.block});
 
   final RCodeTabs block;
+
+  static const maxTabs = 8;
 
   @override
   State<CodeTabsBlockEditor> createState() => _CodeTabsBlockEditorState();
@@ -463,7 +494,7 @@ class CodeTabsBlockEditor extends StatefulWidget {
 class _CodeTabsBlockEditorState extends State<CodeTabsBlockEditor> {
   int _selected = 0;
 
-  void _set(List<RCodeTab> tabs) => BlockEditorScope.of(context).controller.replace(RCodeTabs(widget.block.id, tabs: tabs));
+  void _set(List<RCodeTab> tabs) => BlockEditorScope.of(context).host.replace(RCodeTabs(widget.block.id, tabs: tabs));
 
   RCodeTab _tab(RCodeTab t, {String? label, String? lang, String? code, String? Function()? filename}) => RCodeTab(
         label: label ?? t.label,
@@ -473,10 +504,20 @@ class _CodeTabsBlockEditorState extends State<CodeTabsBlockEditor> {
         compile: t.compile,
       );
 
+  void _remove(int index) {
+    final tabs = widget.block.tabs;
+    if (tabs.length <= 1) return BlockEditorScope.of(context).host.remove(widget.block.id);
+    _set([...tabs]..removeAt(index));
+    setState(() => _selected = (index - 1).clamp(0, tabs.length - 2));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final scope = BlockEditorScope.of(context);
+    final enabled = scope.editorContext.enabled;
     final colors = context.colors;
     final l10n = context.l10n;
+    final id = widget.block.id;
     final tabs = widget.block.tabs;
     if (tabs.isEmpty) return const SizedBox.shrink();
     final index = _selected.clamp(0, tabs.length - 1);
@@ -494,22 +535,25 @@ class _CodeTabsBlockEditorState extends State<CodeTabsBlockEditor> {
                   Padding(
                     padding: const EdgeInsetsDirectional.only(end: ReadInSpace.s1),
                     child: ChoiceChip(
-                      key: ValueKey('${widget.block.id}-tab-$i'),
-                      label: Text(tabs[i].label.isEmpty ? tabs[i].lang : tabs[i].label),
+                      key: ValueKey('$id-tab-$i'),
+                      label: Text(tabs[i].label.isEmpty ? codeLanguageName(tabs[i].lang) : tabs[i].label),
                       selected: i == index,
                       visualDensity: VisualDensity.compact,
                       onSelected: (_) => setState(() => _selected = i),
                     ),
                   ),
-                if (tabs.length < 8)
+                if (tabs.length < CodeTabsBlockEditor.maxTabs)
                   IconButton(
+                    key: ValueKey('$id-tab-add'),
                     tooltip: l10n.addCodeTab,
                     color: colors.codeText,
                     iconSize: 18,
-                    onPressed: () {
-                      _set([...tabs, const RCodeTab(label: 'Dart', lang: 'dart', code: '')]);
-                      setState(() => _selected = tabs.length);
-                    },
+                    onPressed: enabled
+                        ? () {
+                            _set([...tabs, RCodeTab(label: codeLanguageName('plaintext'), lang: 'plaintext', code: '')]);
+                            setState(() => _selected = tabs.length);
+                          }
+                        : null,
                     icon: const Icon(Icons.add_rounded),
                   ),
               ],
@@ -519,9 +563,10 @@ class _CodeTabsBlockEditorState extends State<CodeTabsBlockEditor> {
           Row(
             children: [
               SizedBox(
-                width: 110,
+                width: 96,
                 child: PlainField(
-                  key: ValueKey('${widget.block.id}-label-$index'),
+                  key: ValueKey('$id-label-$index'),
+                  fieldKey: ValueKey('$id-tab-label'),
                   value: tab.label,
                   hint: l10n.codeTabLabelHint,
                   maxLength: 40,
@@ -531,27 +576,43 @@ class _CodeTabsBlockEditorState extends State<CodeTabsBlockEditor> {
                 ),
               ),
               const SizedBox(width: ReadInSpace.s2),
-              _LangPicker(value: tab.lang, onChanged: (v) => _set([...tabs]..[index] = _tab(tab, lang: v))),
+              _LangPicker(
+                pickerKey: ValueKey('$id-tab-lang'),
+                value: tab.lang,
+                // A name that still names the old language follows the new one.
+                onChanged: (v) => _set([...tabs]
+                  ..[index] = tab.label.isEmpty || tab.label == codeLanguageName(tab.lang)
+                      ? _tab(tab, lang: v, label: codeLanguageName(v))
+                      : _tab(tab, lang: v)),
+              ),
               const Spacer(),
-              if (tabs.length > 1)
-                IconButton(
-                  tooltip: l10n.removeCodeTab,
-                  color: colors.codeText,
-                  iconSize: 18,
-                  onPressed: () {
-                    _set([...tabs]..removeAt(index));
-                    setState(() => _selected = (index - 1).clamp(0, tabs.length - 2));
-                  },
-                  icon: const Icon(Icons.close_rounded),
-                ),
+              IconButton(
+                key: ValueKey('$id-tab-remove'),
+                tooltip: l10n.removeCodeTab,
+                color: colors.codeText,
+                iconSize: 18,
+                onPressed: enabled ? () => _remove(index) : null,
+                icon: const Icon(Icons.delete_outline_rounded),
+              ),
             ],
+          ),
+          PlainField(
+            key: ValueKey('$id-filename-$index'),
+            fieldKey: ValueKey('$id-tab-filename'),
+            value: tab.filename ?? '',
+            hint: l10n.codeFilenameHint,
+            maxLength: 200,
+            direction: TextDirection.ltr,
+            style: small,
+            onChanged: (v) => _set([...tabs]..[index] = _tab(tab, filename: () => v.isEmpty ? null : v)),
           ),
           Divider(color: colors.codeBorder, height: ReadInSpace.s4),
           PlainField(
-            key: ValueKey('${widget.block.id}-code-$index'),
+            key: ValueKey('$id-code-$index'),
+            fieldKey: ValueKey('$id-tab-code'),
             value: tab.code,
             hint: l10n.codeHint,
-            primaryFor: widget.block.id,
+            primaryFor: id,
             direction: TextDirection.ltr,
             maxLines: null,
             minLines: 2,
@@ -567,109 +628,117 @@ class _CodeTabsBlockEditorState extends State<CodeTabsBlockEditor> {
 
 // ── Table ──────────────────────────────────────────────────
 
-class TableBlockEditor extends StatelessWidget {
+/// A table edited in place, a field per cell; the header row is bold. The toolbar's table tools add and delete rows
+/// and columns around the cell in focus ([InlineField.cell]); when the cell in focus is deleted, the caret moves to
+/// the nearest cell left, as in the web editor.
+class TableBlockEditor extends StatefulWidget {
   const TableBlockEditor({super.key, required this.block});
 
   final RTable block;
 
-  static const _maxColumns = 12;
-  static const _maxRows = 200;
+  @override
+  State<TableBlockEditor> createState() => _TableBlockEditorState();
+}
+
+class _TableBlockEditorState extends State<TableBlockEditor> {
+  final _focusNodes = <(int, int), FocusNode>{};
+
+  FocusNode _nodeAt(int row, int col) => _focusNodes.putIfAbsent((row, col), FocusNode.new);
+
+  @override
+  void didUpdateWidget(TableBlockEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final rows = widget.block.rows.length;
+    final columns = widget.block.header.length;
+    bool gone((int, int) at) => at.$1 > rows || at.$2 >= columns;
+    final removed = [for (final at in _focusNodes.keys) if (gone(at)) at];
+    if (removed.isEmpty) return;
+    final focused = removed.where((at) => _focusNodes[at]!.hasFocus).firstOrNull;
+    final nodes = [for (final at in removed) _focusNodes.remove(at)!];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // The fields that used them are gone by now.
+      for (final node in nodes) {
+        node.dispose();
+      }
+      if (focused != null && mounted && columns > 0) {
+        _nodeAt(focused.$1 > rows ? rows : focused.$1, focused.$2 >= columns ? columns - 1 : focused.$2).requestFocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final node in _focusNodes.values) {
+      node.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final block = widget.block;
     final scope = BlockEditorScope.of(context);
     final colors = context.colors;
-    final l10n = context.l10n;
     final dir = _dirOf(context, block);
     final style = rdocBodyStyle(context, dir, factor: 0.85).copyWith(height: 1.5);
     final columns = block.header.length;
     void set({List<List<RInline>>? header, List<List<List<RInline>>>? rows}) =>
-        scope.controller.replace(RTable(block.id, dir: block.dir, header: header ?? block.header, rows: rows ?? block.rows));
+        scope.host.replace(RTable(block.id, dir: block.dir, header: header ?? block.header, rows: rows ?? block.rows));
 
-    Widget cell(List<RInline> nodes, ValueChanged<List<RInline>> onChanged, {required bool head, bool primary = false}) => Padding(
+    Widget cell(List<RInline> nodes, ValueChanged<List<RInline>> onChanged, TablePosition at) => Padding(
           padding: const EdgeInsets.all(ReadInSpace.s2),
           child: InlineField(
+            key: ValueKey('${block.id}-cell-${at.row}-${at.col}'),
+            fieldKey: ValueKey('${block.id}-field-${at.row}-${at.col}'),
             blockId: block.id,
-            primary: primary,
+            primary: at.row == 0 && at.col == 0,
+            cell: at,
+            focusNode: _nodeAt(at.row, at.col),
             nodes: nodes,
-            style: head ? style.copyWith(fontWeight: FontWeight.w700) : style,
+            style: at.row == 0 ? style.copyWith(fontWeight: FontWeight.w700) : style,
             direction: dir,
             onChanged: onChanged,
           ),
         );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Directionality(
-          textDirection: dir,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Table(
-              defaultColumnWidth: const FixedColumnWidth(150),
-              border: TableBorder.all(color: colors.border, borderRadius: BorderRadius.circular(ReadInRadius.sm)),
+    return Directionality(
+      textDirection: dir,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Table(
+          defaultColumnWidth: const FixedColumnWidth(150),
+          border: TableBorder.all(color: colors.border, borderRadius: BorderRadius.circular(ReadInRadius.sm)),
+          children: [
+            TableRow(
+              decoration: BoxDecoration(color: colors.surfaceVariant),
               children: [
-                TableRow(
-                  decoration: BoxDecoration(color: colors.surfaceVariant),
-                  children: [
-                    for (var c = 0; c < columns; c++)
-                      cell(block.header[c], (n) => set(header: [...block.header]..[c] = n), head: true, primary: c == 0),
-                  ],
-                ),
-                for (var r = 0; r < block.rows.length; r++)
-                  TableRow(children: [
-                    for (var c = 0; c < columns; c++)
-                      cell(
-                        c < block.rows[r].length ? block.rows[r][c] : const [],
-                        (n) {
-                          final row = [...block.rows[r], for (var k = block.rows[r].length; k < columns; k++) <RInline>[]];
-                          row[c] = n;
-                          set(rows: [...block.rows]..[r] = row);
-                        },
-                        head: false,
-                      ),
-                  ]),
+                for (var c = 0; c < columns; c++) cell(block.header[c], (n) => set(header: [...block.header]..[c] = n), (row: 0, col: c)),
               ],
             ),
-          ),
-        ),
-        Wrap(
-          spacing: ReadInSpace.s1,
-          children: [
-            if (block.rows.length < _maxRows)
-              TextButton.icon(
-                onPressed: () => set(rows: [...block.rows, [for (var c = 0; c < columns; c++) <RInline>[]]]),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(l10n.tableAddRow),
-              ),
-            if (columns < _maxColumns)
-              TextButton.icon(
-                onPressed: () => set(
-                  header: [...block.header, const []],
-                  rows: [for (final r in block.rows) [...r, const []]],
-                ),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(l10n.tableAddColumn),
-              ),
-            if (block.rows.isNotEmpty)
-              TextButton(onPressed: () => set(rows: [...block.rows]..removeLast()), child: Text(l10n.tableRemoveRow)),
-            if (columns > 1)
-              TextButton(
-                onPressed: () => set(
-                  header: [...block.header]..removeLast(),
-                  rows: [for (final r in block.rows) r.length >= columns ? ([...r]..removeLast()) : r],
-                ),
-                child: Text(l10n.tableRemoveColumn),
-              ),
+            for (var r = 0; r < block.rows.length; r++)
+              TableRow(children: [
+                for (var c = 0; c < columns; c++)
+                  cell(
+                    c < block.rows[r].length ? block.rows[r][c] : const [],
+                    (n) {
+                      final row = [...block.rows[r], for (var k = block.rows[r].length; k < columns; k++) <RInline>[]];
+                      row[c] = n;
+                      set(rows: [...block.rows]..[r] = row);
+                    },
+                    (row: r + 1, col: c),
+                  ),
+              ]),
           ],
         ),
-      ],
+      ),
     );
   }
 }
 
 // ── Media and embeds ───────────────────────────────────────
 
+/// An image: upload or replace it in place, with its alt text (required, flagged red while missing) and caption
+/// under it.
 class ImageBlockEditor extends StatefulWidget {
   const ImageBlockEditor({super.key, required this.block});
 
@@ -702,7 +771,7 @@ class _ImageBlockEditorState extends State<ImageBlockEditor> {
     setState(() => _uploading = false);
     final url = asset == null || asset.variants.isEmpty ? null : asset.variants.last.url;
     if (url == null) return;
-    scope.controller.replace(_with(src: url, width: () => asset!.width, height: () => asset!.height));
+    scope.host.replace(_with(src: url, width: () => asset!.width, height: () => asset!.height));
   }
 
   @override
@@ -756,26 +825,29 @@ class _ImageBlockEditorState extends State<ImageBlockEditor> {
         if (hasImage) ...[
           const SizedBox(height: ReadInSpace.s3),
           PlainField(
+            fieldKey: ValueKey('${block.id}-alt'),
             value: block.alt,
             decorated: true,
             primaryFor: block.id,
             label: l10n.imageAltLabel,
             helper: missingAlt ? null : l10n.imageAltHelp,
-            errorText: missingAlt ? l10n.imageAltHelp : null,
+            errorText: missingAlt ? l10n.problemImageAlt : null,
             maxLength: DraftLimits.maxImageAlt,
-            onChanged: (v) => scope.controller.replace(_with(alt: v)),
+            onChanged: (v) => scope.host.replace(_with(alt: v)),
           ),
           const SizedBox(height: ReadInSpace.s3),
           PlainField(
+            fieldKey: ValueKey('${block.id}-caption'),
             value: block.caption ?? '',
             decorated: true,
             label: l10n.imageCaptionLabel,
             maxLength: DraftLimits.maxPlainText,
-            onChanged: (v) => scope.controller.replace(_with(caption: () => v.isEmpty ? null : v)),
+            onChanged: (v) => scope.host.replace(_with(caption: () => v.isEmpty ? null : v)),
           ),
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
+              key: ValueKey('image-replace-${block.id}'),
               onPressed: scope.editorContext.enabled && !_uploading ? _pick : null,
               icon: _uploading
                   ? const SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2))
@@ -789,18 +861,36 @@ class _ImageBlockEditorState extends State<ImageBlockEditor> {
   }
 }
 
-/// Allow-listed embeds (SPEC §13.2): YouTube and GitHub Gist links only.
+/// Allow-listed embeds (SPEC §13.2), the same check as the web editor's `isAllowedEmbed`: a YouTube video id
+/// (youtu.be, youtube.com watch / embed / shorts / live, youtube-nocookie.com) or a GitHub Gist.
 abstract final class EmbedLinks {
-  static const _youtube = {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtube-nocookie.com'};
-  static const _gist = {'gist.github.com'};
+  static final _youtubeId = RegExp(r'^[A-Za-z0-9_-]{11}$');
+  static final _gist = RegExp(r'^https://gist\.github\.com/[\w.-]+/[0-9a-f]+', caseSensitive: false);
+  static final _http = RegExp(r'''^https?://[^\s<>"']+$''', caseSensitive: false);
+  static final _youtubePath = RegExp(r'^/(?:embed|shorts|live)/([^/]+)');
+
+  static String? youtubeId(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme) return null;
+    final host = uri.host.toLowerCase().replaceFirst(RegExp(r'^www\.|^m\.'), '');
+    String? id;
+    if (host == 'youtu.be') {
+      id = uri.path.length > 1 ? uri.path.substring(1) : null;
+    } else if (host == 'youtube.com' || host == 'youtube-nocookie.com') {
+      id = uri.queryParameters['v'] ?? _youtubePath.firstMatch(uri.path)?.group(1);
+    }
+    return id != null && _youtubeId.hasMatch(id) ? id : null;
+  }
 
   static bool isValid(String provider, String url) {
-    if (!InlineEditing.isHttpUrl(url)) return false;
-    final host = Uri.parse(url.trim()).host.toLowerCase();
-    return provider == 'github-gist' ? _gist.contains(host) : _youtube.contains(host);
+    final value = url.trim();
+    if (!_http.hasMatch(value)) return false;
+    if (provider == 'github-gist') return _gist.hasMatch(value);
+    return youtubeId(value) != null;
   }
 }
 
+/// An embed: the provider, the link in place (checked as you type), and the reader's preview once it is valid.
 class EmbedBlockEditor extends StatelessWidget {
   const EmbedBlockEditor({super.key, required this.block});
 
@@ -811,7 +901,9 @@ class EmbedBlockEditor extends StatelessWidget {
     final scope = BlockEditorScope.of(context);
     final colors = context.colors;
     final l10n = context.l10n;
-    final invalid = block.url.trim().isNotEmpty && !EmbedLinks.isValid(block.provider, block.url);
+    final provider = block.provider == 'github-gist' ? 'github-gist' : 'youtube';
+    final empty = block.url.trim().isEmpty;
+    final valid = !empty && EmbedLinks.isValid(provider, block.url);
     return Container(
       padding: const EdgeInsets.all(ReadInSpace.s3),
       decoration: BoxDecoration(
@@ -823,30 +915,37 @@ class EmbedBlockEditor extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SegmentedButton<String>(
+            key: ValueKey('${block.id}-provider'),
             showSelectedIcon: false,
             segments: const [
               ButtonSegment(value: 'youtube', label: Text('YouTube'), icon: Icon(Icons.smart_display_outlined)),
               ButtonSegment(value: 'github-gist', label: Text('GitHub Gist'), icon: Icon(Icons.code_rounded)),
             ],
-            selected: {block.provider == 'github-gist' ? 'github-gist' : 'youtube'},
-            onSelectionChanged: (v) => scope.controller.replace(REmbed(block.id, provider: v.first, url: block.url)),
+            selected: {provider},
+            onSelectionChanged: scope.editorContext.enabled
+                ? (v) => scope.host.replace(REmbed(block.id, provider: v.first, url: block.url))
+                : null,
           ),
           const SizedBox(height: ReadInSpace.s3),
           PlainField(
+            fieldKey: ValueKey('${block.id}-url'),
             value: block.url,
             decorated: true,
             primaryFor: block.id,
             label: l10n.embedUrlLabel,
-            hint: block.provider == 'github-gist' ? 'https://gist.github.com/…' : 'https://www.youtube.com/watch?v=…',
-            errorText: invalid ? l10n.embedInvalid : null,
+            hint: provider == 'github-gist' ? 'https://gist.github.com/…' : 'https://www.youtube.com/watch?v=…',
+            errorText: !empty && !valid ? l10n.embedInvalid : null,
             direction: TextDirection.ltr,
             keyboardType: TextInputType.url,
             maxLength: DraftLimits.maxUrl,
-            onChanged: (v) => scope.controller.replace(REmbed(block.id, provider: block.provider, url: v.trim())),
+            onChanged: (v) => scope.host.replace(REmbed(block.id, provider: provider, url: v)),
           ),
+          if (valid) ...[
+            const SizedBox(height: ReadInSpace.s3),
+            IgnorePointer(child: REmbedView(REmbed(block.id, provider: provider, url: block.url.trim()))),
+          ],
         ],
       ),
     );
   }
 }
-

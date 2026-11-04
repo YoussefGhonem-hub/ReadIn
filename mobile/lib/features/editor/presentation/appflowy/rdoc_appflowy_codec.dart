@@ -13,7 +13,7 @@ abstract final class RDocNodeKeys {
   /// The TL;DR box: its text is the node's delta.
   static const summary = 'rdoc_summary';
 
-  /// Steps, code, code tabs, table, image and embed: the RDoc block JSON in [block], edited in a sheet.
+  /// Steps, code, code tabs, table, image and embed: the RDoc block JSON in [blockJson], edited in place.
   static const block = 'rdoc_block';
 
   static const blockJson = 'rdoc';
@@ -25,14 +25,26 @@ abstract final class RDocNodeKeys {
   static const listId = 'rdoc_list';
 
   // Inline attributes.
+
+  /// On a [placeholder] character: `{userId, text}`.
   static const mention = 'rdoc_mention';
+
+  /// On a [placeholder] character: `{termId, text}`.
   static const term = 'rdoc_term';
   static const highlight = 'highlight';
+
+  /// The one character a mention or glossary term takes in the text (U+FFFC, the object replacement character):
+  /// the caret steps over it, Backspace removes it whole, and typing never extends or splits it.
+  static const placeholder = '￼';
 }
 
+/// A mention or glossary term carried by a [RDocNodeKeys.placeholder] character.
+typedef RDocAtom = ({bool mention, String id, String text});
+
 /// RDoc ⇄ AppFlowy, on top of the library-independent [RDocCodec]: block ids become node ids (AppFlowy's own ids
-/// are valid RDoc ids), `dir` becomes the node's `textDirection`, marks become delta attributes, and mentions and
-/// glossary terms are text runs that carry their user / term id. A hard break is a `\n` inside a block's text.
+/// are valid RDoc ids), `dir` becomes the node's `textDirection`, marks become delta attributes, and a mention or
+/// glossary term is one [RDocNodeKeys.placeholder] character carrying its id and text. A hard break is a `\n` inside
+/// a block's text.
 abstract final class RDocAppFlowyCodec {
   // ── RDoc → AppFlowy ──────────────────────────────────────
 
@@ -86,7 +98,8 @@ abstract final class RDocAppFlowyCodec {
         },
       );
 
-  /// Inline nodes as a delta: marks are attributes, a mention or term is a run with its id, a hard break is `\n`.
+  /// Inline nodes as a delta: marks are attributes, a mention or term is one placeholder character, a hard break is
+  /// `\n`.
   static Delta deltaFor(List<RInline> nodes) {
     final delta = Delta();
     for (final node in nodes) {
@@ -104,14 +117,38 @@ abstract final class RDocAppFlowyCodec {
           };
           delta.insert(node.text, attributes: attributes.isEmpty ? null : attributes);
         case RMention():
-          delta.insert(node.text, attributes: {RDocNodeKeys.mention: node.userId});
+          delta.insert(RDocNodeKeys.placeholder, attributes: mentionAttributes(userId: node.userId, text: node.text));
         case RTerm():
-          delta.insert(node.text, attributes: {RDocNodeKeys.term: node.termId});
+          delta.insert(RDocNodeKeys.placeholder, attributes: termAttributes(termId: node.termId, text: node.text));
         case RHardBreak():
           delta.insert('\n');
       }
     }
     return delta;
+  }
+
+  /// The attributes of a mention's placeholder character.
+  static Map<String, Object> mentionAttributes({required String userId, required String text}) => {
+        RDocNodeKeys.mention: {'userId': userId, 'text': text},
+      };
+
+  /// The attributes of a glossary term's placeholder character.
+  static Map<String, Object> termAttributes({required String termId, required String text}) => {
+        RDocNodeKeys.term: {'termId': termId, 'text': text},
+      };
+
+  /// The mention or term a run's attributes carry, if any.
+  static RDocAtom? atomOf(Map<String, dynamic>? attributes) {
+    if (attributes == null) return null;
+    final mention = attributes[RDocNodeKeys.mention];
+    if (mention is Map && mention['userId'] is String && mention['text'] is String) {
+      return (mention: true, id: mention['userId'] as String, text: mention['text'] as String);
+    }
+    final term = attributes[RDocNodeKeys.term];
+    if (term is Map && term['termId'] is String && term['text'] is String) {
+      return (mention: false, id: term['termId'] as String, text: term['text'] as String);
+    }
+    return null;
   }
 
   // ── AppFlowy → RDoc ──────────────────────────────────────
@@ -192,25 +229,31 @@ abstract final class RDocAppFlowyCodec {
     return BlockDirection.values.contains(value) ? value! : BlockDirection.auto;
   }
 
-  /// A delta back to inline nodes: `\n` becomes a hard break, a run with a mention or term id becomes that node,
-  /// `false` attributes (AppFlowy's "toggled off") are no marks, and links keep http(s) only.
+  /// A delta back to inline nodes: `\n` becomes a hard break, each placeholder character carrying a mention or term
+  /// becomes that node (any other character of such a run stays text), `false` attributes (AppFlowy's "toggled
+  /// off") are no marks, and links keep http(s) only.
   static List<RInline> inlinesFrom(Delta? delta) {
     if (delta == null) return const [];
     final out = <RInline>[];
     for (final op in delta.whereType<TextInsert>()) {
       final attributes = op.attributes ?? const {};
-      final mention = attributes[RDocNodeKeys.mention];
-      final term = attributes[RDocNodeKeys.term];
+      final atom = atomOf(attributes);
       final parts = op.text.split('\n');
       for (final (i, part) in parts.indexed) {
         if (i > 0) out.add(const RHardBreak());
         if (part.isEmpty) continue;
-        if (mention is String && mention.isNotEmpty) {
-          out.add(RMention(userId: mention, text: part));
-        } else if (term is String && term.isNotEmpty) {
-          out.add(RTerm(termId: term, text: part));
-        } else {
+        if (atom == null) {
           out.add(RText(part, marks: _marks(attributes)));
+          continue;
+        }
+        var start = 0;
+        for (var k = 0; k <= part.length; k++) {
+          if (k < part.length && part[k] != RDocNodeKeys.placeholder) continue;
+          if (k > start) out.add(RText(part.substring(start, k)));
+          if (k < part.length) {
+            out.add(atom.mention ? RMention(userId: atom.id, text: atom.text) : RTerm(termId: atom.id, text: atom.text));
+          }
+          start = k + 1;
         }
       }
     }

@@ -1697,6 +1697,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get undo => 'تراجع';
 
   @override
+  String get redo => 'إعادة';
+
+  @override
   String get moreActions => 'اختيارات تانية';
 
   @override
@@ -2597,10 +2600,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tableAddColumn => 'ضيف عمود';
 
   @override
-  String get tableRemoveRow => 'شيل آخر صف';
+  String get tableDeleteRow => 'امسح الصف';
 
   @override
-  String get tableRemoveColumn => 'شيل آخر عمود';
+  String get tableDeleteColumn => 'امسح العمود';
+
+  @override
+  String get tableDelete => 'امسح الجدول';
+
+  @override
+  String get tableTools => 'الجدول';
 
   @override
   String get stepTitleHint => 'عنوان الخطوة';

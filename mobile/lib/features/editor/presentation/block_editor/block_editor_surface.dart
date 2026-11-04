@@ -5,6 +5,7 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/rdoc/editing/block_editing.dart';
+import '../../../../shared/rdoc/editing/table_editing.dart';
 import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../media/domain/entities/media.dart';
 import 'block_editor_controller.dart';
@@ -27,7 +28,7 @@ class BlockEditorContext {
   /// The article's direction, for blocks without strong characters (`dir: auto`).
   final TextDirection fallbackDirection;
 
-  /// The inline field in focus, in the structured-block sheets.
+  /// The inline field of a structured block in focus (a table cell, a step's text).
   final EditorFocus focus;
 
   /// Picks one image on the device; null when cancelled.
@@ -52,37 +53,61 @@ abstract interface class BlockEditorSurface {
   Widget build(BuildContext context, BlockEditorController controller, BlockEditorContext editorContext);
 }
 
-/// Which inline field of a structured-block sheet is in focus.
+/// Which inline field of a structured block (a table cell, a step's text) is in focus: the toolbar formats it, and
+/// shows the table tools for a table cell ([cell]).
 class EditorFocus extends ChangeNotifier {
   InlineTextController? _active;
   String? _blockId;
+  TablePosition? _cell;
 
   InlineTextController? get active => _active;
   String? get blockId => _blockId;
 
-  void activate(String blockId, InlineTextController controller) {
-    if (_active == controller && _blockId == blockId) return;
-    _active?.removeListener(notifyListeners);
-    _active = controller..addListener(notifyListeners);
+  /// The table cell in focus, if the field is one.
+  TablePosition? get cell => _cell;
+
+  void activate(String blockId, InlineTextController controller, {TablePosition? cell}) {
+    if (_active == controller && _blockId == blockId && _cell == cell) return;
+    _active?.removeListener(_notify);
+    _active = controller..addListener(_notify);
     _blockId = blockId;
-    notifyListeners();
+    _cell = cell;
+    _notify();
   }
 
   void deactivate(InlineTextController controller) {
     if (_active != controller) return;
-    controller.removeListener(notifyListeners);
+    controller.removeListener(_notify);
     _active = null;
     _blockId = null;
-    notifyListeners();
+    _cell = null;
+    _notify();
   }
 
   /// [deactivate] for a field being disposed: the tree is locked then, so listeners hear about it after the frame.
   void release(InlineTextController controller) {
     if (_active != controller) return;
-    controller.removeListener(notifyListeners);
+    controller.removeListener(_notify);
     _active = null;
     _blockId = null;
+    _cell = null;
+    _notifyAfterFrame();
+  }
+
+  /// Announces a change (the field's text or caret too: the toolbar's marks follow it). A field updated while the
+  /// tree builds (an undo, a table tool) is announced after the frame.
+  void _notify() {
+    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) return _notifyAfterFrame();
+    notifyListeners();
+  }
+
+  bool _pending = false;
+
+  void _notifyAfterFrame() {
+    if (_pending) return;
+    _pending = true;
     SchedulerBinding.instance.addPostFrameCallback((_) {
+      _pending = false;
       if (!_disposed) notifyListeners();
     });
   }
@@ -92,16 +117,16 @@ class EditorFocus extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
-    _active?.removeListener(notifyListeners);
+    _active?.removeListener(_notify);
     super.dispose();
   }
 }
 
-/// Shared with the block editors of a structured-block sheet.
+/// Shared with the inline block editors: where they write ([host]), the uploads and the focus.
 class BlockEditorScope extends InheritedWidget {
-  const BlockEditorScope({super.key, required super.child, required this.controller, required this.editorContext, required this.registry});
+  const BlockEditorScope({super.key, required super.child, required this.host, required this.editorContext, required this.registry});
 
-  final SimpleBlockEditorController controller;
+  final StructuredBlockHost host;
   final BlockEditorContext editorContext;
   final BlockFocusRegistry registry;
 
@@ -109,7 +134,7 @@ class BlockEditorScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(BlockEditorScope old) =>
-      old.controller != controller || old.editorContext != editorContext || old.registry != registry;
+      old.host != host || old.editorContext != editorContext || old.registry != registry;
 }
 
 /// Each block's first focusable field, so a block can be focused.
@@ -277,4 +302,27 @@ class _SheetLabel extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s3, ReadInSpace.s5, ReadInSpace.s2),
         child: Text(text, style: context.textTheme.labelMedium?.copyWith(color: context.colors.textSecondary)),
       );
+}
+
+/// The table tools (as the web editor's), on the cell in focus.
+enum TableTool { addRow, addColumn, deleteRow, deleteColumn, deleteTable }
+
+/// Applies a table tool to the table cell in [focus], within the schema's limits ([TableEditing]): one edit through
+/// [host], so it is undoable.
+void applyTableTool(BlockStructureCommands commands, StructuredBlockHost host, EditorFocus focus, TableTool tool) {
+  final blockId = focus.blockId;
+  final cell = focus.cell;
+  if (blockId == null || cell == null) return;
+  final table = commands.blockOf(blockId);
+  if (table is! RTable) return;
+  final op = switch (tool) {
+    TableTool.addRow => TableOp.addRow,
+    TableTool.addColumn => TableOp.addColumn,
+    TableTool.deleteRow => TableOp.deleteRow,
+    TableTool.deleteColumn => TableOp.deleteColumn,
+    TableTool.deleteTable => null,
+  };
+  if (op == null) return host.remove(blockId);
+  final next = TableEditing.apply(table, op, cell);
+  if (!identical(next, table)) host.replace(next);
 }

@@ -579,14 +579,20 @@ class _ArticleEditorViewState extends State<ArticleEditorView> {
         ChecksStrip(state: state, onOpen: _openChecks),
         EditorToolbar(
           formatter: formatter,
+          focus: _focus,
+          history: content is UndoRedo ? content as UndoRedo : null,
           enabled: enabled,
-          onAddBlock: () => showInsertBlockSheet(context, content),
+          // A structured block's field in focus is where the writer is.
+          onAddBlock: () => showInsertBlockSheet(context, content, afterId: _focus.blockId),
           onBlockOptions: () {
-            final id = content.focusedBlockId;
+            final id = _focus.blockId ?? content.focusedBlockId;
             if (content is BlockStructureCommands && id != null) {
               showBlockOptionsSheet(context, content as BlockStructureCommands, id);
             }
           },
+          onTableTool: content is StructuredBlockHost && content is BlockStructureCommands
+              ? (tool) => applyTableTool(content as BlockStructureCommands, content as StructuredBlockHost, _focus, tool)
+              : null,
         ),
       ],
     );
