@@ -18,7 +18,7 @@ void main() {
     blocks: document.blocks.where((b) => b is! RImage && b is! REmbed).toList(),
   );
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('reader ${variant.name}', (tester) async {
       usePhoneSurface(tester, size: const Size(390, 2900));
       await tester.pumpWidget(testApp(

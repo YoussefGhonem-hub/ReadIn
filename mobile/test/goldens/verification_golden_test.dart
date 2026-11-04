@@ -53,7 +53,7 @@ void main() {
     proof: pdfProof,
   );
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('verification form ${variant.name}', (tester) async {
       await pumpView(tester, variant, state: filledForm, form: formWithFile, height: 1180);
       await expectLater(find.byType(VerificationView), matchesVariantGolden(variant, 'goldens/verification_form_${variant.name}.png'));

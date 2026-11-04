@@ -68,7 +68,7 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('paths list ${variant.name}', (tester) async {
       final all = MockAllPathsCubit()..hold(PathListState(status: PathListStatus.ready, items: pathsFor(variant)));
       final mine = MockMyPathsCubit()..hold(const PathListState());

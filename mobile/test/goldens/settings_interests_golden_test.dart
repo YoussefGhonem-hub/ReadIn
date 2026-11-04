@@ -23,7 +23,7 @@ void main() {
     Topic(id: 't-aspnet', fieldId: 'f-dotnet', slug: 'aspnet-core', nameAr: 'ASP.NET Core', nameEn: 'ASP.NET Core'),
   ];
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('your interests ${variant.name}', (tester) async {
       usePhoneSurface(tester, size: const Size(390, 640));
       await tester.pumpWidget(testApp(

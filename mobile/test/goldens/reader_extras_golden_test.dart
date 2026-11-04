@@ -68,7 +68,7 @@ void main() {
     await tester.pump();
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('reader health disclaimer and tags ${variant.name}', (tester) async {
       await pump(tester, variant, details(variant, sections: false));
       await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/reader_health_disclaimer_${variant.name}.png'));

@@ -73,7 +73,7 @@ void main() {
     await tester.pump();
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('report sheet ${variant.name}', (tester) async {
       final cubit = MockReportCubit()..hold(const ReportState(reason: ReportReason.harassment));
       await pump(

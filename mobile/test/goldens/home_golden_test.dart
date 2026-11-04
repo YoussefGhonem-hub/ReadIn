@@ -136,7 +136,7 @@ void main() {
     return engagement;
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('home ${variant.name}', (tester) async {
       await pumpHome(tester, variant, progressCards: true);
       await expectLater(find.byType(HomeView), matchesVariantGolden(variant, 'goldens/home_${variant.name}.png'));
@@ -144,7 +144,7 @@ void main() {
   }
 
   // Live updates (F27): "new articles" banner, unread badge and a card whose counters changed.
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('home live ${variant.name}', (tester) async {
       final engagement = await pumpHome(tester, variant, live: const LiveFeedState(hasNewArticles: true), unread: 3);
       // What the card's live subscription hands over once it is on screen: Today's article, the card in view (F34).

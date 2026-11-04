@@ -28,7 +28,7 @@ void main() {
     await tester.pump();
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('reading stats card ${variant.name}', (tester) async {
       await pump(tester, variant, ReadingStatsView(stats: sampleStats()));
       await expectLater(find.byType(ReadingStatsView), matchesVariantGolden(variant, 'goldens/reading_stats_card_${variant.name}.png'));
@@ -36,7 +36,7 @@ void main() {
   }
 
   // Yesterday was missed: reading today uses a freeze. No top fields yet.
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('reading stats card freeze pending ${variant.name}', (tester) async {
       final stats = sampleStats(
         streak: sampleStreak(current: 4, longest: 4, readToday: false, freezeAvailable: false, freezePending: true),
@@ -50,14 +50,14 @@ void main() {
     });
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('reading heatmap ${variant.name}', (tester) async {
       await pump(tester, variant, ReadingHeatmapView(heatmap: sampleHeatmap()), height: 260);
       await expectLater(find.byType(ReadingHeatmapView), matchesVariantGolden(variant, 'goldens/reading_heatmap_${variant.name}.png'));
     });
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('milestone card ${variant.name}', (tester) async {
       await pump(tester, variant, const MilestoneShareCard(days: 30), height: 420);
       await expectLater(find.byType(MilestoneShareCard), matchesVariantGolden(variant, 'goldens/reading_milestone_card_${variant.name}.png'));
@@ -65,7 +65,7 @@ void main() {
   }
 
   // Home badge: read today, not read yet today, freeze pending, and a guest / new streak.
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('streak badge states ${variant.name}', (tester) async {
       await pump(
         tester,

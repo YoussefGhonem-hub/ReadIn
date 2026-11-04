@@ -26,7 +26,7 @@ void main() {
   setUp(() => NotificationClock.now = () => notificationsNow);
   tearDown(() => NotificationClock.now = DateTime.now);
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     // Every kind of row: unread and read, aggregated ("Ahmed Samir and 9 others"), a deleted actor, an English article
     // in the Arabic UI and the other way round, comment excerpts, a mention in an article (no excerpt), and the
     // actorless types.

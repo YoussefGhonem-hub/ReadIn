@@ -73,7 +73,7 @@ void main() {
     await tester.pump();
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     final language = languageOf(variant);
 
     testWidgets("today's article and a short one by a deleted user ${variant.name}", (tester) async {

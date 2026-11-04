@@ -49,7 +49,7 @@ void main() {
     getIt.reset();
   });
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     final language = languageOf(variant);
     // The profile's own articles as post cards (F34), by its writer: no Follow on them.
     List<ArticleCard> articlesBy(UserProfile profile) => [

@@ -147,7 +147,7 @@ void main() {
     return (sentence * 40).substring(0, 1850);
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('comment items ${variant.name}', (tester) async {
       await pump(
         tester,

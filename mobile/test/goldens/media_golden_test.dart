@@ -36,7 +36,7 @@ void main() {
     await tester.pump();
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     final language = variant.locale.languageCode == 'en' ? 'en' : 'ar-EG';
 
     testWidgets('feed card with an image carousel ${variant.name}', (tester) async {

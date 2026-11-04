@@ -128,7 +128,7 @@ void main() {
     await tester.pump();
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     final language = languageOf(variant);
 
     testWidgets('reader action bar ${variant.name}', (tester) async {

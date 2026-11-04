@@ -112,7 +112,7 @@ void main() {
     return cubit;
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('my articles ${variant.name}', (tester) async {
       usePhoneSurface(tester);
       final cubit = MockMyArticlesCubit();

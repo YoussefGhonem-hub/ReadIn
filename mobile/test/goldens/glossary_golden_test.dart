@@ -37,7 +37,7 @@ class MockGlossarySearchCubit extends MockCubit<GlossarySearchState> implements 
 /// The glossary sheet and the editor's term picker (F21), and the related articles at the end of the reader (F04), in
 /// ar/en × light/dark.
 void main() {
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('glossary sheet ${variant.name}', (tester) async {
       usePhoneSurface(tester, size: const Size(390, 900));
       final cubit = MockGlossaryTermCubit();

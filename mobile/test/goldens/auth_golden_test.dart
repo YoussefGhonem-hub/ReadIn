@@ -171,7 +171,7 @@ void main() {
     } while (position.pixels < position.maxScrollExtent && ++drags < 5);
   }
 
-  for (final variant in Variant.all) {
+  for (final variant in Variant.golden) {
     testWidgets('welcome ${variant.name}', (tester) async {
       await pumpScreen(
         tester,
