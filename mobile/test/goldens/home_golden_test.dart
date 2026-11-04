@@ -21,6 +21,7 @@ import 'package:readin/features/reading/presentation/cubit/streak_cubit.dart';
 import 'package:readin/features/saved/domain/usecases/saved_usecases.dart';
 
 import '../helpers/fixtures.dart';
+import '../helpers/path_fixtures.dart';
 import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
 
@@ -43,7 +44,13 @@ void main() {
   setUp(() => HomeView.clock = () => DateTime(2026, 11, 2, 9));
   tearDown(() => HomeView.clock = DateTime.now);
 
-  Future<EngagementCubit> pumpHome(WidgetTester tester, Variant variant, {LiveFeedState live = const LiveFeedState(), int unread = 0}) async {
+  Future<EngagementCubit> pumpHome(
+    WidgetTester tester,
+    Variant variant, {
+    LiveFeedState live = const LiveFeedState(),
+    int unread = 0,
+    bool progressCards = false,
+  }) async {
     usePhoneSurface(tester);
     final home = MockHomeCubit();
     final feed = MockFeedCubit();
@@ -51,8 +58,19 @@ void main() {
     final suggested = MockSuggestedWritersCubit();
     final session = MockSessionCubit();
     final follows = MockFollowsCubit();
+    final en = variant.locale.languageCode == 'en';
+    // F03: Continue reading (the first item is the hero, so the second shows) and the learning path in progress.
+    // Without them, the "explore paths" prompt.
     whenListen(home, const Stream<HomeState>.empty(),
-        initialState: HomeState(loading: false, today: sampleCard(1), fields: sampleFields));
+        initialState: HomeState(
+          loading: false,
+          today: sampleCard(1),
+          fields: sampleFields,
+          continueReading: progressCards ? [sampleContinueReading(1), sampleContinueReading(2, percent: 64)] : const [],
+          activePath: progressCards
+              ? samplePath(title: en ? 'ASP.NET Core basics' : 'أساسيات ASP.NET Core', readCount: 2, enrolled: true)
+              : null,
+        ));
     whenListen(feed, const Stream<FeedState>.empty(),
         initialState: FeedState(
           status: FeedStatus.ready,
@@ -99,7 +117,7 @@ void main() {
 
   for (final variant in Variant.all) {
     testWidgets('home ${variant.name}', (tester) async {
-      await pumpHome(tester, variant);
+      await pumpHome(tester, variant, progressCards: true);
       await expectLater(find.byType(HomeView), matchesGoldenFile('goldens/home_${variant.name}.png'));
     });
   }

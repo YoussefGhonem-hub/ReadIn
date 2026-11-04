@@ -62,7 +62,7 @@ class _Summary extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _Thumb(url: article.coverUrl, fieldSlug: article.field.slug),
+        ArticleThumbnail(url: article.coverUrl),
         const SizedBox(width: ReadInSpace.s3),
         Expanded(
           child: Column(
@@ -136,15 +136,16 @@ class _Counts extends StatelessWidget {
   }
 }
 
-class _Thumb extends StatelessWidget {
-  const _Thumb({required this.url, required this.fieldSlug});
+/// An article's cover as a square thumbnail, or the token-colored `</>` placeholder when it has none. Also the
+/// Continue reading card's thumbnail (F03).
+class ArticleThumbnail extends StatelessWidget {
+  const ArticleThumbnail({super.key, required this.url, this.size = 64});
 
   final String? url;
-  final String fieldSlug;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
-    const size = 64.0;
     if (url != null && url!.isNotEmpty) {
       return SizedBox(
         width: size,
@@ -161,7 +162,7 @@ class _Thumb extends StatelessWidget {
       child: Text(
         '</>',
         textDirection: TextDirection.ltr,
-        style: codeTextStyle(size: 15, color: colors.onPrimaryContainer).copyWith(fontWeight: FontWeight.w600),
+        style: codeTextStyle(size: size * 15 / 64, color: colors.onPrimaryContainer).copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

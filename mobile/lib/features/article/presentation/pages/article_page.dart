@@ -30,13 +30,16 @@ import '../widgets/reader_widgets.dart';
 
 /// Article reader (F04). Deep link: `readin.app/a/{slug}`.
 class ArticlePage extends StatelessWidget {
-  const ArticlePage({super.key, required this.slug});
+  const ArticlePage({super.key, required this.slug, this.language});
 
   final String slug;
 
+  /// The version to open (`?lang=`, e.g. Continue reading's); null = the preferred article language.
+  final String? language;
+
   @override
   Widget build(BuildContext context) {
-    final preferred = context.read<SettingsCubit>().state.articleLanguage;
+    final preferred = language ?? context.read<SettingsCubit>().state.articleLanguage;
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<ArticleCubit>()..load(slug, preferredLanguage: preferred)),

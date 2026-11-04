@@ -641,9 +641,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1065.PublishArticle>(
       () => _i1065.PublishArticle(gh<_i940.EditorRepository>()),
     );
-    gh.factory<_i9.HomeCubit>(
-      () => _i9.HomeCubit(gh<_i251.GetTodayArticle>(), gh<_i172.GetFields>()),
-    );
     gh.lazySingleton<_i371.SessionCubit>(
       () => _i371.SessionCubit(
         gh<_i46.WatchSession>(),
@@ -693,6 +690,15 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i745.PathDetailsCubit(
         gh<_i924.GetPath>(),
         gh<_i924.SetPathEnrollment>(),
+      ),
+    );
+    gh.factory<_i9.HomeCubit>(
+      () => _i9.HomeCubit(
+        gh<_i251.GetTodayArticle>(),
+        gh<_i172.GetFields>(),
+        gh<_i251.GetContinueReading>(),
+        gh<_i924.GetActivePath>(),
+        gh<_i371.SessionCubit>(),
       ),
     );
     gh.factory<_i646.FollowingFeedCubit>(

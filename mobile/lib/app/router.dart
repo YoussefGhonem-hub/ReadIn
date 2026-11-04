@@ -65,6 +65,13 @@ abstract final class AppRoutes {
   /// A learning path (F09).
   static String path(String slug) => PathRoutes.of(slug);
 
+  /// `?lang=` of an article link: open that version (`ar-EG` / `en`) rather than the preferred one, e.g. the version
+  /// Continue reading resumes (F03). Anything else is ignored.
+  static String? articleLanguage(Uri uri) => switch (uri.queryParameters['lang']) {
+        final lang? when lang == 'ar-EG' || lang == 'en' => lang,
+        _ => null,
+      };
+
   /// Where an [AccountGate] is handled.
   static String forGate(AccountGate gate) => switch (gate) {
         AccountGate.changePassword => changePassword,
@@ -142,7 +149,10 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.deleteAccount, builder: (_, _) => const DeleteAccountPage()),
       GoRoute(path: AppRoutes.settings, builder: (_, _) => const SettingsPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
-      GoRoute(path: '/a/:slug', builder: (_, state) => ArticlePage(slug: state.pathParameters['slug']!)),
+      GoRoute(
+        path: '/a/:slug',
+        builder: (_, state) => ArticlePage(slug: state.pathParameters['slug']!, language: AppRoutes.articleLanguage(state.uri)),
+      ),
       GoRoute(
         path: AppRoutes.paths,
         builder: (_, state) => PathsPage(initialTab: PathRoutes.tabOf(state.uri)),
