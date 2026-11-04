@@ -1,0 +1,85 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:readin/core/errors/failure.dart';
+import 'package:readin/core/l10n/failure_messages.dart';
+import 'package:readin/core/l10n/l10n_x.dart';
+import 'package:readin/features/home/presentation/pages/home_page.dart';
+
+/// Error codes both clients translate the same way (wording from the API's ErrorMessages.cs), plurals, and the
+/// greeting's hours.
+void main() {
+  late AppLocalizations ar;
+  late AppLocalizations en;
+
+  setUpAll(() async {
+    ar = await AppLocalizations.delegate.load(AppLocales.ar);
+    en = await AppLocalizations.delegate.load(AppLocales.en);
+  });
+
+  test('the editor codes the API added read the same as on the web', () {
+    const expected = {
+      FailureCodes.articleNoContent: ('المقال فاضي، اكتب حاجة الأول.', 'The article is empty. Write something first.'),
+      FailureCodes.articleInvalidTransition: (
+        'مينفعش تعمل كده والمقال في حالته دي.',
+        "You can't do that while the article is in this state.",
+      ),
+      FailureCodes.articleSlugTaken: ('الرابط ده مستخدم لمقال تاني.', 'That link is already used by another article.'),
+      FailureCodes.articleTagsMaxFive: ('أقصى حاجة 5 تاجز للمقال.', 'An article can have at most 5 tags.'),
+      FailureCodes.articleLanguageInvalid: ('لغة المقال دي مش مدعومة.', "That article language isn't supported."),
+      FailureCodes.articleContentLanguageMismatch: (
+        'لغة المحتوى مش زي لغة المقال.',
+        "The content's language doesn't match the article's language.",
+      ),
+    };
+    for (final MapEntry(key: code, value: (arabic, english)) in expected.entries) {
+      expect(localizeErrorCode(ar, code), arabic, reason: code);
+      expect(localizeErrorCode(en, code), english, reason: code);
+    }
+  });
+
+  test('no other code the clients must translate falls back to the generic error', () {
+    const codes = [
+      'concurrency.conflict',
+      'topic.not_in_field',
+      'topic.not_found',
+      'user.interests.unknown',
+      'user.interests.min_three',
+      'article.not_owner',
+      'article.status_invalid',
+      'request.too_large',
+      'request.unsupported_media_type',
+      'request.invalid',
+      'route.not_found',
+      'report.status_invalid',
+    ];
+    for (final code in codes) {
+      expect(localizeErrorCode(en, code), isNot(en.errServer), reason: code);
+      expect(localizeErrorCode(ar, code), isNot(ar.errServer), reason: code);
+    }
+    expect(localizeErrorCode(en, 'concurrency.conflict'), 'Someone else changed this. Refresh and try again.');
+  });
+
+  test('day counts are plurals', () {
+    expect(en.streakSemantics(1), 'Reading streak: 1 day');
+    expect(en.streakSemantics(4), 'Reading streak: 4 days');
+    expect(ar.streakSemantics(1), 'الـ streak بتاعك: يوم واحد');
+    expect(ar.streakSemantics(3), 'الـ streak بتاعك: 3 أيام');
+    expect(ar.streakSemantics(12), 'الـ streak بتاعك: 12 يوم');
+    expect(ar.readingMilestoneTitle(5), '5 أيام ورا بعض!');
+    expect(ar.readingMilestoneTitle(50), '50 يوم ورا بعض!');
+    expect(en.readingStreakNotReadTodaySemantics(1), startsWith('Reading streak: 1 day.'));
+  });
+
+  test('the article language toggle says مصري + EN, as on the web', () {
+    expect(en.langToggleArEg, 'مصري + EN');
+    expect(ar.langToggleArEg, 'مصري + EN');
+  });
+
+  test('the greeting says good morning from 5 AM until noon, as on the web', () {
+    DateTime at(int hour) => DateTime(2026, 11, 4, hour);
+    expect(greetsMorning(at(4)), isFalse);
+    expect(greetsMorning(at(5)), isTrue);
+    expect(greetsMorning(at(11)), isTrue);
+    expect(greetsMorning(at(12)), isFalse);
+    expect(greetsMorning(at(16)), isFalse);
+  });
+}

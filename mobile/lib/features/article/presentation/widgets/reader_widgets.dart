@@ -171,6 +171,62 @@ class TrustRow extends StatelessWidget {
   }
 }
 
+/// The health disclaimer of an article in a sensitive field (medicine, public health; SPEC F04): information, not an
+/// error, in the UI language.
+class HealthDisclaimer extends StatelessWidget {
+  const HealthDisclaimer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      container: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(ReadInSpace.s3),
+        decoration: BoxDecoration(
+          color: colors.calloutInfo,
+          borderRadius: BorderRadius.circular(ReadInRadius.md),
+          border: BorderDirectional(start: BorderSide(color: colors.calloutInfoAccent, width: 3)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.medical_services_outlined, size: 20, color: colors.calloutInfoAccent),
+            const SizedBox(width: ReadInSpace.s2),
+            Expanded(
+              child: Text(
+                context.l10n.healthDisclaimer,
+                style: context.textTheme.bodySmall?.copyWith(color: colors.textPrimary, height: 1.5),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The article's tags (`#tag`), as plain chips under the content: they don't open anything (F04).
+class ArticleTags extends StatelessWidget {
+  const ArticleTags({super.key, required this.tags});
+
+  final List<String> tags;
+
+  @override
+  Widget build(BuildContext context) {
+    if (tags.isEmpty) return const SizedBox.shrink();
+    return Wrap(
+      spacing: ReadInSpace.s2,
+      runSpacing: ReadInSpace.s2,
+      children: [
+        // InfoTag isolates a tag written in the other direction with its "#": "#EF Core" stays as is in RTL.
+        for (final tag in tags) InfoTag(label: '#$tag', tone: InfoTagTone.neutral),
+      ],
+    );
+  }
+}
+
 /// Mandatory sources list at the end of technical articles (SPEC §20).
 class SourcesSection extends StatelessWidget {
   const SourcesSection({super.key, required this.sources, required this.onOpen});

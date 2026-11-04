@@ -257,7 +257,7 @@ abstract class AppLocalizations {
   /// No description provided for @streakSemantics.
   ///
   /// In en, this message translates to:
-  /// **'Reading streak: {count} days'**
+  /// **'{count, plural, =1{Reading streak: 1 day} other{Reading streak: {count} days}}'**
   String streakSemantics(int count);
 
   /// No description provided for @todayArticle.
@@ -383,7 +383,7 @@ abstract class AppLocalizations {
   /// No description provided for @langToggleArEg.
   ///
   /// In en, this message translates to:
-  /// **'Arabic+EN'**
+  /// **'مصري + EN'**
   String get langToggleArEg;
 
   /// No description provided for @langToggleEn.
@@ -2807,13 +2807,13 @@ abstract class AppLocalizations {
   /// No description provided for @readingStreakNotReadTodaySemantics.
   ///
   /// In en, this message translates to:
-  /// **'Reading streak: {count} days. You haven\'t read today yet.'**
+  /// **'{count, plural, =1{Reading streak: 1 day. You haven\'t read today yet.} other{Reading streak: {count} days. You haven\'t read today yet.}}'**
   String readingStreakNotReadTodaySemantics(int count);
 
   /// No description provided for @readingStreakFreezePendingSemantics.
   ///
   /// In en, this message translates to:
-  /// **'Reading streak: {count} days. You missed yesterday: read today and a freeze keeps your streak.'**
+  /// **'{count, plural, =1{Reading streak: 1 day. You missed yesterday: read today and a freeze keeps your streak.} other{Reading streak: {count} days. You missed yesterday: read today and a freeze keeps your streak.}}'**
   String readingStreakFreezePendingSemantics(int count);
 
   /// No description provided for @readingStatsTitle.
@@ -3017,7 +3017,7 @@ abstract class AppLocalizations {
   /// No description provided for @readingMilestoneTitle.
   ///
   /// In en, this message translates to:
-  /// **'{count}-day streak!'**
+  /// **'{count, plural, =1{1-day streak!} other{{count}-day streak!}}'**
   String readingMilestoneTitle(int count);
 
   /// No description provided for @readingMilestoneBody.
@@ -6631,6 +6631,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This request isn\'t waiting for review anymore.'**
   String get errVerificationNotFound;
+
+  /// No description provided for @healthDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This information is for awareness only and is not a substitute for a doctor\'s advice.'**
+  String get healthDisclaimer;
+
+  /// No description provided for @articleToc.
+  ///
+  /// In en, this message translates to:
+  /// **'In this article'**
+  String get articleToc;
+
+  /// No description provided for @settingsSignInForSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to save these settings to your account.'**
+  String get settingsSignInForSync;
+
+  /// No description provided for @settingsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings saved ✓'**
+  String get settingsSaved;
+
+  /// No description provided for @settingsInterests.
+  ///
+  /// In en, this message translates to:
+  /// **'Your interests'**
+  String get settingsInterests;
+
+  /// No description provided for @settingsInterestsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The fields and topics you follow'**
+  String get settingsInterestsHint;
+
+  /// No description provided for @interestsPageIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a field or topic to follow or unfollow it. Changes are saved right away and shape your For you feed.'**
+  String get interestsPageIntro;
+
+  /// No description provided for @interestsKeepThree.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep at least 3 interests'**
+  String get interestsKeepThree;
+
+  /// No description provided for @imageDarkVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark mode version'**
+  String get imageDarkVersion;
+
+  /// No description provided for @imageDarkAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a dark mode version (for diagrams)'**
+  String get imageDarkAdd;
+
+  /// No description provided for @imageDarkRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the dark mode version'**
+  String get imageDarkRemove;
+
+  /// No description provided for @errInterestsUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Some fields or topics don\'t exist.'**
+  String get errInterestsUnknown;
+
+  /// No description provided for @errTopicNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic not found.'**
+  String get errTopicNotFound;
+
+  /// No description provided for @errTopicNotInField.
+  ///
+  /// In en, this message translates to:
+  /// **'The topic doesn\'t belong to this field.'**
+  String get errTopicNotInField;
+
+  /// No description provided for @errArticleNotOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the author can change this article.'**
+  String get errArticleNotOwner;
+
+  /// No description provided for @errArticleStatusInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Status must be draft or published.'**
+  String get errArticleStatusInvalid;
+
+  /// No description provided for @errArticleNoContent.
+  ///
+  /// In en, this message translates to:
+  /// **'The article is empty. Write something first.'**
+  String get errArticleNoContent;
+
+  /// No description provided for @errArticleInvalidTransition.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t do that while the article is in this state.'**
+  String get errArticleInvalidTransition;
+
+  /// No description provided for @errArticleSlugTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'That link is already used by another article.'**
+  String get errArticleSlugTaken;
+
+  /// No description provided for @errArticleTagsMaxFive.
+  ///
+  /// In en, this message translates to:
+  /// **'An article can have at most 5 tags.'**
+  String get errArticleTagsMaxFive;
+
+  /// No description provided for @errArticleLanguageInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That article language isn\'t supported.'**
+  String get errArticleLanguageInvalid;
+
+  /// No description provided for @errArticleContentLanguageMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The content\'s language doesn\'t match the article\'s language.'**
+  String get errArticleContentLanguageMismatch;
+
+  /// No description provided for @errConcurrencyConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else changed this. Refresh and try again.'**
+  String get errConcurrencyConflict;
+
+  /// No description provided for @errRequestInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The request is invalid.'**
+  String get errRequestInvalid;
+
+  /// No description provided for @errRequestTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The request is too large.'**
+  String get errRequestTooLarge;
+
+  /// No description provided for @errRequestUnsupportedMediaType.
+  ///
+  /// In en, this message translates to:
+  /// **'This content type is not supported.'**
+  String get errRequestUnsupportedMediaType;
+
+  /// No description provided for @errRouteNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Not found.'**
+  String get errRouteNotFound;
+
+  /// No description provided for @errReportStatusInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The report status must be open, resolved or dismissed.'**
+  String get errReportStatusInvalid;
 }
 
 class _AppLocalizationsDelegate

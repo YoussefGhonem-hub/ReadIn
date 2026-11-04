@@ -37,6 +37,7 @@ import '../features/reading/presentation/pages/reading_stats_page.dart';
 import '../features/saved/presentation/pages/saved_page.dart';
 import '../features/settings/domain/entities/app_settings.dart';
 import '../features/settings/presentation/cubit/settings_cubit.dart';
+import '../features/settings/presentation/pages/interests_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
 import '../features/verification/presentation/pages/verification_page.dart';
 import 'main_shell.dart';
@@ -64,6 +65,7 @@ abstract final class AppRoutes {
   static const settings = '/settings';
   static const notifications = '/notifications';
   static const notificationSettings = NotificationSettingsPage.path;
+  static const interests = InterestsPage.path;
   static const readingStats = ReadingStatsPage.path;
   static const verification = VerificationPage.path;
   static const moderation = ModerationRoutes.home;
@@ -115,8 +117,9 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
   final target = atSplash ? (uri.queryParameters['from'] ?? AppRoutes.home) : uri.toString();
   final targetPath = Uri.parse(target).path;
   final isAuthRoute = targetPath.startsWith('/auth/') || targetPath == AppRoutes.welcome;
-  // The editor (F05), moderation (F22), notifications and their settings (F17), the own reading stats and writer
-  // verification (F19) need an account like the account screens; the Write tab itself shows the sign-in prompt.
+  // The editor (F05), moderation (F22), notifications and their settings (F17), your interests (F12), the own reading
+  // stats and writer verification (F19) need an account like the account screens; the Write tab itself shows the
+  // sign-in prompt.
   final isAccountRoute = targetPath.startsWith('/account/') ||
       targetPath == AppRoutes.editProfile ||
       targetPath.startsWith('${AppRoutes.write}/') ||
@@ -124,6 +127,7 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
       targetPath.startsWith('${AppRoutes.moderation}/') ||
       targetPath == AppRoutes.notifications ||
       targetPath == AppRoutes.notificationSettings ||
+      targetPath == AppRoutes.interests ||
       targetPath == AppRoutes.readingStats ||
       targetPath == AppRoutes.verification;
   // Shared links open for first-time guests too, without Welcome first.
@@ -179,6 +183,7 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.deleteAccount, builder: (_, _) => const DeleteAccountPage()),
       GoRoute(path: AppRoutes.settings, builder: (_, state) => SettingsPage(section: SettingsSection.fromQuery(state.uri))),
       GoRoute(path: AppRoutes.notificationSettings, builder: (_, _) => const NotificationSettingsPage()),
+      GoRoute(path: AppRoutes.interests, builder: (_, _) => const InterestsPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
       GoRoute(path: AppRoutes.readingStats, builder: (_, _) => const ReadingStatsPage()),
       GoRoute(path: AppRoutes.verification, builder: (_, _) => const VerificationPage()),

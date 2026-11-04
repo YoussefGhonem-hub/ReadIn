@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/errors/result.dart';
 import 'package:readin/core/l10n/current_locale.dart';
 import 'package:readin/features/auth/domain/entities/me.dart';
@@ -118,6 +119,47 @@ void main() {
     expect: () => [isA<AppSettings>().having((s) => s.fontSize, 'fontSize', ArticleFontSize.xl)],
     verify: (_) => verifyNever(() => repository.pushPreferences(any())),
   );
+
+  group('a change the account refuses (F18, as on the web)', () {
+    const offline = Failure(FailureCodes.networkOffline);
+
+    setUp(() => when(() => repository.pushPreferences(any())).thenAnswer((_) async => const Err(offline)));
+
+    Future<SettingsCubit> signedIn() async {
+      final cubit = build();
+      await cubit.onSessionChanged(me);
+      return cubit;
+    }
+
+    test('the article language says why and goes back to what the account has', () async {
+      final cubit = await signedIn();
+      expect(await cubit.setArticleLanguage('ar-EG'), offline);
+      expect(cubit.state.articleLanguage, 'en');
+      verify(() => repository.save(any(that: isA<AppSettings>().having((s) => s.articleLanguage, 'article', 'en')))).called(2);
+    });
+
+    test('the reminder time too', () async {
+      final cubit = await signedIn();
+      expect(await cubit.setReminderTime(const TimeOfDay(hour: 21, minute: 0)), offline);
+      expect(cubit.state.reminderTime, '07:30');
+    });
+
+    test('the theme and the UI language stay on this device and say why', () async {
+      final cubit = await signedIn();
+      expect(await cubit.setTheme(ThemePreference.light), offline);
+      expect(await cubit.setUiLanguage('ar'), offline);
+      expect(cubit.state.theme, ThemePreference.light);
+      expect(cubit.state.uiLanguage, 'ar');
+    });
+
+    test('a saved change completes with no failure; a guest has nothing to save', () async {
+      when(() => repository.pushPreferences(any())).thenAnswer((_) async => const Ok(null));
+      final cubit = await signedIn();
+      expect(await cubit.setArticleLanguage('ar-EG'), isNull);
+      expect(cubit.state.articleLanguage, 'ar-EG');
+      expect(await build().setArticleLanguage('en'), isNull);
+    });
+  });
 
   test('reminder time round-trips through HH:mm', () {
     expect(SettingsCubit.formatTime(const TimeOfDay(hour: 7, minute: 5)), '07:05');

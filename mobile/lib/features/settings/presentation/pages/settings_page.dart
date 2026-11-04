@@ -19,6 +19,7 @@ import '../../../verification/presentation/widgets/verification_entry_tile.dart'
 import '../widgets/account_section.dart';
 import '../widgets/preference_tiles.dart';
 import '../widgets/who_can_mention_selector.dart';
+import 'interests_page.dart';
 
 /// A part of Settings a link can open at (`/settings?section=account`, e.g. a security alert, F17).
 enum SettingsSection {
@@ -119,12 +120,19 @@ class _SettingsViewState extends State<SettingsView> {
         padding: const EdgeInsets.all(ReadInSpace.s4),
         children: [
           card(l10n.appearance, const [ThemeSelector(), SizedBox(height: ReadInSpace.s5), UiLanguageSelector()]),
-          card(l10n.reading, const [
-            ArticleLanguageSelector(),
-            SizedBox(height: ReadInSpace.s4),
-            FontSizeSelector(),
-            SizedBox(height: ReadInSpace.s3),
-            ReminderTimeTile(),
+          card(l10n.reading, [
+            // The article language and the reminder live on the account (F18).
+            if (!session.isAuthenticated) ...[
+              Text(l10n.settingsSignInForSync, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+              const SizedBox(height: ReadInSpace.s3),
+            ],
+            const ArticleLanguageSelector(confirmSaved: true),
+            const SizedBox(height: ReadInSpace.s4),
+            const FontSizeSelector(),
+            const SizedBox(height: ReadInSpace.s3),
+            const ReminderTimeTile(confirmSaved: true),
+            // Fields and topics followed after onboarding (F02, F12).
+            if (session.isAuthenticated) const _InterestsEntry(),
           ]),
           // Per-type modes and quiet hours live on the account (F17).
           if (session.isAuthenticated) card(l10n.notifications, const [_NotificationSettingsEntry()]),
@@ -147,6 +155,23 @@ class _SettingsViewState extends State<SettingsView> {
           ]),
         ],
       ),
+    );
+  }
+}
+
+class _InterestsEntry extends StatelessWidget {
+  const _InterestsEntry();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.interests_outlined),
+      title: Text(l10n.settingsInterests),
+      subtitle: Text(l10n.settingsInterestsHint),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => context.push(InterestsPage.path),
     );
   }
 }

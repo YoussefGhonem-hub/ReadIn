@@ -737,8 +737,8 @@ class _TableBlockEditorState extends State<TableBlockEditor> {
 
 // ── Media and embeds ───────────────────────────────────────
 
-/// An image: upload or replace it in place, with its alt text (required, flagged red while missing) and caption
-/// under it.
+/// An image: upload or replace it in place, with its alt text (required, flagged red while missing), caption and an
+/// optional dark mode version (diagrams, SPEC §15.5 rule 5) under it.
 class ImageBlockEditor extends StatefulWidget {
   const ImageBlockEditor({super.key, required this.block});
 
@@ -750,28 +750,45 @@ class ImageBlockEditor extends StatefulWidget {
 
 class _ImageBlockEditorState extends State<ImageBlockEditor> {
   bool _uploading = false;
+  bool _uploadingDark = false;
 
-  RImage _with({String? src, String? alt, String? Function()? caption, int? Function()? width, int? Function()? height}) => RImage(
+  RImage _with({
+    String? src,
+    String? alt,
+    String? Function()? darkSrc,
+    String? Function()? caption,
+    int? Function()? width,
+    int? Function()? height,
+  }) =>
+      RImage(
         widget.block.id,
         src: src ?? widget.block.src,
         alt: alt ?? widget.block.alt,
-        darkSrc: widget.block.darkSrc,
+        darkSrc: darkSrc != null ? darkSrc() : widget.block.darkSrc,
         caption: caption != null ? caption() : widget.block.caption,
         width: width != null ? width() : widget.block.width,
         height: height != null ? height() : widget.block.height,
       );
 
-  Future<void> _pick() async {
+  /// Uploads the picture, or with [dark] its dark mode version (the size stays the picture's).
+  Future<void> _pick({bool dark = false}) async {
     final scope = BlockEditorScope.of(context);
     final file = await scope.editorContext.pickImage();
     if (file == null || !mounted) return;
-    setState(() => _uploading = true);
+    void uploading(bool value) => setState(() {
+          if (dark) {
+            _uploadingDark = value;
+          } else {
+            _uploading = value;
+          }
+        });
+    uploading(true);
     final asset = await scope.editorContext.uploadImage(file);
     if (!mounted) return;
-    setState(() => _uploading = false);
+    uploading(false);
     final url = asset == null || asset.variants.isEmpty ? null : asset.variants.last.url;
     if (url == null) return;
-    scope.host.replace(_with(src: url, width: () => asset!.width, height: () => asset!.height));
+    scope.host.replace(dark ? _with(darkSrc: () => url) : _with(src: url, width: () => asset!.width, height: () => asset!.height));
   }
 
   @override
@@ -844,6 +861,12 @@ class _ImageBlockEditorState extends State<ImageBlockEditor> {
             maxLength: DraftLimits.maxPlainText,
             onChanged: (v) => scope.host.replace(_with(caption: () => v.isEmpty ? null : v)),
           ),
+          _DarkVersionRow(
+            block: block,
+            uploading: _uploadingDark,
+            onAdd: scope.editorContext.enabled && !_uploadingDark ? () => _pick(dark: true) : null,
+            onRemove: scope.editorContext.enabled ? () => scope.host.replace(_with(darkSrc: () => null)) : null,
+          ),
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
@@ -857,6 +880,55 @@ class _ImageBlockEditorState extends State<ImageBlockEditor> {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// The image's dark mode version (`darkSrc`, shown in dark mode instead: diagrams), as in the web editor: a thumbnail
+/// with a remove button once there is one, else a button to add it.
+class _DarkVersionRow extends StatelessWidget {
+  const _DarkVersionRow({required this.block, required this.uploading, required this.onAdd, required this.onRemove});
+
+  final RImage block;
+  final bool uploading;
+  final VoidCallback? onAdd;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final darkSrc = block.darkSrc;
+    if (darkSrc == null || darkSrc.isEmpty) {
+      return Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: TextButton.icon(
+          key: ValueKey('image-dark-add-${block.id}'),
+          onPressed: onAdd,
+          icon: uploading
+              ? const SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.dark_mode_outlined, size: 18),
+          label: Text(l10n.imageDarkAdd),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s1),
+      child: Row(
+        children: [
+          SizedBox.square(
+            dimension: 40,
+            child: AppNetworkImage(url: darkSrc, borderRadius: BorderRadius.circular(ReadInRadius.sm), errorLabel: l10n.imageUnavailable),
+          ),
+          const SizedBox(width: ReadInSpace.s3),
+          Expanded(child: Text(l10n.imageDarkVersion, style: context.textTheme.bodyMedium)),
+          IconButton(
+            key: ValueKey('image-dark-remove-${block.id}'),
+            tooltip: l10n.imageDarkRemove,
+            onPressed: onRemove,
+            icon: const Icon(Icons.close_rounded, size: 20),
+          ),
+        ],
+      ),
     );
   }
 }

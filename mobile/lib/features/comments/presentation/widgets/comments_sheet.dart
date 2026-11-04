@@ -302,6 +302,7 @@ class _CommentsList extends StatelessWidget {
     final l10n = context.l10n;
     final state = context.watch<CommentsCubit>().state;
     final cubit = context.read<CommentsCubit>();
+    final guest = context.select((SessionCubit c) => !c.state.isAuthenticated);
     final Widget sliver = switch (state.status) {
       CommentsStatus.loading => const SliverToBoxAdapter(child: CommentsSkeleton()),
       CommentsStatus.failure => SliverFillRemaining(
@@ -323,6 +324,7 @@ class _CommentsList extends StatelessWidget {
                 callbacks: callbacks,
                 pendingIds: state.pendingIds,
                 highlighted: state.highlighted,
+                guest: guest,
               );
             }
             return Padding(

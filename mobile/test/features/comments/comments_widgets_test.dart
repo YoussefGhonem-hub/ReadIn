@@ -375,6 +375,25 @@ void main() {
       expect(find.text("Thanks, we'll review it."), findsOneWidget);
     });
 
+    testWidgets('guests can report too, as on the web: Report asks them to sign in first', (tester) async {
+      await pumpSheet(tester, ready([comment('c1', body: 'Spam link', canReport: false)]), signedIn: false);
+
+      await tester.tap(find.byTooltip('Comment options'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Report'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sign in to continue'), findsOneWidget);
+      expect(find.text('Send report'), findsNothing);
+    });
+
+    test("a guest's menu offers Report although the API's canReport is false; a reader's follows canReport", () {
+      final guestsView = comment('c1', canReport: false);
+      expect(commentMenuActions(guestsView, guest: true), [CommentMenuAction.report]);
+      expect(commentMenuActions(guestsView), isEmpty);
+      expect(commentMenuActions(comment('c1')), [CommentMenuAction.report]);
+    });
+
     testWidgets('deleting your comment asks first', (tester) async {
       final cubit = await pumpSheet(tester, ready([comment('c1', body: 'Mine', own: true)]));
       when(() => cubit.delete('c1')).thenAnswer((_) async => null);

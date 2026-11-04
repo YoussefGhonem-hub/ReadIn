@@ -35,11 +35,12 @@ abstract class FieldRefModel with _$FieldRefModel {
     required String nameAr,
     required String nameEn,
     String? name,
+    @Default(false) bool isSensitive,
   }) = _FieldRefModel;
 
   factory FieldRefModel.fromJson(Map<String, dynamic> json) => _$FieldRefModelFromJson(json);
 
-  FieldRef toEntity() => FieldRef(id: id, slug: slug, nameAr: nameAr, nameEn: nameEn);
+  FieldRef toEntity() => FieldRef(id: id, slug: slug, nameAr: nameAr, nameEn: nameEn, isSensitive: isSensitive);
 }
 
 /// `ReactionCountsDto` (F10).

@@ -20,17 +20,20 @@ class Author extends Equatable {
 }
 
 class FieldRef extends Equatable {
-  const FieldRef({required this.id, required this.slug, required this.nameAr, required this.nameEn});
+  const FieldRef({required this.id, required this.slug, required this.nameAr, required this.nameEn, this.isSensitive = false});
 
   final String id;
   final String slug;
   final String nameAr;
   final String nameEn;
 
+  /// Health content (medicine, public health): the reader shows the health disclaimer (SPEC F04).
+  final bool isSensitive;
+
   String nameFor(String languageCode) => languageCode == 'ar' ? nameAr : nameEn;
 
   @override
-  List<Object?> get props => [id, slug, nameAr, nameEn];
+  List<Object?> get props => [id, slug, nameAr, nameEn, isSensitive];
 }
 
 /// Feed card (`ArticleCardDto`).

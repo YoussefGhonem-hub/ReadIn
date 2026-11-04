@@ -99,6 +99,19 @@ void main() {
     });
   });
 
+  group('field.isSensitive (health disclaimer, SPEC F04)', () {
+    test('a sensitive field ref parses on the reader and the card', () {
+      final json = detailsJson(1);
+      json['field'] = {...json['field'] as Map<String, dynamic>, 'isSensitive': true};
+      expect(ArticleDetailsModel.fromJson(json).toEntity().card.field.isSensitive, isTrue);
+      expect(ArticleCardModel.fromJson(json).toEntity().field.isSensitive, isTrue);
+    });
+
+    test('an API without it means not sensitive', () {
+      expect(ArticleDetailsModel.fromJson(detailsJson(1)).toEntity().card.field.isSensitive, isFalse);
+    });
+  });
+
   group('ReactionCounts', () {
     const counts = ReactionCounts(insightful: 2, love: 1);
 

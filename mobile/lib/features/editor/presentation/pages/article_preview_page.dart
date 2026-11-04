@@ -50,7 +50,7 @@ class PreviewData {
         coverUrl: document.coverUrl,
         field: f == null
             ? const FieldRef(id: '', slug: '', nameAr: '—', nameEn: '—')
-            : FieldRef(id: f.id, slug: f.slug, nameAr: f.nameAr, nameEn: f.nameEn),
+            : FieldRef(id: f.id, slug: f.slug, nameAr: f.nameAr, nameEn: f.nameEn, isSensitive: f.isSensitive),
         author: author,
         readingTimeMinutes: readingTime.where((r) => r.language == t.language).firstOrNull?.minutes ?? 1,
         publishedAt: publishedAt ?? now ?? DateTime.now(),

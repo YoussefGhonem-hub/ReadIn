@@ -29,12 +29,13 @@ class CommentCallbacks {
 }
 
 /// The menu entries [comment] offers the viewer (own: edit/delete; the article's author: pin; readers: report;
-/// moderators: hide/unhide/delete).
-List<CommentMenuAction> commentMenuActions(Comment comment) => [
+/// moderators: hide/unhide/delete). A [guest] may report too, as on the web: the report sheet asks them to sign in
+/// first (the server's `canReport` is false for guests).
+List<CommentMenuAction> commentMenuActions(Comment comment, {bool guest = false}) => [
       if (comment.canEdit) CommentMenuAction.edit,
       if (comment.canDelete) CommentMenuAction.delete,
       if (comment.canPin && !comment.isReply) comment.isPinned ? CommentMenuAction.unpin : CommentMenuAction.pin,
-      if (comment.canReport) CommentMenuAction.report,
+      if (comment.canReport || guest) CommentMenuAction.report,
       if (comment.canModerate) comment.isHidden ? CommentMenuAction.unhide : CommentMenuAction.hide,
       if (comment.canModerate && !comment.canDelete) CommentMenuAction.moderatorDelete,
     ];
@@ -48,12 +49,16 @@ class CommentThreadView extends StatelessWidget {
     required this.callbacks,
     this.pendingIds = const {},
     this.highlighted = const {},
+    this.guest = false,
   });
 
   final CommentThread thread;
   final CommentCallbacks callbacks;
   final Set<String> pendingIds;
   final Set<String> highlighted;
+
+  /// The viewer isn't signed in ([commentMenuActions]).
+  final bool guest;
 
   /// Where the connector line runs: under the center of the top-level avatar.
   static const _lineStart = ReadInSpace.s4 + CommentTile.avatarSize / 2 - 1;
@@ -70,6 +75,7 @@ class CommentThreadView extends StatelessWidget {
           callbacks: callbacks,
           pending: pendingIds.contains(thread.id),
           highlighted: highlighted.contains(thread.id),
+          guest: guest,
         ),
         if (showReplies)
           Padding(
@@ -86,6 +92,7 @@ class CommentThreadView extends StatelessWidget {
                       isReply: true,
                       pending: pendingIds.contains(reply.id),
                       highlighted: highlighted.contains(reply.id),
+                      guest: guest,
                     ),
                   if (thread.hasMoreReplies || thread.repliesFailure != null) _MoreReplies(thread: thread, onTap: callbacks.onMoreReplies),
                 ],
@@ -145,6 +152,7 @@ class CommentTile extends StatelessWidget {
     this.isReply = false,
     this.pending = false,
     this.highlighted = false,
+    this.guest = false,
   });
 
   final Comment comment;
@@ -156,6 +164,9 @@ class CommentTile extends StatelessWidget {
 
   /// Just arrived live (F27).
   final bool highlighted;
+
+  /// The viewer isn't signed in: the menu still offers Report ([commentMenuActions]).
+  final bool guest;
 
   static const avatarSize = 36.0;
   static const replyAvatarSize = 28.0;
@@ -174,7 +185,7 @@ class CommentTile extends StatelessWidget {
             children: [
               _Avatar(comment: comment, size: size),
               const SizedBox(width: ReadInSpace.s3),
-              Expanded(child: _Content(comment: comment, callbacks: callbacks, pending: pending)),
+              Expanded(child: _Content(comment: comment, callbacks: callbacks, pending: pending, guest: guest)),
             ],
           );
     return AnimatedContainer(
@@ -247,11 +258,12 @@ class _Placeholder extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({required this.comment, required this.callbacks, required this.pending});
+  const _Content({required this.comment, required this.callbacks, required this.pending, required this.guest});
 
   final Comment comment;
   final CommentCallbacks callbacks;
   final bool pending;
+  final bool guest;
 
   @override
   Widget build(BuildContext context) {
@@ -314,7 +326,7 @@ class _Content extends StatelessWidget {
           mentions: comment.mentions,
           onMention: pending ? null : (mention) => _openProfile(context, mention.username),
         ),
-        _Actions(comment: comment, callbacks: callbacks, enabled: !pending),
+        _Actions(comment: comment, callbacks: callbacks, enabled: !pending, guest: guest),
       ],
     );
   }
@@ -343,17 +355,18 @@ class _HiddenNotice extends StatelessWidget {
 }
 
 class _Actions extends StatelessWidget {
-  const _Actions({required this.comment, required this.callbacks, required this.enabled});
+  const _Actions({required this.comment, required this.callbacks, required this.enabled, required this.guest});
 
   final Comment comment;
   final CommentCallbacks callbacks;
   final bool enabled;
+  final bool guest;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
-    final menu = enabled ? commentMenuActions(comment) : const <CommentMenuAction>[];
+    final menu = enabled ? commentMenuActions(comment, guest: guest) : const <CommentMenuAction>[];
     final label = context.textTheme.labelMedium?.copyWith(color: colors.textSecondary, fontWeight: FontWeight.w600);
     return Row(
       children: [

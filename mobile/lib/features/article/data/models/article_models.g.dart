@@ -30,6 +30,7 @@ _FieldRefModel _$FieldRefModelFromJson(Map<String, dynamic> json) =>
       nameAr: json['nameAr'] as String,
       nameEn: json['nameEn'] as String,
       name: json['name'] as String?,
+      isSensitive: json['isSensitive'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$FieldRefModelToJson(_FieldRefModel instance) =>
@@ -39,6 +40,7 @@ Map<String, dynamic> _$FieldRefModelToJson(_FieldRefModel instance) =>
       'nameAr': instance.nameAr,
       'nameEn': instance.nameEn,
       'name': ?instance.name,
+      'isSensitive': instance.isSensitive,
     };
 
 _ReactionCountsModel _$ReactionCountsModelFromJson(Map<String, dynamic> json) =>

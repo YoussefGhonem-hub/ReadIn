@@ -290,7 +290,7 @@ as bool,
 /// @nodoc
 mixin _$FieldRefModel {
 
- String get id; String get slug; String get nameAr; String get nameEn; String? get name;
+ String get id; String get slug; String get nameAr; String get nameEn; String? get name; bool get isSensitive;
 /// Create a copy of FieldRefModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -303,16 +303,16 @@ $FieldRefModelCopyWith<FieldRefModel> get copyWith => _$FieldRefModelCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FieldRefModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.name, name) || other.name == name));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FieldRefModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.name, name) || other.name == name)&&(identical(other.isSensitive, isSensitive) || other.isSensitive == isSensitive));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,slug,nameAr,nameEn,name);
+int get hashCode => Object.hash(runtimeType,id,slug,nameAr,nameEn,name,isSensitive);
 
 @override
 String toString() {
-  return 'FieldRefModel(id: $id, slug: $slug, nameAr: $nameAr, nameEn: $nameEn, name: $name)';
+  return 'FieldRefModel(id: $id, slug: $slug, nameAr: $nameAr, nameEn: $nameEn, name: $name, isSensitive: $isSensitive)';
 }
 
 
@@ -323,7 +323,7 @@ abstract mixin class $FieldRefModelCopyWith<$Res>  {
   factory $FieldRefModelCopyWith(FieldRefModel value, $Res Function(FieldRefModel) _then) = _$FieldRefModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String slug, String nameAr, String nameEn, String? name
+ String id, String slug, String nameAr, String nameEn, String? name, bool isSensitive
 });
 
 
@@ -340,14 +340,15 @@ class _$FieldRefModelCopyWithImpl<$Res>
 
 /// Create a copy of FieldRefModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? nameAr = null,Object? nameEn = null,Object? name = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? nameAr = null,Object? nameEn = null,Object? name = freezed,Object? isSensitive = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,nameAr: null == nameAr ? _self.nameAr : nameAr // ignore: cast_nullable_to_non_nullable
 as String,nameEn: null == nameEn ? _self.nameEn : nameEn // ignore: cast_nullable_to_non_nullable
 as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,isSensitive: null == isSensitive ? _self.isSensitive : isSensitive // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -432,10 +433,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String nameAr,  String nameEn,  String? name)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String nameAr,  String nameEn,  String? name,  bool isSensitive)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FieldRefModel() when $default != null:
-return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name);case _:
+return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.isSensitive);case _:
   return orElse();
 
 }
@@ -453,10 +454,10 @@ return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String nameAr,  String nameEn,  String? name)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String nameAr,  String nameEn,  String? name,  bool isSensitive)  $default,) {final _that = this;
 switch (_that) {
 case _FieldRefModel():
-return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name);case _:
+return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.isSensitive);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -473,10 +474,10 @@ return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String nameAr,  String nameEn,  String? name)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String nameAr,  String nameEn,  String? name,  bool isSensitive)?  $default,) {final _that = this;
 switch (_that) {
 case _FieldRefModel() when $default != null:
-return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name);case _:
+return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name,_that.isSensitive);case _:
   return null;
 
 }
@@ -488,7 +489,7 @@ return $default(_that.id,_that.slug,_that.nameAr,_that.nameEn,_that.name);case _
 @JsonSerializable()
 
 class _FieldRefModel extends FieldRefModel {
-  const _FieldRefModel({required this.id, required this.slug, required this.nameAr, required this.nameEn, this.name}): super._();
+  const _FieldRefModel({required this.id, required this.slug, required this.nameAr, required this.nameEn, this.name, this.isSensitive = false}): super._();
   factory _FieldRefModel.fromJson(Map<String, dynamic> json) => _$FieldRefModelFromJson(json);
 
 @override final  String id;
@@ -496,6 +497,7 @@ class _FieldRefModel extends FieldRefModel {
 @override final  String nameAr;
 @override final  String nameEn;
 @override final  String? name;
+@override@JsonKey() final  bool isSensitive;
 
 /// Create a copy of FieldRefModel
 /// with the given fields replaced by the non-null parameter values.
@@ -510,16 +512,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FieldRefModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.name, name) || other.name == name));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FieldRefModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.name, name) || other.name == name)&&(identical(other.isSensitive, isSensitive) || other.isSensitive == isSensitive));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,slug,nameAr,nameEn,name);
+int get hashCode => Object.hash(runtimeType,id,slug,nameAr,nameEn,name,isSensitive);
 
 @override
 String toString() {
-  return 'FieldRefModel(id: $id, slug: $slug, nameAr: $nameAr, nameEn: $nameEn, name: $name)';
+  return 'FieldRefModel(id: $id, slug: $slug, nameAr: $nameAr, nameEn: $nameEn, name: $name, isSensitive: $isSensitive)';
 }
 
 
@@ -530,7 +532,7 @@ abstract mixin class _$FieldRefModelCopyWith<$Res> implements $FieldRefModelCopy
   factory _$FieldRefModelCopyWith(_FieldRefModel value, $Res Function(_FieldRefModel) _then) = __$FieldRefModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String slug, String nameAr, String nameEn, String? name
+ String id, String slug, String nameAr, String nameEn, String? name, bool isSensitive
 });
 
 
@@ -547,14 +549,15 @@ class __$FieldRefModelCopyWithImpl<$Res>
 
 /// Create a copy of FieldRefModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? nameAr = null,Object? nameEn = null,Object? name = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? nameAr = null,Object? nameEn = null,Object? name = freezed,Object? isSensitive = null,}) {
   return _then(_FieldRefModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,nameAr: null == nameAr ? _self.nameAr : nameAr // ignore: cast_nullable_to_non_nullable
 as String,nameEn: null == nameEn ? _self.nameEn : nameEn // ignore: cast_nullable_to_non_nullable
 as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,isSensitive: null == isSensitive ? _self.isSensitive : isSensitive // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

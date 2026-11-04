@@ -40,14 +40,30 @@ abstract final class FailureCodes {
   static const usernameTaken = 'user.username_taken';
   static const usernameInvalid = 'user.username_invalid';
   static const interestsMinThree = 'user.interests.min_three';
+  static const interestsUnknown = 'user.interests.unknown';
   static const fieldNotFound = 'field.not_found';
+  static const topicNotFound = 'topic.not_found';
+  static const topicNotInField = 'topic.not_in_field';
   static const articleNotFound = 'article.not_found';
   static const articleSourcesRequired = 'article.sources_required';
+  static const concurrencyConflict = 'concurrency.conflict';
+  static const requestInvalid = 'request.invalid';
+  static const requestTooLarge = 'request.too_large';
+  static const requestUnsupportedMediaType = 'request.unsupported_media_type';
+  static const routeNotFound = 'route.not_found';
 
   // Article editor (F05 contract): conflicts, and the publish checks (DraftProblemCode).
   static const articleDraftConflict = 'article.draft_conflict';
   static const articleNotPublished = 'article.not_published';
   static const articleRevisionNotFound = 'article.revision_not_found';
+  static const articleNotOwner = 'article.not_owner';
+  static const articleStatusInvalid = 'article.status_invalid';
+  static const articleNoContent = 'article.no_content';
+  static const articleInvalidTransition = 'article.invalid_transition';
+  static const articleSlugTaken = 'article.slug_taken';
+  static const articleTagsMaxFive = 'article.tags.max_five';
+  static const articleLanguageInvalid = 'article.language_invalid';
+  static const articleContentLanguageMismatch = 'article.content_language_mismatch';
   static const articleFieldRequired = 'article.field_required';
   static const articleTitleLength = 'article.title_length';
   static const articleContentEmpty = 'article.content_empty';
@@ -154,6 +170,7 @@ abstract final class FailureCodes {
   static const reportReasonInvalid = 'report.reason_invalid';
   static const reportTargetInvalid = 'report.target_invalid';
   static const reportTargetNotFound = 'report.target_not_found';
+  static const reportStatusInvalid = 'report.status_invalid';
   static const moderationActionInvalid = 'moderation.action_invalid';
   static const moderationSelf = 'moderation.self';
   static const moderationStaffTarget = 'moderation.staff_target';

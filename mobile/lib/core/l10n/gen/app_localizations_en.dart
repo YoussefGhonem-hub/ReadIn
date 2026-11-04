@@ -102,7 +102,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String streakSemantics(int count) {
-    return 'Reading streak: $count days';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reading streak: $count days',
+      one: 'Reading streak: 1 day',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -176,7 +182,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontSizeXl => 'Extra large';
 
   @override
-  String get langToggleArEg => 'Arabic+EN';
+  String get langToggleArEg => 'مصري + EN';
 
   @override
   String get langToggleEn => 'EN';
@@ -1562,12 +1568,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String readingStreakNotReadTodaySemantics(int count) {
-    return 'Reading streak: $count days. You haven\'t read today yet.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reading streak: $count days. You haven\'t read today yet.',
+      one: 'Reading streak: 1 day. You haven\'t read today yet.',
+    );
+    return '$_temp0';
   }
 
   @override
   String readingStreakFreezePendingSemantics(int count) {
-    return 'Reading streak: $count days. You missed yesterday: read today and a freeze keeps your streak.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Reading streak: $count days. You missed yesterday: read today and a freeze keeps your streak.',
+      one:
+          'Reading streak: 1 day. You missed yesterday: read today and a freeze keeps your streak.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1727,7 +1747,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String readingMilestoneTitle(int count) {
-    return '$count-day streak!';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-day streak!',
+      one: '1-day streak!',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -3912,4 +3938,99 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errVerificationNotFound =>
       'This request isn\'t waiting for review anymore.';
+
+  @override
+  String get healthDisclaimer =>
+      'This information is for awareness only and is not a substitute for a doctor\'s advice.';
+
+  @override
+  String get articleToc => 'In this article';
+
+  @override
+  String get settingsSignInForSync =>
+      'Sign in to save these settings to your account.';
+
+  @override
+  String get settingsSaved => 'Settings saved ✓';
+
+  @override
+  String get settingsInterests => 'Your interests';
+
+  @override
+  String get settingsInterestsHint => 'The fields and topics you follow';
+
+  @override
+  String get interestsPageIntro =>
+      'Tap a field or topic to follow or unfollow it. Changes are saved right away and shape your For you feed.';
+
+  @override
+  String get interestsKeepThree => 'Keep at least 3 interests';
+
+  @override
+  String get imageDarkVersion => 'Dark mode version';
+
+  @override
+  String get imageDarkAdd => 'Add a dark mode version (for diagrams)';
+
+  @override
+  String get imageDarkRemove => 'Remove the dark mode version';
+
+  @override
+  String get errInterestsUnknown => 'Some fields or topics don\'t exist.';
+
+  @override
+  String get errTopicNotFound => 'Topic not found.';
+
+  @override
+  String get errTopicNotInField => 'The topic doesn\'t belong to this field.';
+
+  @override
+  String get errArticleNotOwner => 'Only the author can change this article.';
+
+  @override
+  String get errArticleStatusInvalid => 'Status must be draft or published.';
+
+  @override
+  String get errArticleNoContent =>
+      'The article is empty. Write something first.';
+
+  @override
+  String get errArticleInvalidTransition =>
+      'You can\'t do that while the article is in this state.';
+
+  @override
+  String get errArticleSlugTaken =>
+      'That link is already used by another article.';
+
+  @override
+  String get errArticleTagsMaxFive => 'An article can have at most 5 tags.';
+
+  @override
+  String get errArticleLanguageInvalid =>
+      'That article language isn\'t supported.';
+
+  @override
+  String get errArticleContentLanguageMismatch =>
+      'The content\'s language doesn\'t match the article\'s language.';
+
+  @override
+  String get errConcurrencyConflict =>
+      'Someone else changed this. Refresh and try again.';
+
+  @override
+  String get errRequestInvalid => 'The request is invalid.';
+
+  @override
+  String get errRequestTooLarge => 'The request is too large.';
+
+  @override
+  String get errRequestUnsupportedMediaType =>
+      'This content type is not supported.';
+
+  @override
+  String get errRouteNotFound => 'Not found.';
+
+  @override
+  String get errReportStatusInvalid =>
+      'The report status must be open, resolved or dismissed.';
 }

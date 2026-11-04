@@ -178,6 +178,7 @@ import '../../features/onboarding/data/repositories/interests_repository_impl.da
 import '../../features/onboarding/domain/repositories/interests_repository.dart'
     as _i185;
 import '../../features/onboarding/domain/usecases/save_interests.dart' as _i535;
+import '../../features/onboarding/domain/usecases/set_interest.dart' as _i471;
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart'
     as _i807;
 import '../../features/paths/data/datasources/paths_api.dart' as _i88;
@@ -243,6 +244,8 @@ import '../../features/settings/domain/repositories/settings_repository.dart'
     as _i674;
 import '../../features/settings/domain/usecases/settings_usecases.dart'
     as _i279;
+import '../../features/settings/presentation/cubit/interests_cubit.dart'
+    as _i280;
 import '../../features/settings/presentation/cubit/settings_cubit.dart'
     as _i792;
 import '../../features/taxonomy/data/datasources/taxonomy_api.dart' as _i421;
@@ -1101,6 +1104,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i115.PhoneCountryMemory>(),
       ),
     );
+    gh.factory<_i471.SetInterest>(
+      () => _i471.SetInterest(
+        gh<_i185.InterestsRepository>(),
+        gh<_i787.AccountRepository>(),
+      ),
+    );
     gh.factory<_i245.CompleteProfileCubit>(
       () => _i245.CompleteProfileCubit(
         gh<_i46.CompleteProfile>(),
@@ -1215,6 +1224,14 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i643.VerificationCubit(
         gh<_i295.GetVerificationStatus>(),
         gh<_i295.WithdrawVerificationRequest>(),
+        gh<_i371.SessionCubit>(),
+      ),
+    );
+    gh.factory<_i280.InterestsCubit>(
+      () => _i280.InterestsCubit(
+        gh<_i172.GetFields>(),
+        gh<_i172.GetTopics>(),
+        gh<_i471.SetInterest>(),
         gh<_i371.SessionCubit>(),
       ),
     );

@@ -14,4 +14,8 @@ class InterestsRepositoryImpl implements InterestsRepository {
   @override
   Future<Result<void>> saveInterests({required List<String> fieldIds, required List<String> topicIds}) =>
       guardApi(() => _api.update(UpdateInterestsRequest(fieldIds: fieldIds, topicIds: topicIds)));
+
+  @override
+  Future<Result<void>> setInterest(InterestKind kind, String id, {required bool followed}) =>
+      guardApi(() => followed ? _api.follow(kind.path, id) : _api.unfollow(kind.path, id));
 }

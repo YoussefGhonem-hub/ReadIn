@@ -684,6 +684,30 @@ void main() {
       expect(find.byKey(const ValueKey('image-replace-img')), findsOneWidget);
     });
 
+    testWidgets('image: a dark mode version is added and removed as on the web; the size stays the picture\'s', (tester) async {
+      const picture = RImage('img', src: 'https://cdn.readin.app/a.webp', alt: 'A diagram', width: 1600, height: 1200);
+      final controller = await pumpEditor(
+        tester,
+        const [picture],
+        pickImage: () async => sampleImageFile,
+        uploadImage: (_) async => imageAsset('dark'),
+      );
+      final l10n = tester.element(find.byType(Scaffold)).l10n;
+      expect(find.text(l10n.imageDarkAdd), findsOneWidget);
+      expect(find.byKey(const ValueKey('image-dark-remove-img')), findsNothing);
+
+      await tap(tester, 'image-dark-add-img');
+      final withDark = blockOf<RImage>(controller, 'img');
+      expect(withDark.darkSrc, imageAsset('dark').variants.last.url);
+      expect((withDark.src, withDark.width, withDark.height), (picture.src, 1600, 1200));
+      expect(find.text(l10n.imageDarkVersion), findsOneWidget);
+      expect(find.byKey(const ValueKey('image-dark-add-img')), findsNothing);
+
+      await tap(tester, 'image-dark-remove-img');
+      expect(blockOf<RImage>(controller, 'img'), picture);
+      expect(find.text(l10n.imageDarkAdd), findsOneWidget);
+    });
+
     testWidgets('embed: the link is checked as on the web, and a valid one shows the preview', (tester) async {
       final controller = await pumpEditor(tester, const [REmbed('e', provider: 'youtube', url: '')]);
       final l10n = tester.element(find.byType(Scaffold)).l10n;

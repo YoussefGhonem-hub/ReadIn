@@ -105,7 +105,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String streakSemantics(int count) {
-    return 'الـ streak بتاعك: $count يوم';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'الـ streak بتاعك: $count يوم',
+      many: 'الـ streak بتاعك: $count يوم',
+      few: 'الـ streak بتاعك: $count أيام',
+      two: 'الـ streak بتاعك: يومين',
+      one: 'الـ streak بتاعك: يوم واحد',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -182,7 +191,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fontSizeXl => 'كبير جداً';
 
   @override
-  String get langToggleArEg => 'مصري+EN';
+  String get langToggleArEg => 'مصري + EN';
 
   @override
   String get langToggleEn => 'EN';
@@ -1549,12 +1558,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String readingStreakNotReadTodaySemantics(int count) {
-    return 'الـ streak بتاعك: $count يوم. لسه مقرتش النهارده.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'الـ streak بتاعك: $count يوم. لسه مقرتش النهارده.',
+      many: 'الـ streak بتاعك: $count يوم. لسه مقرتش النهارده.',
+      few: 'الـ streak بتاعك: $count أيام. لسه مقرتش النهارده.',
+      two: 'الـ streak بتاعك: يومين. لسه مقرتش النهارده.',
+      one: 'الـ streak بتاعك: يوم واحد. لسه مقرتش النهارده.',
+    );
+    return '$_temp0';
   }
 
   @override
   String readingStreakFreezePendingSemantics(int count) {
-    return 'الـ streak بتاعك: $count يوم. فاتك امبارح: اقرا النهارده والـ freeze هيحافظ على الـ streak.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'الـ streak بتاعك: $count يوم. فاتك امبارح: اقرا النهارده والـ freeze هيحافظ على الـ streak.',
+      many:
+          'الـ streak بتاعك: $count يوم. فاتك امبارح: اقرا النهارده والـ freeze هيحافظ على الـ streak.',
+      few:
+          'الـ streak بتاعك: $count أيام. فاتك امبارح: اقرا النهارده والـ freeze هيحافظ على الـ streak.',
+      two:
+          'الـ streak بتاعك: يومين. فاتك امبارح: اقرا النهارده والـ freeze هيحافظ على الـ streak.',
+      one:
+          'الـ streak بتاعك: يوم واحد. فاتك امبارح: اقرا النهارده والـ freeze هيحافظ على الـ streak.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1726,7 +1758,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String readingMilestoneTitle(int count) {
-    return '$count يوم ورا بعض!';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوم ورا بعض!',
+      many: '$count يوم ورا بعض!',
+      few: '$count أيام ورا بعض!',
+      two: 'يومين ورا بعض!',
+      one: 'يوم واحد!',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -3951,4 +3992,96 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errVerificationNotFound => 'الطلب ده مبقاش مستني مراجعة.';
+
+  @override
+  String get healthDisclaimer =>
+      'المعلومات دي للتوعية ولا تغني عن استشارة الطبيب.';
+
+  @override
+  String get articleToc => 'محتويات المقال';
+
+  @override
+  String get settingsSignInForSync =>
+      'سجل دخولك عشان تحفظ الإعدادات دي على حسابك.';
+
+  @override
+  String get settingsSaved => 'اتحفظت الإعدادات ✓';
+
+  @override
+  String get settingsInterests => 'اهتماماتك';
+
+  @override
+  String get settingsInterestsHint => 'المجالات والمواضيع اللي بتتابعها';
+
+  @override
+  String get interestsPageIntro =>
+      'دوس على أي مجال أو موضوع عشان تتابعه أو تلغي متابعته. التغيير بيتحفظ على طول، وعلى أساسه بنختارلك مقالات «ليك».';
+
+  @override
+  String get interestsKeepThree => 'خليك متابع 3 اهتمامات على الأقل';
+
+  @override
+  String get imageDarkVersion => 'نسخة الوضع الغامق';
+
+  @override
+  String get imageDarkAdd => 'ضيف نسخة للوضع الغامق (للرسومات)';
+
+  @override
+  String get imageDarkRemove => 'شيل نسخة الوضع الغامق';
+
+  @override
+  String get errInterestsUnknown => 'فيه مجالات أو مواضيع مش موجودة.';
+
+  @override
+  String get errTopicNotFound => 'الموضوع مش موجود.';
+
+  @override
+  String get errTopicNotInField => 'الموضوع مش تابع للمجال ده.';
+
+  @override
+  String get errArticleNotOwner => 'التعديل للكاتب بس.';
+
+  @override
+  String get errArticleStatusInvalid => 'الحالة لازم تكون مسودة أو منشور.';
+
+  @override
+  String get errArticleNoContent => 'المقال فاضي، اكتب حاجة الأول.';
+
+  @override
+  String get errArticleInvalidTransition =>
+      'مينفعش تعمل كده والمقال في حالته دي.';
+
+  @override
+  String get errArticleSlugTaken => 'الرابط ده مستخدم لمقال تاني.';
+
+  @override
+  String get errArticleTagsMaxFive => 'أقصى حاجة 5 تاجز للمقال.';
+
+  @override
+  String get errArticleLanguageInvalid => 'لغة المقال دي مش مدعومة.';
+
+  @override
+  String get errArticleContentLanguageMismatch =>
+      'لغة المحتوى مش زي لغة المقال.';
+
+  @override
+  String get errConcurrencyConflict =>
+      'حد عدّل البيانات دي، حدّث الصفحة وجرب تاني.';
+
+  @override
+  String get errRequestInvalid => 'الطلب غير صالح.';
+
+  @override
+  String get errRequestTooLarge => 'الطلب أكبر من المسموح.';
+
+  @override
+  String get errRequestUnsupportedMediaType =>
+      'نوع البيانات المبعوتة مش مدعوم.';
+
+  @override
+  String get errRouteNotFound => 'الصفحة مش موجودة.';
+
+  @override
+  String get errReportStatusInvalid =>
+      'حالة البلاغ لازم تكون مفتوح أو اتحل أو اترفض.';
 }

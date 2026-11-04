@@ -41,6 +41,7 @@ Comment comment(
   bool own = false,
   bool canPin = false,
   bool canModerate = false,
+  bool? canReport,
   List<CommentMention> mentions = const [],
   List<Comment> replies = const [],
 }) =>
@@ -63,7 +64,8 @@ Comment comment(
       canEdit: own,
       canDelete: own,
       canPin: canPin,
-      canReport: !own && body != null,
+      // The API says false for guests.
+      canReport: canReport ?? (!own && body != null),
       canModerate: canModerate,
       replies: replies,
     );

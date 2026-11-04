@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/errors/failure.dart';
 import '../../../../core/l10n/current_locale.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../auth/domain/entities/me.dart';
@@ -36,16 +37,30 @@ class SettingsCubit extends Cubit<AppSettings> {
         ThemePreference.system => ThemeMode.system,
       };
 
-  Future<void> setTheme(ThemePreference theme) => _update(state.copyWith(theme: theme));
+  /// The setters complete with null, or with the failure of saving the change to the account (`PUT /me/preferences`)
+  /// for the screen to show. The theme and the UI language stay applied on this device even then; the account-only
+  /// preferences (article language, reminder time) go back to what the account has, as on the web.
+  Future<Failure?> setTheme(ThemePreference theme) => _update(state.copyWith(theme: theme));
 
-  Future<void> setUiLanguage(String code) => _update(state.copyWith(uiLanguage: code == 'en' ? 'en' : 'ar'));
+  Future<Failure?> setUiLanguage(String code) => _update(state.copyWith(uiLanguage: code == 'en' ? 'en' : 'ar'));
 
-  Future<void> setArticleLanguage(String language) =>
-      _update(state.copyWith(articleLanguage: language == 'en' ? 'en' : 'ar-EG'));
+  Future<Failure?> setArticleLanguage(String language) {
+    final previous = state.articleLanguage;
+    return _update(
+      state.copyWith(articleLanguage: language == 'en' ? 'en' : 'ar-EG'),
+      revert: (current) => current.copyWith(articleLanguage: previous),
+    );
+  }
 
-  Future<void> setReminderTime(TimeOfDay time) => _update(state.copyWith(reminderTime: formatTime(time)));
+  Future<Failure?> setReminderTime(TimeOfDay time) {
+    final previous = state.reminderTime;
+    return _update(
+      state.copyWith(reminderTime: formatTime(time)),
+      revert: (current) => current.copyWith(reminderTime: previous),
+    );
+  }
 
-  Future<void> setFontSize(ArticleFontSize size) => _update(state.copyWith(fontSize: size));
+  Future<Failure?> setFontSize(ArticleFontSize size) => _update(state.copyWith(fontSize: size));
 
   Future<void> markWelcomeSeen() => _update(state.copyWith(welcomeSeen: true));
 
@@ -78,15 +93,22 @@ class SettingsCubit extends Cubit<AppSettings> {
         );
   }
 
-  Future<void> _update(AppSettings next) => _apply(next, push: true);
+  /// Applies [next] and, when signed in, saves it to the account. When that fails, [revert] (if given) undoes the
+  /// change on this device, unless another change replaced it meanwhile.
+  Future<Failure?> _update(AppSettings next, {AppSettings Function(AppSettings current)? revert}) async {
+    final failure = await _apply(next, push: true);
+    if (failure != null && revert != null && !isClosed && state == next) await _apply(revert(state), push: false);
+    return failure;
+  }
 
-  Future<void> _apply(AppSettings next, {required bool push}) async {
-    if (next == state) return;
+  Future<Failure?> _apply(AppSettings next, {required bool push}) async {
+    if (next == state) return null;
     final shouldPush = push && _signedIn && next.syncedFieldsDiffer(state);
     emit(next);
     _locale.value = AppLocales.fromCode(next.uiLanguage);
     await _save(next);
-    if (shouldPush) unawaited(_sync(next));
+    if (!shouldPush) return null;
+    return (await _sync(next)).failureOrNull;
   }
 
   static String formatTime(TimeOfDay t) =>

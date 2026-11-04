@@ -14,12 +14,14 @@ import '../../../../shared/rdoc/rdoc_view.dart';
 import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../comments/presentation/widgets/comments_sheet.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../glossary/presentation/widgets/glossary_sheet.dart';
 import '../../../moderation/presentation/cubit/moderation_action_cubit.dart';
 import '../../../paths/presentation/widgets/next_in_path.dart';
+import '../../../profile/presentation/profile_routes.dart';
 import '../../../reading/presentation/tracking/reading_tracking.dart';
 import '../../../saved/presentation/cubit/collections_cubit.dart';
 import '../../../settings/domain/entities/app_settings.dart';
@@ -31,6 +33,7 @@ import '../cubit/engagement_cubit.dart';
 import '../widgets/article_attachments_view.dart';
 import '../widgets/article_menu.dart';
 import '../widgets/article_share_button.dart';
+import '../widgets/article_toc.dart';
 import '../widgets/reader_action_bar.dart';
 import '../widgets/reader_resume.dart';
 import '../widgets/reader_widgets.dart';
@@ -50,7 +53,7 @@ class ArticlePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final preferred = language ?? context.read<SettingsCubit>().state.articleLanguage;
+    final preferred = language ?? _preferredArticleLanguage(context);
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<ArticleCubit>()..load(slug, preferredLanguage: preferred)),
@@ -61,6 +64,14 @@ class ArticlePage extends StatelessWidget {
       child: ReadingTracking(child: ArticleView(anchor: anchor)),
     );
   }
+}
+
+/// The version the reader opens first: the account's article language (F18). A guest can't set one (Settings asks
+/// them to sign in), so they get their UI language's version, as the API gives guests their feeds.
+String _preferredArticleLanguage(BuildContext context) {
+  final settings = context.read<SettingsCubit>().state;
+  if (context.read<SessionCubit>().state.isAuthenticated) return settings.articleLanguage;
+  return settings.uiLanguage == 'en' ? 'en' : 'ar-EG';
 }
 
 /// The reader once its cubits are provided ([ArticleCubit], [ArticleLiveCubit]; [EngagementCubit],
@@ -235,7 +246,7 @@ class _ArticleViewState extends State<ArticleView> {
                       ArticleStatus.loading => const _ReaderSkeleton(),
                       ArticleStatus.failure => ErrorView(
                           failure: state.failure!,
-                          onRetry: () => context.read<ArticleCubit>().retry(settings.state.articleLanguage),
+                          onRetry: () => context.read<ArticleCubit>().retry(_preferredArticleLanguage(context)),
                         ),
                       ArticleStatus.ready => NotificationListener<Notification>(
                           // While resuming, the jumps stay between the reader and its resume.
@@ -245,6 +256,8 @@ class _ArticleViewState extends State<ArticleView> {
                             controller: _scroll,
                             bodyFontSize: _fontSizeFor(fontSize),
                             onTerm: (term) => unawaited(_showTerm(term)),
+                            // A heading picked in the table of contents wins over the resume.
+                            beforeTocJump: () => _resume?.cancel(),
                             trailing: [
                               NextInPathSliver(articleId: article.card.id),
                               RelatedArticlesSection(article: article.card),
@@ -346,9 +359,9 @@ class _OfflineCopyBanner extends StatelessWidget {
   }
 }
 
-/// The article as readers see it: header, trust row, TL;DR, content, attachments and sources. The editor's preview
-/// (F05) renders the same widget.
-class ReaderBody extends StatelessWidget {
+/// The article as readers see it: header, trust row, health disclaimer, TL;DR, table of contents, content,
+/// attachments, tags and sources. The editor's preview (F05) renders the same widget.
+class ReaderBody extends StatefulWidget {
   const ReaderBody({
     super.key,
     required this.article,
@@ -358,6 +371,7 @@ class ReaderBody extends StatelessWidget {
     this.authorAction,
     this.leading,
     this.trailing = const [],
+    this.beforeTocJump,
   });
 
   final ArticleDetails article;
@@ -374,22 +388,51 @@ class ReaderBody extends StatelessWidget {
   /// Slivers after the sources: the reader's end-of-article sections (related articles). The editor preview has none.
   final List<Widget> trailing;
 
+  /// Runs before a heading of the table of contents scrolls the reader (the reader stops resuming).
+  final VoidCallback? beforeTocJump;
+
+  @override
+  State<ReaderBody> createState() => _ReaderBodyState();
+}
+
+class _ReaderBodyState extends State<ReaderBody> {
+  final _locator = RDocBlockLocator();
+
+  /// A heading picked in the table of contents: scrolled to the top of the reader.
+  void _jumpTo(TocEntry entry) {
+    widget.beforeTocJump?.call();
+    final animate = !MediaQuery.disableAnimationsOf(context);
+    unawaited(_locator.reveal(entry.blockId, duration: animate ? ReadInMotion.slow : Duration.zero));
+  }
+
+  /// An @mention in the content opens that profile (F14), as the web links it to `/@username`.
+  void _openMention(RMention mention) {
+    final router = GoRouter.maybeOf(context);
+    if (router != null && mention.text.replaceFirst('@', '').isNotEmpty) {
+      unawaited(router.push<void>(ProfileRoutes.of(mention.text)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final article = widget.article;
     final direction = RDocScope.directionForLanguage(article.card.language);
     final showSummary = article.summary != null && article.summary!.isNotEmpty && !article.content.hasSummaryBlock;
+    final toc = tableOfContents(article.content);
     const gutter = EdgeInsets.symmetric(horizontal: ReadInSpace.s5);
 
     final moderation = article.moderation;
+    final leading = widget.leading;
 
     return RDocScope(
       baseDirection: direction,
-      bodyFontSize: bodyFontSize,
+      bodyFontSize: widget.bodyFontSize,
       onLinkTap: openExternalLink,
-      onTermTap: onTerm,
+      onTermTap: widget.onTerm,
+      onMentionTap: _openMention,
       child: Builder(
         builder: (context) => CustomScrollView(
-          controller: controller,
+          controller: widget.controller,
           slivers: [
             // Only its author and moderators can open a hidden article (F22).
             if (moderation != null)
@@ -404,7 +447,7 @@ class ReaderBody extends StatelessWidget {
                 child: ArticleHeader(
                   article: article,
                   titleScale: RDocScope.of(context).scale,
-                  authorAction: authorAction,
+                  authorAction: widget.authorAction,
                 ),
               ),
             ),
@@ -412,6 +455,12 @@ class ReaderBody extends StatelessWidget {
               padding: gutter.copyWith(top: ReadInSpace.s4, bottom: ReadInSpace.s4),
               sliver: SliverToBoxAdapter(child: TrustRow(article: article)),
             ),
+            // Health content (medicine, public health) says it doesn't replace a doctor (SPEC F04).
+            if (article.card.field.isSensitive)
+              SliverPadding(
+                padding: gutter.copyWith(bottom: ReadInSpace.s4),
+                sliver: const SliverToBoxAdapter(child: HealthDisclaimer()),
+              ),
             if (showSummary)
               SliverPadding(
                 padding: gutter.copyWith(bottom: ReadInSpace.s4),
@@ -422,17 +471,27 @@ class ReaderBody extends StatelessWidget {
                   ),
                 ),
               ),
-            SliverPadding(padding: gutter, sliver: RDocSliver(article.content)),
+            if (toc.length >= ArticleToc.minHeadings)
+              SliverPadding(
+                padding: gutter.copyWith(bottom: ReadInSpace.s5),
+                sliver: SliverToBoxAdapter(child: ArticleToc(entries: toc, onSelected: _jumpTo)),
+              ),
+            SliverPadding(padding: gutter, sliver: RDocSliver(article.content, locator: _locator)),
             if (article.card.attachments != null)
               SliverPadding(
                 padding: gutter.copyWith(bottom: ReadInSpace.s4),
                 sliver: SliverToBoxAdapter(child: ArticleAttachmentsView(article: article.card)),
               ),
+            if (article.tags.isNotEmpty)
+              SliverPadding(
+                padding: gutter.copyWith(top: ReadInSpace.s4),
+                sliver: SliverToBoxAdapter(child: ArticleTags(tags: article.tags)),
+              ),
             SliverPadding(
               padding: gutter.copyWith(top: ReadInSpace.s4, bottom: ReadInSpace.s8),
               sliver: SliverToBoxAdapter(child: SourcesSection(sources: article.sources, onOpen: openExternalLink)),
             ),
-            ...trailing,
+            ...widget.trailing,
           ],
         ),
       ),

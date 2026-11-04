@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +15,7 @@ import '../../../article/domain/entities/article.dart';
 import '../../../article/presentation/cubit/engagement_cubit.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
+import '../../../auth/domain/entities/me.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
@@ -122,7 +124,13 @@ class _HomeViewState extends State<HomeView> {
         if (_tab == HomeFeedTab.forYou || _signedIn) _activeFeed.refresh(),
       ]);
 
-  /// Signing in or out changes what every feed shows (reactions, saves, the Following tab).
+  static bool _sameInterests(Me? a, Me? b) =>
+      a == null ||
+      b == null ||
+      (setEquals(a.interestFieldIds.toSet(), b.interestFieldIds.toSet()) &&
+          setEquals(a.interestTopicIds.toSet(), b.interestTopicIds.toSet()));
+
+  /// Signing in or out changes what every feed shows (reactions, saves, the Following tab), and so do new interests.
   void _onSessionChanged() {
     unawaited(context.read<HomeCubit>().load(refresh: true));
     unawaited(context.read<FeedCubit>().load(fieldSlug: context.read<FeedCubit>().state.fieldSlug));
@@ -157,7 +165,10 @@ class _HomeViewState extends State<HomeView> {
     return MultiBlocListener(
       listeners: [
         BlocListener<SessionCubit, SessionState>(
-          listenWhen: (a, b) => a.status != SessionStatus.unknown && (a.isAuthenticated, a.me?.id) != (b.isAuthenticated, b.me?.id),
+          // New interests (Settings → Your interests) change For you and the suggestions too.
+          listenWhen: (a, b) =>
+              a.status != SessionStatus.unknown &&
+              ((a.isAuthenticated, a.me?.id) != (b.isAuthenticated, b.me?.id) || !_sameInterests(a.me, b.me)),
           listener: (_, _) => _onSessionChanged(),
         ),
       ],
@@ -238,6 +249,9 @@ class _HomeViewState extends State<HomeView> {
   }
 }
 
+/// The header says "good morning" from 5 AM until noon and "good evening" otherwise, as on the web.
+bool greetsMorning(DateTime now) => now.hour >= 5 && now.hour < 12;
+
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader();
 
@@ -245,7 +259,7 @@ class _HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final me = context.select((SessionCubit c) => c.state.me);
-    final morning = HomeView.clock().hour < 17;
+    final morning = greetsMorning(HomeView.clock());
     final greeting = me == null
         ? l10n.greetingGuest
         : morning

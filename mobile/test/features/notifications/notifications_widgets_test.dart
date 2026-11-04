@@ -618,6 +618,9 @@ void main() {
     testWidgets('signed in: the Notifications card opens the notification settings', (tester) async {
       await pumpSettingsPage(tester);
       await tester.scrollUntilVisible(find.text('Notification settings'), 200);
+      // Built in the list's cache extent, it can still be just below the screen.
+      await tester.ensureVisible(find.text('Notification settings'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Notification settings'));
       await tester.pumpAndSettle();
       expect(find.text('notification settings page'), findsOneWidget);
