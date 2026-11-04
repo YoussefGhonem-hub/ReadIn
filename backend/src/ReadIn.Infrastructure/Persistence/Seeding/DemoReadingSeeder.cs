@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
+using ReadIn.Domain.Learning;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Users;
 
@@ -11,29 +12,32 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 /// Local only (SPEC §18.2 step 8, §18.3): reading history and streaks of different shapes for the demo users, so the
 /// streak badge, stats card and heatmap look real in development (SPEC F08). Days are relative to each user's local
 /// today and the checksum includes today's date, so it re-runs once a day on startup and the streaks stay current. Each
-/// run replaces the demo users' reading data. Every completed read is a different published article; when there are
-/// too few, the oldest planned days are dropped.
+/// run replaces the demo users' reading data and learning path enrollments (F09). Every completed read is a different
+/// published article; when there are too few, the oldest planned days are dropped.
 /// </summary>
 internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : ISeeder
 {
     /// <param name="DaysAgo">Local days with a completed article: 0 = today, 1 = yesterday, …</param>
     /// <param name="InProgress">Articles left part-way, for "continue reading".</param>
-    private sealed record Plan(string Handle, int[] DaysAgo, int InProgress = 0);
+    /// <param name="Path">A learning path the user is enrolled in (F09); its first <paramref name="PathReads"/> articles are
+    /// among the completed reads (all of them for <see cref="int.MaxValue"/>: the completion badge).</param>
+    private sealed record Plan(string Handle, int[] DaysAgo, int InProgress = 0, string? Path = null, int PathReads = 0);
 
     private static readonly Plan[] Plans =
     [
-        // SPEC §18.3: reader1 has a 12-day streak (read today to make it 13), and an older 9-day run.
-        new("reader1", [.. Run(1, 12), .. Run(40, 48)], InProgress: 2),
+        // SPEC §18.3: reader1 has a 12-day streak (read today to make it 13), and an older 9-day run. Three articles into
+        // a learning path, so Home shows the path card and today's article is the path's next one.
+        new("reader1", [.. Run(1, 12), .. Run(40, 48)], InProgress: 2, Path: "aspnet-core-basics", PathReads: 3),
         // One read away from the 7-day milestone celebration.
-        new("reader2", Run(1, 6), InProgress: 1),
-        // 29 read days with a freeze 15 days ago: reading today reaches the 30-day milestone.
-        new("reader3", [.. Run(1, 14), .. Run(16, 30)], InProgress: 1),
+        new("reader2", Run(1, 6), InProgress: 1, Path: "understanding-llms", PathReads: 2),
+        // 29 read days with a freeze 15 days ago: reading today reaches the 30-day milestone. Just enrolled in a path.
+        new("reader3", [.. Run(1, 14), .. Run(16, 30)], InProgress: 1, Path: "react-mental-models"),
         // Streak lost two days ago; the best run (21 days) was two months ago.
         new("reader4", [.. Run(3, 8), .. Run(60, 80)]),
         // Missed yesterday: the freeze is pending until they read today.
         new("reader5", Run(2, 5), InProgress: 1),
-        // A daily reader for six weeks who already read today.
-        new("reader6", Run(0, 44)),
+        // A daily reader for six weeks who already read today, and finished a learning path.
+        new("reader6", Run(0, 44), Path: "secure-by-default", PathReads: int.MaxValue),
         // Started today.
         new("reader7", [0], InProgress: 1),
         // Occasional readers without a streak.
@@ -45,7 +49,7 @@ internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : I
 
     public string Name => "demo-reading";
     public int Order => 10;
-    public int Version => 1;
+    public int Version => 2;
 
     public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.AllowsDemoData(environment);
 
@@ -54,7 +58,7 @@ internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : I
         var published = await Published().CountAsync(cancellationToken);
         var anchor = ReadingClock.LocalDate(clock.GetUtcNow().UtcDateTime, User.DefaultTimeZone);
         return SeedChecksum.Of(
-            [.. Plans.Select(p => $"{p.Handle}|{string.Join(',', p.DaysAgo)}|{p.InProgress}"), $"published:{published}", $"today:{anchor:O}"]);
+            [.. Plans.Select(p => $"{p.Handle}|{string.Join(',', p.DaysAgo)}|{p.InProgress}|{p.Path}|{p.PathReads}"), $"published:{published}", $"today:{anchor:O}"]);
     }
 
     public async Task<bool> SeedAsync(CancellationToken cancellationToken)
@@ -76,6 +80,13 @@ internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : I
         await db.ReadingProgress.Where(r => userIds.Contains(r.UserId)).ExecuteDeleteAsync(cancellationToken);
         await db.ReadingDays.Where(d => userIds.Contains(d.UserId)).ExecuteDeleteAsync(cancellationToken);
         await db.UserStats.Where(s => userIds.Contains(s.UserId)).ExecuteDeleteAsync(cancellationToken);
+        await db.PathEnrollments.Where(e => userIds.Contains(e.UserId)).ExecuteDeleteAsync(cancellationToken);
+
+        var pathSlugs = Plans.Where(p => p.Path is not null).Select(p => p.Path!).Distinct().ToList();
+        var paths = await db.LearningPaths.AsNoTracking()
+            .Where(p => p.IsPublished && pathSlugs.Contains(p.Slug))
+            .Select(p => new DemoPath(p.Id, p.Slug, p.Items.OrderBy(i => i.Order).Select(i => i.ArticleId).ToList()))
+            .ToDictionaryAsync(p => p.Slug, cancellationToken);
 
         var articles = await Published()
             .OrderBy(a => a.PublishedAt)
@@ -88,7 +99,7 @@ internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : I
         foreach (var plan in Plans)
         {
             if (users.FirstOrDefault(u => u.Email == Email(plan.Handle)) is not { } user) continue;
-            SeedReader(plan, user, articles, now);
+            SeedReader(plan, user, articles, plan.Path is { } slug ? paths.GetValueOrDefault(slug) : null, now);
         }
         await db.SaveChangesAsync(cancellationToken);
 
@@ -99,16 +110,25 @@ internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : I
         return true;
     }
 
-    private void SeedReader(Plan plan, DemoReader user, IReadOnlyList<DemoArticle> articles, DateTime now)
+    private void SeedReader(Plan plan, DemoReader user, IReadOnlyList<DemoArticle> articles, DemoPath? path, DateTime now)
     {
         var zone = TimeZoneInfo.TryFindSystemTimeZoneById(user.TimeZone, out var tz) ? tz : TimeZoneInfo.Utc;
         var today = ReadingClock.LocalDate(now, user.TimeZone);
         var localNow = TimeZoneInfo.ConvertTimeFromUtc(now, zone);
 
-        // The user's interests first, in a stable per-user order, so their top fields look plausible.
-        var queue = new Queue<DemoArticle>(articles
+        // A learning path's first articles come first, the latest one read most recently (days run from today back).
+        // The path's other articles stay unread, so its "next" article is untouched.
+        var byId = articles.ToDictionary(a => a.Id);
+        var pathArticles = path?.ArticleIds.Where(byId.ContainsKey).Select(id => byId[id]).ToList() ?? [];
+        var pathReads = pathArticles.Take(plan.PathReads).Reverse().ToList();
+        var pathIds = pathArticles.Select(a => a.Id).ToHashSet();
+
+        // Then the user's interests, in a stable per-user order, so their top fields look plausible.
+        var queue = new Queue<DemoArticle>(pathReads.Concat(articles
+            .Where(a => !pathIds.Contains(a.Id))
             .OrderByDescending(a => user.FieldIds.Contains(a.FieldId))
-            .ThenBy(a => Mix(user.Id, a.Id)));
+            .ThenBy(a => Mix(user.Id, a.Id))));
+        var pathReadTimes = new List<DateTime>();
 
         var days = new List<ReadingDay>();
         var totalSeconds = 0;
@@ -126,6 +146,7 @@ internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : I
                 var seconds = Math.Max(45, minutes * 60 * (85 + Mix(user.Id, article.Id) % 26) / 100);
                 var completedAt = CompletedAt(date, i, daysAgo == 0 ? localNow : null, zone);
                 db.ReadingProgress.Add(ReadingProgress.SeededCompleted(user.Id, article.Id, language, seconds, completedAt));
+                if (pathIds.Contains(article.Id)) pathReadTimes.Add(completedAt);
                 daySeconds += seconds;
             }
 
@@ -144,6 +165,15 @@ internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : I
         var stats = new UserStats(user.Id);
         stats.Rebuild(Streaks.Compute(days.Select(d => d.Date)), days.Sum(d => d.ArticlesRead), totalSeconds, now);
         db.UserStats.Add(stats);
+
+        if (path is not null && pathArticles.Count > 0)
+        {
+            // Enrolled a little before the first path read (or yesterday); completed with the last read when all are read.
+            var enrolledAt = pathReadTimes.Count > 0 ? pathReadTimes.Min().AddHours(-1) : now.AddDays(-1);
+            var lastActivity = pathReadTimes.Count > 0 ? pathReadTimes.Max() : enrolledAt;
+            DateTime? completedAt = pathReadTimes.Count == pathArticles.Count ? lastActivity : null;
+            db.PathEnrollments.Add(PathEnrollment.Seeded(user.Id, path.Id, enrolledAt, lastActivity, completedAt));
+        }
     }
 
     /// <summary>Evenings in the user's time zone; today's reads are placed before now.</summary>
@@ -190,4 +220,6 @@ internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : I
     private sealed record DemoArticle(Guid Id, Guid FieldId, List<DemoTranslation> Translations);
 
     private sealed record DemoTranslation(string Language, int ReadingTimeMinutes);
+
+    private sealed record DemoPath(Guid Id, string Slug, List<Guid> ArticleIds);
 }

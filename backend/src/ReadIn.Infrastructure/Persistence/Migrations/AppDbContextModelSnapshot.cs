@@ -919,6 +919,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("FieldId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsEditorial")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
@@ -981,6 +984,37 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("LearningPathItems", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Learning.PathEnrollment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EnrolledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LastActivityAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PathId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PathId");
+
+                    b.HasIndex("UserId", "PathId")
+                        .IsUnique();
+
+                    b.ToTable("PathEnrollments", (string)null);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Media.MediaAsset", b =>
@@ -2105,6 +2139,21 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasOne("ReadIn.Domain.Learning.LearningPath", null)
                         .WithMany("Items")
                         .HasForeignKey("PathId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Learning.PathEnrollment", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Learning.LearningPath", null)
+                        .WithMany()
+                        .HasForeignKey("PathId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Learning;
 using ReadIn.Domain.Taxonomy;
+using ReadIn.Domain.Users;
 
 namespace ReadIn.Infrastructure.Persistence.Configurations;
 
@@ -61,6 +62,21 @@ internal sealed class LearningPathConfiguration : IEntityTypeConfiguration<Learn
         builder.Property(p => p.DescriptionEn).HasMaxLength(500);
         builder.HasOne<Field>().WithMany().HasForeignKey(p => p.FieldId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(p => p.Items).WithOne().HasForeignKey(i => i.PathId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+/// <summary>F09 enrollments: one per user and path; they go with the account (hard delete) and with the path.</summary>
+internal sealed class PathEnrollmentConfiguration : IEntityTypeConfiguration<PathEnrollment>
+{
+    public void Configure(EntityTypeBuilder<PathEnrollment> builder)
+    {
+        builder.ToTable("PathEnrollments");
+        builder.HasKey(e => e.Id);
+        builder.HasIndex(e => new { e.UserId, e.PathId }).IsUnique();
+        builder.HasIndex(e => e.PathId);
+        builder.Ignore(e => e.IsCompleted);
+        builder.HasOne<User>().WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<LearningPath>().WithMany().HasForeignKey(e => e.PathId).OnDelete(DeleteBehavior.Cascade);
     }
 }
 

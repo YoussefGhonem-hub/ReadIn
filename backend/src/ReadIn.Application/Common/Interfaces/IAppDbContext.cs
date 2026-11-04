@@ -43,6 +43,8 @@ public interface IAppDbContext
     DbSet<ReadingDay> ReadingDays { get; }
     DbSet<UserStats> UserStats { get; }
     DbSet<LearningPath> LearningPaths { get; }
+    DbSet<LearningPathItem> LearningPathItems { get; }
+    DbSet<PathEnrollment> PathEnrollments { get; }
 
     DbSet<Reaction> Reactions { get; }
     DbSet<SavedArticle> SavedArticles { get; }

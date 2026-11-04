@@ -69,6 +69,11 @@ public static class ErrorMessages
         ["collection.limit"] = ("وصلت لأقصى عدد مجموعات (50).", "You can have at most 50 collections."),
         ["follow.self"] = ("مينفعش تتابع نفسك.", "You can't follow yourself."),
         ["glossary.term_not_found"] = ("المصطلح ده مش في القاموس.", "This term isn't in the glossary."),
+        // Learning paths (F09)
+        ["path.not_found"] = ("المسار مش موجود.", "Learning path not found."),
+        ["path.slug_taken"] = ("فيه مسار تاني بنفس الرابط.", "Another learning path uses this slug."),
+        ["path.editorial"] = ("المسار ده بيتعدّل من ملفات المحتوى بس.", "This path is managed in the content files."),
+        ["path.items_invalid"] = ("اختار من 1 لـ 100 مقال منشور ومن غير تكرار.", "Choose 1–100 different published articles."),
         // Comments (SPEC F11) and reports / moderation (F22 hooks)
         ["comment.not_found"] = ("التعليق مش موجود.", "Comment not found."),
         ["comment.not_owner"] = ("التعليق ده مش بتاعك.", "Only the author can change this comment."),
