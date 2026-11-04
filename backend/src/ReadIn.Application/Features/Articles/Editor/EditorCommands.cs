@@ -173,7 +173,7 @@ internal sealed class PublishArticleDraftCommandHandler(
         // what readers see now, and may add or drop terms (F21).
         if (!firstPublish)
         {
-            await cache.RemoveByTagAsync([CacheTags.Feed, CacheTags.Article(article.Slug)], cancellationToken);
+            await cache.RemoveByTagAsync([CacheTags.Feed, CacheTags.Article(article.Slug), CacheTags.ArticleById(article.Id)], cancellationToken);
             if (await termsIndex.RebuildAsync([article.Id], cancellationToken) > 0)
                 await cache.RemoveByTagAsync(CacheTags.Glossary, cancellationToken);
         }

@@ -24,6 +24,9 @@ public sealed record SourceDto(string Title, string Url);
 
 public record ArticleCardDto
 {
+    /// <summary>Tag names a card carries (SPEC F34); <see cref="TagCount"/> gives the rest as "+N".</summary>
+    public const int MaxCardTags = 3;
+
     public Guid Id { get; init; }
     public string Slug { get; init; } = default!;
 
@@ -32,6 +35,16 @@ public record ArticleCardDto
 
     public string Title { get; init; } = default!;
     public string? Subtitle { get; init; }
+
+    /// <summary>
+    /// The served version's beginning as plain text (SPEC F34): at most 400 characters, cut at a word, lines separated by
+    /// <c>\n</c>. Null only for a version published before excerpts existed and not backfilled yet.
+    /// </summary>
+    public string? Excerpt { get; init; }
+
+    /// <summary>The article holds more than <see cref="Excerpt"/> (cut text, later blocks, or blocks it skips); true when the excerpt is null.</summary>
+    public bool HasMore { get; init; }
+
     public string? CoverUrl { get; init; }
     public FieldRefDto Field { get; init; } = default!;
     /// <summary>Null when the author deleted their account; clients show "Deleted user" (SPEC §9.6).</summary>
@@ -40,6 +53,15 @@ public record ArticleCardDto
     public bool IsAiAssisted { get; init; }
     public string? VersionBadge { get; init; }
     public DateTime? PublishedAt { get; init; }
+
+    /// <summary>
+    /// Tag names, ordered by tag id: the first <see cref="MaxCardTags"/> on cards (SPEC F34), all of them in
+    /// <see cref="ArticleDetailsDto"/>.
+    /// </summary>
+    public IReadOnlyList<string> Tags { get; init; } = [];
+
+    /// <summary>All the article's tags (at most 5), for the card's "+N".</summary>
+    public int TagCount { get; init; }
 
     /// <summary>All reactions; always the sum of <see cref="Reactions"/>.</summary>
     public int ReactionCount { get; init; }
@@ -53,6 +75,9 @@ public record ArticleCardDto
 
     /// <summary>The viewer saved it; false for guests.</summary>
     public bool IsSaved { get; init; }
+
+    /// <summary>The viewer follows the author; false for guests, on your own articles and for a deleted author.</summary>
+    public bool IsFollowingAuthor { get; init; }
 
     /// <summary>1–10 images or one PDF (ADR 0011). Loaded after the projection by <see cref="ArticleAttachmentsReader"/>.</summary>
     public ArticleAttachmentsDto? Attachments { get; init; }
@@ -96,12 +121,8 @@ public sealed record ArticleDetailsDto : ArticleCardDto
     public JsonElement Content { get; init; }
 
     public FieldRefDto? Topic { get; init; }
-    public IReadOnlyList<string> Tags { get; init; } = [];
     public IReadOnlyList<SourceDto> Sources { get; init; } = [];
     public int ReadCount { get; init; }
-
-    /// <summary>The viewer follows the author; false for guests and on your own articles.</summary>
-    public bool IsFollowingAuthor { get; init; }
 
     /// <summary>The viewer's collections that hold this article; empty for guests and unsaved articles.</summary>
     public IReadOnlyList<Guid> CollectionIds { get; init; } = [];
@@ -115,6 +136,12 @@ public sealed record ArticleDetailsDto : ArticleCardDto
     [JsonIgnore]
     public string ContentJson { get; init; } = default!;
 }
+
+/// <summary>
+/// GET /articles/{id}/preview (SPEC F34): what "Read more" shows in a feed card. <see cref="Content"/> is an RDoc document
+/// with the article's first whole blocks, about 300 words; <see cref="IsComplete"/> says it is the whole article.
+/// </summary>
+public sealed record ArticlePreviewDto(Guid Id, string Language, JsonElement Content, bool IsComplete);
 
 /// <summary>
 /// Where the viewer left an article: <see cref="LastPosition"/> is what the reader sent (the scroll position as a

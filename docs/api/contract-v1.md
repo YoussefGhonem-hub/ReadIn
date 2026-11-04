@@ -104,11 +104,22 @@ A wrong `currentPassword` counts toward the same 15-minute lockout as sign in (`
 | GET | `/feed/today` | `ArticleCardDto` or `204` when no pick is available yet |
 | GET | `/feed/following?cursor=&limit=` | Bearer → `CursorPage<ArticleCardDto>`: published articles by the writers you follow, newest first (the Home "Following" tab) |
 | GET | `/articles/{id}/related?lang=&limit=` | `ArticleCardDto[]`, 0–`limit` cards (1–10, default 4) for the end of the reader (F04). `lang` is the version being read; cards use it when they have it, else their source language. `404 article.not_found` when the article isn't published |
+| GET | `/articles/{id}/preview?lang=` | `ArticlePreviewDto`: what a feed card's "Read more" shows (F34). `content` is an RDoc document with the article's first whole blocks, in order, until about 300 words of text (the block that reaches 300 is kept whole, so there is always at least one block, and a cut preview never ends on a heading or divider); `isComplete` is true when that is the whole article. `lang` picks the version like `GET /articles/{slug}` (an unknown or missing version gives the source language; `language` says which). Visible exactly like the article: `404 article.not_found` for unknown, unpublished and deleted articles, and for a hidden one to everyone but its author and moderators. Cached like the details and invalidated with them (publish, Update, hide/unhide, delete) |
 
-Every card (for you, today, following, saved) carries the article's counters and, for a signed-in caller, their own
-`myReaction` / `isSaved` (`null` / `false` for guests). `ArticleDetailsDto` adds `isFollowingAuthor` (`false` for guests
-and on your own articles) and `collectionIds`, your collections that hold the article (`[]` for guests and unsaved
-articles), so "add to collection" can show its ticks.
+Every card (feeds, today, field lists, profile articles, related, saved, continue reading, paths) carries the article's
+counters, the post-card fields (F34: `excerpt`, `hasMore`, `tags`, `tagCount`) and, for a signed-in caller, their own
+`myReaction` / `isSaved` / `isFollowingAuthor` (`null` / `false` / `false` for guests; `isFollowingAuthor` is also
+`false` on your own articles and for a deleted author). `ArticleDetailsDto` adds `collectionIds`, your collections that
+hold the article (`[]` for guests and unsaved articles), so "add to collection" can show its ticks.
+
+**Post-card text (F34).** `excerpt` is the served version's beginning as plain text: at most 400 characters cut at a
+word (no "…" stored: clients add "… Read more"), taken in document order from the summary, paragraphs, list items,
+steps (title, then text), quotes and callouts (title, then text), one line each joined by `\n` (a hard break inside a
+block is a `\n` too); glossary terms and mentions give their text; marks are dropped. Headings, code, tables, images,
+embeds and a quote's cite are skipped. `hasMore` is `false` only when `excerpt` is the whole article (so a card needs no
+"Read more" unless its text runs past 4 lines); cut text, later blocks or anything skipped make it `true`. `excerpt` is
+`null` only for a version published before F34 that the backfill job hasn't reached yet (clients show the title only),
+and then `hasMore` is `true`. An article whose blocks give no text has `excerpt: ""` and `hasMore: true`.
 
 **Related articles (F04).** Ranked by what they share with the article: the same topic first, then the same field,
 then tags and glossary terms in common; ties go to the higher quality score, then the newest. Never included: the
@@ -666,6 +677,8 @@ interface ArticleCardDto {
   id: string; slug: string;
   language: ArticleLanguage;     // language actually served
   title: string; subtitle: string | null;
+  excerpt: string | null;        // F34: the served version's beginning, plain text, ≤ 400 chars cut at a word, lines joined by "\n"; null only until the backfill reaches a pre-F34 version
+  hasMore: boolean;              // F34: the article holds more than `excerpt` (cut text, later blocks, skipped blocks); true when excerpt is null
   coverUrl: string | null;
   field: FieldRefDto;
   author: AuthorDto | null;      // null: the author deleted their account (SPEC §9.6); show "Deleted user", no profile link or follow
@@ -673,13 +686,24 @@ interface ArticleCardDto {
   isAiAssisted: boolean;
   versionBadge: string | null;   // e.g. ".NET 10"
   publishedAt: string;
+  tags: string[];                // F34: on cards the first 3 tag names (ordered like ArticleDetailsDto.tags); all of them in ArticleDetailsDto
+  tagCount: number;              // F34: all the article's tags (0–5), for the card's "+N"
   reactionCount: number;         // always the sum of `reactions`
   reactions: ReactionCountsDto;
   commentCount: number;          // 0 until F11
   saveCount: number;
   myReaction: ReactionType | null; // the caller's reaction; null for guests
   isSaved: boolean;              // the caller saved it; false for guests
+  isFollowingAuthor: boolean;    // the caller follows the author; false for guests, on your own articles and for a deleted author
   attachments: ArticleAttachmentsDto | null;  // feed cards carry at most the first 10 PDF pages
+}
+
+// GET /articles/{id}/preview (F34): a feed card's "Read more"
+interface ArticlePreviewDto {
+  id: string;
+  language: ArticleLanguage;     // the version served: the requested one, else the source language
+  content: RDoc;                 // same shape as ArticleDetailsDto.content: the first whole blocks, ~300 words, at least one
+  isComplete: boolean;           // content is the whole article (no "Read the full article")
 }
 
 // ── Reactions, saved, follow (F10, F12, F13) ──────────────────────
@@ -861,10 +885,9 @@ interface ArticleDetailsDto extends ArticleCardDto {
   summary: string | null;        // TL;DR plain text
   content: RDoc;                 // shared/rdoc/rdoc.schema.json
   topic: FieldRefDto | null;
-  tags: string[];
+  // tags: all of the article's tags here (ArticleCardDto has the first 3); isFollowingAuthor comes from ArticleCardDto
   sources: { title: string; url: string }[];
   readCount: number;             // saveCount comes from ArticleCardDto
-  isFollowingAuthor: boolean;    // false for guests and on your own articles
   collectionIds: string[];       // the caller's collections that hold it, oldest entry first; [] for guests and unsaved articles
   myProgress: MyProgressDto | null; // the caller's reading progress (F04 resume); null for guests and unopened articles
   moderation: { hiddenAt: string; note: string | null } | null; // hidden by a moderator (only its author and moderators see it)

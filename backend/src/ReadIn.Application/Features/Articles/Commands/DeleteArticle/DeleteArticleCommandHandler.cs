@@ -50,7 +50,7 @@ internal sealed class DeleteArticleCommandHandler(
         await db.SaveChangesAsync(cancellationToken);
 
         await files.DeleteAsync(paths, cancellationToken);
-        await cache.RemoveByTagAsync([CacheTags.Feed, CacheTags.Article(article.Slug)], cancellationToken);
+        await cache.RemoveByTagAsync([CacheTags.Feed, CacheTags.Article(article.Slug), CacheTags.ArticleById(article.Id)], cancellationToken);
         return Result.Success();
     }
 }

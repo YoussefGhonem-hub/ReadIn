@@ -253,7 +253,7 @@ internal sealed class ModerateContentCommandHandler(
         }
 
         await db.SaveChangesAsync(ct);
-        if (changed) await cache.RemoveByTagAsync([CacheTags.Feed, CacheTags.Article(article.Slug)], ct);
+        if (changed) await cache.RemoveByTagAsync([CacheTags.Feed, CacheTags.Article(article.Slug), CacheTags.ArticleById(article.Id)], ct);
         return Result.Success();
     }
 

@@ -29,7 +29,7 @@ public sealed class RulesTests
     {
         var docs = new Dictionary<string, JsonElement> { ["en"] = Doc(en, "en"), ["ar-EG"] = Doc(ar, "ar-EG") };
         var processed = docs.ToDictionary(d => d.Key, _ =>
-            new ProcessedRDoc(new ArticleContent("{}", "", "", null, 6, 1200), "en", [], [], [], 0));
+            new ProcessedRDoc(new ArticleContent("{}", "", "", null, 6, 1200, "", true), "en", [], [], [], 0));
         return new ArticleUnderTest("content/articles/dotnet/csharp/sample", meta ?? new ArticleMeta { Slug = "sample", Field = "dotnet", Topic = "csharp" },
             Plan: null, docs, processed);
     }

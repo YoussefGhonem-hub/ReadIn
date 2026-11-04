@@ -6,6 +6,7 @@ using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Articles.Commands.DeleteArticle;
 using ReadIn.Application.Features.Articles.Editor;
 using ReadIn.Application.Features.Articles.Queries.GetArticleBySlug;
+using ReadIn.Application.Features.Articles.Queries.GetArticlePreview;
 using ReadIn.Application.Features.Feed.Queries.GetForYouFeed;
 using ReadIn.Application.Features.Feed.Queries.GetTodayArticle;
 using ReadIn.Application.Features.Taxonomy;
@@ -50,6 +51,12 @@ internal sealed class ArticleEndpoints : IEndpointGroup
             .AllowAnonymous()
             .WithSummary("A published article; ?lang=ar-EG|en picks the version (falls back to the source language)")
             .Produces<ArticleDetailsDto>();
+
+        articles.MapGet("/{id:guid}/preview", async (Guid id, string? lang, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new GetArticlePreviewQuery(id, lang), ct)).ToHttp(http))
+            .AllowAnonymous()
+            .WithSummary("A feed card's \"Read more\" (F34): the first whole blocks, about 300 words, as RDoc; isComplete when that is the whole article")
+            .Produces<ArticlePreviewDto>();
 
         // F05 editor (ADR 0015): a private working copy per article, published as a whole.
         articles.MapPost("/", async (ArticleDraftDocument body, ISender sender, HttpContext http, CancellationToken ct) =>

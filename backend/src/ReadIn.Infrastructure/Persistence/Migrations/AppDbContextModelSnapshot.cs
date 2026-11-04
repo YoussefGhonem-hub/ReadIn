@@ -306,6 +306,13 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Excerpt")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<bool>("ExcerptHasMore")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsSource")
                         .HasColumnType("bit");
 

@@ -37,11 +37,7 @@ internal sealed class ArticleDetailsPersonalizer(IAppDbContext db, ICurrentUser 
                 .ToListAsync(cancellationToken)
             : [];
 
-        return details.WithViewerState(states) with
-        {
-            // Your own articles never show "Following".
-            IsFollowingAuthor = state.IsFollowingAuthor && details.Author is { } author && author.Id != viewerId,
-            CollectionIds = collectionIds,
-        };
+        // The viewer state never has your own articles as "Following".
+        return details.WithViewerState(states) with { CollectionIds = collectionIds };
     }
 }

@@ -22,6 +22,9 @@ public static class CacheTags
     public const string Glossary = "glossary";
 
     public static string Article(string slug) => $"article:{slug}";
+
+    /// <summary>What is cached per article id (the card preview, F34); invalidated wherever <see cref="Article"/> is.</summary>
+    public static string ArticleById(Guid id) => $"article-id:{id}";
 }
 
 internal sealed class CachingBehavior<TMessage, TResponse>(HybridCache cache) : IPipelineBehavior<TMessage, TResponse>

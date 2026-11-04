@@ -87,6 +87,7 @@ public static class DependencyInjection
         services.AddScoped<OutboxProcessor>();
         services.AddScoped<OutboxJob>();
         services.AddScoped<ArticleQualityJob>();
+        services.AddScoped<ArticleExcerptsBackfillJob>();
         services.AddScoped<OrphanedUploadsCleanupJob>();
         services.AddScoped<VerificationProofsCleanupJob>();
         services.AddScoped<IdentityCleanupJob>();
@@ -164,6 +165,9 @@ public static class DependencyInjection
         jobs.RemoveIfExists("publish-scheduled"); // scheduling was removed (ADR 0015)
         jobs.AddOrUpdate<ArticleQualityJob>("article-quality", job => job.RunAsync(CancellationToken.None), Cron.Hourly(10));
         jobs.Trigger("article-quality"); // scores are fresh right after a deploy, not only at the next hour
+        // Feed-card excerpts for versions published before F34: runs after every start and has nothing to do once done.
+        jobs.AddOrUpdate<ArticleExcerptsBackfillJob>("article-excerpts-backfill", job => job.RunAsync(CancellationToken.None), Cron.Never());
+        jobs.Trigger("article-excerpts-backfill");
         jobs.AddOrUpdate<OrphanedUploadsCleanupJob>("uploads-orphan-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3));
         jobs.AddOrUpdate<VerificationProofsCleanupJob>("verification-proofs-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 15));
         jobs.AddOrUpdate<IdentityCleanupJob>("identity-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 30));

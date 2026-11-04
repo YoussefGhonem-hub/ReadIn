@@ -9,7 +9,7 @@ public sealed class ArticleTests
     private static readonly Guid AuthorId = Guid.NewGuid();
 
     private static ArticleContent Content(int words = 900) =>
-        new("{}", "text", "text", null, ReadingTimeMinutes: 5, WordCount: words);
+        new("{}", "text", "text", null, ReadingTimeMinutes: 5, WordCount: words, Excerpt: "text", ExcerptHasMore: false);
 
     private static Field SoftwareField() => new("dotnet", ".NET", ".NET", "code", "primary", 1);
 

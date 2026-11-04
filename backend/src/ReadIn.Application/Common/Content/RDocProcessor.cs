@@ -23,8 +23,9 @@ public sealed record ProcessedRDoc(
 public interface IRDocProcessor
 {
     /// <summary>
-    /// Sanitizes, validates and analyses an RDoc document (SPEC §13.5). The returned JSON is the only
-    /// form of the content that may be stored.
+    /// Sanitizes, validates and analyses an RDoc document (SPEC §13.5): plain text, search text, reading time, the feed
+    /// card's excerpt (F34), headings, terms and code languages. The returned JSON is the only form of the content that may
+    /// be stored.
     /// </summary>
     Result<ProcessedRDoc> Process(JsonElement document, string? expectedLanguage = null, string? title = null);
 }
@@ -223,9 +224,10 @@ internal sealed partial class RDocProcessor : IRDocProcessor
         var readingTime = Math.Max(1, (int)Math.Ceiling(minutes));
 
         var searchText = ArabicNormalizer.Normalize(string.IsNullOrWhiteSpace(title) ? plainText : $"{title}\n{plainText}");
+        var excerpt = RDocExcerpt.From(document);
 
         return new ProcessedRDoc(
-            new ArticleContent(json, plainText, searchText, summary, readingTime, words),
+            new ArticleContent(json, plainText, searchText, summary, readingTime, words, excerpt.Text, excerpt.HasMore),
             language,
             headings,
             [.. terms],

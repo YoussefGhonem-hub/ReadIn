@@ -9,7 +9,8 @@ public sealed record ArticleViewerState(ReactionType? MyReaction, bool IsSaved, 
 
 /// <summary>
 /// Loads <see cref="ArticleViewerState"/> for a page of articles in one query: the page's articles LEFT JOIN the viewer's
-/// reactions, saves and follows (each at most one row per article, by the unique indexes). Guests skip it entirely.
+/// reactions, saves and follows (each at most one row per article, by the unique indexes). Guests skip it entirely. Your
+/// own articles and a deleted author's are never "following".
 /// </summary>
 public sealed class ArticleViewerStateReader(IAppDbContext db)
 {
@@ -34,7 +35,7 @@ public sealed class ArticleViewerStateReader(IAppDbContext db)
                     article.Id,
                     MyReaction = reaction != null ? reaction.Type : (ReactionType?)null,
                     IsSaved = saved != null,
-                    IsFollowingAuthor = follow != null,
+                    IsFollowingAuthor = follow != null && article.AuthorId != viewer,
                 })
             .ToListAsync(cancellationToken);
 
@@ -47,6 +48,11 @@ internal static class ArticleViewerStateExtensions
     public static TCard WithViewerState<TCard>(this TCard card, IReadOnlyDictionary<Guid, ArticleViewerState> states)
         where TCard : ArticleCardDto =>
         states.TryGetValue(card.Id, out var state)
-            ? (TCard)((ArticleCardDto)card with { MyReaction = state.MyReaction, IsSaved = state.IsSaved })
+            ? (TCard)((ArticleCardDto)card with
+            {
+                MyReaction = state.MyReaction,
+                IsSaved = state.IsSaved,
+                IsFollowingAuthor = state.IsFollowingAuthor,
+            })
             : card;
 }

@@ -6,16 +6,24 @@ namespace ReadIn.Domain.Articles;
 /// Processed RDoc content: the validated + sanitized JSON and everything derived from it (SPEC §13.5).
 /// Produced by the application's RDoc processor, never built from raw client input.
 /// </summary>
+/// <param name="Excerpt">The feed card's text (SPEC F34): plain text, at most <see cref="ArticleTranslation.ExcerptMaxLength"/>
+/// characters cut at a word; empty when the article has no text the excerpt takes.</param>
+/// <param name="ExcerptHasMore">The article holds more than <paramref name="Excerpt"/>: cut text, later blocks, or blocks
+/// the excerpt skips.</param>
 public sealed record ArticleContent(
     string Json,
     string PlainText,
     string SearchText,
     string? Summary,
     int ReadingTimeMinutes,
-    int WordCount);
+    int WordCount,
+    string Excerpt,
+    bool ExcerptHasMore);
 
 public sealed class ArticleTranslation
 {
+    public const int ExcerptMaxLength = 400;
+
     private ArticleTranslation() { } // EF
 
     internal ArticleTranslation(Guid articleId, string language, string title, string? subtitle, ArticleContent content, bool isSource)
@@ -39,6 +47,13 @@ public sealed class ArticleTranslation
     public string SearchText { get; private set; } = default!;
     public int ReadingTimeMinutes { get; private set; }
     public int WordCount { get; private set; }
+
+    /// <summary>The feed card's text (SPEC F34); null only on a version published before excerpts existed, until the backfill.</summary>
+    public string? Excerpt { get; private set; }
+
+    /// <summary>The version holds more than <see cref="Excerpt"/>: cut text, later blocks, or blocks the excerpt skips.</summary>
+    public bool ExcerptHasMore { get; private set; }
+
     public bool IsSource { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
@@ -60,6 +75,8 @@ public sealed class ArticleTranslation
         Summary = content.Summary;
         ReadingTimeMinutes = content.ReadingTimeMinutes;
         WordCount = content.WordCount;
+        Excerpt = content.Excerpt;
+        ExcerptHasMore = content.ExcerptHasMore;
     }
 }
 

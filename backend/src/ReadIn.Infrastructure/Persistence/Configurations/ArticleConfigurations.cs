@@ -55,6 +55,8 @@ internal sealed class ArticleTranslationConfiguration : IEntityTypeConfiguration
         builder.Property(t => t.Title).HasMaxLength(150).UseCollation(AppDbContext.SearchCollation).IsRequired();
         builder.Property(t => t.Subtitle).HasMaxLength(250);
         builder.Property(t => t.Summary).HasMaxLength(2000);
+        // The feed card's text (SPEC F34); null until the backfill job fills versions published before it.
+        builder.Property(t => t.Excerpt).HasMaxLength(ArticleTranslation.ExcerptMaxLength);
         builder.Property(t => t.ContentJson).HasColumnType("nvarchar(max)").IsRequired();
         builder.Property(t => t.PlainText).HasColumnType("nvarchar(max)").IsRequired();
         builder.Property(t => t.SearchText).HasColumnType("nvarchar(max)")

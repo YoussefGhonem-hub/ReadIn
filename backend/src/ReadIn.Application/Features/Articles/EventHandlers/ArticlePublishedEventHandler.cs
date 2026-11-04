@@ -5,9 +5,10 @@ using ReadIn.Domain.Articles;
 
 namespace ReadIn.Application.Features.Articles.EventHandlers;
 
-/// <summary>Publishing invalidates feeds and the article's cached details (SPEC §6.3).</summary>
+/// <summary>Publishing invalidates feeds and the article's cached details and preview (SPEC §6.3).</summary>
 internal sealed class ArticlePublishedEventHandler(HybridCache cache) : IDomainEventHandler<ArticlePublishedDomainEvent>
 {
     public async Task Handle(ArticlePublishedDomainEvent domainEvent, CancellationToken cancellationToken) =>
-        await cache.RemoveByTagAsync([CacheTags.Feed, CacheTags.Article(domainEvent.Slug)], cancellationToken);
+        await cache.RemoveByTagAsync(
+            [CacheTags.Feed, CacheTags.Article(domainEvent.Slug), CacheTags.ArticleById(domainEvent.ArticleId)], cancellationToken);
 }

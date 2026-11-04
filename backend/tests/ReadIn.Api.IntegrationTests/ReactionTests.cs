@@ -202,10 +202,11 @@ public sealed class ReactionTests(ApiFactory api)
 
         var card = await author.Client.FindInForYouAsync(articleId);
 
+        // excerpt, hasMore, tags, tagCount and isFollowingAuthor: the post card (F34).
         card.Select(p => p.Key).Should().Equal(
-            "id", "slug", "language", "title", "subtitle", "coverUrl", "field", "author", "readingTimeMinutes",
-            "isAiAssisted", "versionBadge", "publishedAt", "reactionCount", "reactions", "commentCount", "saveCount", "myReaction",
-            "isSaved", "attachments");
+            "id", "slug", "language", "title", "subtitle", "excerpt", "hasMore", "coverUrl", "field", "author", "readingTimeMinutes",
+            "isAiAssisted", "versionBadge", "publishedAt", "tags", "tagCount", "reactionCount", "reactions", "commentCount", "saveCount",
+            "myReaction", "isSaved", "isFollowingAuthor", "attachments");
         card["reactions"]!.AsObject().Select(p => p.Key).Should().Equal("insightful", "love", "fire", "mindBlown");
     }
 
