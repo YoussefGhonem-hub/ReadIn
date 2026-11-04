@@ -1266,6 +1266,119 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("Reports", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Notifications.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CommentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Data")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DedupeKey")
+                        .HasMaxLength(200)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("GroupKey")
+                        .HasMaxLength(200)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime?>("PushAfter")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PushAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("PushStatus")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("PushedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("SeenAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("UserId", "DedupeKey")
+                        .IsUnique()
+                        .HasFilter("[DedupeKey] IS NOT NULL");
+
+                    b.HasIndex(new[] { "UserId", "UpdatedAt", "Id" }, "IX_Notifications_List")
+                        .IsDescending(false, true, true);
+
+                    b.HasIndex(new[] { "PushStatus", "PushAfter" }, "IX_Notifications_PushDue")
+                        .HasFilter("[PushStatus] = 1");
+
+                    b.ToTable("Notifications", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Notifications.NotificationActor", b =>
+                {
+                    b.Property<Guid>("NotificationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("NotificationId", "ActorId");
+
+                    b.HasIndex("ActorId");
+
+                    b.ToTable("NotificationActors", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Notifications.UserNotificationSetting", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(40)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<byte>("Mode")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("UserId", "Type");
+
+                    b.ToTable("UserNotificationSettings", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Reading.DailyPick", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1653,6 +1766,21 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("PublicReadingStats")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("QuietHoursEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<TimeOnly>("QuietHoursEnd")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("time")
+                        .HasDefaultValue(new TimeOnly(7, 0, 0));
+
+                    b.Property<TimeOnly>("QuietHoursStart")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("time")
+                        .HasDefaultValue(new TimeOnly(23, 0, 0));
 
                     b.Property<bool>("RecoveryDisabled")
                         .HasColumnType("bit");
@@ -2256,6 +2384,49 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Notifications.Notification", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Articles.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("ReadIn.Domain.Engagement.Comment", null)
+                        .WithMany()
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Notifications.NotificationActor", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Notifications.Notification", null)
+                        .WithMany("Actors")
+                        .HasForeignKey("NotificationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Notifications.UserNotificationSetting", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Reading.DailyPick", b =>
                 {
                     b.HasOne("ReadIn.Domain.Articles.Article", null)
@@ -2416,6 +2587,11 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("ReadIn.Domain.Media.MediaAsset", b =>
                 {
                     b.Navigation("Pages");
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Notifications.Notification", b =>
+                {
+                    b.Navigation("Actors");
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Taxonomy.Field", b =>

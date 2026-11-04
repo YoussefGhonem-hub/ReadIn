@@ -183,7 +183,7 @@ public static class NoticeKinds
     public const string ArticleHidden = "article_hidden";
 }
 
-/// <summary>After the commit: the best-effort push of a new notice to the affected user's devices.</summary>
+/// <summary>After the commit: a <c>moderation_notice</c> notification for the affected user, with its push (F17).</summary>
 public sealed record ModerationNoticeIssuedDomainEvent(Guid NoticeId) : DomainEvent;
 
 public static class ModerationErrors

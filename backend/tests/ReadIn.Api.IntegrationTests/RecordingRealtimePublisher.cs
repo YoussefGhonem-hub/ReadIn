@@ -8,6 +8,7 @@ public sealed class RecordingRealtimePublisher : IRealtimePublisher
 {
     private readonly ConcurrentQueue<(Guid ArticleId, ArticleLiveCounters Counters)> _counters = new();
     private readonly ConcurrentQueue<(Guid ArticleId, ArticleLiveEvent Event)> _events = new();
+    private readonly ConcurrentQueue<(Guid UserId, int Unread, DateTime? LastNotificationAt)> _users = new();
 
     /// <summary>Every feed signal, oldest first.</summary>
     public ConcurrentQueue<DateTime> FeedSignals { get; } = new();
@@ -19,6 +20,10 @@ public sealed class RecordingRealtimePublisher : IRealtimePublisher
     /// <summary>Every comment event of the article (F11), oldest first.</summary>
     public IReadOnlyList<ArticleLiveEvent> EventsFor(Guid articleId) =>
         [.. _events.Where(e => e.ArticleId == articleId).Select(e => e.Event)];
+
+    /// <summary>Every <c>/live/users/{id}</c> write for the user (F17 badge), oldest first.</summary>
+    public IReadOnlyList<(int Unread, DateTime? LastNotificationAt)> NotificationsFor(Guid userId) =>
+        [.. _users.Where(u => u.UserId == userId).Select(u => (u.Unread, u.LastNotificationAt))];
 
     public Task PublishArticleCountersAsync(Guid articleId, ArticleLiveCounters counters, CancellationToken cancellationToken = default)
     {
@@ -39,6 +44,9 @@ public sealed class RecordingRealtimePublisher : IRealtimePublisher
     }
 
     public Task PublishUserNotificationsAsync(
-        Guid userId, int unreadNotifications, DateTime? lastNotificationAt, CancellationToken cancellationToken = default) =>
-        Task.CompletedTask;
+        Guid userId, int unreadNotifications, DateTime? lastNotificationAt, CancellationToken cancellationToken = default)
+    {
+        _users.Enqueue((userId, unreadNotifications, lastNotificationAt));
+        return Task.CompletedTask;
+    }
 }

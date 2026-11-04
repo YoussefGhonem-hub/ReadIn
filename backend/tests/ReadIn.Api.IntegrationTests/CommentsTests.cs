@@ -307,10 +307,12 @@ public sealed class CommentsTests(ApiFactory api)
         var leaving = await api.SignUpAsync();
         var id = (await PostAsync(leaving, articleId, "تعليق هيفضل موجود"))["id"]!.GetValue<Guid>();
 
-        // What account deletion does to the row (readin's AccountEraser): the comment's author becomes null (SET NULL).
+        // What account deletion does to the row (readin's AccountEraser): the comment's author becomes null (SET NULL). As
+        // there, its rows as the actor of other people's notifications (F17, no cascade) go first.
         using (var scope = api.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await db.NotificationActors.Where(a => a.ActorId == leaving.Id).ExecuteDeleteAsync(Ct);
             await db.Users.IgnoreQueryFilters().Where(u => u.Id == leaving.Id).ExecuteDeleteAsync(Ct);
         }
 

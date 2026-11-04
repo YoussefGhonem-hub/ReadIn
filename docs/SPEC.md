@@ -603,7 +603,7 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 
 | Data | Where | On deletion | Why / how long |
 |---|---|---|---|
-| Phone number, email, password hash, recovery PIN hash, name, @username, photo, bio, links, preferences and privacy settings, lockout counters, security stamp | `Users` | **Deleted** | |
+| Phone number, email, password hash, recovery PIN hash, name, @username, photo, bio, links, preferences and privacy settings, quiet hours, lockout counters, security stamp | `Users` | **Deleted** | |
 | Roles, interests, fields of expertise | `UserRoles`, `UserInterests`, `UserExpertiseFields` | **Deleted** (cascade) | |
 | Devices and FCM push tokens | `UserDevices` | **Deleted** (cascade); the apps also delete the token on the device | No notification reaches a deleted account |
 | Google/Apple links and the encrypted Apple refresh token | `UserExternalLogins` | Apple tokens **revoked at Apple** first, then **deleted** | The same Google/Apple account can sign up again |
@@ -618,6 +618,9 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 | The account's reactions, saved articles, collections, follows in both directions | `Reactions`, `SavedArticles`, `Collections`, `CollectionItems`, `UserFollows` | **Deleted** (cascade from `Users`; follows *of* the account deleted explicitly); the counters of the articles it reacted to or saved are recomputed right after | |
 | The account's comments (F11) | `Comments` | **Anonymized**: `AuthorId` set to null by the foreign key, `CreatedBy` and `UpdatedBy` cleared; shown as "Deleted user". Its comments that were already deleted (by it or a moderator) keep only the placeholder: their text is erased | Replies and discussions keep their context |
 | The account's comment likes, mentions of it | `CommentLikes`, `CommentMentions` | **Deleted** (cascade); the like counts of the comments it liked are recomputed in the same transaction | |
+| The account's notifications (with their actors) and notification settings (F17) | `Notifications`, `NotificationActors`, `UserNotificationSettings` | **Deleted** (cascade) | |
+| The account as the actor of other people's notifications ("X commented on your article") | `NotificationActors.ActorId` | **Deleted** explicitly (no cascade: a second path from `Users`); the entry stays and shows "Deleted user", or drops out of the list when nothing is left of it (a follow) | |
+| Other people's notifications about the account's deleted articles or the comments on them | `Notifications.ArticleId` / `CommentId` | **Deleted** explicitly before the articles (no cascade) | Their target is gone |
 | Reports it filed; reports about the account, its deleted articles and the comments on them | `Reports` | **Deleted** | Their target is gone |
 | Comments and articles it hid, reports it resolved, and moderation log entries it made or that name it | `Comments.HiddenById`, `Articles.HiddenById`, `Reports.ResolvedById`, `ModerationActions.ModeratorId` / `TargetUserId` | **Anonymized**: the link to the account is removed | The moderation decision stays |
 | Security log entries about the account (sign ins, password, PIN and phone changes…) | `AuditLogs` | **Deleted** | They hold IP addresses |
@@ -812,8 +815,9 @@ Draft ──► Published ──► Archived
 - Arabic normalization (see [§22](#22-search)), filters (field, language, reading time), recent searches.
 
 ### F17 — Notifications
+**Built.** API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Notifications", "Push payloads"); details in [§21.1](#211-notifications).
 - In-app notification center (SQL `Notifications` table, live unread badge via Firebase Realtime Database) + push (FCM).
-- Types: new follower, reply to your comment, mention, reactions milestone (10/50/100), comment on your article, verification result, daily article, streak reminder (evening, if not read yet), new article from a followed writer, **security alerts** (password/PIN/phone changed, recovery lockout).
+- Types: new follower, reply to your comment, mention (in comments), reactions milestone (10/50/100), comment on your article, verification result (reserved for F19), daily article, streak reminder (20:00, if not read yet), new article from a followed writer, **security alerts** (password/PIN/phone changed, recovery lockout, Google/Apple linked or unlinked), moderation notices (F22).
 - Per-type preferences (push / in-app / off), quiet hours. Details in [§21](#21-notifications--real-time).
 
 ### F18 — Settings
@@ -1391,6 +1395,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | 8 | Glossary terms (`content/glossary/*.yaml`, upserted by term id) and the article-term index, rebuilt when a glossary file or an article changes | All |
 | 9 | Demo interactions (follows, reactions, comments, saves, reading history, streaks, sample image/PDF attachments) | Local only |
 | 10 | Demo reports (`demo-reports`, F22): open, resolved and dismissed reports on demo articles, comments and a user, and a warning notice for reader7 | Development only |
+| 11 | Demo notifications (`demo-notifications`, F17): a few read and unread entries of every kind for reader1, writer1, reader2 and reader7, without pushes | Development only |
 
 ### 18.3 Seed Users
 Users are created in SQL Server only (no Firebase Auth). Phone numbers use the reserved fictional range **+1 202 555 01XX** (555-0100 to 555-0199 are reserved for fiction, so they never belong to a real person).
@@ -1512,14 +1517,28 @@ Seed content lives in `content/articles/{field}/{topic}/{slug}/` so it is versio
 | Email (Phase 3) | Transactional provider | Weekly digest, verification results |
 
 - Pushes are sent **only** from outbox handlers and Hangfire jobs (`IPushSender` → `FcmPushSender`, multicast + batching), never inside request handlers.
-- Every push also creates a `Notifications` row and increments `/live/users/{id}/unreadNotifications`.
+- Every push also has a `Notifications` row (written first; the push carries its id), and `/live/users/{id}` gets the new unread count.
 - Device tokens: registered on sign-in/app start, refreshed when FCM rotates them, deleted on sign out, and removed when FCM reports them as invalid.
 - Daily article and streak reminders are scheduled per user's **time zone** via Hangfire.
-- Message language = the user's UI language. Aggregation: "أحمد و9 غيره عملوا رياكت على مقالك" instead of 10 pushes.
+- Message language = the user's UI language. Aggregation: "أحمد و9 غيره علّقوا على مقالك" instead of 10 pushes.
 - Quiet hours respected (default 23:00 – 07:00); security alerts ignore quiet hours.
 - Payloads carry a deep link (`readin://a/{slug}#comment-{id}`). Taps open the right screen from terminated, background and foreground states.
 - Web: `firebase-messaging-sw.js` + VAPID key, foreground messages as an in-app toast. Mobile: `firebase_messaging` + `flutter_local_notifications`, Android 13+ `POST_NOTIFICATIONS`, iOS APNs.
 - Permission is requested **in context** (onboarding reminder step or when enabling a notification type), never on first launch.
+
+**How it is built (F17).** Endpoints, DTOs, types, links and push payloads are in [`docs/api/contract-v1.md`](api/contract-v1.md) ("Notifications").
+
+| Part | Details |
+|---|---|
+| Tables | `Notifications` (Id, UserId → Users cascade, Type, GroupKey, DedupeKey, ArticleId and CommentId with no cascade, Data JSON, CreatedAt, UpdatedAt = latest activity, SeenAt, ReadAt, PushStatus None/Pending/Sent/Skipped/Failed, PushAfter, PushedAt, PushAttempts); `NotificationActors` (NotificationId cascade + ActorId with no cascade, At); `UserNotificationSettings` (UserId + Type, Mode all/inApp/off; no row = all); `Users.QuietHoursEnabled/Start/End` (default on, 23:00, 07:00). Indexes: unique (UserId, DedupeKey) where set, (UserId, UpdatedAt DESC, Id DESC) for the list, (PushStatus, PushAfter) for pending pushes |
+| Writing | Outbox handlers (`UserFollowedDomainEvent`, `CommentChangedDomainEvent`, `ReactionChangedDomainEvent`, `ArticlePublishedDomainEvent`, `UserSecurityChangedDomainEvent`, `ModerationNoticeIssuedDomainEvent`) and jobs (daily article, streak reminder) write through `NotificationWriter`; they never push. Never about your own action; suspended, deleted and system accounts get nothing; `off` writes nothing, `inApp` writes without a push |
+| Idempotency | A dedupe key per user (`mention:{commentId}`, `reactions_milestone:{articleId}:{n}`, `followed_writer_article:{articleId}`, `security_alert:{change}:{event ticks}`, `moderation_notice:{noticeId}`, `daily_article:{date}`, `streak_reminder:{date}`), and an aggregated entry ignores an actor's activity it already has, so outbox retries change nothing |
+| Aggregation | `new_follower` per day, `article_comment` per article, `comment_reply` per thread: new activity joins an unread entry of the group that moved in the last 24 hours (distinct actors, moved to the top, seen/read cleared, push armed again) |
+| Push job | `NotificationPushJob` (Hangfire, every minute and right after a write): pending entries that are due, batched, title/body in the user's UI language, collapse key = group or type, quiet hours (the push waits for their end; security alerts ignore them), checked again when sending (mode, content still there, account active), dropped after 24 hours (streak reminder: 4), invalid tokens deleted, other failures retried after 1 and 5 minutes (3 sends) |
+| Streak reminder | `StreakReminderJob`, every 5 minutes: from 20:00 to 22:00 in each user's time zone, one per local date, when the streak is ≥ 1 (a pending freeze counts, ADR 0013) and nothing was read today |
+| Daily article | The F07 job writes the `daily_article` entry and sends its own push with the entry's id; `inApp` → entry only, `off` → neither; quiet hours hold the push within F07's 2-hour late window |
+| Badge | `/live/users/{id}` `{ unreadNotifications, lastNotificationAt }` after every write, seen, read and read-all (seen/read through `UserNotificationsChangedDomainEvent`, so other devices follow); `GET /me/notifications/unread-count` is the same number. Entries whose comment or article is gone drop out of the list and the count |
+| Account deletion | §9.6: own entries and settings cascade; actor rows of the account and entries about its deleted articles are deleted explicitly |
 
 ### 21.2 Real-time: Firebase Realtime Database
 The Realtime Database (RTDB) was chosen over Firestore because Firestore bills every document read, which is expensive for frequently updated live counters.

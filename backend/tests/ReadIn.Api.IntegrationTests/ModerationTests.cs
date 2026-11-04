@@ -9,9 +9,11 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Feed.DailyArticle;
 using ReadIn.Application.Features.Moderation;
+using ReadIn.Application.Features.Notifications;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Identity;
 using ReadIn.Domain.Moderation;
+using ReadIn.Domain.Notifications;
 using ReadIn.Domain.Reading;
 using ReadIn.Infrastructure.Persistence;
 using ReadIn.Infrastructure.Persistence.Seeding;
@@ -292,6 +294,9 @@ public sealed class ModerationTests(ApiFactory api)
         var (articleId, slug) = await author.Client.PublishAsync("Notices test");
         var token = $"fcm-{Guid.NewGuid():N}";
         (await author.Client.PostAsJsonAsync("/api/v1/me/devices", new { token, platform = "android" }, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        // Pushes wait for the end of quiet hours (F17); this test sends them now, whatever the time of day.
+        (await author.Client.PutAsJsonAsync("/api/v1/me/notification-settings",
+            new { quietHours = new { enabled = false, start = "23:00", end = "07:00" } }, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var moderator = await ModeratorAsync();
 
         await ActOkAsync(moderator, new { action = "warn", targetType = "user", targetId = author.Id, note = "No self-promotion in comments." });
@@ -310,28 +315,41 @@ public sealed class ModerationTests(ApiFactory api)
         var warningId = notices[0]!["id"]!.GetValue<Guid>();
         var hiddenId = notices[1]!["id"]!.GetValue<Guid>();
 
-        // The outbox ran the push after the commit (Testing logs pushes instead of sending them).
+        // The outbox ran after the commit: each notice is a moderation_notice entry (F17 took over F22's push).
         var message = await InDbAsync(db => db.OutboxMessages
             .Where(m => m.Type == typeof(ModerationNoticeIssuedDomainEvent).FullName && m.Content.Contains(hiddenId.ToString()))
             .SingleAsync(Ct));
         message.ProcessedAt.Should().NotBeNull();
         message.Error.Should().BeNull();
+        var entries = await InDbAsync(db => db.Notifications.AsNoTracking()
+            .Where(n => n.UserId == author.Id && n.Type == NotificationTypes.ModerationNotice).ToListAsync(Ct));
+        entries.Should().HaveCount(2).And.OnlyContain(n => n.PushStatus == NotificationPushStatus.Pending);
+        var hiddenEntry = entries.Single(n => n.ArticleId == articleId);
+        var warningEntry = entries.Single(n => n.ArticleId == null);
 
-        // What FCM would get, in the author's UI language (en).
+        // FCM unreachable: the push job only logs it, and tries again later.
+        var now = DateTime.UtcNow;
+        await PushAsync(new FailingPushSender(), now);
+        (await InDbAsync(db => db.Notifications.AsNoTracking().Where(n => n.UserId == author.Id).Select(n => new { n.PushStatus, n.PushAttempts })
+                .ToListAsync(Ct)))
+            .Should().HaveCount(2).And.OnlyContain(n => n.PushStatus == NotificationPushStatus.Pending && n.PushAttempts == 1);
+
+        // What FCM gets, in the author's UI language (en), once per notice.
         var push = new RecordingPushSender();
-        (await SendNoticeAsync(hiddenId, push)).Should().Be(1);
-        var sent = push.To(token).Should().ContainSingle().Subject;
-        sent.Title.Should().Be(ModerationNoticePush.ArticleHiddenTitleEn);
+        await PushAsync(push, now.AddMinutes(2));
+        var sent = push.To(token).Should().HaveCount(2).And.ContainSingle(n => n.Data["noticeId"] == hiddenId.ToString()).Subject;
+        sent.Title.Should().Be(NotificationTexts.ArticleHiddenTitleEn);
         sent.Body.Should().Be("Notices test");
         sent.Data.Should().Contain(new Dictionary<string, string>
         {
             ["type"] = "moderation_notice", ["kind"] = "article_hidden", ["noticeId"] = hiddenId.ToString(), ["slug"] = slug,
-            ["link"] = $"readin://a/{slug}",
+            ["link"] = $"readin://a/{slug}", ["notificationId"] = hiddenEntry.Id.ToString(),
         });
-        (await SendNoticeAsync(warningId, push)).Should().Be(1);
-        push.To(token).Last().Should().Match<PushNotification>(n =>
-            n.Title == ModerationNoticePush.WarningTitleEn && n.Body == "No self-promotion in comments." && !n.Data.ContainsKey("link"));
-        (await SendNoticeAsync(warningId, new FailingPushSender())).Should().Be(0, "a failed push is only logged");
+        push.To(token).Single(n => n.Data["noticeId"] == warningId.ToString()).Should().Match<PushNotification>(n =>
+            n.Title == NotificationTexts.ModerationWarningTitleEn && n.Body == "No self-promotion in comments."
+            && n.Data["link"] == "readin://notifications" && n.Data["kind"] == "warning" && n.Data["notificationId"] == warningEntry.Id.ToString());
+        await PushAsync(push, now.AddMinutes(3));
+        push.To(token).Should().HaveCount(2, "a notice is pushed once");
 
         // Acknowledging is idempotent and only for the notice's user.
         (await author.Client.PostAsync($"/api/v1/me/moderation-notices/{warningId}/acknowledge", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -340,12 +358,23 @@ public sealed class ModerationTests(ApiFactory api)
             .ProblemAsync(HttpStatusCode.NotFound, "moderation.notice_not_found");
         (await author.Client.GetAsync("/api/v1/me/moderation-notices", Ct).OkJsonAsync())["items"]!.AsArray()
             .Should().ContainSingle().Which!["id"]!.GetValue<Guid>().Should().Be(hiddenId);
-        (await SendNoticeAsync(warningId, push)).Should().Be(0, "an acknowledged notice is not pushed");
+
+        // A notice acknowledged before its push went out is not pushed.
+        await ActOkAsync(moderator, new { action = "warn", targetType = "user", targetId = author.Id, note = "Second warning." });
+        var second = (await author.Client.GetAsync("/api/v1/me/moderation-notices", Ct).OkJsonAsync())["items"]!.AsArray()
+            .Single(n => n!["kind"]!.GetValue<string>() == "warning")!["id"]!.GetValue<Guid>();
+        (await author.Client.PostAsync($"/api/v1/me/moderation-notices/{second}/acknowledge", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await PushAsync(push, DateTime.UtcNow.AddSeconds(5));
+        (await InDbAsync(db => db.Notifications.AsNoTracking().Where(n => n.UserId == author.Id && n.PushedAt == null).Select(n => n.PushStatus)
+                .ToListAsync(Ct)))
+            .Should().ContainSingle().Which.Should().Be(NotificationPushStatus.Skipped);
+        push.To(token).Should().HaveCount(2, "an acknowledged notice is not pushed");
 
         // Tokens FCM rejects are removed.
         var rejecting = new RecordingPushSender();
         rejecting.InvalidTokens.Add(token);
-        await SendNoticeAsync(hiddenId, rejecting);
+        await ActOkAsync(moderator, new { action = "warn", targetType = "user", targetId = author.Id, note = "Third warning." });
+        await PushAsync(rejecting, DateTime.UtcNow.AddSeconds(5));
         (await InDbAsync(db => db.Users.Where(u => u.Id == author.Id).SelectMany(u => u.Devices).CountAsync(Ct))).Should().Be(0);
     }
 
@@ -719,11 +748,12 @@ public sealed class ModerationTests(ApiFactory api)
         return user;
     }
 
-    private async Task<int> SendNoticeAsync(Guid noticeId, IPushSender sender)
+    /// <summary>One run of the notification push job (F17) at <paramref name="utcNow"/>, with <paramref name="sender"/>.</summary>
+    private async Task<NotificationPushRunResult> PushAsync(IPushSender sender, DateTime utcNow)
     {
         await using var scope = api.Services.CreateAsyncScope();
-        var push = new ModerationNoticePush(scope.ServiceProvider.GetRequiredService<IAppDbContext>(), sender, NullLogger<ModerationNoticePush>.Instance);
-        return await push.SendAsync(noticeId, Ct);
+        var pusher = new NotificationPusher(scope.ServiceProvider.GetRequiredService<IAppDbContext>(), sender, NullLogger<NotificationPusher>.Instance);
+        return await pusher.RunAsync(utcNow, Ct);
     }
 
     private async Task<T> InDbAsync<T>(Func<AppDbContext, Task<T>> work)

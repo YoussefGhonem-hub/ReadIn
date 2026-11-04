@@ -113,6 +113,13 @@ internal sealed partial class AccountEraser(
                         && db.Comments.IgnoreQueryFilters().Any(c => c.Id == r.TargetId && gone.Any(a => a.Id == c.ArticleId))))
                 .ExecuteDeleteAsync(ct);
 
+            // F17: anyone's notifications about the articles below or the comments on them (their keys don't cascade).
+            await db.Notifications
+                .Where(n => (n.ArticleId != null && gone.Any(a => a.Id == n.ArticleId))
+                    || (n.CommentId != null
+                        && db.Comments.IgnoreQueryFilters().Any(c => c.Id == n.CommentId && gone.Any(a => a.Id == c.ArticleId))))
+                .ExecuteDeleteAsync(ct);
+
             // Drafts and every article that isn't live, with their translations, revisions, tags, sources, attachments,
             // reactions, saves, comments, reading progress, daily picks and learning path items (cascades). The published
             // ones stay without an author. Media go after, once no attachment of a deleted article points at them.
@@ -126,6 +133,9 @@ internal sealed partial class AccountEraser(
 
             // Followers of this account (FolloweeId has no cascade: one path from UserFollows to Users only).
             await db.UserFollows.Where(f => f.FolloweeId == userId).ExecuteDeleteAsync(ct);
+            // F17: the account as the actor of other people's notifications (ActorId has no cascade either). Their entries
+            // stay: a comment it wrote still shows, as by "Deleted user".
+            await db.NotificationActors.Where(a => a.ActorId == userId).ExecuteDeleteAsync(ct);
             await db.RecoveryAttempts.Where(a => a.UserId == userId).ExecuteDeleteAsync(ct);
 
             await db.AuditLogs
@@ -137,7 +147,8 @@ internal sealed partial class AccountEraser(
 
             // Roles, interests, devices (push tokens), Google/Apple links (with the stored Apple token), sessions, reset
             // tokens, reading progress and days, streak stats, reactions, saves, collections, follows of other accounts,
-            // daily picks, comment likes, mentions of the account and the reports it filed go with the row (cascades).
+            // daily picks, comment likes, mentions of the account, the reports it filed, its notifications and notification
+            // settings go with the row (cascades).
             erased = await db.Users.IgnoreQueryFilters().Where(u => u.Id == userId).ExecuteDeleteAsync(ct) > 0;
             if (liked.Count > 0)
             {

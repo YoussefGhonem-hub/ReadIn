@@ -9,7 +9,8 @@ namespace ReadIn.Api.IntegrationTests;
 /// <summary>
 /// The foreign keys an account hard delete relies on: deleting the Users row removes the user's reactions, saves,
 /// collections and follows through cascades, once the rows that follow them are deleted first (FolloweeId is NO ACTION:
-/// SQL Server refuses a second cascade path into UserFollows). Then the touched articles' counters are recomputed.
+/// SQL Server refuses a second cascade path into UserFollows; NotificationActors.ActorId likewise, F17). Then the touched
+/// articles' counters are recomputed.
 /// </summary>
 [Collection(ApiCollection.Name)]
 public sealed class EngagementDeletionTests(ApiFactory api)
@@ -34,6 +35,7 @@ public sealed class EngagementDeletionTests(ApiFactory api)
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.RefreshTokens.Where(t => t.UserId == leaving.Id).ExecuteDeleteAsync(Ct);
         await db.UserFollows.Where(f => f.FolloweeId == leaving.Id).ExecuteDeleteAsync(Ct);
+        await db.NotificationActors.Where(a => a.ActorId == leaving.Id).ExecuteDeleteAsync(Ct);
         await db.Users.IgnoreQueryFilters().Where(u => u.Id == leaving.Id).ExecuteDeleteAsync(Ct);
 
         (await db.Reactions.AnyAsync(r => r.UserId == leaving.Id, Ct)).Should().BeFalse();

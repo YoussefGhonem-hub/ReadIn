@@ -10,6 +10,7 @@ using ReadIn.Domain.Identity;
 using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
 using ReadIn.Domain.Moderation;
+using ReadIn.Domain.Notifications;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
@@ -63,6 +64,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
     public DbSet<Report> Reports => Set<Report>();
     public DbSet<ModerationAction> ModerationActions => Set<ModerationAction>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationActor> NotificationActors => Set<NotificationActor>();
+    public DbSet<UserNotificationSetting> UserNotificationSettings => Set<UserNotificationSetting>();
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<SeedHistory> SeedHistory => Set<SeedHistory>();

@@ -87,6 +87,8 @@ public static class DependencyInjection
         services.AddScoped<OrphanedUploadsCleanupJob>();
         services.AddScoped<IdentityCleanupJob>();
         services.AddScoped<LiveEventsCleanupJob>();
+        services.AddScoped<NotificationPushJob>();
+        services.AddScoped<StreakReminderJob>();
 
         if (IsHangfireEnabled(configuration))
         {
@@ -102,10 +104,12 @@ public static class DependencyInjection
                 }));
             services.AddHangfireServer(options => options.WorkerCount = Math.Max(2, Environment.ProcessorCount));
             services.AddScoped<IOutboxSignal, HangfireOutboxSignal>();
+            services.AddScoped<INotificationPushSignal, HangfireNotificationPushSignal>();
         }
         else
         {
             services.AddScoped<IOutboxSignal, InlineOutboxSignal>();
+            services.AddScoped<INotificationPushSignal, NullNotificationPushSignal>();
         }
 
         services.AddSingleton<ContentRepository>();
@@ -125,6 +129,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, DemoEditorSeeder>();
         services.AddScoped<ISeeder, DemoInteractionsSeeder>();
         services.AddScoped<ISeeder, DemoReportsSeeder>();
+        services.AddScoped<ISeeder, DemoNotificationsSeeder>();
         services.AddScoped<SeedRunner>();
 
         services.AddHealthChecks().AddDbContextCheck<AppDbContext>("sql");
@@ -158,6 +163,8 @@ public static class DependencyInjection
         jobs.AddOrUpdate<IdentityCleanupJob>("identity-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 30));
         jobs.AddOrUpdate<DailyArticleJob>("daily-article", job => job.RunAsync(CancellationToken.None), DailyArticleJob.Schedule);
         jobs.AddOrUpdate<LiveEventsCleanupJob>("rtdb-events-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Hourly());
+        jobs.AddOrUpdate<NotificationPushJob>("notification-push", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
+        jobs.AddOrUpdate<StreakReminderJob>("streak-reminder", job => job.RunAsync(CancellationToken.None), StreakReminderJob.Schedule);
     }
 
     /// <summary>

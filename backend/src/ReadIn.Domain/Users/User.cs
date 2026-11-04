@@ -10,6 +10,10 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public const string DefaultTimeZone = "Africa/Cairo";
     public const int MaxDisplayNameLength = 60;
 
+    /// <summary>Quiet hours (SPEC F17, §21.1): on by default, 23:00–07:00 in the user's time zone.</summary>
+    public static readonly TimeOnly DefaultQuietHoursStart = new(23, 0);
+    public static readonly TimeOnly DefaultQuietHoursEnd = new(7, 0);
+
     /// <summary>Fields of expertise shown on the profile (SPEC F14).</summary>
     public const int MaxExpertiseFields = 5;
 
@@ -47,6 +51,15 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
 
     /// <summary>Privacy (SPEC F18): the reading stats card and heatmap are on the public profile. Off by default.</summary>
     public bool PublicReadingStats { get; private set; }
+
+    /// <summary>
+    /// Quiet hours (SPEC F17): pushes other than security alerts wait until <see cref="QuietHoursEnd"/>, in
+    /// <see cref="TimeZone"/>. The window may span midnight; the end is exclusive.
+    /// </summary>
+    public bool QuietHoursEnabled { get; private set; } = true;
+
+    public TimeOnly QuietHoursStart { get; private set; } = DefaultQuietHoursStart;
+    public TimeOnly QuietHoursEnd { get; private set; } = DefaultQuietHoursEnd;
 
     /// <summary>Null for accounts without phone sign in: Google/Apple only, or the official ReadIn account.</summary>
     public string? PasswordHash { get; private set; }
@@ -220,6 +233,21 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     }
 
     public void SetPrivacy(bool publicReadingStats) => PublicReadingStats = publicReadingStats;
+
+    /// <summary>Notification settings (SPEC F17). An empty window (start = end) is refused.</summary>
+    public void SetQuietHours(bool enabled, TimeOnly start, TimeOnly end)
+    {
+        if (start == end) throw new ArgumentException("Quiet hours need a start and an end that differ.", nameof(end));
+        QuietHoursEnabled = enabled;
+        QuietHoursStart = start;
+        QuietHoursEnd = end;
+    }
+
+    /// <summary>
+    /// The user saw or read notifications (SPEC F17): after the commit the outbox publishes the unread count under
+    /// <c>/live/users/{id}</c> again, so the user's other devices follow.
+    /// </summary>
+    public void NotificationsChanged() => Raise(() => new UserNotificationsChangedDomainEvent(Id));
 
     public Result SetPreferences(string uiLanguage, string articleLanguage, ThemePreference theme, string timeZone, TimeOnly reminderTime)
     {
@@ -564,5 +592,8 @@ public sealed record UserRegisteredDomainEvent(Guid UserId) : DomainEvent;
 
 public sealed record UserRolesChangedDomainEvent(Guid UserId) : DomainEvent;
 
-/// <summary>Source of the owner notifications in SPEC §9.5; delivered once F17 Notifications ships.</summary>
+/// <summary>Source of the owner notifications in SPEC §9.5: a <c>security_alert</c> notification (F17).</summary>
 public sealed record UserSecurityChangedDomainEvent(Guid UserId, SecurityChange Change) : DomainEvent;
+
+/// <summary>After the commit: the user's unread notifications count is published again (F17).</summary>
+public sealed record UserNotificationsChangedDomainEvent(Guid UserId) : DomainEvent;

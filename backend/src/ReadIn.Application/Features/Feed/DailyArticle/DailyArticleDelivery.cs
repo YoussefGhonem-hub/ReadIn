@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Notifications;
+using ReadIn.Domain.Notifications;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Users;
 
@@ -20,11 +22,18 @@ namespace ReadIn.Application.Features.Feed.DailyArticle;
 /// </list>
 /// Suspended, deleted and system accounts and users without a device are skipped; so is a user the algorithm finds no
 /// article for. The pick is the same one <c>GET /feed/today</c> serves, so the pushed article is the hero card all day.
+/// <para>
+/// F17: when the push is due, a <c>daily_article</c> entry goes into the notification center too (one per local date),
+/// and the push carries its id. The user's <c>daily_article</c> mode applies: <c>off</c> gets neither, <c>inApp</c> the
+/// entry only. Quiet hours hold the push back (a later run within the late window sends it); the entry and the hero
+/// card are there either way. This job sends the push itself, so the notification push job leaves the entry alone.
+/// </para>
 /// </summary>
 public sealed partial class DailyArticleDelivery(
     IAppDbContext db,
     DailyArticlePicker picker,
     IPushSender pushSender,
+    NotificationWriter notifications,
     ILogger<DailyArticleDelivery> logger)
 {
     internal const int BatchSize = 200;
@@ -92,11 +101,24 @@ public sealed partial class DailyArticleDelivery(
         var after = Guid.Empty;
         while (true)
         {
-            // Not yet notified, not opened and not already read today: "today's article is ready" would be noise then.
+            // Not yet notified, not opened and not already read today: "today's article is ready" would be noise then. Users
+            // who turned the daily article off (F17) get nothing.
             var due = await db.DailyPicks
                 .Where(p => p.Date == range.Date && p.NotifiedAt == null && p.OpenedAt == null && p.Id > after)
                 .Join(RecipientsIn(zone, range, utcNow), p => p.UserId, u => u.Id,
-                    (p, u) => new { Pick = p, u.UiLanguage, u.ArticleLanguagePref })
+                    (p, u) => new
+                    {
+                        Pick = p,
+                        u.UiLanguage,
+                        u.ArticleLanguagePref,
+                        u.QuietHoursEnabled,
+                        u.QuietHoursStart,
+                        u.QuietHoursEnd,
+                        InAppOnly = db.UserNotificationSettings.Any(s =>
+                            s.UserId == u.Id && s.Type == NotificationTypes.DailyArticle && s.Mode == NotificationMode.InApp),
+                    })
+                .Where(x => !db.UserNotificationSettings.Any(s =>
+                    s.UserId == x.Pick.UserId && s.Type == NotificationTypes.DailyArticle && s.Mode == NotificationMode.Off))
                 .Where(x => !db.ReadingProgress.Any(r =>
                     r.UserId == x.Pick.UserId && r.ArticleId == x.Pick.ArticleId && r.CompletedAt != null))
                 .OrderBy(x => x.Pick.Id)
@@ -124,26 +146,52 @@ public sealed partial class DailyArticleDelivery(
                 .ToListAsync(ct);
             var tokens = devices.ToLookup(d => d.UserId, d => d.Token);
 
-            var batch = new List<(DailyPick Pick, PushNotification Notification)>(due.Count);
-            foreach (var row in due)
+            // An article unpublished or hidden since the pick gets nothing (the hero card disappears with it).
+            var notify = due.Where(row => articles.ContainsKey(row.Pick.ArticleId)).ToList();
+
+            // F17: the entry in the notification center, one per user and local date (a rerun finds the same one).
+            var entries = await notifications.WriteAsync(
+                [
+                    .. notify.Select(row => new NotificationRequest(row.Pick.UserId, NotificationTypes.DailyArticle)
+                    {
+                        ArticleId = row.Pick.ArticleId,
+                        DedupeKey = $"{NotificationTypes.DailyArticle}:{range.Date:yyyy-MM-dd}",
+                        PushedByCaller = true,
+                    }),
+                ],
+                ct,
+                utcNow);
+
+            var batch = new List<(DailyPick Pick, PushNotification Notification)>(notify.Count);
+            var claimed = false;
+            for (var i = 0; i < notify.Count; i++)
             {
-                // An article unpublished or hidden since the pick gets no push (the hero card disappears with it).
-                if (!articles.TryGetValue(row.Pick.ArticleId, out var article)) continue;
+                var row = notify[i];
+                var article = articles[row.Pick.ArticleId];
+                if (row.InAppOnly)
+                {
+                    // In-app only: the entry is the notification, so the pick is done.
+                    claimed |= row.Pick.MarkNotified(utcNow);
+                    continue;
+                }
+
                 var userTokens = tokens[row.Pick.UserId].Distinct(StringComparer.Ordinal).ToList();
-                if (userTokens.Count == 0 || InQuietHours(QuietHoursOf(row.Pick.UserId), localNow)) continue;
+                var quietHours = QuietHoursOf(row.QuietHoursEnabled, row.QuietHoursStart, row.QuietHoursEnd);
+                if (userTokens.Count == 0 || InQuietHours(quietHours, localNow)) continue;
                 if (!row.Pick.MarkNotified(utcNow)) continue;
+                claimed = true;
 
                 // The version the user reads: the preferred language when it exists, otherwise the source (as on the card).
                 var translation = article.Translations.FirstOrDefault(t => t.Language == row.ArticleLanguagePref)
                     ?? article.Translations.First(t => t.IsSource);
                 batch.Add((row.Pick, DailyArticlePush.Create(
-                    userTokens, row.UiLanguage, article.Id, article.Slug, translation.Title, translation.Language, timeToLive)));
+                    userTokens, row.UiLanguage, article.Id, article.Slug, translation.Title, translation.Language, timeToLive, entries[i])));
             }
-            if (batch.Count > 0)
+            if (claimed)
             {
                 // Claimed before sending: if the process dies below, these pushes are lost rather than sent twice.
                 await db.SaveChangesAsync(ct);
-                await SendAsync(batch, result, ct);
+                if (batch.Count > 0) await SendAsync(batch, result, ct);
             }
 
             if (due.Count < BatchSize) return;
@@ -193,15 +241,11 @@ public sealed partial class DailyArticleDelivery(
     }
 
     /// <summary>
-    /// F17 hook: a user's quiet hours (SPEC §21.1, default 23:00–07:00) will come from their NotificationPreferences. The
-    /// daily article is not a security alert, so it waits until they end (a later run sends it, within the late window).
-    /// Until F17 ships nobody has quiet hours.
+    /// A user's quiet hours (F17, SPEC §21.1, default 23:00–07:00 in their time zone), as stored on the account. The daily
+    /// article is not a security alert, so it waits until they end (a later run sends it, within the late window).
     /// </summary>
-    private static QuietHours? QuietHoursOf(Guid userId)
-    {
-        _ = userId;
-        return null;
-    }
+    internal static QuietHours? QuietHoursOf(bool enabled, TimeOnly start, TimeOnly end) =>
+        NotificationSchedule.QuietHoursOf(enabled, start, end);
 
     private static bool InQuietHours(QuietHours? quietHours, DateTime localNow) =>
         quietHours?.Contains(TimeOnly.FromDateTime(localNow)) == true;

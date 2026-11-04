@@ -16,6 +16,7 @@ public static class DailyArticlePush
     public const string TitleEn = "Today's article is ready ☕";
 
     /// <param name="articleLanguage">The version the user reads (<c>ar-EG</c> | <c>en</c>); the web opens <c>/{ar|en}/a/{slug}</c>.</param>
+    /// <param name="notificationId">Its entry in the notification center (F17): a tap marks it read.</param>
     public static PushNotification Create(
         IReadOnlyList<string> tokens,
         string uiLanguage,
@@ -23,19 +24,19 @@ public static class DailyArticlePush
         string slug,
         string articleTitle,
         string articleLanguage,
-        TimeSpan timeToLive) =>
-        new(
-            tokens,
-            uiLanguage == UiLanguages.English ? TitleEn : TitleAr,
-            articleTitle,
-            new Dictionary<string, string>
-            {
-                ["type"] = Type,
-                ["articleId"] = articleId.ToString(),
-                ["slug"] = slug,
-                ["link"] = $"readin://a/{Uri.EscapeDataString(slug)}",
-                ["lang"] = articleLanguage == ArticleLanguages.English ? "en" : "ar",
-            },
-            Type,
-            timeToLive);
+        TimeSpan timeToLive,
+        Guid? notificationId = null)
+    {
+        var data = new Dictionary<string, string>
+        {
+            ["type"] = Type,
+            ["articleId"] = articleId.ToString(),
+            ["slug"] = slug,
+            ["link"] = $"readin://a/{Uri.EscapeDataString(slug)}",
+            ["lang"] = articleLanguage == ArticleLanguages.English ? "en" : "ar",
+        };
+        if (notificationId is { } id) data["notificationId"] = id.ToString();
+
+        return new PushNotification(tokens, uiLanguage == UiLanguages.English ? TitleEn : TitleAr, articleTitle, data, Type, timeToLive);
+    }
 }

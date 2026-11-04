@@ -115,6 +115,8 @@ internal sealed class DemoCommentsSeeder(AppDbContext db, TimeProvider clock) : 
             .Where(c => articleIds.Contains(c.ArticleId) && c.AuthorId != null && demoUserIds.Contains(c.AuthorId.Value))
             .Select(c => c.Id).ToListAsync(cancellationToken);
         await db.Reports.Where(r => r.TargetType == ReportTargetType.Comment && old.Contains(r.TargetId)).ExecuteDeleteAsync(cancellationToken);
+        // Notifications about them (F17; the key doesn't cascade).
+        await db.Notifications.Where(n => n.CommentId != null && old.Contains(n.CommentId.Value)).ExecuteDeleteAsync(cancellationToken);
         await db.Comments.IgnoreQueryFilters().Where(c => old.Contains(c.Id)).ExecuteDeleteAsync(cancellationToken);
 
         var createdAt = new Dictionary<Comment, DateTime>();

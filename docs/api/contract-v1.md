@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor and media codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, and the problem codes listed with `DraftProblemDto`.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media and notification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, and the problem codes listed with `DraftProblemDto`.
 
 `403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
@@ -233,6 +233,52 @@ Every `/moderation/*` route needs `moderation.manage` (Moderator, Admin, SuperAd
 - A suspension blocks the account at once (`403 user.suspended` with `suspendedUntil`, see Errors), and a temporary one
   ends by itself at `suspendedUntil`.
 
+### Notifications (F17; Bearer) — SPEC F17, §21.1
+
+Reads are unthrottled; writes use the `writes` rate limit (30 a minute).
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/me/notifications?cursor=&limit=` | → `CursorPage<NotificationDto>`, latest activity (`updatedAt`) first. `limit` 1–50, default 20 |
+| GET | `/me/notifications/unread-count` | → `{ unread: number }`: entries not seen yet. The REST fallback of `/live/users/{id}/unreadNotifications` (same number) |
+| POST | `/me/notifications/seen` | → `204`. Call when the center opens: every entry is seen and the badge is 0. Entries stay **unread** until opened |
+| POST | `/me/notifications/{id}/read` | → `204`. Call when an entry, or its push, is opened (it is seen too). Idempotent. `404 notification.not_found` (unknown, or someone else's) |
+| POST | `/me/notifications/read-all` | → `204` ("mark all read") |
+| GET | `/me/notification-settings` | → `NotificationSettingsDto`: quiet hours and **every** configurable type's mode |
+| PUT | `/me/notification-settings` | `NotificationSettingsDto` → `204`. `types` is partial (types left out keep their mode), `quietHours` may be left out. `400 notification.type_invalid` (unknown type, or `security_alert` / `moderation_notice` / `verification_result`), `400 notification.mode_invalid` (not `all` / `inApp` / `off`), `400 notification.quiet_hours_invalid` (not `HH:mm`, or start = end). Nothing changes on an error |
+
+Types and what writes them (one entry per recipient; nobody is told about their own action; suspended and system
+accounts get nothing):
+
+| `type` | When | Aggregated | `link` |
+|---|---|---|---|
+| `new_follower` | someone follows you | per day (your time zone); following again the same day is not news | 1 follower `readin://u/{their username}`, more `readin://u/{your username}/followers` |
+| `article_comment` | a top-level comment on your article | per article | `readin://a/{slug}#comment-{latest comment id}` |
+| `comment_reply` | a reply to your comment | per thread | same |
+| `mention` | a comment @mentions you (also when an edit adds you) | no | same |
+| `reactions_milestone` | your article reaches 10, 50 or 100 reactions (each once, ever) | no | `readin://a/{slug}` |
+| `followed_writer_article` | a writer you follow publishes an article (first publish only) | no | `readin://a/{slug}` |
+| `daily_article` | Today's article push (F07); also written when the push waits for quiet hours | no | `readin://a/{slug}` |
+| `streak_reminder` | 20:00 your time, your streak is ≥ 1 and you haven't read today | no | `readin://me/stats` |
+| `security_alert` | password, PIN or phone changed, password reset, recovery locked, Google/Apple linked or unlinked, phone sign in added | no | `readin://settings/account` |
+| `moderation_notice` | a moderator warned you or hid your article (F22) | no | the hidden article `readin://a/{slug}`, a warning `readin://notifications` (the app shows the notice from `GET /me/moderation-notices`) |
+| `verification_result` | reserved for F19 (nothing writes it yet): render a generic text | | `readin://notifications` |
+
+- One entry per recipient per comment: `mention` > `comment_reply` > `article_comment`. An edit only tells users it
+  mentions for the first time.
+- Aggregation: new activity joins an **unread** entry of the same group that moved in the last 24 hours; the entry moves
+  to the top as unseen, with the newest actor, and its push goes out again with the count. A read entry starts a new one.
+- What the list (and the badge) leaves out: entries whose comment was deleted or hidden, whose article isn't readable
+  any more (a moderation notice keeps its hidden article), and `new_follower` entries whose followers all deleted their
+  accounts. A deleted actor is gone from `actor` / `actorCount`: an entry left with no actor shows "Deleted user"
+  (`actor: null`).
+- Modes per type: `all` (in-app + push, the default), `inApp` (no push), `off` (no entry at all). `security_alert`,
+  `moderation_notice` and `verification_result` always come. Quiet hours (default on, 23:00–07:00 in the user's time
+  zone) hold pushes until they end; `security_alert` ignores them, and the daily article keeps F07's rule (a push due in
+  quiet hours goes out once they end, within its 2-hour late window).
+- Live badge: after every change the API writes `/live/users/{id}` `{ unreadNotifications, lastNotificationAt }` (see
+  Real-time); listen to it, and use `unread-count` when RTDB isn't there.
+
 ### Profile (F14) 🌐 (Bearer optional)
 
 `{username}` is matched ignoring case and one leading `@` (`/users/@Mona` = `/users/mona`). Deleted and suspended
@@ -340,7 +386,7 @@ carry signals, never content: fetch the data itself through REST. Times are epoc
 | `/live/articles/{articleId}` | 🌐 | `reactions: { insightful, love, fire, mindBlown }`, `commentCount`, `saveCount`, `updatedAt` (server time). Totals, not deltas. Listen to the three counter children rather than the node, so `events` isn't downloaded |
 | `/live/articles/{articleId}/events/{pushId}` | 🌐 | `{ type, commentId, parentId?, at }`: `type` is `comment.created` \| `comment.updated` \| `comment.deleted` \| `reply.created` \| `comment.liked` \| `comment.pinned`; `at` is server time, so query `orderByChild('at').startAt(serverNow)`. A retried write can repeat an event |
 | `/live/feed/latestPublishedAt` | 🌐 | Publish time of the newest article the feed can show. Higher than when the feed was loaded → show "مقالات جديدة ↑" |
-| `/live/users/{userId}` | that user (custom token) | `unreadNotifications`, `lastNotificationAt` |
+| `/live/users/{userId}` | that user (custom token) | `unreadNotifications` (entries not seen yet, the same number as `GET /me/notifications/unread-count`), `lastNotificationAt` (latest activity, epoch ms; missing when there is none). Written after every new entry, seen, read and read-all (F17) |
 | `/live/users/{userId}/media/{assetId}` | that user (custom token) | `{ status: processing \| ready \| failed, pagesReady, pageCount, failureReason, updatedAt }` while a PDF renders. Polling `GET /uploads/{id}` stays the contract |
 
 ### Reading & streaks (Bearer) — see [ADR 0013](../adr/0013-reading-days-and-streaks.md)
@@ -815,6 +861,36 @@ interface ModerationNoticeDto {
   createdAt: string;
 }
 
+// Notifications (F17)
+type NotificationType = 'new_follower' | 'article_comment' | 'comment_reply' | 'mention' | 'reactions_milestone'
+  | 'followed_writer_article' | 'daily_article' | 'streak_reminder' | 'security_alert' | 'verification_result' | 'moderation_notice';
+
+type SecurityChange = 'passwordChanged' | 'passwordReset' | 'recoveryPinChanged' | 'phoneNumberChanged' | 'recoveryLockedOut'
+  | 'externalLoginLinked' | 'externalLoginUnlinked' | 'phoneSignInAdded';
+
+interface NotificationDto {
+  id: string;
+  type: NotificationType;
+  createdAt: string; updatedAt: string;  // updatedAt = latest activity (the list order)
+  isRead: boolean;
+  actor: { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean } | null; // latest actor
+  actorCount: number;            // distinct actors (≥ 1 when actor-based, 0 otherwise): "X and {actorCount - 1} others"
+  article: { id: string; slug: string; title: string; language: ArticleLanguage } | null; // your article language, else the source
+  comment: { id: string; parentId: string | null; excerpt: string } | null;              // excerpt ≤ 140 chars, plain text, one line
+  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange };    // only the keys that apply
+  link: string;                  // readin://… (the same as the push's data.link)
+}
+// actor: also set for followed_writer_article (the writer); null for reactions_milestone, daily_article, streak_reminder,
+// security_alert, moderation_notice (moderators stay anonymous), and when every actor deleted their account ("Deleted user").
+// moderation_notice: article set = "your article was hidden", article null = "you received a warning".
+
+type NotificationMode = 'all' | 'inApp' | 'off';
+interface NotificationSettingsDto {
+  quietHours: { enabled: boolean; start: string; end: string };   // "HH:mm", your time zone; end exclusive, may be before start
+  types: Partial<Record<Exclude<NotificationType, 'security_alert' | 'verification_result' | 'moderation_notice'>, NotificationMode>>;
+}
+// GET returns all 8 configurable types; PUT may send any subset.
+
 interface MyProgressDto {
   language: ArticleLanguage;     // the version the progress was recorded on
   percent: number;               // highest percent reached, 0–100
@@ -985,18 +1061,66 @@ Validation codes (in `errors`) for this area: `reaction.invalid` (`type`), `vali
 
 Pushes come only from background jobs and outbox handlers (SPEC §21.1), to every token registered with `POST /me/devices`.
 Each has a visible `notification` (`title`, `body`, in the user's UI language) and a `data` map of strings. `data.link`
-is always the deep link to open (`readin://a/{slug}`); clients map it to their own route and drop anything else.
+is always the deep link to open (`readin://…`, see Notifications); clients map it to their own route and drop anything
+else. Every push of F17 also carries `data.notificationId`: on a tap, call `POST /me/notifications/{id}/read`.
 Tokens FCM reports as unregistered or invalid are deleted by the API.
+
+New deep links with F17: `readin://u/{username}/followers`, `readin://me/stats`, `readin://settings/account` and
+`readin://notifications` (the center), next to `readin://a/{slug}` (with an optional `#comment-{id}`) and
+`readin://u/{username}`.
+
+### Notifications (F17)
+
+Every notification type except `daily_article` is pushed by the notification push job (every minute, and right after
+an entry is written), for entries whose type is on `all`:
+
+```jsonc
+{
+  "notification": { "title": "أحمد و9 غيره علّقوا على مقالك", "body": "<the latest comment>" },
+  // en: "Ahmed and 9 others commented on your article"
+  "data": {
+    "type": "article_comment",          // the NotificationType
+    "notificationId": "0a1b2c3d-…",     // POST /me/notifications/{id}/read on a tap
+    "link": "readin://a/rag-vs-fine-tuning#comment-0a1b…",
+    "lang": "en"                        // article links only: the version the text came from, "ar" (ar-EG) | "en"
+  }
+}
+```
+
+| `type` | Title (ar / en) | Body |
+|---|---|---|
+| `new_follower` | "{name} بدأ يتابعك" / "{name} started following you"; more: "{name} و{n} غيره بدأوا يتابعوك" / "{name} and {n} others started following you" | empty |
+| `article_comment` | "{name} علّق على مقالك" / "{name} commented on your article"; more: "{name} و{n} غيره علّقوا على مقالك" / "{name} and {n} others commented on your article" | the latest comment (≤ 140 characters) |
+| `comment_reply` | "{name} ردّ على تعليقك" / "{name} replied to your comment"; more: "… و{n} غيره ردّوا على تعليقك" / "… and {n} others replied to your comment" | the reply |
+| `mention` | "{name} عمل لك منشن في تعليق" / "{name} mentioned you in a comment" | the comment |
+| `reactions_milestone` | "مقالك وصل لـ {threshold} رياكشن 🎉" / "Your article reached {threshold} reactions 🎉" | the article's title |
+| `followed_writer_article` | "{name} نشر مقال جديد" / "{name} published a new article" | the article's title |
+| `streak_reminder` | "متضيّعش الـ streak بتاعك 🔥" / "Don't lose your streak 🔥" | "الـ streak بتاعك {n} يوم…" / "Your streak is {n} days. Read an article today to keep it going." |
+| `security_alert` | "تنبيه أمان" / "Security alert" | what changed, e.g. "Your password was changed. If this wasn't you, reset it now." |
+| `moderation_notice` | as below | as below |
+
+`{n}` is the number of other actors (one other: "وشخص تاني" / "and 1 other"); names are wrapped in Unicode isolates
+(U+2068 … U+2069) so a Latin name keeps its place in an Arabic sentence. A deleted actor is "مستخدم محذوف" / "Deleted user".
+
+| Item | Rule |
+|---|---|
+| Collapse key (Android collapse key and tag, `apns-collapse-id`, web `tag`) | the entry's group (`article_comment:{articleId}`, `comment_reply:{commentId}`, `new_follower:{yyyy-MM-dd}`), otherwise the type: a newer push of the group replaces the older one |
+| Quiet hours | held until they end (user's time zone); `security_alert` ignores them |
+| Checked when sending | the type is still on `all`; the comment or article is still there; a moderation notice isn't acknowledged yet; the account isn't suspended |
+| Too late | dropped when the entry's last activity is more than 24 hours old (`streak_reminder`: 4 hours); TTL = what is left of that |
+| Failures | tokens FCM reports as invalid are deleted; other failures are retried after 1 and 5 minutes, 3 sends in all |
 
 ### Daily article (`daily_article`, SPEC F07)
 
-Sent once a day at the user's `reminderTime`, in their `timeZone`, for the article `GET /feed/today` returns that day.
+Sent once a day at the user's `reminderTime`, in their `timeZone`, for the article `GET /feed/today` returns that day,
+by the daily-article job itself (not the push job). It is also an entry in the center.
 
 ```jsonc
 {
   "notification": { "title": "مقال النهارده جاهز ☕", "body": "<article title>" }, // en: "Today's article is ready ☕"
   "data": {
     "type": "daily_article",
+    "notificationId": "0a1b2c3d-…", // F17: its entry in the center
     "articleId": "0a1b2c3d-…",
     "slug": "rag-vs-fine-tuning",
     "link": "readin://a/rag-vs-fine-tuning",
@@ -1011,13 +1135,15 @@ Sent once a day at the user's `reminderTime`, in their `timeZone`, for the artic
 | iOS | `apns-push-type: alert`, `apns-collapse-id: daily_article`, `thread-id: daily_article`, sound `default`, expires at the user's midnight |
 | Web | `TTL` header until the user's midnight; `data` also carries `tag: "daily_article"`, so a newer daily push replaces an unread one |
 
-No push when the user already read that day's article, when the account is suspended or has no device, or when the push
-would be more than 2 hours late (the article stays the hero card either way).
+No push when the user already read that day's article, when the account is suspended or has no device, when the user
+set `daily_article` to `inApp` (entry only) or `off` (nothing), or when the push would be more than 2 hours late (the
+article stays the hero card either way). In quiet hours the push waits for them to end, within those 2 hours.
 
 ### Moderation notice (`moderation_notice`, SPEC F22)
 
-Sent once, best effort, when a moderator warns the user or hides their article. The notice itself waits in
-`GET /me/moderation-notices` either way, so a lost push loses nothing.
+Pushed once by the notification push job (F17 took it over from F22) when a moderator warns the user or hides their
+article. The notice itself waits in `GET /me/moderation-notices` either way, so a lost push loses nothing, and a notice
+acknowledged before its push went out isn't pushed.
 
 ```jsonc
 {
@@ -1025,14 +1151,17 @@ Sent once, best effort, when a moderator warns the user or hides their article. 
   // warning: title "وصلك تحذير من فريق الإشراف" (en: "You received a warning from the moderators"), body = the note
   "data": {
     "type": "moderation_notice",
+    "notificationId": "0a1b2c3d-…",
     "noticeId": "0a1b2c3d-…",
     "kind": "article_hidden",    // | "warning"
-    "articleId": "…", "slug": "rag-vs-fine-tuning", "link": "readin://a/rag-vs-fine-tuning" // article_hidden only
+    "link": "readin://a/rag-vs-fine-tuning", // a warning: "readin://notifications"
+    "articleId": "…", "slug": "rag-vs-fine-tuning", "lang": "en" // article_hidden only
   }
 }
 ```
 
-A warning has no `link`: the app opens and shows the notice. Collapse key and tag `moderation_notice`, TTL 7 days.
+A warning links to the center; the app shows the notice itself from `GET /me/moderation-notices`. Collapse key and tag
+`moderation_notice`; quiet hours apply; dropped after 24 hours like every F17 push.
 
 ## Local development
 

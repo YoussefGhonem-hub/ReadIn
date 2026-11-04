@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.Feed.DailyArticle;
+using ReadIn.Application.Features.Notifications;
+using ReadIn.Domain.Notifications;
 using ReadIn.Domain.Reading;
 using ReadIn.Infrastructure.Jobs;
 using ReadIn.Infrastructure.Persistence;
@@ -169,6 +171,72 @@ public sealed class DailyArticleJobTests(ApiFactory api)
         scope.ServiceProvider.GetRequiredService<IPushSender>().GetType().Name.Should().Be("LoggingPushSender", "FCM has no emulator");
     }
 
+    // ---- F17: the notification center entry, the user's mode and quiet hours ----
+
+    [Fact]
+    public async Task The_push_carries_its_notification_center_entry_written_once_a_day()
+    {
+        var (user, token) = await ReaderWithDeviceAsync("en");
+
+        await RunAsync(TodayAt(11, 30));
+        await RunAsync(TodayAt(12, 0));
+        await RunAsync(TodayAt(12, 5));
+
+        var push = _push.To(token).Should().ContainSingle().Subject;
+        var entries = await DailyEntriesAsync(user.Id);
+        var entry = entries.Should().ContainSingle("one entry per local date").Subject;
+        push.Data["notificationId"].Should().Be(entry.Id.ToString());
+        entry.PushStatus.Should().Be(NotificationPushStatus.None, "this job sends the push itself; the push job leaves the entry alone");
+        entry.ArticleId.Should().Be((await PickAsync(user.Id))!.ArticleId);
+
+        var center = (await user.Client.GetFromJsonAsync<JsonObject>("/api/v1/me/notifications", Ct))!["items"]!.AsArray();
+        var item = center.Should().ContainSingle(i => i!["type"]!.GetValue<string>() == "daily_article").Subject!;
+        item["id"]!.GetValue<Guid>().Should().Be(entry.Id);
+        item["link"]!.GetValue<string>().Should().Be(push.Data["link"]);
+        item["article"]!["slug"]!.GetValue<string>().Should().Be(push.Data["slug"]);
+        item["isRead"]!.GetValue<bool>().Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task In_app_only_writes_the_entry_without_a_push_and_off_writes_nothing()
+    {
+        var (inApp, inAppToken) = await ReaderWithDeviceAsync("en");
+        var (off, offToken) = await ReaderWithDeviceAsync("en");
+        await SetDailyModeAsync(inApp, "inApp");
+        await SetDailyModeAsync(off, "off");
+
+        await RunAsync(TodayAt(11, 30));
+        await RunAsync(TodayAt(12, 0));
+        await RunAsync(TodayAt(12, 5));
+
+        _push.To(inAppToken).Should().BeEmpty();
+        (await DailyEntriesAsync(inApp.Id)).Should().ContainSingle();
+        (await PickAsync(inApp.Id))!.NotifiedAt.Should().Be(TodayAt(12, 0), "the entry is the notification, so the day is done");
+
+        _push.To(offToken).Should().BeEmpty();
+        (await DailyEntriesAsync(off.Id)).Should().BeEmpty();
+        (await PickAsync(off.Id)).Should().NotBeNull("the hero card is picked either way");
+    }
+
+    [Fact]
+    public async Task Quiet_hours_hold_the_push_until_they_end_within_the_late_window()
+    {
+        var (user, token) = await ReaderWithDeviceAsync("en");
+        (await user.Client.PutAsJsonAsync("/api/v1/me/notification-settings",
+                new { quietHours = new { enabled = true, start = "11:00", end = "12:30" } }, Ct))
+            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        await RunAsync(TodayAt(11, 30));
+        await RunAsync(TodayAt(12, 0));
+        _push.To(token).Should().BeEmpty("12:00 UTC is inside the user's quiet hours");
+        (await DailyEntriesAsync(user.Id)).Should().ContainSingle("the entry is there anyway");
+        (await PickAsync(user.Id))!.NotifiedAt.Should().BeNull();
+
+        await RunAsync(TodayAt(12, 30));
+        _push.To(token).Should().ContainSingle();
+        (await DailyEntriesAsync(user.Id)).Should().ContainSingle();
+    }
+
     /// <summary>One job run in its own scope, like Hangfire, with the recording sender.</summary>
     private async Task RunAsync(DateTime utcNow)
     {
@@ -177,8 +245,21 @@ public sealed class DailyArticleJobTests(ApiFactory api)
             scope.ServiceProvider.GetRequiredService<IAppDbContext>(),
             scope.ServiceProvider.GetRequiredService<DailyArticlePicker>(),
             _push,
+            scope.ServiceProvider.GetRequiredService<NotificationWriter>(),
             NullLogger<DailyArticleDelivery>.Instance);
         await delivery.RunAsync(utcNow, Ct);
+    }
+
+    private static async Task SetDailyModeAsync(SignedInUser user, string mode) =>
+        (await user.Client.PutAsJsonAsync("/api/v1/me/notification-settings", new { types = new Dictionary<string, string> { ["daily_article"] = mode } }, Ct))
+        .StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+    private async Task<List<Notification>> DailyEntriesAsync(Guid userId)
+    {
+        using var scope = api.Services.CreateScope();
+        return await scope.ServiceProvider.GetRequiredService<AppDbContext>().Notifications.AsNoTracking()
+            .Where(n => n.UserId == userId && n.Type == NotificationTypes.DailyArticle)
+            .ToListAsync(Ct);
     }
 
     /// <summary>A new reader in UTC with a 12:00 reminder, three interests and one Android device.</summary>

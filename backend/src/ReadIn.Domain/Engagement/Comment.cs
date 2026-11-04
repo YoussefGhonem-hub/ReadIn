@@ -193,7 +193,7 @@ public sealed class Comment : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     }
 }
 
-/// <summary>A user @mentioned in a comment (SPEC F11). F17 notifies them; until then the link is all it does.</summary>
+/// <summary>A user @mentioned in a comment (SPEC F11); F17 notifies them once per comment (<c>mention</c>).</summary>
 public sealed class CommentMention
 {
     private CommentMention() { } // EF

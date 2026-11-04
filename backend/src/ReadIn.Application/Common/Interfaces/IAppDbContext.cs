@@ -7,6 +7,7 @@ using ReadIn.Domain.Identity;
 using ReadIn.Domain.Learning;
 using ReadIn.Domain.Media;
 using ReadIn.Domain.Moderation;
+using ReadIn.Domain.Notifications;
 using ReadIn.Domain.Reading;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
@@ -55,6 +56,10 @@ public interface IAppDbContext
     DbSet<CommentLike> CommentLikes { get; }
     DbSet<Report> Reports { get; }
     DbSet<ModerationAction> ModerationActions { get; }
+
+    DbSet<Notification> Notifications { get; }
+    DbSet<NotificationActor> NotificationActors { get; }
+    DbSet<UserNotificationSetting> UserNotificationSettings { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

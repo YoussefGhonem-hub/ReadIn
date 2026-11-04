@@ -39,6 +39,12 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.TimeZone).HasMaxLength(64).IsRequired();
         builder.HasIndex(u => new { u.TimeZone, u.ReminderTime }); // the daily-article job's range query per time zone (F07)
 
+        // Quiet hours (F17): existing accounts get the defaults too. The sentinel is the default, so EF sends the value
+        // only when it differs and a new row never stores the CLR default (false, 00:00) by mistake.
+        builder.Property(u => u.QuietHoursEnabled).HasDefaultValue(true).HasSentinel(true);
+        builder.Property(u => u.QuietHoursStart).HasDefaultValue(User.DefaultQuietHoursStart).HasSentinel(User.DefaultQuietHoursStart);
+        builder.Property(u => u.QuietHoursEnd).HasDefaultValue(User.DefaultQuietHoursEnd).HasSentinel(User.DefaultQuietHoursEnd);
+
         builder.Ignore(u => u.OnboardingCompleted);
         builder.Ignore(u => u.HasRecoveryPin);
         builder.Ignore(u => u.HasPassword);

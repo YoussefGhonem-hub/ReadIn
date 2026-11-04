@@ -64,7 +64,10 @@ public static class DependencyInjection
         services.AddScoped<Features.Articles.Editor.ArticleDrafts>();
         services.AddScoped<Features.Glossary.ArticleTermsIndex>();
         services.AddScoped<Features.Moderation.ModerationReader>();
-        services.AddScoped<Features.Moderation.ModerationNoticePush>();
+        services.AddScoped<Features.Notifications.NotificationBadge>();
+        services.AddScoped<Features.Notifications.NotificationWriter>();
+        services.AddScoped<Features.Notifications.NotificationPusher>();
+        services.AddScoped<Features.Notifications.StreakReminders>();
         services.AddScoped<
             IQueryPersonalizer<Features.Articles.Queries.GetArticleBySlug.GetArticleBySlugQuery, Domain.Common.Result<Features.Articles.ArticleDetailsDto>>,
             Features.Articles.Queries.GetArticleBySlug.ArticleDetailsPersonalizer>();

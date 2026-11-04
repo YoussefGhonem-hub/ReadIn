@@ -73,6 +73,15 @@ public sealed class AccountDeletionTests(ApiFactory api)
         await client.CreateDraftAsync(ArticleTestKit.Document(
             dotnet["id"]!.GetValue<Guid>(), "A draft that goes with its author", blocks: [ArticleTestKit.Paragraph("Draft.")]));
 
+        // F17: a notification for the account, the account as the actor of someone else's, and a notification setting.
+        var other = await api.UserAsync();
+        await other.Client.PutEmptyAsync($"/api/v1/users/{user.Id}/follow").OkJsonAsync();
+        await client.PutEmptyAsync($"/api/v1/users/{other.Id}/follow").OkJsonAsync();
+        (await client.PutAsJsonAsync("/api/v1/me/notification-settings", new { types = new Dictionary<string, string> { ["mention"] = "off" } }, Ct))
+            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await InDbAsync(db => db.Notifications.CountAsync(n => n.UserId == user.Id, Ct))).Should().Be(1);
+        (await InDbAsync(db => db.NotificationActors.CountAsync(a => a.ActorId == user.Id, Ct))).Should().Be(1);
+
         var files = await InDbAsync(async db => (await db.MediaAssets.AsNoTracking().Include(a => a.Pages)
                 .Where(a => a.OwnerId == user.Id).ToListAsync(Ct))
             .SelectMany(a => a.StoredPaths())
@@ -92,6 +101,9 @@ public sealed class AccountDeletionTests(ApiFactory api)
             Articles = await db.Articles.IgnoreQueryFilters().CountAsync(a => a.AuthorId == user.Id, Ct),
             Media = await db.MediaAssets.CountAsync(a => a.OwnerId == user.Id, Ct),
             Audit = await db.AuditLogs.Where(l => l.UserId == user.Id || l.ActorId == user.Id).ToListAsync(Ct),
+            Notifications = await db.Notifications.CountAsync(n => n.UserId == user.Id, Ct),
+            AsActor = await db.NotificationActors.CountAsync(a => a.ActorId == user.Id, Ct),
+            NotificationSettings = await db.UserNotificationSettings.CountAsync(s => s.UserId == user.Id, Ct),
         });
         left.Users.Should().Be(0);
         left.Interests.Should().Be(0);
@@ -100,6 +112,9 @@ public sealed class AccountDeletionTests(ApiFactory api)
         left.Sessions.Should().Be(0);
         left.Articles.Should().Be(0, "drafts go with their author, and nothing keeps the account id");
         left.Media.Should().Be(0);
+        left.Notifications.Should().Be(0);
+        left.AsActor.Should().Be(0, "other people's notifications no longer name the account");
+        left.NotificationSettings.Should().Be(0);
         files.Should().OnlyContain(f => !File.Exists(f), "uploaded files are deleted right after the commit");
         left.Audit.Should().ContainSingle("only the deletion record stays, with no personal data")
             .Which.Should().Match<AuditLog>(l => l.Action == AuditActions.AccountDeleted && l.Ip == null && l.ActorId == null);

@@ -97,6 +97,11 @@ public static class ErrorMessages
         ["moderation.note_required"] = ("اكتب ملاحظة توضّح السبب للمستخدم.", "Write a note that tells the user why."),
         ["moderation.duration_invalid"] = ("مدة الإيقاف من يوم لـ 365 يوم، أو نهائي.", "A suspension lasts 1 to 365 days, or until it is lifted."),
         ["moderation.notice_not_found"] = ("التنبيه ده مش موجود.", "Notice not found."),
+        // Notifications (SPEC F17)
+        ["notification.not_found"] = ("الإشعار ده مش موجود.", "Notification not found."),
+        ["notification.type_invalid"] = ("نوع الإشعار ده مش موجود أو مينفعش يتغيّر.", "Unknown or not configurable notification type."),
+        ["notification.mode_invalid"] = ("اختار: كله، جوه التطبيق بس، أو مقفول.", "The mode must be all, inApp or off."),
+        ["notification.quiet_hours_invalid"] = ("ساعات الهدوء محتاجة بداية ونهاية مختلفين (HH:mm).", "Quiet hours need a start and an end (HH:mm) that differ."),
         // Media (ADR 0010, ADR 0011)
         ["media.purpose_invalid"] = ("نوع الرفع لازم يكون image أو avatar أو cover.", "Purpose must be image, avatar or cover."),
         ["media.file_required"] = ("اختار ملف ترفعه.", "Choose a file to upload."),
