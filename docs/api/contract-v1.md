@@ -392,7 +392,7 @@ interface FieldDto {
   nameAr: string; nameEn: string;
   icon: string;                  // Lucide icon name, e.g. "cpu"
   color: string;                 // token name, e.g. "primary"
-  isSensitive: boolean;
+  isSensitive: boolean; // shows a health disclaimer; never blocks publishing
   requiresSources: boolean;      // publishing needs at least one source
   topicCount: number;
 }

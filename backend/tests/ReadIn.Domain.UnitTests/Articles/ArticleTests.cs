@@ -83,16 +83,14 @@ public sealed class ArticleTests
     }
 
     [Fact]
-    public void Sensitive_field_requires_reviewer_approval_before_publishing()
+    public void Health_fields_can_be_published_without_review()
     {
         var field = SensitiveField();
         var article = Draft(field);
 
-        article.Publish(field, Now).Error.Should().Be(ArticleErrors.ReviewRequired);
-
-        article.SubmitForReview().IsSuccess.Should().BeTrue();
-        article.Approve(ReviewerId, Now).IsSuccess.Should().BeTrue();
         article.Publish(field, Now).IsSuccess.Should().BeTrue();
+        article.Status.Should().Be(ArticleStatus.Published);
+        article.IsReviewed.Should().BeFalse();
     }
 
     [Fact]

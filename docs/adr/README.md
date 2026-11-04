@@ -14,3 +14,4 @@ One file per decision: `NNNN-short-title.md` (Context, Decision, Consequences).
 - [0010 — Uploads stored on the API server (`wwwroot/uploads`)](0010-uploads-in-wwwroot.md)
 - [0011 — Media pipeline: responsive images and PDF attachments with page previews](0011-media-pipeline-and-pdf-preview.md)
 - [0012 — Google and Apple sign in, verified by the API](0012-google-and-apple-sign-in.md)
+- [0014 — Open topics, and review is always optional](0014-open-topics-and-optional-review.md)

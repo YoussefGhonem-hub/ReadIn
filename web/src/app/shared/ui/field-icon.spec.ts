@@ -3,21 +3,31 @@ import { APP_ICONS } from './icons';
 
 /** The `icon` of every field in content/taxonomy.yaml (keep in sync when a field is added). */
 const TAXONOMY_ICONS = [
+  'atom',
+  'book-open',
   'bot',
   'boxes',
   'brain-circuit',
+  'briefcase',
   'cloud',
   'code-xml',
+  'coffee',
   'cog',
   'database',
   'flask-conical',
+  'graduation-cap',
   'heart-pulse',
+  'landmark',
   'layout-template',
   'network',
+  'palette',
+  'scale',
   'shield-check',
   'smartphone',
   'sparkles',
+  'sprout',
   'stethoscope',
+  'trophy',
 ];
 
 describe('FieldIcon', () => {

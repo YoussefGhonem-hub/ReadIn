@@ -154,11 +154,11 @@ public sealed class RoleMatrixTests
         RoleMatrix.Roles.Single(r => r.Name == RoleNames.Guest).Permissions.Should().Equal(Permissions.Articles.Read);
 
     [Fact]
-    public void Moderators_cannot_review_or_publish_sensitive_content()
+    public void Moderators_cannot_review_articles()
     {
         var moderator = RoleMatrix.Roles.Single(r => r.Name == RoleNames.Moderator).Permissions;
 
         moderator.Should().Contain([Permissions.Moderation.Manage, Permissions.Users.Suspend])
-            .And.NotContain([Permissions.Articles.Review, Permissions.Articles.PublishSensitive]);
+            .And.NotContain(Permissions.Articles.Review);
     }
 }

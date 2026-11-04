@@ -121,7 +121,7 @@ status.SetAction(async (_, ct) =>
 });
 
 var forceOption = new Option<bool>("--force") { Description = "Re-run seeders even if their data didn't change." };
-var import = new Command("import", "Migrate the database and import taxonomy + approved articles (runs the seeders).") { forceOption };
+var import = new Command("import", "Migrate the database and import taxonomy + published articles (runs the seeders).") { forceOption };
 import.SetAction(async (parse, ct) =>
 {
     using var host = BuildHost();

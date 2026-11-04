@@ -1,8 +1,6 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using ReadIn.Application.Common.Behaviors;
 using ReadIn.Application.Common.Interfaces;
-using ReadIn.Application.Common.Security;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 
@@ -21,8 +19,6 @@ internal sealed class PublishArticleCommandHandler(IAppDbContext db, ICurrentUse
         if (article.AuthorId != currentUser.UserId) return ArticleErrors.NotOwner;
 
         var field = await db.Fields.AsNoTracking().FirstAsync(f => f.Id == article.FieldId, cancellationToken);
-        if (field.IsSensitive && !currentUser.Permissions.Contains(Permissions.Articles.PublishSensitive))
-            return AuthErrors.Forbidden;
 
         var result = article.Publish(field, clock.GetUtcNow().UtcDateTime);
         if (result.IsFailure) return result;

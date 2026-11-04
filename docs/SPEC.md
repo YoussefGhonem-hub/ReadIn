@@ -35,7 +35,7 @@
 16. [Database Design](#16-database-design)
 17. [API Design](#17-api-design)
 18. [Seeding: Users, Reference Data, Articles](#18-seeding-users-reference-data-articles)
-19. [Content Pipeline: 1000+ Trusted Articles](#19-content-pipeline-1000-trusted-articles)
+19. [Content Pipeline: 300 Seed Articles](#19-content-pipeline-300-seed-articles)
 20. [Trust & Content Quality](#20-trust--content-quality)
 21. [Notifications & Real-time](#21-notifications--real-time)
 22. [Search](#22-search)
@@ -54,7 +54,7 @@
 ## 1. Product Overview
 
 ### 1.1 Vision
-ReadIn is a bilingual (Arabic + English) knowledge platform where anyone with valuable knowledge can publish beautifully formatted articles, and readers build a habit of reading **one valuable article every day** in the field they love.
+ReadIn is a bilingual (Arabic + English) knowledge platform where **anyone can publish beautifully formatted articles about any topic**, and readers build a habit of reading **one valuable article every day** in the field they love.
 
 ### 1.2 Problem
 - Existing platforms (Medium, LinkedIn Articles, Substack, Dev.to) handle Arabic poorly. Mixing Arabic and English in one paragraph breaks punctuation, word order and code blocks.
@@ -66,16 +66,26 @@ ReadIn is a bilingual (Arabic + English) knowledge platform where anyone with va
 |---|---|---|
 | 1 | **Perfect mixed Arabic/English text** | Per-block direction, isolated inline English terms, code always LTR. |
 | 2 | **Daily reading habit** | "مقال النهارده" (Today's article) at the user's chosen time, streaks, learning paths. |
-| 3 | **Trust by design** | Verified writers, reviewed articles, mandatory sources, tested code, "last reviewed" date and version badges. |
+| 3 | **Trust by design** | Verified writers, optional expert review with a visible badge, sources, tested code in seeded articles, "last reviewed" date and version badges. |
 | 4 | **Two versions per article** | Egyptian Arabic + English terms (`ar-EG`) and English-only (`en`). |
 | 5 | **Rich editorial formatting** | Callouts, code tabs, comparison tables, steps, glossary terms, not just plain text. |
 
 ### 1.4 Fields (Domains)
-- **Software** (launch focus): AI, Machine Learning, Deep Learning & LLMs, Claude & AI coding tools, .NET, Frontend, Mobile, Databases, DevOps & Cloud, Software Architecture, Security, Testing.
-- **Medicine**, **Engineering**, **Public Health** (enabled after launch, require verified writers + reviewer approval).
+**ReadIn is open to any topic.** It is not limited to software or health: any signed-in member can publish an article about anything, in any enabled field, without approval. Every field is enabled from launch:
+
+- **Software:** AI, Machine Learning, Deep Learning & LLMs, Claude & AI coding tools, .NET, Frontend, Mobile, Databases, DevOps & Cloud, Software Architecture, Security, Testing.
+- **Health & engineering:** Medicine, Public Health, Engineering.
+- **Everything else:** Science, Business & Finance, Education, Self-growth, History & Culture, Arts & Literature, Law, Sports, Lifestyle.
+- **General (موضوعات عامة):** the catch-all, so no article is left without a field.
+
+Rules that apply to every field:
+- **Review is always optional** ([F06](#f06--article-lifecycle)).
+- Admins can add fields and topics at any time ([F23](#f23--admin-console)); free tags (max 5) cover anything more specific.
+- Open publishing still follows the community guidelines: illegal or harmful content can be reported and removed ([F22](#f22--reporting--moderation)).
+- The 300 seeded articles are software only ([§19](#19-content-pipeline-300-seed-articles)). That is launch content, not a limit on what people can publish.
 
 ### 1.5 Target Users
-Arab developers, students and professionals (18–35) who want to grow daily, plus experts who want to share knowledge and build a reputation.
+Arabic and English readers and writers (18–35 first) who want to learn something new every day, in any field, plus anyone who wants to share knowledge and build a reputation.
 
 ---
 
@@ -588,8 +598,8 @@ Then **Complete profile** (display name, unique `@username` with live availabili
 |---|---|
 | **Guest** | Not signed in. Can browse and read published articles. |
 | **Member** | Default for every signed-up user. Reads, interacts, and can write articles. |
-| **VerifiedWriter** | Member whose identity/expertise is verified. Gets a badge, articles get priority in feeds. Required to publish in Medicine and Public Health. |
-| **Reviewer** | Expert who reviews articles in assigned fields and grants the "Reviewed" badge. |
+| **VerifiedWriter** | Member whose identity/expertise is verified. Gets a badge and priority in feeds. Not required to publish in any field. |
+| **Reviewer** | Expert who reviews articles in assigned fields and grants the "Reviewed" badge. Review is optional, never a condition for publishing. |
 | **Moderator** | Handles reports, hides content, suspends users. |
 | **Admin** | Manages fields, topics, paths, verification requests, featured content and roles (except SuperAdmin). |
 | **SuperAdmin** | Full access, including managing Admins and system settings. |
@@ -603,7 +613,6 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 | `articles.read` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `articles.create` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `articles.publish.sensitive` (Medicine/Health) | | | ✅ | ✅ | | ✅ | ✅ |
 | `articles.review` | | | | ✅ | | ✅ | ✅ |
 | `articles.feature` | | | | | | ✅ | ✅ |
 | `comments.create` / `reactions.create` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -659,7 +668,8 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Trust row: verified writer badge, "✓ Reviewed by …", "Last reviewed: date", version badge (e.g. `.NET 10`), "AI-assisted" label when applicable.
 - Rich RDoc rendering: headings, callouts (tip/warning/info/danger), code blocks with copy button and filename, code tabs (C# / TypeScript / Dart), tables, steps, quotes, images with captions, glossary terms (tap → definition sheet).
 - **TL;DR summary** at the top (optional per article).
-- **Sources** section at the bottom (mandatory for technical and health articles).
+- **Sources** section at the bottom (required by the field's `RequiresSources` setting, see F05).
+- **Health disclaimer** on Medicine and Public Health articles: "المعلومات دي للتوعية ولا تغني عن استشارة الطبيب" (for awareness only, not a substitute for a doctor).
 - Font size control (S / M / L / XL), reading mode toggle.
 - Attachments (image carousel or PDF page carousel) with a full-screen viewer ([F26](#f26--post-attachments--media)).
 - Floating action bar: reactions, comments, save, share. Reaction and comment counts update live ([F27](#f27--real-time-updates)).
@@ -672,29 +682,32 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Per-block automatic direction (`dir="auto"`) with manual override, code blocks forced LTR.
 - Cover image upload (compressed on the device, processed by the backend, stored in `wwwroot/uploads`), field, topic, tags (max 5).
 - **Attachments:** 1–10 images **or** one PDF ([F26](#f26--post-attachments--media)). The attachment bar is one reusable component (web) / widget (mobile). Until the block editor ships, `/write` is a **post composer** that hosts it: field, language, title, plain-text body (paragraphs become RDoc `paragraph` blocks), sources and attachments, then create → set attachments → publish.
-- **Sources** list (title + URL), required for Software, Medicine and Health fields.
+- **Sources** list (title + URL). Required in fields with `RequiresSources` on (software, Medicine, Public Health, Engineering), optional in the others.
 - Second language version: add `en` or `ar-EG` translation of the same article.
 - Autosave drafts every 10 seconds + local backup (offline-safe).
 - Preview exactly as readers will see it (light/dark, ar/en).
-- Publish now, schedule, or submit for review (sensitive fields).
+- Publish now, schedule, or (optionally, in any field) submit for review first.
 - Revision history with restore.
 - Live checks: missing sources, title length, missing alt text, reading time.
 
 ### F06 — Article Lifecycle
 ```text
-Draft ──► Submitted ──► InReview ──► Approved ──► Published ──► Archived
-              │                │
-              │                └──► ChangesRequested ──► Submitted
-              └── (non-sensitive fields may publish directly; review is optional)
+Draft ──────────────────────────────────────► Published ──► Archived      (the default, in every field)
+   │                                              ▲
+   └──► Submitted ──► InReview ──► Approved ──────┘                        (optional review)
+                          │
+                          └──► ChangesRequested ──► Submitted
 ```
-- `Published` articles without review show no "Reviewed" badge but are visible.
-- Medicine / Public Health articles **must** be approved by a Reviewer before publishing.
+- **Publishing never needs a review, in any field, including Medicine and Public Health.** Any member can publish directly; review is something an author can ask for.
+- A published article can also be reviewed afterwards.
+- `Published` articles without review show no "Reviewed" badge but are fully visible.
+- The only publish checks are content ones: the article has content, and has sources if its field requires them.
 - Reviewed articles come first for **Today's article**; published + auto-checked articles are the fallback ([F07](#f07--daily-article-مقال-النهارده)).
 
 ### F07 — Daily Article (مقال النهارده)
 - Picked per user daily by a Hangfire job at the user's local time minus 30 minutes.
 - **Algorithm:** reviewed + published, in user's interests, not read before, matches language preference, reading time 4–10 minutes, weighted by quality score (reactions, completion rate, freshness), not from the same field 3 days in a row, prefers the next item in the user's active learning path.
-- **Fallback:** when no reviewed article matches, the pick comes from **published + auto-checked** articles (passed every content-pipeline check, §19.3; `Articles.AutoCheckedAt`) with the same rules. Constraints relax in the same order (length, then interests), and at every step a reviewed article wins over an auto-checked one. Seeded articles wait for human review, so this keeps the hero card filled without faking a review: the card shows no "Reviewed" badge.
+- **Fallback:** when no reviewed article matches, the pick comes from **published + auto-checked** articles (passed every content-pipeline check, §19.3; `Articles.AutoCheckedAt`) with the same rules. Constraints relax in the same order (length, then interests), and at every step a reviewed article wins over an auto-checked one. Seeded articles have no human review unless a Reviewer picks them up, so this keeps the hero card filled without faking a review: the card shows no "Reviewed" badge.
 - Push notification at the chosen time: *"مقال النهارده جاهز ☕ — {title}"*.
 - If the user doesn't open it, it stays as the hero card for the day.
 - **Job details:** runs every 5 minutes, for users with at least one push device (others get the pick on demand from `GET /feed/today`; both store the same one pick per local date). Times are wall-clock in the user's time zone, so DST never moves a reminder. The push is sent once per day (`DailyPicks.NotifiedAt`), skipped when the user already read the article, and at most 2 hours late after a missed run; "read" is `ReadingProgress.CompletedAt` (F04), and "3 days in a row" means the picks of the two previous days. Payload: [`contract-v1.md`](api/contract-v1.md#push-payloads-fcm).
@@ -778,7 +791,8 @@ Draft ──► Submitted ──► InReview ──► Approved ──► Publis
 - Admin reviews and approves/rejects with a reason. Approved users get the `VerifiedWriter` role and badge.
 
 ### F20 — Review Workflow
-- Reviewer queue filtered by assigned fields.
+- **Optional in every field.** Review adds a trust badge and priority for Today's article; it never blocks publishing.
+- Reviewer queue filtered by assigned fields: articles authors submitted, plus published articles that have no review yet.
 - Inline review notes per block, approve / request changes.
 - Approved article shows "✓ Reviewed by {name}" + review date.
 
@@ -1064,7 +1078,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId, Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
-| Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive, IsEnabled), `Topics`, `Tags`, `UserInterests` |
+| Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive (shows the health disclaimer, never blocks publishing), RequiresSources, IsEnabled), `Topics`, `Tags`, `UserInterests` |
 | Articles | `Articles` (AuthorId, FieldId, TopicId, Slug, Status, ReviewStatus, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, LastReviewedAt, ReviewedById, PublishedAt, ScheduledAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleRevisions`, `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive), `ArticleReviews` (ReviewerId, Decision, Notes JSON) |
 | Engagement | `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
@@ -1169,23 +1183,25 @@ Demo users get realistic profiles (bios mixing Arabic and English, interests, av
 
 ---
 
-## 19. Content Pipeline: 1000+ Trusted Articles
+## 19. Content Pipeline: 300 Seed Articles
 
-### 19.1 Target Taxonomy (Software)
-| Field | Example topics | Target |
+### 19.1 Seed Plan (Software)
+The platform's own launch content, published by the official ReadIn account. Members can publish about any topic ([§1.4](#14-fields-domains)); this plan only covers what ReadIn seeds.
+
+| Field | Example topics | Articles |
 |---|---|---:|
-| AI Fundamentals | AI concepts, prompt engineering, AI ethics, RAG, agents | 80 |
-| Machine Learning | Supervised/unsupervised, feature engineering, evaluation, scikit-learn, MLOps | 100 |
-| Deep Learning & LLMs | Neural networks, transformers, embeddings, fine-tuning, vector DBs | 80 |
-| Claude & AI Coding Tools | Claude Code, CLAUDE.md, `/compact` & context management, Skills, Hooks, Subagents, MCP servers, Plugins, Claude API & tool use, prompt caching, community plugins (e.g. Superpowers, **labeled as community, not official**) | 60 |
-| .NET | C#, ASP.NET Core, EF Core, Clean Architecture, CQRS, Mapster, minimal APIs, testing, performance | 180 |
-| Frontend | HTML/CSS, TypeScript, Angular, React, state management, accessibility, performance | 150 |
-| Mobile | Flutter, Dart, state management, Kotlin, Swift, app architecture, publishing | 120 |
-| Databases | SQL Server, PostgreSQL, indexing, query tuning, NoSQL, Redis | 80 |
-| DevOps & Cloud | Git, Docker, CI/CD, Kubernetes basics, Azure, observability | 70 |
-| Software Architecture | SOLID, design patterns, DDD, microservices, system design | 60 |
-| Security | OWASP Top 10, auth (OAuth/OIDC/JWT), secrets, secure coding | 40 |
-| **Total** | | **1,020** |
+| AI Fundamentals | AI concepts, prompt engineering, AI ethics, RAG, agents | 20 |
+| Machine Learning | Supervised/unsupervised, feature engineering, evaluation, scikit-learn, MLOps | 30 |
+| Deep Learning & LLMs | Neural networks, transformers, embeddings, fine-tuning, vector DBs | 10 |
+| Claude & AI Coding Tools | Claude Code, CLAUDE.md, `/compact` & context management, Skills, Hooks, Subagents, MCP servers, Plugins, Claude API & tool use, prompt caching, community plugins (e.g. Superpowers, **labeled as community, not official**) | 25 |
+| .NET | C#, ASP.NET Core, EF Core, Clean Architecture, CQRS, Mapster, minimal APIs, testing, performance | 45 |
+| Frontend | HTML/CSS, TypeScript, Angular, React, state management, accessibility, performance | 70 |
+| Mobile | Flutter, Dart, state management, Kotlin, Swift, app architecture, publishing | 25 |
+| Databases | SQL Server, PostgreSQL, indexing, query tuning, NoSQL, Redis | 20 |
+| DevOps & Cloud | Git, Docker, CI/CD, Kubernetes basics, Azure, observability | 20 |
+| Software Architecture | SOLID, design patterns, DDD, microservices, system design | 20 |
+| Security | OWASP Top 10, auth (OAuth/OIDC/JWT), secrets, secure coding | 15 |
+| **Total** | | **300** |
 
 Each planned article in `content/taxonomy.yaml` has: slug, field, topic, level (beginner/intermediate/advanced), learning path + order, target version (e.g. `.NET 10`), and official sources to cite.
 
@@ -1198,15 +1214,15 @@ taxonomy.yaml
 2. Draft (en)     → English RDoc, the SOURCE OF TRUTH, generated with Claude (model configurable)
 3. Adapt (ar-EG)  → Egyptian Arabic + English terms, natural adaptation, same structure
 4. Validate       → automatic checks (see 19.3)       status: AutoChecked / Failed
-5. Review         → human Reviewer in the app          status: Approved / ChangesRequested
-6. Import         → seeder imports into SQL Server     status: Published (drip schedule)
+5. Import         → seeder imports into SQL Server     status: Published, reviewStatus: pending
+6. Review         → optional, a human Reviewer in the app, at any time after publishing
 ```
 
 Commands:
 ```bash
 dotnet run --project src/ReadIn.ContentStudio -- generate --field dotnet --limit 20
 dotnet run --project src/ReadIn.ContentStudio -- validate --all
-dotnet run --project src/ReadIn.ContentStudio -- import --status approved
+dotnet run --project src/ReadIn.ContentStudio -- import
 ```
 
 ### 19.3 Automatic Validation
@@ -1226,14 +1242,14 @@ dotnet run --project src/ReadIn.ContentStudio -- import --status approved
 | Trust & freshness | Matches the plan (field, topic, level, path, version badge, titles), `status: published`, `reviewStatus: pending`, no reviewer, `isAiAssisted: true`, `lastReviewedAt`, 2–5 sources, a 1200×630 `cover.webp` |
 
 ### 19.4 Publishing Strategy
-- **Seed set: 300 articles** by the official **ReadIn** account, planned in `content/taxonomy.yaml` (23 learning paths across AI, ML, Claude & AI tools, .NET, React, Angular, frontend, mobile, databases, architecture, DevOps and security). Each one corrects a misconception developers commonly hold. They are published with the AI-assisted label and `reviewStatus: pending`, with staggered publish dates over the last ~120 days, and wait in the reviewer queue; Today's article falls back to them until enough are reviewed (F07).
-- **Launch with ~200 reviewed articles** organized into learning paths.
-- **Drip publishing** of the rest (e.g. 10–15 per day) as reviews complete, until 1,000+.
-- Avoids "scaled content" SEO penalties and keeps quality high.
+- **Seed set: 300 articles** by the official **ReadIn** account, planned in `content/taxonomy.yaml` (23 learning paths across AI, ML, Claude & AI tools, .NET, React, Angular, frontend, mobile, databases, architecture, DevOps and security). Each one corrects a misconception developers commonly hold. They are published with the AI-assisted label and `reviewStatus: pending`, with staggered publish dates over the last ~120 days. They appear in the reviewer queue, and Today's article falls back to them until enough are reviewed (F07).
+- **Launch with all 300**, organized into learning paths. Review is not a launch requirement.
+- **Growth after launch** comes from members publishing in any field, plus more ReadIn articles when wanted (`ContentStudio generate`). There is no fixed article target.
+- Quality gates (§19.3) and the AI-assisted label keep seeded content from being thin, unlabeled mass content, which search engines penalize.
 - Fast-moving topics (Claude, AI tools, framework versions) get a **re-verification job** every 90 days: sources re-checked, `LastReviewedAt` updated or the article flagged "may be outdated".
 
 ### 19.5 Content Files in Git
-Approved content lives in `content/articles/{field}/{topic}/{slug}/` so it is versioned, reviewable in git history, and reproducible in every environment: `meta.json`, `en.json` (source of truth), `ar-EG.json` and `cover.webp` (1200×630, rendered by `tools/content-covers`). Writers draft in `en.md` / `ar-EG.md` (git-ignored) and `ContentStudio compose` turns them into RDoc. Glossary terms live in `content/glossary/{field}.yaml`; the official account's avatar is `content/assets/readin-avatar.png`.
+Seed content lives in `content/articles/{field}/{topic}/{slug}/` so it is versioned, reviewable in git history, and reproducible in every environment: `meta.json`, `en.json` (source of truth), `ar-EG.json` and `cover.webp` (1200×630, rendered by `tools/content-covers`). Writers draft in `en.md` / `ar-EG.md` (git-ignored) and `ContentStudio compose` turns them into RDoc. Glossary terms live in `content/glossary/{field}.yaml`; the official account's avatar is `content/assets/readin-avatar.png`.
 
 ---
 
@@ -1242,14 +1258,14 @@ Approved content lives in `content/articles/{field}/{topic}/{slug}/` so it is ve
 | Mechanism | Description |
 |---|---|
 | Verified writers | Identity/expertise verification with a badge |
-| Reviewed badge | "✓ Reviewed by {name}" + date |
-| Sources | Mandatory for technical and health content, shown at the end of every article |
+| Reviewed badge | "✓ Reviewed by {name}" + date. Optional in every field |
+| Sources | Required in fields with `RequiresSources` on (software, Medicine, Public Health, Engineering), optional elsewhere, shown at the end of the article |
 | Version badge | e.g. `.NET 10`, `Angular 21`, `Flutter 3.x` |
 | Last reviewed date | Shown on every article, re-verification for fast-moving topics |
 | AI-assisted label | Shown on every AI-assisted article. Never hidden. |
 | Tested code | Code snippets compiled in the content pipeline |
 | Community signals | Reports for misinformation, quality score based on completion rate + reactions |
-| Sensitive fields | Medicine/Public Health require reviewer approval and a disclaimer ("لا يغني عن استشارة الطبيب") |
+| Health content | Medicine/Public Health articles publish without approval, show a disclaimer ("لا يغني عن استشارة الطبيب") and require sources. Misinformation is handled through reports and moderation (F22) |
 
 ---
 
@@ -1459,9 +1475,9 @@ Deploy targets (suggested): API + SSR on a single server or container host (with
 | Phase | Scope |
 |---|---|
 | **0 — Foundation** | Repo, solution skeleton, CI, design tokens, RDoc schema, Firebase project + emulators, seeders for roles/fields/users |
-| **1 — MVP** | F01–F07, F10–F14, F18, F26, F27 · phone + password auth with recovery PIN · ~200 reviewed seeded articles · Web + Mobile beta |
-| **2 — Growth** | F08, F09, F15–F17, F19, F20, F22–F24 · drip publishing toward 1,000+ articles |
-| **3 — Depth** | F21, F25, email digest, quizzes at the end of articles, text-to-speech, AI translation for user articles, Medicine/Engineering/Public Health fields |
+| **1 — MVP** | F01–F07, F10–F14, F18, F26, F27 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
+| **2 — Growth** | F08, F09, F15–F17, F19, F20, F22–F24 |
+| **3 — Depth** | F21, F25, email digest, quizzes at the end of articles, text-to-speech, AI translation for user articles |
 
 ---
 

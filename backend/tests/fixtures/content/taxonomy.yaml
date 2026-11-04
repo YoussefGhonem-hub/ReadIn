@@ -1,7 +1,7 @@
 # Integration-test copy of the taxonomy (fields and topics as of 2026-11-03) with a tiny plan of its own.
 # The real plan lives in content/taxonomy.yaml; tests must not depend on which of its articles exist.
 # Field keys:   slug, nameAr, nameEn, icon (Lucide name), color (design token name),
-#               sensitive (needs VerifiedWriter + reviewer approval), requiresSources, enabled, target
+#               sensitive (shows a health disclaimer; never blocks publishing), requiresSources, enabled, target
 # Plan keys (plannedArticles): slug, field, topic, titleEn, titleAr, misconception, level, learningPath, order, versionBadge, plannedSources
 version: 1
 
@@ -171,7 +171,7 @@ fields:
       - { slug: integration-testing, nameAr: Integration Testing, nameEn: Integration Testing }
       - { slug: e2e-testing, nameAr: E2E Testing, nameEn: E2E Testing }
 
-  # ── Enabled after launch (SPEC §1.4). Sensitive fields need verified writers + reviewer approval. ──
+  # ── Disabled in this fixture so tests can cover disabled fields. ──
   - slug: medicine
     nameAr: الطب
     nameEn: Medicine

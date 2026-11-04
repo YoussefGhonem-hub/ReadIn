@@ -43,10 +43,9 @@ public static class RoleMatrix
     [
         new(RoleIds.Guest, RoleNames.Guest, "Not signed in. Can browse and read published articles.", [P.Articles.Read]),
         new(RoleIds.Member, RoleNames.Member, "Default for every signed-up user.", MemberPermissions),
-        new(RoleIds.VerifiedWriter, RoleNames.VerifiedWriter, "Identity/expertise verified writer.",
-            [.. MemberPermissions, P.Articles.PublishSensitive]),
+        new(RoleIds.VerifiedWriter, RoleNames.VerifiedWriter, "Identity/expertise verified writer.", MemberPermissions),
         new(RoleIds.Reviewer, RoleNames.Reviewer, "Reviews articles in assigned fields.",
-            [.. MemberPermissions, P.Articles.PublishSensitive, P.Articles.Review]),
+            [.. MemberPermissions, P.Articles.Review]),
         new(RoleIds.Moderator, RoleNames.Moderator, "Handles reports, hides content, suspends users.",
             [.. MemberPermissions, P.Moderation.Manage, P.Users.Suspend]),
         new(RoleIds.Admin, RoleNames.Admin, "Manages taxonomy, paths, verification, featured content and roles.",

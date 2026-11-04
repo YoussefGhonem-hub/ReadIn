@@ -2,7 +2,7 @@
 # Imported by the Taxonomy seeder (all environments). Removing a field disables it; it is never deleted.
 #
 # Field keys:   slug, nameAr, nameEn, icon (Lucide name), color (design token name),
-#               sensitive (needs VerifiedWriter + reviewer approval), requiresSources, enabled, target
+#               sensitive (shows a health disclaimer; never blocks publishing), requiresSources, enabled, target
 # Learning path keys: slug, field, titleAr, titleEn, descriptionAr, descriptionEn (F09)
 # Plan keys (plannedArticles): slug, field, topic, titleEn, titleAr, misconception (the wrong belief the article corrects),
 #               level, learningPath + order, versionBadge, plannedSources (2–5 official/primary URLs)
@@ -14,7 +14,7 @@ fields:
     nameEn: AI Fundamentals
     icon: sparkles
     color: primary
-    target: 80
+    target: 20
     topics:
       - { slug: ai-concepts, nameAr: مفاهيم الـ AI, nameEn: AI Concepts }
       - { slug: prompt-engineering, nameAr: Prompt Engineering, nameEn: Prompt Engineering }
@@ -28,7 +28,7 @@ fields:
     nameEn: Machine Learning
     icon: brain-circuit
     color: callout-info-accent
-    target: 100
+    target: 30
     topics:
       - { slug: supervised-learning, nameAr: Supervised Learning, nameEn: Supervised Learning }
       - { slug: unsupervised-learning, nameAr: Unsupervised Learning, nameEn: Unsupervised Learning }
@@ -42,7 +42,7 @@ fields:
     nameEn: Deep Learning & LLMs
     icon: network
     color: callout-info-accent
-    target: 80
+    target: 10
     topics:
       - { slug: neural-networks, nameAr: Neural Networks, nameEn: Neural Networks }
       - { slug: transformers, nameAr: Transformers, nameEn: Transformers }
@@ -55,7 +55,7 @@ fields:
     nameEn: Claude & AI Coding Tools
     icon: bot
     color: accent
-    target: 60
+    target: 25
     topics:
       - { slug: claude-code, nameAr: Claude Code, nameEn: Claude Code }
       - { slug: claude-md, nameAr: CLAUDE.md, nameEn: CLAUDE.md }
@@ -71,7 +71,7 @@ fields:
     nameEn: .NET
     icon: code-xml
     color: primary
-    target: 180
+    target: 45
     topics:
       - { slug: csharp, nameAr: "C#", nameEn: "C#" }
       - { slug: aspnet-core, nameAr: ASP.NET Core, nameEn: ASP.NET Core }
@@ -88,7 +88,7 @@ fields:
     nameEn: Frontend
     icon: layout-template
     color: callout-warning-accent
-    target: 150
+    target: 70
     topics:
       - { slug: html-css, nameAr: HTML و CSS, nameEn: HTML & CSS }
       - { slug: typescript, nameAr: TypeScript, nameEn: TypeScript }
@@ -104,7 +104,7 @@ fields:
     nameEn: Mobile
     icon: smartphone
     color: primary
-    target: 120
+    target: 25
     topics:
       - { slug: flutter, nameAr: Flutter, nameEn: Flutter }
       - { slug: dart, nameAr: Dart, nameEn: Dart }
@@ -119,7 +119,7 @@ fields:
     nameEn: Databases
     icon: database
     color: callout-info-accent
-    target: 80
+    target: 20
     topics:
       - { slug: sql-server, nameAr: SQL Server, nameEn: SQL Server }
       - { slug: postgresql, nameAr: PostgreSQL, nameEn: PostgreSQL }
@@ -135,7 +135,7 @@ fields:
     nameEn: DevOps & Cloud
     icon: cloud
     color: callout-info-accent
-    target: 70
+    target: 20
     topics:
       - { slug: git, nameAr: Git, nameEn: Git }
       - { slug: docker, nameAr: Docker, nameEn: Docker }
@@ -149,7 +149,7 @@ fields:
     nameEn: Software Architecture
     icon: boxes
     color: accent
-    target: 60
+    target: 20
     topics:
       - { slug: solid, nameAr: SOLID, nameEn: SOLID }
       - { slug: design-patterns, nameAr: Design Patterns, nameEn: Design Patterns }
@@ -163,7 +163,7 @@ fields:
     nameEn: Security
     icon: shield-check
     color: callout-danger-accent
-    target: 40
+    target: 15
     topics:
       - { slug: owasp-top-10, nameAr: OWASP Top 10, nameEn: OWASP Top 10 }
       - { slug: auth, nameAr: OAuth و OIDC و JWT, nameEn: "OAuth, OIDC & JWT" }
@@ -181,22 +181,13 @@ fields:
       - { slug: integration-testing, nameAr: Integration Testing, nameEn: Integration Testing }
       - { slug: e2e-testing, nameAr: E2E Testing, nameEn: E2E Testing }
 
-  # ── Enabled after launch (SPEC §1.4). Sensitive fields need verified writers + reviewer approval. ──
+  # ── ReadIn is open to any topic (SPEC §1.4). Anyone can publish in any field; review is always optional (F06). ──
   - slug: medicine
     nameAr: الطب
     nameEn: Medicine
     icon: stethoscope
     color: callout-danger-accent
     sensitive: true
-    enabled: false
-    topics: []
-
-  - slug: engineering
-    nameAr: الهندسة
-    nameEn: Engineering
-    icon: cog
-    color: callout-warning-accent
-    enabled: false
     topics: []
 
   - slug: public-health
@@ -205,7 +196,93 @@ fields:
     icon: heart-pulse
     color: success
     sensitive: true
-    enabled: false
+    topics: []
+
+  - slug: engineering
+    nameAr: الهندسة
+    nameEn: Engineering
+    icon: cog
+    color: callout-warning-accent
+    topics: []
+
+  - slug: science
+    nameAr: العلوم
+    nameEn: Science
+    icon: atom
+    color: callout-info-accent
+    requiresSources: false
+    topics: []
+
+  - slug: business
+    nameAr: البيزنس والمال
+    nameEn: Business & Finance
+    icon: briefcase
+    color: primary
+    requiresSources: false
+    topics: []
+
+  - slug: education
+    nameAr: التعليم
+    nameEn: Education
+    icon: graduation-cap
+    color: accent
+    requiresSources: false
+    topics: []
+
+  - slug: self-growth
+    nameAr: تطوير الذات
+    nameEn: Self-growth
+    icon: sprout
+    color: success
+    requiresSources: false
+    topics: []
+
+  - slug: history-culture
+    nameAr: التاريخ والثقافة
+    nameEn: History & Culture
+    icon: landmark
+    color: callout-warning-accent
+    requiresSources: false
+    topics: []
+
+  - slug: arts-literature
+    nameAr: الفنون والأدب
+    nameEn: Arts & Literature
+    icon: palette
+    color: callout-danger-accent
+    requiresSources: false
+    topics: []
+
+  - slug: law
+    nameAr: القانون
+    nameEn: Law
+    icon: scale
+    color: callout-info-accent
+    requiresSources: false
+    topics: []
+
+  - slug: sports
+    nameAr: الرياضة
+    nameEn: Sports
+    icon: trophy
+    color: accent
+    requiresSources: false
+    topics: []
+
+  - slug: lifestyle
+    nameAr: أسلوب الحياة
+    nameEn: Lifestyle
+    icon: coffee
+    color: primary
+    requiresSources: false
+    topics: []
+
+  - slug: general
+    nameAr: موضوعات عامة
+    nameEn: General
+    icon: book-open
+    color: primary
+    requiresSources: false
     topics: []
 
 # Learning paths (F09): curated, ordered series. Each planned article names its path and order.

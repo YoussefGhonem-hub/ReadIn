@@ -96,6 +96,15 @@ import {
   X,
   ZoomIn,
   ZoomOut,
+  Atom,
+  Briefcase,
+  Coffee,
+  GraduationCap,
+  Landmark,
+  Palette,
+  Scale,
+  Sprout,
+  Trophy,
 } from 'lucide';
 
 /**
@@ -199,6 +208,15 @@ export const APP_ICONS = {
   X,
   ZoomIn,
   ZoomOut,
+  Atom,
+  Briefcase,
+  Coffee,
+  GraduationCap,
+  Landmark,
+  Palette,
+  Scale,
+  Sprout,
+  Trophy,
 };
 
 export type AppIconName = keyof typeof APP_ICONS;

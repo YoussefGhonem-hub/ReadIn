@@ -21,6 +21,15 @@ abstract final class FieldStyle {
         'shield-check' => Icons.verified_user_rounded,
         'smartphone' => Icons.smartphone_rounded,
         'stethoscope' => Icons.medical_services_rounded,
+        'atom' => Icons.biotech_rounded,
+        'briefcase' => Icons.work_rounded,
+        'graduation-cap' => Icons.school_rounded,
+        'sprout' => Icons.spa_rounded,
+        'landmark' => Icons.account_balance_rounded,
+        'palette' => Icons.palette_rounded,
+        'scale' => Icons.gavel_rounded,
+        'trophy' => Icons.emoji_events_rounded,
+        'coffee' => Icons.local_cafe_rounded,
         _ => Icons.menu_book_rounded,
       };
 

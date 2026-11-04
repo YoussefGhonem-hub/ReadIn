@@ -11,7 +11,6 @@ public static class ArticleErrors
     public static readonly Error TooManyTags = Error.Validation("article.tags.max_five", "An article can have at most 5 tags.");
     public static readonly Error NoContent = Error.Validation("article.no_content", "Add at least one language version first.");
     public static readonly Error SourcesRequired = Error.Validation("article.sources_required", "Articles in this field must cite at least one source.");
-    public static readonly Error ReviewRequired = Error.Forbidden("article.review_required", "Articles in sensitive fields must be approved by a reviewer before publishing.");
     public static readonly Error NotPendingReview = Error.Conflict("article.not_pending_review", "The article is not waiting for review.");
     public static readonly Error CannotReviewOwnArticle = Error.Forbidden("article.review_own", "Reviewers cannot review their own articles.");
     public static readonly Error ScheduleInPast = Error.Validation("article.schedule_in_past", "The scheduled time must be in the future.");

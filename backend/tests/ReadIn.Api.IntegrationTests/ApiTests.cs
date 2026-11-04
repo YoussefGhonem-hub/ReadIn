@@ -202,7 +202,7 @@ public sealed class AccountTests(ApiFactory api)
         var me = await (await api.SeedUserClientAsync(ApiFactory.ReviewerPhone)).GetFromJsonAsync<JsonObject>("/api/v1/me", Ct);
 
         me!["roles"]!.AsArray().Select(r => r!.GetValue<string>()).Should().BeEquivalentTo("Member", "VerifiedWriter", "Reviewer");
-        me["permissions"]!.AsArray().Select(p => p!.GetValue<string>()).Should().Contain(["articles.review", "articles.publish.sensitive"]);
+        me["permissions"]!.AsArray().Select(p => p!.GetValue<string>()).Should().Contain("articles.review");
         me["isVerified"]!.GetValue<bool>().Should().BeTrue();
         me["isProfileComplete"]!.GetValue<bool>().Should().BeTrue();
         me["hasRecoveryPin"]!.GetValue<bool>().Should().BeTrue();

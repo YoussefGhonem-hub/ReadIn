@@ -52,7 +52,6 @@ public static class ErrorMessages
         ["article.not_owner"] = ("التعديل للكاتب بس.", "Only the author can change this article."),
         ["article.content_invalid"] = ("محتوى المقال مش مظبوط.", "The article content is not valid."),
         ["article.sources_required"] = ("لازم تضيف مصدر واحد على الأقل.", "Add at least one source."),
-        ["article.review_required"] = ("المقال لازم يتراجع قبل النشر.", "This article must be reviewed before publishing."),
         // Reactions, saved articles and follows (F10, F12, F13)
         ["reaction.invalid"] = ("الرياكشن ده مش موجود.", "This reaction doesn't exist."),
         ["collection.not_found"] = ("المجموعة مش موجودة.", "Collection not found."),

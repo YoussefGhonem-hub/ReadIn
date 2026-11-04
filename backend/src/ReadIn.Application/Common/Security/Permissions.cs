@@ -7,7 +7,6 @@ public static class Permissions
     {
         public const string Read = "articles.read";
         public const string Create = "articles.create";
-        public const string PublishSensitive = "articles.publish.sensitive";
         public const string Review = "articles.review";
         public const string Feature = "articles.feature";
     }
@@ -78,7 +77,6 @@ public static class Permissions
     {
         [Articles.Read] = "Read published articles",
         [Articles.Create] = "Write and publish own articles",
-        [Articles.PublishSensitive] = "Publish in sensitive fields (Medicine, Public Health)",
         [Articles.Review] = "Review articles in assigned fields",
         [Articles.Feature] = "Feature articles",
         [Comments.Create] = "Comment and reply",

@@ -341,7 +341,6 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         if (Status is ArticleStatus.Archived) return ArticleErrors.InvalidTransition(Status, ArticleStatus.Published);
         if (_translations.Count == 0) return ArticleErrors.NoContent;
         if (field.RequiresSources && _sources.Count == 0) return ArticleErrors.SourcesRequired;
-        if (field.IsSensitive && ReviewStatus != ReviewStatus.Approved) return ArticleErrors.ReviewRequired;
         return Result.Success();
     }
 
