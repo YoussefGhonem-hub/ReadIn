@@ -7,7 +7,7 @@ import { APIRequestContext, BrowserContext, Locator, Page, Route, expect } from 
  * backend. Sign in is the real phone + password page against the mocked `/auth/login`.
  */
 /** The mock API (playwright.config.ts → MOCK_API_PORT; src/environments/environment.e2e.ts points the app at it). */
-export const MOCK_ORIGIN = 'http://localhost:5180';
+export const MOCK_ORIGIN = `http://localhost:${process.env['E2E_MOCK_PORT'] ?? 5180}`;
 export const API = `${MOCK_ORIGIN}/api/v1`;
 /** The mock API's demo account (e2e/mock-api/server.mjs). */
 export const MOCK_PHONE = '+201001234567';
@@ -160,6 +160,9 @@ export const HIDE_APP_CHROME = join(__dirname, 'hide-app-chrome.css');
 
 /** `stylePath` for shots of the reader's action bar: hides the comments section, which may still be loading. */
 export const HIDE_COMMENTS = join(__dirname, 'hide-comments.css');
+
+/** `stylePath` for shots near the end of an article: hides the reader's floating action bar. */
+export const HIDE_READER_BAR = join(__dirname, 'hide-reader-bar.css');
 
 /** Moves the pointer off any card so hover-only UI (carousel arrows) isn't captured. */
 export async function parkMouse(page: Page): Promise<void> {

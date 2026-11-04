@@ -1,0 +1,4 @@
+/* Element screenshots near the end of an article: the reader's floating action bar would overlap them. */
+rd-article-action-bar {
+  visibility: hidden !important;
+}

@@ -15,13 +15,22 @@ import 'article_attachments_view.dart';
 /// reading time, reaction/comment counts, then the post's images or PDF
 /// pages full width (F26).
 class ArticleCardTile extends StatelessWidget {
-  const ArticleCardTile({super.key, required this.article, required this.onTap, this.actions = const []});
+  const ArticleCardTile({
+    super.key,
+    required this.article,
+    required this.onTap,
+    this.actions = const [],
+    this.showAttachments = true,
+  });
 
   final ArticleCard article;
   final VoidCallback onTap;
 
   /// Buttons at the end of the counters line, e.g. save (F13).
   final List<Widget> actions;
+
+  /// False keeps the row compact (related articles at the end of the reader): no images or PDF pages.
+  final bool showAttachments;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +40,7 @@ class ArticleCardTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s3),
         decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.border))),
-        child: article.attachments == null
+        child: article.attachments == null || !showAttachments
             ? _Summary(article: article, actions: actions)
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

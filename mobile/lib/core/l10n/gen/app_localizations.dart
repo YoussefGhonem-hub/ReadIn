@@ -428,11 +428,47 @@ abstract class AppLocalizations {
   /// **'Glossary'**
   String get glossary;
 
-  /// No description provided for @glossaryComingSoon.
+  /// No description provided for @glossaryInEnglish.
   ///
   /// In en, this message translates to:
-  /// **'Full definitions for “{term}” are coming soon to the glossary.'**
-  String glossaryComingSoon(String term);
+  /// **'In English'**
+  String get glossaryInEnglish;
+
+  /// No description provided for @glossaryInArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'In Arabic'**
+  String get glossaryInArabic;
+
+  /// No description provided for @glossaryArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles that use this term'**
+  String get glossaryArticles;
+
+  /// No description provided for @glossaryNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This term isn\'t in the glossary yet'**
+  String get glossaryNotFound;
+
+  /// No description provided for @relatedArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Related articles'**
+  String get relatedArticles;
+
+  /// No description provided for @resumePickedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked up where you left off'**
+  String get resumePickedUp;
+
+  /// No description provided for @resumeStartOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over'**
+  String get resumeStartOver;
 
   /// No description provided for @readingProgress.
   ///

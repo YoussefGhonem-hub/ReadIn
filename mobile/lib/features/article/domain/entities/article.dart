@@ -159,6 +159,40 @@ class ArticleSource extends Equatable {
   List<Object?> get props => [title, url];
 }
 
+/// The viewer's reading progress on an article (`MyProgressDto`, F04 resume).
+class MyProgress extends Equatable {
+  const MyProgress({required this.language, this.percent = 0, this.lastPosition, this.completedAt});
+
+  /// The reader scrolls back only to a position inside this range (docs/api/contract-v1.md "Resume (F04)").
+  static const minResume = 0.05;
+  static const maxResume = 0.95;
+
+  /// The version the progress was recorded on: `ar-EG` or `en`.
+  final String language;
+
+  /// Highest percent reached, 0–100.
+  final int percent;
+
+  /// The scroll position as the reader sent it: a fraction of the scrollable range with four decimals (`"0.4523"`).
+  final String? lastPosition;
+
+  /// Set once the article counts as read.
+  final DateTime? completedAt;
+
+  /// Where the reader showing [shownLanguage] scrolls back to on open: [lastPosition] when the article isn't read
+  /// yet, the progress was recorded on that version and the position is between [minResume] and [maxResume];
+  /// otherwise null. The reader also checks that the link has no block anchor and the user hasn't scrolled yet.
+  double? resumeFractionFor(String shownLanguage) {
+    if (completedAt != null || language != shownLanguage) return null;
+    final value = double.tryParse(lastPosition ?? '');
+    if (value == null || value.isNaN || value < minResume || value > maxResume) return null;
+    return value;
+  }
+
+  @override
+  List<Object?> get props => [language, percent, lastPosition, completedAt];
+}
+
 /// Reader payload (`ArticleDetailsDto`).
 class ArticleDetails extends Equatable {
   const ArticleDetails({
@@ -172,6 +206,7 @@ class ArticleDetails extends Equatable {
     this.readCount = 0,
     this.isFollowingAuthor = false,
     this.collectionIds = const [],
+    this.myProgress,
     this.isOfflineCopy = false,
   });
 
@@ -193,6 +228,9 @@ class ArticleDetails extends Equatable {
   /// articles that aren't saved.
   final List<String> collectionIds;
 
+  /// The viewer's reading progress (F04 resume); null for guests and articles they haven't opened.
+  final MyProgress? myProgress;
+
   /// Served from the copy kept on this device for a saved article, because the API was unreachable (F13, F25).
   final bool isOfflineCopy;
 
@@ -200,6 +238,9 @@ class ArticleDetails extends Equatable {
   int get saveCount => card.saveCount;
 
   bool get hasBothLanguages => availableLanguages.contains('ar-EG') && availableLanguages.contains('en');
+
+  /// Where the reader scrolls back to when it opens this version ([MyProgress.resumeFractionFor]).
+  double? get resumeFraction => myProgress?.resumeFractionFor(card.language);
 
   @override
   List<Object?> get props => [
@@ -213,6 +254,7 @@ class ArticleDetails extends Equatable {
         readCount,
         isFollowingAuthor,
         collectionIds,
+        myProgress,
         isOfflineCopy,
       ];
 }

@@ -130,6 +130,24 @@ abstract class SourceModel with _$SourceModel {
   factory SourceModel.fromJson(Map<String, dynamic> json) => _$SourceModelFromJson(json);
 }
 
+/// `MyProgressDto`: the viewer's reading progress, for the reader's resume (F04).
+@freezed
+abstract class MyProgressModel with _$MyProgressModel {
+  const MyProgressModel._();
+
+  const factory MyProgressModel({
+    required String language,
+    @Default(0) int percent,
+    String? lastPosition,
+    DateTime? completedAt,
+  }) = _MyProgressModel;
+
+  factory MyProgressModel.fromJson(Map<String, dynamic> json) => _$MyProgressModelFromJson(json);
+
+  MyProgress toEntity() =>
+      MyProgress(language: language, percent: percent, lastPosition: lastPosition, completedAt: completedAt);
+}
+
 /// `ArticleDetailsDto` — card fields plus reader-only fields. `content` stays
 /// raw JSON here and is parsed into [RDocDocument] when mapping to the entity.
 /// [toJson] is what the offline copy of a saved article keeps (F13, F25).
@@ -166,6 +184,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     @Default(0) int readCount,
     @Default(false) bool isFollowingAuthor,
     @Default(<String>[]) List<String> collectionIds,
+    MyProgressModel? myProgress,
   }) = _ArticleDetailsModel;
 
   factory ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
@@ -203,6 +222,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         readCount: readCount,
         isFollowingAuthor: isFollowingAuthor,
         collectionIds: collectionIds,
+        myProgress: myProgress?.toEntity(),
         isOfflineCopy: offline,
       );
 }

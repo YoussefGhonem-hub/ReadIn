@@ -679,6 +679,58 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("UserFollows", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Glossary.ArticleTerm", b =>
+                {
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TermId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ArticleId", "TermId");
+
+                    b.HasIndex("TermId");
+
+                    b.ToTable("ArticleTerms", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Glossary.GlossaryTerm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DefinitionEn")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ExplanationAr")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TermEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .UseCollation("Arabic_100_CI_AI");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.HasIndex("TermEn");
+
+                    b.ToTable("GlossaryTerms", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Identity.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1990,6 +2042,21 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Navigation("Followee");
 
                     b.Navigation("Follower");
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Glossary.ArticleTerm", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Articles.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Glossary.GlossaryTerm", null)
+                        .WithMany()
+                        .HasForeignKey("TermId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Identity.PasswordResetToken", b =>

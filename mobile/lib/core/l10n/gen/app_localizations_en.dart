@@ -200,9 +200,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get glossary => 'Glossary';
 
   @override
-  String glossaryComingSoon(String term) {
-    return 'Full definitions for “$term” are coming soon to the glossary.';
-  }
+  String get glossaryInEnglish => 'In English';
+
+  @override
+  String get glossaryInArabic => 'In Arabic';
+
+  @override
+  String get glossaryArticles => 'Articles that use this term';
+
+  @override
+  String get glossaryNotFound => 'This term isn\'t in the glossary yet';
+
+  @override
+  String get relatedArticles => 'Related articles';
+
+  @override
+  String get resumePickedUp => 'Picked up where you left off';
+
+  @override
+  String get resumeStartOver => 'Start over';
 
   @override
   String get readingProgress => 'Reading progress';

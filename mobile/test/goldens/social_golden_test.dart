@@ -307,6 +307,7 @@ void main() {
     });
 
     Future<void> pumpReader(WidgetTester tester, ArticleCard card) async {
+      registerNoRelatedArticles();
       final article = ArticleDetails(
         card: card,
         availableLanguages: [language],

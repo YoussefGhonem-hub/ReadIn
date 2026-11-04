@@ -92,10 +92,17 @@ describe('RDocRenderer (shared/rdoc/examples/kitchen-sink.ar-EG.json)', () => {
     expect(el.querySelector('[data-block-id="p2"] br')).not.toBeNull();
   });
 
-  it('opens the glossary sheet when a term is tapped', async () => {
-    const el = await render(doc);
-    (el.querySelector('[data-term="dependency-injection"]') as HTMLButtonElement).click();
-    expect(TestBed.inject(TermSheetService).openTerm()).toEqual({ termId: 'dependency-injection', text: 'Dependency Injection' });
+  it('opens the glossary sheet in the version language when a term is tapped, and focuses the term', async () => {
+    const fixture = TestBed.createComponent(RDocRenderer);
+    fixture.componentRef.setInput('doc', doc);
+    fixture.componentRef.setInput('articleId', 'a1');
+    await fixture.whenStable();
+    const term = (fixture.nativeElement as HTMLElement).querySelector('[data-term="dependency-injection"]') as HTMLButtonElement;
+    expect(term.getAttribute('aria-haspopup')).toBe('dialog');
+    term.click();
+    expect(TestBed.inject(TermSheetService).openTerm()).toEqual({ termId: 'dependency-injection', text: 'Dependency Injection', language: 'ar-EG', articleId: 'a1' });
+    // The sheet gives focus back to it when it closes.
+    expect(document.activeElement).toBe(term);
   });
 
   it('renders callout variants with default titles', async () => {

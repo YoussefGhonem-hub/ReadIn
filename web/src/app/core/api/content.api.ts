@@ -26,6 +26,11 @@ export class ContentApi {
     return `${this.base}/articles/${encodeURIComponent(slug)}?lang=${encodeURIComponent(lang)}`;
   }
 
+  /** `GET /articles/{id}/related?lang=&limit=` (F04): 0–`limit` cards for the end of the reader. */
+  relatedUrl(id: string, lang: ArticleLanguage, limit: number): string {
+    return `${this.base}/articles/${encodeURIComponent(id)}/related?lang=${encodeURIComponent(lang)}&limit=${limit}`;
+  }
+
   article(slug: string, lang: ArticleLanguage): Observable<ArticleDetailsDto> {
     return this.http.get<ArticleDetailsDto>(this.articleUrl(slug, lang), { context: this.silent() });
   }

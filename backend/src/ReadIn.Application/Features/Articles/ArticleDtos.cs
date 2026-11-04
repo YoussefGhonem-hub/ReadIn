@@ -99,7 +99,16 @@ public sealed record ArticleDetailsDto : ArticleCardDto
     /// <summary>The viewer's collections that hold this article; empty for guests and unsaved articles.</summary>
     public IReadOnlyList<Guid> CollectionIds { get; init; } = [];
 
+    /// <summary>The viewer's reading progress, so the reader can resume (F04); null for guests and unopened articles.</summary>
+    public MyProgressDto? MyProgress { get; init; }
+
     /// <summary>Raw RDoc from the projection; parsed into <see cref="Content"/> by the handler.</summary>
     [JsonIgnore]
     public string ContentJson { get; init; } = default!;
 }
+
+/// <summary>
+/// Where the viewer left an article: <see cref="LastPosition"/> is what the reader sent (the scroll position as a
+/// fraction, e.g. "0.4523") and <see cref="Language"/> the version it was measured on.
+/// </summary>
+public sealed record MyProgressDto(string Language, int Percent, string? LastPosition, DateTime? CompletedAt);

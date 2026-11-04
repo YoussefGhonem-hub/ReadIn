@@ -50,6 +50,7 @@ export function testDetails(patch: Partial<ArticleDetailsDto> = {}): ArticleDeta
     readCount: 0,
     isFollowingAuthor: false,
     collectionIds: [],
+    myProgress: null,
     ...patch,
   } as ArticleDetailsDto;
 }

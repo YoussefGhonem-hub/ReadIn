@@ -6,6 +6,7 @@ using ReadIn.Application.Common.Behaviors;
 using ReadIn.Application.Common.Content;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
+using ReadIn.Application.Features.Glossary;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Media;
@@ -100,7 +101,13 @@ internal sealed class DiscardArticleDraftCommandHandler(IAppDbContext db, ICurre
 }
 
 internal sealed class PublishArticleDraftCommandHandler(
-    IAppDbContext db, ICurrentUser currentUser, ArticleDrafts drafts, IRDocProcessor rdoc, HybridCache cache, TimeProvider clock)
+    IAppDbContext db,
+    ICurrentUser currentUser,
+    ArticleDrafts drafts,
+    IRDocProcessor rdoc,
+    ArticleTermsIndex termsIndex,
+    HybridCache cache,
+    TimeProvider clock)
     : ICommandHandler<PublishArticleDraftCommand, Result<PublishedArticleDto>>
 {
     public async ValueTask<Result<PublishedArticleDto>> Handle(PublishArticleDraftCommand command, CancellationToken cancellationToken)
@@ -151,8 +158,14 @@ internal sealed class PublishArticleDraftCommandHandler(
 
         if (!await EditorSaves.TrySaveAsync(db, cancellationToken)) return ArticleErrors.DraftConflict;
 
-        // A first publish invalidates through ArticlePublishedDomainEvent; an update changes what readers see now.
-        if (!firstPublish) await cache.RemoveByTagAsync([CacheTags.Feed, CacheTags.Article(article.Slug)], cancellationToken);
+        // A first publish invalidates and indexes glossary terms through ArticlePublishedDomainEvent; an update changes
+        // what readers see now, and may add or drop terms (F21).
+        if (!firstPublish)
+        {
+            await cache.RemoveByTagAsync([CacheTags.Feed, CacheTags.Article(article.Slug)], cancellationToken);
+            if (await termsIndex.RebuildAsync([article.Id], cancellationToken) > 0)
+                await cache.RemoveByTagAsync(CacheTags.Glossary, cancellationToken);
+        }
         return new PublishedArticleDto(article.Id, article.Slug, article.PublishedAt!.Value, number, firstPublish);
     }
 

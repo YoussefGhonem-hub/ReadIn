@@ -6,8 +6,9 @@ using ReadIn.Domain.Common;
 namespace ReadIn.Application.Features.Articles.Queries.GetArticleBySlug;
 
 /// <summary>
-/// The cached details are the same for every reader; this adds the signed-in viewer's reaction, save, author follow
-/// and the collections that hold the article on top, in two queries. Guests keep the defaults (null, false, false, []).
+/// The cached details are the same for every reader; this adds the signed-in viewer's reading progress (F04 resume),
+/// reaction, save, author follow and the collections that hold the article on top, in three queries. Guests keep the
+/// defaults (null, null, false, false, []).
 /// </summary>
 internal sealed class ArticleDetailsPersonalizer(IAppDbContext db, ICurrentUser viewer, ArticleViewerStateReader viewerState)
     : IQueryPersonalizer<GetArticleBySlugQuery, Result<ArticleDetailsDto>>
@@ -17,9 +18,15 @@ internal sealed class ArticleDetailsPersonalizer(IAppDbContext db, ICurrentUser 
     {
         if (response.IsFailure || viewer.UserId is not { } viewerId) return response;
 
-        var details = response.Value;
+        var details = response.Value with
+        {
+            MyProgress = await db.ReadingProgress.AsNoTracking()
+                .Where(p => p.UserId == viewerId && p.ArticleId == response.Value.Id)
+                .Select(p => new MyProgressDto(p.Language, p.Percent, p.LastPosition, p.CompletedAt))
+                .FirstOrDefaultAsync(cancellationToken),
+        };
         var states = await viewerState.LoadAsync(viewerId, [details.Id], cancellationToken);
-        if (!states.TryGetValue(details.Id, out var state)) return response;
+        if (!states.TryGetValue(details.Id, out var state)) return details;
 
         // Unsaving removes an article from every collection, so an unsaved article has none.
         var collectionIds = state.IsSaved

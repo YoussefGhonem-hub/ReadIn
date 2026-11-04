@@ -27,7 +27,7 @@ type InlineVm =
           <ng-container *ngTemplateOutlet="marked; context: { segs: node.segments, marks: node.marks, i: 0 }" />
         }
         @case ('term') {
-          <button type="button" class="rd-term" [attr.data-term]="node.termId" (click)="ctx.openTerm(node.termId, node.text)">
+          <button type="button" class="rd-term" aria-haspopup="dialog" [attr.data-term]="node.termId" (click)="openTerm($event, node.termId, node.text)">
             <ng-container *ngTemplateOutlet="plain; context: { segs: node.segments }" />
           </button>
         }
@@ -116,6 +116,15 @@ export class InlineContentView {
       }
     });
   });
+
+  /**
+   * The sheet gives focus back to whatever had it when it opened (F21). Safari doesn't focus a button on click, so the
+   * term takes focus first.
+   */
+  protected openTerm(event: Event, termId: string, text: string): void {
+    (event.currentTarget as HTMLElement | null)?.focus({ preventScroll: true });
+    this.ctx.openTerm(termId, text);
+  }
 
   protected safeHref(href: string): string | null {
     return safeHttpUrl(href);

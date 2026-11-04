@@ -206,9 +206,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get glossary => 'قاموس المصطلحات';
 
   @override
-  String glossaryComingSoon(String term) {
-    return 'التعريف الكامل لـ «$term» جاي قريب في القاموس.';
-  }
+  String get glossaryInEnglish => 'بالإنجليزي';
+
+  @override
+  String get glossaryInArabic => 'بالعربي';
+
+  @override
+  String get glossaryArticles => 'مقالات فيها المصطلح ده';
+
+  @override
+  String get glossaryNotFound => 'المصطلح ده لسه مش في القاموس';
+
+  @override
+  String get relatedArticles => 'مقالات ذات صلة';
+
+  @override
+  String get resumePickedUp => 'كمّلنا من مكان ما وقفت';
+
+  @override
+  String get resumeStartOver => 'من الأول';
 
   @override
   String get readingProgress => 'تقدّم القراءة';

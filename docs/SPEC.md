@@ -709,8 +709,8 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Font size control (S / M / L / XL), reading mode toggle.
 - Attachments (image carousel or PDF page carousel) with a full-screen viewer ([F26](#f26--post-attachments--media)).
 - Floating action bar: reactions, comments, repost ([F29](#f29--repost)), save, share, and a "⋯" menu ([F28](#f28--article-menu-mute--show-less)). Reaction and comment counts update live ([F27](#f27--real-time-updates)).
-- Remembers the last scroll position. Marks the article as "read" when ≥ 70% scrolled **and** ≥ 30 seconds spent.
-- Related articles + "Next in path" at the end.
+- Remembers the last scroll position: on open, the reader goes back to where you left off (unless you finished the article or the link points at a block) and offers "Start over". Marks the article as "read" when ≥ 70% scrolled **and** ≥ 30 seconds spent.
+- Related articles + "Next in path" at the end. Related ranks the same topic first, then the same field, then shared tags and glossary terms; it skips your own articles, puts the ones you've read last, and leaves the article's path neighbours to "Next in path".
 - Report article (from the "⋯" menu).
 - Highlights: mark sentences, see popular ones, hide them ([F30](#f30--highlights)).
 
@@ -833,8 +833,8 @@ Draft ──► Published ──► Archived
 
 ### F21 — Glossary (قاموس المصطلحات)
 - Central glossary of technical terms (`Dependency Injection` → Arabic explanation + English definition + related articles).
-- Writers mark a term in the editor, readers tap to see the definition.
-- Seeded with 500+ software terms.
+- Writers mark a term in the editor, readers tap to see the definition: the term, the Arabic explanation (on `ar-EG` versions or an Arabic UI), the English definition and up to 5 other articles that use it.
+- Seeded with 500+ software terms from `content/glossary/*.yaml` (one file per writing group; term ids are unique across files and are the RDoc `termId`). Which articles use which term (`ArticleTerms`) is rebuilt from the content on seeding and on publish.
 
 ### F22 — Reporting & Moderation
 - Report article/comment/user with reason (spam, misinformation, harassment, copyright, other). You can't report your own content; reporting the same thing twice is a no-op.
@@ -1181,7 +1181,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Engagement | `Reposts` (UserId+ArticleId unique, CreatedAt), `ArticleHighlights` (UserId, ArticleId, Language, BlockId, StartOffset, EndOffset, Text, CreatedAt), `UserMutes` (MuterId+MutedUserId unique), `ContentMutes` (UserId, TargetType Field/Topic, TargetId, unique), `ArticleFeedback` (UserId+ArticleId unique, Type ShowLess, CreatedAt), `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths`, `LearningPathItems` (Order), `PathEnrollments` |
-| Glossary | `GlossaryTerms` (Slug, TermEn, ExplanationAr, DefinitionEn, FieldId), `ArticleTerms` |
+| Glossary | `GlossaryTerms` (Slug = the RDoc `termId` unique, TermEn, DefinitionEn, ExplanationAr), `ArticleTerms` (ArticleId + TermId key; rebuilt from the content's `term` nodes) |
 | Trust & Moderation | `VerificationRequests`, `Reports` (TargetType article/comment/user, TargetId, ReporterId, Reason, Details, Status open/resolved/dismissed; one per reporter and target), `ModerationActions`, `AuditLogs` |
 | Notifications | `Notifications` (UserId, Type, Payload JSON, IsRead), `NotificationPreferences` |
 | Infrastructure | `OutboxMessages`, `SeedHistory` (seeder name + version + checksum), Hangfire schema |
@@ -1254,10 +1254,11 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | 2 | Fields, Topics, Tags (from `content/taxonomy.yaml`) | All |
 | 3 | System accounts (the official `ReadIn` account, `SuperAdmin`) | All |
 | 4 | Demo users (SQL Server) | Local only |
-| 5 | Official account avatar (`content/assets/readin-avatar.png` through the image pipeline). Glossary terms join with F21 | All |
+| 5 | Official account avatar (`content/assets/readin-avatar.png` through the image pipeline) | All |
 | 6 | Articles (from `content/articles/`, status-aware, covers through the image pipeline, re-imported per article when its files change) | All, Production included |
 | 7 | Learning paths (`learningPaths` in `taxonomy.yaml` + each article's `learningPath`) | All |
-| 8 | Demo interactions (follows, reactions, comments, saves, reading history, streaks, sample image/PDF attachments) | Local only |
+| 8 | Glossary terms (`content/glossary/*.yaml`, upserted by term id) and the article-term index, rebuilt when a glossary file or an article changes | All |
+| 9 | Demo interactions (follows, reactions, comments, saves, reading history, streaks, sample image/PDF attachments) | Local only |
 
 ### 18.3 Seed Users
 Users are created in SQL Server only (no Firebase Auth). Phone numbers use the reserved fictional range **+1 202 555 01XX** (555-0100 to 555-0199 are reserved for fiction, so they never belong to a real person).

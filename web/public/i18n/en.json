@@ -571,7 +571,12 @@
       "more": "Show more"
     },
     "following": "Following",
-    "addToCollection": "Add to collection"
+    "addToCollection": "Add to collection",
+    "related": "Related articles",
+    "resume": {
+      "toast": "Picked up where you left off",
+      "startOver": "Start over"
+    }
   },
   "rdoc": {
     "summary": "TL;DR",
@@ -591,7 +596,11 @@
     },
     "term": {
       "title": "Glossary",
-      "soon": "The full definition and related articles are coming soon to the glossary."
+      "inEnglish": "In English",
+      "inArabic": "In Egyptian Arabic",
+      "articles": "Articles that use this term",
+      "missing": "This term isn't in the glossary yet",
+      "loadError": "We couldn't load the definition."
     }
   },
   "settings": {

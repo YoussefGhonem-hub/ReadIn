@@ -141,7 +141,13 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.deleteAccount, builder: (_, _) => const DeleteAccountPage()),
       GoRoute(path: AppRoutes.settings, builder: (_, _) => const SettingsPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
-      GoRoute(path: '/a/:slug', builder: (_, state) => ArticlePage(slug: state.pathParameters['slug']!)),
+      GoRoute(
+        path: '/a/:slug',
+        builder: (_, state) => ArticlePage(
+          slug: state.pathParameters['slug']!,
+          anchor: state.uri.fragment.isEmpty ? null : state.uri.fragment,
+        ),
+      ),
       // The editor (F05), full screen above the tabs: a new article, or one of mine.
       GoRoute(path: EditorRoutes.newArticle, builder: (_, _) => const ArticleEditorPage()),
       GoRoute(path: '${AppRoutes.write}/:id', builder: (_, state) => ArticleEditorPage(articleId: state.pathParameters['id'])),

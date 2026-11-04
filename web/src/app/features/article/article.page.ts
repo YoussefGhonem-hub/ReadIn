@@ -52,6 +52,8 @@ import { ArticleCover, ArticleHeadline, ArticleSources, ArticleTrustRow } from '
 import { ArticleSeoService } from './article-seo.service';
 import { ArticleToc } from './article-toc';
 import { injectReadingTracker } from './reading-tracker';
+import { RelatedArticles } from './related-articles';
+import { injectResumePosition } from './resume-position';
 
 /** Show the TOC once an article has this many headings ("long articles", F04). */
 const TOC_MIN_HEADINGS = 3;
@@ -81,6 +83,7 @@ const TOC_MIN_HEADINGS = 3;
     FollowButton,
     CollectionPickerSheet,
     NgComponentOutlet,
+    RelatedArticles,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -187,7 +190,7 @@ const TOC_MIN_HEADINGS = 3;
           <rd-article-toc class="mb-6 block" [entries]="toc()" />
         }
 
-        <rd-rdoc [doc]="a.content" [style.--rd-article-size]="prefs.cssSize()" />
+        <rd-rdoc [doc]="a.content" [articleId]="a.id" [style.--rd-article-size]="prefs.cssSize()" />
 
         <!-- Post attachments (F26): after the content, before the sources -->
         @if (a.attachments; as attachments) {
@@ -204,6 +207,8 @@ const TOC_MIN_HEADINGS = 3;
 
         <!-- Sources (mandatory for technical content, SPEC §20) -->
         <rd-article-sources [sources]="a.sources" />
+
+        <rd-related-articles [article]="a" />
 
         <!-- Comments (F11): their code and data load when they near the viewport or the comment button is pressed -->
         <section #commentsAnchor id="comments" class="mt-10 border-t border-border pt-6" style="scroll-margin-top: 5rem" aria-labelledby="comments-title">
@@ -298,6 +303,11 @@ export class ArticlePage {
     const a = this.article();
     return a ? this.social.state(a).commentCount : 0;
   });
+  /**
+   * False while the page shows the anonymous copy rendered by the server and your own (with your reading progress) is
+   * still on its way, see `personalizeAfterHydration`.
+   */
+  private readonly ownCopy = signal(!inject(HydrationWindow).isOpen);
   /** The comments section, once its lazy chunk has loaded (browser only; never during SSR). */
   protected readonly commentsSection = signal<Type<unknown> | null>(null);
   private readonly commentsAnchor = viewChild<ElementRef<HTMLElement>>('commentsAnchor');
@@ -321,8 +331,12 @@ export class ArticlePage {
       onCleanup(() => observer.disconnect());
     });
 
-    // Reading progress and active time for the "read" rule and streaks (F04, F08).
-    injectReadingTracker(this.article, this.progress, () => this.articleEl()?.nativeElement);
+    // Back to where you left off (F04), then reading progress and active time for the "read" rule and streaks (F04,
+    // F08). The tracker starts once you are placed, so its first report doesn't save the top over your position.
+    const session = inject(SessionStore);
+    const articleEl = () => this.articleEl()?.nativeElement;
+    const resume = injectResumePosition(this.article, articleEl, () => this.ownCopy() || session.isGuest());
+    injectReadingTracker(this.article, this.progress, articleEl, resume.pending);
     const social = this.social;
     const follows = inject(FollowStore);
     const collections = inject(CollectionsStore);
@@ -404,7 +418,8 @@ export class ArticlePage {
 
   /**
    * SSR renders the article anonymously and hydration reuses that response, so your reaction, save and follow state
-   * are missing on a server-rendered page. Once the app is stable and you are signed in, load it again with your token.
+   * and your reading progress are missing on a server-rendered page. Once the app is stable and you are signed in,
+   * load it again with your token.
    */
   private personalizeAfterHydration(): void {
     if (!inject(HydrationWindow).isOpen) return;
@@ -416,7 +431,18 @@ export class ArticlePage {
         const ref = effect(
           () => {
             if (!session.isAuthenticated()) return;
-            untracked(() => this.resource.reload());
+            untracked(() => {
+              this.resource.reload();
+              // Your copy has arrived once the reload ends (or fails).
+              const loaded = effect(
+                () => {
+                  if (this.resource.isLoading()) return;
+                  this.ownCopy.set(true);
+                  loaded.destroy();
+                },
+                { injector },
+              );
+            });
             ref.destroy();
           },
           { injector },
