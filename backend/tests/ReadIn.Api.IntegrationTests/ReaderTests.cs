@@ -78,6 +78,7 @@ public sealed class ReaderTests(ApiFactory api)
             db.LearningPaths.Add(path);
             await db.SaveChangesAsync(Ct);
             path.SetItems([(first.Id, 1), (second.Id, 2), (third.Id, 5), (fourth.Id, 6)]);
+            path.Publish().IsSuccess.Should().BeTrue("only published paths have a Next in path block (F09)");
             await db.SaveChangesAsync(Ct);
         }
 
