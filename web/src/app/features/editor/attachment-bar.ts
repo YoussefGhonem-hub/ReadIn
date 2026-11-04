@@ -15,7 +15,7 @@ const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif,.hei
 const PREVIEW_PAGES = 4;
 
 /**
- * Attachment bar (F26) for the composer and, later, the block editor: "📷 Images" (up to 10, reorder by drag or
+ * Attachment bar (F26) of the article editor: "📷 Images" (up to 10, reorder by drag or
  * keyboard, alt text required, optional caption) or "📄 PDF document" (title, allow download, processing preview).
  * Every upload shows progress with cancel and retry. State lives in the host-provided {@link AttachmentDraft}.
  */
@@ -129,7 +129,7 @@ const PREVIEW_PAGES = 4;
                         <button type="button" class="font-semibold underline underline-offset-2" data-cancel (click)="draft().cancelImage(image.id)">
                           {{ 'attachments.cancel' | transloco }}
                         </button>
-                      } @else {
+                      } @else if (image.file) {
                         <button type="button" class="font-semibold underline underline-offset-2" data-retry (click)="draft().retryImage(image.id)">
                           {{ 'attachments.retry' | transloco }}
                         </button>
@@ -230,7 +230,11 @@ const PREVIEW_PAGES = 4;
               @if (nearLimit(doc.title, docTitleMax)) {
                 <p class="m-0 mt-1 text-end text-xs text-text-secondary tabular-nums" dir="ltr" aria-live="polite" data-count>{{ doc.title.length }}/{{ docTitleMax }}</p>
               }
-              <p class="m-0 mt-1 truncate text-xs text-text-secondary" dir="ltr">{{ doc.file.name }} · {{ fileSize(doc.file.size) }}</p>
+              @if (doc.file) {
+                <p class="m-0 mt-1 truncate text-xs text-text-secondary" dir="ltr">{{ doc.file.name }} · {{ fileSize(doc.file.size) }}</p>
+              } @else if (doc.asset) {
+                <p class="m-0 mt-1 truncate text-xs text-text-secondary" dir="ltr">PDF · {{ fileSize(doc.asset.sizeBytes) }}</p>
+              }
             </div>
             <button type="button" class="rd-icon-btn h-9 w-9 shrink-0" [attr.aria-label]="'attachments.removeDocument' | transloco" data-remove-document (click)="draft().removeDocument()">
               <svg lucideIcon="X" [size]="16" aria-hidden="true"></svg>
@@ -274,9 +278,11 @@ const PREVIEW_PAGES = 4;
                 </p>
                 <div class="mt-2 flex gap-2">
                   <button type="button" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" (click)="draft().removeDocument()">{{ 'common.remove' | transloco }}</button>
-                  <button type="button" class="rd-btn rd-btn-primary min-h-9 px-3 text-sm" data-retry (click)="draft().retryDocument()">
-                    {{ 'attachments.retry' | transloco }}
-                  </button>
+                  @if (doc.file) {
+                    <button type="button" class="rd-btn rd-btn-primary min-h-9 px-3 text-sm" data-retry (click)="draft().retryDocument()">
+                      {{ 'attachments.retry' | transloco }}
+                    </button>
+                  }
                 </div>
               }
             }

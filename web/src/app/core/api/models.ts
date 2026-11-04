@@ -241,7 +241,6 @@ export interface ArticleCardDto {
   field: FieldRefDto;
   author: AuthorDto;
   readingTimeMinutes: number;
-  isReviewed: boolean;
   isAiAssisted: boolean;
   versionBadge: string | null;
   publishedAt: string;
@@ -271,8 +270,6 @@ export interface ArticleDetailsDto extends ArticleCardDto {
   topic: FieldRefDto | null;
   tags: string[];
   sources: ArticleSourceDto[];
-  reviewedBy: { displayName: string; username: string } | null;
-  lastReviewedAt: string | null;
   readCount: number;
   /** False for guests and on your own articles. */
   isFollowingAuthor: boolean;
@@ -489,45 +486,171 @@ export interface ProfileDto {
   readingStatsVisible: boolean;
 }
 
-// ── Writing ─────────────────────────────────────────────────
+// ── Writing (F05) ───────────────────────────────────────────
 
-export interface CreateArticleRequest {
-  fieldId: string;
-  topicId?: string | null;
+/** `draft → published` (an `archived` state exists in the backend but has no endpoint). */
+export type ArticleStatus = 'draft' | 'published';
+
+/** One language version of the article being edited. */
+export interface DraftTranslation {
   language: ArticleLanguage;
-  /** 5..150 characters. */
+  /** May be '' in a draft; 5..150 to publish. */
   title: string;
-  subtitle?: string | null;
+  /** ≤ 250. */
+  subtitle: string | null;
+  /** `content.language === language`. In a draft an image block may have `alt: ''`. */
   content: RDoc;
-  tags?: string[];
-  sources?: ArticleSourceDto[];
-  coverUrl?: string | null;
-  versionBadge?: string | null;
-  isAiAssisted: boolean;
 }
 
-/** `201` response of `POST /articles` (the article is a draft until published). */
-export interface CreatedArticleDto {
-  id: string;
-  slug: string;
-}
-
-export interface SetAttachmentItem {
+/** One attachment of the draft: 1–10 images or one PDF (ADR 0011). */
+export interface DraftAttachment {
   mediaAssetId: string;
   order: number;
   /** Images, ≤ 5000. */
   caption?: string | null;
-  /** Images, required, ≤ 5000. */
+  /** Images, required to publish, ≤ 5000. */
   altText?: string | null;
-  /** The document, required, ≤ 5000. */
+  /** The PDF, required to publish, ≤ 5000, no line breaks. */
   title?: string | null;
-  /** The document. */
+  /** The PDF, default false. */
   allowDownload?: boolean;
 }
 
-/** Replaces the whole attachment set; `items: []` clears it. */
-export interface SetAttachmentsRequest {
-  items: SetAttachmentItem[];
+/** Everything the editor edits. Sent whole on every autosave. */
+export interface ArticleDraftDocument {
+  /** The first version; must be one of `translations[].language`. */
+  sourceLanguage: ArticleLanguage;
+  /** 1 or 2, distinct languages. */
+  translations: DraftTranslation[];
+  /** Required to publish. */
+  fieldId: string | null;
+  /** Must belong to `fieldId`. */
+  topicId: string | null;
+  /** ≤ 5 names, each 1..40 characters; new names create tags on publish. */
+  tags: string[];
+  /** ≤ 30; title 1..200, url http(s) ≤ 2048. Required to publish when the field has `requiresSources`. */
+  sources: ArticleSourceDto[];
+  /** Absolute URL from `POST /uploads/images` (purpose=cover), or null. */
+  coverUrl: string | null;
+  /** ≤ 30, e.g. ".NET 10". */
+  versionBadge: string | null;
+  isAiAssisted: boolean;
+  /** 1–10 images OR one PDF, or []. */
+  attachments: DraftAttachment[];
+}
+
+export interface SaveDraftRequest {
+  baseVersion: number;
+  document: ArticleDraftDocument;
+}
+
+export type DraftProblemCode =
+  | 'article.field_required'
+  | 'article.title_length'
+  | 'article.content_empty'
+  | 'article.content_invalid'
+  | 'article.image_alt_required'
+  | 'article.sources_required'
+  | 'attachments.alt_text_required'
+  | 'attachments.title_required'
+  | 'attachments.asset_not_ready'
+  | 'attachments.mixed_kinds'
+  | 'attachments.single_document'
+  | 'media.in_use';
+
+export interface DraftProblemDto {
+  code: DraftProblemCode;
+  /** For translation problems. */
+  language: ArticleLanguage | null;
+  /** RDoc block id (image alt), or null. */
+  blockId: string | null;
+  /** Attachment problems. */
+  mediaAssetId: string | null;
+}
+
+export interface ReadingTimeCheckDto {
+  language: ArticleLanguage;
+  minutes: number;
+  words: number;
+}
+
+export interface DraftChecksDto {
+  /** Per translation (SPEC §13.5). */
+  readingTime: ReadingTimeCheckDto[];
+  /** Empty → can publish. */
+  problems: DraftProblemDto[];
+}
+
+/** The editor's view of an article (`GET /articles/{id}/edit`, every save, discard and restore). */
+export interface ArticleEditDto {
+  id: string;
+  status: ArticleStatus;
+  /** Null until the first publish. */
+  slug: string | null;
+  publishedAt: string | null;
+  /** Working-copy version; send it back as `baseVersion`. */
+  version: number;
+  /** Last save of the working copy (or the publish time). */
+  savedAt: string;
+  /** Published articles: the working copy differs from what readers see. Always false for drafts. */
+  hasUnpublishedChanges: boolean;
+  /** As stored (server-normalized). */
+  document: ArticleDraftDocument;
+  /** The assets the document references (attachments, cover, image blocks). */
+  media: MediaAssetDto[];
+  checks: DraftChecksDto;
+}
+
+export interface PublishedArticleDto {
+  id: string;
+  slug: string;
+  publishedAt: string;
+  revision: number;
+  firstPublish: boolean;
+}
+
+export interface ArticleRevisionDto {
+  /** 1 = first publish. */
+  number: number;
+  createdAt: string;
+  /** Source-language title at that time. */
+  title: string;
+  languages: ArticleLanguage[];
+}
+
+export interface ArticleRevisionDetailsDto extends ArticleRevisionDto {
+  document: ArticleDraftDocument;
+  /** The attachments' assets, so the preview shows them like the reader does. */
+  media: MediaAssetDto[];
+}
+
+/** A row of "My articles" (`GET /me/articles`). */
+export interface MyArticleDto {
+  id: string;
+  status: ArticleStatus;
+  slug: string | null;
+  /** The source language. */
+  language: ArticleLanguage;
+  /** Source-language title; '' → "Untitled". */
+  title: string;
+  coverUrl: string | null;
+  field: FieldRefDto | null;
+  readingTimeMinutes: number;
+  /** Last edit. */
+  savedAt: string;
+  publishedAt: string | null;
+  hasUnpublishedChanges: boolean;
+  /** 0 for drafts. */
+  reactionCount: number;
+  commentCount: number;
+  readCount: number;
+}
+
+/** `GET /tags?q=`: tags whose name or slug starts with `q`, most used first. */
+export interface TagDto {
+  slug: string;
+  name: string;
+  articleCount: number;
 }
 
 // ── Media (ADR 0011) ────────────────────────────────────────

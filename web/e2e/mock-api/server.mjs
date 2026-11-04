@@ -3,16 +3,17 @@
  * SSR fetches data from Node where `page.route` can't intercept it, so this server answers both the SSR and the
  * browser calls on the API's dev address (http://localhost:5080/api/v1, from environment.development.ts).
  *
- * Content is stateless: per-test flows (create post, uploads, polling, publish) are stubbed in the browser with
- * `page.route` (e2e/support). Reactions, saved articles, collections and follows (social.mjs) and profiles, `GET /me`,
- * `PATCH /me`, privacy and reading stats (profiles.mjs) keep state per signed-in viewer, so those flows run against it
- * end to end. It also serves generated PNGs for every media URL and fixture builders under `/__mock`.
+ * The feed is stateless: uploads and polling are stubbed in the browser with `page.route` (e2e/support). Reactions,
+ * saved articles, collections and follows (social.mjs), profiles, `GET /me`, `PATCH /me`, privacy and reading stats
+ * (profiles.mjs) and the article editor with My articles (editor.mjs) keep state per signed-in viewer, so those flows run
+ * against it end to end. It also serves generated PNGs for every media URL and fixture builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
  */
 import { createServer } from 'node:http';
 import { crc32, deflateSync } from 'node:zlib';
 import { encode } from 'blurhash';
+import { createEditor } from './editor.mjs';
 import { createProfiles } from './profiles.mjs';
 import { createSocial } from './social.mjs';
 
@@ -263,7 +264,6 @@ function card({
     field: fieldRef(field),
     author,
     readingTimeMinutes: minutes,
-    isReviewed: true,
     isAiAssisted: false,
     versionBadge: null,
     publishedAt,
@@ -290,8 +290,6 @@ function details(cardDto, paragraphs = ['A short post about the attached media.'
     topic: null,
     tags: [],
     sources: [{ title: 'Microsoft Learn', url: 'https://learn.microsoft.com/aspnet/core' }],
-    reviewedBy: null,
-    lastReviewedAt: null,
     readCount: 0,
     isFollowingAuthor: false,
     collectionIds: [],
@@ -504,24 +502,52 @@ const PDF = Buffer.from(
 const social = createSocial({ articles: ALL_ARTICLES, writers: WRITERS, problem });
 const profiles = createProfiles({ me, articles: ALL_ARTICLES, writers: WRITERS, fields: FIELDS, social, problem, avatarVariants });
 
+/** Every asset a test fetched from `/__mock/asset/*` (then "uploaded" through `page.route`), so drafts can list their media. */
+const assets = new Map();
+const registered = (asset) => {
+  assets.set(asset.id, asset);
+  return asset;
+};
+const editor = createEditor({
+  problem,
+  viewerOf: social.viewerOf,
+  fields: FIELDS,
+  assets,
+  fieldRef,
+  author: (viewer) => (viewer === 'u-writer' ? AUTHOR : { id: viewer, displayName: 'Mona Adel', username: 'mona', avatarUrl: null, isVerified: true }),
+});
+
 const routes = [
+  // Before profiles.mjs: `/users/mention-suggestions` is not a username.
+  [
+    'GET',
+    new RegExp(`^${API}/users/mention-suggestions$`),
+    (q) => {
+      const query = (q.get('q') ?? '').replace(/^@/, '').toLowerCase();
+      const found = WRITERS.filter((w) => w.username.startsWith(query) || w.displayName.toLowerCase().includes(query));
+      return [200, found.slice(0, Number(q.get('limit') ?? 8)).map(({ id, displayName, username, avatarUrl, isVerified }) => ({ id, displayName, username, avatarUrl, isVerified }))];
+    },
+  ],
+  ...editor.routes,
   ...social.routes,
   ...profiles.routes,
   ['GET', /^\/__mock\/health$/, () => [200, { ok: true }]],
-  ['GET', /^\/__mock\/asset\/image$/, (q) => [200, imageAsset(q.get('seed') ?? 'upload', Number(q.get('w') ?? 1600), Number(q.get('h') ?? 1200))]],
+  ['GET', /^\/__mock\/asset\/image$/, (q) => [200, registered(imageAsset(q.get('seed') ?? 'upload', Number(q.get('w') ?? 1600), Number(q.get('h') ?? 1200)))]],
   ['GET', /^\/__mock\/asset\/avatar$/, (q) => [200, avatarAsset(q.get('seed') ?? 'avatar')]],
   [
     'GET',
     /^\/__mock\/asset\/document$/,
     (q) => [
       200,
-      documentAsset(q.get('seed') ?? 'doc', {
-        pageCount: Number(q.get('pages') ?? 12),
-        pagesReady: Number(q.get('ready') ?? q.get('pages') ?? 12),
-        status: q.get('status') ?? 'ready',
-        title: q.get('title') ?? 'Document',
-        allowDownload: q.get('allowDownload') === 'true',
-      }),
+      registered(
+        documentAsset(q.get('seed') ?? 'doc', {
+          pageCount: Number(q.get('pages') ?? 12),
+          pagesReady: Number(q.get('ready') ?? q.get('pages') ?? 12),
+          status: q.get('status') ?? 'ready',
+          title: q.get('title') ?? 'Document',
+          allowDownload: q.get('allowDownload') === 'true',
+        }),
+      ),
     ],
   ],
   ['GET', /^\/__mock\/png$/, (q) => [200, mediaPng('photo', q.get('seed') ?? 'x', Number(q.get('w') ?? 800), Number(q.get('h') ?? 600)), { 'content-type': 'image/png' }]],
@@ -545,8 +571,11 @@ const routes = [
   [
     'GET',
     new RegExp(`^${API}/articles/([^/]+)$`),
-    (_q, [, slug], _body, req) =>
-      DETAILS.has(slug) ? [200, social.personalize(DETAILS.get(slug), social.viewerOf(req))] : [404, problem(404, 'article.not_found', 'Article not found')],
+    (q, [, slug], _body, req) => {
+      if (DETAILS.has(slug)) return [200, social.personalize(DETAILS.get(slug), social.viewerOf(req))];
+      const written = editor.readerArticle(decodeURIComponent(slug), q.get('lang'));
+      return written ? [200, written] : [404, problem(404, 'article.not_found', 'Article not found')];
+    },
   ],
   // Phone + password sessions (docs/api/contract-v1.md → Auth). The cookie is the whole session: `readin_refresh=writer`.
   ['GET', new RegExp(`^${API}/auth/config$`), () => [200, { pinLength: 4, password: { minLength: 8, maxLength: 128, requireLetter: true, requireDigit: true }, externalProviders: [] }]],

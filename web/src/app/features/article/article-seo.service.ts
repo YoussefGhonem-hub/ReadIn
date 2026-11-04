@@ -33,7 +33,6 @@ export class ArticleSeoService {
     this.setMeta('property', 'og:url', url);
     this.setMeta('property', 'og:locale', OG_LOCALE[article.language]);
     this.setMeta('property', 'article:published_time', article.publishedAt);
-    if (article.lastReviewedAt) this.setMeta('property', 'article:modified_time', article.lastReviewedAt);
     if (article.coverUrl) this.setMeta('property', 'og:image', article.coverUrl);
     this.setMeta('name', 'twitter:card', article.coverUrl ? 'summary_large_image' : 'summary');
     this.setMeta('name', 'twitter:title', article.title);
@@ -91,20 +90,13 @@ export class ArticleSeoService {
       inLanguage: article.language,
       url,
       datePublished: article.publishedAt,
-      dateModified: article.lastReviewedAt ?? article.publishedAt,
+      dateModified: article.publishedAt,
       ...(article.coverUrl ? { image: [article.coverUrl] } : {}),
       author: { '@type': 'Person', name: article.author.displayName, url: authorUrl },
       publisher: { '@type': 'Organization', name: 'ReadIn', url: environment.siteUrl },
       keywords: article.tags.join(', '),
       isAccessibleForFree: true,
-      mainEntityOfPage: {
-        '@type': 'WebPage',
-        '@id': url,
-        ...(article.lastReviewedAt ? { lastReviewed: article.lastReviewedAt } : {}),
-        ...(article.reviewedBy
-          ? { reviewedBy: { '@type': 'Person', name: article.reviewedBy.displayName, url: `${environment.siteUrl}/@${article.reviewedBy.username}` } }
-          : {}),
-      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     };
   }
 

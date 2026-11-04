@@ -44,9 +44,6 @@ import { articleLink } from './article-link';
       <div class="min-w-0 flex-1">
         <div class="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
           <span class="rd-tag"><rd-bdi-text [text]="fieldName()" /></span>
-          @if (article().isReviewed) {
-            <span class="rd-tag rd-tag-neutral">✓ {{ 'article.reviewed' | transloco }}</span>
-          }
         </div>
         <h3 class="m-0 line-clamp-2 text-[15px] font-semibold leading-snug" [attr.dir]="titleDir()">
           <rd-bdi-text [text]="article().title" />

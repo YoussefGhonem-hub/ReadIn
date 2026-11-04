@@ -33,9 +33,6 @@ import { Avatar } from '../../shared/ui/avatar';
       <div class="px-4 pt-4">
         <div class="mb-2 flex flex-wrap items-center gap-2 text-xs">
           <span class="rd-tag"><rd-bdi-text [text]="fieldName()" /></span>
-          @if (article().isReviewed) {
-            <span class="rd-tag rd-tag-neutral">✓ {{ 'article.reviewed' | transloco }}</span>
-          }
           <span class="font-semibold text-primary">{{ article().readingTimeMinutes | rdReadingTime: lang() }}</span>
         </div>
         <h2 class="m-0 text-lg font-semibold leading-relaxed" [attr.dir]="titleDir()"><rd-bdi-text [text]="article().title" /></h2>

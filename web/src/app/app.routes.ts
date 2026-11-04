@@ -52,11 +52,8 @@ export const routes: Routes = [
         loadComponent: () => import('./features/saved/saved.page').then((m) => m.SavedPage),
       },
       { path: 'settings', loadChildren: () => import('./features/settings/settings.routes') },
-      {
-        path: 'write',
-        canActivate: [permissionGuard('articles.create')],
-        loadComponent: () => import('./features/editor/composer.page').then((m) => m.ComposerPage),
-      },
+      // My articles and the editor (F05).
+      { path: 'write', canActivate: [permissionGuard('articles.create')], loadChildren: () => import('./features/editor/editor.routes') },
       ...PLACEHOLDER_ROUTES,
       { path: '**', loadComponent: () => import('./shared/ui/not-found.page').then((m) => m.NotFoundPage) },
     ],
