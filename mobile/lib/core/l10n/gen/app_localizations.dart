@@ -896,18 +896,6 @@ abstract class AppLocalizations {
   /// **'Write an article'**
   String get profileWriteFirst;
 
-  /// No description provided for @profilePathsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Learning paths are coming'**
-  String get profilePathsTitle;
-
-  /// No description provided for @profilePathsBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Hand-picked series of articles to learn a topic step by step. We\'re building them now.'**
-  String get profilePathsBody;
-
   /// No description provided for @profilePathsEmptyTitle.
   ///
   /// In en, this message translates to:

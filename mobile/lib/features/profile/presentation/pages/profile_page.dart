@@ -205,7 +205,7 @@ class _ProfileContent extends StatelessWidget {
           children: [
             ProfileArticlesTab(profile: profile, onWrite: isMe ? () => context.go('/write') : null),
             if (isMe) const SavedArticlesList(leading: profileTabOverlap),
-            const ProfilePathsTab(),
+            ProfilePathsTab(profile: profile),
             ProfileAboutTab(profile: profile, onEdit: isMe ? onEdit : null),
           ],
         ),

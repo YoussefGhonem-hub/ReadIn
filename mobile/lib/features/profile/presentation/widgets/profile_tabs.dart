@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/bidi/bidi.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/l10n/formatters.dart';
 import '../../../../core/l10n/l10n_x.dart';
@@ -18,6 +19,10 @@ import '../../../article/presentation/cubit/engagement_cubit.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
 import '../../../home/presentation/cubit/feed_cubit.dart';
+import '../../../paths/domain/entities/learning_path.dart';
+import '../../../paths/presentation/cubit/path_list_cubit.dart';
+import '../../../paths/presentation/pages/paths_page.dart';
+import '../../../paths/presentation/path_routes.dart';
 import '../../../reading/presentation/widgets/reading_heatmap.dart';
 import '../../../reading/presentation/widgets/reading_stats_card.dart';
 import '../../../saved/presentation/widgets/save_button.dart';
@@ -193,23 +198,61 @@ class ArticleListSkeleton extends StatelessWidget {
 
 // ── Paths ───────────────────────────────────────────────────────────────────
 
-/// Learning paths are Phase 2 (F09): an empty state until then.
+/// The learning paths [profile] joined (F09): `GET /users/{username}/paths`, in progress first, with progress and
+/// completion badges. Shown when their reading stats are visible (always on the own profile); otherwise the private
+/// state, without a request.
 class ProfilePathsTab extends StatelessWidget {
-  const ProfilePathsTab({super.key});
+  const ProfilePathsTab({super.key, required this.profile});
+
+  final UserProfile profile;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return CustomScrollView(
-      key: const PageStorageKey('profile-paths'),
-      slivers: [
-        profileTabOverlap(context),
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: EmptyView(icon: Icons.route_outlined, title: l10n.profilePathsTitle, body: l10n.profilePathsBody),
+    if (!profile.readingStatsVisible) {
+      return CustomScrollView(
+        key: const PageStorageKey('profile-paths'),
+        slivers: [
+          profileTabOverlap(context),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: EmptyView(
+              icon: Icons.lock_outline_rounded,
+              title: l10n.profilePathsPrivateTitle,
+              body: l10n.profilePathsPrivateBody,
+            ),
+          ),
+        ],
+      );
+    }
+    final isMe = profile.isMe;
+    return BlocProvider(
+      create: (_) => getIt<UserPathsCubit>(param1: profile.username)..load(),
+      child: Builder(
+        builder: (context) => PathList<UserPathsCubit>(
+          storageKey: 'profile-paths',
+          leading: profileTabOverlap,
+          onOpen: (path) => _openPath(context, path),
+          // The own profile is one tap from every path.
+          footer: isMe
+              ? Center(child: TextButton(onPressed: () => context.push(PathRoutes.list), child: Text(l10n.pathsBrowse)))
+              : null,
+          empty: EmptyView(
+            icon: Icons.route_outlined,
+            title: l10n.profilePathsEmptyTitle,
+            body: isMe ? l10n.profilePathsEmptyOwnBody : l10n.profilePathsEmptyBody,
+            action: isMe ? FilledButton(onPressed: () => context.push(PathRoutes.list), child: Text(l10n.pathsBrowse)) : null,
+          ),
         ),
-      ],
+      ),
     );
+  }
+
+  /// Back from the path page, the list refreshes (enrolling, leaving and reading change it).
+  static Future<void> _openPath(BuildContext context, LearningPath path) async {
+    final cubit = context.read<UserPathsCubit>();
+    await context.push<void>(PathRoutes.of(path.slug));
+    if (!cubit.isClosed) unawaited(cubit.refresh());
   }
 }
 

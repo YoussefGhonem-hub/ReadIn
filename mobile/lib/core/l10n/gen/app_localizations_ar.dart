@@ -478,13 +478,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileWriteFirst => 'اكتب مقال';
 
   @override
-  String get profilePathsTitle => 'المسارات جاية قريب';
-
-  @override
-  String get profilePathsBody =>
-      'سلاسل مقالات متنقية تتعلم بيها موضوع خطوة بخطوة. بنجهزها دلوقتي.';
-
-  @override
   String get profilePathsEmptyTitle => 'مفيش مسارات لسه';
 
   @override

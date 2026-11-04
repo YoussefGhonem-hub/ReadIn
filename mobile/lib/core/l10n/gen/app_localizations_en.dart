@@ -473,13 +473,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileWriteFirst => 'Write an article';
 
   @override
-  String get profilePathsTitle => 'Learning paths are coming';
-
-  @override
-  String get profilePathsBody =>
-      'Hand-picked series of articles to learn a topic step by step. We\'re building them now.';
-
-  @override
   String get profilePathsEmptyTitle => 'No paths yet';
 
   @override
