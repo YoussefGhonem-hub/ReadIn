@@ -3625,6 +3625,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'There\'s an update on your verification request';
 
   @override
+  String get notifVerificationApproved => 'You\'re now a verified writer ✓';
+
+  @override
+  String get notifVerificationRejected =>
+      'Your verification request wasn\'t approved';
+
+  @override
+  String get notifVerificationRejectedHint => 'Open it to see why';
+
+  @override
   String get notifModerationWarning =>
       'You received a warning from the moderation team';
 
@@ -3730,4 +3740,173 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errNotificationQuietHoursInvalid =>
       'Quiet hours need two different times.';
+
+  @override
+  String get settingsWriting => 'Writing';
+
+  @override
+  String get verificationTitle => 'Writer verification';
+
+  @override
+  String get verificationEntryHint => 'Get the verified writer badge';
+
+  @override
+  String get verificationStatusVerified => 'You\'re a verified writer';
+
+  @override
+  String get verificationStatusPending => 'Your request is under review';
+
+  @override
+  String get verificationStatusRejected => 'Not approved, open it to see why';
+
+  @override
+  String get verificationIntro =>
+      'Verified writers get a badge next to their name on their articles, profile and comments. Tell us what you do and show us some proof.';
+
+  @override
+  String get verificationFieldLabel => 'Field';
+
+  @override
+  String get verificationFieldHint => 'Pick your field';
+
+  @override
+  String get verificationFieldsFailed => 'Couldn\'t load the fields.';
+
+  @override
+  String get verificationJobTitleLabel => 'Job title';
+
+  @override
+  String get verificationJobTitleHint => 'e.g. Senior Backend Engineer';
+
+  @override
+  String get verificationProofTitle => 'Proof';
+
+  @override
+  String get verificationProofHint => 'Add a link, a file, or both.';
+
+  @override
+  String get verificationProofUrlLabel => 'Link (LinkedIn, GitHub…)';
+
+  @override
+  String get verificationProofFileAdd => 'Attach a file';
+
+  @override
+  String get verificationProofFileHint =>
+      'A certificate or syndicate card: PDF, JPEG, PNG or WebP, up to 10 MB.';
+
+  @override
+  String get verificationProofFileRemove => 'Remove the file';
+
+  @override
+  String get verificationProofPrivate =>
+      'Only the reviewers see your file, and it\'s deleted once your request is decided.';
+
+  @override
+  String get verificationNoteLabel => 'Note (optional)';
+
+  @override
+  String get verificationNoteHint => 'Anything the reviewers should know';
+
+  @override
+  String get verificationSubmit => 'Send request';
+
+  @override
+  String get verificationSubmitting => 'Sending your request…';
+
+  @override
+  String get verificationPendingTitle => 'Your request is under review';
+
+  @override
+  String get verificationPendingBody =>
+      'We\'ll notify you once it\'s reviewed.';
+
+  @override
+  String verificationSubmittedOn(String date) {
+    return 'Sent on $date';
+  }
+
+  @override
+  String get verificationLinkLabel => 'Link';
+
+  @override
+  String get verificationFileLabel => 'File';
+
+  @override
+  String get verificationNoteSummaryLabel => 'Note';
+
+  @override
+  String get verificationWithdraw => 'Withdraw request';
+
+  @override
+  String get verificationWithdrawTitle => 'Withdraw your request?';
+
+  @override
+  String get verificationWithdrawBody =>
+      'It\'s deleted along with its file. You can send a new one any time.';
+
+  @override
+  String get verificationWithdrawConfirm => 'Withdraw';
+
+  @override
+  String get verificationWithdrawn => 'Request withdrawn';
+
+  @override
+  String get verificationApprovedTitle => 'You\'re a verified writer';
+
+  @override
+  String get verificationApprovedBody =>
+      'The verified badge shows next to your name on your articles, profile and comments.';
+
+  @override
+  String verificationApprovedOn(String date) {
+    return 'Verified on $date';
+  }
+
+  @override
+  String get verificationRejectedTitle => 'Your request wasn\'t approved';
+
+  @override
+  String get verificationRejectedReason => 'Reviewer\'s reason';
+
+  @override
+  String verificationRejectedOn(String date) {
+    return 'Reviewed on $date';
+  }
+
+  @override
+  String get verificationRejectedBody =>
+      'You can fix what\'s missing and request again.';
+
+  @override
+  String get verificationRequestAgain => 'Request again';
+
+  @override
+  String get verificationUnavailableTitle =>
+      'You can\'t request verification right now';
+
+  @override
+  String get verificationUnavailableBody =>
+      'A suspended account can\'t send verification requests.';
+
+  @override
+  String get errVerificationProofRequired => 'Add a link or a file as proof.';
+
+  @override
+  String get errVerificationProofInvalid =>
+      'The proof file must be a PDF, JPEG, PNG or WebP of 10 MB or less.';
+
+  @override
+  String get errVerificationFieldInvalid => 'Pick a field from the list.';
+
+  @override
+  String get errVerificationAlreadyPending =>
+      'You already have a request under review.';
+
+  @override
+  String get errVerificationAlreadyVerified =>
+      'You\'re already a verified writer.';
+
+  @override
+  String get errVerificationNotFound =>
+      'This request isn\'t waiting for review anymore.';
 }

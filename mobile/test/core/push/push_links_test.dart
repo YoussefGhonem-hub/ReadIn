@@ -15,6 +15,9 @@ void main() {
       'readin://u/Mona_Dev/followers': '/u/mona_dev/followers',
       'readin://me/stats': '/me/stats',
       'readin://settings/account': '/settings?section=account',
+      // F19: a verification result opens Settings → Writer verification (the web's /verification).
+      'readin://verification': '/settings/verification',
+      'https://readin.app/verification': '/settings/verification',
       'https://readin.app/a/my-post': '/a/my-post',
       'https://readin.app/en/a/my-post': '/a/my-post',
       '/ar/a/my-post': '/a/my-post',
@@ -34,6 +37,8 @@ void main() {
       'readin://settings/danger',
       'readin://settings/account/delete',
       'readin://me/settings',
+      'readin://verification/42',
+      'readin://verification/../settings',
       'readin://u/mona/edit',
       'readin://u/mona/following/x',
       'readin://u/..%2Fsettings/followers',

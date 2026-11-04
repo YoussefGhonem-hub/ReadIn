@@ -30,6 +30,7 @@ import '../../helpers/notification_fixtures.dart';
 import '../../helpers/profile_fakes.dart';
 import '../../helpers/social_fakes.dart';
 import '../../helpers/test_app.dart';
+import '../../helpers/verification_fixtures.dart';
 
 class MockUnreadBadgeCubit extends MockCubit<int> implements UnreadBadgeCubit {}
 
@@ -144,6 +145,12 @@ void main() {
       expect(notificationMessage(en, notification('n', NotificationType.securityAlert, securityChange: SecurityChange.other)),
           'There was a security change on your account');
       expect(notificationMessage(en, notification('n', NotificationType.verificationResult)), "There's an update on your verification request");
+      // F19: approved or not, by data.approved.
+      expect(notificationMessage(en, notification('n', NotificationType.verificationResult, approved: true)), "You're now a verified writer ✓");
+      expect(notificationMessage(ar, notification('n', NotificationType.verificationResult, approved: true)), 'بقيت كاتب موثّق ✓');
+      expect(notificationMessage(en, notification('n', NotificationType.verificationResult, approved: false)),
+          "Your verification request wasn't approved");
+      expect(notificationMessage(ar, notification('n', NotificationType.verificationResult, approved: false)), 'طلب التوثيق بتاعك ماتقبلش');
       expect(notificationMessage(en, notification('n', NotificationType.moderationNotice)), 'You received a warning from the moderation team');
       expect(notificationMessage(en, notification('n', NotificationType.moderationNotice, article: diArticle)), 'The moderators hid your article');
       expect(notificationMessage(en, notification('n', NotificationType.unknown)), 'You have a new notification');
@@ -223,6 +230,37 @@ void main() {
       });
     }
 
+    for (final variant in Variant.all) {
+      testWidgets('a verification result: approved, or not with "open it to see why" (F19) ${variant.name}', (tester) async {
+        final l10n = await AppLocalizations.delegate.load(variant.locale);
+        await tester.pumpWidget(testApp(
+          Scaffold(
+            body: Column(
+              children: [
+                NotificationTile(
+                  notification: notification('n-a', NotificationType.verificationResult, approved: true, link: 'readin://verification'),
+                  onTap: () {},
+                ),
+                NotificationTile(
+                  notification: notification('n-r', NotificationType.verificationResult, approved: false, link: 'readin://verification'),
+                  onTap: () {},
+                ),
+              ],
+            ),
+          ),
+          variant: variant,
+        ));
+        await tester.pump();
+
+        expect(find.textContaining(l10n.notifVerificationApproved, findRichText: true), findsOneWidget);
+        expect(find.textContaining(l10n.notifVerificationRejected, findRichText: true), findsOneWidget);
+        expect(find.text(l10n.notifVerificationRejectedHint), findsOneWidget, reason: 'only under the rejection');
+        expect(find.byIcon(Icons.verified_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.unpublished_outlined), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
     testWidgets('the article title keeps its own direction, and the comment excerpt its own', (tester) async {
       final cubit = center();
       await cubit.open();
@@ -293,6 +331,7 @@ void main() {
             GoRoute(path: '/u/:username/followers', builder: (_, s) => Text('followers of ${s.pathParameters['username']}')),
             GoRoute(path: '/me/stats', builder: (_, _) => const Text('reading stats')),
             GoRoute(path: '/settings', builder: (_, s) => Text('settings ${s.uri.queryParameters['section']}')),
+            GoRoute(path: '/settings/verification', builder: (_, _) => const Text('writer verification')),
           ],
         );
         addTearDown(router.dispose);
@@ -351,6 +390,14 @@ void main() {
         await tapRow(tester, 'Your password was changed');
         expect(repository.calls, contains('read n-security'));
         expect(find.text('settings account'), findsOneWidget);
+      });
+
+      testWidgets('a verification result opens Settings → Writer verification (F19)', (tester) async {
+        repository.items = [notification('n-v', NotificationType.verificationResult, approved: true, link: 'readin://verification')];
+        await pumpRouter(tester);
+        await tapRow(tester, 'verified writer');
+        expect(repository.calls, contains('read n-v'));
+        expect(find.text('writer verification'), findsOneWidget);
       });
 
       testWidgets('a link the app does not know only marks it read', (tester) async {
@@ -523,6 +570,7 @@ void main() {
           BlocProvider<SettingsCubit>.value(value: MockSettingsCubit()..hold(const AppSettings())),
           BlocProvider<LinkedAccountsCubit>.value(value: MockLinkedAccountsCubit()..hold(const LinkedAccountsState())),
           BlocProvider<PrivacyCubit>.value(value: MockPrivacyCubit()..hold(const PrivacyState())),
+          verificationEntryProvider(),
         ],
         child: MaterialApp.router(
           routerConfig: router,

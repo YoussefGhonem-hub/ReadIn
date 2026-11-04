@@ -3673,6 +3673,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notifVerificationResult => 'فيه جديد في طلب التوثيق بتاعك';
 
   @override
+  String get notifVerificationApproved => 'بقيت كاتب موثّق ✓';
+
+  @override
+  String get notifVerificationRejected => 'طلب التوثيق بتاعك ماتقبلش';
+
+  @override
+  String get notifVerificationRejectedHint => 'افتحه عشان تعرف السبب';
+
+  @override
   String get notifModerationWarning => 'وصلك تحذير من فريق الإشراف';
 
   @override
@@ -3776,4 +3785,167 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get errNotificationQuietHoursInvalid =>
       'ساعات الهدوء محتاجة وقتين مختلفين.';
+
+  @override
+  String get settingsWriting => 'الكتابة';
+
+  @override
+  String get verificationTitle => 'توثيق الكاتب';
+
+  @override
+  String get verificationEntryHint => 'خُد علامة الكاتب الموثّق';
+
+  @override
+  String get verificationStatusVerified => 'انت كاتب موثّق';
+
+  @override
+  String get verificationStatusPending => 'طلبك تحت المراجعة';
+
+  @override
+  String get verificationStatusRejected => 'ماتقبلش، افتحه عشان تعرف السبب';
+
+  @override
+  String get verificationIntro =>
+      'الكتّاب الموثّقين بياخدوا علامة جنب اسمهم على مقالاتهم وبروفايلهم وتعليقاتهم. قولّنا بتشتغل إيه ووريّنا دليل.';
+
+  @override
+  String get verificationFieldLabel => 'المجال';
+
+  @override
+  String get verificationFieldHint => 'اختار مجالك';
+
+  @override
+  String get verificationFieldsFailed => 'مقدرناش نحمّل المجالات.';
+
+  @override
+  String get verificationJobTitleLabel => 'المسمّى الوظيفي';
+
+  @override
+  String get verificationJobTitleHint => 'مثلاً Senior Backend Engineer';
+
+  @override
+  String get verificationProofTitle => 'الدليل';
+
+  @override
+  String get verificationProofHint => 'ضيف لينك أو ملف أو الاتنين.';
+
+  @override
+  String get verificationProofUrlLabel => 'لينك (LinkedIn أو GitHub…)';
+
+  @override
+  String get verificationProofFileAdd => 'ارفع ملف';
+
+  @override
+  String get verificationProofFileHint =>
+      'شهادة أو كارنيه النقابة: PDF أو JPEG أو PNG أو WebP، لحد 10 ميجا.';
+
+  @override
+  String get verificationProofFileRemove => 'شيل الملف';
+
+  @override
+  String get verificationProofPrivate =>
+      'الملف بيشوفه المراجعين بس، وبيتمسح أول ما طلبك يتحسم.';
+
+  @override
+  String get verificationNoteLabel => 'ملاحظة (اختياري)';
+
+  @override
+  String get verificationNoteHint => 'أي حاجة عايز المراجعين يعرفوها';
+
+  @override
+  String get verificationSubmit => 'ابعت الطلب';
+
+  @override
+  String get verificationSubmitting => 'بنبعت طلبك…';
+
+  @override
+  String get verificationPendingTitle => 'طلبك تحت المراجعة';
+
+  @override
+  String get verificationPendingBody => 'هنبعتلك إشعار أول ما نراجعه.';
+
+  @override
+  String verificationSubmittedOn(String date) {
+    return 'اتبعت يوم $date';
+  }
+
+  @override
+  String get verificationLinkLabel => 'اللينك';
+
+  @override
+  String get verificationFileLabel => 'الملف';
+
+  @override
+  String get verificationNoteSummaryLabel => 'الملاحظة';
+
+  @override
+  String get verificationWithdraw => 'اسحب الطلب';
+
+  @override
+  String get verificationWithdrawTitle => 'تسحب طلبك؟';
+
+  @override
+  String get verificationWithdrawBody =>
+      'هيتمسح هو والملف بتاعه. تقدر تبعت طلب جديد في أي وقت.';
+
+  @override
+  String get verificationWithdrawConfirm => 'اسحبه';
+
+  @override
+  String get verificationWithdrawn => 'الطلب اتسحب';
+
+  @override
+  String get verificationApprovedTitle => 'انت كاتب موثّق';
+
+  @override
+  String get verificationApprovedBody =>
+      'علامة التوثيق بتظهر جنب اسمك على مقالاتك وبروفايلك وتعليقاتك.';
+
+  @override
+  String verificationApprovedOn(String date) {
+    return 'اتوثّقت يوم $date';
+  }
+
+  @override
+  String get verificationRejectedTitle => 'طلبك ماتقبلش';
+
+  @override
+  String get verificationRejectedReason => 'سبب المراجع';
+
+  @override
+  String verificationRejectedOn(String date) {
+    return 'اتراجع يوم $date';
+  }
+
+  @override
+  String get verificationRejectedBody => 'تقدر تكمّل اللي ناقص وتطلب تاني.';
+
+  @override
+  String get verificationRequestAgain => 'اطلب تاني';
+
+  @override
+  String get verificationUnavailableTitle => 'مش هتقدر تطلب توثيق دلوقتي';
+
+  @override
+  String get verificationUnavailableBody =>
+      'الحساب الموقوف مش بيقدر يبعت طلبات توثيق.';
+
+  @override
+  String get errVerificationProofRequired => 'ضيف لينك أو ملف كدليل.';
+
+  @override
+  String get errVerificationProofInvalid =>
+      'ملف الدليل لازم يكون PDF أو JPEG أو PNG أو WebP ومايزيدش عن 10 ميجا.';
+
+  @override
+  String get errVerificationFieldInvalid => 'اختار مجال من القايمة.';
+
+  @override
+  String get errVerificationAlreadyPending => 'عندك طلب تحت المراجعة بالفعل.';
+
+  @override
+  String get errVerificationAlreadyVerified => 'انت كاتب موثّق بالفعل.';
+
+  @override
+  String get errVerificationNotFound => 'الطلب ده مبقاش مستني مراجعة.';
 }

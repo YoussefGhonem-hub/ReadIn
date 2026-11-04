@@ -59,12 +59,14 @@ abstract class NotificationCommentModel with _$NotificationCommentModel {
 }
 
 /// `NotificationDto.data`. [securityChange] is read leniently: a value this app doesn't know shows the generic alert.
+/// [approved] is the decision a `verification_result` is about (F19).
 @freezed
 abstract class NotificationDataModel with _$NotificationDataModel {
   const factory NotificationDataModel({
     int? threshold,
     int? streakDays,
     Object? securityChange,
+    bool? approved,
   }) = _NotificationDataModel;
 
   factory NotificationDataModel.fromJson(Map<String, dynamic> json) => _$NotificationDataModelFromJson(json);
@@ -104,6 +106,7 @@ abstract class NotificationModel with _$NotificationModel {
         threshold: data?.threshold,
         streakDays: data?.streakDays,
         securityChange: SecurityChange.fromWire(data?.securityChange),
+        approved: data?.approved,
         link: link,
       );
 }

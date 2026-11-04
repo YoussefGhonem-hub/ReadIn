@@ -175,6 +175,14 @@ abstract final class FailureCodes {
   static const notificationModeInvalid = 'notification.mode_invalid';
   static const notificationQuietHoursInvalid = 'notification.quiet_hours_invalid';
 
+  // Writer verification (F19), the requester's side
+  static const verificationProofRequired = 'verification.proof_required';
+  static const verificationProofInvalid = 'verification.proof_invalid';
+  static const verificationFieldInvalid = 'verification.field_invalid';
+  static const verificationAlreadyPending = 'verification.already_pending';
+  static const verificationAlreadyVerified = 'verification.already_verified';
+  static const verificationNotFound = 'verification.not_found';
+
   // Client-side
   static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';

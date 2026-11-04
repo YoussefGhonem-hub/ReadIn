@@ -97,6 +97,14 @@ void main() {
       expect(redirect('/settings?section=account', guest), isNull, reason: 'Settings itself is open to guests');
     });
 
+    test('writer verification needs an account; a verification result opens it (F19)', () {
+      expect(AppRoutes.verification, '/settings/verification');
+      expect(redirect(AppRoutes.verification, guest), AppRoutes.home);
+      expect(redirect(AppRoutes.verification, guest, fresh), AppRoutes.welcome);
+      expect(redirect(AppRoutes.verification, onboarded), isNull);
+      expect(redirect('/splash?from=%2Fsettings%2Fverification', onboarded), AppRoutes.verification);
+    });
+
     test('a session that ended (refresh rejected) is a guest', () {
       const ended = SessionState(status: SessionStatus.guest, failure: Failure('auth.refresh_invalid', statusCode: 401));
       expect(redirect('/home', ended), isNull);

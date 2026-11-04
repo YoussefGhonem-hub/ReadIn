@@ -155,6 +155,35 @@ void main() {
       expect(mention.link, 'readin://a/rag-vs-fine-tuning');
     });
 
+    test('a verification result says whether it was approved (F19); without data.approved it is generic', () async {
+      Map<String, Object?> result(String id, Map<String, Object?> data) => {
+            'id': id,
+            'type': 'verification_result',
+            'createdAt': '2026-11-04T10:00:00Z',
+            'updatedAt': '2026-11-04T10:00:00Z',
+            'isRead': false,
+            'actor': null,
+            'actorCount': 0,
+            'article': null,
+            'comment': null,
+            'data': data,
+            'link': 'readin://verification',
+          };
+      respond = (_) => {
+            'items': [
+              result('n-a', {'approved': true}),
+              result('n-r', {'approved': false}),
+              result('n-g', <String, Object?>{}),
+            ],
+            'nextCursor': null,
+          };
+      final items = (await repository().list()).valueOrNull!.items;
+      expect([for (final n in items) n.type], List.filled(3, NotificationType.verificationResult));
+      expect([for (final n in items) n.approved], [true, false, null]);
+      expect(items.first.actor, isNull, reason: 'the reviewers stay anonymous');
+      expect(items.first.link, 'readin://verification');
+    });
+
     test('the first page has no cursor', () async {
       respond = (_) => {'items': <Object>[], 'nextCursor': null};
       final page = (await repository().list()).valueOrNull!;

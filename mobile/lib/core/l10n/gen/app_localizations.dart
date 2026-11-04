@@ -6116,6 +6116,24 @@ abstract class AppLocalizations {
   /// **'There\'s an update on your verification request'**
   String get notifVerificationResult;
 
+  /// No description provided for @notifVerificationApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re now a verified writer ✓'**
+  String get notifVerificationApproved;
+
+  /// No description provided for @notifVerificationRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Your verification request wasn\'t approved'**
+  String get notifVerificationRejected;
+
+  /// No description provided for @notifVerificationRejectedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Open it to see why'**
+  String get notifVerificationRejectedHint;
+
   /// No description provided for @notifModerationWarning.
   ///
   /// In en, this message translates to:
@@ -6307,6 +6325,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quiet hours need two different times.'**
   String get errNotificationQuietHoursInvalid;
+
+  /// No description provided for @settingsWriting.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing'**
+  String get settingsWriting;
+
+  /// No description provided for @verificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Writer verification'**
+  String get verificationTitle;
+
+  /// No description provided for @verificationEntryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Get the verified writer badge'**
+  String get verificationEntryHint;
+
+  /// No description provided for @verificationStatusVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re a verified writer'**
+  String get verificationStatusVerified;
+
+  /// No description provided for @verificationStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request is under review'**
+  String get verificationStatusPending;
+
+  /// No description provided for @verificationStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not approved, open it to see why'**
+  String get verificationStatusRejected;
+
+  /// No description provided for @verificationIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified writers get a badge next to their name on their articles, profile and comments. Tell us what you do and show us some proof.'**
+  String get verificationIntro;
+
+  /// No description provided for @verificationFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Field'**
+  String get verificationFieldLabel;
+
+  /// No description provided for @verificationFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick your field'**
+  String get verificationFieldHint;
+
+  /// No description provided for @verificationFieldsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the fields.'**
+  String get verificationFieldsFailed;
+
+  /// No description provided for @verificationJobTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Job title'**
+  String get verificationJobTitleLabel;
+
+  /// No description provided for @verificationJobTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Senior Backend Engineer'**
+  String get verificationJobTitleHint;
+
+  /// No description provided for @verificationProofTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Proof'**
+  String get verificationProofTitle;
+
+  /// No description provided for @verificationProofHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a link, a file, or both.'**
+  String get verificationProofHint;
+
+  /// No description provided for @verificationProofUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Link (LinkedIn, GitHub…)'**
+  String get verificationProofUrlLabel;
+
+  /// No description provided for @verificationProofFileAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a file'**
+  String get verificationProofFileAdd;
+
+  /// No description provided for @verificationProofFileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A certificate or syndicate card: PDF, JPEG, PNG or WebP, up to 10 MB.'**
+  String get verificationProofFileHint;
+
+  /// No description provided for @verificationProofFileRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the file'**
+  String get verificationProofFileRemove;
+
+  /// No description provided for @verificationProofPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the reviewers see your file, and it\'s deleted once your request is decided.'**
+  String get verificationProofPrivate;
+
+  /// No description provided for @verificationNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get verificationNoteLabel;
+
+  /// No description provided for @verificationNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything the reviewers should know'**
+  String get verificationNoteHint;
+
+  /// No description provided for @verificationSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get verificationSubmit;
+
+  /// No description provided for @verificationSubmitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending your request…'**
+  String get verificationSubmitting;
+
+  /// No description provided for @verificationPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request is under review'**
+  String get verificationPendingTitle;
+
+  /// No description provided for @verificationPendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll notify you once it\'s reviewed.'**
+  String get verificationPendingBody;
+
+  /// No description provided for @verificationSubmittedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent on {date}'**
+  String verificationSubmittedOn(String date);
+
+  /// No description provided for @verificationLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get verificationLinkLabel;
+
+  /// No description provided for @verificationFileLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get verificationFileLabel;
+
+  /// No description provided for @verificationNoteSummaryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get verificationNoteSummaryLabel;
+
+  /// No description provided for @verificationWithdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw request'**
+  String get verificationWithdraw;
+
+  /// No description provided for @verificationWithdrawTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw your request?'**
+  String get verificationWithdrawTitle;
+
+  /// No description provided for @verificationWithdrawBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s deleted along with its file. You can send a new one any time.'**
+  String get verificationWithdrawBody;
+
+  /// No description provided for @verificationWithdrawConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw'**
+  String get verificationWithdrawConfirm;
+
+  /// No description provided for @verificationWithdrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'Request withdrawn'**
+  String get verificationWithdrawn;
+
+  /// No description provided for @verificationApprovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re a verified writer'**
+  String get verificationApprovedTitle;
+
+  /// No description provided for @verificationApprovedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The verified badge shows next to your name on your articles, profile and comments.'**
+  String get verificationApprovedBody;
+
+  /// No description provided for @verificationApprovedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified on {date}'**
+  String verificationApprovedOn(String date);
+
+  /// No description provided for @verificationRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request wasn\'t approved'**
+  String get verificationRejectedTitle;
+
+  /// No description provided for @verificationRejectedReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewer\'s reason'**
+  String get verificationRejectedReason;
+
+  /// No description provided for @verificationRejectedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed on {date}'**
+  String verificationRejectedOn(String date);
+
+  /// No description provided for @verificationRejectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can fix what\'s missing and request again.'**
+  String get verificationRejectedBody;
+
+  /// No description provided for @verificationRequestAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Request again'**
+  String get verificationRequestAgain;
+
+  /// No description provided for @verificationUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t request verification right now'**
+  String get verificationUnavailableTitle;
+
+  /// No description provided for @verificationUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A suspended account can\'t send verification requests.'**
+  String get verificationUnavailableBody;
+
+  /// No description provided for @errVerificationProofRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a link or a file as proof.'**
+  String get errVerificationProofRequired;
+
+  /// No description provided for @errVerificationProofInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The proof file must be a PDF, JPEG, PNG or WebP of 10 MB or less.'**
+  String get errVerificationProofInvalid;
+
+  /// No description provided for @errVerificationFieldInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a field from the list.'**
+  String get errVerificationFieldInvalid;
+
+  /// No description provided for @errVerificationAlreadyPending.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a request under review.'**
+  String get errVerificationAlreadyPending;
+
+  /// No description provided for @errVerificationAlreadyVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already a verified writer.'**
+  String get errVerificationAlreadyVerified;
+
+  /// No description provided for @errVerificationNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This request isn\'t waiting for review anymore.'**
+  String get errVerificationNotFound;
 }
 
 class _AppLocalizationsDelegate

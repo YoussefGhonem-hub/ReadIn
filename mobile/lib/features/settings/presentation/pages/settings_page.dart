@@ -14,6 +14,8 @@ import '../../../moderation/presentation/widgets/moderation_entry_tile.dart';
 import '../../../notifications/presentation/pages/notification_settings_page.dart';
 import '../../../profile/presentation/cubit/privacy_cubit.dart';
 import '../../../profile/presentation/widgets/public_reading_stats_switch.dart';
+import '../../../verification/presentation/cubit/verification_cubit.dart';
+import '../../../verification/presentation/widgets/verification_entry_tile.dart';
 import '../widgets/account_section.dart';
 import '../widgets/preference_tiles.dart';
 import '../widgets/who_can_mention_selector.dart';
@@ -38,13 +40,15 @@ class SettingsPage extends StatelessWidget {
           BlocProvider(create: (_) => getIt<PrivacyCubit>()),
           // App-wide (the actions keep it current); read only by moderators' Moderation entry (F22).
           BlocProvider.value(value: getIt<ModerationSummaryCubit>()),
+          // Created (and loaded) when the signed-in-only Writer verification row is built (F19).
+          BlocProvider(create: (_) => getIt<VerificationCubit>()..load()),
         ],
         child: SettingsView(section: section),
       );
 }
 
-/// Settings (F18): appearance, languages, reading, notifications (F17), privacy, moderation (moderators only, F22),
-/// account (phone, password, PIN, linked accounts, sign out, delete).
+/// Settings (F18): appearance, languages, reading, notifications (F17), privacy, writer verification (F19), moderation
+/// (moderators only, F22), account (phone, password, PIN, linked accounts, sign out, delete).
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key, this.section});
 
@@ -130,6 +134,7 @@ class _SettingsViewState extends State<SettingsView> {
               SizedBox(height: ReadInSpace.s3),
               WhoCanMentionSelector(),
             ]),
+          if (session.isAuthenticated) card(l10n.settingsWriting, const [VerificationEntryTile()]),
           if (session.me?.isModerator ?? false) card(l10n.moderationTitle, const [ModerationEntryTile()]),
           card(key: _accountKey, l10n.account, [
             if (session.isAuthenticated)

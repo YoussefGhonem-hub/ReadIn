@@ -47,6 +47,7 @@ import '../../helpers/profile_fakes.dart';
 import '../../helpers/profile_fixtures.dart';
 import '../../helpers/social_fakes.dart';
 import '../../helpers/test_app.dart';
+import '../../helpers/verification_fixtures.dart';
 
 class MockArticleCubit extends MockCubit<ArticleState> implements ArticleCubit {}
 
@@ -756,6 +757,7 @@ void main() {
           BlocProvider<LinkedAccountsCubit>.value(value: MockLinkedAccountsCubit()..hold(const LinkedAccountsState())),
           BlocProvider<PrivacyCubit>.value(value: MockPrivacyCubit()..hold(const PrivacyState())),
           BlocProvider<ModerationSummaryCubit>.value(value: summary),
+          verificationEntryProvider(),
         ],
       );
       return summary;

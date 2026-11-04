@@ -23,6 +23,7 @@ import '../../helpers/fixtures.dart';
 import '../../helpers/profile_fakes.dart';
 import '../../helpers/social_fakes.dart';
 import '../../helpers/test_app.dart';
+import '../../helpers/verification_fixtures.dart';
 
 class MockSetPrivacy extends Mock implements SetPrivacy {}
 
@@ -64,6 +65,7 @@ void main() {
         BlocProvider<SettingsCubit>.value(value: MockSettingsCubit()..hold(const AppSettings())),
         BlocProvider<LinkedAccountsCubit>.value(value: MockLinkedAccountsCubit()..hold(const LinkedAccountsState())),
         BlocProvider<PrivacyCubit>.value(value: privacy),
+        verificationEntryProvider(),
       ],
       child: testApp(const SettingsView(), variant: variant),
     ));

@@ -37,7 +37,12 @@ String notificationMessage(AppLocalizations l10n, AppNotification notification, 
         _ => l10n.notifStreakReminderGeneric,
       },
     NotificationType.securityAlert => securityChangeMessage(l10n, notification.securityChange),
-    NotificationType.verificationResult => l10n.notifVerificationResult,
+    // The reason of a rejection is only on the verification page (F19).
+    NotificationType.verificationResult => switch (notification.approved) {
+        true => l10n.notifVerificationApproved,
+        false => l10n.notifVerificationRejected,
+        null => l10n.notifVerificationResult,
+      },
     // A notice about an article means it was hidden; one without is a warning (F22).
     NotificationType.moderationNotice =>
       notification.article == null ? l10n.notifModerationWarning : l10n.notifModerationArticleHidden,

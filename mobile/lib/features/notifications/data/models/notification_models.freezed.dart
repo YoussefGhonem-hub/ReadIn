@@ -831,7 +831,7 @@ as String,
 /// @nodoc
 mixin _$NotificationDataModel {
 
- int? get threshold; int? get streakDays; Object? get securityChange;
+ int? get threshold; int? get streakDays; Object? get securityChange; bool? get approved;
 /// Create a copy of NotificationDataModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -844,16 +844,16 @@ $NotificationDataModelCopyWith<NotificationDataModel> get copyWith => _$Notifica
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotificationDataModel&&(identical(other.threshold, threshold) || other.threshold == threshold)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other.securityChange, securityChange));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotificationDataModel&&(identical(other.threshold, threshold) || other.threshold == threshold)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other.securityChange, securityChange)&&(identical(other.approved, approved) || other.approved == approved));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,threshold,streakDays,const DeepCollectionEquality().hash(securityChange));
+int get hashCode => Object.hash(runtimeType,threshold,streakDays,const DeepCollectionEquality().hash(securityChange),approved);
 
 @override
 String toString() {
-  return 'NotificationDataModel(threshold: $threshold, streakDays: $streakDays, securityChange: $securityChange)';
+  return 'NotificationDataModel(threshold: $threshold, streakDays: $streakDays, securityChange: $securityChange, approved: $approved)';
 }
 
 
@@ -864,7 +864,7 @@ abstract mixin class $NotificationDataModelCopyWith<$Res>  {
   factory $NotificationDataModelCopyWith(NotificationDataModel value, $Res Function(NotificationDataModel) _then) = _$NotificationDataModelCopyWithImpl;
 @useResult
 $Res call({
- int? threshold, int? streakDays, Object? securityChange
+ int? threshold, int? streakDays, Object? securityChange, bool? approved
 });
 
 
@@ -881,11 +881,12 @@ class _$NotificationDataModelCopyWithImpl<$Res>
 
 /// Create a copy of NotificationDataModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? threshold = freezed,Object? streakDays = freezed,Object? securityChange = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? threshold = freezed,Object? streakDays = freezed,Object? securityChange = freezed,Object? approved = freezed,}) {
   return _then(_self.copyWith(
 threshold: freezed == threshold ? _self.threshold : threshold // ignore: cast_nullable_to_non_nullable
 as int?,streakDays: freezed == streakDays ? _self.streakDays : streakDays // ignore: cast_nullable_to_non_nullable
-as int?,securityChange: freezed == securityChange ? _self.securityChange : securityChange ,
+as int?,securityChange: freezed == securityChange ? _self.securityChange : securityChange ,approved: freezed == approved ? _self.approved : approved // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 
@@ -970,10 +971,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? threshold,  int? streakDays,  Object? securityChange)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? threshold,  int? streakDays,  Object? securityChange,  bool? approved)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NotificationDataModel() when $default != null:
-return $default(_that.threshold,_that.streakDays,_that.securityChange);case _:
+return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.approved);case _:
   return orElse();
 
 }
@@ -991,10 +992,10 @@ return $default(_that.threshold,_that.streakDays,_that.securityChange);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? threshold,  int? streakDays,  Object? securityChange)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? threshold,  int? streakDays,  Object? securityChange,  bool? approved)  $default,) {final _that = this;
 switch (_that) {
 case _NotificationDataModel():
-return $default(_that.threshold,_that.streakDays,_that.securityChange);case _:
+return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.approved);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1011,10 +1012,10 @@ return $default(_that.threshold,_that.streakDays,_that.securityChange);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? threshold,  int? streakDays,  Object? securityChange)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? threshold,  int? streakDays,  Object? securityChange,  bool? approved)?  $default,) {final _that = this;
 switch (_that) {
 case _NotificationDataModel() when $default != null:
-return $default(_that.threshold,_that.streakDays,_that.securityChange);case _:
+return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.approved);case _:
   return null;
 
 }
@@ -1026,12 +1027,13 @@ return $default(_that.threshold,_that.streakDays,_that.securityChange);case _:
 @JsonSerializable()
 
 class _NotificationDataModel implements NotificationDataModel {
-  const _NotificationDataModel({this.threshold, this.streakDays, this.securityChange});
+  const _NotificationDataModel({this.threshold, this.streakDays, this.securityChange, this.approved});
   factory _NotificationDataModel.fromJson(Map<String, dynamic> json) => _$NotificationDataModelFromJson(json);
 
 @override final  int? threshold;
 @override final  int? streakDays;
 @override final  Object? securityChange;
+@override final  bool? approved;
 
 /// Create a copy of NotificationDataModel
 /// with the given fields replaced by the non-null parameter values.
@@ -1046,16 +1048,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NotificationDataModel&&(identical(other.threshold, threshold) || other.threshold == threshold)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other.securityChange, securityChange));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NotificationDataModel&&(identical(other.threshold, threshold) || other.threshold == threshold)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other.securityChange, securityChange)&&(identical(other.approved, approved) || other.approved == approved));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,threshold,streakDays,const DeepCollectionEquality().hash(securityChange));
+int get hashCode => Object.hash(runtimeType,threshold,streakDays,const DeepCollectionEquality().hash(securityChange),approved);
 
 @override
 String toString() {
-  return 'NotificationDataModel(threshold: $threshold, streakDays: $streakDays, securityChange: $securityChange)';
+  return 'NotificationDataModel(threshold: $threshold, streakDays: $streakDays, securityChange: $securityChange, approved: $approved)';
 }
 
 
@@ -1066,7 +1068,7 @@ abstract mixin class _$NotificationDataModelCopyWith<$Res> implements $Notificat
   factory _$NotificationDataModelCopyWith(_NotificationDataModel value, $Res Function(_NotificationDataModel) _then) = __$NotificationDataModelCopyWithImpl;
 @override @useResult
 $Res call({
- int? threshold, int? streakDays, Object? securityChange
+ int? threshold, int? streakDays, Object? securityChange, bool? approved
 });
 
 
@@ -1083,11 +1085,12 @@ class __$NotificationDataModelCopyWithImpl<$Res>
 
 /// Create a copy of NotificationDataModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? threshold = freezed,Object? streakDays = freezed,Object? securityChange = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? threshold = freezed,Object? streakDays = freezed,Object? securityChange = freezed,Object? approved = freezed,}) {
   return _then(_NotificationDataModel(
 threshold: freezed == threshold ? _self.threshold : threshold // ignore: cast_nullable_to_non_nullable
 as int?,streakDays: freezed == streakDays ? _self.streakDays : streakDays // ignore: cast_nullable_to_non_nullable
-as int?,securityChange: freezed == securityChange ? _self.securityChange : securityChange ,
+as int?,securityChange: freezed == securityChange ? _self.securityChange : securityChange ,approved: freezed == approved ? _self.approved : approved // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 

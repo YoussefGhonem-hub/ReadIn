@@ -23,8 +23,8 @@ String? pushNotificationId(Map<String, dynamic> data) {
 /// (`readin://a/{slug}#comment-{id}`, which keeps the comment anchor), App Links (`https://readin.app/a/{slug}`,
 /// `https://readin.app/ar/a/{slug}`), profiles (`readin://u/{username}`, `https://readin.app/@{username}`) and their
 /// followers (`readin://u/{username}/followers`), the own reading stats (`readin://me/stats`), the account settings
-/// (`readin://settings/account`), the notification center and app paths open the matching screen; anything else
-/// returns null, so a push can never open an arbitrary location.
+/// (`readin://settings/account`), writer verification (`readin://verification`, F19), the notification center and app
+/// paths open the matching screen; anything else returns null, so a push can never open an arbitrary location.
 String? pushLinkToPath(String? link) {
   final text = link?.trim() ?? '';
   if (text.isEmpty) return null;
@@ -62,6 +62,8 @@ String? pushLinkToPath(String? link) {
   // The streak reminder and security alerts (F17).
   if (parts.length == 2 && parts[0] == 'me' && parts[1] == 'stats') return '/me/stats';
   if (parts.length == 2 && parts[0] == 'settings' && parts[1] == 'account') return '/settings?section=account';
+  // A verification result (F19): the web's /verification is Settings → Writer verification here.
+  if (parts.length == 1 && parts[0] == 'verification') return '/settings/verification';
   return null;
 }
 

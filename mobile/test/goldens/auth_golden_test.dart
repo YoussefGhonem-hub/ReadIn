@@ -40,6 +40,7 @@ import 'package:readin/features/settings/presentation/widgets/who_can_mention_se
 import 'package:readin/shared/widgets/inputs/country_picker.dart';
 
 import '../helpers/test_app.dart';
+import '../helpers/verification_fixtures.dart';
 
 class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {}
 
@@ -624,6 +625,7 @@ void main() {
         variant,
         const SettingsView(),
         providers: [
+          verificationEntryProvider(),
           BlocProvider<LinkedAccountsCubit>.value(value: MockLinkedAccountsCubit()..seed(const LinkedAccountsState())),
           BlocProvider<PrivacyCubit>.value(value: MockPrivacyCubit()..seed(const PrivacyState())),
         ],
@@ -643,6 +645,7 @@ void main() {
         variant,
         const SettingsView(),
         providers: [
+          verificationEntryProvider(),
           BlocProvider<LinkedAccountsCubit>.value(
             value: MockLinkedAccountsCubit()..seed(const LinkedAccountsState(providers: bothProviders)),
           ),
@@ -660,6 +663,7 @@ void main() {
         variant,
         const SettingsView(),
         providers: [
+          verificationEntryProvider(),
           BlocProvider<LinkedAccountsCubit>.value(value: MockLinkedAccountsCubit()..seed(const LinkedAccountsState())),
           BlocProvider<PrivacyCubit>.value(
             value: MockPrivacyCubit()..seed(const PrivacyState(whoCanMention: MentionPolicy.following)),

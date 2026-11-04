@@ -252,6 +252,20 @@ import '../../features/taxonomy/domain/repositories/taxonomy_repository.dart'
     as _i263;
 import '../../features/taxonomy/domain/usecases/taxonomy_usecases.dart'
     as _i172;
+import '../../features/verification/data/datasources/device_proof_file_picker.dart'
+    as _i688;
+import '../../features/verification/data/datasources/verification_api.dart'
+    as _i1061;
+import '../../features/verification/data/repositories/verification_repository_impl.dart'
+    as _i306;
+import '../../features/verification/domain/repositories/verification_repository.dart'
+    as _i1070;
+import '../../features/verification/domain/usecases/verification_usecases.dart'
+    as _i295;
+import '../../features/verification/presentation/cubit/verification_cubit.dart'
+    as _i643;
+import '../../features/verification/presentation/cubit/verification_form_cubit.dart'
+    as _i221;
 import '../config/app_config.dart' as _i650;
 import '../firebase/firebase_bootstrap.dart' as _i223;
 import '../l10n/current_locale.dart' as _i1026;
@@ -310,12 +324,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i413.EditorBackupStore>(
       () => _i853.HiveEditorBackupStore(),
     );
+    gh.lazySingleton<_i1070.ProofFilePicker>(
+      () => _i688.DeviceProofFilePicker(),
+    );
     gh.lazySingleton<_i956.MediaPicker>(() => _i434.DeviceMediaPicker());
     gh.factory<_i504.PickImages>(
       () => _i504.PickImages(gh<_i956.MediaPicker>()),
     );
     gh.factory<_i504.TakePhoto>(() => _i504.TakePhoto(gh<_i956.MediaPicker>()));
     gh.factory<_i504.PickPdf>(() => _i504.PickPdf(gh<_i956.MediaPicker>()));
+    gh.factory<_i295.PickVerificationProof>(
+      () => _i295.PickVerificationProof(gh<_i1070.ProofFilePicker>()),
+    );
     gh.lazySingleton<_i115.PhoneCountryMemory>(
       () => _i115.PhoneCountryMemory(gh<_i892.KeyValueStore>()),
     );
@@ -418,6 +438,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i421.TaxonomyApi>(
       () => _i421.TaxonomyApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i1061.VerificationApi>(
+      () => _i1061.VerificationApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i848.DocumentFileDataSource>(
       () => _i848.DocumentFileDataSource(gh<_i361.Dio>()),
     );
@@ -442,6 +465,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i462.ArticleApi>(),
         gh<_i1010.ArticleOfflineStore>(),
       ),
+    );
+    gh.lazySingleton<_i1070.VerificationRepository>(
+      () => _i306.VerificationRepositoryImpl(gh<_i1061.VerificationApi>()),
     );
     gh.lazySingleton<_i459.MediaRepository>(
       () => _i110.MediaRepositoryImpl(
@@ -503,6 +529,18 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i724.ManageCollections>(
       () => _i724.ManageCollections(gh<_i105.SavedRepository>()),
+    );
+    gh.factory<_i295.GetVerificationStatus>(
+      () => _i295.GetVerificationStatus(gh<_i1070.VerificationRepository>()),
+    );
+    gh.factory<_i295.SubmitVerificationRequest>(
+      () =>
+          _i295.SubmitVerificationRequest(gh<_i1070.VerificationRepository>()),
+    );
+    gh.factory<_i295.WithdrawVerificationRequest>(
+      () => _i295.WithdrawVerificationRequest(
+        gh<_i1070.VerificationRepository>(),
+      ),
     );
     gh.lazySingleton<_i413.ArticleEditorRepository>(
       () => _i303.ArticleEditorRepositoryImpl(gh<_i880.ArticleEditorApi>()),
@@ -823,6 +861,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i151.ModerationCaseCubit>(
       () => _i151.ModerationCaseCubit(gh<_i130.GetModerationCase>()),
+    );
+    gh.factory<_i221.VerificationFormCubit>(
+      () => _i221.VerificationFormCubit(
+        gh<_i172.GetFields>(),
+        gh<_i295.PickVerificationProof>(),
+        gh<_i295.SubmitVerificationRequest>(),
+      ),
     );
     gh.factory<_i840.ArticleEditorCubit>(
       () => _i840.ArticleEditorCubit(
@@ -1163,6 +1208,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i884.StreakCubit>(
       () => _i884.StreakCubit(
         gh<_i892.GetReadingStats>(),
+        gh<_i371.SessionCubit>(),
+      ),
+    );
+    gh.factory<_i643.VerificationCubit>(
+      () => _i643.VerificationCubit(
+        gh<_i295.GetVerificationStatus>(),
+        gh<_i295.WithdrawVerificationRequest>(),
         gh<_i371.SessionCubit>(),
       ),
     );

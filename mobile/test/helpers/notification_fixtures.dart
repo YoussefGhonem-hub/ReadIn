@@ -37,6 +37,7 @@ AppNotification notification(
   int? threshold,
   int? streakDays,
   SecurityChange? securityChange,
+  bool? approved,
   String? link,
 }) {
   final at = notificationsNow.subtract(ago);
@@ -53,6 +54,7 @@ AppNotification notification(
     threshold: threshold,
     streakDays: streakDays,
     securityChange: securityChange,
+    approved: approved,
     link: link ?? (article == null ? '' : 'readin://a/${article.slug}'),
   );
 }

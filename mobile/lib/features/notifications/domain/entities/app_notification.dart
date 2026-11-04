@@ -14,7 +14,7 @@ enum NotificationType {
   streakReminder('streak_reminder'),
   securityAlert('security_alert'),
 
-  /// Reserved for writer verification (F19): shown with generic text until it is built.
+  /// Writer verification (F19): approved or not ([AppNotification.approved]).
   verificationResult('verification_result'),
   moderationNotice('moderation_notice'),
 
@@ -129,6 +129,7 @@ class AppNotification extends Equatable {
     this.threshold,
     this.streakDays,
     this.securityChange,
+    this.approved,
     this.link = '',
   });
 
@@ -155,6 +156,9 @@ class AppNotification extends Equatable {
   /// `security_alert`.
   final SecurityChange? securityChange;
 
+  /// `verification_result`: whether the request was approved. Null when the API doesn't say (generic text).
+  final bool? approved;
+
   /// `readin://…`, the same link a push of this notification opens.
   final String link;
 
@@ -174,6 +178,7 @@ class AppNotification extends Equatable {
         threshold: threshold,
         streakDays: streakDays,
         securityChange: securityChange,
+        approved: approved,
         link: link,
       );
 
@@ -191,6 +196,7 @@ class AppNotification extends Equatable {
         threshold,
         streakDays,
         securityChange,
+        approved,
         link,
       ];
 }

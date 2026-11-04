@@ -75,6 +75,11 @@ class NotificationTile extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(l10n.notifSecurityHint, style: secondary),
                     ],
+                    // Like its push: the reason is on the verification page.
+                    if (notification.type == NotificationType.verificationResult && notification.approved == false) ...[
+                      const SizedBox(height: 2),
+                      Text(l10n.notifVerificationRejectedHint, style: secondary),
+                    ],
                     const SizedBox(height: ReadInSpace.s1),
                     Text(
                       commentTimeLabel(l10n, notification.updatedAt, now: NotificationClock.now(), languageCode: lang),
@@ -208,7 +213,9 @@ class _Leading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final (icon, background, foreground) = _iconOf(notification.type, colors);
+    final (icon, background, foreground) = notification.type == NotificationType.verificationResult && notification.approved == false
+        ? (Icons.unpublished_outlined, colors.calloutWarning, colors.calloutWarningAccent)
+        : _iconOf(notification.type, colors);
     if (!isActorNotification(notification.type)) {
       return Container(
         width: _size,
