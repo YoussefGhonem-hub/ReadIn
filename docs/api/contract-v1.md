@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile and media codes below.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, editor and media codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, and the problem codes listed with `DraftProblemDto`.
 
 ## Endpoints
 
@@ -89,6 +89,7 @@ A wrong `currentPassword` counts toward the same 15-minute lockout as sign in (`
 |---|---|---|
 | GET | `/fields` | `FieldDto[]` (enabled fields, ordered) |
 | GET | `/fields/{slug}/topics` | `TopicDto[]` |
+| GET | `/tags?q=&limit=10` | `TagDto[]`: tags whose name or slug starts with `q` (case ignored), most used first; empty `q` → most used (the editor's tag suggestions, F05) |
 
 ### Articles & Feed 🌐 (Bearer optional)
 
@@ -230,13 +231,39 @@ so your own action is never counted twice. Feed cards subscribe only while visib
 |---|---|---|---|
 | POST | `/admin/realtime/rebuild-counters` | Bearer, `system.settings` | → `200 { articleCount }`: every article's counters recomputed from SQL and republished |
 
-### Writing (Bearer, permission `articles.create`)
+### Editor (F05; Bearer, permission `articles.create`, rate limit `writes` on writes) — see [ADR 0015](../adr/0015-open-publishing-and-the-editor.md)
+
+Anyone publishes in any field; there is no review and no scheduling. The editor edits one **working copy** per article,
+the whole `ArticleDraftDocument`, and publishing applies it. Readers only ever see the published version.
 
 | Method | Path | Body → Response |
 |---|---|---|
-| POST | `/articles` | `CreateArticleRequest` → `201 { id, slug }` (draft) |
-| PUT | `/articles/{id}/attachments` | `SetAttachmentsRequest` → `204`. Replaces the whole attachment set; `items: []` clears it |
-| POST | `/articles/{id}/publish` | → `204`. Fails with `article.sources_required` when the field has `requiresSources` and no source was given |
+| GET | `/me/articles?status=draft\|published&cursor=&limit=20` | → `CursorPage<MyArticleDto>`. Drafts: never published, latest edit first. Published: newest publish first. `400 article.status_invalid` |
+| POST | `/articles` | `ArticleDraftDocument` → `201 ArticleEditDto`: a new, never-published draft |
+| GET | `/articles/{id}/edit` | → `ArticleEditDto` (the author only; `404 article.not_found` for anyone else) |
+| PUT | `/articles/{id}/draft` | `{ baseVersion: number, document: ArticleDraftDocument }` → `ArticleEditDto`. Autosave: replaces the whole working copy. `409 article.draft_conflict` when `baseVersion` is not the current `version` |
+| DELETE | `/articles/{id}/draft` | → `ArticleEditDto`: "Discard changes" of a published article (the working copy goes back to what readers see). `409 article.not_published` for a draft |
+| POST | `/articles/{id}/publish` | `{ baseVersion: number }` → `PublishedArticleDto`. First publish, or "Update" of a published article. `400` with the first problem's code and every problem in `problems: DraftProblemDto[]`; `409 article.draft_conflict` |
+| GET | `/articles/{id}/revisions` | → `ArticleRevisionDto[]`, newest first (one per publish) |
+| GET | `/articles/{id}/revisions/{number}` | → `ArticleRevisionDetailsDto` (for its preview). `404 article.revision_not_found` |
+| POST | `/articles/{id}/revisions/{number}/restore` | `{ baseVersion: number }` → `ArticleEditDto`: the revision becomes the working copy (live after the next publish) |
+| DELETE | `/articles/{id}` | → `204`. Own articles only (`403 article.not_owner`). Its working copy, revisions and the uploads only they used are deleted too |
+
+**Saving is lenient, publishing is strict.** Saving never fails because the article is unfinished: an empty title, no
+field, an image block with `alt: ""`, attachments still processing or a block the RDoc schema rejects all come back in
+`checks.problems`. Only a malformed body is a `400 validation.failed`: more than 2 versions, duplicate languages,
+`sourceLanguage` not among them, `content` that is not an RDoc object in that language, more than 2000 blocks, more than
+5 tags, 30 sources or 10 attachments, too-long strings, non-http(s) URLs. Publishing re-runs the checks and fails while
+any problem remains.
+
+- `version` starts at 1 and goes up with every save, discard and restore; a publish doesn't change it. An article
+  created before the editor has `version: 0` until its first save.
+- After a publish `hasUnpublishedChanges` is `false`; the next save of a published article makes it `true`.
+- The slug is assigned at the first publish from the source title and never changes; `slug` is `null` before that.
+- Image block `src` and `coverUrl`: send the URL an upload returned (any variant). The API stores its own upload URLs as
+  relative paths / `rdoc-asset://` and always answers with public URLs (ADR 0010).
+- Attachments are part of the document (there is no attachments call). They go live with the publish; a PDF's `title`
+  and `allowDownload` are applied to its asset then.
 
 ### Media (Bearer) — see [ADR 0011](../adr/0011-media-pipeline-and-pdf-preview.md)
 
@@ -245,7 +272,7 @@ so your own action is never counted twice. Feed cards subscribe only while visib
 | POST | `/uploads/images` | `multipart/form-data`: `file` (jpeg/png/webp/heic, ≤ 10 MB, ≤ 8000×8000), `purpose` = `image` (default) \| `avatar` \| `cover` → `201 MediaAssetDto` with `status: "ready"` (images are processed in the request) |
 | POST | `/uploads/documents` | `multipart/form-data`: `file` (PDF, ≤ 20 MB, ≤ 100 pages, no password), `title` (optional, ≤ 5000, defaults to the file name), `allowDownload` (`true`/`false`, default `false`) → `202 MediaAssetDto` with `status: "processing"` and `pageCount` set. Pages are rendered in the background, page 1 first |
 | GET | `/uploads/{id}` | → `200 MediaAssetDto` (owner only). Poll every 2 s while `status` is `processing` |
-| DELETE | `/uploads/{id}` | → `204` (owner only; `409 media.in_use` while attached to an article) |
+| DELETE | `/uploads/{id}` | → `204` (owner only; `409 media.in_use` while attached to an article or in an editor working copy) |
 | GET | `/documents/{assetId}/download` 🌐 | → `200 application/pdf` with `Content-Disposition: attachment`. Allowed when the article is published and `allowDownload` is on, or for the owner / a moderator. `403 media.download_not_allowed`, `404 media.not_found` |
 
 Uploaded files are public, immutable `.webp` URLs under `/uploads/...` (absolute URLs in every DTO). PDFs are never served from `/uploads`.
@@ -411,7 +438,7 @@ interface ArticleCardDto {
   field: FieldRefDto;
   author: AuthorDto;
   readingTimeMinutes: number;
-  isReviewed: boolean; isAiAssisted: boolean;
+  isAiAssisted: boolean;
   versionBadge: string | null;   // e.g. ".NET 10"
   publishedAt: string;
   reactionCount: number;         // always the sum of `reactions`
@@ -519,25 +546,83 @@ interface DocumentAttachmentDto {
 /** Either 1–10 images or exactly one PDF, never both. */
 interface ArticleAttachmentsDto { kind: 'images' | 'document'; images: ImageAttachmentDto[]; document: DocumentAttachmentDto | null }
 
-interface CreateArticleRequest {
-  fieldId: string; topicId?: string | null;
+// ── Editor (F05, ADR 0015) ─────────────────────────────────────────
+type ArticleStatus = 'draft' | 'published';
+
+/** Everything the editor edits; sent whole on every autosave. */
+interface ArticleDraftDocument {
+  sourceLanguage: ArticleLanguage;       // one of translations[].language
+  translations: DraftTranslation[];      // 1 or 2, distinct languages
+  fieldId: string | null;                // required to publish
+  topicId: string | null;                // must belong to fieldId
+  tags: string[];                        // ≤ 5 names, 1..40 chars; new names become tags on publish
+  sources: { title: string; url: string }[]; // ≤ 30; required to publish when the field has requiresSources
+  coverUrl: string | null;               // from POST /uploads/images (purpose=cover)
+  versionBadge: string | null;           // ≤ 30
+  isAiAssisted: boolean;
+  attachments: DraftAttachment[];        // 1–10 images OR one PDF, or []
+}
+interface DraftTranslation {
   language: ArticleLanguage;
-  title: string;                 // 5..150
-  subtitle?: string | null;
-  content: RDoc;
-  tags?: string[]; sources?: { title: string; url: string }[];
-  coverUrl?: string | null; versionBadge?: string | null; isAiAssisted: boolean;
+  title: string;                         // '' allowed in a draft; 5..150 to publish
+  subtitle: string | null;               // ≤ 250
+  content: RDoc;                         // content.language === language
+}
+interface DraftAttachment {
+  mediaAssetId: string; order: number;
+  caption?: string | null;               // images, ≤ 5000
+  altText?: string | null;               // images, required to publish, ≤ 5000
+  title?: string | null;                 // the PDF, required to publish, ≤ 5000, no line breaks
+  allowDownload?: boolean;               // the PDF
 }
 
-interface SetAttachmentsRequest {
-  items: {
-    mediaAssetId: string; order: number;
-    caption?: string | null;     // images, ≤ 5000
-    altText?: string | null;     // images, required, ≤ 5000
-    title?: string | null;       // the document, required, ≤ 5000
-    allowDownload?: boolean;     // the document
-  }[];
+interface ArticleEditDto {
+  id: string;
+  status: ArticleStatus;
+  slug: string | null;                   // null until the first publish
+  publishedAt: string | null;
+  version: number;                       // send back as baseVersion
+  savedAt: string;
+  hasUnpublishedChanges: boolean;        // published articles only
+  document: ArticleDraftDocument;        // public URLs
+  media: MediaAssetDto[];                // the attachments' assets (yours only)
+  checks: DraftChecksDto;
 }
+interface DraftChecksDto {
+  readingTime: { language: ArticleLanguage; minutes: number; words: number }[];
+  problems: DraftProblemDto[];           // empty → can publish
+}
+interface DraftProblemDto {
+  code: string;                          // see below
+  language: ArticleLanguage | null;      // translation problems
+  blockId: string | null;                // the RDoc block (image alt, or the first block the schema rejects)
+  mediaAssetId: string | null;           // attachment problems
+}
+// Problem codes: article.field_required, article.title_length, article.content_empty (no text and no attachments),
+// article.content_invalid, article.image_alt_required, article.sources_required, attachments.alt_text_required,
+// attachments.title_required, attachments.asset_not_ready (uploading, failed, missing or not yours),
+// attachments.mixed_kinds, attachments.single_document, media.in_use (shown in another article).
+
+interface PublishedArticleDto { id: string; slug: string; publishedAt: string; revision: number; firstPublish: boolean }
+interface ArticleRevisionDto { number: number; createdAt: string; title: string; languages: ArticleLanguage[] }
+interface ArticleRevisionDetailsDto extends ArticleRevisionDto { document: ArticleDraftDocument; media: MediaAssetDto[] }
+
+interface MyArticleDto {
+  id: string;
+  status: ArticleStatus;
+  slug: string | null;
+  language: ArticleLanguage;             // source language
+  title: string;                         // '' → "Untitled" / "بدون عنوان"
+  coverUrl: string | null;
+  field: FieldRefDto | null;             // null: a draft without a field yet
+  readingTimeMinutes: number;
+  savedAt: string;
+  publishedAt: string | null;
+  hasUnpublishedChanges: boolean;
+  reactionCount: number; commentCount: number; readCount: number;
+}
+
+interface TagDto { slug: string; name: string; articleCount: number } // articleCount: published articles
 
 interface ArticleDetailsDto extends ArticleCardDto {
   availableLanguages: ArticleLanguage[];
@@ -546,8 +631,6 @@ interface ArticleDetailsDto extends ArticleCardDto {
   topic: FieldRefDto | null;
   tags: string[];
   sources: { title: string; url: string }[];
-  reviewedBy: { displayName: string; username: string } | null;
-  lastReviewedAt: string | null;
   readCount: number;             // saveCount comes from ArticleCardDto
   isFollowingAuthor: boolean;    // false for guests and on your own articles
   collectionIds: string[];       // the caller's collections that hold it, oldest entry first; [] for guests and unsaved articles

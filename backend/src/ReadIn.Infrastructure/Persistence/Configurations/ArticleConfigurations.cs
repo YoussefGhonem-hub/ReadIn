@@ -16,23 +16,21 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.HasIndex(a => a.Slug).IsUnique();
 
         builder.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
-        builder.Property(a => a.ReviewStatus).HasConversion<string>().HasMaxLength(20);
         builder.Property(a => a.SourceLanguage).HasMaxLength(5).IsRequired();
         builder.Property(a => a.CoverUrl).HasMaxLength(2048);
         builder.Property(a => a.VersionBadge).HasMaxLength(30);
 
-        builder.Ignore(a => a.IsReviewed);
         builder.Ignore(a => a.IsPublished);
+        builder.Ignore(a => a.CurrentDraftVersion);
 
         builder.HasOne(a => a.Author).WithMany().HasForeignKey(a => a.AuthorId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(a => a.ReviewedBy).WithMany().HasForeignKey(a => a.ReviewedById).OnDelete(DeleteBehavior.NoAction);
         builder.HasOne(a => a.Field).WithMany().HasForeignKey(a => a.FieldId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(a => a.Topic).WithMany().HasForeignKey(a => a.TopicId).OnDelete(DeleteBehavior.NoAction);
 
         builder.HasMany(a => a.Translations).WithOne().HasForeignKey(t => t.ArticleId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(a => a.Tags).WithOne().HasForeignKey(t => t.ArticleId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(a => a.Sources).WithOne().HasForeignKey(s => s.ArticleId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasMany(a => a.Revisions).WithOne().HasForeignKey(r => r.ArticleId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(a => a.Draft).WithOne().HasForeignKey<ArticleDraft>(d => d.ArticleId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(a => a.Attachments).WithOne().HasForeignKey(x => x.ArticleId).OnDelete(DeleteBehavior.Cascade);
 
         // SPEC §16.3 key indexes
@@ -89,13 +87,26 @@ internal sealed class ArticleRevisionConfiguration : IEntityTypeConfiguration<Ar
     public void Configure(EntityTypeBuilder<ArticleRevision> builder)
     {
         builder.ToTable("ArticleRevisions", t =>
-            t.HasCheckConstraint("CK_ArticleRevisions_ContentJson_IsJson", "ISJSON([ContentJson]) = 1"));
+            t.HasCheckConstraint("CK_ArticleRevisions_DocumentJson_IsJson", "ISJSON([DocumentJson]) = 1"));
         builder.HasKey(r => r.Id);
-        builder.Property(r => r.Language).HasMaxLength(5).IsRequired();
         builder.Property(r => r.Title).HasMaxLength(150).IsRequired();
-        builder.Property(r => r.Subtitle).HasMaxLength(250);
-        builder.Property(r => r.ContentJson).HasColumnType("nvarchar(max)").IsRequired();
+        builder.Property(r => r.Languages).HasMaxLength(20).IsRequired();
+        builder.Property(r => r.DocumentJson).HasColumnType("nvarchar(max)").IsRequired();
         builder.HasIndex(r => new { r.ArticleId, r.RevisionNumber }).IsUnique();
+        builder.HasOne<Article>().WithMany().HasForeignKey(r => r.ArticleId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne<User>().WithMany().HasForeignKey(r => r.CreatedBy).OnDelete(DeleteBehavior.NoAction);
+    }
+}
+
+/// <summary>The editor's working copy (F05): one row per article, the whole editor document as JSON.</summary>
+internal sealed class ArticleDraftConfiguration : IEntityTypeConfiguration<ArticleDraft>
+{
+    public void Configure(EntityTypeBuilder<ArticleDraft> builder)
+    {
+        builder.ToTable("ArticleDrafts", t =>
+            t.HasCheckConstraint("CK_ArticleDrafts_DocumentJson_IsJson", "ISJSON([DocumentJson]) = 1"));
+        builder.HasKey(d => d.ArticleId);
+        builder.Property(d => d.DocumentJson).HasColumnType("nvarchar(max)").IsRequired();
+        builder.Property(d => d.Version).IsConcurrencyToken();
     }
 }

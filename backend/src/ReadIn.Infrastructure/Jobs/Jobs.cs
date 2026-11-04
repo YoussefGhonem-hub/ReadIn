@@ -22,25 +22,28 @@ public sealed class OutboxJob(OutboxProcessor processor)
     }
 }
 
-/// <summary>Publishes articles whose scheduled time has passed (SPEC F05 "schedule").</summary>
-public sealed class ScheduledPublishingJob(AppDbContext db, TimeProvider clock)
+/// <summary>
+/// Recomputes <see cref="Article.QualityScore"/> of every published article in one statement (F07, ADR 0015). Hourly,
+/// because freshness changes with time; the formula is <see cref="ArticleQuality.Score"/>.
+/// </summary>
+public sealed class ArticleQualityJob(AppDbContext db, TimeProvider clock)
 {
-    [DisableConcurrentExecution(timeoutInSeconds: 120)]
+    [DisableConcurrentExecution(timeoutInSeconds: 300)]
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        var due = await db.Articles
-            .Include(a => a.Translations)
-            .Include(a => a.Sources)
-            .Include(a => a.Field)
-            .Where(a => a.Status == ArticleStatus.Scheduled && a.ScheduledAt <= now)
-            .Take(100)
-            .ToListAsync(cancellationToken);
-
-        foreach (var article in due)
-            article.Publish(article.Field, article.ScheduledAt ?? now);
-
-        if (due.Count > 0) await db.SaveChangesAsync(cancellationToken);
+        await db.Articles
+            .Where(a => a.Status == ArticleStatus.Published && a.PublishedAt != null)
+            .ExecuteUpdateAsync(set => set.SetProperty(a => a.QualityScore, a =>
+                ArticleQuality.EngagementWeight
+                    * (1.0 - 1.0 / (1.0 + (a.ReactionCount + 2.0 * a.CommentCount + 3.0 * a.SaveCount) / ArticleQuality.EngagementHalfPoint))
+                + ArticleQuality.CompletionWeight
+                    * ((a.ReadCount + 1.0) / ((db.ReadingProgress.Count(r => r.ArticleId == a.Id) > a.ReadCount
+                        ? db.ReadingProgress.Count(r => r.ArticleId == a.Id)
+                        : a.ReadCount) + 2.0))
+                + ArticleQuality.FreshnessWeight
+                    * Math.Pow(0.5, (EF.Functions.DateDiffHour(a.PublishedAt, now) ?? 0) / ArticleQuality.FreshnessHalfLifeHours)),
+                cancellationToken);
     }
 }
 

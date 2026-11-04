@@ -61,8 +61,8 @@ public sealed partial class OrphanedUploadsCleanupJob(
     }
 
     /// <summary>
-    /// ADR 0011: MediaAssets rows older than the grace period that nothing uses (no article attachment, and for images
-    /// no avatar, cover or RDoc reference either) are deleted with all their files and pages. This also catches
+    /// ADR 0011: MediaAssets rows older than the grace period that nothing uses (no article attachment, no working copy or
+    /// revision naming it, and for images no avatar, cover or RDoc reference either) are deleted with all their files and pages. This also catches
     /// documents whose processing failed and uploads abandoned in the composer.
     /// </summary>
     private async Task DeleteUnusedMediaAsync(DateTime cutoff, CancellationToken cancellationToken)
@@ -76,6 +76,7 @@ public sealed partial class OrphanedUploadsCleanupJob(
         var deleted = 0;
         foreach (var asset in candidates)
         {
+            if (await references.IsAssetReferencedAsync(asset.Id, cancellationToken)) continue;
             if (UploadPath.TryParse(asset.OriginalPath, out var image) && await references.IsReferencedAsync(image.Id, cancellationToken))
                 continue;
 

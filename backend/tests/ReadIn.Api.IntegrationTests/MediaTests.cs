@@ -57,30 +57,25 @@ public sealed class MediaTests(ApiFactory api)
     private static async Task<JsonObject> GetAssetAsync(HttpClient client, JsonObject asset) =>
         (await client.GetFromJsonAsync<JsonObject>($"/api/v1/uploads/{asset["id"]}", Ct))!;
 
-    private async Task<(Guid Id, string Slug)> CreateDraftAsync(HttpClient client, string title)
+    private static async Task<Guid> CreateDraftAsync(HttpClient client, string title)
     {
         var dotnet = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!
             .Single(f => f!["slug"]!.GetValue<string>() == "dotnet")!;
         dotnet["requiresSources"]!.GetValue<bool>().Should().BeTrue();
 
-        var created = await client.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = dotnet["id"]!.GetValue<Guid>(), language = "en", title,
-            content = new
-            {
-                version = 1, language = "en",
-                blocks = new object[] { new { id = "p1", type = "paragraph", dir = "auto", content = new[] { new { type = "text", text = "A post with media." } } } },
-            },
-            sources = new[] { new { title = "ReadIn", url = "https://readin.app" } },
-            isAiAssisted = false,
-        }, Ct);
-        created.StatusCode.Should().Be(HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
-        var body = (await created.Content.ReadFromJsonAsync<JsonObject>(Ct))!;
-        return (body["id"]!.GetValue<Guid>(), body["slug"]!.GetValue<string>());
+        var draft = await client.CreateDraftAsync(ArticleTestKit.Document(
+            dotnet["id"]!.GetValue<Guid>(), title, blocks: [ArticleTestKit.Paragraph("A post with media.")]));
+        return draft["id"]!.GetValue<Guid>();
     }
 
-    private static Task<HttpResponseMessage> SetAttachmentsAsync(HttpClient client, Guid articleId, params object[] items) =>
-        client.PutAsJsonAsync($"/api/v1/articles/{articleId}/attachments", new { items }, Ct);
+    /// <summary>Puts the attachments in the working copy; they go live with the next publish (F05).</summary>
+    private static async Task<JsonObject> SetAttachmentsAsync(HttpClient client, Guid articleId, params object[] items)
+    {
+        var response = await client.SetDraftAttachmentsAsync(articleId, items);
+        var body = await response.Content.ReadAsStringAsync(Ct);
+        response.StatusCode.Should().Be(HttpStatusCode.OK, body);
+        return JsonNode.Parse(body)!.AsObject();
+    }
 
     private string OnDisk(string urlOrPath)
     {
@@ -222,20 +217,25 @@ public sealed class MediaTests(ApiFactory api)
     {
         var (client, _) = await SignedInAsync();
         var images = new[] { await UploadImageAsync(client), await UploadImageAsync(client, "small.png"), await UploadImageAsync(client, "sample.heic") };
-        var (articleId, slug) = await CreateDraftAsync(client, "Three images from the rig");
+        var articleId = await CreateDraftAsync(client, "Three images from the rig");
 
         var missingAlt = await SetAttachmentsAsync(client, articleId,
             new { mediaAssetId = images[0]["id"], order = 0, altText = "Rig" },
             new { mediaAssetId = images[1]["id"], order = 1 });
-        missingAlt.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        Code(await TaxonomyAndContentTests.Problem(missingAlt)).Should().Be("attachments.alt_text_required");
+        var problem = missingAlt["checks"]!["problems"]!.AsArray().Should().ContainSingle().Which!;
+        problem["code"]!.GetValue<string>().Should().Be("attachments.alt_text_required");
+        problem["mediaAssetId"]!.GetValue<Guid>().Should().Be(images[1]["id"]!.GetValue<Guid>());
+        missingAlt["media"]!.AsArray().Should().HaveCount(2, "the editor gets the assets to preview them");
+        var blocked = await client.PublishCurrentAsync(articleId);
+        blocked.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        Code(await TaxonomyAndContentTests.Problem(blocked)).Should().Be("attachments.alt_text_required");
 
         var ok = await SetAttachmentsAsync(client, articleId,
             new { mediaAssetId = images[2]["id"], order = 2, altText = "Deck", caption = "Advancing Offshore Inspection Solutions" },
             new { mediaAssetId = images[0]["id"], order = 0, altText = "Rig" },
             new { mediaAssetId = images[1]["id"], order = 1, altText = "Crane" });
-        ok.StatusCode.Should().Be(HttpStatusCode.NoContent, await ok.Content.ReadAsStringAsync(Ct));
-        (await client.PostAsync($"/api/v1/articles/{articleId}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        ok.ProblemCodes().Should().BeEmpty();
+        var slug = await (await client.PublishCurrentAsync(articleId)).PublishedSlugAsync();
 
         var article = (await api.GuestClient().GetFromJsonAsync<JsonObject>($"/api/v1/articles/{slug}", Ct))!;
         var attachments = article["attachments"]!;
@@ -258,23 +258,25 @@ public sealed class MediaTests(ApiFactory api)
         var (client, _) = await SignedInAsync();
         var image = await UploadImageAsync(client);
         var document = await UploadDocumentAsync(client);
-        var (first, _) = await CreateDraftAsync(client, "Mixing is not allowed");
-        var (second, _) = await CreateDraftAsync(client, "Stealing is not allowed");
+        var first = await CreateDraftAsync(client, "Mixing is not allowed");
+        var second = await CreateDraftAsync(client, "Stealing is not allowed");
 
         var mixed = await SetAttachmentsAsync(client, first,
             new { mediaAssetId = image["id"], order = 0, altText = "Rig" },
             new { mediaAssetId = document["id"], order = 1, title = "Report" });
-        Code(await TaxonomyAndContentTests.Problem(mixed)).Should().Be("attachments.mixed_kinds");
+        mixed.ProblemCodes().Should().Equal("attachments.mixed_kinds");
+        Code(await TaxonomyAndContentTests.Problem(await client.PublishCurrentAsync(first))).Should().Be("attachments.mixed_kinds");
 
-        (await SetAttachmentsAsync(client, first, new { mediaAssetId = image["id"], order = 0, altText = "Rig" }))
-            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await SetAttachmentsAsync(client, first, new { mediaAssetId = image["id"], order = 0, altText = "Rig" });
+        await (await client.PublishCurrentAsync(first)).PublishedSlugAsync();
         var reused = await SetAttachmentsAsync(client, second, new { mediaAssetId = image["id"], order = 0, altText = "Rig" });
-        Code(await TaxonomyAndContentTests.Problem(reused)).Should().Be("media.in_use");
+        reused.ProblemCodes().Should().Equal("media.in_use");
 
         var (other, _) = await SignedInAsync();
         var foreign = await SetAttachmentsAsync(client, second,
             new { mediaAssetId = (await UploadImageAsync(other))["id"], order = 0, altText = "Not mine" });
-        Code(await TaxonomyAndContentTests.Problem(foreign)).Should().Be("attachments.asset_not_found");
+        foreign.ProblemCodes().Should().Equal("attachments.asset_not_ready");
+        foreign["media"]!.AsArray().Should().BeEmpty("someone else's upload is never shown");
         (await other.GetAsync($"/api/v1/uploads/{image["id"]}", Ct)).StatusCode.Should().Be(HttpStatusCode.NotFound, "only the owner polls an upload");
     }
 
@@ -283,16 +285,15 @@ public sealed class MediaTests(ApiFactory api)
     {
         var (author, _) = await SignedInAsync();
         var document = await UploadDocumentAsync(author, allowDownload: false);
-        var (articleId, slug) = await CreateDraftAsync(author, "A report to download");
-        (await SetAttachmentsAsync(author, articleId, new { mediaAssetId = document["id"], order = 0, title = "Inspection Report 2026" }))
-            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var articleId = await CreateDraftAsync(author, "A report to download");
+        await SetAttachmentsAsync(author, articleId, new { mediaAssetId = document["id"], order = 0, title = "Inspection Report 2026" });
         var url = $"/api/v1/documents/{document["id"]}/download";
 
         (await api.GuestClient().GetAsync(url, Ct)).StatusCode.Should().Be(HttpStatusCode.NotFound, "not published yet");
         var ownerDraft = await author.GetAsync(url, Ct);
         ownerDraft.StatusCode.Should().Be(HttpStatusCode.OK, "the owner always can");
 
-        (await author.PostAsync($"/api/v1/articles/{articleId}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var slug = await (await author.PublishCurrentAsync(articleId)).PublishedSlugAsync();
         var denied = await api.GuestClient().GetAsync(url, Ct);
         denied.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         Code(await TaxonomyAndContentTests.Problem(denied)).Should().Be("media.download_not_allowed");
@@ -308,8 +309,9 @@ public sealed class MediaTests(ApiFactory api)
         await GrantAsync(moderatorId, RoleIds.Moderator);
         (await moderator.GetAsync(url, Ct)).StatusCode.Should().Be(HttpStatusCode.OK);
 
-        (await SetAttachmentsAsync(author, articleId, new { mediaAssetId = document["id"], order = 0, title = "Inspection Report 2026", allowDownload = true }))
-            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await SetAttachmentsAsync(author, articleId, new { mediaAssetId = document["id"], order = 0, title = "Inspection Report 2026", allowDownload = true });
+        (await api.GuestClient().GetAsync(url, Ct)).StatusCode.Should().Be(HttpStatusCode.Forbidden, "not live until the Update");
+        await (await author.PublishCurrentAsync(articleId)).PublishedSlugAsync();
         var allowed = await api.GuestClient().GetAsync(url, Ct);
         allowed.StatusCode.Should().Be(HttpStatusCode.OK);
         allowed.Content.Headers.ContentType!.MediaType.Should().Be("application/pdf");
@@ -345,9 +347,8 @@ public sealed class MediaTests(ApiFactory api)
         var (client, _) = await SignedInAsync();
         var loose = await UploadImageAsync(client);
         var attached = await UploadDocumentAsync(client);
-        var (articleId, _) = await CreateDraftAsync(client, "A post that will be deleted");
-        (await SetAttachmentsAsync(client, articleId, new { mediaAssetId = attached["id"], order = 0, title = "Report" }))
-            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var articleId = await CreateDraftAsync(client, "A post that will be deleted");
+        await SetAttachmentsAsync(client, articleId, new { mediaAssetId = attached["id"], order = 0, title = "Report" });
         var attachedFiles = (await GetAssetAsync(client, attached))["pages"]!.AsArray()
             .Select(p => OnDisk(p!["viewUrl"]!.GetValue<string>())).ToList();
 
@@ -369,9 +370,8 @@ public sealed class MediaTests(ApiFactory api)
         var abandoned = await UploadDocumentAsync(client);
         var attached = await UploadDocumentAsync(client);
         var fresh = await UploadImageAsync(client);
-        var (articleId, _) = await CreateDraftAsync(client, "A draft keeps its document");
-        (await SetAttachmentsAsync(client, articleId, new { mediaAssetId = attached["id"], order = 0, title = "Kept" }))
-            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var articleId = await CreateDraftAsync(client, "A draft keeps its document");
+        await SetAttachmentsAsync(client, articleId, new { mediaAssetId = attached["id"], order = 0, title = "Kept" });
         var abandonedFiles = (await GetAssetAsync(client, abandoned))["pages"]!.AsArray()
             .Select(p => OnDisk(p!["thumbUrl"]!.GetValue<string>())).ToList();
 
@@ -432,22 +432,12 @@ public sealed class MediaTests(ApiFactory api)
                      [new { id = "p1", type = "paragraph", dir = "auto", content = new object[] { new { type = "text", text = "سطر أول" }, new { type = "hardBreak" }, new { type = "text", text = "Second line" } } }],
                  })
         {
-            var created = await client.PostAsJsonAsync("/api/v1/articles", new
-            {
-                fieldId = dotnet["id"]!.GetValue<Guid>(), language = "ar-EG", title = $"Composer post {blocks.Length}",
-                content = new { version = 1, language = "ar-EG", blocks },
-                sources = new[] { new { title = "ReadIn", url = "https://readin.app" } },
-                isAiAssisted = false,
-            }, Ct);
-            created.StatusCode.Should().Be(HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
-            var id = (await created.Content.ReadFromJsonAsync<JsonObject>(Ct))!["id"]!.GetValue<Guid>();
+            var draft = await client.CreateDraftAsync(ArticleTestKit.Document(
+                dotnet["id"]!.GetValue<Guid>(), $"Composer post {blocks.Length}", "ar-EG", blocks,
+                attachments: blocks.Length == 0 ? [new { mediaAssetId = image["id"], order = 0, altText = "Only a photo" }] : []));
 
-            if (blocks.Length == 0)
-            {
-                (await SetAttachmentsAsync(client, id, new { mediaAssetId = image["id"], order = 0, altText = "Only a photo" }))
-                    .StatusCode.Should().Be(HttpStatusCode.NoContent);
-            }
-            (await client.PostAsync($"/api/v1/articles/{id}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+            draft.ProblemCodes().Should().BeEmpty(blocks.Length == 0 ? "the photo is the post" : "line breaks are fine");
+            await (await client.PublishDraftAsync(draft["id"]!.GetValue<Guid>(), draft["version"]!.GetValue<int>())).PublishedSlugAsync();
         }
     }
 
@@ -457,23 +447,21 @@ public sealed class MediaTests(ApiFactory api)
         var (client, _) = await SignedInAsync();
         var image = await UploadImageAsync(client);
         var document = await UploadDocumentAsync(client);
-        var (imagePost, imageSlug) = await CreateDraftAsync(client, "A photo with a long description");
-        var (documentPost, documentSlug) = await CreateDraftAsync(client, "A document with a long title");
+        var imagePost = await CreateDraftAsync(client, "A photo with a long description");
+        var documentPost = await CreateDraftAsync(client, "A document with a long title");
         var alt = string.Concat(Enumerable.Repeat("وصف طويل للصورة. ", 400))[..5000];
         var caption = new string('c', 5000);
         var title = new string('ت', 5000);
 
-        var tooLong = await SetAttachmentsAsync(client, imagePost, new { mediaAssetId = image["id"], order = 0, altText = alt + "x" });
+        var tooLong = await client.SetDraftAttachmentsAsync(imagePost, new { mediaAssetId = image["id"], order = 0, altText = alt + "x" });
         var problem = await TaxonomyAndContentTests.Problem(tooLong);
         Code(problem).Should().Be("validation.failed");
         problem["errors"]!.ToJsonString().Should().Contain("attachments.alt_text_too_long");
 
-        (await SetAttachmentsAsync(client, imagePost, new { mediaAssetId = image["id"], order = 0, altText = alt, caption }))
-            .StatusCode.Should().Be(HttpStatusCode.NoContent);
-        (await SetAttachmentsAsync(client, documentPost, new { mediaAssetId = document["id"], order = 0, title }))
-            .StatusCode.Should().Be(HttpStatusCode.NoContent);
-        (await client.PostAsync($"/api/v1/articles/{imagePost}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
-        (await client.PostAsync($"/api/v1/articles/{documentPost}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await SetAttachmentsAsync(client, imagePost, new { mediaAssetId = image["id"], order = 0, altText = alt, caption });
+        await SetAttachmentsAsync(client, documentPost, new { mediaAssetId = document["id"], order = 0, title });
+        var imageSlug = await (await client.PublishCurrentAsync(imagePost)).PublishedSlugAsync();
+        var documentSlug = await (await client.PublishCurrentAsync(documentPost)).PublishedSlugAsync();
 
         var shownImage = (await api.GuestClient().GetFromJsonAsync<JsonObject>($"/api/v1/articles/{imageSlug}", Ct))!["attachments"]!["images"]![0]!;
         shownImage["altText"]!.GetValue<string>().Should().Be(alt.Trim());

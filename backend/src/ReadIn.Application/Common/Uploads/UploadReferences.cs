@@ -4,8 +4,9 @@ using ReadIn.Application.Common.Interfaces;
 namespace ReadIn.Application.Common.Uploads;
 
 /// <summary>
-/// Which uploads are still in use: user avatars, article covers and RDoc content of translations and revisions,
-/// including drafts and soft-deleted rows (they can be restored), and article attachments (ADR 0011). A file is deleted
+/// Which uploads are still in use: user avatars, article covers, RDoc content of translations, the editor's working
+/// copies and revisions (F05; covers, image blocks and attachments by asset id), including soft-deleted rows (they can be
+/// restored), and article attachments (ADR 0011). A file is deleted
 /// only when nothing here mentions its id. New tables that reference uploads must be added to both queries.
 /// <see cref="IsReferencedAsync"/> answers "is it used?"; <see cref="LoadReferencedIdsAsync"/> also keeps the files of
 /// every existing MediaAssets row, whose unused rows the media cleanup removes together with their files.
@@ -22,10 +23,23 @@ public sealed class UploadReferences(IAppDbContext db)
                    .AnyAsync(a => a.CoverUrl != null && a.CoverUrl.Contains(uploadId), cancellationToken)
                || await db.ArticleTranslations
                    .AnyAsync(t => t.ContentJson.Contains(uploadId), cancellationToken)
-               || await db.Articles.IgnoreQueryFilters().SelectMany(a => a.Revisions)
-                   .AnyAsync(r => r.ContentJson.Contains(uploadId), cancellationToken)
+               || await db.ArticleDrafts
+                   .AnyAsync(d => d.DocumentJson.Contains(uploadId), cancellationToken)
+               || await db.ArticleRevisions
+                   .AnyAsync(r => r.DocumentJson.Contains(uploadId), cancellationToken)
                || await db.ArticleAttachments
                    .AnyAsync(a => a.MediaAsset.OriginalPath != null && a.MediaAsset.OriginalPath.Contains(uploadId), cancellationToken);
+    }
+
+    /// <summary>
+    /// Media assets named by id in a working copy or a revision (F05): an attachment the writer added but hasn't published
+    /// yet, or one a revision can bring back. They are kept like attached ones.
+    /// </summary>
+    public async Task<bool> IsAssetReferencedAsync(Guid assetId, CancellationToken cancellationToken)
+    {
+        var id = assetId.ToString();
+        return await db.ArticleDrafts.AnyAsync(d => d.DocumentJson.Contains(id), cancellationToken)
+               || await db.ArticleRevisions.AnyAsync(r => r.DocumentJson.Contains(id), cancellationToken);
     }
 
     /// <summary>Ids of every referenced upload. Streams the rows, so large content columns are never all in memory.</summary>
@@ -39,8 +53,10 @@ public sealed class UploadReferences(IAppDbContext db)
             .Where(a => a.CoverUrl != null && a.CoverUrl.Contains(Marker)).Select(a => a.CoverUrl!));
         await CollectAsync(db.ArticleTranslations
             .Where(t => t.ContentJson.Contains(Marker)).Select(t => t.ContentJson));
-        await CollectAsync(db.Articles.IgnoreQueryFilters().SelectMany(a => a.Revisions)
-            .Where(r => r.ContentJson.Contains(Marker)).Select(r => r.ContentJson));
+        await CollectAsync(db.ArticleDrafts
+            .Where(d => d.DocumentJson.Contains(Marker)).Select(d => d.DocumentJson));
+        await CollectAsync(db.ArticleRevisions
+            .Where(r => r.DocumentJson.Contains(Marker)).Select(r => r.DocumentJson));
 
         // Files of an existing MediaAssets row (ADR 0011). Unused rows are removed by the media cleanup, files included,
         // so the file sweep must never delete files behind the back of a live row.

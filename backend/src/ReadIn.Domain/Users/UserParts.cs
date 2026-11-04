@@ -75,21 +75,6 @@ public sealed class UserDevice
     internal void Touch(DateTime now) => LastSeenAt = now;
 }
 
-/// <summary>Fields a Reviewer is assigned to (SPEC F20, seed table §18.3).</summary>
-public sealed class ReviewerField
-{
-    private ReviewerField() { } // EF
-
-    public ReviewerField(Guid userId, Guid fieldId)
-    {
-        UserId = userId;
-        FieldId = fieldId;
-    }
-
-    public Guid UserId { get; private set; }
-    public Guid FieldId { get; private set; }
-}
-
 /// <summary>Google or Apple sign in (SPEC §9.1).</summary>
 public static class ExternalProviders
 {

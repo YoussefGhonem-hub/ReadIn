@@ -335,22 +335,8 @@ public sealed class CommentsTests(ApiFactory api)
         var author = await api.SignUpAsync();
         var fieldId = (await author.Client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!
             .Single(f => f!["slug"]!.GetValue<string>() == "dotnet")!["id"]!.GetValue<Guid>();
-        var created = await author.Client.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId,
-            language = "en",
-            title = $"Comments test {Guid.NewGuid():N}",
-            content = new
-            {
-                version = 1,
-                language = "en",
-                blocks = new object[] { new { id = "p1", type = "paragraph", content = new[] { new { type = "text", text = "Body." } } } },
-            },
-            sources = new[] { new { title = "Docs", url = "https://learn.microsoft.com/dotnet" } },
-            isAiAssisted = false,
-        }, Ct);
-        var id = (await ApiFactory.ReadSessionAsync(created))["id"]!.GetValue<Guid>();
-        (await author.Client.PostAsync($"/api/v1/articles/{id}/publish", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var (id, _) = await author.Client.WriteAndPublishAsync(ArticleTestKit.Document(
+            fieldId, $"Comments test {Guid.NewGuid():N}", sources: [new { title = "Docs", url = "https://learn.microsoft.com/dotnet" }]));
         return (author, id);
     }
 

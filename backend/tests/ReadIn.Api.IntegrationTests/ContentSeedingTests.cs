@@ -25,9 +25,9 @@ public sealed class ContentSeedingTests(ApiFactory api)
         var article = (await api.GuestClient().GetFromJsonAsync<JsonObject>($"/api/v1/articles/{Slug}?lang=en", Ct))!;
 
         article["isAiAssisted"]!.GetValue<bool>().Should().BeTrue();
-        article["isReviewed"]!.GetValue<bool>().Should().BeFalse("no human reviewed it");
-        article["reviewedBy"].Should().BeNull("a \"Reviewed by\" badge is never faked");
-        article["lastReviewedAt"]!.GetValue<DateTime>().Should().Be(new DateTime(2026, 11, 3, 0, 0, 0, DateTimeKind.Utc));
+        article.ContainsKey("isReviewed").Should().BeFalse("there is no review (ADR 0015)");
+        article.ContainsKey("reviewedBy").Should().BeFalse();
+        article.ContainsKey("lastReviewedAt").Should().BeFalse();
         article["author"]!["username"]!.GetValue<string>().Should().Be("readin");
         article["author"]!["isVerified"]!.GetValue<bool>().Should().BeTrue();
         article["author"]!["avatarUrl"]!.GetValue<string>().Should().Contain("/uploads/avatars/").And.EndWith("_256.webp");
@@ -38,8 +38,7 @@ public sealed class ContentSeedingTests(ApiFactory api)
         using var scope = api.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var stored = await db.Articles.SingleAsync(a => a.Slug == Slug, Ct);
-        stored.ReviewStatus.Should().Be(ReviewStatus.Pending, "it waits in the reviewer queue");
-        stored.AutoCheckedAt.Should().NotBeNull();
+        stored.AutoCheckedAt.Should().Be(new DateTime(2026, 11, 3, 0, 0, 0, DateTimeKind.Utc), "meta.json lastReviewedAt is the pipeline check date");
 
         var cover = await db.MediaAssets.SingleAsync(m => m.OwnerId == SystemUsers.EditorialId && m.Purpose == MediaPurpose.Cover, Ct);
         cover.BlurHash.Should().NotBeNullOrEmpty();
@@ -90,11 +89,11 @@ public sealed class ContentSeedingTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task Today_falls_back_to_an_auto_checked_article_when_no_reviewed_article_matches()
+    public async Task Today_picks_a_published_article_in_the_readers_interests()
     {
         var client = (await api.SignUpAsync()).Client;
 
-        // Security has only the pipeline article (published, pending review); the other two fields have no articles.
+        // Security has only the pipeline article; the other two fields have no articles.
         var fields = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!
             .Where(f => f!["slug"]!.GetValue<string>() is "security" or "mobile" or "devops-cloud")
             .Select(f => f!["id"]!.GetValue<Guid>())
@@ -103,7 +102,6 @@ public sealed class ContentSeedingTests(ApiFactory api)
 
         var today = await client.GetFromJsonAsync<JsonObject>("/api/v1/feed/today", Ct);
 
-        today!["slug"]!.GetValue<string>().Should().Be(Slug);
-        today["isReviewed"]!.GetValue<bool>().Should().BeFalse();
+        today!["slug"]!.GetValue<string>().Should().Be(Slug, "any published article can be Today's article (ADR 0015)");
     }
 }

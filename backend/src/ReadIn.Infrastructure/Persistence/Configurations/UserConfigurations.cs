@@ -118,17 +118,6 @@ internal sealed class UserDeviceConfiguration : IEntityTypeConfiguration<UserDev
     }
 }
 
-internal sealed class ReviewerFieldConfiguration : IEntityTypeConfiguration<ReviewerField>
-{
-    public void Configure(EntityTypeBuilder<ReviewerField> builder)
-    {
-        builder.ToTable("ReviewerFields");
-        builder.HasKey(r => new { r.UserId, r.FieldId });
-        builder.HasOne<User>().WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne<Field>().WithMany().HasForeignKey(r => r.FieldId).OnDelete(DeleteBehavior.NoAction);
-    }
-}
-
 internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 {
     public void Configure(EntityTypeBuilder<Role> builder)

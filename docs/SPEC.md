@@ -12,6 +12,8 @@
 | **Backend** | ASP.NET Core · SQL Server · Firebase (push + real-time only) |
 
 > **v1.1 changes:** phone + password sign-in handled by the backend (no Firebase Auth, no SMS), recovery PIN for forgotten passwords, Firebase limited to FCM + Realtime Database, uploads stored in `wwwroot`, image optimization, and post attachments (image carousel + PDF preview).
+>
+> **v1.2 changes (2026-11-03):** no article review and no scheduling: anyone publishes in any field; the F05 editor keeps a private working copy of published articles until **Update**; Today's article can be any published article, ranked by a quality score ([ADR 0015](adr/0015-open-publishing-and-the-editor.md), which supersedes the review part of ADR 0014).
 
 ---
 
@@ -66,7 +68,7 @@ ReadIn is a bilingual (Arabic + English) knowledge platform where **anyone can p
 |---|---|---|
 | 1 | **Perfect mixed Arabic/English text** | Per-block direction, isolated inline English terms, code always LTR. |
 | 2 | **Daily reading habit** | "مقال النهارده" (Today's article) at the user's chosen time, streaks, learning paths. |
-| 3 | **Trust by design** | Verified writers, optional expert review with a visible badge, sources, tested code in seeded articles, "last reviewed" date and version badges. |
+| 3 | **Trust by design** | Verified writers, sources, tested code in seeded articles, version badges and community moderation. There is no review ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)). |
 | 4 | **Two versions per article** | Egyptian Arabic + English terms (`ar-EG`) and English-only (`en`). |
 | 5 | **Rich editorial formatting** | Callouts, code tabs, comparison tables, steps, glossary terms, not just plain text. |
 
@@ -79,7 +81,7 @@ ReadIn is a bilingual (Arabic + English) knowledge platform where **anyone can p
 - **General (موضوعات عامة):** the catch-all, so no article is left without a field.
 
 Rules that apply to every field:
-- **Review is always optional** ([F06](#f06--article-lifecycle)).
+- **There is no review**: anyone publishes directly ([F06](#f06--article-lifecycle), [ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
 - Admins can add fields and topics at any time ([F23](#f23--admin-console)); free tags (max 5) cover anything more specific.
 - Open publishing still follows the community guidelines: illegal or harmful content can be reported and removed ([F22](#f22--reporting--moderation)).
 - The 300 seeded articles are software only ([§19](#19-content-pipeline-300-seed-articles)). That is launch content, not a limit on what people can publish.
@@ -122,7 +124,7 @@ These rules apply to **every** feature, commit and code review.
 | File storage | **`wwwroot/uploads`** on the API server (Development and Production), behind `IFileStorage` |
 | Image processing | **SkiaSharp** (resize, WebP, strip EXIF), **BlurHash** placeholders |
 | PDF processing | **PDFtoImage** (PDFium, page rendering) + **PdfPig** (metadata, text extraction) |
-| Background jobs | **Hangfire** (SQL Server storage): daily article push, streak reset, link checks, scheduled publishing |
+| Background jobs | **Hangfire** (SQL Server storage): daily article push, streak reset, link checks, article quality score |
 | Caching | `HybridCache` (in-memory + optional Redis) |
 | Logging | **Serilog** (console + Seq in dev, App Insights / file in prod) |
 | API docs | OpenAPI + **Scalar** UI |
@@ -262,7 +264,7 @@ ReadIn/
     ├── paths/                  # learning paths
     └── articles/
         └── {field}/{topic}/{slug}/
-            ├── meta.json       # status, version badge, sources, reviewer
+            ├── meta.json       # status, version badge, sources
             ├── en.json         # RDoc, English-only (source of truth)
             └── ar-EG.json      # RDoc, Egyptian Arabic + English terms
 ```
@@ -391,8 +393,7 @@ public sealed class ArticleMappings : IRegister
                 .Where(t => t.Language == MapContext.Current!.Parameters["lang"])
                 .Select(t => t.Title).FirstOrDefault()
                 ?? s.Translations.First(t => t.IsSource).Title)
-            .Map(d => d.AuthorName, s => s.Author.DisplayName)
-            .Map(d => d.IsReviewed, s => s.ReviewStatus == ReviewStatus.Approved);
+            .Map(d => d.AuthorName, s => s.Author.DisplayName);
     }
 }
 ```
@@ -406,7 +407,7 @@ public sealed class ArticleMappings : IRegister
 | Aggregate | Key behavior |
 |---|---|
 | `User` | `Register`, `ChangePassword`, `ChangePhoneNumber`, `SetRecoveryPin`, `RecordFailedLogin`, `RecordFailedRecovery`, `RotateSecurityStamp`, `CompleteProfile`, `UpdateProfile`, `SetPreferences`, `Suspend`, `GrantRole`, `RecordReading` (streak logic) |
-| `Article` | `CreateDraft`, `AddTranslation`, `SetAttachments`, `SubmitForReview`, `Approve`, `RequestChanges`, `Publish`, `Schedule`, `Archive`, `CreateRevision` |
+| `Article` | `CreateDraft`, `AddTranslation`, `ReplaceTranslations`, `SetAttachments`, `SaveDraft`, `DiscardDraft`, `RestoreDraft`, `Publish`, `Archive` |
 | `MediaAsset` | `CreateImage`, `CreateDocument`, `MarkProcessing`, `MarkReady`, `MarkFailed` |
 | `Comment` | `Create`, `Reply` (max depth 2), `Edit`, `SoftDelete`, `Pin` |
 | `LearningPath` | `AddArticle`, `Reorder`, `Publish` |
@@ -599,38 +600,36 @@ Then **Complete profile** (display name, unique `@username` with live availabili
 | **Guest** | Not signed in. Can browse and read published articles. |
 | **Member** | Default for every signed-up user. Reads, interacts, and can write articles. |
 | **VerifiedWriter** | Member whose identity/expertise is verified. Gets a badge and priority in feeds. Not required to publish in any field. |
-| **Reviewer** | Expert who reviews articles in assigned fields and grants the "Reviewed" badge. Review is optional, never a condition for publishing. |
 | **Moderator** | Handles reports, hides content, suspends users. |
 | **Admin** | Manages fields, topics, paths, verification requests, featured content and roles (except SuperAdmin). |
 | **SuperAdmin** | Full access, including managing Admins and system settings. |
 
-Users can have multiple roles (e.g. `Member` + `VerifiedWriter` + `Reviewer`).
+Users can have multiple roles (e.g. `Member` + `VerifiedWriter` + `Moderator`). There is no Reviewer role ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
 
 ### 10.2 Permission-based Authorization
 Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 
-| Permission | Guest | Member | Verified Writer | Reviewer | Moderator | Admin | Super Admin |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| `articles.read` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `articles.create` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `articles.review` | | | | ✅ | | ✅ | ✅ |
-| `articles.feature` | | | | | | ✅ | ✅ |
-| `comments.create` / `reactions.create` / `reposts.create` / `highlights.create` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `follows.manage` / `saved.manage` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `reports.create` | | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `moderation.manage` (hide content, resolve reports) | | | | | ✅ | ✅ | ✅ |
-| `users.suspend` | | | | | ✅ | ✅ | ✅ |
-| `users.reset_password` (admin password reset) | | | | | | ✅ | ✅ |
-| `users.read.pii` (see phone numbers) | | | | | | ✅ | ✅ |
-| `verification.manage` | | | | | | ✅ | ✅ |
-| `taxonomy.manage` (fields, topics, tags) | | | | | | ✅ | ✅ |
-| `paths.manage` | | | | | | ✅ | ✅ |
-| `roles.manage` | | | | | | ✅* | ✅ |
-| `system.settings` | | | | | | | ✅ |
+| Permission | Guest | Member | Verified Writer | Moderator | Admin | Super Admin |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|
+| `articles.read` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `articles.create` | | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `articles.feature` | | | | | ✅ | ✅ |
+| `comments.create` / `reactions.create` / `reposts.create` / `highlights.create` | | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `follows.manage` / `saved.manage` | | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `reports.create` | | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `moderation.manage` (hide content, resolve reports) | | | | ✅ | ✅ | ✅ |
+| `users.suspend` | | | | ✅ | ✅ | ✅ |
+| `users.reset_password` (admin password reset) | | | | | ✅ | ✅ |
+| `users.read.pii` (see phone numbers) | | | | | ✅ | ✅ |
+| `verification.manage` | | | | | ✅ | ✅ |
+| `taxonomy.manage` (fields, topics, tags) | | | | | ✅ | ✅ |
+| `paths.manage` | | | | | ✅ | ✅ |
+| `roles.manage` | | | | | ✅* | ✅ |
+| `system.settings` | | | | | | ✅ |
 
 \* Admin cannot grant or revoke `Admin` / `SuperAdmin`.
 
-**Ownership rules:** a user can always edit/delete their own articles, comments and reactions. Editing a published article creates a new revision and resets the "Reviewed" badge if content changed significantly.
+**Ownership rules:** a user can always edit/delete their own articles, comments and reactions. Editing a published article happens in a private working copy; readers see the change after **Update**, which records a revision (F05).
 
 ---
 
@@ -654,7 +653,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 
 ### F03 — Home: "النهارده" (Today)
 - Greeting + **streak badge** 🔥 + notifications bell.
-- **Today's article (Hero card):** one reviewed article picked for the user (or, until enough are reviewed, an auto-checked one) (see [§11 F07](#f07--daily-article-مقال-النهارده)).
+- **Today's article (Hero card):** one published article picked for the user (see [§11 F07](#f07--daily-article-مقال-النهارده)).
 - Continue reading (resume last unfinished article).
 - Learning path progress card.
 - Field filter chips + feed: **For you** (interests + popularity + freshness) and **Following** tabs.
@@ -665,7 +664,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 ### F04 — Article Reader
 - Reading progress bar, estimated reading time, table of contents for long articles.
 - **Language toggle** per article: `مصري+EN` / `EN` (shown only when both versions exist).
-- Trust row: verified writer badge, "✓ Reviewed by …", "Last reviewed: date", version badge (e.g. `.NET 10`), "AI-assisted" label when applicable.
+- Trust row: verified writer badge, version badge (e.g. `.NET 10`), "AI-assisted" label when applicable.
 - Rich RDoc rendering: headings, callouts (tip/warning/info/danger), code blocks with copy button and filename, code tabs (C# / TypeScript / Dart), tables, steps, quotes, images with captions, glossary terms (tap → definition sheet).
 - **TL;DR summary** at the top (optional per article).
 - **Sources** section at the bottom (required by the field's `RequiresSources` setting, see F05).
@@ -682,33 +681,32 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Block-based rich editor producing **RDoc**: all block types in [§13](#13-article-content-format-rdoc), slash menu (`/`) to insert blocks, markdown shortcuts.
 - Per-block automatic direction (`dir="auto"`) with manual override, code blocks forced LTR.
 - Cover image upload (compressed on the device, processed by the backend, stored in `wwwroot/uploads`), field, topic, tags (max 5).
-- **Attachments:** 1–10 images **or** one PDF ([F26](#f26--post-attachments--media)). The attachment bar is one reusable component (web) / widget (mobile). Until the block editor ships, `/write` is a **post composer** that hosts it: field, language, title, plain-text body (paragraphs become RDoc `paragraph` blocks), sources and attachments, then create → set attachments → publish.
+- **Attachments:** 1–10 images **or** one PDF ([F26](#f26--post-attachments--media)). The attachment bar is one reusable component (web) / widget (mobile); attachments are part of the draft and go live with it.
 - **Sources** list (title + URL). Required in fields with `RequiresSources` on (software, Medicine, Public Health, Engineering), optional in the others.
 - Second language version: add `en` or `ar-EG` translation of the same article.
-- Autosave drafts every 10 seconds + local backup (offline-safe).
+- Autosave drafts every 10 seconds + local backup (offline-safe). The whole draft is saved as one document with a version, so a second device gets a conflict instead of overwriting the first.
+- Editing a published article works on a private **working copy**: readers keep the published version until the writer presses **Update**; **Discard changes** drops the working copy.
 - Preview exactly as readers will see it (light/dark, ar/en).
-- Publish now, schedule, or (optionally, in any field) submit for review first.
-- Revision history with restore.
-- Live checks: missing sources, title length, missing alt text, reading time.
+- **Publish now.** There is no scheduling and no review: anyone publishes in any field ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)). The reader URL (slug) is fixed at the first publish.
+- Revision history: one revision per publish, with preview and restore into the working copy.
+- Live checks: missing field, title length (5–150), empty content, missing sources, missing alt text (image blocks and attachments), attachments still processing, reading time. Saving never fails because the article is unfinished; publishing is blocked while any check fails.
+- **My articles** (opened from Write): Drafts and Published tabs, each article with Edit and Delete, plus New article.
 
 ### F06 — Article Lifecycle
 ```text
-Draft ──────────────────────────────────────► Published ──► Archived      (the default, in every field)
-   │                                              ▲
-   └──► Submitted ──► InReview ──► Approved ──────┘                        (optional review)
-                          │
-                          └──► ChangesRequested ──► Submitted
+Draft ──► Published ──► Archived
+            ▲   │
+            └───┘  edits go to a private working copy until "Update"
 ```
-- **Publishing never needs a review, in any field, including Medicine and Public Health.** Any member can publish directly; review is something an author can ask for.
-- A published article can also be reviewed afterwards.
-- `Published` articles without review show no "Reviewed" badge but are fully visible.
+- **Anyone publishes directly, in any field, including Medicine and Public Health.** There is no review and no scheduling ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
 - The only publish checks are content ones: the article has content, and has sources if its field requires them.
-- Reviewed articles come first for **Today's article**; published + auto-checked articles are the fallback ([F07](#f07--daily-article-مقال-النهارده)).
+- Medicine / Public Health articles show a disclaimer (§20).
+- Any published article can become **Today's article** ([F07](#f07--daily-article-مقال-النهارده)).
 
 ### F07 — Daily Article (مقال النهارده)
 - Picked per user daily by a Hangfire job at the user's local time minus 30 minutes.
-- **Algorithm:** reviewed + published, in user's interests, not read before, matches language preference, reading time 4–10 minutes, weighted by quality score (reactions, completion rate, freshness), not from the same field 3 days in a row, prefers the next item in the user's active learning path.
-- **Fallback:** when no reviewed article matches, the pick comes from **published + auto-checked** articles (passed every content-pipeline check, §19.3; `Articles.AutoCheckedAt`) with the same rules. Constraints relax in the same order (length, then interests), and at every step a reviewed article wins over an auto-checked one. Seeded articles have no human review unless a Reviewer picks them up, so this keeps the hero card filled without faking a review: the card shows no "Reviewed" badge.
+- **Algorithm:** any published article (written by anyone, never the reader's own), in user's interests, not read before, matches language preference, reading time 4–10 minutes, ranked by the quality score (engagement, read completion, freshness; formula in [ADR 0015](adr/0015-open-publishing-and-the-editor.md)), not from the same field 3 days in a row, prefers the next item in the user's active learning path.
+- **Fallback:** constraints relax in order when nothing matches (length, then interests).
 - Push notification at the chosen time: *"مقال النهارده جاهز ☕ — {title}"*.
 - If the user doesn't open it, it stays as the hero card for the day.
 - **Job details:** runs every 5 minutes, for users with at least one push device (others get the pick on demand from `GET /feed/today`; both store the same one pick per local date). Times are wall-clock in the user's time zone, so DST never moves a reminder. The push is sent once per day (`DailyPicks.NotifiedAt`), skipped when the user already read the article, and at most 2 hours late after a missed run; "read" is `ReadingProgress.CompletedAt` (F04), and "3 days in a row" means the picks of the two previous days. Payload: [`contract-v1.md`](api/contract-v1.md#push-payloads-fcm).
@@ -767,11 +765,11 @@ Draft ────────────────────────�
 
 ### F16 — Search
 - Search articles, writers, topics and tags in Arabic and English.
-- Arabic normalization (see [§22](#22-search)), filters (field, language, reading time, reviewed only), recent searches.
+- Arabic normalization (see [§22](#22-search)), filters (field, language, reading time), recent searches.
 
 ### F17 — Notifications
 - In-app notification center (SQL `Notifications` table, live unread badge via Firebase Realtime Database) + push (FCM).
-- Types: new follower, reply to your comment, mention, reactions milestone (10/50/100), comment on your article, article reviewed/approved/changes requested, verification result, daily article, streak reminder (evening, if not read yet), new article from a followed writer, **security alerts** (password/PIN/phone changed, recovery lockout).
+- Types: new follower, reply to your comment, mention, reactions milestone (10/50/100), comment on your article, verification result, daily article, streak reminder (evening, if not read yet), new article from a followed writer, **security alerts** (password/PIN/phone changed, recovery lockout).
 - Per-type preferences (push / in-app / off), quiet hours. Details in [§21](#21-notifications--real-time).
 
 ### F18 — Settings
@@ -793,11 +791,8 @@ Draft ────────────────────────�
 - Request verification: field, job title, proof (LinkedIn/GitHub URL, certificate or syndicate card upload).
 - Admin reviews and approves/rejects with a reason. Approved users get the `VerifiedWriter` role and badge.
 
-### F20 — Review Workflow
-- **Optional in every field.** Review adds a trust badge and priority for Today's article; it never blocks publishing.
-- Reviewer queue filtered by assigned fields: articles authors submitted, plus published articles that have no review yet.
-- Inline review notes per block, approve / request changes.
-- Approved article shows "✓ Reviewed by {name}" + review date.
+### F20 — Review Workflow (removed)
+- Removed on 2026-11-03: there is no review, anyone publishes ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
 
 ### F21 — Glossary (قاموس المصطلحات)
 - Central glossary of technical terms (`Dependency Injection` → Arabic explanation + English definition + related articles).
@@ -813,7 +808,7 @@ Draft ────────────────────────�
 - Dashboard: daily active readers, articles read, new users, top articles, streak retention.
 - Manage fields, topics, tags, learning paths, featured content.
 - Manage users & roles, verification requests.
-- Content pipeline status (generated / auto-checked / in review / published counts).
+- Content pipeline status (generated / auto-checked / published counts).
 - Available on **web and mobile** (mobile uses a compact layout).
 
 ### F24 — Sharing
@@ -960,7 +955,7 @@ Readers mark sentences in an article. Everyone sees the popular ones.
 | F17 | Notifications | ✅ | ✅ | 2 |
 | F18 | Settings (incl. Dark Mode) | ✅ | ✅ | 1 |
 | F19 | Writer Verification | ✅ | ✅ | 2 |
-| F20 | Review Workflow | ✅ | ✅ | 2 |
+| F20 | ~~Review Workflow~~ (removed, ADR 0015) | — | — | — |
 | F21 | Glossary | ✅ | ✅ | 3 |
 | F22 | Reporting & Moderation | ✅ | ✅ | 2 |
 | F23 | Admin Console | ✅ | ✅ | 2 |
@@ -1145,7 +1140,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId, Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
 | Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive (shows the health disclaimer, never blocks publishing), RequiresSources, IsEnabled), `Topics`, `Tags`, `UserInterests` |
-| Articles | `Articles` (AuthorId, FieldId, TopicId, Slug, Status, ReviewStatus, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, LastReviewedAt, ReviewedById, PublishedAt, ScheduledAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleRevisions`, `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive), `ArticleReviews` (ReviewerId, Decision, Notes JSON) |
+| Articles | `Articles` (AuthorId, FieldId, TopicId, Slug, Status Draft/Published/Archived, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, AutoCheckedAt, PublishedAt, QualityScore, counters), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleDrafts` (ArticleId key, DocumentJson: the editor's working copy, Version concurrency token, HasChanges, SavedAt; F05), `ArticleRevisions` (ArticleId, RevisionNumber, Title, Languages, DocumentJson: the document of one publish, CreatedBy, CreatedAt), `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive) |
 | Engagement | `Reposts` (UserId+ArticleId unique, CreatedAt), `ArticleHighlights` (UserId, ArticleId, Language, BlockId, StartOffset, EndOffset, Text, CreatedAt), `UserMutes` (MuterId+MutedUserId unique), `ContentMutes` (UserId, TargetType Field/Topic, TargetId, unique), `ArticleFeedback` (UserId+ArticleId unique, Type ShowLess, CreatedAt), `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths`, `LearningPathItems` (Order), `PathEnrollments` |
@@ -1185,7 +1180,8 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Me | `GET /me` (incl. `hasRecoveryPin`, `mustSetRecoveryPin`, `mustChangePassword`, `isProfileComplete`, `privacy`) · `PATCH /me` (incl. `avatarAssetId`, `expertiseFieldIds`) · `PUT /me/privacy` · `PUT /me/profile/complete` · `PUT /me/password` · `PUT /me/phone` · `POST /me/recovery-pin` (first set) · `PUT /me/recovery-pin` (change) · `PUT /me/preferences` · `PUT /me/interests` · `POST /me/devices` · `DELETE /me/devices/{token}` · `DELETE /me` · `GET /users/username-available?u=` |
 | Real-time | `POST /realtime/token` (Firebase custom token, used only to read the Realtime Database) |
 | Feed | `GET /feed/today` · `GET /feed/for-you` · `GET /feed/following` · `GET /feed/continue-reading` |
-| Articles | `GET /articles/{slug}?lang=` · `POST /articles` · `PUT /articles/{id}` · `PUT /articles/{id}/translations/{lang}` · `POST /articles/{id}/submit` · `POST /articles/{id}/publish` · `POST /articles/{id}/schedule` · `DELETE /articles/{id}` · `GET /articles/{id}/revisions` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` |
+| Articles | `GET /articles/{slug}?lang=` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` |
+| Editor (F05) | `GET /me/articles?status=draft\|published` · `POST /articles` (new draft) · `GET /articles/{id}/edit` · `PUT /articles/{id}/draft` (autosave, `baseVersion`) · `DELETE /articles/{id}/draft` (discard) · `POST /articles/{id}/publish` (publish or Update) · `GET /articles/{id}/revisions` · `GET /articles/{id}/revisions/{n}` · `POST /articles/{id}/revisions/{n}/restore` · `DELETE /articles/{id}` |
 | Reactions | `PUT /articles/{id}/reaction` · `DELETE /articles/{id}/reaction` · `GET /articles/{id}/reactions` |
 | Reposts | `PUT /articles/{id}/repost` · `DELETE /articles/{id}/repost` (idempotent, return `{ repostCount, isReposted }`) · `GET /users/{username}/reposts` |
 | Mute & feedback | `PUT` / `DELETE /users/{id}/mute` · `PUT` / `DELETE /me/mutes/fields/{id}` · `PUT` / `DELETE /me/mutes/topics/{id}` · `GET /me/mutes` · `PUT` / `DELETE /articles/{id}/show-less` |
@@ -1199,8 +1195,8 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Search | `GET /search?q=&type=articles\|users\|topics&field=&lang=` |
 | Glossary | `GET /glossary/{slug}` · `GET /glossary?q=` |
 | Notifications | `GET /notifications` · `POST /notifications/read` · `GET/PUT /me/notification-preferences` |
-| Uploads & media | `POST /uploads/images` (purpose `image` \| `avatar` \| `cover`; `article-image` is still accepted) · `POST /uploads/documents` (PDF, `202` + processing) · `GET /uploads/{id}` (status, variants, pages) · `DELETE /uploads/{id}` · `PUT /articles/{id}/attachments` · `GET /documents/{assetId}/download` — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) |
-| Trust | `POST /verification-requests` · `GET /reviews/queue` · `POST /articles/{id}/reviews` |
+| Uploads & media | `POST /uploads/images` (purpose `image` \| `avatar` \| `cover`; `article-image` is still accepted) · `POST /uploads/documents` (PDF, `202` + processing) · `GET /uploads/{id}` (status, variants, pages) · `DELETE /uploads/{id}` · `GET /documents/{assetId}/download` (attachments are part of the editor draft) — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) |
+| Trust | `POST /verification-requests` |
 | Moderation | `POST /reports` · `GET /moderation/reports` · `POST /moderation/actions` |
 | Admin | `/admin/users`, `POST /admin/users/{id}/reset-password`, `/admin/roles`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests`, `/admin/dashboard`, `/admin/content-pipeline`, `POST /admin/realtime/rebuild-counters` |
 
@@ -1235,8 +1231,8 @@ Users are created in SQL Server only (no Firebase Auth). Phone numbers use the r
 | `+12025550101` | Super Admin | SuperAdmin | ✅ | Local |
 | `+12025550102` | Admin User | Admin | ✅ | Local |
 | `+12025550103` | Moderator User | Moderator | ✅ | Local |
-| `+12025550104` | .NET Reviewer | Member, VerifiedWriter, Reviewer (.NET, Architecture) | ✅ | Local |
-| `+12025550105` | AI Reviewer | Member, VerifiedWriter, Reviewer (AI, ML, Claude) | ✅ | Local |
+| `+12025550104` | .NET Writer | Member, VerifiedWriter | ✅ | Local |
+| `+12025550105` | AI Writer | Member, VerifiedWriter | ✅ | Local |
 | `+12025550106` | Verified Writer | Member, VerifiedWriter | ✅ | Local |
 | `+12025550107` … `+12025550109` | Writer 1–3 | Member | ✅ | Local |
 | `+12025550110` … `+12025550118` | Reader 1–9 | Member | ✅ | Local |
@@ -1249,7 +1245,7 @@ Users are created in SQL Server only (no Firebase Auth). Phone numbers use the r
 
 Demo users get realistic profiles (bios mixing Arabic and English, interests, avatars), follow relationships, reading history with streaks (e.g. `reader1` has a 12-day streak), comments and replies, reactions and saved articles, so every screen looks real in development.
 
-> **No fake personas in production.** All seeded articles are published under the official **ReadIn** account with the "AI-assisted" label, as `reviewStatus: pending` (no "Reviewed by" badge until a human reviews them).
+> **No fake personas in production.** All seeded articles are published under the official **ReadIn** account with the "AI-assisted" label. There is no review ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
 
 ---
 
@@ -1284,8 +1280,7 @@ taxonomy.yaml
 2. Draft (en)     → English RDoc, the SOURCE OF TRUTH, generated with Claude (model configurable)
 3. Adapt (ar-EG)  → Egyptian Arabic + English terms, natural adaptation, same structure
 4. Validate       → automatic checks (see 19.3)       status: AutoChecked / Failed
-5. Import         → seeder imports into SQL Server     status: Published, reviewStatus: pending
-6. Review         → optional, a human Reviewer in the app, at any time after publishing
+5. Import         → seeder imports into SQL Server     status: Published
 ```
 
 Commands:
@@ -1309,14 +1304,14 @@ dotnet run --project src/ReadIn.ContentStudio -- import
 | **Code compiles** | C# with Roslyn (.NET 10, Web SDK implicit usings, ASP.NET Core/EF Core/Mapster/Mediator referenced), TypeScript/TSX with `tsc --noEmit` (React 19, Angular 22), Dart with `dart analyze`, Python byte-compiled **and run** with scikit-learn, JavaScript `node --check`, Bash `bash -n`, JSON/YAML parsed. `"compile": false` needs a reason in `meta.json`; other languages are listed as not compiled. A missing toolchain is an error |
 | Sources alive | Every source answers HTTP 200 after redirects (polite: 2 requests per host, retries with back-off; successes cached for a week) |
 | Duplicates | Unique slugs; titles compared by keyword similarity across all articles |
-| Trust & freshness | Matches the plan (field, topic, level, path, version badge, titles), `status: published`, `reviewStatus: pending`, no reviewer, `isAiAssisted: true`, `lastReviewedAt`, 2–5 sources, a 1200×630 `cover.webp` |
+| Trust & freshness | Matches the plan (field, topic, level, path, version badge, titles), `status: published`, `isAiAssisted: true`, `lastReviewedAt` (the pipeline check date), 2–5 sources, a 1200×630 `cover.webp` |
 
 ### 19.4 Publishing Strategy
 - **Seed set: 300 articles** by the official **ReadIn** account, planned in `content/taxonomy.yaml` (23 learning paths across AI, ML, Claude & AI tools, .NET, React, Angular, frontend, mobile, databases, architecture, DevOps and security). Each one corrects a misconception developers commonly hold. They are published with the AI-assisted label and `reviewStatus: pending`, with staggered publish dates over the last ~120 days. They appear in the reviewer queue, and Today's article falls back to them until enough are reviewed (F07).
-- **Launch with all 300**, organized into learning paths. Review is not a launch requirement.
+- **Launch with all 300**, organized into learning paths.
 - **Growth after launch** comes from members publishing in any field, plus more ReadIn articles when wanted (`ContentStudio generate`). There is no fixed article target.
 - Quality gates (§19.3) and the AI-assisted label keep seeded content from being thin, unlabeled mass content, which search engines penalize.
-- Fast-moving topics (Claude, AI tools, framework versions) get a **re-verification job** every 90 days: sources re-checked, `LastReviewedAt` updated or the article flagged "may be outdated".
+- Fast-moving topics (Claude, AI tools, framework versions) get a **re-verification job** every 90 days: sources re-checked, `AutoCheckedAt` updated or the article flagged "may be outdated".
 
 ### 19.5 Content Files in Git
 Seed content lives in `content/articles/{field}/{topic}/{slug}/` so it is versioned, reviewable in git history, and reproducible in every environment: `meta.json`, `en.json` (source of truth), `ar-EG.json` and `cover.webp` (1200×630, rendered by `tools/content-covers`). Writers draft in `en.md` / `ar-EG.md` (git-ignored) and `ContentStudio compose` turns them into RDoc. Glossary terms live in `content/glossary/{field}.yaml`; the official account's avatar is `content/assets/readin-avatar.png`.
@@ -1328,13 +1323,11 @@ Seed content lives in `content/articles/{field}/{topic}/{slug}/` so it is versio
 | Mechanism | Description |
 |---|---|
 | Verified writers | Identity/expertise verification with a badge |
-| Reviewed badge | "✓ Reviewed by {name}" + date. Optional in every field |
 | Sources | Required in fields with `RequiresSources` on (software, Medicine, Public Health, Engineering), optional elsewhere, shown at the end of the article |
 | Version badge | e.g. `.NET 10`, `Angular 21`, `Flutter 3.x` |
-| Last reviewed date | Shown on every article, re-verification for fast-moving topics |
 | AI-assisted label | Shown on every AI-assisted article. Never hidden. |
 | Tested code | Code snippets compiled in the content pipeline |
-| Community signals | Reports for misinformation, quality score based on completion rate + reactions |
+| Community signals | Reports for misinformation, quality score from engagement, read completion and freshness (ranks Today's article, ADR 0015) |
 | Health content | Medicine/Public Health articles publish without approval, show a disclaimer ("لا يغني عن استشارة الطبيب") and require sources. Misinformation is handled through reports and moderation (F22) |
 
 ---
@@ -1344,7 +1337,7 @@ Seed content lives in `content/articles/{field}/{topic}/{slug}/` so it is versio
 ### 21.1 Notifications
 | Channel | Technology | Use |
 |---|---|---|
-| Push | **Firebase Cloud Messaging** (Android, iOS, Web Push) | Daily article, replies, mentions, followers, review results, security alerts |
+| Push | **Firebase Cloud Messaging** (Android, iOS, Web Push) | Daily article, replies, mentions, followers, security alerts |
 | In-app | SQL `Notifications` table + live unread badge from the **Realtime Database** | Notification center |
 | Email (Phase 3) | Transactional provider | Weekly digest, verification results |
 
@@ -1404,7 +1397,7 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
 - Angular **SSR** for public pages: articles, profiles, fields, paths, glossary terms.
 - Clean URLs: `/ar/a/{slug}`, `/en/a/{slug}`, `/@{username}`, `/f/{field}`, `/paths/{slug}`.
 - `hreflang` between `ar` and `en` versions, canonical URLs.
-- `schema.org/Article` structured data (author, datePublished, dateModified, reviewedBy).
+- `schema.org/Article` structured data (author, datePublished, dateModified).
 - Dynamic `sitemap.xml` (split per language), `robots.txt`, Open Graph + Twitter cards with generated cover images.
 - Core Web Vitals budget: LCP < 2.5s, CLS < 0.1, INP < 200ms.
 
@@ -1546,7 +1539,7 @@ Deploy targets (suggested): API + SSR on a single server or container host (with
 |---|---|
 | **0 — Foundation** | Repo, solution skeleton, CI, design tokens, RDoc schema, Firebase project + emulators, seeders for roles/fields/users |
 | **1 — MVP** | F01–F07, F10–F14, F18, F26–F30 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
-| **2 — Growth** | F08, F09, F15–F17, F19, F20, F22–F24 |
+| **2 — Growth** | F08, F09, F15–F17, F19, F22–F24 |
 | **3 — Depth** | F21, F25, email digest, quizzes at the end of articles, text-to-speech, AI translation for user articles |
 
 ---

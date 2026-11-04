@@ -73,7 +73,7 @@ public static class DependencyInjection
 
         services.AddScoped<OutboxProcessor>();
         services.AddScoped<OutboxJob>();
-        services.AddScoped<ScheduledPublishingJob>();
+        services.AddScoped<ArticleQualityJob>();
         services.AddScoped<OrphanedUploadsCleanupJob>();
         services.AddScoped<IdentityCleanupJob>();
         services.AddScoped<LiveEventsCleanupJob>();
@@ -111,6 +111,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, DemoMediaSeeder>();
         services.AddScoped<ISeeder, DemoReadingSeeder>();
         services.AddScoped<ISeeder, DemoCommentsSeeder>();
+        services.AddScoped<ISeeder, DemoEditorSeeder>();
         services.AddScoped<ISeeder, DemoInteractionsSeeder>();
         services.AddScoped<SeedRunner>();
 
@@ -138,7 +139,9 @@ public static class DependencyInjection
 
         var jobs = services.GetRequiredService<IRecurringJobManager>();
         jobs.AddOrUpdate<OutboxJob>("outbox", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
-        jobs.AddOrUpdate<ScheduledPublishingJob>("publish-scheduled", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
+        jobs.RemoveIfExists("publish-scheduled"); // scheduling was removed (ADR 0015)
+        jobs.AddOrUpdate<ArticleQualityJob>("article-quality", job => job.RunAsync(CancellationToken.None), Cron.Hourly(10));
+        jobs.Trigger("article-quality"); // scores are fresh right after a deploy, not only at the next hour
         jobs.AddOrUpdate<OrphanedUploadsCleanupJob>("uploads-orphan-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3));
         jobs.AddOrUpdate<IdentityCleanupJob>("identity-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 30));
         jobs.AddOrUpdate<DailyArticleJob>("daily-article", job => job.RunAsync(CancellationToken.None), DailyArticleJob.Schedule);

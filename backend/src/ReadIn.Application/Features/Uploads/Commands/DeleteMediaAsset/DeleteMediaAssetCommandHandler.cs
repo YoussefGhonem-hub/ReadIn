@@ -18,6 +18,10 @@ internal sealed class DeleteMediaAssetCommandHandler(IAppDbContext db, ICurrentU
         if (asset is null) return MediaErrors.NotFound;
         if (await db.ArticleAttachments.AnyAsync(a => a.MediaAssetId == asset.Id, cancellationToken)) return MediaErrors.InUse;
 
+        // An attachment the writer added in the editor but hasn't published yet is in use too (F05).
+        var id = asset.Id.ToString();
+        if (await db.ArticleDrafts.AnyAsync(d => d.DocumentJson.Contains(id), cancellationToken)) return MediaErrors.InUse;
+
         var paths = asset.StoredPaths().ToList();
         db.MediaAssets.Remove(asset);
         await db.SaveChangesAsync(cancellationToken);

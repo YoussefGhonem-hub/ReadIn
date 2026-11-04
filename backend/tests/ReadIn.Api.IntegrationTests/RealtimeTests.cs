@@ -94,25 +94,12 @@ public sealed class RealtimeTests(ApiFactory api)
         var author = Authorized(host, await api.SignUpAsync());
         var dotnet = (await author.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!
             .Single(f => f!["slug"]!.GetValue<string>() == "dotnet")!["id"]!.GetValue<Guid>();
-        var created = await author.PostAsJsonAsync("/api/v1/articles", new
-        {
-            fieldId = dotnet, language = "en", title = "Live banners need a publish signal",
-            content = new
-            {
-                version = 1, language = "en",
-                blocks = new object[] { new { id = "p1", type = "paragraph", dir = "auto", content = new[] { new { type = "text", text = "New." } } } },
-            },
-            sources = new[] { new { title = "ReadIn", url = "https://readin.app" } },
-            isAiAssisted = false,
-        }, Ct);
-        created.StatusCode.Should().Be(HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
-        var draft = (await created.Content.ReadFromJsonAsync<JsonObject>(Ct))!;
+        var draft = await author.CreateDraftAsync(ArticleTestKit.Document(dotnet, "Live banners need a publish signal", blocks: [ArticleTestKit.Paragraph("New.")]));
         publisher.FeedSignals.Should().BeEmpty("a draft is not in the feed");
 
-        (await author.PostAsync($"/api/v1/articles/{draft["id"]}/publish", null, Ct))
-            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var slug = await (await author.PublishDraftAsync(draft["id"]!.GetValue<Guid>(), draft["version"]!.GetValue<int>())).PublishedSlugAsync();
 
-        var article = (await author.GetFromJsonAsync<JsonObject>($"/api/v1/articles/{draft["slug"]}", Ct))!;
+        var article = (await author.GetFromJsonAsync<JsonObject>($"/api/v1/articles/{slug}", Ct))!;
         var publishedAt = article["publishedAt"]!.GetValue<DateTime>();
         // Hangfire is off in tests, so the outbox runs right after the commit.
         publisher.FeedSignals.Should().ContainSingle()

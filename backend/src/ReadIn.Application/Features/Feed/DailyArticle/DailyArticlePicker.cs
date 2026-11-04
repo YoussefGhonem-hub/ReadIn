@@ -70,11 +70,10 @@ public sealed class DailyArticlePicker(IAppDbContext db)
     }
 
     /// <summary>
-    /// F07 algorithm: reviewed + published, in interests, not read before, 4–10 minutes, preferred language first, best
-    /// quality first, never the same field 3 days in a row. Constraints relax in order when nothing matches (length, then
-    /// interests), and at each step a published article that passed the content pipeline's automatic checks stands in when
-    /// no reviewed article matches (the documented fallback while seeded articles wait for human review). "Prefers the
-    /// next item in the user's active learning path" joins once path enrollment (F09) exists.
+    /// F07 algorithm: any published article (ADR 0015), in interests, not read before, 4–10 minutes, preferred language
+    /// first, best <see cref="Article.QualityScore"/> first, never the same field 3 days in a row. Constraints relax in
+    /// order when nothing matches (length, then interests). "Prefers the next item in the user's active learning path"
+    /// joins once path enrollment (F09) exists.
     /// </summary>
     internal async Task<Guid?> PickAsync(PickerProfile profile, CancellationToken cancellationToken)
     {
@@ -83,18 +82,15 @@ public sealed class DailyArticlePicker(IAppDbContext db)
         // Read = completed (≥ 70% and ≥ 30 seconds, SPEC F04), the single "read" marker.
         var completed = db.ReadingProgress.Where(r => r.UserId == userId && r.CompletedAt != null).Select(r => r.ArticleId);
 
-        var reviewed = Reviewed().Where(a => !completed.Contains(a.Id));
-        var autoChecked = AutoChecked().Where(a => !completed.Contains(a.Id));
+        // A writer never gets their own article as Today's article.
+        var unread = Published().Where(a => a.AuthorId != userId && !completed.Contains(a.Id));
         var hasInterests = fieldIds.Count + topicIds.Count > 0;
 
         IQueryable<Article>[] attempts =
         [
-            Narrow(reviewed, strictLength: true, interests: hasInterests, excludedField),
-            Narrow(autoChecked, strictLength: true, interests: hasInterests, excludedField),
-            Narrow(reviewed, strictLength: false, interests: hasInterests, excludedField),
-            Narrow(autoChecked, strictLength: false, interests: hasInterests, excludedField),
-            Narrow(reviewed, strictLength: false, interests: false, excludedField: null),
-            Narrow(autoChecked, strictLength: false, interests: false, excludedField: null),
+            Narrow(unread, strictLength: true, interests: hasInterests, excludedField),
+            Narrow(unread, strictLength: false, interests: hasInterests, excludedField),
+            Narrow(unread, strictLength: false, interests: false, excludedField: null),
         ];
 
         foreach (var candidates in attempts)
@@ -122,11 +118,10 @@ public sealed class DailyArticlePicker(IAppDbContext db)
         }
     }
 
-    /// <summary>Guests get a stable daily rotation over the best reviewed articles (auto-checked ones when none is reviewed).</summary>
+    /// <summary>Guests get a stable daily rotation over the best published articles.</summary>
     public async Task<Guid?> PickForGuestAsync(DateTime utcNow, CancellationToken cancellationToken)
     {
-        var top = await TopAsync(Reviewed(), cancellationToken);
-        if (top.Count == 0) top = await TopAsync(AutoChecked(), cancellationToken);
+        var top = await TopAsync(Published(), cancellationToken);
         if (top.Count == 0) return null;
 
         var dayNumber = DateOnly.FromDateTime(utcNow).DayNumber;
@@ -187,11 +182,6 @@ public sealed class DailyArticlePicker(IAppDbContext db)
 
     private IQueryable<Article> Published() => db.Articles.AsNoTracking()
         .Where(a => a.Status == ArticleStatus.Published && a.Field.IsEnabled);
-
-    private IQueryable<Article> Reviewed() => Published().Where(a => a.ReviewStatus == ReviewStatus.Approved);
-
-    /// <summary>Fallback pool: published, not (yet) reviewed, but passed the content pipeline's automatic checks.</summary>
-    private IQueryable<Article> AutoChecked() => Published().Where(a => a.ReviewStatus != ReviewStatus.Approved && a.AutoCheckedAt != null);
 }
 
 /// <param name="ExcludedFieldId">The field of the last two days' picks when both were the same field.</param>
