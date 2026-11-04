@@ -133,6 +133,9 @@ abstract final class FailureCodes {
   static const reportReasonInvalid = 'report.reason_invalid';
   static const reportTargetNotFound = 'report.target_not_found';
 
+  // Glossary (F21)
+  static const glossaryTermNotFound = 'glossary.term_not_found';
+
   // Client-side
   static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';

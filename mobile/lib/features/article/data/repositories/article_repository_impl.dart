@@ -34,4 +34,8 @@ class ArticleRepositoryImpl implements ArticleRepository {
         return copy == null ? Err(failure) : Ok(copy.toEntity(offline: true));
     }
   }
+
+  @override
+  Future<Result<List<ArticleCard>>> getRelated(String articleId, {String? language, int limit = 4}) =>
+      guardApi(() async => [for (final m in await _api.getRelated(articleId, language, limit)) m.toEntity()]);
 }

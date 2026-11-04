@@ -23,6 +23,8 @@ import '../../features/article/data/repositories/article_repository_impl.dart'
 import '../../features/article/domain/repositories/article_repository.dart'
     as _i904;
 import '../../features/article/domain/usecases/get_article.dart' as _i904;
+import '../../features/article/domain/usecases/get_related_articles.dart'
+    as _i938;
 import '../../features/article/presentation/cubit/article_cubit.dart' as _i284;
 import '../../features/article/presentation/cubit/article_live_cubit.dart'
     as _i172;
@@ -30,6 +32,8 @@ import '../../features/article/presentation/cubit/attachment_viewer_cubit.dart'
     as _i189;
 import '../../features/article/presentation/cubit/engagement_cubit.dart'
     as _i226;
+import '../../features/article/presentation/cubit/related_articles_cubit.dart'
+    as _i692;
 import '../../features/auth/data/auth_module.dart' as _i360;
 import '../../features/auth/data/datasources/account_api.dart' as _i506;
 import '../../features/auth/data/datasources/apple_sign_in_data_source.dart'
@@ -85,6 +89,14 @@ import '../../features/follow/domain/usecases/follow_usecases.dart' as _i537;
 import '../../features/follow/presentation/cubit/follows_cubit.dart' as _i509;
 import '../../features/follow/presentation/cubit/suggested_writers_cubit.dart'
     as _i382;
+import '../../features/glossary/data/datasources/glossary_api.dart' as _i234;
+import '../../features/glossary/data/repositories/glossary_repository_impl.dart'
+    as _i730;
+import '../../features/glossary/domain/repositories/glossary_repository.dart'
+    as _i268;
+import '../../features/glossary/domain/usecases/get_glossary_term.dart' as _i86;
+import '../../features/glossary/presentation/cubit/glossary_term_cubit.dart'
+    as _i520;
 import '../../features/home/data/datasources/feed_api.dart' as _i931;
 import '../../features/home/data/repositories/feed_repository_impl.dart'
     as _i198;
@@ -311,6 +323,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i815.EditorApi>(() => _i815.EditorApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i73.FollowApi>(() => _i73.FollowApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i234.GlossaryApi>(
+      () => _i234.GlossaryApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i931.FeedApi>(() => _i931.FeedApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i757.MediaApi>(() => _i757.MediaApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i227.InterestsApi>(
@@ -440,6 +455,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i904.GetArticle>(
       () => _i904.GetArticle(gh<_i904.ArticleRepository>()),
     );
+    gh.factory<_i938.GetRelatedArticles>(
+      () => _i938.GetRelatedArticles(gh<_i904.ArticleRepository>()),
+    );
     gh.lazySingleton<_i787.AuthRepository>(
       () => _i153.AuthRepositoryImpl(
         gh<_i367.AuthApi>(),
@@ -464,6 +482,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i724.ManageCollections>(
       () => _i724.ManageCollections(gh<_i105.SavedRepository>()),
     );
+    gh.lazySingleton<_i268.GlossaryRepository>(
+      () => _i730.GlossaryRepositoryImpl(gh<_i234.GlossaryApi>()),
+    );
     gh.lazySingleton<_i674.SettingsRepository>(
       () => _i955.SettingsRepositoryImpl(
         gh<_i599.SettingsLocalDataSource>(),
@@ -473,6 +494,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i940.EditorRepository>(
       () => _i552.EditorRepositoryImpl(gh<_i815.EditorApi>()),
+    );
+    gh.factory<_i86.GetGlossaryTerm>(
+      () => _i86.GetGlossaryTerm(gh<_i268.GlossaryRepository>()),
+    );
+    gh.factory<_i520.GlossaryTermCubit>(
+      () => _i520.GlossaryTermCubit(gh<_i86.GetGlossaryTerm>()),
     );
     gh.factory<_i46.SignOut>(
       () => _i46.SignOut(
@@ -714,6 +741,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i321.ReadingHeatmapCubit>(
       () => _i321.ReadingHeatmapCubit(gh<_i892.GetReadingHeatmap>()),
+    );
+    gh.factory<_i692.RelatedArticlesCubit>(
+      () => _i692.RelatedArticlesCubit(gh<_i938.GetRelatedArticles>()),
     );
     gh.factory<_i245.CompleteProfileCubit>(
       () => _i245.CompleteProfileCubit(

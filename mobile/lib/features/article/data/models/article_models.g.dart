@@ -150,69 +150,89 @@ Map<String, dynamic> _$ReviewerModelToJson(_ReviewerModel instance) =>
       'username': instance.username,
     };
 
-_ArticleDetailsModel _$ArticleDetailsModelFromJson(Map<String, dynamic> json) =>
-    _ArticleDetailsModel(
-      id: json['id'] as String,
-      slug: json['slug'] as String,
+_MyProgressModel _$MyProgressModelFromJson(Map<String, dynamic> json) =>
+    _MyProgressModel(
       language: json['language'] as String,
-      title: json['title'] as String,
-      subtitle: json['subtitle'] as String?,
-      coverUrl: json['coverUrl'] as String?,
-      field: FieldRefModel.fromJson(json['field'] as Map<String, dynamic>),
-      author: AuthorModel.fromJson(json['author'] as Map<String, dynamic>),
-      readingTimeMinutes: (json['readingTimeMinutes'] as num?)?.toInt() ?? 1,
-      isReviewed: json['isReviewed'] as bool? ?? false,
-      isAiAssisted: json['isAiAssisted'] as bool? ?? false,
-      versionBadge: json['versionBadge'] as String?,
-      publishedAt: DateTime.parse(json['publishedAt'] as String),
-      reactionCount: (json['reactionCount'] as num?)?.toInt() ?? 0,
-      commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
-      attachments: json['attachments'] == null
+      percent: (json['percent'] as num?)?.toInt() ?? 0,
+      lastPosition: json['lastPosition'] as String?,
+      completedAt: json['completedAt'] == null
           ? null
-          : ArticleAttachmentsModel.fromJson(
-              json['attachments'] as Map<String, dynamic>,
-            ),
-      reactions: json['reactions'] == null
-          ? null
-          : ReactionCountsModel.fromJson(
-              json['reactions'] as Map<String, dynamic>,
-            ),
-      myReaction: json['myReaction'] as String?,
-      isSaved: json['isSaved'] as bool? ?? false,
-      availableLanguages:
-          (json['availableLanguages'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const <String>[],
-      summary: json['summary'] as String?,
-      content:
-          json['content'] as Map<String, dynamic>? ?? const <String, dynamic>{},
-      topic: json['topic'] == null
-          ? null
-          : FieldRefModel.fromJson(json['topic'] as Map<String, dynamic>),
-      tags:
-          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-          const <String>[],
-      sources:
-          (json['sources'] as List<dynamic>?)
-              ?.map((e) => SourceModel.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <SourceModel>[],
-      reviewedBy: json['reviewedBy'] == null
-          ? null
-          : ReviewerModel.fromJson(json['reviewedBy'] as Map<String, dynamic>),
-      lastReviewedAt: json['lastReviewedAt'] == null
-          ? null
-          : DateTime.parse(json['lastReviewedAt'] as String),
-      saveCount: (json['saveCount'] as num?)?.toInt() ?? 0,
-      readCount: (json['readCount'] as num?)?.toInt() ?? 0,
-      isFollowingAuthor: json['isFollowingAuthor'] as bool? ?? false,
-      collectionIds:
-          (json['collectionIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const <String>[],
+          : DateTime.parse(json['completedAt'] as String),
     );
+
+Map<String, dynamic> _$MyProgressModelToJson(_MyProgressModel instance) =>
+    <String, dynamic>{
+      'language': instance.language,
+      'percent': instance.percent,
+      'lastPosition': ?instance.lastPosition,
+      'completedAt': ?instance.completedAt?.toIso8601String(),
+    };
+
+_ArticleDetailsModel _$ArticleDetailsModelFromJson(
+  Map<String, dynamic> json,
+) => _ArticleDetailsModel(
+  id: json['id'] as String,
+  slug: json['slug'] as String,
+  language: json['language'] as String,
+  title: json['title'] as String,
+  subtitle: json['subtitle'] as String?,
+  coverUrl: json['coverUrl'] as String?,
+  field: FieldRefModel.fromJson(json['field'] as Map<String, dynamic>),
+  author: AuthorModel.fromJson(json['author'] as Map<String, dynamic>),
+  readingTimeMinutes: (json['readingTimeMinutes'] as num?)?.toInt() ?? 1,
+  isReviewed: json['isReviewed'] as bool? ?? false,
+  isAiAssisted: json['isAiAssisted'] as bool? ?? false,
+  versionBadge: json['versionBadge'] as String?,
+  publishedAt: DateTime.parse(json['publishedAt'] as String),
+  reactionCount: (json['reactionCount'] as num?)?.toInt() ?? 0,
+  commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
+  attachments: json['attachments'] == null
+      ? null
+      : ArticleAttachmentsModel.fromJson(
+          json['attachments'] as Map<String, dynamic>,
+        ),
+  reactions: json['reactions'] == null
+      ? null
+      : ReactionCountsModel.fromJson(json['reactions'] as Map<String, dynamic>),
+  myReaction: json['myReaction'] as String?,
+  isSaved: json['isSaved'] as bool? ?? false,
+  availableLanguages:
+      (json['availableLanguages'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const <String>[],
+  summary: json['summary'] as String?,
+  content:
+      json['content'] as Map<String, dynamic>? ?? const <String, dynamic>{},
+  topic: json['topic'] == null
+      ? null
+      : FieldRefModel.fromJson(json['topic'] as Map<String, dynamic>),
+  tags:
+      (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const <String>[],
+  sources:
+      (json['sources'] as List<dynamic>?)
+          ?.map((e) => SourceModel.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <SourceModel>[],
+  reviewedBy: json['reviewedBy'] == null
+      ? null
+      : ReviewerModel.fromJson(json['reviewedBy'] as Map<String, dynamic>),
+  lastReviewedAt: json['lastReviewedAt'] == null
+      ? null
+      : DateTime.parse(json['lastReviewedAt'] as String),
+  saveCount: (json['saveCount'] as num?)?.toInt() ?? 0,
+  readCount: (json['readCount'] as num?)?.toInt() ?? 0,
+  isFollowingAuthor: json['isFollowingAuthor'] as bool? ?? false,
+  collectionIds:
+      (json['collectionIds'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const <String>[],
+  myProgress: json['myProgress'] == null
+      ? null
+      : MyProgressModel.fromJson(json['myProgress'] as Map<String, dynamic>),
+);
 
 Map<String, dynamic> _$ArticleDetailsModelToJson(
   _ArticleDetailsModel instance,
@@ -248,4 +268,5 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'readCount': instance.readCount,
   'isFollowingAuthor': instance.isFollowingAuthor,
   'collectionIds': instance.collectionIds,
+  'myProgress': ?instance.myProgress?.toJson(),
 };

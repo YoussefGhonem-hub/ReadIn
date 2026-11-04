@@ -14,4 +14,8 @@ abstract class ArticleApi {
 
   @GET('/articles/{slug}')
   Future<ArticleDetailsModel> getArticle(@Path('slug') String slug, @Query('lang') String? lang);
+
+  /// Cards for the end of the reader (F04). `lang` is the version being read.
+  @GET('/articles/{id}/related')
+  Future<List<ArticleCardModel>> getRelated(@Path('id') String id, @Query('lang') String? lang, @Query('limit') int limit);
 }

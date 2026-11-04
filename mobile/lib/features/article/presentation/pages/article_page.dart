@@ -12,9 +12,11 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/rdoc/blocks/text_blocks.dart';
 import '../../../../shared/rdoc/rdoc_view.dart';
 import '../../../../shared/utils/link_opener.dart';
+import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
+import '../../../glossary/presentation/widgets/glossary_sheet.dart';
 import '../../../reading/presentation/tracking/reading_tracking.dart';
 import '../../../saved/presentation/cubit/collections_cubit.dart';
 import '../../../settings/domain/entities/app_settings.dart';
@@ -25,13 +27,18 @@ import '../cubit/article_live_cubit.dart';
 import '../cubit/engagement_cubit.dart';
 import '../widgets/article_attachments_view.dart';
 import '../widgets/reader_action_bar.dart';
+import '../widgets/reader_resume.dart';
 import '../widgets/reader_widgets.dart';
+import '../widgets/related_articles_section.dart';
 
 /// Article reader (F04). Deep link: `readin.app/a/{slug}`.
 class ArticlePage extends StatelessWidget {
-  const ArticlePage({super.key, required this.slug});
+  const ArticlePage({super.key, required this.slug, this.anchor});
 
   final String slug;
+
+  /// The block or comment the link points at (`#…`); null opens the article where the reader left it.
+  final String? anchor;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +48,7 @@ class ArticlePage extends StatelessWidget {
         BlocProvider(create: (_) => getIt<ArticleCubit>()..load(slug, preferredLanguage: preferred)),
         BlocProvider(create: (_) => getIt<ArticleLiveCubit>()),
       ],
-      child: const ReadingTracking(child: ArticleView()),
+      child: ReadingTracking(child: ArticleView(anchor: anchor)),
     );
   }
 }
@@ -49,7 +56,10 @@ class ArticlePage extends StatelessWidget {
 /// The reader once its cubits are provided ([ArticleCubit], [ArticleLiveCubit]; [EngagementCubit],
 /// [FollowsCubit] and [CollectionsCubit] come from the app).
 class ArticleView extends StatefulWidget {
-  const ArticleView({super.key});
+  const ArticleView({super.key, this.anchor});
+
+  /// See [ArticlePage.anchor]: a link to a block or comment never resumes the last position.
+  final String? anchor;
 
   @override
   State<ArticleView> createState() => _ArticleViewState();
@@ -59,6 +69,10 @@ class _ArticleViewState extends State<ArticleView> {
   final _scroll = ScrollController();
   final _progress = ValueNotifier<double>(0);
   late final AppLifecycleListener _lifecycle;
+
+  // Resume (F04): tried once, for the first article shown.
+  bool _resumeTried = false;
+  ReaderResume? _resume;
 
   @override
   void initState() {
@@ -87,6 +101,44 @@ class _ArticleViewState extends State<ArticleView> {
       context.read<CollectionsCubit>().seedArticle(article.card.id, article.collectionIds);
     }
     context.read<ArticleLiveCubit>().watch(article.card.id);
+    _maybeResume(article);
+  }
+
+  /// Scrolls back to where the reader left this version, once the first article is laid out (F04 resume). Another
+  /// version or a link to a block never resumes; neither does a reader who already scrolled.
+  void _maybeResume(ArticleDetails article) {
+    if (_resumeTried) {
+      // Another version replaced the content: the saved position no longer applies.
+      _resume?.cancel();
+      return;
+    }
+    _resumeTried = true;
+    final fraction = widget.anchor == null ? article.resumeFraction : null;
+    if (fraction != null) WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_resumeAt(fraction)));
+  }
+
+  Future<void> _resumeAt(double fraction) async {
+    if (!mounted || !_scroll.hasClients || _scroll.position.pixels > 0) return;
+    final resume = _resume = ReaderResume(controller: _scroll, fraction: fraction, onSettled: _onResumeSettled);
+    final moved = await resume.start();
+    if (!mounted || !moved) return;
+    final l10n = context.l10n;
+    showActionMessage(
+      context,
+      l10n.resumePickedUp,
+      action: SnackBarAction(label: l10n.resumeStartOver, onPressed: _startOver),
+    );
+  }
+
+  /// The tracker above this widget missed the jumps: hand it the settled position, as the scroll view would.
+  void _onResumeSettled(ScrollMetrics metrics) {
+    if (mounted) ScrollMetricsNotification(metrics: metrics.copyWith(), context: context).dispatch(context);
+  }
+
+  void _startOver() {
+    _resume?.cancel();
+    if (!mounted || !_scroll.hasClients) return;
+    unawaited(_scroll.animateTo(0, duration: ReadInMotion.slow, curve: Curves.easeOutCubic));
   }
 
   void _onLive(LiveArticleCounts? counts) {
@@ -96,6 +148,7 @@ class _ArticleViewState extends State<ArticleView> {
 
   @override
   void dispose() {
+    _resume?.cancel();
     _lifecycle.dispose();
     _scroll.dispose();
     _progress.dispose();
@@ -109,26 +162,18 @@ class _ArticleViewState extends State<ArticleView> {
         ArticleFontSize.xl => ReadInArticleFontScale.xl,
       };
 
-  void _showTerm(RTerm term) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, 0, ReadInSpace.s5, ReadInSpace.s6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(context.l10n.glossary, style: context.textTheme.labelMedium?.copyWith(color: context.colors.primary)),
-              const SizedBox(height: ReadInSpace.s2),
-              Text(term.text, textDirection: TextDirection.ltr, style: context.textTheme.headlineSmall),
-              const SizedBox(height: ReadInSpace.s3),
-              Text(context.l10n.glossaryComingSoon(term.text), style: context.textTheme.bodyMedium),
-            ],
-          ),
-        ),
-      ),
+  /// The glossary sheet (F21) for the version being read; an article picked there opens like any other.
+  Future<void> _showTerm(RTerm term) async {
+    final article = context.read<ArticleCubit>().state.article;
+    if (article == null) return;
+    final slug = await showGlossarySheet(
+      context,
+      termId: term.termId,
+      text: term.text,
+      language: article.card.language,
+      articleId: article.card.id,
     );
+    if (slug != null && mounted) unawaited(context.push('/a/$slug'));
   }
 
   @override
@@ -166,11 +211,15 @@ class _ArticleViewState extends State<ArticleView> {
                           failure: state.failure!,
                           onRetry: () => context.read<ArticleCubit>().retry(settings.state.articleLanguage),
                         ),
-                      ArticleStatus.ready => _ReaderBody(
-                          article: article!,
-                          controller: _scroll,
-                          bodyFontSize: _fontSizeFor(fontSize),
-                          onTerm: _showTerm,
+                      ArticleStatus.ready => NotificationListener<Notification>(
+                          // While resuming, the jumps stay between the reader and its resume.
+                          onNotification: (notification) => _resume?.onNotification(notification) ?? false,
+                          child: _ReaderBody(
+                            article: article!,
+                            controller: _scroll,
+                            bodyFontSize: _fontSizeFor(fontSize),
+                            onTerm: (term) => unawaited(_showTerm(term)),
+                          ),
                         ),
                     },
                   ),
@@ -325,6 +374,7 @@ class _ReaderBody extends StatelessWidget {
               padding: gutter.copyWith(top: ReadInSpace.s4, bottom: ReadInSpace.s8),
               sliver: SliverToBoxAdapter(child: SourcesSection(sources: article.sources, onOpen: openExternalLink)),
             ),
+            RelatedArticlesSection(article: article.card),
           ],
         ),
       ),

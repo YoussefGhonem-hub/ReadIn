@@ -358,6 +358,8 @@ void main() {
   });
 
   group('reader (F04, F25, F27)', () {
+    setUp(registerNoRelatedArticles);
+
     Future<StreamController<LiveArticleCounts?>> pumpReader(
       WidgetTester tester, {
       bool offline = false,

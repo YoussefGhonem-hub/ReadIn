@@ -304,6 +304,7 @@ void main() {
     });
 
     testWidgets('reader with follow and actions ${variant.name}', (tester) async {
+      registerNoRelatedArticles();
       final card = engagedCard(1, myReaction: ReactionType.insightful, language: language);
       final article = ArticleDetails(
         card: card,

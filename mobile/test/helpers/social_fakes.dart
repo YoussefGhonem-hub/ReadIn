@@ -1,10 +1,16 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:readin/core/di/injection.dart';
+import 'package:readin/core/errors/result.dart';
 import 'package:readin/core/realtime/realtime_service.dart';
 import 'package:readin/features/article/data/datasources/article_offline_store.dart';
 import 'package:readin/features/article/data/models/article_models.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
+import 'package:readin/features/article/domain/repositories/article_repository.dart';
+import 'package:readin/features/article/domain/usecases/get_related_articles.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
+import 'package:readin/features/article/presentation/cubit/related_articles_cubit.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/follow/domain/entities/follow.dart';
 import 'package:readin/features/follow/domain/repositories/follow_repository.dart';
@@ -35,6 +41,18 @@ class MockFollowsCubit extends MockCubit<FollowsState> implements FollowsCubit {
 class MockCollectionsCubit extends MockCubit<CollectionsState> implements CollectionsCubit {}
 
 class MockSavedListCubit extends MockCubit<SavedListState> implements SavedListCubit {}
+
+class _NoRelatedArticles extends Mock implements ArticleRepository {}
+
+/// The reader builds its "Related articles" (F04) with `getIt<RelatedArticlesCubit>()`: registers one that finds
+/// none, for the current test, so tests about the rest of the reader see no section.
+void registerNoRelatedArticles() {
+  final repository = _NoRelatedArticles();
+  when(() => repository.getRelated(any(), language: any(named: 'language'), limit: any(named: 'limit')))
+      .thenAnswer((_) async => const Ok(<ArticleCard>[]));
+  getIt.registerFactory<RelatedArticlesCubit>(() => RelatedArticlesCubit(GetRelatedArticles(repository)));
+  addTearDown(() => getIt.unregister<RelatedArticlesCubit>());
+}
 
 /// [ArticleOfflineStore] backed by a map: `id|language` → copy.
 class FakeArticleOfflineStore implements ArticleOfflineStore {
