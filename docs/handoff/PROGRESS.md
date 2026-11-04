@@ -142,3 +142,33 @@ Order:
     reader, social) passed 82/82 when rerun on their own. The next full run is at the Step 6 gate.
 
 ## Step 6: remaining work (in progress)
+
+### 6.1 Handoff leftovers ✅
+- **F22 merge notes checked:** related, glossary terms, path cards, `ActivePathNext`, continue reading, the feeds and the
+  picker all go through `Visible()` or `VisibleTo(viewer)`, so hidden articles stay out.
+- **ContentStudio `reviewStatus`** (abb2873):
+  - New meta.json files leave it out. The 300 seeded files keep `"pending"`, because editing them would re-import
+    every article. The importer ignores it, and any claimed review still fails validation.
+  - The seeder no longer reads `reviewedAt` as a publish date.
+  - The content README and authoring guide no longer describe a reviewer queue or scheduling.
+- **F21: writers mark terms in the editor** (SPEC F21, the F04 handoff):
+  - web ff5dddb;
+  - mobile ff4a0c1, with a toolbar button and a picker searching `GET /glossary?q=`;
+  - selecting a term changes or removes it;
+  - mobile works in the main text and in structured-block fields;
+  - e2e in all four variants, with screenshots and goldens in ar/light and en/dark.
+- **Found and fixed while testing the mobile picker:** the mobile link dialog never applied the link, because AppFlowy
+  drops its selection when a dialog takes the focus (ff4a0c1, with a test of the real dialog flow).
+- **Related cards stay compact on web**, without attachments, as on mobile (fa3169d).
+- **Who reacted (mobile):** a slow answer to an older load can no longer replace the newer list or append a page to it
+  (6a9d250). The web sheet already guarded this.
+- **Left as they are, by design:**
+  - `ArticlePathDto.previous` isn't shown; SPEC F09 has only "Next in path".
+  - Resume is approximate across devices; both clients measure the whole scroll range.
+  - The admin path screens wait for F23.
+- **For the user (not code):**
+  - production FCM/RTDB setup: service account, rules deploy, VAPID, Apple Services ID, release SHA-1s;
+  - whether to install the lock hook in `.claude/settings.json`.
+- **Still open, to look at under "other gaps":**
+  - the web initial bundle (518 kB, over the 500 kB warning);
+  - two mobile editor limits noted during F05: bidi marks while editing, and list item direction.
