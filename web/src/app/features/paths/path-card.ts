@@ -76,7 +76,7 @@ export class PathCover {
     @let p = path();
     <a
       [routerLink]="['/paths', p.slug]"
-      class="rd-card flex gap-3 p-3 text-inherit no-underline shadow-none transition-colors hover:border-primary"
+      class="rd-card flex gap-3 p-3 text-inherit no-underline shadow-none transition-colors hover:bg-surface-variant"
       [attr.data-path-card]="p.slug"
     >
       <rd-path-cover class="h-20 w-20 shrink-0 rounded-md" [path]="p" />
@@ -84,7 +84,7 @@ export class PathCover {
         <div class="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
           <span class="rd-tag"><rd-bdi-text [text]="field()" /></span>
           @if (completed()) {
-            <span class="rd-tag bg-success/15 text-success" data-path-completed>{{ 'paths.completed' | transloco }}</span>
+            <span class="rd-tag text-success" data-path-completed>{{ 'paths.completed' | transloco }}</span>
           }
         </div>
         <h3 class="m-0 line-clamp-2 text-[15px] font-semibold leading-snug" [attr.dir]="titleDir()"><rd-bdi-text [text]="p.title" /></h3>

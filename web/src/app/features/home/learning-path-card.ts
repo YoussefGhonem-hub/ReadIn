@@ -29,18 +29,20 @@ import { ProgressBar } from '../../shared/ui/progress-bar';
   `,
   template: `
     @if (loading()) {
-      <div class="rd-card h-[148px] shadow-none" aria-hidden="true" data-home-path-loading>
-        <div class="flex items-center gap-3 p-4">
+      <!-- The size of the card: the title row, the bar and the button. -->
+      <div class="rd-card p-4 shadow-none" aria-hidden="true" data-home-path-loading>
+        <div class="flex items-center gap-3">
           <div class="rd-skeleton h-10 w-10 shrink-0 rounded-full"></div>
           <div class="flex flex-1 flex-col gap-2">
             <div class="rd-skeleton h-3 w-20"></div>
             <div class="rd-skeleton h-4 w-2/3"></div>
           </div>
         </div>
-        <div class="rd-skeleton mx-4 h-11"></div>
+        <div class="rd-skeleton mt-3 h-1.5"></div>
+        <div class="rd-skeleton mt-3 h-11"></div>
       </div>
     } @else if (path(); as p) {
-      <section class="rd-card relative p-4 shadow-none transition-colors hover:border-primary" aria-labelledby="home-path-title" data-home-path>
+      <section class="rd-card relative p-4 shadow-none transition-colors hover:bg-surface-variant" aria-labelledby="home-path-title" data-home-path>
         <div class="flex items-center gap-3">
           <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-container text-on-primary-container" aria-hidden="true">
             <svg lucideIcon="Route" [size]="20"></svg>
@@ -71,7 +73,7 @@ import { ProgressBar } from '../../shared/ui/progress-bar';
         }
       </section>
     } @else {
-      <a routerLink="/paths" class="rd-card flex min-h-14 items-center gap-3 px-3 py-2 text-inherit no-underline shadow-none transition-colors hover:border-primary" data-home-path-prompt>
+      <a routerLink="/paths" class="rd-card flex h-14 items-center gap-3 px-3 text-inherit no-underline shadow-none transition-colors hover:bg-surface-variant" data-home-path-prompt>
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-container text-on-primary-container" aria-hidden="true">
           <svg lucideIcon="Route" [size]="18"></svg>
         </span>

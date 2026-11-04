@@ -69,7 +69,7 @@ const NEAR_VIEWPORT = '600px 0px';
         } @else {
           <p class="m-0 mt-4 text-sm" data-next-last>{{ 'paths.next.last' | transloco }}</p>
           @if (completed()) {
-            <p class="m-0 mt-2 inline-flex rounded-md bg-success/15 px-3 py-1.5 text-sm font-semibold text-success" role="status" data-next-completed>
+            <p class="rd-tag m-0 mt-2 text-sm text-success" role="status" data-next-completed>
               {{ 'paths.next.completed' | transloco }}
             </p>
           }

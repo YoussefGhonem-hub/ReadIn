@@ -20,7 +20,7 @@ import { ProgressBar } from '../../shared/ui/progress-bar';
   host: { class: 'block' },
   template: `
     @let a = item().article;
-    <a [routerLink]="link()" class="rd-card flex items-center gap-3 p-3 text-inherit no-underline shadow-none transition-colors hover:border-primary" data-continue-reading>
+    <a [routerLink]="link()" class="rd-card flex items-center gap-3 p-3 text-inherit no-underline shadow-none transition-colors hover:bg-surface-variant" data-continue-reading>
       <span class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-primary-container" aria-hidden="true">
         @if (a.coverUrl) {
           <img [src]="a.coverUrl" alt="" class="h-full w-full object-cover" />
@@ -33,8 +33,8 @@ import { ProgressBar } from '../../shared/ui/progress-bar';
           <span class="font-semibold text-primary">{{ 'home.continueReading.title' | transloco }}</span>
           <span class="rd-tag rd-tag-neutral"><rd-bdi-text [text]="field()" /></span>
         </span>
-        <!-- A whole-pixel line height keeps the card's height an integer, so the feed below never sits on a sub-pixel. -->
-        <span class="mt-1 block truncate text-[15px] font-semibold leading-5" [attr.dir]="titleDir()" [attr.lang]="item().language" data-continue-title
+        <!-- text-base has a whole-pixel line height: the card stays a whole number of pixels tall, so the feed below never sits on a sub-pixel. -->
+        <span class="mt-1 block truncate text-base font-semibold" [attr.dir]="titleDir()" [attr.lang]="item().language" data-continue-title
           ><rd-bdi-text [text]="a.title"
         /></span>
         <rd-progress-bar class="mt-2" [value]="item().percent" [label]="'home.continueReading.percent' | transloco: { percent: item().percent }" />

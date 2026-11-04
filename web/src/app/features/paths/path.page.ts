@@ -70,7 +70,7 @@ export function pathAction(path: PathDetailsDto, signedIn: boolean): PathAction 
         <div class="mb-2 flex flex-wrap items-center gap-2 text-xs">
           <span class="rd-tag"><rd-bdi-text [text]="field()" /></span>
           @if (completed()) {
-            <span class="rd-tag bg-success/15 text-success" data-path-completed>{{ 'paths.completed' | transloco }}</span>
+            <span class="rd-tag text-success" data-path-completed>{{ 'paths.completed' | transloco }}</span>
           }
         </div>
         <div class="flex items-start gap-2">
@@ -136,7 +136,7 @@ export function pathAction(path: PathDetailsDto, signedIn: boolean): PathAction 
       </header>
 
       @if (action() === 'again') {
-        <div class="mt-5 flex items-start gap-3 rounded-card bg-success/10 p-4" role="status" data-path-celebration>
+        <div class="mt-5 flex items-start gap-3 rounded-card bg-primary-container p-4" role="status" data-path-celebration>
           <svg lucideIcon="PartyPopper" [size]="24" class="shrink-0 text-success" aria-hidden="true"></svg>
           <div>
             <p class="m-0 font-semibold">{{ 'paths.detail.completedTitle' | transloco }}</p>
@@ -154,7 +154,7 @@ export function pathAction(path: PathDetailsDto, signedIn: boolean): PathAction 
               <a
                 [routerLink]="link(item.article)"
                 class="flex items-center gap-3 rounded-md border p-2 text-inherit no-underline transition-colors hover:bg-surface-variant"
-                [class]="isNext ? 'border-primary bg-primary-container/40' : 'border-transparent'"
+                [class]="isNext ? 'border-primary bg-primary-container' : 'border-transparent'"
                 [attr.aria-current]="isNext ? 'step' : null"
               >
                 <span
@@ -250,7 +250,7 @@ export function pathAction(path: PathDetailsDto, signedIn: boolean): PathAction 
       <div class="flex flex-col gap-3" aria-busy="true" data-path-loading>
         <div class="rd-skeleton h-36 w-full rounded-card"></div>
         <div class="rd-skeleton h-4 w-24"></div>
-        <div class="rd-skeleton h-7 w-3/4"></div>
+        <div class="rd-skeleton h-8 w-3/4"></div>
         <div class="rd-skeleton h-4 w-full"></div>
         <div class="rd-skeleton h-11 w-full"></div>
         @for (i of [1, 2, 3]; track i) {
