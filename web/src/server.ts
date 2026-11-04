@@ -6,6 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { appLinksConfig, appleAppSiteAssociation, assetLinks } from './server/app-links';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -13,16 +14,21 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * App Links and Universal Links (SPEC F24, docs/setup/app-links.md): Android and iOS read these files before they let
+ * the app open this domain's article links. Built from the environment (ANDROID_APP_ID, ANDROID_CERT_SHA256,
+ * IOS_APP_IDS), served as JSON at their exact paths with no redirect; 404 while unconfigured.
  */
+const appLinks = appLinksConfig(process.env);
+for (const value of appLinks.ignored) console.warn(`App links: ignored ${value}`);
+const wellKnown = (body: unknown) => (_req: express.Request, res: express.Response) => {
+  if (body === null) {
+    res.status(404).end();
+    return;
+  }
+  res.set('Cache-Control', 'public, max-age=3600').type('application/json').send(JSON.stringify(body));
+};
+app.get('/.well-known/assetlinks.json', wellKnown(assetLinks(appLinks)));
+app.get('/.well-known/apple-app-site-association', wellKnown(appleAppSiteAssociation(appLinks)));
 
 /**
  * Serve static files from /browser

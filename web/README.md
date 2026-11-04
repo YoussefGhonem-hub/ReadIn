@@ -19,6 +19,8 @@ Local dependencies: the API on `http://localhost:5080` and the Firebase emulator
 
 `npm run e2e` is self-contained: it starts the mock API (`e2e/mock-api/server.mjs`) on `:5180` and `ng serve --configuration e2e` on `:4280` (the development build pointed at the mock, `src/environments/environment.e2e.ts`), so a local API on `:5080` or `npm start` on `:4200` can keep running. Visual baselines are per platform (`*-win32.png` today).
 
+The SSR server also serves `/.well-known/assetlinks.json` and `/.well-known/apple-app-site-association`, so shared article links open the apps (F24): set `ANDROID_CERT_SHA256` (and `ANDROID_APP_ID` / `IOS_APP_IDS` if they change) on the server, see [docs/setup/app-links.md](../docs/setup/app-links.md).
+
 SSR can call the API over an internal address with `READIN_API_INTERNAL_URL` (e.g. `http://readin-api:8080/api/v1`); the transfer cache maps it back to the public origin. Allowed SSR hosts are set in `angular.json` → `security.allowedHosts`.
 
 ## Sign in (SPEC §9, ADR 0007, ADR 0012)
