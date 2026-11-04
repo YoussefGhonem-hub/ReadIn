@@ -1,4 +1,7 @@
+import 'package:readin/core/errors/failure.dart';
+import 'package:readin/core/errors/result.dart';
 import 'package:readin/features/glossary/domain/entities/glossary_term.dart';
+import 'package:readin/features/glossary/domain/repositories/glossary_repository.dart';
 
 import 'fixtures.dart';
 
@@ -82,3 +85,36 @@ Map<String, dynamic> diTermJson() => {
           },
       ],
     };
+
+/// Search results of the editor's term picker (`GlossaryTermSummaryDto`).
+const diSummary = GlossaryTermSummary(
+  slug: 'dependency-injection',
+  term: 'Dependency Injection',
+  definitionEn: 'A technique where an object receives the objects it depends on from outside, instead of creating them itself.',
+);
+const iocSummary = GlossaryTermSummary(
+  slug: 'ioc-container',
+  term: 'IoC container',
+  definitionEn: 'A framework component that creates objects and supplies their dependencies.',
+);
+
+/// A glossary that answers searches from [terms] the way the API does (the English term or the slug, case
+/// insensitive), or fails with [failure]. [searches] records every query.
+class FakeGlossaryRepository implements GlossaryRepository {
+  FakeGlossaryRepository({this.terms = const [diSummary, iocSummary], this.failure});
+
+  final List<GlossaryTermSummary> terms;
+  Failure? failure;
+  final searches = <String>[];
+
+  @override
+  Future<Result<List<GlossaryTermSummary>>> search(String query, {int limit = 8}) async {
+    searches.add(query);
+    if (failure != null) return Err(failure!);
+    final q = query.toLowerCase();
+    return Ok([for (final t in terms) if (t.term.toLowerCase().contains(q) || t.slug.contains(q)) t].take(limit).toList());
+  }
+
+  @override
+  Future<Result<GlossaryTerm>> getTerm(String slug, {required String language}) async => const Ok(diTerm);
+}

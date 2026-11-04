@@ -2764,6 +2764,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get formatMention => 'منشن لحد';
 
   @override
+  String get formatTerm => 'مصطلح من القاموس';
+
+  @override
+  String get termPickerFor => 'اعمله مصطلح من القاموس:';
+
+  @override
+  String get termPickerCurrent => 'مصطلح من القاموس:';
+
+  @override
+  String get termSearchHint => 'دوّر في القاموس (المصطلح بالإنجليزي)';
+
+  @override
+  String get termSearching => 'بندوّر…';
+
+  @override
+  String get termNoMatches =>
+      'مفيش مصطلح زي كده في القاموس. جرّب المصطلح بالإنجليزي.';
+
+  @override
+  String get termTypeToSearch => 'اكتب مصطلح عشان تدوّر في القاموس.';
+
+  @override
+  String get termSearchError => 'معرفناش ندوّر في القاموس.';
+
+  @override
+  String get termRemove => 'شيل المصطلح';
+
+  @override
   String get linkDialogTitle => 'لينك';
 
   @override

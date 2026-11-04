@@ -15,4 +15,8 @@ abstract class GlossaryApi {
 
   @GET('/glossary/{slug}')
   Future<GlossaryTermModel> getTerm(@Path('slug') String slug, @Query('lang') String lang);
+
+  /// The editor's term picker: the English term or the slug, those starting with [q] first, then A–Z.
+  @GET('/glossary')
+  Future<List<GlossaryTermSummaryModel>> search(@Query('q') String q, @Query('limit') int limit);
 }

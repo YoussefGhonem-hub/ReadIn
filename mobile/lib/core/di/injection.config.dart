@@ -107,6 +107,10 @@ import '../../features/glossary/data/repositories/glossary_repository_impl.dart'
 import '../../features/glossary/domain/repositories/glossary_repository.dart'
     as _i268;
 import '../../features/glossary/domain/usecases/get_glossary_term.dart' as _i86;
+import '../../features/glossary/domain/usecases/search_glossary_terms.dart'
+    as _i97;
+import '../../features/glossary/presentation/cubit/glossary_search_cubit.dart'
+    as _i463;
 import '../../features/glossary/presentation/cubit/glossary_term_cubit.dart'
     as _i520;
 import '../../features/home/data/datasources/feed_api.dart' as _i931;
@@ -539,12 +543,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i86.GetGlossaryTerm>(
       () => _i86.GetGlossaryTerm(gh<_i268.GlossaryRepository>()),
     );
+    gh.factory<_i97.SearchGlossaryTerms>(
+      () => _i97.SearchGlossaryTerms(gh<_i268.GlossaryRepository>()),
+    );
     gh.lazySingleton<_i787.AccountRepository>(
       () => _i153.AccountRepositoryImpl(
         gh<_i506.AccountApi>(),
         gh<_i348.AuthSessionStore>(),
         gh<_i881.AccountDeviceData>(),
       ),
+    );
+    gh.factory<_i463.GlossarySearchCubit>(
+      () => _i463.GlossarySearchCubit(gh<_i97.SearchGlossaryTerms>()),
     );
     gh.factory<_i520.GlossaryTermCubit>(
       () => _i520.GlossaryTermCubit(gh<_i86.GetGlossaryTerm>()),

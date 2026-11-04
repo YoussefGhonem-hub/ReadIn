@@ -39,6 +39,43 @@ abstract interface class InlineFormatter implements Listenable {
 
   /// Turns that paragraph into a [kind] block.
   void applySlash(RBlockKind kind);
+
+  /// What the glossary button works on (F21): words selected in this text, or a term the selection covers or the
+  /// caret touches. Null otherwise.
+  TermSelection? get termSelection;
+
+  /// Turns [selection] into the glossary term [termId] (an existing term gets the new id), keeping its words.
+  void markTerm(TermSelection selection, String termId);
+
+  /// Turns the term [selection] back into plain words.
+  void unmarkTerm(TermSelection selection);
+}
+
+/// The words the glossary button marks (F21), or the term it opens again ([termId] set). [start] and [end] are
+/// offsets in the formatter's own text, without the spaces around the words. [path] is where that text is for a
+/// formatter over several texts (AppFlowy's node path): the picker takes the focus, and the editor's selection with
+/// it, so marking can't rely on the selection. It is not part of equality.
+class TermSelection {
+  const TermSelection({required this.start, required this.end, required this.text, this.termId, this.path});
+
+  final int start;
+  final int end;
+  final String text;
+  final String? termId;
+  final List<int>? path;
+
+  /// The longest text a term node keeps (RDoc schema).
+  static const maxText = 200;
+
+  @override
+  bool operator ==(Object other) =>
+      other is TermSelection && other.start == start && other.end == end && other.text == text && other.termId == termId;
+
+  @override
+  int get hashCode => Object.hash(start, end, text, termId);
+
+  @override
+  String toString() => 'TermSelection($start, $end, $text, $termId)';
 }
 
 /// Block-level commands of the "Block options" sheet.

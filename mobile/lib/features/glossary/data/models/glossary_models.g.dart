@@ -51,3 +51,19 @@ Map<String, dynamic> _$GlossaryTermModelToJson(_GlossaryTermModel instance) =>
       'explanationAr': instance.explanationAr,
       'articles': instance.articles.map((e) => e.toJson()).toList(),
     };
+
+_GlossaryTermSummaryModel _$GlossaryTermSummaryModelFromJson(
+  Map<String, dynamic> json,
+) => _GlossaryTermSummaryModel(
+  slug: json['slug'] as String,
+  term: json['term'] as String,
+  definitionEn: json['definitionEn'] as String? ?? '',
+);
+
+Map<String, dynamic> _$GlossaryTermSummaryModelToJson(
+  _GlossaryTermSummaryModel instance,
+) => <String, dynamic>{
+  'slug': instance.slug,
+  'term': instance.term,
+  'definitionEn': instance.definitionEn,
+};

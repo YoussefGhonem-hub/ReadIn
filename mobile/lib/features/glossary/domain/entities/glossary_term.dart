@@ -52,3 +52,18 @@ class GlossaryArticle extends Equatable {
   @override
   List<Object?> get props => [id, slug, language, title, readingTimeMinutes, field];
 }
+
+/// A search result of the editor's term picker (`GlossaryTermSummaryDto`, `GET /glossary?q=`).
+class GlossaryTermSummary extends Equatable {
+  const GlossaryTermSummary({required this.slug, required this.term, required this.definitionEn});
+
+  /// The RDoc `termId`.
+  final String slug;
+
+  /// The English term, always shown left to right.
+  final String term;
+  final String definitionEn;
+
+  @override
+  List<Object?> get props => [slug, term, definitionEn];
+}

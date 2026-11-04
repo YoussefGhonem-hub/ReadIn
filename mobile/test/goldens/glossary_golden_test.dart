@@ -14,8 +14,10 @@ import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart
 import 'package:readin/features/article/presentation/cubit/related_articles_cubit.dart';
 import 'package:readin/features/article/presentation/widgets/related_articles_section.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
+import 'package:readin/features/glossary/presentation/cubit/glossary_search_cubit.dart';
 import 'package:readin/features/glossary/presentation/cubit/glossary_term_cubit.dart';
 import 'package:readin/features/glossary/presentation/widgets/glossary_sheet.dart';
+import 'package:readin/features/glossary/presentation/widgets/glossary_term_picker.dart';
 
 import '../helpers/fixtures.dart';
 import '../helpers/glossary_fixtures.dart';
@@ -26,7 +28,10 @@ class MockGlossaryTermCubit extends MockCubit<GlossaryTermState> implements Glos
 
 class MockArticleRepository extends Mock implements ArticleRepository {}
 
-/// The glossary sheet (F21) and the related articles at the end of the reader (F04) in ar/en × light/dark.
+class MockGlossarySearchCubit extends MockCubit<GlossarySearchState> implements GlossarySearchCubit {}
+
+/// The glossary sheet and the editor's term picker (F21), and the related articles at the end of the reader (F04), in
+/// ar/en × light/dark.
 void main() {
   for (final variant in Variant.all) {
     testWidgets('glossary sheet ${variant.name}', (tester) async {
@@ -54,6 +59,37 @@ void main() {
       ));
       await tester.pump();
       await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/glossary_sheet_${variant.name}.png'));
+    });
+
+    testWidgets('editor term picker ${variant.name}', (tester) async {
+      usePhoneSurface(tester, size: const Size(390, 520));
+      final cubit = MockGlossarySearchCubit();
+      whenListen(
+        cubit,
+        const Stream<GlossarySearchState>.empty(),
+        initialState: const GlossarySearchState(query: 'ioc-container', status: GlossarySearchStatus.ready, results: [iocSummary, diSummary]),
+      );
+      await tester.pumpWidget(testApp(
+        Scaffold(
+          body: Builder(
+            // A Material like the bottom sheet's: the rows' ink paints on it.
+            builder: (context) => Material(
+              color: context.colors.surfaceRaised,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: BlocProvider<GlossarySearchCubit>.value(
+                  value: cubit,
+                  // A term opened again: the words are Arabic, the current term is ticked and can be removed.
+                  child: const GlossaryTermPickerView(text: 'حاوية الـ IoC', termId: 'ioc-container'),
+                ),
+              ),
+            ),
+          ),
+        ),
+        variant: variant,
+      ));
+      await tester.pump();
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/editor_term_picker_${variant.name}.png'));
     });
 
     testWidgets('related articles ${variant.name}', (tester) async {

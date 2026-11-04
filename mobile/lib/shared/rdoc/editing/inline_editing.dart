@@ -8,7 +8,7 @@ typedef InlineEditResult = ({List<RInline> nodes, int caret});
 /// The content is addressed by offsets in its plain text ([plainTextOf]): a text node contributes its text, a term
 /// or mention its display text and a hard break one `\n`. Terms, mentions and hard breaks are **atomic**: an edit
 /// that touches part of one removes it whole, and text typed inside one goes after it. That keeps glossary terms
-/// (F21, no insertion UI yet) and mentions intact through any edit that doesn't delete them.
+/// (F21, [markTerm]) and mentions intact through any edit that doesn't delete them.
 abstract final class InlineEditing {
   static bool _isAtomic(RInline node) => node is! RText;
 
@@ -231,6 +231,57 @@ abstract final class InlineEditing {
     final mention = RMention(userId: userId, text: text);
     final result = normalize([...before, mention, if (needsSpace) const RText(' '), ...after]);
     return (nodes: result, caret: start + text.length + 1);
+  }
+
+  /// What the glossary button works on (F21) for the selection [start, end): a term the selection lies within or the
+  /// caret touches (`termId` set; just after it first), or the selected plain words, without the spaces around them.
+  /// Null when the selection holds a mention, a term or a line break, or no words, or more than [maxText] characters.
+  static ({int start, int end, String text, String? termId})? termAt(List<RInline> nodes, int start, int end, {int maxText = 200}) {
+    final spans = <({int start, int end, RInline node})>[];
+    var pos = 0;
+    for (final node in nodes) {
+      spans.add((start: pos, end: pos + _length(node), node: node));
+      pos += _length(node);
+    }
+    ({int start, int end, String text, String? termId}) term(({int start, int end, RInline node}) s) =>
+        (start: s.start, end: s.end, text: (s.node as RTerm).text, termId: (s.node as RTerm).termId);
+
+    if (start == end) {
+      for (final s in spans) {
+        if (s.node is RTerm && s.start < start && start <= s.end) return term(s);
+      }
+      for (final s in spans) {
+        if (s.node is RTerm && s.start == start) return term(s);
+      }
+      return null;
+    }
+    for (final s in spans) {
+      if (s.node is RTerm && s.start <= start && end <= s.end) return term(s);
+    }
+    for (final s in spans) {
+      if (s.node is! RText && s.start < end && s.end > start) return null;
+    }
+    final raw = plainTextOf(nodes).substring(start.clamp(0, pos), end.clamp(0, pos));
+    final text = raw.trim();
+    if (text.isEmpty || text.length > maxText) return null;
+    final from = start + (raw.length - raw.trimLeft().length);
+    return (start: from, end: from + text.length, text: text, termId: null);
+  }
+
+  /// Replaces [start, end) (plain words, or a term) with the glossary term [termId] showing [text]. The words keep no
+  /// marks: a term node has none.
+  static InlineEditResult markTerm(List<RInline> nodes, int start, int end, {required String termId, required String text}) {
+    final (before, rest) = splitAt(nodes, start);
+    final (_, after) = splitAt(rest, end - start);
+    return (nodes: normalize([...before, RTerm(termId: termId, text: text), ...after]), caret: start + text.length);
+  }
+
+  /// Turns the term at [start, end) back into its words, as plain text.
+  static InlineEditResult unmarkTerm(List<RInline> nodes, int start, int end) {
+    final (before, rest) = splitAt(nodes, start);
+    final (middle, after) = splitAt(rest, end - start);
+    final words = middle.map((n) => n.plainText).join();
+    return (nodes: normalize([...before, RText(words), ...after]), caret: start + words.length);
   }
 
   /// Inserts a hard break (a line break inside the block) at [offset], replacing the selection [offset, end).

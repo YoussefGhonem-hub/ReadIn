@@ -95,6 +95,51 @@ void main() {
     expect(after, const [RText('c', marks: [bold]), mention]);
   });
 
+  group('glossary terms (F21)', () {
+    const words = [RText('استخدم Dependency Injection هنا')];
+
+    test('the selected words, without the spaces around them', () {
+      // " Dependency Injection " (with both spaces) → the words only.
+      final found = InlineEditing.termAt(words, 6, 28);
+      expect(found, (start: 7, end: 27, text: 'Dependency Injection', termId: null));
+    });
+
+    test('mark: the words become a term node, without their marks; unmark gives them back as text', () {
+      const nodes = [RText('Use '), RText('Dependency Injection', marks: [bold]), RText(' here')];
+      final marked = InlineEditing.markTerm(nodes, 4, 24, termId: 'dependency-injection', text: 'Dependency Injection');
+      expect(marked.nodes, const [RText('Use '), RTerm(termId: 'dependency-injection', text: 'Dependency Injection'), RText(' here')]);
+      expect(marked.caret, 24);
+
+      final unmarked = InlineEditing.unmarkTerm(marked.nodes, 4, 24);
+      expect(unmarked.nodes, const [RText('Use Dependency Injection here')]);
+    });
+
+    test('a term the selection is in or the caret touches (just after it first)', () {
+      const nodes = [RText('Use '), term, RText(' or '), RTerm(termId: 'ioc', text: 'IoC')];
+      final di = (start: 4, end: 6, text: 'DI', termId: 'di');
+      expect(InlineEditing.termAt(nodes, 4, 6), di);
+      expect(InlineEditing.termAt(nodes, 5, 5), di); // inside
+      expect(InlineEditing.termAt(nodes, 6, 6), di); // just after
+      expect(InlineEditing.termAt(nodes, 4, 4), di); // just before
+      expect(InlineEditing.termAt(nodes, 10, 10), (start: 10, end: 13, text: 'IoC', termId: 'ioc'));
+      expect(InlineEditing.termAt(nodes, 2, 2), isNull);
+    });
+
+    test('changing a term keeps its words', () {
+      const nodes = [RText('Use '), term];
+      expect(InlineEditing.markTerm(nodes, 4, 6, termId: 'dependency-injection', text: 'DI').nodes,
+          const [RText('Use '), RTerm(termId: 'dependency-injection', text: 'DI')]);
+    });
+
+    test('nothing to mark: spaces only, a mention, a line break, or too long', () {
+      expect(InlineEditing.termAt(const [RText('a   b')], 1, 4), isNull);
+      expect(InlineEditing.termAt(const [RText('hi '), mention, RText(' x')], 0, 9), isNull);
+      expect(InlineEditing.termAt(const [RText('a'), RHardBreak(), RText('b')], 0, 3), isNull);
+      expect(InlineEditing.termAt([RText('x' * 201)], 0, 201), isNull);
+      expect(InlineEditing.termAt([RText('x' * 200)], 0, 200)?.text, 'x' * 200);
+    });
+  });
+
   group('markdown shortcuts', () {
     test('block markers at the start of a paragraph', () {
       expect(MarkdownShortcuts.blockShortcut('# '), (kind: RBlockKind.heading2, marker: 2, lang: null));

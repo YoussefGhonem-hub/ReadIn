@@ -10,6 +10,7 @@ import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../comments/presentation/cubit/mention_suggestions_cubit.dart';
+import '../../../glossary/presentation/widgets/glossary_term_picker.dart';
 import '../../domain/entities/editor_entities.dart';
 import '../block_editor/block_editor_controller.dart';
 import '../block_editor/block_editor_surface.dart';
@@ -231,7 +232,8 @@ class ChecksList extends StatelessWidget {
 
 /// The editor's toolbar above the keyboard: "Add a block", block options, undo and redo, formatting for the text the
 /// writer is in (a structured block's field in [focus] first, else [formatter]), the table tools while a table cell
-/// is in focus, and, while one is typed, the `@mention` suggestions or the slash menu's blocks.
+/// is in focus, and, while one is typed, the `@mention` suggestions or the slash menu's blocks. The glossary button
+/// (F21) marks the selected words as a term, or opens the term the caret touches again.
 class EditorToolbar extends StatelessWidget {
   const EditorToolbar({
     super.key,
@@ -267,6 +269,7 @@ class EditorToolbar extends StatelessWidget {
         final canFormat = enabled && (formatter?.canFormat ?? false);
         final mention = canFormat ? formatter!.activeMention : null;
         final slash = canFormat ? formatter!.slashQuery : null;
+        final term = canFormat ? formatter!.termSelection : null;
         final cell = focus?.cell;
         final history = this.history;
         final suggestions = context.watch<MentionSuggestionsCubit>().state;
@@ -425,6 +428,15 @@ class EditorToolbar extends StatelessWidget {
                         icon: const Icon(Icons.alternate_email_rounded),
                       ),
                       IconButton(
+                        key: const ValueKey('format-term'),
+                        tooltip: l10n.formatTerm,
+                        color: colors.textSecondary,
+                        isSelected: term?.termId != null,
+                        selectedIcon: Icon(Icons.menu_book_rounded, color: colors.primary),
+                        onPressed: term != null ? () => _editTerm(context, formatter!, term) : null,
+                        icon: const Icon(Icons.menu_book_outlined),
+                      ),
+                      IconButton(
                         key: const ValueKey('format-line-break'),
                         tooltip: l10n.formatLineBreak,
                         color: colors.textSecondary,
@@ -446,6 +458,19 @@ class EditorToolbar extends StatelessWidget {
     final href = await showLinkDialog(context, initial: formatter.link);
     if (href == null) return;
     formatter.setLink(href.isEmpty ? null : href);
+  }
+
+  /// The glossary term picker (F21) for the selected words, or for the term the writer opened again.
+  Future<void> _editTerm(BuildContext context, InlineFormatter formatter, TermSelection selection) async {
+    final result = await showGlossaryTermPicker(context, text: selection.text, termId: selection.termId);
+    switch (result) {
+      case TermPicked(:final slug):
+        formatter.markTerm(selection, slug);
+      case TermRemoved():
+        formatter.unmarkTerm(selection);
+      case null:
+        break;
+    }
   }
 }
 

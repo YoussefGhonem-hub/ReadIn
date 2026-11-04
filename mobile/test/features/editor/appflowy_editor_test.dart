@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:readin/core/di/injection.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/comments/presentation/cubit/mention_suggestions_cubit.dart';
@@ -15,7 +16,10 @@ import 'package:readin/features/editor/presentation/appflowy/appflowy_surface.da
 import 'package:readin/features/editor/presentation/appflowy/rdoc_appflowy_codec.dart';
 import 'package:readin/features/editor/presentation/block_editor/block_editor_surface.dart';
 import 'package:readin/features/editor/presentation/block_editor/block_editors.dart';
+import 'package:readin/features/editor/presentation/block_editor/inline_formatter.dart';
 import 'package:readin/features/editor/presentation/widgets/editor_widgets.dart';
+import 'package:readin/features/glossary/domain/usecases/search_glossary_terms.dart';
+import 'package:readin/features/glossary/presentation/cubit/glossary_search_cubit.dart';
 import 'package:readin/features/media/domain/entities/media.dart';
 import 'package:readin/shared/rdoc/blocks/media_blocks.dart';
 import 'package:readin/shared/rdoc/editing/block_editing.dart';
@@ -26,6 +30,7 @@ import 'package:readin/shared/widgets/app_network_image.dart';
 
 import '../../helpers/comment_fixtures.dart';
 import '../../helpers/fake_media.dart';
+import '../../helpers/glossary_fixtures.dart';
 import '../../helpers/media_fixtures.dart';
 import '../../helpers/test_app.dart';
 
@@ -265,6 +270,19 @@ void main() {
     expect((controller.document.blocks.single as RParagraph).content.last, isA<RText>().having((t) => t.href, 'href', 'https://readin.app'));
   });
 
+  testWidgets('the link button links the selected words through its dialog', (tester) async {
+    final controller = await pumpEditor(tester, const [RParagraph('p', dir: 'auto', content: [RText('read the docs')])]);
+    await select(tester, controller, Selection.single(path: [0], startOffset: 9, endOffset: 13));
+    await tap(tester, 'format-link');
+    await tester.enterText(find.byKey(const ValueKey('link-url')), 'https://readin.app/docs');
+    await tester.tap(find.byKey(const ValueKey('link-save')));
+    await settle(tester);
+    expect((controller.document.blocks.single as RParagraph).content, const [
+      RText('read the '),
+      RText('docs', marks: [RMark(RMarkType.link, href: 'https://readin.app/docs')]),
+    ]);
+  });
+
   testWidgets('insertBlock, convert, move and remove keep ids', (tester) async {
     final controller = await pumpEditor(tester, const [
       RParagraph('p', dir: 'auto', content: [RText('x')]),
@@ -391,6 +409,77 @@ void main() {
       final node = RDocAppFlowyCodec.toDocument(doc).root.children.single;
       expect(node.delta!.toPlainText(), 'اسأل $_p عن $_p');
       expect(roundTripped(doc), RDocCodec.encode(doc, language: 'ar-EG'));
+    });
+  });
+
+  group('glossary terms (F21)', () {
+    late FakeGlossaryRepository glossary;
+
+    setUp(() {
+      glossary = FakeGlossaryRepository();
+      getIt.registerFactory<GlossarySearchCubit>(() => GlossarySearchCubit(SearchGlossaryTerms(glossary)));
+    });
+
+    tearDown(() => getIt.unregister<GlossarySearchCubit>());
+
+    IconButton termButton(WidgetTester tester) => tester.widget<IconButton>(find.byKey(const ValueKey('format-term')));
+
+    testWidgets('select words → the picker searches for them → the pick makes one atomic term', (tester) async {
+      final controller = await pumpEditor(
+        tester,
+        const [RParagraph('p', dir: 'auto', content: [RText('استخدم Dependency Injection هنا')])],
+        language: 'ar-EG',
+        variant: _ar,
+      );
+      // A caret in plain words: nothing to mark.
+      await select(tester, controller, Selection.collapsed(Position(path: [0], offset: 3)));
+      expect(termButton(tester).onPressed, isNull);
+
+      // " Dependency Injection " → the words without the spaces.
+      await select(tester, controller, Selection.single(path: [0], startOffset: 6, endOffset: 28));
+      expect(controller.termSelection, const TermSelection(start: 7, end: 27, text: 'Dependency Injection'));
+      await tap(tester, 'format-term');
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(glossary.searches, ['Dependency Injection']);
+      expect(find.byKey(const ValueKey('term-option-dependency-injection')), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('term-option-dependency-injection')));
+      await settle(tester);
+      expect((controller.document.blocks.single as RParagraph).content, const [
+        RText('استخدم '),
+        RTerm(termId: 'dependency-injection', text: 'Dependency Injection'),
+        RText(' هنا'),
+      ]);
+      expect(stateOf(controller).getNodeAtPath([0])!.delta!.toPlainText(), 'استخدم $_p هنا');
+      expect(find.byKey(const ValueKey('term-chip-dependency-injection')), findsOneWidget);
+    });
+
+    testWidgets('the caret after a term opens it again: Remove term gives the words back', (tester) async {
+      final controller = await pumpEditor(tester, const [
+        RParagraph('p', dir: 'auto', content: [RText('Use '), RTerm(termId: 'ioc-container', text: 'IoC'), RText(' here')]),
+      ]);
+      await select(tester, controller, Selection.collapsed(Position(path: [0], offset: 5)));
+      expect(controller.termSelection, const TermSelection(start: 4, end: 5, text: 'IoC', termId: 'ioc-container'));
+      expect(termButton(tester).isSelected, isTrue);
+
+      await tap(tester, 'format-term');
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(glossary.searches, ['ioc-container']);
+      expect(tester.widget<ListTile>(find.byKey(const ValueKey('term-option-ioc-container'))).selected, isTrue);
+      await tester.tap(find.byKey(const ValueKey('term-remove')));
+      await settle(tester);
+      expect((controller.document.blocks.single as RParagraph).content, const [RText('Use IoC here')]);
+    });
+
+    testWidgets('a mention in the selection, or spaces only: nothing to mark', (tester) async {
+      final controller = await pumpEditor(tester, const [
+        RParagraph('p', dir: 'auto', content: [RText('hi '), RMention(userId: 'u1', text: '@mona'), RText('   there')]),
+      ]);
+      await select(tester, controller, Selection.single(path: [0], startOffset: 0, endOffset: 6));
+      expect(controller.termSelection, isNull);
+      await select(tester, controller, Selection.single(path: [0], startOffset: 4, endOffset: 7));
+      expect(controller.termSelection, isNull);
+      expect(termButton(tester).onPressed, isNull);
     });
   });
 

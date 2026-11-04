@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/errors/failure.dart';
@@ -6,8 +9,11 @@ import 'package:readin/core/errors/result.dart';
 import 'package:readin/features/glossary/data/datasources/glossary_api.dart';
 import 'package:readin/features/glossary/data/models/glossary_models.dart';
 import 'package:readin/features/glossary/data/repositories/glossary_repository_impl.dart';
+import 'package:readin/features/glossary/domain/entities/glossary_term.dart';
 import 'package:readin/features/glossary/domain/repositories/glossary_repository.dart';
 import 'package:readin/features/glossary/domain/usecases/get_glossary_term.dart';
+import 'package:readin/features/glossary/domain/usecases/search_glossary_terms.dart';
+import 'package:readin/features/glossary/presentation/cubit/glossary_search_cubit.dart';
 import 'package:readin/features/glossary/presentation/cubit/glossary_term_cubit.dart';
 
 import '../../helpers/fake_auth.dart';
@@ -119,6 +125,67 @@ void main() {
 
       await cubit.retry();
       expect(cubit.state, const GlossaryTermState(status: GlossaryTermStatus.ready, term: diTerm));
+    });
+  });
+
+  group('term picker search (editor, F21)', () {
+    test('GlossaryTermSummaryDto parses; the repository passes the query and the limit', () async {
+      final api = MockGlossaryApi();
+      when(() => api.search('dependency', 8)).thenAnswer((_) async => [
+            GlossaryTermSummaryModel.fromJson({'slug': diSummary.slug, 'term': diSummary.term, 'definitionEn': diSummary.definitionEn}),
+          ]);
+      expect((await GlossaryRepositoryImpl(api).search('dependency')).valueOrNull, [diSummary]);
+    });
+
+    test('searches after the debounce, only the last query; an empty query clears the results', () {
+      fakeAsync((async) {
+        final repository = FakeGlossaryRepository();
+        final cubit = GlossarySearchCubit(SearchGlossaryTerms(repository));
+
+        cubit.search('d');
+        cubit.search('de');
+        cubit.search('ioc');
+        expect(cubit.state.status, GlossarySearchStatus.loading);
+        async.elapse(GlossarySearchCubit.debounce);
+        async.flushMicrotasks();
+        expect(repository.searches, ['ioc']);
+        expect(cubit.state, const GlossarySearchState(query: 'ioc', status: GlossarySearchStatus.ready, results: [iocSummary]));
+
+        cubit.search('   ');
+        expect(cubit.state, const GlossarySearchState(query: '   '));
+        unawaited(cubit.close());
+      });
+    });
+
+    test('an older answer never replaces a newer one', () async {
+      final slow = Completer<Result<List<GlossaryTermSummary>>>();
+      final repository = MockGlossaryRepository();
+      when(() => repository.search('dep', limit: any(named: 'limit'))).thenAnswer((_) => slow.future);
+      when(() => repository.search('ioc', limit: any(named: 'limit'))).thenAnswer((_) async => const Ok([iocSummary]));
+      final cubit = GlossarySearchCubit(SearchGlossaryTerms(repository));
+      addTearDown(cubit.close);
+
+      cubit.search('dep', now: true);
+      cubit.search('ioc', now: true);
+      await Future<void>.delayed(Duration.zero);
+      slow.complete(const Ok([diSummary]));
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.results, [iocSummary]);
+    });
+
+    test('a failure shows an error; retry searches again at once', () async {
+      final repository = FakeGlossaryRepository(failure: const Failure(FailureCodes.networkOffline));
+      final cubit = GlossarySearchCubit(SearchGlossaryTerms(repository));
+      addTearDown(cubit.close);
+
+      cubit.search('dependency', now: true);
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.status, GlossarySearchStatus.failure);
+
+      repository.failure = null;
+      cubit.retry();
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state, const GlossarySearchState(query: 'dependency', status: GlossarySearchStatus.ready, results: [diSummary]));
     });
   });
 }

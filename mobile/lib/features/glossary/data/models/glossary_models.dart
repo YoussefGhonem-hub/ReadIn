@@ -55,3 +55,19 @@ abstract class GlossaryTermModel with _$GlossaryTermModel {
         articles: [for (final a in articles) a.toEntity()],
       );
 }
+
+/// `GlossaryTermSummaryDto`: a match of `GET /glossary?q=` (the editor's term picker).
+@freezed
+abstract class GlossaryTermSummaryModel with _$GlossaryTermSummaryModel {
+  const GlossaryTermSummaryModel._();
+
+  const factory GlossaryTermSummaryModel({
+    required String slug,
+    required String term,
+    @Default('') String definitionEn,
+  }) = _GlossaryTermSummaryModel;
+
+  factory GlossaryTermSummaryModel.fromJson(Map<String, dynamic> json) => _$GlossaryTermSummaryModelFromJson(json);
+
+  GlossaryTermSummary toEntity() => GlossaryTermSummary(slug: slug, term: term, definitionEn: definitionEn);
+}

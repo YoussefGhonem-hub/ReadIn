@@ -2742,6 +2742,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formatMention => 'Mention someone';
 
   @override
+  String get formatTerm => 'Glossary term';
+
+  @override
+  String get termPickerFor => 'Mark as a glossary term:';
+
+  @override
+  String get termPickerCurrent => 'Glossary term:';
+
+  @override
+  String get termSearchHint => 'Search the glossary (English term)';
+
+  @override
+  String get termSearching => 'Searching…';
+
+  @override
+  String get termNoMatches => 'No glossary term matches. Try the English term.';
+
+  @override
+  String get termTypeToSearch => 'Type a term to search the glossary.';
+
+  @override
+  String get termSearchError => 'Couldn\'t search the glossary.';
+
+  @override
+  String get termRemove => 'Remove term';
+
+  @override
   String get linkDialogTitle => 'Link';
 
   @override

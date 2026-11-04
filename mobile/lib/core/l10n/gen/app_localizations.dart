@@ -4736,6 +4736,60 @@ abstract class AppLocalizations {
   /// **'Mention someone'**
   String get formatMention;
 
+  /// No description provided for @formatTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Glossary term'**
+  String get formatTerm;
+
+  /// No description provided for @termPickerFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as a glossary term:'**
+  String get termPickerFor;
+
+  /// No description provided for @termPickerCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Glossary term:'**
+  String get termPickerCurrent;
+
+  /// No description provided for @termSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the glossary (English term)'**
+  String get termSearchHint;
+
+  /// No description provided for @termSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching…'**
+  String get termSearching;
+
+  /// No description provided for @termNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No glossary term matches. Try the English term.'**
+  String get termNoMatches;
+
+  /// No description provided for @termTypeToSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a term to search the glossary.'**
+  String get termTypeToSearch;
+
+  /// No description provided for @termSearchError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t search the glossary.'**
+  String get termSearchError;
+
+  /// No description provided for @termRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove term'**
+  String get termRemove;
+
   /// No description provided for @linkDialogTitle.
   ///
   /// In en, this message translates to:

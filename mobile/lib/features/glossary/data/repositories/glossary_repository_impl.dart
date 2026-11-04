@@ -26,4 +26,8 @@ class GlossaryRepositoryImpl implements GlossaryRepository {
     if (result case Ok(:final value)) _cache[key] = value;
     return result;
   }
+
+  @override
+  Future<Result<List<GlossaryTermSummary>>> search(String query, {int limit = 8}) =>
+      guardApi(() async => [for (final m in await _api.search(query, limit)) m.toEntity()]);
 }

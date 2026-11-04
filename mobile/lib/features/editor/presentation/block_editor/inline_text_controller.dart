@@ -204,6 +204,26 @@ class InlineTextController extends TextEditingController implements InlineFormat
   void applySlash(RBlockKind kind) {}
 
   @override
+  TermSelection? get termSelection {
+    if (!selection.isValid) return null;
+    final (start, end) = _range;
+    final found = InlineEditing.termAt(_nodes, start, end, maxText: TermSelection.maxText);
+    return found == null ? null : TermSelection(start: found.start, end: found.end, text: found.text, termId: found.termId);
+  }
+
+  @override
+  void markTerm(TermSelection selection, String termId) {
+    final result = InlineEditing.markTerm(_nodes, selection.start, selection.end, termId: termId, text: selection.text);
+    _commit(result.nodes, TextSelection.collapsed(offset: result.caret));
+  }
+
+  @override
+  void unmarkTerm(TermSelection selection) {
+    final result = InlineEditing.unmarkTerm(_nodes, selection.start, selection.end);
+    _commit(result.nodes, TextSelection.collapsed(offset: result.caret));
+  }
+
+  @override
   TextSpan buildTextSpan({required BuildContext context, TextStyle? style, required bool withComposing}) {
     if (plainTextOf(_nodes) != text) return super.buildTextSpan(context: context, style: style, withComposing: withComposing);
     final colors = context.colors;

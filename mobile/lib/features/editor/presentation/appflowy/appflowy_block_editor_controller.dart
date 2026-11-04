@@ -78,8 +78,14 @@ class AppFlowyBlockEditorController extends BlockEditorController
   }
 
   void _onSelection() {
-    if (!_disposed) notifyListeners();
+    if (_disposed) return;
+    if (_state.selection case final selection?) _lastSelection = selection;
+    notifyListeners();
   }
+
+  /// The last selection the editor had. A dialog opened from the toolbar (the link's) takes the focus, and AppFlowy
+  /// drops its selection with it: what the dialog applies goes to this one.
+  Selection? _lastSelection;
 
   // ── BlockEditorController ─────────────────────────────────
 
@@ -91,6 +97,7 @@ class AppFlowyBlockEditorController extends BlockEditorController
     _detach();
     final old = _state;
     _language = document.language;
+    _lastSelection = null;
     _attach(_stateFor(document));
     generation++;
     // The old editor widget still reads it until the next frame.
@@ -361,9 +368,10 @@ class AppFlowyBlockEditorController extends BlockEditorController
 
   @override
   void setLink(String? href) {
-    if (!hasRange) return;
+    final selection = _state.selection ?? _lastSelection;
+    if (selection == null || selection.isCollapsed) return;
     if (href != null && !InlineEditing.isHttpUrl(href)) return;
-    unawaited(_state.formatDelta(_state.selection, {AppFlowyRichTextKeys.href: href?.trim()}));
+    unawaited(_state.formatDelta(selection, {AppFlowyRichTextKeys.href: href?.trim()}));
   }
 
   @override
@@ -434,6 +442,83 @@ class AppFlowyBlockEditorController extends BlockEditorController
     transaction.afterSelection = focus.delta != null
         ? Selection.collapsed(Position(path: focusPath))
         : Selection.single(path: focusPath, startOffset: 0, endOffset: 1);
+    unawaited(_state.apply(transaction));
+  }
+
+  // ── Glossary terms (F21): a term is one placeholder character carrying its id and words ──
+
+  @override
+  TermSelection? get termSelection {
+    final selection = _state.selection;
+    final node = _textNode;
+    if (selection == null || node == null || !selection.isSingle) return null;
+    final start = selection.normalized.start.offset;
+    final end = selection.normalized.end.offset;
+    // One run per character of a mention or term (two equal neighbours share one insert), one per plain insert.
+    final runs = <({int start, int end, RDocAtom? atom})>[];
+    var pos = 0;
+    for (final op in node.delta!.whereType<TextInsert>()) {
+      final atom = RDocAppFlowyCodec.atomOf(op.attributes);
+      if (atom == null) {
+        runs.add((start: pos, end: pos + op.text.length, atom: null));
+      } else {
+        for (var i = 0; i < op.text.length; i++) {
+          runs.add((start: pos + i, end: pos + i + 1, atom: atom));
+        }
+      }
+      pos += op.text.length;
+    }
+    bool isTerm(({int start, int end, RDocAtom? atom}) r) => r.atom != null && !r.atom!.mention;
+    TermSelection term(({int start, int end, RDocAtom? atom}) r) =>
+        TermSelection(start: r.start, end: r.end, text: r.atom!.text, termId: r.atom!.id, path: node.path);
+
+    if (start == end) {
+      // The caret just after a term, else just before one.
+      for (final r in runs) {
+        if (isTerm(r) && r.end == start) return term(r);
+      }
+      for (final r in runs) {
+        if (isTerm(r) && r.start == start) return term(r);
+      }
+      return null;
+    }
+    for (final r in runs) {
+      if (isTerm(r) && r.start <= start && end <= r.end) return term(r);
+    }
+    for (final r in runs) {
+      if (r.atom != null && r.start < end && r.end > start) return null;
+    }
+    final raw = node.delta!.toPlainText().substring(start.clamp(0, pos), end.clamp(0, pos));
+    final text = raw.trim();
+    if (text.isEmpty || text.contains('\n') || text.length > TermSelection.maxText) return null;
+    final from = start + (raw.length - raw.trimLeft().length);
+    return TermSelection(start: from, end: from + text.length, text: text, path: node.path);
+  }
+
+  @override
+  void markTerm(TermSelection selection, String termId) {
+    _replaceRange(
+      selection,
+      Delta()..insert(RDocNodeKeys.placeholder, attributes: RDocAppFlowyCodec.termAttributes(termId: termId, text: selection.text)),
+    );
+  }
+
+  @override
+  void unmarkTerm(TermSelection selection) {
+    if (selection.termId == null) return;
+    _replaceRange(selection, Delta()..insert(selection.text));
+  }
+
+  /// Replaces [selection]'s range of its text with [delta] (exactly: no attributes taken from neighbours), then puts
+  /// the caret after it.
+  void _replaceRange(TermSelection selection, Delta delta) {
+    final path = selection.path;
+    final node = path == null ? _textNode : _state.getNodeAtPath(path);
+    if (node == null || node.delta == null || selection.end > node.delta!.length) return;
+    final transaction = _state.transaction
+      ..deleteText(node, selection.start, selection.end - selection.start)
+      ..insertTextDelta(node, selection.start, delta);
+    transaction.afterSelection = Selection.collapsed(Position(path: node.path, offset: selection.start + delta.length));
     unawaited(_state.apply(transaction));
   }
 
