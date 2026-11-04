@@ -1,9 +1,6 @@
-import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 
 import '../../../../shared/rdoc/editing/block_editing.dart';
-import '../../../../shared/rdoc/editing/rdoc_codec.dart';
 import '../../../../shared/rdoc/rdoc_document.dart';
 
 /// The block-editing surface behind the editor page (F05). The page knows only this interface: the document goes
@@ -32,68 +29,20 @@ abstract class BlockEditorController extends ChangeNotifier {
   void reveal(String blockId);
 }
 
-/// RDoc blocks edited in place by the block editors (`block_editors.dart`): the structured-block sheets (steps,
-/// code, code tabs, table, image, embed) edit one block with it. All edits are pure operations on RDoc.
-class SimpleBlockEditorController extends BlockEditorController {
-  SimpleBlockEditorController({RDocDocument? document, Random? random})
-      : _random = random,
-        _document = BlockIds.ensureUnique(document ?? const RDocDocument(version: 1, language: 'ar-EG', blocks: []), random: random);
-
-  final Random? _random;
-  RDocDocument _document;
-  String? _focused;
-
-  @override
-  RDocDocument get document => _document;
-
-  List<RBlock> get blocks => _document.blocks;
-
-  @override
-  String? get focusedBlockId => _focused;
-
-  set focusedBlockId(String? id) => _focused = id;
-
-  @override
-  void load(RDocDocument document) {
-    _document = RDocCodec.decode(document.toJson(), language: document.language);
-    _focused = null;
-  }
-
-  int indexOf(String id) => _document.blocks.indexWhere((b) => b.id == id);
-
-  RBlock? blockOf(String id) => _document.blocks.where((b) => b.id == id).firstOrNull;
-
-  void _set(List<RBlock> blocks) {
-    _document = _document.copyWith(blocks: blocks);
-    notifyListeners();
-  }
-
-  @override
-  String insertBlock(RBlockKind kind, {String? afterId}) {
-    final id = BlockIds.generate({for (final b in _document.blocks) b.id}, random: _random);
-    final anchor = afterId ?? _focused;
-    final at = anchor == null ? -1 : indexOf(anchor);
-    final blocks = [..._document.blocks]..insert(at < 0 ? _document.blocks.length : at + 1, BlockEditing.create(kind, id));
-    _set(blocks);
-    return id;
-  }
-
-  @override
-  void setDirection(String blockId, String dir) {
-    final block = blockOf(blockId);
-    if (block == null || !BlockDirection.supportsDir(block)) return;
-    replace(BlockDirection.withDir(block, dir));
-  }
-
-  @override
-  void reveal(String blockId) => _focused = indexOf(blockId) < 0 ? _focused : blockId;
-
+/// Where the inline block editors (steps, code, code tabs, table, image, embed; block_editors.dart) write: the
+/// surface's controller.
+abstract interface class StructuredBlockHost {
   /// Replaces a block (same id) after an edit inside it.
-  void replace(RBlock block) {
-    final i = indexOf(block.id);
-    if (i < 0 || _document.blocks[i] == block) return;
-    final blocks = [..._document.blocks];
-    blocks[i] = block;
-    _set(blocks);
-  }
+  void replace(RBlock block);
+
+  /// Removes block [id] (the last code tab removed, the table deleted).
+  void remove(String id);
+}
+
+/// Undo and redo of the editing surface (the toolbar's buttons).
+abstract interface class UndoRedo implements Listenable {
+  bool get canUndo;
+  bool get canRedo;
+  void undo();
+  void redo();
 }

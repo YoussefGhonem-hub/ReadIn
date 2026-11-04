@@ -102,3 +102,41 @@ const codeLanguages = [
   'powershell',
   'dockerfile',
 ];
+
+const _codeLanguageNames = {
+  'plaintext': 'Text',
+  'text': 'Text',
+  'csharp': 'C#',
+  'cs': 'C#',
+  'typescript': 'TypeScript',
+  'ts': 'TypeScript',
+  'tsx': 'TSX',
+  'javascript': 'JavaScript',
+  'js': 'JavaScript',
+  'dart': 'Dart',
+  'python': 'Python',
+  'py': 'Python',
+  'java': 'Java',
+  'kotlin': 'Kotlin',
+  'swift': 'Swift',
+  'go': 'Go',
+  'rust': 'Rust',
+  'sql': 'SQL',
+  'json': 'JSON',
+  'yaml': 'YAML',
+  'yml': 'YAML',
+  'xml': 'XML',
+  'html': 'HTML',
+  'css': 'CSS',
+  'scss': 'SCSS',
+  'bash': 'Bash',
+  'sh': 'Shell',
+  'shell': 'Shell',
+  'powershell': 'PowerShell',
+  'dockerfile': 'Dockerfile',
+  'markdown': 'Markdown',
+  'razor': 'Razor',
+};
+
+/// A code language's display name (the web editor's labels): a code tab's default name.
+String codeLanguageName(String lang) => _codeLanguageNames[lang.toLowerCase()] ?? lang;

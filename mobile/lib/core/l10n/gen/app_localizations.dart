@@ -3116,6 +3116,12 @@ abstract class AppLocalizations {
   /// **'Undo'**
   String get undo;
 
+  /// No description provided for @redo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get redo;
+
   /// No description provided for @moreActions.
   ///
   /// In en, this message translates to:
@@ -4628,17 +4634,29 @@ abstract class AppLocalizations {
   /// **'Add column'**
   String get tableAddColumn;
 
-  /// No description provided for @tableRemoveRow.
+  /// No description provided for @tableDeleteRow.
   ///
   /// In en, this message translates to:
-  /// **'Remove last row'**
-  String get tableRemoveRow;
+  /// **'Delete row'**
+  String get tableDeleteRow;
 
-  /// No description provided for @tableRemoveColumn.
+  /// No description provided for @tableDeleteColumn.
   ///
   /// In en, this message translates to:
-  /// **'Remove last column'**
-  String get tableRemoveColumn;
+  /// **'Delete column'**
+  String get tableDeleteColumn;
+
+  /// No description provided for @tableDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete table'**
+  String get tableDelete;
+
+  /// No description provided for @tableTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get tableTools;
 
   /// No description provided for @stepTitleHint.
   ///

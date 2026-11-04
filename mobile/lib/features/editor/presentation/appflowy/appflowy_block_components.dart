@@ -1,16 +1,18 @@
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/bidi/bidi.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/rdoc/blocks/text_blocks.dart';
-import '../../../../shared/rdoc/rdoc_view.dart';
+import '../../../../shared/rdoc/rdoc_document.dart';
+import '../../domain/entities/editor_entities.dart';
+import '../block_editor/block_editors.dart';
 import 'appflowy_block_editor_controller.dart';
 import 'rdoc_appflowy_codec.dart';
 
-/// What the custom blocks need from the surface: the controller, the uploads, and the edit sheets.
+/// What the custom blocks need from the surface: the controller and the publish checks' problem blocks. The inline
+/// block editors also find a `BlockEditorScope` above the editor.
 class RDocEditorScope extends InheritedWidget {
   const RDocEditorScope({
     super.key,
@@ -18,10 +20,6 @@ class RDocEditorScope extends InheritedWidget {
     required this.controller,
     required this.enabled,
     required this.problemBlockIds,
-    required this.onEditBlock,
-    required this.onPickImage,
-    required this.onEditCallout,
-    required this.onEditCite,
   });
 
   final AppFlowyBlockEditorController controller;
@@ -30,19 +28,30 @@ class RDocEditorScope extends InheritedWidget {
   /// Blocks a publish check points at.
   final Set<String> problemBlockIds;
 
-  /// Opens a structured block (steps, code, tabs, table, image, embed) in its sheet.
-  final ValueChanged<RBlock> onEditBlock;
-
-  /// Chooses and uploads the image of an empty image block.
-  final Future<void> Function(RImage block) onPickImage;
-  final ValueChanged<RCallout> onEditCallout;
-  final ValueChanged<RQuote> onEditCite;
-
   static RDocEditorScope of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<RDocEditorScope>()!;
 
   @override
   bool updateShouldNotify(RDocEditorScope old) =>
       old.controller != controller || old.enabled != enabled || old.problemBlockIds != problemBlockIds;
+}
+
+/// Fields inside a block (a table cell, the code, a callout's title) take the keyboard from AppFlowy: when one gets
+/// focus, AppFlowy's selection is cleared, so only one caret shows and the toolbar formats that field.
+class EditorFieldFocus extends StatelessWidget {
+  const EditorFieldFocus({super.key, required this.editorState, required this.child});
+
+  final EditorState editorState;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Focus(
+        canRequestFocus: false,
+        skipTraversal: true,
+        onFocusChange: (focused) {
+          if (focused && editorState.selection != null) editorState.selection = null;
+        },
+        child: child,
+      );
 }
 
 // ── Text blocks with chrome: quote (+ cite), callout (variant + title), TL;DR ──────────────
@@ -155,6 +164,7 @@ class _RDocTextBlockComponentState extends State<RDocTextBlockComponent>
   }
 }
 
+/// A quote: its text, then "— who said it" edited in place (as the web editor's quote).
 class _Quote extends StatelessWidget {
   const _Quote({required this.block, required this.direction, required this.text});
 
@@ -165,8 +175,7 @@ class _Quote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scope = RDocEditorScope.of(context);
-    final cite = block.cite;
-    final empty = cite == null || cite.isEmpty;
+    final style = context.textTheme.bodySmall!;
     return Directionality(
       textDirection: direction,
       child: Container(
@@ -176,15 +185,25 @@ class _Quote extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             text,
-            InkWell(
-              key: ValueKey('quote-cite-${block.id}'),
-              onTap: scope.enabled ? () => scope.onEditCite(block) : null,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s1),
-                child: Text(
-                  empty ? '— ${context.l10n.quoteCiteHint}' : '— ${Bidi.isolateOppositeRuns(cite, direction)}',
-                  style: context.textTheme.bodySmall?.copyWith(color: empty ? context.colors.textSecondary.withValues(alpha: 0.7) : null),
-                ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s1),
+              child: Row(
+                children: [
+                  ExcludeSemantics(child: Text('— ', style: style)),
+                  Expanded(
+                    child: EditorFieldFocus(
+                      editorState: scope.controller.editorState,
+                      child: PlainField(
+                        fieldKey: ValueKey('quote-cite-${block.id}'),
+                        value: block.cite ?? '',
+                        hint: context.l10n.quoteCiteHint,
+                        maxLength: DraftLimits.maxPlainText,
+                        style: style,
+                        onChanged: (v) => scope.controller.updateAttributes(block.id, {RDocNodeKeys.cite: v.isEmpty ? null : v}),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -194,6 +213,7 @@ class _Quote extends StatelessWidget {
   }
 }
 
+/// A callout: the variant and the title in its head, edited in place (as the web editor's callout), then its text.
 class _Callout extends StatelessWidget {
   const _Callout({required this.block, required this.direction, required this.text});
 
@@ -206,13 +226,13 @@ class _Callout extends StatelessWidget {
     final scope = RDocEditorScope.of(context);
     final colors = context.colors;
     final l10n = context.l10n;
-    final (bg, accent, icon, label) = switch (block.variant) {
-      RCalloutVariant.tip => (colors.calloutTip, colors.calloutTipAccent, Icons.lightbulb_outline, l10n.calloutTip),
-      RCalloutVariant.info => (colors.calloutInfo, colors.calloutInfoAccent, Icons.info_outline, l10n.calloutInfo),
-      RCalloutVariant.warning => (colors.calloutWarning, colors.calloutWarningAccent, Icons.warning_amber_rounded, l10n.calloutWarning),
-      RCalloutVariant.danger => (colors.calloutDanger, colors.calloutDangerAccent, Icons.dangerous_outlined, l10n.calloutDanger),
-    };
-    final title = block.title;
+    (Color, Color, IconData, String) look(RCalloutVariant v) => switch (v) {
+          RCalloutVariant.tip => (colors.calloutTip, colors.calloutTipAccent, Icons.lightbulb_outline, l10n.calloutTip),
+          RCalloutVariant.info => (colors.calloutInfo, colors.calloutInfoAccent, Icons.info_outline, l10n.calloutInfo),
+          RCalloutVariant.warning => (colors.calloutWarning, colors.calloutWarningAccent, Icons.warning_amber_rounded, l10n.calloutWarning),
+          RCalloutVariant.danger => (colors.calloutDanger, colors.calloutDangerAccent, Icons.dangerous_outlined, l10n.calloutDanger),
+        };
+    final (bg, accent, _, _) = look(block.variant);
     final style = rdocBodyStyle(context, direction, factor: 0.94);
     return Directionality(
       textDirection: direction,
@@ -223,31 +243,58 @@ class _Callout extends StatelessWidget {
           borderRadius: BorderRadius.circular(ReadInRadius.md),
           border: BorderDirectional(start: BorderSide(color: accent, width: 4)),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(padding: const EdgeInsets.only(top: 4), child: Icon(icon, color: accent, size: 22)),
-            const SizedBox(width: ReadInSpace.s3),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+            EditorFieldFocus(
+              editorState: scope.controller.editorState,
+              child: Row(
                 children: [
-                  InkWell(
-                    key: ValueKey('callout-settings-${block.id}'),
-                    onTap: scope.enabled ? () => scope.onEditCallout(block) : null,
-                    child: Text(
-                      title == null || title.isEmpty ? label : Bidi.isolateOppositeRuns(title, direction),
-                      style: style.copyWith(
-                        fontWeight: FontWeight.w700,
-                        height: 1.5,
-                        color: title == null || title.isEmpty ? accent : null,
-                      ),
+                  DropdownButtonHideUnderline(
+                    child: DropdownButton<RCalloutVariant>(
+                      key: ValueKey('callout-variant-${block.id}'),
+                      value: block.variant,
+                      isDense: true,
+                      icon: Icon(Icons.arrow_drop_down_rounded, color: accent),
+                      menuWidth: 200,
+                      selectedItemBuilder: (context) => [
+                        for (final v in RCalloutVariant.values) Icon(look(v).$3, color: look(v).$2, size: 22, semanticLabel: look(v).$4),
+                      ],
+                      items: [
+                        for (final v in RCalloutVariant.values)
+                          DropdownMenuItem(
+                            value: v,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(look(v).$3, color: look(v).$2, size: 20),
+                                const SizedBox(width: ReadInSpace.s2),
+                                Text(look(v).$4),
+                              ],
+                            ),
+                          ),
+                      ],
+                      onChanged: scope.enabled
+                          ? (v) => scope.controller.updateAttributes(block.id, {RDocNodeKeys.variant: (v ?? block.variant).name})
+                          : null,
                     ),
                   ),
-                  text,
+                  const SizedBox(width: ReadInSpace.s2),
+                  Expanded(
+                    child: PlainField(
+                      fieldKey: ValueKey('callout-title-${block.id}'),
+                      value: block.title ?? '',
+                      hint: l10n.calloutTitleHint,
+                      maxLength: DraftLimits.maxPlainText,
+                      style: style.copyWith(fontWeight: FontWeight.w700, height: 1.5),
+                      onChanged: (v) => scope.controller.updateAttributes(block.id, {RDocNodeKeys.title: v.isEmpty ? null : v}),
+                    ),
+                  ),
                 ],
               ),
             ),
+            const SizedBox(height: ReadInSpace.s1),
+            text,
           ],
         ),
       ),
@@ -276,8 +323,8 @@ class RDocStructuredBlockComponentBuilder extends BlockComponentBuilder {
   BlockComponentValidate get validate => (node) => node.attributes[RDocNodeKeys.blockJson] is Map;
 }
 
-/// A structured block shown as readers will see it (the reader's own block widgets); a tap opens it in its sheet.
-/// It takes the caret like AppFlowy's divider.
+/// A structured block edited in place with its inline editor ([StructuredBlockEditor]), as the web editor's node
+/// views: every change is one undoable transaction. Outside its fields it takes the caret like AppFlowy's divider.
 class RDocStructuredBlockComponent extends BlockComponentStatefulWidget {
   const RDocStructuredBlockComponent({
     super.key,
@@ -300,92 +347,30 @@ class _RDocStructuredBlockComponentState extends State<RDocStructuredBlockCompon
   Node get node => widget.node;
 
   final _bodyKey = GlobalKey();
-  bool _uploading = false;
 
   RenderBox? get _renderBox => context.findRenderObject() as RenderBox?;
-
-  Future<void> _pick(RDocEditorScope scope, RImage image) async {
-    setState(() => _uploading = true);
-    try {
-      await scope.onPickImage(image);
-    } finally {
-      if (mounted) setState(() => _uploading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final scope = RDocEditorScope.of(context);
     final colors = context.colors;
-    final l10n = context.l10n;
     final editorState = scope.controller.editorState;
     final block = RDocAppFlowyCodec.blockFor(node);
     if (block == null) return const SizedBox.shrink();
     final problem = scope.problemBlockIds.contains(block.id);
-    final emptyImage = block is RImage && block.src.isEmpty;
     final missingAlt = block is RImage && block.src.isNotEmpty && block.alt.trim().isEmpty;
 
-    final Widget preview = emptyImage
-        ? AspectRatio(
-            aspectRatio: 16 / 9,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.surfaceVariant,
-                borderRadius: BorderRadius.circular(ReadInRadius.md),
-                border: Border.all(color: colors.border),
-              ),
-              child: Center(
-                child: _uploading
-                    ? Column(mainAxisSize: MainAxisSize.min, children: [
-                        const SizedBox.square(dimension: 24, child: CircularProgressIndicator(strokeWidth: 2)),
-                        const SizedBox(height: ReadInSpace.s2),
-                        Text(l10n.uploadingLabel, style: context.textTheme.bodySmall),
-                      ])
-                    : FilledButton.tonalIcon(
-                        key: ValueKey('image-choose-${block.id}'),
-                        onPressed: scope.enabled ? () => _pick(scope, block) : null,
-                        icon: const Icon(Icons.add_photo_alternate_outlined),
-                        label: Text(l10n.imageChoose),
-                      ),
-              ),
-            ),
-          )
-        : (block is REmbed && block.url.isEmpty)
-            ? ListTile(
-                leading: const Icon(Icons.smart_display_outlined),
-                title: Text(l10n.blockEmbed),
-                subtitle: Text(l10n.embedInvalid),
-              )
-            : IgnorePointer(child: RBlockView(block));
-
-    Widget child = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        preview,
-        if (missingAlt)
-          Padding(
-            padding: const EdgeInsets.only(top: ReadInSpace.s1),
-            child: Row(children: [
-              Icon(Icons.error_outline_rounded, size: 16, color: colors.error),
-              const SizedBox(width: ReadInSpace.s1),
-              Expanded(child: Text(l10n.problemImageAlt, style: context.textTheme.bodySmall?.copyWith(color: colors.error))),
-            ]),
-          ),
-      ],
-    );
-    child = Material(
+    Widget child = Material(
       type: MaterialType.transparency,
-      child: InkWell(
-        key: ValueKey('structured-${block.id}'),
-        borderRadius: BorderRadius.circular(ReadInRadius.md),
-        onTap: scope.enabled && !emptyImage ? () => scope.onEditBlock(block) : null,
-        child: Container(
-          key: _bodyKey,
-          padding: const EdgeInsets.all(ReadInSpace.s1),
-          decoration: problem || missingAlt
-              ? BoxDecoration(border: Border.all(color: colors.error), borderRadius: BorderRadius.circular(ReadInRadius.md))
-              : null,
-          child: child,
+      child: Container(
+        key: _bodyKey,
+        padding: const EdgeInsets.all(ReadInSpace.s1),
+        decoration: problem || missingAlt
+            ? BoxDecoration(border: Border.all(color: colors.error), borderRadius: BorderRadius.circular(ReadInRadius.md))
+            : null,
+        child: EditorFieldFocus(
+          editorState: editorState,
+          child: KeyedSubtree(key: ValueKey('structured-${block.id}'), child: StructuredBlockEditor(block: block)),
         ),
       ),
     );

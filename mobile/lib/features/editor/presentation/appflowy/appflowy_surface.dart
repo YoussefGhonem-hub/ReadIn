@@ -11,7 +11,6 @@ import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../../shared/rdoc/rdoc_scope.dart';
 import '../block_editor/block_editor_controller.dart';
 import '../block_editor/block_editor_surface.dart';
-import '../block_editor/structured_block_sheet.dart';
 import 'appflowy_block_components.dart';
 import 'appflowy_block_editor_controller.dart';
 import 'rdoc_appflowy_codec.dart';
@@ -138,21 +137,33 @@ class AppFlowyRDocEditor extends StatelessWidget {
     );
   }
 
+  /// Highlight, and the chips of mentions and glossary terms: each placeholder character becomes one [RDocAtomChip].
   InlineSpan _decorate(BuildContext context, Node node, int index, TextInsert text, TextSpan before, TextSpan after) {
-    final colors = context.colors;
     final attributes = text.attributes ?? const {};
-    var style = before.style ?? const TextStyle();
-    if (attributes[RDocNodeKeys.highlight] == true) style = style.copyWith(backgroundColor: colors.highlight);
-    if (attributes[RDocNodeKeys.mention] != null) style = style.copyWith(color: colors.primary, fontWeight: FontWeight.w600);
-    if (attributes[RDocNodeKeys.term] != null) {
-      style = style.copyWith(
-        color: colors.primary,
-        decoration: TextDecoration.underline,
-        decorationStyle: TextDecorationStyle.dotted,
-        decorationColor: colors.primary,
-      );
+    final atom = RDocAppFlowyCodec.atomOf(attributes);
+    if (atom != null) {
+      // `after` carries the block's style (its script's font, the quote's italics).
+      final style = (before.style ?? const TextStyle()).merge(after.style);
+      final spans = <InlineSpan>[];
+      var start = 0;
+      for (var k = 0; k <= text.text.length; k++) {
+        if (k < text.text.length && text.text[k] != RDocNodeKeys.placeholder) continue;
+        if (k > start) spans.add(TextSpan(text: text.text.substring(start, k), style: before.style));
+        if (k < text.text.length) {
+          spans.add(WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: RDocAtomChip(atom: atom, style: style),
+          ));
+        }
+        start = k + 1;
+      }
+      return spans.length == 1 ? spans.single : TextSpan(children: spans);
     }
-    return TextSpan(text: text.text, style: style);
+    if (attributes[RDocNodeKeys.highlight] == true) {
+      return TextSpan(text: text.text, style: (before.style ?? const TextStyle()).copyWith(backgroundColor: context.colors.highlight));
+    }
+    return before;
   }
 
   EditorStyle _style(BuildContext context) {
@@ -243,54 +254,66 @@ class AppFlowyRDocEditor extends StatelessWidget {
     };
   }
 
-  Future<void> _pickImage(RImage image) async {
-    final file = await editorContext.pickImage();
-    if (file == null) return;
-    final asset = await editorContext.uploadImage(file);
-    if (asset == null || asset.variants.isEmpty) return;
-    controller.updateBlock(RImage(
-      image.id,
-      src: asset.variants.last.url,
-      alt: image.alt,
-      darkSrc: image.darkSrc,
-      caption: image.caption,
-      width: asset.width,
-      height: asset.height,
-    ));
-  }
+  @override
+  Widget build(BuildContext context) => BlockEditorScope(
+        host: controller,
+        editorContext: editorContext,
+        registry: controller.focusRegistry,
+        child: RDocEditorScope(
+          controller: controller,
+          enabled: editorContext.enabled,
+          problemBlockIds: editorContext.problemBlockIds,
+          child: AppFlowyEditor(
+            key: ValueKey('appflowy-${controller.generation}'),
+            editorState: controller.editorState,
+            editable: editorContext.enabled,
+            editorStyle: _style(context),
+            blockComponentBuilders: _builders(context),
+            characterShortcutEvents: rdocCharacterShortcutEvents,
+            commandShortcutEvents: standardCommandShortcutEvents,
+            header: editorContext.header,
+            footer: const SizedBox(height: ReadInSpace.s9),
+          ),
+        ),
+      );
+}
+
+/// A mention or glossary term inside the editor's text: one atomic piece (a single placeholder character) that lays
+/// out its own text in that text's direction — a mention is always LTR (`@username`), a term follows its script —
+/// so it reads whole at either end of an RTL or LTR line.
+class RDocAtomChip extends StatelessWidget {
+  const RDocAtomChip({super.key, required this.atom, required this.style});
+
+  final RDocAtom atom;
+  final TextStyle style;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return RDocEditorScope(
-      controller: controller,
-      enabled: editorContext.enabled,
-      problemBlockIds: editorContext.problemBlockIds,
-      onEditBlock: (block) async {
-        final edited = await showStructuredBlockSheet(context, block, editorContext);
-        if (edited != null) controller.updateBlock(edited);
-      },
-      onPickImage: _pickImage,
-      onEditCallout: (callout) async {
-        final result = await showCalloutSheet(context, callout);
-        if (result != null) {
-          controller.updateAttributes(callout.id, {RDocNodeKeys.variant: result.variant.name, RDocNodeKeys.title: result.title});
-        }
-      },
-      onEditCite: (quote) async {
-        final cite = await showTextDialog(context, label: l10n.quoteCiteHint, initial: quote.cite);
-        if (cite != null) controller.updateAttributes(quote.id, {RDocNodeKeys.cite: cite.isEmpty ? null : cite});
-      },
-      child: AppFlowyEditor(
-        key: ValueKey('appflowy-${controller.generation}'),
-        editorState: controller.editorState,
-        editable: editorContext.enabled,
-        editorStyle: _style(context),
-        blockComponentBuilders: _builders(context),
-        characterShortcutEvents: rdocCharacterShortcutEvents,
-        commandShortcutEvents: standardCommandShortcutEvents,
-        header: editorContext.header,
-        footer: const SizedBox(height: ReadInSpace.s9),
+    final colors = context.colors;
+    final direction = atom.mention ? TextDirection.ltr : Bidi.detect(atom.text) ?? Directionality.of(context);
+    final text = atom.mention
+        ? style.copyWith(color: colors.primary, fontWeight: FontWeight.w600, backgroundColor: Colors.transparent)
+        : style.copyWith(
+            color: colors.primary,
+            backgroundColor: Colors.transparent,
+            decoration: TextDecoration.underline,
+            decorationStyle: TextDecorationStyle.dotted,
+            decorationColor: colors.primary,
+          );
+    return Container(
+      key: ValueKey('${atom.mention ? 'mention' : 'term'}-chip-${atom.id}'),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      decoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(ReadInRadius.sm),
+      ),
+      child: Text(
+        atom.text,
+        textDirection: direction,
+        textScaler: TextScaler.noScaling,
+        maxLines: 1,
+        softWrap: false,
+        style: text,
       ),
     );
   }

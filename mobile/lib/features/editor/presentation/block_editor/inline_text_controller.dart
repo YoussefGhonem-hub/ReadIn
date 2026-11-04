@@ -5,6 +5,7 @@ import '../../../../shared/rdoc/editing/block_editing.dart';
 import '../../../../shared/rdoc/editing/inline_editing.dart';
 import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../comments/domain/entities/comment_text.dart';
+import 'inline_formatter.dart';
 
 /// Called when the writer presses Enter in a block that splits: [before] stays, [after] are the new paragraphs
 /// below (one per typed or pasted line break).
@@ -13,7 +14,7 @@ typedef InlineSplitCallback = void Function(List<RInline> before, List<List<RInl
 /// A [TextEditingController] over RDoc inline content: the field shows the plain text, and every edit is applied to
 /// the nodes with [InlineEditing], so marks, links, mentions and glossary terms stay where they are. It draws the
 /// marks while editing, and applies the inline markdown shortcuts (`**bold**`, `` `code` ``, `~~strike~~`).
-class InlineTextController extends TextEditingController {
+class InlineTextController extends TextEditingController implements InlineFormatter {
   InlineTextController({List<RInline> nodes = const [], this.onSplit, this.onNodesChanged})
       : _nodes = InlineEditing.normalize(nodes),
         super(text: plainTextOf(nodes));
@@ -113,6 +114,7 @@ class InlineTextController extends TextEditingController {
     return (s.start, s.end);
   }
 
+  @override
   bool hasMark(RMarkType type) {
     final (start, end) = _range;
     if (start == end) {
@@ -122,6 +124,7 @@ class InlineTextController extends TextEditingController {
   }
 
   /// Bold, italic, code, highlight or strike on the selection; with a caret, for the next characters typed.
+  @override
   void toggleMark(RMarkType type) {
     final (start, end) = _range;
     if (start == end) {
@@ -134,18 +137,21 @@ class InlineTextController extends TextEditingController {
     _commit(InlineEditing.toggleMark(_nodes, start, end, type), selection);
   }
 
+  @override
   String? get link {
     final (start, end) = _range;
     return InlineEditing.linkAt(_nodes, start, end);
   }
 
   /// Links the selection to [href] (http/https), or unlinks it when null.
+  @override
   void setLink(String? href) {
     final (start, end) = _range;
     if (start == end) return;
     _commit(InlineEditing.setLink(_nodes, start, end, href), selection);
   }
 
+  @override
   void insertHardBreak() {
     final (start, end) = _range;
     final result = InlineEditing.insertHardBreak(_nodes, start, end);
@@ -153,6 +159,7 @@ class InlineTextController extends TextEditingController {
   }
 
   /// The `@word` being typed (not inside an existing mention), for the suggestions.
+  @override
   MentionQuery? get activeMention {
     final s = selection;
     if (!s.isValid || !s.isCollapsed) return null;
@@ -168,10 +175,33 @@ class InlineTextController extends TextEditingController {
   }
 
   /// Replaces the typed `@word` with a mention of [userId] shown as [text] (`@username`).
+  @override
   void insertMention(MentionQuery query, {required String userId, required String text}) {
     final result = InlineEditing.insertMention(_nodes, query.start, query.end, userId: userId, text: text);
     _commit(result.nodes, TextSelection.collapsed(offset: result.caret));
   }
+
+  // ── InlineFormatter: the toolbar formats a table cell or a step's text like the editor's own text ──
+
+  @override
+  bool get canFormat => true;
+
+  @override
+  bool get hasRange => selection.isValid && !selection.isCollapsed;
+
+  @override
+  void startMention() {
+    final (start, end) = _range;
+    final needsSpace = start > 0 && text[start - 1].trim().isNotEmpty;
+    value = value.replaced(TextRange(start: start, end: end), needsSpace ? ' @' : '@');
+  }
+
+  /// No slash menu inside a structured block.
+  @override
+  String? get slashQuery => null;
+
+  @override
+  void applySlash(RBlockKind kind) {}
 
   @override
   TextSpan buildTextSpan({required BuildContext context, TextStyle? style, required bool withComposing}) {

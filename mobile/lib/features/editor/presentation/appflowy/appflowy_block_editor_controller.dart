@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/widgets.dart';
@@ -8,13 +9,16 @@ import '../../../../shared/rdoc/editing/inline_editing.dart';
 import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../comments/domain/entities/comment_text.dart';
 import '../block_editor/block_editor_controller.dart';
+import '../block_editor/block_editor_surface.dart';
 import '../block_editor/inline_formatter.dart';
 import 'rdoc_appflowy_codec.dart';
 
 /// The AppFlowy surface's controller (F05): an AppFlowy [EditorState] seen as RDoc. Every transaction is converted
-/// back with [RDocAppFlowyCodec] and announced to listeners; the toolbar formats through [InlineFormatter] and the
-/// block options sheet uses [BlockStructureCommands].
-class AppFlowyBlockEditorController extends BlockEditorController implements InlineFormatter, BlockStructureCommands {
+/// back with [RDocAppFlowyCodec] and announced to listeners; the toolbar formats through [InlineFormatter], undoes
+/// through [UndoRedo] and the block options sheet uses [BlockStructureCommands]. The structured blocks edited in
+/// place write through [StructuredBlockHost], one undoable transaction per edit.
+class AppFlowyBlockEditorController extends BlockEditorController
+    implements InlineFormatter, BlockStructureCommands, StructuredBlockHost, UndoRedo {
   AppFlowyBlockEditorController({required RDocDocument document}) : _language = document.language {
     appflowyEditorSliceAttributes = rdocSliceAttributes;
     _attach(_stateFor(document));
@@ -39,6 +43,9 @@ class AppFlowyBlockEditorController extends BlockEditorController implements Inl
 
   /// Bumped by [load]: the surface builds a new editor for the new state.
   int generation = 0;
+
+  /// The first field of each structured block, so inserting or revealing one puts the caret in it.
+  final focusRegistry = BlockFocusRegistry();
 
   EditorState get editorState => _state;
 
@@ -144,6 +151,7 @@ class AppFlowyBlockEditorController extends BlockEditorController implements Inl
         ? Selection.collapsed(Position(path: focusPath))
         : Selection.single(path: focusPath, startOffset: 0, endOffset: 1);
     unawaited(_state.apply(transaction));
+    if (focus.type == RDocNodeKeys.block) _focusField(id);
     return id;
   }
 
@@ -174,20 +182,58 @@ class AppFlowyBlockEditorController extends BlockEditorController implements Inl
       node.delta != null ? Selection.collapsed(Position(path: node.path)) : Selection.single(path: node.path, startOffset: 0, endOffset: 1),
       reason: SelectionUpdateReason.uiEvent,
     ));
+    if (node.type == RDocNodeKeys.block) _focusField(blockId);
   }
 
-  /// Replaces a structured block (steps, code, tabs, table, image, embed) after it was edited in its sheet.
-  void updateBlock(RBlock block) {
+  /// Puts the caret in a structured block's first field once it is built (a code block's code, the first cell).
+  void _focusField(String blockId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_disposed) focusRegistry[blockId]?.requestFocus();
+    });
+  }
+
+  // ── StructuredBlockHost ───────────────────────────────────
+
+  /// Replaces a structured block (steps, code, tabs, table, image, embed) after an edit inside it.
+  @override
+  void replace(RBlock block) {
     final nodes = _nodesOf(block.id);
     if (nodes.length != 1 || nodes.single.type != RDocNodeKeys.block) return;
-    unawaited(_state.apply(_state.transaction..updateNode(nodes.single, {RDocNodeKeys.blockJson: block.toJson()})));
+    final json = block.toJson();
+    if (jsonEncode(nodes.single.attributes[RDocNodeKeys.blockJson]) == jsonEncode(json)) return;
+    unawaited(_state.apply(_state.transaction..updateNode(nodes.single, {RDocNodeKeys.blockJson: json})));
   }
 
   /// Updates attributes of a text block's node (callout variant and title, quote cite).
   void updateAttributes(String blockId, Map<String, Object?> attributes) {
     final nodes = _nodesOf(blockId);
     if (nodes.isEmpty) return;
-    unawaited(_state.apply(_state.transaction..updateNode(nodes.first, attributes)));
+    final node = nodes.first;
+    if (attributes.entries.every((e) => node.attributes[e.key] == e.value)) return;
+    final transaction = _state.transaction..updateNode(node, attributes);
+    transaction.afterSelection = _state.selection;
+    unawaited(_state.apply(transaction));
+  }
+
+  // ── UndoRedo ──────────────────────────────────────────────
+
+  @override
+  bool get canUndo => _state.undoManager.undoStack.isNonEmpty;
+
+  @override
+  bool get canRedo => _state.undoManager.redoStack.isNonEmpty;
+
+  @override
+  void undo() {
+    _state.undoManager.undo();
+    // The stacks change after the transaction is announced.
+    notifyListeners();
+  }
+
+  @override
+  void redo() {
+    _state.undoManager.redo();
+    notifyListeners();
   }
 
   // ── BlockStructureCommands ────────────────────────────────
@@ -339,14 +385,11 @@ class AppFlowyBlockEditorController extends BlockEditorController implements Inl
     final selection = _state.selection;
     final node = _textNode;
     if (selection == null || node == null || !selection.isCollapsed) return null;
-    final text = node.delta!.toPlainText();
-    final query = CommentText.activeMention(text, selection.start.offset);
-    if (query == null) return null;
-    final at = node.delta!.slice(query.start, query.start + 1).firstOrNull?.attributes;
-    if (at?[RDocNodeKeys.mention] != null || at?[RDocNodeKeys.term] != null) return null;
-    return query;
+    // A mention or term is one placeholder character, never part of an `@word`.
+    return CommentText.activeMention(node.delta!.toPlainText(), selection.start.offset);
   }
 
+  /// Replaces the typed `@word` with the mention: one atomic placeholder character, then a space.
   @override
   void insertMention(MentionQuery query, {required String userId, required String text}) {
     final node = _textNode;
@@ -358,10 +401,10 @@ class AppFlowyBlockEditorController extends BlockEditorController implements Inl
         node,
         query.start,
         Delta()
-          ..insert(text, attributes: {RDocNodeKeys.mention: userId})
+          ..insert(RDocNodeKeys.placeholder, attributes: RDocAppFlowyCodec.mentionAttributes(userId: userId, text: text))
           ..insert(' '),
       );
-    transaction.afterSelection = Selection.collapsed(Position(path: node.path, offset: query.start + text.length + 1));
+    transaction.afterSelection = Selection.collapsed(Position(path: node.path, offset: query.start + 2));
     unawaited(_state.apply(transaction));
   }
 

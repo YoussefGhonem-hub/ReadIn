@@ -1803,6 +1803,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get undo => 'Undo';
 
   @override
+  String get redo => 'Redo';
+
+  @override
   String get moreActions => 'More actions';
 
   @override
@@ -2687,10 +2690,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tableAddColumn => 'Add column';
 
   @override
-  String get tableRemoveRow => 'Remove last row';
+  String get tableDeleteRow => 'Delete row';
 
   @override
-  String get tableRemoveColumn => 'Remove last column';
+  String get tableDeleteColumn => 'Delete column';
+
+  @override
+  String get tableDelete => 'Delete table';
+
+  @override
+  String get tableTools => 'Table';
 
   @override
   String get stepTitleHint => 'Step title';
