@@ -43,7 +43,7 @@ internal sealed class GetArticlePathQueryHandler(IAppDbContext db, ICurrentUser 
             candidates = [.. enrolled, .. candidates.Except(enrolled)];
         }
 
-        var language = await cards.ArticleLanguageOfAsync(viewer, ct);
+        var language = await cards.ArticleLanguageOfAsync(viewer, query.UiLanguage, ct);
         var data = await cards.LoadAsync(candidates, viewer, query.UiLanguage, language, ct);
         var path = data.FirstOrDefault(p => p.Items.Any(i => i.Article.Id == query.ArticleId));
         if (path is null) return Result.Success<ArticlePathDto?>(null);

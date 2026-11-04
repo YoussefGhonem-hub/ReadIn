@@ -24,7 +24,7 @@ internal sealed class GetPathBySlugQueryHandler(ICurrentUser currentUser, PathCa
         if (id is null) return LearningPathErrors.NotFound;
 
         var viewer = currentUser.UserId;
-        var language = await cards.ArticleLanguageOfAsync(viewer, ct);
+        var language = await cards.ArticleLanguageOfAsync(viewer, query.UiLanguage, ct);
         var data = await cards.LoadAsync([id.Value], viewer, query.UiLanguage, language, ct);
         if (data is not [var path]) return LearningPathErrors.NotFound;
 

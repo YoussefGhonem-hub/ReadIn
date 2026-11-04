@@ -24,7 +24,7 @@ internal sealed class EnrollInPathCommandHandler(IAppDbContext db, ICurrentUser 
     public async ValueTask<Result<PathCardDto>> Handle(EnrollInPathCommand command, CancellationToken ct)
     {
         var userId = currentUser.RequireUserId();
-        var language = await cards.ArticleLanguageOfAsync(userId, ct);
+        var language = await cards.ArticleLanguageOfAsync(userId, currentUser.UiLanguage, ct);
         if (await cards.LoadAsync([command.PathId], userId, currentUser.UiLanguage, language, ct) is not [var path])
             return LearningPathErrors.NotFound;
         if (path.Enrollment is not null) return path.Card;

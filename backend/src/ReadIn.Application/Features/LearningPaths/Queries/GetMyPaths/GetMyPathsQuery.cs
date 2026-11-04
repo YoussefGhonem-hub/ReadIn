@@ -32,7 +32,7 @@ internal sealed class GetMyPathsQueryHandler(IAppDbContext db, ICurrentUser curr
     public async ValueTask<Result<IReadOnlyList<PathCardDto>>> Handle(GetMyPathsQuery query, CancellationToken ct)
     {
         var userId = currentUser.RequireUserId();
-        return await EnrolledPaths.ListAsync(db, cards, userId, query.UiLanguage, await cards.ArticleLanguageOfAsync(userId, ct), ct);
+        return await EnrolledPaths.ListAsync(db, cards, userId, query.UiLanguage, await cards.ArticleLanguageOfAsync(userId, query.UiLanguage, ct), ct);
     }
 }
 
@@ -48,7 +48,7 @@ internal sealed class GetActivePathQueryHandler(IAppDbContext db, ICurrentUser c
             .Select(e => e.PathId)
             .ToListAsync(ct);
 
-        var language = await cards.ArticleLanguageOfAsync(userId, ct);
+        var language = await cards.ArticleLanguageOfAsync(userId, query.UiLanguage, ct);
         var active = (await cards.BuildAsync(inProgress, userId, query.UiLanguage, language, ct))
             .FirstOrDefault(c => c.Progress?.Next is not null);
         return Result.Success(active);
@@ -65,7 +65,7 @@ internal sealed class GetProfilePathsQueryHandler(IAppDbContext db, ICurrentUser
         if (!owner.ReadingStatsVisibleTo(currentUser.UserId)) return ProfileErrors.StatsPrivate;
 
         // Titles follow the viewer's article language, progress is the profile owner's.
-        var language = await cards.ArticleLanguageOfAsync(currentUser.UserId, ct);
+        var language = await cards.ArticleLanguageOfAsync(currentUser.UserId, query.UiLanguage, ct);
         return await EnrolledPaths.ListAsync(db, cards, owner.Id, query.UiLanguage, language, ct);
     }
 }

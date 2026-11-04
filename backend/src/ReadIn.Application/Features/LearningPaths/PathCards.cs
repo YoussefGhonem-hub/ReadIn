@@ -151,11 +151,14 @@ public sealed class PathCards(IAppDbContext db, IFileStorage storage, TypeAdapte
         return [.. articleIds.Where(completed.ContainsKey).Select(id => completed[id])];
     }
 
-    /// <summary>The signed-in viewer's article language preference (null for guests: the source language).</summary>
-    internal async Task<string?> ArticleLanguageOfAsync(Guid? userId, CancellationToken ct) =>
+    /// <summary>
+    /// The article version cards show: the signed-in viewer's preference; for guests the one matching the UI (ar → ar-EG,
+    /// en → en), as the other feeds do (SPEC §17.1). The source language stays the fallback where a version is missing.
+    /// </summary>
+    internal async Task<string?> ArticleLanguageOfAsync(Guid? userId, string uiLanguage, CancellationToken ct) =>
         userId is { } id
             ? await db.Users.AsNoTracking().Where(u => u.Id == id).Select(u => u.ArticleLanguagePref).FirstOrDefaultAsync(ct)
-            : null;
+            : UiLanguages.Normalize(uiLanguage) == UiLanguages.English ? ArticleLanguages.English : ArticleLanguages.EgyptianArabic;
 }
 
 /// <param name="CoverUrl">Stored (relative) cover of the article.</param>

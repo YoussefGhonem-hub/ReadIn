@@ -24,7 +24,7 @@ internal sealed class GetPathsQueryHandler(IAppDbContext db, ICurrentUser curren
 
         var ids = await paths.OrderBy(p => p.SortOrder).ThenBy(p => p.Slug).Select(p => p.Id).ToListAsync(ct);
         var viewer = currentUser.UserId;
-        var language = await cards.ArticleLanguageOfAsync(viewer, ct);
+        var language = await cards.ArticleLanguageOfAsync(viewer, query.UiLanguage, ct);
         return await cards.BuildAsync(ids, viewer, query.UiLanguage, language, ct);
     }
 }
