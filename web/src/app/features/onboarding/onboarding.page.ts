@@ -14,11 +14,10 @@ import { SessionStore } from '../../core/auth/session.store';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService } from '../../core/i18n/language.service';
 import { PushService } from '../../core/push/push.service';
-import { BdiText } from '../../shared/directives/bdi-text';
-import { FieldIcon } from '../../shared/ui/field-icon';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { ErrorState } from '../../shared/ui/states';
 import { Wordmark } from '../../shared/ui/wordmark';
+import { InterestChips } from './interest-chips';
 
 type Step = 1 | 2 | 3;
 const MIN_INTERESTS = 3;
@@ -26,7 +25,7 @@ const MIN_INTERESTS = 3;
 /** Onboarding (F02): welcome → interests (≥ 3) → preferences. */
 @Component({
   selector: 'rd-onboarding-page',
-  imports: [FormsModule, TranslocoPipe, BdiText, FieldIcon, Segmented, ErrorState, Wordmark, LucideDynamicIcon],
+  imports: [FormsModule, TranslocoPipe, InterestChips, Segmented, ErrorState, Wordmark, LucideDynamicIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex min-h-dvh flex-col items-center px-4 py-8' },
   template: `
@@ -78,38 +77,15 @@ const MIN_INTERESTS = 3;
                   }
                 </div>
               } @else {
-                <div class="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  @for (field of fields(); track field.id) {
-                    <button
-                      type="button"
-                      class="flex min-h-12 items-center gap-2 rounded-md border px-3 text-start text-sm transition-colors"
-                      [class]="fieldIds().has(field.id) ? 'border-primary bg-primary-container font-semibold text-on-primary-container' : 'border-border bg-surface'"
-                      [attr.aria-pressed]="fieldIds().has(field.id)"
-                      (click)="toggleField(field)"
-                    >
-                      <rd-field-icon [name]="field.icon" class="text-primary" />
-                      <span class="min-w-0 flex-1 truncate"><rd-bdi-text [text]="fieldName(field)" /></span>
-                      @if (fieldIds().has(field.id)) {
-                        <svg lucideIcon="Check" [size]="16" aria-hidden="true"></svg>
-                      }
-                    </button>
-                  }
-                </div>
-
-                @for (field of selectedFields(); track field.id) {
-                  @if (topics()[field.slug]?.length) {
-                    <div class="mt-5">
-                      <h2 class="mb-2 text-sm font-semibold">{{ 'onboarding.interests.topicsOf' | transloco: { field: fieldName(field) } }}</h2>
-                      <div class="flex flex-wrap gap-2">
-                        @for (topic of topics()[field.slug]; track topic.id) {
-                          <button type="button" class="rd-chip" [attr.aria-pressed]="topicIds().has(topic.id)" (click)="toggleTopic(topic)">
-                            <rd-bdi-text [text]="lang() === 'ar' ? topic.nameAr : topic.nameEn" />
-                          </button>
-                        }
-                      </div>
-                    </div>
-                  }
-                }
+                <rd-interest-chips
+                  [fields]="fields()"
+                  [topics]="topics()"
+                  [fieldIds]="fieldIds()"
+                  [topicIds]="topicIds()"
+                  [lang]="lang()"
+                  (fieldToggle)="toggleField($event)"
+                  (topicToggle)="toggleTopic($event)"
+                />
               }
 
               <p class="mt-6 text-sm" [class]="canContinue() ? 'text-success' : 'text-text-secondary'" aria-live="polite">
@@ -208,10 +184,6 @@ export class OnboardingPage {
 
   constructor() {
     void this.loadFields();
-  }
-
-  protected fieldName(field: FieldDto): string {
-    return this.lang() === 'ar' ? field.nameAr : field.nameEn;
   }
 
   protected async loadFields(): Promise<void> {

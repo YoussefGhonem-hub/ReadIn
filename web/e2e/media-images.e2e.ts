@@ -86,12 +86,16 @@ for (const variant of VARIANTS) {
     const written = await fixture<any>(request, `/api/v1/articles/${result.slug}?lang=en`);
     const card = { ...base, id: written.id, slug: written.slug, language: written.language, title: written.title, attachments: written.attachments };
     await onApi(page, 'GET', new RegExp(`${API}/feed/for-you`), (route) => reply(route, 200, { items: [card], nextCursor: null }));
-    await page.locator('rd-article-page a[href="/"]').first().click();
+    // Home from the top bar (the reader's Back would return to the editor the article was published from).
+    await page.locator('rd-top-bar a[href="/"]').click();
     await page.waitForURL((url) => url.pathname === '/');
     const feedCard = page.locator('rd-article-card').filter({ has: page.locator('[data-attachments="images"]') });
     await expect(feedCard.locator('[data-counter]')).toHaveText('1 / 3');
     await expect(feedCard.locator('[data-slide]')).toHaveCount(3);
     await expect(feedCard.locator('[data-slide]').first()).toHaveAttribute('aria-label', lang === 'ar' ? 'صورة 1 من 3' : 'Image 1 of 3');
+    // The carousel and its slides are described in the UI language.
+    await expect(feedCard.locator('[data-track]')).toHaveAttribute('aria-roledescription', lang === 'ar' ? 'عرض شرائح' : 'carousel');
+    await expect(feedCard.locator('[data-slide]').first()).toHaveAttribute('aria-roledescription', lang === 'ar' ? 'شريحة' : 'slide');
     await feedCard.scrollIntoViewIfNeeded();
     await parkMouse(page);
     await imagesLoaded(feedCard);

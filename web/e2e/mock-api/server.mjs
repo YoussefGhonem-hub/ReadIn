@@ -229,7 +229,8 @@ const TOPICS = {
     { id: 't-architecture', fieldId: 'f-software', slug: 'architecture', name: 'Architecture', nameAr: 'المعمارية', nameEn: 'Architecture' },
   ],
 };
-const fieldRef = ({ id, slug, name, nameAr, nameEn }) => ({ id, slug, name, nameAr, nameEn });
+/** `FieldRefDto`: Medicine is sensitive, so its articles ("How sleep turns reading into memory") show the health disclaimer. */
+const fieldRef = ({ id, slug, name, nameAr, nameEn, isSensitive }) => ({ id, slug, name, nameAr, nameEn, isSensitive });
 
 function imageAttachment(asset, order, altText, caption = null) {
   return { assetId: asset.id, order, caption, altText, width: asset.width, height: asset.height, blurHash: asset.blurHash, variants: asset.variants };

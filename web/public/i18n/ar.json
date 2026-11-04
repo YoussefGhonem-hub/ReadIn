@@ -36,17 +36,52 @@
     "share": "مشاركة",
     "linkCopied": "اتنسخ اللينك",
     "comingSoonShort": "الميزة دي جاية قريب ✨",
-    "readingTime": "{{count}} دقايق",
+    "readingTime": {
+      "one": "دقيقة قراءة",
+      "two": "دقيقتين قراءة",
+      "few": "{{count}} دقايق قراءة",
+      "many": "{{count}} دقيقة قراءة",
+      "other": "{{count}} دقيقة قراءة"
+    },
     "remove": "شيل",
     "cancel": "إلغاء",
-    "deletedUser": "مستخدم محذوف"
+    "deletedUser": "مستخدم محذوف",
+    "fileSize": {
+      "kb": "{{size}} كيلو",
+      "mb": "{{size}} ميجا"
+    }
+  },
+  "pageTitles": {
+    "welcome": "أهلاً بيك",
+    "signIn": "تسجيل الدخول",
+    "signUp": "حساب جديد",
+    "forgotPassword": "نسيت كلمة السر",
+    "changePassword": "غيّر كلمة السر",
+    "recoveryPin": "PIN الطوارئ",
+    "completeProfile": "كمّل بروفايلك",
+    "onboarding": "يلا نبدأ"
   },
   "errors": {
     "unknown": "حصلت مشكلة غير متوقعة. حاول تاني.",
     "network": "مفيش اتصال بالسيرفر. اتأكد من النت وحاول تاني.",
     "loadFailed": "معرفناش نحمّل البيانات",
     "validation": {
-      "failed": "في بيانات محتاجة تتظبط."
+      "failed": "في بيانات محتاجة تتظبط.",
+      "required": "مطلوب",
+      "max_length": "طويل أوي.",
+      "length": "راجع الخانة دي.",
+      "url": "اكتب لينك كامل بيبدأ بـ https://"
+    },
+    "request": {
+      "invalid": "الطلب غير صالح.",
+      "too_large": "الطلب أكبر من المسموح.",
+      "unsupported_media_type": "نوع البيانات المبعوتة مش مدعوم."
+    },
+    "route": {
+      "not_found": "الصفحة مش موجودة."
+    },
+    "concurrency": {
+      "conflict": "حد عدّل البيانات دي، حدّث الصفحة وجرب تاني."
     },
     "auth": {
       "unauthorized": "لازم تسجل دخولك الأول.",
@@ -82,7 +117,8 @@
       "not_found": "المستخدم ده مش موجود.",
       "username_taken": "اسم المستخدم ده محجوز.",
       "interests": {
-        "min_three": "اختار 3 اهتمامات على الأقل."
+        "min_three": "اختار 3 اهتمامات على الأقل.",
+        "unknown": "فيه مجالات أو مواضيع مش موجودة."
       },
       "username_invalid": "من 3 لـ 30 حرف: a–z و 0–9 و _ بس."
     },
@@ -92,6 +128,10 @@
     },
     "field": {
       "not_found": "المجال ده مش موجود."
+    },
+    "topic": {
+      "not_found": "الموضوع مش موجود.",
+      "not_in_field": "الموضوع مش تابع للمجال ده."
     },
     "article": {
       "not_found": "المقال ده مش موجود",
@@ -103,7 +143,17 @@
       "title_length": "العنوان لازم يكون من 5 لـ 150 حرف.",
       "content_empty": "اكتب نص المقال الأول.",
       "content_invalid": "فيه حاجة في نص المقال مش مظبوطة.",
-      "image_alt_required": "اكتب وصف لكل صورة."
+      "image_alt_required": "اكتب وصف لكل صورة.",
+      "not_owner": "التعديل للكاتب بس.",
+      "status_invalid": "الحالة لازم تكون مسودة أو منشور.",
+      "no_content": "المقال فاضي، اكتب حاجة الأول.",
+      "invalid_transition": "مينفعش تعمل كده والمقال في حالته دي.",
+      "slug_taken": "الرابط ده مستخدم لمقال تاني.",
+      "tags": {
+        "max_five": "أقصى حاجة 5 تاجز للمقال."
+      },
+      "language_invalid": "لغة المقال دي مش مدعومة.",
+      "content_language_mismatch": "لغة المحتوى مش زي لغة المقال."
     },
     "server": {
       "error": "السيرفر واجه مشكلة. حاول كمان شوية."
@@ -570,6 +620,7 @@
   "article": {
     "aiAssisted": "بمساعدة AI",
     "verifiedWriter": "كاتب موثّق",
+    "healthDisclaimer": "المعلومات دي للتوعية ولا تغني عن استشارة الطبيب.",
     "toc": "محتويات المقال",
     "sources": "المصادر",
     "noSources": "مفيش مصادر مضافة للمقال ده.",
@@ -676,6 +727,21 @@
     "signInForSync": "سجل دخولك عشان تحفظ الإعدادات دي على حسابك.",
     "articleLanguage": "لغة المقالات",
     "reminderTime": "معاد تذكير مقال النهارده",
+    "interests": {
+      "title": "اهتماماتك",
+      "rowHint": "المجالات والمواضيع اللي بنختارلك منها المقالات",
+      "back": "الإعدادات",
+      "subtitle": "صفحة «لك» واقتراحات الكتّاب بتمشي على اهتماماتك، وأي تغيير بيتحفظ على طول.",
+      "count": {
+        "zero": "مش متابع أي اهتمامات",
+        "one": "متابع اهتمام واحد",
+        "two": "متابع اهتمامين",
+        "few": "متابع {{count}} اهتمامات",
+        "many": "متابع {{count}} اهتمام",
+        "other": "متابع {{count}} اهتمام"
+      },
+      "minThree": "خليك متابع 3 اهتمامات على الأقل"
+    },
     "push": {
       "title": "الـ push على المتصفح ده",
       "default": "يوصلك مقال النهارده والردود والمتابعين الجداد.",
@@ -792,6 +858,8 @@
   "media": {
     "imagesLabel": "صور البوست",
     "documentLabel": "ملف: {{title}}",
+    "carousel": "عرض شرائح",
+    "slide": "شريحة",
     "imageOf": "صورة {{current}} من {{total}}",
     "pageOf": "صفحة {{current}} من {{total}}",
     "previous": "السابق",
@@ -895,9 +963,30 @@
       "unpublishedChanges": "تعديلات مش منشورة",
       "editedAt": "اتعدّل {{time}}",
       "publishedOn": "اتنشر {{date}}",
-      "reactions": "{{count}} تفاعل",
-      "comments": "{{count}} تعليق",
-      "reads": "{{count}} قراءة",
+      "reactions": {
+        "zero": "مفيش تفاعلات",
+        "one": "تفاعل واحد",
+        "two": "تفاعلين",
+        "few": "{{count}} تفاعلات",
+        "many": "{{count}} تفاعل",
+        "other": "{{count}} تفاعل"
+      },
+      "comments": {
+        "zero": "مفيش تعليقات",
+        "one": "تعليق واحد",
+        "two": "تعليقين",
+        "few": "{{count}} تعليقات",
+        "many": "{{count}} تعليق",
+        "other": "{{count}} تعليق"
+      },
+      "reads": {
+        "zero": "مفيش قراءات",
+        "one": "قراءة واحدة",
+        "two": "قراءتين",
+        "few": "{{count}} قراءات",
+        "many": "{{count}} قراءة",
+        "other": "{{count}} قراءة"
+      },
       "edit": "تعديل",
       "view": "اعرض",
       "delete": "امسح",

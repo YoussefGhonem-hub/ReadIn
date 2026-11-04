@@ -29,6 +29,7 @@ import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { HydrationWindow } from '../../core/http/hydration-window';
 import { LanguageService } from '../../core/i18n/language.service';
+import { AppHistory } from '../../core/platform/app-history';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
 import { CollectionsStore } from '../../core/social/collections.store';
 import { FollowStore } from '../../core/social/follow.store';
@@ -48,7 +49,7 @@ import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { LinesSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { ArticleActionBar } from './article-action-bar';
-import { ArticleCover, ArticleHeadline, ArticleSources, ArticleTrustRow } from './article-parts';
+import { ArticleCover, ArticleHeadline, ArticleHealthNotice, ArticleSources, ArticleTrustRow } from './article-parts';
 import { ArticleSeoService } from './article-seo.service';
 import { ArticleToc } from './article-toc';
 import { NextInPath } from './next-in-path';
@@ -78,6 +79,7 @@ const TOC_MIN_HEADINGS = 3;
     ArticleCover,
     ArticleHeadline,
     ArticleTrustRow,
+    ArticleHealthNotice,
     ArticleSources,
     NextInPath,
     LocalizedDatePipe,
@@ -98,7 +100,8 @@ const TOC_MIN_HEADINGS = 3;
     <article class="mx-auto max-w-[720px] px-4 pb-28 pt-4" #articleEl>
       <!-- Reader toolbar -->
       <div class="mb-4 flex items-center justify-between gap-2">
-        <a routerLink="/" class="rd-icon-btn" [attr.aria-label]="'common.back' | transloco">
+        <!-- Back to the page you came from in the app, else Home (a plain link to Home without JavaScript) -->
+        <a href="/" class="rd-icon-btn" [attr.aria-label]="'common.back' | transloco" data-reader-back (click)="goBack($event)">
           <svg lucideIcon="ArrowRight" [size]="18" class="ltr:rotate-180"></svg>
         </a>
         <div class="flex items-center gap-2">
@@ -198,6 +201,11 @@ const TOC_MIN_HEADINGS = 3;
         <!-- Trust row (SPEC §20) -->
         <rd-article-trust-row [verified]="!!a.author?.isVerified" [versionBadge]="a.versionBadge" [aiAssisted]="a.isAiAssisted" />
 
+        <!-- Medicine and Public Health (SPEC F04, §20) -->
+        @if (a.field.isSensitive) {
+          <rd-article-health-notice />
+        }
+
         @if (a.summary && !hasSummaryBlock()) {
           <aside class="rd-summary mb-6" role="note" [attr.dir]="summaryDir()" [attr.lang]="a.language">
             <span class="rd-summary-label">{{ 'rdoc.summary' | transloco }}</span>
@@ -269,6 +277,7 @@ export class ArticlePage {
   private readonly router = inject(Router);
   private readonly transloco = inject(TranslocoService);
   private readonly responseInit = inject(RESPONSE_INIT, { optional: true });
+  private readonly history = inject(AppHistory);
   protected readonly prefs = inject(ReaderPrefsService);
   protected readonly prompt = inject(AuthPromptService);
   protected readonly uiLang = inject(LanguageService).lang;
@@ -479,10 +488,19 @@ export class ArticlePage {
       });
   }
 
+  /** The other language version replaces this one in history, so Back leaves the article instead of switching back. */
   protected switchLanguage(language: ArticleLanguage): void {
     const article = this.article();
     if (!article || language === article.language) return;
-    void this.router.navigate(['/', urlLangFor(language), 'a', article.slug]);
+    void this.router.navigate(['/', urlLangFor(language), 'a', article.slug], { replaceUrl: true });
+  }
+
+  /** Back in history when you came from another page of the app; Home otherwise (a link, a new tab, a reload). */
+  protected goBack(event: MouseEvent): void {
+    // A new tab or window (a modifier key, another button) opens Home, like any link.
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    this.history.back('/');
   }
 
 }

@@ -91,7 +91,7 @@ export function createPaths({ articles, fields, social, profiles, mediaUrl, prob
   const lang = (req) => (/^ar/i.test(req.headers['accept-language'] ?? '') ? 'ar' : 'en');
   const unauthorized = () => [401, problem(401, 'auth.unauthorized', 'Please sign in first.')];
   const pathNotFound = () => [404, problem(404, 'path.not_found', 'Path not found')];
-  const fieldRef = ({ id, slug, name, nameAr, nameEn }) => ({ id, slug, name, nameAr, nameEn });
+  const fieldRef = ({ id, slug, name, nameAr, nameEn, isSensitive }) => ({ id, slug, name, nameAr, nameEn, isSensitive });
   const itemsOf = (path) => path.slugs.map((slug) => bySlug.get(slug));
 
   function ref(article, position) {

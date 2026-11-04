@@ -44,14 +44,14 @@ export class RelativeTimePipe implements PipeTransform {
   }
 }
 
-/** `{{ 6 | rdReadingTime: lang() }}` → "6 دقايق" / "6 min read". */
+/** `{{ 6 | rdReadingTime: lang() }}` → "6 دقايق قراءة" / "6 min read" (Arabic plural forms: "دقيقتين قراءة", "11 دقيقة قراءة"). */
 @Pipe({ name: 'rdReadingTime' })
 export class ReadingTimePipe implements PipeTransform {
   private readonly transloco = inject(TranslocoService);
 
   transform(minutes: number | null | undefined, lang: UiLanguage): string {
     const count = Math.max(1, Math.round(minutes ?? 1));
-    return this.transloco.translate('common.readingTime', { count }, lang);
+    return translatePlural(this.transloco, 'common.readingTime', count, lang);
   }
 }
 
@@ -60,6 +60,23 @@ export class ReadingTimePipe implements PipeTransform {
 export class CompactNumberPipe implements PipeTransform {
   transform(value: number | null | undefined, lang: UiLanguage): string {
     return new Intl.NumberFormat(intlLocale(lang), { notation: 'compact', maximumFractionDigits: 1 }).format(value ?? 0);
+  }
+}
+
+/** "2.3 ميجا" / "2.3 MB", "830 كيلو" / "830 KB": Western digits in both languages, the unit in the UI language. */
+export function formatFileSize(transloco: TranslocoService, bytes: number, lang: UiLanguage): string {
+  const megabytes = bytes >= 1024 * 1024;
+  const size = megabytes ? (bytes / (1024 * 1024)).toFixed(1) : String(Math.max(1, Math.round(bytes / 1024)));
+  return transloco.translate(megabytes ? 'common.fileSize.mb' : 'common.fileSize.kb', { size }, lang);
+}
+
+/** `{{ file.size | rdFileSize: lang() }}` → "2.3 ميجا" / "2.3 MB". */
+@Pipe({ name: 'rdFileSize' })
+export class FileSizePipe implements PipeTransform {
+  private readonly transloco = inject(TranslocoService);
+
+  transform(bytes: number | null | undefined, lang: UiLanguage): string {
+    return formatFileSize(this.transloco, bytes ?? 0, lang);
   }
 }
 

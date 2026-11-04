@@ -56,6 +56,8 @@ for (const variant of VARIANTS) {
     await page.locator('[data-pdf-input]').setInputFiles({ name: 'Kubernetes_basics.pdf', mimeType: 'application/pdf', buffer: PDF_BYTES });
 
     await expect(page.locator('[data-doc-title]')).toHaveValue('Kubernetes basics'); // from the file name
+    // The file's size in the UI language ("1 كيلو"), its name as it is.
+    await expect(page.locator('[data-doc-size]')).toHaveText(lang === 'ar' ? /^Kubernetes_basics\.pdf · \d+ كيلو$/ : /^Kubernetes_basics\.pdf · \d+ KB$/);
     await expect(page.locator('[data-allow-download]')).not.toBeChecked(); // off by default
     await expect(page.locator('[data-processing]')).toHaveText(lang === 'ar' ? 'بنجهز الصفحات…' : 'Preparing pages…');
     await expect(page.locator('[data-publish]')).toBeDisabled();
@@ -86,7 +88,8 @@ for (const variant of VARIANTS) {
     await onApi(page, 'GET', new RegExp(`${API}/feed/for-you`), (route) => reply(route, 200, { items: [feedItem], nextCursor: null }));
 
     // ── Feed card: header strip + page carousel + "+2 pages" ──
-    await page.locator('rd-article-page a[href="/"]').first().click();
+    // Home from the top bar (the reader's Back would return to the editor the article was published from).
+    await page.locator('rd-top-bar a[href="/"]').click();
     await page.waitForURL((url) => url.pathname === '/');
     const card = page.locator('rd-article-card').filter({ has: page.locator('[data-attachments="document"]') });
     await expect(card.locator('[data-document-header]')).toContainText('Kubernetes basics');

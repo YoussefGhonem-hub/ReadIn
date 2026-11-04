@@ -37,6 +37,10 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-my-article]')).toHaveCount(2);
     await expect(myArticle(page, ids.changed).locator('[data-unpublished-chip]')).toHaveText(ar ? 'تعديلات مش منشورة' : 'Unpublished changes');
     await expect(myArticle(page, ids.published).locator('[data-unpublished-chip]')).toHaveCount(0);
+    // Its counts read as words for screen readers, in the right plural form (4 reactions, 1 comment, 37 reads).
+    await expect
+      .poll(() => myArticle(page, ids.published).locator('span[aria-label]').evaluateAll((spans) => spans.map((s) => s.getAttribute('aria-label'))))
+      .toEqual(ar ? ['4 تفاعلات', 'تعليق واحد', '37 قراءة'] : ['4 reactions', '1 comment', '37 reads']);
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page.locator('rd-my-articles-page')).toHaveScreenshot(`my-articles-published-${lang}-${theme}.png`, { stylePath: HIDE_APP_CHROME });
 
@@ -125,6 +129,31 @@ for (const variant of VARIANTS) {
     await page.goto('/write?tab=published');
     await expect(page.locator('[data-my-article]')).toHaveCount(1);
     await expect(page.locator('[data-my-article] [data-my-title]')).toHaveText('يعني إيه Dependency Injection؟');
+  });
+
+  test(`the tab title, and the preview's health disclaimer for a sensitive field — ${lang}/${theme}`, async ({ page, context, baseURL, request }) => {
+    await useVariant(context, baseURL!, variant);
+    await signInAsAuthor(page, request, variant, 'fresh');
+    await page.goto('/write/new');
+    await editorReady(page);
+    await expect(page).toHaveTitle(ar ? 'مقال جديد — ReadIn' : 'New article — ReadIn');
+    await page.locator('[data-title]').fill('How sleep turns reading into memory');
+    await expect(page).toHaveTitle('How sleep turns reading into memory — ReadIn');
+
+    // Software: no disclaimer in the preview.
+    await page.locator('[data-field]').selectOption('f-software');
+    await page.locator('[data-preview-toggle]').click();
+    const preview = page.locator('rd-article-preview');
+    await expect(preview.locator('h1')).toHaveText('How sleep turns reading into memory');
+    await expect(preview.locator('[data-health-disclaimer]')).toHaveCount(0);
+    await page.locator('[data-preview-toggle]').click();
+
+    // Medicine is sensitive: the preview shows the disclaimer readers will see, below the trust row.
+    await page.locator('[data-field]').selectOption('f-medicine');
+    await page.locator('[data-preview-toggle]').click();
+    await expect(preview.locator('[data-health-disclaimer]')).toHaveText(
+      ar ? 'المعلومات دي للتوعية ولا تغني عن استشارة الطبيب.' : "This information is for awareness only and is not a substitute for a doctor's advice.",
+    );
   });
 
   test(`glossary term: select words, search the glossary, mark, change and remove — ${lang}/${theme}`, async ({ page, context, baseURL, request }) => {

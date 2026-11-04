@@ -28,6 +28,8 @@ export const routes: Routes = [
     path: 'onboarding',
     canActivate: [setupStepGuard('onboarding')],
     loadComponent: () => import('./features/onboarding/onboarding.page').then((m) => m.OnboardingPage),
+    // Route titles are i18n keys (core/i18n/page-title.strategy.ts).
+    title: 'pageTitles.onboarding',
   },
   {
     path: '',

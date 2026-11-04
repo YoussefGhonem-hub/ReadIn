@@ -8,7 +8,7 @@ import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService } from '../../core/i18n/language.service';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir } from '../../shared/directives/bidi';
-import { CompactNumberPipe, LocalizedDatePipe, ReadingTimePipe, RelativeTimePipe } from '../../shared/pipes/format.pipes';
+import { CompactNumberPipe, LocalizedDatePipe, PluralPipe, ReadingTimePipe, RelativeTimePipe } from '../../shared/pipes/format.pipes';
 import { articleLink } from '../../shared/ui/article-link';
 import { BottomSheet } from '../../shared/ui/bottom-sheet';
 import { ArticleCardSkeleton } from '../../shared/ui/skeletons';
@@ -35,6 +35,7 @@ const TABS: readonly ArticleStatus[] = ['draft', 'published'];
     RelativeTimePipe,
     LocalizedDatePipe,
     CompactNumberPipe,
+    PluralPipe,
     ArticleCardSkeleton,
     EmptyState,
     ErrorState,
@@ -122,13 +123,13 @@ const TABS: readonly ArticleStatus[] = ['draft', 'published'];
                   </p>
                   @if (article.status === 'published') {
                     <p class="m-0 mt-1 flex gap-3 text-xs text-text-secondary">
-                      <span class="inline-flex items-center gap-1" [attr.aria-label]="'editor.myArticles.reactions' | transloco: { count: article.reactionCount }">
+                      <span class="inline-flex items-center gap-1" [attr.aria-label]="article.reactionCount | rdPlural: 'editor.myArticles.reactions' : lang()">
                         <svg lucideIcon="Lightbulb" [size]="13" aria-hidden="true"></svg>{{ article.reactionCount | rdCompactNumber: lang() }}
                       </span>
-                      <span class="inline-flex items-center gap-1" [attr.aria-label]="'editor.myArticles.comments' | transloco: { count: article.commentCount }">
+                      <span class="inline-flex items-center gap-1" [attr.aria-label]="article.commentCount | rdPlural: 'editor.myArticles.comments' : lang()">
                         <svg lucideIcon="MessageCircle" [size]="13" aria-hidden="true"></svg>{{ article.commentCount | rdCompactNumber: lang() }}
                       </span>
-                      <span class="inline-flex items-center gap-1" [attr.aria-label]="'editor.myArticles.reads' | transloco: { count: article.readCount }">
+                      <span class="inline-flex items-center gap-1" [attr.aria-label]="article.readCount | rdPlural: 'editor.myArticles.reads' : lang()">
                         <svg lucideIcon="Eye" [size]="13" aria-hidden="true"></svg>{{ article.readCount | rdCompactNumber: lang() }}
                       </span>
                     </p>

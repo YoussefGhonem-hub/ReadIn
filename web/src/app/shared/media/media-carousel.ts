@@ -42,7 +42,7 @@ const PROGRAMMATIC_SCROLL_MS = 800;
       #track
       class="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="region"
-      aria-roledescription="carousel"
+      [attr.aria-roledescription]="'media.carousel' | transloco"
       [attr.aria-label]="label()"
       [attr.dir]="dir()"
       data-track
@@ -54,7 +54,7 @@ const PROGRAMMATIC_SCROLL_MS = 800;
           class="shrink-0 snap-start snap-always"
           [style.width]="slideWidth()"
           role="group"
-          aria-roledescription="slide"
+          [attr.aria-roledescription]="'media.slide' | transloco"
           [attr.aria-label]="slideLabel(slide, i)"
           [attr.aria-current]="i === index() ? 'true' : null"
           data-slide

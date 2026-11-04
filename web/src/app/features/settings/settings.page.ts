@@ -19,9 +19,10 @@ import { PushPermissionRow } from './notifications/push-permission-row';
 import { ProfileSettings } from './profile-settings';
 
 /**
- * Settings (F18): theme, UI language, article language, reminder time, font size, notifications (push in this browser
- * and a link to the notification preferences, F17), profile (with writer verification, F19) and privacy, Moderation for
- * moderators (F22; the side nav isn't there on narrow screens), verification requests for admins (F19), account.
+ * Settings (F18): theme, UI language, article language, reminder time, your interests (F12, their own page), font size,
+ * notifications (push in this browser and a link to the notification preferences, F17), profile (with writer
+ * verification, F19) and privacy, Moderation for moderators (F22; the side nav isn't there on narrow screens),
+ * verification requests for admins (F19), account.
  */
 @Component({
   selector: 'rd-settings-page',
@@ -91,6 +92,17 @@ import { ProfileSettings } from './profile-settings';
           </button>
         </div>
       </fieldset>
+      <!-- The fields and topics you follow (F12), its own page -->
+      @if (session.isAuthenticated()) {
+        <a routerLink="/settings/interests" class="mt-4 flex min-h-14 items-center gap-3 border-t border-border pt-3 text-sm text-text-primary no-underline" data-settings-interests>
+          <svg lucideIcon="Sparkles" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+          <span class="min-w-0 flex-1">
+            <span class="block">{{ 'settings.interests.title' | transloco }}</span>
+            <span class="block text-xs text-text-secondary">{{ 'settings.interests.rowHint' | transloco }}</span>
+          </span>
+          <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+        </a>
+      }
     </section>
 
     <!-- Notifications (F17): push in this browser, and what you get (its own page) -->

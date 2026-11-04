@@ -8,7 +8,7 @@ import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService } from '../../core/i18n/language.service';
 import { MediaImage } from '../../shared/media/media-image';
 import { PAGE_THUMB_WIDTH } from '../../shared/media/media-slides';
-import { PluralPipe } from '../../shared/pipes/format.pipes';
+import { FileSizePipe, PluralPipe } from '../../shared/pipes/format.pipes';
 import { ALT_TEXT_MAX, AttachmentDraft, CAPTION_MAX, COUNTER_WITHIN, DOCUMENT_TITLE_MAX, DraftImage, MAX_IMAGES, UploadStatus } from './attachment-draft';
 
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif';
@@ -21,7 +21,7 @@ const PREVIEW_PAGES = 4;
  */
 @Component({
   selector: 'rd-attachment-bar',
-  imports: [TranslocoPipe, LucideDynamicIcon, CdkDropList, CdkDrag, CdkDragHandle, Dir, MediaImage, PluralPipe],
+  imports: [TranslocoPipe, LucideDynamicIcon, CdkDropList, CdkDrag, CdkDragHandle, Dir, MediaImage, PluralPipe, FileSizePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -231,9 +231,10 @@ const PREVIEW_PAGES = 4;
                 <p class="m-0 mt-1 text-end text-xs text-text-secondary tabular-nums" dir="ltr" aria-live="polite" data-count>{{ doc.title.length }}/{{ docTitleMax }}</p>
               }
               @if (doc.file) {
-                <p class="m-0 mt-1 truncate text-xs text-text-secondary" dir="ltr">{{ doc.file.name }} · {{ fileSize(doc.file.size) }}</p>
+                <!-- The size follows the UI direction ("2.3 ميجا"); the file name keeps its own. -->
+                <p class="m-0 mt-1 truncate text-xs text-text-secondary" data-doc-size><bdi>{{ doc.file.name }}</bdi> · {{ doc.file.size | rdFileSize: lang() }}</p>
               } @else if (doc.asset) {
-                <p class="m-0 mt-1 truncate text-xs text-text-secondary" dir="ltr">PDF · {{ fileSize(doc.asset.sizeBytes) }}</p>
+                <p class="m-0 mt-1 truncate text-xs text-text-secondary" data-doc-size>PDF · {{ doc.asset.sizeBytes | rdFileSize: lang() }}</p>
               }
             </div>
             <button type="button" class="rd-icon-btn h-9 w-9 shrink-0" [attr.aria-label]="'attachments.removeDocument' | transloco" data-remove-document (click)="draft().removeDocument()">
@@ -402,10 +403,6 @@ export class AttachmentBar {
 
   protected percent(progress: number): number {
     return Math.round(Math.max(0, Math.min(1, progress)) * 100);
-  }
-
-  protected fileSize(bytes: number): string {
-    return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   protected valueOf(event: Event): string {

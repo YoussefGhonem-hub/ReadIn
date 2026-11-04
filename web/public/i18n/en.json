@@ -36,17 +36,49 @@
     "share": "Share",
     "linkCopied": "Link copied",
     "comingSoonShort": "This is coming soon ✨",
-    "readingTime": "{{count}} min read",
+    "readingTime": {
+      "one": "{{count}} min read",
+      "other": "{{count}} min read"
+    },
     "remove": "Remove",
     "cancel": "Cancel",
-    "deletedUser": "Deleted user"
+    "deletedUser": "Deleted user",
+    "fileSize": {
+      "kb": "{{size}} KB",
+      "mb": "{{size}} MB"
+    }
+  },
+  "pageTitles": {
+    "welcome": "Welcome",
+    "signIn": "Sign in",
+    "signUp": "Create an account",
+    "forgotPassword": "Forgot password",
+    "changePassword": "Change your password",
+    "recoveryPin": "Recovery PIN",
+    "completeProfile": "Complete your profile",
+    "onboarding": "Get started"
   },
   "errors": {
     "unknown": "Something went wrong. Please try again.",
     "network": "Can't reach the server. Check your connection and try again.",
     "loadFailed": "We couldn't load this",
     "validation": {
-      "failed": "Some details need fixing."
+      "failed": "Some details need fixing.",
+      "required": "Required",
+      "max_length": "Too long.",
+      "length": "Check this field.",
+      "url": "Enter a full link that starts with https://"
+    },
+    "request": {
+      "invalid": "The request is invalid.",
+      "too_large": "The request is too large.",
+      "unsupported_media_type": "This content type is not supported."
+    },
+    "route": {
+      "not_found": "Not found."
+    },
+    "concurrency": {
+      "conflict": "Someone else changed this. Refresh and try again."
     },
     "auth": {
       "unauthorized": "Please sign in first.",
@@ -82,7 +114,8 @@
       "not_found": "This user doesn't exist.",
       "username_taken": "That username is taken.",
       "interests": {
-        "min_three": "Pick at least 3 interests."
+        "min_three": "Pick at least 3 interests.",
+        "unknown": "Some fields or topics don't exist."
       },
       "username_invalid": "3–30 characters: a–z, 0–9 and _ only."
     },
@@ -92,6 +125,10 @@
     },
     "field": {
       "not_found": "This field doesn't exist."
+    },
+    "topic": {
+      "not_found": "Topic not found.",
+      "not_in_field": "The topic doesn't belong to this field."
     },
     "article": {
       "not_found": "Article not found",
@@ -103,7 +140,17 @@
       "title_length": "The title must be 5 to 150 characters.",
       "content_empty": "Write the article text first.",
       "content_invalid": "Something in the article text isn’t valid.",
-      "image_alt_required": "Add alt text to every image."
+      "image_alt_required": "Add alt text to every image.",
+      "not_owner": "Only the author can change this article.",
+      "status_invalid": "Status must be draft or published.",
+      "no_content": "The article is empty. Write something first.",
+      "invalid_transition": "You can't do that while the article is in this state.",
+      "slug_taken": "That link is already used by another article.",
+      "tags": {
+        "max_five": "An article can have at most 5 tags."
+      },
+      "language_invalid": "That article language isn't supported.",
+      "content_language_mismatch": "The content's language doesn't match the article's language."
     },
     "server": {
       "error": "The server ran into a problem. Please try again shortly."
@@ -570,6 +617,7 @@
   "article": {
     "aiAssisted": "AI-assisted",
     "verifiedWriter": "Verified writer",
+    "healthDisclaimer": "This information is for awareness only and is not a substitute for a doctor's advice.",
     "toc": "In this article",
     "sources": "Sources",
     "noSources": "No sources were added to this article.",
@@ -672,6 +720,17 @@
     "signInForSync": "Sign in to save these settings to your account.",
     "articleLanguage": "Article language",
     "reminderTime": "Daily article reminder",
+    "interests": {
+      "title": "Your interests",
+      "rowHint": "The fields and topics we pick your articles from",
+      "back": "Settings",
+      "subtitle": "Your For you feed and writer suggestions follow your interests. Every change is saved right away.",
+      "count": {
+        "one": "Following 1 interest",
+        "other": "Following {{count}} interests"
+      },
+      "minThree": "Keep at least 3 interests"
+    },
     "push": {
       "title": "Push in this browser",
       "default": "Get today's article, replies and new followers.",
@@ -788,6 +847,8 @@
   "media": {
     "imagesLabel": "Post images",
     "documentLabel": "Document: {{title}}",
+    "carousel": "carousel",
+    "slide": "slide",
     "imageOf": "Image {{current}} of {{total}}",
     "pageOf": "Page {{current}} of {{total}}",
     "previous": "Previous",
@@ -884,9 +945,18 @@
       "unpublishedChanges": "Unpublished changes",
       "editedAt": "Edited {{time}}",
       "publishedOn": "Published {{date}}",
-      "reactions": "{{count}} reactions",
-      "comments": "{{count}} comments",
-      "reads": "{{count}} reads",
+      "reactions": {
+        "one": "1 reaction",
+        "other": "{{count}} reactions"
+      },
+      "comments": {
+        "one": "1 comment",
+        "other": "{{count}} comments"
+      },
+      "reads": {
+        "one": "1 read",
+        "other": "{{count}} reads"
+      },
       "edit": "Edit",
       "view": "View",
       "delete": "Delete",

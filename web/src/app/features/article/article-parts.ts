@@ -96,6 +96,24 @@ export class ArticleTrustRow {
   readonly aiAssisted = input(false);
 }
 
+/**
+ * Health disclaimer (SPEC F04, §20) for articles in a sensitive field (Medicine, Public Health): below the trust row,
+ * above the TL;DR and the content. Information, not a warning; in the UI language.
+ */
+@Component({
+  selector: 'rd-article-health-notice',
+  imports: [TranslocoPipe, LucideDynamicIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'mb-6 block' },
+  template: `
+    <aside class="flex items-start gap-3 rounded-card bg-callout-info p-4 text-sm" role="note" data-health-disclaimer>
+      <svg lucideIcon="Stethoscope" [size]="20" class="shrink-0 text-callout-info-accent" aria-hidden="true"></svg>
+      <p class="m-0 leading-relaxed">{{ 'article.healthDisclaimer' | transloco }}</p>
+    </aside>
+  `,
+})
+export class ArticleHealthNotice {}
+
 /** Sources (mandatory for technical content, SPEC §20): http(s) links only. */
 @Component({
   selector: 'rd-article-sources',

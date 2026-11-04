@@ -245,6 +245,11 @@ export interface FieldRefDto {
   name: string;
   nameAr: string;
   nameEn: string;
+  /**
+   * Medicine and Public Health: the reader shows a health disclaimer (SPEC F04, §20). Missing from an API older than
+   * step 6.6 (no disclaimer then).
+   */
+  isSensitive?: boolean;
 }
 
 export interface ArticleCardDto {

@@ -119,7 +119,7 @@ interface Gesture {
           <div
             class="grid h-full w-full shrink-0 place-items-center overflow-hidden p-2"
             role="group"
-            aria-roledescription="slide"
+            [attr.aria-roledescription]="'media.slide' | transloco"
             [attr.aria-label]="itemLabel(i)"
             [attr.aria-hidden]="i === index() ? null : 'true'"
             [attr.data-viewer-item]="i"

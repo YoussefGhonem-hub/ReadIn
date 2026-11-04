@@ -8,7 +8,7 @@ import { LocalizedDatePipe } from '../../shared/pipes/format.pipes';
 import { RDocRenderer } from '../../shared/rdoc/rdoc-renderer';
 import { tableOfContents } from '../../shared/rdoc/rdoc.utils';
 import { Avatar } from '../../shared/ui/avatar';
-import { ArticleCover, ArticleHeadline, ArticleSources, ArticleTrustRow } from '../article/article-parts';
+import { ArticleCover, ArticleHeadline, ArticleHealthNotice, ArticleSources, ArticleTrustRow } from '../article/article-parts';
 import { ArticleToc } from '../article/article-toc';
 
 export interface PreviewAuthor {
@@ -65,7 +65,8 @@ export function previewAttachments(document: ArticleDraftDocument, media: readon
 
 /**
  * Preview (F05): one language version of the draft exactly as readers will see it, built from the reader's own
- * parts (cover, headline, trust row, RDoc renderer, attachments, tags, sources). Nothing here is interactive.
+ * parts (cover, headline, trust row, health disclaimer, RDoc renderer, attachments, tags, sources). Nothing here is
+ * interactive.
  */
 @Component({
   selector: 'rd-article-preview',
@@ -80,6 +81,7 @@ export function previewAttachments(document: ArticleDraftDocument, media: readon
     ArticleCover,
     ArticleHeadline,
     ArticleTrustRow,
+    ArticleHealthNotice,
     ArticleSources,
     ArticleToc,
   ],
@@ -121,6 +123,10 @@ export function previewAttachments(document: ArticleDraftDocument, media: readon
         </div>
 
         <rd-article-trust-row [verified]="author().isVerified" [versionBadge]="document().versionBadge" [aiAssisted]="document().isAiAssisted" />
+
+        @if (field()?.isSensitive) {
+          <rd-article-health-notice />
+        }
 
         @if (toc().length >= tocMinHeadings) {
           <rd-article-toc class="mb-6 block" [entries]="toc()" />

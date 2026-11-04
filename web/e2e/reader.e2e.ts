@@ -120,6 +120,58 @@ for (const variant of VARIANTS) {
     await page.waitForURL((url) => url.pathname === '/ar/a/what-is-a-transformer-ar');
   });
 
+  test(`reader: health disclaimer on Medicine articles — ${suffix}`, async ({ page, context, baseURL }) => {
+    await useVariant(context, baseURL!, variant);
+    // "How sleep turns reading into memory" is in Medicine, a sensitive field (`field.isSensitive`).
+    await openAsGuest(page, '/en/a/sleep-and-memory');
+    const notice = page.locator('[data-health-disclaimer]');
+    await expect(notice).toHaveText(t('المعلومات دي للتوعية ولا تغني عن استشارة الطبيب.', "This information is for awareness only and is not a substitute for a doctor's advice."));
+    await expect(notice).toHaveAttribute('role', 'note');
+    // Below the trust row, above the content.
+    const inOrder = await page.evaluate(() => {
+      const [row, box, rdoc] = ['rd-article-page [data-trust-row]', '[data-health-disclaimer]', 'rd-article-page rd-rdoc'].map((s) => document.querySelector(s)!);
+      return !!(row.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING) && !!(box.compareDocumentPosition(rdoc) & Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    expect(inOrder).toBe(true);
+    const content = page.locator('rd-article-page rd-rdoc');
+    await parkMouse(page);
+    // The header from the field chip to the first paragraph.
+    const top = (await page.locator('rd-article-page rd-article-headline').boundingBox())!;
+    const bottom = (await content.boundingBox())!;
+    const column = (await page.locator('rd-article-page article').boundingBox())!;
+    if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`health-disclaimer-${suffix}.png`, {
+      clip: { x: column.x, y: top.y - 8, width: column.width, height: bottom.y + bottom.height + 8 - (top.y - 8) },
+      stylePath: [HIDE_APP_CHROME, HIDE_READER_BAR],
+    });
+
+    // Other fields have none.
+    await openAsGuest(page);
+    await expect(page.locator('rd-article-page [data-trust-row]')).toBeVisible();
+    await expect(page.locator('[data-health-disclaimer]')).toHaveCount(0);
+  });
+
+  test(`reader: Back returns to the page you came from in the app, else Home — ${suffix}`, async ({ page, context, baseURL }) => {
+    await useVariant(context, baseURL!, variant);
+    await openAsGuest(page);
+    const back = page.locator('rd-article-page a[data-reader-back]');
+    await expect(back).toHaveAttribute('href', '/');
+    await expect(back).toHaveAttribute('aria-label', t('رجوع', 'Back'));
+
+    // A related article, opened from this one: Back returns here.
+    await page.locator('#sources-title').scrollIntoViewIfNeeded();
+    await page.locator('[data-related] rd-article-card').first().locator('a').first().click();
+    await page.waitForURL((url) => url.pathname === '/ar/a/what-is-a-transformer-ar');
+    await expect(page.locator('rd-article-page h1')).toContainText('Transformer');
+    await back.click();
+    await page.waitForURL((url) => url.pathname === ARTICLE);
+    await expect(page.locator('rd-article-page h1')).toContainText('Dependency Injection');
+
+    // This article is where the tab opened: Back goes Home.
+    await back.click();
+    await page.waitForURL((url) => url.pathname === '/');
+    await expect(page.locator('rd-article-page')).toHaveCount(0);
+  });
+
   test(`reader: picks up where you left off — ${suffix}`, async ({ page, context, baseURL, request }) => {
     await useVariant(context, baseURL!, variant);
     await signInAsReader(page, request, variant);

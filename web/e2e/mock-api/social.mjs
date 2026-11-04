@@ -429,6 +429,8 @@ export function createSocial({ articles, writers, problem }) {
     readers: READERS,
     // Profiles (profiles.mjs) count and show the same follows.
     isFollowing: (viewer, id) => !!viewer && stateOf(viewer).follows.has(id),
+    // `GET /me` (profiles.mjs) reports the interests that `PUT`/`DELETE /me/interests/…` change.
+    interestsOf: (viewer) => ({ fieldIds: [...stateOf(viewer).interests.fieldIds], topicIds: [...stateOf(viewer).interests.topicIds] }),
     followerCount,
     listCount: (id, list, viewer) => listOf(id, list, viewer).length,
   };

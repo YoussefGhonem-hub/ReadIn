@@ -159,7 +159,7 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
     if (!viewer) return base;
     const record = ownProfile(viewer);
     // The demo writer stays the account the auth suites expect; no test edits it.
-    if (viewer === 'u-writer') return { ...base, privacy: privacyOf(record) };
+    if (viewer === 'u-writer') return { ...base, privacy: privacyOf(record), interests: social.interestsOf(viewer) };
     return {
       ...base,
       id: viewer,
@@ -172,6 +172,7 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
       bio: record.bio ?? null,
       links: { ...record.links },
       privacy: privacyOf(record),
+      interests: social.interestsOf(viewer),
     };
   }
 
