@@ -95,7 +95,8 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | Phone + password / Google / Apple auth (JWT, rotating refresh tokens, recovery PIN, account linking), SQL-backed roles & permissions | ✅ backend |
 | Seeders: roles & permissions, taxonomy, system accounts, demo users, articles | ✅ |
 | Seeders: demo interactions (reactions, saves, follows, a collection) and demo comment threads (F11); deterministic, local only | ✅ |
-| Seeders: glossary, learning paths | ⏳ arrive with F21 / F09 |
+| Seeders: learning paths (editorial, from `content/taxonomy.yaml`) and demo path enrollments (local only) | ✅ |
+| Seeders: glossary | ⏳ arrives with F21 |
 | Outbox + Hangfire (immediate trigger + per-minute safety net), scheduled publishing | ✅ |
 | F27 Real-time: `POST /realtime/token` (Firebase custom tokens), RTDB publisher with retry + circuit breaker (article counters, comment events, feed, unread badge, PDF status), "new articles" signal on publish | ✅ backend · web + mobile listeners in place; article counters are live with F10/F13, comment events and the badge go live as F11 and F17 publish them |
 | F07 Daily article: Hangfire job picks 30 min before each user's reminder time and sends one FCM push at it (ar/en); the tap opens the reader on web + mobile | ✅ |
@@ -105,6 +106,7 @@ Sign in with any seeded account (SPEC §18.3) and the demo password, e.g. `+1202
 | F10 Reactions, F12 Follow, F13 Saved: reactions/saves on every card, reader action bar, who reacted, Following feed + suggested writers, Saved page with collections (offline copies on mobile), counters recomputed by the outbox and live (F27), admin counter rebuild, demo interactions | ✅ web + mobile + backend |
 | F14 Profile: `/@{username}` (web, server-rendered) and the Profile tab + `/u/{username}` (mobile) with Articles / Saved / Paths / About tabs, stats (articles, followers, following, total reads), reading stats card + heatmap when public, edit profile (square avatar upload 64–512, up to 5 fields of expertise), followers / following lists with search, Settings → Privacy, demo profiles | ✅ web + mobile + backend |
 | F11 Comments & replies: threads (one reply level), likes, @mentions, author pin, live updates, report + moderator hide/unhide/delete, flood limits, "Deleted user": web + mobile + backend, demo threads | ✅ |
+| F09 Learning paths + F03 Home cards: paths list (All / My paths) and path page (enroll, progress, next article, completion badge), "Next in path" at the end of the reader, profile Paths tab, Home "continue reading" + active-path cards, today's article prefers the active path's next article (F07), admin path API (`paths.manage`; screens with F23) | ✅ backend · web + mobile |
 | F05 Editor | ⏳ next |
 | ContentStudio `generate` (Claude), code-compile and live-link checks | ⏳ |
 | Full-text search index (needs FTS in the SQL image), SignalR | ⏳ Phase 2 |

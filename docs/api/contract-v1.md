@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile and media codes below.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path and media codes below.
 
 ## Endpoints
 
@@ -282,6 +282,57 @@ carry signals, never content: fetch the data itself through REST. Times are epoc
 
 Readers report on open (`activeSecondsDelta: 0`), every 15 s while the article is visible and the user was active in the
 last 60 s, and when they leave. A failed report keeps its seconds for the next one. Guests don't report.
+
+### Continue reading (F03; Bearer)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/me/continue-reading?limit=` | → `200 ContinueReadingDto[]`, most recently read first. `limit` 1–10, default 3. Unfinished articles (`completedAt` null) with `percent ≥ 5`, reported in the last 30 days, that a reader can still open. Each card is in the version you were reading |
+
+Home shows the first item whose article isn't today's hero article. Tapping it opens the normal article page in that
+`language`; the reader resumes from your `lastPosition`.
+
+### Learning paths (F09) 🌐 (Bearer optional)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/paths?field=` | → `200 PathCardDto[]`: published paths in editorial order. `field` = field slug. Signed in: `progress` and `enrollment` are filled |
+| GET | `/paths/{slug}` | → `200 PathDetailsDto`. `404 path.not_found` (unknown, unpublished, or no article a reader can open) |
+| GET | `/articles/{id}/path` | → `200 ArticlePathDto` or `204` when the article is in no published path; `404 article.not_found`. The "Next in path" block at the end of the reader |
+| GET | `/users/{username}/paths` | → `200 PathCardDto[]`: that user's enrolled paths (in progress first, then completed), with **their** progress. `403 profile.stats_private` unless it's your own profile or the user turned on `publicReadingStats` (as `/users/{username}/stats`; `ProfileDto.readingStatsVisible` tells you up front). `404 user.not_found` |
+
+Only articles a reader can open count: `articleCount`, positions (1..N, no gaps) and progress skip unpublished ones.
+"Read" is the F04 rule (`ReadingProgress.completedAt`), so progress also counts articles read before enrolling.
+
+### My paths (F09; Bearer, rate limit `writes` on writes)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/me/paths` | → `200 PathCardDto[]`: your enrolled paths. In progress first (latest activity first), then completed (latest completion first) |
+| GET | `/me/paths/active` | → `200 PathCardDto` (with `progress.next`) or `204` when no enrolled path has an unread article. The Home "learning path" card |
+| PUT | `/me/paths/{pathId}` | → `200 PathCardDto` (enroll; idempotent). Already read everything → `enrollment.completedAt` is set at once. `404 path.not_found` |
+| DELETE | `/me/paths/{pathId}` | → `204` (leave; idempotent). Reading history stays; enrolling again shows the same progress |
+
+Reading one of the path's articles moves its "latest activity" (which path is active) and, once every article is read,
+sets `enrollment.completedAt` (the completion badge) a moment later (outbox). The badge stays when the path grows later.
+Today's article (F07) is the active path's next unread article, unless that would make 3 days in a row of one field.
+
+### Path admin (F09; Bearer, permission `paths.manage`, rate limit `writes`)
+
+Backend only for now; the screens come with the F23 Admin Console.
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/admin/paths` | → `200 AdminPathDto[]` (every path, unpublished included, editorial order) |
+| POST | `/admin/paths` | `UpsertPathRequest` → `201 { id, slug }`. `409 path.slug_taken`, `404 field.not_found`, `400 path.items_invalid` when `isPublished` (a new path has no items yet) |
+| PUT | `/admin/paths/{id}` | `UpsertPathRequest` → `204`. Publishing needs at least one item (`400 path.items_invalid`). `409 path.editorial`, `409 path.slug_taken`, `404 path.not_found` |
+| PUT | `/admin/paths/{id}/items` | `{ articleIds: string[] }` (1–100, no repeats, articles a reader can open; order = array order) → `204`. `400 path.items_invalid`, `409 path.editorial` |
+| DELETE | `/admin/paths/{id}` | → `204` (idempotent; its enrollments go with it). `409 path.editorial` |
+
+Editorial paths come from `content/taxonomy.yaml` (`learningPaths` + each article's `learningPath`) and are managed
+there (seeder #7); every admin write to one is `409 path.editorial`.
+
+Path error codes: `path.not_found` (404), `path.slug_taken` (409), `path.editorial` (409), `path.items_invalid` (400).
 
 ## DTOs (TypeScript notation)
 
@@ -618,6 +669,75 @@ interface CommentDto {
 interface CommentPageDto { items: CommentDto[]; nextCursor: string | null; total: number } // total = article's comment count
 interface CommentLikeDto { likeCount: number; liked: boolean }
 interface MentionCandidateDto { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean }
+
+// ── Continue reading (F03) and learning paths (F09) ──
+interface ContinueReadingDto {
+  article: ArticleCardDto;       // in the version you were reading (`language`)
+  percent: number;               // 5–100, how far you scrolled
+  language: ArticleLanguage;
+  updatedAt: string;             // your last progress report
+}
+
+interface PathCardDto {
+  id: string;
+  slug: string;
+  title: string;                 // in the UI language
+  description: string | null;    // in the UI language
+  field: FieldRefDto;
+  articleCount: number;          // articles a reader can open
+  readingTimeMinutes: number;    // sum of their reading times, in the versions served to you
+  coverUrl: string | null;       // absolute; the first article's cover
+  progress: PathProgressDto | null;     // signed in (also when not enrolled); on a profile, that user's. null for guests
+  enrollment: PathEnrollmentDto | null; // null when not enrolled, and for guests
+}
+
+interface PathProgressDto {
+  readCount: number;             // articles of the path read (F04 "read")
+  total: number;                 // = articleCount
+  percent: number;               // floor(readCount * 100 / total)
+  next: PathArticleRefDto | null; // first unread article in path order; null when all are read
+}
+
+interface PathEnrollmentDto {
+  enrolledAt: string;
+  completedAt: string | null;    // the completion badge; stays when the path grows (then readCount < total)
+}
+
+interface PathArticleRefDto {
+  id: string; slug: string;
+  title: string;                 // in your article language (falls back to the source language)
+  language: ArticleLanguage;
+  position: number;              // 1-based place in the path
+  readingTimeMinutes: number;
+}
+
+interface PathItemDto { position: number; article: ArticleCardDto; isRead: boolean } // isRead false for guests
+interface PathDetailsDto extends PathCardDto { items: PathItemDto[] }  // path order
+
+interface ArticlePathDto {
+  path: PathCardDto;             // in several paths: the one you're enrolled in with the latest activity, else the first
+  position: number;              // this article's place, 1-based
+  total: number;
+  previous: PathArticleRefDto | null;
+  next: ArticleCardDto | null;   // the following article in path order (read or not); null on the last one
+}
+
+interface UpsertPathRequest {
+  slug: string;                  // kebab-case, 3–100 (validation code validation.slug)
+  fieldId: string;
+  titleAr: string; titleEn: string;                             // 1–200
+  descriptionAr?: string | null; descriptionEn?: string | null; // ≤ 500
+  sortOrder: number;             // ≥ 0; editorial paths use 1..N
+  isPublished: boolean;
+}
+
+interface AdminPathDto {
+  id: string; slug: string; fieldId: string;
+  titleAr: string; titleEn: string; descriptionAr: string | null; descriptionEn: string | null;
+  sortOrder: number; isPublished: boolean; isEditorial: boolean;
+  articleIds: string[];          // path order
+  enrollmentCount: number;
+}
 ```
 
 Validation codes (in `errors`) for this area: `reaction.invalid` (`type`), `validation.required` /
