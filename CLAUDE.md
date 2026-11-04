@@ -21,11 +21,12 @@ and what is next is in [docs/handoff/PROGRESS.md](docs/handoff/PROGRESS.md).
   project.
 
 ## Tests: what to run when
-- **While working:** run only the tests for what you changed: the affected test projects or files, and the Playwright
-  specs for the screens you touched (`npx playwright test e2e/x.e2e.ts`).
-- **Once per feature, before pushing it:** the full gates below, all of them.
-- Playwright runs its flows in `ar/light` and `en/dark` only (SPEC §27): together they cover both directions and both
-  themes. Don't add the other two combinations back.
+- **While working:** run only the tests for what you changed: the affected test projects or files, the Playwright
+  specs for the screens you touched (`npx playwright test e2e/x.e2e.ts`), and on mobile the affected test files
+  without goldens (`flutter test test/features/x --exclude-tags golden`).
+- **Once per feature, before pushing it:** the full gates below, all of them, mobile goldens included.
+- Screenshots and goldens run in `ar/light` and `en/dark` only (SPEC §27): together they cover both directions and both
+  themes. Don't add the other two combinations back. Mobile widget and logic tests keep all four combinations.
 - Playwright workers: 4 to 6 when no other build or test run is using the machine (`--workers=4`), 2 when one is. If
   failures appear that pass when re-run alone (timeouts, flakes), lower the count and run again; never treat them as
   passing.
