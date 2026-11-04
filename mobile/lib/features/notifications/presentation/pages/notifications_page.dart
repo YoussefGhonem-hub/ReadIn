@@ -27,9 +27,30 @@ class NotificationsPage extends StatelessWidget {
 }
 
 /// The list once a [NotificationsCubit] is provided: Today and Earlier, pull to refresh, more as you scroll, "Mark all
-/// read". Tapping a row marks it read and opens its link like a push would.
-class NotificationsView extends StatelessWidget {
+/// read", and "New notifications" when something arrives while it is open. Tapping a row marks it read and opens its
+/// link like a push would.
+class NotificationsView extends StatefulWidget {
   const NotificationsView({super.key});
+
+  @override
+  State<NotificationsView> createState() => _NotificationsViewState();
+}
+
+class _NotificationsViewState extends State<NotificationsView> {
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// "New notifications": back to the top, and the first page again.
+  Future<void> _showNew() async {
+    if (_scroll.hasClients) unawaited(_scroll.animateTo(0, duration: ReadInMotion.base, curve: Curves.easeOutCubic));
+    final failure = await context.read<NotificationsCubit>().refresh();
+    if (mounted) showActionFailure(context, failure);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,32 +72,44 @@ class NotificationsView extends StatelessWidget {
         body: switch (state.status) {
           NotificationsStatus.loading => const _ListSkeleton(),
           NotificationsStatus.failure => ErrorView(failure: state.failure!, onRetry: () => unawaited(cubit.refresh())),
-          NotificationsStatus.ready => RefreshIndicator(
-              onRefresh: () async {
-                final failure = await cubit.refresh();
-                if (context.mounted) showActionFailure(context, failure);
-              },
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (n) {
-                  if (n.metrics.axis == Axis.vertical && n.metrics.extentAfter < 400) unawaited(cubit.loadMore());
-                  return false;
-                },
-                child: state.items.isEmpty
-                    ? CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: EmptyView(
-                              icon: Icons.notifications_none_rounded,
-                              title: l10n.notificationsEmptyTitle,
-                              body: l10n.notificationsEmptyBody,
-                            ),
-                          ),
-                        ],
-                      )
-                    : _List(state: state),
-              ),
+          NotificationsStatus.ready => Stack(
+              children: [
+                RefreshIndicator(
+                  onRefresh: () async {
+                    final failure = await cubit.refresh();
+                    if (context.mounted) showActionFailure(context, failure);
+                  },
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (n) {
+                      if (n.metrics.axis == Axis.vertical && n.metrics.extentAfter < 400) unawaited(cubit.loadMore());
+                      return false;
+                    },
+                    child: state.items.isEmpty
+                        ? CustomScrollView(
+                            controller: _scroll,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            slivers: [
+                              SliverFillRemaining(
+                                hasScrollBody: false,
+                                child: EmptyView(
+                                  icon: Icons.notifications_none_rounded,
+                                  title: l10n.notificationsEmptyTitle,
+                                  body: l10n.notificationsEmptyBody,
+                                ),
+                              ),
+                            ],
+                          )
+                        : _List(state: state, controller: _scroll),
+                  ),
+                ),
+                if (state.hasNew)
+                  PositionedDirectional(
+                    top: ReadInSpace.s2,
+                    start: ReadInSpace.s4,
+                    end: ReadInSpace.s4,
+                    child: Center(child: _NewItemsButton(onPressed: () => unawaited(_showNew()))),
+                  ),
+              ],
             ),
         },
       ),
@@ -89,10 +122,29 @@ class NotificationsView extends StatelessWidget {
   }
 }
 
+/// Floats over the list's top while new notifications wait (F17), like the web's button.
+class _NewItemsButton extends StatelessWidget {
+  const _NewItemsButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        liveRegion: true,
+        child: FilledButton.icon(
+          style: FilledButton.styleFrom(elevation: 3, shadowColor: Colors.black38, visualDensity: VisualDensity.compact),
+          onPressed: onPressed,
+          icon: const Icon(Icons.arrow_upward_rounded, size: 18),
+          label: Text(context.l10n.notificationsNewItems),
+        ),
+      );
+}
+
 class _List extends StatelessWidget {
-  const _List({required this.state});
+  const _List({required this.state, required this.controller});
 
   final NotificationsState state;
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +165,7 @@ class _List extends StatelessWidget {
       _Footer(state: state),
     ];
     return ListView.builder(
+      controller: controller,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: ReadInSpace.s5),
       itemCount: rows.length,

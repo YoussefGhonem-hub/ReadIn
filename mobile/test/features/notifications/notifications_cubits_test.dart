@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -40,6 +42,30 @@ void main() {
   List<bool> readFlags(NotificationsCubit cubit) => [for (final n in cubit.state.items) n.isRead];
 
   group('NotificationsCubit', () {
+    test('while open, new activity (the bell above 0) sets hasNew; refreshing shows it and clears it', () async {
+      final counts = StreamController<int>.broadcast();
+      addTearDown(counts.close);
+      whenListen(badge, counts.stream, initialState: 0);
+      // The real badge clears to 0 when the center marks everything seen.
+      when(badge.clear).thenAnswer((_) => counts.add(0));
+      final cubit = center();
+      addTearDown(cubit.close);
+
+      final opening = cubit.open();
+      counts.add(1);
+      await opening;
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.hasNew, isTrue);
+
+      await cubit.refresh();
+      expect(cubit.state.hasNew, isFalse);
+
+      counts.add(3);
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.hasNew, isTrue);
+      expect(cubit.state.items, mixedNotifications, reason: 'the list stays until the user asks for the new ones');
+    });
+
     test('opening marks everything seen (the badge clears) and loads the first page', () async {
       final cubit = center();
       await cubit.open();

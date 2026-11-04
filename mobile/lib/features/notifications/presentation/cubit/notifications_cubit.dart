@@ -20,6 +20,7 @@ class NotificationsState extends Equatable {
     this.loadingMore = false,
     this.failure,
     this.loadMoreFailure,
+    this.hasNew = false,
   });
 
   final NotificationsStatus status;
@@ -31,6 +32,10 @@ class NotificationsState extends Equatable {
   final Failure? failure;
   final Failure? loadMoreFailure;
 
+  /// Something arrived since the list loaded (the bell's count is above 0 again): the page offers to show it, as the web
+  /// does.
+  final bool hasNew;
+
   bool get hasMore => nextCursor != null;
 
   bool get hasUnread => items.any((notification) => !notification.isRead);
@@ -40,6 +45,7 @@ class NotificationsState extends Equatable {
     String? Function()? nextCursor,
     bool? loadingMore,
     Failure? Function()? loadMoreFailure,
+    bool? hasNew,
   }) =>
       NotificationsState(
         status: status,
@@ -48,24 +54,33 @@ class NotificationsState extends Equatable {
         loadingMore: loadingMore ?? this.loadingMore,
         failure: failure,
         loadMoreFailure: loadMoreFailure != null ? loadMoreFailure() : this.loadMoreFailure,
+        hasNew: hasNew ?? this.hasNew,
       );
 
   @override
-  List<Object?> get props => [status, items, nextCursor, loadingMore, failure, loadMoreFailure];
+  List<Object?> get props => [status, items, nextCursor, loadingMore, failure, loadMoreFailure, hasNew];
 }
 
 /// The notification center (F17): pages of notifications (cursor, newest activity first). Opening it and pulling to
 /// refresh mark everything seen (`POST /me/notifications/seen`, the badge goes to 0); an item stays unread until it is
-/// opened ([markRead]) or "Mark all read" ([markAllRead]), both shown here at once.
+/// opened ([markRead]) or "Mark all read" ([markAllRead]), both shown here at once. While it is open, new activity (the
+/// bell's count going above 0) sets [NotificationsState.hasNew]; [refresh] shows it.
 @injectable
 class NotificationsCubit extends Cubit<NotificationsState> {
-  NotificationsCubit(this._list, this._seen, this._read, this._readAll, this._badge) : super(const NotificationsState());
+  NotificationsCubit(this._list, this._seen, this._read, this._readAll, this._badge)
+      : super(const NotificationsState()) {
+    _badgeSubscription = _badge.stream.listen(_onBadge);
+  }
 
   final GetNotifications _list;
   final MarkNotificationsSeen _seen;
   final MarkNotificationRead _read;
   final MarkAllNotificationsRead _readAll;
   final UnreadBadgeCubit _badge;
+  late final StreamSubscription<int> _badgeSubscription;
+
+  /// The bell's count as last heard. Opening the center clears it, so it starts at 0.
+  int _badgeCount = 0;
 
   /// Incremented on every first-page load, so a page answered for an older one is dropped.
   int _generation = 0;
@@ -101,7 +116,12 @@ class NotificationsCubit extends Cubit<NotificationsState> {
         emit(NotificationsState(status: NotificationsStatus.failure, failure: failure));
         return null;
       case Ok(value: final page):
-        emit(NotificationsState(status: NotificationsStatus.ready, items: page.items, nextCursor: page.nextCursor));
+        emit(NotificationsState(
+          status: NotificationsStatus.ready,
+          items: page.items,
+          nextCursor: page.nextCursor,
+          hasNew: _badgeCount > 0,
+        ));
         return null;
     }
   }
@@ -143,6 +163,18 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     final failure = (await _readAll()).failureOrNull;
     if (failure != null) _setRead(unread, read: false);
     return failure;
+  }
+
+  void _onBadge(int count) {
+    _badgeCount = count;
+    if (isClosed || state.status != NotificationsStatus.ready || state.hasNew == count > 0) return;
+    emit(state.copyWith(hasNew: count > 0));
+  }
+
+  @override
+  Future<void> close() async {
+    await _badgeSubscription.cancel();
+    return super.close();
   }
 
   void _setRead(Set<String> ids, {required bool read}) {

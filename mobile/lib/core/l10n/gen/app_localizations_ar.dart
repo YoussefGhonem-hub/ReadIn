@@ -3510,6 +3510,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationsMarkAllRead => 'علّم الكل مقروء';
 
   @override
+  String get notificationsNewItems => 'فيه إشعارات جديدة، اعرضها';
+
+  @override
   String get notificationsToday => 'النهارده';
 
   @override

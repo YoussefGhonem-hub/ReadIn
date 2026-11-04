@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/core/theme/app_theme.dart';
@@ -303,6 +306,35 @@ void main() {
       await tester.fling(find.byType(ListView), const Offset(0, 400), 1000);
       await tester.pumpAndSettle();
       expect(repository.calls, ['seen', 'list -']);
+    });
+
+    testWidgets('something new while it is open: "New notifications" goes back to the top and reloads', (tester) async {
+      final counts = StreamController<int>.broadcast();
+      addTearDown(counts.close);
+      whenListen(badge, counts.stream, initialState: 0);
+      // The real badge clears to 0 when the center marks everything seen.
+      when(badge.clear).thenAnswer((_) => counts.add(0));
+      final cubit = center();
+      await cubit.open();
+      usePhoneSurface(tester, size: const Size(390, 600));
+      await tester.pumpWidget(testApp(BlocProvider.value(value: cubit, child: const NotificationsView()), variant: _en));
+      await tester.pump();
+      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.pumpAndSettle();
+      expect(find.text('New notifications — show them'), findsNothing);
+
+      counts.add(2);
+      // One frame delivers the count to the cubit, the next rebuilds the page.
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('New notifications — show them'), findsOneWidget);
+
+      repository.calls.clear();
+      await tester.tap(find.text('New notifications — show them'));
+      await tester.pumpAndSettle();
+      expect(repository.calls, ['seen', 'list -']);
+      expect(find.text('New notifications — show them'), findsNothing);
+      expect(tester.state<ScrollableState>(find.byType(Scrollable).first).position.pixels, 0);
     });
 
     testWidgets('scrolling down loads the next page', (tester) async {

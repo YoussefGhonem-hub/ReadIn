@@ -3478,6 +3478,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsMarkAllRead => 'Mark all read';
 
   @override
+  String get notificationsNewItems => 'New notifications — show them';
+
+  @override
   String get notificationsToday => 'Today';
 
   @override

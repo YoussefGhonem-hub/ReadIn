@@ -5954,6 +5954,12 @@ abstract class AppLocalizations {
   /// **'Mark all read'**
   String get notificationsMarkAllRead;
 
+  /// No description provided for @notificationsNewItems.
+  ///
+  /// In en, this message translates to:
+  /// **'New notifications — show them'**
+  String get notificationsNewItems;
+
   /// No description provided for @notificationsToday.
   ///
   /// In en, this message translates to:

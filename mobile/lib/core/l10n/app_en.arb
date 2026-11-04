@@ -1122,6 +1122,7 @@
   "noticeAcknowledge": "Got it",
 
   "notificationsMarkAllRead": "Mark all read",
+  "notificationsNewItems": "New notifications — show them",
   "notificationsToday": "Today",
   "notificationsEarlier": "Earlier",
   "notificationsEmptyTitle": "No notifications yet",
