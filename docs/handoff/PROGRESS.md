@@ -250,3 +250,37 @@ Built by three helpers from one contract, then reviewed, re-gated and committed 
 - **Small differences left on purpose:**
   - the web shows a hint under "Who can mention me"; mobile has none;
   - the web's Arabic comment-mention text now says "عمل لك", as mobile does.
+
+### 6.4 F19 Writer verification ✅
+Built by three helpers from one contract, then reviewed, re-gated and committed by the main session.
+- **Request** (web `/verification`, mobile Settings → Writing → Writer verification): field, job title, proof (an
+  https link and/or a PDF/JPEG/PNG/WebP file up to 10 MB, checked by magic bytes on the server) and a note. One pending
+  request at a time; withdraw; "Request again" after a rejection (the file must be attached again).
+- **Proof files are private:** `IPrivateFileStorage` at `Storage:PrivatePath` (default `App_Data/private`), never in
+  `wwwroot`. The API refuses to start when that folder overlaps the web root or the uploads folder. Only the admin
+  proof endpoint reads a file (attachment, `no-store`, `nosniff`). The file is deleted once the request is decided,
+  withdrawn or the account is deleted; a daily job (`verification-proofs-cleanup`, 03:15 UTC) deletes orphans.
+- **Admin queue** (web only, `verification.manage`): `/admin/verification` with Pending / Approved / Rejected, the proof
+  shown in the page (images) or a new tab (PDF), approve (grants `VerifiedWriter`, confirmed in a dialog) and reject with
+  a reason (5–500). Both go to the audit log.
+- **Notification** `verification_result` (`data.approved`, `readin://verification`), with the texts in contract-v1.
+- **Lead changes on top:**
+  - `backend/src/ReadIn.Api/.gitignore` ignores `App_Data/` (local demo proofs);
+  - `docker-compose.yml` has an `api-private` volume, owned by UID 1654;
+  - `public/privacy.html` and `public/delete-account.html` list verification requests, proofs and notifications;
+  - the web shows short values (job title, link, file name) next to their label in Arabic, isolated in their own
+    direction; the note and the reason keep their own direction, as comments do.
+- **Commits:** backend 7d21f49 (migration `WriterVerification`), mobile 8eb946d, web 0525054.
+- **Gates:**
+  - backend 1614/1614;
+  - mobile build_runner no diff, analyze clean, 1518/1518 with goldens;
+  - web lint clean, 90 unit files passed, SSR build OK (initial 526.15 kB, was 524.94 kB), Playwright 166/166
+    (verification, auth, external, profile, notifications).
+  - Baselines checked by eye: web `verification-*` and `admin-verification-*` (rewritten with
+    `--update-snapshots=all`: the 1% tolerance hides a moved line), mobile `verification_*` and the six Settings goldens
+    (a new "Writing" card).
+- **Not verified:** a PDF proof opening in a new tab (headless Chromium shows no PDF; the e2e checks the tab opens); the
+  API container with the new volume (`docker compose --profile api`).
+- **For the user:** set `Storage__PrivatePath` on the server (outside the app folder is safest), back that folder up with
+  the database (deployment.md §8), and redeploy `public/` to Firebase Hosting so the updated privacy pages go live.
+- **Left for 6.6:** in Arabic, mobile shows ".NET" as "NET." and a mixed Arabic/Latin file name in the wrong order.
