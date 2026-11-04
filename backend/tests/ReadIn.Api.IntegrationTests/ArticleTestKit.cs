@@ -12,6 +12,14 @@ internal static class ArticleTestKit
     public static object Paragraph(string text, string id = "p1") =>
         new { id, type = "paragraph", dir = "auto", content = new[] { new { type = "text", text } } };
 
+    /// <summary>A paragraph of inline nodes (<see cref="Text"/>, <see cref="Mention"/>).</summary>
+    public static object Inline(string id, params object[] content) => new { id, type = "paragraph", dir = "auto", content };
+
+    public static object Text(string text) => new { type = "text", text };
+
+    /// <summary>An RDoc <c>mention</c> inline node (SPEC §13.3).</summary>
+    public static object Mention(Guid userId, string text) => new { type = "mention", userId, text };
+
     public static readonly object[] OneSource = [new { title = "ReadIn", url = "https://readin.app" }];
 
     /// <summary>An editor document with one language version (<c>ArticleDraftDocument</c>).</summary>

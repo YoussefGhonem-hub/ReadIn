@@ -93,7 +93,7 @@ internal sealed class CommentEndpoints : IEndpointGroup
                 (await sender.Send(new GetMentionSuggestionsQuery(q, limit ?? 8), ct)).ToHttp(http))
             .RequireAuthorization()
             .WithTags("Comments")
-            .WithSummary("People to @mention while typing, by @username prefix or name")
+            .WithSummary("People to @mention while typing (comments and the editor), by @username prefix or name; only people who allow you")
             .Produces<IReadOnlyList<MentionCandidateDto>>();
     }
 

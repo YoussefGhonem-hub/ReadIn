@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using ReadIn.Domain.Common;
+using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Users;
 
@@ -15,7 +16,9 @@ public sealed record InterestsDto(IReadOnlyList<Guid> FieldIds, IReadOnlyList<Gu
 public sealed record ExternalLoginDto(string Provider, string? Email, DateTime LinkedAt);
 
 /// <summary>Settings → Privacy (SPEC F18), changed with PUT /me/privacy.</summary>
-public sealed record PrivacyDto(bool PublicReadingStats);
+/// <param name="PublicReadingStats">The reading stats card and heatmap are on the public profile (F14).</param>
+/// <param name="WhoCanMention">Who may @mention the user in comments and articles: <c>everyone</c>, <c>following</c>, <c>nobody</c>.</param>
+public sealed record PrivacyDto(bool PublicReadingStats, MentionPolicy WhoCanMention = MentionPolicy.Everyone);
 
 /// <summary>The signed-in user. The only DTO that carries the phone number (SPEC §9.5).</summary>
 public sealed record MeDto

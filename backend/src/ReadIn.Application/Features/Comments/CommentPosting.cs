@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Features.Users;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Engagement;
 
@@ -13,27 +14,24 @@ public sealed record PreparedComment(string Body, IReadOnlyList<Guid> MentionedU
 /// 10-a-minute rate limit of the endpoint, one account can write at most <see cref="PerArticlePerHour"/> comments on one
 /// article per hour, and not the same text twice within <see cref="DuplicateWindow"/>.
 /// </summary>
-public sealed class CommentPosting(IAppDbContext db, TimeProvider clock)
+public sealed class CommentPosting(IAppDbContext db, UserMentions mentions, TimeProvider clock)
 {
     public const int PerArticlePerHour = 20;
     public static readonly TimeSpan DuplicateWindow = TimeSpan.FromMinutes(10);
 
-    /// <summary>Unknown @usernames and the author's own handle stay plain text.</summary>
+    /// <summary>
+    /// Unknown @usernames, the author's own handle and users who don't allow the author ("who can mention me", SPEC F18:
+    /// their setting, or a suspended or system account) stay plain text: not in the mentions, so not linked or notified.
+    /// The setting applies when the comment is written or edited; later changes don't touch it.
+    /// </summary>
     public async Task<Result<PreparedComment>> PrepareAsync(string? body, Guid authorId, CancellationToken ct)
     {
         var text = CommentText.Normalize(body);
         if (text.IsFailure) return text.Error;
 
         var usernames = CommentText.MentionedUsernames(text.Value);
-        List<Guid> mentioned = [];
-        if (usernames.Count > 0)
-        {
-            mentioned = await db.Users.AsNoTracking()
-                .Where(u => usernames.Contains(u.Username) && u.Id != authorId)
-                .Select(u => u.Id)
-                .ToListAsync(ct);
-        }
-        return new PreparedComment(text.Value, mentioned);
+        var mentioned = await mentions.AllowedByUsernameAsync(authorId, usernames, ct);
+        return new PreparedComment(text.Value, [.. mentioned.Where(id => id != authorId)]);
     }
 
     /// <summary>Deleted comments still count toward the hourly cap, so deleting doesn't reset it.</summary>

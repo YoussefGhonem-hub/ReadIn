@@ -65,7 +65,7 @@ at a time (single-flight) and always keep the newest token.
 |---|---|---|
 | GET | `/me` | → `200 MeDto` |
 | PATCH | `/me` | `UpdateProfileRequest` → `204`; refetch `GET /me`. `409 user.username_taken`, `400 profile.avatar_invalid`, `400 profile.expertise_invalid`, validation codes as before (`displayName`, `username`, `bio`, `links.*`, `avatarUrl`) |
-| PUT | `/me/privacy` | `{ publicReadingStats: boolean }` → `204` (Settings → Privacy, F18; shown in `MeDto.privacy`). `validation.required` when missing |
+| PUT | `/me/privacy` | `{ publicReadingStats?: boolean, whoCanMention?: MentionPolicy }` → `204` (Settings → Privacy, F18; shown in `MeDto.privacy`). Each field is optional (left out = unchanged), so a client that only sends `publicReadingStats` keeps working; clients send the whole privacy object back. `400 validation.failed` with `validation.required` on both fields when neither is sent, `validation.invalid` for an unknown number; an unknown name is a `400` before validation. Nothing changes on an error. `whoCanMention` applies from then on: existing comments keep their mentions |
 | DELETE | `/me` | `{ password? , external?: ExternalCredential }` → `204`. Confirm with the password or a fresh token of a linked Google/Apple identity (Apple: include `authorizationCode`). Deletes the account **immediately and for good** (SPEC §9.6): Apple tokens are revoked first, then everything goes in one transaction (published articles stay with `author: null`, shown as "Deleted user"); the phone, email and Google/Apple identities can sign up again at once. **Idempotent:** a retry whose token outlived the account also gets `204`. `400 auth.wrong_password`, `400 auth.confirmation_required`, `400 auth.external_mismatch`, `400 auth.apple_confirmation_required` (Apple-linked account without a revocable token: confirm with Apple), `503 account.deletion_unavailable` (Apple unreachable: nothing was deleted, retry) |
 | PUT | `/me/profile/complete` | `{ displayName, username, avatarUrl? }` → `200 MeDto`. `409 user.username_taken` |
 | PUT | `/me/password` | `{ currentPassword, newPassword }` → `200 SessionDto`; other sessions end. `400 auth.wrong_password` |
@@ -172,14 +172,22 @@ come from the article's denormalized columns, which the outbox updates right aft
 | DELETE | `/comments/{id}` | → `204` (idempotent). Own comments only. Soft: a top-level comment with replies becomes a placeholder |
 | PUT / DELETE | `/comments/{id}/like` | → `200 CommentLikeDto` (idempotent). Permission `reactions.create`. `409 comment.not_available` |
 | POST / DELETE | `/comments/{id}/pin` | → `200 CommentDto`. The article's author only (`403 comment.pin_not_author`); top-level and visible only (`400 comment.pin_reply`). Pinning unpins the article's previous pinned comment |
-| GET | `/users/mention-suggestions?q=&limit=8` | Bearer → `MentionCandidateDto[]`: `@username` prefix (with or without `@`) or display name, not you |
+| GET | `/users/mention-suggestions?q=&limit=8` | Bearer → `MentionCandidateDto[]`: `@username` prefix (with or without `@`) or display name, not you, and only people you may mention (see below). The comment box and the article editor both use it |
 
 Text rules: trimmed, line ends trimmed, at most one empty line in a row, 1–2000 characters (`400 comment.empty`,
 `comment.too_long`). `@username` (3–30 of a–z 0–9 _, not right after a Latin letter or digit, so emails aren't mentions;
-fine after an Arabic letter, "و@writer1") resolves to real users, at most 10, never yourself; they come back in
-`mentions`, and clients link exactly those handles. Mention notifications arrive with F17. Flood limits on top of the
+fine after an Arabic letter, "و@writer1") resolves to real users you may mention, at most 10, never yourself; they come
+back in `mentions`, and clients link exactly those handles. Any other `@handle` stays plain text: not in `mentions`, no
+link, no notification. Each mentioned user gets a `mention` notification (F17). Flood limits on top of the
 rate limit: at most 20 comments per user on one article per hour (`429 comment.article_limit`, deleted ones count), and
 not the same text (case and spacing ignored) within 10 minutes (`409 comment.duplicate`).
+
+**Who you may mention** ("who can mention me", F18 privacy, `MeDto.privacy.whoCanMention`): yourself (an article keeps a
+link to your own handle; comments and suggestions leave you out, as above, and nobody is notified about themselves);
+anyone whose setting is `everyone` (the default); someone whose setting is `following` when **they follow you**; nobody
+whose setting is `nobody`. The account must also be active: deleted, suspended and system accounts are never linked. The
+rule is checked by the suggestions, by comments when they are written or edited (a later change of the setting leaves
+existing comments alone), and by articles when they go live (see Editor).
 
 Who sees what: readers get visible comments; a comment hidden by a moderator is shown in full only to its author and to
 moderators (`isHidden: true`). A deleted, or hidden-for-you, top-level comment that still has replies is a placeholder
@@ -255,7 +263,7 @@ accounts get nothing):
 | `new_follower` | someone follows you | per day (your time zone); following again the same day is not news | 1 follower `readin://u/{their username}`, more `readin://u/{your username}/followers` |
 | `article_comment` | a top-level comment on your article | per article | `readin://a/{slug}#comment-{latest comment id}` |
 | `comment_reply` | a reply to your comment | per thread | same |
-| `mention` | a comment @mentions you (also when an edit adds you) | no | same |
+| `mention` | a comment @mentions you (also when an edit adds you), or a published article does (also when an "Update" adds you; once per article, ever): `comment: null`, `article` set | no | a comment: same; an article: `readin://a/{slug}` |
 | `reactions_milestone` | your article reaches 10, 50 or 100 reactions (each once, ever) | no | `readin://a/{slug}` |
 | `followed_writer_article` | a writer you follow publishes an article (first publish only) | no | `readin://a/{slug}` |
 | `daily_article` | Today's article push (F07); also written when the push waits for quiet hours | no | `readin://a/{slug}` |
@@ -266,6 +274,15 @@ accounts get nothing):
 
 - One entry per recipient per comment: `mention` > `comment_reply` > `article_comment`. An edit only tells users it
   mentions for the first time.
+- A mention in an article: every user the live version mentions (any language version) whom the author may mention
+  (see Comments, "Who you may mention") gets one entry, actor = the author, written after the publish or "Update". Each
+  user hears about an article once, ever: an update tells only newly mentioned users, and removing and re-adding a
+  mention tells nobody again. Never the author. At most 20 people per article (all language versions, in document
+  order) keep their link and are told; mentions of anyone after them become plain text, as past 10 in a comment. Clients show `type: "mention"` with `comment: null` as
+  "X mentioned you in an article" / "X عمل لك منشن في مقال", then the article's title; with a `comment` it stays "…in a
+  comment". The entry stays in the list while its article is readable. Both follow the `mention` type's mode, so its
+  Settings label covers both: "Mentions" / "المنشن", hint "When someone mentions you in a comment or an article" /
+  "لما حد يعمل لك منشن في تعليق أو مقال".
 - Aggregation: new activity joins an **unread** entry of the same group that moved in the last 24 hours; the entry moves
   to the top as unseen, with the newest actor, and its push goes out again with the count. A read entry starts a new one.
 - What the list (and the badge) leaves out: entries whose comment was deleted or hidden, whose article isn't readable
@@ -354,6 +371,12 @@ any problem remains.
   relative paths / `rdoc-asset://` and always answers with public URLs (ADR 0010).
 - Attachments are part of the document (there is no attachments call). They go live with the publish; a PDF's `title`
   and `allowDownload` are applied to its asset then.
+- **Mentions** (RDoc `mention` nodes, `{ type: "mention", userId, text }`; pick people with `GET /users/mention-suggestions`):
+  autosave keeps them as written. Every publish and "Update" checks each one, in every language version, against the
+  author ("who you may mention", see Comments): an allowed, active user keeps the node with `text` set to
+  `"@" + their current username` (readers link a mention by its text); anyone else, an unknown `userId`, a deleted or a
+  suspended account becomes a plain `text` node with the same text (no link). What readers, the working copy and the
+  revision get is the checked version. Newly mentioned users get a `mention` notification (see Notifications).
 
 ### Media (Bearer) — see [ADR 0011](../adr/0011-media-pipeline-and-pdf-preview.md)
 
@@ -544,8 +567,14 @@ interface MeDto {
   roles: string[];               // e.g. ["Member", "VerifiedWriter"]
   permissions: string[];         // e.g. ["articles.read", "articles.create", ...]
   interests: { fieldIds: string[]; topicIds: string[] };
-  privacy: { publicReadingStats: boolean };  // Settings → Privacy (F18); default false. PUT /me/privacy
+  privacy: {                     // Settings → Privacy (F18). PUT /me/privacy
+    publicReadingStats: boolean; // default false
+    whoCanMention: MentionPolicy; // default "everyone"
+  };
 }
+
+// Who may @mention you in comments and articles (F18): everyone, the people you follow, or nobody (but yourself).
+type MentionPolicy = 'everyone' | 'following' | 'nobody';
 
 interface UpdateProfileRequest {
   displayName: string;           // 2..60
@@ -876,7 +905,7 @@ interface NotificationDto {
   actor: { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean } | null; // latest actor
   actorCount: number;            // distinct actors (≥ 1 when actor-based, 0 otherwise): "X and {actorCount - 1} others"
   article: { id: string; slug: string; title: string; language: ArticleLanguage } | null; // your article language, else the source
-  comment: { id: string; parentId: string | null; excerpt: string } | null;              // excerpt ≤ 140 chars, plain text, one line
+  comment: { id: string; parentId: string | null; excerpt: string } | null;              // excerpt ≤ 140 chars, plain text, one line; null for a mention in an article
   data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange };    // only the keys that apply
   link: string;                  // readin://… (the same as the push's data.link)
 }
@@ -1094,7 +1123,7 @@ an entry is written), for entries whose type is on `all`:
 | `new_follower` | "{name} بدأ يتابعك" / "{name} started following you"; more: "{name} و{n} غيره بدأوا يتابعوك" / "{name} and {n} others started following you" | empty |
 | `article_comment` | "{name} علّق على مقالك" / "{name} commented on your article"; more: "{name} و{n} غيره علّقوا على مقالك" / "{name} and {n} others commented on your article" | the latest comment (≤ 140 characters) |
 | `comment_reply` | "{name} ردّ على تعليقك" / "{name} replied to your comment"; more: "… و{n} غيره ردّوا على تعليقك" / "… and {n} others replied to your comment" | the reply |
-| `mention` | "{name} عمل لك منشن في تعليق" / "{name} mentioned you in a comment" | the comment |
+| `mention` | in a comment: "{name} عمل لك منشن في تعليق" / "{name} mentioned you in a comment"; in an article (no comment): "{name} عمل لك منشن في مقال" / "{name} mentioned you in an article" | the comment; in an article: the article's title |
 | `reactions_milestone` | "مقالك وصل لـ {threshold} رياكشن 🎉" / "Your article reached {threshold} reactions 🎉" | the article's title |
 | `followed_writer_article` | "{name} نشر مقال جديد" / "{name} published a new article" | the article's title |
 | `streak_reminder` | "متضيّعش الـ streak بتاعك 🔥" / "Don't lose your streak 🔥" | "الـ streak بتاعك {n} يوم…" / "Your streak is {n} days. Read an article today to keep it going." |
@@ -1108,7 +1137,7 @@ an entry is written), for entries whose type is on `all`:
 |---|---|
 | Collapse key (Android collapse key and tag, `apns-collapse-id`, web `tag`) | the entry's group (`article_comment:{articleId}`, `comment_reply:{commentId}`, `new_follower:{yyyy-MM-dd}`), otherwise the type: a newer push of the group replaces the older one |
 | Quiet hours | held until they end (user's time zone); `security_alert` ignores them |
-| Checked when sending | the type is still on `all`; the comment or article is still there; a moderation notice isn't acknowledged yet; the account isn't suspended |
+| Checked when sending | the type is still on `all`; the comment or article is still there (a mention in an article: its article is still readable); a moderation notice isn't acknowledged yet; the account isn't suspended |
 | Too late | dropped when the entry's last activity is more than 24 hours old (`streak_reminder`: 4 hours); TTL = what is left of that |
 | Failures | tokens FCM reports as invalid are deleted; other failures are retried after 1 and 5 minutes, 3 sends in all |
 

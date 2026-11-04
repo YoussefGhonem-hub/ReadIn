@@ -48,6 +48,6 @@ internal sealed class ProfileEndpoints : IEndpointGroup
             .RequireAuthorization()
             .RequireRateLimiting(RateLimitPolicies.Writes)
             .WithTags("Me")
-            .WithSummary("Settings → Privacy: show the reading stats on your public profile");
+            .WithSummary("Settings → Privacy: show the reading stats on your public profile, and who can @mention you (each optional)");
     }
 }

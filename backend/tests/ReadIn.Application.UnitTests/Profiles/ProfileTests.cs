@@ -159,13 +159,30 @@ public sealed class ProfileEditTests
             .Details!["publicReadingStats"].Should().Equal("validation.required");
 
     [Fact]
+    public void Privacy_takes_either_setting_alone()
+    {
+        var validator = new UpdatePrivacyCommandValidator();
+
+        validator.Validate(new UpdatePrivacyCommand(true)).IsValid.Should().BeTrue();
+        validator.Validate(new UpdatePrivacyCommand(null, MentionPolicy.Following)).IsValid.Should().BeTrue();
+        validator.Validate(new UpdatePrivacyCommand(false, MentionPolicy.Nobody)).IsValid.Should().BeTrue();
+
+        var neither = ValidationErrors.From(validator.Validate(new UpdatePrivacyCommand(null, null)).Errors).Details!;
+        neither["whoCanMention"].Should().Equal("validation.required");
+        ValidationErrors.From(validator.Validate(new UpdatePrivacyCommand(null, (MentionPolicy)7)).Errors)
+            .Details!["whoCanMention"].Should().Equal("validation.invalid");
+    }
+
+    [Fact]
     public void Me_carries_the_privacy_setting()
     {
         var config = DependencyInjection.CreateMapperConfig();
         var user = User.CreateSeeded("+12025550110", "Reader 1", "reader1");
 
-        user.Adapt<MeDto>(config).Privacy.Should().Be(new PrivacyDto(PublicReadingStats: false));
+        user.Adapt<MeDto>(config).Privacy.Should().Be(new PrivacyDto(PublicReadingStats: false, MentionPolicy.Everyone));
         user.SetPrivacy(publicReadingStats: true);
-        user.Adapt<MeDto>(config).Privacy.Should().Be(new PrivacyDto(PublicReadingStats: true));
+        user.Adapt<MeDto>(config).Privacy.Should().Be(new PrivacyDto(PublicReadingStats: true, MentionPolicy.Everyone));
+        user.SetPrivacy(whoCanMention: MentionPolicy.Following);
+        user.Adapt<MeDto>(config).Privacy.Should().Be(new PrivacyDto(PublicReadingStats: true, MentionPolicy.Following));
     }
 }

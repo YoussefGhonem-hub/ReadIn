@@ -201,6 +201,31 @@ public sealed class NotificationRulesTests
     }
 
     [Fact]
+    public void A_mention_in_an_article_says_so_with_the_title_as_the_body()
+    {
+        var inArticle = new NotificationTexts.Input("Mona", 1, "RAG vs fine-tuning", null, NotificationData.Empty);
+
+        NotificationTexts.For(NotificationTypes.Mention, english: true, inArticle)
+            .Should().Be(("⁨Mona⁩ mentioned you in an article", "RAG vs fine-tuning"));
+        NotificationTexts.For(NotificationTypes.Mention, english: false, inArticle)
+            .Should().Be(("⁨Mona⁩ عمل لك منشن في مقال", "RAG vs fine-tuning"));
+        NotificationTexts.For(NotificationTypes.Mention, english: true, Input("Mona", 1))
+            .Should().Be(("⁨Mona⁩ mentioned you in a comment", "تعليق قصير"), "a comment's mention keeps its text");
+    }
+
+    [Fact]
+    public void A_mention_in_an_article_opens_the_article_and_is_told_once_per_article()
+    {
+        var article = Guid.NewGuid();
+
+        NotificationLinks.For(NotificationTypes.Mention, 1, "mona", "me", "rag-vs-fine-tuning", commentId: null)
+            .Should().Be("readin://a/rag-vs-fine-tuning");
+        NotificationLinks.For(NotificationTypes.Mention, 1, "mona", "me", articleSlug: null, commentId: null)
+            .Should().Be("readin://notifications");
+        ArticleMentions.DedupeKey(article).Should().Be($"mention:article:{article}");
+    }
+
+    [Fact]
     public void Moderation_notices_keep_F22s_texts()
     {
         var warning = new NotificationTexts.Input(null, 0, null, null,

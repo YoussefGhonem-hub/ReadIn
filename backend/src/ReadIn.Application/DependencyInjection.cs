@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddSingleton<IRDocProcessor, RDocProcessor>();
         services.AddScoped<IUserAccessService, UserAccessService>();
         services.AddScoped<MeReader>();
+        services.AddScoped<UserMentions>();
         services.AddScoped<SessionIssuer>();
         services.AddScoped<AuditTrail>();
         services.AddScoped<PasswordConfirmation>();

@@ -23,7 +23,7 @@ public sealed class UserMappings : IRegister
                 .OrderBy(l => l.LinkedAt)
                 .Select(l => new ExternalLoginDto(l.Provider, l.Email, l.LinkedAt))
                 .ToList())
-            .Map(d => d.Privacy, s => new PrivacyDto(s.PublicReadingStats))
+            .Map(d => d.Privacy, s => new PrivacyDto(s.PublicReadingStats, s.WhoCanMention))
             .Ignore(d => d.Roles, d => d.Permissions, d => d.IsVerified);
     }
 }

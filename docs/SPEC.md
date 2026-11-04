@@ -721,7 +721,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Highlights: mark sentences, see popular ones, hide them ([F30](#f30--highlights)).
 
 ### F05 — Article Editor (Write)
-- Block-based rich editor producing **RDoc**: all block types in [§13](#13-article-content-format-rdoc), slash menu (`/`) to insert blocks, markdown shortcuts, `@` mentions, and a glossary button that marks the selected words as a term ([F21](#f21--glossary-قاموس-المصطلحات): search the glossary, pick; select a term to change or remove it).
+- Block-based rich editor producing **RDoc**: all block types in [§13](#13-article-content-format-rdoc), slash menu (`/`) to insert blocks, markdown shortcuts, `@` mentions (suggestions offer only people who allow the author, [F18](#f18--settings) "who can mention me"; every publish and Update checks each mention again in every language version: allowed ones link with the user's current `@username` (at most 20 people per article), the rest become plain text, and newly mentioned users get a [F17](#f17--notifications) notification), and a glossary button that marks the selected words as a term ([F21](#f21--glossary-قاموس-المصطلحات): search the glossary, pick; select a term to change or remove it).
 - Per-block automatic direction (`dir="auto"`) with manual override, code blocks forced LTR.
 - Cover image upload (compressed on the device, processed by the backend, stored in `wwwroot/uploads`), field, topic, an optional personal category ([F31](#f31--writer-categories-أقسام-الكاتب)), and tags: pick existing ones or create new ones, max 5 ([F32](#f32--tags-التاجات)).
 - **Attachments:** 1–10 images **or** one PDF ([F26](#f26--post-attachments--media)). The attachment bar is one reusable component (web) / widget (mobile); attachments are part of the draft and go live with it.
@@ -777,7 +777,7 @@ Draft ──► Published ──► Archived
 ### F11 — Comments & Replies
 - Threaded comments: top-level + replies (max depth 2, shown as one indented level with a connector line). Replying to a reply joins the same thread.
 - Sort: **Top** / **Newest**.
-- Like comments, reply, `@mention` users (notifies them once F17 ships), edit (shows "edited"), delete (soft: a comment with replies stays as a "deleted" placeholder).
+- Like comments, reply, `@mention` users (only people who allow the author, [F18](#f18--settings) "who can mention me"; any other `@handle` stays plain text; each mentioned user is notified, [F17](#f17--notifications)), edit (shows "edited"), delete (soft: a comment with replies stays as a "deleted" placeholder).
 - Writer badge "الكاتب" on the author's comments, author can **pin** one comment.
 - Mixed Arabic/English input renders correctly (`dir="auto"` per comment).
 - **Live:** new comments/replies appear without refreshing, edits/deletes update in place, and a "N تعليقات جديدة" pill appears when the user is scrolled away ([F27](#f27--real-time-updates)).
@@ -817,14 +817,14 @@ Draft ──► Published ──► Archived
 ### F17 — Notifications
 **Built.** API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Notifications", "Push payloads"); details in [§21.1](#211-notifications).
 - In-app notification center (SQL `Notifications` table, live unread badge via Firebase Realtime Database) + push (FCM).
-- Types: new follower, reply to your comment, mention (in comments), reactions milestone (10/50/100), comment on your article, verification result (reserved for F19), daily article, streak reminder (20:00, if not read yet), new article from a followed writer, **security alerts** (password/PIN/phone changed, recovery lockout, Google/Apple linked or unlinked), moderation notices (F22).
+- Types: new follower, reply to your comment, mention (comments and articles), reactions milestone (10/50/100), comment on your article, verification result (reserved for F19), daily article, streak reminder (20:00, if not read yet), new article from a followed writer, **security alerts** (password/PIN/phone changed, recovery lockout, Google/Apple linked or unlinked), moderation notices (F22).
 - Per-type preferences (push / in-app / off), quiet hours. Details in [§21](#21-notifications--real-time).
 
 ### F18 — Settings
 - Theme: **System / Light / Dark** (synced to profile across devices).
 - UI language: العربية / English.
 - Article language preference, daily reminder time, notification preferences, font size.
-- Privacy: public reading stats on/off, who can mention me.
+- Privacy: public reading stats on/off, who can mention me (**Everyone**, the default / **People I follow** / **Nobody**; you can always mention yourself, and deleted, suspended and system accounts are never linked). Checked by the mention suggestions, by comments when they are written or edited (existing comments keep their mentions), and by articles at every publish and Update.
 - **Muted:** muted writers, fields and topics, with unmute ([F28](#f28--article-menu-mute--show-less)).
 - Show or hide highlights ([F30](#f30--highlights)).
 - **Account:**
@@ -1174,7 +1174,7 @@ A writer can download their own article as a clean, well-organized PDF that carr
 **Attachments are not blocks.** A post's image carousel or PDF ([F26](#f26--post-attachments--media)) lives in `ArticleAttachments` and is rendered after the content, so RDoc stays a pure text format. If inline galleries inside an article are ever needed, they will be a new `gallery` block (`items: { src, alt, caption? }[]`, same `rdoc-asset://` sources and alt-text rule as `image`); the name is reserved and the schema rejects it until then ([ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md)).
 
 ### 13.3 Inline Nodes & Marks
-- Inline nodes: `text`, `term` (glossary term id + display text), `mention` (user id), `hardBreak`.
+- Inline nodes: `text`, `term` (glossary term id + display text), `mention` (user id + display text `@username`: readers link it by that text, which the server rewrites at every publish, F05), `hardBreak`.
 - Marks: `bold`, `italic`, `code`, `link` (`href`, http/https only), `highlight`, `strike`.
 
 ### 13.4 Example
@@ -1303,7 +1303,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 ### 16.2 Tables
 | Area | Tables |
 |---|---|
-| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
+| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, WhoCanMention Everyone/Following/Nobody (default Everyone), IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId (null once a deleted account's asset stays with its published article), Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
@@ -1531,8 +1531,8 @@ Seed content lives in `content/articles/{field}/{topic}/{slug}/` so it is versio
 | Part | Details |
 |---|---|
 | Tables | `Notifications` (Id, UserId → Users cascade, Type, GroupKey, DedupeKey, ArticleId and CommentId with no cascade, Data JSON, CreatedAt, UpdatedAt = latest activity, SeenAt, ReadAt, PushStatus None/Pending/Sent/Skipped/Failed, PushAfter, PushedAt, PushAttempts); `NotificationActors` (NotificationId cascade + ActorId with no cascade, At); `UserNotificationSettings` (UserId + Type, Mode all/inApp/off; no row = all); `Users.QuietHoursEnabled/Start/End` (default on, 23:00, 07:00). Indexes: unique (UserId, DedupeKey) where set, (UserId, UpdatedAt DESC, Id DESC) for the list, (PushStatus, PushAfter) for pending pushes |
-| Writing | Outbox handlers (`UserFollowedDomainEvent`, `CommentChangedDomainEvent`, `ReactionChangedDomainEvent`, `ArticlePublishedDomainEvent`, `UserSecurityChangedDomainEvent`, `ModerationNoticeIssuedDomainEvent`) and jobs (daily article, streak reminder) write through `NotificationWriter`; they never push. Never about your own action; suspended, deleted and system accounts get nothing; `off` writes nothing, `inApp` writes without a push |
-| Idempotency | A dedupe key per user (`mention:{commentId}`, `reactions_milestone:{articleId}:{n}`, `followed_writer_article:{articleId}`, `security_alert:{change}:{event ticks}`, `moderation_notice:{noticeId}`, `daily_article:{date}`, `streak_reminder:{date}`), and an aggregated entry ignores an actor's activity it already has, so outbox retries change nothing |
+| Writing | Outbox handlers (`UserFollowedDomainEvent`, `CommentChangedDomainEvent`, `ReactionChangedDomainEvent`, `ArticlePublishedDomainEvent`, `ArticleMentionsDomainEvent` (every publish and Update with mentions; the handler checks the article and "who can mention me" again), `UserSecurityChangedDomainEvent`, `ModerationNoticeIssuedDomainEvent`) and jobs (daily article, streak reminder) write through `NotificationWriter`; they never push. Never about your own action; suspended, deleted and system accounts get nothing; `off` writes nothing, `inApp` writes without a push |
+| Idempotency | A dedupe key per user (`mention:{commentId}`, `mention:article:{articleId}` (so an Update tells only newly mentioned users), `reactions_milestone:{articleId}:{n}`, `followed_writer_article:{articleId}`, `security_alert:{change}:{event ticks}`, `moderation_notice:{noticeId}`, `daily_article:{date}`, `streak_reminder:{date}`), and an aggregated entry ignores an actor's activity it already has, so outbox retries change nothing |
 | Aggregation | `new_follower` per day, `article_comment` per article, `comment_reply` per thread: new activity joins an unread entry of the group that moved in the last 24 hours (distinct actors, moved to the top, seen/read cleared, push armed again) |
 | Push job | `NotificationPushJob` (Hangfire, every minute and right after a write): pending entries that are due, batched, title/body in the user's UI language, collapse key = group or type, quiet hours (the push waits for their end; security alerts ignore them), checked again when sending (mode, content still there, account active), dropped after 24 hours (streak reminder: 4), invalid tokens deleted, other failures retried after 1 and 5 minutes (3 sends) |
 | Streak reminder | `StreakReminderJob`, every 5 minutes: from 20:00 to 22:00 in each user's time zone, one per local date, when the streak is ≥ 1 (a pending freeze counts, ADR 0013) and nothing was read today |

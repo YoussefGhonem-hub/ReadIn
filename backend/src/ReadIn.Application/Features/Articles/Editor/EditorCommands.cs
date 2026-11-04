@@ -7,6 +7,7 @@ using ReadIn.Application.Common.Content;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Glossary;
+using ReadIn.Application.Features.Users;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Media;
@@ -106,6 +107,7 @@ internal sealed class PublishArticleDraftCommandHandler(
     ArticleDrafts drafts,
     IRDocProcessor rdoc,
     ArticleTermsIndex termsIndex,
+    UserMentions mentions,
     HybridCache cache,
     TimeProvider clock)
     : ICommandHandler<PublishArticleDraftCommand, Result<PublishedArticleDto>>
@@ -123,12 +125,18 @@ internal sealed class PublishArticleDraftCommandHandler(
         var field = evaluation.Field!;
         var now = clock.GetUtcNow().UtcDateTime;
 
+        // "Who can mention me" (SPEC F18), checked for what goes live in every language: a mention the author may make of an
+        // active account keeps its link with the user's current @username; any other, and any after the first
+        // Article.MaxMentions people, becomes plain text.
+        var mentioned = document.Translations.SelectMany(t => RDocMentions.UserIds(t.Content)).Distinct().Take(Article.MaxMentions);
+        var allowed = await mentions.AllowedAsync(userId, mentioned, cancellationToken);
+
         // Strict processing (SPEC §13.5): readers get sanitized RDoc, and the revision keeps exactly what went live.
         var versions = new List<TranslationVersion>();
         var published = new List<DraftTranslation>();
         foreach (var translation in document.Translations)
         {
-            var processed = rdoc.Process(translation.Content, translation.Language, translation.Title);
+            var processed = rdoc.Process(RDocMentions.Apply(translation.Content, allowed), translation.Language, translation.Title);
             if (processed.IsFailure) return processed.Error;
             versions.Add(new TranslationVersion(translation.Language, translation.Title, translation.Subtitle, processed.Value.Content));
             published.Add(translation with { Content = JsonDocument.Parse(processed.Value.Content.Json).RootElement.Clone() });
@@ -155,6 +163,9 @@ internal sealed class PublishArticleDraftCommandHandler(
         var number = (await db.ArticleRevisions.Where(r => r.ArticleId == article.Id)
             .MaxAsync(r => (int?)r.RevisionNumber, cancellationToken) ?? 0) + 1;
         db.ArticleRevisions.Add(new ArticleRevision(article.Id, number, published[0].Title, published.Select(t => t.Language), publishedJson, userId, now));
+
+        // Every user the live version mentions hears about it once per article (F17): an update tells only new ones.
+        article.RecordMentions(allowed.Keys);
 
         if (!await EditorSaves.TrySaveAsync(db, cancellationToken)) return ArticleErrors.DraftConflict;
 

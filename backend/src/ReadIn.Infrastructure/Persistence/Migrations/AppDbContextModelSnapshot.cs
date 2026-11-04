@@ -1850,6 +1850,13 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(30)")
                         .UseCollation("Arabic_100_CI_AI");
 
+                    b.Property<string>("WhoCanMention")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasDefaultValue("Everyone");
+
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Links", "ReadIn.Domain.Users.User.Links#UserLinks", b1 =>
                         {
                             b1.IsRequired();

@@ -7,6 +7,7 @@ using ReadIn.Application.Common.Models;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Users;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Engagement;
@@ -135,7 +136,8 @@ internal sealed class GetCommentQueryHandler(IAppDbContext db, ICurrentUser view
     }
 }
 
-internal sealed class GetMentionSuggestionsQueryHandler(IAppDbContext db, ICurrentUser currentUser, IFileStorage storage)
+/// <summary>Only people the viewer may mention ("who can mention me", SPEC F18): the comment box and the editor both use it.</summary>
+internal sealed class GetMentionSuggestionsQueryHandler(IAppDbContext db, ICurrentUser currentUser, IFileStorage storage, TimeProvider clock)
     : IQueryHandler<GetMentionSuggestionsQuery, Result<IReadOnlyList<MentionCandidateDto>>>
 {
     public async ValueTask<Result<IReadOnlyList<MentionCandidateDto>>> Handle(GetMentionSuggestionsQuery query, CancellationToken cancellationToken)
@@ -147,6 +149,7 @@ internal sealed class GetMentionSuggestionsQueryHandler(IAppDbContext db, ICurre
         var handle = term.ToLowerInvariant();
         var limit = Math.Clamp(query.Limit, 1, 20);
         var users = await db.Users.AsNoTracking()
+            .MentionableBy(db, viewer, clock.GetUtcNow().UtcDateTime)
             .Where(u => u.Id != viewer && (u.Username.StartsWith(handle) || u.DisplayName.Contains(term)))
             .OrderByDescending(u => u.Username.StartsWith(handle))
             .ThenBy(u => u.Username)

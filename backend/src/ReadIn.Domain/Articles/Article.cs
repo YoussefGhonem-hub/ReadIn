@@ -20,6 +20,12 @@ public enum ArticleStatus
 public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRowVersion
 {
     public const int MaxTags = 5;
+
+    /// <summary>
+    /// People one article can @mention (SPEC F05, F18), across its language versions: the first ones in the document keep
+    /// their link and are told (F17); later ones become plain text, as in comments.
+    /// </summary>
+    public const int MaxMentions = 20;
     public const int MaxImageAttachments = 10;
     public const int MaxCaptionLength = 5000;
     public const int MaxAltTextLength = 5000;
@@ -250,6 +256,17 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         QualityScore = ArticleQuality.Score(ReactionCount, CommentCount, SaveCount, ReadCount, ReadCount, (now - PublishedAt.Value).TotalHours);
         Raise(() => new ArticlePublishedDomainEvent(Id, AuthorId, FieldId, Slug));
         return Result.Success();
+    }
+
+    /// <summary>
+    /// The version just made live @mentions <paramref name="userIds"/> (SPEC F05, F17): after the commit each of them, except
+    /// the author, is told once per article. Raises nothing when nobody else is mentioned.
+    /// </summary>
+    public void RecordMentions(IEnumerable<Guid> userIds)
+    {
+        if (AuthorId is not { } authorId) return;
+        var mentioned = userIds.Where(id => id != authorId && id != Guid.Empty).Distinct().ToList();
+        if (mentioned.Count > 0) Raise(() => new ArticleMentionsDomainEvent(Id, authorId, mentioned));
     }
 
     public Result Archive()

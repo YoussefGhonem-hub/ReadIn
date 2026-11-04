@@ -70,6 +70,15 @@ public static class CommentRecipients
     }
 }
 
+/// <summary>
+/// A <c>mention</c> in an article (SPEC F17): the entry has the article and no comment, links to the article, and each
+/// user is told once per article, ever (a comment mention's key is <c>mention:{commentId}</c>).
+/// </summary>
+public static class ArticleMentions
+{
+    public static string DedupeKey(Guid articleId) => $"{NotificationTypes.Mention}:article:{articleId}";
+}
+
 /// <summary>The reaction milestones of SPEC F17: told once per article and threshold, ever.</summary>
 public static class ReactionMilestones
 {
@@ -138,7 +147,7 @@ public static class NotificationTexts
     /// <param name="ActorName">The latest actor's display name; null when they deleted their account.</param>
     /// <param name="ActorCount">Distinct actors.</param>
     /// <param name="ArticleTitle">In the version the user reads.</param>
-    /// <param name="CommentExcerpt">The comment, on one line.</param>
+    /// <param name="CommentExcerpt">The comment, on one line; null for an entry without one (a <c>mention</c> in an article).</param>
     /// <param name="NoticeNote">A moderation notice's note (what the user did wrong).</param>
     /// <param name="NoticeLabel">A moderation notice's target as it was (the hidden article's title).</param>
     public sealed record Input(
@@ -168,6 +177,8 @@ public static class NotificationTexts
             NotificationTypes.CommentReply => (english
                 ? $"{name}{OthersEn(others)} replied to your comment"
                 : others == 0 ? $"{name} ردّ على تعليقك" : $"{name}{OthersAr(others)} ردّوا على تعليقك", comment),
+            NotificationTypes.Mention when input.CommentExcerpt is null =>
+                (english ? $"{name} mentioned you in an article" : $"{name} عمل لك منشن في مقال", article),
             NotificationTypes.Mention => (english ? $"{name} mentioned you in a comment" : $"{name} عمل لك منشن في تعليق", comment),
             NotificationTypes.ReactionsMilestone => (english
                 ? $"Your article reached {input.Data.Threshold} reactions 🎉"

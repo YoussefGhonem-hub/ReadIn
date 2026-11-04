@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Feed.DailyArticle;
+using ReadIn.Application.Features.Users;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Engagement;
 using ReadIn.Domain.Notifications;
@@ -84,6 +85,39 @@ internal sealed class CommentNotificationHandler(IAppDbContext db, NotificationW
                     },
                     DedupeKey = r.Type == NotificationTypes.Mention ? $"{NotificationTypes.Mention}:{domainEvent.CommentId}" : null,
                 }),
+            ],
+            cancellationToken);
+    }
+}
+
+/// <summary>
+/// <c>mention</c> in an article (no comment): every user the live version @mentions hears about it once per article (the
+/// dedupe key <see cref="ArticleMentions.DedupeKey"/>), so an update tells only newly mentioned users and removing and
+/// re-adding a mention tells nobody again. The article must still be readable and the mention still allowed.
+/// </summary>
+internal sealed class ArticleMentionNotificationHandler(IAppDbContext db, UserMentions mentions, NotificationWriter writer)
+    : IDomainEventHandler<ArticleMentionsDomainEvent>
+{
+    public async Task Handle(ArticleMentionsDomainEvent domainEvent, CancellationToken cancellationToken)
+    {
+        if (!await db.Articles.AsNoTracking().Visible()
+                .AnyAsync(a => a.Id == domainEvent.ArticleId && a.AuthorId == domainEvent.AuthorId, cancellationToken))
+            return;
+
+        // "Who can mention me" may have changed since the publish (or the account was suspended): checked again.
+        var allowed = await mentions.AllowedAsync(domainEvent.AuthorId, domainEvent.MentionedUserIds, cancellationToken);
+        await writer.WriteAsync(
+            [
+                .. domainEvent.MentionedUserIds
+                    .Where(id => id != domainEvent.AuthorId && allowed.ContainsKey(id))
+                    .Distinct()
+                    .Select(id => new NotificationRequest(id, NotificationTypes.Mention)
+                    {
+                        ActorId = domainEvent.AuthorId,
+                        ActorAt = domainEvent.OccurredAt,
+                        ArticleId = domainEvent.ArticleId,
+                        DedupeKey = ArticleMentions.DedupeKey(domainEvent.ArticleId),
+                    }),
             ],
             cancellationToken);
     }

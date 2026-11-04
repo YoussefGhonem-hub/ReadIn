@@ -182,6 +182,10 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
         NoticeInfo? notice = null;
         switch (entry.Type)
         {
+            case NotificationTypes.Mention when entry.CommentId is null:
+                // A mention in an article: the article is still readable.
+                if (article is not { IsVisible: true }) return Skip();
+                break;
             case NotificationTypes.ArticleComment or NotificationTypes.CommentReply or NotificationTypes.Mention:
                 if (article is not { IsVisible: true } || entry.CommentId is not { } commentId || !context.Comments.TryGetValue(commentId, out comment))
                     return Skip();

@@ -45,6 +45,10 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.QuietHoursStart).HasDefaultValue(User.DefaultQuietHoursStart).HasSentinel(User.DefaultQuietHoursStart);
         builder.Property(u => u.QuietHoursEnd).HasDefaultValue(User.DefaultQuietHoursEnd).HasSentinel(User.DefaultQuietHoursEnd);
 
+        // "Who can mention me" (F18), stored by name; existing accounts get the default too.
+        builder.Property(u => u.WhoCanMention).HasConversion<string>().HasMaxLength(10)
+            .HasDefaultValue(MentionPolicy.Everyone).HasSentinel(MentionPolicy.Everyone);
+
         builder.Ignore(u => u.OnboardingCompleted);
         builder.Ignore(u => u.HasRecoveryPin);
         builder.Ignore(u => u.HasPassword);

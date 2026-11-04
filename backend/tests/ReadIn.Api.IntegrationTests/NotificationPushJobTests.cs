@@ -141,6 +141,41 @@ public sealed class NotificationPushJobTests(ApiFactory api)
     }
 
     [Fact]
+    public async Task An_article_mention_pushes_the_title_and_opens_the_article_while_it_is_readable()
+    {
+        var (writer, _) = await UserWithDeviceAsync("en", "Mona");
+        var (mentioned, token) = await UserWithDeviceAsync("ar");
+        var (late, lateToken) = await UserWithDeviceAsync("en");
+        var field = await writer.Client.FieldIdAsync("dotnet");
+        var (_, slug) = await writer.Client.WriteAndPublishAsync(ArticleTestKit.Document(field, "Mentions get pushed",
+            blocks: [ArticleTestKit.Inline("p1", ArticleTestKit.Text("Thanks "), ArticleTestKit.Mention(mentioned.Id, "@x"))]));
+        var (goneId, _) = await writer.Client.WriteAndPublishAsync(ArticleTestKit.Document(field, "Deleted before the push",
+            blocks: [ArticleTestKit.Inline("p1", ArticleTestKit.Mention(late.Id, "@y"))]));
+        (await writer.Client.DeleteAsync($"/api/v1/articles/{goneId}", Ct)).EnsureSuccessStatusCode();
+
+        var push = new RecordingPushSender();
+        await PushAsync(push, DateTime.UtcNow.AddSeconds(1));
+
+        var sent = push.To(token).Should().ContainSingle().Subject;
+        var entry = await EntryAsync(mentioned.Id, NotificationTypes.Mention);
+        entry.CommentId.Should().BeNull();
+        sent.Title.Should().Be("⁨Mona⁩ عمل لك منشن في مقال");
+        sent.Body.Should().Be("Mentions get pushed", "the article's title");
+        sent.CollapseKey.Should().Be("mention");
+        sent.Data.Should().BeEquivalentTo(new Dictionary<string, string>
+        {
+            ["type"] = "mention",
+            ["notificationId"] = entry.Id.ToString(),
+            ["link"] = $"readin://a/{slug}",
+            ["lang"] = "en",
+        });
+        entry.PushStatus.Should().Be(NotificationPushStatus.Sent);
+
+        push.To(lateToken).Should().BeEmpty("the article is gone");
+        (await EntryAsync(late.Id, NotificationTypes.Mention)).PushStatus.Should().Be(NotificationPushStatus.Skipped);
+    }
+
+    [Fact]
     public async Task Stale_entries_and_types_turned_off_since_are_not_pushed()
     {
         var push = new RecordingPushSender();

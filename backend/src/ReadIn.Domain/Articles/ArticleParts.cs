@@ -221,3 +221,9 @@ public sealed record ReactionCounts(int Insightful, int Love, int Fire, int Mind
 }
 
 public sealed record ArticlePublishedDomainEvent(Guid ArticleId, Guid? AuthorId, Guid FieldId, string Slug) : DomainEvent;
+
+/// <summary>
+/// A publish or "Update" put live a version that @mentions <paramref name="MentionedUserIds"/> (any language version; never
+/// the author). Source of the article <c>mention</c> notifications (SPEC F17), each user told once per article.
+/// </summary>
+public sealed record ArticleMentionsDomainEvent(Guid ArticleId, Guid AuthorId, IReadOnlyList<Guid> MentionedUserIds) : DomainEvent;

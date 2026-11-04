@@ -52,6 +52,9 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     /// <summary>Privacy (SPEC F18): the reading stats card and heatmap are on the public profile. Off by default.</summary>
     public bool PublicReadingStats { get; private set; }
 
+    /// <summary>Privacy (SPEC F18): who may @mention the user in comments and articles. Everyone by default.</summary>
+    public MentionPolicy WhoCanMention { get; private set; } = MentionPolicy.Everyone;
+
     /// <summary>
     /// Quiet hours (SPEC F17): pushes other than security alerts wait until <see cref="QuietHoursEnd"/>, in
     /// <see cref="TimeZone"/>. The window may span midnight; the end is exclusive.
@@ -232,7 +235,21 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
         return Result.Success();
     }
 
-    public void SetPrivacy(bool publicReadingStats) => PublicReadingStats = publicReadingStats;
+    /// <summary>Settings → Privacy (SPEC F18): each setting left null keeps its value.</summary>
+    public void SetPrivacy(bool? publicReadingStats = null, MentionPolicy? whoCanMention = null)
+    {
+        if (whoCanMention is { } policy && !Enum.IsDefined(policy)) throw new ArgumentOutOfRangeException(nameof(whoCanMention), policy, null);
+        if (publicReadingStats is { } stats) PublicReadingStats = stats;
+        if (whoCanMention is { } mention) WhoCanMention = mention;
+    }
+
+    /// <summary>
+    /// An @mention by <paramref name="authorId"/> may link and notify this user (SPEC F18): an active account (not deleted,
+    /// suspended or the system account) whose setting allows the author (<see cref="MentionRules.Allows"/>).
+    /// </summary>
+    /// <param name="followsAuthor">This user follows the author.</param>
+    public bool CanBeMentionedBy(Guid authorId, bool followsAuthor, DateTime now) =>
+        !IsDeleted && !IsSystemAccount && !IsSuspendedAt(now) && MentionRules.Allows(WhoCanMention, Id == authorId, followsAuthor);
 
     /// <summary>Notification settings (SPEC F17). An empty window (start = end) is refused.</summary>
     public void SetQuietHours(bool enabled, TimeOnly start, TimeOnly end)
