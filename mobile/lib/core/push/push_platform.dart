@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -11,15 +12,38 @@ import 'push_links.dart';
 
 enum PushPermission { unsupported, notDetermined, granted, denied }
 
-/// A push as the app shows it.
+/// A push as the app shows it, and what its tap carries.
 class PushPayload {
-  const PushPayload({this.title, this.body, this.link});
+  const PushPayload({this.title, this.body, this.link, this.notificationId});
 
   final String? title;
   final String? body;
 
   /// `readin://a/{slug}#comment-{id}` or an App Link (SPEC §21.1); null when the push has none.
   final String? link;
+
+  /// `data.notificationId` (F17): opening the push marks this notification read.
+  final String? notificationId;
+
+  /// The payload of the local notification a foreground push becomes: its link and notification id.
+  String toLocalPayload() => jsonEncode({'link': ?link, 'notificationId': ?notificationId});
+
+  /// Reads [toLocalPayload], and the bare link earlier versions stored.
+  static PushPayload fromLocalPayload(String? payload) {
+    if (payload == null || payload.trim().isEmpty) return const PushPayload();
+    if (payload.startsWith('{')) {
+      try {
+        final data = jsonDecode(payload);
+        if (data is Map<String, dynamic>) {
+          final link = data['link'];
+          return PushPayload(link: link is String ? link : null, notificationId: pushNotificationId(data));
+        }
+      } on FormatException {
+        // not ours: read as a link below
+      }
+    }
+    return PushPayload(link: payload);
+  }
 }
 
 /// Firebase Cloud Messaging + local notifications; tests use a fake.
@@ -47,11 +71,11 @@ abstract interface class PushPlatform {
   /// Pushes received while the app is in the foreground.
   Stream<PushPayload> get onForegroundMessage;
 
-  /// Links of notifications the user tapped while the app was running.
-  Stream<String?> get onOpened;
+  /// Notifications the user tapped while the app was running (background, or shown in the foreground).
+  Stream<PushPayload> get onOpened;
 
-  /// The link of the notification that launched the app, if any (read once).
-  Future<String?> launchLink();
+  /// The notification that launched the app, if any (read once).
+  Future<PushPayload?> launchPayload();
 
   /// Shows [payload] as a system notification (Android foreground; iOS shows it itself).
   Future<void> show(PushPayload payload);
@@ -64,7 +88,7 @@ class FirebasePushPlatform implements PushPlatform {
   final AppConfig _config;
   final FirebaseStatus _firebase;
   final _local = FlutterLocalNotificationsPlugin();
-  final _localTaps = StreamController<String?>.broadcast();
+  final _localTaps = StreamController<PushPayload>.broadcast();
   int _nextId = 0;
 
   /// Also the default channel for background FCM notifications (AndroidManifest.xml).
@@ -94,7 +118,7 @@ class FirebasePushPlatform implements PushPlatform {
           requestSoundPermission: false,
         ),
       ),
-      onDidReceiveNotificationResponse: (response) => _localTaps.add(response.payload),
+      onDidReceiveNotificationResponse: (response) => _localTaps.add(PushPayload.fromLocalPayload(response.payload)),
     );
     await _local
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
@@ -136,17 +160,19 @@ class FirebasePushPlatform implements PushPlatform {
   Stream<PushPayload> get onForegroundMessage => FirebaseMessaging.onMessage.map(payloadOf);
 
   @override
-  Stream<String?> get onOpened => StreamGroupLite.merge([
-        FirebaseMessaging.onMessageOpenedApp.map((message) => payloadOf(message).link),
+  Stream<PushPayload> get onOpened => StreamGroupLite.merge([
+        FirebaseMessaging.onMessageOpenedApp.map(payloadOf),
         _localTaps.stream,
       ]);
 
   @override
-  Future<String?> launchLink() async {
+  Future<PushPayload?> launchPayload() async {
     final initial = await _messaging.getInitialMessage();
-    if (initial != null) return payloadOf(initial).link;
+    if (initial != null) return payloadOf(initial);
     final details = await _local.getNotificationAppLaunchDetails();
-    return details?.didNotificationLaunchApp == true ? details!.notificationResponse?.payload : null;
+    return details?.didNotificationLaunchApp == true
+        ? PushPayload.fromLocalPayload(details!.notificationResponse?.payload)
+        : null;
   }
 
   @override
@@ -165,7 +191,7 @@ class FirebasePushPlatform implements PushPlatform {
           priority: Priority.high,
         ),
       ),
-      payload: payload.link,
+      payload: payload.toLocalPayload(),
     );
   }
 
@@ -181,6 +207,7 @@ class FirebasePushPlatform implements PushPlatform {
         title: message.notification?.title ?? message.data['title'] as String?,
         body: message.notification?.body ?? message.data['body'] as String?,
         link: pushDataLink(message.data),
+        notificationId: pushNotificationId(message.data),
       );
 }
 

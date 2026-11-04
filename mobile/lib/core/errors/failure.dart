@@ -169,6 +169,12 @@ abstract final class FailureCodes {
   static const pathEditorial = 'path.editorial';
   static const pathItemsInvalid = 'path.items_invalid';
 
+  // Notifications (F17)
+  static const notificationNotFound = 'notification.not_found';
+  static const notificationTypeInvalid = 'notification.type_invalid';
+  static const notificationModeInvalid = 'notification.mode_invalid';
+  static const notificationQuietHoursInvalid = 'notification.quiet_hours_invalid';
+
   // Client-side
   static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';

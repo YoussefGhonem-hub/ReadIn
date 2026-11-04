@@ -6,7 +6,8 @@ enum ThemePreference { system, light, dark }
 enum ArticleFontSize { s, m, l, xl }
 
 /// Local app preferences (SPEC §11 F18). Theme, languages and reminder time
-/// are synced to the profile when signed in; the rest is device-only.
+/// are synced to the profile when signed in; the rest is device-only. Notification preferences live on the server
+/// (F17, `NotificationSettings`).
 class AppSettings extends Equatable {
   const AppSettings({
     this.theme = ThemePreference.system,
@@ -15,7 +16,6 @@ class AppSettings extends Equatable {
     this.reminderTime = '08:00',
     this.fontSize = ArticleFontSize.m,
     this.welcomeSeen = false,
-    this.dailyNotifications = true,
   });
 
   final ThemePreference theme;
@@ -32,7 +32,6 @@ class AppSettings extends Equatable {
 
   /// The onboarding welcome step was shown once (guests may skip sign-up).
   final bool welcomeSeen;
-  final bool dailyNotifications;
 
   AppSettings copyWith({
     ThemePreference? theme,
@@ -41,7 +40,6 @@ class AppSettings extends Equatable {
     String? reminderTime,
     ArticleFontSize? fontSize,
     bool? welcomeSeen,
-    bool? dailyNotifications,
   }) =>
       AppSettings(
         theme: theme ?? this.theme,
@@ -50,7 +48,6 @@ class AppSettings extends Equatable {
         reminderTime: reminderTime ?? this.reminderTime,
         fontSize: fontSize ?? this.fontSize,
         welcomeSeen: welcomeSeen ?? this.welcomeSeen,
-        dailyNotifications: dailyNotifications ?? this.dailyNotifications,
       );
 
   /// True when a field that lives on the server profile differs.
@@ -61,5 +58,5 @@ class AppSettings extends Equatable {
       reminderTime != other.reminderTime;
 
   @override
-  List<Object?> get props => [theme, uiLanguage, articleLanguage, reminderTime, fontSize, welcomeSeen, dailyNotifications];
+  List<Object?> get props => [theme, uiLanguage, articleLanguage, reminderTime, fontSize, welcomeSeen];
 }

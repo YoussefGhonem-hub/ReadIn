@@ -8,4 +8,11 @@ abstract interface class SettingsRepository {
 
   /// `PUT /me/preferences` with the device time zone.
   Future<Result<void>> pushPreferences(AppSettings settings);
+
+  /// The device-only "daily article notification" switch of earlier versions, or null once it was moved to the
+  /// server's `daily_article` mode (F17) or was never changed.
+  bool? legacyDailyNotifications();
+
+  /// Forgets [legacyDailyNotifications] once it was moved.
+  Future<void> clearLegacyDailyNotifications();
 }

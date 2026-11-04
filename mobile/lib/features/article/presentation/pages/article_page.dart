@@ -14,6 +14,7 @@ import '../../../../shared/rdoc/rdoc_view.dart';
 import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../comments/presentation/widgets/comments_sheet.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../glossary/presentation/widgets/glossary_sheet.dart';
@@ -82,6 +83,9 @@ class _ArticleViewState extends State<ArticleView> {
   bool _resumeTried = false;
   ReaderResume? _resume;
 
+  // A link to a comment opens the comments once (F17).
+  bool _commentsOpened = false;
+
   @override
   void initState() {
     super.initState();
@@ -112,6 +116,17 @@ class _ArticleViewState extends State<ArticleView> {
     }
     context.read<ArticleLiveCubit>().watch(article.card.id);
     _maybeResume(article);
+    _maybeOpenComments(article);
+  }
+
+  /// A link to a comment (`#comment-{id}`: a reply, a mention or a comment on your article, F17) opens the article's
+  /// comments over it, once. A device copy (offline) has no comments to show.
+  void _maybeOpenComments(ArticleDetails article) {
+    if (_commentsOpened || article.isOfflineCopy || !(widget.anchor?.startsWith('comment-') ?? false)) return;
+    _commentsOpened = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(showCommentsSheet(context, article: article.card));
+    });
   }
 
   /// Scrolls back to where the reader left this version, once the first article is laid out (F04 resume). Another

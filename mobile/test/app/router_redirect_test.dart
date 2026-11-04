@@ -89,6 +89,14 @@ void main() {
       expect(redirect('/moderators', guest), isNull, reason: 'only the moderation routes');
     });
 
+    test('notifications, their settings and the own reading stats need an account (F17)', () {
+      for (final route in [AppRoutes.notifications, AppRoutes.notificationSettings, AppRoutes.readingStats]) {
+        expect(redirect(route, guest), AppRoutes.home, reason: route);
+        expect(redirect(route, onboarded), isNull, reason: route);
+      }
+      expect(redirect('/settings?section=account', guest), isNull, reason: 'Settings itself is open to guests');
+    });
+
     test('a session that ended (refresh rejected) is a guest', () {
       const ended = SessionState(status: SessionStatus.guest, failure: Failure('auth.refresh_invalid', statusCode: 401));
       expect(redirect('/home', ended), isNull);

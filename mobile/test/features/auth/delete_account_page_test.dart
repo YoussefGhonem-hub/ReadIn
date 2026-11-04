@@ -13,6 +13,7 @@ import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/core/phone/countries.dart';
 import 'package:readin/core/push/devices_api.dart';
 import 'package:readin/core/push/push_platform.dart';
+import 'package:readin/core/push/push_read_receipts.dart';
 import 'package:readin/core/push/push_service.dart';
 import 'package:readin/core/storage/key_value_store.dart';
 import 'package:readin/core/theme/app_theme.dart';
@@ -51,6 +52,8 @@ class MockAuthApi extends Mock implements AuthApi {}
 class MockPushPlatform extends Mock implements PushPlatform {}
 
 class MockDevicesApi extends Mock implements DevicesApi {}
+
+class MockPushReadReceipts extends Mock implements PushReadReceipts {}
 
 class MockGoogleSignIn extends Mock implements GoogleSignInDataSource {}
 
@@ -214,7 +217,7 @@ void main() {
     await countries.remember('US');
     var imageClears = 0;
     final device = AccountDeviceData(
-      PushService(platform, MockDevicesApi()),
+      PushService(platform, MockDevicesApi(), MockPushReadReceipts()),
       google,
       countries,
       clearImages: () async => imageClears++,

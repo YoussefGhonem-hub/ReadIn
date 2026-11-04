@@ -3493,4 +3493,266 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noticeAcknowledge => 'فهمت';
+
+  @override
+  String get notificationsMarkAllRead => 'علّم الكل مقروء';
+
+  @override
+  String get notificationsToday => 'النهارده';
+
+  @override
+  String get notificationsEarlier => 'قبل كده';
+
+  @override
+  String get notificationsEmptyTitle => 'مفيش إشعارات لسه';
+
+  @override
+  String get notificationsEmptyBody =>
+      'الردود والمنشن والمتابعين الجداد ومقال النهارده هيظهروا هنا.';
+
+  @override
+  String get notificationsUnreadDot => 'جديد';
+
+  @override
+  String notifNewFollower(String name, int others) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$name و$others غيره بدأوا يتابعوك',
+      many: '$name و$others غيره بدأوا يتابعوك',
+      few: '$name و$others غيره بدأوا يتابعوك',
+      two: '$name واتنين غيره بدأوا يتابعوك',
+      one: '$name وواحد غيره بدأوا يتابعوك',
+      zero: '$name بدأ يتابعك',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifArticleComment(String name, int others) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$name و$others غيره علّقوا على مقالك',
+      many: '$name و$others غيره علّقوا على مقالك',
+      few: '$name و$others غيره علّقوا على مقالك',
+      two: '$name واتنين غيره علّقوا على مقالك',
+      one: '$name وواحد غيره علّقوا على مقالك',
+      zero: '$name علّق على مقالك',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifCommentReply(String name, int others) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$name و$others غيره ردّوا على تعليقك',
+      many: '$name و$others غيره ردّوا على تعليقك',
+      few: '$name و$others غيره ردّوا على تعليقك',
+      two: '$name واتنين غيره ردّوا على تعليقك',
+      one: '$name وواحد غيره ردّوا على تعليقك',
+      zero: '$name ردّ على تعليقك',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifMention(String name, int others) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$name و$others غيره عملوا لك منشن في تعليق',
+      many: '$name و$others غيره عملوا لك منشن في تعليق',
+      few: '$name و$others غيره عملوا لك منشن في تعليق',
+      two: '$name واتنين غيره عملوا لك منشن في تعليق',
+      one: '$name وواحد غيره عملوا لك منشن في تعليق',
+      zero: '$name عمل لك منشن في تعليق',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifFollowedWriterArticle(String name) {
+    return '$name نشر مقال جديد';
+  }
+
+  @override
+  String notifReactionsMilestone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'مقالك وصل لـ $count تفاعل 🎉',
+      many: 'مقالك وصل لـ $count تفاعل 🎉',
+      few: 'مقالك وصل لـ $count تفاعلات 🎉',
+      two: 'مقالك وصل لتفاعلين 🎉',
+      one: 'أول تفاعل على مقالك 🎉',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifReactionsMilestoneGeneric => 'القرّاء بيتفاعلوا مع مقالك 🎉';
+
+  @override
+  String get notifDailyArticle => 'مقال النهارده جاهز ☕';
+
+  @override
+  String notifStreakReminder(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'اقرا مقال النهارده عشان الـ streak بتاعك ($days يوم) ميضيعش 🔥',
+      many: 'اقرا مقال النهارده عشان الـ streak بتاعك ($days يوم) ميضيعش 🔥',
+      few: 'اقرا مقال النهارده عشان الـ streak بتاعك ($days أيام) ميضيعش 🔥',
+      two: 'اقرا مقال النهارده عشان الـ streak بتاعك (يومين) ميضيعش 🔥',
+      one: 'اقرا مقال النهارده عشان الـ streak بتاعك (يوم واحد) ميضيعش 🔥',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifStreakReminderGeneric =>
+      'اقرا مقال النهارده عشان الـ streak بتاعك ميضيعش 🔥';
+
+  @override
+  String get notifSecurityPasswordChanged => 'كلمة السر بتاعتك اتغيّرت';
+
+  @override
+  String get notifSecurityPasswordReset => 'اتعمل reset لكلمة السر بتاعتك';
+
+  @override
+  String get notifSecurityRecoveryPinChanged =>
+      'الـ PIN بتاع استرجاع الحساب اتغيّر';
+
+  @override
+  String get notifSecurityPhoneNumberChanged => 'رقم تليفونك اتغيّر';
+
+  @override
+  String get notifSecurityRecoveryLockedOut =>
+      'استرجاع الحساب اتقفل بعد محاولات PIN غلط كتير';
+
+  @override
+  String get notifSecurityExternalLoginLinked =>
+      'اتربط حساب Google أو Apple بحسابك';
+
+  @override
+  String get notifSecurityExternalLoginUnlinked =>
+      'اتشال ربط حساب Google أو Apple من حسابك';
+
+  @override
+  String get notifSecurityPhoneSignInAdded =>
+      'اتضاف رقم تليفون وكلمة سر لحسابك';
+
+  @override
+  String get notifSecurityGeneric => 'حصل تغيير أمني في حسابك';
+
+  @override
+  String get notifSecurityHint =>
+      'لو مش انت اللي عملت كده، غيّر كلمة السر دلوقتي.';
+
+  @override
+  String get notifVerificationResult => 'فيه جديد في طلب التوثيق بتاعك';
+
+  @override
+  String get notifModerationWarning => 'وصلك تحذير من فريق الإشراف';
+
+  @override
+  String get notifModerationArticleHidden => 'المشرفين خبّوا مقالك';
+
+  @override
+  String get notifGeneric => 'عندك إشعار جديد';
+
+  @override
+  String get notificationSettings => 'إعدادات الإشعارات';
+
+  @override
+  String get notificationSettingsEntryHint =>
+      'Push أو جوه التطبيق أو مقفول لكل نوع، وساعات الهدوء';
+
+  @override
+  String get notificationSettingsTypesTitle => 'إيه اللي يوصلك';
+
+  @override
+  String get notificationSettingsTypesHint =>
+      'الـ push بيظهر كمان في الإشعارات جوه التطبيق.';
+
+  @override
+  String get notificationModeAll => 'Push + جوه التطبيق';
+
+  @override
+  String get notificationModeInApp => 'جوه التطبيق بس';
+
+  @override
+  String get notificationModeOff => 'مقفول';
+
+  @override
+  String get notificationModeAllShort => 'Push';
+
+  @override
+  String get notificationModeInAppShort => 'جوه التطبيق';
+
+  @override
+  String get notificationTypeNewFollower => 'متابعين جداد';
+
+  @override
+  String get notificationTypeArticleComment => 'تعليقات على مقالاتك';
+
+  @override
+  String get notificationTypeCommentReply => 'ردود على تعليقاتك';
+
+  @override
+  String get notificationTypeMention => 'المنشن في التعليقات';
+
+  @override
+  String get notificationTypeReactionsMilestone =>
+      'أرقام التفاعل (10 و50 و100)';
+
+  @override
+  String get notificationTypeFollowedWriterArticle =>
+      'مقالات جديدة من كتّاب بتتابعهم';
+
+  @override
+  String get notificationTypeDailyArticle => 'مقال النهارده';
+
+  @override
+  String get notificationTypeStreakReminder => 'تذكير الـ streak (8 بالليل)';
+
+  @override
+  String get notificationSecurityAlerts => 'تنبيهات الأمان';
+
+  @override
+  String get notificationSecurityAlertsHint =>
+      'شغالة دايماً، حتى في ساعات الهدوء.';
+
+  @override
+  String get quietHoursTitle => 'ساعات الهدوء';
+
+  @override
+  String get quietHoursHint =>
+      'الـ push بيستنى لحد ما ساعات الهدوء تخلص. تنبيهات الأمان بتوصل على طول.';
+
+  @override
+  String get quietHoursSwitch => 'أجّل الـ push في الساعات دي';
+
+  @override
+  String get quietHoursFrom => 'من';
+
+  @override
+  String get quietHoursTo => 'لحد';
+
+  @override
+  String get errNotificationNotFound => 'الإشعار ده مبقاش موجود.';
+
+  @override
+  String get errNotificationTypeInvalid => 'نوع الإشعار ده مش موجود.';
+
+  @override
+  String get errNotificationModeInvalid =>
+      'اختار push أو جوه التطبيق أو مقفول.';
+
+  @override
+  String get errNotificationQuietHoursInvalid =>
+      'ساعات الهدوء محتاجة وقتين مختلفين.';
 }

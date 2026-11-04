@@ -5,19 +5,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/push/devices_api.dart';
 import 'package:readin/core/push/push_platform.dart';
+import 'package:readin/core/push/push_read_receipts.dart';
 import 'package:readin/core/push/push_service.dart';
 
 class FakePushPlatform implements PushPlatform {
   bool supported = true;
   PushPermission current = PushPermission.notDetermined;
   String? token = 'fcm-token-1';
-  String? launch;
+  PushPayload? launch;
   int requests = 0;
   int deletes = 0;
   final shown = <PushPayload>[];
   final refreshes = StreamController<String>.broadcast();
   final foreground = StreamController<PushPayload>.broadcast();
-  final opened = StreamController<String?>.broadcast();
+  final opened = StreamController<PushPayload>.broadcast();
 
   @override
   bool get isSupported => supported;
@@ -50,16 +51,28 @@ class FakePushPlatform implements PushPlatform {
   Stream<PushPayload> get onForegroundMessage => foreground.stream;
 
   @override
-  Stream<String?> get onOpened => opened.stream;
+  Stream<PushPayload> get onOpened => opened.stream;
 
   @override
-  Future<String?> launchLink() async => launch;
+  Future<PushPayload?> launchPayload() async => launch;
 
   @override
   Future<void> show(PushPayload payload) async => shown.add(payload);
 }
 
 class MockDevicesApi extends Mock implements DevicesApi {}
+
+/// Records the notifications marked read; [failing] makes every call throw.
+class FakeReadReceipts implements PushReadReceipts {
+  final read = <String>[];
+  bool failing = false;
+
+  @override
+  Future<void> markRead(String notificationId) async {
+    if (failing) throw StateError('offline');
+    read.add(notificationId);
+  }
+}
 
 class FakeRegisterDeviceRequest extends Fake implements RegisterDeviceRequest {}
 
@@ -69,6 +82,7 @@ void main() {
   late FakePushPlatform platform;
   late MockDevicesApi devices;
   late PushService push;
+  late FakeReadReceipts receipts;
   final registered = <String>[];
 
   setUpAll(() => registerFallbackValue(FakeRegisterDeviceRequest()));
@@ -81,7 +95,8 @@ void main() {
       final body = invocation.positionalArguments.single as RegisterDeviceRequest;
       registered.add('${body.platform}:${body.token}');
     });
-    push = PushService(platform, devices);
+    receipts = FakeReadReceipts();
+    push = PushService(platform, devices, receipts);
   });
 
   test('stays unsupported and never asks without Cloud Messaging (emulator, no Firebase)', () async {
@@ -163,15 +178,15 @@ void main() {
   });
 
   test('turns taps into app routes, including the tap that launched the app', () async {
-    platform.launch = 'readin://a/launch-post';
+    platform.launch = const PushPayload(link: 'readin://a/launch-post');
     final paths = <String>[];
     push.openPaths.listen(paths.add);
     await push.start();
 
     platform.opened
-      ..add('https://readin.app/ar/a/my-post')
-      ..add('https://evil.example/phish')
-      ..add(null);
+      ..add(const PushPayload(link: 'https://readin.app/ar/a/my-post'))
+      ..add(const PushPayload(link: 'https://evil.example/phish'))
+      ..add(const PushPayload());
     await settle();
 
     expect(paths, ['/a/launch-post', '/a/my-post', '/notifications']);
@@ -195,6 +210,7 @@ void main() {
       expect(payload.title, 'مقال النهارده جاهز ☕');
       expect(payload.body, 'RAG ولا Fine-tuning؟');
       expect(payload.link, 'readin://a/rag-vs-fine-tuning');
+      expect(payload.notificationId, isNull);
       final withoutLink = FirebasePushPlatform.payloadOf(
         const RemoteMessage(data: {'type': 'daily_article', 'slug': 'rag-vs-fine-tuning'}),
       );
@@ -202,7 +218,7 @@ void main() {
     });
 
     test('a tap that launches the app (terminated) opens the reader', () async {
-      platform.launch = payload.link;
+      platform.launch = payload;
       final paths = <String>[];
       push.openPaths.listen(paths.add);
       await push.start();
@@ -214,7 +230,7 @@ void main() {
       final paths = <String>[];
       push.openPaths.listen(paths.add);
       await push.start();
-      platform.opened.add(payload.link);
+      platform.opened.add(payload);
       await settle();
       expect(paths, ['/a/rag-vs-fine-tuning']);
     });
@@ -229,9 +245,96 @@ void main() {
       expect(platform.shown.single.title, 'مقال النهارده جاهز ☕');
       expect(paths, isEmpty, reason: 'showing it opens nothing by itself');
 
-      platform.opened.add(platform.shown.single.link); // the local notification's tap
+      platform.opened.add(PushPayload.fromLocalPayload(platform.shown.single.toLocalPayload())); // the local tap
       await settle();
       expect(paths, ['/a/rag-vs-fine-tuning']);
+    });
+  });
+
+  group('a tapped push marks its notification read (F17)', () {
+    // As FCM delivers it (docs/handoff/f17-notifications.md, "Push data").
+    const reply = RemoteMessage(
+      notification: RemoteNotification(title: 'ReadIn', body: 'منى ردّت على تعليقك'),
+      data: {'type': 'comment_reply', 'notificationId': 'n-42', 'link': 'readin://a/di-dotnet#comment-c-7', 'lang': 'ar'},
+    );
+    final payload = FirebasePushPlatform.payloadOf(reply);
+
+    test('the payload carries the notification id, and the link keeps the comment', () {
+      expect(payload.notificationId, 'n-42');
+      expect(payload.link, 'readin://a/di-dotnet#comment-c-7');
+      expect(FirebasePushPlatform.payloadOf(const RemoteMessage(data: {'notificationId': '  '})).notificationId, isNull);
+    });
+
+    test('the local notification of a foreground push keeps the link and the id; a bare link still reads', () {
+      final local = PushPayload.fromLocalPayload(payload.toLocalPayload());
+      expect((local.link, local.notificationId), ('readin://a/di-dotnet#comment-c-7', 'n-42'));
+      final legacy = PushPayload.fromLocalPayload('readin://a/older-post');
+      expect((legacy.link, legacy.notificationId), ('readin://a/older-post', null));
+      expect(PushPayload.fromLocalPayload(null).link, isNull);
+      expect(PushPayload.fromLocalPayload('{not json').link, '{not json');
+    });
+
+    test('terminated: the launch tap waits for the restored session, then is marked read and opens the comment', () async {
+      platform.launch = payload;
+      final paths = <String>[];
+      push.openPaths.listen(paths.add);
+      await push.start();
+      await settle();
+      expect(paths, ['/a/di-dotnet#comment-c-7']);
+      expect(receipts.read, isEmpty, reason: 'no access token before the session is restored');
+
+      await push.followUser('user-1');
+      await settle();
+      expect(receipts.read, ['n-42']);
+    });
+
+    test('background: marked read right away when signed in', () async {
+      await push.start();
+      await push.followUser('user-1');
+      platform.opened.add(payload);
+      await settle();
+      expect(receipts.read, ['n-42']);
+    });
+
+    test('foreground: the shown notification\'s tap is marked read', () async {
+      await push.start();
+      await push.followUser('user-1');
+      platform.foreground.add(payload);
+      await settle();
+      expect(receipts.read, isEmpty, reason: 'showing it is not opening it');
+
+      platform.opened.add(PushPayload.fromLocalPayload(platform.shown.single.toLocalPayload()));
+      await settle();
+      expect(receipts.read, ['n-42']);
+    });
+
+    test('a tap without a link is still marked read and opens nothing', () async {
+      final paths = <String>[];
+      push.openPaths.listen(paths.add);
+      await push.start();
+      await push.followUser('user-1');
+      platform.opened.add(const PushPayload(notificationId: 'n-7'));
+      await settle();
+      expect(receipts.read, ['n-7']);
+      expect(paths, isEmpty);
+    });
+
+    test('signed out: the tap opens the app but nothing is marked, not even after a later sign in', () async {
+      platform.launch = payload;
+      await push.start();
+      await push.followUser(null);
+      await push.followUser('user-2');
+      await settle();
+      expect(receipts.read, isEmpty);
+    });
+
+    test('a failed receipt is swallowed', () async {
+      receipts.failing = true;
+      await push.start();
+      await push.followUser('user-1');
+      platform.opened.add(payload);
+      await settle();
+      expect(receipts.read, isEmpty);
     });
   });
 }

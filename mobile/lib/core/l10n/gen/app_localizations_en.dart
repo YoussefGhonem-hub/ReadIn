@@ -3461,4 +3461,252 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noticeAcknowledge => 'Got it';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all read';
+
+  @override
+  String get notificationsToday => 'Today';
+
+  @override
+  String get notificationsEarlier => 'Earlier';
+
+  @override
+  String get notificationsEmptyTitle => 'No notifications yet';
+
+  @override
+  String get notificationsEmptyBody =>
+      'Replies, mentions, new followers and today\'s article show up here.';
+
+  @override
+  String get notificationsUnreadDot => 'Unread';
+
+  @override
+  String notifNewFollower(String name, int others) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$name and $others others started following you',
+      one: '$name and 1 other started following you',
+      zero: '$name started following you',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifArticleComment(String name, int others) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$name and $others others commented on your article',
+      one: '$name and 1 other commented on your article',
+      zero: '$name commented on your article',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifCommentReply(String name, int others) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$name and $others others replied to your comment',
+      one: '$name and 1 other replied to your comment',
+      zero: '$name replied to your comment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifMention(String name, int others) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$name and $others others mentioned you in a comment',
+      one: '$name and 1 other mentioned you in a comment',
+      zero: '$name mentioned you in a comment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifFollowedWriterArticle(String name) {
+    return '$name published a new article';
+  }
+
+  @override
+  String notifReactionsMilestone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Your article reached $count reactions 🎉',
+      one: 'Your article got its first reaction 🎉',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifReactionsMilestoneGeneric =>
+      'Readers are reacting to your article 🎉';
+
+  @override
+  String get notifDailyArticle => 'Today\'s article is ready ☕';
+
+  @override
+  String notifStreakReminder(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Read an article today to keep your $days-day streak 🔥',
+      one: 'Read an article today to keep your 1-day streak 🔥',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifStreakReminderGeneric =>
+      'Read an article today to keep your streak 🔥';
+
+  @override
+  String get notifSecurityPasswordChanged => 'Your password was changed';
+
+  @override
+  String get notifSecurityPasswordReset => 'Your password was reset';
+
+  @override
+  String get notifSecurityRecoveryPinChanged => 'Your recovery PIN was changed';
+
+  @override
+  String get notifSecurityPhoneNumberChanged => 'Your phone number was changed';
+
+  @override
+  String get notifSecurityRecoveryLockedOut =>
+      'Account recovery was locked after too many wrong PINs';
+
+  @override
+  String get notifSecurityExternalLoginLinked =>
+      'A Google or Apple account was linked to your account';
+
+  @override
+  String get notifSecurityExternalLoginUnlinked =>
+      'A Google or Apple account was unlinked from your account';
+
+  @override
+  String get notifSecurityPhoneSignInAdded =>
+      'A phone number and password were added to your account';
+
+  @override
+  String get notifSecurityGeneric =>
+      'There was a security change on your account';
+
+  @override
+  String get notifSecurityHint =>
+      'If this wasn\'t you, change your password now.';
+
+  @override
+  String get notifVerificationResult =>
+      'There\'s an update on your verification request';
+
+  @override
+  String get notifModerationWarning =>
+      'You received a warning from the moderation team';
+
+  @override
+  String get notifModerationArticleHidden => 'The moderators hid your article';
+
+  @override
+  String get notifGeneric => 'You have a new notification';
+
+  @override
+  String get notificationSettings => 'Notification settings';
+
+  @override
+  String get notificationSettingsEntryHint =>
+      'Push, in app or off for each type, and quiet hours';
+
+  @override
+  String get notificationSettingsTypesTitle => 'What reaches you';
+
+  @override
+  String get notificationSettingsTypesHint =>
+      'Push notifications show up in your notification center too.';
+
+  @override
+  String get notificationModeAll => 'Push + in app';
+
+  @override
+  String get notificationModeInApp => 'In app only';
+
+  @override
+  String get notificationModeOff => 'Off';
+
+  @override
+  String get notificationModeAllShort => 'Push';
+
+  @override
+  String get notificationModeInAppShort => 'In app';
+
+  @override
+  String get notificationTypeNewFollower => 'New followers';
+
+  @override
+  String get notificationTypeArticleComment => 'Comments on your articles';
+
+  @override
+  String get notificationTypeCommentReply => 'Replies to your comments';
+
+  @override
+  String get notificationTypeMention => 'Mentions in comments';
+
+  @override
+  String get notificationTypeReactionsMilestone =>
+      'Reaction milestones (10, 50, 100)';
+
+  @override
+  String get notificationTypeFollowedWriterArticle =>
+      'New articles from writers you follow';
+
+  @override
+  String get notificationTypeDailyArticle => 'Today\'s article';
+
+  @override
+  String get notificationTypeStreakReminder => 'Streak reminder (8 PM)';
+
+  @override
+  String get notificationSecurityAlerts => 'Security alerts';
+
+  @override
+  String get notificationSecurityAlertsHint =>
+      'Always on, even in quiet hours.';
+
+  @override
+  String get quietHoursTitle => 'Quiet hours';
+
+  @override
+  String get quietHoursHint =>
+      'Pushes wait until quiet hours end. Security alerts arrive right away.';
+
+  @override
+  String get quietHoursSwitch => 'Hold pushes during these hours';
+
+  @override
+  String get quietHoursFrom => 'From';
+
+  @override
+  String get quietHoursTo => 'To';
+
+  @override
+  String get errNotificationNotFound =>
+      'This notification is no longer available.';
+
+  @override
+  String get errNotificationTypeInvalid =>
+      'That notification type doesn\'t exist.';
+
+  @override
+  String get errNotificationModeInvalid => 'Pick push, in app or off.';
+
+  @override
+  String get errNotificationQuietHoursInvalid =>
+      'Quiet hours need two different times.';
 }

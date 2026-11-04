@@ -20,6 +20,9 @@ import 'package:readin/features/article/presentation/cubit/related_articles_cubi
 import 'package:readin/features/article/presentation/pages/article_page.dart';
 import 'package:readin/features/article/presentation/widgets/reader_resume.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
+import 'package:readin/features/comments/presentation/cubit/comments_cubit.dart';
+import 'package:readin/features/comments/presentation/cubit/mention_suggestions_cubit.dart';
+import 'package:readin/features/comments/presentation/widgets/comments_sheet.dart';
 import 'package:readin/features/follow/domain/usecases/follow_usecases.dart';
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart';
@@ -34,6 +37,7 @@ import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/shared/rdoc/rdoc_view.dart';
 
+import '../../helpers/comment_fixtures.dart';
 import '../../helpers/fixtures.dart';
 import '../../helpers/social_fakes.dart';
 import '../../helpers/test_app.dart';
@@ -296,7 +300,8 @@ void main() {
 
     const leftOff = MyProgress(language: 'en', percent: 45, lastPosition: '0.4523');
 
-    Future<void> pumpReader(WidgetTester tester, ArticleDetails details, {String? anchor}) async {
+    /// [aboveApp] puts the stores above the app, as ReadInApp does, so routes over the reader (sheets) see them too.
+    Future<void> pumpReader(WidgetTester tester, ArticleDetails details, {String? anchor, bool aboveApp = false}) async {
       usePhoneSurface(tester);
       final articleCubit = MockArticleCubit();
       final settings = MockSettingsCubit();
@@ -306,22 +311,20 @@ void main() {
       whenListen(settings, const Stream<AppSettings>.empty(), initialState: const AppSettings(articleLanguage: 'en'));
       whenListen(session, const Stream<SessionState>.empty(), initialState: const SessionState(status: SessionStatus.authenticated, me: sampleMe));
       whenListen(streak, const Stream<Streak?>.empty(), initialState: null);
-      await tester.pumpWidget(testApp(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<SessionCubit>.value(value: session),
-            BlocProvider<StreakCubit>.value(value: streak),
-            BlocProvider<EngagementCubit>.value(value: engagement),
-            BlocProvider<FollowsCubit>.value(value: follows),
-            BlocProvider<CollectionsCubit>.value(value: collections),
-            BlocProvider<ArticleCubit>.value(value: articleCubit),
-            BlocProvider<ArticleLiveCubit>(create: (_) => _QuietLiveCubit()),
-            BlocProvider<SettingsCubit>.value(value: settings),
-          ],
-          child: ReadingTracking(child: ArticleView(anchor: anchor)),
-        ),
-        variant: _en,
-      ));
+      final providers = [
+        BlocProvider<SessionCubit>.value(value: session),
+        BlocProvider<StreakCubit>.value(value: streak),
+        BlocProvider<EngagementCubit>.value(value: engagement),
+        BlocProvider<FollowsCubit>.value(value: follows),
+        BlocProvider<CollectionsCubit>.value(value: collections),
+        BlocProvider<ArticleCubit>.value(value: articleCubit),
+        BlocProvider<ArticleLiveCubit>(create: (_) => _QuietLiveCubit()),
+        BlocProvider<SettingsCubit>.value(value: settings),
+      ];
+      final reader = ReadingTracking(child: ArticleView(anchor: anchor));
+      await tester.pumpWidget(aboveApp
+          ? MultiBlocProvider(providers: providers, child: testApp(reader, variant: _en))
+          : testApp(MultiBlocProvider(providers: providers, child: reader), variant: _en));
       await tester.pumpAndSettle();
     }
 
@@ -382,6 +385,31 @@ void main() {
         expect(find.text('Picked up where you left off'), findsNothing);
       });
     }
+
+    testWidgets('a link to a comment (a reply or mention notification, F17) opens the comments over it, once', (tester) async {
+      final comments = MockCommentsCubit();
+      whenListen(comments, const Stream<CommentsState>.empty(), initialState: const CommentsState(status: CommentsStatus.ready));
+      when(() => comments.load(any())).thenAnswer((_) async {});
+      final mentions = MockMentionSuggestionsCubit();
+      whenListen(mentions, const Stream<List<Author>>.empty(), initialState: const <Author>[]);
+      getIt
+        ..registerFactory<CommentsCubit>(() => comments)
+        ..registerFactory<MentionSuggestionsCubit>(() => mentions);
+      addTearDown(() => getIt
+        ..unregister<CommentsCubit>()
+        ..unregister<MentionSuggestionsCubit>());
+
+      final details = article(progress: leftOff);
+      await pumpReader(tester, details, anchor: 'comment-c-7', aboveApp: true);
+      expect(find.byType(CommentsView), findsOneWidget);
+      verify(() => comments.load(details.card.id)).called(1);
+      expect(find.text('Picked up where you left off'), findsNothing);
+
+      Navigator.of(tester.element(find.byType(CommentsView))).pop();
+      await tester.pumpAndSettle();
+      expect(find.byType(CommentsView), findsNothing);
+      expect(reader(tester).pixels, 0, reason: 'a comment link never resumes');
+    });
   });
 }
 

@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/errors/result.dart';
 import 'package:readin/core/l10n/current_locale.dart';
 import 'package:readin/features/auth/domain/entities/me.dart';
+import 'package:readin/features/notifications/domain/usecases/notification_usecases.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/domain/repositories/settings_repository.dart';
 import 'package:readin/features/settings/domain/usecases/settings_usecases.dart';
@@ -12,9 +13,14 @@ import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart'
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
 
+class MockMigrateDailyArticleSwitch extends Mock implements MigrateDailyArticleSwitch {}
+
+Future<void> settle() => Future<void>.delayed(Duration.zero);
+
 void main() {
   late MockSettingsRepository repository;
   late CurrentLocale locale;
+  late MockMigrateDailyArticleSwitch migrateDailySwitch;
 
   const me = Me(
     id: 'u1',
@@ -33,13 +39,15 @@ void main() {
   setUp(() {
     repository = MockSettingsRepository();
     locale = CurrentLocale();
+    migrateDailySwitch = MockMigrateDailyArticleSwitch();
+    when(() => migrateDailySwitch()).thenAnswer((_) async => true);
     when(() => repository.load()).thenReturn(const AppSettings());
     when(() => repository.save(any())).thenAnswer((_) async {});
     when(() => repository.pushPreferences(any())).thenAnswer((_) async => const Ok(null));
   });
 
   SettingsCubit build() =>
-      SettingsCubit(LoadSettings(repository), SaveSettings(repository), SyncPreferences(repository), locale);
+      SettingsCubit(LoadSettings(repository), SaveSettings(repository), SyncPreferences(repository), locale, migrateDailySwitch);
 
   test('starts from stored settings and publishes the UI locale', () {
     when(() => repository.load()).thenReturn(const AppSettings(uiLanguage: 'en'));
@@ -115,5 +123,35 @@ void main() {
     expect(SettingsCubit.formatTime(const TimeOfDay(hour: 7, minute: 5)), '07:05');
     expect(SettingsCubit.parseTime('21:45'), const TimeOfDay(hour: 21, minute: 45));
     expect(SettingsCubit.parseTime('garbage'), const TimeOfDay(hour: 8, minute: 0));
+  });
+
+  group('the old device-only daily switch (F17)', () {
+    test('moves to the account when a user signs in, once', () async {
+      final cubit = build();
+      await cubit.onSessionChanged(me);
+      await settle();
+      await cubit.onSessionChanged(null);
+      await cubit.onSessionChanged(me);
+      await settle();
+      verify(() => migrateDailySwitch()).called(1);
+    });
+
+    test('guests keep it until they sign in', () async {
+      final cubit = build();
+      await cubit.onSessionChanged(null);
+      verifyNever(() => migrateDailySwitch());
+    });
+
+    test('a move that failed (offline) is tried again on the next session change', () async {
+      when(() => migrateDailySwitch()).thenAnswer((_) async => false);
+      final cubit = build();
+      await cubit.onSessionChanged(me);
+      await settle();
+      when(() => migrateDailySwitch()).thenAnswer((_) async => true);
+      await cubit.onSessionChanged(me);
+      await settle();
+      await cubit.onSessionChanged(me);
+      verify(() => migrateDailySwitch()).called(2);
+    });
   });
 }

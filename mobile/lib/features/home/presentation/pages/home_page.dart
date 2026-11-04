@@ -15,6 +15,7 @@ import '../../../article/presentation/cubit/engagement_cubit.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../auth/presentation/widgets/require_account.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/cubit/suggested_writers_cubit.dart';
 import '../../../follow/presentation/widgets/suggested_writers.dart';
@@ -45,7 +46,8 @@ class HomePage extends StatelessWidget {
           BlocProvider(create: (_) => getIt<FollowingFeedCubit>()),
           BlocProvider(create: (_) => getIt<SuggestedWritersCubit>()),
           BlocProvider(create: (_) => getIt<LiveFeedCubit>()..start()),
-          BlocProvider(create: (_) => getIt<UnreadBadgeCubit>()),
+          // App-wide: the notification center zeroes it (F17).
+          BlocProvider.value(value: getIt<UnreadBadgeCubit>()),
         ],
         child: const HomeView(),
       );
@@ -541,9 +543,29 @@ class _LiveArticleTileState extends State<_LiveArticleTile> {
   }
 }
 
-/// The bell with the live unread count (F27).
-class _NotificationsButton extends StatelessWidget {
+/// The bell with the unread count (F17, F27): live, or re-read when the app comes back without the Realtime Database.
+/// Guests get the sign-in prompt.
+class _NotificationsButton extends StatefulWidget {
   const _NotificationsButton();
+
+  @override
+  State<_NotificationsButton> createState() => _NotificationsButtonState();
+}
+
+class _NotificationsButtonState extends State<_NotificationsButton> {
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: () => unawaited(context.read<UnreadBadgeCubit>().refresh()));
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -552,7 +574,9 @@ class _NotificationsButton extends StatelessWidget {
     const bell = Icon(Icons.notifications_none_rounded);
     return IconButton.outlined(
       tooltip: unread > 0 ? l10n.notificationsUnread(unread) : l10n.notifications,
-      onPressed: () => context.push('/notifications'),
+      onPressed: () {
+        if (requireAccount(context)) unawaited(context.push<void>('/notifications'));
+      },
       // No badge at 0, so the bell looks exactly as before.
       icon: unread > 0 ? Badge(label: Text(unread > 9 ? '9+' : '$unread'), child: bell) : bell,
       style: IconButton.styleFrom(side: BorderSide(color: context.colors.border)),

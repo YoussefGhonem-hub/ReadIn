@@ -34,4 +34,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
           reminderTime: settings.reminderTime,
         )));
   }
+
+  @override
+  bool? legacyDailyNotifications() => _local.legacyDailyNotifications();
+
+  @override
+  Future<void> clearLegacyDailyNotifications() => _local.clearLegacyDailyNotifications();
 }

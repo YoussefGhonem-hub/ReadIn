@@ -1,12 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
-import '../../../../core/push/push_platform.dart';
-import '../../../../core/push/push_service.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../domain/entities/app_settings.dart';
@@ -119,38 +114,6 @@ class ReminderTimeTile extends StatelessWidget {
         final picked = await showTimePicker(context: context, initialTime: SettingsCubit.parseTime(value));
         if (picked != null) await cubit.setReminderTime(picked);
       },
-    );
-  }
-}
-
-/// Turning the switch on is where push permission is asked, in context (SPEC §21.1).
-class DailyNotificationTile extends StatelessWidget {
-  const DailyNotificationTile({super.key});
-
-  static final _noPush = ValueNotifier(PushPermission.unsupported);
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final enabled = context.select((SettingsCubit c) => c.state.dailyNotifications);
-    final push = getIt.isRegistered<PushService>() ? getIt<PushService>() : null;
-    return ValueListenableBuilder(
-      valueListenable: push?.permission ?? _noPush,
-      builder: (context, permission, _) => SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        secondary: const Icon(Icons.notifications_active_outlined),
-        title: Text(l10n.notificationsLabel),
-        subtitle: switch (permission) {
-          PushPermission.denied => Text(l10n.notificationsBlocked),
-          PushPermission.granted => null,
-          _ => Text(l10n.notificationsHint),
-        },
-        value: enabled,
-        onChanged: (on) {
-          unawaited(context.read<SettingsCubit>().setDailyNotifications(on));
-          if (on && push != null) unawaited(push.enable());
-        },
-      ),
     );
   }
 }

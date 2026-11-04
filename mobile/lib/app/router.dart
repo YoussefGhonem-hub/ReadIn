@@ -20,6 +20,7 @@ import '../features/moderation/domain/entities/moderation.dart';
 import '../features/moderation/presentation/moderation_routes.dart';
 import '../features/moderation/presentation/pages/moderation_case_page.dart';
 import '../features/moderation/presentation/pages/moderation_page.dart';
+import '../features/notifications/presentation/pages/notification_settings_page.dart';
 import '../features/notifications/presentation/pages/notifications_page.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../features/paths/presentation/pages/path_page.dart';
@@ -31,6 +32,7 @@ import '../features/profile/presentation/pages/edit_profile_page.dart';
 import '../features/profile/presentation/pages/follow_lists_page.dart';
 import '../features/profile/presentation/pages/profile_page.dart';
 import '../features/profile/presentation/profile_routes.dart';
+import '../features/reading/presentation/pages/reading_stats_page.dart';
 import '../features/saved/presentation/pages/saved_page.dart';
 import '../features/settings/domain/entities/app_settings.dart';
 import '../features/settings/presentation/cubit/settings_cubit.dart';
@@ -59,6 +61,8 @@ abstract final class AppRoutes {
   static const profile = '/profile';
   static const settings = '/settings';
   static const notifications = '/notifications';
+  static const notificationSettings = NotificationSettingsPage.path;
+  static const readingStats = ReadingStatsPage.path;
   static const moderation = ModerationRoutes.home;
   static const editProfile = ProfileRoutes.edit;
   static const paths = PathRoutes.list;
@@ -104,13 +108,16 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
   final target = atSplash ? (uri.queryParameters['from'] ?? AppRoutes.home) : uri.toString();
   final targetPath = Uri.parse(target).path;
   final isAuthRoute = targetPath.startsWith('/auth/') || targetPath == AppRoutes.welcome;
-  // The editor (F05) and moderation (F22) need an account like the account screens; the Write tab itself shows the
-  // sign-in prompt.
+  // The editor (F05), moderation (F22), notifications and their settings (F17) and the own reading stats need an account
+  // like the account screens; the Write tab itself shows the sign-in prompt.
   final isAccountRoute = targetPath.startsWith('/account/') ||
       targetPath == AppRoutes.editProfile ||
       targetPath.startsWith('${AppRoutes.write}/') ||
       targetPath == AppRoutes.moderation ||
-      targetPath.startsWith('${AppRoutes.moderation}/');
+      targetPath.startsWith('${AppRoutes.moderation}/') ||
+      targetPath == AppRoutes.notifications ||
+      targetPath == AppRoutes.notificationSettings ||
+      targetPath == AppRoutes.readingStats;
   // Shared links open for first-time guests too, without Welcome first.
   final isArticle = targetPath.startsWith('/a/') || targetPath.startsWith('/u/');
   String? stay() => atSplash ? target : null;
@@ -162,8 +169,10 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.changePhone, builder: (_, _) => const ChangePhonePage()),
       GoRoute(path: AppRoutes.addPhoneSignIn, builder: (_, _) => const AddPhoneSignInPage()),
       GoRoute(path: AppRoutes.deleteAccount, builder: (_, _) => const DeleteAccountPage()),
-      GoRoute(path: AppRoutes.settings, builder: (_, _) => const SettingsPage()),
+      GoRoute(path: AppRoutes.settings, builder: (_, state) => SettingsPage(section: SettingsSection.fromQuery(state.uri))),
+      GoRoute(path: AppRoutes.notificationSettings, builder: (_, _) => const NotificationSettingsPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
+      GoRoute(path: AppRoutes.readingStats, builder: (_, _) => const ReadingStatsPage()),
       GoRoute(
         path: '/a/:slug',
         builder: (_, state) => ArticlePage(

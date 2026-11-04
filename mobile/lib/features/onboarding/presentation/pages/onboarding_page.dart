@@ -11,7 +11,8 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
-import '../../../settings/presentation/cubit/settings_cubit.dart';
+import '../../../notifications/presentation/cubit/notification_settings_cubit.dart';
+import '../../../notifications/presentation/widgets/daily_article_switch.dart';
 import '../../../settings/presentation/widgets/preference_tiles.dart';
 import '../cubit/onboarding_cubit.dart';
 
@@ -23,9 +24,15 @@ class OnboardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final me = context.read<SessionCubit>().state.me;
-    return BlocProvider(
-      create: (_) => getIt<OnboardingCubit>()
-        ..start(signedIn: me != null, fieldIds: me?.interestFieldIds ?? const [], topicIds: me?.interestTopicIds ?? const []),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => getIt<OnboardingCubit>()
+            ..start(signedIn: me != null, fieldIds: me?.interestFieldIds ?? const [], topicIds: me?.interestTopicIds ?? const []),
+        ),
+        // The daily-article switch of the last step is the account's `daily_article` mode (F17): loaded from the start.
+        BlocProvider(create: (_) => getIt<NotificationSettingsCubit>()..load(), lazy: me == null),
+      ],
       child: const OnboardingView(),
     );
   }
@@ -175,7 +182,7 @@ class _PreferencesStep extends StatelessWidget {
               const ArticleLanguageSelector(),
               const SizedBox(height: ReadInSpace.s4),
               const ReminderTimeTile(),
-              const DailyNotificationTile(),
+              const DailyArticleSwitch(),
             ],
           ),
         ),
@@ -198,7 +205,7 @@ class _PreferencesStep extends StatelessWidget {
 /// push permission is asked here, in context (SPEC §21.1), before finishing.
 Future<void> _finish(BuildContext context) async {
   final cubit = context.read<OnboardingCubit>();
-  if (context.read<SettingsCubit>().state.dailyNotifications && getIt.isRegistered<PushService>()) {
+  if (DailyArticleSwitch.isOn(context.read<NotificationSettingsCubit>().state) && getIt.isRegistered<PushService>()) {
     await getIt<PushService>().enable();
   }
   await cubit.finish();

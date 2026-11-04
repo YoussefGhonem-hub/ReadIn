@@ -186,6 +186,27 @@ void main() {
       expect(connection.signIns, isEmpty);
       expect(connection.listening('live/users/user-1/unreadNotifications'), isFalse);
       expect(service.unreadNotifications.value, 0);
+      expect(service.unreadLive.value, isFalse, reason: 'the badge falls back to REST (F17)');
+    });
+
+    test('is live from the first value until the user changes or the listener ends (F17)', () async {
+      await service.followUser('user-1');
+      expect(service.unreadLive.value, isFalse, reason: 'nothing arrived yet');
+
+      connection.emit('live/users/user-1/unreadNotifications', null);
+      await settle();
+      expect((service.unreadLive.value, service.unreadNotifications.value), (true, 0), reason: 'no node yet = 0 unread');
+
+      await connection.values['live/users/user-1/unreadNotifications']!.close(); // e.g. permission denied
+      await settle();
+      expect(service.unreadLive.value, isFalse);
+
+      await service.followUser('user-2');
+      connection.emit('live/users/user-2/unreadNotifications', 3);
+      await settle();
+      expect(service.unreadLive.value, isTrue);
+      await service.followUser(null);
+      expect(service.unreadLive.value, isFalse);
     });
   });
 

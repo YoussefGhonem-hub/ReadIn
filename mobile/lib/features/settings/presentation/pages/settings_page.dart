@@ -11,13 +11,24 @@ import '../../../auth/presentation/cubit/linked_accounts_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../moderation/presentation/cubit/moderation_summary_cubit.dart';
 import '../../../moderation/presentation/widgets/moderation_entry_tile.dart';
+import '../../../notifications/presentation/pages/notification_settings_page.dart';
 import '../../../profile/presentation/cubit/privacy_cubit.dart';
 import '../../../profile/presentation/widgets/public_reading_stats_switch.dart';
 import '../widgets/account_section.dart';
 import '../widgets/preference_tiles.dart';
 
+/// A part of Settings a link can open at (`/settings?section=account`, e.g. a security alert, F17).
+enum SettingsSection {
+  account;
+
+  static SettingsSection? fromQuery(Uri uri) =>
+      SettingsSection.values.where((section) => section.name == uri.queryParameters['section']).firstOrNull;
+}
+
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, this.section});
+
+  final SettingsSection? section;
 
   @override
   Widget build(BuildContext context) => MultiBlocProvider(
@@ -27,21 +38,59 @@ class SettingsPage extends StatelessWidget {
           // App-wide (the actions keep it current); read only by moderators' Moderation entry (F22).
           BlocProvider.value(value: getIt<ModerationSummaryCubit>()),
         ],
-        child: const SettingsView(),
+        child: SettingsView(section: section),
       );
 }
 
-/// Settings (F18): appearance, languages, reading, privacy, moderation (moderators only, F22), account (phone, password,
-/// PIN, linked accounts, sign out, delete).
-class SettingsView extends StatelessWidget {
-  const SettingsView({super.key});
+/// Settings (F18): appearance, languages, reading, notifications (F17), privacy, moderation (moderators only, F22),
+/// account (phone, password, PIN, linked accounts, sign out, delete).
+class SettingsView extends StatefulWidget {
+  const SettingsView({super.key, this.section});
+
+  /// Scrolled into view once the page is shown.
+  final SettingsSection? section;
+
+  @override
+  State<SettingsView> createState() => _SettingsViewState();
+}
+
+class _SettingsViewState extends State<SettingsView> {
+  final _scroll = ScrollController();
+  final _accountKey = GlobalKey();
+  int _revealTries = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.section == SettingsSection.account) WidgetsBinding.instance.addPostFrameCallback((_) => _revealAccount());
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// The list builds lazily: scroll down until the Account card exists, then bring it to the top.
+  void _revealAccount() {
+    if (!mounted) return;
+    final target = _accountKey.currentContext;
+    if (target != null) {
+      Scrollable.ensureVisible(target, duration: Duration.zero);
+      return;
+    }
+    if (!_scroll.hasClients || _revealTries++ > 5) return;
+    _scroll.jumpTo(_scroll.position.maxScrollExtent);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _revealAccount());
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final session = context.watch<SessionCubit>().state;
 
-    Widget card(String title, List<Widget> children) => Padding(
+    Widget card(String title, List<Widget> children, {Key? key}) => Padding(
+          key: key,
           padding: const EdgeInsets.only(bottom: ReadInSpace.s4),
           child: Card(
             child: Padding(
@@ -61,6 +110,7 @@ class SettingsView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
+        controller: _scroll,
         padding: const EdgeInsets.all(ReadInSpace.s4),
         children: [
           card(l10n.appearance, const [ThemeSelector(), SizedBox(height: ReadInSpace.s5), UiLanguageSelector()]),
@@ -70,12 +120,13 @@ class SettingsView extends StatelessWidget {
             FontSizeSelector(),
             SizedBox(height: ReadInSpace.s3),
             ReminderTimeTile(),
-            DailyNotificationTile(),
           ]),
+          // Per-type modes and quiet hours live on the account (F17).
+          if (session.isAuthenticated) card(l10n.notifications, const [_NotificationSettingsEntry()]),
           // "Who can mention me" joins this card with comments (F11).
           if (session.isAuthenticated) card(l10n.profilePrivacy, const [PublicReadingStatsSwitch()]),
           if (session.me?.isModerator ?? false) card(l10n.moderationTitle, const [ModerationEntryTile()]),
-          card(l10n.account, [
+          card(key: _accountKey, l10n.account, [
             if (session.isAuthenticated)
               const AccountSection()
             else ...[
@@ -86,6 +137,23 @@ class SettingsView extends StatelessWidget {
           ]),
         ],
       ),
+    );
+  }
+}
+
+class _NotificationSettingsEntry extends StatelessWidget {
+  const _NotificationSettingsEntry();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.notifications_active_outlined),
+      title: Text(l10n.notificationSettings),
+      subtitle: Text(l10n.notificationSettingsEntryHint),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => context.push(NotificationSettingsPage.path),
     );
   }
 }

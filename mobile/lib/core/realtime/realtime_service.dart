@@ -75,6 +75,10 @@ class RealtimeService {
   /// `/live/users/{id}/unreadNotifications`; 0 for guests and until the first value arrives.
   final ValueNotifier<int> unreadNotifications = ValueNotifier(0);
 
+  /// True once the signed-in user's [unreadNotifications] arrived from the database, until the user changes or the
+  /// listener ends (e.g. permission denied). While false the badge comes from `GET /me/notifications/unread-count`.
+  final ValueNotifier<bool> unreadLive = ValueNotifier(false);
+
   /// Live counters of an article while the stream is listened to.
   Stream<LiveArticleCounts> watchArticle(String articleId) {
     if (!_safeId.hasMatch(articleId)) return const Stream.empty();
@@ -130,6 +134,7 @@ class RealtimeService {
     await _userSubscription?.cancel();
     _userSubscription = null;
     unreadNotifications.value = 0;
+    unreadLive.value = false;
     bool isCurrent() => generation == _generation;
 
     if (userId == null && _connection == null) return; // never connected: nothing to sign out of
@@ -145,9 +150,16 @@ class RealtimeService {
       return; // no token (offline, older API): the badge waits for the next sign-in, REST still works
     }
     if (!isCurrent()) return;
-    _userSubscription = connection.onValue('live/users/$userId/unreadNotifications').listen((value) {
-      if (isCurrent()) unreadNotifications.value = _toCount(value) ?? 0;
-    });
+    _userSubscription = connection.onValue('live/users/$userId/unreadNotifications').listen(
+      (value) {
+        if (!isCurrent()) return;
+        unreadNotifications.value = _toCount(value) ?? 0;
+        unreadLive.value = true;
+      },
+      onDone: () {
+        if (isCurrent()) unreadLive.value = false;
+      },
+    );
   }
 
   /// Pauses the socket while the app is in the background (SPEC §21.2).

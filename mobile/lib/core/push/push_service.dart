@@ -6,6 +6,7 @@ import 'package:injectable/injectable.dart';
 import 'devices_api.dart';
 import 'push_links.dart';
 import 'push_platform.dart';
+import 'push_read_receipts.dart';
 
 /// Push notifications through Firebase Cloud Messaging (SPEC §21.1).
 ///
@@ -14,13 +15,15 @@ import 'push_platform.dart';
 ///   every sign-in and app start, and again when FCM rotates it. On sign-out it is removed from the API
 ///   ([unregister], `DELETE /me/devices/{token}`) and deleted on the device.
 /// - Foreground pushes become a local notification on Android (iOS shows them itself).
-/// - Taps, including the one that launched the app, come out of [openPaths] as app routes.
+/// - Taps, including the one that launched the app, come out of [openPaths] as app routes, and mark their
+///   notification read (F17) once the session is known: right away when signed in, never when signed out.
 @lazySingleton
 class PushService {
-  PushService(this._platform, this._devices);
+  PushService(this._platform, this._devices, this._receipts);
 
   final PushPlatform _platform;
   final DevicesApi _devices;
+  final PushReadReceipts _receipts;
 
   final ValueNotifier<PushPermission> permission = ValueNotifier(PushPermission.unsupported);
 
@@ -32,6 +35,12 @@ class PushService {
   ({String userId, String token})? _registered;
   bool _started = false;
 
+  /// [followUser] was called: the session is restored, so taps can be marked read (or dropped when signed out).
+  bool _sessionKnown = false;
+
+  /// Notifications whose push was tapped, waiting for the session.
+  final _pendingReads = <String>{};
+
   Future<void> start() async {
     if (_started || !_platform.isSupported) return;
     _started = true;
@@ -41,7 +50,7 @@ class PushService {
       _platform.onForegroundMessage.listen(_platform.show);
       _platform.onOpened.listen(_open);
       _platform.onTokenRefresh.listen((_) => _register());
-      _open(await _platform.launchLink());
+      _open(await _platform.launchPayload());
       await _register(); // the session may have been restored before start() finished
     } catch (error) {
       debugPrint('Push notifications unavailable: $error');
@@ -87,9 +96,14 @@ class PushService {
 
   /// Registers this device for [userId] (null = signed out, which deletes the token).
   Future<void> followUser(String? userId) async {
-    if (userId == _userId) return;
+    _sessionKnown = true;
+    if (userId == _userId) {
+      unawaited(_sendReads());
+      return;
+    }
     final previous = _userId;
     _userId = userId;
+    unawaited(_sendReads());
     if (userId == null) {
       if (previous != null && _registered != null) {
         _registered = null;
@@ -118,9 +132,31 @@ class PushService {
     }
   }
 
-  void _open(String? link) {
+  void _open(PushPayload? tap) {
+    if (tap == null) return;
+    if (tap.notificationId case final id?) {
+      _pendingReads.add(id);
+      unawaited(_sendReads());
+    }
+    final link = tap.link;
     if (link == null) return; // no link: the tap just opens the app
     // A link the app doesn't know (or an unsafe one) still leads somewhere useful.
     _opens.add(pushLinkToPath(link) ?? '/notifications');
+  }
+
+  /// `POST /me/notifications/{id}/read` for the tapped pushes, once someone is signed in. Signed out, they are
+  /// dropped: they belonged to an account that isn't on this device anymore.
+  Future<void> _sendReads() async {
+    if (!_sessionKnown || _pendingReads.isEmpty) return;
+    final ids = _pendingReads.toList();
+    _pendingReads.clear();
+    if (_userId == null) return;
+    for (final id in ids) {
+      try {
+        await _receipts.markRead(id);
+      } catch (error) {
+        debugPrint('Could not mark the notification read: $error');
+      }
+    }
   }
 }

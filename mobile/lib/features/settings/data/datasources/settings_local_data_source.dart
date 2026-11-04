@@ -16,7 +16,9 @@ class SettingsLocalDataSource {
   static const _reminderTime = 'settings.reminderTime';
   static const _fontSize = 'settings.fontSize';
   static const _welcomeSeen = 'settings.welcomeSeen';
-  static const _dailyNotifications = 'settings.dailyNotifications';
+
+  /// The device-only daily-article switch of earlier versions; the server's `daily_article` mode replaced it (F17).
+  static const legacyDailyNotificationsKey = 'settings.dailyNotifications';
 
   AppSettings read() {
     const d = AppSettings();
@@ -29,7 +31,6 @@ class SettingsLocalDataSource {
       reminderTime: _store.read<String>(_reminderTime) ?? d.reminderTime,
       fontSize: byName(ArticleFontSize.values, _fontSize, d.fontSize),
       welcomeSeen: _store.read<bool>(_welcomeSeen) ?? d.welcomeSeen,
-      dailyNotifications: _store.read<bool>(_dailyNotifications) ?? d.dailyNotifications,
     );
   }
 
@@ -40,6 +41,9 @@ class SettingsLocalDataSource {
     await _store.write(_reminderTime, s.reminderTime);
     await _store.write(_fontSize, s.fontSize.name);
     await _store.write(_welcomeSeen, s.welcomeSeen);
-    await _store.write(_dailyNotifications, s.dailyNotifications);
   }
+
+  bool? legacyDailyNotifications() => _store.read<bool>(legacyDailyNotificationsKey);
+
+  Future<void> clearLegacyDailyNotifications() => _store.delete(legacyDailyNotificationsKey);
 }

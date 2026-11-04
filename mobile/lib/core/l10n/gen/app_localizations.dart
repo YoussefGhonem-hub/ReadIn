@@ -5923,6 +5923,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Got it'**
   String get noticeAcknowledge;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get notificationsToday;
+
+  /// No description provided for @notificationsEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get notificationsEarlier;
+
+  /// No description provided for @notificationsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get notificationsEmptyTitle;
+
+  /// No description provided for @notificationsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Replies, mentions, new followers and today\'s article show up here.'**
+  String get notificationsEmptyBody;
+
+  /// No description provided for @notificationsUnreadDot.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notificationsUnreadDot;
+
+  /// No description provided for @notifNewFollower.
+  ///
+  /// In en, this message translates to:
+  /// **'{others, plural, =0{{name} started following you} =1{{name} and 1 other started following you} other{{name} and {others} others started following you}}'**
+  String notifNewFollower(String name, int others);
+
+  /// No description provided for @notifArticleComment.
+  ///
+  /// In en, this message translates to:
+  /// **'{others, plural, =0{{name} commented on your article} =1{{name} and 1 other commented on your article} other{{name} and {others} others commented on your article}}'**
+  String notifArticleComment(String name, int others);
+
+  /// No description provided for @notifCommentReply.
+  ///
+  /// In en, this message translates to:
+  /// **'{others, plural, =0{{name} replied to your comment} =1{{name} and 1 other replied to your comment} other{{name} and {others} others replied to your comment}}'**
+  String notifCommentReply(String name, int others);
+
+  /// No description provided for @notifMention.
+  ///
+  /// In en, this message translates to:
+  /// **'{others, plural, =0{{name} mentioned you in a comment} =1{{name} and 1 other mentioned you in a comment} other{{name} and {others} others mentioned you in a comment}}'**
+  String notifMention(String name, int others);
+
+  /// No description provided for @notifFollowedWriterArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} published a new article'**
+  String notifFollowedWriterArticle(String name);
+
+  /// No description provided for @notifReactionsMilestone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Your article got its first reaction 🎉} other{Your article reached {count} reactions 🎉}}'**
+  String notifReactionsMilestone(int count);
+
+  /// No description provided for @notifReactionsMilestoneGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Readers are reacting to your article 🎉'**
+  String get notifReactionsMilestoneGeneric;
+
+  /// No description provided for @notifDailyArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s article is ready ☕'**
+  String get notifDailyArticle;
+
+  /// No description provided for @notifStreakReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Read an article today to keep your 1-day streak 🔥} other{Read an article today to keep your {days}-day streak 🔥}}'**
+  String notifStreakReminder(int days);
+
+  /// No description provided for @notifStreakReminderGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Read an article today to keep your streak 🔥'**
+  String get notifStreakReminderGeneric;
+
+  /// No description provided for @notifSecurityPasswordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password was changed'**
+  String get notifSecurityPasswordChanged;
+
+  /// No description provided for @notifSecurityPasswordReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password was reset'**
+  String get notifSecurityPasswordReset;
+
+  /// No description provided for @notifSecurityRecoveryPinChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recovery PIN was changed'**
+  String get notifSecurityRecoveryPinChanged;
+
+  /// No description provided for @notifSecurityPhoneNumberChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone number was changed'**
+  String get notifSecurityPhoneNumberChanged;
+
+  /// No description provided for @notifSecurityRecoveryLockedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery was locked after too many wrong PINs'**
+  String get notifSecurityRecoveryLockedOut;
+
+  /// No description provided for @notifSecurityExternalLoginLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'A Google or Apple account was linked to your account'**
+  String get notifSecurityExternalLoginLinked;
+
+  /// No description provided for @notifSecurityExternalLoginUnlinked.
+  ///
+  /// In en, this message translates to:
+  /// **'A Google or Apple account was unlinked from your account'**
+  String get notifSecurityExternalLoginUnlinked;
+
+  /// No description provided for @notifSecurityPhoneSignInAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'A phone number and password were added to your account'**
+  String get notifSecurityPhoneSignInAdded;
+
+  /// No description provided for @notifSecurityGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'There was a security change on your account'**
+  String get notifSecurityGeneric;
+
+  /// No description provided for @notifSecurityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'If this wasn\'t you, change your password now.'**
+  String get notifSecurityHint;
+
+  /// No description provided for @notifVerificationResult.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s an update on your verification request'**
+  String get notifVerificationResult;
+
+  /// No description provided for @notifModerationWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You received a warning from the moderation team'**
+  String get notifModerationWarning;
+
+  /// No description provided for @notifModerationArticleHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'The moderators hid your article'**
+  String get notifModerationArticleHidden;
+
+  /// No description provided for @notifGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'You have a new notification'**
+  String get notifGeneric;
+
+  /// No description provided for @notificationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification settings'**
+  String get notificationSettings;
+
+  /// No description provided for @notificationSettingsEntryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Push, in app or off for each type, and quiet hours'**
+  String get notificationSettingsEntryHint;
+
+  /// No description provided for @notificationSettingsTypesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What reaches you'**
+  String get notificationSettingsTypesTitle;
+
+  /// No description provided for @notificationSettingsTypesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications show up in your notification center too.'**
+  String get notificationSettingsTypesHint;
+
+  /// No description provided for @notificationModeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Push + in app'**
+  String get notificationModeAll;
+
+  /// No description provided for @notificationModeInApp.
+  ///
+  /// In en, this message translates to:
+  /// **'In app only'**
+  String get notificationModeInApp;
+
+  /// No description provided for @notificationModeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get notificationModeOff;
+
+  /// No description provided for @notificationModeAllShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Push'**
+  String get notificationModeAllShort;
+
+  /// No description provided for @notificationModeInAppShort.
+  ///
+  /// In en, this message translates to:
+  /// **'In app'**
+  String get notificationModeInAppShort;
+
+  /// No description provided for @notificationTypeNewFollower.
+  ///
+  /// In en, this message translates to:
+  /// **'New followers'**
+  String get notificationTypeNewFollower;
+
+  /// No description provided for @notificationTypeArticleComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments on your articles'**
+  String get notificationTypeArticleComment;
+
+  /// No description provided for @notificationTypeCommentReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Replies to your comments'**
+  String get notificationTypeCommentReply;
+
+  /// No description provided for @notificationTypeMention.
+  ///
+  /// In en, this message translates to:
+  /// **'Mentions in comments'**
+  String get notificationTypeMention;
+
+  /// No description provided for @notificationTypeReactionsMilestone.
+  ///
+  /// In en, this message translates to:
+  /// **'Reaction milestones (10, 50, 100)'**
+  String get notificationTypeReactionsMilestone;
+
+  /// No description provided for @notificationTypeFollowedWriterArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'New articles from writers you follow'**
+  String get notificationTypeFollowedWriterArticle;
+
+  /// No description provided for @notificationTypeDailyArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s article'**
+  String get notificationTypeDailyArticle;
+
+  /// No description provided for @notificationTypeStreakReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak reminder (8 PM)'**
+  String get notificationTypeStreakReminder;
+
+  /// No description provided for @notificationSecurityAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Security alerts'**
+  String get notificationSecurityAlerts;
+
+  /// No description provided for @notificationSecurityAlertsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Always on, even in quiet hours.'**
+  String get notificationSecurityAlertsHint;
+
+  /// No description provided for @quietHoursTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
+  String get quietHoursTitle;
+
+  /// No description provided for @quietHoursHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pushes wait until quiet hours end. Security alerts arrive right away.'**
+  String get quietHoursHint;
+
+  /// No description provided for @quietHoursSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold pushes during these hours'**
+  String get quietHoursSwitch;
+
+  /// No description provided for @quietHoursFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get quietHoursFrom;
+
+  /// No description provided for @quietHoursTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get quietHoursTo;
+
+  /// No description provided for @errNotificationNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This notification is no longer available.'**
+  String get errNotificationNotFound;
+
+  /// No description provided for @errNotificationTypeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That notification type doesn\'t exist.'**
+  String get errNotificationTypeInvalid;
+
+  /// No description provided for @errNotificationModeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick push, in app or off.'**
+  String get errNotificationModeInvalid;
+
+  /// No description provided for @errNotificationQuietHoursInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours need two different times.'**
+  String get errNotificationQuietHoursInvalid;
 }
 
 class _AppLocalizationsDelegate

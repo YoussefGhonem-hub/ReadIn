@@ -7,6 +7,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/l10n/current_locale.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../auth/domain/entities/me.dart';
+import '../../../notifications/domain/usecases/notification_usecases.dart';
 import '../../domain/entities/app_settings.dart';
 import '../../domain/usecases/settings_usecases.dart';
 
@@ -15,14 +16,17 @@ import '../../domain/usecases/settings_usecases.dart';
 /// pushed to `PUT /me/preferences` so they follow the user across devices.
 @lazySingleton
 class SettingsCubit extends Cubit<AppSettings> {
-  SettingsCubit(LoadSettings load, this._save, this._sync, this._locale) : super(load()) {
+  SettingsCubit(LoadSettings load, this._save, this._sync, this._locale, this._migrateDailySwitch) : super(load()) {
     _locale.value = AppLocales.fromCode(state.uiLanguage);
   }
 
   final SaveSettings _save;
   final SyncPreferences _sync;
   final CurrentLocale _locale;
+  final MigrateDailyArticleSwitch _migrateDailySwitch;
   bool _signedIn = false;
+  bool _dailySwitchMoved = false;
+  Future<void>? _movingDailySwitch;
 
   Locale get locale => AppLocales.fromCode(state.uiLanguage);
 
@@ -43,8 +47,6 @@ class SettingsCubit extends Cubit<AppSettings> {
 
   Future<void> setFontSize(ArticleFontSize size) => _update(state.copyWith(fontSize: size));
 
-  Future<void> setDailyNotifications(bool enabled) => _update(state.copyWith(dailyNotifications: enabled));
-
   Future<void> markWelcomeSeen() => _update(state.copyWith(welcomeSeen: true));
 
   /// Called when the session changes. For an existing account the profile is
@@ -53,6 +55,7 @@ class SettingsCubit extends Cubit<AppSettings> {
   Future<void> onSessionChanged(Me? me) async {
     _signedIn = me != null;
     if (me == null) return;
+    unawaited(_moveDailySwitch());
     if (!me.onboardingCompleted) {
       unawaited(_sync(state));
       return;
@@ -64,6 +67,15 @@ class SettingsCubit extends Cubit<AppSettings> {
       reminderTime: me.reminderTime,
     );
     await _apply(fromProfile, push: false);
+  }
+
+  /// Moves the device-only daily-article switch of earlier versions to the signed-in account (F17): once, and again on
+  /// the next session change while it fails (offline).
+  Future<void> _moveDailySwitch() {
+    if (_dailySwitchMoved) return Future.value();
+    return _movingDailySwitch ??= _migrateDailySwitch().then((done) => _dailySwitchMoved = done).whenComplete(
+          () => _movingDailySwitch = null,
+        );
   }
 
   Future<void> _update(AppSettings next) => _apply(next, push: true);
