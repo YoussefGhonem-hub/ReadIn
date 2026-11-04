@@ -55,14 +55,12 @@ Written 2026-11-04 when the user moved the remaining merges to the main session.
   dev 3d466a8. 2c8ada6 replaces them.
 
 ## Not merged yet
-1. **F04 `f04-reader`** (784ab1e, D:/r8). readin-bd had the turn and was merging it in D:/r8; I don't know its state.
-   - Regenerate `Glossary` after the latest migration. Its body is the two tables + 3 indexes and came out identical
-     when I regenerated it before.
-   - Add the F05 hook in `PublishArticleDraftCommandHandler`'s "already published" branch:
-     `await termsIndex.RebuildAsync([article.Id], ct); await cache.RemoveByTagAsync(CacheTags.Glossary, ct);`
-   - Move its tests to F05's editor API.
-   - Mobile `article_models.freezed.dart` / `.g.dart` conflict: regenerate them.
-   - `social_golden_test.dart`: put `registerNoRelatedArticles();` at the top of the shared `pumpReader` helper.
+1. **F04 `f04-reader`**: readin-bd merged dev 2c8ada6 into it and pushed **`origin/f04-reader` 291c566**, not dev.
+   - Glossary is regenerated as `20261104102442_Glossary`, the F05 hook is in, and its tests use ArticleTestKit.
+   - Its gates: backend 1360, web 628 + e2e reader/social, mobile analyze + codegen clean.
+   - Its handoff is `docs/handoff/f04-reader-glossary.md` on that branch. It fast-forwards dev if dev hasn't moved.
+   - **Migration order:** this branch's `20261104101556_LearningPathEnrollments` and F04's `20261104102442_Glossary`
+     were each generated without the other. Whichever lands second must be regenerated after the first.
 2. **F09 `f09-mobile`** (82e2a4e, analyze clean, 916/916 on its base). I attempted the merge on 87cf8b2 and **aborted** it
    on your instruction. Its conflicts and how I was resolving them:
    - `mobile/lib/app/router.dart`: keep F09's `/a/:slug` with `language: AppRoutes.articleLanguage(state.uri)`, the
