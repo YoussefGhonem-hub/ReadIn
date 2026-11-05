@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, viewChild } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { MUTE_SCOPE, MuteStore } from '../../core/social/mute.store';
 import { PostCardSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { PostCard } from '../feed/post-card';
@@ -9,7 +10,8 @@ import { CardPages } from './card-pages';
 /**
  * A {@link CardPages} list as post cards (F34): skeletons while the first page loads, an error with Retry, the empty
  * state (content inside the element goes under its message), infinite scroll with Retry when a page fails, and a line
- * once everything is shown.
+ * once everything is shown. Muted cards fold away but stay in the list (Undo puts them back in place), so the empty
+ * state counts the cards still shown, in the page's MUTE_SCOPE (F28).
  */
 @Component({
   selector: 'rd-card-pages-list',
@@ -37,10 +39,11 @@ import { CardPages } from './card-pages';
           @if (list.nextCursor()) {
             <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
             <div #sentinel class="h-px" aria-hidden="true"></div>
-          } @else {
+          } @else if (anyShown()) {
             <p class="m-0 py-6 text-center text-sm text-text-secondary" data-list-end>{{ endText() }}</p>
           }
-        } @else {
+        }
+        @if (!anyShown() && !list.nextCursor()) {
           <rd-empty-state [title]="emptyTitle()" [message]="emptyBody()" data-list-empty>
             <ng-content />
           </rd-empty-state>
@@ -70,6 +73,10 @@ export class CardPagesList {
 
   /** The first card with an image loads it eagerly (as on Home). */
   protected readonly firstMediaId = computed(() => this.pages().items().find((a) => a.attachments || a.coverUrl)?.id ?? null);
+  private readonly mutes = inject(MuteStore);
+  private readonly muteScope = inject(MUTE_SCOPE);
+  /** A card is still shown (not muted away). */
+  protected readonly anyShown = computed(() => this.mutes.anyShown(this.pages().items(), this.muteScope));
 
   constructor() {
     loadMoreNearEnd(

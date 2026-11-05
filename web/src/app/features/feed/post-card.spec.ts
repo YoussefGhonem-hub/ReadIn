@@ -5,6 +5,8 @@ import { ArticleCardDto, ArticlePreviewDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { FollowStore } from '../../core/social/follow.store';
+import { MuteStore, keepMutedContent } from '../../core/social/mute.store';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 import { FeedMemory } from './feed-memory';
 import { PostCard } from './post-card';
 
@@ -452,6 +454,74 @@ describe('PostCard (F34)', () => {
       const t = await expanded(false);
       http = t.http;
       t.http.expectNone((r) => r.url === PROGRESS);
+    });
+  });
+
+  describe('mutes (F28)', () => {
+    it('leaves the list when you mute its writer, and comes back in place on Undo', async () => {
+      const t = await render(testCard());
+      http = t.http;
+      const host = t.fixture.nativeElement as HTMLElement;
+      expect(host.style.display).toBe('');
+
+      void TestBed.inject(MuteStore).muteAuthor({ id: 'writer-1', displayName: 'Karim Hassan' });
+      await t.stable();
+      expect(host.style.display).toBe('none');
+      t.http.expectOne(`${TEST_API}/users/writer-1/mute`).flush({ isMuted: true, isFollowing: false, followerCount: 40, followRemoved: false });
+      await t.stable();
+
+      TestBed.inject(ToastService).toasts()[0].action!.run();
+      await t.stable();
+      expect(host.style.display).toBe('');
+      t.http.expectOne(`${TEST_API}/users/writer-1/mute`).flush({ isMuted: false, isFollowing: false, followerCount: 40, followRemoved: false });
+      await t.stable();
+    });
+
+    it("a toggle in the card's own topics sheet folds the card only once the sheet closes", async () => {
+      const t = await render(testCard());
+      http = t.http;
+      const host = t.fixture.nativeElement as HTMLElement;
+      t.$('[data-article-menu]')!.click();
+      await t.stable();
+      (document.querySelector('[data-article-menu-panel] [data-menu-action="muteTopics"]') as HTMLElement).click();
+      await t.stable();
+      // The sheet is its own lazy chunk.
+      for (let i = 0; i < 50 && !t.$('[data-mute-topics-sheet]'); i++) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        await t.stable();
+      }
+      t.$('[data-mute-topics-sheet] [data-mute-field="f1"] [role="switch"]')!.click();
+      await t.stable();
+      t.http.expectOne(`${TEST_API}/me/mutes/fields/f1`).flush({ fieldIds: ['f1'], topicIds: [] });
+      await t.stable();
+
+      // The field is muted, but the card (with its sheet inside) stays while the sheet is open: toggling back stays possible.
+      expect(TestBed.inject(MuteStore).hides(testCard(), { applies: true })).toBe(true);
+      expect(host.style.display).toBe('');
+      expect(t.$('[data-mute-topics-sheet]')).not.toBeNull();
+
+      t.$('[data-mute-topics-done]')!.click();
+      await t.stable();
+      expect(t.$('[data-mute-topics-sheet]')).toBeNull();
+      expect(host.style.display).toBe('none');
+      document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
+    });
+
+    it('a card that arrives muted is never shown; the writer\'s own pages keep it', async () => {
+      const t = await render(testCard({ isAuthorMuted: true }));
+      http = t.http;
+      expect((t.fixture.nativeElement as HTMLElement).style.display).toBe('none');
+
+      TestBed.resetTestingModule();
+      stubViewport(true);
+      setupSocialTesting({ providers: [keepMutedContent()] });
+      const own = TestBed.createComponent(PostCard);
+      own.componentRef.setInput('article', testCard({ isAuthorMuted: true }));
+      own.detectChanges();
+      await own.whenStable();
+      expect((own.nativeElement as HTMLElement).style.display).toBe('');
+      expect((own.nativeElement as HTMLElement).querySelector('[data-card-title]')).not.toBeNull();
+      http = null;
     });
   });
 });

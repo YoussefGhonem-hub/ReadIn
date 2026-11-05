@@ -4,6 +4,7 @@ import { TEST_API, flushMicrotasks, problem, setupSocialTesting, testCard } from
 import { CommentDto, CommentPageDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { CommentEvent, RealtimeService } from '../../core/realtime/realtime.service';
+import { MuteStore } from '../../core/social/mute.store';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { CommentsSection } from './comments-section';
 import { MENTION_DEBOUNCE_MS } from './comment-composer';
@@ -107,6 +108,41 @@ describe('CommentsSection (F11)', () => {
     const own = t.$('[data-comment="mine"]')!;
     expect(own.querySelector('[data-hidden-notice]')).not.toBeNull();
     expect(own.querySelector('[data-edited]')!.textContent).toBe('متعدّل');
+  });
+
+  it('a comment by a writer you muted collapses until "عرض", here only; its replies stay (F28)', async () => {
+    const t = await render({
+      total: 3,
+      items: [
+        dto('m', { isAuthorMuted: true, replyCount: 1, replies: [dto('r', { parentId: 'm' })] }),
+        dto('ok'),
+      ],
+    });
+    http = t.http;
+    const muted = t.$('[data-comment="m"]')!;
+    expect(muted.querySelector('[data-comment-muted]')!.textContent).toContain('تعليق من شخص كتمته');
+    expect(muted.querySelector('[data-comment-body]')).toBeNull();
+    expect(muted.querySelector('[data-comment-author]')).toBeNull();
+    expect(t.$('[data-comment="r"] [data-comment-body]')!.textContent).toContain('Comment r');
+    expect(t.$('[data-comment="ok"] [data-comment-muted]')).toBeNull();
+    expect(t.$('[data-comments-title]')!.textContent!.trim()).toBe('التعليقات (3)');
+
+    const show = muted.querySelector<HTMLButtonElement>('[data-comment-reveal]')!;
+    expect(show.textContent!.trim()).toBe('عرض');
+    show.click();
+    await t.stable();
+    expect(muted.querySelector('[data-comment-muted]')).toBeNull();
+    expect(muted.querySelector('[data-comment-body]')!.textContent).toContain('Comment m');
+  });
+
+  it('muting a writer from elsewhere collapses their comments at once (F28)', async () => {
+    const t = await render({ total: 1, items: [dto('x')] });
+    http = t.http;
+    void TestBed.inject(MuteStore).muteAuthor({ id: 'u-x', displayName: 'User x' });
+    await t.stable();
+    expect(t.$('[data-comment="x"] [data-comment-muted]')).not.toBeNull();
+    t.http.expectOne(`${TEST_API}/users/u-x/mute`).flush({ isMuted: true, isFollowing: false, followerCount: 0, followRemoved: false });
+    await t.stable();
   });
 
   it('guests see a sign-in prompt instead of the composer, and actions ask them to sign in', async () => {
@@ -225,6 +261,50 @@ describe('CommentsSection (F11)', () => {
     await t.stable();
     expect(t.$('[data-delete-comment-sheet]')).toBeNull();
     expect(t.$('[data-comment="m1"]')).toBeNull();
+  });
+
+  it("Mute commenter sits right before Report, collapses their comments, and the toast's Undo brings them back", async () => {
+    const t = await render({ total: 2, items: [dto('c1'), dto('c2', { author: { id: 'u-c1', displayName: 'User c1', username: 'user_c1', avatarUrl: null, isVerified: false } })] });
+    http = t.http;
+    t.$('[data-comment="c1"] [data-comment-menu]')!.click();
+    await t.stable();
+    const actions = [...document.querySelectorAll('[data-comment-menu-panel] [data-menu-action]')].map((el) => el.getAttribute('data-menu-action'));
+    expect(actions).toEqual(['muteCommenter', 'report']);
+    expect(document.querySelector('[data-menu-action="muteCommenter"]')!.textContent!.trim()).toBe('كتم صاحب التعليق');
+    (document.querySelector('[data-menu-action="muteCommenter"]') as HTMLElement).click();
+    await t.stable();
+
+    // Both of their comments collapse at once.
+    expect(t.$$('[data-comment-muted]')).toHaveLength(2);
+    const put = t.http.expectOne(`${TEST_API}/users/u-c1/mute`);
+    expect(put.request.method).toBe('PUT');
+    put.flush({ isMuted: true, isFollowing: false, followerCount: 3, followRemoved: false });
+    await t.stable();
+    const [toast] = TestBed.inject(ToastService).toasts();
+    expect(toast.message).toContain('User c1');
+    expect(toast.action!.label).toBe('تراجع');
+
+    toast.action!.run();
+    await t.stable();
+    expect(t.$$('[data-comment-muted]')).toHaveLength(0);
+    const undo = t.http.expectOne(`${TEST_API}/users/u-c1/mute`);
+    expect(undo.request.method).toBe('DELETE');
+    undo.flush({ isMuted: false, isFollowing: false, followerCount: 3, followRemoved: false });
+    await t.stable();
+    document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
+  });
+
+  it("your own comments and a deleted user's have no Mute commenter", async () => {
+    const t = await render({ total: 2, items: [dto('m1', { author: MINE, canEdit: true, canDelete: true, canReport: false }), dto('d1', { author: null })] });
+    http = t.http;
+    t.$('[data-comment="m1"] [data-comment-menu]')!.click();
+    await t.stable();
+    expect([...document.querySelectorAll('[data-comment-menu-panel] [data-menu-action]')].map((el) => el.getAttribute('data-menu-action'))).toEqual(['edit', 'delete']);
+    document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
+    t.$('[data-comment="d1"] [data-comment-menu]')!.click();
+    await t.stable();
+    expect([...document.querySelectorAll('[data-comment-menu-panel] [data-menu-action]')].map((el) => el.getAttribute('data-menu-action'))).toEqual(['report']);
+    document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
   });
 
   it('reporting sends the reason and thanks you', async () => {

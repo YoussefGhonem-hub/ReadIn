@@ -25,6 +25,7 @@ import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { HydrationWindow } from '../../core/http/hydration-window';
 import { LanguageService } from '../../core/i18n/language.service';
 import { injectNewArticles } from '../../core/realtime/live-signals';
+import { MUTE_SCOPE, MuteStore } from '../../core/social/mute.store';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { PostCardSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
@@ -156,7 +157,9 @@ type FeedTab = 'forYou' | 'following';
             <div class="flex flex-col gap-3 pt-3" data-feed>
               @for (article of store.items(); track article.id) {
                 <rd-post-card [article]="article" [priorityMedia]="article.id === firstMediaId()" />
-              } @empty {
+              }
+              <!-- Muted cards fold away but stay in the list (Undo puts them back): count the ones still shown (F28). -->
+              @if (!anyShown() && !store.nextCursor()) {
                 <rd-empty-state [title]="'home.empty.title' | transloco" [message]="'home.empty.body' | transloco" />
               }
               @if (store.loadingMore()) {
@@ -168,7 +171,7 @@ type FeedTab = 'forYou' | 'following';
                 <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
               </div>
             }
-            @if (store.items().length > 0 && !store.nextCursor()) {
+            @if (anyShown() && !store.nextCursor()) {
               <p class="py-6 text-center text-sm text-text-secondary">{{ 'home.endOfFeed' | transloco }}</p>
             }
           }
@@ -205,6 +208,10 @@ export class HomePage {
 
   /** The first card with attachments gets the eager, high-priority image (the rest lazy-load). */
   protected readonly firstMediaId = computed(() => this.store.items().find((a) => a.attachments || a.coverUrl)?.id ?? null);
+  private readonly mutes = inject(MuteStore);
+  private readonly muteScope = inject(MUTE_SCOPE);
+  /** A card of For you is still shown (not muted away, F28). */
+  protected readonly anyShown = computed(() => this.mutes.anyShown(this.store.items(), this.muteScope));
   protected readonly firstName = computed(() => this.session.displayName()?.split(' ')[0] ?? null);
   protected readonly greetingKey = computed(() => {
     const hour = new Date().getHours();

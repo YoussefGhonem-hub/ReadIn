@@ -1,26 +1,31 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
+import { LucideDynamicIcon, LucideIconData } from '@lucide/angular';
 import { ProfileDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
+import { MuteStore } from '../../core/social/mute.store';
+import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { ModerationActionDraft, ModerationActionSheet } from '../../shared/moderation/moderation-action-sheet';
 import { provideModerationIcons } from '../../shared/moderation/moderation-icons';
 import { ReportSheet, ReportTarget } from '../../shared/moderation/report-sheet';
 
-type ProfileMenuAction = 'report' | 'warn' | 'suspend';
+type ProfileMenuAction = 'muteUser' | 'report' | 'warn' | 'suspend';
 
 interface ProfileMenuItem {
   id: ProfileMenuAction;
   labelKey: string;
-  icon: string;
+  icon: string | LucideIconData;
   danger?: boolean;
 }
 
 /**
- * The "⋯" on someone else's profile (F22): Report user for everyone (guests get the sign-in prompt). Moderators can
- * also Warn (with a note the user sees) and, with `users.suspend`, Suspend the account for 1, 7 or 30 days or for good.
+ * The "⋯" on someone else's profile (F22): Mute user first (F28; not on the official account, which can't be muted),
+ * then Report user, for everyone (guests get the sign-in prompt). Mute works like the article menu's Mute author: the
+ * toast has Undo, which follows again when the mute ended your follow; the profile then shows the muted banner.
+ * Moderators can also Warn (with a note the user sees) and, with `users.suspend`, Suspend the account for 1, 7 or 30
+ * days or for good.
  */
 @Component({
   selector: 'rd-profile-menu',
@@ -64,15 +69,30 @@ interface ProfileMenuItem {
 export class ProfileMenu {
   private readonly session = inject(SessionStore);
   private readonly prompt = inject(AuthPromptService);
+  private readonly mutes = inject(MuteStore);
 
   readonly profile = input.required<ProfileDto>();
 
   protected readonly reporting = signal<ReportTarget | null>(null);
   protected readonly moderating = signal<ModerationActionDraft | null>(null);
 
+  /** You muted this user (false for guests). */
+  private readonly muted = computed(() => {
+    const p = this.profile();
+    return this.session.isAuthenticated() && this.mutes.isAuthorMuted(p.id, p.isMuted ?? false);
+  });
+
   protected readonly items = computed<ProfileMenuItem[]>(() => {
     const permissions = this.session.permissions();
+    const p = this.profile();
     const items: ProfileMenuItem[] = [];
+    if (!p.isMe && !p.isSystemAccount) {
+      items.push(
+        this.muted()
+          ? { id: 'muteUser', labelKey: 'mute.menu.unmuteUser', icon: MUTE_ICON.Volume2 }
+          : { id: 'muteUser', labelKey: 'mute.menu.muteUser', icon: MUTE_ICON.VolumeX },
+      );
+    }
     if (permissions.has('moderation.manage')) {
       items.push({ id: 'warn', labelKey: 'profile.menu.warn', icon: 'TriangleAlert' });
       if (permissions.has('users.suspend')) items.push({ id: 'suspend', labelKey: 'profile.menu.suspend', icon: 'Ban', danger: true });
@@ -84,7 +104,9 @@ export class ProfileMenu {
   protected run(action: ProfileMenuAction): void {
     if (!this.prompt.requireAuth()) return;
     const p = this.profile();
-    if (action === 'report') this.reporting.set({ type: 'user', id: p.id });
+    const user = { id: p.id, displayName: p.displayName };
+    if (action === 'muteUser') void (this.muted() ? this.mutes.unmuteAuthor(user) : this.mutes.muteAuthor(user));
+    else if (action === 'report') this.reporting.set({ type: 'user', id: p.id });
     else this.moderating.set({ action, targetType: 'user', targetId: p.id, name: p.displayName });
   }
 }

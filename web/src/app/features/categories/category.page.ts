@@ -4,6 +4,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { LanguageService } from '../../core/i18n/language.service';
 import { AppHistory } from '../../core/platform/app-history';
+import { keepMutedContent } from '../../core/social/mute.store';
 import { PluralPipe } from '../../shared/pipes/format.pipes';
 import { Avatar } from '../../shared/ui/avatar';
 import { PostCardSkeleton } from '../../shared/ui/skeletons';
@@ -24,7 +25,8 @@ import { CategorySeoService } from './category-seo.service';
 @Component({
   selector: 'rd-category-page',
   imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, PluralPipe, Avatar, PostCard, PostCardSkeleton, EmptyState, ErrorState],
-  providers: [CategoryPageStore],
+  // A writer's own page keeps muted content (F28).
+  providers: [CategoryPageStore, keepMutedContent()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[640px] px-4 pt-4 lg:pt-8' },
   template: `

@@ -233,6 +233,12 @@
     "follow": {
       "self": "You can't follow yourself."
     },
+    "mute": {
+      "self": "You can't mute yourself.",
+      "system_account": "The official ReadIn account can't be muted.",
+      "limit": "You can mute at most 500 writers.",
+      "own_article": "You can't do this on your own article."
+    },
     "comment": {
       "not_found": "This comment doesn't exist.",
       "not_owner": "Only the author can change this comment.",
@@ -502,7 +508,7 @@
         "contact": "Your phone number, email, password and recovery PIN",
         "signIn": "Your Google and Apple sign-in links. We also revoke ReadIn's access at Apple.",
         "articles": "Your drafts and any article that isn't published, with their images and PDFs, and every other photo or file you uploaded",
-        "activity": "Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers",
+        "activity": "Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people's mutes of you), and your \"Show less like this\" marks",
         "devices": "Your devices and notification tokens, so no notification reaches you",
         "security": "Your security log: sign-ins and account changes"
       },
@@ -1852,6 +1858,57 @@
     },
     "errors": {
       "tooFast": "You're commenting too fast. Wait a minute and try again."
+    }
+  },
+  "mute": {
+    "menu": {
+      "showLess": "Show less like this",
+      "follow": "Follow author",
+      "unfollow": "Unfollow author",
+      "muteAuthor": "Mute author",
+      "unmuteAuthor": "Unmute author",
+      "muteTopics": "Mute topics",
+      "muteUser": "Mute user",
+      "unmuteUser": "Unmute user",
+      "muteCommenter": "Mute commenter",
+      "unmuteCommenter": "Unmute commenter"
+    },
+    "undo": "Undo",
+    "toast": {
+      "muted": "You muted {{name}}. You won't see their articles or comments.",
+      "unmuted": "You unmuted {{name}}.",
+      "showLess": "Got it. You'll see fewer articles like this."
+    },
+    "topics": {
+      "title": "Mute topics",
+      "body": "What you mute won't show up in your feeds, Explore or Search. Unmute it here or in Settings.",
+      "fieldHint": "The whole field, with all its topics",
+      "topicHint": "Just this topic",
+      "done": "Done"
+    },
+    "banner": {
+      "title": "You muted this writer",
+      "body": "Their articles and comments don't show up for you, and nobody else knows you muted them.",
+      "unmute": "Unmute"
+    },
+    "comment": {
+      "collapsed": "Comment from someone you muted",
+      "show": "Show"
+    },
+    "settings": {
+      "title": "Muted",
+      "rowHint": "Writers, fields and topics you muted",
+      "back": "Settings",
+      "subtitle": "They don't show up in your feeds, Explore or Search, and nobody knows you muted them.",
+      "writers": "Writers",
+      "fields": "Fields",
+      "topics": "Topics",
+      "topicIn": "In {{field}}",
+      "unmute": "Unmute",
+      "unmuteLabel": "Unmute {{name}}",
+      "emptyTitle": "You haven't muted anything",
+      "emptyBody": "Mute a writer, field or topic from any article's options and it shows up here.",
+      "loadError": "We couldn't load what you muted"
     }
   },
   "report": {

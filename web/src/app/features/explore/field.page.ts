@@ -6,6 +6,7 @@ import { FieldPageTopicDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { AppHistory } from '../../core/platform/app-history';
+import { MUTE_SCOPE, MuteScope } from '../../core/social/mute.store';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { isolate } from '../../shared/directives/bidi';
 import { CompactNumberPipe, PluralPipe } from '../../shared/pipes/format.pipes';
@@ -49,7 +50,17 @@ const FIELD_PATH = /^\/f\/[^/?#]+(?:[?#]|$)/;
     WriterRail,
     WriterRailSkeleton,
   ],
-  providers: [FieldPageStore],
+  providers: [
+    FieldPageStore,
+    // F28: muted writers and other muted topics leave the list; the page's own field and picked topic stay (you opened them).
+    {
+      provide: MUTE_SCOPE,
+      useFactory: (): MuteScope => {
+        const store = inject(FieldPageStore);
+        return { applies: true, shownFieldId: computed(() => store.field()?.id ?? null), shownTopicId: computed(() => store.selectedTopic()?.id ?? null) };
+      },
+    },
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[640px] px-4 pt-4 lg:pt-8' },
   template: `

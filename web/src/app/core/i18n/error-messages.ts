@@ -135,6 +135,11 @@ export const CONTRACT_ERROR_CODES = [
   'collection.limit',
   'collection.not_found',
   'follow.self',
+  // Mute & feedback (F28)
+  'mute.self',
+  'mute.system_account',
+  'mute.limit',
+  'mute.own_article',
   // Comments (F11)
   'comment.not_found',
   'comment.not_owner',

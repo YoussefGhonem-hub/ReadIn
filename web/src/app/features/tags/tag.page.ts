@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { LanguageService } from '../../core/i18n/language.service';
+import { MUTE_SCOPE, MuteStore } from '../../core/social/mute.store';
 import { AppHistory } from '../../core/platform/app-history';
 import { PluralPipe } from '../../shared/pipes/format.pipes';
 import { PostCardSkeleton } from '../../shared/ui/skeletons';
@@ -58,10 +59,12 @@ import { TagSeoService } from './tag-seo.service';
             @if (store.nextCursor()) {
               <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
               <div #sentinel class="h-px" aria-hidden="true"></div>
-            } @else {
+            } @else if (anyShown()) {
               <p class="py-6 text-center text-sm text-text-secondary" data-tag-end>{{ 'tags.page.end' | transloco }}</p>
             }
-          } @else {
+          }
+          <!-- Muted cards fold away but stay in the list (Undo puts them back): count the ones still shown (F28). -->
+          @if (!anyShown() && !store.nextCursor()) {
             <rd-empty-state [title]="'tags.page.emptyTitle' | transloco" [message]="'tags.page.emptyBody' | transloco" data-tag-empty>
               <a routerLink="/" class="rd-btn rd-btn-primary mt-3">{{ 'tags.page.browse' | transloco }}</a>
             </rd-empty-state>
@@ -103,6 +106,10 @@ export class TagPage {
 
   /** The first card with an image loads it eagerly (as on Home). */
   protected readonly firstMediaId = computed(() => this.store.items().find((a) => a.attachments || a.coverUrl)?.id ?? null);
+  private readonly mutes = inject(MuteStore);
+  private readonly muteScope = inject(MUTE_SCOPE);
+  /** A card is still shown (not muted away, F28). */
+  protected readonly anyShown = computed(() => this.mutes.anyShown(this.store.items(), this.muteScope));
 
   constructor() {
     const seo = inject(TagSeoService);

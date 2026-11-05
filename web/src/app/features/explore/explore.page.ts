@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { LanguageService } from '../../core/i18n/language.service';
+import { MUTE_SCOPE, MuteStore } from '../../core/social/mute.store';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { PluralPipe } from '../../shared/pipes/format.pipes';
 import { ArticleCard } from '../../shared/ui/article-card';
@@ -20,7 +21,8 @@ import { WriterRail } from './writer-rail';
  * box), every field (its page holds the topics), the first articles trending this week and the most saved (compact
  * rows; "See all" opens the whole ranking as post cards), new writers with Follow, and the featured learning paths.
  * One call, server-rendered; a section with nothing in it is left out. Kept alive while you open an article, so Back
- * finds it as you left it (features/feed/feed-route-reuse.ts).
+ * finds it as you left it (features/feed/feed-route-reuse.ts); the compact rows of what you muted or marked "show
+ * less" since then leave at once, like the post cards (F28).
  */
 @Component({
   selector: 'rd-explore-page',
@@ -95,7 +97,7 @@ import { WriterRail } from './writer-rail';
           </section>
         }
 
-        @if (store.trending().length) {
+        @if (trending().length) {
           <section class="mb-8" aria-labelledby="explore-trending" data-explore-trending>
             <div class="mb-1 flex items-center justify-between gap-3">
               <h2 id="explore-trending" class="m-0 flex items-center gap-2 text-lg font-bold">
@@ -107,13 +109,13 @@ import { WriterRail } from './writer-rail';
                 <svg lucideIcon="ChevronRight" [size]="16" class="rd-flip-rtl" aria-hidden="true"></svg>
               </a>
             </div>
-            @for (article of store.trending(); track article.id) {
+            @for (article of trending(); track article.id) {
               <rd-article-card [article]="article" [withAttachments]="false" />
             }
           </section>
         }
 
-        @if (store.mostSaved().length) {
+        @if (mostSaved().length) {
           <section class="mb-8" aria-labelledby="explore-most-saved" data-explore-most-saved>
             <div class="mb-1 flex items-center justify-between gap-3">
               <h2 id="explore-most-saved" class="m-0 flex items-center gap-2 text-lg font-bold">
@@ -125,7 +127,7 @@ import { WriterRail } from './writer-rail';
                 <svg lucideIcon="ChevronRight" [size]="16" class="rd-flip-rtl" aria-hidden="true"></svg>
               </a>
             </div>
-            @for (article of store.mostSaved(); track article.id) {
+            @for (article of mostSaved(); track article.id) {
               <rd-article-card [article]="article" [withAttachments]="false" />
             }
           </section>
@@ -187,6 +189,11 @@ export class ExplorePage {
   protected readonly store = inject(ExploreStore);
   protected readonly lang = inject(LanguageService).lang;
   protected readonly fieldColor = fieldColorOf;
+  private readonly mutes = inject(MuteStore);
+  private readonly muteScope = inject(MUTE_SCOPE);
+  /** The compact rows still shown: what you muted or marked "show less" in this session leaves (F28). */
+  protected readonly trending = computed(() => this.store.trending().filter((a) => !this.mutes.hides(a, this.muteScope)));
+  protected readonly mostSaved = computed(() => this.store.mostSaved().filter((a) => !this.mutes.hides(a, this.muteScope)));
 
   constructor() {
     void this.store.load();

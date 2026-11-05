@@ -291,6 +291,19 @@ export interface ArticleCardDto {
   tags: TagRefDto[];
   /** All the article's visible tags (0–5), for "+N". */
   tagCount: number;
+  /**
+   * F28: the article's topic, for the "كتم المواضيع" sheet (on cards since F28; `ArticleDetailsDto` always had it).
+   * Missing from an API older than F28.
+   */
+  topic?: FieldRefDto | null;
+  /**
+   * F28 viewer flags, filled per caller like `isSaved` (false for guests; missing from an API older than F28). Lists that
+   * apply mutes leave such cards out, so there they are false, except a field page's own field and picked topic.
+   * `isAuthorMuted` is false on your own articles and for a deleted author: the reader's "انت كاتم الكاتب ده" banner.
+   */
+  isAuthorMuted?: boolean;
+  isFieldMuted?: boolean;
+  isTopicMuted?: boolean;
 }
 
 /** `GET /articles/{id}/preview?lang=` (F34): the first blocks, about 300 words, never cutting a block, at least one. */
@@ -445,6 +458,53 @@ export interface InterestsDto {
   topicIds: string[];
 }
 
+// ── Mute & feedback (F28) ───────────────────────────────────
+
+/** `PUT` / `DELETE /users/{id}/mute`. */
+export interface UserMuteStateDto {
+  isMuted: boolean;
+  /** After the change: a mute always ends your follow; `DELETE ?restoreFollow=true` follows again. */
+  isFollowing: boolean;
+  /** The writer's followers after the change. */
+  followerCount: number;
+  /** `PUT`: this mute ended your follow, so its Undo sends `restoreFollow=true`. Always false on `DELETE`. */
+  followRemoved: boolean;
+}
+
+/** `PUT` / `DELETE /me/mutes/{fields|topics}/{id}`: every field and topic you muted, after the change. */
+export interface ContentMutesDto {
+  fieldIds: string[];
+  topicIds: string[];
+}
+
+/** A muted field in Settings → Muted; `name` in Accept-Language, `icon` a Lucide name, `color` a token. */
+export interface MutedFieldDto {
+  id: string;
+  slug: string;
+  name: string;
+  nameAr: string;
+  nameEn: string;
+  icon: string;
+  color: string;
+}
+
+export interface MutedTopicDto {
+  id: string;
+  slug: string;
+  name: string;
+  nameAr: string;
+  nameEn: string;
+  field: MutedFieldDto;
+}
+
+/** `GET /me/mutes` (Settings → Muted, F18): each list newest mute first, not paged. */
+export interface MutesDto {
+  /** `isFollowing` is always false (a mute ends the follow); suspended accounts stay listed. */
+  users: UserSummaryDto[];
+  fields: MutedFieldDto[];
+  topics: MutedTopicDto[];
+}
+
 // ── Comments (F11) ──────────────────────────────────────────
 
 /** `top` (default) = likes + 2 × replies, then newest; `new` = newest first. */
@@ -488,6 +548,11 @@ export interface CommentDto {
   canModerate: boolean;
   /** In lists: the first 2 replies of a top-level comment, oldest first. */
   replies?: CommentDto[];
+  /**
+   * F28: you muted the author, so it collapses to "تعليق من شخص كتمته" with "عرض" (replies under it stay). False for
+   * guests and placeholders; missing from an API older than F28.
+   */
+  isAuthorMuted?: boolean;
 }
 
 /** `GET /articles/{id}/comments`. `total` is the article's comment count (visible comments and replies). */
@@ -726,6 +791,16 @@ export interface ProfileDto {
   followsYou: boolean;
   /** True on your own profile, or when the user made their reading stats public. */
   readingStatsVisible: boolean;
+  /**
+   * F28: you muted this user: "انت كاتم الكاتب ده" with "إلغاء الكتم". False for guests and on your own profile;
+   * missing from an API older than F28.
+   */
+  isMuted?: boolean;
+  /**
+   * F28: the official ReadIn account (`@readin`). It can't be muted, so the profile's "⋯" leaves Mute out. Missing from
+   * an API older than F28.
+   */
+  isSystemAccount?: boolean;
 }
 
 // ── Writing (F05) ───────────────────────────────────────────

@@ -24,6 +24,8 @@ import { SessionStore } from '../../core/auth/session.store';
 import { HydrationWindow } from '../../core/http/hydration-window';
 import { LanguageService } from '../../core/i18n/language.service';
 import { FollowStore } from '../../core/social/follow.store';
+import { MuteStore, keepMutedContent } from '../../core/social/mute.store';
+import { MutedBanner } from '../../shared/mutes/muted-banner';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { ManageCategories, ProfileCategories } from '../categories/profile-categories';
 import { ReadingHeatmap } from '../reading/reading-heatmap';
@@ -60,13 +62,20 @@ export type ProfileTab = 'articles' | 'categories' | 'saved' | 'paths' | 'about'
     PublicStatsSwitch,
     ReadingStatsCard,
     ReadingHeatmap,
+    MutedBanner,
   ],
-  providers: [ProfileArticlesStore],
+  // The writer's own page keeps muted content: you opened it on purpose (F28).
+  providers: [ProfileArticlesStore, keepMutedContent()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[720px] px-4 pt-5 lg:pt-8' },
   template: `
     @if (profile(); as p) {
       <rd-profile-header [profile]="p" [isMe]="isMe()" />
+
+      <!-- A writer you muted (F28): their page still opens, with the way to unmute -->
+      @if (muted()) {
+        <rd-muted-banner class="mt-4" [user]="p" />
+      }
 
       @if (statsVisible()) {
         <section class="rd-card mt-5 block p-4 shadow-none" aria-labelledby="profile-reading-title" data-profile-reading>
@@ -182,6 +191,12 @@ export class ProfilePage {
     return !!p && (p.isMe || (this.session.isAuthenticated() && this.session.me()?.id === p.id));
   });
   protected readonly statsVisible = computed(() => this.isMe() || !!this.profile()?.readingStatsVisible);
+  private readonly mutes = inject(MuteStore);
+  /** You muted this writer (F28), here or anywhere else in the app. */
+  protected readonly muted = computed(() => {
+    const p = this.profile();
+    return !!p && !this.isMe() && this.session.isAuthenticated() && this.mutes.isAuthorMuted(p.id, p.isMuted ?? false);
+  });
   protected readonly tabs = computed<ProfileTab[]>(() =>
     this.isMe() ? ['articles', 'categories', 'saved', 'paths', 'about'] : ['articles', 'categories', 'paths', 'about'],
   );

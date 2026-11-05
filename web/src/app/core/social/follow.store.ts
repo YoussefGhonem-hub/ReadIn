@@ -26,6 +26,8 @@ export class FollowStore {
 
   private readonly entries = signal<ReadonlyMap<string, FollowEntry>>(new Map());
   private readonly inFlight = new Set<string>();
+  /** Told each time the server confirms a follow: following a writer you muted ends the mute (F28). */
+  private readonly followListeners: ((userId: string) => void)[] = [];
 
   constructor() {
     const userId = computed(() => (this.session.isAuthenticated() ? (this.session.me()?.id ?? null) : null));
@@ -48,6 +50,20 @@ export class FollowStore {
     this.entries.update((map) => new Map(map).set(userId, { server: isFollowing, view: isFollowing }));
   }
 
+  /**
+   * A follow state the server confirmed through another call (F28: a mute ends your follow, its Undo follows again),
+   * shown everywhere at once; a running follow request keeps its own answer.
+   */
+  learn(userId: string, isFollowing: boolean): void {
+    if (this.inFlight.has(userId)) return;
+    this.entries.update((map) => new Map(map).set(userId, { server: isFollowing, view: isFollowing }));
+  }
+
+  /** `listener(userId)` runs each time the server confirms a follow. */
+  onFollowed(listener: (userId: string) => void): void {
+    this.followListeners.push(listener);
+  }
+
   toggle(userId: string, fallback: boolean): Promise<void> {
     return this.set(userId, !this.isFollowing(userId, fallback), fallback);
   }
@@ -67,6 +83,7 @@ export class FollowStore {
           const result = await firstValueFrom(target ? this.api.follow(userId) : this.api.unfollow(userId));
           // The server's answer wins when it differs from the wish that was sent (never loop on it).
           this.update(userId, (e) => ({ server: result.isFollowing, view: e.view === target ? result.isFollowing : e.view }));
+          if (result.isFollowing) for (const listener of this.followListeners) listener(userId);
         } catch (error) {
           if (this.entries().get(userId)?.view !== target) continue;
           this.update(userId, (e) => ({ ...e, view: e.server }));

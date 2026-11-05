@@ -34,6 +34,7 @@ import { ArticleSocialStore } from '../../core/social/article-social.store';
 import { CollectionsStore } from '../../core/social/collections.store';
 import { FollowStore } from '../../core/social/follow.store';
 import { bindLiveCounters } from '../../core/social/live-article';
+import { MuteStore } from '../../core/social/mute.store';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir, isolate } from '../../shared/directives/bidi';
@@ -41,6 +42,7 @@ import { ArticleAttachments } from '../../shared/media/article-attachments';
 import { LocalizedDatePipe } from '../../shared/pipes/format.pipes';
 import { CollectionPickerSheet } from '../../shared/social/collection-sheets';
 import { FollowButton } from '../../shared/social/follow-button';
+import { MutedBanner } from '../../shared/mutes/muted-banner';
 import { RDocRenderer } from '../../shared/rdoc/rdoc-renderer';
 import { hasBlock, tableOfContents } from '../../shared/rdoc/rdoc.utils';
 import { articleLanguageForUrl, urlLangFor } from '../../shared/ui/article-link';
@@ -90,6 +92,7 @@ const TOC_MIN_HEADINGS = 3;
     CollectionPickerSheet,
     NgComponentOutlet,
     RelatedArticles,
+    MutedBanner,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -156,6 +159,11 @@ const TOC_MIN_HEADINGS = 3;
               }
             </div>
           </section>
+        }
+
+        <!-- A writer you muted (F28): a direct link still opens, with the way to unmute -->
+        @if (mutedAuthor(); as author) {
+          <rd-muted-banner class="mb-4" [user]="author" />
         }
 
         @if (a.coverUrl) {
@@ -314,6 +322,14 @@ export class ArticlePage {
   private readonly session = inject(SessionStore);
   /** You wrote it: the "hidden" banner speaks to you (F22). */
   protected readonly isAuthor = computed(() => this.session.isAuthenticated() && this.session.me()?.id === this.article()?.author?.id);
+  private readonly mutes = inject(MuteStore);
+  /** You muted the writer (F28): the "انت كاتم الكاتب ده" banner, also right after Mute author from the "⋯" menu. */
+  protected readonly mutedAuthor = computed(() => {
+    const article = this.article();
+    const author = article?.author;
+    if (!author || !this.session.isAuthenticated() || this.isAuthor()) return null;
+    return this.mutes.isAuthorMuted(author.id, article.isAuthorMuted ?? false) ? author : null;
+  });
   protected readonly notFound = computed(() => {
     const error = this.resource.error();
     return isApiError(error) ? error.status === 404 : false;

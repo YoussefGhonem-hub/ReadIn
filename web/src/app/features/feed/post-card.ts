@@ -31,6 +31,7 @@ import { injectInViewport } from '../../core/realtime/live-signals';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
 import { FollowStore } from '../../core/social/follow.store';
 import { bindLiveCounters } from '../../core/social/live-article';
+import { MUTE_SCOPE, MuteStore } from '../../core/social/mute.store';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir } from '../../shared/directives/bidi';
 import { ArticleAttachments } from '../../shared/media/article-attachments';
@@ -57,6 +58,8 @@ import { injectCardReading } from './card-reading';
 const WIDE_QUERY = '(min-width: 768px)';
 /** The sticky top bar: a card whose top is above this line is brought back into view when it collapses. */
 const TOP_BAR_PX = 72;
+/** A muted card folds away (and back on Undo) in this long (F28). */
+const MUTE_FOLD_MS = 220;
 
 let nextCardId = 0;
 
@@ -85,6 +88,9 @@ function injectMediaQuery(query: string): Signal<boolean> {
  * into view if it scrolled off. Comments open under the card on wide screens and in a bottom sheet on phones, both
  * lazy. Guests get the sign-in prompt and, once signed in, come back to this card (FeedMemory). Counters are live
  * while the card is on screen (F27).
+ *
+ * F28: after Mute author, Show less or a field / topic mute from any "⋯" menu, the cards they concern fold away from
+ * the list (MuteStore), and unfold in place on Undo; the writer's own pages keep them (MUTE_SCOPE).
  */
 @Component({
   selector: 'rd-post-card',
@@ -115,6 +121,7 @@ function injectMediaQuery(query: string): Signal<boolean> {
     class: 'rd-card block max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0',
     style: 'scroll-margin-top: 5rem',
     '[attr.data-post-card]': 'article().id',
+    '[style.display]': "away() ? 'none' : null",
     '(click)': 'onCardClick($event)',
   },
   styles: `
@@ -188,7 +195,7 @@ function injectMediaQuery(query: string): Signal<boolean> {
           >
             <svg lucideIcon="Bookmark" [size]="19" [class.fill-current]="state().isSaved" aria-hidden="true"></svg>
           </button>
-          <rd-article-menu [article]="article()" />
+          <rd-article-menu [article]="article()" (topicsSheetOpen)="sheetOpen.set($event)" />
         </div>
         <p class="col-span-2 col-start-2 m-0 mt-0.5 flex flex-wrap items-center gap-x-1.5 pe-2 text-xs text-text-secondary" data-card-meta>
           <span><rd-bdi-text [text]="fieldName()" /></span>
@@ -426,6 +433,8 @@ export class PostCard {
   private readonly viewer = inject(MediaViewerService);
   private readonly sharing = inject(ShareService);
   private readonly memory = inject(FeedMemory);
+  private readonly mutes = inject(MuteStore);
+  private readonly muteScope = inject(MUTE_SCOPE);
   private readonly injector = inject(Injector);
   private readonly document = inject(DOCUMENT);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -493,6 +502,16 @@ export class PostCard {
   protected readonly whoOpen = signal(false);
   protected readonly wide = injectMediaQuery(WIDE_QUERY);
 
+  /**
+   * This card's own "كتم المواضيع" sheet is open. The sheet is drawn inside the card, so the card waits for it to close
+   * before it folds away: a toggle can mute the card itself, and toggling back must stay possible (F28).
+   */
+  protected readonly sheetOpen = signal(false);
+  /** You muted its writer, field or topic, or pressed Show less on it, in a list that applies mutes (F28). */
+  private readonly muted = computed(() => !this.sheetOpen() && this.mutes.hides(this.article(), this.muteScope));
+  /** Out of the list, once it folded away. */
+  protected readonly away = signal(false);
+
   private readonly textRegion = viewChild.required<ElementRef<HTMLElement>>('textRegion');
   private readonly excerptEl = viewChild<ElementRef<HTMLElement>>('excerptEl');
   /** Set by the Comment action just before the sign-in prompt opens, read by the card's click handler. */
@@ -513,6 +532,7 @@ export class PostCard {
     );
 
     this.measureExcerpt();
+    this.foldWhenMuted();
 
     // A guest who signed in from this card comes back to it (with its comments open, if that's what they pressed).
     effect(() => {
@@ -669,5 +689,65 @@ export class PostCard {
 
   private reducedMotion(): boolean {
     return !!this.document.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  /**
+   * F28: the card folds away (height and opacity to 0) when it becomes muted, and unfolds in place when that is undone;
+   * with reduce motion (or no Web Animations) it just goes and comes back. A card muted when it arrives is never shown.
+   * Keyboard focus inside a card that leaves moves to the next card still in the list (or the one before).
+   */
+  private foldWhenMuted(): void {
+    const host = this.host.nativeElement;
+    let animation: Animation | null = null;
+    let first = true;
+    const stop = () => {
+      animation?.cancel();
+      animation = null;
+      host.style.overflow = '';
+    };
+    const fold = (keyframes: Keyframe[], easing: string, done: () => void) => {
+      host.style.overflow = 'hidden';
+      const running = host.animate(keyframes, { duration: MUTE_FOLD_MS, easing });
+      animation = running;
+      running.onfinish = () => {
+        if (animation !== running) return;
+        animation = null;
+        host.style.overflow = '';
+        done();
+      };
+    };
+    effect(() => {
+      const muted = this.muted();
+      untracked(() => {
+        stop();
+        const animate = !first && typeof host.animate === 'function' && !this.reducedMotion();
+        first = false;
+        if (muted) {
+          if (this.away()) return;
+          if (!animate || !host.offsetHeight) return this.leave();
+          fold([{ height: `${host.offsetHeight}px`, opacity: 1 }, { height: '0px', opacity: 0 }], 'ease-in', () => this.leave());
+        } else if (this.away()) {
+          this.away.set(false);
+          if (!animate) return;
+          afterNextRender(() => fold([{ height: '0px', opacity: 0 }, { height: `${host.offsetHeight}px`, opacity: 1 }], 'ease-out', () => undefined), {
+            injector: this.injector,
+          });
+        }
+      });
+    });
+    inject(DestroyRef).onDestroy(stop);
+  }
+
+  /** Takes the card out of the list; focus inside it goes to the next card still shown, else the one before. */
+  private leave(): void {
+    const host = this.host.nativeElement;
+    const hadFocus = host.contains(this.document.activeElement);
+    this.away.set(true);
+    if (!hadFocus) return;
+    const cards = [...this.document.querySelectorAll<HTMLElement>('rd-post-card')];
+    const at = cards.indexOf(host);
+    const shown = (card: HTMLElement) => card !== host && card.style.display !== 'none';
+    const next = cards.slice(at + 1).find(shown) ?? cards.slice(0, at).reverse().find(shown);
+    next?.querySelector<HTMLElement>('[data-card-title]')?.focus();
   }
 }

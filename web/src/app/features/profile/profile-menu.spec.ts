@@ -3,14 +3,16 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { testMe } from '../../../testing/auth-testing';
 import { testProfile } from '../../../testing/profile-testing';
 import { TEST_API, flushMicrotasks, problem, setupSocialTesting } from '../../../testing/social-testing';
+import { ProfileDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
+import { MuteStore } from '../../core/social/mute.store';
 import { ProfileHeader } from './profile-header';
 
-async function render(options: { guest?: boolean; permissions?: string[]; isMe?: boolean } = {}) {
+async function render(options: { guest?: boolean; permissions?: string[]; isMe?: boolean; profile?: Partial<ProfileDto> } = {}) {
   const { http, session, toasts } = setupSocialTesting({ guest: options.guest });
   if (!options.guest) session.setMe(testMe({ permissions: options.permissions ?? ['articles.read', 'reports.create'] }));
   const fixture = TestBed.createComponent(ProfileHeader);
-  fixture.componentRef.setInput('profile', testProfile());
+  fixture.componentRef.setInput('profile', testProfile(options.profile));
   fixture.componentRef.setInput('isMe', !!options.isMe);
   fixture.detectChanges();
   await fixture.whenStable();
@@ -39,7 +41,7 @@ async function render(options: { guest?: boolean; permissions?: string[]; isMe?:
   return { fixture, root, http, toasts, stable, $, openMenu, pick, note };
 }
 
-describe('Profile "⋯" menu (F22)', () => {
+describe('Profile "⋯" menu (F22, F28)', () => {
   let http: HttpTestingController;
 
   beforeEach(() => TestBed.resetTestingModule());
@@ -59,7 +61,7 @@ describe('Profile "⋯" menu (F22)', () => {
     const t = await render();
     http = t.http;
     expect(t.$('[data-profile-menu]')!.getAttribute('aria-label')).toBe('خيارات الحساب');
-    expect(await t.openMenu()).toEqual(['report']);
+    expect(await t.openMenu()).toEqual(['muteUser', 'report']);
     expect(document.querySelector('[data-menu-action="report"]')!.textContent!.trim()).toBe('الإبلاغ عن المستخدم');
     await t.pick('report');
     expect(t.$('[data-report-sheet]')!.getAttribute('data-report-target')).toBe('user');
@@ -76,15 +78,76 @@ describe('Profile "⋯" menu (F22)', () => {
   it('guests get the sign-in prompt', async () => {
     const t = await render({ guest: true });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['report']);
+    expect(await t.openMenu()).toEqual(['muteUser', 'report']);
     await t.pick('report');
     expect(TestBed.inject(AuthPromptService).isOpen()).toBe(true);
+  });
+
+  it('guests get the sign-in prompt for Mute user too', async () => {
+    const t = await render({ guest: true });
+    http = t.http;
+    await t.openMenu();
+    await t.pick('muteUser');
+    expect(TestBed.inject(AuthPromptService).isOpen()).toBe(true);
+    t.http.expectNone(`${TEST_API}/users/writer-1/mute`);
+  });
+
+  it('Mute user mutes them like Mute author: the toast has Undo, which follows again when the mute ended your follow', async () => {
+    const t = await render();
+    http = t.http;
+    const mutes = TestBed.inject(MuteStore);
+    await t.openMenu();
+    expect(document.querySelector('[data-menu-action="muteUser"]')!.textContent!.trim()).toBe('كتم المستخدم');
+    await t.pick('muteUser');
+    expect(mutes.isAuthorMuted('writer-1')).toBe(true);
+    const put = t.http.expectOne(`${TEST_API}/users/writer-1/mute`);
+    expect(put.request.method).toBe('PUT');
+    put.flush({ isMuted: true, isFollowing: false, followerCount: 40, followRemoved: true });
+    await t.stable();
+    const [toast] = t.toasts.toasts();
+    expect(toast.message.startsWith('كتمت ')).toBe(true);
+    expect(toast.message).toContain('Karim Hassan');
+    expect(toast.action!.label).toBe('تراجع');
+
+    // The menu now offers to unmute.
+    document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
+    await t.openMenu();
+    expect(document.querySelector('[data-menu-action="muteUser"]')!.textContent!.trim()).toBe('إلغاء كتم المستخدم');
+    document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
+
+    toast.action!.run();
+    expect(mutes.isAuthorMuted('writer-1')).toBe(false);
+    const undo = t.http.expectOne(`${TEST_API}/users/writer-1/mute?restoreFollow=true`);
+    expect(undo.request.method).toBe('DELETE');
+    undo.flush({ isMuted: false, isFollowing: true, followerCount: 41, followRemoved: false });
+    await t.stable();
+  });
+
+  it('a muted user is unmuted from the menu, with the unmute toast', async () => {
+    const t = await render({ profile: { isMuted: true } });
+    http = t.http;
+    await t.openMenu();
+    await t.pick('muteUser');
+    const del = t.http.expectOne(`${TEST_API}/users/writer-1/mute`);
+    expect(del.request.method).toBe('DELETE');
+    del.flush({ isMuted: false, isFollowing: false, followerCount: 40, followRemoved: false });
+    await t.stable();
+    expect(TestBed.inject(MuteStore).isAuthorMuted('writer-1', true)).toBe(false);
+    const messages = t.toasts.toasts().map((toast) => toast.message);
+    expect(messages).toHaveLength(1);
+    expect(messages[0].startsWith('لغيت كتم ')).toBe(true);
+  });
+
+  it("the official ReadIn account can't be muted: no Mute item", async () => {
+    const t = await render({ profile: { isSystemAccount: true } });
+    http = t.http;
+    expect(await t.openMenu()).toEqual(['report']);
   });
 
   it('moderators warn with a required note the user will see', async () => {
     const t = await render({ permissions: ['articles.read', 'moderation.manage'] });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['warn', 'report']);
+    expect(await t.openMenu()).toEqual(['muteUser', 'warn', 'report']);
     await t.pick('warn');
     expect(t.$('#moderation-sheet-title')!.textContent!.trim()).toBe('تحذير ⁨Karim Hassan⁩');
     expect(t.$('label[for="moderation-note"]')!.textContent!.trim()).toBe('ملاحظة');
@@ -107,7 +170,7 @@ describe('Profile "⋯" menu (F22)', () => {
   it('with users.suspend: suspend for 1, 7, 30 days or permanently, with a note', async () => {
     const t = await render({ permissions: ['articles.read', 'moderation.manage', 'users.suspend'] });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['warn', 'suspend', 'report']);
+    expect(await t.openMenu()).toEqual(['muteUser', 'warn', 'suspend', 'report']);
     await t.pick('suspend');
     expect([...t.root.querySelectorAll('[data-duration]')].map((el) => el.getAttribute('data-duration'))).toEqual(['1', '7', '30', 'permanent']);
     expect(t.$<HTMLInputElement>('[data-duration="7"]')!.checked).toBe(true);

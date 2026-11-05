@@ -25,6 +25,7 @@ import { createEditor } from './editor.mjs';
 import { createExplore } from './explore.mjs';
 import { createPaths } from './paths.mjs';
 import { createModeration } from './moderation.mjs';
+import { createMutes } from './mutes.mjs';
 import { createNotifications } from './notifications.mjs';
 import { createProfiles } from './profiles.mjs';
 import { createSearch, textOfBlocks } from './search.mjs';
@@ -795,6 +796,7 @@ const routes = [
   ...tags.routes,
   ...search.routes,
   ...explore.routes,
+  ...createMutes({ social, writers: WRITERS, fields: FIELDS, topics: TOPICS, articles: () => PUBLISHED, problem }).routes,
   ...social.routes,
   ...profiles.routes,
   ...paths.routes,

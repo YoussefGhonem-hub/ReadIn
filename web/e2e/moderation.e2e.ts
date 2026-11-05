@@ -44,11 +44,12 @@ for (const variant of VARIANTS) {
     const me = await signInAsReader(page, request, variant);
     await openArticle(page, '/en/a/sleep-and-memory');
 
-    // The "⋯" menu: only Report on someone else's article, in the error color.
+    // The "⋯" menu on someone else's article: the F28 items, then Report last, in the error color.
     await page.locator('rd-article-action-bar [data-article-menu]').click();
     const menu = page.locator('[data-article-menu-panel]');
-    await expect(menu.locator('[data-menu-action]')).toHaveCount(1);
-    const report = menu.locator('[data-menu-action="report"]');
+    await expect(menu.locator('[data-menu-action]')).toHaveCount(5);
+    const report = menu.locator('[data-menu-action]').last();
+    await expect(report).toHaveAttribute('data-menu-action', 'report');
     await expect(report).toHaveText(ar ? 'الإبلاغ عن المقال' : 'Report article');
     await expect(report).toHaveClass(/text-error/);
     await report.click();
@@ -93,7 +94,9 @@ for (const variant of VARIANTS) {
     await openProfile(page, '/@omar_dev', { signedIn: true });
     await page.locator('[data-profile-menu]').click();
     const menu = page.locator('[data-profile-menu-panel]');
-    await expect(menu.locator('[data-menu-action]')).toHaveCount(1);
+    // Mute user (F28) first, then Report.
+    await expect(menu.locator('[data-menu-action]')).toHaveCount(2);
+    await expect(menu.locator('[data-menu-action]').first()).toHaveAttribute('data-menu-action', 'muteUser');
     await menu.locator('[data-menu-action="report"]').click();
     const sheet = page.locator('[data-report-sheet]');
     await expect(sheet).toHaveAttribute('data-report-target', 'user');
@@ -188,7 +191,9 @@ for (const variant of VARIANTS) {
     await expect(banner).toHaveCount(0);
 
     await page.locator('rd-article-action-bar [data-article-menu]').click();
-    await expect(page.locator('[data-article-menu-panel] [data-menu-action]')).toHaveCount(2);
+    // The F28 items and Report, then Hide after a divider.
+    await expect(page.locator('[data-article-menu-panel] [data-menu-action]')).toHaveCount(6);
+    await expect(page.locator('[data-article-menu-panel] [data-menu-action]').last()).toHaveAttribute('data-menu-action', 'hide');
     await page.locator('[data-article-menu-panel] [data-menu-action="hide"]').click();
     await confirmAction(page, 'Copied from another site without credit.', ar ? 'اتخفى' : 'Hidden');
     await expect(banner).toBeVisible();

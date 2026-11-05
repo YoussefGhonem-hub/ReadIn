@@ -1,12 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
+import { LucideDynamicIcon, LucideIconData } from '@lucide/angular';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { LanguageService } from '../../core/i18n/language.service';
+import { MuteStore } from '../../core/social/mute.store';
 import { BdiText } from '../../shared/directives/bdi-text';
+import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { CompactNumberPipe, LocalizedDatePipe, RelativeTimePipe } from '../../shared/pipes/format.pipes';
 import { Avatar } from '../../shared/ui/avatar';
 import { ToastService } from '../../shared/ui/toast/toast.service';
@@ -15,12 +17,12 @@ import { CommentErrors } from './comment-errors';
 import { commentDir, commentSegments, isPlaceholder } from './comment-text';
 import { CommentView, CommentsStore } from './comments.store';
 
-type MenuAction = 'edit' | 'delete' | 'pin' | 'unpin' | 'report' | 'hide' | 'unhide' | 'moderatorDelete';
+type MenuAction = 'edit' | 'delete' | 'pin' | 'unpin' | 'muteCommenter' | 'report' | 'hide' | 'unhide' | 'moderatorDelete';
 
 interface MenuItem {
   action: MenuAction;
   label: string;
-  icon: string;
+  icon: string | LucideIconData;
   danger?: boolean;
 }
 
@@ -28,7 +30,8 @@ interface MenuItem {
  * One comment or reply (F11): avatar, name, @handle, verified and "الكاتب" badges, pinned label, relative time,
  * "edited", the text with its own direction and only the resolved @mentions as links, then like, reply and a menu with
  * what the viewer may do (`can*`). Deleted or hidden-for-you comments are placeholders; a deleted account shows as
- * "Deleted user" without a profile link. Guests see the actions and get the sign-in prompt.
+ * "Deleted user" without a profile link. Guests see the actions and get the sign-in prompt. A comment by a writer you
+ * muted collapses to "تعليق من شخص كتمته" with "عرض", which shows it here only (F28); replies under it stay.
  */
 @Component({
   selector: 'rd-comment-item',
@@ -68,6 +71,21 @@ interface MenuItem {
           <svg lucideIcon="MessageCircle" [size]="16"></svg>
         </span>
         <span class="italic">{{ (c.isDeleted ? 'comments.deleted' : 'comments.hidden') | transloco }}</span>
+      </div>
+    } @else if (mutedCollapsed()) {
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 py-3 text-sm text-text-secondary" data-comment-muted>
+        <span class="grid shrink-0 place-items-center rounded-full bg-surface-variant" [style.width.px]="avatarSize()" [style.height.px]="avatarSize()" aria-hidden="true">
+          <svg lucideIcon="MessageCircle" [size]="16"></svg>
+        </span>
+        <span class="italic">{{ 'mute.comment.collapsed' | transloco }}</span>
+        <button
+          type="button"
+          class="-ms-1 inline-flex min-h-9 items-center rounded-md px-2 font-semibold text-primary hover:bg-surface-variant"
+          data-comment-reveal
+          (click)="reveal()"
+        >
+          {{ 'mute.comment.show' | transloco }}
+        </button>
       </div>
     } @else {
       <div class="flex gap-3 py-3" [class.opacity-70]="c.pending">
@@ -217,6 +235,9 @@ export class CommentItem {
   private readonly toasts = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
   private readonly errors = inject(CommentErrors);
+  private readonly mutes = inject(MuteStore);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
   protected readonly lang = inject(LanguageService).lang;
 
   readonly comment = input.required<CommentView>();
@@ -228,6 +249,21 @@ export class CommentItem {
   protected readonly editError = signal<string | null>(null);
 
   protected readonly placeholder = computed(() => isPlaceholder(this.comment()));
+  /** "عرض" was pressed on this collapsed comment (F28): it stays open here only. */
+  private readonly revealed = signal(false);
+  /** By a writer you muted (the API's flag, or a mute or unmute since the page loaded): collapsed until "عرض". */
+  protected readonly mutedCollapsed = computed(() => {
+    const c = this.comment();
+    if (this.revealed() || c.pending || !c.author || !this.session.isAuthenticated()) return false;
+    return this.mutes.isAuthorMuted(c.author.id, c.isAuthorMuted ?? false);
+  });
+  /** You (signed in), for the commenter's Mute item. */
+  private readonly myId = computed(() => (this.session.isAuthenticated() ? (this.session.me()?.id ?? null) : null));
+  /** You muted the commenter (false for guests), whether or not "عرض" opened this comment. */
+  private readonly commenterMuted = computed(() => {
+    const c = this.comment();
+    return !!c.author && this.session.isAuthenticated() && this.mutes.isAuthorMuted(c.author.id, c.isAuthorMuted ?? false);
+  });
   protected readonly avatarSize = computed(() => (this.comment().parentId ? 28 : 36));
   protected readonly highlighted = computed(() => this.store.highlighted().has(this.comment().id));
   protected readonly segments = computed(() => commentSegments(this.comment().body, this.comment().mentions));
@@ -243,6 +279,14 @@ export class CommentItem {
     const items: MenuItem[] = [];
     if (c.canEdit) items.push({ action: 'edit', label: 'comments.edit', icon: 'Pencil' });
     if (c.canPin) items.push(c.isPinned ? { action: 'unpin', label: 'comments.unpin', icon: 'PinOff' } : { action: 'pin', label: 'comments.pin', icon: 'Pin' });
+    // F28: mute the commenter (not yourself, not a deleted account), right before Report; guests get the sign-in prompt.
+    if (c.author && c.author.id !== this.myId()) {
+      items.push(
+        this.commenterMuted()
+          ? { action: 'muteCommenter', label: 'mute.menu.unmuteCommenter', icon: MUTE_ICON.Volume2 }
+          : { action: 'muteCommenter', label: 'mute.menu.muteCommenter', icon: MUTE_ICON.VolumeX },
+      );
+    }
     // Guests may report too: they get the sign-in prompt first.
     if (c.canReport || !this.session.isAuthenticated()) items.push({ action: 'report', label: 'comments.report', icon: 'Flag' });
     if (c.canModerate) {
@@ -252,6 +296,12 @@ export class CommentItem {
     else if (c.canModerate) items.push({ action: 'moderatorDelete', label: 'comments.moderation.delete', icon: 'Trash2', danger: true });
     return items;
   });
+
+  /** Shows the collapsed comment, and moves focus to its writer's name (the button is gone). */
+  protected reveal(): void {
+    this.revealed.set(true);
+    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>('[data-comment-author]')?.focus(), { injector: this.injector });
+  }
 
   protected like(): void {
     if (this.prompt.requireAuth()) void this.store.toggleLike(this.comment().id);
@@ -272,6 +322,12 @@ export class CommentItem {
       case 'delete':
       case 'moderatorDelete':
         this.store.openDialog({ kind: action, comment: c });
+        return;
+      case 'muteCommenter':
+        if (!this.prompt.requireAuth() || !c.author) return;
+        void (this.commenterMuted()
+          ? this.mutes.unmuteAuthor({ id: c.author.id, displayName: c.author.displayName })
+          : this.mutes.muteAuthor({ id: c.author.id, displayName: c.author.displayName }));
         return;
       case 'report':
         if (this.prompt.requireAuth()) this.store.openDialog({ kind: 'report', comment: c });

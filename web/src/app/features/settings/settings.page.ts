@@ -12,6 +12,7 @@ import { LanguageService, UiLanguage } from '../../core/i18n/language.service';
 import { ModerationSummaryStore } from '../../core/moderation/moderation-summary.store';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
+import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { AccountSettings } from './account/account-settings';
@@ -19,7 +20,8 @@ import { PushPermissionRow } from './notifications/push-permission-row';
 import { ProfileSettings } from './profile-settings';
 
 /**
- * Settings (F18): theme, UI language, article language, reminder time, your interests (F12, their own page), font size,
+ * Settings (F18): theme, UI language, article language, reminder time, your interests (F12, their own page), what you
+ * muted (F28, its own page), font size,
  * notifications (push in this browser and a link to the notification preferences, F17), profile (with writer
  * verification, F19) and privacy, Moderation for moderators (F22; the side nav isn't there on narrow screens),
  * verification requests for admins (F19), account.
@@ -102,6 +104,15 @@ import { ProfileSettings } from './profile-settings';
           </span>
           <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
         </a>
+        <!-- The writers, fields and topics you muted (F28), its own page -->
+        <a routerLink="/settings/muted" class="flex min-h-14 items-center gap-3 border-t border-border pt-3 text-sm text-text-primary no-underline" data-settings-muted>
+          <svg [lucideIcon]="mutedIcon" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+          <span class="min-w-0 flex-1">
+            <span class="block">{{ 'mute.settings.title' | transloco }}</span>
+            <span class="block text-xs text-text-secondary">{{ 'mute.settings.rowHint' | transloco }}</span>
+          </span>
+          <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+        </a>
       }
     </section>
 
@@ -162,6 +173,8 @@ import { ProfileSettings } from './profile-settings';
   `,
 })
 export class SettingsPage {
+  /** The muted speaker of the F28 menus, banner and Settings → Muted (as on mobile). */
+  protected readonly mutedIcon = MUTE_ICON.VolumeX;
   protected readonly theme = inject(ThemeService);
   protected readonly language = inject(LanguageService);
   protected readonly readerPrefs = inject(ReaderPrefsService);

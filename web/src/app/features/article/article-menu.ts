@@ -1,43 +1,118 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
+import { LucideDynamicIcon, LucideIconData } from '@lucide/angular';
 import { firstValueFrom } from 'rxjs';
 import { ModerationApi } from '../../core/api/moderation.api';
 import { ArticleCardDto, ArticleModerationDto, ModerationActionRequest } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
+import { FollowStore } from '../../core/social/follow.store';
+import { MuteStore } from '../../core/social/mute.store';
 import { ModerationActionDraft, ModerationActionSheet } from '../../shared/moderation/moderation-action-sheet';
 import { ModerationErrors } from '../../shared/moderation/moderation-errors';
 import { provideModerationIcons } from '../../shared/moderation/moderation-icons';
 import { ReportSheet, ReportTarget } from '../../shared/moderation/report-sheet';
+import { MUTE_ICON } from '../../shared/mutes/mute-icons';
+import { MuteTopicsSheet } from '../../shared/mutes/mute-topics-sheet';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 
 /** An article in the reader, with its moderation state when it is hidden (F22). */
 export type MenuArticle = ArticleCardDto & { moderation?: ArticleModerationDto | null };
 
-/**
- * One entry of the reader's "⋯" menu. F28 adds Show less, Hide highlights, Follow, Mute author and Mute topics here:
- * give the item an id, a label, an icon and a case in {@link ArticleMenu.run}.
- */
+export type ArticleMenuAction = 'showLess' | 'follow' | 'muteAuthor' | 'muteTopics' | 'hide' | 'unhide' | 'report';
+
+/** What the items decide on: the article and where you stand with it. */
+export interface ArticleMenuContext {
+  article: MenuArticle;
+  /** Signed in, and you wrote it. */
+  isOwn: boolean;
+  isModerator: boolean;
+  /** You follow the writer (false for guests). */
+  following: boolean;
+  /** You muted the writer (false for guests). */
+  authorMuted: boolean;
+}
+
+type MenuIcon = string | LucideIconData;
+
+/** One entry of {@link ARTICLE_MENU}. */
+export interface ArticleMenuEntry {
+  id: ArticleMenuAction;
+  /** Shown when this says so; always when omitted. */
+  visible?: (ctx: ArticleMenuContext) => boolean;
+  labelKey: string | ((ctx: ArticleMenuContext) => string);
+  icon: MenuIcon | ((ctx: ArticleMenuContext) => MenuIcon);
+  /** In the error color (Report). */
+  danger?: boolean;
+  /** The moderators' items: after a divider, last. */
+  moderation?: boolean;
+}
+
+/** An item as the menu shows it. */
 export interface ArticleMenuItem {
   id: ArticleMenuAction;
   labelKey: string;
-  icon: string;
-  /** Shown in the error color (Report). */
-  danger?: boolean;
+  icon: MenuIcon;
+  danger: boolean;
+  /** A divider goes above it: the first moderator item after the reader's items. */
+  divider: boolean;
 }
 
-export type ArticleMenuAction = 'hide' | 'unhide' | 'report';
+const hasOtherAuthor = (c: ArticleMenuContext) => !c.isOwn && !!c.article.author;
 
 /**
- * The reader's "⋯" menu (F22 now, F28 later). Report article (error color) for everyone but its author; guests get
- * the sign-in prompt for every item. Moderators also Hide (with a note dialog) or Unhide the article; the new
- * moderation state goes up through `moderationChange`, so the reader shows or drops the "hidden" banner at once.
+ * The "⋯" menu, in the SPEC F28 order: the one list every item comes from (the reader's action bar and the post card's
+ * header). Report ends the reader's items; the moderators' Hide/Unhide come last, after a divider (the same order on
+ * mobile). A later feature adds its entry here and a case in {@link ArticleMenu.run}: F30 "إخفاء الـ Highlights" after
+ * Show less, F33 "تحميل PDF" (your own article) before Report. On your own article only Mute topics stays (and Hide for
+ * moderators); Follow and Mute author need a writer (not a deleted account).
+ */
+export const ARTICLE_MENU: readonly ArticleMenuEntry[] = [
+  { id: 'showLess', visible: (c) => !c.isOwn, labelKey: 'mute.menu.showLess', icon: MUTE_ICON.ThumbsDown },
+  {
+    id: 'follow',
+    visible: hasOtherAuthor,
+    labelKey: (c) => (c.following ? 'mute.menu.unfollow' : 'mute.menu.follow'),
+    icon: (c) => (c.following ? MUTE_ICON.UserMinus : 'UserPlus'),
+  },
+  {
+    id: 'muteAuthor',
+    visible: hasOtherAuthor,
+    labelKey: (c) => (c.authorMuted ? 'mute.menu.unmuteAuthor' : 'mute.menu.muteAuthor'),
+    icon: (c) => (c.authorMuted ? MUTE_ICON.Volume2 : MUTE_ICON.VolumeX),
+  },
+  { id: 'muteTopics', labelKey: 'mute.menu.muteTopics', icon: MUTE_ICON.ListX },
+  // The reader's last item, in the error color; never on your own article.
+  { id: 'report', visible: (c) => !c.isOwn, labelKey: 'article.menu.report', icon: 'Flag', danger: true },
+  // Moderators (F22), after a divider: hide, or unhide a hidden article.
+  { id: 'hide', visible: (c) => c.isModerator && !c.article.moderation, labelKey: 'article.menu.hide', icon: 'EyeOff', moderation: true },
+  { id: 'unhide', visible: (c) => c.isModerator && !!c.article.moderation, labelKey: 'article.menu.unhide', icon: 'Eye', moderation: true },
+];
+
+/** The items of {@link ARTICLE_MENU} shown for `ctx`, with their labels and icons resolved. */
+export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
+  const shown = ARTICLE_MENU.filter((entry) => entry.visible?.(ctx) ?? true);
+  return shown.map((entry, i) => ({
+    id: entry.id,
+    labelKey: typeof entry.labelKey === 'function' ? entry.labelKey(ctx) : entry.labelKey,
+    icon: typeof entry.icon === 'function' ? entry.icon(ctx) : entry.icon,
+    danger: entry.danger ?? false,
+    divider: i > 0 && !!entry.moderation && !shown[i - 1].moderation,
+  }));
+}
+
+/**
+ * The "⋯" menu of the reader's action bar and the post card's header (F28, F22, F34). Guests get the sign-in prompt for
+ * every item. Show less and Mute author confirm with a toast and Undo, and the cards they concern leave the lists on
+ * screen (MuteStore, PostCard); in the reader, a muted writer's article shows the "انت كاتم الكاتب ده" banner instead.
+ * Mute topics opens a sheet with the field and topic toggles (its own lazy chunk). Moderators also Hide (with a note
+ * dialog) or Unhide the article; the new moderation state goes up through `moderationChange`, so the reader shows or
+ * drops the "hidden" banner at once.
  */
 @Component({
   selector: 'rd-article-menu',
-  imports: [TranslocoPipe, LucideDynamicIcon, CdkMenu, CdkMenuItem, CdkMenuTrigger, ReportSheet, ModerationActionSheet],
+  imports: [TranslocoPipe, LucideDynamicIcon, CdkMenu, CdkMenuItem, CdkMenuTrigger, ReportSheet, ModerationActionSheet, MuteTopicsSheet],
   providers: [provideModerationIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
@@ -55,8 +130,11 @@ export type ArticleMenuAction = 'hide' | 'unhide' | 'report';
     }
 
     <ng-template #menu>
-      <div cdkMenu class="min-w-52 rounded-md border border-border bg-surface-raised p-1 shadow-raised" data-article-menu-panel>
+      <div cdkMenu class="min-w-56 rounded-md border border-border bg-surface-raised p-1 shadow-raised" data-article-menu-panel>
         @for (item of items(); track item.id) {
+          @if (item.divider) {
+            <div role="separator" class="mx-2 my-1 h-px bg-border" data-menu-divider></div>
+          }
           <button
             type="button"
             cdkMenuItem
@@ -74,6 +152,12 @@ export type ArticleMenuAction = 'hide' | 'unhide' | 'report';
 
     <rd-report-sheet [target]="reporting()" (closed)="reporting.set(null)" />
     <rd-moderation-action-sheet [draft]="moderating()" (done)="onModerated($event)" (closed)="moderating.set(null)" />
+    <!-- The topics sheet is its own chunk, loaded the first time it opens; it stays so it can give focus back. -->
+    @if (topicsUsed()) {
+      @defer (on immediate) {
+        <rd-mute-topics-sheet [article]="topics()" (closed)="closeTopics()" />
+      }
+    }
   `,
 })
 export class ArticleMenu {
@@ -83,35 +167,57 @@ export class ArticleMenu {
   private readonly toasts = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
   private readonly errors = inject(ModerationErrors);
+  private readonly follows = inject(FollowStore);
+  private readonly mutes = inject(MuteStore);
 
   readonly article = input.required<MenuArticle>();
   /** Hidden (the new state) or visible again (null), after a moderator's action. */
   readonly moderationChange = output<ArticleModerationDto | null>();
+  /**
+   * The topics sheet opened (true) or closed (false). It is drawn inside this menu, so a post card holds its fold while
+   * its own sheet is open (a toggle can mute the card itself) and folds once it closes (F28).
+   */
+  readonly topicsSheetOpen = output<boolean>();
 
   protected readonly reporting = signal<ReportTarget | null>(null);
   protected readonly moderating = signal<ModerationActionDraft | null>(null);
+  protected readonly topics = signal<MenuArticle | null>(null);
+  protected readonly topicsUsed = signal(false);
 
-  private readonly isOwn = computed(() => this.session.isAuthenticated() && this.session.me()?.id === this.article().author?.id);
-  private readonly isModerator = computed(() => this.session.permissions().has('moderation.manage'));
-
-  protected readonly items = computed<ArticleMenuItem[]>(() => {
-    const items: ArticleMenuItem[] = [];
-    if (this.isModerator()) {
-      items.push(
-        this.article().moderation
-          ? { id: 'unhide', labelKey: 'article.menu.unhide', icon: 'Eye' }
-          : { id: 'hide', labelKey: 'article.menu.hide', icon: 'EyeOff' },
-      );
-    }
-    // Last, in the error color; never on your own article.
-    if (!this.isOwn()) items.push({ id: 'report', labelKey: 'article.menu.report', icon: 'Flag', danger: true });
-    return items;
+  private readonly context = computed<ArticleMenuContext>(() => {
+    const article = this.article();
+    const signedIn = this.session.isAuthenticated();
+    const author = article.author;
+    return {
+      article,
+      isOwn: signedIn && !!author && this.session.me()?.id === author.id,
+      isModerator: this.session.permissions().has('moderation.manage'),
+      following: signedIn && !!author && this.follows.isFollowing(author.id, article.isFollowingAuthor),
+      authorMuted: signedIn && !!author && this.mutes.isAuthorMuted(author.id, article.isAuthorMuted ?? false),
+    };
   });
+
+  protected readonly items = computed(() => articleMenuItems(this.context()));
 
   protected run(action: ArticleMenuAction): void {
     if (!this.prompt.requireAuth()) return;
-    const article = this.article();
+    const { article, authorMuted } = this.context();
+    const author = article.author;
     switch (action) {
+      case 'showLess':
+        void this.mutes.showLess(article.id);
+        return;
+      case 'follow':
+        if (author) void this.follows.toggle(author.id, article.isFollowingAuthor);
+        return;
+      case 'muteAuthor':
+        if (author) void (authorMuted ? this.mutes.unmuteAuthor(author) : this.mutes.muteAuthor(author));
+        return;
+      case 'muteTopics':
+        this.topicsUsed.set(true);
+        this.topics.set(article);
+        this.topicsSheetOpen.emit(true);
+        return;
       case 'report':
         this.reporting.set({ type: 'article', id: article.id });
         return;
@@ -122,6 +228,11 @@ export class ArticleMenu {
         void this.unhide(article.id);
         return;
     }
+  }
+
+  protected closeTopics(): void {
+    this.topics.set(null);
+    this.topicsSheetOpen.emit(false);
   }
 
   protected onModerated(request: ModerationActionRequest): void {

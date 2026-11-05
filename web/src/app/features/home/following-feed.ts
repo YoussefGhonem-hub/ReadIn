@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, untracked, viewChild } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { FollowStore } from '../../core/social/follow.store';
+import { MUTE_SCOPE, MuteStore } from '../../core/social/mute.store';
 import { FollowButton } from '../../shared/social/follow-button';
 import { UserRow } from '../../shared/social/user-row';
 import { PostCardSkeleton } from '../../shared/ui/skeletons';
@@ -70,7 +71,8 @@ export class SuggestedWriters {
         <rd-error-state [message]="'home.following.error' | transloco" (retry)="store.loadFollowing()" />
       }
       @case ('loaded') {
-        @if (store.following().length) {
+        <!-- Muted cards fold away but stay in the list (Undo puts them back): count the ones still shown (F28). -->
+        @if (anyShown() || store.followingCursor()) {
           <div class="flex flex-col gap-3 pt-3" data-feed>
             @for (article of store.following(); track article.id) {
               <rd-post-card [article]="article" />
@@ -95,7 +97,7 @@ export class SuggestedWriters {
             <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMoreFollowing()">{{ 'common.retry' | transloco }}</button>
           </div>
         }
-        @if (store.following().length > 0 && !store.followingCursor()) {
+        @if (anyShown() && !store.followingCursor()) {
           <p class="py-6 text-center text-sm text-text-secondary">{{ 'home.endOfFeed' | transloco }}</p>
         }
       }
@@ -117,8 +119,17 @@ export class FollowingFeed {
 
   /** True once you follow one of the suggested writers (optimistically). */
   protected readonly followedSomeone = computed(() => this.store.suggested().some((u) => this.follows.isFollowing(u.id, u.isFollowing)));
+  private readonly mutes = inject(MuteStore);
+  private readonly muteScope = inject(MUTE_SCOPE);
+  /** A card of the feed is still shown (not muted away, F28). */
+  protected readonly anyShown = computed(() => this.mutes.anyShown(this.store.following(), this.muteScope));
 
   constructor() {
+    // A feed emptied by mutes shows the empty state, which suggests writers: load them if the feed came with articles.
+    effect(() => {
+      if (this.store.followingStatus() !== 'loaded' || this.anyShown() || this.store.followingCursor()) return;
+      if (untracked(this.store.suggestedStatus) === 'idle') untracked(() => void this.store.loadSuggested());
+    });
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       const observer = new IntersectionObserver(
