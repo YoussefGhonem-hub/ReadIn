@@ -40,6 +40,9 @@ import { CheckTarget, checkItems, readingTimeOf } from './checks';
                   <svg lucideIcon="CircleAlert" [size]="16" class="mt-0.5 shrink-0 text-error" aria-hidden="true"></svg>
                   <span class="min-w-0 flex-1">
                     {{ item.messageKey | transloco }}
+                    @if (item.tag) {
+                      <span class="rd-tag rd-tag-neutral ms-1" dir="auto" data-problem-tag>#{{ item.tag }}</span>
+                    }
                     @if (item.language && multilingual()) {
                       <span class="rd-tag rd-tag-neutral ms-1">{{ 'editor.language.short.' + languageKey(item.language) | transloco }}</span>
                     }

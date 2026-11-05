@@ -1,18 +1,18 @@
 /**
  * The article editor (F05) for the mock API: My articles, the working copy with versions (autosave, 409 conflicts),
- * publish / update with revisions, discard, restore, delete, tags and mention suggestions.
+ * publish / update with revisions, discard, restore, delete, and the tag rules of a save (F32: names cleaned, repeats
+ * dropped, `tag.invalid` / `article.too_many_tags`, a hidden tag as a `tag.hidden` problem). Suggestions and tag pages
+ * are tags.mjs.
  *
  * State is kept per viewer (the bearer token's `sub`, like social.mjs), so parallel tests never share articles. A
  * viewer whose id starts with `u-author` starts with a few drafts and published articles (My articles); every other
  * viewer starts with none. Published articles are also served to everyone by the reader (`GET /articles/{slug}`).
  */
 
+import { cleanTagName, isValidNewTagName, normalizeTagName } from './tags.mjs';
+
 const PAGE_SIZE = 20;
-const TAGS = ['dotnet', 'dependency-injection', 'architecture', 'angular', 'flutter', 'testing', 'performance', 'ai', 'sleep', 'docker'].map((slug, i) => ({
-  slug,
-  name: slug,
-  articleCount: 40 - i * 3,
-}));
+const MAX_TAGS = 5;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -47,9 +47,10 @@ function documentOf({ language = 'ar-EG', title, text, fieldId = 'f-software', t
 }
 
 /**
- * @param {{ problem: Function, viewerOf: Function, fields: any[], assets: Map<string, any>, author: (viewer: string) => any, fieldRef: Function }} deps
+ * @param {{ problem: Function, viewerOf: Function, fields: any[], assets: Map<string, any>, author: (viewer: string) => any, fieldRef: Function,
+ *   tags: { find: (name: string) => any, refsOf: (names: string[]) => any[] } }} deps
  */
-export function createEditor({ problem, viewerOf, fields, assets, author, fieldRef }) {
+export function createEditor({ problem, viewerOf, fields, assets, author, fieldRef, tags }) {
   const states = new Map();
   /** slug → { viewer, id } of every published editor article (the reader serves them). */
   const published = new Map();
@@ -59,6 +60,25 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
   const notFound = () => [404, problem(404, 'article.not_found', 'Article not found')];
   const conflict = () => [409, problem(409, 'article.draft_conflict', 'The article was changed somewhere else.')];
   const validation = (field) => [400, { ...problem(400, 'validation.failed', 'Validation failed'), errors: { [field]: ['validation.invalid'] } }];
+  const validationErrors = (errors) => [400, { ...problem(400, 'validation.failed', 'Validation failed'), errors }];
+  const sameTag = (a, b) => normalizeTagName(a) === normalizeTagName(b);
+
+  /**
+   * A save's tags (F32): cleaned, repeats of the same tag dropped (the first stays); `tag.invalid` at the index sent for a
+   * new name that breaks the rules (an existing tag's name is always fine), `article.too_many_tags` past 5.
+   */
+  function cleanTags(sent) {
+    const errors = {};
+    const names = [];
+    (Array.isArray(sent) ? sent : []).forEach((raw, i) => {
+      const name = cleanTagName(raw);
+      if (name && names.some((n) => sameTag(n, name))) return;
+      if (!tags.find(name) && !isValidNewTagName(name)) errors[`document.tags[${i}]`] = ['tag.invalid'];
+      names.push(name);
+    });
+    if (names.length > MAX_TAGS) errors['document.tags'] = ['article.too_many_tags'];
+    return { names, errors: Object.keys(errors).length ? errors : null };
+  }
 
   function article(viewer, seed) {
     const id = seed.id ?? `art-${nextId++}`;
@@ -122,9 +142,10 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
       .join(' ');
   }
 
-  function checksOf(document) {
+  /** `live`: what readers see of a published article (keeping a hidden tag it already has is fine). */
+  function checksOf(document, live = null) {
     const problems = [];
-    const add = (code, extra = {}) => problems.push({ code, language: null, blockId: null, mediaAssetId: null, ...extra });
+    const add = (code, extra = {}) => problems.push({ code, language: null, blockId: null, mediaAssetId: null, tag: null, ...extra });
     const field = fields.find((f) => f.id === document.fieldId);
     if (!field) add('article.field_required');
     for (const t of document.translations) {
@@ -139,6 +160,9 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
       if (asset && asset.status !== 'ready') add('attachments.asset_not_ready', { mediaAssetId: a.mediaAssetId });
       else if (asset?.kind === 'image' && !a.altText?.trim()) add('attachments.alt_text_required', { mediaAssetId: a.mediaAssetId });
       else if (asset?.kind === 'document' && !a.title?.trim()) add('attachments.title_required', { mediaAssetId: a.mediaAssetId });
+    }
+    for (const name of document.tags ?? []) {
+      if (tags.find(name)?.hidden && !(live?.tags ?? []).some((t) => sameTag(t, name))) add('tag.hidden', { tag: name });
     }
     const readingTime = document.translations.map((t) => {
       const words = textOf(t.content).split(/\s+/).filter(Boolean).length;
@@ -158,7 +182,7 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
       hasUnpublishedChanges: record.status === 'published' && !same(record.document, record.live),
       document: record.document,
       media: record.document.attachments.map((a) => assets.get(a.mediaAssetId)).filter(Boolean),
-      checks: checksOf(record.document),
+      checks: checksOf(record.document, record.live),
     };
   }
 
@@ -191,7 +215,6 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
     if (!languages.length || languages.length > 2 || new Set(languages).size !== languages.length) return 'translations';
     if (!languages.includes(document.sourceLanguage)) return 'sourceLanguage';
     if (document.translations.some((t) => t.content?.language !== t.language)) return 'content';
-    if ((document.tags ?? []).length > 5) return 'tags';
     if ((document.sources ?? []).some((s) => !s.title?.trim() || !/^https?:\/\//.test(s.url ?? ''))) return 'sources';
     return null;
   }
@@ -234,7 +257,9 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
       signedIn((viewer, state, _q, _m, body) => {
         const invalid = invalidDocument(body);
         if (invalid) return validation(invalid);
-        const record = article(viewer, { document: body });
+        const cleaned = cleanTags(body.tags);
+        if (cleaned.errors) return validationErrors(cleaned.errors);
+        const record = article(viewer, { document: { ...body, tags: cleaned.names } });
         state.articles.set(record.id, record);
         return [201, editDto(record)];
       }),
@@ -246,8 +271,10 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
       own((record, _viewer, _q, _m, body) => {
         const invalid = invalidDocument(body?.document);
         if (invalid) return validation(invalid);
+        const cleaned = cleanTags(body.document.tags);
+        if (cleaned.errors) return validationErrors(cleaned.errors);
         if (body.baseVersion !== record.version) return conflict();
-        record.document = body.document;
+        record.document = { ...body.document, tags: cleaned.names };
         record.version++;
         record.savedAt = new Date().toISOString();
         return [200, editDto(record)];
@@ -269,7 +296,7 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
       new RegExp(`^${API}/articles/([^/]+)/publish$`),
       own((record, _viewer, _q, _m, body) => {
         if (body?.baseVersion !== record.version) return conflict();
-        const { problems } = checksOf(record.document);
+        const { problems } = checksOf(record.document, record.live);
         if (problems.length) return [400, { ...problem(400, problems[0].code, 'The article has problems'), problems }];
         const firstPublish = record.status === 'draft';
         const at = new Date().toISOString();
@@ -308,15 +335,6 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
         if (record.slug) published.delete(record.slug);
         return [204, undefined];
       }),
-    ],
-    [
-      'GET',
-      new RegExp(`^${API}/tags$`),
-      (q) => {
-        const prefix = (q.get('q') ?? '').trim().toLowerCase();
-        const limit = Math.min(50, Number(q.get('limit') ?? 10) || 10);
-        return [200, TAGS.filter((t) => t.slug.startsWith(prefix) || t.name.toLowerCase().startsWith(prefix)).slice(0, limit)];
-      },
     ],
   ];
 
@@ -372,7 +390,8 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
       summary: null,
       content: translation.content,
       topic: null,
-      tags: live.tags,
+      tags: tags.refsOf(live.tags),
+      tagCount: tags.refsOf(live.tags).length,
       sources: live.sources,
       readCount: 0,
       isFollowingAuthor: false,

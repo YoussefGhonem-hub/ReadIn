@@ -2,12 +2,14 @@ import { completeSources, isCompleteSource } from './sources-editor';
 import { MAX_TAGS, TAG_MAX_LENGTH, addTag } from './tag-input';
 
 describe('article settings rules (the contract rejects a save that breaks them)', () => {
-  it('tags: trimmed, without a leading #, at most 40 characters, no duplicates ignoring case, at most 5', () => {
+  it('tags (F32): cleaned, at most 30 characters, no repeats ignoring case, at most 5', () => {
     expect(addTag([], '  #dotnet  ')).toEqual(['dotnet']);
     expect(addTag(['dotnet'], 'DotNet')).toEqual(['dotnet']);
-    expect(addTag([], 'x'.repeat(50))).toEqual(['x'.repeat(TAG_MAX_LENGTH)]);
-    expect(addTag(['a', 'b', 'c', 'd', 'e'], 'f')).toHaveLength(MAX_TAGS);
-    expect(addTag(['a'], '   ')).toEqual(['a']);
+    // Too long is refused (the field says why), no longer cut to fit.
+    expect(addTag([], 'x'.repeat(TAG_MAX_LENGTH))).toEqual(['x'.repeat(TAG_MAX_LENGTH)]);
+    expect(addTag([], 'x'.repeat(TAG_MAX_LENGTH + 1))).toEqual([]);
+    expect(addTag(['ab', 'bc', 'cd', 'de', 'ef'], 'fg')).toHaveLength(MAX_TAGS);
+    expect(addTag(['ab'], '   ')).toEqual(['ab']);
     expect(addTag([], 'clean   architecture')).toEqual(['clean architecture']);
   });
 

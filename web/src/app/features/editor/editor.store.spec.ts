@@ -164,6 +164,26 @@ describe('ArticleEditorStore (autosave, local backup, conflicts)', () => {
       expect(api.saveDraft.mock.calls[1][1].document.translations[0].title).toBe('Two');
     });
 
+    it('a save refused because of the tags (F32) says which ones, until a save goes through', async () => {
+      const refused = new ApiError(400, 'validation.failed', {
+        code: 'validation.failed',
+        status: 400,
+        errors: { 'document.tags[1]': ['tag.invalid'], 'document.tags': ['article.too_many_tags'], 'document.title': ['validation.required'] },
+      });
+      api.saveDraft.mockImplementationOnce(() => fail(refused));
+      store.patch({ tags: ['C#', 'CI/CD'] });
+      expect(await store.save()).toBe(false);
+      expect(store.saveStatus()).toBe('error');
+      expect(store.tagErrors()).toEqual([
+        { code: 'tag.invalid', tag: 'CI/CD' },
+        { code: 'article.too_many_tags', tag: null },
+      ]);
+
+      store.patch({ tags: ['C#'] });
+      expect(await store.save()).toBe(true);
+      expect(store.tagErrors()).toEqual([]);
+    });
+
     it('offline: keeps the change on this device, says so, and retries', async () => {
       api.saveDraft.mockImplementationOnce(() => fail(offline()));
       typeTitle('Written on the train');

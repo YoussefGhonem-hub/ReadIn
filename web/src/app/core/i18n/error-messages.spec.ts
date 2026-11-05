@@ -22,6 +22,37 @@ describe('Error code translations (docs/api/contract-v1.md)', () => {
   }
 });
 
+describe('Tag errors (F32)', () => {
+  // The API's wording (ErrorMessages.cs), as mobile has it; the symbols stay in order in Arabic (LRI … PDI).
+  const expected: Record<string, [string, string]> = {
+    'tag.not_found': ['التاج ده مش موجود.', 'Tag not found.'],
+    'tag.invalid': [
+      'التاج لازم يكون من 2 لـ 30 حرف: حروف وأرقام ومسافات و \u2066- _ . + #\u2069 بس.',
+      'A tag has 2–30 characters: letters, digits, spaces and - _ . + # only.',
+    ],
+    'tag.limit': [
+      'عملت تاجات جديدة كتير النهارده. اختار من التاجات الموجودة، أو جرّب تاني بعدين.',
+      "You've created a lot of new tags today. Pick existing tags, or try again later.",
+    ],
+    'tag.hidden': ['التاج ده مش متاح، اختار تاج تاني.', "This tag isn't available. Choose another one."],
+    'article.too_many_tags': ['أقصى حاجة 5 تاجات للمقال.', 'An article can have at most 5 tags.'],
+  };
+
+  it('read like the API in both languages', () => {
+    for (const [code, [arabic, english]] of Object.entries(expected)) {
+      expect(lookup(ar, `errors.${code}`), code).toBe(arabic);
+      expect(lookup(en, `errors.${code}`), code).toBe(english);
+    }
+  });
+
+  it('the editor problems say the same', () => {
+    for (const strings of [ar, en]) {
+      expect(strings.editor.problems.tag_hidden).toBe(strings.errors.tag.hidden);
+      expect(strings.editor.problems.tag_limit).toBe(strings.errors.tag.limit);
+    }
+  });
+});
+
 describe('Suspended account message (F22)', () => {
   const suspended = (suspendedUntil?: string | null) =>
     new ApiError(403, 'user.suspended', { title: 'This account is suspended.', status: 403, code: 'user.suspended', ...(suspendedUntil === undefined ? {} : { suspendedUntil }) });

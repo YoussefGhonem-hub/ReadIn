@@ -39,6 +39,7 @@ import { CompactNumberPipe, PluralPipe, ReadingTimePipe, RelativeTimePipe, Local
 import { FollowButton } from '../../shared/social/follow-button';
 import { ShareService, articleShareUrl } from '../../shared/social/share.service';
 import { articleLink } from '../../shared/ui/article-link';
+import { tagLink } from '../../shared/ui/tag-link';
 import { Avatar } from '../../shared/ui/avatar';
 import { BottomSheet } from '../../shared/ui/bottom-sheet';
 import { LinesSkeleton } from '../../shared/ui/skeletons';
@@ -77,7 +78,7 @@ function injectMediaQuery(query: string): Signal<boolean> {
  * Follow / Save / "⋯", the title (≤ 3 lines, opens the reader), the excerpt cut at 4 lines with "… اقرأ المزيد" at
  * the end of its last line, the attachments (F26) or else the cover (16:9), up to 3 tags + "+N", the counts (who
  * reacted; the comments) and the action bar: React, Comment, Share. The card is no longer one big link: the title
- * opens the reader, the text expands, an image opens the viewer, the writer opens the profile.
+ * opens the reader, the text expands, an image opens the viewer, the writer opens the profile, a tag its tag page (F32).
  *
  * "Read more" grows the card in place, downwards: the first time it loads the preview (the first ~300 words as RDoc)
  * and renders it with the reader's renderer, in a lazy chunk; "Show less" folds it back and brings the card's top
@@ -295,11 +296,13 @@ function injectMediaQuery(query: string): Signal<boolean> {
         </div>
       }
 
-      <!-- Tags (plain chips; tag pages come with F32) -->
+      <!-- Tags: each opens its tag page (F32); "+N" stays plain -->
       @if (tags().length) {
         <ul class="m-0 mt-3 flex list-none flex-wrap gap-1.5 px-4" [attr.aria-label]="'feedCard.tags' | transloco" data-card-tags>
-          @for (tag of tags(); track tag) {
-            <li class="rd-tag rd-tag-neutral" dir="auto">#{{ tag }}</li>
+          @for (tag of tags(); track tag.slug) {
+            <li class="flex">
+              <a [routerLink]="tagLink(tag)" class="rd-tag rd-tag-neutral no-underline hover:text-primary hover:underline" dir="auto" [attr.data-card-tag]="tag.slug">#{{ tag.name }}</a>
+            </li>
           }
           @if (moreTags() > 0) {
             <li class="rd-tag rd-tag-neutral" data-card-more-tags>
@@ -429,6 +432,7 @@ export class PostCard {
   protected readonly lang = this.language.lang;
   protected readonly uiDir = this.language.dir;
   protected readonly emoji = REACTION_EMOJI;
+  protected readonly tagLink = tagLink;
 
   readonly article = input.required<ArticleCardDto>();
   /** An i18n key for the label above the card, e.g. `feedCard.todayLabel` on Home's daily article. */

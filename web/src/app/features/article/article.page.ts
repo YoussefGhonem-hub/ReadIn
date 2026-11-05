@@ -44,6 +44,7 @@ import { FollowButton } from '../../shared/social/follow-button';
 import { RDocRenderer } from '../../shared/rdoc/rdoc-renderer';
 import { hasBlock, tableOfContents } from '../../shared/rdoc/rdoc.utils';
 import { articleLanguageForUrl, urlLangFor } from '../../shared/ui/article-link';
+import { tagLink } from '../../shared/ui/tag-link';
 import { Avatar } from '../../shared/ui/avatar';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { LinesSkeleton } from '../../shared/ui/skeletons';
@@ -224,10 +225,13 @@ const TOC_MIN_HEADINGS = 3;
           <rd-article-attachments class="mt-8" [attachments]="attachments" [article]="a" />
         }
 
+        <!-- Tags (F32): each opens its tag page -->
         @if (a.tags.length) {
-          <ul class="mt-8 flex list-none flex-wrap gap-2 p-0">
-            @for (tag of a.tags; track tag) {
-              <li class="rd-tag rd-tag-neutral" dir="auto">#{{ tag }}</li>
+          <ul class="mt-8 flex list-none flex-wrap gap-2 p-0" [attr.aria-label]="'feedCard.tags' | transloco" data-article-tags>
+            @for (tag of a.tags; track tag.slug) {
+              <li class="flex">
+                <a [routerLink]="tagLink(tag)" class="rd-tag rd-tag-neutral no-underline hover:text-primary hover:underline" dir="auto" [attr.data-article-tag]="tag.slug">#{{ tag.name }}</a>
+              </li>
             }
           </ul>
         }
@@ -282,6 +286,7 @@ export class ArticlePage {
   protected readonly prompt = inject(AuthPromptService);
   protected readonly uiLang = inject(LanguageService).lang;
   protected readonly tocMinHeadings = TOC_MIN_HEADINGS;
+  protected readonly tagLink = tagLink;
 
   /** Route params (component input binding). */
   readonly lang = input<string>('ar');

@@ -37,7 +37,10 @@ export function testCard(patch: Partial<ArticleCardDto> = {}): ArticleCardDto {
     excerpt: 'Four circles on a whiteboard explain most of Clean Architecture: entities, use cases, adapters and frameworks.',
     hasMore: true,
     isFollowingAuthor: false,
-    tags: ['architecture', 'dotnet'],
+    tags: [
+      { slug: 'architecture', name: 'architecture' },
+      { slug: 'dotnet', name: '.NET' },
+    ],
     tagCount: 2,
     ...patch,
   };

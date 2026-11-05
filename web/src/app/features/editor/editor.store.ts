@@ -107,6 +107,28 @@ function isOffline(error: unknown): boolean {
   return isApiError(error) && error.status === 0;
 }
 
+/** Why a save was refused because of the tags (F32): a contract code, and the name it is about (if one). */
+export interface TagSaveError {
+  code: string;
+  tag: string | null;
+}
+
+/**
+ * The tag errors of a refused save (`400 validation.failed`): `errors["document.tags"]` (`article.too_many_tags`) and
+ * `errors["document.tags[i]"]` (`tag.invalid`, `i` = the index in the list sent).
+ */
+export function tagSaveErrors(error: unknown, document: ArticleDraftDocument): TagSaveError[] {
+  if (!isApiError(error) || error.code !== 'validation.failed') return [];
+  const result: TagSaveError[] = [];
+  for (const [key, codes] of Object.entries(error.validationErrors)) {
+    const match = /^document\.tags(?:\[(\d+)\])?$/i.exec(key);
+    if (!match) continue;
+    const tag = match[1] === undefined ? null : (document.tags[Number(match[1])] ?? null);
+    for (const code of codes) result.push({ code, tag });
+  }
+  return result;
+}
+
 /**
  * The article being written (F05): the working copy, autosave, the local backup, conflicts and the actions
  * (publish/update, discard changes, restore a revision, delete).
@@ -144,6 +166,8 @@ export class ArticleEditorStore {
   readonly loadError = signal<string | null>(null);
   readonly saveStatus = signal<SaveStatus>('idle');
   readonly saveError = signal<string | null>(null);
+  /** The tags the last save was refused for (shown under the tag field until a save goes through). */
+  readonly tagErrors = signal<TagSaveError[]>([]);
   readonly conflict = signal(false);
   readonly dirty = signal(false);
   readonly action = signal<EditorAction | null>(null);
@@ -350,6 +374,7 @@ export class ArticleEditorStore {
       }
       this.saveStatus.set('saved');
       this.saveError.set(null);
+      this.tagErrors.set([]);
       return seq === this.changeSeq;
     } catch (error) {
       if (isConflict(error)) {
@@ -358,6 +383,7 @@ export class ArticleEditorStore {
       } else {
         this.saveStatus.set(isOffline(error) ? 'offline' : 'error');
         this.saveError.set(errorCode(error));
+        this.tagErrors.set(tagSaveErrors(error, document));
       }
       return false;
     }

@@ -95,7 +95,7 @@ export class ArticleSeoService {
       // A deleted account's articles stay up without an author (SPEC §9.6): nothing may point back to the person.
       ...(author ? { author: { '@type': 'Person', name: author.displayName, url: `${environment.siteUrl}/@${author.username}` } } : {}),
       publisher: { '@type': 'Organization', name: 'ReadIn', url: environment.siteUrl },
-      keywords: article.tags.join(', '),
+      keywords: article.tags.map((tag) => tag.name).join(', '),
       isAccessibleForFree: true,
       mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     };

@@ -13,6 +13,8 @@ const ALL_CODES: DraftProblemCode[] = [
   'attachments.alt_text_required',
   'attachments.title_required',
   'attachments.asset_not_ready',
+  'tag.hidden',
+  'tag.limit',
 ];
 
 function problem(code: DraftProblemCode, patch: Partial<DraftProblemDto> = {}): DraftProblemDto {
@@ -57,6 +59,32 @@ describe('live checks (checks.problems → what the editor shows)', () => {
       { kind: 'sources' },
       { kind: 'attachment', mediaAssetId: 'asset-1' },
     ]);
+  });
+
+  it('tag problems (F32) carry their tag, come with the article settings, and point at the tag', () => {
+    const checks: DraftChecksDto = {
+      readingTime: [],
+      problems: [
+        problem('article.title_length', { language: 'ar-EG' }),
+        problem('tag.limit', { tag: 'Clean Code' }),
+        problem('tag.hidden', { tag: 'spam-links' }),
+        problem('tag.limit', { tag: 'kotlin' }),
+        problem('tag.limit', { tag: 'kotlin' }),
+        problem('article.field_required'),
+      ],
+    };
+    const items = checkItems(checks, 'ar-EG');
+    expect(items.map((i) => [i.code, i.tag])).toEqual([
+      ['article.field_required', null],
+      ['tag.hidden', 'spam-links'],
+      ['tag.limit', 'Clean Code'],
+      ['tag.limit', 'kotlin'],
+      ['article.title_length', null],
+    ]);
+    expect(items[1].messageKey).toBe('editor.problems.tag_hidden');
+    expect(items[1].target).toEqual({ kind: 'tag', tag: 'spam-links' });
+    // An API older than F32 sends no `tag`.
+    expect(checkItems({ readingTime: [], problems: [{ code: 'tag.hidden', language: null, blockId: null, mediaAssetId: null }] }, 'en')[0].target).toEqual({ kind: 'tag', tag: null });
   });
 
   it('drops duplicates and copes with unknown codes', () => {

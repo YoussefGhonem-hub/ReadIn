@@ -49,6 +49,21 @@ describe('ArticlePage byline', () => {
     expect(t.jsonLd()['author']).toEqual({ '@type': 'Person', name: 'Karim Hassan', url: expect.stringMatching(/\/@karim$/) });
   });
 
+  it('every tag links to its tag page by the slug the API gave it (F32), and is in the JSON-LD keywords', async () => {
+    const tags = [
+      { slug: 'csharp', name: 'C#' },
+      { slug: 'الذكاء-الاصطناعي', name: 'الذكاء الاصطناعي' },
+    ];
+    const t = await render(testDetails({ tags, tagCount: 2 }));
+    http = t.http;
+    const links = [...t.root.querySelectorAll<HTMLAnchorElement>('[data-article-tags] a')];
+    expect(links.map((a) => a.textContent!.trim())).toEqual(['#C#', '#الذكاء الاصطناعي']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/tags/csharp', `/tags/${encodeURIComponent('الذكاء-الاصطناعي')}`]);
+    expect(links.every((a) => a.getAttribute('dir') === 'auto')).toBe(true);
+    expect(t.root.querySelector('[data-article-tags]')!.getAttribute('aria-label')).toBe('التاجات');
+    expect(t.jsonLd()['keywords']).toBe('C#, الذكاء الاصطناعي');
+  });
+
   it('a deleted account’s article says “Deleted user”: a neutral avatar, no link, @username, verified mark or Follow (SPEC §9.6)', async () => {
     const t = await render(testDetails({ author: null, isFollowingAuthor: false }));
     http = t.http;

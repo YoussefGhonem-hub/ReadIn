@@ -341,6 +341,8 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
               [fields]="fields()"
               [topics]="topics()"
               [fieldsFailed]="fieldsFailed()"
+              [tagFlags]="tagFlags()"
+              [tagErrors]="store.tagErrors()"
               (patch)="patchDocument($event)"
               (retryFields)="loadFields()"
               (coverUploading)="coverUploading.set($event)"
@@ -437,6 +439,11 @@ export class ArticleEditor {
   protected readonly selectedTopic = computed(() => this.topics().find((t) => t.id === this.store.document().topicId) ?? null);
   protected readonly uploading = computed(() => this.attachments.isBusy() || this.imageUploads() > 0 || this.coverUploading());
   protected readonly problemCount = computed(() => this.store.problems().length);
+  /** Tags the last checks (`tag.hidden`, `tag.limit`) or a refused save (`tag.invalid`) are about (F32). */
+  protected readonly tagFlags = computed(() => [
+    ...this.store.problems().flatMap((p) => (p.tag ? [p.tag] : [])),
+    ...this.store.tagErrors().flatMap((e) => (e.tag ? [e.tag] : [])),
+  ]);
   protected readonly previewMinutes = computed(() => readingTimeOf(this.store.checks(), this.previewLanguage())?.minutes ?? null);
   protected readonly author = computed<PreviewAuthor>(() => {
     const me = this.session.me();
@@ -667,7 +674,21 @@ export class ArticleEditor {
         this.focus(local ? (isDocument ? '#rd-doc-title' : `#rd-alt-${local}`) : '#ed-attachments');
         break;
       }
+      case 'tag':
+        this.focusTag(target.tag);
+        break;
     }
+  }
+
+  /** A tag problem: the chip's remove button (the usual fix), else the tag input. */
+  private focusTag(tag: string | null): void {
+    this.afterRender(() => {
+      const field = this.document.querySelector<HTMLElement>('#ed-tags');
+      const chip = [...(field?.querySelectorAll<HTMLElement>('[data-tag]') ?? [])].find((el) => el.getAttribute('data-tag') === tag);
+      const element = chip?.querySelector<HTMLElement>('[data-tag-remove]') ?? field?.querySelector<HTMLElement>('[data-tag-input]:not(:disabled)') ?? null;
+      field?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+      element?.focus({ preventScroll: true });
+    });
   }
 
   private afterRender(action: () => void): void {

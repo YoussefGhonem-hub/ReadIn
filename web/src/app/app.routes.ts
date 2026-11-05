@@ -57,6 +57,8 @@ export const routes: Routes = [
       },
       // Learning paths (F09): public, server-rendered (app.routes.server.ts → `**`).
       { path: 'paths', loadChildren: () => import('./features/paths/paths.routes') },
+      // Tag pages (F32): public, server-rendered (`**`), their own chunk. `/tags` alone is a 404.
+      { path: 'tags/:slug', loadComponent: () => import('./features/tags/tag.page').then((m) => m.TagPage) },
       { path: 'settings', loadChildren: () => import('./features/settings/settings.routes') },
       // Reports queue, cases and log (F22): moderators only, client-rendered, its own chunk.
       {

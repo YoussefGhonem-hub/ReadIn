@@ -16,6 +16,9 @@
 /** The article paths the apps open: the web's article URLs, one per language (`/ar/a/{slug}`, `/en/a/{slug}`). */
 export const APP_LINK_ARTICLE_PATHS = ['/ar/a/*', '/en/a/*'] as const;
 
+/** Every web path the apps open: the articles and the tag pages (`/tags/{slug}`, F32). */
+export const APP_LINK_PATHS = [...APP_LINK_ARTICLE_PATHS, '/tags/*'] as const;
+
 export interface AppLinksConfig {
   androidPackage: string;
   androidCertSha256: string[];
@@ -93,7 +96,7 @@ export function appleAppSiteAssociation(config: AppLinksConfig): unknown | null 
       details: [
         {
           appIDs: config.iosAppIds,
-          components: APP_LINK_ARTICLE_PATHS.map((path) => ({ '/': path })),
+          components: APP_LINK_PATHS.map((path) => ({ '/': path })),
         },
       ],
     },

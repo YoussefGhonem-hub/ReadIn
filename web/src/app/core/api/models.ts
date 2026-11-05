@@ -287,9 +287,9 @@ export interface ArticleCardDto {
   hasMore: boolean;
   /** False for guests, on your own articles and for a deleted author. */
   isFollowingAuthor: boolean;
-  /** At most 3 tag names, in the article's order (the same strings as on the article). */
-  tags: string[];
-  /** All the article's tags (≤ 5), for "+N". */
+  /** The first 3 tags, in the writer's order (F32): each links to its tag page. Hidden tags are left out. */
+  tags: TagRefDto[];
+  /** All the article's visible tags (0–5), for "+N". */
   tagCount: number;
 }
 
@@ -313,8 +313,8 @@ export interface ArticleDetailsDto extends ArticleCardDto {
   summary: string | null;
   content: RDoc;
   topic: FieldRefDto | null;
-  /** All of them (the card's `tags` holds the first 3). */
-  tags: string[];
+  /** All the article's visible tags (≤ 5); the card's `tags` holds the first 3. */
+  tags: TagRefDto[];
   sources: ArticleSourceDto[];
   readCount: number;
   /** The viewer's collections that contain the article; empty for guests. */
@@ -708,7 +708,10 @@ export interface ArticleDraftDocument {
   fieldId: string | null;
   /** Must belong to `fieldId`. */
   topicId: string | null;
-  /** ≤ 5 names, each 1..40 characters; new names create tags on publish. */
+  /**
+   * ≤ 5 tag names (F32 rules: features/editor/tag-rules.ts). The server stores them cleaned with repeats dropped, and
+   * new names become tags on publish.
+   */
   tags: string[];
   /** ≤ 30; title 1..200, url http(s) ≤ 2048. Required to publish when the field has `requiresSources`. */
   sources: ArticleSourceDto[];
@@ -738,7 +741,10 @@ export type DraftProblemCode =
   | 'attachments.asset_not_ready'
   | 'attachments.mixed_kinds'
   | 'attachments.single_document'
-  | 'media.in_use';
+  | 'media.in_use'
+  // F32: a hidden tag the published article doesn't have; more than 20 new tags in 24 hours.
+  | 'tag.hidden'
+  | 'tag.limit';
 
 export interface DraftProblemDto {
   code: DraftProblemCode;
@@ -748,6 +754,8 @@ export interface DraftProblemDto {
   blockId: string | null;
   /** Attachment problems. */
   mediaAssetId: string | null;
+  /** Tag problems (F32): the name as in `document.tags`. Missing from an API older than F32. */
+  tag?: string | null;
 }
 
 export interface ReadingTimeCheckDto {
@@ -828,10 +836,19 @@ export interface MyArticleDto {
   readCount: number;
 }
 
-/** `GET /tags?q=`: tags whose name or slug starts with `q`, most used first. */
-export interface TagDto {
+// ── Tags (F32) ──────────────────────────────────────────────
+
+/** A tag on a card or in the reader: shown as "#name" (`dir="auto"`), linking to `/tags/{slug}`. */
+export interface TagRefDto {
+  /** Made by the server and never changed; may hold Arabic letters. Clients never build one from a name. */
   slug: string;
+  /** The first spelling anyone used, e.g. "C#", ".NET", "الذكاء الاصطناعي". */
   name: string;
+}
+
+/** `GET /tags?q=` (the editor's suggestions, most used first) and `GET /tags/{slug}` (the tag page's header). */
+export interface TagDto extends TagRefDto {
+  /** Published articles readers can see; 0 → the tag page's empty state (and `noindex`). */
   articleCount: number;
 }
 

@@ -130,6 +130,12 @@
       "not_found": "Topic not found.",
       "not_in_field": "The topic doesn't belong to this field."
     },
+    "tag": {
+      "not_found": "Tag not found.",
+      "invalid": "A tag has 2–30 characters: letters, digits, spaces and - _ . + # only.",
+      "limit": "You've created a lot of new tags today. Pick existing tags, or try again later.",
+      "hidden": "This tag isn't available. Choose another one."
+    },
     "article": {
       "not_found": "Article not found",
       "sources_required": "Add at least one source before publishing.",
@@ -149,6 +155,7 @@
       "tags": {
         "max_five": "An article can have at most 5 tags."
       },
+      "too_many_tags": "An article can have at most 5 tags.",
       "language_invalid": "That article language isn't supported.",
       "content_language_mismatch": "The content's language doesn't match the article's language."
     },
@@ -1162,9 +1169,17 @@
       "tags": "Tags",
       "tagPlaceholder": "Add a tag",
       "tagsHint": "Up to 5. Press Enter or type a comma to add one.",
-      "tagsFull": "That's 5 tags, the most an article can have.",
+      "tagsFull": "That's 5 tags, the most an article can have. Remove one to add another.",
       "tagSuggestions": "Suggested tags",
+      "createTag": "Create new tag:",
       "removeTag": "Remove the tag {{tag}}",
+      "removeFlaggedTag": "Remove the tag {{tag}} (it has a problem)",
+      "tagRules": {
+        "tooShort": "A tag needs at least {{min}} characters.",
+        "tooLong": "A tag can have at most {{max}} characters.",
+        "charset": "Use only letters, digits, spaces and - _ . + # in a tag.",
+        "noLetter": "A tag needs at least one letter or digit."
+      },
       "cover": "Cover image",
       "coverHint": "Shown on cards and at the top of the article.",
       "coverChoose": "Choose a cover",
@@ -1196,6 +1211,8 @@
       "attachments_mixed_kinds": "A post has images or one PDF, not both. Remove one kind.",
       "attachments_single_document": "A post can have only one PDF.",
       "media_in_use": "This file is already shown in another article. Upload it again.",
+      "tag_hidden": "This tag isn't available. Choose another one.",
+      "tag_limit": "You've created a lot of new tags today. Pick existing tags, or try again later.",
       "uploading": "Wait until uploads finish.",
       "attachmentFailed": "Remove or retry the attachment that failed.",
       "unknown": "Something needs fixing before you publish."
@@ -1344,6 +1361,21 @@
       "last": "This is the last article in the path",
       "completed": "🎉 Path completed",
       "join": "Join path"
+    }
+  },
+  "tags": {
+    "page": {
+      "kicker": "Tag",
+      "articles": "Articles tagged {{name}}",
+      "end": "You've seen every article with this tag.",
+      "emptyTitle": "No articles with this tag yet",
+      "emptyBody": "Articles with this tag will show up here.",
+      "browse": "Browse other articles",
+      "notFoundTitle": "This tag doesn't exist",
+      "notFoundBody": "It may have been removed, or the link is wrong.",
+      "loadError": "We couldn't load this tag.",
+      "metaDescription": "{{articles}} tagged {{name}} on ReadIn.",
+      "metaDescriptionEmpty": "No articles tagged {{name}} on ReadIn yet."
     }
   },
   "profile": {

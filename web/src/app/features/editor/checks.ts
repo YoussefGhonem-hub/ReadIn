@@ -12,7 +12,8 @@ export type CheckTarget =
   | { kind: 'content'; language: ArticleLanguage }
   | { kind: 'block'; language: ArticleLanguage; blockId: string }
   | { kind: 'sources' }
-  | { kind: 'attachment'; mediaAssetId: string | null };
+  | { kind: 'attachment'; mediaAssetId: string | null }
+  | { kind: 'tag'; tag: string | null };
 
 export interface CheckItem {
   code: DraftProblemCode;
@@ -20,11 +21,15 @@ export interface CheckItem {
   messageKey: string;
   /** The language version it belongs to (shown as a label when the article has two). */
   language: ArticleLanguage | null;
+  /** The tag it is about (F32), shown beside the message. */
+  tag: string | null;
   target: CheckTarget;
 }
 
 const ORDER: readonly DraftProblemCode[] = [
   'article.field_required',
+  'tag.hidden',
+  'tag.limit',
   'article.title_length',
   'article.content_empty',
   'article.content_invalid',
@@ -52,27 +57,31 @@ function target(problem: DraftProblemDto, source: ArticleLanguage): CheckTarget 
       return problem.blockId ? { kind: 'block', language, blockId: problem.blockId } : { kind: 'content', language };
     case 'article.sources_required':
       return { kind: 'sources' };
+    case 'tag.hidden':
+    case 'tag.limit':
+      return { kind: 'tag', tag: problem.tag ?? null };
     default:
       return { kind: 'attachment', mediaAssetId: problem.mediaAssetId };
   }
 }
 
 /**
- * The live checks (`checks.problems` of the last save) as a list to show: in a stable order (article settings, then
- * each language, then attachments), duplicates removed, each with the message key and the place to fix it.
+ * The live checks (`checks.problems` of the last save) as a list to show: in a stable order (article settings and
+ * tags, then each language, then attachments), duplicates removed, each with the message key and the place to fix it.
  */
 export function checkItems(checks: DraftChecksDto | null, sourceLanguage: ArticleLanguage): CheckItem[] {
   const problems = checks?.problems ?? [];
   const seen = new Set<string>();
   const items: CheckItem[] = [];
   for (const problem of problems) {
-    const key = `${problem.code}|${problem.language}|${problem.blockId}|${problem.mediaAssetId}`;
+    const key = `${problem.code}|${problem.language}|${problem.blockId}|${problem.mediaAssetId}|${problem.tag ?? null}`;
     if (seen.has(key)) continue;
     seen.add(key);
     items.push({
       code: problem.code,
       messageKey: ORDER.includes(problem.code) ? `editor.problems.${problem.code.replace('.', '_')}` : 'editor.problems.unknown',
       language: problem.language,
+      tag: problem.tag ?? null,
       target: target(problem, sourceLanguage),
     });
   }

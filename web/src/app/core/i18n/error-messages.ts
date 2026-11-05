@@ -71,6 +71,12 @@ export const CONTRACT_ERROR_CODES = [
   'field.not_found',
   'topic.not_found',
   'topic.not_in_field',
+  // Tags (F32): tag.invalid and article.too_many_tags come in a save's `errors`, tag.hidden and tag.limit as problems
+  'tag.not_found',
+  'tag.invalid',
+  'tag.hidden',
+  'tag.limit',
+  'article.too_many_tags',
   'article.not_found',
   'article.sources_required',
   // Editor (F05): saving, publishing and revisions
@@ -87,6 +93,7 @@ export const CONTRACT_ERROR_CODES = [
   'article.no_content',
   'article.invalid_transition',
   'article.slug_taken',
+  // Replaced by article.too_many_tags (F32); still translated for an older API.
   'article.tags.max_five',
   'article.language_invalid',
   'article.content_language_mismatch',

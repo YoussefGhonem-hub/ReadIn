@@ -45,13 +45,13 @@ describe('app links (.well-known, F24)', () => {
   });
 
   describe('apple-app-site-association', () => {
-    it('lets the iOS app open the web article links by default', () => {
+    it('lets the iOS app open the web article and tag page links by default', () => {
       expect(appleAppSiteAssociation(appLinksConfig({}))).toEqual({
         applinks: {
           details: [
             {
               appIDs: ['7A25UFD8VC.app.readin.readin'],
-              components: [{ '/': '/ar/a/*' }, { '/': '/en/a/*' }],
+              components: [{ '/': '/ar/a/*' }, { '/': '/en/a/*' }, { '/': '/tags/*' }],
             },
           ],
         },

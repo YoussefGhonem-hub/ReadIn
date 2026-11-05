@@ -270,13 +270,21 @@ describe('PostCard (F34)', () => {
       expect(t.$('[data-card-cover]')).toBeNull();
     });
 
-    it('up to 3 tags as plain chips (not links), then "+N"', async () => {
-      const t = await render(testCard({ tags: ['architecture', 'dotnet', 'ذكاء'], tagCount: 5 }), { guest: true });
+    it('up to 3 tags, each a link to its tag page (F32), then a plain "+N"', async () => {
+      const tags = [
+        { slug: 'csharp', name: 'C#' },
+        { slug: 'dotnet-2', name: '.NET' },
+        { slug: 'الذكاء-الاصطناعي', name: 'الذكاء الاصطناعي' },
+      ];
+      const t = await render(testCard({ tags, tagCount: 5 }), { guest: true });
       http = t.http;
       const chips = t.$$('[data-card-tags] li');
-      expect(chips.map((c) => c.textContent!.trim())).toEqual(['#architecture', '#dotnet', '#ذكاء', '+2تاجين كمان']);
-      expect(chips[2].getAttribute('dir')).toBe('auto');
-      expect(t.$('[data-card-tags] a')).toBeNull();
+      expect(chips.map((c) => c.textContent!.trim())).toEqual(['#C#', '#.NET', '#الذكاء الاصطناعي', '+2تاجين كمان']);
+      const links = t.$$('[data-card-tags] a');
+      // The slug from the server, never one made from the name; an Arabic one is percent-encoded.
+      expect(links.map((a) => a.getAttribute('href'))).toEqual(['/tags/csharp', '/tags/dotnet-2', `/tags/${encodeURIComponent('الذكاء-الاصطناعي')}`]);
+      expect(links.every((a) => a.getAttribute('dir') === 'auto')).toBe(true);
+      expect(chips[3].querySelector('a')).toBeNull();
     });
 
     it('the top reactions with the total, and the comment count', async () => {

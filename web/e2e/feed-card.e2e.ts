@@ -118,7 +118,12 @@ for (const variant of VARIANTS) {
     await expect(more).toHaveAttribute('aria-expanded', 'false');
     await expect(more).toHaveText(t('… اقرأ المزيد', '… Read more'));
     await expect(di.locator('[data-card-tags] li')).toHaveText(['#ASP.NET Core', '#DI', '#dotnet']);
-    await expect(di.locator('[data-card-tags] a')).toHaveCount(0); // tag pages come with F32
+    // Each tag opens its tag page (F32), by the slug the API gave it.
+    expect(await di.locator('[data-card-tags] a').evaluateAll((links) => links.map((a) => a.getAttribute('href')))).toEqual([
+      '/tags/asp-net-core',
+      '/tags/di',
+      '/tags/dotnet',
+    ]);
     await expect(di.locator('[data-card-comment-count]')).toHaveText(t('3 تعليقات', '3 comments'));
     await expect(di.locator('[data-card-actions] button')).toHaveText([`💡${t('تفاعل', 'React')}`, t('تعليق', 'Comment'), t('مشاركة', 'Share')]);
     // No image: no attachments and no cover (the old placeholder is gone).

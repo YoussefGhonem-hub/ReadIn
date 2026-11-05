@@ -8,7 +8,8 @@
  * (profiles.mjs), the article editor with My articles (editor.mjs), learning paths + continue reading (paths.mjs) and
  * reports, the moderation queue, actions, log and notices (moderation.mjs, F22), the notification center with its
  * settings (notifications.mjs, F17) and writer verification with its admin review (verification.mjs, F19) keep state per
- * signed-in viewer, so those flows run against it end to end. It also
+ * signed-in viewer, so those flows run against it end to end. Tags (tags.mjs, F32) give every card and article its
+ * `TagRefDto`s and serve the editor's suggestions and the tag pages. It also
  * serves generated PNGs for every media URL and fixture builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
@@ -22,6 +23,7 @@ import { createModeration } from './moderation.mjs';
 import { createNotifications } from './notifications.mjs';
 import { createProfiles } from './profiles.mjs';
 import { createSocial } from './social.mjs';
+import { createTagRegistry, createTags } from './tags.mjs';
 import { createVerification } from './verification.mjs';
 import { excerptOf, previewOf } from './post-cards.mjs';
 
@@ -290,6 +292,13 @@ const CONTENT = new Map();
 const TAGS = new Map();
 
 /**
+ * Every tag (F32). The fixtures register theirs as they are built, so the first spelling wins and slugs clash the way
+ * the API resolves it (`dotnet`, then `.NET` → `dotnet-2`). A hidden tag (F23) stays on its article but is never shown.
+ */
+const tagRegistry = createTagRegistry();
+tagRegistry.register('spam-links', { hidden: true });
+
+/**
  * A card as a guest sees it; `reactions` and `saves` are everyone else's (social.mjs adds the viewer's own). `blocks`
  * is the article's content (the reader's, and the card's excerpt and preview, F34); `tags` all of its tags.
  */
@@ -310,7 +319,8 @@ function card({
   coverUrl = null,
 }) {
   CONTENT.set(slug, blocks);
-  TAGS.set(slug, tags);
+  const refs = tagRegistry.refs(tags);
+  TAGS.set(slug, refs);
   return {
     id: `a-${slug}`,
     slug,
@@ -332,8 +342,8 @@ function card({
     myReaction: null,
     isSaved: false,
     isFollowingAuthor: false,
-    tags: tags.slice(0, 3),
-    tagCount: tags.length,
+    tags: refs.slice(0, 3),
+    tagCount: refs.length,
     attachments,
   };
 }
@@ -497,10 +507,64 @@ const MORE_ARTICLES = [
 ];
 const ALL_ARTICLES = [...ARTICLES, ...MORE_ARTICLES];
 
+// ── Tag pages (F32) ────────────────────────────────────────────
+
+/** Two writers seen only on tag pages, so no feed, profile or Following list changes because of them. */
+const TAG_WRITERS = [
+  { id: 'u-hany', displayName: 'Hany Samir', username: 'hany', avatarUrl: null, isVerified: false },
+  { id: 'u-sara', displayName: 'سارة يوسف', username: 'sara_y', avatarUrl: null, isVerified: true },
+];
+const CSHARP_NOTES = [
+  ['Records vs classes', 'Records give you value equality and a one-line syntax; classes keep their identity.'],
+  ['Pattern matching on types', 'A switch expression with type patterns replaces a long ladder of if/else checks.'],
+  ['async/await without deadlocks', 'Await all the way down, and never block on .Result in UI or ASP.NET Core code.'],
+  ['Span<T> for fast parsing', 'Slicing a span allocates nothing, which matters in hot loops.'],
+  ['LINQ runs late', 'A query runs when you enumerate it, not when you write it.'],
+  ['Nullable reference types', 'Turn them on per project and let the compiler find your null bugs.'],
+  ['Primary constructors', 'C# 12 lets a class take its parameters right in its declaration.'],
+];
+const CSHARP_NOTES_AR = [
+  ['يعني إيه record في C#؟', 'الـ record بيتقارن بالقيمة مش بالمرجع، وده بيسهّل الـ testing.'],
+  ['الـ using الجديدة', 'الـ using declaration بتقفل الـ resource في آخر الـ scope من غير أقواس زيادة.'],
+];
+
+/**
+ * 23 short notes tagged `C#` (two cursor pages of 20), newest first, some also `dotnet`, `.NET`, `C++`, the old
+ * `CI/CD` (it breaks today's rules but exists) and the hidden `spam-links` (left off the card).
+ */
+function csharpNote(i) {
+  const ar = i % 4 === 3;
+  const [title, text] = ar ? CSHARP_NOTES_AR[i % CSHARP_NOTES_AR.length] : CSHARP_NOTES[i % CSHARP_NOTES.length];
+  const tags = ['C#'];
+  if (i === 1) tags.push('dotnet');
+  if (i % 3 === 0) tags.push('.NET');
+  if (i % 5 === 0) tags.push('C++');
+  if (i === 2) tags.push('CI/CD');
+  if (i === 4) tags.push('spam-links');
+  return card({
+    slug: `csharp-note-${i}`,
+    language: ar ? 'ar-EG' : 'en',
+    title: ar ? `${title} (${i})` : `C# note ${i}: ${title}`,
+    blocks: [paragraph('p1', text)],
+    tags,
+    author: TAG_WRITERS[i % 2],
+    publishedAt: new Date(Date.UTC(2026, 10, 2, 12) - i * 20 * 3_600_000).toISOString(),
+    minutes: 2 + (i % 4),
+    reactions: { insightful: i % 5, love: (i * 3) % 4, fire: i % 2, mindBlown: 0 },
+    saves: i % 6,
+    comments: 0,
+  });
+}
+const TAG_ARTICLES = Array.from({ length: 23 }, (_, i) => csharpNote(i + 1));
+// Tags with no article (an empty tag page) and more suggestions for the editor.
+for (const name of ['kotlin', 'architecture', 'angular', 'flutter', 'testing', 'docker']) tagRegistry.register(name);
+/** Every published fixture: the feeds' articles and the tag pages' notes. */
+const PUBLISHED = [...ALL_ARTICLES, ...TAG_ARTICLES];
+
 // ── Reader (F04 resume and related articles, F21 glossary) ─────
 
 const DETAILS = new Map(
-  ALL_ARTICLES.map((a) => {
+  PUBLISHED.map((a) => {
     const full = a.attachments?.kind === 'document' ? { ...a, attachments: { ...a.attachments, document: documentAttachment(cheatSheet) } } : a;
     return [a.slug, details(full)];
   }),
@@ -628,7 +692,8 @@ const PDF = Buffer.from(
   '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n',
 );
 
-const social = createSocial({ articles: ALL_ARTICLES, writers: WRITERS, problem });
+// The tag pages' notes can be reacted to and saved too; their writers are nobody's follows, so the feeds don't change.
+const social = createSocial({ articles: PUBLISHED, writers: WRITERS, problem });
 const profiles = createProfiles({ me, articles: ALL_ARTICLES, writers: WRITERS, fields: FIELDS, social, problem, avatarVariants });
 const paths = createPaths({ articles: ALL_ARTICLES, fields: FIELDS, social, profiles, mediaUrl, problem });
 
@@ -645,6 +710,15 @@ const editor = createEditor({
   assets,
   fieldRef,
   author: (viewer) => (viewer === 'u-writer' ? AUTHOR : { id: viewer, displayName: 'Mona Adel', username: 'mona', avatarUrl: null, isVerified: true }),
+  tags: tagRegistry,
+});
+const tags = createTags({
+  registry: tagRegistry,
+  articles: () => PUBLISHED,
+  tagsOf: (a) => TAGS.get(a.slug) ?? [],
+  personalize: social.personalize,
+  viewerOf: social.viewerOf,
+  problem,
 });
 const moderation = createModeration({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
 const notifications = createNotifications({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
@@ -678,6 +752,7 @@ const routes = [
     },
   ],
   ...editor.routes,
+  ...tags.routes,
   ...social.routes,
   ...profiles.routes,
   ...paths.routes,
@@ -749,7 +824,7 @@ const routes = [
     'GET',
     new RegExp(`^${API}/articles/([^/]+)/preview$`),
     (_q, [, id]) => {
-      const article = ALL_ARTICLES.find((a) => a.id === decodeURIComponent(id));
+      const article = PUBLISHED.find((a) => a.id === decodeURIComponent(id));
       if (!article) return [404, problem(404, 'article.not_found', 'Article not found')];
       const { content, isComplete } = previewOf(DETAILS.get(article.slug).content);
       return [200, { id: article.id, language: article.language, content, isComplete }];

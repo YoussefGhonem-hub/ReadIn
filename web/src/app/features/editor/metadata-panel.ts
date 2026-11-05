@@ -5,7 +5,7 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { Switch } from '../../shared/ui/switch';
 import { CoverPicker } from './cover-picker';
 import { SourcesEditor } from './sources-editor';
-import { TagInput } from './tag-input';
+import { TagError, TagInput } from './tag-input';
 
 export const VERSION_BADGE_MAX = 30;
 
@@ -45,7 +45,7 @@ export type DocumentPatch = Partial<Omit<ArticleDraftDocument, 'translations' | 
       </div>
     </div>
 
-    <rd-tag-input [tags]="document().tags" (tagsChange)="patch.emit({ tags: $event })" />
+    <rd-tag-input id="ed-tags" [tags]="document().tags" [flagged]="tagFlags()" [errors]="tagErrors()" (tagsChange)="patch.emit({ tags: $event })" />
 
     <rd-cover-picker [url]="document().coverUrl" (urlChange)="patch.emit({ coverUrl: $event })" (uploadingChange)="coverUploading.emit($event)" />
 
@@ -84,6 +84,10 @@ export class MetadataPanel {
   readonly fields = input<FieldDto[]>([]);
   readonly topics = input<TopicDto[]>([]);
   readonly fieldsFailed = input(false);
+  /** Tags with a problem in the last checks or save (F32): their chips are marked. */
+  readonly tagFlags = input<readonly string[]>([]);
+  /** Why the last save was refused because of the tags. */
+  readonly tagErrors = input<readonly TagError[]>([]);
   readonly patch = output<DocumentPatch>();
   readonly retryFields = output<void>();
   readonly coverUploading = output<boolean>();
