@@ -174,7 +174,7 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
             c.Author == null
                 ? null
                 : new AuthorDto(c.Author.Id, c.Author.DisplayName, c.Author.Username, c.Author.AvatarUrl,
-                    c.Author.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)),
+                    c.Author.IsVerified),
             c.Body,
             c.IsPinned,
             c.LikeCount,

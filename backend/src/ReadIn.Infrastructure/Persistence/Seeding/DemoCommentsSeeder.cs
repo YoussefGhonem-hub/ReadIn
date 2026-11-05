@@ -9,7 +9,7 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 /// <summary>
 /// Local only (SPEC §18.2 step 8, §18.3): a few comment threads so F11 looks alive in development. Mixed Arabic and
 /// English, replies, @mentions, likes, a writer replying with the "الكاتب" badge, a pinned comment, a deleted comment
-/// kept as a placeholder for its reply, and a spam comment hidden by the moderator after a report. They go on the two
+/// kept as a placeholder for its reply, and a spam comment hidden by the demo SuperAdmin after a report. They go on the two
 /// most-read articles and the two demo media posts. Writes SQL only: no domain events, so nothing reaches the Realtime
 /// Database, and the counters are recomputed here. A re-run replaces the demo users' comments on those articles.
 /// </summary>
@@ -88,7 +88,7 @@ internal sealed class DemoCommentsSeeder(AppDbContext db, TimeProvider clock) : 
 
     public string Name => "demo-comments";
     public int Order => 11;
-    public int Version => 1;
+    public int Version => 2; // 2: the SuperAdmin hides the spam (there is no demo moderator any more)
 
     public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.AllowsDemoData(environment);
 
@@ -99,12 +99,14 @@ internal sealed class DemoCommentsSeeder(AppDbContext db, TimeProvider clock) : 
     public async Task<bool> SeedAsync(CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        var handles = Threads.SelectMany(t => Flatten(t.Comments)).SelectMany(c => (c.Likers ?? []).Append(c.Author)).Append("moderator").Distinct().ToList();
+        var handles = Threads.SelectMany(t => Flatten(t.Comments)).SelectMany(c => (c.Likers ?? []).Append(c.Author)).Distinct().ToList();
         var emails = handles.Select(h => $"{h}@readin.test").ToList();
         var users = await db.Users.AsNoTracking()
             .Where(u => u.Email != null && emails.Contains(u.Email))
             .ToDictionaryAsync(u => u.Email!.Replace("@readin.test", string.Empty), u => u.Id, cancellationToken);
-        if (!users.TryGetValue("moderator", out var moderatorId)) return true;
+        // The SuperAdmin moderates (SPEC §10): seeded by the system accounts seeder before this one.
+        var moderatorId = SystemUsers.SuperAdminId;
+        if (!await db.Users.AnyAsync(u => u.Id == moderatorId, cancellationToken)) return true;
 
         var articles = await PickArticlesAsync(cancellationToken);
         var demoUserIds = users.Values.ToList();

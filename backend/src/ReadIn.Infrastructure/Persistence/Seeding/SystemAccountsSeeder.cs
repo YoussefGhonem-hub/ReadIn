@@ -7,21 +7,22 @@ using ReadIn.Domain.Users;
 namespace ReadIn.Infrastructure.Persistence.Seeding;
 
 /// <summary>
-/// Seeder #3 (all environments): the official ReadIn account (author of seeded articles, cannot sign in) and the
-/// SuperAdmin. In production the SuperAdmin gets <c>Seed:SuperAdminPhone</c> + <c>Seed:SuperAdminPassword</c>, must change
+/// Seeder #3 (all environments): the official ReadIn account (author of seeded articles, cannot sign in; a Member with the
+/// Verified badge) and the SuperAdmin (only the SuperAdmin role). In production the SuperAdmin gets <c>Seed:SuperAdminPhone</c> + <c>Seed:SuperAdminPassword</c>, must change
 /// the password on first sign in and then set a recovery PIN (SPEC §18.3).
 /// </summary>
 internal sealed class SystemAccountsSeeder(
     AppDbContext db,
     IPasswordHasher passwords,
     IOptions<SeedOptions> options,
-    IHostEnvironment environment) : ISeeder
+    IHostEnvironment environment,
+    TimeProvider clock) : ISeeder
 {
     private const string OfficialBio = "الحساب الرسمي لمنصة ReadIn. مقالات منظمة وموثوقة في البرمجة والذكاء الاصطناعي، بالعربي والإنجليزي.";
 
     public string Name => "system-accounts";
     public int Order => 3;
-    public int Version => 2;
+    public int Version => 3;
 
     public bool AppliesTo(IHostEnvironment environment) => true;
 
@@ -40,7 +41,7 @@ internal sealed class SystemAccountsSeeder(
         // The avatar is set by its own seeder from content/assets; keep it.
         official.UpdateProfile("ReadIn", "readin", OfficialBio, official.AvatarUrl, new UserLinks());
         official.GrantRole(RoleIds.Member);
-        official.GrantRole(RoleIds.VerifiedWriter);
+        official.Verify(clock.GetUtcNow().UtcDateTime); // the badge, not a role (SPEC §10.1)
 
         var phone = SuperAdminPhone();
         var superAdmin = await SeedUserStore.UpsertByIdAsync(db, SystemUsers.SuperAdminId, () => User.CreateSeeded(

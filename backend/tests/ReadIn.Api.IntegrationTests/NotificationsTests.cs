@@ -17,7 +17,6 @@ namespace ReadIn.Api.IntegrationTests;
 [Collection(ApiCollection.Name)]
 public sealed class NotificationsTests(ApiFactory api)
 {
-    private const string ModeratorPhone = "+12025550103";
     private static readonly CancellationToken Ct = TestContext.Current.CancellationToken;
 
     // ---- Producers ----
@@ -185,7 +184,7 @@ public sealed class NotificationsTests(ApiFactory api)
     {
         var author = await api.UserAsync();
         var (articleId, slug) = await author.Client.PublishAsync("Hidden by the moderators");
-        var moderator = await api.SeedUserClientAsync(ModeratorPhone);
+        var moderator = (await api.SuperAdminAsync("Test Moderator")).Client;
 
         (await moderator.PostAsJsonAsync("/api/v1/moderation/actions",
             new { action = "warn", targetType = "user", targetId = author.Id, note = "Be kind." }, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);

@@ -323,11 +323,11 @@ public sealed class AccountTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task The_seeded_dotnet_writer_is_a_verified_writer_with_no_review_permissions()
+    public async Task The_seeded_dotnet_writer_is_a_verified_member_with_no_review_permissions()
     {
         var me = await (await api.SeedUserClientAsync(ApiFactory.ReviewerPhone)).GetFromJsonAsync<JsonObject>("/api/v1/me", Ct);
 
-        me!["roles"]!.AsArray().Select(r => r!.GetValue<string>()).Should().BeEquivalentTo("Member", "VerifiedWriter");
+        me!["roles"]!.AsArray().Select(r => r!.GetValue<string>()).Should().Equal(["Member"], "Verified is a badge, not a role (SPEC §10.1)");
         me["displayName"]!.GetValue<string>().Should().Be(".NET Writer");
         var permissions = me["permissions"]!.AsArray().Select(p => p!.GetValue<string>()).ToList();
         permissions.Should().Contain("articles.create");

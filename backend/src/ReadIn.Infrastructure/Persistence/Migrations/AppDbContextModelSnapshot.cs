@@ -1920,6 +1920,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsSystemAccount")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LockoutEndAt")
                         .HasColumnType("datetime2");
 
@@ -2024,6 +2027,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)")
                         .UseCollation("Arabic_100_CI_AI");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("WhoCanMention")
                         .IsRequired()

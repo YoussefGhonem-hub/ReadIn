@@ -51,6 +51,8 @@ public sealed class ErrorMessagesTests
     [InlineData("article.pdf_busy")]
     [InlineData("article.pdf_failed")]
     [InlineData("article.pdf_limit")]
+    [InlineData("verification.not_verified")]
+    [InlineData("verification.system_account")]
     public void Codes_the_clients_translate_have_titles_in_both_languages(string code)
     {
         ErrorMessages.Title(code, "ar").Should().NotBeNullOrWhiteSpace();

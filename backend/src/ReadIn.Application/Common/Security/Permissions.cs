@@ -65,11 +65,6 @@ public static class Permissions
         public const string Manage = "paths.manage";
     }
 
-    public static class Roles
-    {
-        public const string Manage = "roles.manage";
-    }
-
     public static class System
     {
         public const string Settings = "system.settings";
@@ -93,7 +88,6 @@ public static class Permissions
         [Verification.Manage] = "Approve or reject writer verification",
         [Taxonomy.Manage] = "Manage fields, topics and tags",
         [Paths.Manage] = "Manage learning paths",
-        [Roles.Manage] = "Grant and revoke roles",
         [System.Settings] = "Change system settings",
     };
 }

@@ -359,7 +359,7 @@ public sealed class LearningPathTests(ApiFactory api)
     [Fact]
     public async Task Admins_create_fill_and_publish_a_path()
     {
-        var admin = await api.SeedUserClientAsync(ApiFactory.AdminPhone);
+        var admin = (await api.SuperAdminAsync("Path Admin")).Client;
         var writer = await api.UserAsync("Admin Path Writer");
         var (a, _) = await writer.Client.PublishAsync();
         var (b, _) = await writer.Client.PublishAsync();
@@ -389,7 +389,7 @@ public sealed class LearningPathTests(ApiFactory api)
     [Fact]
     public async Task Admin_items_must_be_different_published_articles()
     {
-        var admin = await api.SeedUserClientAsync(ApiFactory.AdminPhone);
+        var admin = (await api.SuperAdminAsync("Path Admin")).Client;
         var (path, articles) = await PathWithArticlesAsync(1, publish: false);
         var url = $"/api/v1/admin/paths/{path.Id}/items";
 
@@ -401,7 +401,7 @@ public sealed class LearningPathTests(ApiFactory api)
     [Fact]
     public async Task Editorial_paths_are_read_only_and_members_cant_manage_paths()
     {
-        var admin = await api.SeedUserClientAsync(ApiFactory.AdminPhone);
+        var admin = (await api.SuperAdminAsync("Path Admin")).Client;
         var member = await api.SignUpAsync();
         var editorial = (await admin.GetAsync("/api/v1/admin/paths", Ct).OkArrayAsync()).First(p => p!["isEditorial"]!.GetValue<bool>())!;
         var id = editorial["id"]!.GetValue<Guid>();

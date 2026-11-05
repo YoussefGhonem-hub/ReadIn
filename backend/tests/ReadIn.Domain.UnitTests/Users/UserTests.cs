@@ -261,6 +261,25 @@ public sealed class UserTests
         user.UnregisterDevice("token").Should().BeFalse();
     }
 
+    [Fact]
+    public void The_verified_badge_is_not_a_role_and_keeps_its_first_date()
+    {
+        var user = NewUser();
+        user.IsVerified.Should().BeFalse();
+
+        user.Verify(Now);
+        user.Verify(Now.AddDays(3));
+
+        (user.IsVerified, user.VerifiedAt).Should().Be((true, (DateTime?)Now), "approving again keeps the first date");
+        user.Roles.Select(r => r.RoleId).Should().Equal([MemberRole], "the badge changes no role (SPEC §10.1)");
+        user.DomainEvents.Should().NotContain(e => e is UserRolesChangedDomainEvent);
+
+        user.RemoveVerification().Should().BeTrue();
+        (user.IsVerified, user.VerifiedAt).Should().Be((false, (DateTime?)null));
+        user.RemoveVerification().Should().BeFalse("there is no badge left to remove");
+        user.HasRole(MemberRole).Should().BeTrue();
+    }
+
     private static void LockRecovery(User user, DateTime at)
     {
         for (var i = 0; i < AccountSecurity.MaxFailedRecoveries; i++) user.RecordFailedRecovery(at);

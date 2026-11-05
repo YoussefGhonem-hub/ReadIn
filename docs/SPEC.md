@@ -501,7 +501,7 @@ mobile/lib/
 | Linking | A Google/Apple identity is linked automatically when the provider reports a **verified** email that matches an account. Otherwise the person chooses "create a new account" or "I already have an account" (phone + password links it). Settings links and unlinks providers; Google/Apple-only accounts can add phone + password later. |
 | Who handles auth | The **.NET backend** (own JWT). Firebase Auth is **not** used for sign-in. |
 | Forgot password | **Recovery PIN** (4 digits, set at sign up): phone + PIN → new password. Google/Apple-only accounts recover through their provider and have no PIN. |
-| Last fallback | "نسيت الـ PIN كمان؟" → contact support → an Admin resets the password. |
+| Last fallback | "نسيت الـ PIN كمان؟" → contact support → the SuperAdmin resets the password. |
 | Guests | Can browse and read without an account. |
 
 **Known trade-off:** without SMS, the app cannot prove that a user owns the phone number. This is mitigated by the "confirm your number" step at sign up, the recovery PIN and owner notifications.
@@ -580,13 +580,13 @@ Then **Complete profile** (display name, unique `@username` with live availabili
 | PIN hashing | `PasswordHasher( HMACSHA256(pepper, userId + ":" + pin) )`. The **pepper** (`Security:RecoveryPinPepper`) lives only in secrets, never in the database, so a leaked database cannot be used to brute-force the 10,000 PINs offline. |
 | Login lockout | 5 wrong attempts → locked 15 minutes. Rate limits: 5/min per phone, 20/min per IP. |
 | Register | 3/hour per IP. |
-| Recovery lockout | 5 wrong PINs → recovery locked 1 hour. 3 lockouts within 7 days → recovery disabled until an Admin reset. Rate limits: 10/hour per IP, 5/hour per phone. |
+| Recovery lockout | 5 wrong PINs → recovery locked 1 hour. 3 lockouts within 7 days → recovery disabled until an admin reset (the SuperAdmin). Rate limits: 10/hour per IP, 5/hour per phone. |
 | Anti-enumeration | Generic errors for login and recovery; a dummy hash runs for unknown numbers so timing stays the same. |
 | After reset / password change / phone change / sign out all | New `SecurityStamp`, all refresh tokens revoked, counters reset, audit log entry. |
 | Google / Apple tokens | Verified with the provider's OpenID Connect keys: RS256 signature, issuer, audience (`ExternalAuth:{Google,Apple}:ClientIds`), expiry. Apple tokens must carry the SHA-256 of the raw nonce the app sends (so a leaked token can't be replayed). Only the provider's `sub` and the email it reported are kept, in `UserExternalLogins`, plus, for Apple, the refresh token from exchanging the sign-in `authorizationCode` (AES-GCM encrypted) so it can be revoked when the account is deleted (§9.6). |
 | Linking | Automatic only for a provider-**verified** email matching `Users.Email`, which is itself only ever set from a provider-verified address (or seeding), never from user input. Linking from Settings needs the password or an already linked provider, so a stolen access token can't add a way in. One identity per provider per account; the last way to sign in can't be removed. |
 | Owner notifications (push + in-app) | Recovery lockout, password changed, PIN changed, phone number changed, Google/Apple linked or unlinked, phone sign in added. These ignore quiet hours. |
-| Admin reset | Permission `users.reset_password`: temporary password + `MustChangePassword`, PIN cleared + `MustSetRecoveryPin`, `RecoveryDisabled = false`, sessions revoked, audit log. |
+| Admin reset | Permission `users.reset_password` (the SuperAdmin): temporary password + `MustChangePassword`, PIN cleared + `MustSetRecoveryPin`, `RecoveryDisabled = false`, sessions revoked, audit log. An account that holds a permission the caller doesn't can't be reset by them, so only a SuperAdmin resets a SuperAdmin ([ADR 0018](adr/0018-two-roles-and-a-verified-badge.md)). |
 | PII | Phone numbers never appear in public DTOs (profiles, comments, articles); only in `GET /me` and admin endpoints with `users.read.pii`. Masked in logs (`+20******4567`). Passwords, PINs, hashes and tokens are never logged. |
 
 > Roles and credentials are stored in **SQL Server** (source of truth).
@@ -686,7 +686,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 ### F01 — Authentication & Account
 - Sign up / sign in with **phone number + password** (country picker, E.164), **Google** or **Apple**, all on one account. Full screens and rules in [§9](#9-authentication-phone-google-apple).
 - Sign up is a 3-step stepper: phone + password → recovery PIN → confirm your number.
-- **Forgot password** with phone + recovery PIN → new password. "Forgot the PIN too" → contact support → Admin reset.
+- **Forgot password** with phone + recovery PIN → new password. "Forgot the PIN too" → contact support → admin reset by the SuperAdmin.
 - Mandatory "set recovery PIN" screen for accounts without a PIN.
 - Complete profile after sign up: display name, unique `@username`, optional avatar, optional title.
 - Guest browsing with a soft prompt to sign in when trying to interact.
@@ -1469,7 +1469,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Uploads & media | `POST /uploads/images` (purpose `image` \| `avatar` \| `cover`; `article-image` is still accepted) · `POST /uploads/documents` (PDF, `202` + processing) · `GET /uploads/{id}` (status, variants, pages) · `DELETE /uploads/{id}` · `GET /documents/{assetId}/download` (attachments are part of the editor draft) — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) |
 | Trust | `GET /me/verification` · `POST /verification-requests` (multipart) · `DELETE /me/verification` (withdraw) |
 | Moderation | `POST /reports` · `GET /moderation/summary` · `GET /moderation/reports?status=&type=` · `GET /moderation/reports/{targetType}/{targetId}` · `POST /moderation/actions` · `GET /moderation/actions` (log) · `GET /me/moderation-notices` · `POST /me/moderation-notices/{id}/acknowledge` |
-| Admin | `/admin/users`, `POST /admin/users/{id}/reset-password`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests` (list, detail, `/{id}/proof`, `/{id}/approve`, `/{id}/reject`), `/admin/dashboard`, `/admin/content-pipeline`, `POST /admin/realtime/rebuild-counters` |
+| Admin | `/admin/users`, `POST /admin/users/{id}/reset-password`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests` (list, detail, `/{id}/proof`, `/{id}/approve`, `/{id}/reject`), `DELETE /admin/users/{id}/verification`, `/admin/dashboard`, `/admin/content-pipeline`, `POST /admin/realtime/rebuild-counters` |
 
 ---
 

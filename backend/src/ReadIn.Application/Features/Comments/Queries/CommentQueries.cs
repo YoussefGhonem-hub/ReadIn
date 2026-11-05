@@ -154,7 +154,7 @@ internal sealed class GetMentionSuggestionsQueryHandler(IAppDbContext db, ICurre
             .OrderByDescending(u => u.Username.StartsWith(handle))
             .ThenBy(u => u.Username)
             .Take(limit)
-            .Select(u => new MentionCandidateDto(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)))
+            .Select(u => new MentionCandidateDto(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified))
             .ToListAsync(cancellationToken);
 
         return users.Select(u => u with { AvatarUrl = storage.ToPublicUrl(u.AvatarUrl) }).ToList();

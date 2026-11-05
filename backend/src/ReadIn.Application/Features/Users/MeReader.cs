@@ -20,14 +20,13 @@ internal sealed class MeReader(IAppDbContext db, IUserAccessService access, IMap
         if (user is null) return UserErrors.NotFound;
 
         var userAccess = await access.GetAsync(userId, ct);
-        var roles = userAccess?.Roles ?? [];
 
+        // IsVerified is the badge on the user (SPEC §10.1), mapped with the rest; roles never carry it.
         return mapper.Map<MeDto>(user) with
         {
             AvatarUrl = storage.ToPublicUrl(user.AvatarUrl),
-            Roles = roles,
+            Roles = userAccess?.Roles ?? [],
             Permissions = userAccess?.Permissions ?? [],
-            IsVerified = roles.Contains(RoleNames.VerifiedWriter),
         };
     }
 }

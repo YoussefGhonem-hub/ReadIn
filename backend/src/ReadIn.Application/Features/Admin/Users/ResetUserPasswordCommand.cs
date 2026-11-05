@@ -11,7 +11,7 @@ using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Admin.Users;
 
-/// <summary>Shown once to the Admin, who passes it to the user through support. The user must change it on sign in.</summary>
+/// <summary>Shown once to the admin, who passes it to the user through support. The user must change it on sign in.</summary>
 public sealed record TemporaryPasswordDto(string TemporaryPassword);
 
 /// <summary>
@@ -36,11 +36,12 @@ internal sealed class ResetUserPasswordCommandHandler(
 
     public async ValueTask<Result<TemporaryPasswordDto>> Handle(ResetUserPasswordCommand command, CancellationToken cancellationToken)
     {
-        var user = await db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
         if (user is null || !user.CanSignInWithPassword) return UserErrors.NotFound;
-        // Taking over an Admin or SuperAdmin account would be a way around the role rules (SPEC §10.2 footnote).
-        if ((user.HasRole(RoleIds.Admin) || user.HasRole(RoleIds.SuperAdmin)) && !currentUser.Roles.Contains(RoleNames.SuperAdmin))
-            return AuthErrors.Forbidden;
+        // Taking over an account that can do more than you would be a way around the permissions: only a SuperAdmin
+        // resets a SuperAdmin. Today only the SuperAdmin holds users.reset_password; this keeps a staff role safe later.
+        var target = await access.GetAsync(user.Id, cancellationToken);
+        if (target is not null && !target.Permissions.All(currentUser.Permissions.Contains)) return AuthErrors.Forbidden;
 
         var temporary = NewTemporaryPassword();
         user.ResetByAdmin(passwords.Hash(temporary));

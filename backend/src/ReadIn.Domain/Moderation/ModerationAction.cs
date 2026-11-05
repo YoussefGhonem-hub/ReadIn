@@ -205,7 +205,7 @@ public static class ModerationErrors
     public static readonly Error Self =
         Error.Validation("moderation.self", "You can't take this action on your own account.");
     public static readonly Error StaffTarget =
-        Error.Forbidden("moderation.staff_target", "Moderators and admins can't be warned or suspended.");
+        Error.Forbidden("moderation.staff_target", "You can't warn or suspend a member of the moderation team.");
     public static readonly Error NoteRequired =
         Error.Validation("moderation.note_required", "Write a note that tells the user why.");
     public static readonly Error DurationInvalid =

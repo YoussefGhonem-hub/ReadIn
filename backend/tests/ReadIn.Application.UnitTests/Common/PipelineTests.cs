@@ -154,11 +154,29 @@ public sealed class RoleMatrixTests
         RoleMatrix.Roles.Single(r => r.Name == RoleNames.Guest).Permissions.Should().Equal(Permissions.Articles.Read);
 
     [Fact]
-    public void Moderators_moderate_and_suspend()
-    {
-        var moderator = RoleMatrix.Roles.Single(r => r.Name == RoleNames.Moderator).Permissions;
+    public void The_only_roles_are_guest_member_and_super_admin() =>
+        RoleMatrix.Roles.Select(r => r.Name).Should().Equal(RoleNames.Guest, RoleNames.Member, RoleNames.SuperAdmin);
 
-        moderator.Should().Contain([Permissions.Moderation.Manage, Permissions.Users.Suspend]);
+    [Fact]
+    public void The_super_admin_moderates_suspends_verifies_and_has_every_permission()
+    {
+        var superAdmin = RoleMatrix.Roles.Single(r => r.Name == RoleNames.SuperAdmin).Permissions;
+
+        superAdmin.Should().Contain([Permissions.Moderation.Manage, Permissions.Users.Suspend, Permissions.Verification.Manage]);
+        superAdmin.Should().BeEquivalentTo(Permissions.All.Keys);
+    }
+
+    [Fact]
+    public void Members_have_no_staff_permissions_and_nobody_manages_roles()
+    {
+        var member = RoleMatrix.Roles.Single(r => r.Name == RoleNames.Member).Permissions;
+
+        member.Should().NotContain([
+            Permissions.Moderation.Manage, Permissions.Users.Suspend, Permissions.Users.ResetPassword, Permissions.Users.ReadPii,
+            Permissions.Verification.Manage, Permissions.Taxonomy.Manage, Permissions.Paths.Manage, Permissions.Articles.Feature,
+            Permissions.System.Settings,
+        ]);
+        Permissions.All.Keys.Should().NotContain("roles.manage", "roles are not managed (SPEC §10)");
     }
 
     [Fact]

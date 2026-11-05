@@ -1,6 +1,5 @@
 using Mapster;
 using ReadIn.Application.Common.Mapping;
-using ReadIn.Application.Common.Security;
 using ReadIn.Domain.Articles;
 
 namespace ReadIn.Application.Features.Articles;
@@ -77,7 +76,7 @@ public sealed class ArticleMappings : IRegister
                     s.Topic.NameAr, s.Topic.NameEn, s.Field.IsSensitive))
             .Map(d => d.Author, s => s.Author == null ? null : new AuthorDto(
                 s.Author.Id, s.Author.DisplayName, s.Author.Username, s.Author.AvatarUrl,
-                s.Author.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)))
+                s.Author.IsVerified))
             // The denormalized counters on Articles (F27); ReactionCount and SaveCount map by name.
             .Map(d => d.Reactions, s => new ReactionCountsDto(s.InsightfulCount, s.LoveCount, s.FireCount, s.MindBlownCount))
             // Loaded after the projection: attachments by ArticleAttachmentsReader (absolute URLs, page limits), the

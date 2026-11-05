@@ -73,7 +73,7 @@ internal sealed class GetNotificationsQueryHandler(IAppDbContext db, ICurrentUse
             ? []
             : await db.Users.AsNoTracking()
                 .Where(u => actorIds.Contains(u.Id))
-                .Select(u => new NotificationActorDto(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)))
+                .Select(u => new NotificationActorDto(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified))
                 .ToDictionaryAsync(u => u.Id, cancellationToken);
 
         var articleIds = page.Where(p => p.ArticleId != null).Select(p => p.ArticleId!.Value).Distinct().ToList();

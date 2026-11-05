@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using ReadIn.Application.Common.Behaviors;
 using ReadIn.Application.Common.Interfaces;
-using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Profiles;
 using ReadIn.Domain.Articles;
@@ -27,7 +26,7 @@ internal sealed class WriterCategoryReader(IAppDbContext db, HybridCache cache)
             ? await db.Users.AsNoTracking()
                 .Shown(handle, now)
                 .Select(u => new CategoryOwner(u.Id, new AuthorDto(
-                    u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter))))
+                    u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified)))
                 .FirstOrDefaultAsync(ct)
             : null;
 

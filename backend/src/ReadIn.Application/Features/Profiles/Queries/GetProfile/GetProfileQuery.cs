@@ -37,7 +37,7 @@ internal sealed class GetProfileQueryHandler(IAppDbContext db, ICurrentUser curr
             .Where(u => u.Id == user.Id)
             .Select(u => new
             {
-                IsVerified = u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter),
+                IsVerified = u.IsVerified,
                 Articles = published.Count(),
                 TotalReads = published.Sum(a => a.ReadCount),
                 Followers = db.UserFollows.Count(f => f.FolloweeId == u.Id),

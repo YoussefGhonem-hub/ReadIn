@@ -19,8 +19,8 @@ namespace ReadIn.Api.IntegrationTests;
 
 /// <summary>
 /// F19 Writer Verification against SQL Server: the request (with a file, a URL or both) and its rules, withdrawing, the
-/// admin queue, approve and reject with their role, notification and retention, and the private store, which is never
-/// under wwwroot and never reachable over HTTP.
+/// admin queue (the SuperAdmin's), approve (the Verified badge, no role change) and reject with their notification and
+/// retention, removing a badge, and the private store, which is never under wwwroot and never reachable over HTTP.
 /// </summary>
 [Collection(ApiCollection.Name)]
 public sealed class VerificationTests(ApiFactory api)
@@ -184,7 +184,7 @@ public sealed class VerificationTests(ApiFactory api)
 
         await PostAsync(user.Client, Form(fieldId, "Engineer", "https://github.com/second")).ProblemAsync(HttpStatusCode.Conflict, "verification.already_pending");
 
-        var verified = await UserWithRoleAsync(RoleIds.VerifiedWriter, "Already Verified");
+        var verified = await api.VerifiedUserAsync("Already Verified");
         await PostAsync(verified.Client, Form(fieldId, "Engineer", "https://github.com/v")).ProblemAsync(HttpStatusCode.Conflict, "verification.already_verified");
         var status = await verified.Client.GetAsync("/api/v1/me/verification", Ct).OkJsonAsync();
         (status["isVerified"]!.GetValue<bool>(), status["canRequest"]!.GetValue<bool>()).Should().Be((true, false));
@@ -232,7 +232,7 @@ public sealed class VerificationTests(ApiFactory api)
     [Fact]
     public async Task Admins_list_open_and_download_proofs_and_members_cant()
     {
-        var admin = await UserWithRoleAsync(RoleIds.Admin, "Verification Admin");
+        var admin = await api.SuperAdminAsync("Verification Admin");
         var user = await api.UserAsync("Queued Writer");
         var png = await File.ReadAllBytesAsync(Fixture("small.png"), Ct);
         var id = (await SubmitAsync(user.Client, Form(await user.Client.FieldIdAsync("dotnet"), "Engineer", "https://github.com/queued", "Hi",
@@ -264,8 +264,9 @@ public sealed class VerificationTests(ApiFactory api)
         await admin.Client.GetAsync($"/api/v1/admin/verification-requests/{Guid.NewGuid()}/proof", Ct)
             .ProblemAsync(HttpStatusCode.NotFound, "verification.not_found");
 
-        // Without verification.manage: a moderator is no admin.
-        var moderator = await UserWithRoleAsync(RoleIds.Moderator, "Not An Admin");
+        // Without verification.manage: a Member, and a staff role that only moderates (permissions decide, not roles).
+        var moderator = await api.UserWithPermissionsAsync("Not An Admin",
+            Permissions.Articles.Read, Permissions.Moderation.Manage, Permissions.Users.Suspend);
         foreach (var client in new[] { user.Client, moderator.Client })
         {
             await client.GetAsync("/api/v1/admin/verification-requests", Ct).ProblemAsync(HttpStatusCode.Forbidden, "auth.forbidden");
@@ -284,19 +285,24 @@ public sealed class VerificationTests(ApiFactory api)
     [Fact]
     public async Task Approving_makes_a_verified_writer_tells_them_and_deletes_the_proof()
     {
-        var admin = await UserWithRoleAsync(RoleIds.Admin, "Approving Admin");
+        var admin = await api.SuperAdminAsync("Approving Admin");
         var user = await api.UserAsync("Soon Verified");
         var id = (await SubmitAsync(user.Client, Form(await user.Client.FieldIdAsync("dotnet"), "Engineer", "https://github.com/soon",
             file: await File.ReadAllBytesAsync(Fixture("small.png"), Ct))))["id"]!.GetValue<Guid>();
         var file = Path.Combine(api.PrivatePath, "verification", $"{id}.png");
-        (await user.Client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!["isVerified"]!.GetValue<bool>().Should().BeFalse();
+        var before = (await user.Client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!;
+        before["isVerified"]!.GetValue<bool>().Should().BeFalse();
 
         (await admin.Client.PostAsync($"/api/v1/admin/verification-requests/{id}/approve", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        // The role and the badge, at once on the user's current session.
+        // The badge, at once on the user's current session; roles and permissions don't change (SPEC §10.1).
         var me = (await user.Client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!;
         me["isVerified"]!.GetValue<bool>().Should().BeTrue();
-        me["roles"]!.AsArray().Select(r => r!.GetValue<string>()).Should().Contain(RoleNames.VerifiedWriter);
+        Names(me["roles"]).Should().Equal([RoleNames.Member], "the user stays a Member");
+        Names(me["permissions"]).Should().BeEquivalentTo(Names(before["permissions"]));
+        var badge = await InDbAsync(db => db.Users.AsNoTracking().Where(u => u.Id == user.Id).Select(u => new { u.IsVerified, u.VerifiedAt }).SingleAsync(Ct));
+        badge.IsVerified.Should().BeTrue();
+        badge.VerifiedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
         (await api.GuestClient().GetFromJsonAsync<JsonObject>($"/api/v1/users/{user.Me["username"]}", Ct))!["isVerified"]!.GetValue<bool>()
             .Should().BeTrue();
 
@@ -349,7 +355,7 @@ public sealed class VerificationTests(ApiFactory api)
     [Fact]
     public async Task Rejecting_needs_a_reason_the_user_sees_and_they_can_ask_again()
     {
-        var admin = await UserWithRoleAsync(RoleIds.Admin, "Rejecting Admin");
+        var admin = await api.SuperAdminAsync("Rejecting Admin");
         var user = await api.UserAsync();
         var fieldId = await user.Client.FieldIdAsync("dotnet");
         var id = (await SubmitAsync(user.Client, Form(fieldId, "Engineer", "https://github.com/maybe",
@@ -392,9 +398,80 @@ public sealed class VerificationTests(ApiFactory api)
     }
 
     [Fact]
+    public async Task Removing_a_badge_keeps_the_requests_and_the_roles_and_lets_the_user_ask_again()
+    {
+        var admin = await api.SuperAdminAsync("Badge Remover");
+        var user = await api.UserAsync("Losing The Badge");
+        var fieldId = await user.Client.FieldIdAsync("dotnet");
+        var id = (await SubmitAsync(user.Client, Form(fieldId, "Engineer", "https://github.com/badge")))["id"]!.GetValue<Guid>();
+        (await admin.Client.PostAsync($"/api/v1/admin/verification-requests/{id}/approve", null, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var url = $"/api/v1/admin/users/{user.Id}/verification";
+
+        // verification.manage only: not the user, not another Member, not a staff role that only moderates.
+        var member = await api.UserAsync();
+        var moderator = await api.UserWithPermissionsAsync("Moderation Only", Permissions.Articles.Read, Permissions.Moderation.Manage);
+        foreach (var client in new[] { user.Client, member.Client, moderator.Client })
+            await client.DeleteAsync(url, Ct).ProblemAsync(HttpStatusCode.Forbidden, "auth.forbidden");
+        (await api.GuestClient().DeleteAsync(url, Ct)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await user.Client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!["isVerified"]!.GetValue<bool>().Should().BeTrue();
+
+        (await admin.Client.DeleteAsync(url, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var me = (await user.Client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!;
+        me["isVerified"]!.GetValue<bool>().Should().BeFalse();
+        Names(me["roles"]).Should().Equal([RoleNames.Member]);
+        (await api.GuestClient().GetFromJsonAsync<JsonObject>($"/api/v1/users/{user.Me["username"]}", Ct))!["isVerified"]!.GetValue<bool>()
+            .Should().BeFalse();
+        var stored = await InDbAsync(db => db.Users.AsNoTracking().Where(u => u.Id == user.Id).Select(u => new { u.IsVerified, u.VerifiedAt }).SingleAsync(Ct));
+        (stored.IsVerified, stored.VerifiedAt).Should().Be((false, (DateTime?)null));
+        (await InDbAsync(db => db.AuditLogs.CountAsync(l => l.Action == AuditActions.VerificationRemoved && l.UserId == user.Id && l.ActorId == admin.Id, Ct)))
+            .Should().Be(1);
+
+        // The approved request stays approved, the user may ask again, and only the approval was ever notified.
+        var status = await user.Client.GetAsync("/api/v1/me/verification", Ct).OkJsonAsync();
+        (status["isVerified"]!.GetValue<bool>(), status["canRequest"]!.GetValue<bool>()).Should().Be((false, true));
+        status["request"]!["status"]!.GetValue<string>().Should().Be("approved");
+        var detail = await admin.Client.GetAsync($"/api/v1/admin/verification-requests/{id}", Ct).OkJsonAsync();
+        (detail["status"]!.GetValue<string>(), detail["user"]!["isVerified"]!.GetValue<bool>()).Should().Be(("approved", false));
+        (await InDbAsync(db => db.Notifications.CountAsync(n => n.UserId == user.Id && n.Type == NotificationTypes.VerificationResult, Ct)))
+            .Should().Be(1, "removing a badge tells nobody");
+
+        // Nothing to remove twice, nobody to remove it from; neither is logged.
+        await admin.Client.DeleteAsync(url, Ct).ProblemAsync(HttpStatusCode.Conflict, "verification.not_verified");
+        await admin.Client.DeleteAsync($"/api/v1/admin/users/{Guid.NewGuid()}/verification", Ct).ProblemAsync(HttpStatusCode.NotFound, "user.not_found");
+        (await InDbAsync(db => db.AuditLogs.CountAsync(l => l.Action == AuditActions.VerificationRemoved && l.ActorId == admin.Id, Ct))).Should().Be(1);
+
+        await SubmitAsync(user.Client, Form(fieldId, "Senior Engineer", "https://github.com/badge-again"));
+    }
+
+    [Fact]
+    public async Task The_official_account_keeps_its_badge()
+    {
+        var admin = await api.SuperAdminAsync("Official Badge Keeper");
+        var before = await InDbAsync(db => db.Users.AsNoTracking().Where(u => u.Id == SystemUsers.EditorialId)
+            .Select(u => new { u.Username, u.IsVerified, u.VerifiedAt }).SingleAsync(Ct));
+        before.IsVerified.Should().BeTrue("the system seeder gives the official account the badge");
+
+        await admin.Client.DeleteAsync($"/api/v1/admin/users/{SystemUsers.EditorialId}/verification", Ct)
+            .ProblemAsync(HttpStatusCode.Conflict, "verification.system_account");
+
+        var after = await InDbAsync(db => db.Users.AsNoTracking().Where(u => u.Id == SystemUsers.EditorialId)
+            .Select(u => new { u.Username, u.IsVerified, u.VerifiedAt }).SingleAsync(Ct));
+        after.Should().Be(before, "nothing changes, VerifiedAt included");
+        (await api.GuestClient().GetFromJsonAsync<JsonObject>($"/api/v1/users/{before.Username}", Ct))!["isVerified"]!.GetValue<bool>()
+            .Should().BeTrue();
+        (await InDbAsync(db => db.AuditLogs.CountAsync(l => l.Action == AuditActions.VerificationRemoved && l.UserId == SystemUsers.EditorialId, Ct)))
+            .Should().Be(0, "a refused removal is not logged");
+
+        // A system account without a badge (the SuperAdmin) has nothing to remove: that comes first.
+        await admin.Client.DeleteAsync($"/api/v1/admin/users/{SystemUsers.SuperAdminId}/verification", Ct)
+            .ProblemAsync(HttpStatusCode.Conflict, "verification.not_verified");
+    }
+
+    [Fact]
     public async Task Decided_lists_are_newest_decided_first_and_page_with_a_cursor()
     {
-        var admin = await UserWithRoleAsync(RoleIds.Admin, "Listing Admin");
+        var admin = await api.SuperAdminAsync("Listing Admin");
         var ids = new List<Guid>();
         for (var i = 0; i < 3; i++)
         {
@@ -419,7 +496,9 @@ public sealed class VerificationTests(ApiFactory api)
         document["paths"]!.AsObject().Select(p => p.Key).Should().Contain([
             "/api/v1/me/verification", "/api/v1/verification-requests", "/api/v1/admin/verification-requests",
             "/api/v1/admin/verification-requests/{id}", "/api/v1/admin/verification-requests/{id}/proof",
-            "/api/v1/admin/verification-requests/{id}/approve", "/api/v1/admin/verification-requests/{id}/reject"]);
+            "/api/v1/admin/verification-requests/{id}/approve", "/api/v1/admin/verification-requests/{id}/reject",
+            "/api/v1/admin/users/{id}/verification"]);
+        document["paths"]!["/api/v1/admin/users/{id}/verification"]!.AsObject().Select(p => p.Key).Should().Contain("delete");
         var form = document["paths"]!["/api/v1/verification-requests"]!["post"]!["requestBody"]!["content"]!["multipart/form-data"]!["schema"]!;
         var properties = form["properties"] ?? document["components"]!["schemas"]![form["$ref"]!.GetValue<string>().Split('/')[^1]]!["properties"];
         properties!.AsObject().Select(p => p.Key).Should().BeEquivalentTo("fieldId", "jobTitle", "proofUrl", "note", "proof");
@@ -556,19 +635,7 @@ public sealed class VerificationTests(ApiFactory api)
         throw new InvalidOperationException("Too many pages.");
     }
 
-    /// <summary>A new user with <paramref name="roleId"/>, e.g. each test's own admin: the <c>writes</c> limit is per user.</summary>
-    private async Task<SignedInUser> UserWithRoleAsync(Guid roleId, string displayName)
-    {
-        var user = await api.UserAsync(displayName);
-        await InScopeAsync(async services =>
-        {
-            var db = services.GetRequiredService<AppDbContext>();
-            (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == user.Id, Ct)).GrantRole(roleId);
-            await db.SaveChangesAsync(Ct);
-            await services.GetRequiredService<IUserAccessService>().InvalidateAsync(user.Id, Ct);
-        });
-        return user;
-    }
+    private static List<string> Names(JsonNode? array) => [.. array!.AsArray().Select(n => n!.GetValue<string>())];
 
     private async Task<T> InDbAsync<T>(Func<AppDbContext, Task<T>> work)
     {

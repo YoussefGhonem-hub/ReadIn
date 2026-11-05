@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
-using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Follows;
@@ -56,7 +55,7 @@ public sealed class ModerationReader(IAppDbContext db, IFileStorage storage, Tim
             ? new Dictionary<Guid, UserRow>()
             : await db.Users.IgnoreQueryFilters().AsNoTracking()
                 .Where(u => people.Contains(u.Id))
-                .Select(u => new UserRow(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter),
+                .Select(u => new UserRow(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified,
                     u.IsDeleted, u.IsSuspended, u.SuspendedUntil))
                 .ToDictionaryAsync(u => u.Id, ct);
         var warnings = userTargets.Count == 0

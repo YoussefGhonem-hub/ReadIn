@@ -28,7 +28,6 @@ namespace ReadIn.Api.IntegrationTests;
 [Collection(ApiCollection.Name)]
 public sealed class ExploreTests(ApiFactory api) : IAsyncLifetime
 {
-    private const string ModeratorPhone = "+12025550103";
     private static readonly CancellationToken Ct = TestContext.Current.CancellationToken;
     private readonly List<Guid> _fields = [];
 
@@ -347,7 +346,7 @@ public sealed class ExploreTests(ApiFactory api) : IAsyncLifetime
             .Single(x => x!["id"]!.GetValue<Guid>() == a2)!["myReaction"].Should().BeNull();
 
         // Hidden by a moderator: gone at once, from the guests' cached page too.
-        var moderator = await api.SeedUserClientAsync(ModeratorPhone);
+        var moderator = (await api.SuperAdminAsync("Test Moderator")).Client;
         (await moderator.PostAsJsonAsync("/api/v1/moderation/actions",
             new { action = "hide", targetType = "article", targetId = a3, note = "Test hide." }, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         Ids((await guest.GetAsync($"{url}?limit=2", Ct).OkJsonAsync())["items"]).Should().Equal(n1, b1);
@@ -375,7 +374,7 @@ public sealed class ExploreTests(ApiFactory api) : IAsyncLifetime
         var other = await api.UserAsync();
         (await saver.Client.PutEmptyAsync($"/api/v1/me/saved/{top}")).StatusCode.Should().Be(HttpStatusCode.OK);
         (await saver.Client.PutEmptyAsync($"/api/v1/users/{writer.Id}/follow")).StatusCode.Should().Be(HttpStatusCode.OK);
-        var moderator = await api.SeedUserClientAsync(ModeratorPhone);
+        var moderator = (await api.SuperAdminAsync("Test Moderator")).Client;
         (await moderator.PostAsJsonAsync("/api/v1/moderation/actions",
             new { action = "hide", targetType = "article", targetId = hidden, note = "Test hide." }, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         await ClearCachesAsync();

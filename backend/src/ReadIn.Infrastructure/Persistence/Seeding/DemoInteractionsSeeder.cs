@@ -33,7 +33,7 @@ internal sealed class DemoInteractionsSeeder(AppDbContext db, ArticleCounters co
     private static readonly string[] Handles =
     [
         .. Enumerable.Range(1, 10).Select(i => $"reader{i}"),
-        "writer1", "writer2", "writer3", "writer.verified", "reviewer.dotnet", "reviewer.ai", "admin", "moderator",
+        "writer1", "writer2", "writer3", "writer.verified", "reviewer.dotnet", "reviewer.ai",
     ];
 
     /// <summary>Demo users that write: the others follow some of them (the official ReadIn account is followed by everyone).</summary>

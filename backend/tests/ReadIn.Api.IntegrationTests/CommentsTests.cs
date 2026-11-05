@@ -14,7 +14,6 @@ namespace ReadIn.Api.IntegrationTests;
 [Collection(ApiCollection.Name)]
 public sealed class CommentsTests(ApiFactory api)
 {
-    private const string ModeratorPhone = "+12025550103";
     private static readonly CancellationToken Ct = TestContext.Current.CancellationToken;
 
     [Fact]
@@ -269,7 +268,7 @@ public sealed class CommentsTests(ApiFactory api)
         var (_, articleId) = await NewArticleAsync();
         var author = await api.SignUpAsync();
         var reporter = await api.SignUpAsync();
-        var moderator = await api.SeedUserClientAsync(ModeratorPhone);
+        var moderator = (await api.SuperAdminAsync("Test Moderator")).Client;
         var id = (await PostAsync(author, articleId, "Check my channel!!!"))["id"]!.GetValue<Guid>();
         await reporter.Client.PostAsJsonAsync("/api/v1/reports", new { targetType = "comment", targetId = id, reason = "spam" }, Ct);
 

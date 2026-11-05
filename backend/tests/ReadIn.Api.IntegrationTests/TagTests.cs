@@ -22,7 +22,6 @@ namespace ReadIn.Api.IntegrationTests;
 [Collection(ApiCollection.Name)]
 public sealed class TagTests(ApiFactory api)
 {
-    private const string ModeratorPhone = "+12025550103";
     private static readonly CancellationToken Ct = TestContext.Current.CancellationToken;
 
     /// <summary>A short unique word (lower-case hex), so every test has its own tags.</summary>
@@ -166,7 +165,7 @@ public sealed class TagTests(ApiFactory api)
         mine["items"]!.AsArray().Single(c => c!["id"]!.GetValue<Guid>() == first)!["myReaction"]!.GetValue<string>().Should().Be("insightful");
 
         // Hidden by a moderator or deleted: left out at once (the guests' cached page too).
-        var moderator = await api.SeedUserClientAsync(ModeratorPhone);
+        var moderator = (await api.SuperAdminAsync("Test Moderator")).Client;
         (await moderator.PostAsJsonAsync("/api/v1/moderation/actions",
             new { action = "hide", targetType = "article", targetId = second, note = "Test hide." }, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         (await a.Client.DeleteAsync($"/api/v1/articles/{third}", Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);

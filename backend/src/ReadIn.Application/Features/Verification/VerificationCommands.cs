@@ -7,6 +7,7 @@ using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Uploads;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Identity;
+using ReadIn.Domain.Users;
 using ReadIn.Domain.Verification;
 
 namespace ReadIn.Application.Features.Verification;
@@ -29,11 +30,20 @@ public sealed record SubmitVerificationRequestCommand(Guid FieldId, string? JobT
 public sealed record WithdrawVerificationRequestCommand : ICommand<Result>;
 
 /// <summary>
-/// POST /admin/verification-requests/{id}/approve: the user gets the <c>VerifiedWriter</c> role (their sessions follow at
-/// once), the proof file is deleted, the user is notified (<c>verification_result</c>) and the audit log records it.
+/// POST /admin/verification-requests/{id}/approve: the user gets the Verified badge (<c>Users.IsVerified</c>; roles and
+/// permissions don't change), the proof file is deleted, the user is notified (<c>verification_result</c>) and the audit
+/// log records it.
 /// </summary>
 [RequirePermission(Permissions.Verification.Manage)]
 public sealed record ApproveVerificationRequestCommand(Guid RequestId) : ICommand<Result>;
+
+/// <summary>
+/// DELETE /admin/users/{id}/verification: takes the Verified badge away (<c>admin.verification_removed</c> in the audit
+/// log). The user's requests stay as they were, the user may request again, and nobody is notified. A system account
+/// (the official @readin account) keeps its badge: <c>409 verification.system_account</c>.
+/// </summary>
+[RequirePermission(Permissions.Verification.Manage)]
+public sealed record RemoveVerificationCommand(Guid UserId) : ICommand<Result>;
 
 /// <summary>POST /admin/verification-requests/{id}/reject: with a reason the user sees (5–500 characters).</summary>
 [RequirePermission(Permissions.Verification.Manage)]
@@ -76,7 +86,7 @@ internal sealed class SubmitVerificationRequestCommandHandler(
     public async ValueTask<Result<MyVerificationRequestDto>> Handle(SubmitVerificationRequestCommand command, CancellationToken cancellationToken)
     {
         var userId = currentUser.RequireUserId();
-        if (await db.Users.Where(u => u.Id == userId).SelectMany(u => u.Roles).AnyAsync(r => r.RoleId == RoleIds.VerifiedWriter, cancellationToken))
+        if (await db.Users.AnyAsync(u => u.Id == userId && u.IsVerified, cancellationToken))
             return VerificationErrors.AlreadyVerified;
         if (await HasPendingAsync(userId, cancellationToken)) return VerificationErrors.AlreadyPending;
 
@@ -162,7 +172,6 @@ internal sealed class WithdrawVerificationRequestCommandHandler(IAppDbContext db
 internal sealed class ApproveVerificationRequestCommandHandler(
     IAppDbContext db,
     ICurrentUser currentUser,
-    IUserAccessService access,
     VerificationDecisions decisions,
     AuditTrail audit,
     TimeProvider clock)
@@ -173,17 +182,44 @@ internal sealed class ApproveVerificationRequestCommandHandler(
         var request = await db.VerificationRequests.FirstOrDefaultAsync(r => r.Id == command.RequestId, cancellationToken);
         if (request is null) return VerificationErrors.NotFound;
 
-        var approved = request.Approve(currentUser.RequireUserId(), clock.GetUtcNow().UtcDateTime);
+        var now = clock.GetUtcNow().UtcDateTime;
+        var approved = request.Approve(currentUser.RequireUserId(), now);
         if (approved.IsFailure) return approved.Error;
 
-        // The badge: the role, whose change drops the cached permissions (and the outbox handler does it again).
-        var user = await db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
-        user?.GrantRole(RoleIds.VerifiedWriter);
+        // The badge only: no role or permission changes (SPEC §10.1), so the cached access stays valid. Every read model
+        // reads Users.IsVerified, and GET /me shows it at once.
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+        user?.Verify(now);
         audit.Record(AuditActions.VerificationApproved, request.UserId);
 
-        var saved = await decisions.SaveAsync(request, approved.Value, cancellationToken);
-        if (saved.IsSuccess) await access.InvalidateAsync(request.UserId, cancellationToken);
-        return saved;
+        return await decisions.SaveAsync(request, approved.Value, cancellationToken);
+    }
+}
+
+internal sealed class RemoveVerificationCommandHandler(IAppDbContext db, AuditTrail audit)
+    : ICommandHandler<RemoveVerificationCommand, Result>
+{
+    public async ValueTask<Result> Handle(RemoveVerificationCommand command, CancellationToken cancellationToken)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
+        if (user is null) return UserErrors.NotFound;
+        if (!user.IsVerified) return VerificationErrors.NotVerified;
+        // The official @readin account always has the badge (SPEC §10.1), and no seeder would give it back.
+        if (user.IsSystemAccount) return VerificationErrors.SystemAccount;
+        user.RemoveVerification();
+
+        audit.Record(AuditActions.VerificationRemoved, user.Id);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // The row changed a moment ago. Removed by another request: nothing left to remove; otherwise let it fail.
+            if (await db.Users.AsNoTracking().AnyAsync(u => u.Id == command.UserId && u.IsVerified, CancellationToken.None)) throw;
+            return VerificationErrors.NotVerified;
+        }
+        return Result.Success();
     }
 }
 

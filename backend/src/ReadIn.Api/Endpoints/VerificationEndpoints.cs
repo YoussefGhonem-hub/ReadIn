@@ -105,12 +105,19 @@ internal sealed class VerificationEndpoints : IEndpointGroup
         admin.MapPost("/{id:guid}/approve", async (Guid id, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(new ApproveVerificationRequestCommand(id), ct)).ToHttp(http))
             .RequireRateLimiting(RateLimitPolicies.Writes)
-            .WithSummary("Admins: approve; the user gets the VerifiedWriter role and a notification, the proof file is deleted");
+            .WithSummary("Admins: approve; the user gets the Verified badge (no role change) and a notification, the proof file is deleted");
 
         admin.MapPost("/{id:guid}/reject", async (Guid id, RejectVerificationRequest body, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(new RejectVerificationRequestCommand(id, body.Reason), ct)).ToHttp(http))
             .RequireRateLimiting(RateLimitPolicies.Writes)
             .WithSummary("Admins: reject with a reason (5–500 characters) the user sees; the proof file is deleted");
+
+        api.MapDelete("/admin/users/{id:guid}/verification", async (Guid id, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new RemoveVerificationCommand(id), ct)).ToHttp(http))
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitPolicies.Writes)
+            .WithTags("Admin")
+            .WithSummary("Admins (verification.manage): remove a user's Verified badge; 409 verification.not_verified without one, 409 verification.system_account for the official account");
     }
 }
 

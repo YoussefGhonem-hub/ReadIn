@@ -47,7 +47,7 @@ internal sealed class GetMyVerificationQueryHandler(IAppDbContext db, ICurrentUs
             .Where(u => u.Id == userId)
             .Select(u => new
             {
-                IsVerified = u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter),
+                u.IsVerified,
                 IsSuspended = u.IsSuspended && (u.SuspendedUntil == null || u.SuspendedUntil > now),
             })
             .FirstAsync(cancellationToken);

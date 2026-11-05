@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
-using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Domain.Users;
 
@@ -32,11 +31,11 @@ internal static class UserSummaries
         if (viewerId is not { } viewer)
         {
             return u => new UserSummaryDto(
-                u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter), u.Bio, false, false);
+                u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified, u.Bio, false, false);
         }
 
         return u => new UserSummaryDto(
-            u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter), u.Bio,
+            u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified, u.Bio,
             db.UserFollows.Any(f => f.FollowerId == viewer && f.FolloweeId == u.Id),
             db.UserFollows.Any(f => f.FollowerId == u.Id && f.FolloweeId == viewer));
     }

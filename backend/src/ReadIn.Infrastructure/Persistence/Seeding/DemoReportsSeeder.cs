@@ -10,8 +10,8 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 /// Development only (SPEC F22, §18.2): a moderation queue that isn't empty locally. Demo readers report two articles, a
 /// comment and reader7 (who posts the demo spam comment); one resolved case (reader7 was warned for spam, so reader7 also
 /// has a warning notice to acknowledge) and one dismissed case (a disagreement, not a broken rule). Runs after the demo
-/// comments and writes no outbox events, so nothing is pushed. A re-run replaces the demo reports and the moderator's
-/// actions on these targets.
+/// comments and writes no outbox events, so nothing is pushed. The demo SuperAdmin moderates (there is no demo moderator
+/// any more). A re-run replaces the demo reports and the demo moderation actions on these targets.
 /// </summary>
 internal sealed class DemoReportsSeeder(AppDbContext db, TimeProvider clock) : ISeeder
 {
@@ -52,7 +52,7 @@ internal sealed class DemoReportsSeeder(AppDbContext db, TimeProvider clock) : I
 
     public string Name => "demo-reports";
     public int Order => 12;
-    public int Version => 1;
+    public int Version => 2; // 2: the SuperAdmin moderates
 
     public bool AppliesTo(IHostEnvironment environment) => environment.IsDevelopment();
 
@@ -62,18 +62,21 @@ internal sealed class DemoReportsSeeder(AppDbContext db, TimeProvider clock) : I
     public async Task<bool> SeedAsync(CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        var handles = Reports.Select(r => r.Reporter).Concat(["moderator", "reader4", "reader7", "writer3"]).Distinct().ToList();
+        var handles = Reports.Select(r => r.Reporter).Concat(["reader4", "reader7", "writer3"]).Distinct().ToList();
         var emails = handles.Select(h => $"{h}@readin.test").ToList();
         var users = await db.Users.AsNoTracking()
             .Where(u => u.Email != null && emails.Contains(u.Email))
             .ToDictionaryAsync(u => u.Email!.Replace("@readin.test", string.Empty), u => (u.Id, u.Username), cancellationToken);
-        if (!users.TryGetValue("moderator", out var moderator)) return true;
+        var moderator = await db.Users.AsNoTracking().Where(u => u.Id == SystemUsers.SuperAdminId).Select(u => new { u.Id }).FirstOrDefaultAsync(cancellationToken);
+        if (moderator is null) return true;
 
         var targets = await PickTargetsAsync(users, cancellationToken);
         var targetIds = targets.Values.Select(t => t.Id).ToList();
         var reporterIds = Reports.Select(r => users.GetValueOrDefault(r.Reporter).Id).Where(id => id != Guid.Empty).ToList();
         await db.Reports.Where(r => targetIds.Contains(r.TargetId) && reporterIds.Contains(r.ReporterId)).ExecuteDeleteAsync(cancellationToken);
-        await db.ModerationActions.Where(m => targetIds.Contains(m.TargetId) && m.ModeratorId == moderator.Id).ExecuteDeleteAsync(cancellationToken);
+        // The demo actions by their notes, whoever made them (an older local database has them by the demo moderator).
+        await db.ModerationActions.Where(m => targetIds.Contains(m.TargetId) && (m.Note == WarningNote || m.Note == DismissNote))
+            .ExecuteDeleteAsync(cancellationToken);
 
         var reports = new List<(Report Report, DemoReport Demo)>();
         foreach (var demo in Reports)

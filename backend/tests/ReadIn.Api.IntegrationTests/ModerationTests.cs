@@ -27,7 +27,6 @@ namespace ReadIn.Api.IntegrationTests;
 [Collection(ApiCollection.Name)]
 public sealed class ModerationTests(ApiFactory api)
 {
-    private const string ModeratorPhone = "+12025550103";
     private static readonly CancellationToken Ct = TestContext.Current.CancellationToken;
 
     // ---- Reports ----
@@ -194,8 +193,9 @@ public sealed class ModerationTests(ApiFactory api)
     [Fact]
     public async Task Nobody_warns_or_suspends_themselves_or_staff_but_staff_content_can_be_hidden()
     {
+        // Staff = whoever holds moderation.manage: today the SuperAdmin (a test's own, and the seeded one).
         var moderator = await ModeratorAsync();
-        var admin = await api.SeedUserClientAsync(ApiFactory.AdminPhone);
+        var admin = (await api.SuperAdminAsync("Second SuperAdmin")).Client;
         var moderatorId = await MeIdAsync(moderator);
         var adminId = await MeIdAsync(admin);
         var officialId = await InDbAsync(db => db.Users.Where(u => u.Username == "readin" && u.IsSystemAccount).Select(u => u.Id).SingleAsync(Ct));
@@ -211,6 +211,8 @@ public sealed class ModerationTests(ApiFactory api)
         await ActAsync(admin, new { action = "unsuspend", targetType = "user", targetId = moderatorId })
             .ProblemAsync(HttpStatusCode.Forbidden, "moderation.staff_target");
         await ActAsync(moderator, new { action = "warn", targetType = "user", targetId = officialId, note = "x" })
+            .ProblemAsync(HttpStatusCode.Forbidden, "moderation.staff_target");
+        await ActAsync(moderator, new { action = "suspend", targetType = "user", targetId = SystemUsers.SuperAdminId, note = "x" })
             .ProblemAsync(HttpStatusCode.Forbidden, "moderation.staff_target");
 
         var author = await api.UserAsync();
@@ -576,7 +578,7 @@ public sealed class ModerationTests(ApiFactory api)
     public async Task The_log_filters_by_user_moderator_and_type_and_pages()
     {
         var moderator = await ModeratorAsync();
-        var admin = await api.SeedUserClientAsync(ApiFactory.AdminPhone);
+        var admin = (await api.SuperAdminAsync("Second Moderator")).Client;
         var adminId = await MeIdAsync(admin);
         var warned = await api.UserAsync();
         var commenter = await api.UserAsync();
@@ -642,7 +644,7 @@ public sealed class ModerationTests(ApiFactory api)
 
         async Task<(List<ReportStatus> Reports, List<string> Actions)> DemoRowsAsync()
         {
-            var moderatorId = await UserIdAsync(ModeratorPhone);
+            var moderatorId = SystemUsers.SuperAdminId; // the demo SuperAdmin moderates (there is no demo moderator)
             var reporters = await InDbAsync(db => db.Users.Where(x => x.Email != null && x.Email.EndsWith("@readin.test")).Select(x => x.Id).ToListAsync(Ct));
             return (
                 await InDbAsync(db => db.Reports.Where(r => reporters.Contains(r.ReporterId)).OrderBy(r => r.Status).Select(r => r.Status).ToListAsync(Ct)),
@@ -653,8 +655,11 @@ public sealed class ModerationTests(ApiFactory api)
 
     // ---- Helpers ----
 
-    /// <summary>Each test acts as its own moderator: the <c>writes</c> rate limit (30 a minute) is per user.</summary>
-    private async Task<HttpClient> ModeratorAsync() => (await UserWithRoleAsync(RoleIds.Moderator, "Test Moderator")).Client;
+    /// <summary>
+    /// Each test acts as its own moderator, a SuperAdmin (the only role with <c>moderation.manage</c>): the <c>writes</c>
+    /// rate limit (30 a minute) is per user.
+    /// </summary>
+    private async Task<HttpClient> ModeratorAsync() => (await api.SuperAdminAsync("Test Moderator")).Client;
 
     private static async Task<Guid> MeIdAsync(HttpClient client) => (await client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!["id"]!.GetValue<Guid>();
 

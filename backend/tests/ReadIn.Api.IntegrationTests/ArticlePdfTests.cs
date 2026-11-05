@@ -114,7 +114,7 @@ public sealed class ArticlePdfTests(ApiFactory api)
         var moderator = await api.UserAsync("PDF Moderator");
         await InDbAsync(async db =>
         {
-            (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == moderator.Id, Ct)).GrantRole(RoleIds.Moderator);
+            (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == moderator.Id, Ct)).GrantRole(RoleIds.SuperAdmin); // staff, not the author
             await db.SaveChangesAsync(Ct);
         });
         await using (var scope = api.Services.CreateAsyncScope())

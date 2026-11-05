@@ -15,7 +15,7 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 /// <summary>
 /// Development only (SPEC F19, §18.2): an admin verification queue that isn't empty locally. Three pending requests:
 /// writer1 (a LinkedIn URL and a PNG certificate), writer2 (a GitHub URL only) and writer3 (a PDF syndicate card only);
-/// reader5's request was rejected with a reason and the verified writer's was approved, both by the demo Admin, so every
+/// reader5's request was rejected with a reason and the verified writer's was approved, both by the demo SuperAdmin, so every
 /// tab and the user page's states have data. The proof files are drawn here and go to the private store. Writes no outbox
 /// events, so nothing is notified or pushed. A re-run replaces the requests of these users, with their files.
 /// </summary>
@@ -41,8 +41,6 @@ internal sealed class DemoVerificationSeeder(AppDbContext db, IPrivateFileStorag
         string? Reason = null,
         double DecidedHoursAgo = 0);
 
-    private const string Admin = "admin";
-
     private static readonly DemoRequest[] Requests =
     [
         new("writer1", "frontend", "Senior Frontend Engineer (Angular)", "https://www.linkedin.com/in/readin-demo-writer1", Proof.Png,
@@ -57,7 +55,7 @@ internal sealed class DemoVerificationSeeder(AppDbContext db, IPrivateFileStorag
 
     public string Name => "demo-verification";
     public int Order => 14;
-    public int Version => 1;
+    public int Version => 2; // 2: decided by the SuperAdmin (there is no demo admin any more)
 
     public bool AppliesTo(IHostEnvironment environment) => environment.IsDevelopment();
 
@@ -69,12 +67,12 @@ internal sealed class DemoVerificationSeeder(AppDbContext db, IPrivateFileStorag
 
     public async Task<bool> SeedAsync(CancellationToken cancellationToken)
     {
-        var emails = Requests.Select(r => r.Handle).Append(Admin).Select(h => $"{h}@readin.test").ToList();
+        var emails = Requests.Select(r => r.Handle).Select(h => $"{h}@readin.test").ToList();
         var users = await db.Users.AsNoTracking()
             .Where(u => u.Email != null && emails.Contains(u.Email))
             .ToDictionaryAsync(u => u.Email!.Replace("@readin.test", string.Empty), u => u.Id, cancellationToken);
         var fields = await db.Fields.AsNoTracking().ToDictionaryAsync(f => f.Slug, f => f.Id, cancellationToken);
-        var adminId = users.GetValueOrDefault(Admin);
+        var adminId = await db.Users.AsNoTracking().Where(u => u.Id == SystemUsers.SuperAdminId).Select(u => u.Id).FirstOrDefaultAsync(cancellationToken);
 
         // A re-run replaces these users' requests, files included.
         var userIds = Requests.Select(r => users.GetValueOrDefault(r.Handle)).Where(id => id != Guid.Empty).ToList();

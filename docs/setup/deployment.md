@@ -278,6 +278,12 @@ and URL-safe slug, and tags that are now one tag are merged (`LegacyTagsUpgrade`
 Each upgrade waits until its migration is applied and does nothing once it is done (one or two small queries per
 start), so running it again is always safe.
 
+**Roles change (2026-11-05, [ADR 0018](../adr/0018-two-roles-and-a-verified-badge.md)):** nothing to run by hand. The
+`VerifiedBadgeAndTwoRoles` migration does the whole move in SQL, so a script works too: VerifiedWriter becomes the
+Verified badge, and the Admin, Moderator and VerifiedWriter roles and `roles.manage` are deleted. Anyone who was an
+Admin or a Moderator is a plain Member afterwards, so only the SuperAdmin keeps the admin and moderation screens. The
+role seeder (`seed`, or a start with seeding on) then keeps the roles exactly as SPEC §10.2 lists them.
+
 ## 10. Chromium for article PDFs (SPEC F33)
 
 `GET /api/v1/articles/{id}/pdf` prints an article with **headless Chromium** through PuppeteerSharp. Chromium is installed

@@ -33,6 +33,31 @@ Clients translate `code` (and each validation error code) with their own `ar`/`e
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
 "موقوف نهائيًا".
 
+### Roles and permissions (SPEC §10)
+
+An account has one role: `Member` (everyone who signs up) or `SuperAdmin` (the app's owner). `Guest` only means a call
+without a token. `GET /me` sends `roles` (`["Member"]` or `["SuperAdmin"]`) and `permissions`. Endpoints check
+permissions, never roles, and so do clients: show a screen or an action when `permissions` holds the permission it
+needs, and never test a role name (a staff role may be added later with some of these permissions). Where this contract
+says "moderators" or "admins", it means whoever holds the permission named, today only the SuperAdmin.
+
+| Permission | Member | SuperAdmin | What it opens |
+|---|:-:|:-:|---|
+| `articles.read` (Guest too), `articles.create`, `articles.export_pdf`, `comments.create`, `reactions.create`, `follows.manage`, `saved.manage`, `reports.create` | ✅ | ✅ | reading, writing, interacting, reporting |
+| `moderation.manage` | | ✅ | `/moderation/*` (the queue, the log, the nav badge), hide / unhide / delete in the article, comment and profile menus |
+| `users.suspend` | | ✅ | `suspend` / `unsuspend` in `POST /moderation/actions` |
+| `verification.manage` | | ✅ | `/admin/verification-requests/*` and `DELETE /admin/users/{id}/verification` (the admin verification queue) |
+| `users.reset_password` | | ✅ | `POST /admin/users/{id}/reset-password` |
+| `users.read.pii`, `articles.feature`, `taxonomy.manage`, `paths.manage`, `system.settings` | | ✅ | the admin console (F23), `/admin/paths`, `/admin/realtime/*` |
+
+**Verified is a badge, not a role.** `isVerified` (on `MeDto`, authors, profiles, people and every user summary) is
+`Users.IsVerified`: set when the SuperAdmin approves a verification request, cleared when they remove the badge. It
+never changes `roles` or `permissions`.
+
+**Breaking change (2026-11-05):** the `Admin`, `Moderator` and `VerifiedWriter` roles and the `roles.manage` permission
+are gone, and there is no role management (`/admin/roles` was never built and won't be). `roles` never holds the old
+names; `isVerified` keeps its meaning.
+
 ## Endpoints
 
 ### Auth 🌐 (SPEC §9, ADR 0007, ADR 0009, ADR 0012)
@@ -85,7 +110,7 @@ A wrong `currentPassword` counts toward the same 15-minute lockout as sign in (`
 | Method | Path | Auth | Body → Response |
 |---|---|---|---|
 | GET | `/users/username-available?u=` | 🌐 | → `200 { username, valid, available }` (your own handle counts as available) |
-| POST | `/admin/users/{id}/reset-password` | Bearer, `users.reset_password` | → `200 { temporaryPassword }`. "Forgot the PIN too" (ADR 0009): the user must change the password and set a PIN on the next sign in. Only a SuperAdmin can reset an Admin or SuperAdmin |
+| POST | `/admin/users/{id}/reset-password` | Bearer, `users.reset_password` | → `200 { temporaryPassword }`. "Forgot the PIN too" (ADR 0009): the user must change the password and set a PIN on the next sign in. `403 auth.forbidden` when the account holds a permission the caller doesn't, so only a SuperAdmin resets a SuperAdmin |
 
 ### Taxonomy 🌐
 
@@ -563,7 +588,8 @@ dedupe by `commentId`, and skip events for your own just-made change. Events are
 | GET | `/me/moderation-notices` | Any signed-in user → `{ items: ModerationNoticeDto[] }`: unacknowledged warnings and hidden articles, oldest first. Show each as a dialog on start |
 | POST | `/me/moderation-notices/{id}/acknowledge` | → `204` ("فهمت"; idempotent). `404 moderation.notice_not_found` for someone else's notice |
 
-Every `/moderation/*` route needs `moderation.manage` (Moderator, Admin, SuperAdmin; `403 auth.forbidden` otherwise).
+Every `/moderation/*` route needs `moderation.manage` (the SuperAdmin; `403 auth.forbidden` otherwise, so for every
+Member).
 
 `ModerationActionRequest`: `{ action, targetType, targetId, note?, durationDays?, resolveReportsOf?: { targetType, targetId }, categoryId? }`
 (`categoryId`: `clear_category` only).
@@ -578,8 +604,9 @@ Every `/moderation/*` route needs `moderation.manage` (Moderator, Admin, SuperAd
 - `note` (≤ 500, validation `validation.max_length`) is required for `warn` and `suspend` (`400 moderation.note_required`); it
   is shown to the user for `warn` and an article `hide`.
 - `durationDays` is for `suspend` only: 1–365, or `null`/omitted for a permanent suspension (`400 moderation.duration_invalid`).
-- `warn`, `suspend`, `unsuspend` on yourself: `400 moderation.self`; on a user with `moderation.manage` (or a system
-  account): `403 moderation.staff_target`. Hiding a moderator's article or comment is allowed.
+- `warn`, `suspend`, `unsuspend` on yourself: `400 moderation.self`; on staff, i.e. a user with `moderation.manage`
+  (today the SuperAdmin), or a system account: `403 moderation.staff_target`. Hiding staff's articles or comments is
+  allowed.
 - `clear_category` (F31, an offensive writer-category name reported with the user): `categoryId` is required
   (`400 validation.failed`, `errors.categoryId: ["validation.required"]`) and must be one of that user's categories
   (`404 category.not_found`); the user's case lists them in `ModerationCaseDto.categories`. The category is renamed to a neutral placeholder, `قسم {n}` when the writer's UI language
@@ -602,24 +629,31 @@ Every `/moderation/*` route needs `moderation.manage` (Moderator, Admin, SuperAd
 
 | Method | Path | Body → Response |
 |---|---|---|
-| GET | `/me/verification` | → `VerificationStatusDto`: `isVerified` (has the `VerifiedWriter` role), `canRequest` (not verified, not suspended, nothing pending) and `request`, the latest request whatever its status (`null` when there was none) |
+| GET | `/me/verification` | → `VerificationStatusDto`: `isVerified` (the Verified badge, `Users.IsVerified`), `canRequest` (not verified, not suspended, nothing pending) and `request`, the latest request whatever its status (`null` when there was none) |
 | POST | `/verification-requests` | `multipart/form-data`: `fieldId`, `jobTitle`, `proofUrl?`, `note?`, `proof?` (file) → `201 MyVerificationRequestDto` (`Location: /api/v1/me/verification`). Rate limit `writes`. Rules below |
 | DELETE | `/me/verification` | Withdraws the pending request: it is deleted with its file → `204`. Rate limit `writes`. `404 verification.not_found` when nothing is pending |
 | GET | `/admin/verification-requests?status=&cursor=&limit=` | → `CursorPage<AdminVerificationRequestDto>`. `status` = `pending` (default, oldest first) \| `approved` \| `rejected` (most recently decided first). `limit` 1–50 (default 20). Validation `verification.status_invalid` |
 | GET | `/admin/verification-requests/{id}` | → `AdminVerificationRequestDto`. `404 verification.not_found` |
 | GET | `/admin/verification-requests/{id}/proof` | → `200` the file, with its stored `Content-Type` (`application/pdf` \| `image/jpeg` \| `image/png` \| `image/webp`), `Content-Disposition: attachment; filename="verification-proof-{id}{.ext}"`, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`. `404 verification.proof_not_found` when the request has no file (URL only, or decided: the file is gone), `404 verification.not_found` |
-| POST | `/admin/verification-requests/{id}/approve` | → `204`. Rate limit `writes`. The user gets the `VerifiedWriter` role at once (refresh `GET /me` to show the badge), the proof file is deleted, `verification_result` is written. `409 verification.already_decided`, `404 verification.not_found` |
-| POST | `/admin/verification-requests/{id}/reject` | `{ reason }` (5–500 characters after trimming, required; validation `validation.required` / `validation.length` on `reason`) → `204`. Rate limit `writes`. The proof file is deleted, `verification_result` is written. `409 verification.already_decided`, `404 verification.not_found` |
+| POST | `/admin/verification-requests/{id}/approve` | → `204`. Rate limit `writes`. The user gets the Verified badge at once (`IsVerified = true`, `VerifiedAt` = now; a user who already has it keeps the first `VerifiedAt`); roles and permissions don't change, the user stays a `Member`. Refresh `GET /me` to show it; cached public pages follow within their cache time (≤ 10 minutes). The proof file is deleted, `verification_result` is written, audit `admin.verification_approved`. `409 verification.already_decided`, `404 verification.not_found` |
+| POST | `/admin/verification-requests/{id}/reject` | `{ reason }` (5–500 characters after trimming, required; validation `validation.required` / `validation.length` on `reason`) → `204`. Rate limit `writes`. The proof file is deleted, `verification_result` is written, audit `admin.verification_rejected`. `409 verification.already_decided`, `404 verification.not_found` |
+| DELETE | `/admin/users/{id}/verification` | Removes a user's Verified badge → `204`. Rate limit `writes`. Clears `IsVerified` and `VerifiedAt`, audit `admin.verification_removed`. The user's past requests stay as they were (an approved one stays approved), the user can request again (`canRequest`), and nothing is sent to the user (no notification, no push). `404 user.not_found` (unknown or deleted user), `409 verification.not_verified` (the user has no badge), `409 verification.system_account` (a system account, i.e. the official @readin account: its badge stays) |
 
-Every `/admin/verification-requests` route needs `verification.manage` (Admin, SuperAdmin; `403 auth.forbidden`
-otherwise, also for moderators). A suspended account gets `403 user.suspended` on every route, as elsewhere.
+Every `/admin/verification-requests` route and `DELETE /admin/users/{id}/verification` need `verification.manage`
+(the SuperAdmin; `403 auth.forbidden` for every Member). A suspended account gets `403 user.suspended` on every route,
+as elsewhere.
+
+**Removing a badge** (web: "Remove badge", with a confirmation, on an Approved item of `/admin/verification` while
+`user.isVerified` is still true): after `204`, refresh the item (or the list) so its `user.isVerified` turns `false`
+and the action goes away. A `409 verification.not_verified` means someone already removed it: refresh the same way.
+A `409 verification.system_account` changes nothing: show the error, and the badge stays.
 
 `POST /verification-requests`, checked in this order:
 
 - Validation (`400 validation.failed`): `jobTitle` required, 2–100 characters after trimming (`validation.required`,
   `validation.length`); `proofUrl` an absolute `https://` URL (`validation.url`) of at most 500 characters
   (`validation.max_length`); `note` at most 500 (`validation.max_length`). Blank `proofUrl` / `note` count as missing.
-- `409 verification.already_verified` (the user has the `VerifiedWriter` role), then `409 verification.already_pending`
+- `409 verification.already_verified` (the user has the Verified badge, `isVerified`), then `409 verification.already_pending`
   (one pending request per user, also for two submits at once).
 - `400 verification.field_invalid`: `fieldId` missing, not a GUID, unknown or disabled (`GET /fields`).
 - `400 verification.proof_required`: neither `proofUrl` nor `proof`. Both are allowed.
@@ -637,7 +671,15 @@ then shows the new one. The reason is only shown on the verification page, never
 
 Error codes: `verification.proof_required`, `verification.proof_invalid`, `verification.field_invalid`,
 `verification.already_pending`, `verification.already_verified`, `verification.already_decided`,
-`verification.not_found`, `verification.proof_not_found`, `verification.status_invalid` (validation, `status`).
+`verification.not_found`, `verification.proof_not_found`, `verification.status_invalid` (validation, `status`),
+`verification.not_verified` and `verification.system_account` (new with the roles change,
+`DELETE /admin/users/{id}/verification`):
+
+| Code | Arabic | English |
+|---|---|---|
+| `409 verification.not_verified` | "المستخدم ده مش موثّق." | "This user isn't verified." |
+| `409 verification.system_account` | "ده حساب ReadIn الرسمي، والتوثيق بتاعه ثابت." | "This is ReadIn's official account; its badge stays." |
+
 `request.unsupported_media_type` (415) is new and general: any endpoint answering 415 (a JSON body sent to a multipart
 upload) now carries it instead of `server.error`.
 
@@ -670,7 +712,7 @@ accounts get nothing):
 | `streak_reminder` | 20:00 your time, your streak is ≥ 1 and you haven't read today | no | `readin://me/stats` |
 | `security_alert` | password, PIN or phone changed, password reset, recovery locked, Google/Apple linked or unlinked, phone sign in added | no | `readin://settings/account` |
 | `moderation_notice` | a moderator warned you or hid your article (F22) | no | the hidden article `readin://a/{slug}`, a warning `readin://notifications` (the app shows the notice from `GET /me/moderation-notices`) |
-| `verification_result` | an admin approved or rejected your verification request (F19): `data.approved` `true` / `false`, no actor, no article. Without `data.approved` (never written now) render a generic text | no | `readin://verification` |
+| `verification_result` | the SuperAdmin approved or rejected your verification request (F19; removing a badge later sends nothing): `data.approved` `true` / `false`, no actor, no article. Without `data.approved` (never written now) render a generic text | no | `readin://verification` |
 
 - One entry per recipient per comment: `mention` > `comment_reply` > `article_comment`. An edit only tells users it
   mentions for the first time.
@@ -862,7 +904,7 @@ URLs. Publishing re-runs the checks and fails while any problem remains.
 
 ### Article PDF (F33) — SPEC F33
 
-Bearer, permission `articles.export_pdf` (Member and up, SPEC §10.2), and only on your own article.
+Bearer, permission `articles.export_pdf` (every account, SPEC §10.2), and only on your own article.
 
 | Method | Path | Response |
 |---|---|---|
@@ -1113,15 +1155,15 @@ interface MeDto {
   theme: ThemePreference;
   timeZone: string;
   reminderTime: string;          // "08:00"
-  isVerified: boolean;           // has VerifiedWriter role
+  isVerified: boolean;           // the Verified badge (Users.IsVerified), not a role
   onboardingCompleted: boolean;  // true once ≥ 3 interests are saved
-  mustChangePassword: boolean;   // after an Admin reset, or the production SuperAdmin's first sign in
+  mustChangePassword: boolean;   // after an admin reset (users.reset_password), or the production SuperAdmin's first sign in
   mustSetRecoveryPin: boolean;
   isProfileComplete: boolean;
   hasRecoveryPin: boolean;
   hasPassword: boolean;          // false for Google/Apple-only accounts: offer "add phone sign in" instead of "change password"
   externalLogins: { provider: ExternalProvider; email: string | null; linkedAt: string }[];
-  roles: string[];               // e.g. ["Member", "VerifiedWriter"]
+  roles: string[];               // ["Member"] or ["SuperAdmin"]; gate on permissions, never on role names
   permissions: string[];         // e.g. ["articles.read", "articles.create", ...]
   interests: { fieldIds: string[]; topicIds: string[] };
   privacy: {                     // Settings → Privacy (F18). PUT /me/privacy
@@ -1601,7 +1643,7 @@ interface ModerationNoticeDto {
 type VerificationStatus = 'pending' | 'approved' | 'rejected';
 
 interface VerificationStatusDto {
-  isVerified: boolean;           // has the VerifiedWriter role (the badge)
+  isVerified: boolean;           // the Verified badge (Users.IsVerified)
   canRequest: boolean;           // not verified, not suspended and nothing pending: show the form
   request: MyVerificationRequestDto | null; // the latest request, whatever its status
 }
@@ -1622,7 +1664,7 @@ interface MyVerificationRequestDto {
 interface AdminVerificationRequestDto {
   id: string;
   status: VerificationStatus;
-  user: { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean };
+  user: { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean }; // isVerified: has the badge now (offer "Remove badge")
   field: { id: string; slug: string; name: string };
   jobTitle: string;
   proofUrl: string | null;
@@ -1630,7 +1672,7 @@ interface AdminVerificationRequestDto {
   note: string | null;
   submittedAt: string;
   decidedAt: string | null;
-  decidedBy: { id: string; username: string } | null; // null while pending, or once that admin deleted their account
+  decidedBy: { id: string; username: string } | null; // null while pending, or once the reviewer deleted their account
   rejectionReason: string | null;
 }
 
@@ -1654,7 +1696,7 @@ interface NotificationDto {
   link: string;                  // readin://… (the same as the push's data.link)
 }
 // actor: also set for followed_writer_article (the writer); null for reactions_milestone, daily_article, streak_reminder,
-// security_alert, moderation_notice (moderators stay anonymous), verification_result (admins stay anonymous), and when every
+// security_alert, moderation_notice (moderators stay anonymous), verification_result (the reviewer stays anonymous), and when every
 // actor deleted their account ("Deleted user").
 // verification_result: data.approved true = "You're now a verified writer ✓" / "بقيت كاتب موثّق ✓"; false = "Your
 // verification request wasn't approved" / "طلب التوثيق بتاعك ماتقبلش"; missing = the generic text.

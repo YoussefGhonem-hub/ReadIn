@@ -75,7 +75,7 @@ internal sealed class GetArticlePdfQueryHandler(
                 u.DisplayName,
                 u.Username,
                 u.TimeZone,
-                IsVerified = u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter),
+                IsVerified = u.IsVerified,
             })
             .FirstAsync(cancellationToken);
 

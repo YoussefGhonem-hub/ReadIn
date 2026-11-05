@@ -11,7 +11,7 @@ public sealed class UserMappings : IRegister
         config.NewConfig<UserLinks, UserLinksDto>()
             .MapWith(s => new UserLinksDto(s.GitHub, s.LinkedIn, s.Website));
 
-        // Roles, permissions and IsVerified come from IUserAccessService (cached), not from the entity.
+        // Roles and permissions come from IUserAccessService (cached), not from the entity. IsVerified is the entity's badge.
         config.NewConfig<User, MeDto>()
             .Map(d => d.ArticleLanguage, s => s.ArticleLanguagePref)
             .Map(d => d.Theme, s => s.ThemePref)
@@ -24,6 +24,6 @@ public sealed class UserMappings : IRegister
                 .Select(l => new ExternalLoginDto(l.Provider, l.Email, l.LinkedAt))
                 .ToList())
             .Map(d => d.Privacy, s => new PrivacyDto(s.PublicReadingStats, s.WhoCanMention))
-            .Ignore(d => d.Roles, d => d.Permissions, d => d.IsVerified);
+            .Ignore(d => d.Roles, d => d.Permissions);
     }
 }

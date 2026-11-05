@@ -18,7 +18,9 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 /// Seeder #4 (local only): the demo users of SPEC §18.3 in the fictional range +1 202 555 01XX, with realistic
 /// mixed-language profiles (F14: bio, links, 1–3 fields of expertise for writers, a square avatar drawn here and put
 /// through the real image pipeline, public reading stats for about a third), <c>Seed:DemoPassword</c> and, for those
-/// marked with a PIN, <c>Seed:DemoPin</c>. Locally the SuperAdmin (+12025550101) gets the same credentials.
+/// marked with a PIN, <c>Seed:DemoPin</c>. Locally the SuperAdmin (+12025550101) gets the same credentials. Every demo user
+/// is a Member; the verified writers have the Verified badge (SPEC §10.1). There are no demo admin or moderator accounts
+/// any more: the demo SuperAdmin does that work (an older local database keeps +12025550102/3 as plain Members).
 /// </summary>
 internal sealed partial class DemoUsersSeeder(
     AppDbContext db,
@@ -44,7 +46,6 @@ internal sealed partial class DemoUsersSeeder(
         string Phone,
         string Handle,
         string DisplayName,
-        Guid[] Roles,
         string Bio,
         string[] Interests,
         bool Suspended = false,
@@ -52,50 +53,48 @@ internal sealed partial class DemoUsersSeeder(
         string[]? Expertise = null,
         Link Links = Link.GitHub,
         bool PublicStats = false,
-        bool Avatar = true);
+        bool Avatar = true,
+        bool Verified = false);
 
     private static readonly DemoUser[] Users =
     [
-        new("+12025550102", "admin", "Admin User", [RoleIds.Admin], "بدير المحتوى والمجالات على ReadIn.", ["dotnet", "frontend", "software-architecture"],
-            Expertise: ["software-architecture"]),
-        new("+12025550103", "moderator", "Moderator User", [RoleIds.Moderator], "Moderator — بحافظ إن النقاش يفضل محترم ومفيد.", ["dotnet", "security", "devops-cloud"],
-            Expertise: ["security"]),
         // The handles (and so the usernames) predate ADR 0015, which removed reviewing; other demo seeders find users by them.
-        new("+12025550104", "reviewer.dotnet", ".NET Writer", [RoleIds.Member, RoleIds.VerifiedWriter],
+        new("+12025550104", "reviewer.dotnet", ".NET Writer",
             "Senior .NET engineer. بكتب عن ASP.NET Core و Clean Architecture.", ["dotnet", "software-architecture", "databases"],
-            Expertise: ["dotnet", "software-architecture", "databases"], Links: Link.GitHub | Link.LinkedIn | Link.Website, PublicStats: true),
-        new("+12025550105", "reviewer.ai", "AI Writer", [RoleIds.Member, RoleIds.VerifiedWriter],
+            Expertise: ["dotnet", "software-architecture", "databases"], Links: Link.GitHub | Link.LinkedIn | Link.Website, PublicStats: true,
+            Verified: true),
+        new("+12025550105", "reviewer.ai", "AI Writer",
             "ML engineer. بشتغل على LLMs و RAG، وبكتب عن الـ AI.", ["ai-fundamentals", "machine-learning", "claude-ai-tools"],
-            Expertise: ["machine-learning", "ai-fundamentals", "claude-ai-tools"], Links: Link.GitHub | Link.LinkedIn),
-        new("+12025550106", "writer.verified", "Verified Writer", [RoleIds.Member, RoleIds.VerifiedWriter],
+            Expertise: ["machine-learning", "ai-fundamentals", "claude-ai-tools"], Links: Link.GitHub | Link.LinkedIn, Verified: true),
+        new("+12025550106", "writer.verified", "Verified Writer",
             "Flutter developer بكتب عن الـ mobile architecture.", ["mobile", "frontend", "software-architecture"],
-            Expertise: ["mobile", "frontend"], Links: Link.GitHub | Link.Website, PublicStats: true),
-        new("+12025550107", "writer1", "Writer 1", [RoleIds.Member], "بكتب عن Angular و TypeScript.", ["frontend", "dotnet", "testing"],
+            Expertise: ["mobile", "frontend"], Links: Link.GitHub | Link.Website, PublicStats: true, Verified: true),
+        new("+12025550107", "writer1", "Writer 1", "بكتب عن Angular و TypeScript.", ["frontend", "dotnet", "testing"],
             Expertise: ["frontend"], Links: Link.GitHub | Link.LinkedIn),
-        new("+12025550108", "writer2", "Writer 2", [RoleIds.Member], "Backend developer — Node و .NET.", ["dotnet", "databases", "devops-cloud"],
+        new("+12025550108", "writer2", "Writer 2", "Backend developer — Node و .NET.", ["dotnet", "databases", "devops-cloud"],
             Expertise: ["dotnet", "databases"], PublicStats: true),
-        new("+12025550109", "writer3", "Writer 3", [RoleIds.Member], "Data engineer مهتم بالـ SQL والـ performance.", ["databases", "machine-learning", "devops-cloud"],
+        new("+12025550109", "writer3", "Writer 3", "Data engineer مهتم بالـ SQL والـ performance.", ["databases", "machine-learning", "devops-cloud"],
             Expertise: ["databases", "machine-learning"], Links: Link.GitHub | Link.LinkedIn | Link.Website),
         .. Enumerable.Range(1, 10).Select(i => new DemoUser(
-            $"+120255501{9 + i:D2}", $"reader{i}", $"Reader {i}", [RoleIds.Member],
+            $"+120255501{9 + i:D2}", $"reader{i}", $"Reader {i}",
             i % 2 == 0 ? "طالب هندسة حاسبات، بقرا مقال كل يوم 📚" : "Junior developer بيتعلم كل يوم حاجة جديدة.",
             ReaderInterests(i),
             HasPin: i != 10, // reader10 tests the mandatory "set PIN" screen
             Expertise: i % 3 == 1 ? ReaderInterests(i)[..1] : null,
             PublicStats: i % 3 == 1, // reader1 (12-day streak), reader4, reader7
             Avatar: i != 10)),       // reader10 shows the initials fallback
-        new("+12025550120", "suspended", "Suspended User", [RoleIds.Member], "Demo account for the suspended state.", ["dotnet", "frontend", "mobile"],
+        new("+12025550120", "suspended", "Suspended User", "Demo account for the suspended state.", ["dotnet", "frontend", "mobile"],
             Suspended: true, HasPin: false, Avatar: false),
     ];
 
     public string Name => "demo-users";
     public int Order => 4;
-    public int Version => 5;
+    public int Version => 6;
 
     public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.AllowsDemoData(environment);
 
     public Task<string> ComputeChecksumAsync(CancellationToken cancellationToken) => Task.FromResult(SeedChecksum.Of(
-        [.. Users.Select(u => $"{u.Phone}|{u.Handle}|{u.DisplayName}|{string.Join(',', u.Roles)}|{u.Bio}|{string.Join(',', u.Interests)}|{u.Suspended}|{u.HasPin}" +
+        [.. Users.Select(u => $"{u.Phone}|{u.Handle}|{u.DisplayName}|{u.Verified}|{u.Bio}|{string.Join(',', u.Interests)}|{u.Suspended}|{u.HasPin}" +
                               $"|{string.Join(',', u.Expertise ?? [])}|{u.Links}|{u.PublicStats}|{u.Avatar}"),
          (options.Value.DemoPassword is not null).ToString(),
          (options.Value.DemoPin is not null).ToString()]));
@@ -112,8 +111,8 @@ internal sealed partial class DemoUsersSeeder(
             var user = await SeedUserStore.UpsertAsync(db, demo.Phone, username, () => User.CreateSeeded(
                 demo.Phone, demo.DisplayName, username, email: $"{demo.Handle}@readin.test"), cancellationToken);
 
-            foreach (var role in demo.Roles) user.GrantRole(role);
-            if (!demo.Roles.Contains(RoleIds.Member)) user.RevokeRole(RoleIds.Member);
+            user.GrantRole(RoleIds.Member);
+            if (demo.Verified) user.Verify(now); // the badge, not a role (SPEC §10.1)
             user.SetInterests([.. demo.Interests.Where(fieldIds.ContainsKey).Select(s => fieldIds[s])], []);
             user.SetExpertise([.. (demo.Expertise ?? []).Where(fieldIds.ContainsKey).Select(s => fieldIds[s])]);
             user.SetPrivacy(demo.PublicStats);

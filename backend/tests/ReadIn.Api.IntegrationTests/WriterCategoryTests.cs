@@ -480,7 +480,7 @@ public sealed class WriterCategoryTests(ApiFactory api)
         var user = await api.UserAsync("Category Moderator");
         await using var scope = api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == user.Id, Ct)).GrantRole(RoleIds.Moderator);
+        (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == user.Id, Ct)).GrantRole(RoleIds.SuperAdmin); // moderation.manage
         await db.SaveChangesAsync(Ct);
         await scope.ServiceProvider.GetRequiredService<IUserAccessService>().InvalidateAsync(user.Id, Ct);
         return user.Client;

@@ -92,6 +92,15 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public DateTime? SuspendedUntil { get; private set; }
     public bool IsSystemAccount { get; private set; }
 
+    /// <summary>
+    /// The Verified badge (SPEC §10.1, F19): set when the SuperAdmin approves a verification request, cleared when they
+    /// remove it. A badge, not a role: roles and permissions don't change.
+    /// </summary>
+    public bool IsVerified { get; private set; }
+
+    /// <summary>When the badge was first given; null without it.</summary>
+    public DateTime? VerifiedAt { get; private set; }
+
     public IReadOnlyCollection<UserRole> Roles => _roles.AsReadOnly();
     public IReadOnlyCollection<UserInterest> Interests => _interests.AsReadOnly();
     public IReadOnlyCollection<UserDevice> Devices => _devices.AsReadOnly();
@@ -561,6 +570,25 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     }
 
     public bool IsSuspendedAt(DateTime now) => IsSuspended && (SuspendedUntil is null || SuspendedUntil > now);
+
+    // ---- Verified badge (SPEC §10.1, F19) ----
+
+    /// <summary>Gives the badge (an approved verification request, or seeding). A user who has it keeps the first date.</summary>
+    public void Verify(DateTime now)
+    {
+        if (IsVerified) return;
+        IsVerified = true;
+        VerifiedAt = now;
+    }
+
+    /// <summary>Takes the badge away (the SuperAdmin, F19/F23); false when the user has none.</summary>
+    public bool RemoveVerification()
+    {
+        if (!IsVerified) return false;
+        IsVerified = false;
+        VerifiedAt = null;
+        return true;
+    }
 
     /// <summary>Handles that would clash with a fixed <c>/users/{segment}</c> route (<c>GET /users/suggested</c>).</summary>
     private static readonly HashSet<string> ReservedUsernames = ["suggested"];

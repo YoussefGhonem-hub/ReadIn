@@ -273,11 +273,11 @@ public sealed class AccountDeletionTests(ApiFactory api)
     [Fact]
     public async Task Verification_requests_and_their_private_files_go_and_decisions_lose_the_reviewer()
     {
-        // F19: the leaving account is an admin who decided someone's request, and has requests of its own.
+        // F19: the leaving account is a SuperAdmin who decided someone's request, and has requests of its own.
         var leaving = await api.UserAsync("Leaving Admin");
         await InDbAsync(async db =>
         {
-            (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == leaving.Id, Ct)).GrantRole(Application.Common.Security.RoleIds.Admin);
+            (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == leaving.Id, Ct)).GrantRole(Application.Common.Security.RoleIds.SuperAdmin);
             return await db.SaveChangesAsync(Ct);
         });
         using (var scope = api.Services.CreateScope())

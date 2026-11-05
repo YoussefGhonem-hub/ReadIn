@@ -4,7 +4,7 @@ using ReadIn.Domain.Verification;
 namespace ReadIn.Application.Features.Verification;
 
 /// <summary>GET /me/verification (SPEC F19): where the signed-in user stands.</summary>
-/// <param name="IsVerified">The user has the <c>VerifiedWriter</c> role (the badge).</param>
+/// <param name="IsVerified">The user has the Verified badge (<c>Users.IsVerified</c>).</param>
 /// <param name="CanRequest">Not verified, not suspended and nothing pending: the form can be sent.</param>
 /// <param name="Request">The latest request, whatever its status; null when there was none.</param>
 public sealed record VerificationStatusDto(bool IsVerified, bool CanRequest, MyVerificationRequestDto? Request);

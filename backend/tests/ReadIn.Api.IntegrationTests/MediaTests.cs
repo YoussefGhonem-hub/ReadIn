@@ -306,7 +306,7 @@ public sealed class MediaTests(ApiFactory api)
             .GetValue<bool>().Should().BeTrue("the cached copy is personalized for the author");
 
         var (moderator, moderatorId) = await SignedInAsync();
-        await GrantAsync(moderatorId, RoleIds.Moderator);
+        await GrantAsync(moderatorId, RoleIds.SuperAdmin); // moderation.manage
         (await moderator.GetAsync(url, Ct)).StatusCode.Should().Be(HttpStatusCode.OK);
 
         await SetAttachmentsAsync(author, articleId, new { mediaAssetId = document["id"], order = 0, title = "Inspection Report 2026", allowDownload = true });

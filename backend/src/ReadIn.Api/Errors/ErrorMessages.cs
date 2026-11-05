@@ -118,7 +118,7 @@ public static class ErrorMessages
         ["report.status_invalid"] = ("حالة البلاغ لازم تكون مفتوح أو اتحل أو اترفض.", "The report status must be open, resolved or dismissed."),
         ["moderation.action_invalid"] = ("الإجراء ده مينفعش على النوع ده.", "This action doesn't apply to this target."),
         ["moderation.self"] = ("مينفعش تعمل الإجراء ده على حسابك.", "You can't take this action on your own account."),
-        ["moderation.staff_target"] = ("مينفعش تحذّر أو توقف حد من فريق الإشراف أو الإدارة.", "Moderators and admins can't be warned or suspended."),
+        ["moderation.staff_target"] = ("مينفعش تحذّر أو توقف حد من فريق الإشراف.", "You can't warn or suspend a member of the moderation team."),
         ["moderation.note_required"] = ("اكتب ملاحظة توضّح السبب للمستخدم.", "Write a note that tells the user why."),
         ["moderation.duration_invalid"] = ("مدة الإيقاف من يوم لـ 365 يوم، أو نهائي.", "A suspension lasts 1 to 365 days, or until it is lifted."),
         ["moderation.notice_not_found"] = ("التنبيه ده مش موجود.", "Notice not found."),
@@ -132,6 +132,8 @@ public static class ErrorMessages
         ["verification.not_found"] = ("طلب التوثيق ده مش موجود.", "Verification request not found."),
         ["verification.proof_not_found"] = ("الطلب ده مفيهوش ملف.", "This request has no proof file."),
         ["verification.status_invalid"] = ("الحالة لازم تكون pending أو approved أو rejected.", "Status must be pending, approved or rejected."),
+        ["verification.not_verified"] = ("المستخدم ده مش موثّق.", "This user isn't verified."),
+        ["verification.system_account"] = ("ده حساب ReadIn الرسمي، والتوثيق بتاعه ثابت.", "This is ReadIn's official account; its badge stays."),
         // Article PDF (SPEC F33)
         ["article.pdf_hidden"] = ("المشرفين خفّوا المقال ده، فمينفعش يتحمّل PDF.", "Moderators hid this article, so it can't be downloaded as a PDF."),
         ["article.pdf_busy"] = ("فيه PDFs كتير بتتجهز دلوقتي. حاول تاني كمان شوية.", "Many PDFs are being prepared right now. Try again in a moment."),

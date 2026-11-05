@@ -37,7 +37,6 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public const string Reader1Phone = "+12025550110";
     public const string Reader10Phone = "+12025550119";
     public const string SuspendedPhone = "+12025550120";
-    public const string AdminPhone = "+12025550102";
     public const string SuperAdminPhone = "+12025550101";
 
     // Fictional 555-01XX numbers (SPEC §18.3) in area codes the seed users don't use.

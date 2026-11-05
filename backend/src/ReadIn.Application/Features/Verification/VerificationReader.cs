@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
-using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Domain.Common;
@@ -38,7 +37,7 @@ public sealed class VerificationReader(IAppDbContext db, IFileStorage storage, I
         var userIds = rows.Select(r => r.UserId).Distinct().ToList();
         var users = await db.Users.IgnoreQueryFilters().AsNoTracking()
             .Where(u => userIds.Contains(u.Id))
-            .Select(u => new AuthorDto(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)))
+            .Select(u => new AuthorDto(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified))
             .ToDictionaryAsync(u => u.Id, ct);
 
         var deciderIds = rows.Where(r => r.DecidedById != null).Select(r => r.DecidedById!.Value).Distinct().ToList();

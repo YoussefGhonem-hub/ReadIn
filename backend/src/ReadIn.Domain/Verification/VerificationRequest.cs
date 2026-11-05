@@ -10,8 +10,9 @@ public enum VerificationStatus
 }
 
 /// <summary>
-/// A request for the <c>VerifiedWriter</c> role (SPEC F19): a field, a job title and proof, a URL (LinkedIn, GitHub…), a
-/// private file (a certificate or a syndicate card), or both. An admin approves it, or rejects it with a reason. At most one
+/// A request for the Verified badge (SPEC F19, <c>Users.IsVerified</c>; not a role): a field, a job title and proof, a URL
+/// (LinkedIn, GitHub…), a private file (a certificate or a syndicate card), or both. The SuperAdmin approves it, or
+/// rejects it with a reason. At most one
 /// request per user is pending. The proof file is private (never under <c>wwwroot</c>, never at a public URL) and is
 /// deleted once the request is decided: the decision, the reviewer, the reason and the URL stay. Withdrawing a pending
 /// request deletes it.
@@ -118,7 +119,7 @@ public sealed class VerificationRequest : AggregateRoot
         ProofFileName = fileName;
     }
 
-    /// <summary>The user becomes a verified writer (the caller grants the role).</summary>
+    /// <summary>The user becomes a verified writer (the caller gives the user the badge).</summary>
     /// <returns>The proof file to delete from the private store after the commit, if any.</returns>
     public Result<string?> Approve(Guid adminId, DateTime now)
     {
@@ -175,4 +176,11 @@ public static class VerificationErrors
     public static readonly Error AlreadyDecided = Error.Conflict("verification.already_decided", "This request was already decided.");
     public static readonly Error NotFound = Error.NotFound("verification.not_found", "Verification request not found.");
     public static readonly Error ProofNotFound = Error.NotFound("verification.proof_not_found", "This request has no proof file.");
+
+    /// <summary>Removing a badge the user doesn't have (DELETE /admin/users/{id}/verification).</summary>
+    public static readonly Error NotVerified = Error.Conflict("verification.not_verified", "This user isn't verified.");
+
+    /// <summary>Removing the badge of a system account (the official @readin account keeps it, SPEC §10.1).</summary>
+    public static readonly Error SystemAccount =
+        Error.Conflict("verification.system_account", "This is ReadIn's official account; its badge stays.");
 }

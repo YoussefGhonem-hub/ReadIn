@@ -20,7 +20,7 @@ internal sealed class DemoNotificationsSeeder(AppDbContext db, TimeProvider cloc
 {
     private const string KeyPrefix = "demo:";
     private const string ImagesSlug = "demo-media-angular-workshop";
-    private static readonly string[] Handles = ["reader1", "reader2", "reader3", "reader5", "reader7", "writer1", "moderator"];
+    private static readonly string[] Handles = ["reader1", "reader2", "reader3", "reader5", "reader7", "writer1"];
 
     public string Name => "demo-notifications";
     public int Order => 13;

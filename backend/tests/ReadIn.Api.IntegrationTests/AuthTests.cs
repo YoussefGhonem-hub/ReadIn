@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using ReadIn.Application.Common.Security;
 
 namespace ReadIn.Api.IntegrationTests;
 
@@ -318,7 +319,7 @@ public sealed class AuthTests(ApiFactory api)
     public async Task Admin_reset_gives_a_temporary_password_and_forces_new_credentials()
     {
         var user = await api.SignUpAsync();
-        var admin = await api.SeedUserClientAsync(ApiFactory.AdminPhone);
+        var admin = (await api.SuperAdminAsync("Resetting SuperAdmin")).Client;
 
         var reset = await admin.PostAsync($"/api/v1/admin/users/{user.Id}/reset-password", null, Ct);
         reset.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -330,12 +331,22 @@ public sealed class AuthTests(ApiFactory api)
         session["user"]!["mustSetRecoveryPin"]!.GetValue<bool>().Should().BeTrue();
         session["user"]!["hasRecoveryPin"]!.GetValue<bool>().Should().BeFalse();
 
+        // A staff role holding users.reset_password (none exists today) resets Members but can't take over the
+        // SuperAdmin, who can do more than it can.
         var superAdminId = (await (await api.SeedUserClientAsync(ApiFactory.SuperAdminPhone)).GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!["id"]!
             .GetValue<Guid>();
-        (await admin.PostAsync($"/api/v1/admin/users/{superAdminId}/reset-password", null, Ct)).StatusCode
-            .Should().Be(HttpStatusCode.Forbidden, "an Admin can't take over a SuperAdmin");
+        // A staff role is built on the Member bundle (as Moderator was), plus what it does.
+        var desk = await api.UserWithPermissionsAsync("Password Desk",
+            [.. RoleMatrix.Roles.Single(r => r.Id == RoleIds.Member).Permissions, Permissions.Users.ResetPassword]);
+        (await desk.Client.PostAsync($"/api/v1/admin/users/{superAdminId}/reset-password", null, Ct)).StatusCode
+            .Should().Be(HttpStatusCode.Forbidden, "only a SuperAdmin resets a SuperAdmin");
+        var member = await api.SignUpAsync();
+        (await desk.Client.PostAsync($"/api/v1/admin/users/{member.Id}/reset-password", null, Ct)).StatusCode.Should().Be(HttpStatusCode.OK);
         (await user.Client.PostAsync($"/api/v1/admin/users/{user.Id}/reset-password", null, Ct)).StatusCode
             .Should().BeOneOf(HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden);
+        var other = await api.SignUpAsync();
+        await other.Client.PostAsync($"/api/v1/admin/users/{member.Id}/reset-password", null, Ct)
+            .ProblemAsync(HttpStatusCode.Forbidden, "auth.forbidden"); // a Member can't
     }
 
     [Fact]

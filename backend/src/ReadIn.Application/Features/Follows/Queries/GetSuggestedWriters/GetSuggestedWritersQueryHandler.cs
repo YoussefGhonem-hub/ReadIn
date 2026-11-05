@@ -1,7 +1,6 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
-using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Search;
 using ReadIn.Domain.Common;
@@ -46,7 +45,7 @@ internal sealed class GetSuggestedWritersQueryHandler(IAppDbContext db, ICurrent
             .Where(u => !db.UserFollows.Any(f => f.FollowerId == userId && f.FolloweeId == u.Id))
             .WithoutMutedFor(db, userId)
             .Where(u => published.Any(a => a.AuthorId == u.Id))
-            .OrderByDescending(u => u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter))
+            .OrderByDescending(u => u.IsVerified)
             .ThenByDescending(u => db.UserFollows.Count(f => f.FolloweeId == u.Id))
             .ThenBy(u => u.Username)
             .Take(limit)

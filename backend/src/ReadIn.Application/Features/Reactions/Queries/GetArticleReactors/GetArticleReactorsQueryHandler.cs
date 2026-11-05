@@ -2,7 +2,6 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Models;
-using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Domain.Articles;
@@ -38,7 +37,7 @@ internal sealed class GetArticleReactorsQueryHandler(IAppDbContext db, ICurrentU
                 r.Id,
                 Reactor = new ReactorDto(
                     new AuthorDto(r.User.Id, r.User.DisplayName, r.User.Username, r.User.AvatarUrl,
-                        r.User.Roles.Any(role => role.RoleId == RoleIds.VerifiedWriter)),
+                        r.User.IsVerified),
                     r.Type,
                     r.ReactedAt),
             })
