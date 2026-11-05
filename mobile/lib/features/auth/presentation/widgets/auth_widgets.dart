@@ -15,7 +15,8 @@ import '../../../../shared/widgets/app_logo.dart';
 String? errorText(BuildContext context, String? code) => code == null ? null : localizeErrorCode(context.l10n, code);
 
 /// Shared layout of the auth and account screens: optional logo, title, subtitle, content, footer. Content is capped
-/// at a phone-like width on tablets.
+/// at a phone-like width on tablets. One white (`surface`) page, the bar too and with no line under it: a form, not
+/// blocks on the canvas.
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
     super.key,
@@ -44,7 +45,13 @@ class AuthScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(leading: leading, automaticallyImplyLeading: automaticallyImplyLeading, actions: actions),
+        backgroundColor: context.colors.surface,
+        appBar: AppBar(
+          leading: leading,
+          automaticallyImplyLeading: automaticallyImplyLeading,
+          actions: actions,
+          shape: const Border(),
+        ),
         body: SafeArea(
           top: false,
           child: Align(

@@ -80,7 +80,8 @@ class LinkedAccountsSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s2),
               child: Semantics(header: true, child: Text(l10n.linkedAccounts, style: context.textTheme.titleSmall)),
             ),
-            for (final provider in rows)
+            for (final provider in rows) ...[
+              if (provider != rows.first) const Divider(),
               _LinkedAccountTile(
                 provider: provider,
                 login: me.externalLogin(provider),
@@ -90,6 +91,7 @@ class LinkedAccountsSection extends StatelessWidget {
                     : null,
                 onUnlink: idle ? () => _unlink(context, provider) : null,
               ),
+            ],
           ],
         );
       },

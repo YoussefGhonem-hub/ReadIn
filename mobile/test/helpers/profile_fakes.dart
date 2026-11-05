@@ -1,7 +1,9 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart' show addTearDown;
 import 'package:mocktail/mocktail.dart';
+import 'package:readin/core/di/injection.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/auth/domain/entities/me.dart';
@@ -15,6 +17,8 @@ import 'package:readin/features/profile/presentation/cubit/privacy_cubit.dart';
 import 'package:readin/features/profile/presentation/cubit/profile_articles_cubit.dart';
 import 'package:readin/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:readin/features/profile/presentation/cubit/profile_reposts_cubit.dart';
+import 'package:readin/features/reading/presentation/cubit/reading_heatmap_cubit.dart';
+import 'package:readin/features/reading/presentation/cubit/reading_stats_cubit.dart';
 import 'package:readin/features/saved/presentation/cubit/collections_cubit.dart';
 import 'package:readin/features/saved/presentation/cubit/saved_list_cubit.dart';
 
@@ -32,6 +36,10 @@ class MockEditProfileCubit extends MockCubit<EditProfileState> implements EditPr
 class MockFollowListCubit extends MockCubit<FollowListState> implements FollowListCubit {}
 
 class MockPrivacyCubit extends MockCubit<PrivacyState> implements PrivacyCubit {}
+
+class _LoadingReadingStatsCubit extends MockCubit<ReadingStatsState> implements ReadingStatsCubit {}
+
+class _LoadingReadingHeatmapCubit extends MockCubit<ReadingHeatmapState> implements ReadingHeatmapCubit {}
 
 extension SeedCubit<S> on MockCubit<S> {
   /// A cubit that stays in [state].
@@ -72,13 +80,39 @@ List<BlocProvider> appStores({Me? me = sampleMe, FollowsState follows = const Fo
   ];
 }
 
-/// What [ProfileView] needs above it, besides [appStores].
+/// The reading stats block above the profile's tabs builds its cubits with `getIt` (F08): unless the test registered
+/// its own, registers ones that stay loading, for the current test.
+void registerLoadingReadingStats() {
+  if (!getIt.isRegistered<ReadingStatsCubit>()) {
+    getIt.registerFactory<ReadingStatsCubit>(() {
+      final cubit = _LoadingReadingStatsCubit()..hold(const ReadingStatsState());
+      when(() => cubit.load(username: any(named: 'username'))).thenAnswer((_) async {});
+      return cubit;
+    });
+    addTearDown(() {
+      if (getIt.isRegistered<ReadingStatsCubit>()) getIt.unregister<ReadingStatsCubit>();
+    });
+  }
+  if (!getIt.isRegistered<ReadingHeatmapCubit>()) {
+    getIt.registerFactory<ReadingHeatmapCubit>(() {
+      final cubit = _LoadingReadingHeatmapCubit()..hold(const ReadingHeatmapState());
+      when(() => cubit.load(username: any(named: 'username'))).thenAnswer((_) async {});
+      return cubit;
+    });
+    addTearDown(() {
+      if (getIt.isRegistered<ReadingHeatmapCubit>()) getIt.unregister<ReadingHeatmapCubit>();
+    });
+  }
+}
+
+/// What [ProfileView] needs above it, besides [appStores] (and the reading stats' cubits, [registerLoadingReadingStats]).
 List<BlocProvider> profileScreen(
   UserProfile profile, {
   List<ArticleCard> articles = const [],
   List<ArticleCard> reposts = const [],
   PrivacyState privacy = const PrivacyState(),
 }) {
+  registerLoadingReadingStats();
   final saved = MockSavedListCubit()..hold(const SavedListState(status: SavedListStatus.ready));
   return [
     BlocProvider<ProfileCubit>.value(value: profileCubit(profile)),

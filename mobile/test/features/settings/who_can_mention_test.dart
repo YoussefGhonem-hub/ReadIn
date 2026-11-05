@@ -17,6 +17,7 @@ import 'package:readin/features/profile/presentation/widgets/public_reading_stat
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/features/settings/presentation/pages/settings_page.dart';
+import 'package:readin/features/settings/presentation/widgets/settings_block.dart';
 import 'package:readin/features/settings/presentation/widgets/who_can_mention_selector.dart';
 
 import '../../helpers/fixtures.dart';
@@ -80,7 +81,7 @@ void main() {
       await tester.scrollUntilVisible(find.text(l10n.profileWhoCanMentionNobody), 200);
       await tester.pumpAndSettle();
 
-      final card = find.ancestor(of: find.text(l10n.profilePrivacy), matching: find.byType(Card));
+      final card = find.ancestor(of: find.text(l10n.profilePrivacy), matching: find.byType(SettingsBlock));
       expect(find.descendant(of: card, matching: find.byType(PublicReadingStatsSwitch)), findsOneWidget);
       expect(find.descendant(of: card, matching: find.byType(WhoCanMentionSelector)), findsOneWidget);
       expect(find.text(l10n.profileWhoCanMention), findsOneWidget);

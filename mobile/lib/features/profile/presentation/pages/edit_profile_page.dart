@@ -11,6 +11,7 @@ import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/bidi_text_field.dart';
 import '../../../../shared/widgets/field_style.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../auth/presentation/cubit/complete_profile_cubit.dart' show UsernameStatus;
 import '../../../auth/presentation/cubit/form_support.dart';
@@ -34,7 +35,10 @@ class EditProfilePage extends StatelessWidget {
     if (me == null) {
       return Scaffold(
         appBar: AppBar(title: Text(context.l10n.editProfile)),
-        body: EmptyView(icon: Icons.person_outline_rounded, title: context.l10n.profileGuestTitle, body: context.l10n.profileGuestBody),
+        body: PageBlock(
+          margin: _blockGap,
+          child: EmptyView(icon: Icons.person_outline_rounded, title: context.l10n.profileGuestTitle, body: context.l10n.profileGuestBody),
+        ),
       );
     }
     return BlocProvider(
@@ -97,30 +101,36 @@ class _EditProfileViewState extends State<EditProfileView> {
       },
       builder: (context, state) {
         final Widget body = switch (state.load) {
-          EditProfileLoad.loading => const Center(child: CircularProgressIndicator()),
-          EditProfileLoad.failure => ErrorView(
-              failure: state.loadFailure!,
-              onRetry: () => context.read<EditProfileCubit>().reload(context.read<SessionCubit>().state.me?.username ?? ''),
+          EditProfileLoad.loading => const PageBlock(margin: _blockGap, child: Center(child: CircularProgressIndicator())),
+          EditProfileLoad.failure => PageBlock(
+              margin: _blockGap,
+              child: ErrorView(
+                failure: state.loadFailure!,
+                onRetry: () => context.read<EditProfileCubit>().reload(context.read<SessionCubit>().state.me?.username ?? ''),
+              ),
             ),
           EditProfileLoad.ready => _Form(state: state, view: this),
         };
         return Scaffold(
           appBar: AppBar(title: Text(l10n.editProfile)),
           body: body,
+          // A white bar with a line above it, as the reader's action bar.
           bottomNavigationBar: state.load != EditProfileLoad.ready
               ? null
-              : SafeArea(
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s3, ReadInSpace.s5, ReadInSpace.s3),
-                    decoration: BoxDecoration(
-                      color: context.colors.bg,
-                      border: Border(top: BorderSide(color: context.colors.border)),
-                    ),
-                    child: SubmitButton(
-                      label: l10n.save,
-                      submitting: state.submitting,
-                      // Saving waits for a photo still uploading (no double submit either way).
-                      onPressed: state.uploadingAvatar ? null : _submit,
+              : DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: context.colors.surface,
+                    border: Border(top: BorderSide(color: context.colors.border)),
+                  ),
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s3, PageBlock.gutter, ReadInSpace.s3),
+                      child: SubmitButton(
+                        label: l10n.save,
+                        submitting: state.submitting,
+                        // Saving waits for a photo still uploading (no double submit either way).
+                        onPressed: state.uploadingAvatar ? null : _submit,
+                      ),
                     ),
                   ),
                 ),
@@ -143,96 +153,106 @@ class _Form extends StatelessWidget {
     final busy = state.submitting;
     String? error(String field) => errorText(context, state.errors[field]);
 
+    // White form blocks on the canvas: who you are, your links, your fields of expertise.
+    Widget block(List<Widget> children) => PageBlock(
+          margin: _blockGap,
+          padding: const EdgeInsets.all(PageBlock.gutter),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+        );
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, ReadInSpace.s6),
+      padding: const EdgeInsets.only(bottom: ReadInSpace.s6),
       children: [
-        if (state.failure case final failure?) ...[
-          FailureBanner(failure: failure),
-          const SizedBox(height: ReadInSpace.s4),
-        ],
-        _AvatarEditor(state: state, displayName: view._name),
-        const SizedBox(height: ReadInSpace.s5),
-        BidiTextField(
-          controller: view._name,
-          enabled: !busy,
-          maxLength: ProfileLimits.displayNameMax,
-          counterWithin: 10,
-          textInputAction: TextInputAction.next,
-          textCapitalization: TextCapitalization.words,
-          onChanged: (_) => cubit.edited(ProfileFields.displayName),
-          decoration: InputDecoration(
-            labelText: l10n.displayName,
-            prefixIcon: const Icon(Icons.person_outline_rounded),
-            errorText: error(ProfileFields.displayName),
-          ),
-        ),
-        const SizedBox(height: ReadInSpace.s4),
-        TextField(
-          controller: view._username,
-          enabled: !busy,
-          textDirection: TextDirection.ltr,
-          autocorrect: false,
-          enableSuggestions: false,
-          keyboardType: TextInputType.visiblePassword, // no autocorrect, no capitals
-          textInputAction: TextInputAction.next,
-          autofillHints: const [AutofillHints.newUsername],
-          inputFormatters: [
-            TextInputFormatter.withFunction(
-              (_, value) => value.copyWith(text: value.text.toLowerCase().replaceAll(RegExp('[^a-z0-9_]'), '')),
-            ),
-            LengthLimitingTextInputFormatter(30),
+        block([
+          if (state.failure case final failure?) ...[
+            FailureBanner(failure: failure),
+            const SizedBox(height: ReadInSpace.s4),
           ],
-          onChanged: cubit.usernameChanged,
-          decoration: InputDecoration(
-            labelText: l10n.usernameLabel,
-            prefixIcon: const Icon(Icons.alternate_email_rounded),
-            suffixIcon: _UsernameStatusIcon(status: state.usernameStatus),
-            helperText: switch (state.usernameStatus) {
-              UsernameStatus.checking => l10n.usernameChecking,
-              UsernameStatus.available when state.username != state.profile?.username => l10n.usernameAvailable(state.username),
-              _ => l10n.usernameHint,
-            },
-            errorText: errorText(
-              context,
-              state.errors[ProfileFields.username] ??
-                  switch (state.usernameStatus) {
-                    UsernameStatus.invalid => FailureCodes.usernameInvalid,
-                    UsernameStatus.taken => FailureCodes.usernameTaken,
-                    _ => null,
-                  },
+          _AvatarEditor(state: state, displayName: view._name),
+          const SizedBox(height: ReadInSpace.s5),
+          BidiTextField(
+            controller: view._name,
+            enabled: !busy,
+            maxLength: ProfileLimits.displayNameMax,
+            counterWithin: 10,
+            textInputAction: TextInputAction.next,
+            textCapitalization: TextCapitalization.words,
+            onChanged: (_) => cubit.edited(ProfileFields.displayName),
+            decoration: InputDecoration(
+              labelText: l10n.displayName,
+              prefixIcon: const Icon(Icons.person_outline_rounded),
+              errorText: error(ProfileFields.displayName),
             ),
           ),
-        ),
-        const SizedBox(height: ReadInSpace.s4),
-        HeadlineField(
-          controller: view._headline,
-          enabled: !busy,
-          error: error(ProfileFields.headline),
-          onChanged: (_) => cubit.edited(ProfileFields.headline),
-        ),
-        const SizedBox(height: ReadInSpace.s4),
-        BidiTextField(
-          controller: view._bio,
-          enabled: !busy,
-          maxLength: ProfileLimits.bioMax,
-          minLines: 3,
-          maxLines: 6,
-          onChanged: (_) => cubit.edited(ProfileFields.bio),
-          decoration: InputDecoration(
-            labelText: l10n.profileBioLabel,
-            hintText: l10n.profileBioHint,
-            alignLabelWithHint: true,
-            errorText: error(ProfileFields.bio),
+          const SizedBox(height: ReadInSpace.s4),
+          TextField(
+            controller: view._username,
+            enabled: !busy,
+            textDirection: TextDirection.ltr,
+            autocorrect: false,
+            enableSuggestions: false,
+            keyboardType: TextInputType.visiblePassword, // no autocorrect, no capitals
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.newUsername],
+            inputFormatters: [
+              TextInputFormatter.withFunction(
+                (_, value) => value.copyWith(text: value.text.toLowerCase().replaceAll(RegExp('[^a-z0-9_]'), '')),
+              ),
+              LengthLimitingTextInputFormatter(30),
+            ],
+            onChanged: cubit.usernameChanged,
+            decoration: InputDecoration(
+              labelText: l10n.usernameLabel,
+              prefixIcon: const Icon(Icons.alternate_email_rounded),
+              suffixIcon: _UsernameStatusIcon(status: state.usernameStatus),
+              helperText: switch (state.usernameStatus) {
+                UsernameStatus.checking => l10n.usernameChecking,
+                UsernameStatus.available when state.username != state.profile?.username => l10n.usernameAvailable(state.username),
+                _ => l10n.usernameHint,
+              },
+              errorText: errorText(
+                context,
+                state.errors[ProfileFields.username] ??
+                    switch (state.usernameStatus) {
+                      UsernameStatus.invalid => FailureCodes.usernameInvalid,
+                      UsernameStatus.taken => FailureCodes.usernameTaken,
+                      _ => null,
+                    },
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: ReadInSpace.s5),
-        ProfileLinksEditor(state: state),
-        const SizedBox(height: ReadInSpace.s5),
-        _ExpertisePicker(state: state),
+          const SizedBox(height: ReadInSpace.s4),
+          HeadlineField(
+            controller: view._headline,
+            enabled: !busy,
+            error: error(ProfileFields.headline),
+            onChanged: (_) => cubit.edited(ProfileFields.headline),
+          ),
+          const SizedBox(height: ReadInSpace.s4),
+          BidiTextField(
+            controller: view._bio,
+            enabled: !busy,
+            maxLength: ProfileLimits.bioMax,
+            minLines: 3,
+            maxLines: 6,
+            onChanged: (_) => cubit.edited(ProfileFields.bio),
+            decoration: InputDecoration(
+              labelText: l10n.profileBioLabel,
+              hintText: l10n.profileBioHint,
+              alignLabelWithHint: true,
+              errorText: error(ProfileFields.bio),
+            ),
+          ),
+        ]),
+        block([ProfileLinksEditor(state: state)]),
+        block([_ExpertisePicker(state: state)]),
       ],
     );
   }
 }
+
+/// The canvas above a block.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text, {this.trailing});

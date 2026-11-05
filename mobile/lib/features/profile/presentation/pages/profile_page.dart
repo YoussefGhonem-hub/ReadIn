@@ -10,6 +10,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
@@ -102,7 +103,7 @@ class _ProfileProviders extends StatelessWidget {
       );
 }
 
-/// Settings stay one tap away on the Profile tab.
+/// Settings stay one tap away on the Profile tab. The [body] (sign in, or an error) is a block on the canvas.
 class _TabScaffold extends StatelessWidget {
   const _TabScaffold({required this.body});
 
@@ -115,7 +116,7 @@ class _TabScaffold extends StatelessWidget {
           automaticallyImplyLeading: false,
           actions: const [_SettingsButton()],
         ),
-        body: body,
+        body: PageBlock(margin: const EdgeInsets.only(top: PageBlock.gap), child: body),
       );
 }
 
@@ -169,21 +170,28 @@ class ProfileView extends StatelessWidget {
             ],
           ),
           body: switch (state.status) {
+            // The top block's shape, then a block of rows.
             ProfileStatus.loading => const SingleChildScrollView(
                 physics: NeverScrollableScrollPhysics(),
                 child: Column(
                   children: [
                     ProfileHeaderSkeleton(),
-                    Padding(padding: EdgeInsets.symmetric(horizontal: ReadInSpace.s5), child: ArticleListSkeleton()),
+                    PageBlock(margin: EdgeInsets.only(top: PageBlock.gap), padding: PageBlock.gutters, child: ArticleListSkeleton()),
                   ],
                 ),
               ),
-            ProfileStatus.failure when state.notFound => EmptyView(
-                icon: Icons.person_off_outlined,
-                title: l10n.profileNotFoundTitle,
-                body: l10n.profileNotFoundBody,
+            ProfileStatus.failure when state.notFound => PageBlock(
+                margin: const EdgeInsets.only(top: PageBlock.gap),
+                child: EmptyView(
+                  icon: Icons.person_off_outlined,
+                  title: l10n.profileNotFoundTitle,
+                  body: l10n.profileNotFoundBody,
+                ),
               ),
-            ProfileStatus.failure => ErrorView(failure: state.failure!, onRetry: context.read<ProfileCubit>().refresh),
+            ProfileStatus.failure => PageBlock(
+                margin: const EdgeInsets.only(top: PageBlock.gap),
+                child: ErrorView(failure: state.failure!, onRetry: context.read<ProfileCubit>().refresh),
+              ),
             ProfileStatus.ready => _ProfileContent(profile: profile!, onEdit: () => _edit(context, profile)),
           },
         );
@@ -213,6 +221,8 @@ class _ProfileContent extends StatelessWidget {
     return DefaultTabController(
       length: tabs.length,
       child: NestedScrollView(
+        // Blocks on the canvas, a gap apart, as on the web: the top block (banner, avatar, who they are, actions,
+        // stats), the reading stats, then the tab bar (pinned under the app bar) and the tab's content.
         headerSliverBuilder: (context, _) => [
           SliverToBoxAdapter(child: ProfileHeader(profile: profile, onEdit: onEdit)),
           // A muted writer's profile still opens, with "انت كاتم الكاتب ده" under the header, as on the web; its tabs
@@ -224,9 +234,12 @@ class _ProfileContent extends StatelessWidget {
                 userId: profile.id,
                 name: profile.displayName,
                 initiallyMuted: profile.isMuted,
-                padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, 0, ReadInSpace.s5, ReadInSpace.s3),
+                padding: const EdgeInsets.fromLTRB(PageBlock.gutter, PageBlock.gap, PageBlock.gutter, 0),
               ),
             ),
+          // Yours, or public ones (F08, F14).
+          if (profile.readingStatsVisible) SliverToBoxAdapter(child: ProfileReadingStatsBlock(profile: profile)),
+          const SliverToBoxAdapter(child: SizedBox(height: PageBlock.gap)),
           SliverOverlapAbsorber(
             handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
             sliver: SliverPersistentHeader(
@@ -268,9 +281,12 @@ class _ProfileSavedTabState extends State<_ProfileSavedTab> {
     return SliverMainAxisGroup(
       slivers: [
         profileTabOverlap(context),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, 0),
-          sliver: SliverToBoxAdapter(
+        // The top of the tab's header block, a gap under the tab bar: the saved articles' search and chips continue it;
+        // the highlights come a gap under it.
+        SliverToBoxAdapter(
+          child: PageBlock(
+            margin: const EdgeInsets.only(top: PageBlock.gap),
+            padding: EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s4, PageBlock.gutter, _highlights ? ReadInSpace.s4 : 0),
             child: SegmentedButton<bool>(
               showSelectedIcon: false,
               segments: [
@@ -293,7 +309,7 @@ class _ProfileSavedTabState extends State<_ProfileSavedTab> {
       );
 }
 
-/// The tab bar, pinned under the app bar once the header scrolls away.
+/// The tab bar, a white block pinned under the app bar once the header scrolls away.
 class _TabBarHeader extends SliverPersistentHeaderDelegate {
   _TabBarHeader(this.tabBar, this.colors);
 
@@ -308,7 +324,7 @@ class _TabBarHeader extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => DecoratedBox(
-        decoration: BoxDecoration(color: colors.bg, border: Border(bottom: BorderSide(color: colors.border))),
+        decoration: BoxDecoration(color: colors.surface, border: Border(bottom: BorderSide(color: colors.border))),
         child: Align(alignment: AlignmentDirectional.topStart, child: tabBar),
       );
 

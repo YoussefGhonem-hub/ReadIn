@@ -13,6 +13,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/field_style.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
@@ -129,6 +130,8 @@ class _PostCardsTabState<C extends ArticleFeedCubit> extends State<_PostCardsTab
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 profileTabOverlap(context),
+                // The first card a gap under the tab bar; the states in a block, where the cards would be.
+                const SliverToBoxAdapter(child: SizedBox(height: postCardGap)),
                 ...switch (feed.status) {
                   FeedStatus.loading => [
                       SliverList.list(children: [
@@ -136,21 +139,21 @@ class _PostCardsTabState<C extends ArticleFeedCubit> extends State<_PostCardsTab
                       ]),
                     ],
                   FeedStatus.failure => [
-                      SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: feed.failure!, onRetry: cubit.load)),
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: PageBlock(child: ErrorView(failure: feed.failure!, onRetry: cubit.load)),
+                      ),
                     ],
                   FeedStatus.ready when feed.items.isEmpty => [
-                      SliverFillRemaining(hasScrollBody: false, child: widget.empty),
+                      SliverFillRemaining(hasScrollBody: false, child: PageBlock(child: widget.empty)),
                     ],
                   // Post cards full width, one after another on the background (F34).
                   FeedStatus.ready => [
-                      SliverPadding(
-                        padding: const EdgeInsets.only(top: postCardGap),
-                        sliver: SliverList.builder(
-                          itemCount: feed.items.length + 1,
-                          itemBuilder: (context, i) => i < feed.items.length
-                              ? Padding(padding: const EdgeInsets.only(bottom: postCardGap), child: PostCard(article: feed.items[i]))
-                              : _ListFooter(loadingMore: feed.loadingMore, failure: feed.loadMoreFailure, onRetry: cubit.loadMore),
-                        ),
+                      SliverList.builder(
+                        itemCount: feed.items.length + 1,
+                        itemBuilder: (context, i) => i < feed.items.length
+                            ? Padding(padding: const EdgeInsets.only(bottom: postCardGap), child: PostCard(article: feed.items[i]))
+                            : _ListFooter(loadingMore: feed.loadingMore, failure: feed.loadMoreFailure, onRetry: cubit.loadMore),
                       ),
                     ],
                 },
@@ -252,10 +255,13 @@ class ProfilePathsTab extends StatelessWidget {
           profileTabOverlap(context),
           SliverFillRemaining(
             hasScrollBody: false,
-            child: EmptyView(
-              icon: Icons.lock_outline_rounded,
-              title: l10n.profilePathsPrivateTitle,
-              body: l10n.profilePathsPrivateBody,
+            child: PageBlock(
+              margin: const EdgeInsets.only(top: PageBlock.gap),
+              child: EmptyView(
+                icon: Icons.lock_outline_rounded,
+                title: l10n.profilePathsPrivateTitle,
+                body: l10n.profilePathsPrivateBody,
+              ),
             ),
           ),
         ],
@@ -294,8 +300,8 @@ class ProfilePathsTab extends StatelessWidget {
 
 // ── About ───────────────────────────────────────────────────────────────────
 
-/// Bio, links, fields of expertise, joined date and, when visible, the reading stats card and heatmap (F08). The own
-/// profile also has the "show on my public profile" switch, which needs a [PrivacyCubit] above.
+/// Bio, links, fields of expertise and the joined date, in one white block on the canvas, its sections split by lines.
+/// The reading stats sit above the tabs, in [ProfileReadingStatsBlock].
 class ProfileAboutTab extends StatelessWidget {
   const ProfileAboutTab({super.key, required this.profile, this.onEdit});
 
@@ -311,96 +317,141 @@ class ProfileAboutTab extends StatelessWidget {
     final bio = profile.bio;
     final links = profile.links;
     final hasDetails = bio != null || links.isNotEmpty || profile.expertise.isNotEmpty;
-    // The own stats come from /me/stats (the streak badge follows them); someone else's from their public endpoint.
-    final statsOf = profile.isMe ? null : profile.username;
+
+    final sections = <Widget>[
+      if (bio != null) _Section(title: l10n.profileAboutBio, child: ProfileBioText(bio, style: context.textTheme.bodyLarge?.copyWith(height: 1.6))),
+      if (links.isNotEmpty)
+        _Section(
+          title: l10n.profileLinksSection,
+          child: Column(
+            children: [
+              for (final link in links)
+                Semantics(
+                  link: true,
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    minTileHeight: 56,
+                    leading: PlatformIcon(link.platform, color: context.colors.textPrimary),
+                    title: Text(Bidi.isolateOppositeRuns(
+                      linkPlatformName(l10n, link.platform, label: link.label),
+                      Directionality.of(context),
+                    )),
+                    subtitle: Text(
+                      Bidi.ltrIsolate(displayLink(link.url)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodySmall,
+                    ),
+                    trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+                    onTap: () => openExternalLink(link.url),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      if (profile.expertise.isNotEmpty)
+        _Section(
+          title: l10n.profileExpertise,
+          child: Wrap(
+            spacing: ReadInSpace.s2,
+            runSpacing: ReadInSpace.s2,
+            children: [for (final field in profile.expertise) ExpertiseChip(field: field)],
+          ),
+        ),
+      if (!hasDetails)
+        profile.isMe
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.profileAboutEmptyOwn, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+                  if (onEdit != null) ...[
+                    const SizedBox(height: ReadInSpace.s3),
+                    OutlinedButton.icon(onPressed: onEdit, icon: const Icon(Icons.edit_outlined, size: 18), label: Text(l10n.editProfile)),
+                  ],
+                ],
+              )
+            : Text(l10n.profileAboutEmpty, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+      if (profile.joinedAt case final joined?)
+        Row(
+          children: [
+            Icon(Icons.calendar_month_outlined, size: 18, color: context.colors.textSecondary),
+            const SizedBox(width: ReadInSpace.s2),
+            Expanded(child: Text(l10n.profileJoined(formatMonthYear(joined, lang)), style: context.textTheme.bodyMedium)),
+          ],
+        ),
+    ];
 
     return CustomScrollView(
       key: const PageStorageKey('profile-about'),
       slivers: [
         profileTabOverlap(context),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, ReadInSpace.s6),
-          sliver: SliverList.list(
-            children: [
-              if (bio != null) _Section(title: l10n.profileAboutBio, child: ProfileBioText(bio, style: context.textTheme.bodyLarge?.copyWith(height: 1.6))),
-              if (links.isNotEmpty)
-                _Section(
-                  title: l10n.profileLinksSection,
-                  child: Column(
-                    children: [
-                      for (final link in links)
-                        Semantics(
-                          link: true,
-                          child: ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            minTileHeight: 56,
-                            leading: PlatformIcon(link.platform, color: context.colors.textPrimary),
-                            title: Text(Bidi.isolateOppositeRuns(
-                              linkPlatformName(l10n, link.platform, label: link.label),
-                              Directionality.of(context),
-                            )),
-                            subtitle: Text(
-                              Bidi.ltrIsolate(displayLink(link.url)),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: context.textTheme.bodySmall,
-                            ),
-                            trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                            onTap: () => openExternalLink(link.url),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              if (profile.expertise.isNotEmpty)
-                _Section(
-                  title: l10n.profileExpertise,
-                  child: Wrap(
-                    spacing: ReadInSpace.s2,
-                    runSpacing: ReadInSpace.s2,
-                    children: [for (final field in profile.expertise) ExpertiseChip(field: field)],
-                  ),
-                ),
-              if (!hasDetails)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: ReadInSpace.s5),
-                  child: profile.isMe
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(l10n.profileAboutEmptyOwn, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-                            if (onEdit != null) ...[
-                              const SizedBox(height: ReadInSpace.s3),
-                              OutlinedButton.icon(onPressed: onEdit, icon: const Icon(Icons.edit_outlined, size: 18), label: Text(l10n.editProfile)),
-                            ],
-                          ],
-                        )
-                      : Text(l10n.profileAboutEmpty, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-                ),
-              if (profile.joinedAt case final joined?)
-                Row(
-                  children: [
-                    Icon(Icons.calendar_month_outlined, size: 18, color: context.colors.textSecondary),
-                    const SizedBox(width: ReadInSpace.s2),
-                    Expanded(child: Text(l10n.profileJoined(formatMonthYear(joined, lang)), style: context.textTheme.bodyMedium)),
-                  ],
-                ),
-              if (profile.readingStatsVisible) ...[
-                const Padding(padding: EdgeInsets.symmetric(vertical: ReadInSpace.s5), child: Divider()),
-                Semantics(header: true, child: Text(l10n.readingStatsTitle, style: context.textTheme.titleMedium)),
-                if (profile.isMe) const PublicReadingStatsSwitch(),
-                const SizedBox(height: ReadInSpace.s3),
-                ReadingStatsCard(username: statsOf),
-                const SizedBox(height: ReadInSpace.s4),
-                ReadingHeatmap(username: statsOf),
+        SliverToBoxAdapter(
+          child: PageBlock(
+            margin: const EdgeInsets.only(top: PageBlock.gap, bottom: ReadInSpace.s6),
+            padding: const EdgeInsets.all(PageBlock.gutter),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < sections.length; i++) ...[
+                  if (i > 0) const Padding(padding: EdgeInsets.symmetric(vertical: ReadInSpace.s4), child: Divider()),
+                  sections[i],
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ],
     );
   }
+}
 
+/// The reading stats (F08, F14) under the profile's top block, as on the web: the stats card and the heatmap in a white
+/// block, with the own profile's "show on my public profile" switch (it needs a [PrivacyCubit] above). Only for stats
+/// the viewer may see: their own, or public ones.
+class ProfileReadingStatsBlock extends StatelessWidget {
+  const ProfileReadingStatsBlock({super.key, required this.profile});
+
+  final UserProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    // The own stats come from /me/stats (the streak badge follows them); someone else's from their public endpoint.
+    final statsOf = profile.isMe ? null : profile.username;
+    final theme = Theme.of(context);
+    return PageBlock(
+      key: const ValueKey('profile-reading-stats'),
+      margin: const EdgeInsets.only(top: PageBlock.gap),
+      padding: const EdgeInsets.all(PageBlock.gutter),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(header: true, child: Text(context.l10n.readingStatsTitle, style: context.textTheme.titleMedium)),
+          if (profile.isMe) const PublicReadingStatsSwitch(),
+          const SizedBox(height: ReadInSpace.s3),
+          // Flat inside the block: a line around the cards, no shadow.
+          Theme(
+            data: theme.copyWith(
+              cardTheme: theme.cardTheme.copyWith(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(ReadInRadius.card),
+                  side: BorderSide(color: context.colors.border),
+                ),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ReadingStatsCard(username: statsOf),
+                const SizedBox(height: ReadInSpace.s4),
+                ReadingHeatmap(username: statsOf),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// `https://github.com/mona/` → `github.com/mona`.
@@ -418,19 +469,13 @@ class _Section extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: ReadInSpace.s5),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Semantics(
-              header: true,
-              child: Text(title, style: context.textTheme.labelLarge?.copyWith(color: context.colors.textSecondary)),
-            ),
-            const SizedBox(height: ReadInSpace.s2),
-            child,
-          ],
-        ),
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(header: true, child: Text(title, style: context.textTheme.titleMedium)),
+          const SizedBox(height: ReadInSpace.s2),
+          child,
+        ],
       );
 }
 

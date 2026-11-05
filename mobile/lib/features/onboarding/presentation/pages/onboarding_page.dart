@@ -51,10 +51,13 @@ class OnboardingView extends StatelessWidget {
       },
       builder: (context, state) {
         final index = state.step.index;
+        // One white page, the bar too and with no line under it (its progress is its edge), as on Sign in.
         return Scaffold(
+          backgroundColor: context.colors.surface,
           appBar: state.step == OnboardingStep.welcome
               ? null
               : AppBar(
+                  shape: const Border(),
                   leading: state.step == OnboardingStep.preferences
                       ? IconButton(
                           icon: const BackButtonIcon(),

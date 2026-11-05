@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../domain/entities/learning_path.dart';
@@ -96,16 +97,19 @@ class _MyPathsTabState extends State<_MyPathsTab> {
     final l10n = context.l10n;
     final signedIn = context.select((SessionCubit c) => c.state.isAuthenticated);
     if (!signedIn) {
-      return EmptyView(
-        icon: Icons.route_outlined,
-        title: l10n.myPathsGuestTitle,
-        body: l10n.myPathsGuestBody,
-        action: Column(
-          children: [
-            FilledButton(onPressed: () => context.push('/auth/sign-up'), child: Text(l10n.signUp)),
-            const SizedBox(height: ReadInSpace.s2),
-            TextButton(onPressed: () => context.push('/auth/sign-in'), child: Text(l10n.signIn)),
-          ],
+      return PageBlock(
+        margin: const EdgeInsets.only(top: PageBlock.gap),
+        child: EmptyView(
+          icon: Icons.route_outlined,
+          title: l10n.myPathsGuestTitle,
+          body: l10n.myPathsGuestBody,
+          action: Column(
+            children: [
+              FilledButton(onPressed: () => context.push('/auth/sign-up'), child: Text(l10n.signUp)),
+              const SizedBox(height: ReadInSpace.s2),
+              TextButton(onPressed: () => context.push('/auth/sign-in'), child: Text(l10n.signIn)),
+            ],
+          ),
         ),
       );
     }
@@ -125,7 +129,8 @@ class _MyPathsTabState extends State<_MyPathsTab> {
   }
 }
 
-/// A [PathListCubit]'s list: field chips, path cards, pull to refresh, and the loading, error and empty states.
+/// A [PathListCubit]'s list: field chips, path cards, pull to refresh, and the loading, error and empty states. Each
+/// path is a full-width block on the canvas, a gap apart (LinkedIn style); the error and empty states are a block too.
 class PathList<C extends PathListCubit> extends StatefulWidget {
   const PathList({super.key, required this.onOpen, required this.empty, this.storageKey, this.leading, this.footer});
 
@@ -147,8 +152,6 @@ class _PathListState<C extends PathListCubit> extends State<PathList<C>> with Au
   @override
   bool get wantKeepAlive => true;
 
-  static const _gutter = EdgeInsets.symmetric(horizontal: ReadInSpace.s5);
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -167,21 +170,26 @@ class _PathListState<C extends PathListCubit> extends State<PathList<C>> with Au
                 child: PathFieldChips(fields: state.fields, selected: state.fieldSlug, onSelected: cubit.selectField),
               ),
               ...switch (state.status) {
-                PathListStatus.loading => [const SliverPadding(padding: _gutter, sliver: SliverToBoxAdapter(child: PathListSkeleton()))],
+                PathListStatus.loading => [const SliverToBoxAdapter(child: PathListSkeleton())],
                 PathListStatus.failure => [
-                    SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: state.failure!, onRetry: cubit.load)),
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: PageBlock(child: ErrorView(failure: state.failure!, onRetry: cubit.load)),
+                    ),
                   ],
-                PathListStatus.ready when state.items.isEmpty => [SliverFillRemaining(hasScrollBody: false, child: widget.empty)],
+                PathListStatus.ready when state.items.isEmpty => [
+                    SliverFillRemaining(hasScrollBody: false, child: PageBlock(child: widget.empty)),
+                  ],
                 PathListStatus.ready => [
-                    SliverPadding(
-                      padding: _gutter,
-                      sliver: SliverList.separated(
-                        itemCount: visible.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: ReadInSpace.s3),
-                        itemBuilder: (context, i) => PathCardTile(path: visible[i], onTap: () => widget.onOpen(visible[i])),
+                    SliverList.separated(
+                      itemCount: visible.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: PageBlock.gap),
+                      itemBuilder: (context, i) => PageBlock(
+                        child: PathCardTile(path: visible[i], onTap: () => widget.onOpen(visible[i])),
                       ),
                     ),
-                    if (widget.footer != null) SliverPadding(padding: _gutter, sliver: SliverToBoxAdapter(child: widget.footer)),
+                    if (widget.footer != null)
+                      SliverPadding(padding: PageBlock.gutters, sliver: SliverToBoxAdapter(child: widget.footer)),
                     const SliverToBoxAdapter(child: SizedBox(height: ReadInSpace.s6)),
                   ],
               },

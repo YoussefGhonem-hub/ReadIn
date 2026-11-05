@@ -36,6 +36,7 @@ import 'package:readin/features/profile/presentation/cubit/privacy_cubit.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/features/settings/presentation/pages/settings_page.dart';
+import 'package:readin/features/settings/presentation/widgets/settings_block.dart';
 import 'package:readin/features/settings/presentation/widgets/who_can_mention_selector.dart';
 import 'package:readin/shared/widgets/inputs/country_picker.dart';
 
@@ -671,7 +672,7 @@ void main() {
         ],
       );
       await tester.scrollUntilVisible(find.byType(WhoCanMentionSelector), 300);
-      await tester.ensureVisible(find.ancestor(of: find.byType(WhoCanMentionSelector), matching: find.byType(Card)));
+      await tester.ensureVisible(find.ancestor(of: find.byType(WhoCanMentionSelector), matching: find.byType(SettingsBlock)));
       await expectGolden(tester, 'settings_privacy', variant);
     });
 

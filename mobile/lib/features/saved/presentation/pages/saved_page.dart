@@ -12,6 +12,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/bidi_text_field.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/cubit/engagement_cubit.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
@@ -77,16 +78,19 @@ class _SavedGuestView extends StatelessWidget {
     final l10n = context.l10n;
     return Scaffold(
       appBar: const AppTopBar(),
-      body: EmptyView(
-        icon: Icons.bookmark_border_rounded,
-        title: l10n.savedGuestTitle,
-        body: l10n.savedGuestBody,
-        action: Column(
-          children: [
-            FilledButton(onPressed: () => context.push('/auth/sign-up'), child: Text(l10n.signUp)),
-            const SizedBox(height: ReadInSpace.s2),
-            TextButton(onPressed: () => context.push('/auth/sign-in'), child: Text(l10n.signIn)),
-          ],
+      body: PageBlock(
+        margin: _blockGap,
+        child: EmptyView(
+          icon: Icons.bookmark_border_rounded,
+          title: l10n.savedGuestTitle,
+          body: l10n.savedGuestBody,
+          action: Column(
+            children: [
+              FilledButton(onPressed: () => context.push('/auth/sign-up'), child: Text(l10n.signUp)),
+              const SizedBox(height: ReadInSpace.s2),
+              TextButton(onPressed: () => context.push('/auth/sign-in'), child: Text(l10n.signIn)),
+            ],
+          ),
         ),
       ),
     );
@@ -96,7 +100,8 @@ class _SavedGuestView extends StatelessWidget {
 // ── Articles ────────────────────────────────────────────────────────────────
 
 /// Saved articles with search, field chips, the collection filter, paging and the offline copies. Needs a
-/// [SavedListCubit] above it; the Saved tab and the own profile's Saved tab (F14) share it.
+/// [SavedListCubit] above it; the Saved tab and the own profile's Saved tab (F14) share it. The search and the filters
+/// are a white block under the bar; the rows a block a gap under it, as are the skeleton, the error and the empty state.
 class SavedArticlesList extends StatefulWidget {
   const SavedArticlesList({super.key, this.leading});
 
@@ -142,46 +147,65 @@ class _SavedArticlesListState extends State<SavedArticlesList> with AutomaticKee
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               ?widget.leading?.call(context),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, 0),
-                sliver: SliverToBoxAdapter(
-                  child: BidiTextField(
-                    controller: _search,
-                    textInputAction: TextInputAction.search,
-                    onChanged: (text) {
-                      cubit.search(text);
-                      setState(() {}); // the clear button
-                    },
-                    decoration: InputDecoration(
-                      hintText: l10n.savedSearchHint,
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _search.text.isEmpty
-                          ? null
-                          : IconButton(tooltip: l10n.clearSearch, icon: const Icon(Icons.close_rounded), onPressed: _clearSearch),
-                    ),
+              // The header block: the search, the offline note, the collection shown and the field chips.
+              SliverToBoxAdapter(
+                child: PageBlock(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s4, PageBlock.gutter, 0),
+                        child: BidiTextField(
+                          controller: _search,
+                          textInputAction: TextInputAction.search,
+                          onChanged: (text) {
+                            cubit.search(text);
+                            setState(() {}); // the clear button
+                          },
+                          decoration: InputDecoration(
+                            hintText: l10n.savedSearchHint,
+                            prefixIcon: const Icon(Icons.search_rounded),
+                            suffixIcon: _search.text.isEmpty
+                                ? null
+                                : IconButton(tooltip: l10n.clearSearch, icon: const Icon(Icons.close_rounded), onPressed: _clearSearch),
+                          ),
+                        ),
+                      ),
+                      if (state.offline) const _OfflineBanner(),
+                      if (state.filter.collectionId != null) _CollectionFilterChip(collectionId: state.filter.collectionId!),
+                      _FieldChips(state: state),
+                    ],
                   ),
                 ),
               ),
-              if (state.offline) const SliverToBoxAdapter(child: _OfflineBanner()),
-              if (state.filter.collectionId != null) SliverToBoxAdapter(child: _CollectionFilterChip(collectionId: state.filter.collectionId!)),
-              SliverToBoxAdapter(child: _FieldChips(state: state)),
+              const SliverToBoxAdapter(child: SizedBox(height: PageBlock.gap)),
               ...switch (state.status) {
-                SavedListStatus.loading => [const SliverToBoxAdapter(child: _SavedSkeleton())],
+                SavedListStatus.loading => [const SliverToBoxAdapter(child: PageBlock(child: _SavedSkeleton()))],
                 SavedListStatus.failure => [
-                    SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: state.failure!, onRetry: cubit.load)),
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: PageBlock(child: ErrorView(failure: state.failure!, onRetry: cubit.load)),
+                    ),
                   ],
                 SavedListStatus.ready when state.items.isEmpty => [
-                    SliverFillRemaining(hasScrollBody: false, child: _SavedEmpty(filter: state.filter)),
+                    SliverFillRemaining(hasScrollBody: false, child: PageBlock(child: _SavedEmpty(filter: state.filter))),
                   ],
+                // One block of rows (each row a slice of it, so the list stays lazy; the rows draw their own top
+                // line), then the footer on the canvas.
                 SavedListStatus.ready => [
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5),
-                      sliver: SliverList.builder(
-                        itemCount: state.items.length + 1,
-                        itemBuilder: (context, i) => i < state.items.length
-                            ? _SavedTile(item: state.items[i], collectionId: state.filter.collectionId)
-                            : _Footer(state: state),
-                      ),
+                    SliverList.builder(
+                      itemCount: state.items.length + 1,
+                      itemBuilder: (context, i) => i < state.items.length
+                          ? PageBlock(
+                              padding: EdgeInsets.fromLTRB(
+                                PageBlock.gutter,
+                                0,
+                                PageBlock.gutter,
+                                i == state.items.length - 1 ? ReadInSpace.s2 : 0,
+                              ),
+                              child: _SavedTile(item: state.items[i], collectionId: state.filter.collectionId),
+                            )
+                          : _Footer(state: state),
                     ),
                   ],
               },
@@ -202,7 +226,7 @@ class _OfflineBanner extends StatelessWidget {
     return Semantics(
       liveRegion: true,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s3, ReadInSpace.s5, 0),
+        margin: const EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s3, PageBlock.gutter, 0),
         padding: const EdgeInsets.all(ReadInSpace.s3),
         decoration: BoxDecoration(color: colors.calloutInfo, borderRadius: BorderRadius.circular(ReadInRadius.md)),
         child: Row(
@@ -227,7 +251,7 @@ class _CollectionFilterChip extends StatelessWidget {
     final l10n = context.l10n;
     final name = context.select((CollectionsCubit c) => c.state.byId(collectionId)?.name) ?? '…';
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(ReadInSpace.s5, ReadInSpace.s3, ReadInSpace.s5, 0),
+      padding: const EdgeInsetsDirectional.fromSTEB(PageBlock.gutter, ReadInSpace.s3, PageBlock.gutter, 0),
       child: Align(
         alignment: AlignmentDirectional.centerStart,
         child: InputChip(
@@ -275,7 +299,7 @@ class _FieldChips extends StatelessWidget {
       height: 64,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s3),
+        padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s3),
         children: [
           chip(context.l10n.filterAll, null),
           for (final field in state.fields) chip(field.nameFor(lang), field.slug),
@@ -397,7 +421,7 @@ class _SavedSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5),
+        padding: PageBlock.gutters,
         child: Column(
           children: [
             for (var i = 0; i < 4; i++)
@@ -445,28 +469,44 @@ class _CollectionsTab extends StatelessWidget {
     return BlocBuilder<CollectionsCubit, CollectionsState>(
       builder: (context, state) => switch (state.status) {
         CollectionsStatus.idle || CollectionsStatus.loading => const _CollectionsSkeleton(),
-        CollectionsStatus.failure => ErrorView(failure: state.failure!, onRetry: () => collections.load(force: true)),
+        CollectionsStatus.failure => PageBlock(
+            margin: _blockGap,
+            child: ErrorView(failure: state.failure!, onRetry: () => collections.load(force: true)),
+          ),
+        // One block: "New collection", then the collections split by dividers (or the empty state).
         CollectionsStatus.ready => RefreshIndicator(
             onRefresh: () => collections.load(force: true),
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s3),
+              padding: const EdgeInsets.only(bottom: ReadInSpace.s6),
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s2),
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _create(context),
-                      icon: const Icon(Icons.add_rounded),
-                      label: Text(l10n.newCollection),
-                    ),
+                PageBlock(
+                  margin: _blockGap,
+                  padding: const EdgeInsets.only(bottom: ReadInSpace.s1),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s3),
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _create(context),
+                            icon: const Icon(Icons.add_rounded),
+                            label: Text(l10n.newCollection),
+                          ),
+                        ),
+                      ),
+                      if (state.items.isEmpty)
+                        EmptyView(icon: Icons.folder_open_rounded, title: l10n.collectionsEmptyTitle, body: l10n.collectionsEmptyBody)
+                      else
+                        for (final collection in state.items) ...[
+                          const Divider(indent: PageBlock.gutter, endIndent: PageBlock.gutter),
+                          _CollectionTile(collection: collection),
+                        ],
+                    ],
                   ),
                 ),
-                if (state.items.isEmpty)
-                  EmptyView(icon: Icons.folder_open_rounded, title: l10n.collectionsEmptyTitle, body: l10n.collectionsEmptyBody)
-                else
-                  for (final collection in state.items) _CollectionTile(collection: collection),
               ],
             ),
           ),
@@ -516,7 +556,7 @@ class _CollectionTile extends StatelessWidget {
     final l10n = context.l10n;
     final colors = context.colors;
     return ListTile(
-      contentPadding: const EdgeInsetsDirectional.only(start: ReadInSpace.s5, end: ReadInSpace.s2),
+      contentPadding: const EdgeInsetsDirectional.only(start: PageBlock.gutter, end: ReadInSpace.s1),
       minTileHeight: 64,
       leading: Container(
         width: 44,
@@ -552,30 +592,41 @@ class _CollectionTile extends StatelessWidget {
   }
 }
 
+/// The collections' block while they load.
 class _CollectionsSkeleton extends StatelessWidget {
   const _CollectionsSkeleton();
 
   @override
   Widget build(BuildContext context) => ListView(
         physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(ReadInSpace.s5),
         children: [
-          for (var i = 0; i < 4; i++)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: ReadInSpace.s2),
-              child: Row(
-                children: [
-                  SkeletonBox(width: 44, height: 44, radius: ReadInRadius.md),
-                  SizedBox(width: ReadInSpace.s3),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [SkeletonBox(width: 150), SizedBox(height: ReadInSpace.s2), SkeletonBox(width: 70, height: 12)],
+          PageBlock(
+            margin: _blockGap,
+            padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s3),
+            child: Column(
+              children: [
+                for (var i = 0; i < 4; i++)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: ReadInSpace.s2),
+                    child: Row(
+                      children: [
+                        SkeletonBox(width: 44, height: 44, radius: ReadInRadius.md),
+                        SizedBox(width: ReadInSpace.s3),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [SkeletonBox(width: 150), SizedBox(height: ReadInSpace.s2), SkeletonBox(width: 70, height: 12)],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
+          ),
         ],
       );
 }
+
+/// The canvas above a block.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);

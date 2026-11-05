@@ -10,7 +10,8 @@ import '../../../auth/presentation/session/session_cubit.dart';
 import 'linked_accounts_section.dart';
 
 /// Settings → Account (F18): the phone number (owner only) and "change number", password, PIN (or "add a phone number
-/// and password" for Google / Apple-only accounts), linked accounts, sign out, sign out of all devices and delete account.
+/// and password" for Google / Apple-only accounts), linked accounts, sign out, sign out of all devices and delete account,
+/// as rows split by dividers (Settings' blocks).
 class AccountSection extends StatefulWidget {
   const AccountSection({super.key});
 
@@ -97,6 +98,7 @@ class _AccountSectionState extends State<AccountSection> {
               child: Text(l10n.changePhone),
             ),
           ),
+          const Divider(),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.password_rounded),
@@ -105,6 +107,7 @@ class _AccountSectionState extends State<AccountSection> {
             enabled: !_busy,
             onTap: () => context.push('/account/password'),
           ),
+          const Divider(),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.pin_outlined),
@@ -124,6 +127,7 @@ class _AccountSectionState extends State<AccountSection> {
           enabled: !_busy,
           onTap: _signOut,
         ),
+        const Divider(),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.devices_other_rounded),
@@ -132,6 +136,7 @@ class _AccountSectionState extends State<AccountSection> {
           enabled: !_busy,
           onTap: _signOutEverywhere,
         ),
+        const Divider(),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: Icon(Icons.delete_outline_rounded, color: colors.error),

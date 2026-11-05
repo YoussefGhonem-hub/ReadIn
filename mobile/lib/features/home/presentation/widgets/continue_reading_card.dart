@@ -5,12 +5,13 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
 import '../../../paths/presentation/widgets/path_widgets.dart';
 import '../../domain/entities/continue_reading.dart';
 
 /// "كمّل القراءة" (F03): the last unfinished article, with how far the viewer scrolled. Opens the reader in the
-/// version they were reading, which resumes from their last position.
+/// version they were reading, which resumes from their last position. A full-width block on the canvas (F34).
 class ContinueReadingCard extends StatelessWidget {
   const ContinueReadingCard({super.key, required this.item, required this.onTap});
 
@@ -24,12 +25,11 @@ class ContinueReadingCard extends StatelessWidget {
     final lang = Localizations.localeOf(context).languageCode;
     final article = item.article;
     final titleDir = Bidi.detect(article.title) ?? Directionality.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
+    return PageBlock(
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(ReadInSpace.s3),
+          padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s3),
           child: Row(
             children: [
               ArticleThumbnail(url: article.coverUrl, size: 56),

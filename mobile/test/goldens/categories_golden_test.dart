@@ -78,6 +78,9 @@ void main() {
     testWidgets('new category dialog ${variant.name}', (tester) async {
       final repo = FakeCategoriesRepository(mine: ownCategories(language), uncategorized: 2);
       await pumpProfileTab(tester, variant, repo, own: true);
+      // The profile's top block and reading stats sit above the tabs, so scroll the button into view first.
+      await tester.ensureVisible(find.byKey(const ValueKey('category-create')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('category-create')));
       await tester.pumpAndSettle();
       // Another spelling of an existing name: the message shows while typing.

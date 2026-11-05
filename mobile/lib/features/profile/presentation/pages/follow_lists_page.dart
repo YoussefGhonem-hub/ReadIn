@@ -9,6 +9,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/bidi_text_field.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../follow/presentation/widgets/suggested_writers.dart';
 import '../../domain/entities/profile.dart';
@@ -34,12 +35,21 @@ class FollowListsPage extends StatelessWidget {
       child: BlocBuilder<ProfileCubit, ProfileState>(
         builder: (context, state) => switch (state.status) {
           ProfileStatus.ready => FollowListsView(profile: state.profile!, initialKind: initialKind),
-          ProfileStatus.loading => Scaffold(appBar: AppBar(), body: const _RowsSkeleton()),
+          ProfileStatus.loading => Scaffold(
+              appBar: AppBar(),
+              body: const SingleChildScrollView(
+                physics: NeverScrollableScrollPhysics(),
+                child: PageBlock(margin: _blockGap, child: _RowsSkeleton()),
+              ),
+            ),
           ProfileStatus.failure => Scaffold(
               appBar: AppBar(),
-              body: state.notFound
-                  ? EmptyView(icon: Icons.person_off_outlined, title: context.l10n.profileNotFoundTitle, body: context.l10n.profileNotFoundBody)
-                  : ErrorView(failure: state.failure!, onRetry: () => context.read<ProfileCubit>().load(username)),
+              body: PageBlock(
+                margin: _blockGap,
+                child: state.notFound
+                    ? EmptyView(icon: Icons.person_off_outlined, title: context.l10n.profileNotFoundTitle, body: context.l10n.profileNotFoundBody)
+                    : ErrorView(failure: state.failure!, onRetry: () => context.read<ProfileCubit>().load(username)),
+              ),
             ),
         },
       ),
@@ -133,9 +143,10 @@ class _FollowListViewState extends State<FollowListView> with AutomaticKeepAlive
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, ReadInSpace.s2),
-                sliver: SliverToBoxAdapter(
+              // The search in a white strip under the tabs, then the people a gap under it, in one block.
+              SliverToBoxAdapter(
+                child: PageBlock(
+                  padding: const EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s3, PageBlock.gutter, ReadInSpace.s3),
                   child: BidiTextField(
                     controller: _search,
                     textInputAction: TextInputAction.search,
@@ -154,21 +165,42 @@ class _FollowListViewState extends State<FollowListView> with AutomaticKeepAlive
                   ),
                 ),
               ),
+              const SliverToBoxAdapter(child: SizedBox(height: PageBlock.gap)),
               ...switch (state.status) {
-                FollowListStatus.loading => [const SliverToBoxAdapter(child: _RowsSkeleton())],
+                FollowListStatus.loading => [const SliverToBoxAdapter(child: PageBlock(child: _RowsSkeleton()))],
                 FollowListStatus.failure => [
-                    SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: state.failure!, onRetry: cubit.load)),
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: PageBlock(child: ErrorView(failure: state.failure!, onRetry: cubit.load)),
+                    ),
                   ],
                 FollowListStatus.ready when state.items.isEmpty => [
-                    SliverFillRemaining(hasScrollBody: false, child: _Empty(kind: widget.kind, profile: widget.profile, query: state.query)),
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: PageBlock(child: _Empty(kind: widget.kind, profile: widget.profile, query: state.query)),
+                    ),
                   ],
+                // One block of rows split by dividers (each row a slice of it, so the list stays lazy), then the
+                // footer on the canvas.
                 FollowListStatus.ready => [
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5),
-                      sliver: SliverList.builder(
-                        itemCount: state.items.length + 1,
-                        itemBuilder: (context, i) => i < state.items.length ? WriterTile(user: state.items[i]) : _Footer(state: state),
-                      ),
+                    SliverList.builder(
+                      itemCount: state.items.length + 1,
+                      itemBuilder: (context, i) => i < state.items.length
+                          ? PageBlock(
+                              padding: EdgeInsets.fromLTRB(
+                                PageBlock.gutter,
+                                i == 0 ? ReadInSpace.s1 : 0,
+                                PageBlock.gutter,
+                                i == state.items.length - 1 ? ReadInSpace.s1 : 0,
+                              ),
+                              child: i == 0
+                                  ? WriterTile(user: state.items[i])
+                                  : Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [const Divider(), WriterTile(user: state.items[i])],
+                                    ),
+                            )
+                          : _Footer(state: state),
                     ),
                   ],
               },
@@ -227,12 +259,15 @@ class _Footer extends StatelessWidget {
   }
 }
 
+/// The canvas above a block.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);
+
 class _RowsSkeleton extends StatelessWidget {
   const _RowsSkeleton();
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5),
+        padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s2),
         child: Column(
           children: [
             for (var i = 0; i < 6; i++)

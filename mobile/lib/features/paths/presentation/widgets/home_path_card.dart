@@ -5,11 +5,12 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../domain/entities/learning_path.dart';
 import 'path_widgets.dart';
 
 /// The Home learning path card (F03, F09): the enrolled path in progress with "{readCount}/{total}", and its next
-/// article as the primary action. Tapping the card opens the path page.
+/// article as the primary action. Tapping the card opens the path page. A full-width block on the canvas (F34).
 class ActivePathCard extends StatelessWidget {
   const ActivePathCard({super.key, required this.path, required this.onOpenPath, required this.onOpenNext});
 
@@ -24,12 +25,11 @@ class ActivePathCard extends StatelessWidget {
     final lang = Localizations.localeOf(context).languageCode;
     final progress = path.progress;
     final next = progress?.next;
-    return Card(
-      clipBehavior: Clip.antiAlias,
+    return PageBlock(
       child: InkWell(
         onTap: onOpenPath,
         child: Padding(
-          padding: const EdgeInsets.all(ReadInSpace.s4),
+          padding: const EdgeInsets.all(PageBlock.gutter),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -74,7 +74,8 @@ class ActivePathCard extends StatelessWidget {
   }
 }
 
-/// The slim "learn step by step with learning paths" row: Home without a path in progress, and guests.
+/// The slim "learn step by step with learning paths" row: Home without a path in progress, and guests. A full-width
+/// block on the canvas, the whole row one link.
 class PathsPromptRow extends StatelessWidget {
   const PathsPromptRow({super.key, required this.onTap});
 
@@ -83,27 +84,28 @@ class PathsPromptRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final radius = BorderRadius.circular(ReadInRadius.md);
-    return Material(
-      color: colors.primaryContainer,
-      borderRadius: radius,
+    return PageBlock(
       child: InkWell(
         onTap: onTap,
-        borderRadius: radius,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 48),
-          padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s4, vertical: ReadInSpace.s3),
+          constraints: const BoxConstraints(minHeight: 56),
+          padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s3),
           child: Row(
             children: [
-              Icon(Icons.route_rounded, size: 20, color: colors.onPrimaryContainer),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(color: colors.primaryContainer, borderRadius: BorderRadius.circular(ReadInRadius.md)),
+                child: Icon(Icons.route_rounded, size: 20, color: colors.onPrimaryContainer),
+              ),
               const SizedBox(width: ReadInSpace.s3),
               Expanded(
                 child: Text(
                   context.l10n.pathsPrompt,
-                  style: context.textTheme.labelLarge?.copyWith(color: colors.onPrimaryContainer, fontWeight: FontWeight.w600),
+                  style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, size: 20, color: colors.onPrimaryContainer),
+              Icon(Icons.chevron_right_rounded, size: 20, color: colors.textSecondary),
             ],
           ),
         ),

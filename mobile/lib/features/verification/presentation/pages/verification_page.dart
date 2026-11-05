@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/l10n/l10n_x.dart';
+import '../../../../core/theme/theme_x.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../auth/presentation/cubit/form_support.dart';
@@ -53,7 +54,9 @@ class VerificationView extends StatelessWidget {
           unawaited(context.read<VerificationCubit>().load());
         }
       },
+      // A form page: white under the white bar, its inputs and the request card framed by their borders.
       child: Scaffold(
+        backgroundColor: context.colors.surface,
         appBar: AppBar(title: Text(l10n.verificationTitle)),
         body: BlocBuilder<VerificationCubit, VerificationState>(
           builder: (context, state) => switch (state.load) {

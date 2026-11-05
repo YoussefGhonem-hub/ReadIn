@@ -12,6 +12,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
@@ -29,7 +30,8 @@ import '../widgets/explore_widgets.dart';
 /// A field's page (F15, guests allowed; `/f/{slug}`, `?topic=` selects a chip): the field's icon, name, article and
 /// follower counts with Follow, the health note on sensitive fields, the topic chips (each filters the articles and can
 /// be followed), "Top writers in this field", then the articles as post cards (F34), newest first, with pull to refresh
-/// and infinite scroll. An unknown or disabled field shows "This field doesn't exist".
+/// and infinite scroll. An unknown or disabled field shows "This field doesn't exist". The header (with the chips),
+/// the writers and the articles' title are blocks on the canvas, like the post cards under them (F34).
 class FieldPage extends StatelessWidget {
   const FieldPage({super.key, required this.slug, this.topic});
 
@@ -84,8 +86,11 @@ class FieldView extends StatelessWidget {
             ),
             body: switch (header.status) {
               FieldStatus.loading => const _FieldSkeleton(),
-              FieldStatus.failure when header.notFound => const _FieldNotFound(),
-              FieldStatus.failure => ErrorView(failure: header.failure!, onRetry: () => _reload(context)),
+              FieldStatus.failure when header.notFound => const PageBlock(margin: _blockGap, child: _FieldNotFound()),
+              FieldStatus.failure => PageBlock(
+                  margin: _blockGap,
+                  child: ErrorView(failure: header.failure!, onRetry: () => _reload(context)),
+                ),
               FieldStatus.ready => const _FieldContent(),
             },
           ),
@@ -153,16 +158,26 @@ class _FieldContent extends StatelessWidget {
               key: PageStorageKey('field-${field.slug}'),
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                SliverToBoxAdapter(child: FieldHeader(field: field)),
-                if (field.topics.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: TopicChips(
-                      topics: field.topics,
-                      selected: feed.fieldSlug,
-                      onSelected: (slug) => unawaited(cubit.selectTopic(slug)),
+                // The header block: the field, its topic chips and the picked topic's Follow.
+                SliverToBoxAdapter(
+                  child: PageBlock(
+                    margin: _blockGap,
+                    padding: const EdgeInsets.only(bottom: ReadInSpace.s3),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        FieldHeader(field: field),
+                        if (field.topics.isNotEmpty)
+                          TopicChips(
+                            topics: field.topics,
+                            selected: feed.fieldSlug,
+                            onSelected: (slug) => unawaited(cubit.selectTopic(slug)),
+                          ),
+                        if (field.topicOf(feed.fieldSlug) case final topic?) TopicFollowRow(topic: topic),
+                      ],
                     ),
                   ),
-                if (field.topicOf(feed.fieldSlug) case final topic?) SliverToBoxAdapter(child: TopicFollowRow(topic: topic)),
+                ),
                 const SliverToBoxAdapter(child: _TopWriters()),
                 ..._articles(context, feed, field),
               ],
@@ -180,29 +195,39 @@ class _FieldContent extends StatelessWidget {
     // Mutes and "show less" can fold away every card loaded (F28): the next page loads by itself, and once none is
     // left the page says it has no articles.
     final allHidden = mutesHideAll(context, feed.items, keepFieldId: field.id, keepTopicId: keepTopicId);
-    final title = SliverPadding(
-      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s3, ReadInSpace.s5, ReadInSpace.s2),
-      sliver: SliverToBoxAdapter(child: ExploreSectionHeader(title: l10n.fieldArticles)),
+    // The title in a slim block of its own; the post cards a gap under it.
+    final title = SliverToBoxAdapter(
+      child: PageBlock(
+        margin: _blockGap,
+        padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s1),
+        child: ExploreSectionHeader(title: l10n.fieldArticles),
+      ),
     );
     return switch (feed.status) {
       FeedStatus.loading => [
           title,
-          SliverList.list(children: [
-            for (var i = 0; i < 2; i++) const Padding(padding: EdgeInsets.only(bottom: postCardGap), child: PostCardSkeleton()),
-          ]),
+          SliverPadding(
+            padding: _blockGap,
+            sliver: SliverList.list(children: [
+              for (var i = 0; i < 2; i++) const Padding(padding: EdgeInsets.only(bottom: postCardGap), child: PostCardSkeleton()),
+            ]),
+          ),
         ],
       // A `?topic=` that isn't one of the field's: say so, and offer the whole field.
       FeedStatus.failure when isTopicNotFound(feed.failure) => [
           SliverFillRemaining(
             hasScrollBody: false,
-            child: EmptyView(
-              icon: Icons.label_off_outlined,
-              title: l10n.fieldTopicNotFoundTitle,
-              body: l10n.fieldTopicNotFoundBody('${Bidi.fsi}${field.nameFor(Localizations.localeOf(context).languageCode)}${Bidi.pdi}'),
-              action: OutlinedButton(
-                key: const ValueKey('field-show-all'),
-                onPressed: () => unawaited(cubit.selectTopic(null)),
-                child: Text(l10n.fieldShowAllArticles),
+            child: PageBlock(
+              margin: _blockGap,
+              child: EmptyView(
+                icon: Icons.label_off_outlined,
+                title: l10n.fieldTopicNotFoundTitle,
+                body: l10n.fieldTopicNotFoundBody('${Bidi.fsi}${field.nameFor(Localizations.localeOf(context).languageCode)}${Bidi.pdi}'),
+                action: OutlinedButton(
+                  key: const ValueKey('field-show-all'),
+                  onPressed: () => unawaited(cubit.selectTopic(null)),
+                  child: Text(l10n.fieldShowAllArticles),
+                ),
               ),
             ),
           ),
@@ -210,45 +235,54 @@ class _FieldContent extends StatelessWidget {
       FeedStatus.failure => [
           SliverFillRemaining(
             hasScrollBody: false,
-            child: ErrorView(failure: feed.failure!, compact: true, onRetry: () => unawaited(cubit.load(fieldSlug: cubit.topic))),
+            child: PageBlock(
+              margin: _blockGap,
+              child: ErrorView(failure: feed.failure!, compact: true, onRetry: () => unawaited(cubit.load(fieldSlug: cubit.topic))),
+            ),
           ),
         ],
       FeedStatus.ready when feed.items.isEmpty || (allHidden && !feed.hasMore) => [
           SliverFillRemaining(
             hasScrollBody: false,
-            child: EmptyView(
-              key: const ValueKey('field-empty'),
-              icon: Icons.article_outlined,
-              title: feed.fieldSlug == null ? l10n.fieldEmptyTitle : l10n.fieldTopicEmptyTitle,
-              body: l10n.fieldEmptyBody,
+            child: PageBlock(
+              margin: _blockGap,
+              child: EmptyView(
+                key: const ValueKey('field-empty'),
+                icon: Icons.article_outlined,
+                title: feed.fieldSlug == null ? l10n.fieldEmptyTitle : l10n.fieldTopicEmptyTitle,
+                body: l10n.fieldEmptyBody,
+              ),
             ),
           ),
         ],
       // Post cards full width, one after another on the background (F34).
       FeedStatus.ready => [
           title,
-          SliverList.builder(
-            itemCount: feed.items.length + 1,
-            itemBuilder: (context, i) => i < feed.items.length
-                // Mutes fold the card away at once (F28); the page's own field and picked topic stay, as on the server.
-                ? MuteGate(
-                    article: feed.items[i],
-                    keepFieldId: field.id,
-                    keepTopicId: keepTopicId,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: postCardGap),
-                      child: PostCard(key: ValueKey('field-card-${feed.items[i].id}'), article: feed.items[i]),
+          SliverPadding(
+            padding: _blockGap,
+            sliver: SliverList.builder(
+              itemCount: feed.items.length + 1,
+              itemBuilder: (context, i) => i < feed.items.length
+                  // Mutes fold the card away at once (F28); the page's own field and picked topic stay, as on the server.
+                  ? MuteGate(
+                      article: feed.items[i],
+                      keepFieldId: field.id,
+                      keepTopicId: keepTopicId,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: postCardGap),
+                        child: PostCard(key: ValueKey('field-card-${feed.items[i].id}'), article: feed.items[i]),
+                      ),
+                    )
+                  : LoadMoreWhileHidden(
+                      active: allHidden && !feed.loadingMore && feed.loadMoreFailure == null,
+                      onLoadMore: () => unawaited(cubit.loadMore()),
+                      child: ExploreListFooter(
+                        loadingMore: feed.loadingMore,
+                        failure: feed.loadMoreFailure,
+                        onRetry: () => unawaited(cubit.loadMore()),
+                      ),
                     ),
-                  )
-                : LoadMoreWhileHidden(
-                    active: allHidden && !feed.loadingMore && feed.loadMoreFailure == null,
-                    onLoadMore: () => unawaited(cubit.loadMore()),
-                    child: ExploreListFooter(
-                      loadingMore: feed.loadingMore,
-                      failure: feed.loadMoreFailure,
-                      onRetry: () => unawaited(cubit.loadMore()),
-                    ),
-                  ),
+            ),
           ),
         ],
     };
@@ -270,7 +304,7 @@ class FieldHeader extends StatelessWidget {
     final signedIn = context.select((SessionCubit c) => c.state.isAuthenticated);
     final pending = context.select((FieldCubit c) => c.state.pending.contains(field.id));
     return Padding(
-      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, ReadInSpace.s4),
+      padding: const EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s4, PageBlock.gutter, ReadInSpace.s3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -396,7 +430,7 @@ class _TopicChipsState extends State<TopicChips> {
       child: SingleChildScrollView(
         key: const ValueKey('field-topics'),
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s1),
+        padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s1),
         child: Row(
           children: [
             chip(l10n.filterAll, null, key: const ValueKey('field-topic-all')),
@@ -422,7 +456,7 @@ class TopicFollowRow extends StatelessWidget {
     final signedIn = context.select((SessionCubit c) => c.state.isAuthenticated);
     final pending = context.select((FieldCubit c) => c.state.pending.contains(topic.id));
     return Padding(
-      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, 0),
+      padding: const EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s3, PageBlock.gutter, 0),
       child: Row(
         children: [
           Expanded(
@@ -453,12 +487,12 @@ class TopicFollowRow extends StatelessWidget {
   }
 }
 
-/// "Top writers in this field" with Follow, in a rail that runs to the screen's edges (all of them, ≤ 10, as on the web
-/// and Explore); nothing when the field has none.
+/// "Top writers in this field" with Follow, in a block, in a rail that runs to the screen's edges (all of them, ≤ 10,
+/// as on the web and Explore); nothing when the field has none.
 class _TopWriters extends StatelessWidget {
   const _TopWriters();
 
-  static const _gutter = EdgeInsets.symmetric(horizontal: ReadInSpace.s5);
+  static const _gutter = PageBlock.gutters;
 
   @override
   Widget build(BuildContext context) => BlocBuilder<FieldWritersCubit, FieldWritersState>(
@@ -484,8 +518,9 @@ class _TopWriters extends StatelessWidget {
               ),
           };
           if (body == null) return const SizedBox.shrink();
-          return Padding(
-            padding: const EdgeInsets.only(top: ReadInSpace.s3),
+          return PageBlock(
+            margin: _blockGap,
+            padding: const EdgeInsets.only(top: ReadInSpace.s1, bottom: ReadInSpace.s3),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [Padding(padding: _gutter, child: ExploreSectionHeader(title: l10n.fieldTopWriters)), body],
@@ -495,7 +530,11 @@ class _TopWriters extends StatelessWidget {
       );
 }
 
-/// The header, the chips and two post cards while the page loads (static, so "reduce motion" is respected).
+/// The canvas above a block.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);
+
+/// The header's block with the chips, and two post cards, while the page loads (static, so "reduce motion" is
+/// respected).
 class _FieldSkeleton extends StatelessWidget {
   const _FieldSkeleton();
 
@@ -506,39 +545,43 @@ class _FieldSkeleton extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, ReadInSpace.s4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            PageBlock(
+              margin: _blockGap,
+              padding: EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s4, PageBlock.gutter, ReadInSpace.s4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SkeletonBox(width: 56, height: 56, radius: ReadInRadius.card),
-                  SizedBox(width: ReadInSpace.s4),
-                  Column(
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SkeletonBox(width: 170, height: 24),
-                      SizedBox(height: ReadInSpace.s2),
-                      SkeletonBox(width: 130),
-                      SizedBox(height: ReadInSpace.s3),
-                      SkeletonBox(width: 96, height: 44, radius: ReadInRadius.chip),
+                      SkeletonBox(width: 56, height: 56, radius: ReadInRadius.card),
+                      SizedBox(width: ReadInSpace.s4),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SkeletonBox(width: 170, height: 24),
+                          SizedBox(height: ReadInSpace.s2),
+                          SkeletonBox(width: 130),
+                          SizedBox(height: ReadInSpace.s3),
+                          SkeletonBox(width: 96, height: 44, radius: ReadInRadius.chip),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: ReadInSpace.s4),
+                  Row(
+                    children: [
+                      SkeletonBox(width: 56, height: 32, radius: ReadInRadius.chip),
+                      SizedBox(width: ReadInSpace.s2),
+                      SkeletonBox(width: 96, height: 32, radius: ReadInRadius.chip),
+                      SizedBox(width: ReadInSpace.s2),
+                      SkeletonBox(width: 80, height: 32, radius: ReadInRadius.chip),
                     ],
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s2),
-              child: Row(
-                children: [
-                  SkeletonBox(width: 56, height: 32, radius: ReadInRadius.chip),
-                  SizedBox(width: ReadInSpace.s2),
-                  SkeletonBox(width: 96, height: 32, radius: ReadInRadius.chip),
-                  SizedBox(width: ReadInSpace.s2),
-                  SkeletonBox(width: 80, height: 32, radius: ReadInRadius.chip),
-                ],
-              ),
-            ),
-            SizedBox(height: ReadInSpace.s3),
+            SizedBox(height: PageBlock.gap),
             PostCardSkeleton(),
             SizedBox(height: postCardGap),
             PostCardSkeleton(),

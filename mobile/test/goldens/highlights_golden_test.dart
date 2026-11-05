@@ -268,6 +268,8 @@ void main() {
       myHighlights();
       await pumpApp(tester, variant, provided([...appStores(), ...profileScreen(ownProfile)], const ProfileView(isTab: true)));
       final l10n = await AppLocalizations.delegate.load(variant.locale);
+      // The top block and the reading stats run past the screen: scroll the tab bar up, where it stays pinned.
+      await tester.scrollUntilVisible(find.text(l10n.profileTabSaved), 300, scrollable: find.byType(Scrollable).first);
       await tester.tap(find.text(l10n.profileTabSaved));
       await tester.pumpAndSettle();
       await tester.tap(find.text(l10n.highlightSavedTab));

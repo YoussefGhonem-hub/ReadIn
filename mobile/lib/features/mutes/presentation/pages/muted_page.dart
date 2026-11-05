@@ -13,8 +13,10 @@ import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/field_style.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../profile/presentation/widgets/profile_link.dart';
+import '../../../settings/presentation/widgets/settings_block.dart';
 import '../../domain/entities/mutes.dart';
 import '../cubit/muted_list_cubit.dart';
 import '../cubit/mutes_cubit.dart';
@@ -44,42 +46,63 @@ class MutedView extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Under the title, as on the web: what a mute does, and that it's private.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s1, ReadInSpace.s5, ReadInSpace.s2),
+          // Under the title, as on the web: what a mute does, and that it's private. A white strip under the bar.
+          PageBlock(
+            padding: const EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s3, PageBlock.gutter, ReadInSpace.s3),
             child: Text(
               l10n.mutePageSubtitle,
               key: const ValueKey('muted-subtitle'),
               style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary),
             ),
           ),
+          // Settings' look: writers, fields and topics each a white block on the canvas, rows split by dividers.
           Expanded(
             child: BlocBuilder<MutedListCubit, MutedListState>(
               builder: (context, state) => switch (state.status) {
-                MutedListStatus.loading => const _RowsSkeleton(),
-                MutedListStatus.failure => ErrorView(failure: state.failure!, onRetry: cubit.load),
-                MutedListStatus.ready when state.mutes.isEmpty => EmptyView(
-                    icon: Icons.volume_off_outlined,
-                    title: l10n.mutePageEmptyTitle,
-                    body: l10n.mutePageEmptyBody,
+                MutedListStatus.loading => ListView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: const [PageBlock(margin: EdgeInsets.only(top: PageBlock.gap), child: _RowsSkeleton())],
+                  ),
+                MutedListStatus.failure => PageBlock(
+                    margin: const EdgeInsets.only(top: PageBlock.gap),
+                    child: ErrorView(failure: state.failure!, onRetry: cubit.load),
+                  ),
+                MutedListStatus.ready when state.mutes.isEmpty => PageBlock(
+                    margin: const EdgeInsets.only(top: PageBlock.gap),
+                    child: EmptyView(
+                      icon: Icons.volume_off_outlined,
+                      title: l10n.mutePageEmptyTitle,
+                      body: l10n.mutePageEmptyBody,
+                    ),
                   ),
                 MutedListStatus.ready => RefreshIndicator(
                     onRefresh: cubit.load,
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, 0, ReadInSpace.s5, ReadInSpace.s6),
+                      padding: const EdgeInsets.only(bottom: ReadInSpace.s6),
                       children: [
-                        if (state.mutes.users.isNotEmpty) ...[
-                          _SectionTitle(l10n.mutePageWriters),
-                          for (final user in state.mutes.users) _MutedWriterRow(key: ValueKey('muted-user-${user.id}'), user: user),
-                        ],
-                        if (state.mutes.fields.isNotEmpty) ...[
-                          _SectionTitle(l10n.mutePageFields),
-                          for (final field in state.mutes.fields) _MutedFieldRow(key: ValueKey('muted-field-${field.id}'), field: field),
-                        ],
-                        if (state.mutes.topics.isNotEmpty) ...[
-                          _SectionTitle(l10n.mutePageTopics),
-                          for (final topic in state.mutes.topics) _MutedTopicRow(key: ValueKey('muted-topic-${topic.id}'), topic: topic),
-                        ],
+                        if (state.mutes.users.isNotEmpty)
+                          SettingsBlock(
+                            title: l10n.mutePageWriters,
+                            rows: [
+                              for (final user in state.mutes.users) _MutedWriterRow(key: ValueKey('muted-user-${user.id}'), user: user),
+                            ],
+                          ),
+                        if (state.mutes.fields.isNotEmpty)
+                          SettingsBlock(
+                            title: l10n.mutePageFields,
+                            rows: [
+                              for (final field in state.mutes.fields)
+                                _MutedFieldRow(key: ValueKey('muted-field-${field.id}'), field: field),
+                            ],
+                          ),
+                        if (state.mutes.topics.isNotEmpty)
+                          SettingsBlock(
+                            title: l10n.mutePageTopics,
+                            rows: [
+                              for (final topic in state.mutes.topics)
+                                _MutedTopicRow(key: ValueKey('muted-topic-${topic.id}'), topic: topic),
+                            ],
+                          ),
                       ],
                     ),
                   ),
@@ -90,21 +113,6 @@ class MutedView extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: ReadInSpace.s4, bottom: ReadInSpace.s1),
-        child: Semantics(
-          header: true,
-          child: Text(text, style: context.textTheme.titleSmall?.copyWith(color: context.colors.textSecondary)),
-        ),
-      );
 }
 
 /// "إلغاء الكتم" for one row: off while its request runs; a refusal says why and the row stays.
@@ -290,7 +298,7 @@ class _RowsSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s4),
+        padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s3),
         child: Column(
           children: [
             for (var i = 0; i < 5; i++)

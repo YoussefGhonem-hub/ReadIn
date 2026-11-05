@@ -189,7 +189,7 @@ class _PinBox extends StatelessWidget {
       height: 56,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: colors.surfaceVariant,
+        color: colors.surface, // like the text inputs
         borderRadius: BorderRadius.circular(ReadInRadius.md),
         border: Border.all(color: borderColor, width: active || error ? 2 : 1),
       ),

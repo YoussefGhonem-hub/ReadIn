@@ -7,6 +7,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/app_network_image.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/domain/entities/article.dart';
 import '../../domain/entities/learning_path.dart';
@@ -104,7 +105,8 @@ class PathCover extends StatelessWidget {
 }
 
 /// A path in a list (`/paths`, a profile's Paths tab): cover, field, title, two lines of description, "N articles ·
-/// M min", and for the signed-in viewer the progress and the completion badge.
+/// M min", and for the signed-in viewer the progress and the completion badge. A full-width row with the block gutter
+/// and no frame: a list shows each in its own block ([PageBlock]), a section splits them with dividers.
 class PathCardTile extends StatelessWidget {
   const PathCardTile({super.key, required this.path, required this.onTap});
 
@@ -117,63 +119,60 @@ class PathCardTile extends StatelessWidget {
     final colors = context.colors;
     final progress = path.progress;
     final description = path.description;
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(ReadInSpace.s4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox.square(dimension: 72, child: PathCover(path: path)),
-                  const SizedBox(width: ReadInSpace.s3),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Wrap(
-                          spacing: ReadInSpace.s1,
-                          runSpacing: ReadInSpace.s1,
-                          children: [
-                            InfoTag(label: path.field.nameFor(lang)),
-                            if (path.isCompleted) const PathCompletedBadge(),
-                          ],
-                        ),
-                        const SizedBox(height: ReadInSpace.s1),
-                        BidiText(path.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall?.copyWith(height: 1.5)),
-                        if (description != null) ...[
-                          const SizedBox(height: 2),
-                          BidiText(
-                            description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary),
-                          ),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox.square(dimension: 72, child: PathCover(path: path)),
+                const SizedBox(width: ReadInSpace.s3),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: ReadInSpace.s1,
+                        runSpacing: ReadInSpace.s1,
+                        children: [
+                          InfoTag(label: path.field.nameFor(lang)),
+                          if (path.isCompleted) const PathCompletedBadge(),
                         ],
-                        const SizedBox(height: ReadInSpace.s1),
-                        PathMeta(path: path),
+                      ),
+                      const SizedBox(height: ReadInSpace.s1),
+                      BidiText(path.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall?.copyWith(height: 1.5)),
+                      if (description != null) ...[
+                        const SizedBox(height: 2),
+                        BidiText(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+                        ),
                       ],
-                    ),
+                      const SizedBox(height: ReadInSpace.s1),
+                      PathMeta(path: path),
+                    ],
                   ),
-                ],
-              ),
-              if (progress != null) ...[
-                const SizedBox(height: ReadInSpace.s3),
-                PathProgressRow(progress: progress),
+                ),
               ],
+            ),
+            if (progress != null) ...[
+              const SizedBox(height: ReadInSpace.s3),
+              PathProgressRow(progress: progress),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Card placeholders while a list of paths loads.
+/// Placeholders while a list of paths loads: a block each, a gap apart, like the list.
 class PathListSkeleton extends StatelessWidget {
   const PathListSkeleton({super.key, this.count = 3});
 
@@ -183,39 +182,35 @@ class PathListSkeleton extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         children: [
           for (var i = 0; i < count; i++)
-            const Padding(
-              padding: EdgeInsets.only(bottom: ReadInSpace.s3),
-              child: Card(
-                child: Padding(
-                  padding: EdgeInsets.all(ReadInSpace.s4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SkeletonBox(width: 72, height: 72, radius: ReadInRadius.md),
-                      SizedBox(width: ReadInSpace.s3),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SkeletonBox(width: 70),
-                            SizedBox(height: ReadInSpace.s2),
-                            SkeletonBox(),
-                            SizedBox(height: ReadInSpace.s2),
-                            SkeletonBox(width: 140),
-                          ],
-                        ),
-                      ),
-                    ],
+            const PageBlock(
+              margin: EdgeInsets.only(bottom: PageBlock.gap),
+              padding: EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonBox(width: 72, height: 72, radius: ReadInRadius.md),
+                  SizedBox(width: ReadInSpace.s3),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonBox(width: 70),
+                        SizedBox(height: ReadInSpace.s2),
+                        SkeletonBox(),
+                        SizedBox(height: ReadInSpace.s2),
+                        SkeletonBox(width: 140),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
         ],
       );
 }
 
-/// The field chips of a path list ("All" first), built from the fields present in it. Hidden with fewer than two
-/// fields: there would be nothing to filter.
+/// The field chips of a path list ("All" first), built from the fields present in it, in a white strip under the bar
+/// and a gap above the list. Hidden with fewer than two fields (there would be nothing to filter): then only the gap.
 class PathFieldChips extends StatelessWidget {
   const PathFieldChips({super.key, required this.fields, required this.selected, required this.onSelected});
 
@@ -225,7 +220,7 @@ class PathFieldChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (fields.length < 2) return const SizedBox(height: ReadInSpace.s3);
+    if (fields.length < 2) return const SizedBox(height: PageBlock.gap);
     final lang = Localizations.localeOf(context).languageCode;
     final colors = context.colors;
 
@@ -247,15 +242,18 @@ class PathFieldChips extends StatelessWidget {
       );
     }
 
-    return SizedBox(
-      height: 64,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s3),
-        children: [
-          chip(context.l10n.filterAll, null),
-          for (final field in fields) chip(field.nameFor(lang), field.slug),
-        ],
+    return PageBlock(
+      margin: const EdgeInsets.only(bottom: PageBlock.gap),
+      child: SizedBox(
+        height: 64,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s3),
+          children: [
+            chip(context.l10n.filterAll, null),
+            for (final field in fields) chip(field.nameFor(lang), field.slug),
+          ],
+        ),
       ),
     );
   }

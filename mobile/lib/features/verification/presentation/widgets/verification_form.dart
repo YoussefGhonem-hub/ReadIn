@@ -249,7 +249,7 @@ class _ProofFile extends StatelessWidget {
           Container(
             padding: const EdgeInsetsDirectional.fromSTEB(ReadInSpace.s3, ReadInSpace.s2, ReadInSpace.s1, ReadInSpace.s2),
             decoration: BoxDecoration(
-              color: colors.surfaceVariant,
+              color: colors.surface, // like the inputs above it
               borderRadius: BorderRadius.circular(ReadInRadius.md),
               border: Border.all(color: proofError == null ? colors.border : colors.error),
             ),

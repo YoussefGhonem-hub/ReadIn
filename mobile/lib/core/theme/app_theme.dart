@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'tokens.g.dart';
 
@@ -88,14 +89,23 @@ abstract final class AppTheme {
       extensions: [c],
       splashFactory: InkSparkle.splashFactory,
       dividerTheme: DividerThemeData(color: c.border, thickness: 1, space: 1),
+      // White bars over the `bg` canvas, as LinkedIn's: `surface` with a 1 px `border` edge under the bar (a TabBar's
+      // own divider lands on that line). Flat whether or not content scrolls under it: no tint, no shadow.
       appBarTheme: AppBarTheme(
-        backgroundColor: c.bg,
+        backgroundColor: c.surface,
         foregroundColor: c.textPrimary,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        shape: Border(bottom: BorderSide(color: c.border)),
         centerTitle: false,
         titleTextStyle: textTheme.titleMedium,
+        // The status bar sits on the bar: dark icons on the white one, light icons on the dark one.
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: brightness,
+        ),
       ),
       cardTheme: CardThemeData(
         color: c.surface,
@@ -154,9 +164,11 @@ abstract final class AppTheme {
           textStyle: textTheme.labelMedium,
         ),
       ),
+      // Inputs on `surface` with their border, as on the web: they read on the `bg` canvas and inside cards alike. A
+      // disabled one keeps the old subtle fill, so it still shows without its border.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: c.surfaceVariant,
+        fillColor: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.disabled) ? c.surfaceVariant : c.surface),
         hintStyle: textTheme.bodyMedium?.copyWith(color: c.textSecondary),
         labelStyle: textTheme.bodyMedium?.copyWith(color: c.textSecondary),
         contentPadding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s4, vertical: ReadInSpace.s4),

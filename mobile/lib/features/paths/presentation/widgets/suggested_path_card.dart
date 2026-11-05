@@ -5,12 +5,13 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../domain/entities/learning_path.dart';
 import 'path_widgets.dart';
 
 /// "Suggested path" on Home (F03, F09): a published path the reader hasn't joined, with its cover, field, title and
 /// "N articles · M min". The card and "Start path" open the path page, where joining happens; "See all" opens the
-/// list of paths.
+/// list of paths. A full-width block on the canvas, like the post cards around it (F34).
 class SuggestedPathCard extends StatelessWidget {
   const SuggestedPathCard({super.key, required this.path, required this.onOpenPath, required this.onSeeAll});
 
@@ -23,13 +24,12 @@ class SuggestedPathCard extends StatelessWidget {
     final l10n = context.l10n;
     final colors = context.colors;
     final lang = Localizations.localeOf(context).languageCode;
-    return Card(
+    return PageBlock(
       key: ValueKey('suggested-path-${path.slug}'),
-      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onOpenPath,
         child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(ReadInSpace.s4, ReadInSpace.s1, ReadInSpace.s2, ReadInSpace.s4),
+          padding: const EdgeInsetsDirectional.fromSTEB(PageBlock.gutter, ReadInSpace.s1, ReadInSpace.s1, ReadInSpace.s4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -53,7 +53,7 @@ class SuggestedPathCard extends StatelessWidget {
                 ],
               ),
               Padding(
-                padding: const EdgeInsetsDirectional.only(end: ReadInSpace.s2),
+                padding: const EdgeInsetsDirectional.only(end: ReadInSpace.s3),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -81,7 +81,7 @@ class SuggestedPathCard extends StatelessWidget {
               ),
               const SizedBox(height: ReadInSpace.s3),
               Padding(
-                padding: const EdgeInsetsDirectional.only(end: ReadInSpace.s2),
+                padding: const EdgeInsetsDirectional.only(end: ReadInSpace.s3),
                 child: FilledButton.tonalIcon(
                   key: const ValueKey('suggested-path-start'),
                   onPressed: onOpenPath,

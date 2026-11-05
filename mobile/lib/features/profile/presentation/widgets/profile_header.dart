@@ -9,6 +9,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../domain/entities/profile.dart';
@@ -67,8 +68,9 @@ class FollowsYouChip extends StatelessWidget {
   }
 }
 
-/// Avatar, name, verified badge, the title (in full), `@username`, "Follows you", bio, links, the follow / edit button
-/// and the stats row.
+/// The profile's top block, LinkedIn style: a banner strip in the theme's colors (no image) with the avatar over its
+/// lower start edge, then the name, verified badge, the title (in full), `@username`, "Follows you", bio, links, the
+/// follow / edit button, and the stats row at the block's foot.
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({super.key, required this.profile, this.onEdit});
 
@@ -77,7 +79,13 @@ class ProfileHeader extends StatelessWidget {
   /// "Edit profile" on the viewer's own profile.
   final VoidCallback? onEdit;
 
-  static const avatarSize = 80.0;
+  static const avatarSize = 88.0;
+
+  /// The banner strip above the avatar.
+  static const bannerHeight = 72.0;
+
+  /// The `surface` ring around the avatar, so it reads on the banner.
+  static const avatarRing = 4.0;
 
   /// The title line (tests find it by this key).
   static const headlineKey = ValueKey('profile-headline');
@@ -88,68 +96,125 @@ class ProfileHeader extends StatelessWidget {
     final colors = context.colors;
     final bio = profile.bio;
     final headline = profile.headline;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, ReadInSpace.s3),
+    return PageBlock(
+      margin: const EdgeInsets.only(top: PageBlock.gap),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              ExcludeSemantics(child: UserAvatar(name: profile.displayName, url: profile.avatarFor(avatarSize * 2), size: avatarSize)),
-              const SizedBox(width: ReadInSpace.s4),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Semantics(
-                      header: true,
-                      child: Row(
-                        children: [
-                          Flexible(child: BidiText(profile.displayName, style: context.textTheme.titleLarge, maxLines: 2, overflow: TextOverflow.ellipsis)),
-                          if (profile.isVerified) ...[const SizedBox(width: 6), const VerifiedMark(size: 18)],
-                        ],
-                      ),
-                    ),
-                    // The title in full, wrapped, in its own direction (F14); none, no line.
-                    if (headline != null) ...[
-                      const SizedBox(height: 2),
-                      ProfileBioText(
-                        headline,
-                        key: headlineKey,
-                        style: context.textTheme.bodyMedium?.copyWith(color: colors.textPrimary, height: 1.4),
-                      ),
+          ProfileBanner(
+            avatar: ExcludeSemantics(
+              child: UserAvatar(name: profile.displayName, url: profile.avatarFor(avatarSize * 2), size: avatarSize),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s2, PageBlock.gutter, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(
+                  header: true,
+                  child: Row(
+                    children: [
+                      Flexible(child: BidiText(profile.displayName, style: context.textTheme.titleLarge, maxLines: 2, overflow: TextOverflow.ellipsis)),
+                      if (profile.isVerified) ...[const SizedBox(width: 6), const VerifiedMark(size: 18)],
                     ],
-                    const SizedBox(height: 2),
+                  ),
+                ),
+                // The title in full, wrapped, in its own direction (F14); none, no line.
+                if (headline != null) ...[
+                  const SizedBox(height: 2),
+                  ProfileBioText(
+                    headline,
+                    key: headlineKey,
+                    style: context.textTheme.bodyMedium?.copyWith(color: colors.textPrimary, height: 1.4),
+                  ),
+                ],
+                const SizedBox(height: 2),
+                Wrap(
+                  spacing: ReadInSpace.s2,
+                  runSpacing: ReadInSpace.s1,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
                     UsernameText(profile.username, style: context.textTheme.bodyMedium?.copyWith(color: colors.textSecondary)),
-                    if (profile.followsYou) ...[const SizedBox(height: ReadInSpace.s2), const FollowsYouChip()],
+                    if (profile.followsYou) const FollowsYouChip(),
                   ],
                 ),
-              ),
-            ],
-          ),
-          if (bio != null) ...[
-            const SizedBox(height: ReadInSpace.s3),
-            ProfileBioText(bio, maxLines: 4, style: context.textTheme.bodyMedium?.copyWith(height: 1.5)),
-          ],
-          if (profile.links.isNotEmpty) ...[
-            const SizedBox(height: ReadInSpace.s2),
-            ProfileLinksRow(links: profile.links),
-          ],
-          const SizedBox(height: ReadInSpace.s4),
-          if (profile.isMe)
-            OutlinedButton.icon(
-              onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              label: Text(l10n.editProfile),
-              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-            )
-          else
-            SizedBox(
-              height: 48,
-              child: FollowButton(userId: profile.id, name: profile.displayName, initiallyFollowing: profile.isFollowing),
+                if (bio != null) ...[
+                  const SizedBox(height: ReadInSpace.s3),
+                  ProfileBioText(bio, maxLines: 4, style: context.textTheme.bodyMedium?.copyWith(height: 1.5)),
+                ],
+                if (profile.links.isNotEmpty) ...[
+                  const SizedBox(height: ReadInSpace.s2),
+                  ProfileLinksRow(links: profile.links),
+                ],
+              ],
             ),
-          const SizedBox(height: ReadInSpace.s4),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s4, PageBlock.gutter, ReadInSpace.s3),
+            child: profile.isMe
+                ? OutlinedButton.icon(
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: Text(l10n.editProfile),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                  )
+                : SizedBox(
+                    height: 48,
+                    child: FollowButton(userId: profile.id, name: profile.displayName, initiallyFollowing: profile.isFollowing),
+                  ),
+          ),
+          // The stats at the block's foot, under a line.
+          const Divider(),
           ProfileStatsRow(profile: profile),
+        ],
+      ),
+    );
+  }
+}
+
+/// The top of the profile's block: a [ProfileHeader.bannerHeight] strip in the theme's colors (no image), and [avatar]
+/// in a `surface` ring over its lower start edge.
+class ProfileBanner extends StatelessWidget {
+  const ProfileBanner({super.key, required this.avatar});
+
+  final Widget avatar;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    const ring = ProfileHeader.avatarSize + ProfileHeader.avatarRing * 2;
+    return SizedBox(
+      height: ProfileHeader.bannerHeight + ring / 2,
+      child: Stack(
+        children: [
+          PositionedDirectional(
+            top: 0,
+            start: 0,
+            end: 0,
+            height: ProfileHeader.bannerHeight,
+            child: ExcludeSemantics(
+              child: DecoratedBox(
+                key: const ValueKey('profile-banner'),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [colors.primaryContainer, colors.surfaceVariant],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          PositionedDirectional(
+            top: ProfileHeader.bannerHeight - ring / 2,
+            start: PageBlock.gutter - ProfileHeader.avatarRing,
+            child: Container(
+              padding: const EdgeInsets.all(ProfileHeader.avatarRing),
+              decoration: BoxDecoration(color: colors.surface, shape: BoxShape.circle),
+              child: avatar,
+            ),
+          ),
         ],
       ),
     );
@@ -203,7 +268,8 @@ class ProfileLinksRow extends StatelessWidget {
   }
 }
 
-/// Articles · followers · following · total reads. Followers and following open the lists.
+/// Articles · followers · following · total reads, across the foot of the profile's block. Followers and following
+/// open the lists.
 class ProfileStatsRow extends StatelessWidget {
   const ProfileStatsRow({super.key, required this.profile});
 
@@ -212,34 +278,26 @@ class ProfileStatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final colors = context.colors;
     final stats = profile.stats;
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(ReadInRadius.card),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: _StatTile(value: stats.articles, label: l10n.profileStatArticles)),
-          Expanded(
-            child: _StatTile(
-              value: stats.followers,
-              label: l10n.profileStatFollowers,
-              onTap: () => openFollowList(context, profile, following: false),
-            ),
+    return Row(
+      children: [
+        Expanded(child: _StatTile(value: stats.articles, label: l10n.profileStatArticles)),
+        Expanded(
+          child: _StatTile(
+            value: stats.followers,
+            label: l10n.profileStatFollowers,
+            onTap: () => openFollowList(context, profile, following: false),
           ),
-          Expanded(
-            child: _StatTile(
-              value: stats.following,
-              label: l10n.profileStatFollowing,
-              onTap: () => openFollowList(context, profile, following: true),
-            ),
+        ),
+        Expanded(
+          child: _StatTile(
+            value: stats.following,
+            label: l10n.profileStatFollowing,
+            onTap: () => openFollowList(context, profile, following: true),
           ),
-          Expanded(child: _StatTile(value: stats.totalReads, label: l10n.profileStatReads)),
-        ],
-      ),
+        ),
+        Expanded(child: _StatTile(value: stats.totalReads, label: l10n.profileStatReads)),
+      ],
     );
   }
 }
@@ -279,43 +337,43 @@ class _StatTile extends StatelessWidget {
       button: onTap != null,
       label: context.l10n.profileStatSemantics(label, text),
       excludeSemantics: true,
-      child: onTap == null
-          ? content
-          : InkWell(onTap: onTap, borderRadius: BorderRadius.circular(ReadInRadius.card), child: content),
+      child: onTap == null ? content : InkWell(onTap: onTap, child: content),
     );
   }
 }
 
-/// Header placeholder while the profile loads.
+/// The profile's top block while it loads: the banner, the avatar, lines, the button and the stats.
 class ProfileHeaderSkeleton extends StatelessWidget {
   const ProfileHeaderSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, ReadInSpace.s3),
+  Widget build(BuildContext context) => const PageBlock(
+        margin: EdgeInsets.only(top: PageBlock.gap),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                SkeletonBox(width: ProfileHeader.avatarSize, height: ProfileHeader.avatarSize, radius: ProfileHeader.avatarSize / 2),
-                SizedBox(width: ReadInSpace.s4),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [SkeletonBox(width: 160, height: 20), SizedBox(height: ReadInSpace.s2), SkeletonBox(width: 90)],
-                  ),
-                ),
-              ],
+            ProfileBanner(
+              avatar: SkeletonBox(width: ProfileHeader.avatarSize, height: ProfileHeader.avatarSize, radius: ProfileHeader.avatarSize / 2),
             ),
-            SizedBox(height: ReadInSpace.s4),
-            SkeletonBox(),
-            SizedBox(height: ReadInSpace.s2),
-            SkeletonBox(width: 220),
-            SizedBox(height: ReadInSpace.s4),
-            SkeletonBox(height: 48, radius: ReadInRadius.chip),
-            SizedBox(height: ReadInSpace.s4),
-            SkeletonBox(height: 64, radius: ReadInRadius.card),
+            Padding(
+              padding: EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s3, PageBlock.gutter, ReadInSpace.s4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonBox(width: 160, height: 20),
+                  SizedBox(height: ReadInSpace.s2),
+                  SkeletonBox(width: 90),
+                  SizedBox(height: ReadInSpace.s4),
+                  SkeletonBox(),
+                  SizedBox(height: ReadInSpace.s2),
+                  SkeletonBox(width: 220),
+                  SizedBox(height: ReadInSpace.s4),
+                  SkeletonBox(height: 48, radius: ReadInRadius.chip),
+                  SizedBox(height: ReadInSpace.s4),
+                  SkeletonBox(height: 48),
+                ],
+              ),
+            ),
           ],
         ),
       );

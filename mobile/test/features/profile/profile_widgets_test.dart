@@ -42,6 +42,9 @@ void main() {
 
   setUpAll(() async => l10n = await AppLocalizations.delegate.load(AppLocales.en));
 
+  // Above the tabs, the top block and the reading stats run past a phone's screen: tall enough to show a tab's content.
+  const profileHeight = 1800.0;
+
   Future<void> pump(WidgetTester tester, List<BlocProvider> providers, Widget child, {Variant? variant, double height = 844}) async {
     usePhoneSurface(tester, size: Size(390, height));
     await tester.pumpWidget(testApp(provided(providers, child), variant: variant ?? en));
@@ -52,7 +55,7 @@ void main() {
     testWidgets('own profile: edit, settings and the Saved tab; no follow button', (tester) async {
       // Their own article, as a post card (F34): no Follow on it either.
       const me = Author(id: 'u-1', displayName: 'Youssef Hassan', username: 'reader1');
-      await pump(tester, [...appStores(), ...profileScreen(ownProfile, articles: [postCard(0, author: me, cover: false)])], const ProfileView(isTab: true));
+      await pump(tester, [...appStores(), ...profileScreen(ownProfile, articles: [postCard(0, author: me, cover: false)])], const ProfileView(isTab: true), height: profileHeight);
 
       expect(find.text(l10n.editProfile), findsOneWidget);
       expect(find.byTooltip(l10n.settings), findsOneWidget);
@@ -63,7 +66,7 @@ void main() {
     });
 
     testWidgets('someone else: follow button, "follows you", no Saved tab; @handle stays LTR', (tester) async {
-      await pump(tester, [...appStores(), ...profileScreen(otherProfile)], const ProfileView(), variant: Variant.all.first);
+      await pump(tester, [...appStores(), ...profileScreen(otherProfile)], const ProfileView(), variant: Variant.all.first, height: profileHeight);
 
       expect(find.byType(FollowButtonView), findsOneWidget);
       expect(find.byType(FollowsYouChip), findsOneWidget);
@@ -178,7 +181,7 @@ void main() {
       verify(reposts.ensureLoaded).called(1);
 
       // The own profile: Reposts before Saved, and its own empty state.
-      await pump(tester, [...appStores(), ...profileScreen(ownProfile)], const ProfileView(isTab: true));
+      await pump(tester, [...appStores(), ...profileScreen(ownProfile)], const ProfileView(isTab: true), height: profileHeight);
       final own = tester.widgetList<Tab>(find.byType(Tab)).map((t) => t.text).toList();
       expect(own.indexOf(l10n.profileTabReposts), own.indexOf(l10n.profileTabSaved) - 1);
       await tester.tap(find.text(l10n.profileTabReposts));
@@ -187,7 +190,7 @@ void main() {
     });
 
     testWidgets("someone else's empty Reposts tab says so", (tester) async {
-      await pump(tester, [...appStores(), ...profileScreen(otherProfile)], const ProfileView());
+      await pump(tester, [...appStores(), ...profileScreen(otherProfile)], const ProfileView(), height: profileHeight);
 
       await tester.tap(find.text(l10n.profileTabReposts));
       await tester.pumpAndSettle();
@@ -231,7 +234,7 @@ void main() {
     });
 
     testWidgets('followers and following open the lists; an author name opens their profile', (tester) async {
-      usePhoneSurface(tester);
+      usePhoneSurface(tester, size: const Size(390, profileHeight));
       final opened = <String>[];
       final router = GoRouter(
         initialLocation: '/u/mona_dev',

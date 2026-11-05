@@ -12,7 +12,8 @@ import '../../../editor/presentation/pages/my_articles_page.dart';
 
 /// "Start a post" at the top of Home (signed-in writers): the avatar and a pill that opens the editor, then Photo, PDF
 /// and Article. The editor has no way yet to open its image or PDF picker from a link, so all three open a new
-/// article; the attachments are in its settings sheet (F26).
+/// article; the attachments are in its settings sheet (F26). It has no frame of its own: it sits in Home's first block
+/// (a `PageBlock`), under the greeting.
 class StartPostCard extends StatelessWidget {
   const StartPostCard({super.key, required this.me});
 
@@ -40,58 +41,53 @@ class StartPostCard extends StatelessWidget {
             ),
           ),
         );
-    return Card(
+    return Column(
       key: const ValueKey('start-post'),
-      child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(ReadInSpace.s4, ReadInSpace.s3, ReadInSpace.s4, ReadInSpace.s1),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                ExcludeSemantics(child: UserAvatar(name: me.displayName, url: me.avatarUrl, size: 44)),
-                const SizedBox(width: ReadInSpace.s3),
-                Expanded(
-                  child: Semantics(
-                    button: true,
-                    label: l10n.startPostHint,
-                    excludeSemantics: true,
-                    child: Material(
-                      color: colors.surface,
-                      shape: pill,
-                      clipBehavior: Clip.antiAlias,
-                      child: InkWell(
-                        key: const ValueKey('start-post-pill'),
-                        onTap: () => _openEditor(context),
-                        customBorder: pill,
-                        child: Container(
-                          height: 48,
-                          padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s4),
-                          alignment: AlignmentDirectional.centerStart,
-                          child: Text(
-                            l10n.startPostHint,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.bodyMedium?.copyWith(color: colors.textSecondary, fontWeight: FontWeight.w600),
-                          ),
-                        ),
+            ExcludeSemantics(child: UserAvatar(name: me.displayName, url: me.avatarUrl, size: 44)),
+            const SizedBox(width: ReadInSpace.s3),
+            Expanded(
+              child: Semantics(
+                button: true,
+                label: l10n.startPostHint,
+                excludeSemantics: true,
+                child: Material(
+                  color: colors.surface,
+                  shape: pill,
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    key: const ValueKey('start-post-pill'),
+                    onTap: () => _openEditor(context),
+                    customBorder: pill,
+                    child: Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s4),
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        l10n.startPostHint,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.bodyMedium?.copyWith(color: colors.textSecondary, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: ReadInSpace.s1),
-            Row(
-              children: [
-                action('photo', Icons.image_outlined, colors.calloutInfoAccent, l10n.startPostPhoto),
-                action('pdf', Icons.picture_as_pdf_outlined, colors.calloutDangerAccent, l10n.startPostPdf),
-                action('article', Icons.article_outlined, colors.calloutWarningAccent, l10n.startPostArticle),
-              ],
+              ),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: ReadInSpace.s1),
+        Row(
+          children: [
+            action('photo', Icons.image_outlined, colors.calloutInfoAccent, l10n.startPostPhoto),
+            action('pdf', Icons.picture_as_pdf_outlined, colors.calloutDangerAccent, l10n.startPostPdf),
+            action('article', Icons.article_outlined, colors.calloutWarningAccent, l10n.startPostArticle),
+          ],
+        ),
+      ],
     );
   }
 }

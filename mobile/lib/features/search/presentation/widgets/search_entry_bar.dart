@@ -33,7 +33,8 @@ class SearchEntryBar extends StatelessWidget {
       excludeSemantics: true,
       onTap: () => _open(context),
       child: Material(
-        color: colors.surfaceVariant,
+        // The pill is a well of the canvas in the white top bar (it shows in dark mode too).
+        color: pill ? colors.bg : colors.surfaceVariant,
         shape: shape,
         clipBehavior: Clip.antiAlias,
         child: InkWell(

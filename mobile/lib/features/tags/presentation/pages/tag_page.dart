@@ -10,6 +10,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
@@ -21,7 +22,7 @@ import '../cubit/tag_cubits.dart';
 
 /// A tag's page (F32, guests allowed): `#name`, its article count, and every published article with the tag, from all
 /// writers, newest first, as post cards (F34) with pull to refresh and infinite scroll. An unknown or hidden tag shows
-/// "This tag doesn't exist".
+/// "This tag doesn't exist". The header is a block on the canvas, a gap above the post cards.
 class TagPage extends StatelessWidget {
   const TagPage({super.key, required this.slug});
 
@@ -66,8 +67,11 @@ class TagView extends StatelessWidget {
           ),
           body: switch (header.status) {
             TagStatus.loading => const _TagSkeleton(),
-            TagStatus.failure when header.notFound => const _TagNotFound(),
-            TagStatus.failure => ErrorView(failure: header.failure!, onRetry: () => _retry(context)),
+            TagStatus.failure when header.notFound => const PageBlock(margin: _blockGap, child: _TagNotFound()),
+            TagStatus.failure => PageBlock(
+                margin: _blockGap,
+                child: ErrorView(failure: header.failure!, onRetry: () => _retry(context)),
+              ),
             TagStatus.ready => _TagContent(tag: header.tag!),
           },
         ),
@@ -118,7 +122,9 @@ class _TagContent extends StatelessWidget {
                 key: PageStorageKey('tag-${tag.slug}'),
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  SliverToBoxAdapter(child: TagHeader(tag: tag)),
+                  SliverToBoxAdapter(child: PageBlock(margin: _blockGap, child: TagHeader(tag: tag))),
+                  // A gap under the header; the cards, or the states in a block.
+                  const SliverToBoxAdapter(child: SizedBox(height: PageBlock.gap)),
                   ...switch (feed.status) {
                     FeedStatus.loading => [
                         SliverList.list(children: [
@@ -126,15 +132,20 @@ class _TagContent extends StatelessWidget {
                         ]),
                       ],
                     FeedStatus.failure when isTagNotFound(feed.failure) => [
-                        const SliverFillRemaining(hasScrollBody: false, child: _TagNotFound()),
+                        const SliverFillRemaining(hasScrollBody: false, child: PageBlock(child: _TagNotFound())),
                       ],
                     FeedStatus.failure => [
-                        SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: feed.failure!, onRetry: cubit.load)),
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: PageBlock(child: ErrorView(failure: feed.failure!, onRetry: cubit.load)),
+                        ),
                       ],
                     FeedStatus.ready when feed.items.isEmpty || (allHidden && !feed.hasMore) => [
                         SliverFillRemaining(
                           hasScrollBody: false,
-                          child: EmptyView(icon: Icons.article_outlined, title: l10n.tagPageEmptyTitle, body: l10n.tagPageEmptyBody),
+                          child: PageBlock(
+                            child: EmptyView(icon: Icons.article_outlined, title: l10n.tagPageEmptyTitle, body: l10n.tagPageEmptyBody),
+                          ),
                         ),
                       ],
                     // Post cards full width, one after another on the background (F34).
@@ -177,7 +188,7 @@ class TagHeader extends StatelessWidget {
     final name = '#${tag.name}';
     final nameDir = Bidi.detect(tag.name) ?? Directionality.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, ReadInSpace.s5),
+      padding: const EdgeInsets.all(PageBlock.gutter),
       child: Row(
         children: [
           Container(
@@ -239,7 +250,10 @@ class _ListFooter extends StatelessWidget {
   }
 }
 
-/// The header and two post cards while the page loads (static, so "reduce motion" is respected).
+/// The canvas above a block.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);
+
+/// The header's block and two post cards while the page loads (static, so "reduce motion" is respected).
 class _TagSkeleton extends StatelessWidget {
   const _TagSkeleton();
 
@@ -249,8 +263,9 @@ class _TagSkeleton extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, ReadInSpace.s5),
+            PageBlock(
+              margin: EdgeInsets.symmetric(vertical: PageBlock.gap),
+              padding: EdgeInsets.all(PageBlock.gutter),
               child: Row(
                 children: [
                   SkeletonBox(width: 56, height: 56, radius: ReadInRadius.card),

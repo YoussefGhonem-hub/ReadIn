@@ -20,6 +20,7 @@ import 'package:readin/features/paths/presentation/widgets/suggested_path_card.d
 import 'package:readin/features/reading/presentation/cubit/reading_stats_cubit.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:readin/shared/widgets/page_block.dart';
 
 import '../helpers/path_fixtures.dart';
 import '../helpers/profile_fakes.dart';
@@ -114,21 +115,19 @@ void main() {
         Scaffold(
           body: SingleChildScrollView(
             key: const ValueKey('home-additions'),
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            // Full-width blocks on the canvas, 8 px apart, as on Home.
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: StartPostCard(me: _me)),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: SuggestedPathCard(
-                    path: samplePath(title: en ? 'Flutter from scratch' : 'Flutter من الصفر', readCount: 0),
-                    onOpenPath: () {},
-                    onSeeAll: () {},
-                  ),
+                const PageBlock(padding: EdgeInsets.fromLTRB(16, 16, 16, 4), child: StartPostCard(me: _me)),
+                const SizedBox(height: 8),
+                SuggestedPathCard(
+                  path: samplePath(title: en ? 'Flutter from scratch' : 'Flutter من الصفر', readCount: 0),
+                  onOpenPath: () {},
+                  onSeeAll: () {},
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 SuggestedWritersCarousel(onSeeAll: () {}),
               ],
             ),

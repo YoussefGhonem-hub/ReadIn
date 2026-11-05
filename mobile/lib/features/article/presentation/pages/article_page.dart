@@ -13,6 +13,7 @@ import '../../../../shared/rdoc/blocks/text_blocks.dart';
 import '../../../../shared/rdoc/rdoc_view.dart';
 import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/action_feedback.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article_pdf/presentation/cubit/article_pdf_cubit.dart';
 import '../../../article_pdf/presentation/widgets/article_pdf_widgets.dart';
@@ -242,26 +243,42 @@ class _ArticleViewState extends State<ArticleView> {
         BlocListener<ArticleLiveCubit, LiveArticleCounts?>(listener: (_, counts) => _onLive(counts)),
       ],
       child: Scaffold(
+        // The status bar's inset belongs to the white bar at the top; the sides and the bottom stay safe.
         body: SafeArea(
+          top: false,
           child: BlocBuilder<ArticleCubit, ArticleState>(
             builder: (context, state) {
               final article = state.article;
               return Column(
                 children: [
-                  ReadingProgressBar(progress: _progress),
-                  _TopBar(
-                    article: article,
-                    switching: state.switchingLanguage,
-                    onLanguage: (lang) => context.read<ArticleCubit>().switchLanguage(lang),
-                    onFontSize: () => showFontSizeSheet(context, current: fontSize, onChanged: settings.setFontSize),
+                  // The progress and the bar on `surface`, up under the status bar, like the app's other bars.
+                  ColoredBox(
+                    color: context.colors.surface,
+                    child: SafeArea(
+                      bottom: false,
+                      child: Column(
+                        children: [
+                          ReadingProgressBar(progress: _progress),
+                          _TopBar(
+                            article: article,
+                            switching: state.switchingLanguage,
+                            onLanguage: (lang) => context.read<ArticleCubit>().switchLanguage(lang),
+                            onFontSize: () => showFontSizeSheet(context, current: fontSize, onChanged: settings.setFontSize),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   if (state.status == ArticleStatus.ready && article!.isOfflineCopy) const _OfflineCopyBanner(),
                   Expanded(
                     child: switch (state.status) {
                       ArticleStatus.loading => const _ReaderSkeleton(),
-                      ArticleStatus.failure => ErrorView(
-                          failure: state.failure!,
-                          onRetry: () => context.read<ArticleCubit>().retry(_preferredArticleLanguage(context)),
+                      ArticleStatus.failure => PageBlock(
+                          margin: const EdgeInsets.only(top: PageBlock.gap),
+                          child: ErrorView(
+                            failure: state.failure!,
+                            onRetry: () => context.read<ArticleCubit>().retry(_preferredArticleLanguage(context)),
+                          ),
                         ),
                       ArticleStatus.ready => NotificationListener<Notification>(
                           // While resuming, the jumps stay between the reader and its resume.
@@ -332,33 +349,37 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final a = article;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2, vertical: ReadInSpace.s1),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            icon: const BackButtonIcon(),
-            onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
-          ),
-          const Spacer(),
-          if (a != null && a.hasBothLanguages)
-            Padding(
-              padding: const EdgeInsetsDirectional.only(end: ReadInSpace.s1),
-              child: SegmentedButton<String>(
-                style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                showSelectedIcon: false,
-                segments: [
-                  ButtonSegment(value: 'ar-EG', label: Text(l10n.langToggleArEg), tooltip: l10n.articleLangArEg),
-                  ButtonSegment(value: 'en', label: Text(l10n.langToggleEn), tooltip: l10n.articleLangEn),
-                ],
-                selected: {a.card.language},
-                onSelectionChanged: switching ? null : (v) => onLanguage(v.first),
-              ),
+    // As the app's bars: on `surface` (painted above it) with a 1 px `border` line under it.
+    return DecoratedBox(
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.border))),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2, vertical: ReadInSpace.s1),
+        child: Row(
+          children: [
+            IconButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              icon: const BackButtonIcon(),
+              onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
             ),
-          IconButton(tooltip: l10n.fontSize, icon: const Icon(Icons.format_size_rounded), onPressed: onFontSize),
-          ArticleShareButton(article: a?.card),
-        ],
+            const Spacer(),
+            if (a != null && a.hasBothLanguages)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: ReadInSpace.s1),
+                child: SegmentedButton<String>(
+                  style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                  showSelectedIcon: false,
+                  segments: [
+                    ButtonSegment(value: 'ar-EG', label: Text(l10n.langToggleArEg), tooltip: l10n.articleLangArEg),
+                    ButtonSegment(value: 'en', label: Text(l10n.langToggleEn), tooltip: l10n.articleLangEn),
+                  ],
+                  selected: {a.card.language},
+                  onSelectionChanged: switching ? null : (v) => onLanguage(v.first),
+                ),
+              ),
+            IconButton(tooltip: l10n.fontSize, icon: const Icon(Icons.format_size_rounded), onPressed: onFontSize),
+            ArticleShareButton(article: a?.card),
+          ],
+        ),
       ),
     );
   }
@@ -392,7 +413,8 @@ class _OfflineCopyBanner extends StatelessWidget {
 }
 
 /// The article as readers see it: header, trust row, health disclaimer, TL;DR, table of contents, content,
-/// attachments, tags and sources. The editor's preview (F05) renders the same widget.
+/// attachments, tags and sources, in one white block on the canvas ([PageBlock]'s look), then the [trailing] sections.
+/// The editor's preview (F05) renders the same widget.
 class ReaderBody extends StatefulWidget {
   const ReaderBody({
     super.key,
@@ -471,6 +493,9 @@ class _ReaderBodyState extends State<ReaderBody> {
     final moderation = article.moderation;
     final leading = widget.leading;
 
+    // A box inside the article's block: its own ink layer, so taps still ripple above the block's `surface`.
+    Widget box(Widget child) => SliverToBoxAdapter(child: Material(type: MaterialType.transparency, child: child));
+
     return RDocScope(
       baseDirection: direction,
       bodyFontSize: widget.bodyFontSize,
@@ -481,64 +506,76 @@ class _ReaderBodyState extends State<ReaderBody> {
         builder: (context) => CustomScrollView(
           controller: widget.controller,
           slivers: [
-            // Only its author and moderators can open a hidden article (F22).
-            if (moderation != null)
-              SliverPadding(
-                padding: gutter.copyWith(top: ReadInSpace.s2),
-                sliver: SliverToBoxAdapter(child: HiddenArticleBanner(moderation: moderation)),
-              ),
-            if (leading != null) SliverToBoxAdapter(child: leading),
+            // The article (banners, header, content, attachments, tags and sources) is one white block on the canvas,
+            // a gap under the bar, as LinkedIn shows a post; the reading width, sizes and line height don't change.
             SliverPadding(
-              padding: gutter.copyWith(top: ReadInSpace.s2),
-              sliver: SliverToBoxAdapter(
-                child: ArticleHeader(
-                  article: article,
-                  titleScale: RDocScope.of(context).scale,
-                  authorAction: widget.authorAction,
+              padding: const EdgeInsets.only(top: PageBlock.gap),
+              sliver: DecoratedSliver(
+                decoration: BoxDecoration(color: context.colors.surface),
+                sliver: SliverMainAxisGroup(
+                  slivers: [
+                    // Only its author and moderators can open a hidden article (F22).
+                    if (moderation != null)
+                      SliverPadding(
+                        padding: gutter.copyWith(top: ReadInSpace.s4),
+                        sliver: box(HiddenArticleBanner(moderation: moderation)),
+                      ),
+                    if (leading != null) box(leading),
+                    SliverPadding(
+                      padding: gutter.copyWith(top: ReadInSpace.s4),
+                      sliver: box(
+                        ArticleHeader(
+                          article: article,
+                          titleScale: RDocScope.of(context).scale,
+                          authorAction: widget.authorAction,
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: gutter.copyWith(top: ReadInSpace.s4, bottom: ReadInSpace.s4),
+                      sliver: box(TrustRow(article: article)),
+                    ),
+                    // Health content (medicine, public health) says it doesn't replace a doctor (SPEC F04).
+                    if (article.card.field.isSensitive)
+                      SliverPadding(padding: gutter.copyWith(bottom: ReadInSpace.s4), sliver: box(const HealthDisclaimer())),
+                    if (showSummary)
+                      SliverPadding(
+                        padding: gutter.copyWith(bottom: ReadInSpace.s4),
+                        sliver: box(
+                          SummaryBox(
+                            direction: direction,
+                            child: Text(
+                              article.summary!,
+                              textDirection: direction,
+                              style: rdocBodyStyle(context, direction, factor: 0.94),
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (toc.length >= ArticleToc.minHeadings)
+                      SliverPadding(
+                        padding: gutter.copyWith(bottom: ReadInSpace.s5),
+                        sliver: box(ArticleToc(entries: toc, onSelected: _jumpTo)),
+                      ),
+                    SliverPadding(padding: gutter, sliver: RDocSliver(article.content, locator: _locator)),
+                    if (article.card.attachments != null)
+                      SliverPadding(
+                        padding: gutter.copyWith(bottom: ReadInSpace.s4),
+                        sliver: box(ArticleAttachmentsView(article: article.card)),
+                      ),
+                    if (article.tags.isNotEmpty)
+                      SliverPadding(padding: gutter.copyWith(top: ReadInSpace.s4), sliver: box(ArticleTags(tags: article.tags))),
+                    SliverPadding(
+                      padding: gutter.copyWith(top: ReadInSpace.s4, bottom: ReadInSpace.s5),
+                      sliver: box(SourcesSection(sources: article.sources, onOpen: openExternalLink)),
+                    ),
+                  ],
                 ),
               ),
             ),
-            SliverPadding(
-              padding: gutter.copyWith(top: ReadInSpace.s4, bottom: ReadInSpace.s4),
-              sliver: SliverToBoxAdapter(child: TrustRow(article: article)),
-            ),
-            // Health content (medicine, public health) says it doesn't replace a doctor (SPEC F04).
-            if (article.card.field.isSensitive)
-              SliverPadding(
-                padding: gutter.copyWith(bottom: ReadInSpace.s4),
-                sliver: const SliverToBoxAdapter(child: HealthDisclaimer()),
-              ),
-            if (showSummary)
-              SliverPadding(
-                padding: gutter.copyWith(bottom: ReadInSpace.s4),
-                sliver: SliverToBoxAdapter(
-                  child: SummaryBox(
-                    direction: direction,
-                    child: Text(article.summary!, textDirection: direction, style: rdocBodyStyle(context, direction, factor: 0.94)),
-                  ),
-                ),
-              ),
-            if (toc.length >= ArticleToc.minHeadings)
-              SliverPadding(
-                padding: gutter.copyWith(bottom: ReadInSpace.s5),
-                sliver: SliverToBoxAdapter(child: ArticleToc(entries: toc, onSelected: _jumpTo)),
-              ),
-            SliverPadding(padding: gutter, sliver: RDocSliver(article.content, locator: _locator)),
-            if (article.card.attachments != null)
-              SliverPadding(
-                padding: gutter.copyWith(bottom: ReadInSpace.s4),
-                sliver: SliverToBoxAdapter(child: ArticleAttachmentsView(article: article.card)),
-              ),
-            if (article.tags.isNotEmpty)
-              SliverPadding(
-                padding: gutter.copyWith(top: ReadInSpace.s4),
-                sliver: SliverToBoxAdapter(child: ArticleTags(tags: article.tags)),
-              ),
-            SliverPadding(
-              padding: gutter.copyWith(top: ReadInSpace.s4, bottom: ReadInSpace.s8),
-              sliver: SliverToBoxAdapter(child: SourcesSection(sources: article.sources, onOpen: openExternalLink)),
-            ),
+            // The end-of-article sections, each its own block a gap under the last.
             ...widget.trailing,
+            const SliverToBoxAdapter(child: SizedBox(height: ReadInSpace.s6)),
           ],
         ),
       ),
@@ -546,30 +583,34 @@ class _ReaderBodyState extends State<ReaderBody> {
   }
 }
 
+/// The article's block while it loads (static, so "reduce motion" is respected).
 class _ReaderSkeleton extends StatelessWidget {
   const _ReaderSkeleton();
 
   @override
-  Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.all(ReadInSpace.s5),
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          const SkeletonBox(width: 80, height: 18),
-          const SizedBox(height: ReadInSpace.s4),
-          const SkeletonBox(height: 26),
-          const SizedBox(height: ReadInSpace.s2),
-          const SkeletonBox(width: 220, height: 26),
-          const SizedBox(height: ReadInSpace.s5),
-          const Row(children: [
-            SkeletonBox(width: 36, height: 36, radius: 18),
-            SizedBox(width: ReadInSpace.s2),
-            SkeletonBox(width: 140),
-          ]),
-          const SizedBox(height: ReadInSpace.s6),
-          for (var i = 0; i < 8; i++) ...[
-            SkeletonBox(width: i.isEven ? double.infinity : 260),
-            const SizedBox(height: ReadInSpace.s3),
+  Widget build(BuildContext context) => PageBlock(
+        margin: const EdgeInsets.only(top: PageBlock.gap),
+        child: ListView(
+          padding: const EdgeInsets.all(ReadInSpace.s5),
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            const SkeletonBox(width: 80, height: 18),
+            const SizedBox(height: ReadInSpace.s4),
+            const SkeletonBox(height: 26),
+            const SizedBox(height: ReadInSpace.s2),
+            const SkeletonBox(width: 220, height: 26),
+            const SizedBox(height: ReadInSpace.s5),
+            const Row(children: [
+              SkeletonBox(width: 36, height: 36, radius: 18),
+              SizedBox(width: ReadInSpace.s2),
+              SkeletonBox(width: 140),
+            ]),
+            const SizedBox(height: ReadInSpace.s6),
+            for (var i = 0; i < 8; i++) ...[
+              SkeletonBox(width: i.isEven ? double.infinity : 260),
+              const SizedBox(height: ReadInSpace.s3),
+            ],
           ],
-        ],
+        ),
       );
 }

@@ -115,7 +115,7 @@ class ReadInColors extends ThemeExtension<ReadInColors> {
     accent: Color(0xFFF2A93B),
     onAccent: Color(0xFF1A1A1A),
     accentContainer: Color(0xFFFFF3D9),
-    bg: Color(0xFFFAF8F4),
+    bg: Color(0xFFF4F2EE),
     surface: Color(0xFFFFFFFF),
     surfaceVariant: Color(0xFFF3F0EA),
     surfaceRaised: Color(0xFFFFFFFF),

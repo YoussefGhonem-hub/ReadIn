@@ -67,12 +67,13 @@ void main() {
         ];
 
     testWidgets('own profile ${variant.name}', (tester) async {
-      await pump(tester, variant, [...appStores(), ...profileScreen(ownProfile, articles: articlesBy(ownProfile))], const ProfileView(isTab: true));
+      // Tall enough to show the tab's post cards under the top block and the reading stats.
+      await pump(tester, variant, [...appStores(), ...profileScreen(ownProfile, articles: articlesBy(ownProfile))], const ProfileView(isTab: true), height: 1900);
       await expectLater(find.byType(ProfileView), matchesVariantGolden(variant, 'goldens/profile_own_${variant.name}.png'));
     });
 
     testWidgets('other profile ${variant.name}', (tester) async {
-      await pump(tester, variant, [...appStores(), ...profileScreen(otherProfile, articles: articlesBy(otherProfile))], const ProfileView());
+      await pump(tester, variant, [...appStores(), ...profileScreen(otherProfile, articles: articlesBy(otherProfile))], const ProfileView(), height: 1900);
       await expectLater(find.byType(ProfileView), matchesVariantGolden(variant, 'goldens/profile_other_${variant.name}.png'));
     });
 

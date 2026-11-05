@@ -12,6 +12,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
@@ -25,7 +26,8 @@ import '../cubit/category_cubits.dart';
 /// A writer's category page (F31, guests allowed): `/u/{username}/c/{slug}`, the category's name, its article count and
 /// its writer, then its articles readers can see, newest first, as post cards (F34) with pull to refresh and infinite
 /// scroll. `_other` is "مقالات تانية", the writer's articles without a category. An unknown slug (a moderator's clear
-/// changes it) shows "This category doesn't exist" with a way to the writer's profile.
+/// changes it) shows "This category doesn't exist" with a way to the writer's profile. The header is a block on the
+/// canvas, a gap above the post cards.
 class CategoryPage extends StatelessWidget {
   const CategoryPage({super.key, required this.username, required this.slug});
 
@@ -73,9 +75,13 @@ class CategoryView extends StatelessWidget {
           ),
           body: switch (header.status) {
             CategoryLoadStatus.loading => const _CategorySkeleton(),
-            CategoryLoadStatus.failure when header.writerNotFound => const _WriterNotFound(),
-            CategoryLoadStatus.failure when header.notFound => _CategoryNotFound(username: username),
-            CategoryLoadStatus.failure => ErrorView(failure: header.failure!, onRetry: () => _retry(context)),
+            CategoryLoadStatus.failure when header.writerNotFound => const PageBlock(margin: _blockGap, child: _WriterNotFound()),
+            CategoryLoadStatus.failure when header.notFound =>
+              PageBlock(margin: _blockGap, child: _CategoryNotFound(username: username)),
+            CategoryLoadStatus.failure => PageBlock(
+                margin: _blockGap,
+                child: ErrorView(failure: header.failure!, onRetry: () => _retry(context)),
+              ),
             CategoryLoadStatus.ready => _CategoryContent(page: header.page!),
           },
         ),
@@ -141,7 +147,9 @@ class _CategoryContent extends StatelessWidget {
               key: PageStorageKey('category-${page.author.username}-${page.slug}'),
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                SliverToBoxAdapter(child: CategoryHeader(page: page)),
+                SliverToBoxAdapter(child: PageBlock(margin: _blockGap, child: CategoryHeader(page: page))),
+                // A gap under the header; the cards, or the states in a block.
+                const SliverToBoxAdapter(child: SizedBox(height: PageBlock.gap)),
                 ...switch (feed.status) {
                   FeedStatus.loading => [
                       SliverList.list(children: [
@@ -149,18 +157,26 @@ class _CategoryContent extends StatelessWidget {
                       ]),
                     ],
                   FeedStatus.failure when isCategoryNotFound(feed.failure) => [
-                      SliverFillRemaining(hasScrollBody: false, child: _CategoryNotFound(username: page.author.username)),
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: PageBlock(child: _CategoryNotFound(username: page.author.username)),
+                      ),
                     ],
                   FeedStatus.failure => [
-                      SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: feed.failure!, onRetry: cubit.load)),
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: PageBlock(child: ErrorView(failure: feed.failure!, onRetry: cubit.load)),
+                      ),
                     ],
                   FeedStatus.ready when feed.items.isEmpty => [
                       SliverFillRemaining(
                         hasScrollBody: false,
-                        child: EmptyView(
-                          icon: Icons.folder_open_outlined,
-                          title: page.isOther ? l10n.categoryOtherEmptyTitle : l10n.categoryPageEmptyTitle,
-                          body: page.isOther ? l10n.categoryOtherEmptyBody : l10n.categoryPageEmptyBody,
+                        child: PageBlock(
+                          child: EmptyView(
+                            icon: Icons.folder_open_outlined,
+                            title: page.isOther ? l10n.categoryOtherEmptyTitle : l10n.categoryPageEmptyTitle,
+                            body: page.isOther ? l10n.categoryOtherEmptyBody : l10n.categoryPageEmptyBody,
+                          ),
                         ),
                       ),
                     ],
@@ -198,7 +214,7 @@ class CategoryHeader extends StatelessWidget {
     final nameDir = Bidi.detect(name) ?? Directionality.of(context);
     final author = page.author;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, ReadInSpace.s5),
+      padding: const EdgeInsets.fromLTRB(PageBlock.gutter, PageBlock.gutter, PageBlock.gutter, ReadInSpace.s3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -289,7 +305,10 @@ class _ListFooter extends StatelessWidget {
   }
 }
 
-/// The header and two post cards while the page loads (static, so "reduce motion" is respected).
+/// The canvas above a block.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);
+
+/// The header's block and two post cards while the page loads (static, so "reduce motion" is respected).
 class _CategorySkeleton extends StatelessWidget {
   const _CategorySkeleton();
 
@@ -299,8 +318,9 @@ class _CategorySkeleton extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, ReadInSpace.s5),
+            PageBlock(
+              margin: EdgeInsets.symmetric(vertical: PageBlock.gap),
+              padding: EdgeInsets.all(PageBlock.gutter),
               child: Row(
                 children: [
                   SkeletonBox(width: 56, height: 56, radius: ReadInRadius.card),

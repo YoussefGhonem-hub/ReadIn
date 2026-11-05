@@ -246,7 +246,8 @@ class _CountryButton extends StatelessWidget {
       label: context.l10n.countryButtonSemantics(country.name(lang), country.dialCode),
       excludeSemantics: true,
       child: Material(
-        color: colors.surfaceVariant,
+        // On `surface`, like the text inputs beside it.
+        color: colors.surface,
         shape: RoundedRectangleBorder(borderRadius: radius, side: BorderSide(color: hasError ? colors.error : colors.border)),
         child: InkWell(
           onTap: onTap,

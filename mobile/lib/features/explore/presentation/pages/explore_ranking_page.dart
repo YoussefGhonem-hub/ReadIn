@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
@@ -83,6 +84,8 @@ class ExploreRankingView extends StatelessWidget {
                   key: PageStorageKey('explore-${cubit.ranking.path}'),
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
+                    // The first card a gap under the bar, like every block on the canvas.
+                    const SliverToBoxAdapter(child: SizedBox(height: PageBlock.gap)),
                     ...switch (feed.status) {
                       FeedStatus.loading => [
                           SliverList.list(children: [
@@ -93,16 +96,18 @@ class ExploreRankingView extends StatelessWidget {
                       FeedStatus.failure => [
                           SliverFillRemaining(
                             hasScrollBody: false,
-                            child: ErrorView(failure: feed.failure!, onRetry: () => unawaited(cubit.load())),
+                            child: PageBlock(child: ErrorView(failure: feed.failure!, onRetry: () => unawaited(cubit.load()))),
                           ),
                         ],
                       FeedStatus.ready when feed.items.isEmpty || (allHidden && !feed.hasMore) => [
                           SliverFillRemaining(
                             hasScrollBody: false,
-                            child: EmptyView(
-                              icon: Icons.local_fire_department_outlined,
-                              title: emptyTitle,
-                              body: l10n.exploreRankingEmptyBody,
+                            child: PageBlock(
+                              child: EmptyView(
+                                icon: Icons.local_fire_department_outlined,
+                                title: emptyTitle,
+                                body: l10n.exploreRankingEmptyBody,
+                              ),
                             ),
                           ),
                         ],

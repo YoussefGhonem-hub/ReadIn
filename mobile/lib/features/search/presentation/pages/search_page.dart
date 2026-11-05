@@ -12,6 +12,7 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/bidi_text_field.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
 import '../../../follow/presentation/widgets/suggested_writers.dart';
@@ -23,7 +24,8 @@ import '../widgets/search_result_rows.dart';
 
 /// The search screen (F16, guests allowed): the box (searching as you type, Enter at once), the Articles / Writers /
 /// Topics / Tags tabs, the Articles tab's filters, and the device's recent searches while nothing is searched.
-/// Articles show as the compact row (F34). `/search?q=&type=` opens on a query and a tab.
+/// Articles show as the compact row (F34). `/search?q=&type=` opens on a query and a tab. The lists are blocks on the
+/// canvas, rows split by dividers; the Articles filters are a white strip under the bar.
 class SearchPage extends StatelessWidget {
   const SearchPage({super.key, this.initialQuery, this.initialType});
 
@@ -179,29 +181,45 @@ class _IdleView extends StatelessWidget {
     final recent = context.select((SearchCubit c) => c.state.recent);
     final cubit = context.read<SearchCubit>();
     if (recent.isEmpty) {
-      return EmptyView(icon: Icons.search_rounded, title: l10n.searchIdleTitle, body: l10n.searchIdleBody);
+      return PageBlock(
+        margin: _blockGap,
+        child: EmptyView(icon: Icons.search_rounded, title: l10n.searchIdleTitle, body: l10n.searchIdleBody),
+      );
     }
     return ListView(
       key: const ValueKey('search-recent'),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.only(top: ReadInSpace.s2, bottom: ReadInSpace.s6),
+      padding: const EdgeInsets.only(bottom: ReadInSpace.s6),
       children: [
-        Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(ReadInSpace.s5, 0, ReadInSpace.s2, 0),
-          child: Row(
+        // One block: the title and "Clear all", then the searches split by dividers.
+        PageBlock(
+          margin: _blockGap,
+          padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s1),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Semantics(header: true, child: Text(l10n.searchRecentTitle, style: context.textTheme.titleSmall)),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: PageBlock.gutter, end: ReadInSpace.s1),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Semantics(header: true, child: Text(l10n.searchRecentTitle, style: context.textTheme.titleSmall)),
+                    ),
+                    TextButton(
+                      key: const ValueKey('search-recent-clear'),
+                      onPressed: () => unawaited(cubit.clearRecent()),
+                      child: Text(l10n.searchRecentClearAll),
+                    ),
+                  ],
+                ),
               ),
-              TextButton(
-                key: const ValueKey('search-recent-clear'),
-                onPressed: () => unawaited(cubit.clearRecent()),
-                child: Text(l10n.searchRecentClearAll),
-              ),
+              for (final query in recent) ...[
+                const Divider(indent: PageBlock.gutter, endIndent: PageBlock.gutter),
+                _RecentRow(query: query, onPick: onPick),
+              ],
             ],
           ),
         ),
-        for (final query in recent) _RecentRow(query: query, onPick: onPick),
       ],
     );
   }
@@ -218,7 +236,7 @@ class _RecentRow extends StatelessWidget {
     final colors = context.colors;
     return ListTile(
       key: ValueKey('search-recent-$query'),
-      contentPadding: const EdgeInsetsDirectional.only(start: ReadInSpace.s5, end: ReadInSpace.s2),
+      contentPadding: const EdgeInsetsDirectional.only(start: PageBlock.gutter, end: ReadInSpace.s1),
       leading: ExcludeSemantics(child: Icon(Icons.history_rounded, color: colors.textSecondary)),
       // In its own direction ("dir=auto"), at the start of the row.
       title: Align(
@@ -240,6 +258,9 @@ class _RecentRow extends StatelessWidget {
   }
 }
 
+/// The canvas above a block.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);
+
 // ── Tabs ────────────────────────────────────────────────────────────────────
 
 class _ArticlesTab extends StatelessWidget {
@@ -260,6 +281,8 @@ class _ArticlesTab extends StatelessWidget {
         results: results,
         header: const SearchFilterBar(),
         skeleton: const _RowsSkeleton(leading: _SkeletonLeading.thumbnail),
+        // The article rows draw their own top line.
+        divided: false,
         // With filters: say so, and offer to clear them (the query in its own direction, so the quotes stay around it).
         emptyTitle: filtered ? l10n.searchNoResultsFilteredTitle : null,
         emptyTip: filtered ? l10n.searchNoResultsFiltersTip('${Bidi.fsi}$query${Bidi.pdi}') : l10n.searchNoResultsTip,
@@ -323,8 +346,9 @@ class _TagsTab extends StatelessWidget {
   }
 }
 
-/// One tab: [header] (the Articles filters), then the skeleton, an error with retry, "no results" ([emptyTitle], by
-/// default "no results for «q»") with a tip, or the rows with infinite scroll.
+/// One tab: [header] (the Articles filters) in a white strip, then a block a gap under it with the skeleton, an error
+/// with retry, "no results" ([emptyTitle], by default "no results for «q»") with a tip, or the rows with infinite
+/// scroll, split by dividers ([divided]).
 class _ResultsList<T> extends StatelessWidget {
   const _ResultsList({
     super.key,
@@ -336,6 +360,7 @@ class _ResultsList<T> extends StatelessWidget {
     this.emptyTitle,
     this.header,
     this.emptyAction,
+    this.divided = true,
   });
 
   final SearchType type;
@@ -346,6 +371,9 @@ class _ResultsList<T> extends StatelessWidget {
   final String? emptyTitle;
   final Widget? header;
   final Widget? emptyAction;
+
+  /// A divider between two rows; off for rows that draw their own line.
+  final bool divided;
 
   @override
   Widget build(BuildContext context) {
@@ -361,34 +389,51 @@ class _ResultsList<T> extends StatelessWidget {
         key: PageStorageKey('search-${type.name}'),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         slivers: [
-          if (header != null) SliverToBoxAdapter(child: header),
+          if (header != null) SliverToBoxAdapter(child: PageBlock(child: header)),
+          const SliverToBoxAdapter(child: SizedBox(height: PageBlock.gap)),
           ...switch (results.status) {
-            SearchResultsStatus.idle || SearchResultsStatus.loading => [SliverToBoxAdapter(child: skeleton)],
+            SearchResultsStatus.idle || SearchResultsStatus.loading => [SliverToBoxAdapter(child: PageBlock(child: skeleton))],
             SearchResultsStatus.failure => [
-                SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: results.failure!, onRetry: cubit.retry)),
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: PageBlock(child: ErrorView(failure: results.failure!, onRetry: cubit.retry)),
+                ),
               ],
             SearchResultsStatus.ready when results.items.isEmpty => [
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: EmptyView(
-                    key: const ValueKey('search-empty'),
-                    icon: Icons.search_off_rounded,
-                    // The query in its own direction, so the quotes stay around it.
-                    title: emptyTitle ?? context.l10n.searchNoResultsTitle('${Bidi.fsi}$query${Bidi.pdi}'),
-                    body: emptyTip,
-                    action: emptyAction,
+                  child: PageBlock(
+                    child: EmptyView(
+                      key: const ValueKey('search-empty'),
+                      icon: Icons.search_off_rounded,
+                      // The query in its own direction, so the quotes stay around it.
+                      title: emptyTitle ?? context.l10n.searchNoResultsTitle('${Bidi.fsi}$query${Bidi.pdi}'),
+                      body: emptyTip,
+                      action: emptyAction,
+                    ),
                   ),
                 ),
               ],
             SearchResultsStatus.ready => [
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(ReadInSpace.s5, header == null ? ReadInSpace.s2 : 0, ReadInSpace.s5, 0),
-                  sliver: SliverList.builder(
-                    itemCount: results.items.length + 1,
-                    itemBuilder: (context, i) => i < results.items.length
-                        ? itemBuilder(context, results.items[i])
-                        : _Footer(loadingMore: results.loadingMore, failure: results.loadMoreFailure, onRetry: cubit.loadMore),
-                  ),
+                // One block of rows (each row a slice of it, so the list stays lazy), then the footer on the canvas.
+                SliverList.builder(
+                  itemCount: results.items.length + 1,
+                  itemBuilder: (context, i) => i < results.items.length
+                      ? PageBlock(
+                          padding: EdgeInsets.fromLTRB(
+                            PageBlock.gutter,
+                            0,
+                            PageBlock.gutter,
+                            i == results.items.length - 1 ? ReadInSpace.s2 : 0,
+                          ),
+                          child: divided && i > 0
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [const Divider(), itemBuilder(context, results.items[i])],
+                                )
+                              : itemBuilder(context, results.items[i]),
+                        )
+                      : _Footer(loadingMore: results.loadingMore, failure: results.loadMoreFailure, onRetry: cubit.loadMore),
                 ),
               ],
           },
@@ -429,7 +474,7 @@ class _RowsSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         key: const ValueKey('search-skeleton'),
-        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5),
+        padding: PageBlock.gutters,
         child: Column(
           children: [
             for (var i = 0; i < 5; i++)

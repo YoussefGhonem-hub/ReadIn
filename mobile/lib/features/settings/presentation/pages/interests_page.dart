@@ -10,10 +10,12 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../cubit/interests_cubit.dart';
 
-/// Settings → Your interests (F02, F12), signed in only: the onboarding chips, each followed or unfollowed at once.
+/// Settings → Your interests (F02, F12), signed in only: the onboarding chips, each followed or unfollowed at once. The
+/// fields are a white block on the canvas, and each field's topics a block under it.
 class InterestsPage extends StatelessWidget {
   const InterestsPage({super.key});
 
@@ -42,51 +44,63 @@ class InterestsView extends StatelessWidget {
     final l10n = context.l10n;
     final cubit = context.read<InterestsCubit>();
     final lang = Localizations.localeOf(context).languageCode;
+    Widget block(List<Widget> children) => PageBlock(
+          margin: const EdgeInsets.only(top: PageBlock.gap),
+          padding: const EdgeInsets.all(PageBlock.gutter),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+        );
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsInterests)),
       body: BlocBuilder<InterestsCubit, InterestsState>(
         builder: (context, state) {
-          if (state.loading && state.fields.isEmpty) return const Center(child: CircularProgressIndicator());
+          if (state.loading && state.fields.isEmpty) {
+            return const PageBlock(margin: EdgeInsets.only(top: PageBlock.gap), child: Center(child: CircularProgressIndicator()));
+          }
           if (state.failure != null && state.fields.isEmpty) {
-            return ErrorView(failure: state.failure!, onRetry: () => unawaited(cubit.load()));
+            return PageBlock(
+              margin: const EdgeInsets.only(top: PageBlock.gap),
+              child: ErrorView(failure: state.failure!, onRetry: () => unawaited(cubit.load())),
+            );
           }
           return ListView(
-            padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, ReadInSpace.s8),
+            padding: const EdgeInsets.only(bottom: ReadInSpace.s6),
             children: [
-              Text(l10n.interestsPageIntro, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-              const SizedBox(height: ReadInSpace.s2),
-              Text(l10n.interestsSelected(state.count), style: context.textTheme.labelMedium),
-              const SizedBox(height: ReadInSpace.s4),
-              Wrap(
-                spacing: ReadInSpace.s2,
-                runSpacing: ReadInSpace.s2,
-                children: [
-                  for (final field in state.fields)
-                    FilterChip(
-                      label: BidiText(field.nameFor(lang)),
-                      selected: state.fieldIds.contains(field.id),
-                      onSelected: (_) => unawaited(_save(context, cubit.toggleField(field))),
-                    ),
-                ],
-              ),
+              block([
+                Text(l10n.interestsPageIntro, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+                const SizedBox(height: ReadInSpace.s2),
+                Text(l10n.interestsSelected(state.count), style: context.textTheme.labelMedium),
+                const SizedBox(height: ReadInSpace.s4),
+                Wrap(
+                  spacing: ReadInSpace.s2,
+                  runSpacing: ReadInSpace.s2,
+                  children: [
+                    for (final field in state.fields)
+                      FilterChip(
+                        label: BidiText(field.nameFor(lang)),
+                        selected: state.fieldIds.contains(field.id),
+                        onSelected: (_) => unawaited(_save(context, cubit.toggleField(field))),
+                      ),
+                  ],
+                ),
+              ]),
               for (final field in state.fields.where(state.showsTopicsOf))
-                if ((state.topics[field.id] ?? const []).isNotEmpty) ...[
-                  const SizedBox(height: ReadInSpace.s5),
-                  BidiText(field.nameFor(lang), style: context.textTheme.titleSmall),
-                  const SizedBox(height: ReadInSpace.s2),
-                  Wrap(
-                    spacing: ReadInSpace.s2,
-                    runSpacing: ReadInSpace.s2,
-                    children: [
-                      for (final topic in state.topics[field.id]!)
-                        FilterChip(
-                          label: BidiText(topic.nameFor(lang)),
-                          selected: state.topicIds.contains(topic.id),
-                          onSelected: (_) => unawaited(_save(context, cubit.toggleTopic(topic))),
-                        ),
-                    ],
-                  ),
-                ],
+                if ((state.topics[field.id] ?? const []).isNotEmpty)
+                  block([
+                    BidiText(field.nameFor(lang), style: context.textTheme.titleSmall),
+                    const SizedBox(height: ReadInSpace.s2),
+                    Wrap(
+                      spacing: ReadInSpace.s2,
+                      runSpacing: ReadInSpace.s2,
+                      children: [
+                        for (final topic in state.topics[field.id]!)
+                          FilterChip(
+                            label: BidiText(topic.nameFor(lang)),
+                            selected: state.topicIds.contains(topic.id),
+                            onSelected: (_) => unawaited(_save(context, cubit.toggleTopic(topic))),
+                          ),
+                      ],
+                    ),
+                  ]),
             ],
           );
         },

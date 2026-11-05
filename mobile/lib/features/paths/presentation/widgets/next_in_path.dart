@@ -9,6 +9,7 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
 import '../../domain/entities/learning_path.dart';
@@ -101,8 +102,9 @@ class _NextInPathBlockState extends State<NextInPathBlock> {
         builder: (context, state) {
           final articlePath = state.articlePath;
           if (state.status != ArticlePathStatus.ready || articlePath == null) return const SizedBox.shrink();
+          // Its own block, a gap under the article's.
           return Padding(
-            padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, 0, ReadInSpace.s5, ReadInSpace.s8),
+            padding: const EdgeInsets.only(top: PageBlock.gap),
             child: NextInPathCard(
               articlePath: articlePath,
               joining: state.joining,
@@ -115,8 +117,9 @@ class _NextInPathBlockState extends State<NextInPathBlock> {
       );
 }
 
-/// What the block shows: "From the path: …", "{position} of {total}" and the progress, then the next article (or
-/// "this is the last one" and the completion), and "Join path" when the viewer isn't enrolled.
+/// The block itself, a white [PageBlock] on the canvas: "From the path: …", "{position} of {total}" and the progress,
+/// then the next article (or "this is the last one" and the completion), and "Join path" when the viewer isn't
+/// enrolled.
 class NextInPathCard extends StatelessWidget {
   const NextInPathCard({
     super.key,
@@ -140,13 +143,8 @@ class NextInPathCard extends StatelessWidget {
     final path = articlePath.path;
     final progress = path.progress;
     final next = articlePath.next;
-    return Container(
-      padding: const EdgeInsets.all(ReadInSpace.s4),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(ReadInRadius.card),
-        border: Border.all(color: colors.border),
-      ),
+    return PageBlock(
+      padding: const EdgeInsets.all(PageBlock.gutter),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

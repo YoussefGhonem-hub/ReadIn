@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
@@ -38,8 +39,6 @@ class ExploreView extends StatelessWidget {
   /// The rows a ranking shows here; "See all" has the rest.
   static const previewCount = 3;
 
-  static const _gutter = ReadInSpace.s5;
-
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<ExploreCubit>();
@@ -59,30 +58,36 @@ class ExploreView extends StatelessWidget {
               child: CustomScrollView(
                 key: const PageStorageKey('explore'),
                 physics: const AlwaysScrollableScrollPhysics(),
+                // Every section is a full-width block on the canvas, a gap apart (LinkedIn style); the loading,
+                // error and empty states too.
                 slivers: [
-                  const SliverToBoxAdapter(child: SizedBox(height: ReadInSpace.s2)),
                   ...switch (state.status) {
                     ExploreStatus.loading => [const SliverToBoxAdapter(child: _ExploreSkeleton())],
                     ExploreStatus.failure => [
                         SliverFillRemaining(
                           hasScrollBody: false,
-                          child: ErrorView(failure: state.failure!, onRetry: () => unawaited(cubit.load())),
+                          child: PageBlock(
+                            margin: _blockGap,
+                            child: ErrorView(failure: state.failure!, onRetry: () => unawaited(cubit.load())),
+                          ),
                         ),
                       ],
                     ExploreStatus.ready when state.sections.isEmpty => [
                         SliverFillRemaining(
                           hasScrollBody: false,
-                          child: EmptyView(
-                            icon: Icons.explore_outlined,
-                            title: context.l10n.exploreEmptyTitle,
-                            body: context.l10n.exploreEmptyBody,
+                          child: PageBlock(
+                            margin: _blockGap,
+                            child: EmptyView(
+                              icon: Icons.explore_outlined,
+                              title: context.l10n.exploreEmptyTitle,
+                              body: context.l10n.exploreEmptyBody,
+                            ),
                           ),
                         ),
                       ],
                     ExploreStatus.ready => [
-                        // Each section keeps the gutter itself: the writers' rail runs to the screen's edges.
                         SliverPadding(
-                          padding: const EdgeInsets.only(bottom: ReadInSpace.s7),
+                          padding: const EdgeInsets.only(bottom: ReadInSpace.s6),
                           sliver: SliverList.list(children: _sections(context, state.sections)),
                         ),
                       ],
@@ -99,89 +104,126 @@ class ExploreView extends StatelessWidget {
   static List<Widget> _sections(BuildContext context, ExploreSections sections) {
     final l10n = context.l10n;
     void push(String location) => unawaited(GoRouter.maybeOf(context)?.push<void>(location));
-    Widget padded(Widget child) => Padding(padding: const EdgeInsets.symmetric(horizontal: _gutter), child: child);
-    const gap = SizedBox(height: ReadInSpace.s5);
+    Widget padded(Widget child) => Padding(padding: PageBlock.gutters, child: child);
     return [
-      if (sections.fields.isNotEmpty) ...[
-        padded(ExploreSectionHeader(title: l10n.exploreFields)),
-        const SizedBox(height: ReadInSpace.s1),
-        padded(FieldsGrid(key: const ValueKey('explore-fields'), fields: sections.fields)),
-        gap,
-      ],
+      if (sections.fields.isNotEmpty)
+        _SectionBlock(
+          header: ExploreSectionHeader(title: l10n.exploreFields),
+          children: [padded(FieldsGrid(key: const ValueKey('explore-fields'), fields: sections.fields))],
+        ),
       for (final (ranking, cards, title) in [
         (ExploreRanking.trending, sections.trending, l10n.exploreTrending),
         (ExploreRanking.mostSaved, sections.mostSaved, l10n.exploreMostSaved),
       ])
-        if (cards.isNotEmpty) ...[
-          padded(ExploreSectionHeader(
-            title: title,
-            seeAllKey: ValueKey('explore-see-all-${ranking.path}'),
-            onSeeAll: () => push(ExploreRoutes.ranking(ranking)),
-          )),
-          for (final card in cards.take(previewCount)) padded(ExploreArticleRow(article: card)),
-          gap,
-        ],
-      if (sections.newWriters.isNotEmpty) ...[
-        padded(ExploreSectionHeader(title: l10n.exploreNewWriters)),
-        WriterRail(
-          key: const ValueKey('explore-new-writers'),
-          users: sections.newWriters,
-          label: l10n.exploreNewWriters,
-          keyPrefix: 'explore-writer',
-          padding: const EdgeInsets.symmetric(horizontal: _gutter),
-        ),
-        gap,
-      ],
-      // No featured path: the section is hidden like any other (Home and the profile lead to /paths).
-      if (sections.featuredPaths.isNotEmpty) ...[
-        padded(ExploreSectionHeader(
-          title: l10n.exploreFeaturedPaths,
-          seeAllKey: const ValueKey('explore-see-all-paths'),
-          onSeeAll: () => push(PathRoutes.list),
-        )),
-        const SizedBox(height: ReadInSpace.s1),
-        for (final path in sections.featuredPaths)
-          padded(Padding(
-            padding: const EdgeInsets.only(bottom: ReadInSpace.s3),
-            child: PathCardTile(
-              key: ValueKey('explore-path-${path.slug}'),
-              path: path,
-              onTap: () => push(PathRoutes.of(path.slug)),
+        if (cards.isNotEmpty)
+          // The rows split by their own top lines.
+          _SectionBlock(
+            header: ExploreSectionHeader(
+              title: title,
+              seeAllKey: ValueKey('explore-see-all-${ranking.path}'),
+              onSeeAll: () => push(ExploreRoutes.ranking(ranking)),
             ),
-          )),
-      ],
+            children: [for (final card in cards.take(previewCount)) padded(ExploreArticleRow(article: card))],
+          ),
+      if (sections.newWriters.isNotEmpty)
+        _SectionBlock(
+          header: ExploreSectionHeader(title: l10n.exploreNewWriters),
+          children: [
+            // The rail runs to the screen's edges.
+            WriterRail(
+              key: const ValueKey('explore-new-writers'),
+              users: sections.newWriters,
+              label: l10n.exploreNewWriters,
+              keyPrefix: 'explore-writer',
+              padding: PageBlock.gutters,
+            ),
+          ],
+        ),
+      // No featured path: the section is hidden like any other (Home and the profile lead to /paths).
+      if (sections.featuredPaths.isNotEmpty)
+        _SectionBlock(
+          header: ExploreSectionHeader(
+            title: l10n.exploreFeaturedPaths,
+            seeAllKey: const ValueKey('explore-see-all-paths'),
+            onSeeAll: () => push(PathRoutes.list),
+          ),
+          children: [
+            for (final path in sections.featuredPaths) ...[
+              const Divider(indent: PageBlock.gutter, endIndent: PageBlock.gutter),
+              PathCardTile(
+                key: ValueKey('explore-path-${path.slug}'),
+                path: path,
+                onTap: () => push(PathRoutes.of(path.slug)),
+              ),
+            ],
+          ],
+        ),
     ];
   }
 }
 
-/// Every section's shape while Explore loads.
+/// The canvas above a block.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);
+
+/// A section of Explore: its title row (and "See all") at the top of a block, then [children].
+class _SectionBlock extends StatelessWidget {
+  const _SectionBlock({required this.header, required this.children});
+
+  final Widget header;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => PageBlock(
+        margin: _blockGap,
+        padding: const EdgeInsets.only(top: ReadInSpace.s1, bottom: ReadInSpace.s2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // "See all" lines its text up with the gutter.
+            Padding(padding: const EdgeInsetsDirectional.only(start: PageBlock.gutter, end: ReadInSpace.s1), child: header),
+            ...children,
+          ],
+        ),
+      );
+}
+
+/// Every section's shape while Explore loads, in its block.
 class _ExploreSkeleton extends StatelessWidget {
   const _ExploreSkeleton();
-
-  static const _padding = EdgeInsets.symmetric(horizontal: ExploreView._gutter);
 
   @override
   Widget build(BuildContext context) => Column(
         key: const ValueKey('explore-skeleton'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: _padding,
+          PageBlock(
+            margin: _blockGap,
+            padding: PageBlock.gutters,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [ExploreSkeletons.title, ExploreSkeletons.fields()],
+            ),
+          ),
+          PageBlock(
+            margin: _blockGap,
+            padding: PageBlock.gutters,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [ExploreSkeletons.title, ExploreSkeletons.rows()],
+            ),
+          ),
+          PageBlock(
+            margin: _blockGap,
+            padding: const EdgeInsets.only(bottom: ReadInSpace.s3),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ExploreSkeletons.title,
-                ExploreSkeletons.fields(),
-                const SizedBox(height: ReadInSpace.s3),
-                ExploreSkeletons.title,
-                ExploreSkeletons.rows(),
-                const SizedBox(height: ReadInSpace.s3),
-                ExploreSkeletons.title,
+                const Padding(padding: PageBlock.gutters, child: ExploreSkeletons.title),
+                // The writers' rail runs to the screen's edges.
+                ExploreSkeletons.writers(padding: PageBlock.gutters),
               ],
             ),
           ),
-          // The writers' rail runs to the screen's edges.
-          ExploreSkeletons.writers(padding: _padding),
         ],
       );
 }

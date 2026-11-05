@@ -51,7 +51,12 @@ class _SuggestedWritersListState extends State<SuggestedWritersList> {
                 padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s3),
                 child: Text(l10n.suggestedWritersEmpty, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
               ),
-            SuggestedWritersStatus.ready => Column(children: [for (final user in state.users) WriterTile(user: user)]),
+            // One row each, split by dividers.
+            SuggestedWritersStatus.ready => Column(
+                children: [
+                  for (final (i, user) in state.users.indexed) ...[if (i > 0) const Divider(), WriterTile(user: user)],
+                ],
+              ),
           },
         ],
       ),

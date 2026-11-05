@@ -73,7 +73,7 @@ class SearchFilterBar extends StatelessWidget {
       height: height,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s2),
+        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s4, vertical: ReadInSpace.s2),
         children: [
           // Without the fields (still loading, or offline) there is nothing to choose from.
           if (fields.isNotEmpty || fieldLabel != null)

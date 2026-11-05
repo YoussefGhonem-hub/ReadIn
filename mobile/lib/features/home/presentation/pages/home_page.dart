@@ -10,6 +10,7 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/domain/entities/article.dart';
 import '../../../article/presentation/cubit/engagement_cubit.dart';
@@ -35,6 +36,9 @@ import '../widgets/app_top_bar.dart';
 import '../widgets/continue_reading_card.dart';
 import '../widgets/home_side_column.dart';
 import '../widgets/start_post_card.dart';
+
+/// The canvas between two of Home's blocks, above the lower one.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);
 
 /// The two feeds of Home (F03): "For you" and "Following" (F12).
 enum HomeFeedTab { forYou, following }
@@ -84,8 +88,6 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  static const _gutter = ReadInSpace.s5;
-
   late HomeFeedTab _tab = widget.initialTab;
   StreamSubscription<FollowChange>? _followChanges;
 
@@ -244,17 +246,31 @@ class _HomeViewState extends State<HomeView> {
               onRefresh: _refresh,
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
+                // LinkedIn-style blocks on the canvas, [PageBlock.gap] apart: the greeting with "Start a post", Today's
+                // article, the progress cards, the tabs with their chips, then the post cards (F34).
                 slivers: [
-                  const SliverPadding(
-                    padding: EdgeInsets.fromLTRB(_gutter, ReadInSpace.s4, _gutter, ReadInSpace.s4),
-                    sliver: SliverToBoxAdapter(child: _HomeHeader()),
-                  ),
-                  // "Start a post" (signed-in writers): the editor, one tap away.
-                  if (me != null && me.canWrite)
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(_gutter, 0, _gutter, ReadInSpace.s4),
-                      sliver: SliverToBoxAdapter(child: StartPostCard(me: me)),
+                  SliverToBoxAdapter(
+                    child: PageBlock(
+                      margin: const EdgeInsets.only(top: PageBlock.gap),
+                      padding: EdgeInsets.fromLTRB(
+                        PageBlock.gutter,
+                        ReadInSpace.s4,
+                        PageBlock.gutter,
+                        me != null && me.canWrite ? ReadInSpace.s1 : ReadInSpace.s4,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const _HomeHeader(),
+                          // "Start a post" (signed-in writers): the editor, one tap away.
+                          if (me != null && me.canWrite) ...[
+                            const SizedBox(height: ReadInSpace.s4),
+                            StartPostCard(me: me),
+                          ],
+                        ],
+                      ),
                     ),
+                  ),
                   // Today's article (F07) as a post card under its label, full width (F34).
                   SliverToBoxAdapter(
                     child: EngagementSeeder<HomeCubit, HomeState>(
@@ -262,41 +278,55 @@ class _HomeViewState extends State<HomeView> {
                       child: BlocBuilder<HomeCubit, HomeState>(
                         buildWhen: (a, b) => (a.loading, a.today) != (b.loading, b.today),
                         builder: (context, state) {
-                          if (state.loading) return const PostCardSkeleton();
+                          if (state.loading) return const Padding(padding: _blockGap, child: PostCardSkeleton());
                           final today = state.today;
                           if (today == null) return const SizedBox.shrink();
                           // Muting its writer, field or topic, or "show less", folds it away (F28).
-                          return MuteGate(
-                            article: today,
-                            child: _LiveArticleTile(
+                          return Padding(
+                            padding: _blockGap,
+                            child: MuteGate(
                               article: today,
-                              label: context.l10n.todayArticle,
-                              onTap: () => _open(today.slug),
+                              child: _LiveArticleTile(
+                                article: today,
+                                label: context.l10n.todayArticle,
+                                onTap: () => _open(today.slug),
+                              ),
                             ),
                           );
                         },
                       ),
                     ),
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: _gutter),
-                    sliver: SliverToBoxAdapter(child: _ProgressCards(onPush: (location) => unawaited(_push(location)))),
+                  SliverToBoxAdapter(child: _ProgressCards(onPush: (location) => unawaited(_push(location)))),
+                  SliverToBoxAdapter(
+                    child: PageBlock(
+                      margin: _blockGap,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Padding(
+                            padding: PageBlock.gutters,
+                            child: _FeedTabs(selected: _tab, onSelected: _selectTab),
+                          ),
+                          // The tabs' line, under the selected one's underline; For you's field chips below it.
+                          const Divider(),
+                          if (_tab == HomeFeedTab.forYou) const _FieldFilterBar(),
+                        ],
+                      ),
+                    ),
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(_gutter, ReadInSpace.s4, _gutter, 0),
-                    sliver: SliverToBoxAdapter(child: _FeedTabs(selected: _tab, onSelected: _selectTab)),
-                  ),
-                  if (_tab == HomeFeedTab.forYou) ...[
-                    const SliverToBoxAdapter(child: _FieldFilterBar()),
+                  if (_tab == HomeFeedTab.forYou)
                     _ArticleFeedSliver<FeedCubit>(
                       onOpen: _open,
                       empty: EmptyView(title: context.l10n.feedEmptyTitle, body: context.l10n.feedEmptyBody),
                       after: (index) => _afterCard(index, signedIn: signedIn, wide: wide),
-                    ),
-                  ] else if (!signedIn)
-                    const SliverFillRemaining(hasScrollBody: false, child: _FollowingGuest())
-                  else ...[
-                    const SliverToBoxAdapter(child: SizedBox(height: ReadInSpace.s3)),
+                    )
+                  else if (!signedIn)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: PageBlock(margin: _blockGap, child: _FollowingGuest()),
+                    )
+                  else
                     _ArticleFeedSliver<FollowingFeedCubit>(
                       onOpen: _open,
                       emptyFillsRemaining: false,
@@ -304,7 +334,6 @@ class _HomeViewState extends State<HomeView> {
                         onShowArticles: _followingStale ? _showFollowedArticles : null,
                       ),
                     ),
-                  ],
                 ],
               ),
             ),
@@ -368,18 +397,20 @@ class _ProgressCards extends StatelessWidget {
           final resume = state.resume;
           final path = state.activePath;
           final suggested = state.suggestedPath;
+          // Each its own block, a gap under the one above.
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (state.today != null) const SizedBox(height: ReadInSpace.s4),
-              if (resume != null) ...[
-                ContinueReadingCard(
-                  item: resume,
-                  // The version they were reading; the reader resumes from their last position.
-                  onTap: () => onPush(Uri(path: '/a/${resume.article.slug}', queryParameters: {'lang': resume.language}).toString()),
+              if (resume != null)
+                Padding(
+                  padding: _blockGap,
+                  child: ContinueReadingCard(
+                    item: resume,
+                    // The version they were reading; the reader resumes from their last position.
+                    onTap: () => onPush(Uri(path: '/a/${resume.article.slug}', queryParameters: {'lang': resume.language}).toString()),
+                  ),
                 ),
-                const SizedBox(height: ReadInSpace.s3),
-              ],
+              const SizedBox(height: PageBlock.gap),
               if (path != null)
                 ActivePathCard(
                   path: path,
@@ -411,8 +442,9 @@ class _FeedSuggestedPath extends StatelessWidget {
   Widget build(BuildContext context) {
     final (active, suggested) = context.select((HomeCubit c) => (c.state.activePath, c.state.suggestedPath));
     if (active == null || suggested == null) return const SizedBox.shrink();
+    // A block between the post cards, like them (F34).
     return Padding(
-      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, ReadInSpace.s2 + postCardGap),
+      padding: const EdgeInsets.only(bottom: postCardGap),
       child: SuggestedPathCard(
         key: const ValueKey('feed-suggested-path'),
         path: suggested,
@@ -505,36 +537,43 @@ class _ArticleFeedSliver<C extends ArticleFeedCubit> extends StatelessWidget {
           // Mutes and "show less" can fold away every card loaded (F28): then the next page loads by itself, and once
           // none is left the list says it's empty.
           final allHidden = mutesHideAll(context, feed.items);
+          // A gap under the tabs' block; the error and empty states are blocks too.
           return switch (feed.status) {
-            FeedStatus.loading => const SliverToBoxAdapter(child: _FeedSkeleton()),
+            FeedStatus.loading => const SliverToBoxAdapter(child: Padding(padding: _blockGap, child: _FeedSkeleton())),
             FeedStatus.failure => SliverFillRemaining(
                 hasScrollBody: false,
-                child: ErrorView(
-                  failure: feed.failure!,
-                  compact: true,
-                  onRetry: () => context.read<C>().load(fieldSlug: feed.fieldSlug),
+                child: PageBlock(
+                  margin: _blockGap,
+                  child: ErrorView(
+                    failure: feed.failure!,
+                    compact: true,
+                    onRetry: () => context.read<C>().load(fieldSlug: feed.fieldSlug),
+                  ),
                 ),
               ),
             FeedStatus.ready when feed.items.isEmpty || (allHidden && !feed.hasMore) => emptyFillsRemaining
-                ? SliverFillRemaining(hasScrollBody: false, child: empty)
-                : SliverToBoxAdapter(child: empty),
+                ? SliverFillRemaining(hasScrollBody: false, child: PageBlock(margin: _blockGap, child: empty))
+                : SliverToBoxAdapter(child: PageBlock(margin: _blockGap, child: empty)),
             // Post cards full width, one after another on the background (F34).
-            FeedStatus.ready => SliverList.builder(
-                itemCount: feed.items.length + 1,
-                itemBuilder: (context, i) => i < feed.items.length
-                    ? _card(feed, i)
-                    : LoadMoreWhileHidden(
-                        active: allHidden && !feed.loadingMore && feed.loadMoreFailure == null,
-                        onLoadMore: () => unawaited(context.read<C>().loadMore()),
-                        child: _FeedFooter(state: feed, onRetry: context.read<C>().loadMore),
-                      ),
+            FeedStatus.ready => SliverPadding(
+                padding: _blockGap,
+                sliver: SliverList.builder(
+                  itemCount: feed.items.length + 1,
+                  itemBuilder: (context, i) => i < feed.items.length
+                      ? _card(feed, i)
+                      : LoadMoreWhileHidden(
+                          active: allHidden && !feed.loadingMore && feed.loadMoreFailure == null,
+                          onLoadMore: () => unawaited(context.read<C>().loadMore()),
+                          child: _FeedFooter(state: feed, onRetry: context.read<C>().loadMore),
+                        ),
+                ),
               ),
           };
         },
       );
 }
 
-/// The Following tab with nobody followed yet: suggested writers to follow (F12).
+/// The Following tab with nobody followed yet: suggested writers to follow (F12). Home shows it in a block.
 class FollowingEmptyView extends StatelessWidget {
   const FollowingEmptyView({super.key, this.onShowArticles});
 
@@ -546,7 +585,7 @@ class FollowingEmptyView extends StatelessWidget {
     final l10n = context.l10n;
     final colors = context.colors;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, ReadInSpace.s6),
+      padding: const EdgeInsets.fromLTRB(PageBlock.gutter, PageBlock.gutter, PageBlock.gutter, ReadInSpace.s5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -707,7 +746,7 @@ class _FieldFilterBar extends StatelessWidget {
       height: 64,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5, vertical: ReadInSpace.s3),
+        padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s3),
         children: [
           chip(context.l10n.filterAll, null),
           for (final f in fields) chip(f.nameFor(lang), f.slug),

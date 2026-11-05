@@ -11,6 +11,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
@@ -20,7 +21,7 @@ import '../cubit/path_details_cubit.dart';
 import '../widgets/path_widgets.dart';
 
 /// A learning path (F09, guests allowed): header, the primary action (start · continue · read again), "Leave path"
-/// in the menu, and the ordered articles with read ticks.
+/// in the menu, and the ordered articles with read ticks. The header and the articles are two blocks on the canvas.
 class PathPage extends StatelessWidget {
   const PathPage({super.key, required this.slug});
 
@@ -109,14 +110,20 @@ class PathView extends StatelessWidget {
             ),
             body: switch (state.status) {
               PathDetailsStatus.loading => const _PathSkeleton(),
-              PathDetailsStatus.failure when state.notFound => EmptyView(
-                  icon: Icons.route_outlined,
-                  title: l10n.pathNotFoundTitle,
-                  body: l10n.pathNotFoundBody,
+              PathDetailsStatus.failure when state.notFound => PageBlock(
+                  margin: _blockGap,
+                  child: EmptyView(
+                    icon: Icons.route_outlined,
+                    title: l10n.pathNotFoundTitle,
+                    body: l10n.pathNotFoundBody,
+                  ),
                 ),
-              PathDetailsStatus.failure => ErrorView(
-                  failure: state.failure!,
-                  onRetry: () => context.read<PathDetailsCubit>().refresh(),
+              PathDetailsStatus.failure => PageBlock(
+                  margin: _blockGap,
+                  child: ErrorView(
+                    failure: state.failure!,
+                    onRetry: () => context.read<PathDetailsCubit>().refresh(),
+                  ),
                 ),
               PathDetailsStatus.ready => RefreshIndicator(
                   onRefresh: context.read<PathDetailsCubit>().refresh,
@@ -149,18 +156,35 @@ class _PathContent extends StatelessWidget {
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, ReadInSpace.s4),
-          sliver: SliverToBoxAdapter(child: _PathHeader(details: details, busy: busy, onStart: onStart, onOpen: onOpen)),
+        SliverToBoxAdapter(
+          child: PageBlock(
+            margin: _blockGap,
+            padding: const EdgeInsets.all(PageBlock.gutter),
+            child: _PathHeader(details: details, busy: busy, onStart: onStart, onOpen: onOpen),
+          ),
         ),
+        // The articles in order, in one block under its title; the rows split by their own top lines.
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, 0, ReadInSpace.s5, ReadInSpace.s6),
-          sliver: SliverList.builder(
-            itemCount: details.items.length,
-            itemBuilder: (context, i) {
-              final item = details.items[i];
-              return _PathItemRow(item: item, isNext: item.article.id == nextId, onTap: () => onOpen(item.article.slug));
-            },
+          padding: const EdgeInsets.only(bottom: ReadInSpace.s6),
+          sliver: SliverToBoxAdapter(
+            child: PageBlock(
+              margin: _blockGap,
+              padding: const EdgeInsets.fromLTRB(PageBlock.gutter, ReadInSpace.s3, PageBlock.gutter, ReadInSpace.s2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: ReadInSpace.s2),
+                    child: Semantics(
+                      header: true,
+                      child: Text(context.l10n.pathArticleCount(details.items.length), style: context.textTheme.titleMedium),
+                    ),
+                  ),
+                  for (final item in details.items)
+                    _PathItemRow(item: item, isNext: item.article.id == nextId, onTap: () => onOpen(item.article.slug)),
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -288,7 +312,7 @@ class _PathItemRow extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: ReadInSpace.s1),
       padding: const EdgeInsetsDirectional.fromSTEB(ReadInSpace.s2, ReadInSpace.s2, ReadInSpace.s2, 0),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(colors.primary.withValues(alpha: 0.06), colors.bg),
+        color: Color.alphaBlend(colors.primary.withValues(alpha: 0.06), colors.surface),
         borderRadius: BorderRadius.circular(ReadInRadius.md),
         border: Border.all(color: colors.primary.withValues(alpha: 0.4)),
       ),
@@ -341,43 +365,62 @@ class _PositionMarker extends StatelessWidget {
   }
 }
 
+/// The canvas above a block.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);
+
+/// The header's block and the articles' block while the path loads.
 class _PathSkeleton extends StatelessWidget {
   const _PathSkeleton();
 
   @override
   Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.all(ReadInSpace.s5),
         physics: const NeverScrollableScrollPhysics(),
         children: [
-          const SkeletonBox(height: 148, radius: ReadInRadius.card),
-          const SizedBox(height: ReadInSpace.s4),
-          const SkeletonBox(width: 80),
-          const SizedBox(height: ReadInSpace.s3),
-          const SkeletonBox(height: 24),
-          const SizedBox(height: ReadInSpace.s2),
-          const SkeletonBox(width: 220, height: 24),
-          const SizedBox(height: ReadInSpace.s4),
-          const SkeletonBox(height: 44, radius: ReadInRadius.chip),
-          const SizedBox(height: ReadInSpace.s5),
-          for (var i = 0; i < 3; i++)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: ReadInSpace.s3),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(padding: EdgeInsets.only(top: 18), child: SkeletonBox(width: 28, height: 28, radius: 14)),
-                  SizedBox(width: ReadInSpace.s3),
-                  SkeletonBox(width: 64, height: 64, radius: ReadInRadius.md),
-                  SizedBox(width: ReadInSpace.s3),
-                  Expanded(
-                    child: Column(
+          const PageBlock(
+            margin: _blockGap,
+            padding: EdgeInsets.all(PageBlock.gutter),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SkeletonBox(height: 148, radius: ReadInRadius.card),
+                SizedBox(height: ReadInSpace.s4),
+                Align(alignment: AlignmentDirectional.centerStart, child: SkeletonBox(width: 80)),
+                SizedBox(height: ReadInSpace.s3),
+                SkeletonBox(height: 24),
+                SizedBox(height: ReadInSpace.s2),
+                Align(alignment: AlignmentDirectional.centerStart, child: SkeletonBox(width: 220, height: 24)),
+                SizedBox(height: ReadInSpace.s4),
+                SkeletonBox(height: 44, radius: ReadInRadius.chip),
+              ],
+            ),
+          ),
+          PageBlock(
+            margin: _blockGap,
+            padding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter, vertical: ReadInSpace.s2),
+            child: Column(
+              children: [
+                for (var i = 0; i < 3; i++)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: ReadInSpace.s3),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [SkeletonBox(width: 70), SizedBox(height: ReadInSpace.s2), SkeletonBox(), SizedBox(height: ReadInSpace.s2), SkeletonBox(width: 140)],
+                      children: [
+                        Padding(padding: EdgeInsets.only(top: 18), child: SkeletonBox(width: 28, height: 28, radius: 14)),
+                        SizedBox(width: ReadInSpace.s3),
+                        SkeletonBox(width: 64, height: 64, radius: ReadInRadius.md),
+                        SizedBox(width: ReadInSpace.s3),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [SkeletonBox(width: 70), SizedBox(height: ReadInSpace.s2), SkeletonBox(), SizedBox(height: ReadInSpace.s2), SkeletonBox(width: 140)],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
+          ),
         ],
       );
 }

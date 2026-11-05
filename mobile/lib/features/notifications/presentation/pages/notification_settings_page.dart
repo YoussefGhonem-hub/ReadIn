@@ -11,8 +11,10 @@ import '../../../../core/push/push_service.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
+import '../../../settings/presentation/widgets/settings_block.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/entities/notification_settings.dart';
 import '../cubit/notification_settings_cubit.dart';
@@ -42,17 +44,21 @@ class NotificationSettingsView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notificationSettings)),
       body: BlocBuilder<NotificationSettingsCubit, NotificationSettingsState>(
+        // Settings' look: a white block per section on the canvas, its rows split by dividers.
         builder: (context, state) => switch (state.status) {
-          NotificationSettingsStatus.loading => const Center(child: CircularProgressIndicator()),
-          NotificationSettingsStatus.failure => ErrorView(failure: state.failure!, onRetry: () => unawaited(cubit.load())),
+          NotificationSettingsStatus.loading => const PageBlock(margin: _blockGap, child: Center(child: CircularProgressIndicator())),
+          NotificationSettingsStatus.failure => PageBlock(
+              margin: _blockGap,
+              child: ErrorView(failure: state.failure!, onRetry: () => unawaited(cubit.load())),
+            ),
           NotificationSettingsStatus.ready => ListView(
-              padding: const EdgeInsets.all(ReadInSpace.s4),
+              padding: const EdgeInsets.only(bottom: ReadInSpace.s6),
               children: [
                 const PushBlockedNotice(),
-                _Card(
+                SettingsBlock(
                   title: l10n.notificationSettingsTypesTitle,
-                  hint: l10n.notificationSettingsTypesHint,
-                  children: [
+                  note: _Hint(l10n.notificationSettingsTypesHint),
+                  rows: [
                     for (final type in NotificationType.configurable) _TypeModeTile(type: type, mode: state.modeOf(type)),
                     const _SecurityAlertsTile(),
                   ],
@@ -91,51 +97,41 @@ class PushBlockedNotice extends StatelessWidget {
     final colors = context.colors;
     return ValueListenableBuilder(
       valueListenable: push?.permission ?? _noPush,
+      // A block of its own above the sections.
       builder: (context, permission, _) => permission != PushPermission.denied
           ? const SizedBox.shrink()
-          : Container(
-              margin: const EdgeInsets.only(bottom: ReadInSpace.s4),
-              padding: const EdgeInsets.all(ReadInSpace.s3),
-              decoration: BoxDecoration(color: colors.calloutWarning, borderRadius: BorderRadius.circular(ReadInRadius.md)),
-              child: Row(
-                children: [
-                  Icon(Icons.notifications_off_outlined, color: colors.calloutWarningAccent),
-                  const SizedBox(width: ReadInSpace.s3),
-                  Expanded(child: Text(context.l10n.notificationsBlocked, style: context.textTheme.bodyMedium)),
-                ],
+          : PageBlock(
+              margin: _blockGap,
+              padding: const EdgeInsets.all(PageBlock.gutter),
+              child: Container(
+                padding: const EdgeInsets.all(ReadInSpace.s3),
+                decoration: BoxDecoration(color: colors.calloutWarning, borderRadius: BorderRadius.circular(ReadInRadius.md)),
+                child: Row(
+                  children: [
+                    Icon(Icons.notifications_off_outlined, color: colors.calloutWarningAccent),
+                    const SizedBox(width: ReadInSpace.s3),
+                    Expanded(child: Text(context.l10n.notificationsBlocked, style: context.textTheme.bodyMedium)),
+                  ],
+                ),
               ),
             ),
     );
   }
 }
 
-class _Card extends StatelessWidget {
-  const _Card({required this.title, this.hint, required this.children});
+/// The canvas above a block.
+const _blockGap = EdgeInsets.only(top: PageBlock.gap);
 
-  final String title;
-  final String? hint;
-  final List<Widget> children;
+/// What a section is about, under its title.
+class _Hint extends StatelessWidget {
+  const _Hint(this.text);
+
+  final String text;
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: ReadInSpace.s4),
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(ReadInSpace.s4, ReadInSpace.s4, ReadInSpace.s4, ReadInSpace.s2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Semantics(header: true, child: Text(title, style: context.textTheme.titleMedium)),
-                if (hint != null) ...[
-                  const SizedBox(height: ReadInSpace.s1),
-                  Text(hint!, style: context.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
-                ],
-                const SizedBox(height: ReadInSpace.s2),
-                ...children,
-              ],
-            ),
-          ),
-        ),
+        padding: const EdgeInsets.only(bottom: ReadInSpace.s1),
+        child: Text(text, style: context.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
       );
 }
 
@@ -223,10 +219,10 @@ class _QuietHoursCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final enabled = quietHours.enabled;
-    return _Card(
+    return SettingsBlock(
       title: l10n.quietHoursTitle,
-      hint: l10n.quietHoursHint,
-      children: [
+      note: _Hint(l10n.quietHoursHint),
+      rows: [
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           secondary: const Icon(Icons.bedtime_outlined),

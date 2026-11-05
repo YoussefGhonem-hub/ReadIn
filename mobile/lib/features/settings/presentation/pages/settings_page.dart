@@ -20,6 +20,7 @@ import '../../../verification/presentation/cubit/verification_cubit.dart';
 import '../../../verification/presentation/widgets/verification_entry_tile.dart';
 import '../widgets/account_section.dart';
 import '../widgets/preference_tiles.dart';
+import '../widgets/settings_block.dart';
 import '../widgets/who_can_mention_selector.dart';
 import 'interests_page.dart';
 
@@ -97,68 +98,60 @@ class _SettingsViewState extends State<SettingsView> {
     final l10n = context.l10n;
     final session = context.watch<SessionCubit>().state;
 
-    Widget card(String title, List<Widget> children, {Key? key}) => Padding(
-          key: key,
-          padding: const EdgeInsets.only(bottom: ReadInSpace.s4),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(ReadInSpace.s4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(title, style: context.textTheme.titleMedium),
-                  const SizedBox(height: ReadInSpace.s4),
-                  ...children,
-                ],
-              ),
-            ),
-          ),
+    // A choice with its label (segments, radios): room above and below, as a row of the block.
+    Widget choice(Widget child) => Padding(padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s3), child: child);
+    Widget note(String text) => Padding(
+          padding: const EdgeInsets.only(bottom: ReadInSpace.s3),
+          child: Text(text, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
         );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
+      // LinkedIn-like: a white block per section on the canvas, its title inside, its rows split by dividers.
       body: ListView(
         controller: _scroll,
-        padding: const EdgeInsets.all(ReadInSpace.s4),
+        padding: const EdgeInsets.only(bottom: ReadInSpace.s6),
         children: [
-          card(l10n.appearance, const [ThemeSelector(), SizedBox(height: ReadInSpace.s5), UiLanguageSelector()]),
-          card(l10n.reading, [
+          SettingsBlock(title: l10n.appearance, rows: [choice(const ThemeSelector()), choice(const UiLanguageSelector())]),
+          SettingsBlock(
+            title: l10n.reading,
             // The article language and the reminder live on the account (F18).
-            if (!session.isAuthenticated) ...[
-              Text(l10n.settingsSignInForSync, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-              const SizedBox(height: ReadInSpace.s3),
+            note: session.isAuthenticated ? null : note(l10n.settingsSignInForSync),
+            rows: [
+              choice(const ArticleLanguageSelector(confirmSaved: true)),
+              choice(const FontSizeSelector()),
+              const ReminderTimeTile(confirmSaved: true),
+              // Highlights in the reader (F30): guests too, kept on the device.
+              const ShowHighlightsSwitch(),
+              // Fields and topics followed after onboarding (F02, F12).
+              if (session.isAuthenticated) const _InterestsEntry(),
+              // The writers, fields and topics muted from an article's "⋯" (F28), next to what you follow.
+              if (session.isAuthenticated) const _MutedEntry(),
             ],
-            const ArticleLanguageSelector(confirmSaved: true),
-            const SizedBox(height: ReadInSpace.s4),
-            const FontSizeSelector(),
-            const SizedBox(height: ReadInSpace.s3),
-            const ReminderTimeTile(confirmSaved: true),
-            // Highlights in the reader (F30): guests too, kept on the device.
-            const ShowHighlightsSwitch(),
-            // Fields and topics followed after onboarding (F02, F12).
-            if (session.isAuthenticated) const _InterestsEntry(),
-            // The writers, fields and topics muted from an article's "⋯" (F28), next to what you follow.
-            if (session.isAuthenticated) const _MutedEntry(),
-          ]),
+          ),
           // Per-type modes and quiet hours live on the account (F17).
-          if (session.isAuthenticated) card(l10n.notifications, const [_NotificationSettingsEntry()]),
+          if (session.isAuthenticated) SettingsBlock(title: l10n.notifications, rows: const [_NotificationSettingsEntry()]),
           if (session.isAuthenticated)
-            card(l10n.profilePrivacy, const [
-              PublicReadingStatsSwitch(),
-              SizedBox(height: ReadInSpace.s3),
-              WhoCanMentionSelector(),
-            ]),
-          if (session.isAuthenticated) card(l10n.settingsWriting, const [VerificationEntryTile()]),
-          if (session.me?.isModerator ?? false) card(l10n.moderationTitle, const [ModerationEntryTile()]),
-          card(key: _accountKey, l10n.account, [
-            if (session.isAuthenticated)
-              const AccountSection()
-            else ...[
-              Text(l10n.guestMode, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-              const SizedBox(height: ReadInSpace.s4),
-              FilledButton(onPressed: () => context.push('/auth/sign-in'), child: Text(l10n.signIn)),
+            SettingsBlock(
+              title: l10n.profilePrivacy,
+              rows: [const PublicReadingStatsSwitch(), choice(const WhoCanMentionSelector())],
+            ),
+          if (session.isAuthenticated) SettingsBlock(title: l10n.settingsWriting, rows: const [VerificationEntryTile()]),
+          if (session.me?.isModerator ?? false) SettingsBlock(title: l10n.moderationTitle, rows: const [ModerationEntryTile()]),
+          SettingsBlock(
+            key: _accountKey,
+            title: l10n.account,
+            note: session.isAuthenticated ? null : note(l10n.guestMode),
+            rows: [
+              if (session.isAuthenticated)
+                const AccountSection()
+              else
+                Padding(
+                  padding: const EdgeInsets.only(bottom: ReadInSpace.s3),
+                  child: FilledButton(onPressed: () => context.push('/auth/sign-in'), child: Text(l10n.signIn)),
+                ),
             ],
-          ]),
+          ),
         ],
       ),
     );

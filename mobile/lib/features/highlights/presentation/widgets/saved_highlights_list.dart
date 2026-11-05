@@ -10,6 +10,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/rdoc/rdoc_scope.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../domain/entities/highlight.dart';
 import '../cubit/my_highlights_cubit.dart';
@@ -52,30 +53,34 @@ class _SavedHighlightsListState extends State<SavedHighlightsList> with Automati
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               ?widget.leading?.call(context),
+              // Each article's highlights are a block on the canvas, a gap apart; the states are a block too.
+              const SliverToBoxAdapter(child: SizedBox(height: PageBlock.gap)),
               ...switch (state.status) {
-                MyHighlightsStatus.loading => [const SliverToBoxAdapter(child: _HighlightsSkeleton())],
+                MyHighlightsStatus.loading => [const SliverToBoxAdapter(child: PageBlock(child: _HighlightsSkeleton()))],
                 MyHighlightsStatus.failure => [
-                    SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: state.failure!, onRetry: cubit.load)),
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: PageBlock(child: ErrorView(failure: state.failure!, onRetry: cubit.load)),
+                    ),
                   ],
                 MyHighlightsStatus.ready when state.groups.isEmpty => [
                     SliverFillRemaining(
                       hasScrollBody: false,
-                      child: EmptyView(
-                        icon: Icons.border_color_outlined,
-                        title: l10n.highlightSavedEmptyTitle,
-                        body: l10n.highlightSavedEmptyBody,
+                      child: PageBlock(
+                        child: EmptyView(
+                          icon: Icons.border_color_outlined,
+                          title: l10n.highlightSavedEmptyTitle,
+                          body: l10n.highlightSavedEmptyBody,
+                        ),
                       ),
                     ),
                   ],
                 MyHighlightsStatus.ready => [
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, 0),
-                      sliver: SliverList.builder(
-                        itemCount: state.groups.length + 1,
-                        itemBuilder: (context, i) => i < state.groups.length
-                            ? HighlightGroupCard(key: ValueKey('highlight-group-${state.groups[i].key}'), group: state.groups[i])
-                            : _Footer(state: state),
-                      ),
+                    SliverList.builder(
+                      itemCount: state.groups.length + 1,
+                      itemBuilder: (context, i) => i < state.groups.length
+                          ? HighlightGroupCard(key: ValueKey('highlight-group-${state.groups[i].key}'), group: state.groups[i])
+                          : _Footer(state: state),
                     ),
                   ],
               },
@@ -103,65 +108,57 @@ class HighlightGroupCard extends StatelessWidget {
     final author = article.author?.displayName ?? l10n.deletedUser;
     // "Arabic version" / "English version", as on the web.
     final version = article.language == 'en' ? l10n.highlightSavedVersionEn : l10n.highlightSavedVersionAr;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: ReadInSpace.s4),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(ReadInRadius.card),
-          border: Border.all(color: colors.border),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s3),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    // A full-width block, a gap above the next one.
+    return PageBlock(
+      margin: const EdgeInsets.only(bottom: PageBlock.gap),
+      padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: PageBlock.gutters,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Directionality(
+                  textDirection: direction,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      Bidi.isolateOppositeRuns(article.title, direction),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.titleSmall?.copyWith(color: colors.textPrimary, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: ReadInSpace.s1),
+                Row(
                   children: [
-                    Directionality(
-                      textDirection: direction,
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          Bidi.isolateOppositeRuns(article.title, direction),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.textTheme.titleSmall?.copyWith(color: colors.textPrimary, fontWeight: FontWeight.w600),
-                        ),
+                    Flexible(
+                      child: BidiText(
+                        author,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary),
                       ),
                     ),
-                    const SizedBox(height: ReadInSpace.s1),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: BidiText(
-                            author,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary),
-                          ),
-                        ),
-                        Text(' · ', style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
-                        Text(version, style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
-                      ],
-                    ),
+                    Text(' · ', style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
+                    Text(version, style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
                   ],
                 ),
-              ),
-              const SizedBox(height: ReadInSpace.s2),
-              for (final h in group.highlights)
-                SavedHighlightTile(
-                  key: ValueKey('saved-highlight-${h.id}'),
-                  text: h.text,
-                  direction: direction,
-                  onTap: () => unawaited(context.push(highlightLink(article, h.blockId))),
-                ),
-            ],
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: ReadInSpace.s2),
+          for (final h in group.highlights)
+            SavedHighlightTile(
+              key: ValueKey('saved-highlight-${h.id}'),
+              text: h.text,
+              direction: direction,
+              onTap: () => unawaited(context.push(highlightLink(article, h.blockId))),
+            ),
+        ],
       ),
     );
   }
@@ -240,7 +237,7 @@ class _HighlightsSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(ReadInSpace.s5),
+        padding: const EdgeInsets.all(PageBlock.gutter),
         child: Column(
           children: [
             for (var i = 0; i < 3; i++)

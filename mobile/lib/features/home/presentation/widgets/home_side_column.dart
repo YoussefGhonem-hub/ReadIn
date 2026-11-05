@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/widgets/page_block.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../follow/presentation/widgets/suggested_writers.dart';
 import '../../../profile/presentation/profile_routes.dart';
@@ -28,7 +29,8 @@ class HomeSideColumn extends StatelessWidget {
     const gap = SizedBox(height: ReadInSpace.s3);
     return ListView(
       key: const ValueKey('home-side-column'),
-      padding: const EdgeInsetsDirectional.fromSTEB(0, ReadInSpace.s4, ReadInSpace.s5, ReadInSpace.s5),
+      // Level with the feed's first block, and off its blocks, which run to the column's edge.
+      padding: const EdgeInsetsDirectional.fromSTEB(ReadInSpace.s4, PageBlock.gap, ReadInSpace.s5, ReadInSpace.s5),
       children: me == null
           ? [
               card(Column(
