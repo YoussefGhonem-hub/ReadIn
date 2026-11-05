@@ -644,37 +644,36 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 | Role | Description |
 |---|---|
 | **Guest** | Not signed in. Can browse and read published articles. |
-| **Member** | Default for every signed-up user. Reads, interacts, and can write articles. |
-| **VerifiedWriter** | Member whose identity/expertise is verified. Gets a badge and priority in feeds. Not required to publish in any field. |
-| **Moderator** | Handles reports, hides content, suspends users. |
-| **Admin** | Manages fields, topics, paths, verification requests, featured content and roles (except SuperAdmin). |
-| **SuperAdmin** | Full access, including managing Admins and system settings. |
+| **Member** | Default for every signed-up user. Reads, interacts, and can write articles. A user stays a Member with or without the Verified badge. |
+| **SuperAdmin** | The app's owner. Full access: reports and moderation, suspending users, fields, topics, tags, paths, featured content, verification requests and system settings. |
 
-Users can have multiple roles (e.g. `Member` + `VerifiedWriter` + `Moderator`). There is no Reviewer role ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
+An account is a `Member` or the `SuperAdmin`, and `Guest` only means not signed in. There is no Reviewer role ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
+
+**Only two account roles.** Every account that signs up is a `Member`, and the `SuperAdmin` is the app's owner, created from `Seed:SuperAdminPhone`. There are no Admin or Moderator roles: the SuperAdmin does that work, so wherever this SPEC says admin or moderator, it means the SuperAdmin. Endpoints still check permissions rather than roles, so a staff role can be added later without changing them.
+
+**Verified is a badge, not a role.** A Member can request verification (F19). When the SuperAdmin approves it, `Users.IsVerified` is set and the badge appears next to the name everywhere. Roles and permissions don't change, so the user stays a `Member`. The badge also gives priority in feeds, and it isn't required to publish in any field.
 
 ### 10.2 Permission-based Authorization
 Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 
-| Permission | Guest | Member | Verified Writer | Moderator | Admin | Super Admin |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| `articles.read` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `articles.create` | | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `articles.export_pdf` (own articles only, [F33](#f33--download-article-pdf-تحميل-المقال-pdf)) | | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `articles.feature` | | | | | ✅ | ✅ |
-| `comments.create` / `reactions.create` / `reposts.create` / `highlights.create` | | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `follows.manage` / `saved.manage` | | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `reports.create` | | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `moderation.manage` (hide content, resolve reports) | | | | ✅ | ✅ | ✅ |
-| `users.suspend` | | | | ✅ | ✅ | ✅ |
-| `users.reset_password` (admin password reset) | | | | | ✅ | ✅ |
-| `users.read.pii` (see phone numbers) | | | | | ✅ | ✅ |
-| `verification.manage` | | | | | ✅ | ✅ |
-| `taxonomy.manage` (fields, topics, tags) | | | | | ✅ | ✅ |
-| `paths.manage` | | | | | ✅ | ✅ |
-| `roles.manage` | | | | | ✅* | ✅ |
-| `system.settings` | | | | | | ✅ |
+| Permission | Guest | Member | Super Admin |
+|---|:-:|:-:|:-:|
+| `articles.read` | ✅ | ✅ | ✅ |
+| `articles.create` | | ✅ | ✅ |
+| `articles.export_pdf` (own articles only, [F33](#f33--download-article-pdf-تحميل-المقال-pdf)) | | ✅ | ✅ |
+| `articles.feature` | | | ✅ |
+| `comments.create` / `reactions.create` / `reposts.create` / `highlights.create` | | ✅ | ✅ |
+| `follows.manage` / `saved.manage` | | ✅ | ✅ |
+| `reports.create` | | ✅ | ✅ |
+| `moderation.manage` (hide content, resolve reports) | | | ✅ |
+| `users.suspend` | | | ✅ |
+| `users.reset_password` (admin password reset) | | | ✅ |
+| `users.read.pii` (see phone numbers) | | | ✅ |
+| `verification.manage` | | | ✅ |
+| `taxonomy.manage` (fields, topics, tags) | | | ✅ |
+| `paths.manage` | | | ✅ |
+| `system.settings` | | | ✅ |
 
-\* Admin cannot grant or revoke `Admin` / `SuperAdmin`.
 
 **Ownership rules:** a user can always edit/delete their own articles, comments and reactions. Editing a published article happens in a private working copy; readers see the change after **Update**, which records a revision (F05).
 
@@ -847,10 +846,10 @@ API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR
 ### F19 — Writer Verification
 **Built.** API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Writer verification"). The user's page is `/verification` on the web and Settings → "Writer verification" (`/settings/verification`) on mobile; the admin queue is web only (`/admin/verification`).
 - Request verification: field, job title, proof (LinkedIn/GitHub URL, certificate or syndicate card upload).
-- Admin reviews and approves/rejects with a reason. Approved users get the `VerifiedWriter` role and badge.
+- The SuperAdmin reviews and approves or rejects with a reason. An approved user gets the Verified badge (`Users.IsVerified`) next to their name and stays a `Member`: no role or permission changes.
 - **Request:** a field (enabled), a job title (2–100), proof (an `https://` URL ≤ 500, a file, or both) and an optional note (≤ 500). At most one pending request per user (a filtered unique index); verified writers and suspended users can't ask. The user can withdraw a pending request (it is deleted with its file), and ask again after a rejection. The page shows the latest request: pending with its date, approved, or rejected with the reason.
 - **Proof files are private.** A PDF, JPEG, PNG or WebP of at most 10 MB, recognized by its magic bytes (never the name or the client's content type), stored as `verification/{requestId}{.ext}` in the **private store** (`Storage:PrivatePath`, default `App_Data/private`), never in `wwwroot` and never at a public URL. The API refuses to start when that folder overlaps the web root or the uploads folder. Only `GET /admin/verification-requests/{id}/proof` (`verification.manage`) reads a file: `Content-Disposition: attachment` under a neutral name, `Cache-Control: no-store`, `nosniff`. The uploaded name is only shown to admins, sanitized (no folders, control or direction-override characters, ≤ 120). Configuration and backups: [deployment](setup/deployment.md#8-private-files-verification-proofs).
-- **Admin queue** (`verification.manage`: Admin, SuperAdmin; web only): Pending (oldest first), Approved and Rejected (newest decided first). **Approve** grants `VerifiedWriter` (the user's sessions follow at once); **Reject** needs a reason (5–500) that only the user's verification page shows. A request is decided once (`409 verification.already_decided`, also when two admins race). Both are in the audit log (`admin.verification_approved` / `_rejected`).
+- **Review queue** (`verification.manage`: SuperAdmin only; web only): Pending (oldest first), Approved and Rejected (newest decided first). **Approve** sets `IsVerified` and `VerifiedAt`, and the badge shows at once; **Reject** needs a reason (5–500) that only the user's verification page shows. A request is decided once (`409 verification.already_decided`). Both are in the audit log (`admin.verification_approved` / `_rejected`). The SuperAdmin can also remove a badge (F23, audited), and that user can request again.
 - **Retention:** the proof file is deleted when the request is decided; the decision, the reviewer, the reason and the URL stay. Withdrawing deletes the request and its file; deleting the account deletes the user's requests and files and removes the account from the requests it decided (§9.6). A daily job deletes proof files that no request points at any more (a delete that failed).
 - **Notification:** `verification_result` (F17) to the requester on each decision, `data.approved` true/false, no actor, link `readin://verification`; not configurable, quiet hours apply. Push: "بقيت كاتب موثّق ✓" / "You're now a verified writer ✓", or "طلب التوثيق بتاعك ماتقبلش" / "Your verification request wasn't approved" with "افتحه عشان تعرف السبب" / "Open it to see why". The reason is never in the push.
 
@@ -875,7 +874,7 @@ API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR
 ### F23 — Admin Console
 - Dashboard: daily active readers, articles read, new users, top articles, streak retention.
 - Manage fields, topics, tags, learning paths, featured content.
-- Manage users & roles, verification requests.
+- Manage users and verification requests. There is no role management, because the only account roles are Member and SuperAdmin (§10).
 - Content pipeline status (generated / auto-checked / published counts).
 - Available on **web and mobile** (mobile uses a compact layout).
 
@@ -1379,7 +1378,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 ### 16.2 Tables
 | Area | Tables |
 |---|---|
-| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, WhoCanMention Everyone/Following/Nobody (default Everyone), IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
+| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, IsVerified, VerifiedAt, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, WhoCanMention Everyone/Following/Nobody (default Everyone), IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId (null once a deleted account's asset stays with its published article), Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
@@ -1449,7 +1448,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Uploads & media | `POST /uploads/images` (purpose `image` \| `avatar` \| `cover`; `article-image` is still accepted) · `POST /uploads/documents` (PDF, `202` + processing) · `GET /uploads/{id}` (status, variants, pages) · `DELETE /uploads/{id}` · `GET /documents/{assetId}/download` (attachments are part of the editor draft) — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) |
 | Trust | `GET /me/verification` · `POST /verification-requests` (multipart) · `DELETE /me/verification` (withdraw) |
 | Moderation | `POST /reports` · `GET /moderation/summary` · `GET /moderation/reports?status=&type=` · `GET /moderation/reports/{targetType}/{targetId}` · `POST /moderation/actions` · `GET /moderation/actions` (log) · `GET /me/moderation-notices` · `POST /me/moderation-notices/{id}/acknowledge` |
-| Admin | `/admin/users`, `POST /admin/users/{id}/reset-password`, `/admin/roles`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests` (list, detail, `/{id}/proof`, `/{id}/approve`, `/{id}/reject`), `/admin/dashboard`, `/admin/content-pipeline`, `POST /admin/realtime/rebuild-counters` |
+| Admin | `/admin/users`, `POST /admin/users/{id}/reset-password`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests` (list, detail, `/{id}/proof`, `/{id}/approve`, `/{id}/reject`), `/admin/dashboard`, `/admin/content-pipeline`, `POST /admin/realtime/rebuild-counters` |
 
 ---
 
@@ -1478,7 +1477,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | 9 | Demo interactions (follows, reactions, comments, saves, reading history, streaks, sample image/PDF attachments) | Local only |
 | 10 | Demo reports (`demo-reports`, F22): open, resolved and dismissed reports on demo articles, comments and a user, and a warning notice for reader7 | Development only |
 | 11 | Demo notifications (`demo-notifications`, F17): a few read and unread entries of every kind for reader1, writer1, reader2 and reader7, without pushes | Development only |
-| 12 | Demo verification requests (`demo-verification`, F19): pending for writer1 (LinkedIn URL + PNG certificate), writer2 (GitHub URL only) and writer3 (PDF syndicate card only), reader5 rejected with a reason and the verified writer approved, both by the demo Admin (`+12025550102`); the proof files are drawn by the seeder into the private store; no notifications | Development only |
+| 12 | Demo verification requests (`demo-verification`, F19): pending for writer1 (LinkedIn URL + PNG certificate), writer2 (GitHub URL only) and writer3 (PDF syndicate card only), reader5 rejected with a reason and the verified writer approved, both by the demo SuperAdmin (`+12025550101`); the proof files are drawn by the seeder into the private store; no notifications | Development only |
 | 13 | Demo writers (`demo-writers`, F15): six short articles by writer2, writer3, reviewer.dotnet and reviewer.ai in a few fields and topics, before the demo interactions; re-dated daily so their first publish stays 1–20 days ago and Explore's new writers and top writers are never empty; no notifications | Development only |
 
 ### 18.3 Seed Users
@@ -1486,13 +1485,11 @@ Users are created in SQL Server only (no Firebase Auth). Phone numbers use the r
 
 | Phone | Display name | Roles | Recovery PIN | Environments |
 |---|---|---|:-:|---|
-| `+201229391155` | ReadIn (official account, `@readin`) | Member, VerifiedWriter | — | All (cannot sign in, author of seeded articles; fixed id) |
+| `+201229391155` | ReadIn (official account, `@readin`) | Member + Verified badge | — | All (cannot sign in, author of seeded articles; fixed id) |
 | `+12025550101` | Super Admin | SuperAdmin | ✅ | Local |
-| `+12025550102` | Admin User | Admin | ✅ | Local |
-| `+12025550103` | Moderator User | Moderator | ✅ | Local |
-| `+12025550104` | .NET Writer | Member, VerifiedWriter | ✅ | Local |
-| `+12025550105` | AI Writer | Member, VerifiedWriter | ✅ | Local |
-| `+12025550106` | Verified Writer | Member, VerifiedWriter | ✅ | Local |
+| `+12025550104` | .NET Writer | Member + Verified badge | ✅ | Local |
+| `+12025550105` | AI Writer | Member + Verified badge | ✅ | Local |
+| `+12025550106` | Verified Writer | Member + Verified badge | ✅ | Local |
 | `+12025550107` … `+12025550109` | Writer 1–3 | Member | ✅ | Local |
 | `+12025550110` … `+12025550118` | Reader 1–9 | Member | ✅ | Local |
 | `+12025550119` | Reader 10 | Member | ❌ (tests the mandatory "set PIN" screen) | Local |
