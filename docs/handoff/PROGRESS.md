@@ -483,3 +483,23 @@ again next run; `Retry-After` is honoured up to 30 s. Dead links still fail. SPE
   problem was checked pixel by pixel and isn't real.
 - **To know:** the full-text image is ~5 GB and takes ~5 minutes to build the first time; your local SQL container
   needs `docker compose build sqlserver` then `docker compose up -d` (the data volume stays).
+
+### F15 Explore and field pages ✅
+- **Backend:** `GET /explore`, `/explore/trending`, `/explore/most-saved`, `/fields/{slug}`,
+  `/fields/{slug}/articles?topic=`, `/fields/{slug}/writers`. Trending = 7-day engagement (reads 1, reactions 2,
+  comments 4, saves 6, the author's own activity excluded), falling back to quality; Most saved = 30 days then all
+  time; Top writers = 90 days of reads and reactions in the field; New writers = first article in the last 30 days.
+  Shared parts cached 5 minutes, each caller's state (and suspended/deleted writers) applied after the cache.
+  Migration `ExploreFeaturedPaths` (`IsFeatured`, `FeaturedOrder`; editorial paths featured). Development only:
+  `DemoWritersSeeder` (six short articles by demo writers so Explore isn't empty), and `DemoUsersSeeder` v5 marks
+  the demo users' profiles complete (they were missing from writer lists and people search in the local DB).
+- **Web and mobile:** Explore (search bar, every field, the four sections with 3 compact rows + "See all" as post
+  cards, empty sections hidden), the field page (Follow field and topic with "keep at least 3 interests", sensitive
+  note, topic chips with a ✓ for followed topics, Top writers rail, post cards), 404 and unknown-topic states; web SSR
+  with `noindex` / HTTP 404 rules and Back keeping the page; mobile deep links `readin://f/{slug}` and
+  `https://{host}/f/{slug}`; `/f/*` in the app links.
+- **Test round:** 8 bugs fixed, all web/mobile differences (section names, counts, empty paths row, names not
+  following the UI language, the followed-topic mark, copy) plus the contract wording and suspended writers staying in
+  cached lists.
+- **For the final review:** the writer Follow button says "متابعة" on the web and "تابع" on mobile (F12); Lucide hides
+  icons that use `role="img"` + `aria-label` (e.g. the verified badge) from screen readers on the web.
