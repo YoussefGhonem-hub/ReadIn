@@ -4,7 +4,6 @@ using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using ReadIn.Application.Common.Behaviors;
 using ReadIn.Application.Features.Articles.Counters;
 using ReadIn.Application.Features.Explore;
@@ -467,45 +466,6 @@ public sealed class ExploreTests(ApiFactory api) : IAsyncLifetime
         var editorial = await WithDbAsync(db => db.LearningPaths.Where(p => p.IsEditorial)
             .Select(p => new { p.IsFeatured, p.FeaturedOrder, p.SortOrder }).ToListAsync(Ct));
         editorial.Should().NotBeEmpty().And.OnlyContain(p => p.IsFeatured && p.FeaturedOrder == p.SortOrder);
-    }
-
-    // ── Demo data ───────────────────────────────────────────────
-
-    [Fact]
-    public async Task The_demo_writers_seeder_publishes_new_writers_locally_and_keeps_them_new()
-    {
-        await using var scope = api.Services.CreateAsyncScope();
-        var seeder = scope.ServiceProvider.GetServices<ISeeder>().Single(s => s.Name == "demo-writers");
-        seeder.AppliesTo(scope.ServiceProvider.GetRequiredService<IHostEnvironment>()).Should().BeFalse("Development only");
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var slugs = DemoWritersSeeder.Plans.Select(p => p.Slug).ToList();
-
-        try
-        {
-            (await seeder.SeedAsync(Ct)).Should().BeTrue();
-            await db.Articles.Where(a => a.Slug == slugs[0])
-                .ExecuteUpdateAsync(s => s.SetProperty(a => a.PublishedAt, DateTime.UtcNow.AddDays(-50)), Ct);
-            (await seeder.SeedAsync(Ct)).Should().BeTrue("a re-run keeps the articles and dates them again");
-
-            var rows = await db.Articles.AsNoTracking().Where(a => slugs.Contains(a.Slug))
-                .Select(a => new { a.Slug, a.AuthorId, a.Status, a.PublishedAt, a.TopicId, Author = a.Author!.Username, IsSystem = a.Author!.IsSystemAccount })
-                .ToListAsync(Ct);
-            rows.Should().HaveCount(DemoWritersSeeder.Plans.Length).And.OnlyContain(r => r.Status == ArticleStatus.Published && !r.IsSystem);
-            rows.Select(r => r.Author).Distinct().Should().BeEquivalentTo(["writer2", "writer3", "reviewer_dotnet", "reviewer_ai"]);
-            rows.Should().OnlyContain(r => r.TopicId != null);
-            foreach (var plan in DemoWritersSeeder.Plans)
-                rows.Single(r => r.Slug == plan.Slug).PublishedAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(-plan.DaysAgo), TimeSpan.FromMinutes(5));
-
-            var newWriters = await scope.ServiceProvider.GetRequiredService<ExploreRankings>().NewWriterIdsAsync(DateTime.UtcNow, int.MaxValue, Ct);
-            newWriters.Should().Contain(rows.Select(r => r.AuthorId!.Value).Distinct(), "their first articles are 1–20 days old");
-        }
-        finally
-        {
-            // Out of the other tests' way: the demo articles are soft-deleted again.
-            await db.Articles.Where(a => slugs.Contains(a.Slug))
-                .ExecuteUpdateAsync(s => s.SetProperty(a => a.IsDeleted, true).SetProperty(a => a.DeletedAt, DateTime.UtcNow), Ct);
-            await ClearCachesAsync();
-        }
     }
 
     // ── Helpers ─────────────────────────────────────────────────

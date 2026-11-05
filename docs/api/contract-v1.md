@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). Writer categories: `category.not_found`, `category.not_owner`, `category.limit`, `category.name_taken`, `category.name_invalid` (see Writer categories). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). Writer categories: `category.not_found`, `category.not_owner`, `category.limit`, `category.name_taken`, `category.name_invalid` (see Writer categories). Profile links and title (pre-production step): the validation codes `link.*` and `profile.headline_*` (see Profile). Reposts (F29): `repost.own_article` (see Reposts). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
 
 `403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
@@ -43,7 +43,7 @@ says "moderators" or "admins", it means whoever holds the permission named, toda
 
 | Permission | Member | SuperAdmin | What it opens |
 |---|:-:|:-:|---|
-| `articles.read` (Guest too), `articles.create`, `articles.export_pdf`, `comments.create`, `reactions.create`, `follows.manage`, `saved.manage`, `reports.create` | ✅ | ✅ | reading, writing, interacting, reporting |
+| `articles.read` (Guest too), `articles.create`, `articles.export_pdf`, `comments.create`, `reactions.create`, `reposts.create` (F29, new), `follows.manage`, `saved.manage`, `reports.create` | ✅ | ✅ | reading, writing, interacting, reporting |
 | `moderation.manage` | | ✅ | `/moderation/*` (the queue, the log, the nav badge), hide / unhide / delete in the article, comment and profile menus |
 | `users.suspend` | | ✅ | `suspend` / `unsuspend` in `POST /moderation/actions` |
 | `verification.manage` | | ✅ | `/admin/verification-requests/*` and `DELETE /admin/users/{id}/verification` (the admin verification queue) |
@@ -89,10 +89,10 @@ at a time (single-flight) and always keep the newest token.
 | Method | Path | Body → Response |
 |---|---|---|
 | GET | `/me` | → `200 MeDto` |
-| PATCH | `/me` | `UpdateProfileRequest` → `204`; refetch `GET /me`. `409 user.username_taken`, `400 profile.avatar_invalid`, `400 profile.expertise_invalid`, validation codes as before (`displayName`, `username`, `bio`, `links.*`, `avatarUrl`) |
+| PATCH | `/me` | `UpdateProfileRequest` → `204`; refetch `GET /me`. `409 user.username_taken`, `400 profile.avatar_invalid`, `400 profile.expertise_invalid`, validation codes as before (`displayName`, `username`, `bio`, `avatarUrl`), and for `headline` and `links` the codes in Profile → "Title and social links" |
 | PUT | `/me/privacy` | `{ publicReadingStats?: boolean, whoCanMention?: MentionPolicy }` → `204` (Settings → Privacy, F18; shown in `MeDto.privacy`). Each field is optional (left out = unchanged), so a client that only sends `publicReadingStats` keeps working; clients send the whole privacy object back. `400 validation.failed` with `validation.required` on both fields when neither is sent, `validation.invalid` for an unknown number; an unknown name is a `400` before validation. Nothing changes on an error. `whoCanMention` applies from then on: existing comments keep their mentions |
 | DELETE | `/me` | `{ password? , external?: ExternalCredential }` → `204`. Confirm with the password or a fresh token of a linked Google/Apple identity (Apple: include `authorizationCode`). Deletes the account **immediately and for good** (SPEC §9.6): Apple tokens are revoked first, then everything goes in one transaction (published articles stay with `author: null`, shown as "Deleted user"); the phone, email and Google/Apple identities can sign up again at once. **Idempotent:** a retry whose token outlived the account also gets `204`. `400 auth.wrong_password`, `400 auth.confirmation_required`, `400 auth.external_mismatch`, `400 auth.apple_confirmation_required` (Apple-linked account without a revocable token: confirm with Apple), `503 account.deletion_unavailable` (Apple unreachable: nothing was deleted, retry) |
-| PUT | `/me/profile/complete` | `{ displayName, username, avatarUrl? }` → `200 MeDto`. `409 user.username_taken` |
+| PUT | `/me/profile/complete` | `{ displayName, username, avatarUrl?, headline? }` → `200 MeDto`. `409 user.username_taken`. `headline` (the optional title, F14) follows the rules of `PATCH /me`: omitted keeps it, `null` or blank clears it |
 | PUT | `/me/password` | `{ currentPassword, newPassword }` → `200 SessionDto`; other sessions end. `400 auth.wrong_password` |
 | PUT | `/me/phone` | `{ newPhoneNumber, currentPassword }` → `200 SessionDto`; other sessions end. `409 auth.phone_taken`, `400 auth.phone_unchanged` |
 | POST | `/me/recovery-pin` | `{ pin }` → `200 MeDto`. Only while `mustSetRecoveryPin` (or without a PIN); `409 auth.pin_already_set` otherwise |
@@ -383,14 +383,16 @@ Explore error codes: `field.not_found` (404), `topic.not_found` (404).
 | GET | `/articles/{slug}?lang=` | `ArticleDetailsDto` |
 | GET | `/feed/for-you?field=&cursor=&limit=` | `CursorPage<ArticleCardDto>`. Signed in: the articles in the user's interests first, then all the other published articles, newest first within each group (the cursor remembers the group, so paging never repeats or skips an article). Guests, users without interests, and any `field` filter: latest published. Signed in, what you muted or marked "show less" is left out, and the topics (or fields) you marked "show less" in the last 90 days come last, in a tier of their own (F28, see Mute & feedback). `field` is a field slug. |
 | GET | `/feed/today` | `ArticleCardDto` or `204` when no pick is available yet |
-| GET | `/feed/following?cursor=&limit=` | Bearer → `CursorPage<ArticleCardDto>`: published articles by the writers you follow, newest first (the Home "Following" tab), without your muted fields and topics and "show less" articles (F28) |
+| GET | `/feed/following?cursor=&limit=` | Bearer → `CursorPage<ArticleCardDto>`: the Home "Following" tab. Published articles by the writers you follow **and articles they reposted** (F29), each once, newest placement first, without your muted writers, fields and topics and "show less" articles (F28). A card a repost placed carries `repostedBy` (the label "أعاد نشره {name}"). Rules in Reposts → "The Following feed" |
 | GET | `/articles/{id}/related?lang=&limit=` | `ArticleCardDto[]`, 0–`limit` cards (1–10, default 4) for the end of the reader (F04). `lang` is the version being read; cards use it when they have it, else their source language. `404 article.not_found` when the article isn't published |
 | GET | `/articles/{id}/preview?lang=` | `ArticlePreviewDto`: what a feed card's "Read more" shows (F34). `content` is an RDoc document with the article's first whole blocks, in order, until about 300 words of text (the block that reaches 300 is kept whole, so there is always at least one block, and a cut preview never ends on a heading or divider); `isComplete` is true when that is the whole article. `lang` picks the version like `GET /articles/{slug}` (an unknown or missing version gives the source language; `language` says which). Visible exactly like the article: `404 article.not_found` for unknown, unpublished and deleted articles, and for a hidden one to everyone but its author and moderators. Cached like the details and invalidated with them (publish, Update, hide/unhide, delete) |
 
 Every card (feeds, today, field lists, profile articles, related, saved, continue reading, paths) carries the article's
-counters, the post-card fields (F34: `excerpt`, `hasMore`, `tags`, `tagCount`) and, for a signed-in caller, their own
-`myReaction` / `isSaved` / `isFollowingAuthor` (`null` / `false` / `false` for guests; `isFollowingAuthor` is also
-`false` on your own articles and for a deleted author). `ArticleDetailsDto` adds `collectionIds`, your collections that
+counters (`repostCount` too, F29), the post-card fields (F34: `excerpt`, `hasMore`, `tags`, `tagCount`) and, for a
+signed-in caller, their own `myReaction` / `isSaved` / `isFollowingAuthor` / `isReposted` (`null` / `false` / `false` /
+`false` for guests; `isFollowingAuthor` is also `false` on your own articles and for a deleted author). The author's
+`headline` (the writer's title, F14) is on `author`. `repostedBy` (F29) is set only on Following-feed cards a repost
+placed and on a profile's Reposts tab; it is `null` everywhere else, `ArticleDetailsDto` included. `ArticleDetailsDto` adds `collectionIds`, your collections that
 hold the article (`[]` for guests and unsaved articles), so "add to collection" can show its ticks, and `category`, the
 writer's category of the article (F31, `{ slug, name }` or `null`; see Writer categories).
 
@@ -422,6 +424,69 @@ everyone but its author and moderators; they get it with `moderation: { hiddenAt
 
 The `ArticleReactionsDto` of a write is counted from the rows right after your change. Counters on cards and details
 come from the article's denormalized columns, which the outbox updates right after the commit (see Live counters).
+
+### Reposts (F29) — SPEC F29
+
+Writes: Bearer, permission **`reposts.create`** (every member, SPEC §10.2; new in `GET /me` `permissions`), rate limit
+`writes` (30 a minute). Guests get `401 auth.unauthorized`: clients show the sign-in prompt instead of calling.
+
+| Method | Path | Body → Response |
+|---|---|---|
+| PUT | `/articles/{id}/repost` | → `200 RepostStateDto` (idempotent: reposting again changes nothing). `400 repost.own_article` (your own article), `404 article.not_found` (unknown, unpublished, deleted; a hidden article for anyone but its author and moderators, as `GET /articles/{slug}`) |
+| DELETE | `/articles/{id}/repost` | → `200 RepostStateDto` (idempotent; on your own article it answers `isReposted: false`). `404 article.not_found` as above |
+| GET | `/users/{username}/reposts?cursor=&limit=` | 🌐 (Bearer optional) → `CursorPage<ArticleCardDto>`: the profile's **Reposts** tab, newest repost first. Each card's `repostedBy` is this user (`othersCount: 0`, `repostedAt` = their repost). Articles readers can't open (hidden, deleted, unpublished) are left out. Like the other profile tabs it keeps what the caller muted (cards carry `isAuthorMuted`). `limit` 1–50, default 20. `404 user.not_found` (unknown, deleted or suspended, as in Profile) |
+
+`RepostStateDto` is `{ repostCount, isReposted }`, counted from the rows right after your change. One repost per user
+per article (unique `Reposts(UserId, ArticleId)`); a repost keeps its first time. Cards and details carry
+`repostCount` (the denormalized `Articles.RepostCount`, recomputed by the outbox right after the commit) and the
+caller's `isReposted`.
+
+**Clients.** The Repost icon sits between Comment and Share on the post card's action bar and next to comments in the
+reader's bar, with its count beside it (no number at 0); accessible name "إعادة نشر، 3" / "Repost, 3" (with the count
+when > 0). A tap toggles optimistically (`PUT` / `DELETE`), and on a failure rolls back and shows the error. On your own
+article (`author.id` = your id) the button is disabled with the hint "مينفعش تعيد نشر مقالك" / "You can't repost your
+own article" (the API answers `repost.own_article` anyway). Live `repostCount` replaces the number (see Live counters).
+
+**The Following feed** (`GET /feed/following`):
+- Items are the published articles you can open that were written **or reposted** by writers you follow. Each article
+  appears **once**.
+- Its place (`feedAt`) is the **later** of: its publish time, when you follow its author; and the newest repost by a writer
+  you follow. Order: `feedAt` newest first, then id. The cursor encodes `(feedAt, id)`, so paging never repeats or skips
+  an item while nothing changes.
+- **Label.** When a repost placed the item (the author isn't followed, or the newest followed repost is later than the
+  publish), the card's `repostedBy` is `{ user, othersCount, repostedAt }`: `user` = the newest followed reposter,
+  `othersCount` = the other writers you follow who reposted it. Clients show "أعاد نشره {name}" / "{name} reposted
+  this", or with `othersCount > 0` "{name} و{n} غيره أعادوا نشره" / "{name} and {n} others reposted this"
+  (`n` = `othersCount`; Arabic "{name} وشخص تاني أعادوا نشره" when `n` = 1). `{name}` links to `/@{user.username}`.
+  Otherwise `repostedBy` is `null` and the card is the author's own post, as before.
+- So an article you already got from a writer you follow isn't repeated: a later repost by someone you follow moves
+  that one item up, labeled.
+- Never in your Following feed: your own articles (you hear about reposts through the notification), articles by
+  writers you muted, in fields or topics you muted, or marked "show less" (F28). A writer you follow is never muted
+  (muting ends the follow), so a muted writer's reposts never place anything.
+- Hidden, deleted and unpublished articles drop out. A repost by an account that is deleted goes with it.
+- Things that move while you scroll: a new repost moves an item to the top, so if it was further down it now appears on
+  the next refresh, not in the next page; an undone repost can move an item down into a later page. As with For you,
+  drop ids you already show.
+
+**Notification `article_reposted`** (F17; SPEC F29 calls it `article.reposted`). To the article's author when someone
+reposts it, aggregated per article like `article_comment` (group `article_reposted:{articleId}`: new reposters join an
+unread entry that moved in the last 24 hours). Undoing and reposting again is not news. It respects the type's mode
+(configurable: `all` / `inApp` / `off`), quiet hours and mutes (a writer you muted tells you nothing). Nobody hears about
+their own action (you can't repost your own article anyway); suspended, deleted and system accounts get nothing; nothing
+for a hidden or deleted article. Undoing a repost leaves the entry. See Notifications and Push payloads for texts and the
+link.
+
+**Account deletion (SPEC §9.6).** The account's reposts are deleted with it (cascade), and the `repostCount` of the
+articles it had reposted is recomputed right after (and republished live). Reposts of its deleted articles go with those
+articles; other people's reposts of its kept published articles stay. It disappears as an actor of `article_reposted`
+entries like any deleted actor.
+
+Repost error code: `repost.own_article` (400):
+
+| Code | Arabic | English |
+|---|---|---|
+| `400 repost.own_article` | "مينفعش تعيد نشر مقالك." | "You can't repost your own article." |
 
 ### Saved (F13; Bearer, permission `saved.manage`, rate limit `writes` on writes)
 
@@ -495,12 +560,12 @@ ids you already show. There is no list of these marks.
 
 | List | Muted writers | Muted fields and topics | Show less |
 |---|---|---|---|
-| For you, Following, Today's article, Related | left out | left out | left out (For you also lowers the topic) |
+| For you, Following (reposted articles too, F29), Today's article, Related | left out | left out | left out (For you also lowers the topic) |
 | Explore `trending` / `mostSaved` and both rankings, tag pages | left out | left out | left out |
 | Explore `fields` and `newWriters`, a field's top writers, suggested writers (`/users/suggested`) | left out | muted fields left out | — |
 | `/fields/{slug}/articles` | left out | the other muted topics left out; the page's own field and the topic picked in `topic` are shown (you opened them) | left out |
 | Search | articles and people left out | articles, fields and topics left out | kept (you searched for it) |
-| Profile tabs, category pages, saved, paths, continue reading, glossary | kept | kept | kept |
+| Profile tabs (Reposts included, F29), category pages, saved, paths, continue reading, glossary | kept | kept | kept |
 
 Today's article: the pick skips them. When the day's pick is by a writer you then mute, in a field or topic you then
 mute, or one you mark Show less, `GET /feed/today` gives the next eligible pick instead, and that one stays for the rest
@@ -523,7 +588,7 @@ on). Undo puts them back in place. In the reader, Mute author shows the banner i
 in the DTO). Replies under it render as usual; counts don't change. The same in feed-card comments (F34).
 
 **Notifications (F17).** No entry, and no actor in an aggregated entry, comes from a writer you muted: follows,
-comments, replies, mentions (comments and articles). Entries written before the mute stay. Milestones and the daily
+comments, replies, mentions (comments and articles), reposts (F29). Entries written before the mute stay. Milestones and the daily
 article have no actor and still come (the daily pick skips muted content).
 
 **Account deletion (SPEC §9.6).** The account's mutes, both ways (whom it muted, who muted it), and its show-less marks
@@ -562,6 +627,26 @@ whose setting is `nobody`. The account must also be active: deleted, suspended a
 rule is checked by the suggestions, by comments when they are written or edited (a later change of the setting leaves
 existing comments alone), and by articles when they go live (see Editor).
 
+**Text and emoji only (F11).** The write bodies are `{ body }` and nothing else: comments and replies have no images,
+GIFs or attachments. Any other property in the body (`attachments`, `imageUrl`, `gif`, `mediaAssetId`…) is ignored:
+only the text is stored, and `CommentDto` has no media field. Emoji are ordinary text (an emoji counts as its UTF-16
+length toward the 2000).
+
+**Reply with a mention (F11).** "رد" / "Reply" pre-fills the box with `@{username} ` of the comment's author (not when
+you reply to yourself), as plain text like any typed mention, with the caret after it; the user can delete it. Posting
+resolves it like every mention. When that person doesn't allow you to mention them (their setting, or a suspended or
+system account), the reply is still posted (`201`, no error) with the handle as plain text: not in `mentions`, no link,
+no `mention` notification. The reply notification still goes to the author of the comment replied to (`comment_reply`,
+aggregated per thread; a reply to a reply tells the author of that reply). When the mention is allowed, they get the
+`mention` instead (one entry per recipient per comment, see Notifications).
+
+**The comment row (F11).** `author.headline` is the writer's title (one line with "…", in place of the `@username`;
+hidden when `null`). `isFollowingAuthor` says whether you follow the comment's author: show "متابعة" / "Follow" when it is
+`false`, `author` isn't `null` and `author.id` isn't your id (guests: the button opens the sign-in prompt). The flag is
+`false` for guests, on your own comments, for a deleted author and on placeholders. Following from a
+row uses `PUT /users/{id}/follow` and the shared follow store, so every row, card and profile of that writer updates.
+Seed the store from `isFollowingAuthor` like cards do.
+
 Who sees what: readers get visible comments; a comment hidden by a moderator is shown in full only to its author and to
 moderators (`isHidden: true`). A deleted, or hidden-for-you, top-level comment that still has replies is a placeholder
 (`isDeleted` or `isHidden`, `body` and `author` null) so its replies keep their thread; otherwise it's left out. When an
@@ -598,7 +683,7 @@ Member).
 |---|---|
 | `comment` | `hide`, `unhide`, `delete`, `dismiss` |
 | `article` | `hide`, `unhide`, `dismiss` (moderators never delete articles) |
-| `user` | `warn`, `suspend`, `unsuspend` (both need `users.suspend`, `403 auth.forbidden` otherwise), `clear_category` (F31), `dismiss` |
+| `user` | `warn`, `suspend`, `unsuspend` (both need `users.suspend`, `403 auth.forbidden` otherwise), `clear_category` (F31), `clear_links`, `clear_headline` (F14), `dismiss` |
 
 - Any other pair, or an unknown action or type: `400 moderation.action_invalid`.
 - `note` (≤ 500, validation `validation.max_length`) is required for `warn` and `suspend` (`400 moderation.note_required`); it
@@ -615,10 +700,19 @@ Member).
   named like that is left alone (`204`, nothing logged). Allowed on any user, like hiding content. Like `hide`, it
   resolves the user's open reports (and those of `resolveReportsOf`). Logged as `user.clear_category` with the old name
   as `targetLabel`, and in the audit log; the writer gets no notice.
+- `clear_links` and `clear_headline` (F14, an abusive social link or title reported with the user): remove all of the
+  user's links (`links: []`) or their title (`headline: null`). Like `clear_category` they are content actions: allowed on
+  any user (staff, a system account and yourself included), `note` optional, no notice or notification to the user.
+  When there is nothing to clear (no links, no title) the answer is `204` and nothing is logged or resolved. Otherwise
+  they resolve the user's open reports (and those of `resolveReportsOf`) and are logged as `user.clear_links` (label: the
+  removed URLs joined by a space, cut to 200 characters) and `user.clear_headline` (label: the removed title), and in the
+  audit log (`moderation.links_cleared`, `moderation.headline_cleared`). The cards, reader and comments show the change
+  at once (the cached article pages of the user are dropped). The user's case shows both: `target.author.headline` and
+  `target.links` (user targets only).
 - `404 article.not_found` / `comment.not_found` / `user.not_found` for an unknown or deleted target (a deleted target can
   still be `dismiss`ed).
-- `hide`, `delete`, `warn`, `suspend` and `clear_category` resolve the target's open reports, and those of
-  `resolveReportsOf` (e.g. warn the author from an article case). `dismiss` closes the target's open reports as dismissed and changes nothing else.
+- `hide`, `delete`, `warn`, `suspend`, `clear_category`, `clear_links` and `clear_headline` resolve the target's open
+  reports, and those of `resolveReportsOf` (e.g. warn the author from an article case). `dismiss` closes the target's open reports as dismissed and changes nothing else.
 - Repeating an action that changes nothing (hide a hidden article, unsuspend an active user) is `204` and logs nothing.
 - Every action that changed something is a `ModerationActionDto` in the log; actions on a user's content or account are
   also in the audit log. `warn` and an article `hide` are notices to the user (`GET /me/moderation-notices`) with a push.
@@ -713,6 +807,7 @@ accounts get nothing):
 | `security_alert` | password, PIN or phone changed, password reset, recovery locked, Google/Apple linked or unlinked, phone sign in added | no | `readin://settings/account` |
 | `moderation_notice` | a moderator warned you or hid your article (F22) | no | the hidden article `readin://a/{slug}`, a warning `readin://notifications` (the app shows the notice from `GET /me/moderation-notices`) |
 | `verification_result` | the SuperAdmin approved or rejected your verification request (F19; removing a badge later sends nothing): `data.approved` `true` / `false`, no actor, no article. Without `data.approved` (never written now) render a generic text | no | `readin://verification` |
+| `article_reposted` | someone reposted your article (F29; undoing and reposting again is not news) | per article | `readin://a/{slug}` |
 
 - One entry per recipient per comment: `mention` > `comment_reply` > `article_comment`. An edit only tells users it
   mentions for the first time.
@@ -727,6 +822,11 @@ accounts get nothing):
   "لما حد يعمل لك منشن في تعليق أو مقال".
 - Aggregation: new activity joins an **unread** entry of the same group that moved in the last 24 hours; the entry moves
   to the top as unseen, with the newest actor, and its push goes out again with the count. A read entry starts a new one.
+- `article_reposted` (F29, new): actor = the latest reposter, `actorCount` = distinct reposters, `article` set, `comment`
+  `null`, `data` `{}`. Row text: "{name} أعاد نشر مقالك" / "{name} reposted your article"; more: "{name} و{n} غيره أعادوا
+  نشر مقالك" / "{name} and {n} others reposted your article"; then the article's title. It is a configurable type, so
+  `GET /me/notification-settings` now returns **9** types; Settings label "إعادة النشر" / "Reposts", hint "لما حد يعيد
+  نشر مقالك" / "When someone reposts your article". The entry stays in the list while its article is readable.
 - What the list (and the badge) leaves out: entries whose comment was deleted or hidden, whose article isn't readable
   any more (a moderation notice keeps its hidden article), and `new_follower` entries whose followers all deleted their
   accounts. A deleted actor is gone from `actor` / `actorCount`: an entry left with no actor shows "Deleted user"
@@ -741,13 +841,14 @@ accounts get nothing):
 ### Profile (F14) 🌐 (Bearer optional)
 
 `{username}` is matched ignoring case and one leading `@` (`/users/@Mona` = `/users/mona`). Deleted and suspended
-accounts are `404 user.not_found` on all four; system accounts (the official `@readin`) are shown like everyone else.
+accounts are `404 user.not_found` on all five; system accounts (the official `@readin`) are shown like everyone else.
 The phone number and e-mail are never in these responses (SPEC §9.5).
 
 | Method | Path | Response |
 |---|---|---|
-| GET | `/users/{username}` | `200 ProfileDto` |
+| GET | `/users/{username}` | `200 ProfileDto` (with `headline` in full and `links`, for guests too) |
 | GET | `/users/{username}/articles?cursor=&limit=` | `CursorPage<ArticleCardDto>`: published articles, newest first, with the caller's `myReaction` / `isSaved` like every feed. `limit` 1–50, default 20 |
+| GET | `/users/{username}/reposts?cursor=&limit=` | `CursorPage<ArticleCardDto>`: the **Reposts** tab (F29), newest repost first; see Reposts |
 | GET | `/users/{username}/stats` | `200 ReadingStatsDto`, computed in **that user's** time zone. `403 profile.stats_private` unless it's your own profile or the user turned on `publicReadingStats` |
 | GET | `/users/{username}/stats/heatmap?days=` | `200 ReadingHeatmapDto` (as `/me/stats/heatmap`), same privacy rule |
 
@@ -762,10 +863,97 @@ Editing (Bearer, `PATCH /me`, `UpdateProfileRequest`):
 - **Expertise.** `expertiseFieldIds`: 0–5 enabled field ids, kept in the order sent (a repeated id counts once); `[]`
   clears them, omitted keeps them. More than 5 or an unknown/disabled id is `400 profile.expertise_invalid`, also listed
   in `errors.expertiseFieldIds`.
-- `displayName`, `username`, `bio` and `links` replace the current values as before (an omitted `bio` or link clears it).
+- `displayName`, `username` and `bio` replace the current values as before (an omitted `bio` clears it).
+- **Title** (`headline`, new) and **links** (new shape): below. Unlike `bio`, **omitting** either one keeps it.
+
+#### Title and social links (F14, pre-production step)
+
+**Title** (`headline`, "المسمى" / "Title"): one optional line under the writer's name, e.g. "Senior Full Stack .NET
+Engineer | .NET | Angular".
+- `PATCH /me` and `PUT /me/profile/complete`: `headline` omitted keeps the current title; `null`, `""` or only spaces
+  clears it. A value is trimmed and stored as written (Arabic, English or mixed).
+- At most **120** characters after trimming (`profile.headline_too_long`); one line with no control or
+  direction-override characters: line breaks, tabs, U+0000–U+001F, U+007F–U+009F, U+200E/U+200F, U+202A–U+202E and
+  U+2066–U+2069 are refused (`profile.headline_invalid`). Both codes are validation codes in `errors.headline`.
+- Returned as `headline` (`null` when empty) on `MeDto`, `ProfileDto`, every `AuthorDto` (cards, reader, comments and
+  replies, who reacted, the moderation case, category pages, repost labels) and every `UserSummaryDto` (followers,
+  following, suggestions, search people, Explore writers, mutes list).
+- Always the writer's current title. Changing the title, the name, the @username or the avatar drops the cached reader
+  pages, cards and lists that show the writer, so the change shows at once (not after the 10-minute cache time).
+- Clients: on cards, in the reader's author row and on comment rows show it on one line, cut with "…", with
+  `dir="auto"` (§14.2); on the profile in full (wrapped). With `null` the line is hidden. On cards and in the reader the
+  line "field · time · reading time" moves below it.
+
+**Social links** (`links`, "روابط" / "Links"): an ordered array of `ProfileLinkDto` `{ platform, url, label }`.
+- `PATCH /me`: `links` omitted or `null` keeps the current links; an array **replaces the whole list** (`[]` removes
+  them all). Kept in the order sent; the profile shows them in that order. `PUT /me/profile/complete` has no links.
+- Read back on `GET /me` and `GET /users/{username}` (for guests too), always an array (`[]` when none).
+- **Breaking change:** `links` was an object `{ github, linkedin, website }`; it is now this array in requests and
+  responses. Saved GitHub, LinkedIn and website links were migrated in that order to `github`, `linkedin`,
+  `website` entries (a migrated link that breaks a rule below is kept until the user saves, then it is reported).
+
+| `platform` | Icon / name | Allowed hosts (the host itself or any subdomain, e.g. `www.`, `m.`) |
+|---|---|---|
+| `linkedin` | LinkedIn | `linkedin.com`, `lnkd.in` |
+| `x` | X | `x.com`, `twitter.com` |
+| `instagram` | Instagram | `instagram.com`, `instagr.am` |
+| `facebook` | Facebook | `facebook.com`, `fb.com`, `fb.me` |
+| `youtube` | YouTube | `youtube.com`, `youtu.be` |
+| `tiktok` | TikTok | `tiktok.com` |
+| `snapchat` | Snapchat | `snapchat.com` |
+| `threads` | Threads | `threads.net`, `threads.com` |
+| `telegram` | Telegram | `t.me`, `telegram.me` |
+| `github` | GitHub | `github.com` |
+| `medium` | Medium | `medium.com` (and `*.medium.com`) |
+| `behance` | Behance | `behance.net` |
+| `website` | Website ("الموقع") | any `https` host |
+| `other` | the member's `label` | any `https` host |
+
+Rules (checked in this order per link; every failure is a validation code under its index, e.g.
+`errors["links[2].url"]`):
+- At most **8** links: `link.too_many` in `errors.links`.
+- `platform` is one of the 14 values above, lower case: `link.platform_invalid` (`links[i].platform`).
+- One link per platform, except `other`, which may repeat: `link.duplicate_platform` on each repeat
+  (`links[i].platform`).
+- `url` is required (`validation.required`), trimmed. Without a scheme, `https://` is added (`instagram.com/name` →
+  `https://instagram.com/name`); the stored and returned `url` is that normalized value.
+- At most **500** characters after that (`link.too_long`).
+- `https` only: `http://` or any other scheme is `link.https_required`.
+- A real absolute URL with a host name (a dot in it, not an IP address, no spaces), the default port and **no username
+  or password**: `link.url_invalid`.
+- A named platform's link is on one of its hosts: `link.host_mismatch`. `website` and `other` accept any host.
+- `label` is for `other` only: required there (`link.label_required`), 2–30 characters after trimming, one line, no
+  control or direction-override characters (`link.label_invalid`); sent with any other platform:
+  `link.label_not_allowed`. Stored trimmed; `null` on every other platform.
+
+Clients: on the profile, a row of icons under the bio (hidden when `[]`), for everyone including guests; each icon is a
+link with an accessible name (the platform's name, or the label for `other`), icons don't mirror in RTL. Web opens a new
+tab with `rel="nofollow ugc noopener noreferrer"`; mobile the system browser or the platform's app. In Edit profile, a
+"روابط" / "Links" section with "+ إضافة رابط" / "Add link" (platform picker, then the URL; a label field for Other),
+at most 8, each error under its own field.
+
+| Validation code | Arabic | English |
+|---|---|---|
+| `profile.headline_too_long` | "المسمى لازم يكون 120 حرف أو أقل." | "A title has at most 120 characters." |
+| `profile.headline_invalid` | "المسمى لازم يكون سطر واحد من غير رموز خاصة." | "A title must be one line, without special characters." |
+| `link.too_many` | "تقدر تضيف 8 روابط بس." | "You can add up to 8 links." |
+| `link.platform_invalid` | "اختار المنصة من القايمة." | "Choose a platform from the list." |
+| `link.duplicate_platform` | "عندك رابط للمنصة دي بالفعل." | "You already have a link for this platform." |
+| `link.too_long` | "الرابط لازم يكون 500 حرف أو أقل." | "A link has at most 500 characters." |
+| `link.https_required` | "الرابط لازم يبدأ بـ https." | "The link must start with https." |
+| `link.url_invalid` | "الرابط ده مش صحيح." | "This link isn't valid." |
+| `link.host_mismatch` | "الرابط ده مش على موقع المنصة اللي اخترتها." | "This link isn't on the platform you chose." |
+| `link.label_required` | "اكتب اسم للرابط." | "Give this link a name." |
+| `link.label_invalid` | "اسم الرابط لازم يكون من 2 لـ 30 حرف في سطر واحد." | "A link name has 2–30 characters on one line." |
+| `link.label_not_allowed` | "الاسم للروابط من نوع «تاني» بس." | "Only \"Other\" links have a name." |
+
+**Moderation.** A SuperAdmin clears a user's links or title from the user's report case: `clear_links` /
+`clear_headline` in `POST /moderation/actions` (see Reports and moderation).
+
+**Account deletion.** The title and links are on `Users` and are deleted with the account (SPEC §9.6).
 
 Profile error codes: `user.not_found` (404), `profile.stats_private` (403), `profile.avatar_invalid` (400),
-`profile.expertise_invalid` (400).
+`profile.expertise_invalid` (400), and the validation codes above.
 
 The profile's **Categories** tab (between Articles and Reposts) and the category pages: see Writer categories (F31).
 
@@ -849,16 +1037,19 @@ validation code on `categoryIds`), `category.name_taken` (409), `category.name_i
 
 ### Live counters (F27, SPEC §21.2)
 
-After a reaction or save change commits, an outbox handler recomputes that article's counters from SQL (idempotent:
-always recounted, never incremented), stores them on `Articles` (`ReactionCount` = the sum of the four per-type
-columns, `SaveCount`), refreshes the cached details and writes `/live/articles/{id}` through `IRealtimePublisher`:
-`{ reactions: { insightful, love, fire, mindBlown }, commentCount, saveCount, updatedAt }` (published articles only).
+After a reaction, save, comment or repost change commits, an outbox handler recomputes that article's counters from SQL
+(idempotent: always recounted, never incremented), stores them on `Articles` (`ReactionCount` = the sum of the four
+per-type columns, `SaveCount`, `CommentCount`, `RepostCount`), refreshes the cached details and writes
+`/live/articles/{id}` through `IRealtimePublisher`:
+`{ reactions: { insightful, love, fire, mindBlown }, commentCount, saveCount, repostCount, updatedAt }` (published
+articles only). `repostCount` is new with F29: clients that don't see it yet (an article not touched since) keep the
+REST value.
 Clients apply their own action optimistically, and when live counters arrive they **replace** the numbers (never add),
 so your own action is never counted twice. Feed cards subscribe only while visible; the reader while open.
 
 | Method | Path | Auth | Response |
 |---|---|---|---|
-| POST | `/admin/realtime/rebuild-counters` | Bearer, `system.settings` | → `200 { articleCount }`: every article's counters recomputed from SQL and republished |
+| POST | `/admin/realtime/rebuild-counters` | Bearer, `system.settings` | → `200 { articleCount }`: every article's counters (reposts included) recomputed from SQL and republished |
 
 ### Editor (F05; Bearer, permission `articles.create`, rate limit `writes` on writes) — see [ADR 0015](../adr/0015-open-publishing-and-the-editor.md)
 
@@ -982,12 +1173,19 @@ Article PDF error codes: `article.pdf_hidden` (409), `article.pdf_busy` (503), `
 | Method | Path | Body → Response |
 |---|---|---|
 | POST | `/uploads/images` | `multipart/form-data`: `file` (jpeg/png/webp/heic, ≤ 10 MB, ≤ 8000×8000), `purpose` = `image` (default) \| `avatar` \| `cover` → `201 MediaAssetDto` with `status: "ready"` (images are processed in the request) |
-| POST | `/uploads/documents` | `multipart/form-data`: `file` (PDF, ≤ 20 MB, ≤ 100 pages, no password), `title` (optional, ≤ 5000, defaults to the file name), `allowDownload` (`true`/`false`, default `false`) → `202 MediaAssetDto` with `status: "processing"` and `pageCount` set. Pages are rendered in the background, page 1 first |
+| POST | `/uploads/documents` | `multipart/form-data`: `file` (PDF, ≤ 20 MB, ≤ 100 pages, no password), `title` (optional, ≤ 5000, defaults to the file name), `allowDownload` (`true`/`false`, **default `true`** when omitted, pre-production step; send `false` to turn it off) → `202 MediaAssetDto` with `status: "processing"` and `pageCount` set. Pages are rendered in the background, page 1 first |
 | GET | `/uploads/{id}` | → `200 MediaAssetDto` (owner only). Poll every 2 s while `status` is `processing` |
 | DELETE | `/uploads/{id}` | → `204` (owner only; `409 media.in_use` while attached to an article or in an editor working copy) |
 | GET | `/documents/{assetId}/download` 🌐 | → `200 application/pdf` with `Content-Disposition: attachment`. Allowed when the article is published and `allowDownload` is on, or for the owner / a moderator. `403 media.download_not_allowed`, `404 media.not_found` |
 
 Uploaded files are public, immutable `.webp` URLs under `/uploads/...` (absolute URLs in every DTO). PDFs are never served from `/uploads`.
+
+**Allow download (F26, pre-production step).** "السماح بتحميل الملف" / "Allow download" is **on by default**: both
+composers start the toggle on and send `allowDownload` with the upload (and in the draft's `DraftAttachment`), and the
+API takes `true` when the upload omits it. The writer can turn it off (`false`). `DraftAttachment.allowDownload` omitted
+keeps the asset's value. Documents uploaded before keep the value they have. A document's `canDownload` (owner,
+moderators, or `allowDownload`) shows the download icon in the PDF's title strip on the card and in the full-screen
+viewer; it calls `downloadUrl` (`GET /documents/{assetId}/download` → `Content-Disposition: attachment`).
 
 Quotas: 50 uploads per user per day (`409 media.quota_daily`), 200 MB stored per user (`409 media.quota_storage`).
 
@@ -1005,7 +1203,7 @@ carry signals, never content: fetch the data itself through REST. Times are epoc
 
 | Path | Who reads | Value |
 |---|---|---|
-| `/live/articles/{articleId}` | 🌐 | `reactions: { insightful, love, fire, mindBlown }`, `commentCount`, `saveCount`, `updatedAt` (server time). Totals, not deltas. Listen to the three counter children rather than the node, so `events` isn't downloaded |
+| `/live/articles/{articleId}` | 🌐 | `reactions: { insightful, love, fire, mindBlown }`, `commentCount`, `saveCount`, `repostCount` (F29), `updatedAt` (server time). Totals, not deltas. Listen to the four counter children rather than the node, so `events` isn't downloaded |
 | `/live/articles/{articleId}/events/{pushId}` | 🌐 | `{ type, commentId, parentId?, at }`: `type` is `comment.created` \| `comment.updated` \| `comment.deleted` \| `reply.created` \| `comment.liked` \| `comment.pinned`; `at` is server time, so query `orderByChild('at').startAt(serverNow)`. A retried write can repeat an event |
 | `/live/feed/latestPublishedAt` | 🌐 | Publish time of the newest article the feed can show. Higher than when the feed was loaded → show "مقالات جديدة ↑" |
 | `/live/users/{userId}` | that user (custom token) | `unreadNotifications` (entries not seen yet, the same number as `GET /me/notifications/unread-count`), `lastNotificationAt` (latest activity, epoch ms; missing when there is none). Written after every new entry, seen, read and read-all (F17) |
@@ -1148,8 +1346,9 @@ interface MeDto {
   displayName: string;
   username: string;              // @handle without "@"
   avatarUrl: string | null;
+  headline: string | null;       // the title (F14): one line, ≤ 120; null when empty
   bio: string | null;
-  links: { github?: string; linkedin?: string; website?: string };
+  links: ProfileLinkDto[];       // F14, in the user's order; [] when none (was { github, linkedin, website })
   uiLanguage: UiLanguage;
   articleLanguage: ArticleLanguage;
   theme: ThemePreference;
@@ -1179,7 +1378,8 @@ interface UpdateProfileRequest {
   displayName: string;           // 2..60
   username: string;              // ^[a-z0-9_]{3,30}$
   bio?: string | null;           // ≤ 300
-  links?: { github?: string | null; linkedin?: string | null; website?: string | null }; // https URLs
+  headline?: string | null;      // F14 title, ≤ 120, one line. OMIT to keep it; null or blank clears it
+  links?: ProfileLinkInput[] | null; // F14, ≤ 8, in display order. OMIT (or null) to keep them; an array replaces them all ([] clears)
   avatarAssetId?: string | null; // POST /uploads/images purpose=avatar → id. OMIT to keep the avatar; null removes it
   expertiseFieldIds?: string[];  // 0–5 enabled field ids in display order; omit to keep, [] to clear
   /** @deprecated previous release: an uploaded avatar's URL or an external https image; null removes. */
@@ -1211,7 +1411,20 @@ interface FieldDto {
 
 interface TopicDto { id: string; fieldId: string; slug: string; name: string; nameAr: string; nameEn: string }
 
-interface AuthorDto { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean }
+interface AuthorDto {
+  id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean;
+  headline: string | null;       // F14: the writer's current title; one line with "…" on cards, the reader and comments; null → hide the line
+}
+
+// ── Profile links (F14) ─────────────────────────────────────────────
+type LinkPlatform = 'linkedin' | 'x' | 'instagram' | 'facebook' | 'youtube' | 'tiktok' | 'snapchat' | 'threads'
+  | 'telegram' | 'github' | 'medium' | 'behance' | 'website' | 'other';
+interface ProfileLinkDto {
+  platform: LinkPlatform;
+  url: string;                   // https, ≤ 500, normalized ("https://" added when it was typed without a scheme)
+  label: string | null;          // 'other' only (2–30, one line): its accessible name and tooltip; null for the rest
+}
+interface ProfileLinkInput { platform: string; url: string; label?: string | null } // PATCH /me; rules in Profile → "Title and social links"
 
 interface FieldRefDto {
   id: string; slug: string; name: string; nameAr: string; nameEn: string;
@@ -1238,8 +1451,11 @@ interface ArticleCardDto {
   reactions: ReactionCountsDto;
   commentCount: number;          // 0 until F11
   saveCount: number;
+  repostCount: number;           // F29: people who reposted it; the number beside the Repost icon (hidden at 0)
   myReaction: ReactionType | null; // the caller's reaction; null for guests
   isSaved: boolean;              // the caller saved it; false for guests
+  isReposted: boolean;           // F29: the caller reposted it; false for guests
+  repostedBy: RepostLabelDto | null; // F29: only on Following-feed cards a repost placed and on a profile's Reposts tab; null elsewhere
   isFollowingAuthor: boolean;    // the caller follows the author; false for guests, on your own articles and for a deleted author
   isAuthorMuted: boolean;        // F28: the caller muted the author (the reader's "انت كاتم الكاتب ده" banner); false for guests, on your own articles and for a deleted author
   isFieldMuted: boolean;         // F28: the caller muted `field` (the sheet's toggle); false for guests
@@ -1266,9 +1482,19 @@ interface SaveStateDto { isSaved: boolean; saveCount: number }
 interface SavedArticleDto { savedAt: string; collectionIds: string[]; article: ArticleCardDto }
 interface CollectionDto { id: string; name: string; articleCount: number; createdAt: string } // articleCount: openable articles
 
+// ── Reposts (F29) ─────────────────────────────────────────────────
+interface RepostStateDto { repostCount: number; isReposted: boolean } // PUT / DELETE /articles/{id}/repost
+/** The card's label "أعاد نشره {name}" / "{name} و{n} غيره أعادوا نشره". */
+interface RepostLabelDto {
+  user: AuthorDto;               // the newest reposter you follow (Following feed), or the profile's owner (Reposts tab); name links to /@{username}
+  othersCount: number;           // other writers you follow who reposted it; always 0 on the Reposts tab
+  repostedAt: string;            // that repost's time: where the item is placed
+}
+
 interface FollowStateDto { isFollowing: boolean; followerCount: number }
 interface UserSummaryDto {
   id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean;
+  headline: string | null;       // F14 title (one line with "…"); null → hidden
   bio: string | null;
   isFollowing: boolean;          // the caller follows this user (false for guests)
   followsYou: boolean;           // this user follows the caller (false for guests)
@@ -1302,8 +1528,9 @@ interface ProfileDto {
    *  null without an avatar or for an avatar that isn't an upload (e.g. a Google photo). */
   avatarVariants: { '64': string; '128': string; '256': string; '512': string } | null;
   isVerified: boolean;
+  headline: string | null;       // F14 title, shown in full (wrapped) under the name; null → hidden. dir="auto"
   bio: string | null;            // mixed ar/en: render dir="auto"
-  links: { github: string | null; linkedin: string | null; website: string | null };
+  links: ProfileLinkDto[];       // F14: the icon row under the bio, in order; [] → hidden (was { github, linkedin, website })
   expertise: ExpertiseFieldDto[]; // ≤ 5, in the user's order
   joinedAt: string;
   stats: { articles: number; followers: number; following: number; totalReads: number }; // published articles; sum of their readCount
@@ -1423,7 +1650,7 @@ interface DraftAttachment {
   caption?: string | null;               // images, ≤ 5000
   altText?: string | null;               // images, required to publish, ≤ 5000
   title?: string | null;                 // the PDF, required to publish, ≤ 5000, no line breaks
-  allowDownload?: boolean;               // the PDF
+  allowDownload?: boolean;               // the PDF; omitted keeps the asset's value (uploads default to true); the composer's toggle starts on
 }
 
 interface ArticleEditDto {
@@ -1596,6 +1823,8 @@ interface ModerationTargetDto {  // the fields of the other target types are nul
   body: string | null; articleId: string | null; articleSlug: string | null; articleTitle: string | null;    // comment
   suspendedUntil: string | null; // user: while suspended (null = permanent)
   warningCount: number | null;   // user: warnings so far
+  links: ProfileLinkDto[] | null; // user: their social links now (F14), for clear_links; null for articles and comments
+  // user: their title is author.headline (F14), for clear_headline
 }
 
 interface ModerationReportDto {
@@ -1619,7 +1848,8 @@ interface ModerationCaseDto {
 interface ModerationActionDto {
   id: string;
   action: 'comment.hide' | 'comment.unhide' | 'comment.delete' | 'article.hide' | 'article.unhide'
-        | 'user.warn' | 'user.suspend' | 'user.unsuspend' | 'user.clear_category' | 'reports.dismiss'; // clear_category: F31
+        | 'user.warn' | 'user.suspend' | 'user.unsuspend' | 'user.clear_category' | 'user.clear_links' | 'user.clear_headline'
+        | 'reports.dismiss'; // clear_category: F31; clear_links, clear_headline: F14
   targetType: ModerationTargetType;
   targetId: string;
   targetLabel: string | null;    // article title / first 80 characters of the comment / @username, at the time
@@ -1664,7 +1894,7 @@ interface MyVerificationRequestDto {
 interface AdminVerificationRequestDto {
   id: string;
   status: VerificationStatus;
-  user: { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean }; // isVerified: has the badge now (offer "Remove badge")
+  user: { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean; headline: string | null }; // an AuthorDto; isVerified: has the badge now (offer "Remove badge"); headline: F14 title
   field: { id: string; slug: string; name: string };
   jobTitle: string;
   proofUrl: string | null;
@@ -1678,7 +1908,8 @@ interface AdminVerificationRequestDto {
 
 // Notifications (F17)
 type NotificationType = 'new_follower' | 'article_comment' | 'comment_reply' | 'mention' | 'reactions_milestone'
-  | 'followed_writer_article' | 'daily_article' | 'streak_reminder' | 'security_alert' | 'verification_result' | 'moderation_notice';
+  | 'followed_writer_article' | 'daily_article' | 'streak_reminder' | 'security_alert' | 'verification_result' | 'moderation_notice'
+  | 'article_reposted'; // F29
 
 type SecurityChange = 'passwordChanged' | 'passwordReset' | 'recoveryPinChanged' | 'phoneNumberChanged' | 'recoveryLockedOut'
   | 'externalLoginLinked' | 'externalLoginUnlinked' | 'phoneSignInAdded';
@@ -1707,7 +1938,7 @@ interface NotificationSettingsDto {
   quietHours: { enabled: boolean; start: string; end: string };   // "HH:mm", your time zone; end exclusive, may be before start
   types: Partial<Record<Exclude<NotificationType, 'security_alert' | 'verification_result' | 'moderation_notice'>, NotificationMode>>;
 }
-// GET returns all 8 configurable types; PUT may send any subset.
+// GET returns all 9 configurable types (article_reposted is the 9th, F29); PUT may send any subset.
 
 interface MyProgressDto {
   language: ArticleLanguage;     // the version the progress was recorded on
@@ -1782,8 +2013,9 @@ interface CommentDto {
   articleId: string;
   parentId: string | null;       // the thread's top-level comment; null for top-level comments
   body: string | null;           // null for placeholders; render with dir="auto"
-  author: AuthorDto | null;      // null: "Deleted user" (or a placeholder)
+  author: AuthorDto | null;      // null: "Deleted user" (or a placeholder). author.headline: the title under the name, instead of @username
   isAuthorMuted: boolean;        // F28: the caller muted the author: collapse to "تعليق من شخص كتمته" + "عرض" (expands locally); replies stay. false for guests and placeholders
+  isFollowingAuthor: boolean;    // the caller follows the comment's author ("متابعة" shows when false and it isn't you); false for guests, own comments, deleted authors and placeholders
   isArticleAuthor: boolean;      // the "الكاتب" badge
   mentions: { userId: string; username: string }[];  // link exactly these @handles
   likeCount: number;
@@ -1932,13 +2164,14 @@ an entry is written), for entries whose type is on `all`:
 | `security_alert` | "تنبيه أمان" / "Security alert" | what changed, e.g. "Your password was changed. If this wasn't you, reset it now." |
 | `verification_result` | approved: "بقيت كاتب موثّق ✓" / "You're now a verified writer ✓"; rejected: "طلب التوثيق بتاعك ماتقبلش" / "Your verification request wasn't approved" | approved: empty; rejected: "افتحه عشان تعرف السبب" / "Open it to see why" (never the reason). `data.link` = `readin://verification`; collapse key `verification_result` |
 | `moderation_notice` | as below | as below |
+| `article_reposted` (F29) | "{name} أعاد نشر مقالك" / "{name} reposted your article"; more: "{name} و{n} غيره أعادوا نشر مقالك" / "{name} and {n} others reposted your article" | the article's title. `data.link` = `readin://a/{slug}` (with `data.lang`); collapse key `article_reposted:{articleId}` |
 
 `{n}` is the number of other actors (one other: "وشخص تاني" / "and 1 other"); names are wrapped in Unicode isolates
 (U+2068 … U+2069) so a Latin name keeps its place in an Arabic sentence. A deleted actor is "مستخدم محذوف" / "Deleted user".
 
 | Item | Rule |
 |---|---|
-| Collapse key (Android collapse key and tag, `apns-collapse-id`, web `tag`) | the entry's group (`article_comment:{articleId}`, `comment_reply:{commentId}`, `new_follower:{yyyy-MM-dd}`), otherwise the type: a newer push of the group replaces the older one |
+| Collapse key (Android collapse key and tag, `apns-collapse-id`, web `tag`) | the entry's group (`article_comment:{articleId}`, `comment_reply:{commentId}`, `new_follower:{yyyy-MM-dd}`, `article_reposted:{articleId}`), otherwise the type: a newer push of the group replaces the older one |
 | Quiet hours | held until they end (user's time zone); `security_alert` ignores them |
 | Checked when sending | the type is still on `all`; the comment or article is still there (a mention in an article: its article is still readable); a moderation notice isn't acknowledged yet; the account isn't suspended |
 | Too late | dropped when the entry's last activity is more than 24 hours old (`streak_reminder`: 4 hours); TTL = what is left of that |

@@ -37,7 +37,7 @@ internal sealed class GetArticleReactorsQueryHandler(IAppDbContext db, ICurrentU
                 r.Id,
                 Reactor = new ReactorDto(
                     new AuthorDto(r.User.Id, r.User.DisplayName, r.User.Username, r.User.AvatarUrl,
-                        r.User.IsVerified),
+                        r.User.IsVerified, r.User.Headline),
                     r.Type,
                     r.ReactedAt),
             })

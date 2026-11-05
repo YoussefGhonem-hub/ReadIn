@@ -2,14 +2,16 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
+using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 
 namespace ReadIn.Infrastructure.Persistence.Seeding;
 
 /// <summary>
 /// Seeder #3 (all environments): the official ReadIn account (author of seeded articles, cannot sign in; a Member with the
-/// Verified badge) and the SuperAdmin (only the SuperAdmin role). In production the SuperAdmin gets <c>Seed:SuperAdminPhone</c> + <c>Seed:SuperAdminPassword</c>, must change
-/// the password on first sign in and then set a recovery PIN (SPEC §18.3).
+/// Verified badge, its headline "مقال كل يوم يفرق معاك" and no links) and the SuperAdmin (only the SuperAdmin role). In
+/// production the SuperAdmin gets <c>Seed:SuperAdminPhone</c> + <c>Seed:SuperAdminPassword</c>, must change the password on
+/// first sign in and then set a recovery PIN (SPEC §18.3).
 /// </summary>
 internal sealed class SystemAccountsSeeder(
     AppDbContext db,
@@ -20,9 +22,15 @@ internal sealed class SystemAccountsSeeder(
 {
     private const string OfficialBio = "الحساب الرسمي لمنصة ReadIn. مقالات منظمة وموثوقة في البرمجة والذكاء الاصطناعي، بالعربي والإنجليزي.";
 
+    /// <summary>@readin's title under its name on cards and the reader (SPEC F14), in every environment.</summary>
+    internal const string OfficialHeadline = "مقال كل يوم يفرق معاك";
+
+    /// <summary>@readin's links: none (it has no social accounts; the seed decides them, nobody edits them by hand).</summary>
+    internal static readonly IReadOnlyList<ProfileLink> OfficialLinks = [];
+
     public string Name => "system-accounts";
     public int Order => 3;
-    public int Version => 3;
+    public int Version => 4; // 4: @readin's headline, and its links set explicitly in the new shape
 
     public bool AppliesTo(IHostEnvironment environment) => true;
 
@@ -30,6 +38,8 @@ internal sealed class SystemAccountsSeeder(
         Version.ToString(),
         SystemUsers.OfficialPhone,
         OfficialBio,
+        OfficialHeadline,
+        string.Join(' ', OfficialLinks.Select(l => $"{l.Platform}={l.Url}|{l.Label}")),
         options.Value.SuperAdminPhone ?? string.Empty,
         (options.Value.SuperAdminPassword is not null).ToString()));
 
@@ -39,7 +49,9 @@ internal sealed class SystemAccountsSeeder(
             SystemUsers.OfficialPhone, "ReadIn", "readin", SystemUsers.EditorialId, systemAccount: true), cancellationToken);
         if (official.PhoneNumber != SystemUsers.OfficialPhone) official.AssignSeedPhoneNumber(SystemUsers.OfficialPhone);
         // The avatar is set by its own seeder from content/assets; keep it.
-        official.UpdateProfile("ReadIn", "readin", OfficialBio, official.AvatarUrl, new UserLinks());
+        Ensure(official.UpdateProfile("ReadIn", "readin", OfficialBio, official.AvatarUrl), "profile");
+        Ensure(official.SetHeadline(OfficialHeadline), "headline");
+        Ensure(official.SetLinks(OfficialLinks), "links");
         official.GrantRole(RoleIds.Member);
         official.Verify(clock.GetUtcNow().UtcDateTime); // the badge, not a role (SPEC §10.1)
 
@@ -60,6 +72,13 @@ internal sealed class SystemAccountsSeeder(
 
         await db.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    /// <summary>Seed data that breaks a profile rule is a bug: it stops the start with a clear error (SPEC §18.1).</summary>
+    private static void Ensure(Result result, string part)
+    {
+        if (result.IsFailure)
+            throw new InvalidOperationException($"The official account's seeded {part} is invalid: {result.Error.Code}");
     }
 
     private string? SuperAdminPhone()

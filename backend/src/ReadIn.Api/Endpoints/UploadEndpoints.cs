@@ -41,7 +41,7 @@ internal sealed class UploadEndpoints : IEndpointGroup
                 ISender sender, HttpContext http, CancellationToken ct) =>
             {
                 await using var content = file.OpenReadStream();
-                var result = await sender.Send(new UploadDocumentCommand(content, file.FileName, title, allowDownload ?? false), ct);
+                var result = await sender.Send(new UploadDocumentCommand(content, file.FileName, title, allowDownload ?? true), ct);
                 return result.IsSuccess
                     ? TypedResults.Accepted($"/api/v1/uploads/{result.Value.Id}", result.Value)
                     : result.Error!.ToProblem(http);
@@ -50,7 +50,7 @@ internal sealed class UploadEndpoints : IEndpointGroup
             .DisableAntiforgery()
             .WithMetadata(new RequestSizeLimitAttribute(UploadLimits.MaxDocumentBytes + FormOverhead))
             .WithFormOptions(multipartBodyLengthLimit: UploadLimits.MaxDocumentBytes + FormOverhead)
-            .WithSummary("Upload a PDF (multipart: file + title + allowDownload); pages are rendered in the background")
+            .WithSummary("Upload a PDF (multipart: file + title + allowDownload, default true); pages are rendered in the background")
             .Produces<MediaAssetDto>(StatusCodes.Status202Accepted);
 
         uploads.MapGet("/{id:guid}", async (Guid id, ISender sender, HttpContext http, CancellationToken ct) =>

@@ -43,7 +43,7 @@ internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : I
         // Occasional readers without a streak.
         new("reader8", [2, 9, 16, 30, 31, 45]),
         new("reader9", [5, 6, 20, 33]),
-        new("writer.verified", Run(0, 2)),
+        new("writer1", Run(0, 2)),
         new("reviewer.dotnet", [1, 4, 7, 10, 13]),
     ];
 
@@ -195,8 +195,9 @@ internal sealed class DemoReadingSeeder(AppDbContext db, TimeProvider clock) : I
         return (translation.Language, Math.Max(1, translation.ReadingTimeMinutes));
     }
 
+    /// <summary>@readin's articles, the only seeded ones (SPEC §18.1).</summary>
     private IQueryable<Article> Published() =>
-        db.Articles.Where(a => a.Status == ArticleStatus.Published && a.Translations.Any());
+        db.Articles.Where(a => a.AuthorId == SystemUsers.EditorialId && a.Status == ArticleStatus.Published && a.Translations.Any());
 
     private static string Email(string handle) => $"{handle}@readin.test";
 

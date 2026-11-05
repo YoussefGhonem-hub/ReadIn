@@ -7,8 +7,9 @@ using ReadIn.Domain.Common;
 namespace ReadIn.Application.Features.Feed.Queries.GetFollowingFeed;
 
 /// <summary>
-/// GET /feed/following — the "Following" tab (SPEC F03, F12): published articles by the writers you follow, newest
-/// first, keyset-paginated over (PublishedAt DESC, Id DESC).
+/// GET /feed/following — the "Following" tab (SPEC F03, F12, F29): published articles written or reposted by the writers
+/// you follow, each once, at the later of its publish (when you follow its author) and the newest followed repost,
+/// keyset-paginated over (that time DESC, Id DESC). A card a repost placed carries the label (<c>repostedBy</c>).
 /// </summary>
 [Authenticated]
 [RequirePermission(Permissions.Articles.Read)]

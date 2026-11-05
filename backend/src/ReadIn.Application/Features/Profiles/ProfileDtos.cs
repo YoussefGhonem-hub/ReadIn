@@ -12,6 +12,8 @@ namespace ReadIn.Application.Features.Profiles;
 /// <param name="AvatarVariants">
 /// <c>{ "64", "128", "256", "512" }</c> → URL; null without an avatar or for an avatar that isn't an upload.
 /// </param>
+/// <param name="Headline">The title (F14), in full; null when empty.</param>
+/// <param name="Links">Social links (F14) in the user's order; empty when none.</param>
 /// <param name="Expertise">At most 5, in the user's order; names in the request's UI language.</param>
 /// <param name="IsFollowing">The viewer follows this user; false for guests and on your own profile.</param>
 /// <param name="FollowsYou">This user follows the viewer; false for guests and on your own profile.</param>
@@ -23,8 +25,9 @@ public sealed record ProfileDto(
     string? AvatarUrl,
     IReadOnlyDictionary<string, string>? AvatarVariants,
     bool IsVerified,
+    string? Headline,
     string? Bio,
-    UserLinksDto Links,
+    IReadOnlyList<ProfileLinkDto> Links,
     IReadOnlyList<ExpertiseFieldDto> Expertise,
     DateTime JoinedAt,
     ProfileStatsDto Stats,

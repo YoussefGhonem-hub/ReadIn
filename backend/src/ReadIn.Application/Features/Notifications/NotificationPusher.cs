@@ -190,7 +190,8 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
                 if (article is not { IsVisible: true } || entry.CommentId is not { } commentId || !context.Comments.TryGetValue(commentId, out comment))
                     return Skip();
                 break;
-            case NotificationTypes.ReactionsMilestone or NotificationTypes.FollowedWriterArticle or NotificationTypes.DailyArticle:
+            case NotificationTypes.ReactionsMilestone or NotificationTypes.FollowedWriterArticle or NotificationTypes.DailyArticle
+                or NotificationTypes.ArticleReposted:
                 if (article is not { IsVisible: true }) return Skip();
                 break;
             case NotificationTypes.ModerationNotice:
@@ -201,7 +202,7 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
 
         var actor = context.Actors.GetValueOrDefault(entry.Id);
         // Every follower deleted their account since: the center drops the entry too.
-        if (entry.Type == NotificationTypes.NewFollower && actor.Count == 0) return Skip();
+        if (entry.Type is NotificationTypes.NewFollower or NotificationTypes.ArticleReposted && actor.Count == 0) return Skip();
 
         var english = user.UiLanguage == UiLanguages.English;
         // The version the user reads: the preferred language when it exists, otherwise the source (as on cards).

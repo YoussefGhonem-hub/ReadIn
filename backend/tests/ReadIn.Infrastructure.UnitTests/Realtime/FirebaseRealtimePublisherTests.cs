@@ -42,7 +42,7 @@ public sealed class FirebaseRealtimePublisherTests
     {
         var (publisher, http) = Publisher();
 
-        await publisher.PublishArticleCountersAsync(ArticleId, new ArticleLiveCounters(5, 4, 3, 2, CommentCount: 7, SaveCount: 9), Ct);
+        await publisher.PublishArticleCountersAsync(ArticleId, new ArticleLiveCounters(5, 4, 3, 2, CommentCount: 7, SaveCount: 9, RepostCount: 6), Ct);
 
         var request = http.Requests.Should().ContainSingle().Subject;
         request.Method.Should().Be(HttpMethod.Patch);
@@ -54,6 +54,7 @@ public sealed class FirebaseRealtimePublisherTests
             ["reactions"] = new JsonObject { ["insightful"] = 5, ["love"] = 4, ["fire"] = 3, ["mindBlown"] = 2 },
             ["commentCount"] = 7,
             ["saveCount"] = 9,
+            ["repostCount"] = 6,
             ["updatedAt"] = ServerTimestamp.DeepClone(),
         }).Should().BeTrue(request.Body?.ToJsonString());
     }

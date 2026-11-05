@@ -27,6 +27,12 @@ public sealed record CommentDto
     /// </summary>
     public bool IsAuthorMuted { get; init; }
 
+    /// <summary>
+    /// The viewer follows the comment's author: the row shows "متابعة" when false (SPEC F11). False for guests, on your own
+    /// comments, for a deleted author and on placeholders.
+    /// </summary>
+    public bool IsFollowingAuthor { get; init; }
+
     /// <summary>Written by the article's author: the "الكاتب" badge.</summary>
     public bool IsArticleAuthor { get; init; }
     public IReadOnlyList<MentionDto> Mentions { get; init; } = [];

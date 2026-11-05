@@ -4,7 +4,11 @@ using ReadIn.Domain.Engagement;
 
 namespace ReadIn.Application.Features.Articles;
 
-public sealed record AuthorDto(Guid Id, string DisplayName, string Username, string? AvatarUrl, bool IsVerified);
+/// <summary>
+/// A writer as cards, the reader, comments and lists show them. <see cref="Headline"/> is their current title (SPEC F14),
+/// shown on one line under the name; null when they have none.
+/// </summary>
+public sealed record AuthorDto(Guid Id, string DisplayName, string Username, string? AvatarUrl, bool IsVerified, string? Headline);
 
 /// <summary>Reactions per type (SPEC F10); the same shape as <c>/live/articles/{id}/reactions</c> (F27).</summary>
 public sealed record ReactionCountsDto(int Insightful, int Love, int Fire, int MindBlown)
@@ -86,11 +90,23 @@ public record ArticleCardDto
     public int CommentCount { get; init; }
     public int SaveCount { get; init; }
 
+    /// <summary>People who reposted it (SPEC F29): the number beside the Repost icon.</summary>
+    public int RepostCount { get; init; }
+
     /// <summary>The viewer's reaction; null for guests. Loaded after the projection by <see cref="ArticleViewerStateReader"/>.</summary>
     public ReactionType? MyReaction { get; init; }
 
     /// <summary>The viewer saved it; false for guests.</summary>
     public bool IsSaved { get; init; }
+
+    /// <summary>The viewer reposted it (SPEC F29); false for guests.</summary>
+    public bool IsReposted { get; init; }
+
+    /// <summary>
+    /// The label "أعاد نشره {name}" (SPEC F29, F34): set on Following-feed cards a repost placed and on a profile's Reposts
+    /// tab; null everywhere else.
+    /// </summary>
+    public Reposts.RepostLabelDto? RepostedBy { get; init; }
 
     /// <summary>The viewer follows the author; false for guests, on your own articles and for a deleted author.</summary>
     public bool IsFollowingAuthor { get; init; }

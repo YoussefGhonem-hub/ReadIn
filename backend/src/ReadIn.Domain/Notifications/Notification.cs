@@ -283,16 +283,20 @@ public static class NotificationTypes
 
     public const string ModerationNotice = "moderation_notice";
 
+    /// <summary>Someone reposted your article (SPEC F29, which calls it <c>article.reposted</c>); aggregated per article.</summary>
+    public const string ArticleReposted = "article_reposted";
+
     public static readonly IReadOnlyList<string> All =
     [
         NewFollower, ArticleComment, CommentReply, Mention, ReactionsMilestone, FollowedWriterArticle, DailyArticle, StreakReminder,
-        SecurityAlert, VerificationResult, ModerationNotice,
+        SecurityAlert, VerificationResult, ModerationNotice, ArticleReposted,
     ];
 
     /// <summary>The types a user can set to all / in-app / off. Security alerts and moderation notices always come.</summary>
     public static readonly IReadOnlyList<string> Configurable =
     [
         NewFollower, ArticleComment, CommentReply, Mention, ReactionsMilestone, FollowedWriterArticle, DailyArticle, StreakReminder,
+        ArticleReposted,
     ];
 
     public static bool IsKnown(string? type) => type is not null && All.Contains(type);

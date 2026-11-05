@@ -9,6 +9,7 @@ using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Auth;
 using ReadIn.Application.Features.Users;
+using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 using SkiaSharp;
 
@@ -16,11 +17,13 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 
 /// <summary>
 /// Seeder #4 (local only): the demo users of SPEC §18.3 in the fictional range +1 202 555 01XX, with realistic
-/// mixed-language profiles (F14: bio, links, 1–3 fields of expertise for writers, a square avatar drawn here and put
-/// through the real image pipeline, public reading stats for about a third), <c>Seed:DemoPassword</c> and, for those
+/// mixed-language profiles (F14: bio, headline, links, 1–3 fields of expertise for writers, a square avatar drawn here
+/// and put through the real image pipeline, public reading stats for about a third), <c>Seed:DemoPassword</c> and, for those
 /// marked with a PIN, <c>Seed:DemoPin</c>. Locally the SuperAdmin (+12025550101) gets the same credentials. Every demo user
 /// is a Member; the verified writers have the Verified badge (SPEC §10.1). There are no demo admin or moderator accounts
-/// any more: the demo SuperAdmin does that work (an older local database keeps +12025550102/3 as plain Members).
+/// any more: the demo SuperAdmin does that work (an older local database keeps +12025550102/3 as plain Members). Demo users
+/// have no articles of any status (SPEC §18.1); the former "Verified Writer" (+12025550106) is no longer seeded, and an older
+/// local database loses it with its articles and everything else of it (<see cref="DemoArticlesCleanupSeeder"/>).
 /// </summary>
 internal sealed partial class DemoUsersSeeder(
     AppDbContext db,
@@ -34,14 +37,9 @@ internal sealed partial class DemoUsersSeeder(
     TimeProvider clock,
     ILogger<DemoUsersSeeder> logger) : ISeeder
 {
-    [Flags]
-    private enum Link
-    {
-        GitHub = 1,
-        LinkedIn = 2,
-        Website = 4,
-    }
-
+    /// <param name="Headline">The title under the name (SPEC F14); null shows no line.</param>
+    /// <param name="Links">The profile's social links in order (SPEC F14); fictional <c>readin-demo-…</c> handles on the
+    /// platforms' own hosts, or reserved <c>example.com</c>/<c>example.org</c> sites.</param>
     private sealed record DemoUser(
         string Phone,
         string Handle,
@@ -51,7 +49,8 @@ internal sealed partial class DemoUsersSeeder(
         bool Suspended = false,
         bool HasPin = true,
         string[]? Expertise = null,
-        Link Links = Link.GitHub,
+        string? Headline = null,
+        ProfileLink[]? Links = null,
         bool PublicStats = false,
         bool Avatar = true,
         bool Verified = false);
@@ -59,28 +58,33 @@ internal sealed partial class DemoUsersSeeder(
     private static readonly DemoUser[] Users =
     [
         // The handles (and so the usernames) predate ADR 0015, which removed reviewing; other demo seeders find users by them.
+        // Every demo writer has a headline and 1–3 links (the profile, cards and comment rows show them locally).
         new("+12025550104", "reviewer.dotnet", ".NET Writer",
             "Senior .NET engineer. بكتب عن ASP.NET Core و Clean Architecture.", ["dotnet", "software-architecture", "databases"],
-            Expertise: ["dotnet", "software-architecture", "databases"], Links: Link.GitHub | Link.LinkedIn | Link.Website, PublicStats: true,
-            Verified: true),
+            Expertise: ["dotnet", "software-architecture", "databases"], Headline: "Senior .NET Engineer · ASP.NET Core و Clean Architecture",
+            Links: [GitHub("reviewer.dotnet"), LinkedIn("reviewer.dotnet"), Website("reviewer.dotnet")], PublicStats: true, Verified: true),
         new("+12025550105", "reviewer.ai", "AI Writer",
             "ML engineer. بشتغل على LLMs و RAG، وبكتب عن الـ AI.", ["ai-fundamentals", "machine-learning", "claude-ai-tools"],
-            Expertise: ["machine-learning", "ai-fundamentals", "claude-ai-tools"], Links: Link.GitHub | Link.LinkedIn, Verified: true),
-        new("+12025550106", "writer.verified", "Verified Writer",
-            "Flutter developer بكتب عن الـ mobile architecture.", ["mobile", "frontend", "software-architecture"],
-            Expertise: ["mobile", "frontend"], Links: Link.GitHub | Link.Website, PublicStats: true, Verified: true),
+            Expertise: ["machine-learning", "ai-fundamentals", "claude-ai-tools"], Headline: "ML Engineer بيشتغل على LLMs و RAG",
+            Links: [GitHub("reviewer.ai"), LinkedIn("reviewer.ai"), new(LinkPlatforms.YouTube, "https://www.youtube.com/@readin-demo-ai")],
+            Verified: true),
         new("+12025550107", "writer1", "Writer 1", "بكتب عن Angular و TypeScript.", ["frontend", "dotnet", "testing"],
-            Expertise: ["frontend"], Links: Link.GitHub | Link.LinkedIn),
+            Expertise: ["frontend"], Headline: "Frontend Engineer · Angular و TypeScript",
+            Links: [GitHub("writer1"), LinkedIn("writer1"), new(LinkPlatforms.X, "https://x.com/readin_demo_w1")]),
         new("+12025550108", "writer2", "Writer 2", "Backend developer — Node و .NET.", ["dotnet", "databases", "devops-cloud"],
-            Expertise: ["dotnet", "databases"], PublicStats: true),
+            Expertise: ["dotnet", "databases"], Headline: "Backend Developer — Node و .NET",
+            Links: [GitHub("writer2"), new(LinkPlatforms.Medium, "https://medium.com/@readin-demo-writer2")], PublicStats: true),
         new("+12025550109", "writer3", "Writer 3", "Data engineer مهتم بالـ SQL والـ performance.", ["databases", "machine-learning", "devops-cloud"],
-            Expertise: ["databases", "machine-learning"], Links: Link.GitHub | Link.LinkedIn | Link.Website),
+            Expertise: ["databases", "machine-learning"], Headline: "Data Engineer مهتم بالـ SQL والـ performance",
+            Links: [LinkedIn("writer3"), Website("writer3"), new(LinkPlatforms.Other, "https://example.org/readin-demo-writer3/talks", "Talks")]),
         .. Enumerable.Range(1, 10).Select(i => new DemoUser(
             $"+120255501{9 + i:D2}", $"reader{i}", $"Reader {i}",
             i % 2 == 0 ? "طالب هندسة حاسبات، بقرا مقال كل يوم 📚" : "Junior developer بيتعلم كل يوم حاجة جديدة.",
             ReaderInterests(i),
             HasPin: i != 10, // reader10 tests the mandatory "set PIN" screen
             Expertise: i % 3 == 1 ? ReaderInterests(i)[..1] : null,
+            Headline: ReaderHeadline(i),
+            Links: i == 10 ? null : [GitHub($"reader{i}")],
             PublicStats: i % 3 == 1, // reader1 (12-day streak), reader4, reader7
             Avatar: i != 10)),       // reader10 shows the initials fallback
         new("+12025550120", "suspended", "Suspended User", "Demo account for the suspended state.", ["dotnet", "frontend", "mobile"],
@@ -89,13 +93,14 @@ internal sealed partial class DemoUsersSeeder(
 
     public string Name => "demo-users";
     public int Order => 4;
-    public int Version => 6;
+    public int Version => 7; // 7: headlines and the new links; no "Verified Writer"
 
     public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.AllowsDemoData(environment);
 
     public Task<string> ComputeChecksumAsync(CancellationToken cancellationToken) => Task.FromResult(SeedChecksum.Of(
         [.. Users.Select(u => $"{u.Phone}|{u.Handle}|{u.DisplayName}|{u.Verified}|{u.Bio}|{string.Join(',', u.Interests)}|{u.Suspended}|{u.HasPin}" +
-                              $"|{string.Join(',', u.Expertise ?? [])}|{u.Links}|{u.PublicStats}|{u.Avatar}"),
+                              $"|{string.Join(',', u.Expertise ?? [])}|{u.Headline}|{string.Join(' ', (u.Links ?? []).Select(l => $"{l.Platform}={l.Url}|{l.Label}"))}" +
+                              $"|{u.PublicStats}|{u.Avatar}"),
          (options.Value.DemoPassword is not null).ToString(),
          (options.Value.DemoPin is not null).ToString()]));
 
@@ -126,7 +131,9 @@ internal sealed partial class DemoUsersSeeder(
             // Demo users made before the PhoneAuth migration got IsProfileComplete = false from its default; they have real
             // handles, so they count as complete (people search, Explore's writers, sign in routing).
             if (!user.IsProfileComplete) user.CompleteProfile(demo.DisplayName, username, avatar);
-            user.UpdateProfile(demo.DisplayName, username, demo.Bio, avatar, LinksFor(username, demo.Links));
+            Ensure(user.UpdateProfile(demo.DisplayName, username, demo.Bio, avatar), demo.Handle, "profile");
+            Ensure(user.SetHeadline(demo.Headline), demo.Handle, "headline");
+            Ensure(user.SetLinks(demo.Links ?? []), demo.Handle, "links");
 
             await db.SaveChangesAsync(cancellationToken);
             if (previousAvatar != avatar) await uploads.ReleaseAsync(previousAvatar, cancellationToken);
@@ -179,12 +186,28 @@ internal sealed partial class DemoUsersSeeder(
         return [all[i % all.Length], all[(i + 2) % all.Length], all[(i + 5) % all.Length]];
     }
 
-    private static UserLinks LinksFor(string username, Link links) => new()
+    /// <summary>Most readers have a title too, so comment rows show one; reader10 has none (the line is hidden).</summary>
+    private static string? ReaderHeadline(int i) => i switch
     {
-        GitHub = links.HasFlag(Link.GitHub) ? $"https://github.com/{username}" : null,
-        LinkedIn = links.HasFlag(Link.LinkedIn) ? $"https://www.linkedin.com/in/{username.Replace('_', '-')}" : null,
-        Website = links.HasFlag(Link.Website) ? $"https://example.com/{username}" : null,
+        10 => null,
+        _ when i % 3 == 0 => "QA Engineer بيتعلم test automation",
+        _ when i % 2 == 0 => "طالب هندسة حاسبات",
+        _ => "Junior Developer",
     };
+
+    // Fictional handles (readin-demo-…) on each platform's own host, and the reserved example.com for websites.
+    private static ProfileLink GitHub(string handle) => new(LinkPlatforms.GitHub, $"https://github.com/readin-demo-{handle.Replace('.', '-')}");
+
+    private static ProfileLink LinkedIn(string handle) =>
+        new(LinkPlatforms.LinkedIn, $"https://www.linkedin.com/in/readin-demo-{handle.Replace('.', '-')}");
+
+    private static ProfileLink Website(string handle) => new(LinkPlatforms.Website, $"https://example.com/readin-demo-{handle.Replace('.', '-')}");
+
+    /// <summary>Seed data that breaks a profile rule is a bug: it stops the start with a clear error (SPEC §18.1).</summary>
+    private static void Ensure(Result result, string handle, string part)
+    {
+        if (result.IsFailure) throw new InvalidOperationException($"The demo user {handle}'s seeded {part} is invalid: {result.Error.Code}");
+    }
 
     /// <summary>
     /// A deterministic avatar (no external personas, no network) through the same pipeline as a user upload: square

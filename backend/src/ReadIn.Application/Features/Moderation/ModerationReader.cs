@@ -6,7 +6,9 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Follows;
+using ReadIn.Application.Features.Users;
 using ReadIn.Domain.Moderation;
+using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Moderation;
 
@@ -26,7 +28,8 @@ public sealed class ModerationReader(IAppDbContext db, IFileStorage storage, Tim
     private sealed record CommentRow(Guid Id, string Body, Guid ArticleId, Guid? AuthorId, bool IsDeleted, DateTime? HiddenAt);
 
     private sealed record UserRow(
-        Guid Id, string DisplayName, string Username, string? AvatarUrl, bool IsVerified, bool IsDeleted, bool IsSuspended, DateTime? SuspendedUntil);
+        Guid Id, string DisplayName, string Username, string? AvatarUrl, bool IsVerified, bool IsDeleted, bool IsSuspended, DateTime? SuspendedUntil,
+        string? Headline, IReadOnlyList<ProfileLink> Links);
 
     public async Task<IReadOnlyDictionary<ModerationTargetKey, ModerationTargetDto>> TargetsAsync(
         IReadOnlyCollection<ModerationTargetKey> keys, CancellationToken ct)
@@ -56,7 +59,7 @@ public sealed class ModerationReader(IAppDbContext db, IFileStorage storage, Tim
             : await db.Users.IgnoreQueryFilters().AsNoTracking()
                 .Where(u => people.Contains(u.Id))
                 .Select(u => new UserRow(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified,
-                    u.IsDeleted, u.IsSuspended, u.SuspendedUntil))
+                    u.IsDeleted, u.IsSuspended, u.SuspendedUntil, u.Headline, u.Links))
                 .ToDictionaryAsync(u => u.Id, ct);
         var warnings = userTargets.Count == 0
             ? new Dictionary<Guid, int>()
@@ -98,13 +101,15 @@ public sealed class ModerationReader(IAppDbContext db, IFileStorage storage, Tim
                     Author = Author(user.Id),
                     SuspendedUntil = SuspendedAt(user, now) ? user.SuspendedUntil : null,
                     WarningCount = warnings.GetValueOrDefault(user.Id),
+                    // F14: what clear_links removes; the title (clear_headline) is Author.Headline.
+                    Links = user.Links.ToDtos(),
                 }
                 : Gone with { WarningCount = warnings.GetValueOrDefault(key.Id) },
         });
 
         AuthorDto? Author(Guid? id) =>
             id is { } userId && users.TryGetValue(userId, out var u) && !u.IsDeleted
-                ? new AuthorDto(u.Id, u.DisplayName, u.Username, storage.ToPublicUrl(u.AvatarUrl), u.IsVerified)
+                ? new AuthorDto(u.Id, u.DisplayName, u.Username, storage.ToPublicUrl(u.AvatarUrl), u.IsVerified, u.Headline)
                 : null;
     }
 

@@ -18,8 +18,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                 nullable: false,
                 defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
-            // Rows from before this column: the earliest time we know of is the last report.
-            migrationBuilder.Sql("UPDATE [ReadingProgress] SET [StartedAt] = [UpdatedAt];");
+            // Rows from before this column: the earliest time we know of is the last report. Through EXEC because a SQL
+            // script compiles the whole migration as one batch, before the new column exists.
+            migrationBuilder.Sql("EXEC(N'UPDATE [ReadingProgress] SET [StartedAt] = [UpdatedAt];');");
 
             migrationBuilder.CreateTable(
                 name: "ReadingDays",

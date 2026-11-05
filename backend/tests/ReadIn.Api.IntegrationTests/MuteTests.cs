@@ -135,7 +135,7 @@ public sealed class MuteTests(ApiFactory api) : IAsyncLifetime
         mutes.Select(p => p.Key).Should().Equal("users", "fields", "topics");
         Ids(mutes["users"]).Should().Equal(second.Id, first.Id);
         mutes["users"]![0]!.AsObject().Select(p => p.Key).Should().Equal(
-            "id", "displayName", "username", "avatarUrl", "isVerified", "bio", "isFollowing", "followsYou");
+            "id", "displayName", "username", "avatarUrl", "isVerified", "headline", "bio", "isFollowing", "followsYou");
         var mutedField = mutes["fields"]!.AsArray().Single()!.AsObject();
         mutedField.Select(p => p.Key).Should().Equal("id", "slug", "name", "nameAr", "nameEn", "icon", "color");
         mutedField["name"]!.GetValue<string>().Should().Be($"Field {field.Word}", "names follow Accept-Language");

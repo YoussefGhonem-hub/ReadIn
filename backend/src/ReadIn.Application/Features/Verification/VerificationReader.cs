@@ -37,7 +37,7 @@ public sealed class VerificationReader(IAppDbContext db, IFileStorage storage, I
         var userIds = rows.Select(r => r.UserId).Distinct().ToList();
         var users = await db.Users.IgnoreQueryFilters().AsNoTracking()
             .Where(u => userIds.Contains(u.Id))
-            .Select(u => new AuthorDto(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified))
+            .Select(u => new AuthorDto(u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified, u.Headline))
             .ToDictionaryAsync(u => u.Id, ct);
 
         var deciderIds = rows.Where(r => r.DecidedById != null).Select(r => r.DecidedById!.Value).Distinct().ToList();

@@ -158,4 +158,8 @@ public static class AuditActions
 
     /// <summary>A moderator cleared the name of one of the user's writer categories (SPEC F31).</summary>
     public const string CategoryCleared = "moderation.category_cleared";
+
+    /// <summary>A moderator cleared the user's social links or title (SPEC F14).</summary>
+    public const string LinksCleared = "moderation.links_cleared";
+    public const string HeadlineCleared = "moderation.headline_cleared";
 }

@@ -207,27 +207,19 @@ public sealed class EditorTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task Demo_writers_have_drafts_and_an_article_with_history_locally()
+    public async Task Demo_writers_have_no_drafts_and_no_published_articles()
     {
-        var verified = await api.SeedUserClientAsync("+12025550106");
-
-        var drafts = (await verified.GetFromJsonAsync<JsonObject>("/api/v1/me/articles?status=draft", Ct))!["items"]!.AsArray();
-        drafts.Select(d => d!["title"]!.GetValue<string>()).Should().Contain("Riverpod ولا Bloc؟");
-        var published = (await verified.GetFromJsonAsync<JsonObject>("/api/v1/me/articles?status=published", Ct))!["items"]!.AsArray();
-        var folders = published.Single(a => a!["slug"]!.GetValue<string>() == "flutter-feature-first-folders")!;
-        folders["hasUnpublishedChanges"]!.GetValue<bool>().Should().BeTrue();
-        folders["title"]!.GetValue<string>().Should().Be("Feature-first folders in Flutter apps", "readers see the second revision");
-
-        var id = folders["id"]!.GetValue<Guid>();
-        (await verified.GetFromJsonAsync<JsonArray>($"/api/v1/articles/{id}/revisions", Ct))!.Should().HaveCount(2);
-        (await verified.EditAsync(id))["document"]!["translations"]![0]!["title"]!.GetValue<string>()
-            .Should().Be("Feature-first folders in Flutter apps, with examples");
-
-        var writer1 = await api.SeedUserClientAsync("+12025550107");
-        var signals = (await writer1.GetFromJsonAsync<JsonObject>("/api/v1/me/articles?status=draft", Ct))!["items"]!.AsArray()
-            .Single(d => d!["title"]!.GetValue<string>().StartsWith("الـ Signals", StringComparison.Ordinal))!;
-        (await writer1.EditAsync(signals["id"]!.GetValue<Guid>())).ProblemCodes()
-            .Should().BeEquivalentTo(["article.image_alt_required", "article.sources_required"], "the demo shows the live checks");
+        // Every seeded article is @readin's (SPEC §18.1): "My articles" of each demo writer is empty, drafts included.
+        string[] writers = [ApiFactory.ReviewerPhone, "+12025550105", "+12025550107", "+12025550108", "+12025550109"];
+        foreach (var phone in writers)
+        {
+            var writer = await api.SeedUserClientAsync(phone);
+            foreach (var status in new[] { "draft", "published" })
+            {
+                (await writer.GetFromJsonAsync<JsonObject>($"/api/v1/me/articles?status={status}", Ct))!["items"]!.AsArray()
+                    .Should().BeEmpty($"the demo writer {phone} has no {status} articles");
+            }
+        }
     }
 
     [Fact]

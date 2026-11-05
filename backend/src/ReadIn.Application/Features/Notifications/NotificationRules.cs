@@ -125,7 +125,8 @@ public static class NotificationLinks
             NotificationTypes.NewFollower => actorCount == 1 && actorUsername is not null ? Profile(actorUsername) : Followers(myUsername),
             NotificationTypes.ArticleComment or NotificationTypes.CommentReply or NotificationTypes.Mention =>
                 articleSlug is null ? Center : commentId is { } id ? Comment(articleSlug, id) : Article(articleSlug),
-            NotificationTypes.ReactionsMilestone or NotificationTypes.FollowedWriterArticle or NotificationTypes.DailyArticle =>
+            NotificationTypes.ReactionsMilestone or NotificationTypes.FollowedWriterArticle or NotificationTypes.DailyArticle
+                or NotificationTypes.ArticleReposted =>
                 articleSlug is null ? Center : Article(articleSlug),
             NotificationTypes.StreakReminder => Stats,
             NotificationTypes.SecurityAlert => Account,
@@ -194,6 +195,9 @@ public static class NotificationTexts
                 ? $"Your article reached {input.Data.Threshold} reactions 🎉"
                 : $"مقالك وصل لـ {input.Data.Threshold} رياكشن 🎉", article),
             NotificationTypes.FollowedWriterArticle => (english ? $"{name} published a new article" : $"{name} نشر مقال جديد", article),
+            NotificationTypes.ArticleReposted => (english
+                ? $"{name}{OthersEn(others)} reposted your article"
+                : others == 0 ? $"{name} أعاد نشر مقالك" : $"{name}{OthersAr(others)} أعادوا نشر مقالك", article),
             NotificationTypes.DailyArticle => (english ? DailyArticlePush.TitleEn : DailyArticlePush.TitleAr, article),
             NotificationTypes.StreakReminder => StreakReminder(english, input.Data.StreakDays ?? 1),
             NotificationTypes.SecurityAlert => (english ? "Security alert" : "تنبيه أمان", SecurityBody(english, input.Data)),

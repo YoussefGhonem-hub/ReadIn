@@ -9,12 +9,13 @@ using ReadIn.Application.Features.Profiles.Queries.GetProfileArticles;
 using ReadIn.Application.Features.Profiles.Queries.GetProfileReadingStats;
 using ReadIn.Application.Features.Reading;
 using ReadIn.Application.Features.Reading.Queries.GetMyHeatmap;
+using ReadIn.Application.Features.Reposts;
 using ReadIn.Application.Features.Users.Commands.UpdatePrivacy;
 
 namespace ReadIn.Api.Endpoints;
 
 /// <summary>
-/// F14 Profile (SPEC §17.2): the public profile, its Articles tab and its reading stats, plus Settings → Privacy (F18).
+/// F14 Profile (SPEC §17.2): the public profile, its Articles and Reposts (F29) tabs and its reading stats, plus Settings → Privacy (F18).
 /// <c>{username}</c> never clashes with <c>/users/suggested</c> or <c>/users/username-available</c>: literal segments win.
 /// </summary>
 internal sealed class ProfileEndpoints : IEndpointGroup
@@ -31,6 +32,11 @@ internal sealed class ProfileEndpoints : IEndpointGroup
         users.MapGet("/{username}/articles", async (string username, string? cursor, int? limit, ISender sender, ICurrentUser user, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(new GetProfileArticlesQuery(username, cursor, limit ?? 20, user.UiLanguage), ct)).ToHttp(http))
             .WithSummary("The profile's published articles, newest first")
+            .Produces<CursorPage<ArticleCardDto>>();
+
+        users.MapGet("/{username}/reposts", async (string username, string? cursor, int? limit, ISender sender, ICurrentUser user, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new GetProfileRepostsQuery(username, cursor, limit ?? 20, user.UiLanguage), ct)).ToHttp(http))
+            .WithSummary("The profile's Reposts tab (F29): articles the user reposted, newest repost first, labeled")
             .Produces<CursorPage<ArticleCardDto>>();
 
         users.MapGet("/{username}/stats", async (string username, ISender sender, HttpContext http, CancellationToken ct) =>

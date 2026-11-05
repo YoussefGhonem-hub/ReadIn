@@ -51,6 +51,12 @@ public sealed record ModerationTargetDto
 
     /// <summary>Warnings this user got so far.</summary>
     public int? WarningCount { get; init; }
+
+    /// <summary>
+    /// A user target's social links now (SPEC F14), for <c>clear_links</c>; null for articles and comments. Their title,
+    /// for <c>clear_headline</c>, is <see cref="AuthorDto.Headline"/> of <see cref="Author"/>.
+    /// </summary>
+    public IReadOnlyList<Users.ProfileLinkDto>? Links { get; init; }
 }
 
 public static class ModerationTargetStates

@@ -21,8 +21,8 @@ public interface IRealtimePublisher
         Guid userId, int unreadNotifications, DateTime? lastNotificationAt, CancellationToken cancellationToken = default);
 }
 
-/// <summary>Counters under <c>/live/articles/{articleId}</c>: reactions per type (F10), comments (F11), saves (F13).</summary>
-public sealed record ArticleLiveCounters(int Insightful, int Love, int Fire, int MindBlown, int CommentCount, int SaveCount);
+/// <summary>Counters under <c>/live/articles/{articleId}</c>: reactions per type (F10), comments (F11), saves (F13), reposts (F29).</summary>
+public sealed record ArticleLiveCounters(int Insightful, int Love, int Fire, int MindBlown, int CommentCount, int SaveCount, int RepostCount = 0);
 
 /// <summary>
 /// One comment event (F11). <see cref="Type"/> is one of <c>comment.created</c>, <c>comment.updated</c>,

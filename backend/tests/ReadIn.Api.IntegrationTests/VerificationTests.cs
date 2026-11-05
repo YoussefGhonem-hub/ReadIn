@@ -244,7 +244,7 @@ public sealed class VerificationTests(ApiFactory api)
         var item = pending.Should().ContainSingle(p => p["id"]!.GetValue<Guid>() == id).Subject;
         item.Select(p => p.Key).Should().BeEquivalentTo(
             "id", "status", "user", "field", "jobTitle", "proofUrl", "proof", "note", "submittedAt", "decidedAt", "decidedBy", "rejectionReason");
-        item["user"]!.AsObject().Select(p => p.Key).Should().BeEquivalentTo("id", "displayName", "username", "avatarUrl", "isVerified");
+        item["user"]!.AsObject().Select(p => p.Key).Should().BeEquivalentTo("id", "displayName", "username", "avatarUrl", "isVerified", "headline");
         (item["user"]!["id"]!.GetValue<Guid>(), item["user"]!["displayName"]!.GetValue<string>(), item["user"]!["isVerified"]!.GetValue<bool>())
             .Should().Be((user.Id, "Queued Writer", false));
         item["proof"]!.ToJsonString().Should().Be($"{{\"fileName\":\"card.png\",\"contentType\":\"image/png\",\"sizeBytes\":{png.Length}}}");
@@ -549,7 +549,7 @@ public sealed class VerificationTests(ApiFactory api)
         var seeder = scope.ServiceProvider.GetServices<ISeeder>().Single(s => s.Name == "demo-verification");
         seeder.AppliesTo(scope.ServiceProvider.GetRequiredService<IHostEnvironment>()).Should().BeFalse("Development only");
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        string[] emails = ["writer1@readin.test", "writer2@readin.test", "writer3@readin.test", "reader5@readin.test", "writer.verified@readin.test"];
+        string[] emails = ["writer1@readin.test", "writer2@readin.test", "writer3@readin.test", "reader5@readin.test", "reviewer.dotnet@readin.test"];
         var demoUsers = await db.Users.Where(u => u.Email != null && emails.Contains(u.Email)).Select(u => u.Id).ToListAsync(Ct);
 
         try
@@ -568,6 +568,8 @@ public sealed class VerificationTests(ApiFactory api)
             second.Where(r => r.ProofFilePath != null)
                 .Should().OnlyContain(r => File.Exists(Path.Combine(api.PrivatePath, r.ProofFilePath!.Replace('/', Path.DirectorySeparatorChar))));
             second.Should().Contain(r => r.ProofFilePath == null && r.ProofUrl != null && r.Status == VerificationStatus.Pending, "one is URL only");
+            var dotnetWriter = await db.Users.Where(u => u.Email == "reviewer.dotnet@readin.test").Select(u => u.Id).SingleAsync(Ct);
+            second.Single(r => r.Status == VerificationStatus.Approved).UserId.Should().Be(dotnetWriter, "the .NET Writer's request was approved");
             foreach (var old in first.Where(r => r.ProofFilePath != null))
                 File.Exists(Path.Combine(api.PrivatePath, old.ProofFilePath!.Replace('/', Path.DirectorySeparatorChar))).Should().BeFalse("replaced with its row");
             (await db.Notifications.CountAsync(n => demoUsers.Contains(n.UserId) && n.Type == NotificationTypes.VerificationResult, Ct))

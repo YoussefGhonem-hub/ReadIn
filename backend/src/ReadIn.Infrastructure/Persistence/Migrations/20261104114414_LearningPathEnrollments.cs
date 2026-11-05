@@ -19,7 +19,8 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                 defaultValue: false);
 
             // Every path so far came from content/taxonomy.yaml (seeder #7); version 2 of that seeder marks them too.
-            migrationBuilder.Sql("UPDATE LearningPaths SET IsEditorial = 1;");
+            // Through EXEC because a SQL script compiles the whole migration as one batch, before the new column exists.
+            migrationBuilder.Sql("EXEC(N'UPDATE LearningPaths SET IsEditorial = 1;');");
 
             migrationBuilder.CreateTable(
                 name: "PathEnrollments",

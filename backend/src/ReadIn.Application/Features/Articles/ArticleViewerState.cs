@@ -10,7 +10,8 @@ namespace ReadIn.Application.Features.Articles;
 /// they muted its author, field or topic (F28).
 /// </summary>
 public sealed record ArticleViewerState(
-    ReactionType? MyReaction, bool IsSaved, bool IsFollowingAuthor, bool IsAuthorMuted = false, bool IsFieldMuted = false, bool IsTopicMuted = false);
+    ReactionType? MyReaction, bool IsSaved, bool IsFollowingAuthor, bool IsAuthorMuted = false, bool IsFieldMuted = false, bool IsTopicMuted = false,
+    bool IsReposted = false);
 
 /// <summary>
 /// Loads <see cref="ArticleViewerState"/> for a page of articles in one query: the page's articles LEFT JOIN the viewer's
@@ -48,11 +49,13 @@ public sealed class ArticleViewerStateReader(IAppDbContext db)
                     IsAuthorMuted = article.AuthorId != viewer && mutedUsers.Any(id => id == article.AuthorId),
                     IsFieldMuted = mutedFields.Contains(article.FieldId),
                     IsTopicMuted = mutedTopics.Any(id => id == article.TopicId),
+                    // F29: an EXISTS lookup on the unique (UserId, ArticleId) index.
+                    IsReposted = db.Reposts.Any(r => r.UserId == viewer && r.ArticleId == article.Id),
                 })
             .ToListAsync(cancellationToken);
 
         return rows.ToDictionary(r => r.Id, r => new ArticleViewerState(
-            r.MyReaction, r.IsSaved, r.IsFollowingAuthor, r.IsAuthorMuted, r.IsFieldMuted, r.IsTopicMuted));
+            r.MyReaction, r.IsSaved, r.IsFollowingAuthor, r.IsAuthorMuted, r.IsFieldMuted, r.IsTopicMuted, r.IsReposted));
     }
 }
 
@@ -69,6 +72,7 @@ internal static class ArticleViewerStateExtensions
                 IsAuthorMuted = state.IsAuthorMuted,
                 IsFieldMuted = state.IsFieldMuted,
                 IsTopicMuted = state.IsTopicMuted,
+                IsReposted = state.IsReposted,
             })
             : card;
 }

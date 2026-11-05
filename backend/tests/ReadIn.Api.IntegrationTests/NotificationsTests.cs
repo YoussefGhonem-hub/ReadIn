@@ -405,11 +405,14 @@ public sealed class NotificationsTests(ApiFactory api)
                 NotificationTypes.CommentReply, NotificationTypes.Mention, NotificationTypes.FollowedWriterArticle, NotificationTypes.DailyArticle,
                 NotificationTypes.StreakReminder, NotificationTypes.SecurityAlert,
             ]);
-            second.Where(n => n.UserId == writer1).Select(n => n.Type).Should().Contain(
-                [NotificationTypes.ArticleComment, NotificationTypes.ReactionsMilestone, NotificationTypes.NewFollower]);
-            var demoIds = second.Select(n => n.Id).ToList();
-            (await db.NotificationActors.CountAsync(a => demoIds.Contains(a.NotificationId) && a.ActorId == reader1, Ct))
-                .Should().BeGreaterThanOrEqualTo(2, "reader1 commented on and follows writer1");
+            // Demo writers have no articles (SPEC §18.1): no comments-on-your-article or milestone entries for them.
+            second.Where(n => n.UserId == writer1).Select(n => n.Type).Should().BeEquivalentTo([NotificationTypes.Mention, NotificationTypes.NewFollower]);
+            var articleIds = second.Where(n => n.ArticleId != null).Select(n => n.ArticleId!.Value).Distinct().ToList();
+            (await db.Articles.CountAsync(a => articleIds.Contains(a.Id) && a.AuthorId == SystemUsers.EditorialId, Ct))
+                .Should().Be(articleIds.Count, "every entry is about one of @readin's articles");
+            var followers = second.Single(n => n.UserId == writer1 && n.Type == NotificationTypes.NewFollower).Id;
+            (await db.NotificationActors.Where(a => a.NotificationId == followers).Select(a => a.ActorId).ToListAsync(Ct))
+                .Should().HaveCount(3, "reader1, reader3 and reader5 follow writer1, aggregated in one entry").And.Contain(reader1);
 
             var center = (await (await api.SeedUserClientAsync(ApiFactory.Reader1Phone))
                 .GetFromJsonAsync<JsonObject>("/api/v1/me/notifications?limit=50", Ct))!["items"]!.AsArray();

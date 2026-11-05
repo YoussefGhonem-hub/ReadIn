@@ -603,7 +603,7 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 
 | Data | Where | On deletion | Why / how long |
 |---|---|---|---|
-| Phone number, email, password hash, recovery PIN hash, name, @username, photo, bio, links, preferences and privacy settings, quiet hours, lockout counters, security stamp | `Users` | **Deleted** | |
+| Phone number, email, password hash, recovery PIN hash, name, @username, photo, title (headline), bio, social links, preferences and privacy settings, quiet hours, lockout counters, security stamp | `Users` | **Deleted** | |
 | Roles, interests, fields of expertise | `UserRoles`, `UserInterests`, `UserExpertiseFields` | **Deleted** (cascade) | |
 | Devices and FCM push tokens | `UserDevices` | **Deleted** (cascade); the apps also delete the token on the device | No notification reaches a deleted account |
 | Google/Apple links and the encrypted Apple refresh token | `UserExternalLogins` | Apple tokens **revoked at Apple** first, then **deleted** | The same Google/Apple account can sign up again |
@@ -615,7 +615,7 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 | Images and PDFs a kept article shows (attachments, cover, images in its content or revisions) | `MediaAssets`, `MediaAssetPages`, files under `/uploads` | **Anonymized**: `OwnerId`, `CreatedBy` and `UpdatedBy` set to null; files kept | They're part of the article that stays |
 | Every other upload: avatar, images and PDFs of deleted articles, unused uploads, with their page previews | `MediaAssets`, `MediaAssetPages`, files under `/uploads` | **Deleted**; files right after the commit (a failed file delete is finished by the daily orphaned-uploads job) | |
 | Live signals | Firebase RTDB `/live/users/{id}` | **Deleted** (best effort; they expire after 24 hours anyway) | |
-| The account's reactions, saved articles, collections, follows in both directions | `Reactions`, `SavedArticles`, `Collections`, `CollectionItems`, `UserFollows` | **Deleted** (cascade from `Users`; follows *of* the account deleted explicitly); the counters of the articles it reacted to or saved are recomputed right after | |
+| The account's reactions, saved articles, collections, reposts (F29), follows in both directions | `Reactions`, `SavedArticles`, `Collections`, `CollectionItems`, `Reposts`, `UserFollows` | **Deleted** (cascade from `Users`; follows *of* the account deleted explicitly); the counters of the articles it reacted to, saved or reposted are recomputed right after. Reposts of its deleted articles go with those articles | |
 | The account's comments (F11) | `Comments` | **Anonymized**: `AuthorId` set to null by the foreign key, `CreatedBy` and `UpdatedBy` cleared; shown as "Deleted user". Its comments that were already deleted (by it or a moderator) keep only the placeholder: their text is erased | Replies and discussions keep their context |
 | The account's comment likes, mentions of it | `CommentLikes`, `CommentMentions` | **Deleted** (cascade); the like counts of the comments it liked are recomputed in the same transaction | |
 | The account's notifications (with their actors) and notification settings (F17) | `Notifications`, `NotificationActors`, `UserNotificationSettings` | **Deleted** (cascade) | |
@@ -848,7 +848,7 @@ API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR
 ### F17 — Notifications
 **Built.** API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Notifications", "Push payloads"); details in [§21.1](#211-notifications).
 - In-app notification center (SQL `Notifications` table, live unread badge via Firebase Realtime Database) + push (FCM).
-- Types: new follower, reply to your comment, mention (comments and articles), reactions milestone (10/50/100), comment on your article, verification result (F19: approved or rejected), daily article, streak reminder (20:00, if not read yet), new article from a followed writer, **security alerts** (password/PIN/phone changed, recovery lockout, Google/Apple linked or unlinked), moderation notices (F22).
+- Types: new follower, reply to your comment, mention (comments and articles), reactions milestone (10/50/100), comment on your article, verification result (F19: approved or rejected), daily article, streak reminder (20:00, if not read yet), new article from a followed writer, repost of your article (`article_reposted`, F29), **security alerts** (password/PIN/phone changed, recovery lockout, Google/Apple linked or unlinked), moderation notices (F22).
 - Per-type preferences (push / in-app / off), quiet hours. Details in [§21](#21-notifications--real-time).
 
 ### F18 — Settings
@@ -1634,7 +1634,7 @@ Seed content lives in `content/articles/{field}/{topic}/{slug}/` so it is versio
 | Tables | `Notifications` (Id, UserId → Users cascade, Type, GroupKey, DedupeKey, ArticleId and CommentId with no cascade, Data JSON, CreatedAt, UpdatedAt = latest activity, SeenAt, ReadAt, PushStatus None/Pending/Sent/Skipped/Failed, PushAfter, PushedAt, PushAttempts); `NotificationActors` (NotificationId cascade + ActorId with no cascade, At); `UserNotificationSettings` (UserId + Type, Mode all/inApp/off; no row = all); `Users.QuietHoursEnabled/Start/End` (default on, 23:00, 07:00). Indexes: unique (UserId, DedupeKey) where set, (UserId, UpdatedAt DESC, Id DESC) for the list, (PushStatus, PushAfter) for pending pushes |
 | Writing | Outbox handlers (`UserFollowedDomainEvent`, `CommentChangedDomainEvent`, `ReactionChangedDomainEvent`, `ArticlePublishedDomainEvent`, `ArticleMentionsDomainEvent` (every publish and Update with mentions; the handler checks the article and "who can mention me" again), `UserSecurityChangedDomainEvent`, `ModerationNoticeIssuedDomainEvent`, `VerificationDecidedDomainEvent` (F19)) and jobs (daily article, streak reminder) write through `NotificationWriter`; they never push. Never about your own action; suspended, deleted and system accounts get nothing; `off` writes nothing, `inApp` writes without a push |
 | Idempotency | A dedupe key per user (`mention:{commentId}`, `mention:article:{articleId}` (so an Update tells only newly mentioned users), `reactions_milestone:{articleId}:{n}`, `followed_writer_article:{articleId}`, `security_alert:{change}:{event ticks}`, `moderation_notice:{noticeId}`, `verification_result:{requestId}`, `daily_article:{date}`, `streak_reminder:{date}`), and an aggregated entry ignores an actor's activity it already has, so outbox retries change nothing |
-| Aggregation | `new_follower` per day, `article_comment` per article, `comment_reply` per thread: new activity joins an unread entry of the group that moved in the last 24 hours (distinct actors, moved to the top, seen/read cleared, push armed again) |
+| Aggregation | `new_follower` per day, `article_comment` and `article_reposted` (F29) per article, `comment_reply` per thread: new activity joins an unread entry of the group that moved in the last 24 hours (distinct actors, moved to the top, seen/read cleared, push armed again) |
 | Push job | `NotificationPushJob` (Hangfire, every minute and right after a write): pending entries that are due, batched, title/body in the user's UI language, collapse key = group or type, quiet hours (the push waits for their end; security alerts ignore them), checked again when sending (mode, content still there, account active), dropped after 24 hours (streak reminder: 4), invalid tokens deleted, other failures retried after 1 and 5 minutes (3 sends) |
 | Streak reminder | `StreakReminderJob`, every 5 minutes: from 20:00 to 22:00 in each user's time zone, one per local date, when the streak is ≥ 1 (a pending freeze counts, ADR 0013) and nothing was read today |
 | Daily article | The F07 job writes the `daily_article` entry and sends its own push with the entry's id; `inApp` → entry only, `off` → neither; quiet hours hold the push within F07's 2-hour late window |
@@ -1649,7 +1649,7 @@ The Realtime Database (RTDB) was chosen over Firestore because Firestore bills e
 ```text
 /live/articles/{articleId}
     reactions: { insightful, love, fire, mindBlown }
-    commentCount, saveCount, updatedAt
+    commentCount, saveCount, repostCount, updatedAt
 /live/articles/{articleId}/events/{pushId}
     { type: comment.created | comment.updated | comment.deleted
           | reply.created | comment.liked | comment.pinned,

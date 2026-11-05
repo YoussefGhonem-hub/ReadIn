@@ -9,13 +9,17 @@ namespace ReadIn.Application.Features.Follows;
 /// <summary>Your follow and the writer's follower count right after the change.</summary>
 public sealed record FollowStateDto(bool IsFollowing, int FollowerCount);
 
-/// <summary>A user in followers/following lists and suggestions; never the phone number (SPEC §9.5).</summary>
+/// <summary>
+/// A user in followers/following lists and suggestions; never the phone number (SPEC §9.5). <see cref="Headline"/> is
+/// their title (F14), null when they have none.
+/// </summary>
 public sealed record UserSummaryDto(
     Guid Id,
     string DisplayName,
     string Username,
     string? AvatarUrl,
     bool IsVerified,
+    string? Headline,
     string? Bio,
     bool IsFollowing,
     bool FollowsYou);
@@ -31,11 +35,11 @@ internal static class UserSummaries
         if (viewerId is not { } viewer)
         {
             return u => new UserSummaryDto(
-                u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified, u.Bio, false, false);
+                u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified, u.Headline, u.Bio, false, false);
         }
 
         return u => new UserSummaryDto(
-            u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified, u.Bio,
+            u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified, u.Headline, u.Bio,
             db.UserFollows.Any(f => f.FollowerId == viewer && f.FolloweeId == u.Id),
             db.UserFollows.Any(f => f.FollowerId == u.Id && f.FolloweeId == viewer));
     }

@@ -15,7 +15,7 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 /// <summary>
 /// Development only (SPEC F19, §18.2): an admin verification queue that isn't empty locally. Three pending requests:
 /// writer1 (a LinkedIn URL and a PNG certificate), writer2 (a GitHub URL only) and writer3 (a PDF syndicate card only);
-/// reader5's request was rejected with a reason and the verified writer's was approved, both by the demo SuperAdmin, so every
+/// reader5's request was rejected with a reason and the .NET Writer's was approved, both by the demo SuperAdmin, so every
 /// tab and the user page's states have data. The proof files are drawn here and go to the private store. Writes no outbox
 /// events, so nothing is notified or pushed. A re-run replaces the requests of these users, with their files.
 /// </summary>
@@ -49,13 +49,13 @@ internal sealed class DemoVerificationSeeder(AppDbContext db, IPrivateFileStorag
         new("writer3", "databases", "Data Engineer", null, Proof.Pdf, "كارنيه النقابة.pdf", "كارنيه نقابة المهندسين مرفق.", 5),
         new("reader5", "frontend", "Junior Developer", "https://github.com/readin-demo-reader5", Proof.None, null, null, 96,
             VerificationStatus.Rejected, "اللينك مش بيوضّح خبرة في المجال ده. ضيف شغلك أو شهادة وابعت الطلب تاني.", 72),
-        new("writer.verified", "mobile", "Flutter Developer", "https://github.com/readin-demo-writer-verified", Proof.None, null, null, 400,
+        new("reviewer.dotnet", "dotnet", "Senior .NET Engineer", "https://github.com/readin-demo-reviewer-dotnet", Proof.None, null, null, 400,
             VerificationStatus.Approved, DecidedHoursAgo: 380),
     ];
 
     public string Name => "demo-verification";
     public int Order => 14;
-    public int Version => 2; // 2: decided by the SuperAdmin (there is no demo admin any more)
+    public int Version => 3; // 3: the .NET Writer's request is the approved one (the "Verified Writer" account is gone)
 
     public bool AppliesTo(IHostEnvironment environment) => environment.IsDevelopment();
 

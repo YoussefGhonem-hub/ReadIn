@@ -32,7 +32,7 @@ public static class RoleMatrix
         new(RoleIds.Guest, RoleNames.Guest, "Not signed in. Can browse and read published articles.", [P.Articles.Read]),
         new(RoleIds.Member, RoleNames.Member, "Default for every signed-up user, with or without the Verified badge.",
         [
-            P.Articles.Read, P.Articles.Create, P.Articles.ExportPdf, P.Comments.Create, P.Reactions.Create,
+            P.Articles.Read, P.Articles.Create, P.Articles.ExportPdf, P.Comments.Create, P.Reactions.Create, P.Reposts.Create,
             P.Follows.Manage, P.Saved.Manage, P.Reports.Create,
         ]),
         new(RoleIds.SuperAdmin, RoleNames.SuperAdmin, "The app's owner. Full access, moderation and verification included.", [.. P.All.Keys]),

@@ -132,7 +132,8 @@ public sealed class NotificationTests
     {
         NotificationTypes.Configurable.Should().NotContain([NotificationTypes.SecurityAlert, NotificationTypes.ModerationNotice,
             NotificationTypes.VerificationResult]);
-        NotificationTypes.All.Should().HaveCount(11).And.OnlyHaveUniqueItems();
+        NotificationTypes.All.Should().HaveCount(12, "article_reposted (F29) is the 12th").And.OnlyHaveUniqueItems();
+        NotificationTypes.Configurable.Should().Contain(NotificationTypes.ArticleReposted).And.HaveCount(9);
         NotificationTypes.IgnoresQuietHours(NotificationTypes.SecurityAlert).Should().BeTrue();
         NotificationTypes.IgnoresQuietHours(NotificationTypes.ModerationNotice).Should().BeFalse();
 

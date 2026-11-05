@@ -140,16 +140,14 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, ArticlesSeeder>();
         services.AddScoped<ISeeder, LearningPathsSeeder>();
         services.AddScoped<ISeeder, GlossarySeeder>();
-        services.AddScoped<ISeeder, DemoMediaSeeder>();
-        services.AddScoped<ISeeder, DemoWritersSeeder>();
+        // Every article is @readin's (SPEC §18.1): demo accounts get no articles; this removes the old ones from local databases.
+        services.AddScoped<ISeeder, DemoArticlesCleanupSeeder>();
         services.AddScoped<ISeeder, DemoReadingSeeder>();
         services.AddScoped<ISeeder, DemoCommentsSeeder>();
-        services.AddScoped<ISeeder, DemoEditorSeeder>();
         services.AddScoped<ISeeder, DemoInteractionsSeeder>();
         services.AddScoped<ISeeder, DemoReportsSeeder>();
         services.AddScoped<ISeeder, DemoNotificationsSeeder>();
         services.AddScoped<ISeeder, DemoVerificationSeeder>();
-        services.AddScoped<ISeeder, DemoCategoriesSeeder>();
         services.AddScoped<SeedRunner>();
 
         services.AddHealthChecks().AddDbContextCheck<AppDbContext>("sql");

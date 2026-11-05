@@ -78,6 +78,9 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public int MindBlownCount { get; private set; }
     public int CommentCount { get; private set; }
     public int SaveCount { get; private set; }
+
+    /// <summary>People who reposted it (SPEC F29).</summary>
+    public int RepostCount { get; private set; }
     public int ReadCount { get; private set; }
 
     // Read-side navigations for query projections only; domain behavior never uses them.
@@ -321,7 +324,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     /// Sets the denormalized counters. The outbox handlers update them in SQL instead (one statement, no rowversion
     /// round trip); this keeps the same invariant for code that works on a loaded article.
     /// </summary>
-    public void ApplyCounters(ReactionCounts reactions, int comments, int saves, int reads)
+    public void ApplyCounters(ReactionCounts reactions, int comments, int saves, int reads, int reposts = 0)
     {
         InsightfulCount = reactions.Insightful;
         LoveCount = reactions.Love;
@@ -330,6 +333,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         ReactionCount = reactions.Total;
         CommentCount = comments;
         SaveCount = saves;
+        RepostCount = reposts;
         ReadCount = reads;
     }
 

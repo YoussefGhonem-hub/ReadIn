@@ -274,6 +274,7 @@ and URL-safe slug, and tags that are now one tag are merged (`LegacyTagsUpgrade`
 - **A SQL script or a migrations bundle** (`dotnet ef migrations script --idempotent`, `dotnet ef migrations bundle`)
   can't run C#. The API does the data upgrades at its next start, before it serves requests (`UpgradeDataAsync()` in
   `ReadIn.Infrastructure/DependencyInjection.cs`), so start or restart the API **after** the script is applied.
+  Run the script with `sqlcmd -I` (QUOTED_IDENTIFIER on): without it, the filtered indexes fail (`Msg 1934`).
 
 Each upgrade waits until its migration is applied and does nothing once it is done (one or two small queries per
 start), so running it again is always safe.

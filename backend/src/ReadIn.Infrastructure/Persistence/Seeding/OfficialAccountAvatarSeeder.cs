@@ -60,7 +60,7 @@ internal sealed partial class OfficialAccountAvatarSeeder(
 
         var previous = account.AvatarUrl;
         var avatar = SeedImages.Pick(imported.Value, StoredWidth);
-        var updated = account.UpdateProfile(account.DisplayName, account.Username, account.Bio, avatar, account.Links);
+        var updated = account.UpdateProfile(account.DisplayName, account.Username, account.Bio, avatar); // headline and links stay
         if (updated.IsFailure) return false;
 
         await db.SaveChangesAsync(cancellationToken);

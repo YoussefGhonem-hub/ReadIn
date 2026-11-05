@@ -16,6 +16,7 @@ using ReadIn.Application.Features.Reactions;
 using ReadIn.Application.Features.Reactions.Commands.RemoveReaction;
 using ReadIn.Application.Features.Reactions.Commands.SetReaction;
 using ReadIn.Application.Features.Reactions.Queries.GetArticleReactors;
+using ReadIn.Application.Features.Reposts;
 using ReadIn.Application.Features.SavedArticles;
 using ReadIn.Application.Features.SavedArticles.Commands.AddToCollection;
 using ReadIn.Application.Features.SavedArticles.Commands.CreateCollection;
@@ -56,6 +57,29 @@ internal sealed class ReactionEndpoints : IEndpointGroup
             .AllowAnonymous()
             .WithSummary("Who reacted, newest first; ?type= keeps one reaction")
             .Produces<CursorPage<ReactorDto>>();
+    }
+}
+
+/// <summary>F29 Reposts (SPEC §17.2): repost an article to your followers, or undo it; both idempotent.</summary>
+internal sealed class RepostEndpoints : IEndpointGroup
+{
+    public void Map(RouteGroupBuilder api)
+    {
+        var articles = api.MapGroup("/articles").WithTags("Reposts");
+
+        articles.MapPut("/{id:guid}/repost", async (Guid id, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new RepostArticleCommand(id), ct)).ToHttp(http))
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitPolicies.Writes)
+            .WithSummary("Repost an article (reposts.create); 400 repost.own_article on your own")
+            .Produces<RepostStateDto>();
+
+        articles.MapDelete("/{id:guid}/repost", async (Guid id, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new UndoRepostCommand(id), ct)).ToHttp(http))
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitPolicies.Writes)
+            .WithSummary("Undo your repost (idempotent)")
+            .Produces<RepostStateDto>();
     }
 }
 

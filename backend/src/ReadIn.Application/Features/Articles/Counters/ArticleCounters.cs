@@ -8,12 +8,12 @@ using ReadIn.Domain.Engagement;
 namespace ReadIn.Application.Features.Articles.Counters;
 
 /// <summary>
-/// The denormalized counters on <c>Articles</c> (SPEC §16.1, F27): reactions per type and their sum, saves and comments
+/// The denormalized counters on <c>Articles</c> (SPEC §16.1, F27): reactions per type and their sum, saves, reposts (F29) and comments
 /// (visible comments and replies: not deleted, not hidden). They are
 /// always recomputed from the rows (never incremented), so running it twice, late or after a crash gives the same
 /// numbers. Each recompute updates the columns in one SQL statement, publishes the counters of published articles to
 /// <c>/live/articles/{id}</c> and drops their cached details;
-/// the admin rebuild also recomputes <c>ReadCount</c> (F08). Called by the reactions, saves and comments outbox handlers, the admin rebuild, the demo seeders and account deletion.
+/// the admin rebuild also recomputes <c>ReadCount</c> (F08). Called by the reactions, saves, reposts and comments outbox handlers, the admin rebuild, the demo seeders and account deletion.
 /// </summary>
 public sealed class ArticleCounters(IAppDbContext db, IRealtimePublisher realtime, HybridCache cache)
 {
@@ -62,6 +62,7 @@ public sealed class ArticleCounters(IAppDbContext db, IRealtimePublisher realtim
                 a.MindBlownCount != db.Reactions.Count(r => r.ArticleId == a.Id && r.Type == ReactionType.MindBlown) ||
                 a.ReactionCount != db.Reactions.Count(r => r.ArticleId == a.Id) ||
                 a.SaveCount != db.SavedArticles.Count(s => s.ArticleId == a.Id) ||
+                a.RepostCount != db.Reposts.Count(r => r.ArticleId == a.Id) ||
                 a.CommentCount != db.Comments.Count(c => c.ArticleId == a.Id && !c.IsDeleted && c.HiddenAt == null))
             .ExecuteUpdateAsync(set => set
                 .SetProperty(a => a.InsightfulCount, a => db.Reactions.Count(r => r.ArticleId == a.Id && r.Type == ReactionType.Insightful))
@@ -70,6 +71,7 @@ public sealed class ArticleCounters(IAppDbContext db, IRealtimePublisher realtim
                 .SetProperty(a => a.MindBlownCount, a => db.Reactions.Count(r => r.ArticleId == a.Id && r.Type == ReactionType.MindBlown))
                 .SetProperty(a => a.ReactionCount, a => db.Reactions.Count(r => r.ArticleId == a.Id))
                 .SetProperty(a => a.SaveCount, a => db.SavedArticles.Count(s => s.ArticleId == a.Id))
+                .SetProperty(a => a.RepostCount, a => db.Reposts.Count(r => r.ArticleId == a.Id))
                 .SetProperty(a => a.CommentCount, a => db.Comments.Count(c => c.ArticleId == a.Id && !c.IsDeleted && c.HiddenAt == null)),
                 ct);
 
@@ -86,6 +88,7 @@ public sealed class ArticleCounters(IAppDbContext db, IRealtimePublisher realtim
                 a.MindBlownCount,
                 a.CommentCount,
                 a.SaveCount,
+                a.RepostCount,
             })
             .ToListAsync(ct);
 
@@ -94,7 +97,8 @@ public sealed class ArticleCounters(IAppDbContext db, IRealtimePublisher realtim
         {
             await realtime.PublishArticleCountersAsync(
                 row.Id,
-                new ArticleLiveCounters(row.InsightfulCount, row.LoveCount, row.FireCount, row.MindBlownCount, row.CommentCount, row.SaveCount),
+                new ArticleLiveCounters(row.InsightfulCount, row.LoveCount, row.FireCount, row.MindBlownCount, row.CommentCount, row.SaveCount,
+                    row.RepostCount),
                 ct);
         }
 

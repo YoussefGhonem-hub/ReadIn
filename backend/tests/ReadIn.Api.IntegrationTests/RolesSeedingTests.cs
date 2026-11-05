@@ -179,8 +179,9 @@ public sealed class RolesSeedingTests(ApiFactory api)
         seeded.Single(u => u.Id == SystemUsers.SuperAdminId).Roles.Should().Equal([RoleIds.SuperAdmin]);
         var official = seeded.Single(u => u.Id == SystemUsers.EditorialId);
         (official.IsVerified, official.Roles.Single()).Should().Be((true, RoleIds.Member), "@readin is a Member with the badge");
-        seeded.Where(u => u.Username is "reviewer_dotnet" or "reviewer_ai" or "writer_verified").Should().HaveCount(3)
+        seeded.Where(u => u.Username is "reviewer_dotnet" or "reviewer_ai").Should().HaveCount(2)
             .And.OnlyContain(u => u.IsVerified && u.Roles.Count == 1 && u.Roles[0] == RoleIds.Member);
+        seeded.Select(u => u.Username).Should().NotContain("writer_verified", "the \"Verified Writer\" demo account is gone");
         seeded.Where(u => u.Username.StartsWith("reader", StringComparison.Ordinal)).Should().NotBeEmpty().And.OnlyContain(u => !u.IsVerified);
     }
 

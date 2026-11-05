@@ -22,6 +22,7 @@ internal sealed class FirebaseRealtimePublisher(RealtimeDatabaseClient database)
             },
             ["commentCount"] = counters.CommentCount,
             ["saveCount"] = counters.SaveCount,
+            ["repostCount"] = counters.RepostCount,
             ["updatedAt"] = RealtimeDatabaseClient.ServerTimestamp,
         }, cancellationToken);
 

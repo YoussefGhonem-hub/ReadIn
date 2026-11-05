@@ -1,5 +1,8 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ReadIn.Application.Common.Security;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Taxonomy;
@@ -30,8 +33,14 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.Username).IsUnique();
 
         builder.Property(u => u.AvatarUrl).HasMaxLength(2048);
+        builder.Property(u => u.Headline).HasMaxLength(HeadlineRules.MaxLength);
         builder.Property(u => u.Bio).HasMaxLength(300);
-        builder.ComplexProperty(u => u.Links, links => links.ToJson());
+        // A JSON array, `[{"platform":"github","url":"https://…","label":null}]` (SPEC F14), in the member's order.
+        builder.Property(u => u.Links)
+            .HasConversion(ProfileLinksJson.Converter, ProfileLinksJson.Comparer)
+            .HasColumnName("Links")
+            .HasColumnType("nvarchar(max)")
+            .IsRequired();
 
         builder.Property(u => u.UiLanguage).HasMaxLength(5).IsRequired();
         builder.Property(u => u.ArticleLanguagePref).HasMaxLength(5).IsRequired();
@@ -164,4 +173,33 @@ internal sealed class RolePermissionConfiguration : IEntityTypeConfiguration<Rol
         builder.HasKey(p => new { p.RoleId, p.PermissionId });
         builder.HasOne<Permission>().WithMany().HasForeignKey(p => p.PermissionId).OnDelete(DeleteBehavior.Cascade);
     }
+}
+
+/// <summary>
+/// <c>Users.Links</c> (SPEC F14): <c>[{"platform":"github","url":"https://github.com/mona","label":null}, …]</c>. The
+/// profile migration rewrote the previous <c>{"GitHub":…,"LinkedIn":…,"Website":…}</c> object into this shape.
+/// </summary>
+internal static class ProfileLinksJson
+{
+    private sealed record Entry(string Platform, string Url, string? Label);
+
+    private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
+
+    public static readonly ValueConverter<IReadOnlyList<ProfileLink>, string> Converter = new(
+        links => Serialize(links),
+        json => Deserialize(json));
+
+    public static readonly ValueComparer<IReadOnlyList<ProfileLink>> Comparer = new(
+        (a, b) => a!.SequenceEqual(b!),
+        links => links.Aggregate(0, (hash, l) => HashCode.Combine(hash, l)),
+        links => links.ToList());
+
+    private static string Serialize(IReadOnlyList<ProfileLink> links) =>
+        JsonSerializer.Serialize(links.Select(l => new Entry(l.Platform, l.Url, l.Label)), Options);
+
+    private static List<ProfileLink> Deserialize(string json) =>
+        // Anything but an array (a row the migration didn't reach) reads as no links.
+        string.IsNullOrWhiteSpace(json) || json.TrimStart()[0] != '['
+            ? []
+            : [.. (JsonSerializer.Deserialize<List<Entry>>(json, Options) ?? []).Select(e => new ProfileLink(e.Platform, e.Url, e.Label))];
 }

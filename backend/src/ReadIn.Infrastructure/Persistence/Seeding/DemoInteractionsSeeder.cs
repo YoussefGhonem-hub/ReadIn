@@ -11,7 +11,8 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 
 /// <summary>
 /// Seeder #8 (local only, SPEC §18.2): reactions, saves and follows by the demo users, plus a collection for reader1, so
-/// feeds, the reader, the Following tab and the saved list look real in development.
+/// feeds, the reader, the Following tab and the saved list look real in development. They react to and save @readin's
+/// articles only, the only seeded articles (SPEC §18.1); articles written by hand in a local database are left alone.
 /// <list type="bullet">
 /// <item>Deterministic: a stable hash of (user, article) decides whether and how a demo user reacts or saves, so every
 /// run and every machine seeds the same rows.</item>
@@ -33,11 +34,14 @@ internal sealed class DemoInteractionsSeeder(AppDbContext db, ArticleCounters co
     private static readonly string[] Handles =
     [
         .. Enumerable.Range(1, 10).Select(i => $"reader{i}"),
-        "writer1", "writer2", "writer3", "writer.verified", "reviewer.dotnet", "reviewer.ai",
+        "writer1", "writer2", "writer3", "reviewer.dotnet", "reviewer.ai",
     ];
 
-    /// <summary>Demo users that write: the others follow some of them (the official ReadIn account is followed by everyone).</summary>
-    private static readonly string[] Writers = ["writer.verified", "writer1", "writer2", "writer3", "reviewer.dotnet", "reviewer.ai"];
+    /// <summary>
+    /// The demo writers: the others follow some of them (the official ReadIn account is followed by everyone). They have
+    /// no articles (SPEC §18.1), so their followers fill the follow lists and suggestions, not the Following feed.
+    /// </summary>
+    private static readonly string[] Writers = ["writer1", "writer2", "writer3", "reviewer.dotnet", "reviewer.ai"];
 
     public string Name => "demo-interactions";
     public int Order => 10;
@@ -141,7 +145,7 @@ internal sealed class DemoInteractionsSeeder(AppDbContext db, ArticleCounters co
     }
 
     private IQueryable<Article> PublishedArticles() => db.Articles.AsNoTracking()
-        .Where(a => a.Status == ArticleStatus.Published && a.Field.IsEnabled)
+        .Where(a => a.AuthorId == SystemUsers.EditorialId && a.Status == ArticleStatus.Published && a.Field.IsEnabled)
         .OrderBy(a => a.Slug);
 
     private static string Email(string handle) => $"{handle}@readin.test";

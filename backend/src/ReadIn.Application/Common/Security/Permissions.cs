@@ -23,6 +23,12 @@ public static class Permissions
         public const string Create = "reactions.create";
     }
 
+    /// <summary>Repost an article to your followers (SPEC F29).</summary>
+    public static class Reposts
+    {
+        public const string Create = "reposts.create";
+    }
+
     public static class Follows
     {
         public const string Manage = "follows.manage";
@@ -78,6 +84,7 @@ public static class Permissions
         [Articles.Feature] = "Feature articles",
         [Comments.Create] = "Comment and reply",
         [Reactions.Create] = "React to articles",
+        [Reposts.Create] = "Repost articles",
         [Follows.Manage] = "Follow writers and fields",
         [Saved.Manage] = "Save articles and manage collections",
         [Reports.Create] = "Report content",

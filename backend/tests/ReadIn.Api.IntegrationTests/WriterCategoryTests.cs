@@ -414,24 +414,19 @@ public sealed class WriterCategoryTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task The_demo_seed_gives_demo_writers_categories_and_a_second_run_changes_nothing()
+    public async Task The_demo_seed_gives_demo_writers_no_categories()
     {
-        var guest = api.GuestClient();
-        var tab = await guest.GetAsync("/api/v1/users/writer1/categories", Ct).OkJsonAsync();
-        tab["items"]!.AsArray().Select(c => c!["name"]!.GetValue<string>()).Should().Equal(["ورش Angular"], "TypeScript is empty: only writer1 sees it");
-        tab["items"]![0]!["articleCount"]!.GetValue<int>().Should().Be(1);
-        (await guest.GetAsync("/api/v1/articles/demo-media-angular-workshop", Ct).OkJsonAsync())["category"]!["name"]!.GetValue<string>()
-            .Should().Be("ورش Angular");
-
+        // Demo writers have no articles (SPEC §18.1), so the seed gives them no categories, not even empty ones.
         await using (var scope = api.Services.CreateAsyncScope())
         {
-            var seeder = scope.ServiceProvider.GetServices<ISeeder>().Single(s => s.Name == "demo-categories");
-            (await seeder.SeedAsync(Ct)).Should().BeTrue();
+            scope.ServiceProvider.GetServices<ISeeder>().Select(s => s.Name).Should().NotContain("demo-categories");
         }
 
+        var guest = api.GuestClient();
+        foreach (var handle in new[] { "writer1", "writer2", "reviewer_ai" })
+            (await guest.GetAsync($"/api/v1/users/{handle}/categories", Ct).OkJsonAsync())["items"]!.AsArray().Should().BeEmpty();
         var writer1 = await api.SeedUserClientAsync(Writer1Phone);
-        (await writer1.GetAsync("/api/v1/me/categories", Ct).OkJsonAsync())["items"]!.AsArray().Select(c => c!["name"]!.GetValue<string>())
-            .Should().Equal("ورش Angular", "TypeScript");
+        (await writer1.GetAsync("/api/v1/me/categories", Ct).OkJsonAsync())["items"]!.AsArray().Should().BeEmpty("only the owner would see an empty one");
     }
 
     [Fact]

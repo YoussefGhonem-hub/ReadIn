@@ -86,6 +86,7 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
 
         var liked = new HashSet<Guid>();
         var muted = new HashSet<Guid>();
+        var followed = new HashSet<Guid>();
         if (ViewerId is { } viewer)
         {
             var all = ordered.Select(r => r.Id).Concat(replies.Select(r => r.Id)).ToList();
@@ -102,6 +103,11 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
                     .Where(m => m.MuterId == viewer && authors.Contains(m.MutedUserId))
                     .Select(m => m.MutedUserId)
                     .ToListAsync(ct)];
+                // The rows' "متابعة" (F11), seeded into the clients' follow store.
+                followed = [.. await db.UserFollows.AsNoTracking()
+                    .Where(f => f.FollowerId == viewer && authors.Contains(f.FolloweeId))
+                    .Select(f => f.FolloweeId)
+                    .ToListAsync(ct)];
             }
         }
 
@@ -109,16 +115,16 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
         return [.. ordered.Select(row =>
         {
             var articleAuthor = articleAuthors.GetValueOrDefault(row.ArticleId);
-            var dto = ToDto(row, articleAuthor, liked, muted);
+            var dto = ToDto(row, articleAuthor, liked, muted, followed);
             if (!withReplies || row.ParentId is not null) return dto;
-            return dto with { Replies = [.. repliesByParent[row.Id].Select(r => ToDto(r, articleAuthor, liked, muted))] };
+            return dto with { Replies = [.. repliesByParent[row.Id].Select(r => ToDto(r, articleAuthor, liked, muted, followed))] };
         })];
     }
 
     public async Task<CommentDto?> LoadOneAsync(Guid id, CancellationToken ct) =>
         (await LoadAsync([id], withReplies: false, ct)).FirstOrDefault();
 
-    private CommentDto ToDto(CommentRow row, Guid? articleAuthorId, HashSet<Guid> liked, HashSet<Guid> muted)
+    private CommentDto ToDto(CommentRow row, Guid? articleAuthorId, HashSet<Guid> liked, HashSet<Guid> muted, HashSet<Guid> followed)
     {
         var viewer = ViewerId;
         var own = viewer is not null && row.AuthorId == viewer;
@@ -148,6 +154,7 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
             Body = row.Body,
             Author = author,
             IsAuthorMuted = !own && row.AuthorId is { } authorId && muted.Contains(authorId),
+            IsFollowingAuthor = !own && row.AuthorId is { } followedId && followed.Contains(followedId),
             IsArticleAuthor = row.AuthorId is not null && row.AuthorId == articleAuthorId,
             Mentions = row.Mentions,
             LikeCount = row.LikeCount,
@@ -174,7 +181,7 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
             c.Author == null
                 ? null
                 : new AuthorDto(c.Author.Id, c.Author.DisplayName, c.Author.Username, c.Author.AvatarUrl,
-                    c.Author.IsVerified),
+                    c.Author.IsVerified, c.Author.Headline),
             c.Body,
             c.IsPinned,
             c.LikeCount,

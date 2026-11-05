@@ -40,8 +40,14 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     public string DisplayName { get; private set; } = default!;
     public string Username { get; private set; } = default!;
     public string? AvatarUrl { get; private set; }
+
+    /// <summary>The title under the name (SPEC F14, "المسمى"): one line, at most 120 characters; null when empty.</summary>
+    public string? Headline { get; private set; }
+
     public string? Bio { get; private set; }
-    public UserLinks Links { get; private set; } = new();
+
+    /// <summary>Social links (SPEC F14), at most 8, in the member's order; always valid (<see cref="ProfileLinkRules"/>).</summary>
+    public IReadOnlyList<ProfileLink> Links { get; private set; } = [];
 
     public string UiLanguage { get; private set; } = UiLanguages.Arabic;
     public string ArticleLanguagePref { get; private set; } = ArticleLanguages.EgyptianArabic;
@@ -213,7 +219,8 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
         return Result.Success();
     }
 
-    public Result UpdateProfile(string displayName, string username, string? bio, string? avatarUrl, UserLinks links)
+    /// <summary>Name, @username, bio and avatar (SPEC F14); the title and the links keep their values.</summary>
+    public Result UpdateProfile(string displayName, string username, string? bio, string? avatarUrl)
     {
         if (!IsValidUsername(username)) return UserErrors.InvalidUsername;
 
@@ -221,8 +228,68 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
         Username = username;
         Bio = string.IsNullOrWhiteSpace(bio) ? null : bio.Trim();
         AvatarUrl = avatarUrl;
-        Links = links;
         return Result.Success();
+    }
+
+    /// <summary>
+    /// <see cref="UpdateProfile(string, string, string?, string?)"/> and the links (<see cref="SetLinks"/>); nothing changes
+    /// when either fails.
+    /// </summary>
+    public Result UpdateProfile(string displayName, string username, string? bio, string? avatarUrl, IReadOnlyList<ProfileLink> links)
+    {
+        var checkedLinks = ProfileLinkRules.Check(links);
+        if (checkedLinks.IsFailure) return checkedLinks.Error;
+        var result = UpdateProfile(displayName, username, bio, avatarUrl);
+        if (result.IsSuccess) Links = checkedLinks.Value;
+        return result;
+    }
+
+    /// <summary>The links of the previous shape (GitHub, LinkedIn, website), for callers not moved to <see cref="SetLinks"/> yet.</summary>
+    public Result UpdateProfile(string displayName, string username, string? bio, string? avatarUrl, UserLinks links) =>
+        UpdateProfile(displayName, username, bio, avatarUrl, links.ToProfileLinks());
+
+    /// <summary>
+    /// The title under the name (SPEC F14): trimmed, empty → none, at most 120 characters on one line without control or
+    /// direction-override characters (<see cref="HeadlineRules"/>). Fails with the validation code in <c>errors.headline</c>;
+    /// nothing changes then.
+    /// </summary>
+    public Result SetHeadline(string? headline)
+    {
+        var normalized = HeadlineRules.Normalize(headline);
+        if (HeadlineRules.Problem(normalized) is { } code)
+            return Error.Validation("validation.failed", "Validation failed.") with { Details = new Dictionary<string, string[]> { ["headline"] = [code] } };
+        Headline = normalized;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Replaces the social links (SPEC F14), in the given order: at most 8, one per platform (<c>other</c> may repeat),
+    /// https only (<c>https://</c> is added when there is no scheme), ≤ 500 characters, on the platform's own hosts, and a
+    /// 2–30 character label for <c>other</c> only (<see cref="ProfileLinkRules"/>). Fails with the validation codes keyed
+    /// like the API's <c>errors</c> (<c>links[2].url</c>); nothing changes then.
+    /// </summary>
+    public Result SetLinks(IReadOnlyList<ProfileLink> links)
+    {
+        var checkedLinks = ProfileLinkRules.Check(links);
+        if (checkedLinks.IsFailure) return checkedLinks.Error;
+        Links = checkedLinks.Value;
+        return Result.Success();
+    }
+
+    /// <summary>A moderator cleared the links (SPEC F14, <c>clear_links</c>). False when there were none.</summary>
+    public bool ClearLinks()
+    {
+        if (Links.Count == 0) return false;
+        Links = [];
+        return true;
+    }
+
+    /// <summary>A moderator cleared the title (SPEC F14, <c>clear_headline</c>). False when there was none.</summary>
+    public bool ClearHeadline()
+    {
+        if (Headline is null) return false;
+        Headline = null;
+        return true;
     }
 
     /// <summary>
@@ -614,11 +681,23 @@ public static class AccountSecurity
     public static readonly TimeSpan RecoveryLockoutWindow = TimeSpan.FromDays(7);
 }
 
+/// <summary>
+/// The links of the previous release (GitHub, LinkedIn, website). Kept as an input only: they are stored as
+/// <see cref="ProfileLink"/>s (SPEC F14).
+/// </summary>
 public sealed record UserLinks
 {
     public string? GitHub { get; init; }
     public string? LinkedIn { get; init; }
     public string? Website { get; init; }
+
+    /// <summary>The same links in the new shape, in the order the data migration used: github, linkedin, website.</summary>
+    public IReadOnlyList<ProfileLink> ToProfileLinks() =>
+    [
+        .. new (string Platform, string? Url)[] { (LinkPlatforms.GitHub, GitHub), (LinkPlatforms.LinkedIn, LinkedIn), (LinkPlatforms.Website, Website) }
+            .Where(l => !string.IsNullOrWhiteSpace(l.Url))
+            .Select(l => new ProfileLink(l.Platform, l.Url!)),
+    ];
 }
 
 public enum SecurityChange

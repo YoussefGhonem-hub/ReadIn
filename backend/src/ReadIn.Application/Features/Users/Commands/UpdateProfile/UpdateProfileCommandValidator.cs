@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.Results;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Domain.Users;
@@ -20,9 +21,31 @@ internal sealed class UpdateProfileCommandValidator : AbstractValidator<UpdatePr
             .When(c => c.Avatar?.Url is not null)
             .WithErrorCode("validation.url")
             .OverridePropertyName("avatarUrl");
-        RuleFor(c => c.Links!.GitHub).Must(BeHttpsUrl!).When(c => c.Links?.GitHub is not null).WithErrorCode("validation.url");
-        RuleFor(c => c.Links!.LinkedIn).Must(BeHttpsUrl!).When(c => c.Links?.LinkedIn is not null).WithErrorCode("validation.url");
-        RuleFor(c => c.Links!.Website).Must(BeHttpsUrl!).When(c => c.Links?.Website is not null).WithErrorCode("validation.url");
+
+        // The title and the social links (F14): the domain's rules, reported under `headline` and `links[i].url` etc.
+        RuleFor(c => c.Headline).Custom((change, context) => AddHeadlineFailures(change, context));
+        RuleFor(c => c.Links).Custom((links, context) =>
+        {
+            if (links is null) return;
+            var result = ProfileLinkRules.Check(links.ToDomain());
+            if (result.IsFailure) AddFailures(result.Error.Details!, context);
+        });
+    }
+
+    /// <summary>Shared with PUT /me/profile/complete.</summary>
+    public static void AddHeadlineFailures<T>(HeadlineChange? change, ValidationContext<T> context)
+    {
+        if (change is null) return;
+        if (HeadlineRules.Problem(HeadlineRules.Normalize(change.Value)) is { } code)
+            context.AddFailure(new ValidationFailure("headline", code) { ErrorCode = code });
+    }
+
+    private static void AddFailures<T>(IReadOnlyDictionary<string, string[]> errors, ValidationContext<T> context)
+    {
+        foreach (var (property, codes) in errors)
+        {
+            foreach (var code in codes) context.AddFailure(new ValidationFailure(property, code) { ErrorCode = code });
+        }
     }
 
     private static bool BeHttpsUrl(string value) =>

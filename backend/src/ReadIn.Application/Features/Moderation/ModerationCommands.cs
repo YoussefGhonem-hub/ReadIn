@@ -8,6 +8,7 @@ using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Comments;
 using ReadIn.Application.Features.Tags;
+using ReadIn.Application.Features.Users;
 using ReadIn.Application.Features.WriterCategories;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
@@ -28,7 +29,7 @@ public sealed record ReportContentCommand(string TargetType, Guid TargetId, stri
 
 /// <summary>
 /// POST /moderation/actions (SPEC F22). Comments: hide, unhide, delete. Articles: hide, unhide. Users: warn, suspend,
-/// unsuspend (both need <c>users.suspend</c>), clear_category (F31). Any target: dismiss its open reports. Hide, delete,
+/// unsuspend (both need <c>users.suspend</c>), clear_category (F31), clear_links and clear_headline (F14). Any target: dismiss its open reports. Hide, delete,
 /// warn, suspend and clear_category resolve the target's open reports, and those of <see cref="ResolveReportsOf"/> too.
 /// An action that changed something is logged in ModerationActions, and in the audit log when it touched a user's content
 /// or account; repeating one that changes nothing is a no-op.
@@ -63,16 +64,29 @@ public static class ModerationVerbs
     /// <summary>Renames one of the user's writer categories to a neutral placeholder (SPEC F31).</summary>
     public const string ClearCategory = "clear_category";
 
+    /// <summary>Removes all of the user's social links (SPEC F14).</summary>
+    public const string ClearLinks = "clear_links";
+
+    /// <summary>Removes the user's title (SPEC F14).</summary>
+    public const string ClearHeadline = "clear_headline";
+
     public static bool Allows(string? action, ReportTargetType target) => (action, target) switch
     {
         (Hide or Unhide or Delete or Dismiss, ReportTargetType.Comment) => true,
         (Hide or Unhide or Dismiss, ReportTargetType.Article) => true,
-        (Warn or Suspend or Unsuspend or ClearCategory or Dismiss, ReportTargetType.User) => true,
+        (Warn or Suspend or Unsuspend or ClearCategory or ClearLinks or ClearHeadline or Dismiss, ReportTargetType.User) => true,
         _ => false,
     };
 
-    /// <summary>Hide, delete, warn, suspend and clear_category resolve the target's open reports; dismiss closes them as dismissed.</summary>
-    public static bool ClosesReports(string action) => action is Hide or Delete or Warn or Suspend or ClearCategory or Dismiss;
+    /// <summary>The content actions on a user (F14, F31): allowed on anyone, staff and yourself included, like hiding content.</summary>
+    public static bool IsProfileContent(string action) => action is ClearCategory or ClearLinks or ClearHeadline;
+
+    /// <summary>
+    /// Hide, delete, warn, suspend and the clears (category, links, title) resolve the target's open reports; dismiss closes
+    /// them as dismissed.
+    /// </summary>
+    public static bool ClosesReports(string action) =>
+        action is Hide or Delete or Warn or Suspend or ClearCategory or ClearLinks or ClearHeadline or Dismiss;
 }
 
 internal sealed class ReportContentCommandValidator : AbstractValidator<ReportContentCommand>
@@ -155,6 +169,7 @@ internal sealed class ModerateContentCommandHandler(
     AuditTrail audit,
     HybridCache cache,
     WriterCategoryReader categories,
+    AuthorCaches authorCaches,
     TimeProvider clock)
     : ICommandHandler<ModerateContentCommand, Result>
 {
@@ -272,17 +287,41 @@ internal sealed class ModerateContentCommandHandler(
         var user = await db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == command.TargetId, ct);
         if (user is null || (user.IsDeleted && command.Action != ModerationVerbs.Dismiss)) return UserErrors.NotFound;
 
-        // Clearing a category name is about content, like hiding an article: allowed on anyone, staff and yourself included.
-        if (command.Action is not (ModerationVerbs.Dismiss or ModerationVerbs.ClearCategory))
+        // Clearing a category name, the links or the title is about content, like hiding an article: allowed on anyone,
+        // staff and yourself included.
+        if (command.Action != ModerationVerbs.Dismiss && !ModerationVerbs.IsProfileContent(command.Action))
         {
             if (user.Id == acting.ModeratorId) return ModerationErrors.Self;
             if (await IsStaffAsync(user, ct)) return ModerationErrors.StaffTarget;
         }
 
         var accessChanged = false;
+        var headlineCleared = false;
         List<string>? clearedCategoryArticles = null;
         switch (command.Action)
         {
+            case ModerationVerbs.ClearLinks:
+            {
+                // Nothing to clear: nothing to log, and the reports stay as they are (as for clear_category).
+                var removed = string.Join(' ', user.Links.Select(l => l.Url));
+                if (!user.ClearLinks()) return Result.Success();
+                var resolved = await CloseReportsAsync(command, ReportTargetType.User, acting, ct);
+                audit.Record(AuditActions.LinksCleared, user.Id);
+                Log(ModerationAction.ProfileCleared(ModerationActionTypes.UserClearLinks, user.Id, removed, acting.ModeratorId, acting.Note,
+                    resolved, acting.Now));
+                break;
+            }
+            case ModerationVerbs.ClearHeadline:
+            {
+                var removed = user.Headline;
+                if (!user.ClearHeadline()) return Result.Success();
+                var resolved = await CloseReportsAsync(command, ReportTargetType.User, acting, ct);
+                audit.Record(AuditActions.HeadlineCleared, user.Id);
+                Log(ModerationAction.ProfileCleared(ModerationActionTypes.UserClearHeadline, user.Id, removed!, acting.ModeratorId, acting.Note,
+                    resolved, acting.Now));
+                headlineCleared = true;
+                break;
+            }
             case ModerationVerbs.ClearCategory:
             {
                 var category = await db.WriterCategories.FirstOrDefaultAsync(c => c.Id == command.CategoryId && c.UserId == user.Id, ct);
@@ -357,6 +396,8 @@ internal sealed class ModerateContentCommandHandler(
         if (accessChanged) await access.InvalidateAsync(user.Id, ct);
         // The writer's category list and pages, and the reader's "في قسم {name}" of its articles.
         if (clearedCategoryArticles is not null) await categories.InvalidateAsync(user.Id, clearedCategoryArticles, ct);
+        // The title is on every card, the reader and comments of the user (F14): their cached pages go.
+        if (headlineCleared) await authorCaches.DropAsync(user.Id, ct);
         return Result.Success();
     }
 

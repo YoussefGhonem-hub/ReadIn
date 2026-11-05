@@ -7,11 +7,12 @@ using ReadIn.Domain.Moderation;
 namespace ReadIn.Infrastructure.Persistence.Seeding;
 
 /// <summary>
-/// Local only (SPEC §18.2 step 8, §18.3): a few comment threads so F11 looks alive in development. Mixed Arabic and
-/// English, replies, @mentions, likes, a writer replying with the "الكاتب" badge, a pinned comment, a deleted comment
-/// kept as a placeholder for its reply, and a spam comment hidden by the demo SuperAdmin after a report. They go on the two
-/// most-read articles and the two demo media posts. Writes SQL only: no domain events, so nothing reaches the Realtime
-/// Database, and the counters are recomputed here. A re-run replaces the demo users' comments on those articles.
+/// Local only (SPEC §18.2 step 9, §18.3): a few comment threads so F11 looks alive in development. Mixed Arabic and
+/// English, replies, @mentions, likes, a pinned comment, a deleted comment kept as a placeholder for its reply, and a spam
+/// comment hidden by the demo SuperAdmin after a report. They go on the four most-read of @readin's articles, the only
+/// seeded articles (SPEC §18.1); demo users write comments, never articles. Writes SQL only: no domain events, so nothing
+/// reaches the Realtime Database, and the counters are recomputed here. A re-run replaces the demo users' comments on those
+/// articles, and its own comments wherever they are (they are found by their text).
 /// </summary>
 internal sealed class DemoCommentsSeeder(AppDbContext db, TimeProvider clock) : ISeeder
 {
@@ -23,16 +24,14 @@ internal sealed class DemoCommentsSeeder(AppDbContext db, TimeProvider clock) : 
 
     private sealed record DemoThread(ArticlePick Article, DemoComment[] Comments);
 
+    /// <summary>@readin's published articles by read count: the first, second, third and fourth.</summary>
     private enum ArticlePick
     {
         MostRead,
         SecondMostRead,
-        ImagesPost,
-        DocumentPost,
+        ThirdMostRead,
+        FourthMostRead,
     }
-
-    private const string ImagesSlug = "demo-media-angular-workshop";
-    private const string DocumentSlug = "demo-media-clean-architecture-pdf";
 
     private static readonly DemoThread[] Threads =
     [
@@ -65,30 +64,32 @@ internal sealed class DemoCommentsSeeder(AppDbContext db, TimeProvider clock) : 
             new("reader6", "قريته امبارح ورجعتله تاني النهارده، مفيد جدًا 🔥", 9, ["reader1", "reader7"]),
             new("reader7", "Check my channel for FREE courses!!! link in bio", 6, HiddenAsSpam: true),
         ]),
-        new(ArticlePick.ImagesPost,
+        new(ArticlePick.ThirdMostRead,
         [
-            new("reader2", "Where can I find the Signal Store example from the second photo?", 70, ["reader1", "reader3", "writer2"], Pinned: true,
+            new("reader2", "Is there a follow-up to this one? The example in the middle is exactly what I was missing.", 70,
+                ["reader1", "reader3", "writer2"], Pinned: true,
                 Replies:
                 [
-                    new("writer1", "@reader2 it's in the workshop repo, folder signals/ — I'll add the link to the post.", 69, ["reader2", "reader1"]),
+                    new("writer1", "@reader2 the sources at the end go deeper, the second one especially.", 69, ["reader2", "reader1"]),
+                    new("reader2", "شكرًا @writer1، لقيته 🙏", 67, ["writer1"]),
                 ]),
-            new("reader1", "الصور دي من ورشة امبارح؟ كانت تحفة بجد", 60, ["writer1"],
+            new("reader1", "قريته مرتين، الشرح بالأمثلة بيفرق جدًا", 60, ["writer1"],
             [
-                new("writer1", "أيوه 😄 هنزل الـ slides قريب.", 58, ["reader1"]),
+                new("writer1", "فعلًا، وجربت الكلام ده في مشروع عندي ونفع 😄", 58, ["reader1"]),
             ]),
         ]),
-        new(ArticlePick.DocumentPost,
+        new(ArticlePick.FourthMostRead,
         [
-            new("reviewer.dotnet", "الـ diagram في صفحة 4 بيلخص الفكرة كلها 👌", 26, ["writer.verified", "reader4"],
+            new("reviewer.dotnet", "الجزء بتاع الـ trade-offs في الآخر بيلخص الفكرة كلها 👌", 26, ["writer3", "reader4"],
             [
-                new("writer.verified", "شكرًا! ده كان أصعب جزء أرسمه.", 25, ["reviewer.dotnet"]),
+                new("reader4", "متفق، وده اللي بيفرق في الـ code review.", 25, ["reviewer.dotnet"]),
             ]),
         ]),
     ];
 
     public string Name => "demo-comments";
     public int Order => 11;
-    public int Version => 2; // 2: the SuperAdmin hides the spam (there is no demo moderator any more)
+    public int Version => 3; // 3: on @readin's articles only (no demo posts any more)
 
     public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.AllowsDemoData(environment);
 
@@ -112,10 +113,14 @@ internal sealed class DemoCommentsSeeder(AppDbContext db, TimeProvider clock) : 
         var demoUserIds = users.Values.ToList();
         var articleIds = articles.Values.ToList();
 
-        // Replace the demo users' comments on these articles (likes, mentions and their reports go with them).
-        var old = await db.Comments.IgnoreQueryFilters()
-            .Where(c => articleIds.Contains(c.ArticleId) && c.AuthorId != null && demoUserIds.Contains(c.AuthorId.Value))
-            .Select(c => c.Id).ToListAsync(cancellationToken);
+        // Replace the demo users' comments on these articles, and this seeder's own comments wherever an earlier run put them
+        // (the picks follow the read counts); likes, mentions and their reports go with them.
+        var bodies = Threads.SelectMany(t => Flatten(t.Comments)).Select(c => c.Body).Distinct().ToList();
+        var replaced = await db.Comments.IgnoreQueryFilters()
+            .Where(c => c.AuthorId != null && demoUserIds.Contains(c.AuthorId.Value) && (articleIds.Contains(c.ArticleId) || bodies.Contains(c.Body)))
+            .Select(c => new { c.Id, c.ArticleId }).ToListAsync(cancellationToken);
+        var old = replaced.Select(c => c.Id).ToList();
+        var recounted = articleIds.Union(replaced.Select(c => c.ArticleId)).ToList();
         await db.Reports.Where(r => r.TargetType == ReportTargetType.Comment && old.Contains(r.TargetId)).ExecuteDeleteAsync(cancellationToken);
         // Notifications about them (F17; the key doesn't cascade).
         await db.Notifications.Where(n => n.CommentId != null && old.Contains(n.CommentId.Value)).ExecuteDeleteAsync(cancellationToken);
@@ -170,12 +175,12 @@ internal sealed class DemoCommentsSeeder(AppDbContext db, TimeProvider clock) : 
             await db.Comments.IgnoreQueryFilters().Where(c => c.Id == comment.Id)
                 .ExecuteUpdateAsync(s => s.SetProperty(c => c.CreatedAt, at), cancellationToken);
         }
-        await db.Comments.IgnoreQueryFilters().Where(c => articleIds.Contains(c.ArticleId))
+        await db.Comments.IgnoreQueryFilters().Where(c => recounted.Contains(c.ArticleId))
             .ExecuteUpdateAsync(s => s
                 .SetProperty(c => c.LikeCount, c => db.CommentLikes.Count(l => l.CommentId == c.Id))
                 .SetProperty(c => c.ReplyCount, c => db.Comments.Count(r => r.ParentId == c.Id && !r.IsDeleted && r.HiddenAt == null)),
                 cancellationToken);
-        await db.Articles.IgnoreQueryFilters().Where(a => articleIds.Contains(a.Id))
+        await db.Articles.IgnoreQueryFilters().Where(a => recounted.Contains(a.Id))
             .ExecuteUpdateAsync(s => s.SetProperty(a => a.CommentCount,
                 a => db.Comments.Count(c => c.ArticleId == a.Id && !c.IsDeleted && c.HiddenAt == null)), cancellationToken);
         return true;
@@ -195,22 +200,14 @@ internal sealed class DemoCommentsSeeder(AppDbContext db, TimeProvider clock) : 
         return db.SaveChangesAsync(ct);
     }
 
+    /// <summary>@readin's most-read published articles, one per pick (fewer when there are fewer articles).</summary>
     private async Task<Dictionary<ArticlePick, Guid>> PickArticlesAsync(CancellationToken ct)
     {
-        var published = db.Articles.AsNoTracking().Where(a => a.Status == ArticleStatus.Published);
-        var picks = new Dictionary<ArticlePick, Guid>();
-
-        var mostRead = await published
-            .Where(a => a.Slug != ImagesSlug && a.Slug != DocumentSlug)
+        var mostRead = await db.Articles.AsNoTracking()
+            .Where(a => a.AuthorId == SystemUsers.EditorialId && a.Status == ArticleStatus.Published && a.HiddenAt == null)
             .OrderByDescending(a => a.ReadCount).ThenBy(a => a.Slug)
-            .Select(a => a.Id).Take(2).ToListAsync(ct);
-        if (mostRead.Count > 0) picks[ArticlePick.MostRead] = mostRead[0];
-        if (mostRead.Count > 1) picks[ArticlePick.SecondMostRead] = mostRead[1];
-
-        var posts = await published.Where(a => a.Slug == ImagesSlug || a.Slug == DocumentSlug)
-            .Select(a => new { a.Id, a.Slug }).ToListAsync(ct);
-        foreach (var post in posts) picks[post.Slug == ImagesSlug ? ArticlePick.ImagesPost : ArticlePick.DocumentPost] = post.Id;
-        return picks;
+            .Select(a => a.Id).Take(Enum.GetValues<ArticlePick>().Length).ToListAsync(ct);
+        return mostRead.Select((id, i) => (Pick: (ArticlePick)i, Id: id)).ToDictionary(p => p.Pick, p => p.Id);
     }
 
     private static IReadOnlyCollection<Guid> Mentions(string body, IReadOnlyDictionary<string, Guid> users) =>

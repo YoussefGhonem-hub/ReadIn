@@ -7,7 +7,8 @@ using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Users.Commands.UpdateProfile;
 
-internal sealed class UpdateProfileCommandHandler(IAppDbContext db, ICurrentUser currentUser, IFileStorage storage, UploadCleanup uploads)
+internal sealed class UpdateProfileCommandHandler(
+    IAppDbContext db, ICurrentUser currentUser, IFileStorage storage, UploadCleanup uploads, AuthorCaches authorCaches)
     : ICommandHandler<UpdateProfileCommand, Result>
 {
     // Also named in `errors`, so clients can show them next to the field.
@@ -33,14 +34,9 @@ internal sealed class UpdateProfileCommandHandler(IAppDbContext db, ICurrentUser
             await db.Users.AnyAsync(u => u.Username == command.Username, cancellationToken))
             return UserErrors.UsernameTaken;
 
-        var links = new UserLinks
-        {
-            GitHub = command.Links?.GitHub,
-            LinkedIn = command.Links?.LinkedIn,
-            Website = command.Links?.Website,
-        };
-
         var previousAvatar = user.AvatarUrl;
+        // What cards, the reader and comments show of the writer (F14): when it changes, their cached pages go.
+        var shown = (user.DisplayName, user.Username, user.AvatarUrl, user.Headline);
         var avatar = await StoredAvatarAsync(command.Avatar, user, cancellationToken);
         if (avatar.IsFailure) return avatar.Error;
 
@@ -51,11 +47,15 @@ internal sealed class UpdateProfileCommandHandler(IAppDbContext db, ICurrentUser
             if (user.SetExpertise(expertise).IsFailure) return ExpertiseInvalid;
         }
 
-        var result = user.UpdateProfile(command.DisplayName, command.Username, command.Bio, avatar.Value, links);
+        var result = user.UpdateProfile(command.DisplayName, command.Username, command.Bio, avatar.Value);
         if (result.IsFailure) return result;
+        // Omitted (null) keeps the title and the links; the validator already checked them.
+        if (command.Headline is { } headline && user.SetHeadline(headline.Value) is { IsFailure: true } badHeadline) return badHeadline;
+        if (command.Links is { } links && user.SetLinks(links.ToDomain()) is { IsFailure: true } badLinks) return badLinks;
 
         await db.SaveChangesAsync(cancellationToken);
         if (previousAvatar != avatar.Value) await uploads.ReleaseAsync(previousAvatar, cancellationToken);
+        if (shown != (user.DisplayName, user.Username, user.AvatarUrl, user.Headline)) await authorCaches.DropAsync(user.Id, cancellationToken);
         return Result.Success();
     }
 

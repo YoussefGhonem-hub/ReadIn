@@ -112,6 +112,19 @@ public sealed class ModerationAction : AggregateRoot
         Create(ModerationActionTypes.UserClearCategory, ReportTargetType.User, userId, userId, Label(oldName, MaxLabelLength), moderatorId,
             note, reportsClosed, now);
 
+    /// <summary>
+    /// A moderator cleared the user's social links (<c>user.clear_links</c>) or title (<c>user.clear_headline</c>, SPEC F14),
+    /// logged on the user with what was removed as the label (the URLs joined by a space, or the title), cut to 200
+    /// characters. No notice: the user sees their profile without it.
+    /// </summary>
+    public static ModerationAction ProfileCleared(
+        string action, Guid userId, string removed, Guid moderatorId, string? note, int reportsClosed, DateTime now)
+    {
+        if (action is not (ModerationActionTypes.UserClearLinks or ModerationActionTypes.UserClearHeadline))
+            throw new ArgumentException($"'{action}' is not a profile clear action.", nameof(action));
+        return Create(action, ReportTargetType.User, userId, userId, Label(removed, MaxLabelLength), moderatorId, note, reportsClosed, now);
+    }
+
     /// <summary>Open reports closed without touching the target.</summary>
     public static ModerationAction Dismissal(
         ReportTargetType targetType, Guid targetId, Guid? targetUserId, string? label, Guid moderatorId, string? note, int reportsClosed,
@@ -185,6 +198,10 @@ public static class ModerationActionTypes
 
     /// <summary>A writer-category name cleared (SPEC F31).</summary>
     public const string UserClearCategory = "user.clear_category";
+
+    /// <summary>A user's social links or title cleared (SPEC F14).</summary>
+    public const string UserClearLinks = "user.clear_links";
+    public const string UserClearHeadline = "user.clear_headline";
     public const string ReportsDismiss = "reports.dismiss";
 }
 

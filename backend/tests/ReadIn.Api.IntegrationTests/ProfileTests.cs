@@ -89,7 +89,8 @@ public sealed class ProfileTests(ApiFactory api)
         (await PatchMeAsync(writer, Body(writer, new
         {
             bio = "Backend engineer · .NET و SQL Server",
-            links = new { github = "https://github.com/mona", linkedin = (string?)null, website = "https://example.com/mona" },
+            headline = "  Senior Full Stack .NET Engineer | .NET | Angular  ",
+            links = new object[] { new { platform = "github", url = "https://github.com/mona" }, new { platform = "website", url = "example.com/mona" } },
             expertiseFieldIds = fields,
         }))).StatusCode.Should().Be(HttpStatusCode.NoContent);
         await writer.Client.PublishAsync();
@@ -100,14 +101,14 @@ public sealed class ProfileTests(ApiFactory api)
         var profile = JsonNode.Parse(raw)!.AsObject();
 
         profile.Select(p => p.Key).Should().BeEquivalentTo(
-            "id", "displayName", "username", "avatarUrl", "avatarVariants", "isVerified", "bio", "links", "expertise", "joinedAt",
+            "id", "displayName", "username", "avatarUrl", "avatarVariants", "isVerified", "headline", "bio", "links", "expertise", "joinedAt",
             "stats", "isMe", "isFollowing", "followsYou", "readingStatsVisible", "isMuted", "isSystemAccount");
         profile["id"]!.GetValue<Guid>().Should().Be(writer.Id);
         profile["displayName"]!.GetValue<string>().Should().Be("Mona Adel");
         profile["bio"]!.GetValue<string>().Should().Be("Backend engineer · .NET و SQL Server");
-        profile["links"]!["github"]!.GetValue<string>().Should().Be("https://github.com/mona");
-        profile["links"]!["linkedin"].Should().BeNull();
-        profile["links"]!["website"]!.GetValue<string>().Should().Be("https://example.com/mona");
+        profile["headline"]!.GetValue<string>().Should().Be("Senior Full Stack .NET Engineer | .NET | Angular");
+        profile["links"]!.ToJsonString().Should().Be(
+            """[{"platform":"github","url":"https://github.com/mona","label":null},{"platform":"website","url":"https://example.com/mona","label":null}]""");
         profile["avatarUrl"].Should().BeNull();
         profile["avatarVariants"].Should().BeNull();
         profile["isVerified"]!.GetValue<bool>().Should().BeFalse();
@@ -390,9 +391,17 @@ public sealed class ProfileTests(ApiFactory api)
         var taken = await api.UserAsync();
 
         await PatchMeAsync(user, Body(user, new { username = Username(taken) })).ProblemAsync(HttpStatusCode.Conflict, "user.username_taken");
-        var invalid = await PatchMeAsync(user, Body(user, new { displayName = "x", bio = new string('b', 301), links = new { github = "http://github.com/x" } }))
+        var invalid = await PatchMeAsync(user, Body(user, new
+            {
+                displayName = "x",
+                bio = new string('b', 301),
+                headline = new string('h', 121),
+                links = new object[] { new { platform = "github", url = "http://github.com/x" } },
+            }))
             .ProblemAsync(HttpStatusCode.BadRequest, "validation.failed");
-        invalid["errors"]!.AsObject().Select(e => e.Key).Should().BeEquivalentTo("displayName", "bio", "links.gitHub");
+        invalid["errors"]!.AsObject().Select(e => e.Key).Should().BeEquivalentTo("displayName", "bio", "headline", "links[0].url");
+        invalid["errors"]!["headline"]![0]!.GetValue<string>().Should().Be("profile.headline_too_long");
+        invalid["errors"]!["links[0].url"]![0]!.GetValue<string>().Should().Be("link.https_required");
     }
 
     [Fact]
@@ -401,13 +410,18 @@ public sealed class ProfileTests(ApiFactory api)
         var reviewer = await ProfileAsync(api.GuestClient(), "reviewer_dotnet").OkJsonAsync();
 
         reviewer["isVerified"]!.GetValue<bool>().Should().BeTrue();
+        reviewer["headline"]!.GetValue<string>().Should().Be("Senior .NET Engineer · ASP.NET Core و Clean Architecture");
         reviewer["bio"]!.GetValue<string>().Should().NotBeNullOrWhiteSpace();
-        reviewer["links"]!["linkedin"]!.GetValue<string>().Should().StartWith("https://");
+        var links = reviewer["links"]!.AsArray();
+        links.Select(l => l!["platform"]!.GetValue<string>()).Should().Equal("github", "linkedin", "website");
+        links.Should().OnlyContain(l => l!["url"]!.GetValue<string>().StartsWith("https://", StringComparison.Ordinal));
         reviewer["expertise"]!.AsArray().Select(f => f!["slug"]!.GetValue<string>()).Should().Equal("dotnet", "software-architecture", "databases");
         reviewer["avatarVariants"]!.AsObject().Select(v => v.Key).Should().Equal("64", "128", "256", "512");
         reviewer["readingStatsVisible"]!.GetValue<bool>().Should().BeTrue("about a third of the demo users have public stats");
         (await ProfileAsync(api.GuestClient(), "reader2").OkJsonAsync())["readingStatsVisible"]!.GetValue<bool>().Should().BeFalse();
-        (await ProfileAsync(api.GuestClient(), "reader10").OkJsonAsync())["avatarUrl"].Should().BeNull();
+        var reader10 = await ProfileAsync(api.GuestClient(), "reader10").OkJsonAsync();
+        reader10["avatarUrl"].Should().BeNull();
+        reader10["headline"].Should().BeNull("one demo reader has no title, so the hidden line shows too");
     }
 
     [Fact]
@@ -419,7 +433,7 @@ public sealed class ProfileTests(ApiFactory api)
         paths.Should().Contain(["/api/v1/users/{username}", "/api/v1/users/{username}/articles", "/api/v1/users/{username}/stats",
             "/api/v1/users/{username}/stats/heatmap", "/api/v1/me/privacy"]);
         var request = document["components"]!["schemas"]!["UpdateProfileRequest"]!["properties"]!.AsObject().Select(p => p.Key);
-        request.Should().BeEquivalentTo("displayName", "username", "bio", "links", "avatarAssetId", "avatarUrl", "expertiseFieldIds");
+        request.Should().BeEquivalentTo("displayName", "username", "bio", "headline", "links", "avatarAssetId", "avatarUrl", "expertiseFieldIds");
         document["components"]!["schemas"]!["ProfileDto"]!["properties"]!.AsObject().Select(p => p.Key).Should().NotContain("phoneNumber");
     }
 

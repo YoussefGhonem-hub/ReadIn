@@ -25,8 +25,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                 defaultValue: false);
 
             // Explore's "Featured paths" (F15) starts with the editorial paths, in their sort order; new editorial paths
-            // are created featured by the seeder, and F23 will manage the flag.
-            migrationBuilder.Sql("UPDATE [LearningPaths] SET [IsFeatured] = 1, [FeaturedOrder] = [SortOrder] WHERE [IsEditorial] = 1;");
+            // are created featured by the seeder, and F23 will manage the flag. Through EXEC because a SQL script compiles
+            // the whole migration as one batch, before the new columns exist.
+            migrationBuilder.Sql("EXEC(N'UPDATE [LearningPaths] SET [IsFeatured] = 1, [FeaturedOrder] = [SortOrder] WHERE [IsEditorial] = 1;');");
         }
 
         /// <inheritdoc />

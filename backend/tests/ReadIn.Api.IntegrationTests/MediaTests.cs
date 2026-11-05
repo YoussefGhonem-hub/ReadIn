@@ -470,17 +470,7 @@ public sealed class MediaTests(ApiFactory api)
             .GetValue<string>().Should().Be(title);
     }
 
-    [Fact]
-    public async Task Demo_posts_with_media_are_seeded_locally()
-    {
-        var photos = (await api.GuestClient().GetFromJsonAsync<JsonObject>("/api/v1/articles/demo-media-angular-workshop", Ct))!;
-        var document = (await api.GuestClient().GetFromJsonAsync<JsonObject>("/api/v1/articles/demo-media-clean-architecture-pdf", Ct))!;
-
-        photos["attachments"]!["images"]!.AsArray().Should().HaveCount(3);
-        photos["attachments"]!["images"]![0]!["variants"]!.AsArray().Select(v => v!["width"]!.GetValue<int>()).Should().Equal(320, 640, 1080, 1600);
-        document["attachments"]!["document"]!["pageCount"]!.GetValue<int>().Should().Be(12);
-        document["attachments"]!["document"]!["canDownload"]!.GetValue<bool>().Should().BeTrue();
-    }
+    // The seed has no demo photo or PDF posts any more (SPEC §18.1): SeedRulesTests checks that seeded articles are text.
 
     private async Task GrantAsync(Guid userId, Guid roleId)
     {

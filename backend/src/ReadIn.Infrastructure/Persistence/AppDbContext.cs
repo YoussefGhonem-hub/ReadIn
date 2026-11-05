@@ -61,6 +61,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<PathEnrollment> PathEnrollments => Set<PathEnrollment>();
 
     public DbSet<Reaction> Reactions => Set<Reaction>();
+    public DbSet<Repost> Reposts => Set<Repost>();
     public DbSet<SavedArticle> SavedArticles => Set<SavedArticle>();
     public DbSet<Collection> Collections => Set<Collection>();
     public DbSet<CollectionItem> CollectionItems => Set<CollectionItem>();

@@ -226,7 +226,7 @@ public sealed class AccountTests(ApiFactory api)
     private static readonly CancellationToken Ct = TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Profile_links_use_the_contract_keys()
+    public async Task Profile_links_are_an_ordered_array_with_the_contract_keys()
     {
         var user = await api.SignUpAsync();
         var patch = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/me")
@@ -235,15 +235,21 @@ public sealed class AccountTests(ApiFactory api)
             {
                 displayName = "Links Test",
                 username = user.Me["username"]!.GetValue<string>(),
-                links = new { github = "https://github.com/readin", linkedin = "https://www.linkedin.com/in/readin", website = "https://readin.app" },
+                links = new object[]
+                {
+                    new { platform = "linkedin", url = "https://www.linkedin.com/in/readin" },
+                    new { platform = "github", url = "https://github.com/readin" },
+                    new { platform = "other", url = "https://readin.app", label = "ReadIn" },
+                },
             }),
         };
         (await user.Client.SendAsync(patch, Ct)).EnsureSuccessStatusCode();
 
-        var links = (await user.Client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!["links"]!.AsObject();
-        links["github"]!.GetValue<string>().Should().Be("https://github.com/readin");
-        links["linkedin"]!.GetValue<string>().Should().Be("https://www.linkedin.com/in/readin");
-        links["website"]!.GetValue<string>().Should().Be("https://readin.app");
+        var links = (await user.Client.GetFromJsonAsync<JsonObject>("/api/v1/me", Ct))!["links"]!.AsArray();
+        links.Select(l => l!.AsObject().Select(p => p.Key)).Should().AllSatisfy(keys => keys.Should().Equal("platform", "url", "label"));
+        links.Select(l => l!["platform"]!.GetValue<string>()).Should().Equal("linkedin", "github", "other");
+        links[2]!["label"]!.GetValue<string>().Should().Be("ReadIn");
+        links[0]!["label"].Should().BeNull();
     }
 
     [Fact]

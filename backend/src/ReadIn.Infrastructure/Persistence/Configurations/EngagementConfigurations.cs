@@ -30,6 +30,27 @@ internal sealed class ReactionConfiguration : IEntityTypeConfiguration<Reaction>
     }
 }
 
+/// <summary>Reposts (SPEC F29, §16.2): one per user per article; deleted with the user or the article.</summary>
+internal sealed class RepostConfiguration : IEntityTypeConfiguration<Repost>
+{
+    public void Configure(EntityTypeBuilder<Repost> builder)
+    {
+        builder.ToTable("Reposts");
+        builder.HasKey(r => r.Id);
+
+        // One repost per user per article.
+        builder.HasIndex(r => new { r.UserId, r.ArticleId }).IsUnique();
+        // A user's reposts, newest first, with the article: the profile's Reposts tab, and the Following feed's
+        // candidates (the reposts of the writers you follow, newest per article) read only this index.
+        builder.HasIndex(r => new { r.UserId, r.CreatedAt }).IsDescending(false, true).IncludeProperties(r => r.ArticleId);
+        // The repost count, and the per-article reads (the labels of a Following page's cards).
+        builder.HasIndex(r => new { r.ArticleId, r.CreatedAt }).IsDescending(false, true);
+
+        builder.HasOne(r => r.User).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<Article>().WithMany().HasForeignKey(r => r.ArticleId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 internal sealed class SavedArticleConfiguration : IEntityTypeConfiguration<SavedArticle>
 {
     public void Configure(EntityTypeBuilder<SavedArticle> builder)

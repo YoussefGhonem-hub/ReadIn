@@ -59,7 +59,7 @@ public sealed class FollowTests(ApiFactory api)
         asAlice[0]!["followsYou"]!.GetValue<bool>().Should().BeFalse();
         asAlice[0]!["displayName"]!.GetValue<string>().Should().Be("Bob Reader");
         asAlice[0]!.AsObject().Select(p => p.Key).Should().Equal(
-            "id", "displayName", "username", "avatarUrl", "isVerified", "bio", "isFollowing", "followsYou");
+            "id", "displayName", "username", "avatarUrl", "isVerified", "headline", "bio", "isFollowing", "followsYou");
 
         var asBob = (await bob.Client.GetAsync($"/api/v1/users/{writer.Id}/followers", Ct).OkJsonAsync())["items"]!.AsArray();
         asBob[1]!["followsYou"]!.GetValue<bool>().Should().BeTrue("Alice follows Bob");

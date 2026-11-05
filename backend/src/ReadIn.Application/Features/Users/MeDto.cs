@@ -1,14 +1,7 @@
-using System.Text.Json.Serialization;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Users;
-
-/// <summary>JSON keys <c>github</c>, <c>linkedin</c>, <c>website</c> as in the API contract (camel case would give <c>gitHub</c>).</summary>
-public sealed record UserLinksDto(
-    [property: JsonPropertyName("github")] string? GitHub,
-    [property: JsonPropertyName("linkedin")] string? LinkedIn,
-    string? Website);
 
 public sealed record InterestsDto(IReadOnlyList<Guid> FieldIds, IReadOnlyList<Guid> TopicIds);
 
@@ -29,8 +22,14 @@ public sealed record MeDto
     public string DisplayName { get; init; } = default!;
     public string Username { get; init; } = default!;
     public string? AvatarUrl { get; init; }
+
+    /// <summary>The title under the name (SPEC F14); null when empty.</summary>
+    public string? Headline { get; init; }
+
     public string? Bio { get; init; }
-    public UserLinksDto Links { get; init; } = new(null, null, null);
+
+    /// <summary>Social links (SPEC F14), in the user's order; empty when none.</summary>
+    public IReadOnlyList<ProfileLinkDto> Links { get; init; } = [];
     public string UiLanguage { get; init; } = default!;
     public string ArticleLanguage { get; init; } = default!;
     public ThemePreference Theme { get; init; }

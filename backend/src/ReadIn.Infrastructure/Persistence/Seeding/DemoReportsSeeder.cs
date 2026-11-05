@@ -7,11 +7,11 @@ using ReadIn.Domain.Moderation;
 namespace ReadIn.Infrastructure.Persistence.Seeding;
 
 /// <summary>
-/// Development only (SPEC F22, §18.2): a moderation queue that isn't empty locally. Demo readers report two articles, a
-/// comment and reader7 (who posts the demo spam comment); one resolved case (reader7 was warned for spam, so reader7 also
-/// has a warning notice to acknowledge) and one dismissed case (a disagreement, not a broken rule). Runs after the demo
-/// comments and writes no outbox events, so nothing is pushed. The demo SuperAdmin moderates (there is no demo moderator
-/// any more). A re-run replaces the demo reports and the demo moderation actions on these targets.
+/// Development only (SPEC F22, §18.2): a moderation queue that isn't empty locally. Demo readers report two of @readin's
+/// articles, a comment and reader7 (who posts the demo spam comment); one resolved case (reader7 was warned for spam, so
+/// reader7 also has a warning notice to acknowledge) and one dismissed case (a disagreement, not a broken rule). Runs after
+/// the demo comments and writes no outbox events, so nothing is pushed. The demo SuperAdmin moderates (there is no demo
+/// moderator any more). A re-run replaces the demo reports and the demo moderation actions on these targets.
 /// </summary>
 internal sealed class DemoReportsSeeder(AppDbContext db, TimeProvider clock) : ISeeder
 {
@@ -46,9 +46,6 @@ internal sealed class DemoReportsSeeder(AppDbContext db, TimeProvider clock) : I
         // Dismissed.
         new(Pick.Writer3Comment, "reader10", ReportReason.Other, "مش موافق على الكلام ده.", 30, ReportStatus.Dismissed),
     ];
-
-    private const string ImagesSlug = "demo-media-angular-workshop";
-    private const string DocumentSlug = "demo-media-clean-architecture-pdf";
 
     public string Name => "demo-reports";
     public int Order => 12;
@@ -118,9 +115,9 @@ internal sealed class DemoReportsSeeder(AppDbContext db, TimeProvider clock) : I
     {
         var picks = new Dictionary<Pick, (ReportTargetType, Guid)>();
 
-        // The demo comments live on the two most-read articles; these are the next two.
+        // Two of @readin's articles (the only seeded ones, SPEC §18.1): the third and fourth most read.
         var articles = await db.Articles.AsNoTracking()
-            .Where(a => a.Status == ArticleStatus.Published && a.HiddenAt == null && a.Slug != ImagesSlug && a.Slug != DocumentSlug)
+            .Where(a => a.AuthorId == SystemUsers.EditorialId && a.Status == ArticleStatus.Published && a.HiddenAt == null)
             .OrderByDescending(a => a.ReadCount).ThenBy(a => a.Slug)
             .Select(a => a.Id).Skip(2).Take(2).ToListAsync(ct);
         if (articles.Count > 0) picks[Pick.ThirdMostRead] = (ReportTargetType.Article, articles[0]);

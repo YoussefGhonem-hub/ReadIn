@@ -8,9 +8,6 @@ public sealed class UserMappings : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        config.NewConfig<UserLinks, UserLinksDto>()
-            .MapWith(s => new UserLinksDto(s.GitHub, s.LinkedIn, s.Website));
-
         // Roles and permissions come from IUserAccessService (cached), not from the entity. IsVerified is the entity's badge.
         config.NewConfig<User, MeDto>()
             .Map(d => d.ArticleLanguage, s => s.ArticleLanguagePref)
@@ -24,6 +21,7 @@ public sealed class UserMappings : IRegister
                 .Select(l => new ExternalLoginDto(l.Provider, l.Email, l.LinkedAt))
                 .ToList())
             .Map(d => d.Privacy, s => new PrivacyDto(s.PublicReadingStats, s.WhoCanMention))
+            .Map(d => d.Links, s => s.Links.Select(l => new ProfileLinkDto(l.Platform, l.Url, l.Label)).ToList())
             .Ignore(d => d.Roles, d => d.Permissions);
     }
 }

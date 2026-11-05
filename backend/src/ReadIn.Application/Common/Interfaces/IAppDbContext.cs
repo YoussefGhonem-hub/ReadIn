@@ -50,6 +50,7 @@ public interface IAppDbContext
     DbSet<PathEnrollment> PathEnrollments { get; }
 
     DbSet<Reaction> Reactions { get; }
+    DbSet<Repost> Reposts { get; }
     DbSet<SavedArticle> SavedArticles { get; }
     DbSet<Collection> Collections { get; }
     DbSet<CollectionItem> CollectionItems { get; }

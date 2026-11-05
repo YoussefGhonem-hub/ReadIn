@@ -8,9 +8,13 @@ using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Users.Commands.CompleteProfile;
 
-/// <summary>After sign up (SPEC §9.2): display name, unique @username and an optional avatar from <c>POST /uploads/images</c>.</summary>
+/// <summary>
+/// After sign up (SPEC §9.2): display name, unique @username, an optional avatar from <c>POST /uploads/images</c> and an
+/// optional title (F14; <see cref="Headline"/> null keeps the current one).
+/// </summary>
 [Authenticated]
-public sealed record CompleteProfileCommand(string DisplayName, string Username, string? AvatarUrl = null) : ICommand<Result<MeDto>>;
+public sealed record CompleteProfileCommand(string DisplayName, string Username, string? AvatarUrl = null, HeadlineChange? Headline = null)
+    : ICommand<Result<MeDto>>;
 
 internal sealed class CompleteProfileCommandValidator : AbstractValidator<CompleteProfileCommand>
 {
@@ -22,5 +26,6 @@ internal sealed class CompleteProfileCommandValidator : AbstractValidator<Comple
             .Must(url => storage.TryGetUploadPath(url, out var path) && path.Purpose == UploadPurpose.Avatar)
             .When(c => c.AvatarUrl is not null)
             .WithErrorCode("validation.url");
+        RuleFor(c => c.Headline).Custom((change, context) => UpdateProfile.UpdateProfileCommandValidator.AddHeadlineFailures(change, context));
     }
 }

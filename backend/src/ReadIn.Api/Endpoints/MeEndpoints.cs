@@ -62,10 +62,10 @@ internal sealed class MeEndpoints : IEndpointGroup
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
-        me.MapPut("/profile/complete", async (CompleteProfileCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
-                (await sender.Send(body, ct)).ToHttp(http))
+        me.MapPut("/profile/complete", async (CompleteProfileRequest body, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(body.ToCommand(), ct)).ToHttp(http))
             .RequireRateLimiting(RateLimitPolicies.Writes)
-            .WithSummary("After sign up: display name, @username and optional avatar")
+            .WithSummary("After sign up: display name, @username, optional avatar and optional title")
             .Produces<MeDto>();
 
         me.MapPut("/password", async (ChangePasswordCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
@@ -168,10 +168,22 @@ internal sealed class UpdateProfileRequest
     private string? _avatarUrl;
     private bool _avatarUrlSent;
 
+    private string? _headline;
+    private bool _headlineSent;
+
     public string DisplayName { get; init; } = default!;
     public string Username { get; init; } = default!;
     public string? Bio { get; init; }
-    public UserLinksDto? Links { get; init; }
+
+    /// <summary>The title (F14): omitted keeps it, null or blank clears it.</summary>
+    public string? Headline
+    {
+        get => _headline;
+        init { _headline = value; _headlineSent = true; }
+    }
+
+    /// <summary>The social links (F14), in display order: omitted or null keeps them, an array replaces them all.</summary>
+    public IReadOnlyList<ProfileLinkInput>? Links { get; init; }
 
     public Guid? AvatarAssetId
     {
@@ -188,7 +200,8 @@ internal sealed class UpdateProfileRequest
 
     public IReadOnlyList<Guid>? ExpertiseFieldIds { get; init; }
 
-    public UpdateProfileCommand ToCommand() => new(DisplayName, Username, Bio, Links, Avatar(), ExpertiseFieldIds);
+    public UpdateProfileCommand ToCommand() =>
+        new(DisplayName, Username, Bio, Links, Avatar(), ExpertiseFieldIds, _headlineSent ? new HeadlineChange(_headline) : null);
 
     private AvatarChange? Avatar() => (_avatarAssetId, _avatarUrlSent, _avatarAssetIdSent) switch
     {
@@ -197,4 +210,27 @@ internal sealed class UpdateProfileRequest
         (null, false, true) => AvatarChange.Remove,
         _ => null,
     };
+}
+
+/// <summary>
+/// Body of PUT /me/profile/complete (SPEC §9.2): display name, @username, optional avatar and the optional title (F14),
+/// which is kept when omitted and cleared by null or blank, as in PATCH /me.
+/// </summary>
+internal sealed class CompleteProfileRequest
+{
+    private string? _headline;
+    private bool _headlineSent;
+
+    public string DisplayName { get; init; } = default!;
+    public string Username { get; init; } = default!;
+    public string? AvatarUrl { get; init; }
+
+    public string? Headline
+    {
+        get => _headline;
+        init { _headline = value; _headlineSent = true; }
+    }
+
+    public CompleteProfileCommand ToCommand() =>
+        new(DisplayName, Username, AvatarUrl, _headlineSent ? new HeadlineChange(_headline) : null);
 }

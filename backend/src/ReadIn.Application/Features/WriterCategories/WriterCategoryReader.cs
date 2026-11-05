@@ -26,7 +26,7 @@ internal sealed class WriterCategoryReader(IAppDbContext db, HybridCache cache)
             ? await db.Users.AsNoTracking()
                 .Shown(handle, now)
                 .Select(u => new CategoryOwner(u.Id, new AuthorDto(
-                    u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified)))
+                    u.Id, u.DisplayName, u.Username, u.AvatarUrl, u.IsVerified, u.Headline)))
                 .FirstOrDefaultAsync(ct)
             : null;
 

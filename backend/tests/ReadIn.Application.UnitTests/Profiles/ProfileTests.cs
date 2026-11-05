@@ -1,4 +1,5 @@
 using Mapster;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using ReadIn.Application.Common.Behaviors;
@@ -106,7 +107,7 @@ public sealed class ProfileEditTests
         _storage.GetPublicUrl(Arg.Any<string>()).Returns(call => "https://api.readin.app" + call.Arg<string>());
 
     private static UpdateProfileCommand Command(AvatarChange? avatar = null, IReadOnlyList<Guid>? expertise = null) =>
-        new("Mona Adel", "mona", "Backend · .NET", new UserLinksDto("https://github.com/mona", null, null), avatar, expertise);
+        new("Mona Adel", "mona", "Backend · .NET", [new ProfileLinkInput("github", "https://github.com/mona")], avatar, expertise);
 
     private Dictionary<string, string[]> Errors(UpdateProfileCommand command) =>
         ValidationErrors.From(new UpdateProfileCommandValidator(_storage).Validate(command).Errors).Details!.ToDictionary();
@@ -144,7 +145,8 @@ public sealed class ProfileEditTests
         var currentUser = Substitute.For<ICurrentUser>();
         currentUser.UserId.Returns(Guid.NewGuid());
         var handler = new UpdateProfileCommandHandler(
-            _db, currentUser, _storage, new UploadCleanup(new UploadReferences(_db), _db, _storage, NullLogger<UploadCleanup>.Instance));
+            _db, currentUser, _storage, new UploadCleanup(new UploadReferences(_db), _db, _storage, NullLogger<UploadCleanup>.Instance),
+            new AuthorCaches(_db, Substitute.For<HybridCache>()));
 
         var result = await handler.Handle(Command(expertise: [.. Enumerable.Range(0, 6).Select(_ => Guid.NewGuid())]), Ct);
 
