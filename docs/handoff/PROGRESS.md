@@ -538,3 +538,25 @@ again next run; `Retry-After` is honoured up to 30 s. Dead links still fail. SPE
   texts, the empty tab, the empty-row mark, copy and plurals, moderation), plus the deletion screens, the limit race
   and the unit-test warm-up. **The fixes were not tried with the tests** (user rule); only the builds, lint and
   analyze ran after them.
+
+### F28 Article menu, mute and "show less" ✅ (track A)
+- **Backend:** migration `MutesAndFeedback` (`UserMutes`, `ContentMutes`, `ArticleFeedback`). `PUT/DELETE
+  /users/{id}/mute` (ends your follow; Undo sends `restoreFollow=true`), `/me/mutes/fields|topics/{id}`, `GET
+  /me/mutes`, `PUT/DELETE /articles/{id}/show-less`; writes need `follows.manage`, at most 500 muted writers (held
+  under the per-user lock). `ArticleVisibility.WithoutMutedFor` is real now: For you, Following, Today (a muted pick is
+  replaced for the rest of the day), Related, Explore, Search (mutes only), field pages (their own field and the picked
+  topic stay), tag pages and suggested writers. "Show less" puts the topic (or field) in a last For you tier for 90
+  days; a cursor whose tier is gone restarts the last tier. No notifications from muted actors; comments carry
+  `isAuthorMuted`; cards and details carry `topic` and the three mute flags; `ProfileDto.isMuted` and
+  `isSystemAccount`. Account deletion removes mutes both ways. The writer's own pages (profile tabs, category pages)
+  don't hide a muted writer.
+- **Web and mobile:** the one "⋯" menu (Show less, Follow, Mute author, Mute topics, Report, then moderator items),
+  Mute also on the profile "⋯" and a comment's "⋯", Undo toasts, cards fold away (reduce motion respected) and come
+  back on Undo, the topics sheet, the banner (reader and under the profile header), collapsed comments with "عرض",
+  Settings → Muted at `/settings/muted` on both, empty states when mutes empty a list. Search rows and writer rails
+  don't fold during the session (the next load leaves them out).
+- **Test round:** the tests ran once (backend 2069/2076 with the 7 failures in track B's PDF work at the time, web unit
+  1063/1063, Playwright for the touched screens 270/270, mobile 1860/1860). 14 bugs fixed (the topics sheet closing
+  under a folding card, mobile paging repeats, suggestions, follow vs old mutes, empty states, error texts, deletion
+  texts, mute from profile/comments, one route, one menu order, Explore rows, one wording, the For you tier cursor,
+  14 more backend tests). **The fixes were not tried with the tests** (user rule).
