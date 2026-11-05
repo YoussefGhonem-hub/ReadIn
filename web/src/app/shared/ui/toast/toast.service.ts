@@ -37,8 +37,9 @@ export class ToastService {
     this.show('success', message, null, null, null);
   }
 
-  error(message: string): void {
-    this.show('error', message, null, null, null);
+  /** `action`: e.g. "حاول تاني" after a failed PDF download (F33). */
+  error(message: string, action: ToastAction | null = null): void {
+    this.show('error', message, null, action, null);
   }
 
   dismiss(id: number): void {

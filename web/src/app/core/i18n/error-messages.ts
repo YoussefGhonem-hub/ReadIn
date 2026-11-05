@@ -101,6 +101,11 @@ export const CONTRACT_ERROR_CODES = [
   'article.tags.max_five',
   'article.language_invalid',
   'article.content_language_mismatch',
+  // Article PDF (F33): GET /articles/{id}/pdf
+  'article.pdf_hidden',
+  'article.pdf_limit',
+  'article.pdf_busy',
+  'article.pdf_failed',
   'server.error',
   'media.purpose_invalid',
   'media.file_required',

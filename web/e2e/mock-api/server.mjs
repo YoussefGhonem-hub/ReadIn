@@ -22,6 +22,7 @@ import { crc32, deflateSync } from 'node:zlib';
 import { encode } from 'blurhash';
 import { createCategories } from './categories.mjs';
 import { createEditor } from './editor.mjs';
+import { createPdf } from './pdf.mjs';
 import { createExplore } from './explore.mjs';
 import { createPaths } from './paths.mjs';
 import { createModeration } from './moderation.mjs';
@@ -793,6 +794,7 @@ const routes = [
   ],
   ...categories.routes,
   ...editor.routes,
+  ...createPdf({ problem, viewerOf: social.viewerOf, editor, articles: () => [...DETAILS.values()], pdf: PDF }).routes,
   ...tags.routes,
   ...search.routes,
   ...explore.routes,

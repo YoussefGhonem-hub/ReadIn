@@ -974,6 +974,11 @@ export interface MyArticleDto {
   reactionCount: number;
   commentCount: number;
   readCount: number;
+  /**
+   * The published versions, source language first (F33): what "Download PDF" offers (two → it asks which). Empty for
+   * drafts; missing from an API older than F33.
+   */
+  publishedLanguages?: ArticleLanguage[];
 }
 
 // ── Tags (F32) ──────────────────────────────────────────────

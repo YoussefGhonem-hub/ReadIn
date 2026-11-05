@@ -207,6 +207,10 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
       reactionCount: record.status === 'published' ? 4 : 0,
       commentCount: record.status === 'published' ? 1 : 0,
       readCount: record.status === 'published' ? 37 : 0,
+      // F33: the published versions, source language first; [] for a draft.
+      publishedLanguages: record.live
+        ? record.live.translations.map((t) => t.language).sort((a, b) => Number(b === record.live.sourceLanguage) - Number(a === record.live.sourceLanguage))
+        : [],
     };
   }
 

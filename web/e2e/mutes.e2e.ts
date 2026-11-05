@@ -102,7 +102,7 @@ for (const variant of VARIANTS) {
     expect(mutes.users).toEqual([]);
   });
 
-  test(`menu: your own article keeps Mute topics; guests sign in first — ${suffix}`, async ({ page, context, baseURL, request }) => {
+  test(`menu: your own article keeps Mute topics (and Download PDF, F33); guests sign in first — ${suffix}`, async ({ page, context, baseURL, request }) => {
     await useVariant(context, baseURL!, variant);
     // Guests: every item, each asking to sign in.
     await page.goto('/en/a/clean-architecture-whiteboard');
@@ -121,7 +121,7 @@ for (const variant of VARIANTS) {
     await restoreSessionAs(page, writer);
     await openArticle(page, '/en/a/clean-architecture-whiteboard');
     await openMenu(bar, page);
-    await expect(actions(page)).toHaveText([t('كتم المواضيع', 'Mute topics')]);
+    await expect(actions(page)).toHaveText([t('كتم المواضيع', 'Mute topics'), t('تحميل PDF', 'Download PDF')]);
   });
 
   test(`reader: the topics sheet, the muted-writer banner and collapsed comments — ${suffix}`, async ({ page, context, baseURL, request }) => {

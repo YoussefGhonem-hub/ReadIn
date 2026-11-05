@@ -7,7 +7,7 @@ import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { FollowStore } from '../../core/social/follow.store';
 import { MuteStore } from '../../core/social/mute.store';
 import { ArticleActionBar } from './article-action-bar';
-import { MenuArticle } from './article-menu';
+import { ArticleMenu, MenuArticle } from './article-menu';
 
 const MODERATOR = ['articles.read', 'reports.create', 'moderation.manage', 'users.suspend'];
 const OTHERS = ['showLess', 'follow', 'muteAuthor', 'muteTopics', 'report'];
@@ -85,10 +85,69 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     expect(t.$('[data-report-sheet]')).toBeNull();
   });
 
-  it('your own article: only Mute topics', async () => {
+  it('your own article: Mute topics, then Download PDF (F33)', async () => {
     const t = await render(testCard(), { myId: 'writer-1' });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['muteTopics']);
+    expect(await t.openMenu()).toEqual(['muteTopics', 'downloadPdf']);
+    expect(t.label('downloadPdf')).toBe('تحميل PDF');
+  });
+
+  it('Download PDF prints the version on screen; while it is built the item says so and is disabled', async () => {
+    const clicks: string[] = [];
+    URL.createObjectURL = vi.fn(() => 'blob:http://localhost/pdf-1');
+    URL.revokeObjectURL = vi.fn();
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      clicks.push(this.download);
+    });
+    try {
+      const t = await render(testCard({ language: 'en' }), { myId: 'writer-1' });
+      http = t.http;
+      await t.openMenu();
+      await t.pick('downloadPdf');
+      const req = t.http.expectOne((r) => r.url === `${TEST_API}/articles/a1/pdf`);
+      expect(req.request.params.get('lang')).toBe('en');
+
+      // Open again while it builds: "بنجهز الـ PDF…", disabled, and a press asks for nothing more.
+      expect(await t.openMenu()).toEqual(['muteTopics', 'downloadPdf']);
+      const item = document.querySelector('[data-article-menu-panel] [data-menu-action="downloadPdf"]')!;
+      expect(t.label('downloadPdf')).toBe('بنجهز الـ PDF…');
+      expect(item.getAttribute('aria-disabled')).toBe('true');
+      expect(item.getAttribute('data-state')).toBe('building');
+      await t.pick('downloadPdf');
+      t.http.expectNone((r) => r.url === `${TEST_API}/articles/a1/pdf`);
+
+      req.flush(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), {
+        headers: { 'Content-Disposition': `attachment; filename="readin-article.pdf"; filename*=UTF-8''clean-architecture-en.pdf` },
+      });
+      await t.stable();
+      expect(clicks).toEqual(['clean-architecture-en.pdf']);
+      if (!document.querySelector('[data-article-menu-panel]')) await t.openMenu();
+      expect(t.label('downloadPdf')).toBe('تحميل PDF');
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  it("someone else's article has no Download PDF", async () => {
+    const t = await render(testCard());
+    http = t.http;
+    expect(await t.openMenu()).not.toContain('downloadPdf');
+  });
+
+  it("a post card's menu has no Download PDF, even on your own article (the reader's menu has it)", async () => {
+    const t = await render(testCard(), { myId: 'writer-1' });
+    http = t.http;
+
+    // A post card's "⋯" is the same menu without `pdf`.
+    const card = TestBed.createComponent(ArticleMenu);
+    card.componentRef.setInput('article', testCard());
+    card.detectChanges();
+    (card.nativeElement as HTMLElement).querySelector<HTMLElement>('[data-article-menu]')!.click();
+    card.detectChanges();
+    await card.whenStable();
+    expect([...document.querySelectorAll('[data-article-menu-panel] [data-menu-action]')].map((el) => el.getAttribute('data-menu-action'))).toEqual([
+      'muteTopics',
+    ]);
   });
 
   it("a deleted author's article: no Follow and no Mute author", async () => {
@@ -363,10 +422,10 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     expect(t.changes).toEqual([]);
   });
 
-  it('a moderator on their own article can mute its topics and hide it, but not report it', async () => {
+  it('a moderator on their own article can mute its topics, download it and hide it, but not report it', async () => {
     const t = await render(testCard(), { permissions: MODERATOR, myId: 'writer-1' });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['muteTopics', 'hide']);
+    expect(await t.openMenu()).toEqual(['muteTopics', 'downloadPdf', 'hide']);
     expect(document.querySelectorAll('[data-article-menu-panel] [data-menu-divider]')).toHaveLength(1);
   });
 });

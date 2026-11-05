@@ -76,7 +76,7 @@ import { ReactorsSheet } from './reactors-sheet';
         <button type="button" class="rd-icon-btn h-11 w-11 border-0" [attr.aria-label]="'common.share' | transloco" (click)="share()">
           <svg lucideIcon="Share2" [size]="18" aria-hidden="true"></svg>
         </button>
-        <rd-article-menu [article]="article()" (moderationChange)="moderationChange.emit($event)" />
+        <rd-article-menu [article]="article()" [pdf]="true" (moderationChange)="moderationChange.emit($event)" />
       </div>
     </div>
 

@@ -14,6 +14,8 @@ import { BottomSheet } from '../../shared/ui/bottom-sheet';
 import { ArticleCardSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { pdfLanguages } from '../pdf/article-pdf.service';
+import { PdfDownload } from '../pdf/pdf-download';
 import { loadMoreNearEnd } from '../profile/infinite-scroll';
 import { provideEditorIcons } from './editor-icons';
 import { MyArticlesStore } from './my-articles.store';
@@ -21,8 +23,8 @@ import { MyArticlesStore } from './my-articles.store';
 const TABS: readonly ArticleStatus[] = ['draft', 'published'];
 
 /**
- * My articles (F05), `/write`: Drafts and Published, each row with Edit and Delete (confirmed in a sheet), and the
- * New article button. Signed-in writers only; rendered in the browser.
+ * My articles (F05), `/write`: Drafts and Published, each row with Edit and Delete (confirmed in a sheet), published
+ * rows also with Download PDF (F33), and the New article button. Signed-in writers only; rendered in the browser.
  */
 @Component({
   selector: 'rd-my-articles-page',
@@ -40,6 +42,7 @@ const TABS: readonly ArticleStatus[] = ['draft', 'published'];
     EmptyState,
     ErrorState,
     BottomSheet,
+    PdfDownload,
   ],
   providers: [MyArticlesStore, provideEditorIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -142,6 +145,10 @@ const TABS: readonly ArticleStatus[] = ['draft', 'published'];
                     @if (article.slug && article.status === 'published') {
                       <a [routerLink]="link(article)" class="rd-btn rd-btn-ghost min-h-9 px-3 text-sm" data-view-article>{{ 'editor.myArticles.view' | transloco }}</a>
                     }
+                    @if (article.status === 'published') {
+                      <!-- F33: the published version as a PDF; two language versions ask which first. -->
+                      <rd-pdf-download [articleId]="article.id" [languages]="pdfLanguages(article)" />
+                    }
                     <button type="button" class="rd-btn rd-btn-ghost min-h-9 px-3 text-sm text-error" data-delete-article (click)="confirming.set(article)">
                       <svg lucideIcon="Trash2" [size]="15" aria-hidden="true"></svg>
                       {{ 'editor.myArticles.delete' | transloco }}
@@ -215,6 +222,7 @@ export class MyArticlesPage {
   private readonly language = inject(LanguageService);
   protected readonly lang = this.language.lang;
   protected readonly tabs = TABS;
+  protected readonly pdfLanguages = pdfLanguages;
 
   /** `?tab=published` (query param binding) opens the Published tab. */
   readonly tab = input<string | undefined>(undefined);

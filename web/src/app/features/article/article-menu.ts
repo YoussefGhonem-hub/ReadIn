@@ -16,11 +16,12 @@ import { ReportSheet, ReportTarget } from '../../shared/moderation/report-sheet'
 import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { MuteTopicsSheet } from '../../shared/mutes/mute-topics-sheet';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { ArticlePdfService } from '../pdf/article-pdf.service';
 
 /** An article in the reader, with its moderation state when it is hidden (F22). */
 export type MenuArticle = ArticleCardDto & { moderation?: ArticleModerationDto | null };
 
-export type ArticleMenuAction = 'showLess' | 'follow' | 'muteAuthor' | 'muteTopics' | 'hide' | 'unhide' | 'report';
+export type ArticleMenuAction = 'showLess' | 'follow' | 'muteAuthor' | 'muteTopics' | 'downloadPdf' | 'hide' | 'unhide' | 'report';
 
 /** What the items decide on: the article and where you stand with it. */
 export interface ArticleMenuContext {
@@ -32,6 +33,10 @@ export interface ArticleMenuContext {
   following: boolean;
   /** You muted the writer (false for guests). */
   authorMuted: boolean;
+  /** The menu offers "تحميل PDF" on your own article: the reader's menu, not a post card's (F33). */
+  pdf: boolean;
+  /** That article's PDF is being built (F33): the item says "بنجهز الـ PDF…", disabled, with a spinner. */
+  pdfBuilding: boolean;
 }
 
 type MenuIcon = string | LucideIconData;
@@ -47,6 +52,8 @@ export interface ArticleMenuEntry {
   danger?: boolean;
   /** The moderators' items: after a divider, last. */
   moderation?: boolean;
+  /** Working on it: disabled, with a spinning icon. */
+  busy?: (ctx: ArticleMenuContext) => boolean;
 }
 
 /** An item as the menu shows it. */
@@ -57,6 +64,8 @@ export interface ArticleMenuItem {
   danger: boolean;
   /** A divider goes above it: the first moderator item after the reader's items. */
   divider: boolean;
+  /** Disabled, with a spinning icon (a PDF being built). */
+  busy: boolean;
 }
 
 const hasOtherAuthor = (c: ArticleMenuContext) => !c.isOwn && !!c.article.author;
@@ -65,7 +74,7 @@ const hasOtherAuthor = (c: ArticleMenuContext) => !c.isOwn && !!c.article.author
  * The "⋯" menu, in the SPEC F28 order: the one list every item comes from (the reader's action bar and the post card's
  * header). Report ends the reader's items; the moderators' Hide/Unhide come last, after a divider (the same order on
  * mobile). A later feature adds its entry here and a case in {@link ArticleMenu.run}: F30 "إخفاء الـ Highlights" after
- * Show less, F33 "تحميل PDF" (your own article) before Report. On your own article only Mute topics stays (and Hide for
+ * Show less. On your own article Mute topics stays, and the reader adds "تحميل PDF" (F33) before Report (and Hide for
  * moderators); Follow and Mute author need a writer (not a deleted account).
  */
 export const ARTICLE_MENU: readonly ArticleMenuEntry[] = [
@@ -83,6 +92,14 @@ export const ARTICLE_MENU: readonly ArticleMenuEntry[] = [
     icon: (c) => (c.authorMuted ? MUTE_ICON.Volume2 : MUTE_ICON.VolumeX),
   },
   { id: 'muteTopics', labelKey: 'mute.menu.muteTopics', icon: MUTE_ICON.ListX },
+  // F33: your own article's published version on screen, in the reader.
+  {
+    id: 'downloadPdf',
+    visible: (c) => c.isOwn && c.pdf,
+    labelKey: (c) => (c.pdfBuilding ? 'pdf.building' : 'pdf.download'),
+    icon: (c) => (c.pdfBuilding ? 'LoaderCircle' : 'Download'),
+    busy: (c) => c.pdfBuilding,
+  },
   // The reader's last item, in the error color; never on your own article.
   { id: 'report', visible: (c) => !c.isOwn, labelKey: 'article.menu.report', icon: 'Flag', danger: true },
   // Moderators (F22), after a divider: hide, or unhide a hidden article.
@@ -99,6 +116,7 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
     icon: typeof entry.icon === 'function' ? entry.icon(ctx) : entry.icon,
     danger: entry.danger ?? false,
     divider: i > 0 && !!entry.moderation && !shown[i - 1].moderation,
+    busy: entry.busy?.(ctx) ?? false,
   }));
 }
 
@@ -108,7 +126,8 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
  * screen (MuteStore, PostCard); in the reader, a muted writer's article shows the "انت كاتم الكاتب ده" banner instead.
  * Mute topics opens a sheet with the field and topic toggles (its own lazy chunk). Moderators also Hide (with a note
  * dialog) or Unhide the article; the new moderation state goes up through `moderationChange`, so the reader shows or
- * drops the "hidden" banner at once.
+ * drops the "hidden" banner at once. In the reader (`pdf`), your own article also has "تحميل PDF" (F33): a normal
+ * download of the version on screen, "بنجهز الـ PDF…" and disabled while it is built ({@link ArticlePdfService}).
  */
 @Component({
   selector: 'rd-article-menu',
@@ -138,12 +157,14 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
           <button
             type="button"
             cdkMenuItem
-            class="flex min-h-11 w-full items-center gap-2 rounded-sm px-3 text-start text-sm hover:bg-surface-variant"
+            class="flex min-h-11 w-full items-center gap-2 rounded-sm px-3 text-start text-sm hover:bg-surface-variant aria-disabled:cursor-not-allowed aria-disabled:opacity-55"
             [class]="item.danger ? 'text-error' : 'text-text-primary'"
+            [cdkMenuItemDisabled]="item.busy"
             [attr.data-menu-action]="item.id"
+            [attr.data-state]="item.id === 'downloadPdf' ? (item.busy ? 'building' : 'idle') : null"
             (cdkMenuItemTriggered)="run(item.id)"
           >
-            <svg [lucideIcon]="item.icon" [size]="16" aria-hidden="true"></svg>
+            <svg [lucideIcon]="item.icon" [size]="16" [class.animate-spin]="item.busy" aria-hidden="true"></svg>
             {{ item.labelKey | transloco }}
           </button>
         }
@@ -169,8 +190,11 @@ export class ArticleMenu {
   private readonly errors = inject(ModerationErrors);
   private readonly follows = inject(FollowStore);
   private readonly mutes = inject(MuteStore);
+  private readonly pdfs = inject(ArticlePdfService);
 
   readonly article = input.required<MenuArticle>();
+  /** The reader's menu: your own article also has "تحميل PDF" (F33). A post card's menu doesn't. */
+  readonly pdf = input(false);
   /** Hidden (the new state) or visible again (null), after a moderator's action. */
   readonly moderationChange = output<ArticleModerationDto | null>();
   /**
@@ -194,6 +218,8 @@ export class ArticleMenu {
       isModerator: this.session.permissions().has('moderation.manage'),
       following: signedIn && !!author && this.follows.isFollowing(author.id, article.isFollowingAuthor),
       authorMuted: signedIn && !!author && this.mutes.isAuthorMuted(author.id, article.isAuthorMuted ?? false),
+      pdf: this.pdf(),
+      pdfBuilding: this.pdfs.isBuilding(article.id),
     };
   });
 
@@ -217,6 +243,10 @@ export class ArticleMenu {
         this.topicsUsed.set(true);
         this.topics.set(article);
         this.topicsSheetOpen.emit(true);
+        return;
+      case 'downloadPdf':
+        // The version on screen; a second press while it builds does nothing (the item is disabled too).
+        void this.pdfs.download(article.id, article.language);
         return;
       case 'report':
         this.reporting.set({ type: 'article', id: article.id });

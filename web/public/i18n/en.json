@@ -147,6 +147,10 @@
     },
     "article": {
       "not_found": "Article not found",
+      "pdf_hidden": "Moderators hid this article, so it can't be downloaded as a PDF.",
+      "pdf_limit": "You've downloaded many PDFs this hour. Try again later.",
+      "pdf_busy": "Many PDFs are being prepared right now. Try again in a moment.",
+      "pdf_failed": "We couldn't prepare the PDF. Try again.",
       "sources_required": "Add at least one source before publishing.",
       "draft_conflict": "This article was changed somewhere else.",
       "not_published": "This article isn't published yet.",
@@ -1286,6 +1290,19 @@
       "restoreTitle": "Restore revision {{number}}?",
       "restoreBody": "It replaces the version you are editing, including unsaved changes. Readers see it after you press Update.",
       "restored": "Revision {{number}} restored. Press Update to publish it."
+    }
+  },
+  "pdf": {
+    "download": "Download PDF",
+    "building": "Preparing the PDF…",
+    "offline": "You need an internet connection to download the PDF.",
+    "retry": "Try again",
+    "notFound": "Article not found.",
+    "chooseTitle": "Which version?",
+    "chooseBody": "This article is published in two languages. Choose the version to download as a PDF.",
+    "languages": {
+      "arEG": "Arabic",
+      "en": "English"
     }
   },
   "collections": {
