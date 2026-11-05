@@ -8,20 +8,25 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../search_routes.dart';
 
-/// Explore's search bar (F16): looks like the search box and opens the search screen, where the typing happens.
+/// The search bar (F16): looks like the search box and opens the search screen, where the typing happens. [pill] is
+/// the shorter, fully rounded one in the tabs' top bar.
 class SearchEntryBar extends StatelessWidget {
-  const SearchEntryBar({super.key});
+  const SearchEntryBar({super.key, this.pill = false});
 
   static const height = 48.0;
+
+  /// The top bar's height for it.
+  static const pillHeight = 40.0;
+
+  final bool pill;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final l10n = context.l10n;
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(ReadInRadius.md),
-      side: BorderSide(color: colors.border),
-    );
+    final ShapeBorder shape = pill
+        ? const StadiumBorder()
+        : RoundedRectangleBorder(borderRadius: BorderRadius.circular(ReadInRadius.md), side: BorderSide(color: colors.border));
     return Semantics(
       button: true,
       label: l10n.searchHint,
@@ -36,16 +41,16 @@ class SearchEntryBar extends StatelessWidget {
           onTap: () => _open(context),
           customBorder: shape,
           child: SizedBox(
-            height: height,
+            height: pill ? pillHeight : height,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s4),
+              padding: EdgeInsets.symmetric(horizontal: pill ? ReadInSpace.s3 : ReadInSpace.s4),
               child: Row(
                 children: [
-                  Icon(Icons.search_rounded, color: colors.textSecondary),
-                  const SizedBox(width: ReadInSpace.s3),
+                  Icon(Icons.search_rounded, color: colors.textSecondary, size: pill ? 20 : 24),
+                  SizedBox(width: pill ? ReadInSpace.s2 : ReadInSpace.s3),
                   Expanded(
                     child: Text(
-                      l10n.searchHint,
+                      pill ? l10n.searchPillHint : l10n.searchHint,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.bodyMedium?.copyWith(color: colors.textSecondary),

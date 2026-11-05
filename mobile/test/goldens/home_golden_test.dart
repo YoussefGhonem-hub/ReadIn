@@ -9,6 +9,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/realtime/realtime_service.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
+import 'package:readin/features/auth/domain/entities/me.dart';
+import 'package:readin/features/auth/domain/entities/permissions.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/comments/presentation/widgets/comment_body.dart';
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
@@ -44,6 +46,16 @@ class MockLiveFeedCubit extends MockCubit<LiveFeedState> implements LiveFeedCubi
 class MockUnreadBadgeCubit extends MockCubit<int> implements UnreadBadgeCubit {}
 
 class MockStreakCubit extends MockCubit<Streak?> implements StreakCubit {}
+
+/// [sampleMe] as every Member is: allowed to write.
+const _writer = Me(
+  id: 'u-1',
+  phoneNumber: '+12025550110',
+  displayName: 'Youssef Hassan',
+  username: 'reader1',
+  onboardingCompleted: true,
+  permissions: [Permissions.articlesCreate],
+);
 
 /// Home ("النهارده") in the 4 mandatory variants: ar/en × light/dark (SPEC §8.2).
 void main() {
@@ -100,8 +112,11 @@ void main() {
         ));
     whenListen(following, const Stream<FeedState>.empty(), initialState: const FeedState());
     whenListen(suggested, const Stream<SuggestedWritersState>.empty(), initialState: const SuggestedWritersState());
+    // "Add to your feed" after the third card asks for the suggestions (they're still loading here).
+    when(suggested.ensureLoaded).thenAnswer((_) async {});
+    // A Member, who can write: the top bar's avatar and "Start a post" (LinkedIn-style layout).
     whenListen(session, const Stream<SessionState>.empty(),
-        initialState: const SessionState(status: SessionStatus.authenticated, me: sampleMe));
+        initialState: const SessionState(status: SessionStatus.authenticated, me: _writer));
     whenListen(follows, const Stream<FollowsState>.empty(), initialState: const FollowsState());
     when(() => follows.changes).thenAnswer((_) => const Stream.empty());
     when(feed.loadMore).thenAnswer((_) async {});

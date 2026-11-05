@@ -82,7 +82,12 @@ void main() {
     addTearDown(store.close);
     unawaited(explore.load());
     await pumpRouted(tester, const ExploreView(), opened: opened, providers: [BlocProvider<ExploreCubit>.value(value: explore)]);
-    expect(find.text(l10nEn.searchHint), findsOneWidget);
+    // Explore's search bar is the tabs' top bar's search pill now: a shorter hint on screen, the full one for screen
+    // readers.
+    final semantics = tester.ensureSemantics();
+    expect(find.text(l10nEn.searchPillHint), findsOneWidget);
+    expect(find.bySemanticsLabel(l10nEn.searchHint), findsOneWidget);
+    semantics.dispose();
     await tester.tap(find.byKey(const ValueKey('search-entry')));
     await tester.pumpAndSettle();
     expect(opened, ['/search']);

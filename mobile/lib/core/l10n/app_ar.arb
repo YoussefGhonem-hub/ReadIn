@@ -1354,5 +1354,19 @@
   "errCategoryNotOwner": "القسم ده مش بتاعك.",
   "errCategoryLimit": "وصلت لأقصى عدد أقسام (50).",
   "errCategoryNameTaken": "عندك قسم بنفس الاسم بالفعل.",
-  "errCategoryNameInvalid": "اسم القسم لازم يكون من 1 لـ 40 حرف، وفيه حرف أو رقم على الأقل."
+  "errCategoryNameInvalid": "اسم القسم لازم يكون من 1 لـ 40 حرف، وفيه حرف أو رقم على الأقل.",
+
+  "meMenu": "أنا",
+  "meViewProfile": "عرض البروفايل",
+  "meArticlesThisWeek": "مقالات الأسبوع ده",
+  "meMinutesThisWeek": "دقايق الأسبوع ده",
+  "themeSwitchToDark": "حوّل للوضع الداكن",
+  "themeSwitchToLight": "حوّل للوضع الفاتح",
+  "searchPillHint": "دوّر على مقالات، كتّاب…",
+  "startPostHint": "ابدأ مقال جديد…",
+  "startPostPhoto": "صورة",
+  "startPostPdf": "PDF",
+  "startPostArticle": "مقال",
+  "suggestedWritersFeedTitle": "أضف لفيدك",
+  "suggestedPathTitle": "مسار مقترح"
 }

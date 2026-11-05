@@ -12,7 +12,14 @@ import '../../domain/entities/continue_reading.dart';
 import '../../domain/usecases/feed_usecases.dart';
 
 class HomeState extends Equatable {
-  const HomeState({this.loading = true, this.today, this.fields = const [], this.continueReading = const [], this.activePath});
+  const HomeState({
+    this.loading = true,
+    this.today,
+    this.fields = const [],
+    this.continueReading = const [],
+    this.activePath,
+    this.suggestedPath,
+  });
 
   final bool loading;
 
@@ -28,6 +35,10 @@ class HomeState extends Equatable {
   /// the "explore paths" prompt.
   final LearningPath? activePath;
 
+  /// "Suggested path" (F09): the first published path (`GET /paths`, editorial order) the viewer hasn't joined; for
+  /// guests the first path. Null when every path is joined, there is none, or on failure.
+  final LearningPath? suggestedPath;
+
   /// The Continue reading card: the first article that isn't [today] (that one already is the hero). Null hides it.
   ContinueReading? get resume {
     final heroId = today?.id;
@@ -35,20 +46,21 @@ class HomeState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [loading, today, fields, continueReading, activePath];
+  List<Object?> get props => [loading, today, fields, continueReading, activePath, suggestedPath];
 }
 
-/// Header data for Home (F03): Today's article, the Continue reading and learning path cards, and the field filter
-/// chips. The two cards need a session; they load in parallel with Today's article.
+/// Header data for Home (F03): Today's article, the Continue reading and learning path cards, the suggested path and
+/// the field filter chips. The two progress cards need a session; everything loads in parallel with Today's article.
 @injectable
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit(this._getToday, this._getFields, this._getContinueReading, this._getActivePath, this._session)
+  HomeCubit(this._getToday, this._getFields, this._getContinueReading, this._getActivePath, this._getPaths, this._session)
       : super(const HomeState());
 
   final GetTodayArticle _getToday;
   final GetFields _getFields;
   final GetContinueReading _getContinueReading;
   final GetActivePath _getActivePath;
+  final GetPaths _getPaths;
   final SessionCubit _session;
 
   // Incremented by every load (and every card refresh), so an older answer is dropped.
@@ -59,7 +71,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (!refresh) emit(const HomeState());
     final generation = ++_generation;
     ++_cardsGeneration;
-    final (today, fields, (resume, path)) = await (_getToday(), _getFields(refresh: refresh), _cards()).wait;
+    final (today, fields, (resume, path, suggested)) = await (_getToday(), _getFields(refresh: refresh), _cards()).wait;
     if (generation != _generation || isClosed) return;
     emit(HomeState(
       loading: false,
@@ -67,21 +79,35 @@ class HomeCubit extends Cubit<HomeState> {
       fields: fields.valueOrNull ?? state.fields,
       continueReading: resume,
       activePath: path,
+      suggestedPath: suggested,
     ));
   }
 
-  /// Back on Home from the reader or a path: only the Continue reading and learning path cards (cheap calls).
+  /// Back on Home from the reader or a path: only the Continue reading, learning path and suggested path cards (cheap
+  /// calls; joining a path changes the suggestion).
   Future<void> refreshProgress() async {
     if (state.loading) return;
     final generation = ++_cardsGeneration;
-    final (resume, path) = await _cards();
+    final (resume, path, suggested) = await _cards();
     if (generation != _cardsGeneration || isClosed || state.loading) return;
-    emit(HomeState(loading: false, today: state.today, fields: state.fields, continueReading: resume, activePath: path));
+    emit(HomeState(
+      loading: false,
+      today: state.today,
+      fields: state.fields,
+      continueReading: resume,
+      activePath: path,
+      suggestedPath: suggested,
+    ));
   }
 
-  Future<(List<ContinueReading>, LearningPath?)> _cards() async {
-    if (!_session.state.isAuthenticated) return (const <ContinueReading>[], null);
-    final (resume, path) = await (_getContinueReading(), _getActivePath()).wait;
-    return (resume.valueOrNull ?? const <ContinueReading>[], path.valueOrNull);
+  Future<(List<ContinueReading>, LearningPath?, LearningPath?)> _cards() async {
+    if (!_session.state.isAuthenticated) return (const <ContinueReading>[], null, _suggest((await _getPaths()).valueOrNull, null));
+    final (resume, path, paths) = await (_getContinueReading(), _getActivePath(), _getPaths()).wait;
+    final active = path.valueOrNull;
+    return (resume.valueOrNull ?? const <ContinueReading>[], active, _suggest(paths.valueOrNull, active));
   }
+
+  /// The first of [paths] not joined and not [active]; a failed list only hides the card.
+  static LearningPath? _suggest(List<LearningPath>? paths, LearningPath? active) =>
+      paths?.where((p) => !p.isEnrolled && p.id != active?.id).firstOrNull;
 }

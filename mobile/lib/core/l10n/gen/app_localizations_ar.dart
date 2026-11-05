@@ -4790,4 +4790,43 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get errCategoryNameInvalid =>
       'اسم القسم لازم يكون من 1 لـ 40 حرف، وفيه حرف أو رقم على الأقل.';
+
+  @override
+  String get meMenu => 'أنا';
+
+  @override
+  String get meViewProfile => 'عرض البروفايل';
+
+  @override
+  String get meArticlesThisWeek => 'مقالات الأسبوع ده';
+
+  @override
+  String get meMinutesThisWeek => 'دقايق الأسبوع ده';
+
+  @override
+  String get themeSwitchToDark => 'حوّل للوضع الداكن';
+
+  @override
+  String get themeSwitchToLight => 'حوّل للوضع الفاتح';
+
+  @override
+  String get searchPillHint => 'دوّر على مقالات، كتّاب…';
+
+  @override
+  String get startPostHint => 'ابدأ مقال جديد…';
+
+  @override
+  String get startPostPhoto => 'صورة';
+
+  @override
+  String get startPostPdf => 'PDF';
+
+  @override
+  String get startPostArticle => 'مقال';
+
+  @override
+  String get suggestedWritersFeedTitle => 'أضف لفيدك';
+
+  @override
+  String get suggestedPathTitle => 'مسار مقترح';
 }

@@ -4729,4 +4729,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errCategoryNameInvalid =>
       'A category name has 1–40 characters, with at least one letter or digit.';
+
+  @override
+  String get meMenu => 'Me';
+
+  @override
+  String get meViewProfile => 'View profile';
+
+  @override
+  String get meArticlesThisWeek => 'Articles this week';
+
+  @override
+  String get meMinutesThisWeek => 'Minutes this week';
+
+  @override
+  String get themeSwitchToDark => 'Switch to dark mode';
+
+  @override
+  String get themeSwitchToLight => 'Switch to light mode';
+
+  @override
+  String get searchPillHint => 'Search articles, writers…';
+
+  @override
+  String get startPostHint => 'Start a post…';
+
+  @override
+  String get startPostPhoto => 'Photo';
+
+  @override
+  String get startPostPdf => 'PDF';
+
+  @override
+  String get startPostArticle => 'Article';
+
+  @override
+  String get suggestedWritersFeedTitle => 'Add to your feed';
+
+  @override
+  String get suggestedPathTitle => 'Suggested path';
 }

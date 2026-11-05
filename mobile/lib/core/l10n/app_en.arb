@@ -1495,5 +1495,19 @@
   "errCategoryNotOwner": "This category isn't yours.",
   "errCategoryLimit": "You can have at most 50 categories.",
   "errCategoryNameTaken": "You already have a category with this name.",
-  "errCategoryNameInvalid": "A category name has 1–40 characters, with at least one letter or digit."
+  "errCategoryNameInvalid": "A category name has 1–40 characters, with at least one letter or digit.",
+
+  "meMenu": "Me",
+  "meViewProfile": "View profile",
+  "meArticlesThisWeek": "Articles this week",
+  "meMinutesThisWeek": "Minutes this week",
+  "themeSwitchToDark": "Switch to dark mode",
+  "themeSwitchToLight": "Switch to light mode",
+  "searchPillHint": "Search articles, writers…",
+  "startPostHint": "Start a post…",
+  "startPostPhoto": "Photo",
+  "startPostPdf": "PDF",
+  "startPostArticle": "Article",
+  "suggestedWritersFeedTitle": "Add to your feed",
+  "suggestedPathTitle": "Suggested path"
 }

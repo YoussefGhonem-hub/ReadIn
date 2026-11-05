@@ -10,15 +10,15 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../home/presentation/widgets/app_top_bar.dart';
 import '../../../paths/presentation/path_routes.dart';
 import '../../../paths/presentation/widgets/path_widgets.dart';
-import '../../../search/presentation/widgets/search_entry_bar.dart';
 import '../../domain/entities/explore.dart';
 import '../cubit/explore_cubit.dart';
 import '../explore_routes.dart';
 import '../widgets/explore_widgets.dart';
 
-/// The Explore tab (F15), guests too: the search bar (F16), then the fields (each opens its field page, where the
+/// The Explore tab (F15), guests too: the top bar's search (F16), then the fields (each opens its field page, where the
 /// topics are), "Trending this week" and "Most saved" (a few rows each, "See all" opens the full list as post cards),
 /// new writers with Follow, and the featured learning paths. A section with nothing in it is hidden.
 class ExplorePage extends StatelessWidget {
@@ -51,7 +51,8 @@ class ExploreView extends StatelessWidget {
       child: EngagementSeeder<ExploreCubit, ExploreState>(
         cards: (state) => [...state.sections.trending, ...state.sections.mostSaved],
         child: Scaffold(
-          appBar: AppBar(title: Text(context.l10n.navExplore), automaticallyImplyLeading: false),
+          // The tabs' top bar: its search pill is Explore's search (F16).
+          appBar: const AppTopBar(),
           body: BlocBuilder<ExploreCubit, ExploreState>(
             builder: (context, state) => RefreshIndicator(
               onRefresh: cubit.refresh,
@@ -59,10 +60,7 @@ class ExploreView extends StatelessWidget {
                 key: const PageStorageKey('explore'),
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  const SliverPadding(
-                    padding: EdgeInsets.fromLTRB(_gutter, ReadInSpace.s2, _gutter, ReadInSpace.s2),
-                    sliver: SliverToBoxAdapter(child: SearchEntryBar()),
-                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: ReadInSpace.s2)),
                   ...switch (state.status) {
                     ExploreStatus.loading => [const SliverToBoxAdapter(child: _ExploreSkeleton())],
                     ExploreStatus.failure => [

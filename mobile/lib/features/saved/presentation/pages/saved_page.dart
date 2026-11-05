@@ -16,6 +16,7 @@ import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/cubit/engagement_cubit.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../home/presentation/widgets/app_top_bar.dart';
 import '../../domain/entities/saved.dart';
 import '../cubit/collections_cubit.dart';
 import '../cubit/saved_list_cubit.dart';
@@ -60,11 +61,8 @@ class _SavedViewState extends State<SavedView> {
       length: 2,
       initialIndex: widget.initialTab,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.navSaved),
-          automaticallyImplyLeading: false,
-          bottom: TabBar(tabs: [Tab(text: l10n.savedTabArticles), Tab(text: l10n.collections)]),
-        ),
+        // The tabs' top bar, with Saved's own tabs under it.
+        appBar: AppTopBar(bottom: TabBar(tabs: [Tab(text: l10n.savedTabArticles), Tab(text: l10n.collections)])),
         body: const TabBarView(children: [SavedArticlesList(), _CollectionsTab()]),
       ),
     );
@@ -78,7 +76,7 @@ class _SavedGuestView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.navSaved), automaticallyImplyLeading: false),
+      appBar: const AppTopBar(),
       body: EmptyView(
         icon: Icons.bookmark_border_rounded,
         title: l10n.savedGuestTitle,

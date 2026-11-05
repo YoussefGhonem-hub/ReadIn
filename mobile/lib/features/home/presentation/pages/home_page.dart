@@ -17,20 +17,24 @@ import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
 import '../../../article/presentation/widgets/post_card.dart';
 import '../../../auth/domain/entities/me.dart';
+import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
-import '../../../auth/presentation/widgets/require_account.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/cubit/suggested_writers_cubit.dart';
 import '../../../follow/presentation/widgets/suggested_writers.dart';
+import '../../../follow/presentation/widgets/suggested_writers_carousel.dart';
 import '../../../mutes/presentation/widgets/mute_gate.dart';
-import '../../../notifications/presentation/cubit/unread_badge_cubit.dart';
 import '../../../paths/presentation/path_routes.dart';
 import '../../../paths/presentation/widgets/home_path_card.dart';
+import '../../../paths/presentation/widgets/suggested_path_card.dart';
 import '../../../reading/presentation/widgets/home_streak_badge.dart';
 import '../cubit/feed_cubit.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/live_feed_cubit.dart';
+import '../widgets/app_top_bar.dart';
 import '../widgets/continue_reading_card.dart';
+import '../widgets/home_side_column.dart';
+import '../widgets/start_post_card.dart';
 
 /// The two feeds of Home (F03): "For you" and "Following" (F12).
 enum HomeFeedTab { forYou, following }
@@ -44,14 +48,14 @@ class HomePage extends StatelessWidget {
         providers: [
           BlocProvider(create: (_) => getIt<HomeCubit>()..load()),
           BlocProvider(create: (_) => getIt<FeedCubit>()..load()),
-          // The Following tab and its suggestions load the first time they are shown.
+          // The Following tab and the suggestions (its empty state, For you's "Add to your feed", the side column)
+          // load the first time they are shown.
           BlocProvider(create: (_) => getIt<FollowingFeedCubit>()),
           BlocProvider(create: (_) => getIt<SuggestedWritersCubit>()),
           BlocProvider(create: (_) => getIt<LiveFeedCubit>()..start()),
           // The expanded post cards of every list on Home, kept while the reader or a profile is open (F34).
           BlocProvider(create: (_) => getIt<PostCardsCubit>()),
-          // App-wide: the notification center zeroes it (F17).
-          BlocProvider.value(value: getIt<UnreadBadgeCubit>()),
+          // The top bar's unread count comes from the tab shell (MainShell), as on Explore and Saved.
         ],
         child: const HomeView(),
       );
@@ -61,6 +65,15 @@ class HomeView extends StatefulWidget {
   const HomeView({super.key, this.initialTab = HomeFeedTab.forYou});
 
   final HomeFeedTab initialTab;
+
+  /// From this width (tablets) Home has two columns: the feed, and [HomeSideColumn] beside it.
+  static const twoColumnWidth = 840.0;
+
+  /// "Add to your feed" comes after this many cards of For you (on phones; tablets have it in the side column).
+  static const suggestedWritersAfter = 3;
+
+  /// The suggested path comes after this many cards of For you when a path in progress has its place above.
+  static const suggestedPathAfter = 8;
 
   /// Time source for the morning/evening greeting (overridden in golden tests).
   @visibleForTesting
@@ -165,9 +178,26 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
+  /// What comes after card [index] of For you: "Add to your feed" (signed in, on phones), and the suggested path when
+  /// a path in progress has the place above.
+  Widget? _afterCard(int index, {required bool signedIn, required bool wide}) {
+    if (index == HomeView.suggestedWritersAfter - 1 && signedIn && !wide) {
+      return SuggestedWritersCarousel(
+        margin: const EdgeInsets.only(bottom: postCardGap),
+        // Explore is a tab: switch to it.
+        onSeeAll: () => GoRouter.maybeOf(context)?.go('/explore'),
+      );
+    }
+    if (index == HomeView.suggestedPathAfter - 1) return _FeedSuggestedPath(onPush: (location) => unawaited(_push(location)));
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final signedIn = context.select((SessionCubit c) => c.state.isAuthenticated);
+    final me = context.select((SessionCubit c) => c.state.isAuthenticated ? c.state.me : null);
+    // Tablets: the profile card, this week's reading and suggestions in a column beside the feed.
+    final wide = MediaQuery.sizeOf(context).width >= HomeView.twoColumnWidth;
     return MultiBlocListener(
       listeners: [
         BlocListener<SessionCubit, SessionState>(
@@ -183,79 +213,16 @@ class _HomeViewState extends State<HomeView> {
         child: EngagementSeeder<FollowingFeedCubit, FeedState>(
           cards: (state) => state.items,
           child: Scaffold(
+            // The avatar (Me), search, the light / dark toggle and the bell, as on Explore and Saved.
+            appBar: const AppTopBar(),
             body: SafeArea(
               bottom: false,
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (n) {
-                  if (n.metrics.axis == Axis.vertical && n.metrics.extentAfter < 600) unawaited(_activeFeed.loadMore());
-                  return false;
-                },
-                child: Stack(
-                  children: [
-                    RefreshIndicator(
-                      onRefresh: _refresh,
-                      child: CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          const SliverPadding(
-                            padding: EdgeInsets.fromLTRB(_gutter, ReadInSpace.s4, _gutter, ReadInSpace.s4),
-                            sliver: SliverToBoxAdapter(child: _HomeHeader()),
-                          ),
-                          // Today's article (F07) as a post card under its label, full width (F34).
-                          SliverToBoxAdapter(
-                            child: EngagementSeeder<HomeCubit, HomeState>(
-                              cards: (state) => [?state.today],
-                              child: BlocBuilder<HomeCubit, HomeState>(
-                                buildWhen: (a, b) => (a.loading, a.today) != (b.loading, b.today),
-                                builder: (context, state) {
-                                  if (state.loading) return const PostCardSkeleton();
-                                  final today = state.today;
-                                  if (today == null) return const SizedBox.shrink();
-                                  // Muting its writer, field or topic, or "show less", folds it away (F28).
-                                  return MuteGate(
-                                    article: today,
-                                    child: _LiveArticleTile(
-                                      article: today,
-                                      label: context.l10n.todayArticle,
-                                      onTap: () => _open(today.slug),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                          SliverPadding(
-                            padding: const EdgeInsets.symmetric(horizontal: _gutter),
-                            sliver: SliverToBoxAdapter(child: _ProgressCards(onPush: (location) => unawaited(_push(location)))),
-                          ),
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(_gutter, ReadInSpace.s4, _gutter, 0),
-                            sliver: SliverToBoxAdapter(child: _FeedTabs(selected: _tab, onSelected: _selectTab)),
-                          ),
-                          if (_tab == HomeFeedTab.forYou) ...[
-                            const SliverToBoxAdapter(child: _FieldFilterBar()),
-                            _ArticleFeedSliver<FeedCubit>(
-                              onOpen: _open,
-                              empty: EmptyView(title: context.l10n.feedEmptyTitle, body: context.l10n.feedEmptyBody),
-                            ),
-                          ] else if (!signedIn)
-                            const SliverFillRemaining(hasScrollBody: false, child: _FollowingGuest())
-                          else ...[
-                            const SliverToBoxAdapter(child: SizedBox(height: ReadInSpace.s3)),
-                            _ArticleFeedSliver<FollowingFeedCubit>(
-                              onOpen: _open,
-                              emptyFillsRemaining: false,
-                              empty: FollowingEmptyView(
-                                onShowArticles: _followingStale ? _showFollowedArticles : null,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    _NewArticlesBanner(onTap: _showNewArticles),
-                  ],
-                ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _feed(signedIn: signedIn, me: me, wide: wide)),
+                  if (wide) const SizedBox(width: HomeSideColumn.width, child: HomeSideColumn()),
+                ],
               ),
             ),
           ),
@@ -263,6 +230,88 @@ class _HomeViewState extends State<HomeView> {
       ),
     );
   }
+
+  /// The feed column: the header, Start a post, Today's article, the progress cards, the tabs and their feed.
+  Widget _feed({required bool signedIn, required Me? me, required bool wide}) =>
+      NotificationListener<ScrollNotification>(
+        onNotification: (n) {
+          if (n.metrics.axis == Axis.vertical && n.metrics.extentAfter < 600) unawaited(_activeFeed.loadMore());
+          return false;
+        },
+        child: Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: _refresh,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  const SliverPadding(
+                    padding: EdgeInsets.fromLTRB(_gutter, ReadInSpace.s4, _gutter, ReadInSpace.s4),
+                    sliver: SliverToBoxAdapter(child: _HomeHeader()),
+                  ),
+                  // "Start a post" (signed-in writers): the editor, one tap away.
+                  if (me != null && me.canWrite)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(_gutter, 0, _gutter, ReadInSpace.s4),
+                      sliver: SliverToBoxAdapter(child: StartPostCard(me: me)),
+                    ),
+                  // Today's article (F07) as a post card under its label, full width (F34).
+                  SliverToBoxAdapter(
+                    child: EngagementSeeder<HomeCubit, HomeState>(
+                      cards: (state) => [?state.today],
+                      child: BlocBuilder<HomeCubit, HomeState>(
+                        buildWhen: (a, b) => (a.loading, a.today) != (b.loading, b.today),
+                        builder: (context, state) {
+                          if (state.loading) return const PostCardSkeleton();
+                          final today = state.today;
+                          if (today == null) return const SizedBox.shrink();
+                          // Muting its writer, field or topic, or "show less", folds it away (F28).
+                          return MuteGate(
+                            article: today,
+                            child: _LiveArticleTile(
+                              article: today,
+                              label: context.l10n.todayArticle,
+                              onTap: () => _open(today.slug),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: _gutter),
+                    sliver: SliverToBoxAdapter(child: _ProgressCards(onPush: (location) => unawaited(_push(location)))),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(_gutter, ReadInSpace.s4, _gutter, 0),
+                    sliver: SliverToBoxAdapter(child: _FeedTabs(selected: _tab, onSelected: _selectTab)),
+                  ),
+                  if (_tab == HomeFeedTab.forYou) ...[
+                    const SliverToBoxAdapter(child: _FieldFilterBar()),
+                    _ArticleFeedSliver<FeedCubit>(
+                      onOpen: _open,
+                      empty: EmptyView(title: context.l10n.feedEmptyTitle, body: context.l10n.feedEmptyBody),
+                      after: (index) => _afterCard(index, signedIn: signedIn, wide: wide),
+                    ),
+                  ] else if (!signedIn)
+                    const SliverFillRemaining(hasScrollBody: false, child: _FollowingGuest())
+                  else ...[
+                    const SliverToBoxAdapter(child: SizedBox(height: ReadInSpace.s3)),
+                    _ArticleFeedSliver<FollowingFeedCubit>(
+                      onOpen: _open,
+                      emptyFillsRemaining: false,
+                      empty: FollowingEmptyView(
+                        onShowArticles: _followingStale ? _showFollowedArticles : null,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            _NewArticlesBanner(onTap: _showNewArticles),
+          ],
+        ),
+      );
 }
 
 /// The header says "good morning" from 5 AM until noon and "good evening" otherwise, as on the web.
@@ -293,16 +342,16 @@ class _HomeHeader extends StatelessWidget {
             ],
           ),
         ),
+        // The bell is in the top bar.
         const HomeStreakBadge(),
-        const SizedBox(width: ReadInSpace.s2),
-        const _NotificationsButton(),
       ],
     );
   }
 }
 
 /// Under Today's article (F03): "Continue reading" (signed in, not the hero's article), then the learning path in
-/// progress, or the slim "explore paths" prompt when there is none (and for guests). Nothing while Home loads.
+/// progress; without one (and for guests) a suggested path to start, or the slim "explore paths" prompt when there is
+/// none to suggest. Nothing while Home loads.
 class _ProgressCards extends StatelessWidget {
   const _ProgressCards({required this.onPush});
 
@@ -311,11 +360,14 @@ class _ProgressCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocBuilder<HomeCubit, HomeState>(
-        buildWhen: (a, b) => (a.loading, a.today?.id, a.resume, a.activePath) != (b.loading, b.today?.id, b.resume, b.activePath),
+        buildWhen: (a, b) =>
+            (a.loading, a.today?.id, a.resume, a.activePath, a.suggestedPath) !=
+            (b.loading, b.today?.id, b.resume, b.activePath, b.suggestedPath),
         builder: (context, state) {
           if (state.loading) return const SizedBox.shrink();
           final resume = state.resume;
           final path = state.activePath;
+          final suggested = state.suggestedPath;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -334,12 +386,41 @@ class _ProgressCards extends StatelessWidget {
                   onOpenPath: () => onPush(PathRoutes.of(path.slug)),
                   onOpenNext: (next) => onPush('/a/${next.slug}'),
                 )
+              else if (suggested != null)
+                SuggestedPathCard(
+                  path: suggested,
+                  onOpenPath: () => onPush(PathRoutes.of(suggested.slug)),
+                  onSeeAll: () => onPush(PathRoutes.list),
+                )
               else
                 PathsPromptRow(onTap: () => onPush(PathRoutes.list)),
             ],
           );
         },
       );
+}
+
+/// The suggested path further down For you (after [HomeView.suggestedPathAfter] cards), for readers whose path in
+/// progress has the place above.
+class _FeedSuggestedPath extends StatelessWidget {
+  const _FeedSuggestedPath({required this.onPush});
+
+  final ValueChanged<String> onPush;
+
+  @override
+  Widget build(BuildContext context) {
+    final (active, suggested) = context.select((HomeCubit c) => (c.state.activePath, c.state.suggestedPath));
+    if (active == null || suggested == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, ReadInSpace.s2 + postCardGap),
+      child: SuggestedPathCard(
+        key: const ValueKey('feed-suggested-path'),
+        path: suggested,
+        onOpenPath: () => onPush(PathRoutes.of(suggested.slug)),
+        onSeeAll: () => onPush(PathRoutes.list),
+      ),
+    );
+  }
 }
 
 /// "For you" | "Following" (F03).
@@ -392,13 +473,31 @@ class _FeedTabs extends StatelessWidget {
 
 /// A feed's cards, skeleton, empty and error states and the load-more footer.
 class _ArticleFeedSliver<C extends ArticleFeedCubit> extends StatelessWidget {
-  const _ArticleFeedSliver({required this.onOpen, required this.empty, this.emptyFillsRemaining = true});
+  const _ArticleFeedSliver({required this.onOpen, required this.empty, this.emptyFillsRemaining = true, this.after});
 
   final ValueChanged<String> onOpen;
   final Widget empty;
 
   /// Centre [empty] in the space left (a message), or let it scroll at its own height (a list of suggestions).
   final bool emptyFillsRemaining;
+
+  /// A block to show after the card at an index (suggestions), or null. It stays when that card is muted away.
+  final Widget? Function(int index)? after;
+
+  Widget _card(FeedState feed, int i) {
+    final article = feed.items[i];
+    // Mutes and "show less" fold the card away at once, and Undo brings it back in place (F28).
+    final card = MuteGate(
+      key: ValueKey('feed-${article.id}'),
+      article: article,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: postCardGap),
+        child: _LiveArticleTile(article: article, onTap: () => onOpen(article.slug)),
+      ),
+    );
+    final extra = after?.call(i);
+    return extra == null ? card : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [card, extra]);
+  }
 
   @override
   Widget build(BuildContext context) => BlocBuilder<C, FeedState>(
@@ -423,15 +522,7 @@ class _ArticleFeedSliver<C extends ArticleFeedCubit> extends StatelessWidget {
             FeedStatus.ready => SliverList.builder(
                 itemCount: feed.items.length + 1,
                 itemBuilder: (context, i) => i < feed.items.length
-                    // Mutes and "show less" fold the card away at once, and Undo brings it back in place (F28).
-                    ? MuteGate(
-                        key: ValueKey('feed-${feed.items[i].id}'),
-                        article: feed.items[i],
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: postCardGap),
-                          child: _LiveArticleTile(article: feed.items[i], onTap: () => onOpen(feed.items[i].slug)),
-                        ),
-                      )
+                    ? _card(feed, i)
                     : LoadMoreWhileHidden(
                         active: allHidden && !feed.loadingMore && feed.loadMoreFailure == null,
                         onLoadMore: () => unawaited(context.read<C>().loadMore()),
@@ -580,47 +671,6 @@ class _LiveArticleTileState extends State<_LiveArticleTile> {
       listenWhen: (a, b) => b.counts[id] != null && !identical(a.counts[id], b.counts[id]),
       listener: (context, state) => context.read<EngagementCubit>().applyLive(id, state.counts[id]!),
       child: PostCard(article: widget.article, label: widget.label, onOpen: widget.onTap),
-    );
-  }
-}
-
-/// The bell with the unread count (F17, F27): live, or re-read when the app comes back without the Realtime Database.
-/// Guests get the sign-in prompt.
-class _NotificationsButton extends StatefulWidget {
-  const _NotificationsButton();
-
-  @override
-  State<_NotificationsButton> createState() => _NotificationsButtonState();
-}
-
-class _NotificationsButtonState extends State<_NotificationsButton> {
-  late final AppLifecycleListener _lifecycle;
-
-  @override
-  void initState() {
-    super.initState();
-    _lifecycle = AppLifecycleListener(onResume: () => unawaited(context.read<UnreadBadgeCubit>().refresh()));
-  }
-
-  @override
-  void dispose() {
-    _lifecycle.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final unread = context.watch<UnreadBadgeCubit>().state;
-    const bell = Icon(Icons.notifications_none_rounded);
-    return IconButton.outlined(
-      tooltip: unread > 0 ? l10n.notificationsUnread(unread) : l10n.notifications,
-      onPressed: () {
-        if (requireAccount(context)) unawaited(context.push<void>('/notifications'));
-      },
-      // No badge at 0, so the bell looks exactly as before.
-      icon: unread > 0 ? Badge(label: Text(unread > 9 ? '9+' : '$unread'), child: bell) : bell,
-      style: IconButton.styleFrom(side: BorderSide(color: context.colors.border)),
     );
   }
 }

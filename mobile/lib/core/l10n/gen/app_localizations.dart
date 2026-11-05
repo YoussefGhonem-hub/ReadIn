@@ -7939,6 +7939,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A category name has 1–40 characters, with at least one letter or digit.'**
   String get errCategoryNameInvalid;
+
+  /// No description provided for @meMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get meMenu;
+
+  /// No description provided for @meViewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View profile'**
+  String get meViewProfile;
+
+  /// No description provided for @meArticlesThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles this week'**
+  String get meArticlesThisWeek;
+
+  /// No description provided for @meMinutesThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes this week'**
+  String get meMinutesThisWeek;
+
+  /// No description provided for @themeSwitchToDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to dark mode'**
+  String get themeSwitchToDark;
+
+  /// No description provided for @themeSwitchToLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to light mode'**
+  String get themeSwitchToLight;
+
+  /// No description provided for @searchPillHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search articles, writers…'**
+  String get searchPillHint;
+
+  /// No description provided for @startPostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a post…'**
+  String get startPostHint;
+
+  /// No description provided for @startPostPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get startPostPhoto;
+
+  /// No description provided for @startPostPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get startPostPdf;
+
+  /// No description provided for @startPostArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Article'**
+  String get startPostArticle;
+
+  /// No description provided for @suggestedWritersFeedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to your feed'**
+  String get suggestedWritersFeedTitle;
+
+  /// No description provided for @suggestedPathTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested path'**
+  String get suggestedPathTitle;
 }
 
 class _AppLocalizationsDelegate

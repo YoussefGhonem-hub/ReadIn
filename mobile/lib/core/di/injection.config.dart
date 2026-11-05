@@ -1391,15 +1391,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i46.ConfirmWithLinkedProvider>(),
       ),
     );
-    gh.factory<_i9.HomeCubit>(
-      () => _i9.HomeCubit(
-        gh<_i251.GetTodayArticle>(),
-        gh<_i172.GetFields>(),
-        gh<_i251.GetContinueReading>(),
-        gh<_i924.GetActivePath>(),
-        gh<_i371.SessionCubit>(),
-      ),
-    );
     gh.lazySingleton<_i729.MutesCubit>(
       () => _i729.MutesCubit(
         gh<_i984.SetUserMuted>(),
@@ -1435,6 +1426,16 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i991.MutedListCubit>(
       () => _i991.MutedListCubit(gh<_i984.GetMutes>(), gh<_i729.MutesCubit>()),
+    );
+    gh.factory<_i9.HomeCubit>(
+      () => _i9.HomeCubit(
+        gh<_i251.GetTodayArticle>(),
+        gh<_i172.GetFields>(),
+        gh<_i251.GetContinueReading>(),
+        gh<_i924.GetActivePath>(),
+        gh<_i924.GetPaths>(),
+        gh<_i371.SessionCubit>(),
+      ),
     );
     gh.lazySingleton<_i564.ModerationNoticesCubit>(
       () => _i564.ModerationNoticesCubit(
