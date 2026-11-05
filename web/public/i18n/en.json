@@ -57,7 +57,10 @@
     "recoveryPin": "Recovery PIN",
     "completeProfile": "Complete your profile",
     "onboarding": "Get started",
-    "search": "Search"
+    "search": "Search",
+    "explore": "Explore",
+    "trending": "Trending this week",
+    "mostSaved": "Most saved"
   },
   "errors": {
     "unknown": "Something went wrong. Please try again.",
@@ -1441,6 +1444,71 @@
       "seeAll": "See all results for “{{q}}”",
       "searching": "Searching…",
       "none": "No suggestions yet"
+    }
+  },
+  "explore": {
+    "title": "Explore",
+    "sub": "Fields, what people are reading right now, and new writers.",
+    "loadError": "We couldn't load Explore.",
+    "empty": {
+      "title": "Nothing to explore yet",
+      "body": "Fields, articles, writers and paths show up here once people start publishing."
+    },
+    "fields": "Fields",
+    "trending": "Trending this week",
+    "mostSaved": "Most saved",
+    "seeAll": "See all",
+    "newWriters": "New writers",
+    "newWritersSub": "They published their first article in the last 30 days.",
+    "featuredPaths": "Featured paths",
+    "lists": {
+      "trending": {
+        "title": "Trending this week",
+        "sub": "The articles people read, reacted to, discussed and saved most in the last 7 days.",
+        "end": "That's everything trending this week.",
+        "emptyTitle": "Nothing is trending this week yet"
+      },
+      "mostSaved": {
+        "title": "Most saved",
+        "sub": "The articles people saved most in the last 30 days.",
+        "end": "That's every most-saved article.",
+        "emptyTitle": "No saved articles yet"
+      },
+      "emptyBody": "Check back soon, or browse the fields on Explore.",
+      "loadError": "We couldn't load these articles."
+    }
+  },
+  "fields": {
+    "page": {
+      "follow": "Follow field",
+      "following": "Following",
+      "followers": {
+        "one": "{{n}} follower",
+        "other": "{{n}} followers"
+      },
+      "topics": "Topics in this field",
+      "allTopics": "All",
+      "followTopic": "Follow topic",
+      "followingTopic": "Following",
+      "minThree": "Keep at least 3 interests. Follow another field or topic first.",
+      "topWriters": "Top writers in this field",
+      "writersError": "We couldn't load the writers.",
+      "latest": "Latest articles",
+      "end": "You've seen every article in this field.",
+      "endTopic": "You've seen every article in this topic.",
+      "emptyTitle": "No articles in this field yet",
+      "emptyTopicTitle": "No articles in this topic yet",
+      "emptyBody": "Follow it and you'll see new articles as soon as they're published.",
+      "articlesError": "We couldn't load the articles.",
+      "browse": "Browse other fields",
+      "allArticles": "All articles in this field",
+      "notFoundTitle": "This field doesn't exist",
+      "notFoundBody": "It may have been removed, or the link is wrong.",
+      "topicNotFoundTitle": "This topic doesn't exist",
+      "topicNotFoundBody": "It isn't one of the topics of {{field}}, or it was removed.",
+      "loadError": "We couldn't load this field.",
+      "metaDescription": "{{articles}} about {{name}} on ReadIn.",
+      "metaDescriptionEmpty": "No articles about {{name}} on ReadIn yet."
     }
   },
   "profile": {

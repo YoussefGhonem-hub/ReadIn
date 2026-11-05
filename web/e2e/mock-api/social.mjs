@@ -427,6 +427,8 @@ export function createSocial({ articles, writers, problem }) {
     personalize,
     viewerOf,
     readers: READERS,
+    // `UserSummaryDto` as `viewer` sees it (Explore's writers, F15).
+    summary,
     // Profiles (profiles.mjs) count and show the same follows.
     isFollowing: (viewer, id) => !!viewer && stateOf(viewer).follows.has(id),
     // `GET /me` (profiles.mjs) reports the interests that `PUT`/`DELETE /me/interests/…` change.

@@ -897,6 +897,75 @@ export interface SearchSuggestionsDto {
   tags: TagDto[];
 }
 
+// ── Explore and field pages (F15) ───────────────────────────
+
+/** `GET /explore`: every section of the Explore page in one call. An empty section is `[]` (clients hide it). */
+export interface ExploreDto {
+  /** Every enabled field, in display order (empty ones included). */
+  fields: FieldSummaryDto[];
+  /** ≤ 6: the first of `/explore/trending`. */
+  trending: ArticleCardDto[];
+  /** ≤ 6: the first of `/explore/most-saved`. */
+  mostSaved: ArticleCardDto[];
+  /** ≤ 10, latest first publish first. May hold the caller (no Follow on your own row). */
+  newWriters: UserSummaryDto[];
+  /** ≤ 6, featured order. */
+  featuredPaths: PathCardDto[];
+}
+
+/** A field tile on Explore; opens `/f/{slug}`. */
+export interface FieldSummaryDto {
+  id: string;
+  slug: string;
+  /** In Accept-Language. */
+  name: string;
+  nameAr: string;
+  nameEn: string;
+  /** Lucide icon name, e.g. "cpu". */
+  icon: string;
+  /** Color token, e.g. "primary". */
+  color: string;
+  /** Articles readers can see in it (the same for everyone). */
+  articleCount: number;
+}
+
+/** `GET /fields/{slug}`: the field page's header and topic chips. */
+export interface FieldPageDto {
+  /** For `PUT`/`DELETE /me/interests/fields/{id}`. */
+  id: string;
+  slug: string;
+  /** In Accept-Language. */
+  name: string;
+  nameAr: string;
+  nameEn: string;
+  icon: string;
+  color: string;
+  /** Show the health disclaimer note. */
+  isSensitive: boolean;
+  /** `0` → the empty state (`noindex`). */
+  articleCount: number;
+  /** People who follow the field itself (a followed topic doesn't count). */
+  followerCount: number;
+  /** False for guests. */
+  isFollowing: boolean;
+  /** Every topic, in editorial order, empty ones included. */
+  topics: FieldPageTopicDto[];
+}
+
+/** A topic chip: filters with `?topic={slug}`. */
+export interface FieldPageTopicDto {
+  /** For `PUT`/`DELETE /me/interests/topics/{id}`. */
+  id: string;
+  slug: string;
+  /** In Accept-Language. */
+  name: string;
+  nameAr: string;
+  nameEn: string;
+  articleCount: number;
+  /** False for guests. */
+  isFollowing: boolean;
+}
+
 // ── Media (ADR 0011) ────────────────────────────────────────
 
 export type MediaKind = 'image' | 'document';

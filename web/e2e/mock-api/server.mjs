@@ -10,8 +10,8 @@
  * settings (notifications.mjs, F17) and writer verification with its admin review (verification.mjs, F19) keep state per
  * signed-in viewer, so those flows run against it end to end. Tags (tags.mjs, F32) give every card and article its
  * `TagRefDto`s and serve the editor's suggestions and the tag pages. Search (search.mjs, F16) finds the articles (and
- * the attached PDF's text), writers, fields and topics, and tags. It also
- * serves generated PNGs for every media URL and fixture builders under `/__mock`.
+ * the attached PDF's text), writers, fields and topics, and tags. Explore and the field pages (explore.mjs, F15) rank
+ * and list the same articles. It also serves generated PNGs for every media URL and fixture builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
  */
@@ -19,6 +19,7 @@ import { createServer } from 'node:http';
 import { crc32, deflateSync } from 'node:zlib';
 import { encode } from 'blurhash';
 import { createEditor } from './editor.mjs';
+import { createExplore } from './explore.mjs';
 import { createPaths } from './paths.mjs';
 import { createModeration } from './moderation.mjs';
 import { createNotifications } from './notifications.mjs';
@@ -743,6 +744,8 @@ const search = createSearch({
   isFollowing: social.isFollowing,
   problem,
 });
+// Explore and field pages (F15): every published fixture, the tag pages' notes too (they are Software articles).
+const explore = createExplore({ articles: () => PUBLISHED, fields: FIELDS, topics: TOPICS, writers: WRITERS, social, paths, problem });
 const moderation = createModeration({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
 const notifications = createNotifications({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
 const verification = createVerification({
@@ -777,6 +780,7 @@ const routes = [
   ...editor.routes,
   ...tags.routes,
   ...search.routes,
+  ...explore.routes,
   ...social.routes,
   ...profiles.routes,
   ...paths.routes,

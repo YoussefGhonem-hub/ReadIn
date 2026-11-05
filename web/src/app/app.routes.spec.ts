@@ -65,3 +65,21 @@ describe('writer verification routes (F19)', () => {
     expect(PLACEHOLDER_ROUTES.find((r) => r.path === 'admin')).toBeDefined();
   });
 });
+
+describe('Explore and field pages (F15)', () => {
+  const shell = routes.find((r) => r.path === '' && r.children)!;
+  const route = (path: string) => shell.children!.find((r) => r.path === path)!;
+
+  it('/explore and its "See all" rankings are real pages (no more "coming soon"), each kept alive while you read', async () => {
+    expect(PLACEHOLDER_ROUTES.map((r) => r.path)).not.toContain('explore');
+    const { default: explore } = (await (route('explore').loadChildren as () => Promise<{ default: Routes }>)()) as { default: Routes };
+    expect(explore.map((r) => r.path)).toEqual(['', 'trending', 'most-saved']);
+    expect(explore.map((r) => r.data?.['ranking'] ?? null)).toEqual([null, 'trending', 'most-saved']);
+    expect(explore.every((r) => r.loadComponent && r.data?.['keepOnBack'])).toBe(true);
+  });
+
+  it('/f/{slug} is the field page: its own chunk, kept alive while you read', () => {
+    expect(route('f/:slug').loadComponent).toBeDefined();
+    expect(route('f/:slug').data?.['keepOnBack']).toBe(true);
+  });
+});

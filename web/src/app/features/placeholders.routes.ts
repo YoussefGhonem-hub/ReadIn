@@ -8,6 +8,5 @@ const comingSoon = () => import('../shared/ui/coming-soon.page').then((m) => m.C
  * its final URL and guard so links and permissions are already right.
  */
 export const PLACEHOLDER_ROUTES: Route[] = [
-  { path: 'explore', loadComponent: comingSoon, data: { titleKey: 'nav.explore', phase: 2 } },
   { path: 'admin', canActivate: [permissionGuard('taxonomy.manage')], loadComponent: comingSoon, data: { titleKey: 'nav.admin', phase: 2 } },
 ];

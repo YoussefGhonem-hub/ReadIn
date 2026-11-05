@@ -246,5 +246,9 @@ export function createPaths({ articles, fields, social, profiles, mediaUrl, prob
     ],
   ];
 
-  return { routes };
+  return {
+    routes,
+    // Explore's featured paths (F15): the editorial paths in their order, with your progress.
+    featured: (req) => PATHS.map((p) => card(p, social.viewerOf(req), lang(req))),
+  };
 }

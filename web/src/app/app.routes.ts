@@ -66,6 +66,14 @@ export const routes: Routes = [
       },
       // Tag pages (F32): public, server-rendered (`**`), their own chunk. `/tags` alone is a 404.
       { path: 'tags/:slug', loadComponent: () => import('./features/tags/tag.page').then((m) => m.TagPage) },
+      // Explore and its "See all" rankings (F15): public, server-rendered (`**`), each page its own chunk.
+      { path: 'explore', loadChildren: () => import('./features/explore/explore.routes') },
+      // Field pages (F15), `/f/{slug}?topic=`: public, server-rendered (`**`), their own chunk. Kept alive while you read.
+      {
+        path: 'f/:slug',
+        loadComponent: () => import('./features/explore/field.page').then((m) => m.FieldPage),
+        data: { keepOnBack: true },
+      },
       { path: 'settings', loadChildren: () => import('./features/settings/settings.routes') },
       // Reports queue, cases and log (F22): moderators only, client-rendered, its own chunk.
       {
