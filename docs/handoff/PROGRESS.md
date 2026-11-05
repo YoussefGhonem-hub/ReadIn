@@ -452,6 +452,10 @@ Later decisions (user, 2026-11-05):
   `flutter analyze` (plus new baselines for the screens a fix changed), then commit and push. A failing GitHub check
   after a push is fixed before the next feature. No test is deleted. So for every feature from F31 on, **the fixes
   were not tried with the tests**.
+- **Roles change** (after F28 + F33, before any new feature): Member + SuperAdmin only, Verified is a badge.
+- **Pre-production step** (after the roles change, before F30 and the rest of both tracks): profile links + headline,
+  the post bar and comments, F29 repost, real seed data, PDF download and the viewer fixes (details below). F29 moves
+  from track A into this step; track A continues with F30 → the F24 quote card, track B with F23 → F25.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked
@@ -587,3 +591,42 @@ again next run; `Retry-After` is honoured up to 30 s. Dead links still fail. SPE
   mobile 1860/1860). 9 bugs fixed (emoji font left out, one failed build killing the other, split words in wide
   tables, the AI label, the iPad share anchor on retry, wording, symbol fallback, code indentation, the permission
   note), then the reader menu item. **The fixes and the menu item were not tried with the tests** (user rule).
+
+### CI repairs before the roles change ✅ (8ffc853, e0e5337, a1e4cfb)
+- Backend: PDFs on CI's Ubuntu 24.04 need a user namespace for Chrome's sandbox; CI pins Chrome for Testing and gives
+  only that binary an AppArmor `userns` profile (deployment.md §10 has the production side).
+- Mobile: a mute widget test awaited a cubit's `close()` inside `testWidgets`; that close finished outside the fake
+  clock, so the test hung forever (no timeout) and stalled the whole CI job. The old cubit now closes in a tear-down.
+- Mobile goldens: the Explore and tag page goldens printed "N days ago" from the real clock; they pin it now.
+
+### Roles change: Member + SuperAdmin, Verified is a badge ✅ (user decision, 2026-11-05)
+- **Roles:** only `Member` and `SuperAdmin` (`Guest` = not signed in). Admin, Moderator, VerifiedWriter and
+  `roles.manage` are gone; endpoints and both clients check permissions, never role names (ADR 0018). The SuperAdmin
+  does what Admin and Moderator did. The startup role seeder brings any database to this state.
+- **Badge:** `Users.IsVerified` + `VerifiedAt`. Approving a request sets them only (the user stays a Member);
+  `DELETE /admin/users/{id}/verification` removes a badge (`409 verification.not_verified`, `409
+  verification.system_account` for @readin, audit `admin.verification_removed`, no notification); the web's admin
+  queue has "شيل التوثيق" on approved requests. `isVerified` everywhere reads the column; suggestions and people search
+  still rank verified writers first.
+- **Migration** `VerifiedBadgeAndTwoRoles`: VerifiedWriter holders get the badge (dated by their latest approval),
+  the three roles go, accounts left with no role become Members, @readin keeps the badge. It also works as a SQL
+  script (data steps through `EXEC`), checked with sqlcmd up, up again, down, down again.
+- **Admin reset:** refused when the target holds a permission the caller lacks, so only a SuperAdmin resets a
+  SuperAdmin.
+- **Demo:** the demo admin (+12025550102) and moderator (+12025550103) are gone from the seed and both sign-in panels;
+  their demo data belongs to the SuperAdmin. On an existing local database they become plain Members.
+- **Not done here:** SPEC §10.1 says the badge gives priority in feeds, but no feed has ever ranked by it (only
+  suggestions and search). It goes with the For you ranking work (leftovers).
+- **Test round:** the tests ran once (backend 2125/2125, web unit 1086/1086, Playwright verification + moderation +
+  categories 74/74, mobile 1907/1907 with goldens). 7 bugs fixed (the migration failing as a SQL script, @readin's
+  badge removable, the web keeping a removed badge until reload, wording, the SPEC endpoint list, a demo panel label).
+  **The fixes were not tried with the tests** (user rule).
+
+### Next: the pre-production step (user decisions, 2026-11-05)
+Before F30 and the rest of both tracks, in one step on web and mobile: profile social links and the headline (F14,
+F34), the post bar with icons and counts and a LinkedIn-style floating reactions bar, the comment box (emoji picker,
+send icon, ✕ to cancel a reply) and comment rows (headline, Follow, ⋯), replies that start with a real @mention
+(none on yourself, dropped silently if mentions aren't allowed), **F29 repost in full**, no demo articles (every
+article is @readin's from `content/articles`; "Verified Writer" removed; the old demo articles cleaned from local
+databases), real seed data checked with a Production seed on an empty database, PDF "Allow download" on by default
+with a download icon on the card and in the viewer, and closing the viewer keeps the scroll position and focus.
