@@ -778,13 +778,14 @@ Draft ──► Published ──► Archived
 - Four reactions: 💡 مفيد (Insightful), ❤️ (Love), 🔥 (Fire), 🤯 (Mind-blown).
 - One reaction per user per article (change or remove anytime).
 - Counts per reaction, list of who reacted.
+- **Reaction picker, like LinkedIn:** the four reactions in a floating bar with no numbers or labels (the counts stay in the who-reacted list). On hover on web or a long press on mobile, the bar and its reactions animate in one after the other, the one under the pointer grows and rises, and picking one plays a short animation. It respects "reduce motion" (§26).
 
 ### F11 — Comments & Replies
 - Threaded comments: top-level + replies (max depth 2, shown as one indented level with a connector line). Replying to a reply joins the same thread.
 - Sort: **Top** / **Newest**.
-- **Comment box:** your avatar, then a rounded field with "اكتب تعليق…" (Add a comment…) and an emoji button that opens an emoji picker. The same box is used in the reader and on feed cards, on web and mobile.
+- **Comment box:** your avatar, then a rounded field with "اكتب تعليق…" (Add a comment…) an emoji button that opens an emoji picker, and a send icon, disabled until there is text, with no text button like "نشر". Reply boxes look the same. The same box is used in the reader and on feed cards, on web and mobile.
 - **Text and emoji only:** comments and replies have no images, GIFs or attachments, and there is no button or API field for them.
-- **Each comment shows:** the avatar, name and verified badge, the writer's title (F14) on one line under the name, the time, "متابعة" (Follow) when you don't follow them and it isn't you, and "⋯". Tapping the avatar or name opens the profile.
+- **Each comment shows:** the avatar, name and verified badge, the writer's title (F14) on one line under the name (not their `@username`), the time, "متابعة" (Follow) when you don't follow them and it isn't you, and "⋯". Tapping the avatar or name opens the profile.
 - **Reply with a mention:** "رد" (Reply) opens the comment box with `@name` of the person you're replying to already in it, so they are mentioned and notified, and you can delete the mention. If they don't allow you to mention them (F18), the reply stays in the thread with no mention, and they still get the reply notification (F17).
 - Like comments, reply, `@mention` users (only people who allow the author, [F18](#f18--settings) "who can mention me"; any other `@handle` stays plain text; each mentioned user is notified, [F17](#f17--notifications)), edit (shows "edited"), delete (soft: a comment with replies stays as a "deleted" placeholder).
 - Writer badge "الكاتب" on the author's comments, author can **pin** one comment.
@@ -920,7 +921,7 @@ A post/article has **either** 1–10 images **or** exactly one PDF (never both),
 **Composer / editor**
 - Attachment bar: "📷 صور" (Images) and "📄 ملف PDF" (PDF document).
 - Images: multi-select up to 10, drag to reorder, remove, optional caption per image (`dir="auto"`, max 5000 characters), **required alt text** per image (max 5000 characters; publishing is blocked until every image has one). Both are multi-line fields that grow with their text; a character counter appears only in the last 500 characters.
-- PDF: one file, max 20 MB, max 100 pages, required document title (pre-filled from the file name, max 5000 characters, no line breaks), "السماح بتحميل الملف" (Allow download) toggle, off by default. Shows "بنجهز الصفحات…" while processing, then a preview.
+- PDF: one file, max 20 MB, max 100 pages, required document title (pre-filled from the file name, max 5000 characters, no line breaks), "السماح بتحميل الملف" (Allow download) toggle, on by default, and the writer can turn it off. Shows "بنجهز الصفحات…" while processing, then a preview.
 - Each upload shows progress, cancel and retry. Publishing is blocked while anything is uploading or processing.
 
 **Display (feed card + post/article page)**
@@ -930,8 +931,8 @@ A post/article has **either** 1–10 images **or** exactly one PDF (never both),
   - Optional caption bar under image slides.
   - RTL: starts from the right in the Arabic UI, arrows mirrored.
   - Only about 3 slides around the current one are rendered; BlurHash placeholders while loading.
-- PDF: header strip "📄 {title} · 12 صفحة", page slides, and a "+N صفحة، افتح الملف" card after 10 pages.
-- **Full-screen viewer:** swipe/arrows, pinch and double-tap zoom, counter + thumbnail strip (PDF), close with ✕ / back / swipe down, "تحميل" (Download, only when allowed) and "مشاركة" (Share).
+- PDF: header strip "📄 {title} · 12 صفحة", page slides, a "+N صفحة، افتح الملف" card after 10 pages, and a download icon in the strip when download is allowed.
+- **Full-screen viewer:** swipe/arrows, pinch and double-tap zoom, counter + thumbnail strip (PDF), close with ✕ / back / swipe down, "تحميل" (Download, only when allowed) and "مشاركة" (Share). Closing the viewer returns to exactly the same scroll position and focus, on web and mobile, and the page never jumps to the top.
 
 **Image optimization (all images in the app)**
 - Compressed on the device **before upload** (max 2048px, quality 85, orientation fixed).
@@ -1057,7 +1058,6 @@ A writer's own way to organize their articles. It is separate from:
 - Articles hidden by moderation (F22) are not listed or counted.
 - Offensive category names are handled by reporting the user (F22); a moderator can clear the name from the user's case (`clear_category`: a neutral `قسم {n}` / `Category {n}` and a new slug, logged and audited).
 - Categories are deleted with the writer's account, and the articles that stay lose their category (§9.6).
-- The demo seed gives some writers categories, so the feature is visible in development.
 
 ### F32 — Tags (التاجات)
 Tags are shared across the platform, so an article can be found by any tag on it, from any writer.
@@ -1481,6 +1481,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 - **`content/` ships with the API:** `dotnet publish` and the container image include the `content/` folder, and `Content:RootPath` defaults to it, so production doesn't need the repo.
 - The API serves requests only after seeding finishes, so the first start takes longer and the host's health check must allow for it. A failed seeder logs a clear error and stops the start, like a failed migration.
 - Re-importing an article changes only its content and metadata, never its reactions, comments, saves or reads.
+- **Articles are real content in every environment.** Every seeded article belongs to the official `@readin` account and comes from `content/articles`: text, with images only when they are real and fit the article. There are no demo authors, demo PDFs or placeholder images, and demo accounts have no articles of any status. Demo accounts and their interactions stay local only.
 - Environment-gated: **demo users and demo interactions are seeded only into the local database** (`Development` and `Testing` environments), never into production.
 - Passwords and PINs are **never** committed. They come from configuration: `Seed:DemoPassword`, `Seed:DemoPin` (must pass the weak-PIN policy), `Seed:SuperAdminPhone`, `Seed:SuperAdminPassword` (user-secrets locally, secret store in production).
 
@@ -1495,11 +1496,10 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | 6 | Articles (from `content/articles/`, status-aware, covers through the image pipeline, re-imported per article when its files change). The tags in their `meta.json` become system tags (F32) | All, Production included |
 | 7 | Learning paths (`learningPaths` in `taxonomy.yaml` + each article's `learningPath`) | All |
 | 8 | Glossary terms (`content/glossary/*.yaml`, upserted by term id) and the article-term index, rebuilt when a glossary file or an article changes | All |
-| 9 | Demo interactions (follows, reactions, comments, saves, reading history, streaks, sample image/PDF attachments) | Local only |
+| 9 | Demo interactions (follows, reactions, comments, saves, reading history, streaks) | Local only |
 | 10 | Demo reports (`demo-reports`, F22): open, resolved and dismissed reports on demo articles, comments and a user, and a warning notice for reader7 | Development only |
 | 11 | Demo notifications (`demo-notifications`, F17): a few read and unread entries of every kind for reader1, writer1, reader2 and reader7, without pushes | Development only |
-| 12 | Demo verification requests (`demo-verification`, F19): pending for writer1 (LinkedIn URL + PNG certificate), writer2 (GitHub URL only) and writer3 (PDF syndicate card only), reader5 rejected with a reason and the verified writer approved, both by the demo SuperAdmin (`+12025550101`); the proof files are drawn by the seeder into the private store; no notifications | Development only |
-| 13 | Demo writers (`demo-writers`, F15): six short articles by writer2, writer3, reviewer.dotnet and reviewer.ai in a few fields and topics, before the demo interactions; re-dated daily so their first publish stays 1–20 days ago and Explore's new writers and top writers are never empty; no notifications | Development only |
+| 12 | Demo verification requests (`demo-verification`, F19): pending for writer1 (LinkedIn URL + PNG certificate), writer2 (GitHub URL only) and writer3 (PDF syndicate card only), reader5 rejected with a reason and the .NET Writer approved, both by the demo SuperAdmin (`+12025550101`); the proof files are drawn by the seeder into the private store; no notifications | Development only |
 
 ### 18.3 Seed Users
 Users are created in SQL Server only (no Firebase Auth). Phone numbers use the reserved fictional range **+1 202 555 01XX** (555-0100 to 555-0199 are reserved for fiction, so they never belong to a real person).
@@ -1510,7 +1510,6 @@ Users are created in SQL Server only (no Firebase Auth). Phone numbers use the r
 | `+12025550101` | Super Admin | SuperAdmin | ✅ | Local |
 | `+12025550104` | .NET Writer | Member + Verified badge | ✅ | Local |
 | `+12025550105` | AI Writer | Member + Verified badge | ✅ | Local |
-| `+12025550106` | Verified Writer | Member + Verified badge | ✅ | Local |
 | `+12025550107` … `+12025550109` | Writer 1–3 | Member | ✅ | Local |
 | `+12025550110` … `+12025550118` | Reader 1–9 | Member | ✅ | Local |
 | `+12025550119` | Reader 10 | Member | ❌ (tests the mandatory "set PIN" screen) | Local |
