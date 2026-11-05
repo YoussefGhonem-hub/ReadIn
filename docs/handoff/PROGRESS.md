@@ -622,11 +622,53 @@ again next run; `Retry-After` is honoured up to 30 s. Dead links still fail. SPE
   badge removable, the web keeping a removed badge until reload, wording, the SPEC endpoint list, a demo panel label).
   **The fixes were not tried with the tests** (user rule).
 
-### Next: the pre-production step (user decisions, 2026-11-05)
-Before F30 and the rest of both tracks, in one step on web and mobile: profile social links and the headline (F14,
-F34), the post bar with icons and counts and a LinkedIn-style floating reactions bar, the comment box (emoji picker,
-send icon, ✕ to cancel a reply) and comment rows (headline, Follow, ⋯), replies that start with a real @mention
-(none on yourself, dropped silently if mentions aren't allowed), **F29 repost in full**, no demo articles (every
-article is @readin's from `content/articles`; "Verified Writer" removed; the old demo articles cleaned from local
-databases), real seed data checked with a Production seed on an empty database, PDF "Allow download" on by default
-with a download icon on the card and in the viewer, and closing the viewer keeps the scroll position and focus.
+### Pre-production step ✅ (user decisions, 2026-11-05)
+Before F30 and the rest of both tracks, in one step on web, mobile and backend (six builders, then one test round,
+then two fixers). Per part, what was built and **what was actually tried**:
+- **Profile title and social links (F14, F34):** `Users.Headline` (≤ 120, one line) under the name on cards, the
+  reader, comments and the profile; `links` is an ordered list of `{ platform, url, label }` (14 platforms + Other,
+  ≤ 8, one per platform, https on the platform's own hosts), old links migrated; the SuperAdmin clears either from a
+  user's case (`clear_links` / `clear_headline`, audited). One bundled icon set on both clients (Simple Icons, CC0;
+  LinkedIn from 10.4.0). Tried: the links migration as a SQL script on old-shape rows (up, up again, down, up); the
+  editor flows clicked through on web; the mobile edit screen's accessibility tree (a merged control found and fixed);
+  a title in the other script keeps its start (Chromium repro before/after).
+- **Post bar and reactions (F34, F10):** icons only, counts beside them (none at 0), accessible names with the count;
+  the floating reactions bar on hover/keyboard (web, CSS only) and long press + slide (mobile, an overlay), staggered,
+  the one under the pointer grows, a short pick animation, instant under reduce motion. Tried: hover, keyboard, pick
+  and reduced motion in Playwright (32 tests); long press, slide and lift in widget tests and goldens.
+- **Comments (F11):** the box (avatar, rounded field, emoji picker — a 7 kB lazy chunk on web, `emoji_picker_flutter`
+  on mobile — and a send icon disabled until there is text), the reply box with ✕, rows with the title, Follow
+  (`isFollowingAuthor`) and ⋯; Reply inserts a real `@username` with the caret after it, none on yourself; a mention
+  the target doesn't allow is dropped silently and the reply notification still goes out. Tried: emoji insert at the
+  caret, reply mention and caret, follow from a row (Playwright and widget tests).
+- **F29 Repost in full:** `PUT`/`DELETE /articles/{id}/repost`, `reposts.create`, the live counter, the Following feed
+  (once per article at the later of publish and the newest followed repost, labeled, stable cursor, one `UNION ALL`
+  with no per-article subquery, covering index on reposts), the Reposts tab, `article_reposted` grouped per article,
+  mutes, account deletion, counter rebuild. Tried: the handler's SQL against a scratch DB with and without a cursor.
+- **No demo articles, real seed (§18):** every article is @readin's from `content/articles`; DemoWriters/Media/
+  Editor/Categories seeders removed; "Verified Writer" (+12025550106) removed, also from existing local databases
+  (through the account eraser); a Development-only cleanup deletes exactly the 11 old demo articles. Tried for real: a
+  **Production seed on an empty database**: 300 articles = 300 published in content, all by @readin, 0 attachments /
+  documents / PDF pages, 2 users (readin, superadmin), 0 reactions, comments, saves, reads, reports, follows, reposts,
+  notifications, @readin verified with its title; and the Development seed on a copy of the local database (exactly the
+  11 demo articles removed, the 302 @readin article ids unchanged).
+- **PDF download (F26):** Allow download on by default (API default and both composers); a download icon in the PDF
+  strip on the card and in the viewer. Tried: real downloads on web (`%PDF-` checked in Playwright) and on mobile (Dio
+  with a fake server, a real temp file, then the share sheet).
+- **Viewer return (F26):** web's cause found: closing the viewer's history entry fired a popstate that the router
+  treated as a same-URL navigation and scrolled to the top (8492 → 0). `ViewerAwarePlatformLocation` keeps those moves
+  away from the router; a Playwright test closes with ✕, Esc and Back far down the feed. Mobile had no bug (the viewer is
+  a see-through page over the feed); a widget test closes four ways about 2000 px down and checks position and focus.
+- **Migrations as SQL scripts:** the new migrations and four older ones (ReadingStats, LearningPathEnrollments, Tags,
+  ExploreFeaturedPaths) now work in a full idempotent script; tried on an empty database with `sqlcmd -I -b` (27
+  migrations, run twice). deployment.md says to run scripts with `sqlcmd -I`.
+- **Test round:** the tests ran once (backend 2224/2224, web unit 1226/1226, Playwright 26 specs 339/368 with 21
+  baselines to regenerate and 8 stale feed-card checks, mobile 2062/2064 with 2 goldens for the new default). 11 bugs
+  fixed (title cut at the wrong end on web, script-unsafe old migrations, deletion and privacy texts, two icon sets, an
+  e2e mock that hid the owner's Download, stale feed-card checks, a reposter text, the Following query, the old
+  account in local databases, wording); 60 web baselines and 9 mobile goldens rewritten and looked at.
+  **The fixes were not tried with the tests** (user rule).
+- **For the user:** redeploy `public/` (delete-account and privacy pages changed). SPEC nits for the SPEC owner: §18.2
+  row 10 still says demo reports are "on demo articles" (they are on @readin's now), and F29 names the notification
+  `article.reposted` while F17, the contract and the code use `article_reposted`. The web initial bundle is 554 kB
+  (target < 500 kB, leftovers).
