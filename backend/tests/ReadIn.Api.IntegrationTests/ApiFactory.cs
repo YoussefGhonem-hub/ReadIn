@@ -2,6 +2,8 @@ using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Images;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -42,7 +44,16 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private static readonly string[] AreaCodes = ["201", "212", "213", "305", "312", "415", "617", "646", "702", "718", "917", "206", "303", "404", "503"];
     private static int _phoneCounter;
 
-    private readonly MsSqlContainer _sql = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
+    /// <summary>
+    /// SQL Server 2022 with Full-Text Search, built from <c>docker/sqlserver</c> (the official image has no full-text, F16),
+    /// so search is tested with its real engine. Built only when missing and kept after the run (the same tag as
+    /// docker-compose.yml): after changing the Dockerfile, rebuild it with <c>docker compose build sqlserver</c>.
+    /// Set <c>READIN_TESTS_SQL_IMAGE</c> (e.g. <c>mcr.microsoft.com/mssql/server:2022-latest</c>) to run the suite on
+    /// another image; without full-text, search uses its LIKE fallback.
+    /// </summary>
+    public const string FullTextImage = "readin-sqlserver-fts:local";
+
+    private MsSqlContainer? _sql;
     private readonly ConcurrentDictionary<string, Task<string>> _seedSessions = new();
 
     /// <summary>A fresh uploads folder per test run, deleted afterwards.</summary>
@@ -53,6 +64,21 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
+        var image = Environment.GetEnvironmentVariable("READIN_TESTS_SQL_IMAGE");
+        if (string.IsNullOrWhiteSpace(image))
+        {
+            await new ImageFromDockerfileBuilder()
+                .WithDockerfileDirectory(CommonDirectoryPath.GetGitDirectory(), "docker/sqlserver")
+                .WithName(FullTextImage)
+                .WithImageBuildPolicy(PullPolicy.Missing)
+                .WithDeleteIfExists(false)
+                .WithCleanUp(false)
+                .Build()
+                .CreateAsync();
+            image = FullTextImage;
+        }
+
+        _sql = new MsSqlBuilder(image).Build();
         await _sql.StartAsync();
         _ = Server; // start the host now: migrations + seeding run once for the whole collection
     }
@@ -60,14 +86,18 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public new async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
-        await _sql.DisposeAsync();
+        if (_sql is not null) await _sql.DisposeAsync();
         if (Directory.Exists(UploadsPath)) Directory.Delete(UploadsPath, recursive: true);
         if (Directory.Exists(PrivatePath)) Directory.Delete(PrivatePath, recursive: true);
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        var connection = new SqlConnectionStringBuilder(_sql.GetConnectionString()) { InitialCatalog = "ReadInTests" };
+        var connection = new SqlConnectionStringBuilder(
+            (_sql ?? throw new InvalidOperationException("The SQL Server container starts in InitializeAsync.")).GetConnectionString())
+        {
+            InitialCatalog = "ReadInTests",
+        };
 
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:ReadIn", connection.ConnectionString);

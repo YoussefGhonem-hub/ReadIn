@@ -35,6 +35,9 @@ public sealed class ErrorMessagesTests
     [InlineData("tag.invalid")]
     [InlineData("tag.limit")]
     [InlineData("tag.hidden")]
+    [InlineData("search.query_invalid")]
+    [InlineData("search.type_invalid")]
+    [InlineData("search.filter_invalid")]
     public void Codes_the_clients_translate_have_titles_in_both_languages(string code)
     {
         ErrorMessages.Title(code, "ar").Should().NotBeNullOrWhiteSpace();

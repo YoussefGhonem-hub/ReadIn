@@ -80,6 +80,9 @@ public static class ErrorMessages
         ["collection.limit"] = ("وصلت لأقصى عدد مجموعات (50).", "You can have at most 50 collections."),
         ["follow.self"] = ("مينفعش تتابع نفسك.", "You can't follow yourself."),
         ["glossary.term_not_found"] = ("المصطلح ده مش في القاموس.", "This term isn't in the glossary."),
+        ["search.query_invalid"] = ("اكتب من حرف لـ 100 حرف، وفيهم حرف أو رقم على الأقل.", "Type 1–100 characters, with at least one letter or digit."),
+        ["search.type_invalid"] = ("نوع البحث لازم يكون مقالات أو كتّاب أو مواضيع أو تاجات.", "The search type must be articles, writers, topics or tags."),
+        ["search.filter_invalid"] = ("فلاتر البحث دي مش صحيحة.", "These search filters aren't valid."),
         // Learning paths (F09)
         ["path.not_found"] = ("المسار مش موجود.", "Learning path not found."),
         ["path.slug_taken"] = ("فيه مسار تاني بنفس الرابط.", "Another learning path uses this slug."),

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.Auth;
+using ReadIn.Application.Features.Search;
 using ReadIn.Infrastructure.Content;
 using ReadIn.Infrastructure.Identity;
 using ReadIn.Infrastructure.Jobs;
@@ -17,6 +18,7 @@ using ReadIn.Infrastructure.Persistence.Outbox;
 using ReadIn.Infrastructure.Persistence.Seeding;
 using ReadIn.Infrastructure.Push;
 using ReadIn.Infrastructure.Realtime;
+using ReadIn.Infrastructure.Search;
 using ReadIn.Infrastructure.Storage;
 
 namespace ReadIn.Infrastructure;
@@ -83,6 +85,14 @@ public static class DependencyInjection
                 .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
             .AddInterceptors(sp.GetRequiredService<AuditingInterceptor>(), sp.GetRequiredService<OutboxInterceptor>()));
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+
+        // Search (F16): full-text when the server has it, else the LIKE fallback; chosen at startup (SearchEngineSetup).
+        services.AddSingleton<SearchEngineState>();
+        services.AddScoped<FullTextSearchEngine>();
+        services.AddScoped<LikeSearchEngine>();
+        services.AddScoped<ISearchEngine>(sp => sp.GetRequiredService<SearchEngineState>().Kind == SearchEngineKind.FullText
+            ? sp.GetRequiredService<FullTextSearchEngine>()
+            : sp.GetRequiredService<LikeSearchEngine>());
 
         services.AddScoped<OutboxProcessor>();
         services.AddScoped<OutboxJob>();
@@ -154,19 +164,23 @@ public static class DependencyInjection
         await db.Database.MigrateAsync(ct);
         // Tags made before F32 get its rules once (SPEC F32); a no-op afterwards.
         await LegacyTagsUpgrade.RunAsync(db, ct);
+        // Search (F16): the full-text indexes if the server has full-text, and the engine this API uses.
+        await SearchEngineSetup.ConfigureAsync(scope.ServiceProvider, ct);
 
         if (seed) await scope.ServiceProvider.GetRequiredService<SeedRunner>().RunAsync(forceSeed, ct);
     }
 
     /// <summary>
     /// The data upgrades that follow the migrations, for an API start that doesn't migrate itself: production may apply
-    /// the migrations as a SQL script or a bundle, which can't run C#. Tags made before F32 get its rules (SPEC F32).
+    /// the migrations as a SQL script or a bundle, which can't run C#. Tags made before F32 get its rules (SPEC F32). The
+    /// search engine is chosen (F16), with the full-text indexes created if the server has full-text and they are missing.
     /// Each upgrade waits for its migration, and is one or two small queries once done.
     /// </summary>
     public static async Task UpgradeDataAsync(this IServiceProvider services, CancellationToken ct = default)
     {
         await using var scope = services.CreateAsyncScope();
         await LegacyTagsUpgrade.RunIfMigratedAsync(scope.ServiceProvider.GetRequiredService<AppDbContext>(), ct);
+        await SearchEngineSetup.ConfigureAsync(scope.ServiceProvider, ct);
     }
 
     /// <summary>Registers recurring Hangfire jobs (no-op when Hangfire is disabled).</summary>

@@ -39,6 +39,9 @@ public static class RateLimitPolicies
 
     /// <summary>New comments and replies: 10 a minute per user (SPEC F11). Edits, likes and pins use <see cref="Writes"/>.</summary>
     public const string Comments = "comments";
+
+    /// <summary>Search and its suggestions (F16): 60 a minute per user, or per IP for guests (<c>RateLimits:SearchPerMinute</c>).</summary>
+    public const string Search = "search";
 }
 
 /// <summary>Per-IP limits of the anonymous auth endpoints (SPEC §9.5); tests raise them.</summary>

@@ -18,3 +18,4 @@ One file per decision: `NNNN-short-title.md` (Context, Decision, Consequences).
 - [0014 — Open topics, and review is always optional](0014-open-topics-and-optional-review.md) (review part superseded by 0015)
 - [0015 — Open publishing, the editor's working copy, and the quality score](0015-open-publishing-and-the-editor.md)
 - [0016 — Immediate account deletion, with Apple token revocation](0016-immediate-account-deletion.md)
+- [0017 — Search: SQL Server Full-Text Search, with a LIKE fallback](0017-search-full-text-with-like-fallback.md)

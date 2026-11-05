@@ -816,6 +816,7 @@ Draft ──► Published ──► Archived
 - Top writers per field.
 
 ### F16 — Search
+API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR 0017](adr/0017-search-full-text-with-like-fallback.md).
 - Search articles, writers, topics and tags in Arabic and English.
 - Arabic normalization (see [§22](#22-search)), filters (field, language, reading time), recent searches.
 
@@ -1398,7 +1399,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 - `Reactions(ArticleId, Type)`, `UserFollows(FolloweeId)`.
 - `Articles(WriterCategoryId, PublishedAt DESC)` and `ArticleTags(TagId, ArticleId)`, for the category and tag pages.
 - `Tags(Slug)` and `Tags(NormalizedName)` unique, `Tags(CreatedById, CreatedAt)` (new tags per writer per day, F32).
-- Full-Text index on `ArticleTranslations(SearchText)`, `MediaAssets(ExtractedText)` and `Users(DisplayName, Username)` (created with F16 Search; the columns and their collation exist already).
+- Full-Text indexes on `ArticleTranslations(SearchText)` and `MediaAssets(ExtractedText)` in the catalog `ReadInSearch` (Arabic word breaker, no stoplist, automatic change tracking), created by the `SearchFullText` migration only when the server has Full-Text Search; without it search uses its `LIKE` fallback ([ADR 0017](adr/0017-search-full-text-with-like-fallback.md)). Names (`Users`, fields, topics, tags) are matched with normalized `LIKE`, not full-text.
 - `Users(PhoneNumber)` unique, `RefreshTokens(TokenHash)` unique, `RefreshTokens(UserId, RevokedAt)`, `UserExternalLogins(Provider, Subject)` unique, `UserExternalLogins(UserId, Provider)` unique.
 - `ArticleAttachments(MediaAssetId)` unique (an asset belongs to one post), `MediaAssets(OwnerId, CreatedAt)` (quotas), `MediaAssets(CreatedAt)` (orphan cleanup).
 - Media paths are stored **relative** (`/uploads/...`); absolute URLs are built from `Storage:PublicBaseUrl`, so a domain change never needs a data migration.
@@ -1436,7 +1437,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Tags | `GET /tags?q=` (most used first) · `GET /tags/{slug}` · `GET /tags/{slug}/articles?cursor=` · `/admin/tags` (rename, merge, hide) |
 | Writer categories | `GET /users/{username}/categories` · `GET /users/{username}/categories/{slug}/articles?cursor=` · `GET` / `POST /me/categories` · `PATCH` / `DELETE /me/categories/{id}` · `PUT /me/categories/order` · `PUT /articles/{id}/category` (`{ categoryId \| null }`) |
 | Paths | `GET /paths` · `GET /paths/{slug}` · `POST /paths/{id}/enroll` |
-| Search | `GET /search?q=&type=articles\|users\|topics&field=&lang=` |
+| Search | `GET /search?q=&type=articles\|users\|topics\|tags&field=&lang=&minMinutes=&maxMinutes=&cursor=&limit=20` · `GET /search/suggest?q=` (top 3 of each type) — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search") |
 | Glossary | `GET /glossary/{slug}` · `GET /glossary?q=` |
 | Notifications | `GET /notifications` · `POST /notifications/read` · `GET/PUT /me/notification-preferences` |
 | Uploads & media | `POST /uploads/images` (purpose `image` \| `avatar` \| `cover`; `article-image` is still accepted) · `POST /uploads/documents` (PDF, `202` + processing) · `GET /uploads/{id}` (status, variants, pages) · `DELETE /uploads/{id}` · `GET /documents/{assetId}/download` (attachments are part of the editor draft) — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) |
@@ -1646,11 +1647,11 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
 
 ## 22. Search
 
-- SQL Server **Full-Text Search** on `ArticleTranslations.SearchText` (Arabic word breaker for `ar-EG`, English for `en`), `MediaAssets.ExtractedText` (text of attached PDFs) + `Users`.
+- SQL Server **Full-Text Search** on `ArticleTranslations.SearchText` and `MediaAssets.ExtractedText` (text of attached PDFs), with the Arabic word breaker, which also breaks English words (one indexed column has one word breaker; every query word is a prefix term, so English needs no stemming). A server without full-text uses a normalized `LIKE` fallback, chosen at startup ([ADR 0017](adr/0017-search-full-text-with-like-fallback.md)). People, fields, topics and tags are matched with normalized `LIKE` by both engines. Local development and the integration tests run SQL Server with full-text (`docker/sqlserver`).
 - **Documents:** the PDF job extracts each page's text with PdfPig and stores it Arabic-normalized (same rules as below) in `MediaAssets.ExtractedText` (up to 1,000,000 characters). Search results for a document point to the post it is attached to; unattached or unpublished documents are never returned.
 - **Arabic normalization** into `SearchText` and on queries: remove diacritics (تشكيل) and tatweel (ـ), unify `أ إ آ → ا`, `ى → ي`, `ة → ه`.
-- Ranking: full-text rank × quality score × freshness.
-- Typo tolerance and suggestions in Phase 3 (or move to Azure AI Search / Elasticsearch if needed).
+- Ranking: full-text rank × quality score × freshness (the formula is in [`docs/api/contract-v1.md`](api/contract-v1.md), "Search").
+- Typo tolerance and "did you mean" in Phase 3 (or move to Azure AI Search / Elasticsearch if needed). As-you-type suggestions (`GET /search/suggest`) ship with F16.
 
 ---
 
@@ -1758,7 +1759,7 @@ There is **one** real Firebase project, used **only** for Cloud Messaging and th
 Step-by-step creation and wiring of the real project: [`docs/setup/firebase.md`](setup/firebase.md) ([ADR 0005](adr/0005-single-firebase-project.md)).
 
 ### 28.2 Local Setup
-- `docker compose up` → SQL Server (host port **14333**, because a local SQL Server already uses 1433) + Seq.
+- `docker compose up` → SQL Server with Full-Text Search (host port **14333**, because a local SQL Server already uses 1433; the image is built once from `docker/sqlserver`, for search, F16) + Seq.
 - `firebase emulators:start` → Realtime Database emulator only.
 - Backend: `dotnet run --project backend/src/ReadIn.Api` (migrates + seeds in Development, creates `wwwroot/uploads` if missing).
 - Web: `npm start` in `web/`. Mobile: `flutter run` in `mobile/` (flavors: `dev` = emulator, `prod` = real project).

@@ -62,6 +62,23 @@ public readonly record struct TieredTimeCursor(int Tier, DateTime Timestamp, Gui
     }
 }
 
+/// <summary>
+/// Opaque cursor over a ranked list (search, F16): the position of the next item. A ranked list has no stable key to
+/// seek from, so the cursor counts; a cursor that doesn't decode is the first page.
+/// </summary>
+public readonly record struct OffsetCursor(int Offset)
+{
+    private const string Prefix = "o";
+
+    public string Encode() => CursorText.Encode($"{Prefix}:{Offset.ToString(CultureInfo.InvariantCulture)}");
+
+    public static int Decode(string? cursor) =>
+        CursorText.Decode(cursor) is [Prefix, var offset]
+        && int.TryParse(offset, NumberStyles.None, CultureInfo.InvariantCulture, out var value)
+            ? value
+            : 0;
+}
+
 /// <summary>URL-safe base64 of <c>:</c>-separated parts, for the opaque cursors.</summary>
 internal static class CursorText
 {

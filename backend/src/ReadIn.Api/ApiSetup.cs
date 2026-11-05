@@ -80,6 +80,7 @@ public static class ApiSetup
 
         var authLimits = configuration.GetSection(AuthRateLimits.Section).Get<AuthRateLimits>() ?? new AuthRateLimits();
         var globalPerMinute = configuration.GetValue("RateLimits:GlobalPerMinute", 300);
+        var searchPerMinute = configuration.GetValue("RateLimits:SearchPerMinute", 60);
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -135,6 +136,13 @@ public static class ApiSetup
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = 10,
+                    Window = TimeSpan.FromMinutes(1),
+                }));
+            // SPEC F16, §24: /search and /search/suggest together, per user (guests: per IP). Clients debounce typing.
+            options.AddPolicy(RateLimitPolicies.Search, context =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(context), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = searchPerMinute,
                     Window = TimeSpan.FromMinutes(1),
                 }));
         });

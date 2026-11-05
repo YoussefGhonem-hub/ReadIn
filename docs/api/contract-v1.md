@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
 
 `403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
@@ -152,6 +152,103 @@ in none of these and not in `tagCount`, but it stays on its articles, so un-hidi
 
 Tag error codes: `tag.not_found` (404), `tag.invalid` and `article.too_many_tags` (validation codes in `errors`),
 `tag.hidden` and `tag.limit` (problem codes: in `checks.problems`, and `400` on publish).
+
+### Search (F16) 🌐 (Bearer optional, rate limit `search`) — SPEC F16, §22
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/search?q=&type=&field=&lang=&minMinutes=&maxMinutes=&cursor=&limit=20` | One tab of results, best first. `type` = `articles` (the default) → `CursorPage<SearchArticleDto>`, `users` → `CursorPage<UserSummaryDto>`, `topics` → `CursorPage<SearchTopicDto>`, `tags` → `CursorPage<TagDto>`. `field`, `lang`, `minMinutes` and `maxMinutes` filter articles; the other types ignore them. `limit` 1–50, default 20 |
+| GET | `/search/suggest?q=` | `SearchSuggestionsDto`: the first 3 results of each type, ranked as in `/search` (no filters, no paging), for the as-you-type dropdown. One request for the rate limit |
+
+**The query.** `q` is cleaned like a tag name (Tags rule 1: invisible format characters dropped, Arabic-Indic digits
+→ `0–9`, whitespace runs → one space, trimmed, leading `#`s dropped), then one leading `@` is dropped, then it is
+normalized like `SearchText` (§22: Arabic diacritics and tatweel removed, `أ إ آ ٱ → ا`, `ى → ي`, `ة → ه`, lower case).
+The cleaned `q` must have 1–100 characters (UTF-16 code units) and at least one letter or digit, else
+`400 search.query_invalid`. Clients search as you type from 2 characters and on Enter from 1.
+
+**Matching, for every type.** `q` is split into words at spaces (the first 8 count, the rest are ignored). Every word
+must be found at the start of a word (`dock` finds `Docker`); an Arabic word also matches after a leading `ال` (`ذكاء`
+finds `الذكاء`). Case, Arabic diacritics, tatweel and letter forms never matter (`مكتبة` = `مكتبه`, `أحمد` = `احمد`).
+Quotes, brackets and punctuation around a word (and a full stop after it) are ignored, and a "word" without a letter or
+digit doesn't count. There is no query syntax: `OR`, `AND`, `NEAR`, `*`, `%`, `_` and `[` are never operators or
+wildcards.
+
+**Articles** (`type=articles`, `SearchArticleDto`)
+- Only articles readers can open (as `GET /articles/{slug}`): published, not deleted, in an enabled field and not
+  hidden by moderators (F22), not even for their author. For a signed-in caller, muted writers, fields and topics are
+  left out too once F28 ships. One result per article.
+- Searched: each language version's title + text (`SearchText`), and the text of the post's attached PDF
+  (`ExtractedText`, F26). All words must be in one version's title + text, or all in the PDF. A PDF counts only while it
+  is attached to an article that can be opened, and once it is processed: unattached PDFs and PDFs of unpublished or
+  hidden posts are never searched or returned.
+- `matchedIn`: `title` when the served version's title holds every word, else `text` when its title + text do, else
+  `attachment` (only the PDF matched: the row says "لقيناها في ملف الـ PDF المرفق" / "Found in the attached PDF").
+- Filters: `field` = a field slug (an unknown one gives an empty page). `lang` = `ar-EG` | `en`: only versions in that
+  language are searched and served. `minMinutes` / `maxMinutes` (0–600, inclusive): only versions whose reading time is
+  in range. The reading-time chips send `maxMinutes=5` ("لحد 5 دقايق" / "Up to 5 min"),
+  `minMinutes=6&maxMinutes=10` ("من 5 لـ 10 دقايق" / "5–10 min"), `minMinutes=11` ("أكتر من 10 دقايق" / "Over 10 min").
+  A bad `lang`, a value outside 0–600 or `minMinutes > maxMinutes` is `400 search.filter_invalid`; a value that isn't a
+  whole number is `400 request.invalid`.
+- The card (`article`) is a normal `ArticleCardDto` with the caller's `myReaction` / `isSaved` / `isFollowingAuthor`,
+  in a version whose title + text matched, or, when only the PDF matched, any version the filters keep. When more than
+  one is left: the caller's article language (guests: `Accept-Language`, `ar` → `ar-EG`), else the source language.
+  Clients show it as the **compact row** (F34), not the post card.
+- **Ranking:** best `score` first; ties go to the newer `publishedAt`, then the id. An article that matches in several
+  places keeps its best score.
+
+  ```
+  score     = relevance × quality × freshness
+  relevance = place × (0.5 + 0.5 × rank)
+    place   = 1.0 title · 0.6 text · 0.4 attachment   (where it matched, as matchedIn)
+    rank    = full-text engine: the hit's CONTAINSTABLE RANK ÷ the highest RANK among this query's hits on the same
+              column (SearchText for title and text, ExtractedText for attachment), so 0–1
+              fallback engine:   1 when the searched text holds the whole cleaned q as one phrase, else 0.5
+  quality   = 0.5 + Articles.QualityScore              (the F07 score, 0–1, refreshed hourly) → 0.5–1.5
+  freshness = 1 ÷ (1 + days since the first publish ÷ 365)   → 1 when new, 0.5 after a year, 0.33 after two
+  ```
+
+**Users** (`type=users`, `UserSummaryDto`)
+- People whose display name holds every word, or whose `@username` starts with `q` (for a one-word `q`).
+- Left out: deleted accounts, suspended accounts (while suspended), accounts that haven't completed their profile (the
+  `@reader_…` placeholder), and, once F28 ships, writers the caller muted. System accounts (the official `@readin`) are
+  found like everyone, and so is the caller (`isFollowing: false`; show no Follow button on your own row).
+- Order: an exact `@username` or display name first, then a username or display name that starts with `q`, then the
+  rest; within each, verified first, then the most followers, then `@username`. Follow with `PUT /users/{id}/follow`
+  (guests get the sign-in prompt).
+
+**Topics** (`type=topics`, `SearchTopicDto`)
+- Enabled fields and their topics whose Arabic or English name holds every word, or whose slug starts with `q` made into
+  a slug (Tags rule 4, so `C#` finds `csharp`). Once F28 ships, fields and topics the caller muted are left out.
+- Order: an exact name (either language) first, then fields before topics, then the most articles, then the name in
+  `Accept-Language`.
+- Opens the field page (F15) on web and mobile: `/f/{fieldSlug}` for a field, `/f/{fieldSlug}?topic={topicSlug}` for a
+  topic.
+
+**Tags** (`type=tags`, `TagDto`)
+- Tags whose name holds every word (a word also starts after `-`, `_` or `.`), or whose slug starts with `q` made into a
+  slug (`csharp` finds `C#`). Hidden tags never appear, and neither do tags without a visible article
+  (`articleCount: 0`).
+- Order: the tag named exactly `q` first, then the most used (`articleCount`), then the name. Opens the tag page (F32).
+
+**Paging.** `cursor` is opaque: pass back `nextCursor` with the same `q`, `type` and filters (a cursor that doesn't decode
+starts from the first page). A query returns at most 200 results, then `nextCursor` is `null`. Results can shift
+between pages while articles are published or counters change, so drop an id you already show. Guests' results may be
+cached for up to 2 minutes; signed-in callers always get their own state.
+
+**Engines** ([ADR 0017](../adr/0017-search-full-text-with-like-fallback.md)). Article text and PDF text are searched
+with SQL Server Full-Text Search when the server has it installed (full-text indexes on
+`ArticleTranslations(SearchText)` and `MediaAssets(ExtractedText)`, Arabic word breaker), and otherwise with a fallback
+that runs `LIKE` over the same normalized text (with `%`, `_` and `[` escaped). The engine is chosen once at startup.
+Both follow the rules above; the fallback may also match inside a word (`net` finds `internet`), and its `rank` is the
+phrase rule. Full-text indexing is asynchronous: a new or updated article is found a few seconds after it is published.
+People, topics and tags are small tables whose names aren't stored normalized, so both engines match them the same
+way (§22 normalization on both sides, escaped `LIKE` at word starts).
+
+**Rate limit `search`:** 60 requests a minute per signed-in user, or per IP for guests, `/search` and `/search/suggest`
+together; then `429 rate_limited`. Clients wait 300 ms after the last keystroke before searching.
+
+Search error codes: `search.query_invalid` (400), `search.type_invalid` (400: `type` isn't one of the four),
+`search.filter_invalid` (400), plus `request.invalid` and `rate_limited`.
 
 ### Articles & Feed 🌐 (Bearer optional)
 
@@ -946,6 +1043,38 @@ interface TagDto {
   slug: string;                  // stable; lower case letters (Arabic too), digits and "-"
   name: string;                  // the first spelling, e.g. "C#", ".NET", "الذكاء الاصطناعي"
   articleCount: number;          // published articles readers can see (not hidden, not deleted); 0 → empty state, noindex
+}
+
+// ── Search (F16) ────────────────────────────────────────────────────
+// GET /search?type=: articles → CursorPage<SearchArticleDto>, users → CursorPage<UserSummaryDto>,
+// topics → CursorPage<SearchTopicDto>, tags → CursorPage<TagDto>.
+type SearchType = 'articles' | 'users' | 'topics' | 'tags';
+/** Where the query was found, best first: the served version's title, its title + text, or only the attached PDF. */
+type SearchMatch = 'title' | 'text' | 'attachment';
+
+interface SearchArticleDto {
+  article: ArticleCardDto;       // in the version that matched; shown as the compact row (F34)
+  matchedIn: SearchMatch;        // 'attachment' → "لقيناها في ملف الـ PDF المرفق" / "Found in the attached PDF"
+}
+
+interface SearchTopicDto {
+  kind: 'field' | 'topic';
+  id: string;                    // the field's or the topic's id
+  name: string;                  // in Accept-Language
+  nameAr: string; nameEn: string;
+  fieldSlug: string;
+  topicSlug: string | null;      // null for a field. Opens /f/{fieldSlug}, or /f/{fieldSlug}?topic={topicSlug} for a topic
+  fieldName: string;             // the field's name in Accept-Language (= name for a field): a topic's subtitle
+  icon: string;                  // the field's Lucide icon name, e.g. "cpu"
+  color: string;                 // the field's color token, e.g. "primary"
+  articleCount: number;          // published articles readers can see in it (the same for everyone)
+}
+
+interface SearchSuggestionsDto { // GET /search/suggest: at most 3 of each type, ranked as in /search
+  articles: SearchArticleDto[];
+  users: UserSummaryDto[];
+  topics: SearchTopicDto[];
+  tags: TagDto[];
 }
 
 interface ArticleDetailsDto extends ArticleCardDto {

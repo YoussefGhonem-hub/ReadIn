@@ -3,9 +3,9 @@ name: backend
 on:
   push:
     branches: [main, dev]
-    paths: ["backend/**", "shared/rdoc/**", "content/**", ".github/workflows/backend.yml"]
+    paths: ["backend/**", "shared/rdoc/**", "content/**", "docker/sqlserver/**", ".github/workflows/backend.yml"]
   pull_request:
-    paths: ["backend/**", "shared/rdoc/**", "content/**", ".github/workflows/backend.yml"]
+    paths: ["backend/**", "shared/rdoc/**", "content/**", "docker/sqlserver/**", ".github/workflows/backend.yml"]
 
 concurrency:
   group: backend-${{ github.ref }}
@@ -31,7 +31,26 @@ jobs:
       - name: Build
         run: dotnet build ReadIn.slnx --no-restore -c Release
 
-      # Unit + architecture + integration tests (Testcontainers uses the runner's Docker for SQL Server).
+      # SQL Server with Full-Text Search for the integration tests (search, F16, ADR 0017), built from docker/sqlserver.
+      # Its apt layer (mssql-server-fts, ~2.7 GB, minutes to install) lives in the GitHub Actions cache, so it is built
+      # again only when the Dockerfile or the SQL Server base image changes. Loaded under the tag the tests look for
+      # (readin-sqlserver-fts:local): Testcontainers then uses it as it is, and the suite runs on the real full-text engine.
+      - uses: docker/setup-buildx-action@v3
+
+      - name: SQL Server test image
+        uses: docker/build-push-action@v6
+        with:
+          context: docker/sqlserver
+          tags: readin-sqlserver-fts:local
+          load: true
+          cache-from: type=gha,scope=sqlserver-fts
+          cache-to: type=gha,scope=sqlserver-fts,mode=max,ignore-error=true
+
+      # The image is in Docker now: the builder's copy of its layers would only take disk space.
+      - name: Free the builder's disk space
+        run: docker buildx prune --all --force
+
+      # Unit + architecture + integration tests (Testcontainers runs the image above on the runner's Docker).
       - name: Test
         run: dotnet test --solution ReadIn.slnx --no-build -c Release
 

@@ -5,8 +5,12 @@
 name: readin
 
 services:
+  # SQL Server 2022 with Full-Text Search (search, F16): built once from docker/sqlserver (`docker compose build`, a few
+  # minutes the first time). An existing sqlserver-data volume keeps working; the API creates the full-text indexes at
+  # its next start. Without full-text the API still searches, with its LIKE fallback.
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    build: ./docker/sqlserver
+    image: readin-sqlserver-fts:local
     container_name: readin-sqlserver
     environment:
       ACCEPT_EULA: "Y"
