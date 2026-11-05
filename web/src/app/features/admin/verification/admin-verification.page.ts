@@ -1,4 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+  untracked,
+} from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -30,8 +43,10 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
  * Verification requests (F19), `/admin/verification?status=&id=`, for `verification.manage`: Pending / Approved /
  * Rejected (pending oldest first), one row per request (who, field, job title, when), and the request itself: the job
  * title and note, the proof link (a new tab, no referrer) and the proof file (fetched with the session, never linked to),
- * then Approve or Reject with a reason. A decision leaves the list at once and comes back when the API refuses. Wide
- * screens show the list and the request side by side; narrow ones one at a time. The URL keeps the tab and the request.
+ * then Approve or Reject with a reason. A decision leaves the list at once and comes back when the API refuses. An
+ * approved request whose writer still has the Verified badge can remove it (asked first; it comes back when the API
+ * refuses). Wide screens show the list and the request side by side; narrow ones one at a time. The URL keeps the tab
+ * and the request.
  */
 @Component({
   selector: 'rd-admin-verification-page',
@@ -203,7 +218,8 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
                   </button>
                 </div>
               } @else {
-                <div class="mt-6 border-t border-border pt-4 text-sm" data-detail-decision>
+                <!-- Focused after the badge is removed (its button goes away). -->
+                <div class="mt-6 border-t border-border pt-4 text-sm outline-none" tabindex="-1" data-detail-decision>
                   <p class="m-0 text-text-secondary">
                     {{ decidedBy(r) }}
                   </p>
@@ -212,6 +228,21 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
                       <p class="m-0 text-xs font-semibold text-text-secondary">{{ 'verification.rejected.reason' | transloco }}</p>
                       <p class="m-0 mt-1 whitespace-pre-line [overflow-wrap:anywhere]" [attr.dir]="dirOf(reason)" data-detail-reason><rd-bdi-text [text]="reason" /></p>
                     </div>
+                  }
+                  @if (r.status === 'approved') {
+                    @if (r.user.isVerified) {
+                      <button
+                        type="button"
+                        class="rd-btn rd-btn-outline mt-4 w-full gap-1.5 border-error text-error sm:w-auto"
+                        (click)="decision.set({ kind: 'removeBadge', item: r })"
+                        data-detail-remove-badge
+                      >
+                        <svg lucideIcon="BadgeMinus" [size]="18" aria-hidden="true"></svg>
+                        {{ 'verification.admin.removeBadge' | transloco }}
+                      </button>
+                    } @else {
+                      <p class="m-0 mt-2 text-text-secondary" data-detail-badge-removed>{{ 'verification.admin.badgeGone' | transloco }}</p>
+                    }
                   }
                 </div>
               }
@@ -239,7 +270,7 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
       </section>
     </div>
 
-    <rd-decision-sheet [draft]="decision()" (closed)="decision.set(null)" (decided)="decide($event.item, $event.decision)" />
+    <rd-decision-sheet [draft]="decision()" (closed)="decision.set(null)" (decided)="decide($event.item, $event.decision)" (removeBadge)="removeBadge($event)" />
   `,
 })
 export class AdminVerificationPage {
@@ -249,6 +280,8 @@ export class AdminVerificationPage {
   private readonly transloco = inject(TranslocoService);
   private readonly errors = inject(ErrorMessages);
   private readonly toasts = inject(ToastService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
   protected readonly lang = inject(LanguageService).lang;
 
   /** `?status=` and `?id=` (component input binding); anything else means Pending and no request open. */
@@ -352,5 +385,32 @@ export class AdminVerificationPage {
       // Back on screen (as it is now, when someone else decided it), unless another request was opened meanwhile.
       if (!this.selectedId()) void this.router.navigate([PATH], { queryParams: { status: this.statusParam(), id: item.id }, replaceUrl: true });
     }
+  }
+
+  /**
+   * Removes the Verified badge of an approved request's writer: the action goes away at once (the list and a request
+   * opened by link), and comes back when the API refuses. `409 verification.not_verified` means someone removed it
+   * first: it stays gone and the toast says so.
+   */
+  protected async removeBadge(item: AdminVerificationRequestDto): Promise<void> {
+    this.decision.set(null);
+    const userId = item.user.id;
+    this.setDetailVerified(userId, false);
+    // Its button is gone: the focus stays in the request, on the decision (which now says the badge is gone).
+    afterNextRender(() => queueMicrotask(() => this.host.nativeElement.querySelector<HTMLElement>('[data-detail-decision]')?.focus()), { injector: this.injector });
+    try {
+      await this.store.removeBadge(item);
+      this.toasts.success(this.transloco.translate('verification.admin.badgeRemoved', { name: isolate(item.user.displayName) }));
+    } catch (error) {
+      if (!isApiError(error) || error.code !== 'verification.not_verified') this.setDetailVerified(userId, true);
+      this.toasts.error(this.errors.forError(error));
+    }
+  }
+
+  /** The same change for a request opened by link (not on the list). */
+  private setDetailVerified(userId: string, isVerified: boolean): void {
+    const detail = this.detail();
+    if (detail?.status !== 'loaded' || detail.data.user.id !== userId) return;
+    this.detail.set({ ...detail, data: { ...detail.data, user: { ...detail.data.user, isVerified } } });
   }
 }

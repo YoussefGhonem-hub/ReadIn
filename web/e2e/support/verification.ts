@@ -25,14 +25,17 @@ export async function signInAsRequester(page: Page, request: APIRequestContext, 
   return me;
 }
 
-/** An admin (`verification.manage`) with their own copy of the seeded requests: 2 pending, 1 approved, 1 rejected. */
+/**
+ * An admin (`verification.manage`) with their own copy of the seeded requests: 2 pending, 1 approved, 1 rejected. The
+ * admin is the SuperAdmin (SPEC §10: there is no Admin role), with the permissions this page needs.
+ */
 export async function signInAsVerificationAdmin(page: Page, request: APIRequestContext, variant: Variant): Promise<MockMe> {
   const me = await writerMe(request, variant, {
     id: `u-admin-${randomUUID().slice(0, 8)}`,
     displayName: 'Hana Gamal',
     username: 'hana_admin',
     isVerified: false,
-    roles: ['Member', 'Admin'],
+    roles: ['SuperAdmin'],
     permissions: [...READER_PERMISSIONS, 'verification.manage', 'taxonomy.manage'],
   });
   await restoreSessionAs(page, me);
@@ -56,4 +59,10 @@ export async function reviewOf(request: APIRequestContext, admin: string): Promi
     requests: Record<string, { status: string; rejectionReason: string | null }>;
   };
   return body.requests;
+}
+
+/** Who has the Verified badge for an admin now, by user id (the writers of that admin's requests). */
+export async function badgesOf(request: APIRequestContext, admin: string): Promise<Record<string, boolean>> {
+  const body = (await (await request.get(`${MOCK_ORIGIN}/__mock/verification?viewer=${encodeURIComponent(admin)}`)).json()) as { verified: Record<string, boolean> };
+  return body.verified;
 }

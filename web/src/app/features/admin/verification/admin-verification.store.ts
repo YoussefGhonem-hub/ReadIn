@@ -88,4 +88,26 @@ export class AdminVerificationStore {
       throw error;
     }
   }
+
+  /**
+   * Removes the Verified badge of `item`'s user (`DELETE /admin/users/{id}/verification`): every listed request of that
+   * user shows them unverified at once, so the action goes away. When the API refuses, the badge comes back and the
+   * error is rethrown; `409 verification.not_verified` (someone removed it first) keeps them unverified and is
+   * rethrown too, so the page can say so.
+   */
+  async removeBadge(item: AdminVerificationRequestDto): Promise<void> {
+    const userId = item.user.id;
+    this.setVerified(userId, false);
+    try {
+      await firstValueFrom(this.api.removeBadge(userId));
+    } catch (error) {
+      if (!isApiError(error) || error.code !== 'verification.not_verified') this.setVerified(userId, true);
+      throw error;
+    }
+  }
+
+  private setVerified(userId: string, isVerified: boolean): void {
+    if (!this.items().some((i) => i.user.id === userId && i.user.isVerified !== isVerified)) return;
+    this.items.update((items) => items.map((i) => (i.user.id === userId && i.user.isVerified !== isVerified ? { ...i, user: { ...i.user, isVerified } } : i)));
+  }
 }

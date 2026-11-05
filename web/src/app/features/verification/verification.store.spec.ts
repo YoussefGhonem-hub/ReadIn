@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TEST_API, flushMicrotasks, problem, setupSocialTesting } from '../../../testing/social-testing';
+import { testMe } from '../../../testing/auth-testing';
 import { testVerificationRequest, testVerificationStatus } from '../../../testing/verification-testing';
 import { AuthService } from '../../core/auth/auth.service';
+import { SessionStore } from '../../core/auth/session.store';
 import { VerificationStore } from './verification.store';
 
 const STATUS = `${TEST_API}/me/verification`;
@@ -58,6 +60,19 @@ describe('VerificationStore (F19)', () => {
   it('verified while the session says otherwise: `me` is read again (the badge)', async () => {
     await loaded(testVerificationStatus({ isVerified: true, canRequest: false }));
     expect(auth.refreshMe).toHaveBeenCalledTimes(1);
+  });
+
+  it('the badge removed while the session still has it: `me` is read again, as on mobile', async () => {
+    TestBed.inject(SessionStore).setMe(testMe({ isVerified: true }));
+    await loaded(testVerificationStatus({ isVerified: false, canRequest: true, request: testVerificationRequest({ status: 'approved' }) }));
+    expect(auth.refreshMe).toHaveBeenCalledTimes(1);
+  });
+
+  it('the session already agrees with the server: `me` is not read again', async () => {
+    await loaded(testVerificationStatus());
+    TestBed.inject(SessionStore).setMe(testMe({ isVerified: true }));
+    await loaded(testVerificationStatus({ isVerified: true, canRequest: false }));
+    expect(auth.refreshMe).not.toHaveBeenCalled();
   });
 
   it('a sent request is under review at once; errors are the caller\'s', async () => {

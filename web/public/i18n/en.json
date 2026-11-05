@@ -295,7 +295,9 @@
       "field_invalid": "Pick a field from the list.",
       "not_found": "This request doesn't exist anymore.",
       "proof_not_found": "The proof file isn't there anymore.",
-      "already_decided": "This request was already decided."
+      "already_decided": "This request was already decided.",
+      "not_verified": "This user isn't verified.",
+      "system_account": "This is ReadIn's official account; its badge stays."
     },
     "category": {
       "not_found": "Category not found.",
@@ -419,7 +421,8 @@
       "hint": "Seed users from SPEC §18.3. Save your Seed:DemoPassword here to sign in with one tap; it stays in this browser.",
       "demoPassword": "Demo password",
       "pin": "Has a recovery PIN",
-      "noPin": "No recovery PIN yet"
+      "noPin": "No recovery PIN yet",
+      "suspended": "suspended"
     },
     "external": {
       "google": "Continue with Google",
@@ -2384,7 +2387,7 @@
       "reject": "Reject",
       "approveSheet": {
         "title": "Approve {{name}}?",
-        "body": "They get the Verified writer role and the ✓ badge, and their proof file is deleted."
+        "body": "They get the Verified ✓ badge next to their name, and their proof file is deleted."
       },
       "rejectSheet": {
         "title": "Reject this request?",
@@ -2394,7 +2397,14 @@
         "hint": "At least 5 characters. The writer sees it."
       },
       "approved": "{{name}} is now a verified writer ✓",
-      "rejected": "Request rejected"
+      "rejected": "Request rejected",
+      "removeBadge": "Remove badge",
+      "removeBadgeSheet": {
+        "title": "Remove {{name}}'s badge?",
+        "body": "The ✓ badge disappears from next to their name everywhere. They can ask to be verified again, and they aren't notified."
+      },
+      "badgeRemoved": "{{name}} isn't verified anymore",
+      "badgeGone": "They don't have the Verified badge anymore."
     }
   }
 }

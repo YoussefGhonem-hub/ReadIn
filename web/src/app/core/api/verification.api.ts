@@ -82,4 +82,13 @@ export class VerificationApi {
   reject(id: string, reason: string): Observable<void> {
     return this.http.post<void>(`${this.base}/admin/verification-requests/${encodeURIComponent(id)}/reject`, { reason }, { context: this.context() });
   }
+
+  /**
+   * `DELETE /admin/users/{userId}/verification` → `204`: removes the user's Verified badge (their requests stay as
+   * they are). `409 verification.not_verified` when they have no badge, `409 verification.system_account` for the
+   * official @readin account (its badge stays), `404 user.not_found`.
+   */
+  removeBadge(userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/users/${encodeURIComponent(userId)}/verification`, { context: this.context() });
+  }
 }

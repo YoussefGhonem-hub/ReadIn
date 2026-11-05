@@ -2,16 +2,17 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
 import { Page, expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, VARIANTS, hasScreenshot, imagesLoaded, onApi, parkMouse, pngFile, problem, reply, useVariant } from './support/mock-api';
-import { VERIFICATION_NOW, requesterOf, reviewOf, signInAsRequester, signInAsVerificationAdmin } from './support/verification';
+import { HIDE_APP_CHROME, VARIANTS, hasScreenshot, imagesLoaded, onApi, parkMouse, pngFile, problem, reply, restoreSessionAs, useVariant } from './support/mock-api';
+import { VERIFICATION_NOW, badgesOf, requesterOf, reviewOf, signInAsRequester, signInAsVerificationAdmin } from './support/verification';
 
 /**
  * F19 Writer verification end to end in ar/en × light/dark: a member asks to be verified from Settings (field, job
  * title, a proof file, a note; the form's own checks), sees the request under review and withdraws it; a rejected
  * request shows its reason and can be sent again; an approval found on page load refreshes the session; an admin
  * reviews requests (the proof file previewed with the session: an image inline, a PDF in a new tab), approves one and
- * rejects one with a reason; a member gets no admin entry and is sent home from the admin page. The mock API keeps each
- * account's own state (e2e/mock-api/verification.mjs), so parallel tests never share it.
+ * rejects one with a reason, and removes the Verified badge of an approved writer (Verified is a badge, not a role:
+ * SPEC §10); a member gets no admin entry and is sent home from the admin page. The mock API keeps each account's own
+ * state (e2e/mock-api/verification.mjs), so parallel tests never share it.
  */
 test.describe.configure({ timeout: 120_000 });
 
@@ -154,12 +155,15 @@ for (const variant of VARIANTS) {
       if (r.method() === 'GET' && path === '/api/v1/me') calls.me++;
       if (r.method() === 'GET' && path === '/api/v1/me/verification') calls.status++;
     });
+    const meResponse = page.waitForResponse((r) => r.request().method() === 'GET' && new URL(r.url()).pathname === '/api/v1/me');
     await page.goto('/verification');
     const verified = page.locator('[data-verification-status="verified"]');
     await expect(verified).toBeVisible({ timeout: FIRST_RENDER_MS });
     await expect(verified).toContainText(ar ? 'إنت كاتب موثّق ✓' : "You're a verified writer ✓");
     await expect.poll(() => calls.me).toBe(1);
     expect(calls.status).toBe(1);
+    // The badge, not a role (SPEC §10): the account stays a Member.
+    expect(await (await meResponse).json()).toMatchObject({ isVerified: true, roles: ['Member'] });
 
     // The session knows now: Settings shows it without asking the API again.
     await page.locator('[data-back-to-settings]').click();
@@ -270,6 +274,70 @@ for (const variant of VARIANTS) {
     await expect(decided.locator('[data-detail-reason]')).toHaveText(ar ? 'الكارنيه مش باين فيه الاسم.' : 'The card does not show your name.');
     await expect(decided.locator('[data-detail-no-file]')).toBeVisible();
     await expect(decided.locator('[data-detail-actions]')).toHaveCount(0);
+  });
+
+  test(`admin: remove an approved writer's badge (asked first; a second tab finds it gone) — ${suffix}`, async ({ page, context, baseURL, request }) => {
+    await useVariant(context, baseURL!, variant);
+    await page.clock.setFixedTime(VERIFICATION_NOW);
+    const admin = await signInAsVerificationAdmin(page, request, variant);
+    // A second tab, opened before the badge goes: it still offers to remove it.
+    const stale = await context.newPage();
+    await stale.clock.setFixedTime(VERIFICATION_NOW);
+    await restoreSessionAs(stale, admin);
+    await stale.goto('/admin/verification?status=approved&id=vr-karim');
+    await expect(stale.locator('[data-verification-detail="vr-karim"] [data-detail-remove-badge]')).toBeVisible({ timeout: FIRST_RENDER_MS });
+
+    await page.goto('/admin/verification?status=approved');
+    const row = page.locator('[data-verification-row="vr-karim"]');
+    await expect(row).toBeVisible({ timeout: FIRST_RENDER_MS });
+    await expect(row.locator('svg[aria-label]')).toHaveAttribute('aria-label', ar ? 'كاتب موثّق' : 'Verified writer');
+    await row.click();
+    await expect(page).toHaveURL(/status=approved&id=vr-karim$/);
+    const detail = page.locator('[data-verification-detail="vr-karim"]');
+    const remove = detail.locator('[data-detail-remove-badge]');
+    await expect(remove).toHaveText(ar ? 'شيل التوثيق' : 'Remove badge');
+    await fontsReady(page);
+    await parkMouse(page);
+    if (hasScreenshot(variant)) await expect(page.locator('rd-admin-verification-page')).toHaveScreenshot(`admin-verification-approved-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+
+    // By keyboard: a confirmation first, with the focus on Cancel (the safe choice), which sends nothing.
+    await remove.focus();
+    await page.keyboard.press('Enter');
+    const sheet = page.locator('[data-decision-sheet]');
+    await expect(sheet).toHaveAttribute('data-decision', 'removeBadge');
+    await expect(sheet.locator('#decision-title')).toContainText(ar ? 'تشيل التوثيق من' : 'Remove');
+    await expect(sheet.locator('#decision-title')).toContainText('Karim Hassan');
+    await expect(page.locator('section[role="alertdialog"]')).toHaveAttribute('aria-describedby', 'decision-body');
+    const cancel = sheet.getByRole('button', { name: ar ? 'إلغاء' : 'Cancel' });
+    await expect(cancel).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(sheet).toHaveCount(0);
+    await expect(remove).toBeFocused();
+    expect((await badgesOf(request, admin.id))['u-karim']).toBe(true);
+
+    // Confirmed: the action goes at once, the request stays approved, and the toast says so.
+    await page.keyboard.press('Enter');
+    await sheet.locator('[data-decision-confirm]').click();
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'مبقاش موثّق' : "isn't verified anymore");
+    await expect(remove).toHaveCount(0);
+    await expect(detail.locator('[data-detail-badge-removed]')).toHaveText(ar ? 'مبقاش معاه علامة التوثيق.' : "They don't have the Verified badge anymore.");
+    await expect(detail.locator('[data-detail-decision]')).toBeFocused();
+    await expect(row.locator('svg[aria-label]')).toHaveCount(0);
+    await expect.poll(async () => (await badgesOf(request, admin.id))['u-karim']).toBe(false);
+    expect((await reviewOf(request, admin.id))['vr-karim'].status).toBe('approved');
+
+    // The stale tab: the API says the user isn't verified (409), so the action goes there too.
+    await stale.locator('[data-detail-remove-badge]').click();
+    await stale.locator('[data-decision-confirm]').click();
+    await expect(stale.locator('rd-toast-host')).toContainText(ar ? 'المستخدم ده مش موثّق.' : "This user isn't verified.");
+    await expect(stale.locator('[data-detail-remove-badge]')).toHaveCount(0);
+    await expect(stale.locator('[data-verification-detail="vr-karim"] [data-detail-badge-removed]')).toBeVisible();
+    await stale.close();
+
+    // Loaded again, the list agrees: no badge, nothing to remove.
+    await page.reload();
+    await expect(page.locator('[data-verification-detail="vr-karim"] [data-detail-badge-removed]')).toBeVisible({ timeout: FIRST_RENDER_MS });
+    await expect(page.locator('[data-detail-remove-badge]')).toHaveCount(0);
   });
 
   test(`a member: no admin entry, and the admin page sends them home — ${suffix}`, async ({ page, context, baseURL, request }, testInfo) => {

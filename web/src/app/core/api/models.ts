@@ -53,6 +53,7 @@ export interface MeDto {
   theme: ThemePreference;
   timeZone: string;
   reminderTime: string;
+  /** The Verified badge (`Users.IsVerified`): a badge, not a role (SPEC §10). */
   isVerified: boolean;
   /** True once ≥ 3 interests are saved. */
   onboardingCompleted: boolean;
@@ -64,6 +65,7 @@ export interface MeDto {
   /** False for Google/Apple-only accounts: no phone, password or PIN (they can add them later). */
   hasPassword: boolean;
   externalLogins: ExternalLoginDto[];
+  /** `["Member"]` or `["SuperAdmin"]` (SPEC §10). Never test it: gate on `permissions`, show the badge from `isVerified`. */
   roles: string[];
   permissions: string[];
   interests: { fieldIds: string[]; topicIds: string[] };

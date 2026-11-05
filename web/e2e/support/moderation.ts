@@ -6,6 +6,9 @@ import { MOCK_ORIGIN, MockMe, Variant, restoreSessionAs, writerMe } from './mock
  * Reporting and moderation flows (F22). The mock API (e2e/mock-api/moderation.mjs) gives every moderator their own
  * copy of the seeded cases, so each test signs in as its own moderator (`u-mod-*`) and parallel tests never share a
  * queue. `u-warned-*` readers start with two moderation notices to acknowledge.
+ *
+ * The moderator is the SuperAdmin (SPEC §10: there is no Moderator role), with the permissions moderating needs; the
+ * web only ever checks permissions.
  */
 export async function signInAsModerator(page: Page, request: APIRequestContext, variant: Variant): Promise<MockMe> {
   const me = await writerMe(request, variant, {
@@ -13,7 +16,7 @@ export async function signInAsModerator(page: Page, request: APIRequestContext, 
     displayName: 'Hana Gamal',
     username: 'hana_mod',
     isVerified: false,
-    roles: ['Member', 'Moderator'],
+    roles: ['SuperAdmin'],
     permissions: ['articles.read', 'reactions.create', 'saved.manage', 'follows.manage', 'reports.create', 'moderation.manage', 'users.suspend'],
   });
   await restoreSessionAs(page, me);

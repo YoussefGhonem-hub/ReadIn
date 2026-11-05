@@ -197,6 +197,9 @@ export const CONTRACT_ERROR_CODES = [
   'verification.not_found',
   'verification.proof_not_found',
   'verification.already_decided',
+  // Removing a writer's Verified badge (roles change, 2026-11-05)
+  'verification.not_verified',
+  'verification.system_account',
 ] as const;
 
 /** Translates stable API error codes (e.g. `user.suspended`) into the active UI language. */

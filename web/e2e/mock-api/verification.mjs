@@ -2,12 +2,15 @@
  * Writer verification (F19) for the mock API, per the F19 contract: your own request (`GET` / `DELETE
  * /me/verification`, `POST /verification-requests` as multipart, with the contract's checks: magic bytes, 10 MB, https
  * links, lengths) and the admins' review (`/admin/verification-requests`: list by status, one request, its proof file,
- * approve, reject with a reason).
+ * approve, reject with a reason; `DELETE /admin/users/{id}/verification` removes a writer's badge).
+ *
+ * Verified is a badge, not a role (SPEC §10): approving sets `isVerified` and never touches `roles`.
  *
  * Requesters: `u-verify-*` viewers start with nothing; `u-verify-rejected-*` with a rejected request (and its reason);
  * `u-verify-approved-*` with an approved one, so they are verified (`GET /me` says so too: `decorateMe`). Admins are
  * viewers whose id starts with `u-admin` (`verification.manage`); each works on their own copy of the seeded requests
- * (2 pending, 1 approved, 1 rejected), so parallel tests never see each other's decisions. Everyone else gets `403`.
+ * (2 pending, 1 approved, 1 rejected) and of who has the badge, so parallel tests never see each other's decisions.
+ * Everyone else gets `403`.
  */
 
 const NOW = '2026-11-04T10:00:00Z';
@@ -54,6 +57,8 @@ export function createVerification({ writers, social, fields, problem, proofPng,
   const requesters = new Map();
   /** admin → Map(id → request) */
   const admins = new Map();
+  /** admin → Map(userId → has the badge), once that admin approved a request of the user or removed their badge. */
+  const badges = new Map();
   let nextId = 1;
 
   const unauthorized = () => [401, problem(401, 'auth.unauthorized', 'Please sign in first.')];
@@ -245,13 +250,24 @@ export function createVerification({ writers, social, fields, problem, proofPng,
     return admins.get(viewer);
   }
 
-  const adminDto = (r, l) => {
+  function badgesOf(viewer) {
+    if (!badges.has(viewer)) badges.set(viewer, new Map());
+    return badges.get(viewer);
+  }
+
+  /** Whether `userId` has the Verified badge for this admin: an approved request gives it, removing it takes it away. */
+  function isVerifiedFor(viewer, userId) {
+    const known = badgesOf(viewer).get(userId);
+    if (known !== undefined) return known;
+    return !!people.get(userId)?.isVerified || [...adminOf(viewer).values()].some((r) => r.userId === userId && r.status === 'approved');
+  }
+
+  const adminDto = (viewer, r, l) => {
     const user = userOf(r.userId);
     return {
       id: r.id,
       status: r.status,
-      // Approved: the role (and badge) came with it.
-      user: r.status === 'approved' ? { ...user, isVerified: true } : user,
+      user: { ...user, isVerified: isVerifiedFor(viewer, r.userId) },
       field: fieldOf(r.fieldId, l),
       jobTitle: r.jobTitle,
       proofUrl: r.proofUrl,
@@ -271,7 +287,7 @@ export function createVerification({ writers, social, fields, problem, proofPng,
     all.sort((a, b) => (status === 'pending' ? a.submittedAt.localeCompare(b.submittedAt) : b.decidedAt.localeCompare(a.decidedAt)));
     const limit = Math.min(PAGE_LIMIT, Math.max(1, Number(q.get('limit') ?? 20) || 20));
     const start = Number(q.get('cursor') ?? 0) || 0;
-    const items = all.slice(start, start + limit).map((r) => adminDto(r, l));
+    const items = all.slice(start, start + limit).map((r) => adminDto(viewer, r, l));
     return [200, { items, nextCursor: start + limit < all.length ? String(start + limit) : null }];
   }
 
@@ -285,6 +301,17 @@ export function createVerification({ writers, social, fields, problem, proofPng,
       if (reason.length < 5 || reason.length > 500) return validation({ reason: ['validation.length'] });
     }
     Object.assign(request, { status: outcome, decidedAt: NOW, decidedBy: { id: viewer, username: 'hana_admin' }, rejectionReason: reason, proof: null });
+    // The badge only: the user stays a Member.
+    if (outcome === 'approved') badgesOf(viewer).set(request.userId, true);
+    return [204, undefined];
+  }
+
+  /** `DELETE /admin/users/{id}/verification`: `404 user.not_found`, `409 verification.not_verified`, else `204`. */
+  function removeBadge(viewer, id) {
+    const userId = decodeURIComponent(id);
+    if (!people.has(userId)) return [404, problem(404, 'user.not_found', 'User not found.')];
+    if (!isVerifiedFor(viewer, userId)) return [409, problem(409, 'verification.not_verified', 'This user is not verified.')];
+    badgesOf(viewer).set(userId, false);
     return [204, undefined];
   }
 
@@ -328,28 +355,38 @@ export function createVerification({ writers, social, fields, problem, proofPng,
       /^\/api\/v1\/admin\/verification-requests\/([^/]+)$/,
       admin((viewer, _q, [, id], _b, req) => {
         const request = adminOf(viewer).get(decodeURIComponent(id));
-        return request ? [200, adminDto(request, lang(req))] : [404, problem(404, 'verification.not_found', 'Not found.')];
+        return request ? [200, adminDto(viewer, request, lang(req))] : [404, problem(404, 'verification.not_found', 'Not found.')];
       }),
     ],
     ['POST', /^\/api\/v1\/admin\/verification-requests\/([^/]+)\/approve$/, admin((viewer, _q, [, id]) => decide(viewer, id, 'approved'))],
     ['POST', /^\/api\/v1\/admin\/verification-requests\/([^/]+)\/reject$/, admin((viewer, _q, [, id], body) => decide(viewer, id, 'rejected', body))],
-    // For the tests: a requester's requests and every form they sent; an admin's requests by id.
+    ['DELETE', /^\/api\/v1\/admin\/users\/([^/]+)\/verification$/, admin((viewer, _q, [, id]) => removeBadge(viewer, id))],
+    // For the tests: a requester's requests and every form they sent; an admin's requests by id and who has the badge.
     [
       'GET',
       /^\/__mock\/verification$/,
       (q) => {
         const viewer = q.get('viewer') ?? '';
-        if (isAdmin(viewer)) return [200, { requests: Object.fromEntries([...adminOf(viewer)].map(([id, r]) => [id, { status: r.status, rejectionReason: r.rejectionReason }])) }];
+        if (isAdmin(viewer)) {
+          const requests = [...adminOf(viewer).values()];
+          return [
+            200,
+            {
+              requests: Object.fromEntries(requests.map((r) => [r.id, { status: r.status, rejectionReason: r.rejectionReason }])),
+              verified: Object.fromEntries(requests.map((r) => [r.userId, isVerifiedFor(viewer, r.userId)])),
+            },
+          ];
+        }
         const state = requesterOf(viewer);
         return [200, { verified: state.verified, requests: state.requests, submissions: state.submissions }];
       },
     ],
   ];
 
-  /** `GET /me` follows the verification: an approved requester is verified, with the role. */
+  /** `GET /me` follows the verification: an approved requester has the badge, and their roles stay as they are. */
   function decorateMe(me, viewer) {
     if (!viewer?.startsWith('u-verify') || !requesterOf(viewer).verified) return me;
-    return { ...me, isVerified: true, roles: [...new Set([...(me.roles ?? []), 'VerifiedWriter'])] };
+    return { ...me, isVerified: true };
   }
 
   return { routes, decorateMe };

@@ -6,21 +6,23 @@ import { LucideDynamicIcon } from '@lucide/angular';
 export interface DevSeedUser {
   phone: string;
   name: string;
-  roles: string;
+  /** The account's role (SPEC §10.1): the SuperAdmin, or a Member like every other account. */
+  role: 'SuperAdmin' | 'Member';
+  /** Has the Verified badge (`isVerified`): a badge, not a role. */
+  verified?: boolean;
+  suspended?: boolean;
   hasPin: boolean;
 }
 
 export const DEV_SEED_USERS: readonly DevSeedUser[] = [
-  { phone: '+12025550101', name: 'Super Admin', roles: 'SuperAdmin', hasPin: true },
-  { phone: '+12025550102', name: 'Admin User', roles: 'Admin', hasPin: true },
-  { phone: '+12025550103', name: 'Moderator User', roles: 'Moderator', hasPin: true },
-  { phone: '+12025550104', name: '.NET Writer', roles: 'VerifiedWriter', hasPin: true },
-  { phone: '+12025550105', name: 'AI Writer', roles: 'VerifiedWriter', hasPin: true },
-  { phone: '+12025550106', name: 'Verified Writer', roles: 'VerifiedWriter', hasPin: true },
-  ...[1, 2, 3].map((n) => ({ phone: `+120255501${String(6 + n).padStart(2, '0')}`, name: `Writer ${n}`, roles: 'Member', hasPin: true })),
-  ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({ phone: `+120255501${String(9 + n).padStart(2, '0')}`, name: `Reader ${n}`, roles: 'Member', hasPin: true })),
-  { phone: '+12025550119', name: 'Reader 10', roles: 'Member', hasPin: false },
-  { phone: '+12025550120', name: 'Suspended User', roles: 'Member (suspended)', hasPin: false },
+  { phone: '+12025550101', name: 'Super Admin', role: 'SuperAdmin', hasPin: true },
+  { phone: '+12025550104', name: '.NET Writer', role: 'Member', verified: true, hasPin: true },
+  { phone: '+12025550105', name: 'AI Writer', role: 'Member', verified: true, hasPin: true },
+  { phone: '+12025550106', name: 'Verified Writer', role: 'Member', verified: true, hasPin: true },
+  ...[1, 2, 3].map((n): DevSeedUser => ({ phone: `+120255501${String(6 + n).padStart(2, '0')}`, name: `Writer ${n}`, role: 'Member', hasPin: true })),
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n): DevSeedUser => ({ phone: `+120255501${String(9 + n).padStart(2, '0')}`, name: `Reader ${n}`, role: 'Member', hasPin: true })),
+  { phone: '+12025550119', name: 'Reader 10', role: 'Member', hasPin: false },
+  { phone: '+12025550120', name: 'Suspended User', role: 'Member', suspended: true, hasPin: false },
 ];
 
 /** The developer's `Seed:DemoPassword`, kept in this browser only (development builds only). */
@@ -66,7 +68,18 @@ function readDemoPassword(): string {
             <button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-start hover:bg-surface-variant" (click)="choose(user)" [attr.data-dev-user]="user.phone">
               <span class="min-w-0 flex-1">
                 <span class="block truncate font-semibold"><bdi>{{ user.name }}</bdi></span>
-                <span class="block truncate text-xs text-text-secondary"><bdi>{{ user.roles }}</bdi></span>
+                <span class="flex min-w-0 items-center gap-1 text-xs text-text-secondary" data-dev-user-role>
+                  <bdi class="font-latin" dir="ltr">{{ user.role }}</bdi>
+                  @if (user.verified) {
+                    <!-- The Verified badge, as next to names everywhere (it is not a role). -->
+                    <span class="inline-flex min-w-0 items-center gap-0.5 text-primary" data-dev-user-verified>
+                      · <svg lucideIcon="BadgeCheck" [size]="12" class="shrink-0" aria-hidden="true"></svg><span class="truncate">{{ 'article.verifiedWriter' | transloco }}</span>
+                    </span>
+                  }
+                  @if (user.suspended) {
+                    <span class="truncate" data-dev-user-suspended>· {{ 'auth.dev.suspended' | transloco }}</span>
+                  }
+                </span>
               </span>
               <span class="font-latin text-xs text-text-secondary" dir="ltr">{{ user.phone }}</span>
               <span class="w-14 text-end text-xs" [attr.aria-label]="(user.hasPin ? 'auth.dev.pin' : 'auth.dev.noPin') | transloco">

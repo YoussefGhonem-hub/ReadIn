@@ -631,7 +631,8 @@ function me({ uiLanguage = 'ar', theme = 'system' } = {}) {
     hasRecoveryPin: true,
     hasPassword: true,
     externalLogins: [],
-    roles: ['Member', 'VerifiedWriter'],
+    // Verified is a badge (`isVerified`), not a role (SPEC §10).
+    roles: ['Member'],
     permissions: ['articles.read', 'articles.create'],
     interests: { fieldIds: ['f-software'], topicIds: [] },
   };

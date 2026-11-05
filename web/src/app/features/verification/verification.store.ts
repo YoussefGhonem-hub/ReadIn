@@ -9,8 +9,9 @@ import { VerificationView, verificationView } from './verification-status';
 
 /**
  * Your writer verification (F19), for the `/verification` page that provides it: `GET /me/verification`, sending a
- * request, and withdrawing it (at once on screen, put back when the API refuses). Once you are verified and the
- * session doesn't know it yet, `me` is read again so the badge shows everywhere.
+ * request, and withdrawing it (at once on screen, put back when the API refuses). When the server and the session
+ * disagree on the badge (you were verified, or the SuperAdmin removed it, which sends nothing), `me` is read again so
+ * the badge shows, or goes, everywhere.
  */
 @Injectable()
 export class VerificationStore {
@@ -36,7 +37,8 @@ export class VerificationStore {
       if (generation !== this.generation) return;
       this.data.set(data);
       this.status.set('loaded');
-      if (data.isVerified && this.session.me()?.isVerified === false) void this.auth.refreshMe();
+      const me = this.session.me();
+      if (me && me.isVerified !== data.isVerified) void this.auth.refreshMe();
     } catch {
       if (generation === this.generation && !options.quiet) this.status.set('error');
     }

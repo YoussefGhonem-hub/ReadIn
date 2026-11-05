@@ -261,6 +261,7 @@ describe('AdminVerificationPage (F19)', () => {
     await t.stable();
     const detail = t.$('[data-verification-detail="vr-old"]')!;
     expect(detail.querySelector('[data-detail-actions]')).toBeNull();
+    expect(detail.querySelector('[data-detail-remove-badge]')).toBeNull();
     expect(detail.querySelector('[data-detail-decision]')!.textContent).toContain('رفضه ⁨@nour_admin⁩ يوم 25 أكتوبر 2026');
     expect(detail.querySelector('[data-detail-reason]')!.textContent).toBe('An Instagram page is not proof of a medical qualification.');
     expect(detail.querySelector('[data-detail-no-file]')!.textContent).toContain('ملف الإثبات بيتمسح أول ما الطلب يتاخد فيه قرار.');
@@ -269,5 +270,99 @@ describe('AdminVerificationPage (F19)', () => {
     http.expectOne(`${LIST}/vr-gone`).flush(problem(404, 'verification.not_found'), { status: 404, statusText: 'Not Found' });
     await t.stable();
     expect(t.$('rd-error-state')!.textContent).toContain('الطلب ده مبقاش موجود.');
+  });
+
+  describe('Remove badge (roles change: Verified is a badge, the SuperAdmin can take it away)', () => {
+    const BADGE_URL = `${TEST_API}/admin/users/u-karim/verification`;
+    const KARIM = { id: 'u-karim', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true };
+    const decided = { proof: null, decidedAt: '2026-10-20T11:00:00Z', decidedBy: { id: 'u-admin', username: 'nour_admin' } };
+    const APPROVED = testAdminRequest('vr-karim', { status: 'approved', user: KARIM, ...decided });
+    /** Approved, but the badge was removed since. */
+    const UNVERIFIED = testAdminRequest('vr-mona', { status: 'approved', user: { ...KARIM, id: 'u-mona', displayName: 'Mona Adel', username: 'mona', isVerified: false }, ...decided });
+
+    async function confirmRemoval(t: Awaited<ReturnType<typeof render>>, detail: () => HTMLElement): Promise<TestRequest> {
+      detail().querySelector<HTMLButtonElement>('[data-detail-remove-badge]')!.click();
+      await t.stable();
+      t.$<HTMLButtonElement>('[data-decision-confirm]')!.click();
+      await t.stable();
+      return http.expectOne({ method: 'DELETE', url: BADGE_URL });
+    }
+
+    it('only while the writer has the badge: asked first, gone at once (the request stays approved), then thanked', async () => {
+      const t = await render({ status: 'approved', id: 'vr-karim' }, [APPROVED, UNVERIFIED]);
+      const detail = () => t.$('[data-verification-detail="vr-karim"]')!;
+      expect(detail().getAttribute('data-status')).toBe('approved');
+      const button = detail().querySelector<HTMLButtonElement>('[data-detail-remove-badge]')!;
+      expect(button.type).toBe('button');
+      expect(button.textContent!.trim()).toBe('شيل التوثيق');
+      expect(t.$('[data-verification-row="vr-karim"] svg[aria-label="كاتب موثّق"]')).not.toBeNull();
+
+      button.click();
+      await t.stable();
+      const sheet = t.$('[data-decision-sheet]')!;
+      expect(sheet.getAttribute('data-decision')).toBe('removeBadge');
+      expect(sheet.querySelector('#decision-title')!.textContent).toBe('تشيل التوثيق من ⁨Karim Hassan⁩؟');
+      expect(sheet.querySelector('#decision-body')!.textContent).toContain('يقدر يطلب التوثيق تاني');
+      expect(t.$('[data-decision-confirm]')!.textContent!.trim()).toBe('شيل التوثيق');
+      expect(t.$('[data-decision-reason]')).toBeNull();
+      http.expectNone(BADGE_URL);
+      t.$<HTMLButtonElement>('[data-decision-confirm]')!.click();
+      await t.stable();
+
+      expect(t.$('[data-decision-sheet]')).toBeNull();
+      expect(detail().querySelector('[data-detail-remove-badge]')).toBeNull();
+      expect(detail().querySelector('[data-detail-badge-removed]')!.textContent).toContain('مبقاش معاه علامة التوثيق.');
+      expect(t.$('[data-verification-row="vr-karim"] svg[aria-label]')).toBeNull();
+      // The focus stays in the request, on the decision that now says the badge is gone.
+      expect(document.activeElement).toBe(detail().querySelector('[data-detail-decision]'));
+      const req = http.expectOne({ method: 'DELETE', url: BADGE_URL });
+      expect(req.request.body).toBeNull();
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await t.stable();
+      expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'success', message: '⁨Karim Hassan⁩ مبقاش موثّق' })]);
+      expect(t.$$('[data-verification-row]').map((r) => r.getAttribute('data-verification-row'))).toEqual(['vr-karim', 'vr-mona']);
+      expect(detail().getAttribute('data-status')).toBe('approved');
+
+      // Approved without the badge: nothing to remove, and it says why.
+      await t.open('vr-mona');
+      const mona = t.$('[data-verification-detail="vr-mona"]')!;
+      expect(mona.querySelector('[data-detail-remove-badge]')).toBeNull();
+      expect(mona.querySelector('[data-detail-badge-removed]')).not.toBeNull();
+    });
+
+    it('cancel sends nothing', async () => {
+      const t = await render({ status: 'approved', id: 'vr-karim' }, [APPROVED]);
+      t.$<HTMLButtonElement>('[data-detail-remove-badge]')!.click();
+      await t.stable();
+      [...t.$('[data-decision-sheet]')!.querySelectorAll('button')].find((b) => b.textContent!.trim() === 'إلغاء')!.click();
+      await t.stable();
+      expect(t.$('[data-decision-sheet]')).toBeNull();
+      http.expectNone(BADGE_URL);
+      expect(t.$('[data-detail-remove-badge]')).not.toBeNull();
+    });
+
+    it('someone removed it first (409 verification.not_verified): it stays gone and the toast says so', async () => {
+      const t = await render({ status: 'approved', id: 'vr-karim' }, [APPROVED]);
+      const detail = () => t.$('[data-verification-detail="vr-karim"]')!;
+      (await confirmRemoval(t, detail)).flush(problem(409, 'verification.not_verified'), { status: 409, statusText: 'Conflict' });
+      await t.stable();
+      expect(detail().querySelector('[data-detail-remove-badge]')).toBeNull();
+      expect(detail().querySelector('[data-detail-badge-removed]')).not.toBeNull();
+      expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'المستخدم ده مش موثّق.' })]);
+    });
+
+    it('a request opened by link: the same, and a refusal brings the action back with the error', async () => {
+      const t = await render({ id: 'vr-karim' }, [testAdminRequest()]);
+      http.expectOne({ method: 'GET', url: `${LIST}/vr-karim` }).flush(APPROVED);
+      await t.stable();
+      const detail = () => t.$('[data-verification-detail="vr-karim"]')!;
+      const req = await confirmRemoval(t, detail);
+      expect(detail().querySelector('[data-detail-remove-badge]')).toBeNull();
+      req.flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
+      await t.stable();
+      expect(detail().querySelector('[data-detail-remove-badge]')).not.toBeNull();
+      expect(detail().querySelector('[data-detail-badge-removed]')).toBeNull();
+      expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'السيرفر واجه مشكلة. حاول كمان شوية.' })]);
+    });
   });
 });

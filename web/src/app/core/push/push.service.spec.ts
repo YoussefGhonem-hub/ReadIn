@@ -199,7 +199,8 @@ describe('PushService', () => {
   it('a writer verification result reads `me` again, so an approval shows the badge, and still shows its toast (F19)', async () => {
     const { client, toasts, meApi, session } = await setup();
     await signIn(session);
-    const verified = { id: 'user-1', displayName: 'Mona', isVerified: true, roles: ['Member', 'VerifiedWriter'] } as MeDto;
+    // Verified is a badge, not a role: the account stays a Member.
+    const verified = { id: 'user-1', displayName: 'Mona', isVerified: true, roles: ['Member'] } as MeDto;
     Object.assign(meApi, { get: vi.fn(() => of(verified)) });
     client.worker!({
       type: 'push',

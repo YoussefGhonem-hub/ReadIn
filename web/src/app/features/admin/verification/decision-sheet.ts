@@ -6,16 +6,17 @@ import { BottomSheet } from '../../../shared/ui/bottom-sheet';
 import { REASON_MAX, REASON_MIN } from '../../verification/verification-rules';
 import { VerificationDecision } from './admin-verification.store';
 
-/** A decision to confirm: approve, or reject (which needs a reason). */
+/** An action to confirm: approve, reject (which needs a reason), or remove the user's Verified badge. */
 export interface DecisionDraft {
-  kind: VerificationDecision['kind'];
+  kind: VerificationDecision['kind'] | 'removeBadge';
   item: AdminVerificationRequestDto;
 }
 
 /**
- * Confirms an admin's decision on a verification request (F19). Approving says what it does (the role, the badge, the
- * file deleted); rejecting needs a reason of 5–500 characters, which the writer sees on their verification page.
- * Emits the decision; the page applies it (at once, put back when the API refuses).
+ * Confirms an admin's action on a verification request (F19). Approving says what it does (the badge, the file
+ * deleted; roles don't change); rejecting needs a reason of 5–500 characters, which the writer sees on their
+ * verification page; removing the badge of an approved writer says they can ask again. Emits the decision (or the
+ * removal); the page applies it (at once, put back when the API refuses).
  */
 @Component({
   selector: 'rd-decision-sheet',
@@ -53,8 +54,11 @@ export interface DecisionDraft {
           }
 
           <div class="mt-1 flex gap-2">
-            <button type="button" class="rd-btn rd-btn-outline flex-1" (click)="closed.emit()">{{ 'common.cancel' | transloco }}</button>
-            <button type="submit" class="rd-btn flex-1" [class]="d.kind === 'reject' ? 'bg-error text-on-error' : 'rd-btn-primary'" [disabled]="!canSubmit()" data-decision-confirm>
+            <!-- Removing a badge undoes an approval: the safe choice has the focus. -->
+            <button type="button" class="rd-btn rd-btn-outline flex-1" [attr.data-initial-focus]="d.kind === 'removeBadge' ? '' : null" (click)="closed.emit()">
+              {{ 'common.cancel' | transloco }}
+            </button>
+            <button type="submit" class="rd-btn flex-1" [class]="d.kind === 'approve' ? 'rd-btn-primary' : 'bg-error text-on-error'" [disabled]="!canSubmit()" data-decision-confirm>
               {{ 'verification.admin.' + d.kind | transloco }}
             </button>
           </div>
@@ -68,6 +72,8 @@ export class DecisionSheet {
   readonly draft = input<DecisionDraft | null>(null);
   readonly closed = output<void>();
   readonly decided = output<{ item: AdminVerificationRequestDto; decision: VerificationDecision }>();
+  /** Confirmed: remove the Verified badge of the item's user. */
+  readonly removeBadge = output<AdminVerificationRequestDto>();
 
   protected readonly isolate = isolate;
   protected readonly reasonMax = REASON_MAX;
@@ -75,7 +81,7 @@ export class DecisionSheet {
   protected readonly canSubmit = computed(() => {
     const draft = this.draft();
     if (!draft) return false;
-    if (draft.kind === 'approve') return true;
+    if (draft.kind !== 'reject') return true;
     const length = this.reason().trim().length;
     return length >= REASON_MIN && length <= REASON_MAX;
   });
@@ -91,6 +97,10 @@ export class DecisionSheet {
     event.preventDefault();
     const draft = this.draft();
     if (!draft || !this.canSubmit()) return;
+    if (draft.kind === 'removeBadge') {
+      this.removeBadge.emit(draft.item);
+      return;
+    }
     this.decided.emit({ item: draft.item, decision: draft.kind === 'approve' ? { kind: 'approve' } : { kind: 'reject', reason: this.reason().trim() } });
   }
 }

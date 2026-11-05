@@ -93,4 +93,69 @@ describe('AdminVerificationStore (F19)', () => {
     await flushMicrotasks();
     expect(store.items().map((i) => i.id)).toEqual(['vr-2']);
   });
+
+  describe('removing a badge (roles change: Verified is a badge)', () => {
+    const KARIM = { id: 'u-karim', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true };
+
+    async function approvedTab(): Promise<void> {
+      const loading = store.load('approved');
+      http.expectOne((r) => r.url === LIST && r.params.get('status') === 'approved').flush({
+        items: [
+          testAdminRequest('vr-karim-2', { status: 'approved', user: KARIM }),
+          testAdminRequest('vr-salma', { status: 'approved', user: { ...KARIM, id: 'u-salma', username: 'salma' } }),
+          testAdminRequest('vr-karim-1', { status: 'approved', user: KARIM }),
+        ],
+        nextCursor: null,
+      });
+      await loading;
+    }
+
+    const verified = () => store.items().map((i) => [i.id, i.user.isVerified]);
+
+    it("DELETE /admin/users/{id}/verification; every request of that user shows them unverified at once", async () => {
+      await approvedTab();
+      const removing = store.removeBadge(store.find('vr-karim-2')!);
+      expect(verified()).toEqual([
+        ['vr-karim-2', false],
+        ['vr-salma', true],
+        ['vr-karim-1', false],
+      ]);
+      const req = http.expectOne({ method: 'DELETE', url: `${TEST_API}/admin/users/u-karim/verification` });
+      expect(req.request.body).toBeNull();
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await removing;
+      // The requests stay where they are (an approved one stays approved).
+      expect(store.items().map((i) => i.status)).toEqual(['approved', 'approved', 'approved']);
+      expect(verified()).toEqual([
+        ['vr-karim-2', false],
+        ['vr-salma', true],
+        ['vr-karim-1', false],
+      ]);
+    });
+
+    it('a refusal gives the badge back and is rethrown', async () => {
+      await approvedTab();
+      const removing = store.removeBadge(store.find('vr-karim-1')!);
+      http.expectOne(`${TEST_API}/admin/users/u-karim/verification`).flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
+      await expect(removing).rejects.toMatchObject({ code: 'server.error' });
+      expect(verified()).toEqual([
+        ['vr-karim-2', true],
+        ['vr-salma', true],
+        ['vr-karim-1', true],
+      ]);
+    });
+
+    it('already removed by someone else (409 verification.not_verified): stays unverified, and is rethrown so the page says so', async () => {
+      await approvedTab();
+      const removing = store.removeBadge(store.find('vr-karim-2')!);
+      http.expectOne(`${TEST_API}/admin/users/u-karim/verification`).flush(problem(409, 'verification.not_verified'), { status: 409, statusText: 'Conflict' });
+      await expect(removing).rejects.toMatchObject({ code: 'verification.not_verified' });
+      expect(verified()).toEqual([
+        ['vr-karim-2', false],
+        ['vr-salma', true],
+        ['vr-karim-1', false],
+      ]);
+      http.expectNone((r) => r.url === LIST);
+    });
+  });
 });

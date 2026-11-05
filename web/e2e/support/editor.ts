@@ -15,7 +15,7 @@ export async function signInAsAuthor(page: Page, request: APIRequestContext, var
     displayName: 'Mona Adel',
     username: 'mona',
     isVerified: true,
-    roles: ['Member', 'VerifiedWriter'],
+    roles: ['Member'],
     permissions: ['articles.read', 'articles.create'],
   });
   await restoreSessionAs(page, me);
