@@ -2175,6 +2175,7 @@
     "newItems": "New notifications — show them",
     "loadError": "We couldn't load your notifications.",
     "end": "You're all caught up ✓",
+    "seeAll": "See all notifications",
     "empty": {
       "title": "No notifications yet",
       "body": "New followers, replies, mentions and today's article show up here."
