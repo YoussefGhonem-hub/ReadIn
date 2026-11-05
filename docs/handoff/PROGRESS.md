@@ -675,3 +675,23 @@ then two fixers). Per part, what was built and **what was actually tried**:
 - **For the user:** redeploy `public/` (delete-account and privacy pages changed). The two SPEC nits found here (§18.2 row 10, the
   F29 notification name) were fixed by the SPEC session (6f42aa1). The web initial bundle is 554 kB
   (target < 500 kB, leftovers).
+
+### F30 Highlights ✅
+- **Backend:** `ArticleHighlights` + `Users.ShowHighlights` (one migration, also as a SQL script); `GET/POST
+  /articles/{id}/highlights`, `DELETE /highlights/{id}`, `GET /me/highlights` (grouped per article version, one query
+  for the texts), `showHighlights` in preferences, permission `highlights.create`. A range sits in one allowed block or
+  list item and must match the current translation's plain text (UTF-16 code units, no isolates); overlapping or
+  touching ranges of yours merge; 3–1,000 characters, 100 per article. Popular = the same range from ≥ 3 readers minus
+  the viewer's muted writers, at most 5, never who. Highlights an author's Update no longer matches are hidden and don't
+  count. Shared fixtures `shared/rdoc/highlight-fixtures.json`, read by tests on all three sides.
+- **Web and mobile:** the selection toolbar (Highlight / Remove, also on tapping your own), amber marks for yours and a
+  lighter underline for popular ones (the count announced), hide from the reader's ⋯, `Ctrl + /` (web) or Settings
+  (synced; guests keep it locally), the profile's Saved tab → Highlights opening the article at the block.
+- **Tried for real:** the migration's full idempotent script twice on an empty database; a real mouse drag, keyboard and
+  `Ctrl + /` in Playwright; real long presses on Arabic text with isolates and tashkeel in widget tests; the fixtures
+  checked by an independent script (32 selections, 5 isolate cases, 14 server cases).
+- **Test round:** the tests ran once (backend 2287/2287, web unit 1287/1289 with 2 timing-flaky selection tests,
+  Playwright 198/198, mobile 2229/2229). Fixed: the flaky spec helper, the delete-account texts, the 100 limit counting
+  hidden highlights, the Saved list order, one query instead of one per group, the screen-reader announcement, web and
+  mobile made the same (labels, tap to remove, where Saved → Highlights lives), a gap in an underline.
+  **The fixes were not tried with the tests** (user rule).
