@@ -62,6 +62,12 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public DateTime? HiddenAt { get; private set; }
     public Guid? HiddenById { get; private set; }
 
+    /// <summary>
+    /// The writer's own category (SPEC F31); null for none. Changed at once by the writer, outside the editor's working
+    /// copy, so it needs no publish and makes no revision. Deleting the category sets it back to null.
+    /// </summary>
+    public Guid? WriterCategoryId { get; private set; }
+
     // Denormalized counters (SPEC §16.1), recomputed from SQL by the outbox handlers after each change (F27).
 
     /// <summary>All reactions: always the sum of the four per-type counts below.</summary>
@@ -78,6 +84,7 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public Users.User? Author { get; private set; }
     public Field Field { get; private set; } = default!;
     public Topic? Topic { get; private set; }
+    public WriterCategory? WriterCategory { get; private set; }
 
     public IReadOnlyCollection<ArticleTranslation> Translations => _translations.AsReadOnly();
     public IReadOnlyCollection<ArticleTag> Tags => _tags.AsReadOnly();

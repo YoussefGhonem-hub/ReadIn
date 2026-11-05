@@ -40,6 +40,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Field> Fields => Set<Field>();
     public DbSet<Topic> Topics => Set<Topic>();
     public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<WriterCategory> WriterCategories => Set<WriterCategory>();
     public DbSet<GlossaryTerm> GlossaryTerms => Set<GlossaryTerm>();
     public DbSet<ArticleTerm> ArticleTerms => Set<ArticleTerm>();
 
@@ -78,6 +79,21 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<SeedHistory> SeedHistory => Set<SeedHistory>();
 
     public void ClearChangeTracker() => ChangeTracker.Clear();
+
+    public Task<T> LockedForUserAsync<T>(Guid userId, Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken)
+    {
+        var attempt = 0;
+        return Database.CreateExecutionStrategy().ExecuteAsync(async ct =>
+        {
+            if (attempt++ > 0) ChangeTracker.Clear(); // a retried attempt starts from a clean slate
+            await using var transaction = await Database.BeginTransactionAsync(ct);
+            // UPDLOCK is held until the transaction ends; another run for this user waits here, plain reads don't.
+            await Database.ExecuteSqlAsync($"SELECT 1 FROM [Users] WITH (UPDLOCK, ROWLOCK) WHERE [Id] = {userId}", ct);
+            var result = await work(ct);
+            await transaction.CommitAsync(ct);
+            return result;
+        }, cancellationToken);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

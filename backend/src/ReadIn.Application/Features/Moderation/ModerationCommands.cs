@@ -7,11 +7,14 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Comments;
+using ReadIn.Application.Features.Tags;
+using ReadIn.Application.Features.WriterCategories;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Engagement;
 using ReadIn.Domain.Identity;
 using ReadIn.Domain.Moderation;
+using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Moderation;
@@ -25,13 +28,14 @@ public sealed record ReportContentCommand(string TargetType, Guid TargetId, stri
 
 /// <summary>
 /// POST /moderation/actions (SPEC F22). Comments: hide, unhide, delete. Articles: hide, unhide. Users: warn, suspend,
-/// unsuspend (both need <c>users.suspend</c>). Any target: dismiss its open reports. Hide, delete, warn and suspend resolve
-/// the target's open reports, and those of <see cref="ResolveReportsOf"/> too. An action that changed something is logged
-/// in ModerationActions, and in the audit log when it touched a user's content or account; repeating one that changes
-/// nothing is a no-op.
+/// unsuspend (both need <c>users.suspend</c>), clear_category (F31). Any target: dismiss its open reports. Hide, delete,
+/// warn, suspend and clear_category resolve the target's open reports, and those of <see cref="ResolveReportsOf"/> too.
+/// An action that changed something is logged in ModerationActions, and in the audit log when it touched a user's content
+/// or account; repeating one that changes nothing is a no-op.
 /// </summary>
 /// <param name="Note">≤ 500; required to warn or suspend.</param>
 /// <param name="DurationDays">Suspend only: 1–365, null = permanent.</param>
+/// <param name="CategoryId">clear_category only (required there): one of the user's writer categories.</param>
 [RequirePermission(Permissions.Moderation.Manage)]
 public sealed record ModerateContentCommand(
     string Action,
@@ -39,7 +43,8 @@ public sealed record ModerateContentCommand(
     Guid TargetId,
     string? Note = null,
     int? DurationDays = null,
-    ModerationTargetRef? ResolveReportsOf = null) : ICommand<Result>;
+    ModerationTargetRef? ResolveReportsOf = null,
+    Guid? CategoryId = null) : ICommand<Result>;
 
 /// <summary>Another target, e.g. the article an author is warned for, whose open reports the action also resolves.</summary>
 public sealed record ModerationTargetRef(string TargetType, Guid TargetId);
@@ -55,16 +60,19 @@ public static class ModerationVerbs
     public const string Unsuspend = "unsuspend";
     public const string Dismiss = "dismiss";
 
+    /// <summary>Renames one of the user's writer categories to a neutral placeholder (SPEC F31).</summary>
+    public const string ClearCategory = "clear_category";
+
     public static bool Allows(string? action, ReportTargetType target) => (action, target) switch
     {
         (Hide or Unhide or Delete or Dismiss, ReportTargetType.Comment) => true,
         (Hide or Unhide or Dismiss, ReportTargetType.Article) => true,
-        (Warn or Suspend or Unsuspend or Dismiss, ReportTargetType.User) => true,
+        (Warn or Suspend or Unsuspend or ClearCategory or Dismiss, ReportTargetType.User) => true,
         _ => false,
     };
 
-    /// <summary>Hide, delete, warn and suspend resolve the target's open reports; dismiss closes them as dismissed.</summary>
-    public static bool ClosesReports(string action) => action is Hide or Delete or Warn or Suspend or Dismiss;
+    /// <summary>Hide, delete, warn, suspend and clear_category resolve the target's open reports; dismiss closes them as dismissed.</summary>
+    public static bool ClosesReports(string action) => action is Hide or Delete or Warn or Suspend or ClearCategory or Dismiss;
 }
 
 internal sealed class ReportContentCommandValidator : AbstractValidator<ReportContentCommand>
@@ -83,6 +91,7 @@ internal sealed class ModerateContentCommandValidator : AbstractValidator<Modera
     {
         // The action and its target, the required note and the duration are business errors with their own codes (handler).
         RuleFor(c => c.Note).MaximumLength(ModerationAction.MaxNoteLength);
+        When(c => c.Action == ModerationVerbs.ClearCategory, () => RuleFor(c => c.CategoryId).NotNull());
         When(c => c.ResolveReportsOf is not null, () =>
             RuleFor(c => c.ResolveReportsOf!.TargetType).Must(t => ModerationValues.TryParseTarget(t, out _)).WithErrorCode("report.target_invalid"));
     }
@@ -145,6 +154,7 @@ internal sealed class ModerateContentCommandHandler(
     CommentPosting posting,
     AuditTrail audit,
     HybridCache cache,
+    WriterCategoryReader categories,
     TimeProvider clock)
     : ICommandHandler<ModerateContentCommand, Result>
 {
@@ -262,15 +272,42 @@ internal sealed class ModerateContentCommandHandler(
         var user = await db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == command.TargetId, ct);
         if (user is null || (user.IsDeleted && command.Action != ModerationVerbs.Dismiss)) return UserErrors.NotFound;
 
-        if (command.Action != ModerationVerbs.Dismiss)
+        // Clearing a category name is about content, like hiding an article: allowed on anyone, staff and yourself included.
+        if (command.Action is not (ModerationVerbs.Dismiss or ModerationVerbs.ClearCategory))
         {
             if (user.Id == acting.ModeratorId) return ModerationErrors.Self;
             if (await IsStaffAsync(user, ct)) return ModerationErrors.StaffTarget;
         }
 
         var accessChanged = false;
+        List<string>? clearedCategoryArticles = null;
         switch (command.Action)
         {
+            case ModerationVerbs.ClearCategory:
+            {
+                var category = await db.WriterCategories.FirstOrDefaultAsync(c => c.Id == command.CategoryId && c.UserId == user.Id, ct);
+                if (category is null) return WriterCategoryErrors.NotFound;
+                // Already a placeholder: nothing to clear, nothing to log.
+                if (WriterCategoryNames.IsPlaceholder(category.Name)) return Result.Success();
+
+                var others = await db.WriterCategories.AsNoTracking()
+                    .Where(c => c.UserId == user.Id && c.Id != category.Id)
+                    .Select(c => new { c.NormalizedName, c.Slug })
+                    .ToListAsync(ct);
+                var usedNames = others.Select(c => c.NormalizedName).ToHashSet(StringComparer.Ordinal);
+                var number = 1;
+                while (usedNames.Contains(WriterCategoryNames.Normalize(WriterCategoryNames.Placeholder(user.UiLanguage, number)))) number++;
+                var placeholder = WriterCategoryNames.Placeholder(user.UiLanguage, number);
+                var slug = TagNames.UniqueSlug(WriterCategoryNames.SlugBase(placeholder), others.Select(c => c.Slug).ToHashSet(StringComparer.Ordinal));
+
+                var oldName = category.Name;
+                clearedCategoryArticles = await categories.ArticleSlugsAsync(category.Id, ct);
+                category.ClearName(placeholder, WriterCategoryNames.Normalize(placeholder), slug);
+                var resolved = await CloseReportsAsync(command, ReportTargetType.User, acting, ct);
+                audit.Record(AuditActions.CategoryCleared, user.Id);
+                Log(ModerationAction.CategoryCleared(user.Id, oldName, acting.ModeratorId, acting.Note, resolved, acting.Now));
+                break;
+            }
             case ModerationVerbs.Warn:
             {
                 var resolved = await CloseReportsAsync(command, ReportTargetType.User, acting, ct);
@@ -318,6 +355,8 @@ internal sealed class ModerateContentCommandHandler(
         // The next request of the account is blocked (or let through) at once; the outbox handler of
         // UserRolesChangedDomainEvent drops the same cache entry a moment later.
         if (accessChanged) await access.InvalidateAsync(user.Id, ct);
+        // The writer's category list and pages, and the reader's "في قسم {name}" of its articles.
+        if (clearedCategoryArticles is not null) await categories.InvalidateAsync(user.Id, clearedCategoryArticles, ct);
         return Result.Success();
     }
 

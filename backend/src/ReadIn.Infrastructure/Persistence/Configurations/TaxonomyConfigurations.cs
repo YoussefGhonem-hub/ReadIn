@@ -53,6 +53,27 @@ internal sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
     }
 }
 
+/// <summary>
+/// F31 writer categories: unique slug and normalized name per writer; they go with the account (cascade), and deleting one
+/// leaves its articles without a category (<c>Articles.WriterCategoryId</c> SET NULL).
+/// </summary>
+internal sealed class WriterCategoryConfiguration : IEntityTypeConfiguration<WriterCategory>
+{
+    public void Configure(EntityTypeBuilder<WriterCategory> builder)
+    {
+        builder.ToTable("WriterCategories");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Name).HasMaxLength(WriterCategory.NameColumnLength).UseCollation(AppDbContext.SearchCollation).IsRequired();
+        // Compared exactly (ordinal), like TagNames.Normalize in C#: one name per writer ignoring case and letter forms.
+        builder.Property(c => c.NormalizedName).HasMaxLength(WriterCategory.NameColumnLength).UseCollation(AppDbContext.OrdinalCollation)
+            .IsRequired();
+        builder.Property(c => c.Slug).HasMaxLength(WriterCategory.SlugColumnLength).UseCollation(AppDbContext.OrdinalCollation).IsRequired();
+        builder.HasIndex(c => new { c.UserId, c.Slug }).IsUnique();
+        builder.HasIndex(c => new { c.UserId, c.NormalizedName }).IsUnique();
+        builder.HasOne<User>().WithMany().HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 internal sealed class LearningPathConfiguration : IEntityTypeConfiguration<LearningPath>
 {
     public void Configure(EntityTypeBuilder<LearningPath> builder)

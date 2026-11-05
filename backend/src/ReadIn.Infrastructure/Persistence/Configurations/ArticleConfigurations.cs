@@ -28,6 +28,8 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.HasOne(a => a.Author).WithMany().HasForeignKey(a => a.AuthorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(a => a.Field).WithMany().HasForeignKey(a => a.FieldId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(a => a.Topic).WithMany().HasForeignKey(a => a.TopicId).OnDelete(DeleteBehavior.NoAction);
+        // F31: deleting a category (or the account that owns it) leaves its articles uncategorized.
+        builder.HasOne(a => a.WriterCategory).WithMany().HasForeignKey(a => a.WriterCategoryId).OnDelete(DeleteBehavior.SetNull);
 
         builder.HasMany(a => a.Translations).WithOne().HasForeignKey(t => t.ArticleId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(a => a.Tags).WithOne().HasForeignKey(t => t.ArticleId).OnDelete(DeleteBehavior.Cascade);
@@ -39,6 +41,8 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.HasIndex(a => new { a.Status, a.PublishedAt }).IsDescending(false, true).HasFilter("[IsDeleted] = 0");
         builder.HasIndex(a => new { a.FieldId, a.Status, a.QualityScore }).IsDescending(false, false, true);
         builder.HasIndex(a => a.AuthorId);
+        // The category pages (F31), newest first.
+        builder.HasIndex(a => new { a.WriterCategoryId, a.PublishedAt }).IsDescending(false, true);
     }
 }
 

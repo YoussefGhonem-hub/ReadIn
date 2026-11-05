@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Models;
 using ReadIn.Application.Common.Security;
+using ReadIn.Application.Features.WriterCategories;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Moderation;
 
@@ -150,7 +151,7 @@ internal sealed class GetModerationQueueQueryHandler(IAppDbContext db, Moderatio
     }
 }
 
-internal sealed class GetModerationCaseQueryHandler(IAppDbContext db, ModerationReader reader)
+internal sealed class GetModerationCaseQueryHandler(IAppDbContext db, ModerationReader reader, WriterCategoryReader categories)
     : IQueryHandler<GetModerationCaseQuery, Result<ModerationCaseDto>>
 {
     /// <summary>The history shows at most this many actions.</summary>
@@ -199,7 +200,11 @@ internal sealed class GetModerationCaseQueryHandler(IAppDbContext db, Moderation
             .Take(HistoryLimit)
             .ToListAsync(cancellationToken);
 
-        return new ModerationCaseDto(item, reportDtos, await reader.ActionsAsync(history, cancellationToken));
+        // A user's writer categories (F31), so a moderator can clear an offensive name from the case.
+        IReadOnlyList<WriterCategoryDto> userCategories = type == ReportTargetType.User
+            ? (await categories.LoadAsync(query.TargetId, cancellationToken)).Items
+            : [];
+        return new ModerationCaseDto(item, reportDtos, await reader.ActionsAsync(history, cancellationToken), userCategories);
     }
 }
 

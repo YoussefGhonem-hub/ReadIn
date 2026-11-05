@@ -1,5 +1,6 @@
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Follows;
+using ReadIn.Application.Features.WriterCategories;
 using ReadIn.Domain.Moderation;
 
 namespace ReadIn.Application.Features.Moderation;
@@ -76,7 +77,15 @@ public sealed record ModerationReportDto(
 /// <param name="Item">Status open when any report is open, else the latest closed status.</param>
 /// <param name="Reports">Every report on the target, newest first.</param>
 /// <param name="History">Actions on the target and, for an article or comment, on its author's account; newest first.</param>
-public sealed record ModerationCaseDto(ModerationQueueItemDto Item, IReadOnlyList<ModerationReportDto> Reports, IReadOnlyList<ModerationActionDto> History);
+/// <param name="Categories">
+/// A user target's writer categories (SPEC F31), all of them in the writer's order, empty ones included, for "clear the
+/// name" (<c>clear_category</c>); empty for article and comment targets.
+/// </param>
+public sealed record ModerationCaseDto(
+    ModerationQueueItemDto Item,
+    IReadOnlyList<ModerationReportDto> Reports,
+    IReadOnlyList<ModerationActionDto> History,
+    IReadOnlyList<WriterCategoryDto> Categories);
 
 /// <summary>One row of the moderation log (<c>ModerationActions</c>).</summary>
 /// <param name="Action">One of <see cref="ModerationActionTypes"/>.</param>

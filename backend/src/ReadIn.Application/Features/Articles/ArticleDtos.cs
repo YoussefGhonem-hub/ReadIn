@@ -28,6 +28,12 @@ public sealed record SourceDto(string Title, string Url);
 /// </summary>
 public sealed record TagRefDto(string Slug, string Name);
 
+/// <summary>
+/// The writer's category of an article in the reader (SPEC F31): "في قسم {name}", linking to
+/// <c>/@{author.username}/c/{slug}</c>.
+/// </summary>
+public sealed record WriterCategoryRefDto(string Slug, string Name);
+
 public record ArticleCardDto
 {
     /// <summary>Tags a card carries (SPEC F34); <see cref="TagCount"/> gives the rest as "+N".</summary>
@@ -137,6 +143,9 @@ public sealed record ArticleDetailsDto : ArticleCardDto
     public MyProgressDto? MyProgress { get; init; }
     /// <summary>Set only while a moderator hides the article (SPEC F22); then only its author and moderators open it.</summary>
     public ArticleModerationDto? Moderation { get; init; }
+
+    /// <summary>The writer's category of the article (SPEC F31); null when it has none.</summary>
+    public WriterCategoryRefDto? Category { get; init; }
 
     /// <summary>Raw RDoc from the projection; parsed into <see cref="Content"/> by the handler.</summary>
     [JsonIgnore]

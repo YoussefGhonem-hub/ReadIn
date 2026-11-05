@@ -26,6 +26,12 @@ public static class CacheTags
 
     public static string Article(string slug) => $"article:{slug}";
 
+    /// <summary>
+    /// One writer's categories (F31): the public list, the category page headers and the guests' category pages. They also
+    /// go with <see cref="Feed"/>, as article counts change.
+    /// </summary>
+    public static string WriterCategories(Guid userId) => $"writer-categories:{userId:N}";
+
     /// <summary>What is cached per article id (the card preview, F34); invalidated wherever <see cref="Article"/> is.</summary>
     public static string ArticleById(Guid id) => $"article-id:{id}";
 }

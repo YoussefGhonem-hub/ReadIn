@@ -158,6 +158,7 @@ internal sealed class ArticleDrafts(
         article.CurrentDraftVersion,
         article.Draft?.SavedAt ?? article.UpdatedAt ?? article.CreatedAt,
         article.IsPublished && article.Draft?.HasChanges == true,
+        article.WriterCategoryId,
         ToPublic(document),
         [.. document.Attachments
             .Where(a => evaluation.Assets.ContainsKey(a.MediaAssetId))

@@ -28,6 +28,10 @@ public sealed record DraftTranslation(string Language, string Title, string? Sub
 /// <summary>An attachment of the working copy: the same item as the former attachments request (ADR 0011).</summary>
 public sealed record DraftAttachment(Guid MediaAssetId, int Order, string? Caption, string? AltText, string? Title, bool? AllowDownload);
 
+/// <param name="CategoryId">
+/// The writer's category of the article (SPEC F31), null for none. Not part of <see cref="Document"/>: it changes only
+/// with <c>PUT /articles/{id}/category</c>, at once, never through autosave, discard, restore or publish.
+/// </param>
 public sealed record ArticleEditDto(
     Guid Id,
     string Status,
@@ -36,6 +40,7 @@ public sealed record ArticleEditDto(
     int Version,
     DateTime SavedAt,
     bool HasUnpublishedChanges,
+    Guid? CategoryId,
     ArticleDraftDocument Document,
     IReadOnlyList<MediaAssetDto> Media,
     DraftChecksDto Checks);

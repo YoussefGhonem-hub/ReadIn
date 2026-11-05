@@ -40,7 +40,7 @@ internal sealed class ModerationEndpoints : IEndpointGroup
         moderation.MapPost("/actions", async (ModerateContentCommand body, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(body, ct)).ToHttp(http))
             .RequireRateLimiting(RateLimitPolicies.Writes)
-            .WithSummary("Moderators: hide | unhide | delete | warn | suspend | unsuspend | dismiss; resolves reports, logged and audited");
+            .WithSummary("Moderators: hide | unhide | delete | warn | suspend | unsuspend | clear_category | dismiss; resolves reports, logged and audited");
 
         moderation.MapGet("/actions", async (Guid? targetUserId, Guid? moderatorId, string? targetType, string? cursor, int? limit, ISender sender,
                 HttpContext http, CancellationToken ct) =>

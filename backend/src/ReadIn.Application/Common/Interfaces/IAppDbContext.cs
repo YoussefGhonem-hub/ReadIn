@@ -29,6 +29,7 @@ public interface IAppDbContext
     DbSet<Field> Fields { get; }
     DbSet<Topic> Topics { get; }
     DbSet<Tag> Tags { get; }
+    DbSet<WriterCategory> WriterCategories { get; }
     DbSet<GlossaryTerm> GlossaryTerms { get; }
     DbSet<ArticleTerm> ArticleTerms { get; }
 
@@ -67,4 +68,12 @@ public interface IAppDbContext
 
     /// <summary>Forgets every tracked entity and unsaved change, e.g. to start a command over after it lost a race.</summary>
     void ClearChangeTracker();
+
+    /// <summary>
+    /// Runs <paramref name="work"/> in one transaction that first takes an update lock on user <paramref name="userId"/>'s
+    /// row, so two runs for the same user happen one after the other: a per-user limit checked by counting before an
+    /// insert then holds under concurrent requests. Plain reads of the row don't wait. A transient failure retries the
+    /// whole, from a clean change tracker; the transaction commits when <paramref name="work"/> returns.
+    /// </summary>
+    Task<T> LockedForUserAsync<T>(Guid userId, Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken);
 }

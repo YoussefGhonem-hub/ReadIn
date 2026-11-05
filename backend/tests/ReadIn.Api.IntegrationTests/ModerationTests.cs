@@ -619,7 +619,7 @@ public sealed class ModerationTests(ApiFactory api)
             "/api/v1/reports", "/api/v1/moderation/summary", "/api/v1/moderation/reports", "/api/v1/moderation/reports/{targetType}/{targetId}",
             "/api/v1/moderation/actions", "/api/v1/me/moderation-notices/{id}/acknowledge"]);
         document["components"]!["schemas"]!["ModerateContentCommand"]!["properties"]!.AsObject().Select(p => p.Key)
-            .Should().BeEquivalentTo("action", "targetType", "targetId", "note", "durationDays", "resolveReportsOf");
+            .Should().BeEquivalentTo("action", "targetType", "targetId", "note", "durationDays", "resolveReportsOf", "categoryId"); // categoryId: F31
     }
 
     // ---- Demo data ----

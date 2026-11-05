@@ -127,6 +127,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<Guid?>("WriterCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorId");
@@ -139,6 +142,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasIndex("Status", "PublishedAt")
                         .IsDescending(false, true)
                         .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("WriterCategoryId", "PublishedAt")
+                        .IsDescending(false, true);
 
                     b.HasIndex("FieldId", "Status", "QualityScore")
                         .IsDescending(false, false, true);
@@ -1682,6 +1688,50 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("Topics", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Taxonomy.WriterCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)")
+                        .UseCollation("Arabic_100_CI_AI");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "NormalizedName")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("WriterCategories", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Users.ExternalLogin", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2182,11 +2232,18 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TopicId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("ReadIn.Domain.Taxonomy.WriterCategory", "WriterCategory")
+                        .WithMany()
+                        .HasForeignKey("WriterCategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Author");
 
                     b.Navigation("Field");
 
                     b.Navigation("Topic");
+
+                    b.Navigation("WriterCategory");
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Articles.ArticleAttachment", b =>
@@ -2606,6 +2663,15 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasOne("ReadIn.Domain.Taxonomy.Field", null)
                         .WithMany("Topics")
                         .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Taxonomy.WriterCategory", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

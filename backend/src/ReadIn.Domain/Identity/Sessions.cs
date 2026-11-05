@@ -153,4 +153,7 @@ public static class AuditActions
     public const string UserWarned = "moderation.user_warned";
     public const string UserSuspended = "moderation.user_suspended";
     public const string UserUnsuspended = "moderation.user_unsuspended";
+
+    /// <summary>A moderator cleared the name of one of the user's writer categories (SPEC F31).</summary>
+    public const string CategoryCleared = "moderation.category_cleared";
 }

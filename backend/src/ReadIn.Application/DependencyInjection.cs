@@ -64,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<Features.Comments.CommentPosting>();
         services.AddScoped<Features.Articles.Editor.ArticleDrafts>();
         services.AddScoped<Features.Tags.ArticleTagging>();
+        services.AddScoped<Features.WriterCategories.WriterCategoryReader>();
         services.AddScoped<Features.Search.ArticleSearch>();
         services.AddScoped<Features.Search.PeopleSearch>();
         services.AddScoped<Features.Search.TopicSearch>();

@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). Writer categories: `category.not_found`, `category.not_owner`, `category.limit`, `category.name_taken`, `category.name_invalid` (see Writer categories). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
 
 `403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
@@ -366,7 +366,8 @@ Every card (feeds, today, field lists, profile articles, related, saved, continu
 counters, the post-card fields (F34: `excerpt`, `hasMore`, `tags`, `tagCount`) and, for a signed-in caller, their own
 `myReaction` / `isSaved` / `isFollowingAuthor` (`null` / `false` / `false` for guests; `isFollowingAuthor` is also
 `false` on your own articles and for a deleted author). `ArticleDetailsDto` adds `collectionIds`, your collections that
-hold the article (`[]` for guests and unsaved articles), so "add to collection" can show its ticks.
+hold the article (`[]` for guests and unsaved articles), so "add to collection" can show its ticks, and `category`, the
+writer's category of the article (F31, `{ slug, name }` or `null`; see Writer categories).
 
 **Post-card text (F34).** `excerpt` is the served version's beginning as plain text: at most 400 characters cut at a
 word (no "…" stored: clients add "… Read more"), taken in document order from the summary, paragraphs, list items,
@@ -476,7 +477,7 @@ dedupe by `commentId`, and skip events for your own just-made change. Events are
 | POST | `/reports` | `{ targetType: "article"\|"comment"\|"user", targetId, reason: spam\|misinformation\|harassment\|copyright\|other, details? (≤ 500) }` → `204`. Permission `reports.create`, rate limit `writes`. Reporting the same target again is a no-op. `400 report.own_content` (your article or comment, or yourself), `404 report.target_not_found` (unknown or deleted; a hidden article and its comments for anyone but its author and moderators), validation `report.target_invalid`, `report.reason_invalid`. A suspended user can be reported |
 | GET | `/moderation/summary` | → `{ open: { article, comment, user, total } }`: targets with open reports (the nav badge) |
 | GET | `/moderation/reports?status=&type=&cursor=&limit=` | → `CursorPage<ModerationQueueItemDto>`, one item per target. `status` = `open` (default) \| `resolved` \| `dismissed`; `type` = `article` \| `comment` \| `user` (optional). Open: most reports first, then the most recent report. Resolved and dismissed: most recently closed first. `limit` 1–50 (default 20). Validation `report.status_invalid`, `report.target_invalid` |
-| GET | `/moderation/reports/{targetType}/{targetId}` | → `ModerationCaseDto`. `404 report.target_not_found` when nobody reported it |
+| GET | `/moderation/reports/{targetType}/{targetId}` | → `ModerationCaseDto`; a user's case also lists the user's writer categories (`categories`, F31). `404 report.target_not_found` when nobody reported it |
 | POST | `/moderation/actions` | `ModerationActionRequest` → `204`. Rate limit `writes`. Rules below |
 | GET | `/moderation/actions?targetUserId=&moderatorId=&targetType=&cursor=&limit=` | → `CursorPage<ModerationActionDto>`, newest first (the log). `limit` 1–50 (default 20) |
 | GET | `/me/moderation-notices` | Any signed-in user → `{ items: ModerationNoticeDto[] }`: unacknowledged warnings and hidden articles, oldest first. Show each as a dialog on start |
@@ -484,13 +485,14 @@ dedupe by `commentId`, and skip events for your own just-made change. Events are
 
 Every `/moderation/*` route needs `moderation.manage` (Moderator, Admin, SuperAdmin; `403 auth.forbidden` otherwise).
 
-`ModerationActionRequest`: `{ action, targetType, targetId, note?, durationDays?, resolveReportsOf?: { targetType, targetId } }`.
+`ModerationActionRequest`: `{ action, targetType, targetId, note?, durationDays?, resolveReportsOf?: { targetType, targetId }, categoryId? }`
+(`categoryId`: `clear_category` only).
 
 | Target | Actions |
 |---|---|
 | `comment` | `hide`, `unhide`, `delete`, `dismiss` |
 | `article` | `hide`, `unhide`, `dismiss` (moderators never delete articles) |
-| `user` | `warn`, `suspend`, `unsuspend` (both need `users.suspend`, `403 auth.forbidden` otherwise), `dismiss` |
+| `user` | `warn`, `suspend`, `unsuspend` (both need `users.suspend`, `403 auth.forbidden` otherwise), `clear_category` (F31), `dismiss` |
 
 - Any other pair, or an unknown action or type: `400 moderation.action_invalid`.
 - `note` (≤ 500, validation `validation.max_length`) is required for `warn` and `suspend` (`400 moderation.note_required`); it
@@ -498,10 +500,18 @@ Every `/moderation/*` route needs `moderation.manage` (Moderator, Admin, SuperAd
 - `durationDays` is for `suspend` only: 1–365, or `null`/omitted for a permanent suspension (`400 moderation.duration_invalid`).
 - `warn`, `suspend`, `unsuspend` on yourself: `400 moderation.self`; on a user with `moderation.manage` (or a system
   account): `403 moderation.staff_target`. Hiding a moderator's article or comment is allowed.
+- `clear_category` (F31, an offensive writer-category name reported with the user): `categoryId` is required
+  (`400 validation.failed`, `errors.categoryId: ["validation.required"]`) and must be one of that user's categories
+  (`404 category.not_found`); the user's case lists them in `ModerationCaseDto.categories`. The category is renamed to a neutral placeholder, `قسم {n}` when the writer's UI language
+  is Arabic or `Category {n}` in English (the smallest `n` the writer doesn't use), and gets a new slug made from it (the
+  old slug held the name, so its links answer `404 category.not_found`); its articles stay in it. A category already
+  named like that is left alone (`204`, nothing logged). Allowed on any user, like hiding content. Like `hide`, it
+  resolves the user's open reports (and those of `resolveReportsOf`). Logged as `user.clear_category` with the old name
+  as `targetLabel`, and in the audit log; the writer gets no notice.
 - `404 article.not_found` / `comment.not_found` / `user.not_found` for an unknown or deleted target (a deleted target can
   still be `dismiss`ed).
-- `hide`, `delete`, `warn` and `suspend` resolve the target's open reports, and those of `resolveReportsOf` (e.g. warn the
-  author from an article case). `dismiss` closes the target's open reports as dismissed and changes nothing else.
+- `hide`, `delete`, `warn`, `suspend` and `clear_category` resolve the target's open reports, and those of
+  `resolveReportsOf` (e.g. warn the author from an article case). `dismiss` closes the target's open reports as dismissed and changes nothing else.
 - Repeating an action that changes nothing (hide a hidden article, unsuspend an active user) is `204` and logs nothing.
 - Every action that changed something is a `ModerationActionDto` in the log; actions on a user's content or account are
   also in the audit log. `warn` and an article `hide` are notices to the user (`GET /me/moderation-notices`) with a push.
@@ -635,6 +645,86 @@ Editing (Bearer, `PATCH /me`, `UpdateProfileRequest`):
 Profile error codes: `user.not_found` (404), `profile.stats_private` (403), `profile.avatar_invalid` (400),
 `profile.expertise_invalid` (400).
 
+The profile's **Categories** tab (between Articles and Reposts) and the category pages: see Writer categories (F31).
+
+### Writer categories (F31) — SPEC F31
+
+A writer's own way to group their articles ("أقسام الكاتب"), apart from fields and topics (platform-wide), collections
+(F13, private) and learning paths (F09). An article has zero or one category, for all its language versions. Show a
+`name` with `dir="auto"`; link with its `slug` (percent-encoded: it may hold Arabic letters), never with a name.
+
+**Reading** 🌐 (Bearer optional). `{username}` as in Profile (ignoring case and one leading `@`); deleted and suspended
+accounts are `404 user.not_found`.
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/users/{username}/categories` | `WriterCategoryListDto`: the profile's Categories tab. `items`: the categories with at least one article readers can see, in the writer's order. `uncategorizedCount`: those articles without a category, the last card "مقالات تانية" / "Other articles" (hidden when 0). The same for everyone; the writer's own profile uses `GET /me/categories`, which also has the empty ones |
+| GET | `/users/{username}/categories/{slug}` | `WriterCategoryPageDto`: the category page's header (title, description, server rendering). An empty category answers too: the page shows its empty state (web: `noindex`). `404 category.not_found` for a slug the writer doesn't have |
+| GET | `/users/{username}/categories/{slug}/articles?cursor=&limit=` | `CursorPage<ArticleCardDto>`: the category's articles readers can see, newest first (`publishedAt` DESC, id DESC, keyset cursor, so paging never repeats or skips one), shown as the post card (F34), in the caller's article language and with the caller's `myReaction` / `isSaved` / `isFollowingAuthor` like every feed. `limit` 1–50, default 20; a cursor that doesn't decode starts from the first page. `404` like the header |
+
+- **"مقالات تانية" (the uncategorized list)** is the reserved `{slug}` `_other`: its header has `id: null` and
+  `name: null` (clients show "مقالات تانية" / "Other articles"), its articles are the writer's articles readers can see
+  that have no category. A category's slug never starts with `_`, so the two never clash.
+- **Pages.** Web `/@{username}/c/{slug}` (server-rendered; `/@{username}/c/_other` for the uncategorized list), mobile
+  `/u/{username}/c/{slug}`, deep links `readin://u/{username}/c/{slug}` and `https://{host}/@{username}/c/{slug}`.
+  `{slug}` is matched ignoring case.
+- **What counts.** Lists and every `articleCount` / `uncategorizedCount` hold only articles readers can open (as
+  `GET /articles/{slug}`: published, not deleted, in an enabled field, not hidden by moderators, F22); drafts never. The
+  numbers are the same for everyone, the writer included. Like the profile's Articles tab, these pages don't apply mutes
+  (F28): they belong to the one writer the caller opened.
+
+**Managing** (Bearer, permission `articles.create`, rate limit `writes` on writes)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/me/categories` | → `WriterCategoryListDto`: all your categories in your order, **empty ones included**, and `uncategorizedCount` as on your profile. For your own Categories tab (the manage view) and the editor's picker |
+| POST | `/me/categories` | `{ name }` → `201 WriterCategoryDto`, added last. `400 category.limit` (50 per writer; it holds when several creates arrive at once, as they run one after the other), `409 category.name_taken`, `400 validation.failed` with `errors.name: ["category.name_invalid"]` |
+| PATCH | `/me/categories/{id}` | `{ name }` → `200 WriterCategoryDto`. Renames; the slug stays, so links keep working. Same name errors; another spelling of its own name (e.g. its case) is fine |
+| DELETE | `/me/categories/{id}` | → `204`. Its articles stay published and become uncategorized (drafts too). Confirm first with the category's `articleCount` from the list ("القسم ده فيه {n} مقالات") |
+| PUT | `/me/categories/order` | `{ categoryIds: string[] }` → `200 WriterCategoryListDto` (as `GET /me/categories`). Your categories in the order sent; ids that aren't your categories are ignored, a repeat counts once, and categories left out keep their order after the listed ones (so a list from another device never fails). `400 validation.failed` with `errors.categoryIds`: `validation.required` (missing) or `category.limit` (more than 50 ids) |
+| PUT | `/articles/{id}/category` | `{ categoryId: string \| null }` → `204`. Puts your article (draft or published) in that category, or in none with `null`. Applies at once: no publish, no revision, and the working copy's `version` doesn't change (the category isn't part of `ArticleDraftDocument`). Idempotent. `404 article.not_found`, `403 article.not_owner`, `404 category.not_found`, `403 category.not_owner` |
+
+`404 category.not_found` for an unknown id and `403 category.not_owner` for another writer's category, on `PATCH`,
+`DELETE` and `PUT /articles/{id}/category` (the order call ignores such ids).
+
+**Names.** Cleaned like tag names (Tags, rule 1, but a leading `#` stays): invisible format characters (Unicode `Cf`)
+and control characters are removed, the name is trimmed, every run of whitespace becomes one space, and Arabic-Indic
+digits become `0–9`. Then it needs 1–40 characters (UTF-16 code units, i.e. JS / Dart `length`) and at least one letter
+(tatweel `ـ` doesn't count) or digit; otherwise `category.name_invalid`. Other characters (punctuation, symbols, emoji)
+are allowed: a name is plain text, never markup, on one line. Two names are the same (`409 category.name_taken`, per
+writer) when they are equal after tag rule 3 (lower case + the §22 Arabic normalization), so `AI` and `ai` clash. The
+name keeps the writer's spelling. Clients run the same checks before sending, with inline messages.
+
+**Slugs** are made once, when the category is created, from its name with tag rule 4 (`C#` → `csharp`,
+`نصايح البرمجة` → `نصايح-البرمجة`); a clash with another of the writer's slugs gets `-2`, `-3`, …. Renaming never changes
+the slug; only a moderator's clear (Reports and moderation, `clear_category`) does.
+
+**The editor.** `ArticleEditDto.categoryId` is the article's category (`null`: none), in every editor answer. It is not in
+`ArticleDraftDocument`, so autosave, discard, restoring a revision and publishing never change it. The picker ("القسم")
+lists `GET /me/categories`, plus "＋ قسم جديد" (`POST /me/categories`, then `PUT /articles/{id}/category` with the new
+id). A new article that has no id yet is saved first (`POST /articles`), then its category is set.
+
+**The reader.** `ArticleDetailsDto.category` is `{ slug, name }` or `null`; the author row shows "في قسم {name}" /
+"In {name}", linking to `/@{author.username}/c/{slug}` (mobile `/u/{username}/c/{slug}`).
+
+**Caching.** The public list, the page header and the guests' article pages are cached on the server like tag pages,
+and dropped when a category is created, renamed, reordered, deleted or cleared by a moderator, when an article's
+category changes, on publish, Update, hide/unhide and delete of the writer's articles, and when the fields change (an
+article in a disabled field isn't counted). The reader's cached details
+(`category`) are dropped with them. `GET /me/categories` is never cached.
+
+**Account deletion (SPEC §9.6).** The writer's categories are deleted with the account; the articles that stay lose
+their category.
+
+**Moderation.** An offensive name is handled by reporting the user (F22). The user's case
+(`GET /moderation/reports/user/{id}`) lists all their categories in `categories`, and a moderator clears one with
+`POST /moderation/actions` `{ action: "clear_category", targetType: "user", targetId: <the writer's id>, categoryId }`
+(see Reports and moderation).
+
+Writer category error codes: `category.not_found` (404), `category.not_owner` (403), `category.limit` (400; also a
+validation code on `categoryIds`), `category.name_taken` (409), `category.name_invalid` (a validation code in
+`errors.name`).
+
 ### Live counters (F27, SPEC §21.2)
 
 After a reaction or save change commits, an outbox handler recomputes that article's counters from SQL (idempotent:
@@ -681,6 +771,8 @@ URLs. Publishing re-runs the checks and fails while any problem remains.
   relative paths / `rdoc-asset://` and always answers with public URLs (ADR 0010).
 - Attachments are part of the document (there is no attachments call). They go live with the publish; a PDF's `title`
   and `allowDownload` are applied to its asset then.
+- The writer's **category** (F31) is not part of the document: `ArticleEditDto.categoryId`, changed at once with
+  `PUT /articles/{id}/category` (see Writer categories).
 - **Mentions** (RDoc `mention` nodes, `{ type: "mention", userId, text }`; pick people with `GET /users/mention-suggestions`):
   autosave keeps them as written. Every publish and "Update" checks each one, in every language version, against the
   author ("who you may mention", see Comments): an allowed, active user keeps the node with `text` set to
@@ -1006,6 +1098,33 @@ interface ProfileDto {
 
 interface ExpertiseFieldDto { id: string; slug: string; name: string; icon: string; color: string } // name localized by Accept-Language
 
+// ── Writer categories (F31) ─────────────────────────────────────────
+/** A card of the profile's Categories tab and a row of the writer's manage list. Show `name` with dir="auto". */
+interface WriterCategoryDto {
+  id: string;
+  slug: string;                  // made once from the name, never changes on rename; opens /@{username}/c/{slug} (percent-encoded)
+  name: string;                  // 1–40 characters, the writer's spelling
+  articleCount: number;          // articles readers can see in it, the same for everyone; 0 only in GET /me/categories
+  sortOrder: number;             // the writer's order, ascending (1..N in GET /me/categories); lists already come sorted
+}
+
+interface WriterCategoryListDto {  // GET /users/{username}/categories, GET /me/categories, PUT /me/categories/order
+  items: WriterCategoryDto[];    // the profile: non-empty ones only; /me: all of them, empty ones included
+  uncategorizedCount: number;    // articles readers can see without a category: the last card "مقالات تانية" (/c/_other); hidden when 0
+}
+
+/** GET /users/{username}/categories/{slug}: the category page's header. */
+interface WriterCategoryPageDto {
+  id: string | null;             // null for the uncategorized list (slug "_other")
+  slug: string;
+  name: string | null;           // null for "_other": show "مقالات تانية" / "Other articles"
+  articleCount: number;          // 0 → the empty state (web: noindex)
+  author: AuthorDto;             // the writer: the page title ("{name} · {displayName}") and the link back to the profile
+}
+
+/** ArticleDetailsDto.category: "في قسم {name}" / "In {name}", linking to /@{author.username}/c/{slug}. */
+interface WriterCategoryRefDto { slug: string; name: string }
+
 // ── Media (ADR 0011) ──────────────────────────────────────────────
 type MediaKind = 'image' | 'document';
 type MediaPurpose = 'image' | 'avatar' | 'cover' | 'document';
@@ -1096,6 +1215,7 @@ interface ArticleEditDto {
   version: number;                       // send back as baseVersion
   savedAt: string;
   hasUnpublishedChanges: boolean;        // published articles only
+  categoryId: string | null;             // F31: the writer's category (null: none). Not in `document`; PUT /articles/{id}/category
   document: ArticleDraftDocument;        // public URLs
   media: MediaAssetDto[];                // the attachments' assets (yours only)
   checks: DraftChecksDto;
@@ -1229,6 +1349,7 @@ interface ArticleDetailsDto extends ArticleCardDto {
   collectionIds: string[];       // the caller's collections that hold it, oldest entry first; [] for guests and unsaved articles
   myProgress: MyProgressDto | null; // the caller's reading progress (F04 resume); null for guests and unopened articles
   moderation: { hiddenAt: string; note: string | null } | null; // hidden by a moderator (only its author and moderators see it)
+  category: WriterCategoryRefDto | null; // F31: the writer's category of the article ("في قسم {name}"); null: none
 }
 
 // Reports and moderation (F22)
@@ -1272,12 +1393,13 @@ interface ModerationCaseDto {
   item: ModerationQueueItemDto;  // status = open if any open report, else the latest closed status
   reports: ModerationReportDto[]; // all statuses, newest first
   history: ModerationActionDto[]; // actions on this target and, for article/comment, on its author's account; newest first (≤ 100)
+  categories: WriterCategoryDto[]; // F31, user targets: all of the user's writer categories (empty ones too), in their order, for "clear the name" (clear_category); [] for articles and comments
 }
 
 interface ModerationActionDto {
   id: string;
   action: 'comment.hide' | 'comment.unhide' | 'comment.delete' | 'article.hide' | 'article.unhide'
-        | 'user.warn' | 'user.suspend' | 'user.unsuspend' | 'reports.dismiss';
+        | 'user.warn' | 'user.suspend' | 'user.unsuspend' | 'user.clear_category' | 'reports.dismiss'; // clear_category: F31
   targetType: ModerationTargetType;
   targetId: string;
   targetLabel: string | null;    // article title / first 80 characters of the comment / @username, at the time

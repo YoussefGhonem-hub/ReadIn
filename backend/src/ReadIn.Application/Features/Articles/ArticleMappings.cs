@@ -39,6 +39,8 @@ public sealed class ArticleMappings : IRegister
             .Map(d => d.Sources, s => s.Sources.OrderBy(x => x.SortOrder).Select(x => new SourceDto(x.Title, x.Url)).ToList())
             // The hide note is loaded by the handler (latest article.hide in ModerationActions).
             .Map(d => d.Moderation, s => s.HiddenAt == null ? null : new ArticleModerationDto(s.HiddenAt.Value, null))
+            // The writer's category (F31): the reader's "في قسم {name}".
+            .Map(d => d.Category, s => s.WriterCategory == null ? null : new WriterCategoryRefDto(s.WriterCategory.Slug, s.WriterCategory.Name))
             .Ignore(d => d.Content)
             .Ignore(d => d.CollectionIds);
     }

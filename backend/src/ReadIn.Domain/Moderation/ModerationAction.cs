@@ -103,6 +103,15 @@ public sealed class ModerationAction : AggregateRoot
     public static ModerationAction Unsuspension(Guid userId, string username, Guid moderatorId, string? note, DateTime now) =>
         Create(ModerationActionTypes.UserUnsuspend, ReportTargetType.User, userId, userId, UserLabel(username), moderatorId, note, 0, now);
 
+    /// <summary>
+    /// A moderator cleared an offensive writer-category name (SPEC F31): logged on the user, with the old name as the label
+    /// so the log shows what was removed. No notice: the writer sees the renamed category.
+    /// </summary>
+    public static ModerationAction CategoryCleared(
+        Guid userId, string oldName, Guid moderatorId, string? note, int reportsClosed, DateTime now) =>
+        Create(ModerationActionTypes.UserClearCategory, ReportTargetType.User, userId, userId, Label(oldName, MaxLabelLength), moderatorId,
+            note, reportsClosed, now);
+
     /// <summary>Open reports closed without touching the target.</summary>
     public static ModerationAction Dismissal(
         ReportTargetType targetType, Guid targetId, Guid? targetUserId, string? label, Guid moderatorId, string? note, int reportsClosed,
@@ -173,6 +182,9 @@ public static class ModerationActionTypes
     public const string UserWarn = "user.warn";
     public const string UserSuspend = "user.suspend";
     public const string UserUnsuspend = "user.unsuspend";
+
+    /// <summary>A writer-category name cleared (SPEC F31).</summary>
+    public const string UserClearCategory = "user.clear_category";
     public const string ReportsDismiss = "reports.dismiss";
 }
 

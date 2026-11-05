@@ -73,6 +73,12 @@ public static class ErrorMessages
         ["tag.invalid"] = ("التاج لازم يكون من 2 لـ 30 حرف: حروف وأرقام ومسافات و \u2066- _ . + #\u2069 بس.", "A tag has 2–30 characters: letters, digits, spaces and - _ . + # only."),
         ["tag.limit"] = ("عملت تاجات جديدة كتير النهارده. اختار من التاجات الموجودة، أو جرّب تاني بعدين.", "You've created a lot of new tags today. Pick existing tags, or try again later."),
         ["tag.hidden"] = ("التاج ده مش متاح، اختار تاج تاني.", "This tag isn't available. Choose another one."),
+        // Writer categories (SPEC F31)
+        ["category.not_found"] = ("القسم ده مش موجود.", "Category not found."),
+        ["category.not_owner"] = ("القسم ده مش بتاعك.", "This category isn't yours."),
+        ["category.limit"] = ("وصلت لأقصى عدد أقسام (50).", "You can have at most 50 categories."),
+        ["category.name_taken"] = ("عندك قسم بنفس الاسم بالفعل.", "You already have a category with this name."),
+        ["category.name_invalid"] = ("اسم القسم لازم يكون من 1 لـ 40 حرف، وفيه حرف أو رقم على الأقل.", "A category name has 1–40 characters, with at least one letter or digit."),
         // Reactions, saved articles and follows (F10, F12, F13)
         ["reaction.invalid"] = ("الرياكشن ده مش موجود.", "This reaction doesn't exist."),
         ["collection.not_found"] = ("المجموعة مش موجودة.", "Collection not found."),

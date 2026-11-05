@@ -38,6 +38,11 @@ public sealed class ErrorMessagesTests
     [InlineData("search.query_invalid")]
     [InlineData("search.type_invalid")]
     [InlineData("search.filter_invalid")]
+    [InlineData("category.not_found")]
+    [InlineData("category.not_owner")]
+    [InlineData("category.limit")]
+    [InlineData("category.name_taken")]
+    [InlineData("category.name_invalid")]
     public void Codes_the_clients_translate_have_titles_in_both_languages(string code)
     {
         ErrorMessages.Title(code, "ar").Should().NotBeNullOrWhiteSpace();
