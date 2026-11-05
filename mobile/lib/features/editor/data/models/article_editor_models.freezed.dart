@@ -3174,7 +3174,7 @@ $ArticleDraftDocumentModelCopyWith<$Res> get document {
 /// @nodoc
 mixin _$MyArticleModel {
 
- String get id; String get status; String? get slug; String get language; String get title; String? get coverUrl; FieldRefModel? get field; int get readingTimeMinutes; DateTime? get savedAt; DateTime? get publishedAt; bool get hasUnpublishedChanges; int get reactionCount; int get commentCount; int get readCount;
+ String get id; String get status; String? get slug; String get language; String get title; String? get coverUrl; FieldRefModel? get field; int get readingTimeMinutes; DateTime? get savedAt; DateTime? get publishedAt; bool get hasUnpublishedChanges; int get reactionCount; int get commentCount; int get readCount; List<String> get publishedLanguages;
 /// Create a copy of MyArticleModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3187,16 +3187,16 @@ $MyArticleModelCopyWith<MyArticleModel> get copyWith => _$MyArticleModelCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MyArticleModel&&(identical(other.id, id) || other.id == id)&&(identical(other.status, status) || other.status == status)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.savedAt, savedAt) || other.savedAt == savedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.hasUnpublishedChanges, hasUnpublishedChanges) || other.hasUnpublishedChanges == hasUnpublishedChanges)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.readCount, readCount) || other.readCount == readCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MyArticleModel&&(identical(other.id, id) || other.id == id)&&(identical(other.status, status) || other.status == status)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.savedAt, savedAt) || other.savedAt == savedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.hasUnpublishedChanges, hasUnpublishedChanges) || other.hasUnpublishedChanges == hasUnpublishedChanges)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.readCount, readCount) || other.readCount == readCount)&&const DeepCollectionEquality().equals(other.publishedLanguages, publishedLanguages));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,status,slug,language,title,coverUrl,field,readingTimeMinutes,savedAt,publishedAt,hasUnpublishedChanges,reactionCount,commentCount,readCount);
+int get hashCode => Object.hash(runtimeType,id,status,slug,language,title,coverUrl,field,readingTimeMinutes,savedAt,publishedAt,hasUnpublishedChanges,reactionCount,commentCount,readCount,const DeepCollectionEquality().hash(publishedLanguages));
 
 @override
 String toString() {
-  return 'MyArticleModel(id: $id, status: $status, slug: $slug, language: $language, title: $title, coverUrl: $coverUrl, field: $field, readingTimeMinutes: $readingTimeMinutes, savedAt: $savedAt, publishedAt: $publishedAt, hasUnpublishedChanges: $hasUnpublishedChanges, reactionCount: $reactionCount, commentCount: $commentCount, readCount: $readCount)';
+  return 'MyArticleModel(id: $id, status: $status, slug: $slug, language: $language, title: $title, coverUrl: $coverUrl, field: $field, readingTimeMinutes: $readingTimeMinutes, savedAt: $savedAt, publishedAt: $publishedAt, hasUnpublishedChanges: $hasUnpublishedChanges, reactionCount: $reactionCount, commentCount: $commentCount, readCount: $readCount, publishedLanguages: $publishedLanguages)';
 }
 
 
@@ -3207,7 +3207,7 @@ abstract mixin class $MyArticleModelCopyWith<$Res>  {
   factory $MyArticleModelCopyWith(MyArticleModel value, $Res Function(MyArticleModel) _then) = _$MyArticleModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String status, String? slug, String language, String title, String? coverUrl, FieldRefModel? field, int readingTimeMinutes, DateTime? savedAt, DateTime? publishedAt, bool hasUnpublishedChanges, int reactionCount, int commentCount, int readCount
+ String id, String status, String? slug, String language, String title, String? coverUrl, FieldRefModel? field, int readingTimeMinutes, DateTime? savedAt, DateTime? publishedAt, bool hasUnpublishedChanges, int reactionCount, int commentCount, int readCount, List<String> publishedLanguages
 });
 
 
@@ -3224,7 +3224,7 @@ class _$MyArticleModelCopyWithImpl<$Res>
 
 /// Create a copy of MyArticleModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? status = null,Object? slug = freezed,Object? language = null,Object? title = null,Object? coverUrl = freezed,Object? field = freezed,Object? readingTimeMinutes = null,Object? savedAt = freezed,Object? publishedAt = freezed,Object? hasUnpublishedChanges = null,Object? reactionCount = null,Object? commentCount = null,Object? readCount = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? status = null,Object? slug = freezed,Object? language = null,Object? title = null,Object? coverUrl = freezed,Object? field = freezed,Object? readingTimeMinutes = null,Object? savedAt = freezed,Object? publishedAt = freezed,Object? hasUnpublishedChanges = null,Object? reactionCount = null,Object? commentCount = null,Object? readCount = null,Object? publishedLanguages = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -3240,7 +3240,8 @@ as DateTime?,hasUnpublishedChanges: null == hasUnpublishedChanges ? _self.hasUnp
 as bool,reactionCount: null == reactionCount ? _self.reactionCount : reactionCount // ignore: cast_nullable_to_non_nullable
 as int,commentCount: null == commentCount ? _self.commentCount : commentCount // ignore: cast_nullable_to_non_nullable
 as int,readCount: null == readCount ? _self.readCount : readCount // ignore: cast_nullable_to_non_nullable
-as int,
+as int,publishedLanguages: null == publishedLanguages ? _self.publishedLanguages : publishedLanguages // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 /// Create a copy of MyArticleModel
@@ -3337,10 +3338,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String status,  String? slug,  String language,  String title,  String? coverUrl,  FieldRefModel? field,  int readingTimeMinutes,  DateTime? savedAt,  DateTime? publishedAt,  bool hasUnpublishedChanges,  int reactionCount,  int commentCount,  int readCount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String status,  String? slug,  String language,  String title,  String? coverUrl,  FieldRefModel? field,  int readingTimeMinutes,  DateTime? savedAt,  DateTime? publishedAt,  bool hasUnpublishedChanges,  int reactionCount,  int commentCount,  int readCount,  List<String> publishedLanguages)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MyArticleModel() when $default != null:
-return $default(_that.id,_that.status,_that.slug,_that.language,_that.title,_that.coverUrl,_that.field,_that.readingTimeMinutes,_that.savedAt,_that.publishedAt,_that.hasUnpublishedChanges,_that.reactionCount,_that.commentCount,_that.readCount);case _:
+return $default(_that.id,_that.status,_that.slug,_that.language,_that.title,_that.coverUrl,_that.field,_that.readingTimeMinutes,_that.savedAt,_that.publishedAt,_that.hasUnpublishedChanges,_that.reactionCount,_that.commentCount,_that.readCount,_that.publishedLanguages);case _:
   return orElse();
 
 }
@@ -3358,10 +3359,10 @@ return $default(_that.id,_that.status,_that.slug,_that.language,_that.title,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String status,  String? slug,  String language,  String title,  String? coverUrl,  FieldRefModel? field,  int readingTimeMinutes,  DateTime? savedAt,  DateTime? publishedAt,  bool hasUnpublishedChanges,  int reactionCount,  int commentCount,  int readCount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String status,  String? slug,  String language,  String title,  String? coverUrl,  FieldRefModel? field,  int readingTimeMinutes,  DateTime? savedAt,  DateTime? publishedAt,  bool hasUnpublishedChanges,  int reactionCount,  int commentCount,  int readCount,  List<String> publishedLanguages)  $default,) {final _that = this;
 switch (_that) {
 case _MyArticleModel():
-return $default(_that.id,_that.status,_that.slug,_that.language,_that.title,_that.coverUrl,_that.field,_that.readingTimeMinutes,_that.savedAt,_that.publishedAt,_that.hasUnpublishedChanges,_that.reactionCount,_that.commentCount,_that.readCount);case _:
+return $default(_that.id,_that.status,_that.slug,_that.language,_that.title,_that.coverUrl,_that.field,_that.readingTimeMinutes,_that.savedAt,_that.publishedAt,_that.hasUnpublishedChanges,_that.reactionCount,_that.commentCount,_that.readCount,_that.publishedLanguages);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3378,10 +3379,10 @@ return $default(_that.id,_that.status,_that.slug,_that.language,_that.title,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String status,  String? slug,  String language,  String title,  String? coverUrl,  FieldRefModel? field,  int readingTimeMinutes,  DateTime? savedAt,  DateTime? publishedAt,  bool hasUnpublishedChanges,  int reactionCount,  int commentCount,  int readCount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String status,  String? slug,  String language,  String title,  String? coverUrl,  FieldRefModel? field,  int readingTimeMinutes,  DateTime? savedAt,  DateTime? publishedAt,  bool hasUnpublishedChanges,  int reactionCount,  int commentCount,  int readCount,  List<String> publishedLanguages)?  $default,) {final _that = this;
 switch (_that) {
 case _MyArticleModel() when $default != null:
-return $default(_that.id,_that.status,_that.slug,_that.language,_that.title,_that.coverUrl,_that.field,_that.readingTimeMinutes,_that.savedAt,_that.publishedAt,_that.hasUnpublishedChanges,_that.reactionCount,_that.commentCount,_that.readCount);case _:
+return $default(_that.id,_that.status,_that.slug,_that.language,_that.title,_that.coverUrl,_that.field,_that.readingTimeMinutes,_that.savedAt,_that.publishedAt,_that.hasUnpublishedChanges,_that.reactionCount,_that.commentCount,_that.readCount,_that.publishedLanguages);case _:
   return null;
 
 }
@@ -3393,7 +3394,7 @@ return $default(_that.id,_that.status,_that.slug,_that.language,_that.title,_tha
 @JsonSerializable()
 
 class _MyArticleModel extends MyArticleModel {
-  const _MyArticleModel({required this.id, this.status = 'draft', this.slug, this.language = 'ar-EG', this.title = '', this.coverUrl, this.field, this.readingTimeMinutes = 0, this.savedAt, this.publishedAt, this.hasUnpublishedChanges = false, this.reactionCount = 0, this.commentCount = 0, this.readCount = 0}): super._();
+  const _MyArticleModel({required this.id, this.status = 'draft', this.slug, this.language = 'ar-EG', this.title = '', this.coverUrl, this.field, this.readingTimeMinutes = 0, this.savedAt, this.publishedAt, this.hasUnpublishedChanges = false, this.reactionCount = 0, this.commentCount = 0, this.readCount = 0, final  List<String> publishedLanguages = const <String>[]}): _publishedLanguages = publishedLanguages,super._();
   factory _MyArticleModel.fromJson(Map<String, dynamic> json) => _$MyArticleModelFromJson(json);
 
 @override final  String id;
@@ -3410,6 +3411,13 @@ class _MyArticleModel extends MyArticleModel {
 @override@JsonKey() final  int reactionCount;
 @override@JsonKey() final  int commentCount;
 @override@JsonKey() final  int readCount;
+ final  List<String> _publishedLanguages;
+@override@JsonKey() List<String> get publishedLanguages {
+  if (_publishedLanguages is EqualUnmodifiableListView) return _publishedLanguages;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_publishedLanguages);
+}
+
 
 /// Create a copy of MyArticleModel
 /// with the given fields replaced by the non-null parameter values.
@@ -3424,16 +3432,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MyArticleModel&&(identical(other.id, id) || other.id == id)&&(identical(other.status, status) || other.status == status)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.savedAt, savedAt) || other.savedAt == savedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.hasUnpublishedChanges, hasUnpublishedChanges) || other.hasUnpublishedChanges == hasUnpublishedChanges)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.readCount, readCount) || other.readCount == readCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MyArticleModel&&(identical(other.id, id) || other.id == id)&&(identical(other.status, status) || other.status == status)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.savedAt, savedAt) || other.savedAt == savedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.hasUnpublishedChanges, hasUnpublishedChanges) || other.hasUnpublishedChanges == hasUnpublishedChanges)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.readCount, readCount) || other.readCount == readCount)&&const DeepCollectionEquality().equals(other._publishedLanguages, _publishedLanguages));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,status,slug,language,title,coverUrl,field,readingTimeMinutes,savedAt,publishedAt,hasUnpublishedChanges,reactionCount,commentCount,readCount);
+int get hashCode => Object.hash(runtimeType,id,status,slug,language,title,coverUrl,field,readingTimeMinutes,savedAt,publishedAt,hasUnpublishedChanges,reactionCount,commentCount,readCount,const DeepCollectionEquality().hash(_publishedLanguages));
 
 @override
 String toString() {
-  return 'MyArticleModel(id: $id, status: $status, slug: $slug, language: $language, title: $title, coverUrl: $coverUrl, field: $field, readingTimeMinutes: $readingTimeMinutes, savedAt: $savedAt, publishedAt: $publishedAt, hasUnpublishedChanges: $hasUnpublishedChanges, reactionCount: $reactionCount, commentCount: $commentCount, readCount: $readCount)';
+  return 'MyArticleModel(id: $id, status: $status, slug: $slug, language: $language, title: $title, coverUrl: $coverUrl, field: $field, readingTimeMinutes: $readingTimeMinutes, savedAt: $savedAt, publishedAt: $publishedAt, hasUnpublishedChanges: $hasUnpublishedChanges, reactionCount: $reactionCount, commentCount: $commentCount, readCount: $readCount, publishedLanguages: $publishedLanguages)';
 }
 
 
@@ -3444,7 +3452,7 @@ abstract mixin class _$MyArticleModelCopyWith<$Res> implements $MyArticleModelCo
   factory _$MyArticleModelCopyWith(_MyArticleModel value, $Res Function(_MyArticleModel) _then) = __$MyArticleModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String status, String? slug, String language, String title, String? coverUrl, FieldRefModel? field, int readingTimeMinutes, DateTime? savedAt, DateTime? publishedAt, bool hasUnpublishedChanges, int reactionCount, int commentCount, int readCount
+ String id, String status, String? slug, String language, String title, String? coverUrl, FieldRefModel? field, int readingTimeMinutes, DateTime? savedAt, DateTime? publishedAt, bool hasUnpublishedChanges, int reactionCount, int commentCount, int readCount, List<String> publishedLanguages
 });
 
 
@@ -3461,7 +3469,7 @@ class __$MyArticleModelCopyWithImpl<$Res>
 
 /// Create a copy of MyArticleModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? status = null,Object? slug = freezed,Object? language = null,Object? title = null,Object? coverUrl = freezed,Object? field = freezed,Object? readingTimeMinutes = null,Object? savedAt = freezed,Object? publishedAt = freezed,Object? hasUnpublishedChanges = null,Object? reactionCount = null,Object? commentCount = null,Object? readCount = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? status = null,Object? slug = freezed,Object? language = null,Object? title = null,Object? coverUrl = freezed,Object? field = freezed,Object? readingTimeMinutes = null,Object? savedAt = freezed,Object? publishedAt = freezed,Object? hasUnpublishedChanges = null,Object? reactionCount = null,Object? commentCount = null,Object? readCount = null,Object? publishedLanguages = null,}) {
   return _then(_MyArticleModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -3477,7 +3485,8 @@ as DateTime?,hasUnpublishedChanges: null == hasUnpublishedChanges ? _self.hasUnp
 as bool,reactionCount: null == reactionCount ? _self.reactionCount : reactionCount // ignore: cast_nullable_to_non_nullable
 as int,commentCount: null == commentCount ? _self.commentCount : commentCount // ignore: cast_nullable_to_non_nullable
 as int,readCount: null == readCount ? _self.readCount : readCount // ignore: cast_nullable_to_non_nullable
-as int,
+as int,publishedLanguages: null == publishedLanguages ? _self._publishedLanguages : publishedLanguages // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 

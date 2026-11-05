@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/errors/failure.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
+import 'package:readin/features/article_pdf/presentation/cubit/article_pdf_cubit.dart';
 import 'package:readin/features/comments/presentation/cubit/mention_suggestions_cubit.dart';
 import 'package:readin/features/editor/domain/entities/editor_entities.dart';
 import 'package:readin/features/editor/presentation/cubit/article_editor_cubit.dart';
@@ -125,7 +126,16 @@ void main() {
         ),
       );
       when(() => cubit.ensureLoaded(any())).thenAnswer((_) async {});
-      await tester.pumpWidget(testApp(BlocProvider<MyArticlesCubit>.value(value: cubit, child: const MyArticlesView()), variant: variant));
+      await tester.pumpWidget(testApp(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<MyArticlesCubit>.value(value: cubit),
+            BlocProvider<ArticlePdfCubit>.value(value: articlePdfCubit()),
+          ],
+          child: const MyArticlesView(),
+        ),
+        variant: variant,
+      ));
       await tester.pump();
       await expectLater(find.byType(MyArticlesView), matchesVariantGolden(variant, 'goldens/editor_my_articles_${variant.name}.png'));
     });
@@ -142,7 +152,13 @@ void main() {
       );
       when(() => cubit.ensureLoaded(any())).thenAnswer((_) async {});
       await tester.pumpWidget(testApp(
-        BlocProvider<MyArticlesCubit>.value(value: cubit, child: const MyArticlesView(initialTab: 1)),
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<MyArticlesCubit>.value(value: cubit),
+            BlocProvider<ArticlePdfCubit>.value(value: articlePdfCubit()),
+          ],
+          child: const MyArticlesView(initialTab: 1),
+        ),
         variant: variant,
       ));
       await tester.pump();

@@ -14,6 +14,8 @@ import '../../../../shared/rdoc/rdoc_view.dart';
 import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../article_pdf/presentation/cubit/article_pdf_cubit.dart';
+import '../../../article_pdf/presentation/widgets/article_pdf_widgets.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../comments/presentation/widgets/comments_sheet.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
@@ -61,8 +63,10 @@ class ArticlePage extends StatelessWidget {
         BlocProvider(create: (_) => getIt<ArticleLiveCubit>()),
         // Created when a moderator hides or unhides from the menu (F22).
         BlocProvider(create: (_) => getIt<ModerationActionCubit>()),
+        // "تحميل PDF" in the "⋯" menu on your own article (F33); its failures show here, with "حاول تاني".
+        BlocProvider(create: (_) => getIt<ArticlePdfCubit>()),
       ],
-      child: ReadingTracking(child: ArticleView(anchor: anchor)),
+      child: ArticlePdfFeedback(child: ReadingTracking(child: ArticleView(anchor: anchor))),
     );
   }
 }

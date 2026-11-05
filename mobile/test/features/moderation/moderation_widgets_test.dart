@@ -223,6 +223,12 @@ void main() {
         [...readerItems, ArticleMenuItem.report, ArticleMenuItem.hide],
       );
       expect(articleMenuItems(own: true, moderator: true, hidden: true), [ArticleMenuItem.muteTopics, ArticleMenuItem.unhide]);
+      // In the reader your own article also has "تحميل PDF" (F33), before the moderator tools.
+      expect(
+        articleMenuItems(own: true, moderator: true, hidden: true, pdf: true),
+        [ArticleMenuItem.muteTopics, ArticleMenuItem.downloadPdf, ArticleMenuItem.unhide],
+      );
+      expect(articleMenuItems(own: false, moderator: true, hidden: false, pdf: true), [...readerItems, ArticleMenuItem.report, ArticleMenuItem.hide]);
     });
 
     testWidgets('a reader can report, in the error color; nothing else', (tester) async {

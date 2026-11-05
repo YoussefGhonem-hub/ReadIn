@@ -2372,6 +2372,43 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get pdfDownload => 'تحميل PDF';
+
+  @override
+  String get pdfPreparing => 'بنجهز الـ PDF…';
+
+  @override
+  String get pdfRetry => 'حاول تاني';
+
+  @override
+  String get pdfLanguageTitle => 'أنهي نسخة؟';
+
+  @override
+  String get pdfLanguageBody =>
+      'المقال ده منشور بلغتين. اختار النسخة اللي عايز تحمّلها PDF.';
+
+  @override
+  String get errArticlePdfNotFound => 'المقال مش موجود.';
+
+  @override
+  String get errArticlePdfHidden =>
+      'المشرفين خفّوا المقال ده، فمينفعش يتحمّل PDF.';
+
+  @override
+  String get errArticlePdfLimit =>
+      'حمّلت PDFs كتير الساعة دي. حاول تاني بعد شوية.';
+
+  @override
+  String get errArticlePdfBusy =>
+      'فيه PDFs كتير بتتجهز دلوقتي. حاول تاني كمان شوية.';
+
+  @override
+  String get errArticlePdfFailed => 'معرفناش نجهّز الـ PDF. حاول تاني.';
+
+  @override
+  String get errArticlePdfOffline => 'محتاج إنترنت عشان تحمّل الـ PDF.';
+
+  @override
   String get deleteArticleTitle => 'تمسح المقال ده؟';
 
   @override

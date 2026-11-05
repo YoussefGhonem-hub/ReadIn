@@ -6,6 +6,7 @@ import 'package:readin/core/errors/result.dart';
 import 'package:readin/core/models/cursor_page.dart';
 import 'package:readin/core/models/transfer.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
+import 'package:readin/features/article_pdf/presentation/cubit/article_pdf_cubit.dart';
 import 'package:readin/features/editor/domain/entities/editor_entities.dart';
 import 'package:readin/features/editor/domain/repositories/article_editor_repository.dart';
 import 'package:readin/features/editor/presentation/cubit/article_editor_cubit.dart';
@@ -31,6 +32,16 @@ class MockRevisionsCubit extends MockCubit<RevisionsState> implements RevisionsC
 class MockTagSuggestionsCubit extends MockCubit<List<ArticleTag>> implements TagSuggestionsCubit {}
 
 class MockAttachmentsCubit extends MockCubit<AttachmentsState> implements AttachmentsCubit {}
+
+/// "Download PDF" in My articles (F33).
+class MockArticlePdfCubit extends MockCubit<ArticlePdfState> implements ArticlePdfCubit {}
+
+/// A [MockArticlePdfCubit] that stays in [state].
+MockArticlePdfCubit articlePdfCubit([ArticlePdfState state = const ArticlePdfState()]) {
+  final cubit = MockArticlePdfCubit();
+  whenListen(cubit, const Stream<ArticlePdfState>.empty(), initialState: state);
+  return cubit;
+}
 
 const editorFields = [
   Field(id: 'f-dotnet', slug: 'dotnet', nameAr: '.NET', nameEn: '.NET', requiresSources: true),
@@ -219,6 +230,7 @@ List<MyArticle> sampleMyArticles(ArticleLifecycle status) => status == ArticleLi
           reactionCount: 42,
           commentCount: 7,
           readCount: 1200,
+          publishedLanguages: const ['ar-EG', 'en'],
         ),
         MyArticle(
           id: 'p2',
@@ -230,6 +242,7 @@ List<MyArticle> sampleMyArticles(ArticleLifecycle status) => status == ArticleLi
           readingTimeMinutes: 5,
           savedAt: DateTime.utc(2026, 10, 12, 9),
           publishedAt: DateTime.utc(2026, 10, 12, 9),
+          publishedLanguages: const ['ar-EG'],
         ),
       ];
 

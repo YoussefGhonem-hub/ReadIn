@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 import '../errors/failure.dart';
@@ -23,7 +25,8 @@ abstract final class ApiErrorMapper {
     return fromProblem(response.statusCode, response.data);
   }
 
-  static Failure fromProblem(int? status, Object? body) {
+  static Failure fromProblem(int? status, Object? data) {
+    final body = data is List<int> ? _json(data) : data;
     if (body is Map) {
       final code = body['code'] as String? ?? _codeForStatus(status);
       final errors = <String, List<String>>{};
@@ -42,6 +45,15 @@ abstract final class ApiErrorMapper {
       );
     }
     return Failure(_codeForStatus(status), statusCode: status);
+  }
+
+  /// A call that downloads a file (`ResponseType.bytes`, e.g. the article PDF, F33) gets its ProblemDetails as bytes.
+  static Object? _json(List<int> bytes) {
+    try {
+      return bytes.isEmpty ? null : jsonDecode(utf8.decode(bytes));
+    } on FormatException {
+      return null;
+    }
   }
 
   /// The `suspendedUntil` extension of `user.suspended` (F22): ISO 8601 UTC, or null for a permanent suspension.

@@ -12,6 +12,8 @@ import '../../../../shared/widgets/app_network_image.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../article_pdf/presentation/cubit/article_pdf_cubit.dart';
+import '../../../article_pdf/presentation/widgets/article_pdf_widgets.dart';
 import '../../domain/entities/editor_entities.dart';
 import '../cubit/my_articles_cubit.dart';
 import '../widgets/editor_widgets.dart';
@@ -24,13 +26,17 @@ abstract final class EditorRoutes {
   static String edit(String id) => '/write/$id';
 }
 
-/// "My articles" (F05), the Write tab: Drafts / Published, each row with Edit and Delete, and "New article".
+/// "My articles" (F05), the Write tab: Drafts / Published, each row with Edit and Delete, published ones also with
+/// "Download PDF" (F33), and "New article".
 class MyArticlesPage extends StatelessWidget {
   const MyArticlesPage({super.key});
 
   @override
-  Widget build(BuildContext context) => BlocProvider(
-        create: (_) => getIt<MyArticlesCubit>()..ensureLoaded(ArticleLifecycle.draft),
+  Widget build(BuildContext context) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => getIt<MyArticlesCubit>()..ensureLoaded(ArticleLifecycle.draft)),
+          BlocProvider(create: (_) => getIt<ArticlePdfCubit>()),
+        ],
         child: const MyArticlesView(),
       );
 }
@@ -77,26 +83,28 @@ class _MyArticlesViewState extends State<MyArticlesView> with SingleTickerProvid
     return BlocListener<MyArticlesCubit, MyArticlesState>(
       listenWhen: (a, b) => a.noticeSeq != b.noticeSeq && b.notice != null,
       listener: (context, state) => showActionFailure(context, state.notice),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.myArticlesTitle),
-          automaticallyImplyLeading: false,
-          bottom: TabBar(
-            controller: _tabs,
-            tabs: [Tab(text: l10n.myArticlesDrafts), Tab(text: l10n.myArticlesPublished)],
+      child: ArticlePdfFeedback(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(l10n.myArticlesTitle),
+            automaticallyImplyLeading: false,
+            bottom: TabBar(
+              controller: _tabs,
+              tabs: [Tab(text: l10n.myArticlesDrafts), Tab(text: l10n.myArticlesPublished)],
+            ),
           ),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          key: const ValueKey('my-articles-new'),
-          onPressed: () => _open(EditorRoutes.newArticle),
-          icon: const Icon(Icons.edit_outlined),
-          label: Text(l10n.myArticlesNew),
-        ),
-        body: TabBarView(
-          controller: _tabs,
-          children: [
-            for (final status in _statuses) _ArticlesTab(status: status, onOpen: (a) => _open(EditorRoutes.edit(a.id)), onNew: () => _open(EditorRoutes.newArticle)),
-          ],
+          floatingActionButton: FloatingActionButton.extended(
+            key: const ValueKey('my-articles-new'),
+            onPressed: () => _open(EditorRoutes.newArticle),
+            icon: const Icon(Icons.edit_outlined),
+            label: Text(l10n.myArticlesNew),
+          ),
+          body: TabBarView(
+            controller: _tabs,
+            children: [
+              for (final status in _statuses) _ArticlesTab(status: status, onOpen: (a) => _open(EditorRoutes.edit(a.id)), onNew: () => _open(EditorRoutes.newArticle)),
+            ],
+          ),
         ),
       ),
     );
@@ -156,6 +164,7 @@ class _ArticlesTab extends StatelessWidget {
                   article: article,
                   onEdit: () => onOpen(article),
                   onDelete: () => _confirmDelete(context, article),
+                  pdfAction: article.isPublished ? MyArticlePdfAction(article: article) : null,
                 );
               },
             ),
@@ -182,13 +191,14 @@ class _ArticlesTab extends StatelessWidget {
 }
 
 /// One row of "My articles": cover, title (or "Untitled"), field, reading time, dates, "Unpublished changes", and
-/// Edit / Delete.
+/// Edit / Delete; [pdfAction] ("Download PDF", F33) under the dates.
 class MyArticleTile extends StatelessWidget {
-  const MyArticleTile({super.key, required this.article, required this.onEdit, required this.onDelete});
+  const MyArticleTile({super.key, required this.article, required this.onEdit, required this.onDelete, this.pdfAction});
 
   final MyArticle article;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final Widget? pdfAction;
 
   @override
   Widget build(BuildContext context) {
@@ -243,6 +253,10 @@ class MyArticleTile extends StatelessWidget {
                     ].join(' · '),
                     style: meta,
                   ),
+                  if (pdfAction case final action?) ...[
+                    const SizedBox(height: ReadInSpace.s1),
+                    action,
+                  ],
                 ],
               ),
             ),
@@ -270,6 +284,32 @@ class MyArticleTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Download PDF" on a published article (F33), from the [ArticlePdfCubit] above: two published versions ask which
+/// one first.
+class MyArticlePdfAction extends StatelessWidget {
+  const MyArticlePdfAction({super.key, required this.article});
+
+  final MyArticle article;
+
+  @override
+  Widget build(BuildContext context) => BlocSelector<ArticlePdfCubit, ArticlePdfState, bool>(
+        selector: (state) => state.isBuilding(article.id),
+        builder: (context, building) => Align(
+          alignment: AlignmentDirectional.centerStart,
+          // While it builds the button is disabled: a tap on it does nothing, instead of reaching the row (Edit).
+          child: GestureDetector(
+            onTap: building ? () {} : null,
+            excludeFromSemantics: true,
+            child: ArticlePdfButton(
+              key: ValueKey('my-article-pdf-${article.id}'),
+              building: building,
+              onPressed: () => downloadArticlePdf(context, articleId: article.id, languages: article.pdfLanguages),
+            ),
+          ),
+        ),
+      );
 }
 
 class _Cover extends StatelessWidget {

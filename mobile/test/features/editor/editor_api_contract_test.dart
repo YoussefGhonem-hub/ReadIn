@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:readin/core/errors/failure.dart';
 import 'package:readin/features/editor/data/datasources/article_editor_api.dart';
 import 'package:readin/features/editor/data/datasources/editor_backup_store.dart';
+import 'package:readin/features/editor/data/models/article_editor_models.dart';
 import 'package:readin/features/editor/data/repositories/article_editor_repository_impl.dart';
 import 'package:readin/features/editor/domain/entities/editor_backup.dart';
 import 'package:readin/features/editor/domain/entities/editor_entities.dart';
@@ -126,6 +127,7 @@ void main() {
               'reactionCount': 0,
               'commentCount': 0,
               'readCount': 0,
+              'publishedLanguages': [],
             },
             {
               'id': 'p1',
@@ -142,6 +144,7 @@ void main() {
               'reactionCount': 42,
               'commentCount': 7,
               'readCount': 1200,
+              'publishedLanguages': ['ar-EG', 'en'],
             },
           ],
           'nextCursor': 'c2',
@@ -156,6 +159,16 @@ void main() {
     expect(page.items.last.field?.slug, 'dotnet');
     expect(page.items.last.hasUnpublishedChanges, isTrue);
     expect(page.items.last.publishedAt, DateTime.utc(2026, 10, 20, 9));
+    // F33: the published versions, source language first; "Download PDF" asks which when there are two.
+    expect(page.items.first.publishedLanguages, isEmpty);
+    expect(page.items.last.publishedLanguages, ['ar-EG', 'en']);
+    expect(page.items.last.pdfLanguages, ['ar-EG', 'en']);
+  });
+
+  test('MyArticleDto without publishedLanguages (an older API): the PDF offers the source language', () {
+    final model = MyArticleModel.fromJson({'id': 'p9', 'status': 'published', 'language': 'en', 'title': 'Old'});
+    expect(model.toEntity().publishedLanguages, isEmpty);
+    expect(model.toEntity().pdfLanguages, ['en']);
   });
 
   test('GET /articles/{id}/edit parses the working copy, its media and checks', () async {

@@ -3920,6 +3920,72 @@ abstract class AppLocalizations {
   /// **'Published {date}'**
   String myArticlePublishedOn(String date);
 
+  /// No description provided for @pdfDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download PDF'**
+  String get pdfDownload;
+
+  /// No description provided for @pdfPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing the PDF…'**
+  String get pdfPreparing;
+
+  /// No description provided for @pdfRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get pdfRetry;
+
+  /// No description provided for @pdfLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which version?'**
+  String get pdfLanguageTitle;
+
+  /// No description provided for @pdfLanguageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This article is published in two languages. Choose the version to download as a PDF.'**
+  String get pdfLanguageBody;
+
+  /// No description provided for @errArticlePdfNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Article not found.'**
+  String get errArticlePdfNotFound;
+
+  /// No description provided for @errArticlePdfHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderators hid this article, so it can\'t be downloaded as a PDF.'**
+  String get errArticlePdfHidden;
+
+  /// No description provided for @errArticlePdfLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve downloaded many PDFs this hour. Try again later.'**
+  String get errArticlePdfLimit;
+
+  /// No description provided for @errArticlePdfBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Many PDFs are being prepared right now. Try again in a moment.'**
+  String get errArticlePdfBusy;
+
+  /// No description provided for @errArticlePdfFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t prepare the PDF. Try again.'**
+  String get errArticlePdfFailed;
+
+  /// No description provided for @errArticlePdfOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'You need an internet connection to download the PDF.'**
+  String get errArticlePdfOffline;
+
   /// No description provided for @deleteArticleTitle.
   ///
   /// In en, this message translates to:

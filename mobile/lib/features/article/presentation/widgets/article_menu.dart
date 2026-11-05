@@ -7,6 +7,8 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
+import '../../../article_pdf/presentation/cubit/article_pdf_cubit.dart';
+import '../../../article_pdf/presentation/widgets/article_pdf_widgets.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
@@ -22,13 +24,16 @@ import '../../domain/entities/article.dart';
 import '../cubit/article_cubit.dart';
 
 /// The items of an article's "⋯" menu (SPEC F28), in the order the menu shows them; moderator tools (F22) come last,
-/// after a divider. A later item (F30 "إخفاء الـ Highlights", F33 "تحميل PDF") is added here and in
-/// [articleMenuItems], [_ArticleMenuLabel] and [ArticleMenuView]'s `_onSelected`.
+/// after a divider. A later item (F30 "إخفاء الـ Highlights") is added here and in [articleMenuItems],
+/// [_ArticleMenuLabel] and [ArticleMenuView]'s `_onSelected`.
 enum ArticleMenuItem {
   showLess,
   follow,
   muteAuthor,
   muteTopics,
+
+  /// "تحميل PDF" (F33): your own article, in the reader.
+  downloadPdf,
   report,
   hide,
   unhide;
@@ -39,24 +44,26 @@ enum ArticleMenuItem {
 
 /// What an article's menu offers the viewer, in the SPEC F28 order. Someone else's article: Show less, Follow author,
 /// Mute author, Mute topics and Report (follow and mute need an author: a deleted account has none, [hasAuthor]).
-/// Your own article: Mute topics only. Moderators can also hide or unhide it (F22). Guests see the reader's items and
-/// get the sign-in prompt for every one of them.
+/// Your own article: Mute topics, and in the reader ([pdf]) "تحميل PDF" (F33). Moderators can also hide or unhide it
+/// (F22). Guests see the reader's items and get the sign-in prompt for every one of them.
 List<ArticleMenuItem> articleMenuItems({
   required bool own,
   required bool moderator,
   required bool hidden,
   bool hasAuthor = true,
+  bool pdf = false,
 }) =>
     [
       if (!own) ArticleMenuItem.showLess,
       if (!own && hasAuthor) ...[ArticleMenuItem.follow, ArticleMenuItem.muteAuthor],
       ArticleMenuItem.muteTopics,
+      if (own && pdf) ArticleMenuItem.downloadPdf,
       if (!own) ArticleMenuItem.report,
       if (moderator) hidden ? ArticleMenuItem.unhide : ArticleMenuItem.hide,
     ];
 
-/// The reader action bar's "⋯" (F22, F28). Hiding needs an [ModerationActionCubit] and the [ArticleCubit] above (the
-/// reader provides them).
+/// The reader action bar's "⋯" (F22, F28). Hiding needs an [ModerationActionCubit] and the [ArticleCubit] above, and
+/// "تحميل PDF" on your own article an [ArticlePdfCubit] (F33; the reader provides them all).
 class ArticleMenuButton extends StatelessWidget {
   const ArticleMenuButton({super.key, required this.article});
 
@@ -74,7 +81,8 @@ class ArticleMenuButton extends StatelessWidget {
 /// "⋯" for one article: the reader's ([ArticleMenuButton]) and the post card's header (F34), the same menu (F28).
 /// Show less and Mute author confirm with Undo ([MuteActions]); Mute topics opens its sheet; Follow author uses
 /// [FollowsCubit]. Hiding and unhiding need an [ModerationActionCubit] above; [onModerated] then gets the article's new
-/// moderation (null once visible again).
+/// moderation (null once visible again). With an [ArticlePdfCubit] above (the reader, not a post card), your own
+/// article also has "تحميل PDF" (F33): the version on screen, "بنجهز الـ PDF…" and disabled while it is built.
 class ArticleMenuView extends StatelessWidget {
   const ArticleMenuView({super.key, required this.card, required this.hidden, required this.onModerated});
 
@@ -104,6 +112,9 @@ class ArticleMenuView extends StatelessWidget {
         }
       case ArticleMenuItem.muteTopics:
         await showMuteTopicsSheet(context, article: card);
+      case ArticleMenuItem.downloadPdf:
+        // The page's context, never the popup's: this menu's own button anchors the share sheet (iPad).
+        await downloadArticlePdf(context, articleId: card.id, languages: [card.language]);
       case ArticleMenuItem.report:
         await showReportSheet(context, target: target);
       case ArticleMenuItem.hide:
@@ -128,11 +139,14 @@ class ArticleMenuView extends StatelessWidget {
     final authorMuted = context.select(
       (MutesCubit? c) => authorId != null && (c?.state.isUserMuted(authorId, fallback: card.isAuthorMuted) ?? card.isAuthorMuted),
     );
+    // Null without an [ArticlePdfCubit] above: a post card's menu has no "تحميل PDF".
+    final pdfBuilding = context.select((ArticlePdfCubit? c) => c?.state.isBuilding(card.id));
     final items = articleMenuItems(
       own: me != null && me.id == authorId,
       moderator: me?.isModerator ?? false,
       hidden: hidden,
       hasAuthor: authorId != null,
+      pdf: pdfBuilding != null,
     );
     if (items.isEmpty) return const SizedBox.shrink();
     return PopupMenuButton<ArticleMenuItem>(
@@ -145,7 +159,14 @@ class ArticleMenuView extends StatelessWidget {
           if (item.isModeration && item != items.first) const PopupMenuDivider(),
           PopupMenuItem(
             value: item,
-            child: _ArticleMenuLabel(item: item, following: me != null && following, authorMuted: me != null && authorMuted),
+            // A PDF being built: "بنجهز الـ PDF…", and another tap does nothing.
+            enabled: !(item == ArticleMenuItem.downloadPdf && pdfBuilding == true),
+            child: _ArticleMenuLabel(
+              item: item,
+              following: me != null && following,
+              authorMuted: me != null && authorMuted,
+              pdfBuilding: pdfBuilding == true,
+            ),
           ),
         ],
       ],
@@ -154,7 +175,7 @@ class ArticleMenuView extends StatelessWidget {
 }
 
 class _ArticleMenuLabel extends StatelessWidget {
-  const _ArticleMenuLabel({required this.item, required this.following, required this.authorMuted});
+  const _ArticleMenuLabel({required this.item, required this.following, required this.authorMuted, this.pdfBuilding = false});
 
   final ArticleMenuItem item;
 
@@ -163,6 +184,9 @@ class _ArticleMenuLabel extends StatelessWidget {
 
   /// The viewer muted the author: "Unmute author".
   final bool authorMuted;
+
+  /// The article's PDF is being built: "Preparing the PDF…" with a spinner.
+  final bool pdfBuilding;
 
   @override
   Widget build(BuildContext context) {
@@ -177,14 +201,25 @@ class _ArticleMenuLabel extends StatelessWidget {
           ? (Icons.volume_up_outlined, l10n.articleMenuUnmuteAuthor)
           : (Icons.volume_off_outlined, l10n.articleMenuMuteAuthor),
       ArticleMenuItem.muteTopics => (Icons.label_off_outlined, l10n.articleMenuMuteTopics),
+      ArticleMenuItem.downloadPdf => (Icons.picture_as_pdf_outlined, pdfBuilding ? l10n.pdfPreparing : l10n.pdfDownload),
       ArticleMenuItem.report => (Icons.flag_outlined, l10n.articleMenuReport),
       ArticleMenuItem.hide => (Icons.visibility_off_outlined, l10n.articleMenuHide),
       ArticleMenuItem.unhide => (Icons.visibility_outlined, l10n.articleMenuUnhide),
     };
-    final color = item == ArticleMenuItem.report ? colors.error : colors.textPrimary;
+    final color = switch (item) {
+      ArticleMenuItem.report => colors.error,
+      ArticleMenuItem.downloadPdf when pdfBuilding => colors.textSecondary,
+      _ => colors.textPrimary,
+    };
     return Row(
       children: [
-        Icon(icon, size: 20, color: color),
+        if (item == ArticleMenuItem.downloadPdf && pdfBuilding)
+          SizedBox.square(
+            dimension: 20,
+            child: Padding(padding: const EdgeInsets.all(2), child: CircularProgressIndicator(strokeWidth: 2, color: color)),
+          )
+        else
+          Icon(icon, size: 20, color: color),
         const SizedBox(width: ReadInSpace.s3),
         Flexible(child: Text(text, style: TextStyle(color: color))),
       ],

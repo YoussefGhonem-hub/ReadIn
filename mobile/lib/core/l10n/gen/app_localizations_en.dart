@@ -2335,6 +2335,44 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get pdfDownload => 'Download PDF';
+
+  @override
+  String get pdfPreparing => 'Preparing the PDF…';
+
+  @override
+  String get pdfRetry => 'Try again';
+
+  @override
+  String get pdfLanguageTitle => 'Which version?';
+
+  @override
+  String get pdfLanguageBody =>
+      'This article is published in two languages. Choose the version to download as a PDF.';
+
+  @override
+  String get errArticlePdfNotFound => 'Article not found.';
+
+  @override
+  String get errArticlePdfHidden =>
+      'Moderators hid this article, so it can\'t be downloaded as a PDF.';
+
+  @override
+  String get errArticlePdfLimit =>
+      'You\'ve downloaded many PDFs this hour. Try again later.';
+
+  @override
+  String get errArticlePdfBusy =>
+      'Many PDFs are being prepared right now. Try again in a moment.';
+
+  @override
+  String get errArticlePdfFailed => 'We couldn\'t prepare the PDF. Try again.';
+
+  @override
+  String get errArticlePdfOffline =>
+      'You need an internet connection to download the PDF.';
+
+  @override
   String get deleteArticleTitle => 'Delete this article?';
 
   @override

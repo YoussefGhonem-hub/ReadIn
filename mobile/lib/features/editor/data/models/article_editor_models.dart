@@ -290,6 +290,7 @@ abstract class MyArticleModel with _$MyArticleModel {
     @Default(0) int reactionCount,
     @Default(0) int commentCount,
     @Default(0) int readCount,
+    @Default(<String>[]) List<String> publishedLanguages,
   }) = _MyArticleModel;
 
   factory MyArticleModel.fromJson(Map<String, dynamic> json) => _$MyArticleModelFromJson(json);
@@ -309,6 +310,7 @@ abstract class MyArticleModel with _$MyArticleModel {
         reactionCount: reactionCount,
         commentCount: commentCount,
         readCount: readCount,
+        publishedLanguages: publishedLanguages,
       );
 }
 

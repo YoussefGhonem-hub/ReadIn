@@ -284,6 +284,11 @@ _MyArticleModel _$MyArticleModelFromJson(Map<String, dynamic> json) =>
       reactionCount: (json['reactionCount'] as num?)?.toInt() ?? 0,
       commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
       readCount: (json['readCount'] as num?)?.toInt() ?? 0,
+      publishedLanguages:
+          (json['publishedLanguages'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const <String>[],
     );
 
 Map<String, dynamic> _$MyArticleModelToJson(_MyArticleModel instance) =>
@@ -302,6 +307,7 @@ Map<String, dynamic> _$MyArticleModelToJson(_MyArticleModel instance) =>
       'reactionCount': instance.reactionCount,
       'commentCount': instance.commentCount,
       'readCount': instance.readCount,
+      'publishedLanguages': instance.publishedLanguages,
     };
 
 _MyArticlePageModel _$MyArticlePageModelFromJson(Map<String, dynamic> json) =>

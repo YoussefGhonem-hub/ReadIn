@@ -145,6 +145,15 @@ void main() {
         ArticleMenuItem.report,
       ]);
       expect(articleMenuItems(own: true, moderator: true, hidden: true), [ArticleMenuItem.muteTopics, ArticleMenuItem.unhide]);
+      // The reader's menu (pdf) adds "تحميل PDF" on your own article only, before Report (F33).
+      expect(articleMenuItems(own: true, moderator: false, hidden: false, pdf: true), [ArticleMenuItem.muteTopics, ArticleMenuItem.downloadPdf]);
+      expect(articleMenuItems(own: false, moderator: false, hidden: false, pdf: true), [
+        ArticleMenuItem.showLess,
+        ArticleMenuItem.follow,
+        ArticleMenuItem.muteAuthor,
+        ArticleMenuItem.muteTopics,
+        ArticleMenuItem.report,
+      ]);
     });
 
     testWidgets("someone else's article: the SPEC order, Report in the error color", (tester) async {

@@ -358,6 +358,7 @@ class MyArticle extends Equatable {
     this.reactionCount = 0,
     this.commentCount = 0,
     this.readCount = 0,
+    this.publishedLanguages = const [],
   });
 
   final String id;
@@ -366,6 +367,9 @@ class MyArticle extends Equatable {
 
   /// The source language.
   final String language;
+
+  /// The published versions, source language first; empty for a draft (F33: two → "Download PDF" asks which).
+  final List<String> publishedLanguages;
 
   /// The source-language title; empty → "Untitled".
   final String title;
@@ -383,6 +387,10 @@ class MyArticle extends Equatable {
 
   bool get isPublished => status == ArticleLifecycle.published;
 
+  /// The languages "Download PDF" offers (F33): the published versions, or the source language when the server sent
+  /// none (an older API).
+  List<String> get pdfLanguages => publishedLanguages.isNotEmpty ? publishedLanguages : [language];
+
   @override
   List<Object?> get props => [
         id,
@@ -399,6 +407,7 @@ class MyArticle extends Equatable {
         reactionCount,
         commentCount,
         readCount,
+        publishedLanguages,
       ];
 }
 

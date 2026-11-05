@@ -38,6 +38,16 @@ import '../../features/article/presentation/cubit/post_cards_cubit.dart'
     as _i789;
 import '../../features/article/presentation/cubit/related_articles_cubit.dart'
     as _i692;
+import '../../features/article_pdf/data/datasources/article_pdf_data_source.dart'
+    as _i16;
+import '../../features/article_pdf/data/repositories/article_pdf_repository_impl.dart'
+    as _i487;
+import '../../features/article_pdf/domain/repositories/article_pdf_repository.dart'
+    as _i393;
+import '../../features/article_pdf/domain/usecases/download_article_pdf.dart'
+    as _i911;
+import '../../features/article_pdf/presentation/cubit/article_pdf_cubit.dart'
+    as _i1040;
 import '../../features/auth/data/auth_module.dart' as _i360;
 import '../../features/auth/data/datasources/account_api.dart' as _i506;
 import '../../features/auth/data/datasources/account_device_data.dart' as _i881;
@@ -505,6 +515,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1070.TagsRepository>(
       () => _i160.TagsRepositoryImpl(gh<_i94.TagsApi>()),
     );
+    gh.lazySingleton<_i16.ArticlePdfDataSource>(
+      () => _i16.ArticlePdfDataSource(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i848.DocumentFileDataSource>(
       () => _i848.DocumentFileDataSource(gh<_i361.Dio>()),
     );
@@ -560,6 +573,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i887.LiveConnector>(),
         gh<_i894.RealtimeTokenApi>(),
       ),
+    );
+    gh.lazySingleton<_i393.ArticlePdfRepository>(
+      () => _i487.ArticlePdfRepositoryImpl(gh<_i16.ArticlePdfDataSource>()),
     );
     gh.lazySingleton<_i634.ReadingRepository>(
       () => _i571.ReadingRepositoryImpl(gh<_i597.ReadingApi>()),
@@ -682,6 +698,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i83.GetTag>(() => _i83.GetTag(gh<_i1070.TagsRepository>()));
     gh.factory<_i83.GetTagArticles>(
       () => _i83.GetTagArticles(gh<_i1070.TagsRepository>()),
+    );
+    gh.factory<_i911.DownloadArticlePdf>(
+      () => _i911.DownloadArticlePdf(gh<_i393.ArticlePdfRepository>()),
     );
     gh.factory<_i463.GlossarySearchCubit>(
       () => _i463.GlossarySearchCubit(gh<_i97.SearchGlossaryTerms>()),
@@ -1007,6 +1026,12 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i512.ArticlePathCubit(
         gh<_i924.GetArticlePath>(),
         gh<_i924.SetPathEnrollment>(),
+      ),
+    );
+    gh.factory<_i1040.ArticlePdfCubit>(
+      () => _i1040.ArticlePdfCubit(
+        gh<_i911.DownloadArticlePdf>(),
+        gh<_i868.ShareService>(),
       ),
     );
     gh.factory<_i151.ModerationCaseCubit>(

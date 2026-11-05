@@ -139,6 +139,12 @@ abstract final class FailureCodes {
   static const attachmentsAssetNotReady = 'attachments.asset_not_ready';
   static const attachmentsDuplicateAsset = 'attachments.duplicate_asset';
 
+  // Article PDF (F33): `GET /articles/{id}/pdf`.
+  static const articlePdfHidden = 'article.pdf_hidden';
+  static const articlePdfBusy = 'article.pdf_busy';
+  static const articlePdfFailed = 'article.pdf_failed';
+  static const articlePdfLimit = 'article.pdf_limit';
+
   // Reading & streaks (ADR 0013): a parallel progress report; the reader sends it again.
   static const readingConflict = 'reading.conflict';
 
