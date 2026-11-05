@@ -106,7 +106,7 @@ describe('Settings → Muted (F18, F28)', () => {
   it('nothing muted: the empty state says where muting happens', async () => {
     const t = await render({ users: [], fields: [], topics: [] });
     http = t.http;
-    expect(t.$('[data-muted-empty]')!.textContent).toContain('من زرار "⋯" في أي مقال');
+    expect(t.$('[data-muted-empty]')!.textContent).toContain('من اختيارات أي مقال');
     expect(t.$('[data-muted-list]')).toBeNull();
   });
 
