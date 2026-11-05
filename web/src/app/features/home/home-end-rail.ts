@@ -7,13 +7,13 @@ import { PathCardDto } from '../../core/api/models';
 import { PathsApi } from '../../core/api/paths.api';
 import { SessionStore } from '../../core/auth/session.store';
 import { LanguageService } from '../../core/i18n/language.service';
-import { environment } from '../../../environments/environment';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir } from '../../shared/directives/bidi';
 import { PluralPipe } from '../../shared/pipes/format.pipes';
 import { FollowButton } from '../../shared/social/follow-button';
 import { Avatar } from '../../shared/ui/avatar';
 import { PathCover } from '../paths/path-card';
+import { HomeFooter } from './home-footer';
 import { HomeStore } from './home.store';
 import { HomeLayout } from './home-layout';
 import { railAudience } from './home-start-rail';
@@ -113,7 +113,7 @@ export class HomeSuggestionsCard {
 /**
  * "Suggested path": the first path of `GET /paths` you haven't enrolled in (the first one for a guest), with its cover
  * (or field color), title and "N articles · M min"; the card opens the path, where you start it. Hidden when there's
- * none. `settled` fires once it knows what it shows, so the footer under it never jumps.
+ * none. `settled` fires once it knows what it shows (whether it shows a path), so the footer under it never jumps.
  */
 @Component({
   selector: 'rd-home-suggested-path',
@@ -156,7 +156,7 @@ export class HomeSuggestedPath {
   private readonly session = inject(SessionStore);
   protected readonly lang = inject(LanguageService).lang;
 
-  readonly settled = output<void>();
+  readonly settled = output<boolean>();
   protected readonly status = signal<'loading' | 'loaded' | 'error'>('loading');
   protected readonly path = signal<PathCardDto | null>(null);
   protected readonly titleDir = computed(() => detectDir(this.path()?.title ?? '') ?? 'auto');
@@ -180,38 +180,15 @@ export class HomeSuggestedPath {
     } catch {
       this.status.set('error');
     }
-    this.settled.emit();
+    this.settled.emit(this.status() === 'loaded' && this.path() !== null);
   }
-}
-
-/** The footer links under the end column: the public pages next to the account deletion page, and the support email. */
-@Component({
-  selector: 'rd-home-footer',
-  imports: [TranslocoPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block px-2 py-3 text-center text-xs text-text-secondary' },
-  template: `
-    <nav [attr.aria-label]="'home.footer.label' | transloco" data-home-footer>
-      <ul class="m-0 flex list-none flex-wrap justify-center gap-x-3 gap-y-1 p-0">
-        <li><a [href]="site + '/'" target="_blank" rel="noopener" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.about' | transloco }}</a></li>
-        <li><a [href]="site + '/privacy'" target="_blank" rel="noopener" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.privacy' | transloco }}</a></li>
-        <li><a [href]="site + '/terms'" target="_blank" rel="noopener" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.terms' | transloco }}</a></li>
-        <li><a [href]="'mailto:' + email" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.help' | transloco }}</a></li>
-      </ul>
-    </nav>
-    <p class="m-0 mt-2"><span dir="ltr">ReadIn © {{ year }}</span></p>
-  `,
-})
-export class HomeFooter {
-  /** The public pages (`public/` on Firebase Hosting) live next to the account deletion page. */
-  protected readonly site = new URL(environment.accountDeletionUrl).origin;
-  protected readonly email = environment.supportEmail;
-  protected readonly year = new Date().getFullYear();
 }
 
 /**
  * Home's end column. Shown only in the browser once it knows who is signed in, top to bottom, each part after the one
- * above it settled: nothing ever moves down under the reader (no layout shift).
+ * above it settled: nothing ever moves down under the reader (no layout shift). The footer goes under its cards; when
+ * it has none (nobody to suggest and no path, or neither loaded), under the start column's cards instead, so it never
+ * stands alone at the top of an empty column.
  */
 @Component({
   selector: 'rd-home-end-rail',
@@ -224,9 +201,9 @@ export class HomeFooter {
         <rd-home-suggestions-card />
       }
       @if (suggestionsSettled()) {
-        <rd-home-suggested-path (settled)="pathSettled.set(true)" />
+        <rd-home-suggested-path (settled)="pathSettled($event)" />
       }
-      @if (pathSettled()) {
+      @if (footerHere()) {
         <rd-home-footer />
       }
     }
@@ -235,11 +212,21 @@ export class HomeFooter {
 export class HomeEndRail {
   private readonly session = inject(SessionStore);
   private readonly store = inject(HomeStore);
+  private readonly layout = inject(HomeLayout, { optional: true });
   protected readonly audience = computed(() => railAudience(this.session));
   protected readonly suggestionsSettled = computed(() => {
     if (this.audience() !== 'member') return true;
     const status = this.store.suggestedStatus();
     return status === 'loaded' || status === 'error';
   });
-  protected readonly pathSettled = signal(false);
+  protected readonly footerHere = signal(false);
+
+  /** The path card knows what it shows (the suggestions settled before it): the footer's place is final now. */
+  protected pathSettled(pathShown: boolean): void {
+    const suggestionsShown =
+      this.audience() === 'member' && this.store.suggestedStatus() === 'loaded' && this.store.suggested().length > 0;
+    const here = pathShown || suggestionsShown || !this.layout;
+    this.footerHere.set(here);
+    this.layout?.footerInStart.set(!here);
+  }
 }

@@ -13,6 +13,8 @@ export const HOME_RAILS_QUERY = '(min-width: 64rem)';
 export class HomeLayout {
   readonly wide = signal(true);
   readonly active = signal(false);
+  /** The end column had no card to show: its footer links go under the start column's cards. */
+  readonly footerInStart = signal(false);
 
   constructor() {
     if (!isPlatformBrowser(inject(PLATFORM_ID))) return;

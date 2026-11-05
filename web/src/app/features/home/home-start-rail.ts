@@ -12,6 +12,7 @@ import { PluralPipe } from '../../shared/pipes/format.pipes';
 import { Avatar } from '../../shared/ui/avatar';
 import { profilePath } from '../../layout/nav-items';
 import { StreakStore } from '../reading/streak.store';
+import { HomeFooter } from './home-footer';
 import { HomeLayout } from './home-layout';
 
 /** `unknown` until the browser knows who is signed in (always during SSR). */
@@ -228,11 +229,12 @@ export class HomeGuestCard {}
 
 /**
  * Home's start column: signed in, the profile, reading and shortcut cards; a guest, one card to sign up. Until the
- * browser knows (and on the server) the guest card holds the place, invisible, so neither shows the wrong one.
+ * browser knows (and on the server) the guest card holds the place, invisible, so neither shows the wrong one. The
+ * footer links come here only when the end column has no card to put them under.
  */
 @Component({
   selector: 'rd-home-start-rail',
-  imports: [HomeProfileCard, HomeReadingCard, HomeShortcutsCard, HomeGuestCard],
+  imports: [HomeProfileCard, HomeReadingCard, HomeShortcutsCard, HomeGuestCard, HomeFooter],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-2' },
   template: `
@@ -249,9 +251,13 @@ export class HomeGuestCard {}
         <rd-home-guest-card class="invisible" aria-hidden="true" inert />
       }
     }
+    @if (layout?.footerInStart()) {
+      <rd-home-footer />
+    }
   `,
 })
 export class HomeStartRail {
   private readonly session = inject(SessionStore);
+  protected readonly layout = inject(HomeLayout, { optional: true });
   protected readonly audience = computed(() => railAudience(this.session));
 }

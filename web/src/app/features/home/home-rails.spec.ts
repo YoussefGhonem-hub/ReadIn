@@ -37,6 +37,7 @@ class ColumnsHost {}
 describe('Home columns', () => {
   let http: HttpTestingController;
   const active = signal(true);
+  const footerInStart = signal(false);
   const streak = signal<StreakDto | null>(null);
   const stats = signal<ReadingStatsDto | null>(null);
   const refreshIfStale = vi.fn(() => Promise.resolve());
@@ -46,6 +47,7 @@ describe('Home columns', () => {
   function setup(options: { guest?: boolean; permissions?: string[]; layout?: boolean } = {}) {
     TestBed.resetTestingModule();
     active.set(true);
+    footerInStart.set(false);
     streak.set(null);
     stats.set(null);
     refreshIfStale.mockClear();
@@ -53,7 +55,7 @@ describe('Home columns', () => {
       guest: options.guest,
       providers: [
         HomeStore,
-        ...(options.layout === false ? [] : [{ provide: HomeLayout, useValue: { wide: signal(true), active } }]),
+        ...(options.layout === false ? [] : [{ provide: HomeLayout, useValue: { wide: signal(true), active, footerInStart } }]),
         { provide: StreakStore, useValue: { streak, stats, refreshIfStale } },
       ],
     });
@@ -142,7 +144,7 @@ describe('Home columns', () => {
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
         imports: [translocoTesting()],
-        providers: [provideRouter([]), provideAppIcons(), { provide: HomeLayout, useValue: { wide: signal(true), active } }],
+        providers: [provideRouter([]), provideAppIcons(), { provide: HomeLayout, useValue: { wide: signal(true), active, footerInStart } }],
       });
       // A fresh session store is "unknown", like every page during SSR.
       const fixture = TestBed.createComponent(HomeStartRail);
@@ -161,6 +163,16 @@ describe('Home columns', () => {
       render(HomeStartRail);
       http.expectNone(`${TEST_API}/users/mona`);
       expect(refreshIfStale).not.toHaveBeenCalled();
+    });
+
+    it('the footer links come under its cards only when the end column has none', async () => {
+      setup({ guest: true });
+      const { root, stable } = render(HomeStartRail);
+      expect(root.querySelector('[data-home-footer]')).toBeNull();
+      footerInStart.set(true);
+      await stable();
+      expect(root.lastElementChild!.tagName.toLowerCase()).toBe('rd-home-footer');
+      expect(root.querySelector('[data-home-guest]')).not.toBeNull();
     });
   });
 
@@ -237,7 +249,9 @@ describe('Home columns', () => {
       await rendered.stable();
       expect(rendered.root.querySelector('[data-rail-path]')!.getAttribute('href')).toBe('/paths/aspnet-core-basics');
       expect(rendered.root.querySelector('[data-home-footer]')).not.toBeNull();
+      expect(footerInStart()).toBe(false);
 
+      // No card left in the end column: the footer goes under the start column's cards, not alone at the top here.
       setup();
       rendered = render(HomeEndRail);
       http.expectOne((r) => r.url === `${TEST_API}/users/suggested`).flush([]);
@@ -245,7 +259,31 @@ describe('Home columns', () => {
       http.expectOne(`${TEST_API}/paths`).flush([testPathCard({ ...testProgress(1, { enrolled: true }) })]);
       await rendered.stable();
       expect(rendered.root.querySelector('[data-home-suggested-path]')).toBeNull();
-      expect(rendered.root.querySelector('[data-home-footer]')).not.toBeNull();
+      expect(rendered.root.querySelector('[data-home-footer]')).toBeNull();
+      expect(footerInStart()).toBe(true);
+    });
+
+    it('the path fails to load (a guest): no card, and the footer goes to the start column', async () => {
+      setup({ guest: true });
+      const { root, stable } = render(HomeEndRail);
+      http.expectOne(`${TEST_API}/paths`).flush({ code: 'server.error' }, { status: 500, statusText: 'Server Error' });
+      await stable();
+      expect(root.querySelector('[data-home-suggested-path]')).toBeNull();
+      expect(root.querySelector('[data-rail-path-loading]')).toBeNull();
+      expect(root.querySelector('[data-home-footer]')).toBeNull();
+      expect(footerInStart()).toBe(true);
+    });
+
+    it('suggestions but no path: the footer stays under the suggestions', async () => {
+      setup();
+      const { root, stable } = render(HomeEndRail);
+      http.expectOne((r) => r.url === `${TEST_API}/users/suggested`).flush([writer('1')]);
+      await stable();
+      http.expectOne(`${TEST_API}/paths`).flush([]);
+      await stable();
+      expect(root.querySelector('[data-home-suggestions]')).not.toBeNull();
+      expect(root.querySelector('[data-home-footer]')).not.toBeNull();
+      expect(footerInStart()).toBe(false);
     });
   });
 
