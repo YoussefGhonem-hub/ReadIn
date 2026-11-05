@@ -456,6 +456,10 @@ Later decisions (user, 2026-11-05):
 - **Pre-production step** (after the roles change, before F30 and the rest of both tracks): profile links + headline,
   the post bar and comments, F29 repost, real seed data, PDF download and the viewer fixes (details below). F29 moves
   from track A into this step; track A continues with F30 → the F24 quote card, track B with F23 → F25.
+- **Order after the pre-production step (user, 2026-11-05, one after another):** F30 highlights → the F24 quote
+  card → F23 admin console (with the paths and tag management screens, no role management) → the small leftovers
+  (incl. the reading-mode button and the web initial bundle under 500 kB) → the final SPEC review. **F25 (offline) is
+  postponed by the user:** not built now, and the final review doesn't count it as a gap.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked
@@ -668,7 +672,6 @@ then two fixers). Per part, what was built and **what was actually tried**:
   e2e mock that hid the owner's Download, stale feed-card checks, a reposter text, the Following query, the old
   account in local databases, wording); 60 web baselines and 9 mobile goldens rewritten and looked at.
   **The fixes were not tried with the tests** (user rule).
-- **For the user:** redeploy `public/` (delete-account and privacy pages changed). SPEC nits for the SPEC owner: §18.2
-  row 10 still says demo reports are "on demo articles" (they are on @readin's now), and F29 names the notification
-  `article.reposted` while F17, the contract and the code use `article_reposted`. The web initial bundle is 554 kB
+- **For the user:** redeploy `public/` (delete-account and privacy pages changed). The two SPEC nits found here (§18.2 row 10, the
+  F29 notification name) were fixed by the SPEC session (6f42aa1). The web initial bundle is 554 kB
   (target < 500 kB, leftovers).
