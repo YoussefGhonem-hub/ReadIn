@@ -57,6 +57,13 @@ export const routes: Routes = [
       },
       // Learning paths (F09): public, server-rendered (app.routes.server.ts → `**`).
       { path: 'paths', loadChildren: () => import('./features/paths/paths.routes') },
+      // Search (F16): server-rendered without results, noindex (app.routes.server.ts). Kept alive while you open a result.
+      {
+        path: 'search',
+        loadComponent: () => import('./features/search/search.page').then((m) => m.SearchPage),
+        title: 'pageTitles.search',
+        data: { keepOnBack: true, hideHeaderSearch: true },
+      },
       // Tag pages (F32): public, server-rendered (`**`), their own chunk. `/tags` alone is a 404.
       { path: 'tags/:slug', loadComponent: () => import('./features/tags/tag.page').then((m) => m.TagPage) },
       { path: 'settings', loadChildren: () => import('./features/settings/settings.routes') },

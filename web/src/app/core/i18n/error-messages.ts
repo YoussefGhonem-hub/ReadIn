@@ -77,6 +77,10 @@ export const CONTRACT_ERROR_CODES = [
   'tag.hidden',
   'tag.limit',
   'article.too_many_tags',
+  // Search (F16)
+  'search.query_invalid',
+  'search.type_invalid',
+  'search.filter_invalid',
   'article.not_found',
   'article.sources_required',
   // Editor (F05): saving, publishing and revisions

@@ -15,7 +15,7 @@ import { CompactNumberPipe, ReadingTimePipe } from '../pipes/format.pipes';
 import { articleLink } from './article-link';
 
 /**
- * Compact row, for lists people scan rather than read (F34: Saved, Next in path; feeds use the post card): thumbnail,
+ * Compact row, for lists people scan rather than read (F34: Saved, Next in path, Search; feeds use the post card): thumbnail,
  * title, author (opens the profile, F14), reading time, live counts, save (F13); post attachments (F26) full width
  * below. Content marked `rdCardFooter` goes under the card, above its link (e.g. the Saved page's actions).
  */
@@ -35,8 +35,8 @@ import { articleLink } from './article-link';
     <a [routerLink]="link()" class="absolute inset-0 z-0" [attr.aria-label]="article().title"></a>
     <div class="flex gap-3">
       <div class="h-[72px] w-[72px] shrink-0 overflow-hidden rounded-md bg-primary-container" aria-hidden="true">
-        @if (article().coverUrl) {
-          <img [src]="article().coverUrl" alt="" class="h-full w-full object-cover" loading="lazy" />
+        @if (thumbnail(); as src) {
+          <img [src]="src" alt="" class="h-full w-full object-cover" loading="lazy" />
         } @else {
           <div class="grid h-full w-full place-items-center font-mono text-sm text-on-primary-container" dir="ltr">&lt;/&gt;</div>
         }
@@ -86,7 +86,7 @@ import { articleLink } from './article-link';
         <svg lucideIcon="Bookmark" [size]="18" [class.fill-current]="state().isSaved" aria-hidden="true"></svg>
       </button>
     </div>
-    @if (article().attachments; as attachments) {
+    @if (withAttachments() && article().attachments; as attachments) {
       <!-- Above the card link so taps open the carousel / viewer instead of the article. -->
       <rd-article-attachments class="relative z-10 mt-3" [attachments]="attachments" [article]="article()" [priority]="priorityMedia()" />
     }
@@ -101,11 +101,21 @@ export class ArticleCard {
   readonly article = input.required<ArticleCardDto>();
   /** Loads the first attachment image eagerly (the first card with media in the feed). */
   readonly priorityMedia = input(false);
+  /**
+   * Post attachments full width below the row. Without them (search results, F16) the thumbnail falls back to the
+   * first image, or the PDF's first page, when the article has no cover.
+   */
+  readonly withAttachments = input(true);
 
   protected readonly lang = this.language.lang;
   protected readonly link = computed(() => articleLink(this.article()));
   protected readonly titleDir = computed(() => detectDir(this.article().title) ?? 'auto');
   protected readonly fieldName = computed(() => (this.lang() === 'ar' ? this.article().field.nameAr : this.article().field.nameEn));
+  protected readonly thumbnail = computed(() => {
+    const { coverUrl, attachments } = this.article();
+    if (coverUrl || this.withAttachments() || !attachments) return coverUrl;
+    return attachments.images[0]?.variants[0]?.url ?? attachments.document?.pages[0]?.thumbUrl ?? null;
+  });
 
   /** The feed values with your actions and the live counters on top. */
   protected readonly state = computed(() => this.social.state(this.article()));

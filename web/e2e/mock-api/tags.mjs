@@ -170,5 +170,6 @@ export function createTags({ registry, articles, tagsOf, personalize, viewerOf, 
     ],
   ];
 
-  return { routes };
+  // `visible`: every tag readers can see, as `TagDto`s (search, F16).
+  return { routes, visible: () => registry.all().filter((t) => !t.hidden).map(dto) };
 }

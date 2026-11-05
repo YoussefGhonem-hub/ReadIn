@@ -37,4 +37,21 @@ describe('TopBar notifications bell (F17)', () => {
     fixture.detectChanges();
     expect(bell.querySelector('[data-unread-badge]')).toBeNull();
   });
+
+  it('search (F16): the box on wide screens (a link to the search page until it loads), the icon on narrow ones; none on the search page', () => {
+    const fixture = TestBed.createComponent(TopBar);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const placeholder = root.querySelector<HTMLAnchorElement>('[data-header-search-placeholder]')!;
+    expect(placeholder.getAttribute('href')).toBe('/search');
+    expect(placeholder.textContent!.trim()).toBe('دوّر في ReadIn');
+    const icon = root.querySelector<HTMLAnchorElement>('[data-search-link]')!;
+    expect(icon.getAttribute('href')).toBe('/search');
+    expect(icon.getAttribute('aria-label')).toBe('بحث');
+
+    fixture.componentRef.setInput('searchBox', false);
+    fixture.detectChanges();
+    expect(root.querySelector('[data-header-search-placeholder]')).toBeNull();
+    expect(root.querySelector('[data-search-link]')).toBeNull();
+  });
 });

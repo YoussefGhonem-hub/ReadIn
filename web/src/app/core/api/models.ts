@@ -852,6 +852,51 @@ export interface TagDto extends TagRefDto {
   articleCount: number;
 }
 
+// ── Search (F16) ────────────────────────────────────────────
+
+/** `GET /search?type=`: articles → SearchArticleDto, users → UserSummaryDto, topics → SearchTopicDto, tags → TagDto. */
+export type SearchType = 'articles' | 'users' | 'topics' | 'tags';
+
+/** Where the query was found, best first: the served version's title, its title + text, or only the attached PDF. */
+export type SearchMatch = 'title' | 'text' | 'attachment';
+
+export interface SearchArticleDto {
+  /** In the version that matched; shown as the compact row (F34), not the post card. */
+  article: ArticleCardDto;
+  /** `attachment` → "لقيناها في ملف الـ PDF المرفق" / "Found in the attached PDF". */
+  matchedIn: SearchMatch;
+}
+
+/** A field or a topic. Opens the field page (F15): `/f/{fieldSlug}`, or `/f/{fieldSlug}?topic={topicSlug}` for a topic. */
+export interface SearchTopicDto {
+  kind: 'field' | 'topic';
+  /** The field's or the topic's id. */
+  id: string;
+  /** In Accept-Language. */
+  name: string;
+  nameAr: string;
+  nameEn: string;
+  fieldSlug: string;
+  /** Null for a field. */
+  topicSlug: string | null;
+  /** The field's name in Accept-Language (= `name` for a field): a topic's subtitle. */
+  fieldName: string;
+  /** The field's Lucide icon name, e.g. "cpu". */
+  icon: string;
+  /** The field's color token, e.g. "primary". */
+  color: string;
+  /** Published articles readers can see in it. */
+  articleCount: number;
+}
+
+/** `GET /search/suggest`: at most 3 of each type, ranked as in `/search`, for the as-you-type dropdown. */
+export interface SearchSuggestionsDto {
+  articles: SearchArticleDto[];
+  users: UserSummaryDto[];
+  topics: SearchTopicDto[];
+  tags: TagDto[];
+}
+
 // ── Media (ADR 0011) ────────────────────────────────────────
 
 export type MediaKind = 'image' | 'document';

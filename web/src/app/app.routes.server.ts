@@ -18,5 +18,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'me/**', renderMode: RenderMode.Client },
   { path: 'verification', renderMode: RenderMode.Client },
   { path: 'admin/**', renderMode: RenderMode.Client },
+  // Search (F16): the page renders on the server without results (the browser searches); never indexed.
+  { path: 'search', renderMode: RenderMode.Server, headers: { 'X-Robots-Tag': 'noindex' } },
   { path: '**', renderMode: RenderMode.Server },
 ];

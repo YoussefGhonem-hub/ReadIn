@@ -56,7 +56,8 @@
     "changePassword": "Change your password",
     "recoveryPin": "Recovery PIN",
     "completeProfile": "Complete your profile",
-    "onboarding": "Get started"
+    "onboarding": "Get started",
+    "search": "Search"
   },
   "errors": {
     "unknown": "Something went wrong. Please try again.",
@@ -135,6 +136,11 @@
       "invalid": "A tag has 2–30 characters: letters, digits, spaces and - _ . + # only.",
       "limit": "You've created a lot of new tags today. Pick existing tags, or try again later.",
       "hidden": "This tag isn't available. Choose another one."
+    },
+    "search": {
+      "query_invalid": "Type 1–100 characters, with at least one letter or digit.",
+      "type_invalid": "The search type must be articles, writers, topics or tags.",
+      "filter_invalid": "These search filters aren't valid."
     },
     "article": {
       "not_found": "Article not found",
@@ -1376,6 +1382,65 @@
       "loadError": "We couldn't load this tag.",
       "metaDescription": "{{articles}} tagged {{name}} on ReadIn.",
       "metaDescriptionEmpty": "No articles tagged {{name}} on ReadIn yet."
+    }
+  },
+  "search": {
+    "label": "Search ReadIn",
+    "placeholder": "Search articles, writers, topics and tags",
+    "headerPlaceholder": "Search ReadIn",
+    "clear": "Clear search",
+    "tabs": {
+      "label": "Kinds of results",
+      "articles": "Articles",
+      "users": "Writers",
+      "topics": "Topics",
+      "tags": "Tags"
+    },
+    "filters": {
+      "label": "Filter articles",
+      "field": "Field",
+      "anyField": "All fields",
+      "language": "Article language",
+      "anyLanguage": "All languages",
+      "arabic": "Arabic",
+      "english": "English",
+      "time": "Reading time",
+      "anyTime": "Any length",
+      "short": "Up to 5 min",
+      "medium": "5–10 min",
+      "long": "Over 10 min",
+      "clear": "Clear filters"
+    },
+    "inAttachment": "Found in the attached PDF",
+    "topic": {
+      "field": "Field",
+      "inField": "Topic in {{field}}"
+    },
+    "results": "Results for “{{q}}”",
+    "end": "That's everything we found.",
+    "loadError": "We couldn't search right now.",
+    "invalid": "Type a word with letters or digits.",
+    "empty": {
+      "title": "No results for “{{q}}”",
+      "body": "Try another word or a shorter one, or look in another tab.",
+      "filteredTitle": "No results with these filters",
+      "filteredBody": "Clear the filters to see everything that matches “{{q}}”."
+    },
+    "idle": {
+      "title": "What do you want to read about?",
+      "body": "Search articles, writers, topics and tags, in Arabic or English.",
+      "tip": "Try: Docker, الذكاء الاصطناعي or C#"
+    },
+    "recent": {
+      "title": "Recent searches",
+      "clearAll": "Clear all",
+      "remove": "Remove “{{q}}” from recent searches"
+    },
+    "suggest": {
+      "label": "Suggestions",
+      "seeAll": "See all results for “{{q}}”",
+      "searching": "Searching…",
+      "none": "No suggestions yet"
     }
   },
   "profile": {

@@ -9,7 +9,8 @@
  * reports, the moderation queue, actions, log and notices (moderation.mjs, F22), the notification center with its
  * settings (notifications.mjs, F17) and writer verification with its admin review (verification.mjs, F19) keep state per
  * signed-in viewer, so those flows run against it end to end. Tags (tags.mjs, F32) give every card and article its
- * `TagRefDto`s and serve the editor's suggestions and the tag pages. It also
+ * `TagRefDto`s and serve the editor's suggestions and the tag pages. Search (search.mjs, F16) finds the articles (and
+ * the attached PDF's text), writers, fields and topics, and tags. It also
  * serves generated PNGs for every media URL and fixture builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
@@ -22,6 +23,7 @@ import { createPaths } from './paths.mjs';
 import { createModeration } from './moderation.mjs';
 import { createNotifications } from './notifications.mjs';
 import { createProfiles } from './profiles.mjs';
+import { createSearch, textOfBlocks } from './search.mjs';
 import { createSocial } from './social.mjs';
 import { createTagRegistry, createTags } from './tags.mjs';
 import { createVerification } from './verification.mjs';
@@ -720,6 +722,27 @@ const tags = createTags({
   viewerOf: social.viewerOf,
   problem,
 });
+/** The text of attached PDFs (`MediaAssets.ExtractedText`, F26): search finds words that are only in the PDF (F16). */
+const PDF_TEXT = new Map([
+  [
+    'aspnet-core-cheatsheet',
+    'ASP.NET Core cheat sheet. Kestrel and reverse proxies. The middleware order: exception handler, HSTS, HTTPS redirection, static files, routing, CORS, authentication, authorization, endpoints. DI lifetimes: singleton, scoped, transient. Configuration providers and the options pattern.',
+  ],
+]);
+const search = createSearch({
+  articles: () => PUBLISHED,
+  textOf: (a) => textOfBlocks(CONTENT.get(a.slug)),
+  attachmentTextOf: (a) => PDF_TEXT.get(a.slug) ?? null,
+  people: () => [...WRITERS, ...TAG_WRITERS, ...social.readers],
+  fields: FIELDS,
+  topics: TOPICS,
+  topicCount: (topic) => ({ dotnet: 2, architecture: 1 })[topic.slug] ?? 0,
+  tags: tags.visible,
+  personalize: social.personalize,
+  viewerOf: social.viewerOf,
+  isFollowing: social.isFollowing,
+  problem,
+});
 const moderation = createModeration({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
 const notifications = createNotifications({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
 const verification = createVerification({
@@ -753,6 +776,7 @@ const routes = [
   ],
   ...editor.routes,
   ...tags.routes,
+  ...search.routes,
   ...social.routes,
   ...profiles.routes,
   ...paths.routes,
