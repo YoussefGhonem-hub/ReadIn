@@ -80,6 +80,13 @@ public static class DependencyInjection
         services.AddScoped<
             IQueryPersonalizer<Features.Articles.Queries.GetArticleBySlug.GetArticleBySlugQuery, Domain.Common.Result<Features.Articles.ArticleDetailsDto>>,
             Features.Articles.Queries.GetArticleBySlug.ArticleDetailsPersonalizer>();
+        services.AddScoped<Features.Explore.ExploreRankings>();
+        services.AddScoped<
+            IQueryPersonalizer<Features.Explore.GetFieldPageQuery, Domain.Common.Result<Features.Explore.FieldPageDto>>,
+            Features.Explore.FieldPagePersonalizer>();
+        services.AddScoped<
+            IQueryPersonalizer<Features.Explore.GetFieldWritersQuery, Domain.Common.Result<IReadOnlyList<Features.Follows.UserSummaryDto>>>,
+            Features.Explore.FieldWritersPersonalizer>();
 
         AddDomainEventHandlers(services);
         return services;

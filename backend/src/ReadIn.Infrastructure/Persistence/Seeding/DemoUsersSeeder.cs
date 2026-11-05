@@ -90,7 +90,7 @@ internal sealed partial class DemoUsersSeeder(
 
     public string Name => "demo-users";
     public int Order => 4;
-    public int Version => 4;
+    public int Version => 5;
 
     public bool AppliesTo(IHostEnvironment environment) => SeedEnvironments.AllowsDemoData(environment);
 
@@ -124,6 +124,9 @@ internal sealed partial class DemoUsersSeeder(
 
             var previousAvatar = user.AvatarUrl;
             var avatar = demo.Avatar ? await AvatarAsync(user, demo.Handle, now, cancellationToken) : null;
+            // Demo users made before the PhoneAuth migration got IsProfileComplete = false from its default; they have real
+            // handles, so they count as complete (people search, Explore's writers, sign in routing).
+            if (!user.IsProfileComplete) user.CompleteProfile(demo.DisplayName, username, avatar);
             user.UpdateProfile(demo.DisplayName, username, demo.Bio, avatar, LinksFor(username, demo.Links));
 
             await db.SaveChangesAsync(cancellationToken);

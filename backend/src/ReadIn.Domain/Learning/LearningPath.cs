@@ -24,9 +24,12 @@ public sealed class LearningPath : Entity, IAuditable
         SortOrder = sortOrder;
     }
 
-    /// <summary>An editorial path, from content/taxonomy.yaml (seeder #7).</summary>
+    /// <summary>
+    /// An editorial path, from content/taxonomy.yaml (seeder #7). It starts featured on Explore (F15), in its sort order;
+    /// later seeding never changes the flag, so F23 can manage it.
+    /// </summary>
     public static LearningPath CreateEditorial(string slug, Guid fieldId, string titleAr, string titleEn, int sortOrder) =>
-        new(slug, fieldId, titleAr, titleEn, sortOrder) { IsEditorial = true };
+        new(slug, fieldId, titleAr, titleEn, sortOrder) { IsEditorial = true, IsFeatured = true, FeaturedOrder = sortOrder };
 
     public string Slug { get; private set; } = default!;
     public Guid FieldId { get; private set; }
@@ -41,6 +44,12 @@ public sealed class LearningPath : Entity, IAuditable
 
     /// <summary>Managed in content/taxonomy.yaml: admins can't change it (<see cref="LearningPathErrors.Editorial"/>).</summary>
     public bool IsEditorial { get; private set; }
+
+    /// <summary>Shown in Explore's "Featured paths" (F15) while it is published; F23 will manage it.</summary>
+    public bool IsFeatured { get; private set; }
+
+    /// <summary>The place among the featured paths, lowest first (then <see cref="SortOrder"/>).</summary>
+    public int FeaturedOrder { get; private set; }
 
     public IReadOnlyCollection<LearningPathItem> Items => _items.AsReadOnly();
 
@@ -98,6 +107,13 @@ public sealed class LearningPath : Entity, IAuditable
     }
 
     public void Unpublish() => IsPublished = false;
+
+    /// <summary>Features the path on Explore at <paramref name="order"/> (F15), or takes it off (F23 will call this).</summary>
+    public void SetFeatured(bool featured, int order = 0)
+    {
+        IsFeatured = featured;
+        FeaturedOrder = featured ? order : 0;
+    }
 }
 
 public sealed class LearningPathItem : Entity

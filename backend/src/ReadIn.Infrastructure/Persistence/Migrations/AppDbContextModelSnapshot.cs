@@ -932,10 +932,16 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int>("FeaturedOrder")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("FieldId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsEditorial")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFeatured")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsPublished")

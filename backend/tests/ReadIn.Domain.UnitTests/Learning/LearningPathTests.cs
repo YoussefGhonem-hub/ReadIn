@@ -40,6 +40,24 @@ public sealed class LearningPathTests
     }
 
     [Fact]
+    public void An_editorial_path_starts_featured_in_its_sort_order_and_an_admin_path_does_not()
+    {
+        var editorial = LearningPath.CreateEditorial("understanding-llms", Guid.NewGuid(), "فهم الـ LLMs", "Understanding LLMs", 4);
+        var admin = AdminPath();
+
+        (editorial.IsFeatured, editorial.FeaturedOrder).Should().Be((true, 4), "Explore's featured paths start with the editorial ones (F15)");
+        (admin.IsFeatured, admin.FeaturedOrder).Should().Be((false, 0));
+
+        editorial.SyncEditorial([(Guid.NewGuid(), 1)]);
+        editorial.IsFeatured.Should().BeTrue("seeding never changes the flag");
+
+        editorial.SetFeatured(false, 9);
+        (editorial.IsFeatured, editorial.FeaturedOrder).Should().Be((false, 0));
+        admin.SetFeatured(true, 2);
+        (admin.IsFeatured, admin.FeaturedOrder).Should().Be((true, 2));
+    }
+
+    [Fact]
     public void An_editorial_path_that_loses_its_articles_is_unlisted_again()
     {
         var path = Editorial();

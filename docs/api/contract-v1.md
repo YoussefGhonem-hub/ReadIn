@@ -94,6 +94,8 @@ A wrong `currentPassword` counts toward the same 15-minute lockout as sign in (`
 | GET | `/fields` | `FieldDto[]` (enabled fields, ordered) |
 | GET | `/fields/{slug}/topics` | `TopicDto[]` |
 
+Field pages (`/fields/{slug}`, `/fields/{slug}/articles`, `/fields/{slug}/writers`): see Explore and field pages (F15).
+
 ### Tags (F32) 🌐 (Bearer optional) — SPEC F32
 
 Tags are shared by all writers. A tag has a display `name` (the first spelling anyone used) and a stable `slug`, the
@@ -249,6 +251,105 @@ together; then `429 rate_limited`. Clients wait 300 ms after the last keystroke 
 
 Search error codes: `search.query_invalid` (400), `search.type_invalid` (400: `type` isn't one of the four),
 `search.filter_invalid` (400), plus `request.invalid` and `rate_limited`.
+
+### Explore and field pages (F15) 🌐 (Bearer optional) — SPEC F15
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/explore` | `ExploreDto`: every section of the Explore page (web `/explore`, mobile Explore tab) in one call |
+| GET | `/explore/trending?cursor=&limit=` | `CursorPage<ArticleCardDto>`: "Trending this week" in full ("عرض الكل" / "See all"), best first |
+| GET | `/explore/most-saved?cursor=&limit=` | `CursorPage<ArticleCardDto>`: "Most saved" in full, best first |
+| GET | `/fields/{slug}` | `FieldPageDto`: the field page's header and topic chips |
+| GET | `/fields/{slug}/articles?topic=&cursor=&limit=` | `CursorPage<ArticleCardDto>`: the field's articles, newest first. `topic` = a topic slug of this field (empty: the whole field). `404 topic.not_found` for a `topic` that isn't one of this field's |
+| GET | `/fields/{slug}/writers?limit=` | `UserSummaryDto[]`: "Top writers in this field", best first. `limit` 1–10, default 10 |
+
+`{slug}` and `topic` are matched ignoring case. An unknown or disabled field is `404 field.not_found` on all three
+`/fields/{slug}` endpoints.
+
+**Article lists.** Every list here (Explore sections, the two rankings, field articles) holds only articles readers can
+open (as `GET /articles/{slug}`: published, not deleted, in an enabled field, not hidden by moderators, F22), one card
+per article, in the caller's article language (guests: `Accept-Language`, `ar` → `ar-EG`; else the source language),
+with the caller's `myReaction` / `isSaved` / `isFollowingAuthor` like every feed. Clients show the two rankings ("See
+all") and the field articles as the **post card** (F34); Explore's `trending` / `mostSaved` previews show their first 3
+as the compact article row, with "See all" next to the section title. For a signed-in caller, muted writers, fields and
+topics will be left out too once F28 ships. `limit` 1–50, default 20; a cursor that doesn't decode starts from the
+first page.
+
+**Explore (`ExploreDto`).** A section with nothing in it is `[]`; clients hide it.
+- `fields`: every enabled field in display order (as `GET /fields`), empty ones included, with `articleCount` (articles
+  readers can see, the same for everyone). Opens the field page; topics are reached there. Once F28 ships, fields the
+  caller muted are left out.
+- `trending`: the first 6 of `/explore/trending`. `mostSaved`: the first 6 of `/explore/most-saved`.
+- `newWriters`: ≤ 10 people whose first article was published in the last 30 days, latest first publish first (the
+  first article = the earliest `publishedAt` among their articles readers can see). Left out: system accounts (the
+  official `@readin`), suspended accounts (while suspended), deleted accounts, profiles not completed (the
+  `@reader_…` placeholder), and, once F28 ships, writers the caller muted. The caller can be listed (`isFollowing:
+  false`; show no Follow button on your own row). Follow with `PUT /users/{id}/follow` (guests get the sign-in prompt).
+- `featuredPaths`: ≤ 6 published paths flagged featured (`LearningPaths.IsFeatured`), in featured order
+  (`FeaturedOrder`, then the editorial order), as `PathCardDto` like `/paths` (a path with no article a reader can open
+  is left out; `progress` / `enrollment` for a signed-in caller). Editorial paths start featured, in their sort order;
+  F23 will manage the flag. Opens `/paths/{slug}`.
+
+**Trending this week** (`/explore/trending`)
+
+```
+engagement = 1 × completed reads + 2 × reactions + 4 × comments + 6 × saves      (in the last 7 days, rolling)
+order      = engagement DESC, QualityScore DESC, publishedAt DESC, id DESC
+```
+- Completed reads: `ReadingProgress.completedAt` in the window (the F04 "read", once per reader). Reactions: the ones
+  whose current type was chosen in the window (`reactedAt`). Comments: comments and replies written in the window that
+  are still visible (not deleted, not hidden). Saves: articles still saved, saved in the window.
+- Activity by the article's own author doesn't count.
+- The weights are the quality score's interaction weights (reaction 1, comment 2, save 3; F07) doubled, plus 1 for a
+  completed read, so a read counts half a reaction.
+- **Fallback:** articles without engagement this week follow in quality-score order (F07, refreshed hourly), so a quiet
+  week shows the quality ranking.
+
+**Most saved** (`/explore/most-saved`)
+
+```
+order = saves in the last 30 days DESC, saveCount DESC, publishedAt DESC, id DESC
+```
+- Saves in the last 30 days: articles still saved, saved in the window, not by the article's author. **Fallback:**
+  all-time saves (`saveCount`, the card's number). Articles nobody saved (`saveCount: 0`) are left out.
+
+**Paging the rankings.** Each ranking holds at most 100 articles; then `nextCursor` is `null`. The cursor is a position
+(as in Search), and rankings move while people read, so drop an id you already show.
+
+**Field page (`FieldPageDto`).** Web `/f/{slug}` (`?topic={topicSlug}` selects a chip, the link Search gives topics),
+mobile `/f/:slug`, deep links `readin://f/{slug}` and `https://{host}/f/{slug}`.
+- `articleCount`: articles readers can see in the field (the same for everyone); `0` → the empty state (web:
+  `noindex`). `isSensitive`: show the health disclaimer note.
+- `followerCount`: people who follow the field itself (a followed topic doesn't count). `isFollowing`: the caller does
+  (`false` for guests).
+- Follow / Unfollow with `PUT` / `DELETE /me/interests/fields/{id}` (the F12 interests endpoints, `InterestsDto`):
+  clients flip `isFollowing` and move `followerCount` by 1 themselves. `400 user.interests.min_three` when fewer than 3
+  interests would remain: keep the toggle on and show the message. Guests get the sign-in prompt.
+- `topics`: every topic of the field in editorial order, empty ones included (a topic can be followed before it has
+  articles), each with `articleCount` and `isFollowing` (follow with `PUT` / `DELETE /me/interests/topics/{id}`).
+
+**Field articles** (`/fields/{slug}/articles`): newest first (`publishedAt` DESC, id DESC), keyset cursor, so paging
+never repeats or skips an article.
+
+**Top writers** (`/fields/{slug}/writers`)
+
+```
+score = 1 × completed reads + 2 × reactions     (on their articles in this field, in the last 90 days, not their own)
+order = score DESC, their articles readers can see in this field DESC, followers DESC, username ASC
+```
+- Writers with at least one article readers can see in the field; those without activity in the window follow in the
+  fallback order. Left out like `newWriters`: system accounts, suspended, deleted and not completed profiles, and (F28)
+  writers the caller muted. The caller can be listed (`isFollowing: false`).
+
+**Caching.** `/explore`, the two rankings, the field header and top writers are cached on the server for up to 5
+minutes, shared by everyone with the same UI language and article language, and dropped on publish, Update,
+hide/unhide and delete. Guests' field article pages are cached like tag pages. What belongs to the caller
+(`myReaction`, `isSaved`, `isFollowingAuthor`, `isFollowing`, `followsYou`, a path's `progress` / `enrollment`) is
+filled per caller after the cache, never cached. The people in `newWriters` and the top writers are checked on every
+request too, so a writer suspended (or whose account is deleted) leaves both lists at once. Counts can lag up to 5
+minutes; live counters (F27) refresh visible cards.
+
+Explore error codes: `field.not_found` (404), `topic.not_found` (404).
 
 ### Articles & Feed 🌐 (Bearer optional)
 
@@ -1075,6 +1176,46 @@ interface SearchSuggestionsDto { // GET /search/suggest: at most 3 of each type,
   users: UserSummaryDto[];
   topics: SearchTopicDto[];
   tags: TagDto[];
+}
+
+// ── Explore and field pages (F15) ───────────────────────────────────
+interface ExploreDto {           // GET /explore; an empty section is [] (clients hide it)
+  fields: FieldSummaryDto[];     // every enabled field, display order
+  trending: ArticleCardDto[];    // ≤ 6, the first of /explore/trending
+  mostSaved: ArticleCardDto[];   // ≤ 6, the first of /explore/most-saved
+  newWriters: UserSummaryDto[];  // ≤ 10, latest first publish first
+  featuredPaths: PathCardDto[];  // ≤ 6, featured order
+}
+
+interface FieldSummaryDto {      // a field tile on Explore; opens /f/{slug}
+  id: string; slug: string;
+  name: string;                  // in Accept-Language
+  nameAr: string; nameEn: string;
+  icon: string;                  // Lucide icon name, e.g. "cpu"
+  color: string;                 // color token, e.g. "primary"
+  articleCount: number;          // articles readers can see in it (the same for everyone)
+}
+
+interface FieldPageDto {         // GET /fields/{slug}
+  id: string;                    // for PUT/DELETE /me/interests/fields/{id}
+  slug: string;
+  name: string;                  // in Accept-Language
+  nameAr: string; nameEn: string;
+  icon: string; color: string;
+  isSensitive: boolean;          // show the health disclaimer note
+  articleCount: number;          // 0 → empty state (web: noindex)
+  followerCount: number;         // people who follow the field itself
+  isFollowing: boolean;          // the caller follows the field; false for guests
+  topics: FieldPageTopicDto[];   // every topic, editorial order, empty ones included
+}
+
+interface FieldPageTopicDto {    // a topic chip: filters with ?topic={slug}
+  id: string;                    // for PUT/DELETE /me/interests/topics/{id}
+  slug: string;
+  name: string;                  // in Accept-Language
+  nameAr: string; nameEn: string;
+  articleCount: number;
+  isFollowing: boolean;          // false for guests
 }
 
 interface ArticleDetailsDto extends ArticleCardDto {

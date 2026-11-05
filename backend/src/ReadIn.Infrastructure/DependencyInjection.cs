@@ -140,6 +140,7 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, LearningPathsSeeder>();
         services.AddScoped<ISeeder, GlossarySeeder>();
         services.AddScoped<ISeeder, DemoMediaSeeder>();
+        services.AddScoped<ISeeder, DemoWritersSeeder>();
         services.AddScoped<ISeeder, DemoReadingSeeder>();
         services.AddScoped<ISeeder, DemoCommentsSeeder>();
         services.AddScoped<ISeeder, DemoEditorSeeder>();
