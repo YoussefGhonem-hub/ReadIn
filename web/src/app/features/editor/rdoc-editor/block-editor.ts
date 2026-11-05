@@ -35,20 +35,28 @@ import {
   BLOCK_MENU,
   BlockKind,
   BlockMenuItem,
+  TABLE_MAX_COLS,
+  TABLE_MAX_ROWS,
+  TableSize,
   TermTarget,
   currentBlockDir,
   currentTextKind,
   filterBlockMenu,
   insertBlock,
+  insertTable,
   markTerm,
   setBlockDir,
+  tableShape,
   termTarget,
   unmarkTerm,
 } from './block-commands';
+import { BlockStage } from './block-stage';
 import { RDocEditorHost } from './editor-host';
 import { ensureBlockIds } from './editor-plugins';
+import { PopupAnchor } from './popup-place';
 import { PmNode, editorToRDoc, rdocToEditor } from './rdoc-convert';
 import { rdocExtensions } from './rdoc-schema';
+import { TableSizePicker } from './table-size-picker';
 
 /** The editor tells the page about changes this long after the last keystroke. */
 export const CHANGE_DEBOUNCE_MS = 300;
@@ -84,12 +92,13 @@ let nextEditorId = 0;
 
 /**
  * The block editor (F05): Tiptap over the RDoc schema, with a toolbar (block type, marks, link, glossary term (F21),
- * direction, insert, table rows/columns, undo), a slash menu (`/`), `@` mentions and markdown shortcuts. It loads `content` (again when
- * `contentKey` changes) and reports the edited RDoc through `changed` (debounced; `flush()` reports at once).
+ * direction, insert, table rows/columns, undo), a slash menu (`/`), `@` mentions and markdown shortcuts. A new table's
+ * size comes from a picker; every block has a handle to drag, move or delete it (block-stage.ts). It loads `content`
+ * (again when `contentKey` changes) and reports the edited RDoc through `changed` (debounced; `flush()` reports at once).
  */
 @Component({
   selector: 'rd-block-editor',
-  imports: [TranslocoPipe, LucideDynamicIcon, Avatar, BdiText],
+  imports: [TranslocoPipe, LucideDynamicIcon, Avatar, BdiText, BlockStage, TableSizePicker],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: { class: 'block' },
@@ -184,6 +193,23 @@ let nextEditorId = 0;
         <svg lucideIcon="Plus" [size]="16" aria-hidden="true"></svg>
         {{ 'editor.toolbar.insert' | transloco }}
       </button>
+      @if (!gutter()) {
+        <!-- No room for the block handle beside the text (phones, narrow windows): its menu, for the current block. -->
+        <button
+          #blockButton
+          type="button"
+          class="rd-ed-tool"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="!!stage()?.menuOpen()"
+          [attr.aria-label]="'editor.blockHandle.options' | transloco"
+          [title]="'editor.blockHandle.options' | transloco"
+          data-block-options
+          (mousedown)="$event.preventDefault()"
+          (click)="toggleBlockMenu(blockButton, $event.detail === 0)"
+        >
+          <svg lucideIcon="GripVertical" [size]="16" aria-hidden="true"></svg>
+        </button>
+      }
       <span class="ms-auto flex gap-1">
         <button type="button" class="rd-ed-tool" [attr.aria-label]="'editor.toolbar.undo' | transloco" [title]="'editor.toolbar.undo' | transloco" [disabled]="!canUndo()" (mousedown)="$event.preventDefault()" (click)="run('undo')">
           <svg lucideIcon="Undo2" [size]="16" class="rd-flip-rtl" aria-hidden="true"></svg>
@@ -194,8 +220,30 @@ let nextEditorId = 0;
       </span>
       @if (inTable()) {
         <div class="rd-ed-table-tools" role="group" [attr.aria-label]="'editor.table.label' | transloco" data-table-tools>
-          <button type="button" class="rd-ed-tool rd-ed-tool-text" (mousedown)="$event.preventDefault()" (click)="run('addRowAfter')">{{ 'editor.table.addRow' | transloco }}</button>
-          <button type="button" class="rd-ed-tool rd-ed-tool-text" (mousedown)="$event.preventDefault()" (click)="run('addColumnAfter')">{{ 'editor.table.addColumn' | transloco }}</button>
+          <button
+            type="button"
+            class="rd-ed-tool rd-ed-tool-text"
+            [disabled]="(tableSize()?.rows ?? 0) >= maxRows"
+            [attr.title]="(tableSize()?.rows ?? 0) >= maxRows ? ('editor.table.maxRows' | transloco: { max: maxRows }) : null"
+            data-table-add-row
+            (mousedown)="$event.preventDefault()"
+            (click)="run('addRowAfter')"
+          >
+            {{ 'editor.table.addRow' | transloco }}
+          </button>
+          @for (side of columnSides; track side) {
+            <button
+              type="button"
+              class="rd-ed-tool rd-ed-tool-text"
+              [disabled]="(tableSize()?.cols ?? 0) >= maxCols"
+              [attr.title]="(tableSize()?.cols ?? 0) >= maxCols ? ('editor.table.maxColumns' | transloco: { max: maxCols }) : null"
+              [attr.data-table-add-column]="side"
+              (mousedown)="$event.preventDefault()"
+              (click)="run(side === 'before' ? 'addColumnBefore' : 'addColumnAfter')"
+            >
+              {{ (side === 'before' ? 'editor.table.addColumnBefore' : 'editor.table.addColumnAfter') | transloco }}
+            </button>
+          }
           <button type="button" class="rd-ed-tool rd-ed-tool-text" (mousedown)="$event.preventDefault()" (click)="run('deleteRow')">{{ 'editor.table.deleteRow' | transloco }}</button>
           <button type="button" class="rd-ed-tool rd-ed-tool-text" (mousedown)="$event.preventDefault()" (click)="run('deleteColumn')">{{ 'editor.table.deleteColumn' | transloco }}</button>
           <button type="button" class="rd-ed-tool rd-ed-tool-text text-error" (mousedown)="$event.preventDefault()" (click)="run('deleteTable')">{{ 'editor.table.delete' | transloco }}</button>
@@ -291,7 +339,13 @@ let nextEditorId = 0;
       </div>
     }
 
-    <div #host class="rd-ed-surface" [attr.lang]="language()" [attr.dir]="contentDir()" data-editor-surface></div>
+    <rd-block-stage [editor]="editorRef()" [tick]="tick()" [dir]="contentDir()" (gutterChange)="gutter.set($event)">
+      <div #host class="rd-ed-surface" [attr.lang]="language()" [attr.dir]="contentDir()" data-editor-surface></div>
+    </rd-block-stage>
+
+    @if (tablePicker(); as anchor) {
+      <rd-table-size-picker [anchor]="anchor" [dir]="contentDir()" (picked)="insertTableOf($event)" (cancelled)="closeTablePicker(true)" />
+    }
 
     @if (blockMenu(); as menu) {
       <ul
@@ -385,9 +439,19 @@ export class BlockEditor {
   private readonly hostEl = viewChild.required<ElementRef<HTMLElement>>('host');
   private readonly linkInput = viewChild<ElementRef<HTMLInputElement>>('linkInput');
   private readonly termInput = viewChild<ElementRef<HTMLInputElement>>('termInput');
+  protected readonly stage = viewChild(BlockStage);
   private editor: Editor | null = null;
+  /** The Tiptap editor, for the block handle. */
+  protected readonly editorRef = signal<Editor | null>(null);
+  /** Whether the block handle fits beside the text; until measured, a guess from the screen. */
+  protected readonly gutter = signal(typeof matchMedia === 'function' && matchMedia('(min-width: 64rem) and (pointer: fine)').matches);
+  /** Insert → Table: the size picker, opened under this rectangle. */
+  protected readonly tablePicker = signal<PopupAnchor | null>(null);
+  protected readonly columnSides = ['before', 'after'] as const;
+  protected readonly maxCols = TABLE_MAX_COLS;
+  protected readonly maxRows = TABLE_MAX_ROWS;
   /** Bumped on every transaction so the toolbar state recomputes. */
-  private readonly tick = signal(0);
+  protected readonly tick = signal(0);
   private emitTimer: ReturnType<typeof setTimeout> | null = null;
   private uploads = 0;
   private loadedKey: string | null = null;
@@ -412,6 +476,8 @@ export class BlockEditor {
   protected readonly textKind = computed(() => (this.tick(), this.editor ? currentTextKind(this.editor) : null));
   protected readonly blockDir = computed(() => (this.tick(), this.editor ? currentBlockDir(this.editor) : null));
   protected readonly inTable = computed(() => (this.tick(), !!this.editor?.isActive('table')));
+  /** Columns and rows of the table holding the cursor (the add buttons stop at the RDoc limits). */
+  protected readonly tableSize = computed(() => (this.tick(), this.editor ? tableShape(this.editor.state) : null));
   protected readonly canUndo = computed(() => (this.tick(), !!this.editor?.can().undo()));
   protected readonly canRedo = computed(() => (this.tick(), !!this.editor?.can().redo()));
   /** Marks apply to text, not to code blocks or atoms. */
@@ -461,6 +527,7 @@ export class BlockEditor {
       this.flush();
       this.editor?.destroy();
       this.editor = null;
+      this.editorRef.set(null);
     });
   }
 
@@ -514,6 +581,7 @@ export class BlockEditor {
     this.editor?.destroy();
     this.blockMenu.set(null);
     this.mentionMenu.set(null);
+    this.tablePicker.set(null);
     this.termOpen.set(false); // its positions belong to the old document
     this.loadedKey =`${this.language()}|${this.contentKey()}`;
     this.loadedUi = this.uiLang();
@@ -544,6 +612,7 @@ export class BlockEditor {
     });
     editor.view.dispatch(ensureBlockIds(editor.state.tr, undefined).setMeta('addToHistory', false));
     this.editor = editor;
+    this.editorRef.set(editor);
     this.tick.update((n) => n + 1);
   }
 
@@ -601,7 +670,7 @@ export class BlockEditor {
     if (this.editor) setBlockDir(this.editor, dir);
   }
 
-  protected run(command: 'undo' | 'redo' | 'addRowAfter' | 'addColumnAfter' | 'deleteRow' | 'deleteColumn' | 'deleteTable'): void {
+  protected run(command: 'undo' | 'redo' | 'addRowAfter' | 'addColumnBefore' | 'addColumnAfter' | 'deleteRow' | 'deleteColumn' | 'deleteTable'): void {
     const chain = this.editor?.chain().focus();
     if (!chain) return;
     switch (command) {
@@ -613,6 +682,9 @@ export class BlockEditor {
         break;
       case 'addRowAfter':
         chain.addRowAfter().run();
+        break;
+      case 'addColumnBefore':
+        chain.addColumnBefore().run();
         break;
       case 'addColumnAfter':
         chain.addColumnAfter().run();
@@ -643,7 +715,9 @@ export class BlockEditor {
       ...this.place(rect),
       command: (item) => {
         this.closeInsert();
-        if (this.editor) insertBlock(this.editor, item.kind);
+        if (!this.editor) return;
+        if (item.kind === 'table') this.tablePicker.set(anchorOf(rect));
+        else insertBlock(this.editor, item.kind);
       },
     });
     queueMicrotask(() => document.addEventListener('mousedown', this.closeInsertOnOutside, { once: true }));
@@ -665,6 +739,33 @@ export class BlockEditor {
 
   protected setMenuIndex(index: number): void {
     this.blockMenu.update((menu) => (menu ? { ...menu, index } : menu));
+  }
+
+  // ── Table size, block menu ─────────────────────────────
+
+  /** Slash menu → Table: the typed `/query` goes, and the size picker opens at the caret. */
+  private openTablePicker(editor: Editor, range: Range): void {
+    const caret = editor.view.coordsAtPos(range.from);
+    editor.chain().focus().deleteRange(range).run();
+    this.tablePicker.set(anchorOf(caret));
+  }
+
+  protected insertTableOf(size: TableSize): void {
+    this.closeTablePicker(false);
+    if (this.editor) insertTable(this.editor, size);
+  }
+
+  protected closeTablePicker(refocus: boolean): void {
+    this.tablePicker.set(null);
+    if (refocus) this.editor?.commands.focus();
+  }
+
+  /** The toolbar's block button (when the handle has no room beside the text). */
+  protected toggleBlockMenu(button: HTMLElement, viaKeyboard: boolean): void {
+    const stage = this.stage();
+    if (!stage) return;
+    if (stage.menuOpen()) stage.closeMenu(viaKeyboard);
+    else stage.openMenu(button, viaKeyboard);
   }
 
   // ── Link ───────────────────────────────────────────────
@@ -818,7 +919,10 @@ export class BlockEditor {
         return $from.depth === 1 && $from.parent.type.name === 'paragraph';
       },
       items: ({ query }) => filterBlockMenu(query, (kind) => this.transloco.translate(`editor.blocks.menu.${kind}`)),
-      command: ({ editor, range, props }) => insertBlock(editor, props.kind, range as Range),
+      command: ({ editor, range, props }) => {
+        if (props.kind === 'table') this.openTablePicker(editor, range as Range);
+        else insertBlock(editor, props.kind, range as Range);
+      },
       render: () => ({
         onStart: (props) => {
           this.insertOpen.set(false);
@@ -879,6 +983,10 @@ function suggestionExtension<T>(name: string, options: Omit<SuggestionOptions<T,
       return [Suggestion<T, T>({ editor: this.editor, ...options })];
     },
   });
+}
+
+function anchorOf(rect: PopupAnchor): PopupAnchor {
+  return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
 }
 
 /** Focuses an element that appears on the next render. */

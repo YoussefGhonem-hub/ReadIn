@@ -1,10 +1,25 @@
 import { Editor } from '@tiptap/core';
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 import { RDocBlockType } from '../../../shared/rdoc/rdoc.models';
-import { BLOCK_MENU, BlockKind, currentBlockDir, filterBlockMenu, insertBlock, markTerm, setBlockDir, termTarget, unmarkTerm } from './block-commands';
+import {
+  BLOCK_MENU,
+  BlockKind,
+  TABLE_MAX_COLS,
+  TABLE_MAX_ROWS,
+  TABLE_PICKER,
+  currentBlockDir,
+  filterBlockMenu,
+  insertBlock,
+  insertTable,
+  markTerm,
+  setBlockDir,
+  tableShape,
+  termTarget,
+  unmarkTerm,
+} from './block-commands';
 import { RDocEditorHost } from './editor-host';
 import { PmNode, editorToRDoc, rdocToEditor } from './rdoc-convert';
-import { rdocExtensions } from './rdoc-schema';
+import { currentTopBlock, rdocExtensions } from './rdoc-schema';
 
 const host: RDocEditorHost = {
   t: (key) => key,
@@ -104,6 +119,78 @@ describe('block commands (slash menu, toolbar)', () => {
     insertBlock(editor, 'embed');
     expect(editor.state.doc.firstChild?.type.name).toBe('embed');
     expect(blocks().map((b) => b.type)).toEqual(['paragraph']); // the empty paragraph after it
+  });
+
+  describe('tables', () => {
+    const tableBlock = () => blocks().find((b) => b.type === 'table') as { header: unknown[]; rows: unknown[][] } | undefined;
+
+    it('inserts a table of the picked size: columns × rows under the header row', () => {
+      editor.commands.setTextSelection(2);
+      expect(insertTable(editor, { cols: 4, rows: 3 })).toBe(true);
+      const table = tableBlock()!;
+      expect(table.header).toHaveLength(4);
+      expect(table.rows).toHaveLength(3);
+      expect(table.rows.every((row) => row.length === 4)).toBe(true);
+      expect(blocks()[0]).toMatchObject({ id: 'p1', type: 'paragraph' }); // after the current block
+      // The cursor is in the new table's first header cell.
+      expect(tableShape(editor.state)).toEqual({ cols: 4, rows: 3 });
+      expect(editor.state.selection.$head.node(-1).type.name).toBe('tableHeader');
+    });
+
+    it('replaces an empty paragraph, and keeps the size within the RDoc limits', () => {
+      editor.commands.setContent(rdocToEditor(null) as never);
+      insertTable(editor, { cols: 40, rows: 500 });
+      expect(editor.state.doc.firstChild?.type.name).toBe('table');
+      expect(tableShape(editor.state)).toEqual({ cols: TABLE_MAX_COLS, rows: TABLE_MAX_ROWS });
+      editor.commands.setContent(rdocToEditor(null) as never);
+      insertTable(editor, { cols: 0, rows: -2 });
+      expect(tableShape(editor.state)).toEqual({ cols: 1, rows: 0 });
+    });
+
+    it('the slash menu without a size still inserts the 2 × 2 table', () => {
+      editor.commands.setTextSelection(2);
+      insertBlock(editor, 'table');
+      expect(tableShape(editor.state)).toEqual(TABLE_PICKER.initial);
+    });
+
+    it('"+ column" adds a third, fourth… column, before or after the current one, header cells included', () => {
+      editor.commands.setTextSelection(2);
+      insertTable(editor, { cols: 2, rows: 2 });
+      expect(editor.commands.addColumnAfter()).toBe(true);
+      expect(editor.commands.addColumnAfter()).toBe(true);
+      expect(editor.commands.addColumnBefore()).toBe(true);
+      expect(tableShape(editor.state)).toEqual({ cols: 5, rows: 2 });
+      const table = editor.state.doc.child(1);
+      expect(table.child(0).content.content.map((cell) => cell.type.name)).toEqual(Array(5).fill('tableHeader'));
+      expect(table.child(1).content.content.map((cell) => cell.type.name)).toEqual(Array(5).fill('tableCell'));
+      const saved = tableBlock()!;
+      expect(saved.header).toHaveLength(5);
+      expect(saved.rows.map((row) => row.length)).toEqual([5, 5]);
+      expect(editor.commands.addRowAfter()).toBe(true);
+      expect(tableShape(editor.state)).toEqual({ cols: 5, rows: 3 });
+    });
+
+    it('knows the table holding the cursor; outside a table there is none', () => {
+      editor.commands.setTextSelection(2);
+      expect(tableShape(editor.state)).toBeNull();
+    });
+  });
+
+  it('inserts after a selected image, embed or divider, not after the block that follows it', () => {
+    editor.commands.setContent(
+      rdocToEditor({
+        version: 1,
+        language: 'ar-EG',
+        blocks: [
+          { id: 'd1', type: 'divider' },
+          { id: 'p2', type: 'paragraph', content: [{ type: 'text', text: 'بعده' }] },
+        ],
+      }) as never,
+    );
+    editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, 0)));
+    expect(currentTopBlock(editor)?.node.attrs['id']).toBe('d1');
+    insertBlock(editor, 'code');
+    expect(blocks().map((b) => b.id === 'd1' || b.id === 'p2' ? b.id : b.type)).toEqual(['d1', 'code', 'p2']);
   });
 
   it('sets and clears the direction override of the current block', () => {

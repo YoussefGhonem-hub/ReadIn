@@ -1,6 +1,7 @@
 import { Editor, Range } from '@tiptap/core';
 import { Node as PmNodeType } from '@tiptap/pm/model';
-import { NodeSelection, TextSelection } from '@tiptap/pm/state';
+import { EditorState, NodeSelection, TextSelection } from '@tiptap/pm/state';
+import { TableMap } from '@tiptap/pm/tables';
 import { BlockDir, CalloutVariant } from '../../../shared/rdoc/rdoc.models';
 import { AppIconName } from '../../../shared/ui/icons';
 import { openPickerForNextImage } from './node-views';
@@ -77,10 +78,22 @@ export function filterBlockMenu(query: string, label: (kind: BlockKind) => strin
 
 const TEXTBLOCKS = new Set(['paragraph', 'heading', 'quote', 'callout', 'summary']);
 
+/** A new table's size: columns, and body rows under the header row. */
+export interface TableSize {
+  cols: number;
+  rows: number;
+}
+
+/** The size picker's grid (Insert → Table): 2 to 6 columns and 1 to 8 rows under the header; 2 × 2 at first. */
+export const TABLE_PICKER = { minCols: 2, maxCols: 6, minRows: 1, maxRows: 8, initial: { cols: 2, rows: 2 } } as const;
+/** shared/rdoc/rdoc.schema.json: a table has 1 to 12 columns and at most 200 rows under the header. */
+export const TABLE_MAX_COLS = 12;
+export const TABLE_MAX_ROWS = 200;
+
 /**
  * Inserts a block of `kind` (slash menu, toolbar). Text blocks convert the current block in place, keeping its text
  * and id; lists wrap it; other blocks replace an empty paragraph or go after the current block. `range` is the typed
- * `/query`, removed first.
+ * `/query`, removed first. A table is 2 × 2 here; {@link insertTable} picks the size.
  */
 export function insertBlock(editor: Editor, kind: BlockKind, range?: Range, callout: CalloutVariant = 'tip'): boolean {
   if (range) editor.chain().focus().deleteRange(range).run();
@@ -96,21 +109,7 @@ export function insertBlock(editor: Editor, kind: BlockKind, range?: Range, call
     return true;
   };
 
-  const insert = (node: PmNodeType, select: 'inside' | 'node' = 'inside') => {
-    const { tr } = editor.state;
-    const isEmptyParagraph = top.node.type.name === 'paragraph' && top.node.content.size === 0;
-    const from = isEmptyParagraph ? top.pos : top.pos + top.node.nodeSize;
-    if (isEmptyParagraph) tr.replaceWith(from, from + top.node.nodeSize, node);
-    else tr.insert(from, node);
-    const end = from + node.nodeSize;
-    // Something to type into after a block that is not text.
-    if (node.isAtom && end >= tr.doc.content.size) tr.insert(end, schema.nodes['paragraph'].create());
-    if (select === 'node') tr.setSelection(NodeSelection.create(tr.doc, from));
-    else tr.setSelection(TextSelection.near(tr.doc.resolve(from + 1)));
-    editor.view.dispatch(tr.scrollIntoView());
-    editor.view.focus();
-    return true;
-  };
+  const insert = (node: PmNodeType, select: 'inside' | 'node' = 'inside') => insertAfter(editor, top, node, select);
 
   switch (kind) {
     case 'paragraph':
@@ -148,11 +147,8 @@ export function insertBlock(editor: Editor, kind: BlockKind, range?: Range, call
         }),
         'node',
       );
-    case 'table': {
-      const cell = (type: string) => schema.nodes[type].create(null, schema.nodes['paragraph'].create());
-      const row = (type: string) => schema.nodes['tableRow'].create(null, [cell(type), cell(type)]);
-      return insert(schema.nodes['table'].create(null, [row('tableHeader'), row('tableCell'), row('tableCell')]));
-    }
+    case 'table':
+      return insert(tableNode(editor, TABLE_PICKER.initial));
     case 'image':
       openPickerForNextImage();
       return insert(schema.nodes['image'].create({ alt: '' }), 'node');
@@ -164,6 +160,58 @@ export function insertBlock(editor: Editor, kind: BlockKind, range?: Range, call
       return done;
     }
   }
+}
+
+/** Puts `node` in place of the current block if it is an empty paragraph, or after it; selects it or its start. */
+function insertAfter(editor: Editor, top: { node: PmNodeType; pos: number }, node: PmNodeType, select: 'inside' | 'node'): boolean {
+  const { tr, schema } = editor.state;
+  const isEmptyParagraph = top.node.type.name === 'paragraph' && top.node.content.size === 0;
+  const from = isEmptyParagraph ? top.pos : top.pos + top.node.nodeSize;
+  if (isEmptyParagraph) tr.replaceWith(from, from + top.node.nodeSize, node);
+  else tr.insert(from, node);
+  const end = from + node.nodeSize;
+  // Something to type into after a block that is not text.
+  if (node.isAtom && end >= tr.doc.content.size) tr.insert(end, schema.nodes['paragraph'].create());
+  if (select === 'node') tr.setSelection(NodeSelection.create(tr.doc, from));
+  else tr.setSelection(TextSelection.near(tr.doc.resolve(from + 1)));
+  editor.view.dispatch(tr.scrollIntoView());
+  editor.view.focus();
+  return true;
+}
+
+/** A table of `size` (kept within the RDoc limits): a header row and `rows` rows, every cell an empty paragraph. */
+function tableNode(editor: Editor, size: TableSize): PmNodeType {
+  const { schema } = editor.state;
+  const cols = clamp(Math.round(size.cols), 1, TABLE_MAX_COLS);
+  const rows = clamp(Math.round(size.rows), 0, TABLE_MAX_ROWS);
+  const cell = (type: string) => schema.nodes[type].create(null, schema.nodes['paragraph'].create());
+  const row = (type: string) => schema.nodes['tableRow'].create(null, Array.from({ length: cols }, () => cell(type)));
+  return schema.nodes['table'].create(null, [row('tableHeader'), ...Array.from({ length: rows }, () => row('tableCell'))]);
+}
+
+/** Inserts a table of `size` columns × rows (plus the header row), with the cursor in its first header cell. */
+export function insertTable(editor: Editor, size: TableSize, range?: Range): boolean {
+  if (range) editor.chain().focus().deleteRange(range).run();
+  const top = currentTopBlock(editor);
+  if (!top) return false;
+  return insertAfter(editor, top, tableNode(editor, size), 'inside');
+}
+
+/** Columns, and rows under the header, of the table holding the selection; null outside a table. */
+export function tableShape(state: EditorState): TableSize | null {
+  const { $head } = state.selection;
+  for (let depth = $head.depth; depth > 0; depth--) {
+    const node = $head.node(depth);
+    if (node.type.name === 'table') {
+      const map = TableMap.get(node);
+      return { cols: map.width, rows: Math.max(0, map.height - 1) };
+    }
+  }
+  return null;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Number.isFinite(value) ? value : min));
 }
 
 /** Sets the manual direction override of the current top-level block (`auto` clears it). Code stays LTR. */

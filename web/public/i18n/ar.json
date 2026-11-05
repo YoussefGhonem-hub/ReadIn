@@ -1244,7 +1244,22 @@
       "addColumn": "+ عمود",
       "deleteRow": "امسح الصف",
       "deleteColumn": "امسح العمود",
-      "delete": "امسح الجدول"
+      "delete": "امسح الجدول",
+      "addColumnBefore": "+ عمود قبله",
+      "addColumnAfter": "+ عمود بعده",
+      "maxColumns": "الجدول آخره {{max}} عمود",
+      "maxRows": "الجدول آخره {{max}} صف",
+      "size": "حجم الجدول",
+      "sizeHint": "أعمدة × صفوف، وفوقهم صف العناوين"
+    },
+    "blockHandle": {
+      "options": "أوامر البلوك",
+      "hint": "اسحب عشان تنقله، أو دوس عشان تشوف الأوامر",
+      "moveUp": "طلّعه لفوق",
+      "moveDown": "نزّله لتحت",
+      "delete": "امسح البلوك",
+      "moved": "البلوك اتنقل",
+      "deleted": "البلوك اتمسح. Ctrl+Z ترجّعه."
     },
     "blocks": {
       "menuLabel": "البلوكات",

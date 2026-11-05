@@ -1206,7 +1206,22 @@
       "addColumn": "+ Column",
       "deleteRow": "Delete row",
       "deleteColumn": "Delete column",
-      "delete": "Delete table"
+      "delete": "Delete table",
+      "addColumnBefore": "+ Column before",
+      "addColumnAfter": "+ Column after",
+      "maxColumns": "A table has {{max}} columns at most",
+      "maxRows": "A table has {{max}} rows at most",
+      "size": "Table size",
+      "sizeHint": "Columns × rows, plus the header row"
+    },
+    "blockHandle": {
+      "options": "Block options",
+      "hint": "Drag to move, or click for options",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "delete": "Delete block",
+      "moved": "Block moved",
+      "deleted": "Block deleted. Ctrl+Z brings it back."
     },
     "blocks": {
       "menuLabel": "Blocks",

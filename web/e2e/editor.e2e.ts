@@ -335,6 +335,133 @@ test.describe('published articles', () => {
   });
 });
 
+test('tables of any size, and whole blocks moved or deleted: drag, menu, Alt+Shift+↑, trash, undo', async ({ page, context, baseURL, request, isMobile }) => {
+  const variant = VARIANTS[0]; // ar/light
+  await useVariant(context, baseURL!, variant);
+  await signInAsAuthor(page, request, variant, 'fresh');
+  const savedDocument = trackSavedDocument(page);
+  await page.goto('/write/new');
+  await editorReady(page);
+  await page.locator('[data-source-language]').getByRole('radio').first().click(); // Arabic: RTL
+  await page.locator('[data-title]').fill('مقارنة بين الـ ORMs');
+  await typeInEditor(page, 'أول فقرة.');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('تاني فقرة.');
+  await page.keyboard.press('Enter');
+
+  // Table → the size picker: 4 columns × 3 rows under the header (in RTL, ← adds a column).
+  await page.keyboard.type('/جدول');
+  await expect(page.locator('[data-slash-menu] [aria-selected="true"]')).toHaveAttribute('data-block-option', 'table');
+  await page.keyboard.press('Enter');
+  const picker = page.locator('[data-table-picker]');
+  await expect(picker.getByRole('grid')).toBeFocused();
+  await expect(picker.locator('[data-table-size]')).toHaveText('2 × 2');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowDown');
+  await expect(picker.locator('[data-table-size]')).toHaveText('4 × 3');
+  await page.keyboard.press('Enter');
+  await expect(picker).toHaveCount(0);
+  const table = page.locator('[data-editor] > [data-block-type="table"]');
+  const headerCells = table.locator('tr').first().locator('th');
+  await expect(table.locator('tr')).toHaveCount(4);
+  await expect(headerCells).toHaveCount(4);
+
+  // "+ Column" adds a fifth and a sixth column, after and before the current one.
+  await page.keyboard.type('الأداة');
+  await page.locator('[data-table-add-column="after"]').click();
+  await expect(headerCells).toHaveCount(5);
+  await page.locator('[data-table-add-column="before"]').click();
+  await expect(headerCells).toHaveCount(6);
+  await expect(headerCells.nth(1)).toHaveText('الأداة');
+
+  const order = () =>
+    page.locator('[data-editor] > [data-block-id]').evaluateAll((blocks) => blocks.map((b) => b.getAttribute('data-block-type') ?? b.textContent?.trim()));
+  const paragraph = (text: string) => page.locator('[data-editor] > p', { hasText: text });
+  /** The toolbar's block type follows the cursor: "paragraph", or "" in a table. */
+  const blockType = page.locator('[data-block-type-select]');
+  /** Puts the cursor in a paragraph by clicking its first characters (the article is RTL: they are on the right). */
+  const cursorIn = async (block: ReturnType<typeof paragraph>) => {
+    const box = (await block.boundingBox())!;
+    await block.click({ position: { x: box.width - 6, y: 8 } });
+    await expect(blockType).toHaveValue('paragraph');
+  };
+  const cursorInTable = async () => {
+    await table.locator('td').first().click();
+    await expect(blockType).toHaveValue('');
+  };
+  const handle = page.locator('[data-block-handle]');
+  const blockMenu = page.locator('[data-block-menu]');
+  const blockOptions = page.locator('[data-block-options]');
+  const showHandleFor = async (block: ReturnType<typeof paragraph>) => {
+    await block.hover();
+    await expect(handle).toHaveAttribute('data-for', (await block.getAttribute('data-block-id'))!);
+  };
+
+  // The table to the very top: dragged by its grip, or twice "Move up" from the menu on a phone (the toolbar's block
+  // button, for the block holding the cursor: the handle has no room beside the text there).
+  await expect.poll(order).toEqual(['أول فقرة.', 'تاني فقرة.', 'table']);
+  await expect(blockType).toHaveValue(''); // the cursor is in the table
+  if (isMobile) {
+    for (let i = 0; i < 2; i++) {
+      await blockOptions.click();
+      await blockMenu.locator('[data-block-action="up"]').click();
+      await expect(blockMenu).toHaveCount(0);
+    }
+  } else {
+    await expect(blockOptions).toHaveCount(0);
+    await showHandleFor(table);
+    const grip = (await page.locator('[data-block-grip]').boundingBox())!;
+    const target = (await paragraph('أول فقرة.').boundingBox())!;
+    await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(target.x + target.width / 2, target.y + 12, { steps: 8 });
+    await page.mouse.move(target.x + target.width / 2, target.y + 2, { steps: 4 });
+    await expect(page.locator('[data-drop-indicator]')).toBeVisible();
+    await page.mouse.up();
+  }
+  await expect.poll(order).toEqual(['table', 'أول فقرة.', 'تاني فقرة.']);
+
+  // Alt+Shift+↑ moves the block holding the cursor.
+  await cursorIn(paragraph('تاني فقرة.'));
+  await page.keyboard.press('Alt+Shift+ArrowUp');
+  await expect.poll(order).toEqual(['table', 'تاني فقرة.', 'أول فقرة.']);
+
+  // The table's menu: the first block can't go up; "Move down" moves it.
+  if (isMobile) {
+    await cursorInTable();
+    await blockOptions.click();
+  } else {
+    await showHandleFor(table);
+    await page.locator('[data-block-grip]').click();
+  }
+  await expect(blockMenu.locator('[data-block-action="up"]')).toBeDisabled();
+  await blockMenu.locator('[data-block-action="down"]').click();
+  await expect(blockMenu).toHaveCount(0);
+  await expect.poll(order).toEqual(['تاني فقرة.', 'table', 'أول فقرة.']);
+
+  // Delete the whole table (the trash beside it, or the menu on a phone); undo brings it back.
+  await page.waitForTimeout(600); // its own undo step: the history joins neighbouring changes made within half a second
+  if (isMobile) {
+    await cursorInTable();
+    await blockOptions.click();
+    await blockMenu.locator('[data-block-action="delete"]').click();
+  } else {
+    await showHandleFor(table);
+    await page.locator('[data-block-delete]').click();
+  }
+  await expect.poll(order).toEqual(['تاني فقرة.', 'أول فقرة.']);
+  await page.locator('[data-toolbar]').getByRole('button', { name: 'تراجع' }).click();
+  await expect.poll(order).toEqual(['تاني فقرة.', 'table', 'أول فقرة.']);
+
+  // The draft keeps the order and the 6 × 3 table.
+  await expect
+    .poll(() => savedDocument()?.translations?.[0]?.content?.blocks?.map((b: { type: string; header?: unknown[]; rows?: unknown[][] }) => (b.type === 'table' ? `table ${b.header!.length}×${b.rows!.length}` : b.type)), {
+      timeout: 25_000,
+    })
+    .toEqual(['paragraph', 'table 6×3', 'paragraph']);
+});
+
 test('RTL: per-block direction is automatic, can be overridden, and the toolbar mirrors', async ({ page, context, baseURL, request }) => {
   const variant = VARIANTS[0]; // ar/light
   await useVariant(context, baseURL!, variant);

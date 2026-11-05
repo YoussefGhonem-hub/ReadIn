@@ -16,7 +16,8 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
 import { Text } from '@tiptap/extension-text';
 import { Dropcursor, Gapcursor, Placeholder, UndoRedo } from '@tiptap/extensions';
 import { Node as PmNodeType } from '@tiptap/pm/model';
-import { TextSelection } from '@tiptap/pm/state';
+import { NodeSelection, TextSelection } from '@tiptap/pm/state';
+import { BlockMoves } from './block-moves';
 import { RDocEditorHost } from './editor-host';
 import { RDocPlugins } from './editor-plugins';
 import { CalloutView, CodeBlockView, CodeTabsView, EmbedView, ImageView, QuoteView, SummaryView } from './node-views';
@@ -71,9 +72,15 @@ function dataAttribute(key: string, name: string, fallback: unknown = null, json
   };
 }
 
-/** Top-level block containing the selection head, with its position (depth 1), or null at the document level. */
+/**
+ * Top-level block containing the selection head, with its position (depth 1); a selected image, embed or code tabs
+ * block itself; or null at the document level.
+ */
 export function currentTopBlock(editor: Editor): { node: PmNodeType; pos: number } | null {
-  const { $head } = editor.state.selection;
+  const { selection } = editor.state;
+  // A node selection's head is after the node: the block itself, not the one after it.
+  if (selection instanceof NodeSelection && selection.$from.depth === 0) return { node: selection.node, pos: selection.from };
+  const { $head } = selection;
   if ($head.depth < 1) {
     const node = editor.state.doc.nodeAt($head.pos);
     return node ? { node, pos: $head.pos } : null;
@@ -443,6 +450,7 @@ export function rdocExtensions(host: RDocEditorHost, extra: AnyExtension[] = [],
       },
     }),
     RDocPlugins.configure({ host, newId }),
+    BlockMoves,
     ...extra,
   ];
 }
