@@ -6,8 +6,11 @@ namespace ReadIn.Infrastructure.UnitTests.Pdf;
 /// <summary>
 /// The first page of each stress fixture compared with its approved image (SPEC §27: one Arabic and one English; the
 /// file is always light). Rendered at 50 dpi in grey so the check is about the layout (logo, title, meta, disclaimer,
-/// cover, direction), not anti-aliasing. To approve a deliberate change, set <c>READIN_PDF_BASELINES_DIR</c> to
-/// <c>backend/tests/ReadIn.Infrastructure.UnitTests/Pdf/baselines</c>, run the test, and look at the new images.
+/// cover, direction), not anti-aliasing. Linux has its own approved images (<c>*.linux.png</c>): Chrome places glyphs a
+/// fraction of a pixel differently there, which moves text edges at 50 dpi while the layout stays the same. To approve a
+/// deliberate change, set <c>READIN_PDF_BASELINES_DIR</c> to
+/// <c>backend/tests/ReadIn.Infrastructure.UnitTests/Pdf/baselines</c>, run the test on Windows and on Linux
+/// (docs/setup/deployment.md §10), and look at the new images.
 /// </summary>
 [Collection(ArticlePdfCollection.Name)]
 public sealed class ArticlePdfPageImageTests(ArticlePdfFixture fixture)
@@ -25,7 +28,7 @@ public sealed class ArticlePdfPageImageTests(ArticlePdfFixture fixture)
     [InlineData("en")]
     public void The_first_page_looks_like_its_approved_image(string language)
     {
-        var name = $"pdf-stress.{language}.page1.png";
+        var name = OperatingSystem.IsLinux() ? $"pdf-stress.{language}.page1.linux.png" : $"pdf-stress.{language}.page1.png";
         using var actual = Render(fixture.Pdf(language));
 
         if (Environment.GetEnvironmentVariable("READIN_PDF_BASELINES_DIR") is { Length: > 0 } approve)

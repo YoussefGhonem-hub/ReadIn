@@ -318,18 +318,28 @@ default of 2 minutes is enough; Cloudflare's proxied limit is exactly 100 s).
 ### Docker image
 
 The SDK container build (`dotnet publish … /t:PublishContainer`, `backend.yml`) starts from
-`mcr.microsoft.com/dotnet/aspnet`, which has no Chromium. Publish onto a base image that has it:
+`mcr.microsoft.com/dotnet/aspnet`, which has no Chromium. .NET 10 has no Debian images (Microsoft publishes Ubuntu,
+Alpine and Azure Linux ones; `10.0-trixie-slim` only existed as a preview tag), and Ubuntu's `chromium` package is a
+snap shim that doesn't run in a container. So the base image is Debian 13 with Debian's real `chromium`, plus the
+ASP.NET Core runtime copied from Microsoft's image:
 
 ```dockerfile
-# Base image for the API with Chromium (rebuild it monthly for Chromium's security fixes).
-# A Debian tag: Debian ships a real `chromium` package (Ubuntu's is only a snap shim and doesn't run in a container).
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-trixie-slim
-USER root
+# api-base.Dockerfile: the API's base image, with Chromium for article PDFs. Rebuild it monthly: Debian's chromium
+# follows Chrome stable with its security fixes, and the COPY takes the latest .NET 10 patch.
+FROM debian:trixie-slim
+COPY --from=mcr.microsoft.com/dotnet/aspnet:10.0-noble /usr/share/dotnet /usr/share/dotnet
 RUN apt-get update \
- && apt-get install -y --no-install-recommends chromium \
- && rm -rf /var/lib/apt/lists/*
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-USER app
+ && apt-get install -y --no-install-recommends ca-certificates libicu76 tzdata chromium \
+ && rm -rf /var/lib/apt/lists/* \
+ && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+ && groupadd --gid 1654 app \
+ && useradd --uid 1654 --gid app --create-home --no-log-init app
+# As on Microsoft's images: the SDK container build reads the user and port from APP_UID and ASPNETCORE_HTTP_PORTS.
+ENV APP_UID=1654 \
+    ASPNETCORE_HTTP_PORTS=8080 \
+    DOTNET_RUNNING_IN_CONTAINER=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+USER $APP_UID
 ```
 
 ```bash
@@ -339,10 +349,90 @@ dotnet publish backend/src/ReadIn.Api -c Release /t:PublishContainer \
   -p:ContainerBaseImage=ghcr.io/<owner>/readin-api-base:chromium   # plus the registry/repository/tags of backend.yml
 ```
 
-The API runs as the non-root `app` user, which Chromium's sandbox needs. The sandbox also needs unprivileged user
-namespaces: if Chromium fails to start with "No usable sandbox!", run the container with Chrome's seccomp profile
-(`--security-opt seccomp=chrome.json`, from the Chromium/Puppeteer docs) or on a host that allows user namespaces
-(`kernel.unprivileged_userns_clone=1`). Don't turn the sandbox off instead.
+The API runs as the non-root `app` user (UID 1654); Chromium refuses to start its sandbox as root.
+
+**The sandbox in a container.** Chromium's sandbox starts by creating a user namespace, and Docker's default seccomp
+profile refuses that (`clone`/`unshare` with namespace flags need `CAP_SYS_ADMIN` there). Started the default way,
+Chromium aborts with "No usable sandbox!" and every PDF answers `500 article.pdf_failed`. (Debian's hint to install
+`chromium-sandbox` doesn't help in a container.) Run the API with Docker's default profile plus three rules:
+
+```bash
+# chromium-seccomp.json: Docker's default seccomp profile + what Chromium's sandbox needs, nothing else.
+curl -fsSL https://raw.githubusercontent.com/moby/profiles/seccomp/v0.3.0/seccomp/default.json \
+| jq '.syscalls += [
+    {"names": ["clone", "unshare"], "action": "SCMP_ACT_ALLOW",
+     "args": [{"index": 0, "value": 268435456, "valueTwo": 268435456, "op": "SCMP_CMP_MASKED_EQ"}],
+     "comment": "Chromium sandbox: create a user namespace (CLONE_NEWUSER)"},
+    {"names": ["clone"], "action": "SCMP_ACT_ALLOW",
+     "args": [{"index": 0, "value": 2114060288, "valueTwo": 536870912, "op": "SCMP_CMP_MASKED_EQ"}],
+     "comment": "Chromium sandbox: fork a renderer into a new PID namespace (CLONE_NEWPID alone)"},
+    {"names": ["chroot"], "action": "SCMP_ACT_ALLOW",
+     "comment": "Chromium sandbox: chroot inside its user namespace, also with every capability dropped"}
+  ]' > chromium-seccomp.json
+```
+
+The rules let a process create a user namespace (what any user may do on a normal Linux host), let Chromium fork each
+renderer into a new PID namespace from inside it, and allow the `chroot` Chromium makes inside that namespace (Docker
+allows `chroot` only with `CAP_SYS_CHROOT`, so without this rule a container with every capability dropped fails). The
+kernel still checks every call, and the container gets no capability. Each rule is needed: without the first Chromium
+says "No usable sandbox!", without the second it hangs on "Zygote could not fork", without the third it fails once
+capabilities are dropped. Never use `--cap-add SYS_ADMIN` or `seccomp=unconfined` instead: both open far more.
+
+- `docker run`: `--security-opt seccomp=/etc/readin/chromium-seccomp.json`.
+- Compose (the path is relative to the compose file):
+
+  ```yaml
+  services:
+    api:
+      image: ghcr.io/<owner>/readin-api:latest
+      security_opt:
+        - seccomp=./chromium-seccomp.json
+  ```
+
+- Kubernetes: containerd reads `Localhost` profiles in the OCI format and ignores Docker's `includes`/`excludes`, which
+  would allow everything `CAP_SYS_ADMIN` unlocks. Convert the file for pods that drop every capability (x86-64), copy it
+  to `/var/lib/kubelet/seccomp/readin/chromium-seccomp.json` on every node, and point the container at it:
+
+  ```bash
+  jq '{defaultAction, defaultErrnoRet,
+       architectures: ["SCMP_ARCH_X86_64", "SCMP_ARCH_X86", "SCMP_ARCH_X32"],
+       syscalls: [.syscalls[]
+         | select((.includes.caps // []) == []
+                  and ((.includes.arches // ["amd64"]) | index("amd64"))
+                  and (((.excludes.arches // []) | index("amd64")) | not))
+         | del(.includes, .excludes, .comment)]}' chromium-seccomp.json > chromium-seccomp.oci.json
+  ```
+
+  ```yaml
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1654
+    allowPrivilegeEscalation: false
+    capabilities: { drop: ["ALL"] }
+    seccompProfile: { type: Localhost, localhostProfile: readin/chromium-seccomp.json }
+  ```
+
+**The host.** The kernel must allow unprivileged user namespaces: `sysctl user.max_user_namespaces` above 0 (the default
+on current Debian and Ubuntu), and `kernel.unprivileged_userns_clone = 1` where that Debian-only setting exists. Ubuntu
+23.10 and later also set `kernel.apparmor_restrict_unprivileged_userns = 1`, which applies to programs without an
+AppArmor profile; containers run under Docker's `docker-default` profile, so it shouldn't affect them. If the check
+below still fails only on such a host, give the container an AppArmor profile that allows `userns` rather than turning
+the setting off for the whole server.
+
+**Check it works**, on the server, with the image and options the API runs with:
+
+```bash
+docker run --rm --security-opt seccomp=/etc/readin/chromium-seccomp.json --entrypoint chromium \
+  ghcr.io/<owner>/readin-api:latest --headless=new --disable-gpu --dump-dom 'data:text/html,<p>sandbox ok</p>'
+```
+
+It prints `<html><head></head><body><p>sandbox ok</p></body></html>` (D-Bus errors on stderr are harmless). Without the
+profile it prints "No usable sandbox!". In the API's log, the first PDF writes `Started Chromium <version> for article
+PDFs`; a start that fails writes `Chromium for article PDFs (…) did not start` with Chromium's output.
+
+Verified on 2026-11-05 with this image (Debian chromium 156.0.8078.79, user `app`): the article PDF tests fail with
+Docker's default profile and pass with `chromium-seccomp.json`, also with `--cap-drop ALL --security-opt
+no-new-privileges`, and with the OCI version above.
 
 ### Windows Server / IIS
 
@@ -354,15 +444,41 @@ launch makes a throwaway profile there).
 ### Linux server (no Docker)
 
 Debian: `sudo apt-get install chromium` (found at `/usr/bin/chromium`). Run the API as a normal user, never as root.
+Debian allows unprivileged user namespaces, so the sandbox works as installed.
+
+Ubuntu 23.10 and later: Ubuntu's `chromium` is a snap, so install Google Chrome (`google-chrome-stable` from Google's apt
+repository). Ubuntu restricts user namespaces with AppArmor (`kernel.apparmor_restrict_unprivileged_userns = 1`) and
+ships a profile that exempts `/opt/google/chrome/chrome` only. Any other Chrome or Chromium binary needs the same
+one-rule profile that CI adds for its pinned Chrome (`backend.yml`, step "Chrome for article PDFs"); don't turn the
+restriction off for the whole server.
+
+Check either one as the API's user: `<chrome> --headless=new --disable-gpu --dump-dom 'data:text/html,<p>sandbox ok</p>'`
+prints `<p>sandbox ok</p>` inside the page's HTML, or "No usable sandbox!".
 
 ### Local development and CI
 
 - **Local:** an installed Chrome is found on its own (Windows, macOS, Linux). Otherwise set `ArticlePdf:ChromiumPath`
   in user-secrets, or `PUPPETEER_EXECUTABLE_PATH`.
 - **Tests:** the article PDF tests (`ReadIn.Infrastructure.UnitTests/Pdf`, `ArticlePdfTests`) print with the real
-  Chromium found the same way, so it must be installed where the tests run. GitHub's `ubuntu-latest` runner already
-  has Google Chrome at `/usr/bin/google-chrome`. To pin a version there, add a step such as
-  `browser-actions/setup-chrome` with a fixed `chrome-version` and export its path as `PUPPETEER_EXECUTABLE_PATH`.
-- **Page baselines:** two page images (`Pdf/baselines/*.png`, one Arabic, one English) are compared with a small
-  tolerance. After a deliberate layout change, set `READIN_PDF_BASELINES_DIR` to that folder, run the test once, look
-  at the new images and commit them. `READIN_PDF_OUT=<folder>` writes the test PDFs and every page as PNG for a look.
+  Chromium found the same way, sandbox on, so it must be installed where the tests run.
+- **CI** (`backend.yml`, step "Chrome for article PDFs"): the runner's own browsers change with every runner image, and
+  the API would pick its `/usr/bin/chromium` first, a Chromium snapshot that Ubuntu 24.04's AppArmor restriction leaves
+  without a sandbox ("No usable sandbox!", every PDF test failing). So CI downloads a pinned
+  [Chrome for Testing](https://googlechromelabs.github.io/chrome-for-testing/) build (`CHROME_VERSION`), loads a
+  one-rule AppArmor profile that lets only that binary create user namespaces (the restriction stays on for everything
+  else), starts it once with its sandbox so a sandbox problem fails that step, and exports `PUPPETEER_EXECUTABLE_PATH`.
+  To move CI to a newer Chrome, change `CHROME_VERSION` to a version listed there, and re-approve the Linux page images
+  if they change.
+- **Page baselines:** page 1 of the Arabic and the English stress fixture is compared with an approved image, with a
+  small tolerance: `Pdf/baselines/*.page1.png` on Windows and `*.page1.linux.png` on Linux. The layout is the same, but
+  Chrome places glyphs a fraction of a pixel differently on Linux, which moves text edges by more than the tolerance
+  allows. After a deliberate layout change:
+  - Windows: set `READIN_PDF_BASELINES_DIR` to `backend/tests/ReadIn.Infrastructure.UnitTests/Pdf/baselines`, run the
+    test once, look at the new images and commit them.
+  - Linux: push. The failing CI run uploads the new images as the `pdf-page-images` artifact, already named
+    `*.linux.png`. Download them with `gh run download <run-id> -n pdf-page-images -D
+    backend/tests/ReadIn.Infrastructure.UnitTests/Pdf/baselines`, look at them, and commit them. On any Linux machine
+    the same variable writes them too, with the Chrome version of `CHROME_VERSION` (Debian's chromium 156.0.8078.79 and
+    Chrome for Testing 156.0.8078.80 gave byte-identical images).
+
+  `READIN_PDF_OUT=<folder>` writes the test PDFs and every page as PNG for a look.

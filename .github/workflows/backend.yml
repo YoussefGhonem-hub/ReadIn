@@ -48,9 +48,51 @@ jobs:
         working-directory: .
         run: docker build --tag readin-sqlserver-fts:local docker/sqlserver
 
+      # Article PDFs (F33) print with headless Chrome, its sandbox on (SPEC §24; never --no-sandbox). Two things:
+      # 1. A pinned Chrome for Testing build, not the runner's own Chrome/Chromium, which change with every runner image
+      #    (its /usr/bin/chromium is a Chromium snapshot that the API would pick first). The page-image baselines and the
+      #    page-break tests then always meet the same Chrome. Bump CHROME_VERSION on purpose (deployment.md §10).
+      # 2. Chrome's sandbox needs an unprivileged user namespace. Ubuntu 24.04 allows that only to programs whose AppArmor
+      #    profile grants `userns` (kernel.apparmor_restrict_unprivileged_userns=1); without one Chrome aborts with
+      #    "No usable sandbox!". Ubuntu ships such a profile for /opt/google/chrome/chrome only, so this step adds the same
+      #    one-rule profile for the pinned binary alone: the restriction stays on for everything else on the runner.
+      # The last command starts Chrome once with its sandbox, so a sandbox problem fails here, not in 69 PDF tests.
+      - name: Chrome for article PDFs
+        working-directory: .
+        env:
+          CHROME_VERSION: 156.0.8078.80
+        run: |
+          dir="/opt/chrome-for-testing/$CHROME_VERSION"
+          chrome="$dir/chrome-linux64/chrome"
+          curl -fsSL -o "$RUNNER_TEMP/chrome.zip" \
+            "https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chrome-linux64.zip"
+          sudo mkdir -p "$dir"
+          sudo unzip -q -o "$RUNNER_TEMP/chrome.zip" -d "$dir"
+          sudo tee /etc/apparmor.d/readin-chrome-for-testing > /dev/null <<EOF
+          abi <abi/4.0>,
+          include <tunables/global>
+
+          profile readin-chrome-for-testing $chrome flags=(unconfined) {
+            userns,
+          }
+          EOF
+          sudo apparmor_parser --replace /etc/apparmor.d/readin-chrome-for-testing
+          "$chrome" --headless=new --disable-gpu --dump-dom 'data:text/html,<p>sandbox ok</p>' | grep 'sandbox ok'
+          echo "PUPPETEER_EXECUTABLE_PATH=$chrome" >> "$GITHUB_ENV"
+
       # Unit + architecture + integration tests (Testcontainers runs the image above on the runner's Docker).
       - name: Test
         run: dotnet test --solution ReadIn.slnx --no-build -c Release
+
+      # A PDF page that differs from its approved image is written to /tmp/readin-pdf-baselines (*.linux.png). After a
+      # deliberate layout change, look at these and commit them to Pdf/baselines (deployment.md §10).
+      - name: PDF page images
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-page-images
+          path: /tmp/readin-pdf-baselines/
+          if-no-files-found: ignore
 
       - name: Vulnerable packages
         run: |

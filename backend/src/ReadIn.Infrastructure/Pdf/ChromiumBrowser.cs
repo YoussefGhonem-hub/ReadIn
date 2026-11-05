@@ -71,10 +71,14 @@ internal sealed class ChromiumBrowser(IOptions<ArticlePdfOptions> options, ILogg
 
     private async Task<bool> AnswersAsync(IBrowser browser)
     {
-        if (!browser.IsConnected || browser.IsClosed) return false;
+        // A killed browser can still look connected for a moment (on Linux its socket closes a little after the process).
+        if (!browser.IsConnected || browser.IsClosed || browser.Process is { HasExited: true }) return false;
         try
         {
-            await browser.GetVersionAsync().WaitAsync(AnswerTimeout);
+            // A real round trip: PuppeteerSharp caches GetVersionAsync after the first call, so that one answers for a
+            // browser that crashed or hangs too.
+            var session = await browser.Target.CreateCDPSessionAsync().WaitAsync(AnswerTimeout);
+            await session.DetachAsync().WaitAsync(AnswerTimeout);
             return true;
         }
         catch (Exception e)
@@ -97,13 +101,23 @@ internal sealed class ChromiumBrowser(IOptions<ArticlePdfOptions> options, ILogg
             var path = ChromiumLocator.Find(options.Value.ChromiumPath)
                        ?? throw new InvalidOperationException(
                            $"Chrome/Chromium for article PDFs was not found. Install it (docs/setup/deployment.md) or set {ArticlePdfOptions.Section}:ChromiumPath.");
-            _browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            try
             {
-                ExecutablePath = path,
-                Headless = true,
-                Args = Args,
-                Timeout = 30_000,
-            });
+                _browser = await Puppeteer.LaunchAsync(new LaunchOptions
+                {
+                    ExecutablePath = path,
+                    Headless = true,
+                    Args = Args,
+                    Timeout = 30_000,
+                });
+            }
+            catch (ProcessException e)
+            {
+                // Chromium's own output (inner exception) is often cut short, and the usual cause on Linux is its sandbox.
+                throw new InvalidOperationException(
+                    $"Chromium for article PDFs ({path}) did not start. If its output mentions the sandbox or ZygoteHostImpl, the container or host doesn't let it create a user namespace: see docs/setup/deployment.md §10 (never add --no-sandbox).",
+                    e);
+            }
             logger.LogInformation("Started Chromium {Version} for article PDFs", await _browser.GetVersionAsync());
             return _browser;
         }

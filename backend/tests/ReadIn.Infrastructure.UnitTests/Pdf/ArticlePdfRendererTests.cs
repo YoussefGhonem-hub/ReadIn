@@ -325,7 +325,7 @@ public sealed partial class ArticlePdfRendererTests(ArticlePdfFixture fixture)
     [InlineData("ar-EG", "نصيحة مهمة", "DbContext")]
     [InlineData("en", "var builder = WebApplication.CreateBuilder(args);", "// end of short code")]
     [InlineData("ar-EG", "var builder = WebApplication.CreateBuilder(args);", "// end of short code")]
-    [InlineData("ar-EG", "Row 06", "جوه الخلية")]
+    [InlineData("ar-EG", "Row 06", "الخلية")] // the cell's last word, alone: its text wraps, and "جوه الخلية" straddles the wrap
     [InlineData("en", "Write the interface", "For example IOrderService.")]
     public void Callouts_short_code_steps_and_table_rows_never_split(string language, string first, string last)
     {
