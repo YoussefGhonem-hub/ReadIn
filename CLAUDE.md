@@ -27,6 +27,12 @@ and what is next is in [docs/handoff/PROGRESS.md](docs/handoff/PROGRESS.md).
 - **Once per feature, before pushing it:** the gates below, mobile goldens included. Playwright runs only the specs for
   the screens the feature touched (and any spec whose baselines it changed); the full Playwright suite runs only when
   the user asks for it (user request, 2026-11-05). Backend tests are never cut down, and no test is ever deleted.
+- **Temporary rule (user decision, 2026-11-05, until the user says otherwise):** per feature, the tests run once, after
+  the implementation. After the bugs from that run are fixed, no tests run again (not the whole suite, not the fixed
+  part). Before committing a fix, run only `dotnet build ReadIn.slnx`, `npm run lint`, `npm run build` and
+  `flutter analyze` (plus `flutter gen-l10n` / `build_runner` when their inputs changed, and new baselines for the
+  screens a fix changed). Then commit and push `dev`. If the GitHub check fails after the push, fix it before starting
+  the next feature. No test is deleted or weakened.
 - Screenshots and goldens run in `ar/light` and `en/dark` only (SPEC §27): together they cover both directions and both
   themes. Don't add the other two combinations back. Mobile widget and logic tests keep all four combinations.
 - Playwright workers: 4 to 6 when no other build or test run is using the machine (`--workers=4`), 2 when one is. If

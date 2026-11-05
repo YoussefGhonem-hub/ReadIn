@@ -442,6 +442,17 @@ Decisions the user made for this list (2026-11-05):
 - the daily upload quota counts every upload, deleted ones too;
 - the web's initial bundle under 500 kB without removing features.
 
+Later decisions (user, 2026-11-05):
+- **Two tracks after F31**, each one feature after the other: track A F28 → F29 → F30 → the F24 quote card; track B
+  F33 → F23 → F25. The small leftovers (6.6 + reading mode) come after both tracks, then the final review.
+- **Playwright per feature:** only the specs for the screens the feature touched; the full suite only when the user
+  asks (CI still runs it). Backend tests are never cut down.
+- **Temporary test rule (until the user says otherwise):** per feature the tests run once, after the implementation.
+  After the bugs are fixed, no tests run again; only `dotnet build`, `npm run lint`, `npm run build` and
+  `flutter analyze` (plus new baselines for the screens a fix changed), then commit and push. A failing GitHub check
+  after a push is fixed before the next feature. No test is deleted. So for every feature from F31 on, **the fixes
+  were not tried with the tests**.
+
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked
 again next run; `Retry-After` is honoured up to 30 s. Dead links still fail. SPEC §19.3 says so.
