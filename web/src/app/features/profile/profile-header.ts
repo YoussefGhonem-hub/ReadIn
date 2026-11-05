@@ -10,7 +10,7 @@ import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir } from '../../shared/directives/bidi';
 import { CompactNumberPipe } from '../../shared/pipes/format.pipes';
 import { FollowButton } from '../../shared/social/follow-button';
-import { PROFILE_ICONS } from './profile-icons';
+import { LinkIcon } from './link-icon';
 import { ProfileMenu } from './profile-menu';
 import { profileLinks } from './profile-links';
 
@@ -29,13 +29,14 @@ export function profileAvatar(profile: Pick<ProfileDto, 'avatarUrl' | 'avatarVar
 }
 
 /**
- * Profile header (F14): photo, name, verified badge, @username (always LTR), "Follows you", Follow and "⋯" (report and
- * moderate, F22) or Edit profile, the bio (its own direction), links (open in a new tab) and the stats row, where
- * followers and following open the lists.
+ * Profile header (F14): photo, name, verified badge, the title in full (its own direction; hidden when empty),
+ * @username (always LTR), "Follows you", Follow and "⋯" (report and moderate, F22) or Edit profile, the bio (its own
+ * direction), the social links as a row of icons in the member's order (each named for its platform, or by its label
+ * for Other; a new tab; for guests too) and the stats row, where followers and following open the lists.
  */
 @Component({
   selector: 'rd-profile-header',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, CompactNumberPipe, FollowButton, ProfileMenu],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, CompactNumberPipe, FollowButton, ProfileMenu, LinkIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block', 'data-profile-header': '' },
   styles: `
@@ -64,6 +65,12 @@ export function profileAvatar(profile: Pick<ProfileDto, 'avatarUrl' | 'avatarVar
             <svg lucideIcon="BadgeCheck" [size]="20" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
           }
         </h1>
+        @if (headline(); as title) {
+          <!-- The title (F14) in full, wrapped, aligned with the name: the text is isolated in its own direction (SPEC §14.2). -->
+          <p class="m-0 mt-1 text-[15px] leading-snug text-text-primary [overflow-wrap:anywhere]" data-profile-headline>
+            <rd-bdi-text [text]="title" />
+          </p>
+        }
         <p class="m-0 mt-1 flex flex-wrap items-center gap-2 text-sm text-text-secondary">
           <span dir="ltr" data-profile-username>&#64;{{ p.username }}</span>
           @if (p.followsYou && !isMe()) {
@@ -95,24 +102,27 @@ export function profileAvatar(profile: Pick<ProfileDto, 'avatarUrl' | 'avatarVar
     }
 
     @if (links().length) {
-      <ul class="m-0 mt-2 flex list-none flex-wrap gap-x-4 p-0" [attr.aria-label]="'profile.links.label' | transloco" data-profile-links>
-        @for (link of links(); track link.kind) {
+      <!-- Icons only, in the member's order; brand icons don't mirror in RTL. -->
+      <ul class="m-0 mt-2 -ms-2.5 flex list-none flex-wrap gap-1 p-0" [attr.aria-label]="'profile.links.label' | transloco" data-profile-links>
+        @for (link of links(); track $index) {
+          @let name = link.label ?? ('profile.links.platforms.' + link.platform | transloco);
           <li>
             <a
               [href]="link.url"
               target="_blank"
-              rel="me nofollow noopener noreferrer"
-              class="inline-flex min-h-11 items-center gap-1.5 text-sm text-link no-underline hover:underline"
-              [attr.data-profile-link]="link.kind"
+              rel="me nofollow ugc noopener noreferrer"
+              class="grid h-11 w-11 place-items-center rounded-full text-text-secondary no-underline hover:bg-surface-variant hover:text-text-primary"
+              [attr.aria-label]="name"
+              [title]="name"
+              aria-describedby="profile-links-new-tab"
+              [attr.data-profile-link]="link.platform"
             >
-              <svg [lucideIcon]="icons[link.kind]" [size]="16" class="shrink-0" aria-hidden="true"></svg>
-              <span class="sr-only">{{ 'profile.links.' + link.kind | transloco }}:</span>
-              <bdi dir="ltr">{{ link.label }}</bdi>
-              <span class="sr-only">{{ 'profile.links.newTab' | transloco }}</span>
+              <rd-link-icon [platform]="link.platform" [size]="20" />
             </a>
           </li>
         }
       </ul>
+      <span id="profile-links-new-tab" class="sr-only">{{ 'profile.links.newTab' | transloco }}</span>
     }
 
     <!-- Stats -->
@@ -144,7 +154,6 @@ export class ProfileHeader {
   private readonly follows = inject(FollowStore);
   private readonly session = inject(SessionStore);
   protected readonly lang = inject(LanguageService).lang;
-  protected readonly icons = PROFILE_ICONS;
 
   readonly profile = input.required<ProfileDto>();
   /** Your own profile (the server says so, or the session knows it before the personalized copy arrives). */
@@ -153,6 +162,7 @@ export class ProfileHeader {
   protected readonly avatar = computed(() => profileAvatar(this.profile()));
   protected readonly initial = computed(() => (this.profile().displayName.trim()[0] ?? '?').toUpperCase());
   protected readonly links = computed(() => profileLinks(this.profile().links));
+  protected readonly headline = computed(() => this.profile().headline?.trim() || null);
   /**
    * `dir="auto"` resolved here: the browser skips the <rd-bdi-text> inside (it has its own `dir`), so it would
    * find no strong character and fall back to LTR.

@@ -193,6 +193,12 @@ const TOC_MIN_HEADINGS = 3;
                   <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
                 }
               </a>
+              <!-- The writer's title (F14): one line with "…", on the UI's start side, laid out and cut in its own direction -->
+              @if (author.headline?.trim(); as headline) {
+                <p class="m-0 flex text-xs leading-snug text-text-secondary" [attr.title]="headline" data-author-headline>
+                  <bdi dir="auto" class="min-w-0 truncate">{{ headline }}</bdi>
+                </p>
+              }
               <div class="text-xs text-text-secondary">
                 {{ a.publishedAt | rdDate: uiLang() : 'long' }}
                 <!-- The writer's category (F31): "في قسم {name}", the name isolated in its own direction. -->

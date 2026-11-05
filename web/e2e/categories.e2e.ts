@@ -51,7 +51,8 @@ for (const variant of VARIANTS) {
     await useVariant(context, baseURL!, variant);
     await open(page, '/@mona', '[data-profile-header]');
     const tabs = page.locator('[data-profile-tab]');
-    await expect(tabs).toHaveText(t('المقالات الأقسام المسارات نبذة', 'Articles Categories Paths About').split(' '));
+    // Reposts (F29) sits between Categories and Paths.
+    await expect(tabs).toHaveText(t('المقالات|الأقسام|إعادة النشر|المسارات|نبذة', 'Articles|Categories|Reposts|Paths|About').split('|'));
     await openCategoriesTab(page);
 
     const cards = page.locator('[data-profile-categories] [data-category-card]');

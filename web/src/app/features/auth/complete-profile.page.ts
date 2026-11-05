@@ -17,6 +17,8 @@ import { AVATAR_TYPES, avatarUrlOf } from '../../shared/media/avatar-variant';
 import { ImageCompressor } from '../../shared/media/image-compressor';
 import { Avatar } from '../../shared/ui/avatar';
 import { UsernameStatus, normalizeUsername, usernameStatus } from '../../shared/utils/username';
+import { HeadlineField } from '../profile/headline-field';
+import { headlineProblem, normalizeHeadline } from '../profile/link-rules';
 import { AuthCard, SubmitButton, fieldErrors } from './auth-shared';
 
 /** Placeholder handles from sign up (`@reader_xxxxxxxxxx`) are not offered as the user's choice. */
@@ -24,11 +26,12 @@ const PLACEHOLDER_USERNAME = /^reader_[a-z0-9]{10}$/;
 
 /**
  * Complete profile (SPEC §9.2), right after Create account: display name, a unique @username with a live
- * availability check, and an optional avatar (uploaded with `POST /uploads/images`, purpose `avatar`).
+ * availability check, an optional avatar (uploaded with `POST /uploads/images`, purpose `avatar`) and an optional title
+ * (F14: one line, ≤ 120).
  */
 @Component({
   selector: 'rd-complete-profile-page',
-  imports: [ReactiveFormsModule, TranslocoPipe, LucideDynamicIcon, AuthCard, SubmitButton, Avatar],
+  imports: [ReactiveFormsModule, TranslocoPipe, LucideDynamicIcon, AuthCard, SubmitButton, Avatar, HeadlineField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <rd-auth-card [title]="'auth.completeProfile.title' | transloco" [subtitle]="'auth.completeProfile.subtitle' | transloco">
@@ -117,6 +120,9 @@ const PLACEHOLDER_USERNAME = /^reader_[a-z0-9]{10}$/;
           </p>
         </div>
 
+        <!-- The optional title (F14): it can also be added later in Edit profile. -->
+        <rd-headline-field [control]="form.controls.headline" inputId="profile-headline" [error]="headlineError()" />
+
         @if (error()) {
           <p class="rd-alert rd-alert-error" role="alert" data-error>{{ error() }}</p>
         }
@@ -142,6 +148,7 @@ export class CompleteProfilePage {
   protected readonly form = inject(FormBuilder).nonNullable.group({
     displayName: [this.me && !PLACEHOLDER_USERNAME.test(this.me.displayName) ? this.me.displayName : ''],
     username: [this.me && !PLACEHOLDER_USERNAME.test(this.me.username) ? this.me.username : ''],
+    headline: [this.me?.headline ?? ''],
   });
   protected readonly avatarTypes = AVATAR_TYPES;
   protected readonly avatarUrl = signal<string | null>(this.me?.avatarUrl ?? null);
@@ -151,7 +158,7 @@ export class CompleteProfilePage {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   private readonly submitted = signal(false);
-  private readonly serverErrors = signal<{ displayName: string | null; username: string | null }>({ displayName: null, username: null });
+  private readonly serverErrors = signal<{ displayName: string | null; username: string | null; headline?: string | null }>({ displayName: null, username: null });
   private upload: Subscription | null = null;
 
   private readonly value = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
@@ -165,6 +172,13 @@ export class CompleteProfilePage {
     const name = this.value().displayName?.trim() ?? '';
     if (!this.submitted()) return null;
     return name.length < 2 || name.length > 60 ? 'auth.validation.displayName' : null;
+  });
+  /** The title's error: the server's, else (after the first submit) the local check. */
+  protected readonly headlineError = computed(() => {
+    const server = this.serverErrors().headline;
+    if (server) return server;
+    const problem = this.submitted() ? headlineProblem(this.value().headline) : null;
+    return problem ? `errors.${problem}` : null;
   });
   protected readonly usernameError = computed(() => {
     if (this.serverErrors().username) return this.serverErrors().username;
@@ -247,13 +261,20 @@ export class CompleteProfilePage {
     if (this.busy() || this.uploading()) return;
     this.submitted.set(true);
     const status = this.usernameStatus();
-    if (this.nameError() || this.usernameError() || status === 'checking') return;
+    if (this.nameError() || this.usernameError() || this.headlineError() || status === 'checking') return;
 
-    const { displayName, username } = this.form.getRawValue();
+    const { displayName, username, headline } = this.form.getRawValue();
+    // The title is optional: left out when empty (the API keeps "no title").
+    const title = normalizeHeadline(headline);
     this.busy.set(true);
     try {
       const me = await firstValueFrom(
-        this.meApi.completeProfile({ displayName: displayName.trim(), username: username.trim(), avatarUrl: this.avatarUrl() }),
+        this.meApi.completeProfile({
+          displayName: displayName.trim(),
+          username: username.trim(),
+          avatarUrl: this.avatarUrl(),
+          ...(title ? { headline: title } : {}),
+        }),
       );
       this.auth.updateMe(me);
       await this.router.navigateByUrl(postAuthUrl(me, this.returnUrl()));
@@ -264,10 +285,12 @@ export class CompleteProfilePage {
       }
       const name = fieldErrors(error, 'displayName');
       const handle = fieldErrors(error, 'username');
-      if (name.length || handle.length) {
+      const title = fieldErrors(error, 'headline');
+      if (name.length || handle.length || title.length) {
         this.serverErrors.set({
           displayName: name.length ? 'auth.validation.displayName' : null,
           username: handle.length ? `errors.${handle[0]}` : null,
+          headline: title.length ? `errors.${title[0] === 'profile.headline_too_long' ? title[0] : 'profile.headline_invalid'}` : null,
         });
       } else if (fieldErrors(error, 'avatarUrl').length) {
         this.avatarError.set(this.errors.forCode('media.not_found'));

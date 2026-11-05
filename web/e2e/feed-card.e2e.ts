@@ -124,8 +124,21 @@ for (const variant of VARIANTS) {
       '/tags/di',
       '/tags/dotnet',
     ]);
-    await expect(di.locator('[data-card-comment-count]')).toHaveText(t('3 تعليقات', '3 comments'));
-    await expect(di.locator('[data-card-actions] button')).toHaveText([`💡${t('تفاعل', 'React')}`, t('تعليق', 'Comment'), t('مشاركة', 'Share')]);
+    // The bar (F34): icons only, each count beside its icon (none at 0), Share without one, the reaction emojis on the
+    // other side; every button named with its count.
+    await expect(di.locator('[data-card-counts]')).toHaveCount(0);
+    await expect(di.locator('[data-card-comment-count]')).toHaveText('3');
+    await expect(di.locator('[data-card-comment]')).toHaveAttribute('aria-label', t('تعليق، 3', 'Comment, 3'));
+    await expect(di.locator('[data-card-actions] button')).toHaveText(['12', '3', '4', '', '💡❤️🔥']);
+    expect(await di.locator('[data-card-actions] button').evaluateAll((list) => list.map((b) => b.getAttribute('aria-label')))).toEqual([
+      t('تفاعل، 12', 'React, 12'),
+      t('تعليق، 3', 'Comment, 3'),
+      t('إعادة نشر، 4', 'Repost, 4'),
+      t('مشاركة', 'Share'),
+      t('12 تفاعل، شوف مين اتفاعل', '12 reactions, see who reacted'),
+    ]);
+    // The label row comes from `repostedBy` (F29): For you has none.
+    await expect(di.locator('[data-card-repost-label]')).toHaveCount(0);
     // No image: no attachments and no cover (the old placeholder is gone).
     await expect(di.locator('img')).toHaveCount(0);
     // Up to 3 tags, then "+N"; a short complete article has no "Read more".
@@ -187,7 +200,8 @@ for (const variant of VARIANTS) {
     const reacted = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().endsWith(`/articles/${CLEAN}/reaction`));
     await react.click();
     await expect(react).toHaveAttribute('data-my-reaction', 'insightful');
-    await expect(card.locator('[data-reaction-total]')).toHaveText('13');
+    await expect(card.locator('[data-react-count]')).toHaveText('13');
+    await expect(react).toHaveAttribute('aria-label', t('تفاعلت: مفيد، 13', 'Reacted: Insightful, 13'));
     await reacted;
     await react.focus();
     await page.keyboard.press('ArrowUp');

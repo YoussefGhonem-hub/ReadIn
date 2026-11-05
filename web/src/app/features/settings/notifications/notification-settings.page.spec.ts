@@ -58,6 +58,13 @@ describe('NotificationSettingsPage (F17)', () => {
     // Mentions cover comments and articles.
     expect(typeRow('mention').textContent).toContain('لما حد يعمل لك منشن في تعليق أو مقال');
     expect(TestBed.inject(TranslocoService).translate('settings.notifications.types.mention.hint', {}, 'en')).toBe('When someone mentions you in a comment or an article');
+    // F29: reposts are the 9th configurable type, listed last.
+    expect(CONFIGURABLE_TYPES).toHaveLength(9);
+    expect(CONFIGURABLE_TYPES.at(-1)).toBe('article_reposted');
+    expect(typeRow('article_reposted').getAttribute('data-mode')).toBe('all');
+    expect(typeRow('article_reposted').textContent).toContain('إعادة النشر');
+    expect(typeRow('article_reposted').textContent).toContain('لما حد يعيد نشر مقالك');
+    expect(TestBed.inject(TranslocoService).translate('settings.notifications.types.article_reposted.label', {}, 'en')).toBe('Reposts');
     expect(root.querySelector('[data-notification-types]')!.textContent).toContain('تنبيهات الأمان وإشعارات فريق الإشراف مش بتتقفل');
     expect(root.querySelector<HTMLInputElement>('#quiet-start')!.value).toBe('23:00');
     expect(root.querySelector<HTMLInputElement>('#quiet-end')!.value).toBe('07:00');

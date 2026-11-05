@@ -14,13 +14,13 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
-import { MediaApi } from '../../core/api/media.api';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService } from '../../core/i18n/language.service';
+import { DocumentDownloader } from './document-download';
 import { MediaImage } from './media-image';
 import { MediaSlide } from './media-slides';
 
@@ -212,11 +212,10 @@ interface Gesture {
 export class MediaViewer {
   protected readonly data = inject<MediaViewerData>(DIALOG_DATA);
   private readonly dialogRef = inject<DialogRef<void, MediaViewer>>(DialogRef);
-  private readonly media = inject(MediaApi);
+  private readonly downloader = inject(DocumentDownloader);
   private readonly errors = inject(ErrorMessages);
   private readonly language = inject(LanguageService);
   private readonly transloco = inject(TranslocoService);
-  private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
@@ -485,21 +484,18 @@ export class MediaViewer {
 
   // ── Actions ──────────────────────────────────────────────
 
-  /** Downloads the original through HttpClient (bearer token included) and saves it under the document title. */
-  protected download(): void {
+  /** Downloads the original (bearer token included) and saves it under the document title. */
+  protected async download(): Promise<void> {
     const doc = this.data.document;
     if (!doc?.canDownload || this.downloading()) return;
     this.downloading.set(true);
-    this.media.download(doc.downloadUrl).subscribe({
-      next: (blob) => {
-        this.downloading.set(false);
-        this.saveBlob(blob, pdfFileName(doc.title));
-      },
-      error: (error: unknown) => {
-        this.downloading.set(false);
-        this.showNotice(this.errors.forError(error));
-      },
-    });
+    try {
+      await this.downloader.download(doc);
+    } catch (error) {
+      this.showNotice(this.errors.forError(error));
+    } finally {
+      this.downloading.set(false);
+    }
   }
 
   /** Web Share API when available, otherwise copy the post link. */
@@ -518,19 +514,6 @@ export class MediaViewer {
     }
   }
 
-  private saveBlob(blob: Blob, fileName: string): void {
-    const url = URL.createObjectURL(blob);
-    const link = this.document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.rel = 'noopener';
-    link.style.display = 'none';
-    this.document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
-  }
-
   private showNotice(message: string): void {
     clearTimeout(this.noticeTimer);
     this.notice.set(message);
@@ -544,11 +527,4 @@ export class MediaViewer {
 
 function distance(a: Point, b: Point): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
-/** `"Clean Architecture.pdf"` from the document title, without characters file systems reject. */
-export function pdfFileName(title: string): string {
-  // eslint-disable-next-line no-control-regex
-  const base = title.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\.pdf$/i, '') || 'document';
-  return `${base.slice(0, 150)}.pdf`;
 }

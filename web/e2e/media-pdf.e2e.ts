@@ -1,6 +1,21 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
-import { API, HIDE_APP_CHROME, VARIANTS, fixture, hasScreenshot, imagesLoaded, multipartField, onApi, parkMouse, reply, signInAsWriter, useVariant } from './support/mock-api';
+import {
+  API,
+  HIDE_APP_CHROME,
+  VARIANTS,
+  fixture,
+  hasScreenshot,
+  imagesLoaded,
+  multipartField,
+  onApi,
+  parkMouse,
+  reply,
+  sessionFor,
+  signInAsWriter,
+  useVariant,
+  writerMe,
+} from './support/mock-api';
 import { editorReady, publish, trackSavedDocument, typeInEditor } from './support/editor';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- DTOs come from the mock API as plain JSON */
@@ -11,8 +26,9 @@ const PDF_BYTES = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer
 
 /**
  * F26 PDF, end to end (ar/en × light/dark): upload a PDF in the editor (F05) → "Preparing pages…" while
- * `GET /uploads/{id}` polls → preview → publish → the feed card page carousel (+N pages card) → the document viewer,
- * where Download is hidden because the author didn't allow it.
+ * `GET /uploads/{id}` polls → preview → publish → the feed card page carousel (+N pages card) → the document viewer.
+ * The author turns "Allow download" off (it starts on), yet still gets the download icon on the strip and Download in the
+ * viewer: like the API, the owner can always download (other readers can't; pdf-download.e2e.ts downloads).
  */
 // Full flows (sign-in, client-side compression, uploads, three screenshots) run in parallel with the other suites.
 test.describe.configure({ timeout: 120_000 });
@@ -20,7 +36,7 @@ test.describe.configure({ timeout: 120_000 });
 for (const variant of VARIANTS) {
   const { lang, theme } = variant;
 
-  test(`post with a PDF → processing → page carousel → viewer (no download) — ${lang}/${theme}`, async ({ page, context, baseURL, request }) => {
+  test(`post with a PDF → processing → page carousel → viewer (the owner's download) — ${lang}/${theme}`, async ({ page, context, baseURL, request }) => {
     await useVariant(context, baseURL!, variant);
     // The same pictures in every run, but an asset id of its own: the mock API keeps the latest state of each asset, and a
     // run in parallel registering "processing" must not turn this run's ready asset back (attachments.asset_not_ready).
@@ -58,11 +74,14 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-doc-title]')).toHaveValue('Kubernetes basics'); // from the file name
     // The file's size in the UI language ("1 كيلو"), its name as it is.
     await expect(page.locator('[data-doc-size]')).toHaveText(lang === 'ar' ? /^Kubernetes_basics\.pdf · \d+ كيلو$/ : /^Kubernetes_basics\.pdf · \d+ KB$/);
-    await expect(page.locator('[data-allow-download]')).not.toBeChecked(); // off by default
+    // "Allow download" starts on (pre-production step G) and is sent with the upload; this writer turns it off.
+    await expect(page.locator('[data-allow-download]')).toBeChecked();
     await expect(page.locator('[data-processing]')).toHaveText(lang === 'ar' ? 'بنجهز الصفحات…' : 'Preparing pages…');
     await expect(page.locator('[data-publish]')).toBeDisabled();
     await expect(page.locator('[data-add-images]')).toBeDisabled(); // no mixing
-    expect(uploadFields).toEqual({ title: 'Kubernetes basics', allowDownload: 'false' });
+    expect(uploadFields).toEqual({ title: 'Kubernetes basics', allowDownload: 'true' });
+    await page.locator('[data-allow-download]').uncheck();
+    await expect(page.locator('[data-allow-download]')).not.toBeChecked();
 
     await expect(page.locator('[data-doc-preview] li')).toHaveCount(3); // first poll: 3 pages ready
     await expect(page.locator('[data-document]')).toHaveAttribute('data-status', 'ready', { timeout: 10_000 });
@@ -80,9 +99,14 @@ for (const variant of VARIANTS) {
     await page.waitForURL((url) => url.pathname.endsWith(`/a/${result.slug}`));
     expect(savedDocument().attachments).toEqual([{ mediaAssetId: ready.id, order: 0, title: 'Kubernetes basics', allowDownload: false }]);
 
-    // The published article (as the mock serves it) on a known card; feed cards carry at most the first 10 pages.
+    // The published article as its writer gets it, on a known card; feed cards carry at most the first 10 pages.
+    // "Allow download" is off, but the owner can always download (contract, Media → "Allow download"); a guest can't.
     const base = await fixture<any>(request, '/api/v1/articles/aspnet-core-cheatsheet');
-    const written = await fixture<any>(request, `/api/v1/articles/${result.slug}?lang=en`);
+    const asWriter = { authorization: `Bearer ${sessionFor(await writerMe(request, variant)).accessToken}` };
+    const written = await (await request.get(`${API}/articles/${result.slug}?lang=en`, { headers: asWriter })).json();
+    expect(written.attachments.document).toMatchObject({ allowDownload: false, canDownload: true });
+    const asGuest = await fixture<any>(request, `/api/v1/articles/${result.slug}?lang=en`);
+    expect(asGuest.attachments.document).toMatchObject({ allowDownload: false, canDownload: false });
     const feedItem = { ...base, id: written.id, slug: written.slug, language: written.language, title: written.title, attachments: written.attachments };
     feedItem.attachments.document = { ...feedItem.attachments.document, pages: feedItem.attachments.document.pages.slice(0, 10), downloadUrl: `${API}/documents/${ready.id}/download` };
     await onApi(page, 'GET', new RegExp(`${API}/feed/for-you`), (route) => reply(route, 200, { items: [feedItem], nextCursor: null }));
@@ -99,6 +123,8 @@ for (const variant of VARIANTS) {
     await expect(card.locator('[data-counter]')).toHaveText(`1 / ${PAGE_COUNT}`);
     await expect(card.locator('[data-slide]')).toHaveCount(11);
     await expect(card.locator('[data-more]')).toHaveText(lang === 'ar' ? '+صفحتين، افتح الملف' : '+2 pages, open document');
+    // The owner's download icon in the title strip.
+    await expect(card.locator('[data-document-header] [data-document-download]')).toBeVisible();
     await card.scrollIntoViewIfNeeded();
     await parkMouse(page);
     await imagesLoaded(card);
@@ -110,7 +136,7 @@ for (const variant of VARIANTS) {
     const viewer = page.locator('rd-media-viewer');
     await expect(viewer).toBeVisible();
     await expect(viewer.locator('[data-viewer-counter]')).toHaveText(`1 / ${PAGE_COUNT}`);
-    await expect(viewer.locator('[data-viewer-download]')).toHaveCount(0); // download not allowed
+    await expect(viewer.locator('[data-viewer-download]')).toBeVisible(); // the owner may always download
     await expect(viewer.locator('[data-viewer-share]')).toBeVisible();
     await expect(viewer.locator('[data-viewer-thumbnails] button')).toHaveCount(PAGE_COUNT); // pages 11–12 loaded on demand
     expect(articleFetches).toBe(fetchesBefore + 1);

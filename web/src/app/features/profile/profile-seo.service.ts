@@ -85,9 +85,11 @@ export class ProfileSeoService {
     for (const [attr, key] of META) this.meta.removeTag(`${attr}="${key}"`);
   }
 
+  /** The title (F14) and the bio ("Senior .NET Engineer · I write about…"), else a generic line; ≤ 160 characters. */
   private description(profile: ProfileDto): string {
-    const bio = (profile.bio ?? '').replace(/\s+/g, ' ').trim();
-    const text = bio || this.transloco.translate('profile.meta.description', { name: profile.displayName });
+    const clean = (text: string | null | undefined) => (text ?? '').replace(/\s+/g, ' ').trim();
+    const own = [clean(profile.headline), clean(profile.bio)].filter(Boolean).join(' · ');
+    const text = own || this.transloco.translate('profile.meta.description', { name: profile.displayName });
     return text.length > 160 ? `${text.slice(0, 157)}…` : text;
   }
 
@@ -103,6 +105,7 @@ export class ProfileSeoService {
         name: profile.displayName,
         alternateName: `@${profile.username}`,
         identifier: profile.username,
+        ...(profile.headline?.trim() ? { jobTitle: profile.headline.trim() } : {}),
         description,
         url,
         ...(image ? { image } : {}),

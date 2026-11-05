@@ -49,6 +49,27 @@ describe('ArticlePage byline', () => {
     expect(t.jsonLd()['author']).toEqual({ '@type': 'Person', name: 'Karim Hassan', url: expect.stringMatching(/\/@karim$/) });
   });
 
+  it('the writer’s title on one line under the name, above the date; no line without one (F14)', async () => {
+    const author = { id: 'writer-1', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true, headline: 'مهندس Frontend | Angular' };
+    const t = await render(testDetails({ author }));
+    http = t.http;
+    const headline = t.byline.querySelector<HTMLElement>('[data-author-headline]')!;
+    expect(headline.textContent!.trim()).toBe('مهندس Frontend | Angular');
+    // Placed in the UI's direction; the text laid out and cut ("…") in its own direction, so it keeps its beginning.
+    expect(headline.hasAttribute('dir')).toBe(false);
+    expect(headline.classList).toContain('flex');
+    expect(headline.classList).not.toContain('truncate');
+    expect(headline.querySelector('bdi')!.getAttribute('dir')).toBe('auto');
+    expect(headline.querySelector('bdi')!.classList).toContain('truncate');
+    expect(headline.querySelector('bdi')!.classList).toContain('min-w-0');
+    expect(headline.previousElementSibling!.getAttribute('href')).toBe('/@karim');
+
+    TestBed.resetTestingModule();
+    const none = await render(testDetails());
+    http = none.http;
+    expect(none.byline.querySelector('[data-author-headline]')).toBeNull();
+  });
+
   it('every tag links to its tag page by the slug the API gave it (F32), and is in the JSON-LD keywords', async () => {
     const tags = [
       { slug: 'csharp', name: 'C#' },

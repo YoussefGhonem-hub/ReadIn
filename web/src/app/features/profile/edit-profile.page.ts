@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DOCUMENT, DestroyRef, ElementRef, Injector, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, DestroyRef, ElementRef, Injector, afterNextRender, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { HttpEventType } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -22,24 +22,25 @@ import { ErrorState } from '../../shared/ui/states';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { UsernameStatus, normalizeUsername, usernameStatus } from '../../shared/utils/username';
 import { ExpertisePicker, MAX_EXPERTISE } from './expertise-picker';
-import { LINK_KINDS, LinkKind, PROFILE_ICONS } from './profile-icons';
-import { isValidLink, normalizeLink } from './profile-links';
+import { HeadlineField } from './headline-field';
+import { LinkCode, checkLinks, headlineProblem, normalizeHeadline, normalizeLinkUrl, toLinkInputs } from './link-rules';
+import { LinkRow, LinksEditor, linkRows } from './links-editor';
+import { PROFILE_ICONS } from './profile-icons';
+import { profileLinksOf } from './profile-links';
 
 export const MAX_BIO = 300;
 
-/** A form field a server error can point at. */
-export type ProfileField = 'displayName' | 'username' | 'bio' | LinkKind | 'avatar' | 'expertise';
+/** A form field a server error can point at (the links have their own, per link: see linkFieldErrors). */
+export type ProfileField = 'displayName' | 'username' | 'headline' | 'bio' | 'avatar' | 'expertise';
 /** Translation keys per field, plus `general` (an already translated message) for anything else. */
 export type ProfileFieldErrors = Partial<Record<ProfileField, string>> & { general?: string };
 
-/** Validation keys from the API (camelCase property paths, e.g. `links.gitHub`) → form fields. */
+/** Validation keys from the API (camelCase property paths) → form fields. */
 const VALIDATION_FIELDS: Record<string, ProfileField> = {
   displayname: 'displayName',
   username: 'username',
+  headline: 'headline',
   bio: 'bio',
-  'links.github': 'github',
-  'links.linkedin': 'linkedin',
-  'links.website': 'website',
   avatarassetid: 'avatar',
   avatarurl: 'avatar',
   expertisefieldids: 'expertise',
@@ -47,10 +48,8 @@ const VALIDATION_FIELDS: Record<string, ProfileField> = {
 const FIELD_MESSAGES: Record<ProfileField, string> = {
   displayName: 'profile.edit.displayNameError',
   username: 'errors.user.username_invalid',
+  headline: 'errors.profile.headline_invalid',
   bio: 'profile.edit.bioTooLong',
-  github: 'profile.edit.linkInvalid',
-  linkedin: 'profile.edit.linkInvalid',
-  website: 'profile.edit.linkInvalid',
   avatar: 'errors.profile.avatar_invalid',
   expertise: 'errors.profile.expertise_invalid',
 };
@@ -59,11 +58,48 @@ const FIELD_MESSAGES: Record<ProfileField, string> = {
 const INPUT_IDS: Partial<Record<ProfileField, string>> = {
   displayName: 'edit-name',
   username: 'edit-username',
+  headline: 'edit-headline',
   bio: 'edit-bio',
-  github: 'edit-link-github',
-  linkedin: 'edit-link-linkedin',
-  website: 'edit-link-website',
 };
+
+/** The message of a link's validation code: the API's text, or "Paste the link" for an empty one. */
+export function linkErrorKey(code: string, part: 'platform' | 'url' | 'label' | 'list'): string {
+  if (code === 'validation.required') return part === 'url' ? 'profile.linksEditor.urlRequired' : 'errors.validation.required';
+  if (code.startsWith('link.')) return `errors.${code}`;
+  return part === 'url' ? 'errors.link.url_invalid' : 'errors.validation.failed';
+}
+
+const LINK_ERROR_KEY = /^links(?:\[(\d+)\]\.(platform|url|label))?$/;
+
+/**
+ * The link errors of a failed `PATCH /me` (`errors.links`, `errors["links[2].url"]`, …), keyed the same way (lower
+ * case) with translation keys as values.
+ */
+export function linkFieldErrors(error: unknown): Record<string, string> {
+  if (!isApiError(error)) return {};
+  const result: Record<string, string> = {};
+  for (const [key, codes] of Object.entries(error.validationErrors)) {
+    const match = LINK_ERROR_KEY.exec(key.toLowerCase());
+    if (!match || !codes.length) continue;
+    const part = (match[2] ?? 'list') as 'platform' | 'url' | 'label' | 'list';
+    result[match[1] === undefined ? 'links' : `links[${match[1]}].${part}`] = linkErrorKey(codes[0], part);
+  }
+  return result;
+}
+
+/** The local link errors (checkLinks), keyed like the API's. */
+export function localLinkErrors(rows: readonly LinkRow[]): Record<string, string> {
+  const checked = checkLinks(rows);
+  const result: Record<string, string> = {};
+  if (checked.list) result['links'] = linkErrorKey(checked.list, 'list');
+  checked.items.forEach((item, i) => {
+    for (const part of ['platform', 'url', 'label'] as const) {
+      const code: LinkCode | null = item[part];
+      if (code) result[`links[${i}].${part}`] = linkErrorKey(code, part);
+    }
+  });
+  return result;
+}
 
 /** Maps a failed `PATCH /me` to the fields it is about (ProblemDetails `code`, or per-field validation codes). */
 export function profileFieldErrors(error: unknown, translate: (error: unknown) => string): ProfileFieldErrors {
@@ -82,19 +118,23 @@ export function profileFieldErrors(error: unknown, translate: (error: unknown) =
     // `expertiseFieldIds[5]` is about the list as a whole.
     const field = VALIDATION_FIELDS[key.toLowerCase().replace(/\[\d+\]$/, '')];
     if (!field) continue;
-    result[field] = field === 'username' && codes.includes('user.username_taken') ? 'errors.user.username_taken' : FIELD_MESSAGES[field];
+    if (field === 'username' && codes.includes('user.username_taken')) result[field] = 'errors.user.username_taken';
+    else if (field === 'headline' && codes.includes('profile.headline_too_long')) result[field] = 'errors.profile.headline_too_long';
+    else result[field] = FIELD_MESSAGES[field];
   }
-  return Object.keys(result).length ? result : { general: translate(error) };
+  // Link errors are shown under their links (linkFieldErrors), not as a general message.
+  const onLinks = Object.keys(linkFieldErrors(error)).length > 0;
+  return Object.keys(result).length || onLinks ? result : { general: translate(error) };
 }
 
 /**
  * Edit profile (F14), `/settings/profile`: photo (uploaded with `purpose=avatar`, previewed from its 256 px variant,
- * removable), name, @username with the live availability check, bio with a counter, GitHub / LinkedIn / website, and up
- * to 5 fields of expertise. Saving shows a spinner and can't be sent twice; server errors land on their fields.
+ * removable), name, @username with the live availability check, the title (one line, ≤ 120), bio with a counter, the
+ * social links (up to 8 of 14 platforms, in order; see LinksEditor) and up to 5 fields of expertise. Saving shows a spinner and can't be sent twice; server errors land on their fields.
  */
 @Component({
   selector: 'rd-edit-profile-page',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LucideDynamicIcon, ErrorState, ExpertisePicker],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LucideDynamicIcon, ErrorState, ExpertisePicker, HeadlineField, LinksEditor],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
   template: `
@@ -210,6 +250,9 @@ export function profileFieldErrors(error: unknown, translate: (error: unknown) =
             </p>
           </div>
 
+          <!-- Title (F14): optional, one line -->
+          <rd-headline-field [control]="form.controls.headline" inputId="edit-headline" [error]="errorFor('headline')" />
+
           <!-- Bio -->
           <div>
             <label class="rd-label" for="edit-bio">{{ 'profile.edit.bio' | transloco }}</label>
@@ -235,40 +278,8 @@ export function profileFieldErrors(error: unknown, translate: (error: unknown) =
             </div>
           </div>
 
-          <!-- Links -->
-          <fieldset class="m-0 flex flex-col gap-3 border-0 p-0">
-            <legend class="rd-label p-0">{{ 'profile.edit.links' | transloco }}</legend>
-            @for (kind of linkKinds; track kind) {
-              <div>
-                <label class="sr-only" [for]="'edit-link-' + kind">{{ 'profile.links.' + kind | transloco }}</label>
-                <div class="rd-field-group" dir="ltr" [class.is-invalid]="!!errorFor(kind)">
-                  <span class="rd-field-addon cursor-default gap-2 border-0 border-e border-solid border-border" aria-hidden="true">
-                    <svg [lucideIcon]="icons[kind]" [size]="16"></svg>
-                    <span class="hidden w-16 text-xs sm:inline">{{ 'profile.links.' + kind | transloco }}</span>
-                  </span>
-                  <input
-                    class="rd-field-input"
-                    type="url"
-                    inputmode="url"
-                    dir="ltr"
-                    autocapitalize="off"
-                    autocorrect="off"
-                    spellcheck="false"
-                    [id]="'edit-link-' + kind"
-                    [formControlName]="kind"
-                    [placeholder]="placeholders[kind]"
-                    [attr.aria-invalid]="!!errorFor(kind) || null"
-                    [attr.aria-describedby]="errorFor(kind) ? 'edit-link-' + kind + '-error' : null"
-                    [attr.data-link-input]="kind"
-                    (blur)="tidyLink(kind)"
-                  />
-                </div>
-                @if (errorFor(kind); as key) {
-                  <p [id]="'edit-link-' + kind + '-error'" class="rd-field-error" [attr.data-field-error]="kind">{{ key | transloco }}</p>
-                }
-              </div>
-            }
-          </fieldset>
+          <!-- Links (F14): up to 8, in the member's order -->
+          <rd-links-editor [(rows)]="links" [errors]="linkErrors()" [disabled]="busy()" />
 
           <!-- Expertise -->
           <div>
@@ -341,14 +352,8 @@ export class EditProfilePage {
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
   protected readonly icons = PROFILE_ICONS;
-  protected readonly linkKinds = LINK_KINDS;
   protected readonly maxBio = MAX_BIO;
   protected readonly avatarTypes = AVATAR_TYPES;
-  protected readonly placeholders: Record<LinkKind, string> = {
-    github: 'https://github.com/you',
-    linkedin: 'https://www.linkedin.com/in/you',
-    website: 'https://example.com',
-  };
 
   protected readonly status = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly fieldsStatus = signal<'loading' | 'ready' | 'error'>('loading');
@@ -364,12 +369,20 @@ export class EditProfilePage {
   protected readonly form = inject(FormBuilder).nonNullable.group({
     displayName: [''],
     username: [''],
+    headline: [''],
     bio: [''],
-    github: [''],
-    linkedin: [''],
-    website: [''],
   });
   private readonly value = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
+  /** The social links being edited (F14), in order; sent whole on save. */
+  protected readonly links = signal<LinkRow[]>([]);
+  /** What the server said about the links (`links[2].url` → translation key), until they change. */
+  private readonly serverLinkErrors = signal<Record<string, string>>({});
+  /** The server's link errors, else (after the first submit) the local checks. */
+  protected readonly linkErrors = computed<Record<string, string>>(() => {
+    const server = this.serverLinkErrors();
+    if (Object.keys(server).length) return server;
+    return this.submitted() ? localLinkErrors(this.links()) : {};
+  });
 
   protected readonly avatarUrl = signal<string | null>(null);
   /** undefined = unchanged; a new upload's id, or null to remove the photo. */
@@ -399,8 +412,9 @@ export class EditProfilePage {
     const errors: ProfileFieldErrors = {};
     const name = v.displayName?.trim() ?? '';
     if (name.length < 2 || name.length > 60) errors.displayName = 'profile.edit.displayNameError';
+    const headline = headlineProblem(v.headline);
+    if (headline) errors.headline = `errors.${headline}`;
     if ((v.bio ?? '').length > MAX_BIO) errors.bio = 'profile.edit.bioTooLong';
-    for (const kind of LINK_KINDS) if (!isValidLink(normalizeLink(v[kind]))) errors[kind] = 'profile.edit.linkInvalid';
     if (this.pickedExpertise().length > MAX_EXPERTISE) errors.expertise = 'errors.profile.expertise_invalid';
     return errors;
   });
@@ -430,8 +444,13 @@ export class EditProfilePage {
 
   constructor() {
     inject(Title).setTitle(`${this.transloco.translate('profile.edit.title')} — ReadIn`);
-    // Editing a field clears what the server said about the form.
+    // Editing a field clears what the server said about the form; any change to the links (an index can move) clears
+    // what it said about them.
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.serverErrors.set({}));
+    effect(() => {
+      this.links();
+      untracked(() => this.serverLinkErrors.set({}));
+    });
     inject(DestroyRef).onDestroy(() => this.upload?.unsubscribe());
     void this.load();
     void this.loadFields();
@@ -455,11 +474,10 @@ export class EditProfilePage {
       this.form.reset({
         displayName: profile.displayName,
         username: profile.username,
+        headline: profile.headline ?? '',
         bio: profile.bio ?? '',
-        github: profile.links.github ?? '',
-        linkedin: profile.links.linkedin ?? '',
-        website: profile.links.website ?? '',
       });
+      this.links.set(linkRows(profileLinksOf(profile.links)));
       this.expertise.set(profile.expertise.map((f) => f.id));
       this.avatarUrl.set(profile.avatarUrl);
       this.avatarAssetId.set(undefined);
@@ -492,13 +510,6 @@ export class EditProfilePage {
       element.value = clean;
       this.form.controls.username.setValue(clean);
     }
-  }
-
-  /** "github.com/mona" becomes "https://github.com/mona" when the field is left. */
-  protected tidyLink(kind: LinkKind): void {
-    const control = this.form.controls[kind];
-    const normalized = normalizeLink(control.value) ?? '';
-    if (normalized !== control.value) control.setValue(normalized);
   }
 
   protected async pickAvatar(event: Event): Promise<void> {
@@ -545,11 +556,16 @@ export class EditProfilePage {
   protected async save(): Promise<void> {
     if (this.busy() || this.uploading() || !this.original) return;
     this.submitted.set(true);
-    for (const kind of LINK_KINDS) this.tidyLink(kind);
+    // A link typed without a scheme is shown (and sent) with https://.
+    if (this.links().some((row) => normalizeLinkUrl(row.url) !== row.url)) {
+      this.links.update((rows) => rows.map((row) => ({ ...row, url: normalizeLinkUrl(row.url) })));
+    }
     const status = this.usernameStatus();
     const local = this.localErrors();
-    if (Object.keys(local).length || this.usernameError() || status === 'checking') {
-      this.focusFirstError(Object.keys(local)[0] as ProfileField | undefined);
+    const linkErrors = localLinkErrors(this.links());
+    if (Object.keys(local).length || Object.keys(linkErrors).length || this.usernameError() || status === 'checking') {
+      if (Object.keys(local).length || !Object.keys(linkErrors).length) this.focusFirstError(Object.keys(local)[0] as ProfileField | undefined);
+      else this.focusFirstLinkError(linkErrors);
       return;
     }
 
@@ -558,8 +574,11 @@ export class EditProfilePage {
     const body: UpdateProfileRequest = {
       displayName: v.displayName.trim(),
       username: v.username.trim(),
+      // Blank clears the title.
+      headline: normalizeHeadline(v.headline),
       bio: v.bio.trim() || null,
-      links: { github: normalizeLink(v.github), linkedin: normalizeLink(v.linkedin), website: normalizeLink(v.website) },
+      // The whole list, in order ([] removes them all).
+      links: toLinkInputs(this.links()),
       // Left out while the fields couldn't load (the picker wasn't shown): the server keeps them.
       ...(this.fieldsStatus() === 'ready' ? { expertiseFieldIds: this.pickedExpertise() } : {}),
       // avatarAssetId: left out = keep the photo, null = remove it, an id = the new upload.
@@ -574,9 +593,13 @@ export class EditProfilePage {
       await this.router.navigateByUrl(`/@${body.username}`);
     } catch (error) {
       const errors = profileFieldErrors(error, (e) => this.errors.forError(e));
+      const linkErrors = linkFieldErrors(error);
       this.serverErrors.set(errors);
+      this.serverLinkErrors.set(linkErrors);
       if (errors.avatar) this.avatarError.set(this.transloco.translate(errors.avatar));
-      this.focusFirstError(Object.keys(errors).find((k) => k !== 'general') as ProfileField | undefined);
+      const field = Object.keys(errors).find((k) => k !== 'general') as ProfileField | undefined;
+      if (field || !Object.keys(linkErrors).length) this.focusFirstError(field);
+      else this.focusFirstLinkError(linkErrors);
     } finally {
       this.busy.set(false);
     }
@@ -595,5 +618,14 @@ export class EditProfilePage {
     const target = field ?? (this.usernameError() ? 'username' : null);
     const id = target ? INPUT_IDS[target] : null;
     if (id) afterNextRender(() => this.document.getElementById(id)?.focus(), { injector: this.injector });
+  }
+
+  /** Moves the focus to the first link field with an error (its name for Other, else its URL), or "Add link". */
+  private focusFirstLinkError(errors: Record<string, string>): void {
+    const rows = this.links();
+    const index = rows.findIndex((_, i) => errors[`links[${i}].label`] || errors[`links[${i}].url`] || errors[`links[${i}].platform`]);
+    const row = rows[index];
+    const id = row ? `link-${row.id}-${errors[`links[${index}].label`] ? 'label' : 'url'}` : 'link-add';
+    afterNextRender(() => this.document.getElementById(id)?.focus(), { injector: this.injector });
   }
 }

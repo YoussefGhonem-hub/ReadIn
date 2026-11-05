@@ -232,12 +232,22 @@ for (const variant of VARIANTS) {
     await page.locator('#profile-username').fill('Mona_Adel!');
     await expect(page.locator('#profile-username')).toHaveValue('mona_adel');
     await expect(page.locator('[data-username-status]')).toHaveClass(/text-success/);
+    // The optional title (F14) is empty: the screenshot shows the field with its hint.
+    await expect(page.locator('#profile-headline')).toHaveValue('');
     await snap(page, variant, `complete-profile-${suffix}.png`);
+    // One line, up to 120: past the limit it can't be sent; trimmed when it is.
+    await page.locator('#profile-headline').fill('x'.repeat(121));
+    await page.locator('[data-complete-profile] [data-submit]').click();
+    await expect(page.locator('[data-complete-profile] [data-field-error="headline"]')).toHaveText(
+      lang === 'ar' ? 'المسمى لازم يكون 120 حرف أو أقل.' : 'A title has at most 120 characters.',
+    );
+    expect(profileBody).toBeNull();
+    await page.locator('#profile-headline').fill('  Backend engineer | .NET  ');
     await page.locator('[data-complete-profile] [data-submit]').click();
 
     await page.waitForURL('**/onboarding');
     await expect(page).toHaveTitle(lang === 'ar' ? 'يلا نبدأ — ReadIn' : 'Get started — ReadIn');
-    expect(profileBody).toEqual({ displayName: lang === 'ar' ? 'منى عادل' : 'Mona Adel', username: 'mona_adel', avatarUrl: null });
+    expect(profileBody).toEqual({ displayName: lang === 'ar' ? 'منى عادل' : 'Mona Adel', username: 'mona_adel', avatarUrl: null, headline: 'Backend engineer | .NET' });
   });
 
   test(`mandatory change password → set recovery PIN — ${suffix}`, async ({ page, context, baseURL, request }) => {

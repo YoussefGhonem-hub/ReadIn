@@ -8,9 +8,10 @@ import { MOCK_ORIGIN, MockMe, Variant, restoreSessionAs, writerMe } from './mock
  */
 export const NOTIFICATIONS_NOW = new Date('2026-11-04T10:00:00Z');
 
-export async function signInAsNotifiedReader(page: Page, request: APIRequestContext, variant: Variant): Promise<MockMe> {
+/** `idPrefix` `u-notified-repost` adds the two repost entries (F29) on top of the 25. */
+export async function signInAsNotifiedReader(page: Page, request: APIRequestContext, variant: Variant, idPrefix = 'u-notified'): Promise<MockMe> {
   const me = await writerMe(request, variant, {
-    id: `u-notified-${randomUUID().slice(0, 8)}`,
+    id: `${idPrefix}-${randomUUID().slice(0, 8)}`,
     displayName: 'Sara Hassan',
     username: 'sara',
     isVerified: false,

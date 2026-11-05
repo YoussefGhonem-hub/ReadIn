@@ -36,9 +36,24 @@ describe('DevLoginPanel', () => {
     expect(t.role('+12025550107').querySelector('[data-dev-user-verified]')).toBeNull();
   });
 
+  it('the demo "Verified Writer" (+12025550106) is gone: no seed account has that number any more', () => {
+    const t = render('en');
+    expect(DEV_SEED_USERS.map((u) => u.phone)).not.toContain('+12025550106');
+    expect(DEV_SEED_USERS.map((u) => u.name)).not.toContain('Verified Writer');
+    expect(t.user('+12025550106')).toBeNull();
+    expect(t.root.textContent).not.toContain('Verified Writer');
+    // The two verified writers that stay, then writers 1–3 from .107.
+    expect(DEV_SEED_USERS.filter((u) => u.verified).map((u) => u.phone)).toEqual(['+12025550104', '+12025550105']);
+    expect(DEV_SEED_USERS.slice(3, 6).map((u) => [u.phone, u.name])).toEqual([
+      ['+12025550107', 'Writer 1'],
+      ['+12025550108', 'Writer 2'],
+      ['+12025550109', 'Writer 3'],
+    ]);
+  });
+
   it('the verified writers are Members with the Verified badge, translated', () => {
     const ar = render('ar');
-    for (const phone of ['+12025550104', '+12025550105', '+12025550106']) {
+    for (const phone of ['+12025550104', '+12025550105']) {
       expect(ar.role(phone).querySelector('bdi')!.textContent).toBe('Member');
       const badge = ar.role(phone).querySelector('[data-dev-user-verified]')!;
       expect(badge.querySelector('svg')).not.toBeNull();

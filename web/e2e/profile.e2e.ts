@@ -35,15 +35,37 @@ for (const variant of VARIANTS) {
     expect(html).toMatch(/<link rel="canonical" href="[^"]*\/@mona"/);
     expect(html).toContain('"@type":"ProfilePage"');
     expect(html).toContain('data-profile-header');
+    // The title (F14) is in the description and the Person's jobTitle; the links are its sameAs.
+    expect(html).toMatch(/<meta name="description" content="Senior Backend Engineer \| \.NET \| Architecture · Backend engineer/);
+    expect(html).toContain('"jobTitle":"Senior Backend Engineer | .NET | Architecture"');
+    expect(html).toContain('"sameAs":["https://www.linkedin.com/in/mona-adel"');
+    // The title and the link icons are server-rendered too, for guests.
+    expect(html).toContain('data-profile-headline');
+    expect(html).toContain('data-profile-link="linkedin"');
 
     const header = page.locator('[data-profile-header]');
     await expect(header.locator('[data-profile-name]')).toContainText('Mona Adel', { timeout: FIRST_RENDER_MS });
+    // The whole title under the name, aligned with it, isolated in its own direction.
+    await expect(header.locator('[data-profile-headline]')).toHaveText('Senior Backend Engineer | .NET | Architecture');
+    await expect(header.locator('[data-profile-headline] rd-bdi-text')).toHaveAttribute('dir', 'ltr');
     await expect(header.locator('[data-profile-username]')).toHaveText('@mona');
     await expect(header.locator('[data-profile-username]')).toHaveAttribute('dir', 'ltr');
     // Mixed text takes the direction of its first strong character: an English bio stays LTR in the Arabic UI.
     await expect(header.locator('[data-profile-bio]')).toHaveAttribute('dir', 'ltr');
-    await expect(header.locator('[data-profile-link]')).toHaveCount(3);
-    await expect(header.locator('[data-profile-link="github"]')).toHaveAttribute('target', '_blank');
+    // Social links (F14): icons in the order she saved, each a link named for its platform (Other: its label), a new tab.
+    const links = header.locator('[data-profile-link]');
+    await expect(links).toHaveCount(6);
+    expect(await links.evaluateAll((all) => all.map((a) => a.getAttribute('data-profile-link')))).toEqual(['linkedin', 'github', 'x', 'youtube', 'website', 'other']);
+    await expect(header.getByRole('link', { name: 'LinkedIn', exact: true })).toHaveAttribute('href', 'https://www.linkedin.com/in/mona-adel');
+    await expect(header.getByRole('link', { name: 'X', exact: true })).toHaveAttribute('href', 'https://x.com/mona_adel');
+    await expect(header.getByRole('link', { name: ar ? 'الموقع' : 'Website', exact: true })).toHaveAttribute('href', 'https://mona.dev');
+    await expect(header.getByRole('link', { name: 'بودكاست Backend', exact: true })).toHaveAttribute('href', 'https://podcasts.example/mona');
+    for (const anchor of await links.all()) {
+      await expect(anchor).toHaveAttribute('target', '_blank');
+      await expect(anchor).toHaveAttribute('rel', /\bme\b.*\bnoopener\b/);
+    }
+    // Brand icons don't mirror in RTL: the icons sit in the same order in both directions, only the row's start moves.
+    await expect(links.first().locator('rd-link-icon svg')).toHaveAttribute('aria-hidden', 'true');
     await expect(header.locator('[data-stat="articles"]')).toContainText('4');
     await expect(header.locator('[data-edit-profile]')).toHaveCount(0);
     await expect(header.locator('[data-follows-you]')).toHaveCount(0);
@@ -54,9 +76,9 @@ for (const variant of VARIANTS) {
     await expect(reading.locator('[data-public-stats]')).toHaveCount(0);
     await expect(reading.locator('rd-reading-stats-card')).toContainText(ar ? '12 يوم' : '12 days');
 
-    // Articles / Categories / Paths / About (Saved is only on your own profile).
+    // Articles / Categories / Reposts / Paths / About (Saved is only on your own profile).
     const tabs = page.locator('[data-profile-tab]');
-    await expect(tabs).toHaveCount(4);
+    await expect(tabs).toHaveCount(5);
     await expect(page.locator('[data-profile-articles] rd-post-card')).toHaveCount(4);
 
     // About: bio, links, fields of expertise, join date. The screenshot shows this tab (the cards' media is lazy).
@@ -79,8 +101,11 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-profile-tab="articles"]')).toBeFocused();
     await page.keyboard.press(dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight');
     await expect(page.locator('[data-profile-tab="categories"]')).toBeFocused();
-    // Her categories (F31), then on to Paths.
+    // Her categories (F31), her Reposts (F29: none), then on to Paths.
     await expect(page.locator('[data-profile-categories] [data-category-card]')).toHaveCount(3, { timeout: FIRST_RENDER_MS });
+    await page.keyboard.press(dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight');
+    await expect(page.locator('[data-profile-tab="reposts"]')).toBeFocused();
+    await expect(page.locator('[data-profile-reposts] [data-reposts-empty]')).toContainText(ar ? 'مفيش إعادة نشر لسه' : 'No reposts yet');
     await page.keyboard.press(dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight');
     await expect(page.locator('[data-profile-tab="paths"]')).toBeFocused();
     await expect(page.locator('[data-profile-tab="paths"]')).toHaveAttribute('aria-selected', 'true');
@@ -110,7 +135,10 @@ for (const variant of VARIANTS) {
     await expect(header.locator('[data-edit-profile]')).toBeVisible();
     await expect(header.locator('[data-profile-follow]')).toHaveCount(0);
     await expect(header.locator('[data-stat="following"]')).toContainText('2');
-    await expect(page.locator('[data-profile-tab]')).toHaveCount(5);
+    await expect(page.locator('[data-profile-tab]')).toHaveCount(6);
+    // No title yet: the line is hidden. One link (GitHub).
+    await expect(header.locator('[data-profile-headline]')).toHaveCount(0);
+    await expect(header.locator('[data-profile-link]')).toHaveCount(1);
     await expect(page.locator('[data-articles-empty]')).toBeVisible();
     await expect(header.locator('[data-profile-bio]')).toHaveAttribute('dir', 'rtl');
 
@@ -223,7 +251,10 @@ for (const variant of VARIANTS) {
     const form = page.locator('[data-edit-profile-form]');
     await expect(form.locator('#edit-name')).toHaveValue('Sara Hassan', { timeout: FIRST_RENDER_MS });
     await expect(form.locator('#edit-username')).toHaveValue('sara');
-    await expect(form.locator('[data-link-input="github"]')).toHaveValue('https://github.com/sara-hassan');
+    await expect(form.locator('#edit-headline')).toHaveValue('');
+    await expect(form.locator('[data-link-row]')).toHaveCount(1);
+    await expect(form.locator('[data-link-row="0"]')).toHaveAttribute('data-platform', 'github');
+    await expect(form.locator('[data-link-row="0"] [data-link-url]')).toHaveValue('https://github.com/sara-hassan');
     await expect(form.locator('[data-expertise="software"]')).toHaveAttribute('aria-pressed', 'true');
     await expect(form.locator('[data-bio-count]')).toHaveText(/^\s*\d+ \/ 300\s*$/);
     await parkMouse(page);
@@ -250,15 +281,30 @@ for (const variant of VARIANTS) {
     expect(patches).toHaveLength(0);
     await bio.fill('بكتب عن الـ backend و system design (.NET).');
 
-    // A bare link gets https://; a link that isn't https is refused.
-    await form.locator('[data-link-input="linkedin"]').fill('linkedin.com/in/sara');
-    await form.locator('[data-link-input="website"]').fill('ftp://sara.dev');
-    await form.locator('[data-link-input="website"]').blur();
-    await expect(form.locator('[data-link-input="linkedin"]')).toHaveValue('https://linkedin.com/in/sara');
+    // The title (F14): one line, with a counter near 120.
+    const headline = form.locator('#edit-headline');
+    await headline.fill('Backend engineer | .NET و system design');
+    await expect(form.locator('[data-headline-count]')).toHaveCount(0);
+
+    // Links (F14): "+ Add link" → the platform → the link. A bare link gets https://; a link that isn't https is refused.
+    const addLink = async (platform: string) => {
+      await form.locator('[data-add-link]').click();
+      await form.locator(`[data-link-picker] [data-pick-platform="${platform}"]`).click();
+    };
+    await addLink('linkedin');
+    const linkedin = form.locator('[data-link-row="1"] [data-link-url]');
+    await expect(linkedin).toBeFocused();
+    await linkedin.fill('linkedin.com/in/sara');
+    await addLink('website');
+    const website = form.locator('[data-link-row="2"] [data-link-url]');
+    await website.fill('ftp://sara.dev');
+    await website.blur();
+    await expect(linkedin).toHaveValue('https://linkedin.com/in/sara');
     await form.locator('[data-submit]').click();
-    await expect(form.locator('[data-field-error="website"]')).toBeVisible();
-    await expect(form.locator('[data-link-input="website"]')).toBeFocused();
-    await form.locator('[data-link-input="website"]').fill('');
+    await expect(form.locator('[data-link-row="2"] [data-link-error="url"]')).toHaveText(ar ? 'الرابط لازم يبدأ بـ https.' : 'The link must start with https.');
+    await expect(website).toBeFocused();
+    await form.locator('[data-link-row="2"] [data-link-remove]').click();
+    await expect(form.locator('[data-link-row]')).toHaveCount(2);
 
     // Expertise keeps the order you pick.
     await form.locator('[data-expertise="medicine"]').click();
@@ -281,13 +327,20 @@ for (const variant of VARIANTS) {
     expect(patches[1]).toEqual({
       displayName: 'Sara Hassan',
       username: 'sara_hassan',
+      headline: 'Backend engineer | .NET و system design',
       bio: 'بكتب عن الـ backend و system design (.NET).',
-      links: { github: 'https://github.com/sara-hassan', linkedin: 'https://linkedin.com/in/sara', website: null },
+      links: [
+        { platform: 'github', url: 'https://github.com/sara-hassan' },
+        { platform: 'linkedin', url: 'https://linkedin.com/in/sara' },
+      ],
       expertiseFieldIds: ['f-software', 'f-medicine'],
       avatarAssetId: 'asset-avatar-sara-new',
     });
     const header = page.locator('[data-profile-header]');
     await expect(header.locator('[data-profile-username]')).toHaveText('@sara_hassan', { timeout: FIRST_RENDER_MS });
+    await expect(header.locator('[data-profile-headline]')).toHaveText('Backend engineer | .NET و system design');
+    await expect(header.locator('[data-profile-link]')).toHaveCount(2);
+    await expect(header.getByRole('link', { name: 'LinkedIn', exact: true })).toHaveAttribute('href', 'https://linkedin.com/in/sara');
     await expect(header.locator('img')).toHaveAttribute('src', /avatar-sara-new\/256x256/);
     await expect(header.locator('[data-edit-profile]')).toBeVisible();
 

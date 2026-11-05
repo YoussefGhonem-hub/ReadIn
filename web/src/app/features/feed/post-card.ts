@@ -53,6 +53,8 @@ import { CardPreview } from './card-preview';
 import type { PreviewStatus } from './card-preview';
 import { FeedMemory } from './feed-memory';
 import { injectCardReading } from './card-reading';
+import { providePostBarIcons } from './post-bar-icons';
+import { RepostButton } from './repost-button';
 
 /** Comments open in place under the card from this width; narrower screens get a bottom sheet (F34). */
 const WIDE_QUERY = '(min-width: 768px)';
@@ -60,6 +62,8 @@ const WIDE_QUERY = '(min-width: 768px)';
 const TOP_BAR_PX = 72;
 /** A muted card folds away (and back on Undo) in this long (F28). */
 const MUTE_FOLD_MS = 220;
+/** Stands for the reposter's name in the translated label, which is split around it to put the name's link there. */
+const NAME_MARK = '\u2063';
 
 let nextCardId = 0;
 
@@ -77,11 +81,13 @@ function injectMediaQuery(query: string): Signal<boolean> {
 
 /**
  * An article as a social post (F34), in Home's feeds, profile Articles and Related articles. Top to bottom: an optional
- * label ("مقال النهارده"), the writer (avatar, name, verified badge; field · time since publishing · reading time),
- * Follow / Save / "⋯", the title (≤ 3 lines, opens the reader), the excerpt cut at 4 lines with "… اقرأ المزيد" at
- * the end of its last line, the attachments (F26) or else the cover (16:9), up to 3 tags + "+N", the counts (who
- * reacted; the comments) and the action bar: React, Comment, Share. The card is no longer one big link: the title
- * opens the reader, the text expands, an image opens the viewer, the writer opens the profile, a tag its tag page (F32).
+ * label ("مقال النهارده", or "أعاد نشره {name}" / "{name} و N غيره" from `repostedBy`, F29), the writer (avatar, name,
+ * verified badge; their title (F14) on one line; field · time since publishing · reading time), Follow / Save / "⋯",
+ * the title (≤ 3 lines, opens the reader), the excerpt cut at 4 lines with "… اقرأ المزيد" at the end of its last line,
+ * the attachments (F26) or else the cover (16:9), up to 3 tags + "+N", and the action bar: icons only, each with its
+ * count beside it (none at 0): React, Comment, Repost, then Share; on the other side up to 3 reaction emojis that open
+ * who reacted. The card is no longer one big link: the title opens the reader, the text expands, an image opens the
+ * viewer, the writer opens the profile, a tag its tag page (F32).
  *
  * "Read more" grows the card in place, downwards: the first time it loads the preview (the first ~300 words as RDoc)
  * and renders it with the reader's renderer, in a lazy chunk; "Show less" folds it back and brings the card's top
@@ -105,6 +111,7 @@ function injectMediaQuery(query: string): Signal<boolean> {
     ArticleMenu,
     ArticleAttachments,
     ReactionButton,
+    RepostButton,
     ReactorsSheet,
     BottomSheet,
     LinesSkeleton,
@@ -116,6 +123,7 @@ function injectMediaQuery(query: string): Signal<boolean> {
     RelativeTimePipe,
     LocalizedDatePipe,
   ],
+  providers: [providePostBarIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'rd-card block max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0',
@@ -155,13 +163,29 @@ function injectMediaQuery(query: string): Signal<boolean> {
           <svg lucideIcon="Sparkles" [size]="14" aria-hidden="true"></svg>
           {{ labelKey | transloco }}
         </div>
+      } @else if (repostLabel(); as repost) {
+        <!-- F29: a repost placed it (Home → Following) or it is on a profile's Reposts tab; the name opens the profile -->
+        <div
+          class="flex items-center gap-1.5 border-b border-border px-4 py-2 text-xs font-semibold text-text-secondary"
+          data-card-label
+          data-card-repost-label
+        >
+          <svg lucideIcon="Repeat2" [size]="14" class="shrink-0" aria-hidden="true"></svg>
+          <span class="min-w-0 truncate"
+            >{{ repost.before
+            }}<a [routerLink]="'/@' + repost.user.username" class="text-text-primary no-underline hover:underline" dir="auto" data-card-reposter>{{
+              repost.user.displayName
+            }}</a
+            >{{ repost.after }}</span
+          >
+        </div>
       }
 
       <!-- Header: the writer, then Follow, Save and "⋯"; the meta line runs under them, so it rarely wraps -->
       <header class="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 ps-4 pe-2 pt-3">
         @if (article().author; as author) {
           <!-- The name is the link for keyboards and screen readers; the photo is the same link for taps. -->
-          <a [routerLink]="'/@' + author.username" class="row-span-2 mt-0.5 flex self-start rounded-full" tabindex="-1" aria-hidden="true" data-card-avatar>
+          <a [routerLink]="'/@' + author.username" class="row-span-3 mt-0.5 flex self-start rounded-full" tabindex="-1" aria-hidden="true" data-card-avatar>
             <rd-avatar [name]="author.displayName" [src]="author.avatarUrl" [size]="44" />
           </a>
           <a
@@ -176,7 +200,7 @@ function injectMediaQuery(query: string): Signal<boolean> {
           </a>
         } @else {
           <!-- The author deleted their account (SPEC §9.6): no profile link and no follow. -->
-          <rd-avatar class="row-span-2 mt-0.5 self-start" [generic]="true" [size]="44" />
+          <rd-avatar class="row-span-3 mt-0.5 self-start" [generic]="true" [size]="44" />
           <span class="self-center pt-0.5 font-semibold text-text-secondary" data-deleted-author>{{ 'common.deletedUser' | transloco }}</span>
         }
         <!-- 44 px targets that don't make the name's row taller -->
@@ -197,6 +221,13 @@ function injectMediaQuery(query: string): Signal<boolean> {
           </button>
           <rd-article-menu [article]="article()" (topicsSheetOpen)="sheetOpen.set($event)" />
         </div>
+        <!-- The writer's title (F14): one line with "…", placed on the UI's start side; the text is laid out and cut in its
+             own direction (§14.2), so a title in the other script keeps its beginning; no line without one -->
+        @if (headline(); as headline) {
+          <p class="col-span-2 col-start-2 m-0 flex pe-2 text-xs leading-snug text-text-secondary" [attr.title]="headline" data-card-headline>
+            <bdi dir="auto" class="min-w-0 truncate">{{ headline }}</bdi>
+          </p>
+        }
         <p class="col-span-2 col-start-2 m-0 mt-0.5 flex flex-wrap items-center gap-x-1.5 pe-2 text-xs text-text-secondary" data-card-meta>
           <span><rd-bdi-text [text]="fieldName()" /></span>
           <span aria-hidden="true">·</span>
@@ -320,46 +351,9 @@ function injectMediaQuery(query: string): Signal<boolean> {
         </ul>
       }
 
-      <!-- Counts: who reacted, and the comments -->
-      @if (state().reactionCount > 0 || state().commentCount > 0) {
-        <div class="mt-2 flex items-center justify-between gap-2 px-3 text-sm text-text-secondary" data-card-counts>
-          @if (state().reactionCount > 0) {
-            <button
-              type="button"
-              class="flex min-h-11 items-center gap-1.5 rounded-md px-1 hover:text-primary hover:underline"
-              data-reactions-summary
-              [attr.aria-label]="summaryLabel()"
-              (click)="whoOpen.set(true)"
-            >
-              <span class="flex items-center" aria-hidden="true">
-                @for (type of topTypes(); track type) {
-                  <span class="-ms-1 text-base leading-none first:ms-0">{{ emoji[type] }}</span>
-                }
-              </span>
-              <span aria-hidden="true" data-reaction-total>{{ state().reactionCount | rdCompactNumber: lang() }}</span>
-            </button>
-          } @else {
-            <span></span>
-          }
-          @if (state().commentCount > 0) {
-            <button
-              type="button"
-              class="min-h-11 rounded-md px-1 hover:text-primary hover:underline"
-              data-card-comment-count
-              [attr.aria-expanded]="commentsOpen()"
-              [attr.aria-controls]="commentsId"
-              (click)="toggleComments()"
-            >
-              {{ state().commentCount | rdPlural: 'feedCard.commentCount' : lang() : { count: (state().commentCount | rdCompactNumber: lang()) } }}
-            </button>
-          }
-        </div>
-      }
-
-      <!-- Action bar: always visible, never leaves the feed -->
+      <!-- Action bar: icons only, each with its count (none at 0); always visible, never leaves the feed -->
       <div
-        class="relative mx-2 flex items-stretch gap-1 border-t border-border py-1"
-        [class.mt-2]="state().reactionCount === 0 && state().commentCount === 0"
+        class="relative mx-2 mt-2 flex items-center gap-1 border-t border-border py-1"
         role="group"
         [attr.aria-label]="'feedCard.actions' | transloco: { title: article().title }"
         data-card-actions
@@ -367,25 +361,46 @@ function injectMediaQuery(query: string): Signal<boolean> {
         <rd-reaction-button [article]="article()" variant="card" />
         <button
           type="button"
-          class="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md px-2 text-sm font-semibold text-text-secondary hover:bg-surface-variant"
+          class="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-md px-2.5 text-sm font-semibold hover:bg-surface-variant"
           [class.text-primary]="commentsOpen()"
+          [class.text-text-secondary]="!commentsOpen()"
           data-card-comment
+          [attr.aria-label]="commentLabel()"
           [attr.aria-expanded]="commentsOpen()"
           [attr.aria-controls]="commentsId"
           (click)="comment()"
         >
-          <svg lucideIcon="MessageCircle" [size]="18" aria-hidden="true"></svg>
-          {{ 'feedCard.comment' | transloco }}
+          <svg lucideIcon="MessageCircle" [size]="20" aria-hidden="true"></svg>
+          @if (state().commentCount > 0) {
+            <span aria-hidden="true" data-card-comment-count>{{ state().commentCount | rdCompactNumber: lang() }}</span>
+          }
         </button>
+        <rd-repost-button [article]="article()" variant="card" />
         <button
           type="button"
-          class="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md px-2 text-sm font-semibold text-text-secondary hover:bg-surface-variant"
+          class="flex min-h-11 min-w-11 items-center justify-center rounded-md px-2.5 text-text-secondary hover:bg-surface-variant"
           data-card-share
+          [attr.aria-label]="'postBar.share' | transloco"
           (click)="share()"
         >
-          <svg lucideIcon="Share2" [size]="18" aria-hidden="true"></svg>
-          {{ 'common.share' | transloco }}
+          <svg lucideIcon="Share2" [size]="20" aria-hidden="true"></svg>
         </button>
+        <!-- Up to 3 reaction emojis on the other side: who reacted -->
+        @if (state().reactionCount > 0) {
+          <button
+            type="button"
+            class="ms-auto flex min-h-11 min-w-11 items-center justify-center rounded-md px-2 hover:bg-surface-variant"
+            data-reactions-summary
+            [attr.aria-label]="summaryLabel()"
+            (click)="whoOpen.set(true)"
+          >
+            <span class="flex items-center" aria-hidden="true">
+              @for (type of topTypes(); track type) {
+                <span class="-ms-1 text-base leading-none first:ms-0">{{ emoji[type] }}</span>
+              }
+            </span>
+          </button>
+        }
       </div>
 
       <!-- Comments: in place on wide screens (F34), lazy -->
@@ -463,8 +478,30 @@ export class PostCard {
   protected readonly tags = computed(() => this.article().tags ?? []);
   protected readonly moreTags = computed(() => Math.max(0, (this.article().tagCount ?? 0) - this.tags().length));
 
+  /** The writer's title (F14), hidden when empty. */
+  protected readonly headline = computed(() => this.article().author?.headline?.trim() || null);
+
+  /** F29: "أعاد نشره {name}" / "{name} و N غيره", split around the name, which links to the profile. */
+  protected readonly repostLabel = computed(() => {
+    const by = this.article().repostedBy;
+    if (!by) return null;
+    const lang = this.lang();
+    const text =
+      by.othersCount > 0
+        ? translatePlural(this.transloco, 'repostLabel.others', by.othersCount, lang, { name: NAME_MARK })
+        : this.transloco.translate('repostLabel.one', { name: NAME_MARK }, lang);
+    const [before, after = ''] = text.split(NAME_MARK);
+    return { before, after, user: by.user };
+  });
+
   /** The feed values with your actions and the live counters on top. */
   protected readonly state = computed(() => this.social.state(this.article()));
+  /** "تعليق، 4" / "Comment, 4": the action's name with its count (§26). */
+  protected readonly commentLabel = computed(() => {
+    this.lang();
+    const count = this.state().commentCount;
+    return count > 0 ? this.transloco.translate('postBar.commentCount', { count }) : this.transloco.translate('postBar.comment');
+  });
   protected readonly topTypes = computed(() => topReactions(this.state().reactions));
   protected readonly summaryLabel = computed(() => {
     const lang = this.lang();
@@ -566,7 +603,6 @@ export class PostCard {
     this.toggleComments();
   }
 
-  /** The count opens the comments for everyone: guests can read them, and the section offers to sign in. */
   protected toggleComments(): void {
     this.commentsOpen.update((open) => !open);
   }

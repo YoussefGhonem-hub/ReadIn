@@ -28,6 +28,8 @@ export const CONFIGURABLE_TYPES: readonly ConfigurableNotificationType[] = [
   'comment_reply',
   'mention',
   'reactions_milestone',
+  // F29: someone reposted your article.
+  'article_reposted',
 ];
 const MODES: readonly NotificationMode[] = ['all', 'inApp', 'off'];
 /** Every configurable type defaults to `all` (a type the API leaves out has its default). */

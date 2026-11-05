@@ -1,11 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LucideDynamicIcon } from '@lucide/angular';
 import { environment } from '../../../environments/environment';
 import { ContentApi } from '../../core/api/content.api';
 import { ArticleAttachmentsDto, ArticleLanguage, DocumentAttachmentDto } from '../../core/api/models';
+import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService } from '../../core/i18n/language.service';
+import { isolate } from '../directives/bidi';
 import { PluralPipe } from '../pipes/format.pipes';
 import { urlLangFor } from '../ui/article-link';
+import { ToastService } from '../ui/toast/toast.service';
+import { DocumentDownloader } from './document-download';
 import { MediaCarousel } from './media-carousel';
 import { MediaImage } from './media-image';
 import { MediaSlide, clampImageRatio, documentRatio, documentSlides, imageSlides } from './media-slides';
@@ -27,7 +32,7 @@ const SLIDE_SIZES = '(min-width: 768px) 600px, 85vw';
  */
 @Component({
   selector: 'rd-article-attachments',
-  imports: [TranslocoPipe, PluralPipe, MediaCarousel, MediaImage],
+  imports: [TranslocoPipe, LucideDynamicIcon, PluralPipe, MediaCarousel, MediaImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block', '[attr.data-attachments]': 'attachments().kind' },
   template: `
@@ -71,6 +76,25 @@ const SLIDE_SIZES = '(min-width: 768px) 600px, 85vw';
         <span aria-hidden="true">📄</span>
         <span class="min-w-0 truncate font-semibold text-text-primary" dir="auto">{{ doc.title }}</span>
         <span class="shrink-0 text-text-secondary">· {{ doc.pageCount | rdPlural: 'media.pageCount' : lang() }}</span>
+        @if (doc.canDownload) {
+          <!-- Download (F26): when the writer allows it, or for the owner and moderators. The 44 px target overlaps the strip's margins. -->
+          <button
+            type="button"
+            class="-my-3 -me-2 ms-auto grid h-11 w-11 shrink-0 place-items-center rounded-full text-text-secondary hover:bg-surface-variant hover:text-text-primary disabled:opacity-60"
+            [attr.aria-label]="'media.downloadDocument' | transloco: { title: isolate(doc.title) }"
+            [title]="'media.viewer.download' | transloco"
+            [disabled]="downloading()"
+            [attr.aria-busy]="downloading() || null"
+            data-document-download
+            (click)="download(doc)"
+          >
+            @if (downloading()) {
+              <svg lucideIcon="LoaderCircle" [size]="18" class="animate-spin" aria-hidden="true"></svg>
+            } @else {
+              <svg lucideIcon="Download" [size]="18" aria-hidden="true"></svg>
+            }
+          </button>
+        }
       </div>
       @if (pages().length) {
         <rd-media-carousel
@@ -89,7 +113,12 @@ export class ArticleAttachments {
   private readonly viewer = inject(MediaViewerService);
   private readonly content = inject(ContentApi);
   private readonly transloco = inject(TranslocoService);
+  private readonly downloader = inject(DocumentDownloader);
+  private readonly toasts = inject(ToastService);
+  private readonly errors = inject(ErrorMessages);
   protected readonly lang = inject(LanguageService).lang;
+  protected readonly isolate = isolate;
+  protected readonly downloading = signal(false);
 
   readonly attachments = input.required<ArticleAttachmentsDto>();
   readonly article = input.required<AttachmentsArticleRef>();
@@ -109,6 +138,19 @@ export class ArticleAttachments {
     return doc ? documentSlides(doc, (pageNo) => this.pageAlt(doc, pageNo)) : [];
   });
   protected readonly pageRatio = computed(() => documentRatio(this.attachments().document?.pages ?? []));
+
+  /** Saves the original PDF under its title; a failure is a toast (the card stays as it was). */
+  protected async download(doc: DocumentAttachmentDto): Promise<void> {
+    if (!doc.canDownload || this.downloading()) return;
+    this.downloading.set(true);
+    try {
+      await this.downloader.download(doc);
+    } catch (error) {
+      this.toasts.error(this.errors.forError(error));
+    } finally {
+      this.downloading.set(false);
+    }
+  }
 
   protected openImages(index: number): void {
     const items = this.images();

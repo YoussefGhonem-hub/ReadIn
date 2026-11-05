@@ -106,8 +106,8 @@ const NEAR_TOP_SLACK_PX = 160;
           class="mb-2"
           [(text)]="draft"
           [label]="'comments.composer.label' | transloco"
-          [placeholder]="'comments.composer.placeholder' | transloco"
-          [submitLabel]="'comments.composer.send' | transloco"
+          [placeholder]="'commentBox.placeholder' | transloco"
+          [submitLabel]="'commentBox.send' | transloco"
           [error]="postError()"
           (submitted)="post($event)"
           data-new-comment

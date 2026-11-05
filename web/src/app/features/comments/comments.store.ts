@@ -438,10 +438,14 @@ export class CommentsStore {
     this._dialog.set(null);
   }
 
-  /** Opens the reply composer; replying to a reply pre-fills its author's @handle. */
+  /**
+   * Opens the reply box with the replied-to person's `@username ` already in it (a real mention: they are mentioned and
+   * notified; the box puts the caret after it, and it can be deleted like any text). No mention when you reply to
+   * yourself or to a deleted account. A mention they don't allow is dropped by the API, which still posts the reply.
+   */
   openReply(threadId: string, target: CommentView): void {
     const me = this.session.me()?.id;
-    const handle = target.parentId && target.author && target.author.id !== me ? `@${target.author.username} ` : '';
+    const handle = target.author && target.author.id !== me ? `@${target.author.username} ` : '';
     this._composer.set({ kind: 'reply', threadId, targetId: target.id, prefill: handle });
   }
 
@@ -627,7 +631,9 @@ export class CommentsStore {
 
   private me(): AuthorDto | null {
     const me = this.session.isAuthenticated() ? this.session.me() : null;
-    return me ? { id: me.id, displayName: me.displayName, username: me.username, avatarUrl: me.avatarUrl, isVerified: me.isVerified } : null;
+    return me
+      ? { id: me.id, displayName: me.displayName, username: me.username, avatarUrl: me.avatarUrl, isVerified: me.isVerified, headline: me.headline ?? null }
+      : null;
   }
 
   private async whileBusy(commentId: string, work: () => Promise<void>): Promise<void> {

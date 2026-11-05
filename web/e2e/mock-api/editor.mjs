@@ -344,11 +344,15 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
     ],
   ];
 
-  /** Reader DTO (`GET /articles/{slug}`) of a published editor article, or null. */
-  function readerArticle(slug, lang) {
+  /**
+   * Reader DTO (`GET /articles/{slug}`) of a published editor article, or null. `viewer` is who asks (null for guests):
+   * like the API, the document's `canDownload` is true for its owner even with "Allow download" off.
+   */
+  function readerArticle(slug, lang, viewer = null) {
     const ref = published.get(slug);
     const record = ref ? stateOf(ref.viewer).articles.get(ref.id) : null;
     if (!record?.live) return null;
+    const isOwner = !!viewer && viewer === record.viewer;
     const live = record.live;
     const translation = live.translations.find((t) => t.language === lang) ?? live.translations.find((t) => t.language === live.sourceLanguage);
     const field = fields.find((f) => f.id === live.fieldId) ?? fields[0];
@@ -365,7 +369,7 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
           title: a.title ?? asset.title,
           pageCount: asset.pageCount,
           allowDownload: !!a.allowDownload,
-          canDownload: !!a.allowDownload,
+          canDownload: isOwner || !!a.allowDownload,
           downloadUrl: `http://localhost/api/v1/documents/${asset.id}/download`,
           pages: asset.pages,
         };

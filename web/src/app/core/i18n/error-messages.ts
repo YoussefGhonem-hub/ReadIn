@@ -145,6 +145,8 @@ export const CONTRACT_ERROR_CODES = [
   'mute.system_account',
   'mute.limit',
   'mute.own_article',
+  // Reposts (F29)
+  'repost.own_article',
   // Comments (F11)
   'comment.not_found',
   'comment.not_owner',
@@ -172,6 +174,19 @@ export const CONTRACT_ERROR_CODES = [
   'profile.stats_private',
   'profile.avatar_invalid',
   'profile.expertise_invalid',
+  // Profile title and social links (F14, pre-production step): validation codes in `errors.headline` / `errors["links[i].url"]`
+  'profile.headline_too_long',
+  'profile.headline_invalid',
+  'link.too_many',
+  'link.platform_invalid',
+  'link.duplicate_platform',
+  'link.too_long',
+  'link.https_required',
+  'link.url_invalid',
+  'link.host_mismatch',
+  'link.label_required',
+  'link.label_invalid',
+  'link.label_not_allowed',
   // Writer categories (F31): category.name_invalid comes in a validation failure's `errors.name`
   'category.not_found',
   'category.not_owner',

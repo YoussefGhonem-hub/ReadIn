@@ -5,7 +5,7 @@ import { pushLinkToPath } from '../../core/push/push-message';
 import { translatePlural } from '../../shared/pipes/intl';
 
 /** Types whose text starts with who did it: "X (and N others) …". */
-const ACTOR_TYPES = new Set<NotificationType>(['new_follower', 'article_comment', 'comment_reply', 'mention', 'followed_writer_article']);
+const ACTOR_TYPES = new Set<NotificationType>(['new_follower', 'article_comment', 'comment_reply', 'mention', 'followed_writer_article', 'article_reposted']);
 
 const SECURITY_CHANGES = new Set<SecurityChange>([
   'passwordChanged',
@@ -102,6 +102,8 @@ export function notificationIcon(n: NotificationDto): string {
       return 'PartyPopper';
     case 'followed_writer_article':
       return 'PenLine';
+    case 'article_reposted':
+      return 'Repeat2';
     case 'daily_article':
       return 'Coffee';
     case 'streak_reminder':

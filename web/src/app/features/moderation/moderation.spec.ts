@@ -389,6 +389,95 @@ describe('Moderation (F22)', () => {
       expect(t.$('[data-case-history] [data-log-entry]')!.getAttribute('data-log-action')).toBe('user.clear_category');
     });
 
+    it('a user case shows their title and links (F14); "امسح الروابط" and "امسح المسمى" confirm, then send clear_links / clear_headline', async () => {
+      const user = { ...AUTHOR, headline: 'أحسن مدرب في مصر | اشتري الكورس' };
+      const links = [
+        { platform: 'instagram' as const, url: 'https://instagram.com/cheap.courses', label: null },
+        { platform: 'other' as const, url: 'https://spam.example/buy', label: 'اشتري' },
+      ];
+      const userItem = item('user', 'u9', { target: { state: 'active', author: user, suspendedUntil: null, warningCount: 0, links } });
+      const t = await render('user', 'u9', caseOf(userItem, { categories: [] }));
+      const section = t.$('[data-case-profile]')!;
+      expect(section.querySelector('#case-profile-title')!.textContent).toContain('المسمى والروابط');
+      expect(section.querySelector('[data-case-headline]')!.textContent!.trim()).toBe('أحسن مدرب في مصر | اشتري الكورس');
+      expect(section.querySelector('[data-case-headline]')!.getAttribute('dir')).toBe('rtl');
+      const rows = [...section.querySelectorAll('[data-case-link]')];
+      expect(rows.map((r) => r.getAttribute('data-case-link'))).toEqual(['instagram', 'other']);
+      expect(rows[0].textContent).toContain('Instagram');
+      expect(rows[1].textContent).toContain('اشتري');
+      // The whole address, LTR, never followed by crawlers.
+      const url = rows[0].querySelector<HTMLAnchorElement>('[data-case-link-url]')!;
+      expect(url.textContent!.trim()).toBe('https://instagram.com/cheap.courses');
+      expect(url.getAttribute('dir')).toBe('ltr');
+      expect(url.rel).toContain('nofollow');
+
+      // Clear title: a confirmation with an optional note.
+      section.querySelector<HTMLElement>('[data-case-clear-headline]')!.click();
+      await t.stable();
+      expect(t.$('[data-moderation-sheet]')!.getAttribute('data-moderation-action')).toBe('clear_headline');
+      expect(t.$('#moderation-sheet-title')!.textContent).toContain('تمسح مسمى');
+      expect(t.$('#moderation-sheet-body')!.textContent).toContain('مش هيوصله إشعار');
+      expect(t.$<HTMLButtonElement>('[data-moderation-confirm]')!.disabled).toBe(false); // the note is optional
+      t.$('[data-moderation-confirm]')!.click();
+      let req = http.expectOne(ACTIONS);
+      expect(req.request.body).toEqual({ action: 'clear_headline', targetType: 'user', targetId: 'u9' });
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await t.stable();
+      const cleared = item('user', 'u9', {
+        status: 'resolved',
+        closedAt: '2026-11-03T09:00:00Z',
+        target: { state: 'active', author: { ...user, headline: null }, suspendedUntil: null, warningCount: 0, links },
+      });
+      http.expectOne(`${TEST_API}/moderation/reports/user/u9`).flush(
+        caseOf(cleared, { categories: [], history: [logOf('h1', { action: 'user.clear_headline', targetType: 'user', targetId: 'u9', targetLabel: user.headline, note: null })] }),
+      );
+      answerSummary(http);
+      await t.stable();
+      expect(t.$('[data-case-no-headline]')!.textContent!.trim()).toBe('مفيش مسمى.');
+      expect(t.$('[data-case-clear-headline]')).toBeNull();
+      expect(t.$('[data-case-history]')!.textContent).toContain('مسح مسمى مستخدم');
+
+      // Clear links, with a note.
+      t.$('[data-case-clear-links]')!.click();
+      await t.stable();
+      expect(t.$('[data-moderation-sheet]')!.getAttribute('data-moderation-action')).toBe('clear_links');
+      expect(t.$('#moderation-sheet-title')!.textContent).toContain('تمسح كل روابط');
+      const note = t.$<HTMLTextAreaElement>('[data-moderation-note]')!;
+      note.value = 'روابط سبام';
+      note.dispatchEvent(new Event('input'));
+      await t.stable();
+      t.$('[data-moderation-confirm]')!.click();
+      req = http.expectOne(ACTIONS);
+      expect(req.request.body).toEqual({ action: 'clear_links', targetType: 'user', targetId: 'u9', note: 'روابط سبام' });
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await t.stable();
+      http.expectOne(`${TEST_API}/moderation/reports/user/u9`).flush(
+        caseOf(item('user', 'u9', { status: 'resolved', target: { state: 'active', author: { ...user, headline: null }, suspendedUntil: null, warningCount: 0, links: [] } }), {
+          categories: [],
+          history: [logOf('h2', { action: 'user.clear_links', targetType: 'user', targetId: 'u9', targetLabel: links.map((l) => l.url).join(' '), note: 'روابط سبام' })],
+        }),
+      );
+      answerSummary(http);
+      await t.stable();
+      expect(t.$('[data-case-no-links]')!.textContent!.trim()).toBe('مفيش روابط.');
+      expect(t.$('[data-case-clear-links]')).toBeNull();
+      expect(t.$('[data-case-history] [data-log-entry]')!.getAttribute('data-log-action')).toBe('user.clear_links');
+      expect(t.$('[data-case-history]')!.textContent).toContain('مسح روابط مستخدم');
+    });
+
+    it('a user without a title or links (or an API older than F14): nothing to clear', async () => {
+      const t = await render('user', 'u9', caseOf(item('user', 'u9'), { categories: [] }));
+      expect(t.$('[data-case-no-headline]')).not.toBeNull();
+      expect(t.$('[data-case-no-links]')).not.toBeNull();
+      expect(t.$('[data-case-clear-headline]')).toBeNull();
+      expect(t.$('[data-case-clear-links]')).toBeNull();
+    });
+
+    it('article and comment cases have no title and links section', async () => {
+      const t = await render('article', 'a1', caseOf(item('article', 'a1'), { categories: [] }));
+      expect(t.$('[data-case-profile]')).toBeNull();
+    });
+
     it('a user without categories: the section says so (as on mobile)', async () => {
       const t = await render('user', 'u9', caseOf(item('user', 'u9'), { categories: [] }));
       expect(t.$('#case-categories-title')!.textContent).toContain('أقسام الكاتب');

@@ -337,7 +337,8 @@ export class AttachmentDraft implements OnDestroy {
       asset: null,
       errorCode: null,
       title: titleFromFileName(file.name),
-      allowDownload: false,
+      // "Allow download" starts on for a new PDF (SPEC F26); the writer can turn it off. Sent with the upload.
+      allowDownload: true,
     });
     this.startDocument();
     return null;

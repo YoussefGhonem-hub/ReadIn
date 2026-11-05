@@ -85,7 +85,7 @@ describe('RealtimeService', () => {
       await flush();
 
       connection.emit('live/articles/a1/commentCount', 7);
-      expect(seen.at(-1)).toEqual({ reactions: null, reactionCount: null, commentCount: 7, saveCount: null });
+      expect(seen.at(-1)).toEqual({ reactions: null, reactionCount: null, commentCount: 7, saveCount: null, repostCount: null });
 
       connection.emit('live/articles/a1/reactions', { insightful: 3, love: 2, fire: 1 });
       expect(seen.at(-1)).toEqual({
@@ -93,7 +93,12 @@ describe('RealtimeService', () => {
         reactionCount: 6,
         commentCount: 7,
         saveCount: null,
+        repostCount: null,
       });
+
+      // F29: the repost counter, like the others.
+      connection.emit('live/articles/a1/repostCount', 3);
+      expect(seen.at(-1)?.repostCount).toBe(3);
     });
 
     it('listens to the counters only, never the whole article node with its events', async () => {
@@ -105,6 +110,7 @@ describe('RealtimeService', () => {
       expect(connection.listenerCount('live/articles/a1/reactions')).toBe(1);
       expect(connection.listenerCount('live/articles/a1/commentCount')).toBe(1);
       expect(connection.listenerCount('live/articles/a1/saveCount')).toBe(1);
+      expect(connection.listenerCount('live/articles/a1/repostCount')).toBe(1);
     });
 
     it('ignores malformed values instead of showing them', async () => {

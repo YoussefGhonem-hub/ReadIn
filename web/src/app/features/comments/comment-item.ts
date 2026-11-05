@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, computed, inject, input, linkedSignal, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -6,10 +6,12 @@ import { LucideDynamicIcon, LucideIconData } from '@lucide/angular';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { LanguageService } from '../../core/i18n/language.service';
+import { FollowStore } from '../../core/social/follow.store';
 import { MuteStore } from '../../core/social/mute.store';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { CompactNumberPipe, LocalizedDatePipe, RelativeTimePipe } from '../../shared/pipes/format.pipes';
+import { FollowButton } from '../../shared/social/follow-button';
 import { Avatar } from '../../shared/ui/avatar';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { CommentComposer } from './comment-composer';
@@ -27,11 +29,13 @@ interface MenuItem {
 }
 
 /**
- * One comment or reply (F11): avatar, name, @handle, verified and "الكاتب" badges, pinned label, relative time,
- * "edited", the text with its own direction and only the resolved @mentions as links, then like, reply and a menu with
- * what the viewer may do (`can*`). Deleted or hidden-for-you comments are placeholders; a deleted account shows as
- * "Deleted user" without a profile link. Guests see the actions and get the sign-in prompt. A comment by a writer you
- * muted collapses to "تعليق من شخص كتمته" with "عرض", which shows it here only (F28); replies under it stay.
+ * One comment or reply (F11): the avatar, the name with the verified and "الكاتب" badges, the pinned label, the relative
+ * time and "edited"; on the other side "متابعة" (when you don't follow them and it isn't you; guests get the sign-in
+ * prompt) and "⋯" with what the viewer may do (`can*`). Under the name, the writer's title (F14) on one line with "…"
+ * instead of the @username. Then the text with its own direction and only the resolved @mentions as links, and one row
+ * of actions: Like and Reply. The avatar and the name open the profile. Deleted or hidden-for-you comments are
+ * placeholders; a deleted account shows as "Deleted user" without a profile link. A comment by a writer you muted
+ * collapses to "تعليق من شخص كتمته" with "عرض", which shows it here only (F28); replies under it stay.
  */
 @Component({
   selector: 'rd-comment-item',
@@ -48,6 +52,7 @@ interface MenuItem {
     LocalizedDatePipe,
     RelativeTimePipe,
     CommentComposer,
+    FollowButton,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -106,37 +111,70 @@ interface MenuItem {
         }
 
         <div class="min-w-0 flex-1">
-          <div class="flex flex-wrap items-center gap-1.5 text-sm">
-            @if (c.author; as author) {
-              <a [routerLink]="'/@' + author.username" class="inline-flex min-w-0 items-center gap-1 font-semibold text-text-primary no-underline hover:underline" data-comment-author>
-                <rd-bdi-text class="truncate" [text]="author.displayName" />
-                @if (author.isVerified) {
-                  <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+          <div class="flex items-start gap-2">
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
+                @if (c.author; as author) {
+                  <a
+                    [routerLink]="'/@' + author.username"
+                    class="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-text-primary no-underline hover:underline"
+                    data-comment-author
+                  >
+                    <rd-bdi-text class="truncate" [text]="author.displayName" />
+                    @if (author.isVerified) {
+                      <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                    }
+                  </a>
+                } @else {
+                  <span class="font-semibold text-text-secondary" data-comment-author>{{ 'comments.deletedUser' | transloco }}</span>
                 }
-              </a>
-              <bdi dir="ltr" class="text-xs text-text-secondary">&#64;{{ author.username }}</bdi>
-            } @else {
-              <span class="font-semibold text-text-secondary" data-comment-author>{{ 'comments.deletedUser' | transloco }}</span>
-            }
-            @if (c.isArticleAuthor) {
-              <span class="rd-tag" data-writer-badge>{{ 'comments.writer' | transloco }}</span>
-            }
-            @if (c.isPinned) {
-              <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-primary" data-pinned>
-                <svg lucideIcon="Pin" [size]="12" aria-hidden="true"></svg>{{ 'comments.pinned' | transloco }}
-              </span>
-            }
-            <span class="text-xs text-text-secondary">
-              ·
-              @if (c.pending) {
-                <span data-sending>{{ 'comments.sending' | transloco }}</span>
-              } @else {
-                <time [attr.datetime]="c.createdAt" [title]="c.createdAt | rdDate: lang() : 'long'">{{ c.createdAt | rdRelativeTime: lang() }}</time>
+                @if (c.isArticleAuthor) {
+                  <span class="rd-tag" data-writer-badge>{{ 'comments.writer' | transloco }}</span>
+                }
+                @if (c.isPinned) {
+                  <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-primary" data-pinned>
+                    <svg lucideIcon="Pin" [size]="12" aria-hidden="true"></svg>{{ 'comments.pinned' | transloco }}
+                  </span>
+                }
+                <span class="text-xs text-text-secondary">
+                  ·
+                  @if (c.pending) {
+                    <span data-sending>{{ 'comments.sending' | transloco }}</span>
+                  } @else {
+                    <time [attr.datetime]="c.createdAt" [title]="c.createdAt | rdDate: lang() : 'long'">{{ c.createdAt | rdRelativeTime: lang() }}</time>
+                  }
+                  @if (c.editedAt) {
+                    · <span data-edited>{{ 'comments.edited' | transloco }}</span>
+                  }
+                </span>
+              </div>
+              <!-- The writer's title (F14) on one line with "…", in place of the @username: on the UI's start side, laid out
+                   and cut in its own direction -->
+              @if (headline(); as headline) {
+                <p class="m-0 flex text-xs leading-snug text-text-secondary" [attr.title]="headline" data-comment-headline>
+                  <bdi dir="auto" class="min-w-0 truncate">{{ headline }}</bdi>
+                </p>
               }
-              @if (c.editedAt) {
-                · <span data-edited>{{ 'comments.edited' | transloco }}</span>
-              }
-            </span>
+            </div>
+            @if (!c.pending && (showFollow() || menuItems().length)) {
+              <!-- 44 px targets that don't make the name's row taller -->
+              <div class="-my-2.5 -me-2 flex shrink-0 items-center">
+                @if (showFollow() && c.author; as author) {
+                  <span class="contents" data-comment-follow><rd-follow-button [user]="author" [initial]="c.isFollowingAuthor ?? false" [compact]="true" /></span>
+                }
+                @if (menuItems().length) {
+                  <button
+                    type="button"
+                    class="grid h-11 w-9 place-items-center rounded-md text-text-secondary hover:bg-surface-variant"
+                    [cdkMenuTriggerFor]="menu"
+                    [attr.aria-label]="'comments.actions' | transloco"
+                    data-comment-menu
+                  >
+                    <svg lucideIcon="EllipsisVertical" [size]="16" aria-hidden="true"></svg>
+                  </button>
+                }
+              </div>
+            }
           </div>
 
           @if (c.isHidden) {
@@ -154,6 +192,8 @@ interface MenuItem {
               [error]="editError()"
               [busy]="saving()"
               [cancelable]="true"
+              [cancelLabel]="'commentBox.cancelEdit' | transloco"
+              [showAvatar]="false"
               [autofocus]="true"
               (submitted)="saveEdit($event)"
               (cancelled)="store.closeComposer()"
@@ -170,7 +210,7 @@ interface MenuItem {
             </p>
 
             @if (!c.pending) {
-              <div class="mt-1 flex items-center gap-1 text-xs text-text-secondary">
+              <div class="-ms-2 mt-0.5 flex items-center gap-1 text-xs text-text-secondary" data-comment-actions>
                 <button
                   type="button"
                   class="inline-flex min-h-9 items-center justify-center gap-1 rounded-md px-2 hover:bg-surface-variant"
@@ -186,20 +226,9 @@ interface MenuItem {
                   }
                 </button>
                 @if (!c.isHidden) {
-                  <button type="button" class="inline-flex min-h-9 items-center gap-1 rounded-md px-2 hover:bg-surface-variant" data-reply (click)="reply()">
+                  <button type="button" class="inline-flex min-h-9 items-center gap-1 rounded-md px-2 font-semibold hover:bg-surface-variant" data-reply (click)="reply()">
                     <svg lucideIcon="CornerDownLeft" [size]="15" class="rd-flip-rtl" aria-hidden="true"></svg>
                     {{ 'comments.reply' | transloco }}
-                  </button>
-                }
-                @if (menuItems().length) {
-                  <button
-                    type="button"
-                    class="ms-auto inline-flex min-h-9 items-center justify-center rounded-md px-2 hover:bg-surface-variant"
-                    [cdkMenuTriggerFor]="menu"
-                    [attr.aria-label]="'comments.actions' | transloco"
-                    data-comment-menu
-                  >
-                    <svg lucideIcon="EllipsisVertical" [size]="16" aria-hidden="true"></svg>
                   </button>
                 }
               </div>
@@ -236,6 +265,7 @@ export class CommentItem {
   private readonly transloco = inject(TranslocoService);
   private readonly errors = inject(CommentErrors);
   private readonly mutes = inject(MuteStore);
+  private readonly follows = inject(FollowStore);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
   protected readonly lang = inject(LanguageService).lang;
@@ -265,6 +295,28 @@ export class CommentItem {
     return !!c.author && this.session.isAuthenticated() && this.mutes.isAuthorMuted(c.author.id, c.isAuthorMuted ?? false);
   });
   protected readonly avatarSize = computed(() => (this.comment().parentId ? 28 : 36));
+  /** The writer's title (F14), hidden when empty. */
+  protected readonly headline = computed(() => this.comment().author?.headline?.trim() || null);
+  /** Who wrote it and who is looking: Follow is decided again only when one of them changes. */
+  private readonly followKey = computed(() => {
+    const c = this.comment();
+    return `${c.id}|${c.author?.id ?? ''}|${this.myId() ?? ''}`;
+  });
+  /**
+   * "متابعة" shows when you don't follow the writer (the API's `isFollowingAuthor`, or a follow since) and it isn't
+   * you; guests see it too and get the sign-in prompt. Decided when the comment arrives, so the button stays to show
+   * "بتتابعه" after a tap, and to undo; every button of that writer changes together (FollowStore, F12).
+   */
+  protected readonly showFollow = linkedSignal({
+    source: this.followKey,
+    computation: () =>
+      untracked(() => {
+        const c = this.comment();
+        const viewer = this.myId();
+        if (c.pending || !c.author || isPlaceholder(c) || c.author.id === viewer) return false;
+        return !viewer || !this.follows.isFollowing(c.author.id, c.isFollowingAuthor ?? false);
+      }),
+  });
   protected readonly highlighted = computed(() => this.store.highlighted().has(this.comment().id));
   protected readonly segments = computed(() => commentSegments(this.comment().body, this.comment().mentions));
   protected readonly bodyDir = computed(() => commentDir(this.comment().body) ?? 'ltr');

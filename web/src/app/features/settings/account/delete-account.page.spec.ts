@@ -164,6 +164,9 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     // Drafts and unpublished articles go; published ones stay up as "Deleted user" (SPEC §9.6).
     expect(page.$('[data-deleted]')!.textContent).toContain('المسودات وأي مقال مش منشور، بالصور وملفات الـ PDF اللي فيها، وأي صورة أو ملف تاني رفعته');
     expect(page.$('[data-deleted]')!.textContent).not.toContain('مقالاتك والمسودات');
+    // The title and the reposts (F14, F29) are deleted too (SPEC §9.6).
+    expect(page.$('[data-deleted]')!.textContent).toContain('بروفايلك: الاسم واسم المستخدم والصورة والمسمى والنبذة والروابط');
+    expect(page.$('[data-deleted]')!.textContent).toContain('وتفاعلاتك وإعادات نشرك وإعجاباتك بالتعليقات');
     const kept = page.root().querySelectorAll('[data-kept] li');
     expect(kept).toHaveLength(4);
     expect(kept[0].textContent!.trim()).toBe(
@@ -189,6 +192,8 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     expect(page.$('[data-deleted]')!.textContent).toContain(
       "Your drafts and any article that isn't published, with their images and PDFs, and every other photo or file you uploaded",
     );
+    expect(page.$('[data-deleted]')!.textContent).toContain('Your profile: name, @username, photo, title, bio and links');
+    expect(page.$('[data-deleted]')!.textContent).toContain('reading progress and stats, reactions, reposts, comment likes');
     expect(page.root().querySelector('[data-kept] li')!.textContent!.trim()).toBe(
       'Your published articles and comments stay up under “Deleted user”, with the images and PDFs they show: no name, @username or photo, and nothing that links them to you. That keeps links and discussions other readers rely on working. To take an article down, delete it before you delete your account.',
     );

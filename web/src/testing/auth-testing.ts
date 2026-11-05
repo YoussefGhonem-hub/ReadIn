@@ -24,7 +24,7 @@ export function testMe(patch: Partial<MeDto> = {}): MeDto {
     username: 'mona',
     avatarUrl: null,
     bio: null,
-    links: {},
+    links: [],
     uiLanguage: 'ar',
     articleLanguage: 'ar-EG',
     theme: 'system',

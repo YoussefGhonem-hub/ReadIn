@@ -29,6 +29,7 @@ import { createModeration } from './moderation.mjs';
 import { createMutes } from './mutes.mjs';
 import { createNotifications } from './notifications.mjs';
 import { createProfiles } from './profiles.mjs';
+import { createReposts } from './reposts.mjs';
 import { createSearch, textOfBlocks } from './search.mjs';
 import { createSocial } from './social.mjs';
 import { createTagRegistry, createTags } from './tags.mjs';
@@ -217,17 +218,20 @@ function documentAsset(seed, { pageCount = 12, pagesReady = pageCount, status = 
   };
 }
 
-/** Writers people can follow (F12); `followsEveryone` makes `followsYou` true for every viewer. */
+/**
+ * Writers people can follow (F12); `followsEveryone` makes `followsYou` true for every viewer. `headline` is the title
+ * (F14) under the name on cards, the reader and comments; Omar has none (the line is hidden).
+ */
 const WRITERS = [
-  { id: 'u-writer', displayName: 'Mona Adel', username: 'mona', avatarUrl: null, isVerified: true, followerCount: 1280, bio: 'Backend engineer. بكتب عن .NET والـ architecture.' },
-  { id: 'u-readin', displayName: 'ReadIn', username: 'readin', avatarUrl: null, isVerified: true, followerCount: 5400, bio: 'The official ReadIn account — مقال كل يوم يفرق معاك.' },
-  { id: 'u-karim', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true, followerCount: 860, bio: 'Frontend lead: React, Angular and web performance.' },
-  { id: 'u-salma', displayName: 'سلمى إبراهيم', username: 'salma', avatarUrl: null, isVerified: false, followerCount: 430, bio: 'ML engineer بتحب تبسّط الـ AI.', followsEveryone: true },
-  { id: 'u-omar', displayName: 'Omar Fathy', username: 'omar_dev', avatarUrl: null, isVerified: false, followerCount: 210, bio: 'Sleep, memory and learning, from a medical student.' },
+  { id: 'u-writer', displayName: 'Mona Adel', username: 'mona', avatarUrl: null, isVerified: true, followerCount: 1280, bio: 'Backend engineer. بكتب عن .NET والـ architecture.', headline: 'Senior Backend Engineer | .NET | Architecture' },
+  { id: 'u-readin', displayName: 'ReadIn', username: 'readin', avatarUrl: null, isVerified: true, followerCount: 5400, bio: 'The official ReadIn account — مقال كل يوم يفرق معاك.', headline: 'مقال كل يوم يفرق معاك' },
+  { id: 'u-karim', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true, followerCount: 860, bio: 'Frontend lead: React, Angular and web performance.', headline: 'Frontend lead · React & Angular' },
+  { id: 'u-salma', displayName: 'سلمى إبراهيم', username: 'salma', avatarUrl: null, isVerified: false, followerCount: 430, bio: 'ML engineer بتحب تبسّط الـ AI.', followsEveryone: true, headline: 'ML Engineer | بحب أبسّط الـ AI' },
+  { id: 'u-omar', displayName: 'Omar Fathy', username: 'omar_dev', avatarUrl: null, isVerified: false, followerCount: 210, bio: 'Sleep, memory and learning, from a medical student.', headline: null },
 ];
 const authorOf = (id) => {
-  const { displayName, username, avatarUrl, isVerified } = WRITERS.find((w) => w.id === id);
-  return { id, displayName, username, avatarUrl, isVerified };
+  const { displayName, username, avatarUrl, isVerified, headline } = WRITERS.find((w) => w.id === id);
+  return { id, displayName, username, avatarUrl, isVerified, headline };
 };
 const AUTHOR = authorOf('u-writer');
 const FIELDS = [
@@ -703,6 +707,9 @@ const PDF = Buffer.from(
 
 // The tag pages' notes can be reacted to and saved too; their writers are nobody's follows, so the feeds don't change.
 const social = createSocial({ articles: PUBLISHED, writers: WRITERS, problem });
+// F29: every card and article gets `repostCount` / `isReposted` (set before the other modules take `personalize`).
+const reposts = createReposts({ articles: PUBLISHED, social, authorOf, problem });
+social.personalize = reposts.personalize;
 const profiles = createProfiles({ me, articles: ALL_ARTICLES, writers: WRITERS, fields: FIELDS, social, problem, avatarVariants });
 const paths = createPaths({ articles: ALL_ARTICLES, fields: FIELDS, social, profiles, mediaUrl, problem });
 
@@ -800,6 +807,8 @@ const routes = [
   ...search.routes,
   ...explore.routes,
   ...createMutes({ social, writers: WRITERS, fields: FIELDS, topics: TOPICS, articles: () => PUBLISHED, problem }).routes,
+  // Before social.mjs: the repost routes and the Following feed with reposts (F29).
+  ...reposts.routes,
   ...social.routes,
   ...profiles.routes,
   ...paths.routes,
@@ -891,7 +900,7 @@ const routes = [
     (q, [, slug], _body, req) => {
       const viewer = social.viewerOf(req);
       if (DETAILS.has(slug)) return [200, categories.decorateArticle(moderation.decorateArticle(social.personalize(DETAILS.get(slug), viewer), viewer))];
-      const written = editor.readerArticle(decodeURIComponent(slug), q.get('lang'));
+      const written = editor.readerArticle(decodeURIComponent(slug), q.get('lang'), viewer);
       return written ? [200, categories.decorateArticle(written)] : [404, problem(404, 'article.not_found', 'Article not found')];
     },
   ],

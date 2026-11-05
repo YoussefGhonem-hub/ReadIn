@@ -21,6 +21,8 @@ export interface LiveArticleCounts {
   reactionCount: number | null;
   commentCount: number | null;
   saveCount: number | null;
+  /** F29. Optional for callers that only confirm other counters (left out = unknown). */
+  repostCount?: number | null;
 }
 
 export type CommentEventType =
@@ -118,7 +120,7 @@ export class RealtimeService {
   watchArticle(articleId: string, next: (counts: LiveArticleCounts) => void): Unsubscribe {
     if (!SAFE_ID.test(articleId)) return noop;
     const base = `live/articles/${articleId}`;
-    const counts: LiveArticleCounts = { reactions: null, reactionCount: null, commentCount: null, saveCount: null };
+    const counts: LiveArticleCounts = { reactions: null, reactionCount: null, commentCount: null, saveCount: null, repostCount: null };
     const emit = () => next({ ...counts, reactions: counts.reactions && { ...counts.reactions } });
     // Separate listeners, so the article's event list is never downloaded with its counters.
     return this.listen((connection) => [
@@ -133,6 +135,10 @@ export class RealtimeService {
       }),
       connection.onValue(`${base}/saveCount`, (value) => {
         counts.saveCount = toCount(value);
+        emit();
+      }),
+      connection.onValue(`${base}/repostCount`, (value) => {
+        counts.repostCount = toCount(value);
         emit();
       }),
     ]);

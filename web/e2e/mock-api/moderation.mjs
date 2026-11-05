@@ -10,6 +10,10 @@
  *
  * A user case lists that user's writer categories (F31, from categories.mjs); `clear_category` renames one to "قسم {n}"
  * with a new slug, for that moderator only (like their other actions).
+ *
+ * A user case also shows the user's title and social links (F14, `target.author.headline`, `target.links`): the reported
+ * reader u-reader-21 has an abusive title and two spam links, which `clear_headline` / `clear_links` remove, again for
+ * that moderator only (logged as `user.clear_headline` / `user.clear_links` with what was removed as the label).
  */
 
 const REASONS = ['spam', 'misinformation', 'harassment', 'copyright', 'other'];
@@ -17,7 +21,20 @@ const TYPES = ['article', 'comment', 'user'];
 const ALLOWED = {
   comment: ['hide', 'unhide', 'delete', 'dismiss'],
   article: ['hide', 'unhide', 'dismiss'],
-  user: ['warn', 'suspend', 'unsuspend', 'clear_category', 'dismiss'],
+  user: ['warn', 'suspend', 'unsuspend', 'clear_category', 'clear_links', 'clear_headline', 'dismiss'],
+};
+/** Content actions on a user (F31, F14): allowed on any user, staff and yourself included, with an optional note. */
+const USER_CONTENT_ACTIONS = ['clear_category', 'clear_links', 'clear_headline'];
+
+/** Profiles reported for their title or links (F14): what a user case shows before a moderator clears it. */
+const REPORTED_PROFILES = {
+  'u-reader-21': {
+    headline: 'بيع متابعين ولايكات | كلمني واتساب',
+    links: [
+      { platform: 'instagram', url: 'https://instagram.com/cheap.followers', label: null },
+      { platform: 'other', url: 'https://cheap-followers.example/buy', label: 'اشتري متابعين' },
+    ],
+  },
 };
 const NOW = '2026-11-03T09:00:00Z';
 const SEED_MODERATOR = { id: 'u-mod-seed', displayName: 'Nour Fawzy', username: 'nour_mod', avatarUrl: null, isVerified: false, bio: null, isFollowing: false, followsYou: false };
@@ -125,8 +142,17 @@ export function createModeration({ articles, writers, social, problem, categorie
 
   const author = (id) => {
     const user = people.get(id);
-    return user ? { id, displayName: user.displayName, username: user.username, avatarUrl: user.avatarUrl ?? null, isVerified: !!user.isVerified } : null;
+    return user ? { id, displayName: user.displayName, username: user.username, avatarUrl: user.avatarUrl ?? null, isVerified: !!user.isVerified, headline: user.headline ?? null } : null;
   };
+
+  /** A user's title and links as this moderator sees them (F14): what they cleared, else the seed. */
+  function profileOf(state, userId) {
+    if (!state.profiles.has(userId)) {
+      const seed = REPORTED_PROFILES[userId];
+      state.profiles.set(userId, { headline: seed?.headline ?? people.get(userId)?.headline ?? null, links: (seed?.links ?? []).map((l) => ({ ...l })) });
+    }
+    return state.profiles.get(userId);
+  }
   const summaryOf = (id, viewer) => {
     if (id === 'seed') return SEED_MODERATOR;
     if (id === viewer && isModerator(viewer)) return { id, displayName: 'Hana Gamal', username: 'hana_mod', avatarUrl: null, isVerified: false, bio: null, isFollowing: false, followsYou: false };
@@ -135,7 +161,9 @@ export function createModeration({ articles, writers, social, problem, categorie
   };
 
   function stateOf(viewer) {
-    if (!moderators.has(viewer)) moderators.set(viewer, { cases: new Map(seedCases().map((c) => [`${c.targetType}:${c.targetId}`, c])), log: seedLog(), cleared: new Map() });
+    if (!moderators.has(viewer)) {
+      moderators.set(viewer, { cases: new Map(seedCases().map((c) => [`${c.targetType}:${c.targetId}`, c])), log: seedLog(), cleared: new Map(), profiles: new Map() });
+    }
     return moderators.get(viewer);
   }
 
@@ -162,8 +190,8 @@ export function createModeration({ articles, writers, social, problem, categorie
   }
 
   /** Like the API: every field is there, and the ones that don't apply to the target type are null. */
-  function targetDto(c) {
-    const empty = { title: null, slug: null, language: null, body: null, articleId: null, articleSlug: null, articleTitle: null, suspendedUntil: null, warningCount: null };
+  function targetDto(c, state) {
+    const empty = { title: null, slug: null, language: null, body: null, articleId: null, articleSlug: null, articleTitle: null, suspendedUntil: null, warningCount: null, links: null };
     if (c.targetType === 'article') {
       const a = articleById.get(c.targetId);
       return { ...empty, state: c.state, author: a ? (author(a.author.id) ?? a.author) : null, title: a?.title ?? null, slug: a?.slug ?? null, language: a?.language ?? null };
@@ -181,10 +209,19 @@ export function createModeration({ articles, writers, social, problem, categorie
         articleTitle: a?.title ?? null,
       };
     }
-    return { ...empty, state: c.state, author: author(c.targetId), suspendedUntil: c.state === 'suspended' ? (c.suspendedUntil ?? null) : null, warningCount: c.warningCount ?? 0 };
+    const user = author(c.targetId);
+    const profile = state ? profileOf(state, c.targetId) : { headline: user?.headline ?? null, links: [] };
+    return {
+      ...empty,
+      state: c.state,
+      author: user ? { ...user, headline: profile.headline } : null,
+      suspendedUntil: c.state === 'suspended' ? (c.suspendedUntil ?? null) : null,
+      warningCount: c.warningCount ?? 0,
+      links: profile.links.map((l) => ({ ...l })),
+    };
   }
 
-  function itemOf(c, status) {
+  function itemOf(c, status, state) {
     const inStatus = c.reports.filter((r) => r.status === status);
     if (!inStatus.length) return null;
     const reasons = {};
@@ -200,7 +237,7 @@ export function createModeration({ articles, writers, social, problem, categorie
       firstReportedAt: times[0],
       lastReportedAt: times[times.length - 1],
       closedAt: status === 'open' ? null : (closed[closed.length - 1] ?? null),
-      target: targetDto(c),
+      target: targetDto(c, state),
     };
   }
 
@@ -275,8 +312,8 @@ export function createModeration({ articles, writers, social, problem, categorie
     if (!TYPES.includes(targetType) || !ALLOWED[targetType].includes(action)) return [400, problem(400, 'moderation.action_invalid', 'This action is not allowed here.')];
     if (typeof body.note === 'string' && body.note.length > 500) return validation('note', 'validation.max_length');
     if (!exists(targetType, targetId)) return [404, problem(404, `${targetType}.not_found`, 'Not found')];
-    // Clearing a category name (F31) is allowed on any user, like hiding content.
-    if (targetType === 'user' && action !== 'clear_category') {
+    // Clearing a category name (F31), the links or the title (F14) is allowed on any user, like hiding content.
+    if (targetType === 'user' && !USER_CONTENT_ACTIONS.includes(action)) {
       if (targetId === viewer) return [400, problem(400, 'moderation.self', 'You cannot moderate yourself.')];
       if (targetId.startsWith('u-mod') && action !== 'dismiss') return [403, problem(403, 'moderation.staff_target', 'Staff are protected.')];
     }
@@ -298,6 +335,19 @@ export function createModeration({ articles, writers, social, problem, categorie
       while (used.has(n)) n++;
       state.cleared.set(category.id, { name: `قسم ${n}`, slug: `قسم-${n}` });
       label = category.name;
+    }
+    if (action === 'clear_links' || action === 'clear_headline') {
+      // Nothing to clear: 204, nothing logged or resolved.
+      const profile = profileOf(state, targetId);
+      if (action === 'clear_links') {
+        if (!profile.links.length) return [204, undefined];
+        label = profile.links.map((l) => l.url).join(' ').slice(0, 200);
+        profile.links = [];
+      } else {
+        if (!profile.headline) return [204, undefined];
+        label = profile.headline;
+        profile.headline = null;
+      }
     }
     const c = caseOf(state, targetType, targetId);
     const at = new Date().toISOString();
@@ -334,6 +384,8 @@ export function createModeration({ articles, writers, social, problem, categorie
         c.state = 'active';
         break;
       case 'clear_category':
+      case 'clear_links':
+      case 'clear_headline':
         reportsClosed = closeOpen(c, 'resolved', viewer, at);
         break;
       case 'dismiss':
@@ -447,7 +499,7 @@ export function createModeration({ articles, writers, social, problem, categorie
         if (type && !TYPES.includes(type)) return validation('type', 'report.target_invalid');
         const items = [...stateOf(viewer).cases.values()]
           .filter((c) => !type || c.targetType === type)
-          .map((c) => itemOf(c, status))
+          .map((c) => itemOf(c, status, stateOf(viewer)))
           .filter(Boolean)
           .sort((a, b) =>
             status === 'open' ? b.reportCount - a.reportCount || b.lastReportedAt.localeCompare(a.lastReportedAt) : b.closedAt.localeCompare(a.closedAt),
@@ -466,7 +518,7 @@ export function createModeration({ articles, writers, social, problem, categorie
         return [
           200,
           {
-            item: itemOf(c, status),
+            item: itemOf(c, status, state),
             reports: [...c.reports].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((r) => reportDto(r, viewer)),
             history: state.log.filter((e) => e.targetType === c.targetType && e.targetId === c.targetId).map((e) => actionDto(e, viewer)),
             // F31: a user's categories, empty ones too, so an offensive name can be cleared.

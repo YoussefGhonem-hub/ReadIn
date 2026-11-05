@@ -10,6 +10,7 @@ import { ArticleSocialStore } from './article-social.store';
 
 const REACTION_URL = `${TEST_API}/articles/a1/reaction`;
 const SAVE_URL = `${TEST_API}/me/saved/a1`;
+const REPOST_URL = `${TEST_API}/articles/a1/repost`;
 
 function result(reactions: ReactionCountsDto, myReaction: ArticleReactionsDto['myReaction']): ArticleReactionsDto {
   return { reactions, total: Object.values(reactions).reduce((a, b) => a + b, 0), myReaction };
@@ -19,7 +20,7 @@ function live(patch: Partial<LiveArticleCounts>): LiveArticleCounts {
   return { reactions: null, reactionCount: null, commentCount: null, saveCount: null, ...patch };
 }
 
-describe('ArticleSocialStore (F10, F13, F27)', () => {
+describe('ArticleSocialStore (F10, F13, F27, F29)', () => {
   let http: HttpTestingController;
   let store: ArticleSocialStore;
   let toasts: ToastService;
@@ -42,6 +43,8 @@ describe('ArticleSocialStore (F10, F13, F27)', () => {
       isSaved: false,
       saveCount: 4,
       commentCount: 3,
+      repostCount: 0,
+      isReposted: false,
     });
   });
 
@@ -194,6 +197,67 @@ describe('ArticleSocialStore (F10, F13, F27)', () => {
       await done;
       expect(store.state(article)).toEqual(expect.objectContaining({ isSaved: false, saveCount: 4 }));
       expect(toasts.toasts()[0].kind).toBe('error');
+    });
+  });
+
+  describe('repost (F29)', () => {
+    const reposts = testCard({ repostCount: 3, isReposted: false });
+
+    it('toggles at once and keeps the count the server confirms', async () => {
+      const done = store.toggleRepost(reposts);
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: true, repostCount: 4 }));
+      const req = http.expectOne(REPOST_URL);
+      expect(req.request.method).toBe('PUT');
+      req.flush({ repostCount: 5, isReposted: true }); // someone else reposted too
+      await done;
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: true, repostCount: 5 }));
+
+      const undo = store.toggleRepost(reposts);
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 4 }));
+      const del = http.expectOne(REPOST_URL);
+      expect(del.request.method).toBe('DELETE');
+      del.flush({ repostCount: 4, isReposted: false });
+      await undo;
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 4 }));
+    });
+
+    it('rolls back with the translated error (your own article: repost.own_article)', async () => {
+      const done = store.toggleRepost(reposts);
+      http.expectOne(REPOST_URL).flush(problem(400, 'repost.own_article'), { status: 400, statusText: 'Bad Request' });
+      await done;
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 3 }));
+      expect(toasts.toasts().map((t) => t.message)).toEqual(['مينفعش تعيد نشر مقالك.']);
+    });
+
+    it('quick taps coalesce into the latest wish: back where it started sends nothing more', async () => {
+      const first = store.toggleRepost(reposts);
+      void store.toggleRepost(reposts);
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 3 }));
+      http.expectOne(REPOST_URL).flush({ repostCount: 4, isReposted: true });
+      await flushMicrotasks();
+      const undo = http.expectOne(REPOST_URL);
+      expect(undo.request.method).toBe('DELETE');
+      undo.flush({ repostCount: 3, isReposted: false });
+      await first;
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 3 }));
+      http.expectNone(REPOST_URL);
+    });
+
+    it('the live repostCount replaces the number, never adds to it', async () => {
+      const done = store.toggleRepost(reposts);
+      http.expectOne(REPOST_URL).flush({ repostCount: 4, isReposted: true });
+      await done;
+      store.applyLive(reposts, live({ repostCount: 4 })); // the echo of your own repost
+      expect(store.state(reposts).repostCount).toBe(4);
+      store.applyLive(reposts, live({ repostCount: 9 }));
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ repostCount: 9, isReposted: true }));
+    });
+
+    it('cards from an API older than F29 count 0 and are not reposted', () => {
+      const old = testCard();
+      delete old.repostCount;
+      delete old.isReposted;
+      expect(store.state(old)).toEqual(expect.objectContaining({ repostCount: 0, isReposted: false }));
     });
   });
 

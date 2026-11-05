@@ -200,14 +200,23 @@ describe('AttachmentBar + AttachmentDraft (F26 in the editor)', () => {
     bar().addDocument(pdf());
     await settle();
     expect(draft().document()?.title).toBe('Clean Architecture'); // pre-filled from the file name
-    expect(draft().document()?.allowDownload).toBe(false); // off by default
+    // "Allow download" starts on (SPEC F26) and is sent explicitly with the upload.
+    expect(draft().document()?.allowDownload).toBe(true);
+    expect(media.uploadDocument).toHaveBeenCalledWith(expect.any(File), 'Clean_Architecture.pdf', 'Clean Architecture', true);
     expect(draft().isBusy()).toBe(true);
 
     respond(media.documentUploads[0], documentAsset('doc-1', 'processing', 0));
     await settle();
     expect(el().querySelector('[data-processing]')?.textContent).toContain('بنجهز الصفحات…');
+    expect(el().querySelector<HTMLInputElement>('[data-allow-download]')!.checked).toBe(true);
     expect(draft().isBusy()).toBe(true);
     // The draft already names the PDF: the server reports it as not ready until the pages are done.
+    expect(draft().draftAttachments()).toEqual([{ mediaAssetId: 'doc-1', order: 0, title: 'Clean Architecture', allowDownload: true }]);
+    // The writer can turn it off; the draft carries the change.
+    const toggle = el().querySelector<HTMLInputElement>('[data-allow-download]')!;
+    toggle.checked = false;
+    toggle.dispatchEvent(new Event('change'));
+    await settle();
     expect(draft().draftAttachments()).toEqual([{ mediaAssetId: 'doc-1', order: 0, title: 'Clean Architecture', allowDownload: false }]);
 
     media.polled = [documentAsset('doc-1', 'processing', 3), documentAsset('doc-1', 'ready', 12)];

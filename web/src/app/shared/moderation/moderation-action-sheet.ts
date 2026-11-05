@@ -20,7 +20,10 @@ export interface ModerationActionDraft {
   action: ModerationAction;
   targetType: ModerationTargetType;
   targetId: string;
-  /** The user's display name, for "Warn {name}" / "Suspend {name}"; the category's name for `clear_category`. */
+  /**
+   * The user's display name, for "Warn {name}" / "Suspend {name}" / "Clear {name}'s links"; the category's name for
+   * `clear_category`.
+   */
   name?: string | null;
   resolveReportsOf?: ModerationActionRequest['resolveReportsOf'];
   /** `clear_category` (F31): the user's category whose name is cleared. */
@@ -54,6 +57,10 @@ export function sheetCopy(draft: Pick<ModerationActionDraft, 'action' | 'targetT
       return { key: 'unsuspend', confirm: 'moderation.actions.unsuspend', note: 'optional', danger: false, duration: false };
     case 'clear_category':
       return { key: 'clearCategory', confirm: 'moderation.actions.clearCategory', note: 'optional', danger: true, duration: false };
+    case 'clear_links':
+      return { key: 'clearLinks', confirm: 'moderation.actions.clearLinks', note: 'optional', danger: true, duration: false };
+    case 'clear_headline':
+      return { key: 'clearHeadline', confirm: 'moderation.actions.clearHeadline', note: 'optional', danger: true, duration: false };
     case 'dismiss':
       return { key: 'dismiss', confirm: 'moderation.actions.dismiss', note: 'optional', danger: false, duration: false };
   }
@@ -62,7 +69,8 @@ export function sheetCopy(draft: Pick<ModerationActionDraft, 'action' | 'targetT
 /**
  * Confirms one moderation action (F22) with a note and, for a suspension, its length (1, 7, 30 days or permanent). The
  * note is required for warn and suspend (the user sees it) and optional otherwise; clearing a writer category's name
- * (F31) carries the category's id. Sends `POST /moderation/actions`,
+ * (F31) carries the category's id; clearing a user's links or title (F14) is confirmed like the other content actions.
+ * Sends `POST /moderation/actions`,
  * thanks with a toast and emits `done`; a failure stays in the sheet with its translated message.
  */
 @Component({

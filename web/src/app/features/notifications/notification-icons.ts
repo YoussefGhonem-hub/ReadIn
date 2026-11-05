@@ -6,10 +6,11 @@ import CheckCheck from 'lucide/dist/esm/icons/check-check.mjs';
 import MoonStar from 'lucide/dist/esm/icons/moon-star.mjs';
 import PartyPopper from 'lucide/dist/esm/icons/party-popper.mjs';
 import PenLine from 'lucide/dist/esm/icons/pen-line.mjs';
+import Repeat2 from 'lucide/dist/esm/icons/repeat-2.mjs';
 import Reply from 'lucide/dist/esm/icons/reply.mjs';
 
 /** Icons only the notification center and its settings use. Registered there, so they stay out of the initial bundle. */
-const NOTIFICATION_ICONS = { BadgeX, CheckCheck, MoonStar, PartyPopper, PenLine, Reply };
+const NOTIFICATION_ICONS = { BadgeX, CheckCheck, MoonStar, PartyPopper, PenLine, Repeat2, Reply };
 
 /** Adds {@link NOTIFICATION_ICONS} to the app's icon registry for this component tree (`<svg lucideIcon="Reply">`). */
 export function provideNotificationIcons(): Provider {

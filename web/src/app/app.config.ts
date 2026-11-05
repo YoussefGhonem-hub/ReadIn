@@ -11,6 +11,7 @@ import { AppHistory } from './core/platform/app-history';
 import { PushService } from './core/push/push.service';
 import { FeedRouteReuse } from './features/feed/feed-route-reuse';
 import { RealtimeService } from './core/realtime/realtime.service';
+import { provideMediaViewerHistory } from './shared/media/viewer-history';
 import { provideAppIcons } from './shared/ui/icons';
 
 export const appConfig: ApplicationConfig = {
@@ -24,6 +25,8 @@ export const appConfig: ApplicationConfig = {
     ),
     // Home stays alive while you read and comes back as you left it on Back (F34).
     { provide: RouteReuseStrategy, useExisting: FeedRouteReuse },
+    // The full-screen viewer's own history entry never reaches the router, so closing it keeps the scroll (F26).
+    provideMediaViewerHistory(),
     // Route titles are i18n keys and follow the UI language.
     { provide: TitleStrategy, useExisting: PageTitleStrategy },
     provideHttpClient(withFetch(), withInterceptors(API_INTERCEPTORS)),

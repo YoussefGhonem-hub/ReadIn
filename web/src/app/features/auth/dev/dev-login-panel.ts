@@ -18,7 +18,6 @@ export const DEV_SEED_USERS: readonly DevSeedUser[] = [
   { phone: '+12025550101', name: 'Super Admin', role: 'SuperAdmin', hasPin: true },
   { phone: '+12025550104', name: '.NET Writer', role: 'Member', verified: true, hasPin: true },
   { phone: '+12025550105', name: 'AI Writer', role: 'Member', verified: true, hasPin: true },
-  { phone: '+12025550106', name: 'Verified Writer', role: 'Member', verified: true, hasPin: true },
   ...[1, 2, 3].map((n): DevSeedUser => ({ phone: `+120255501${String(6 + n).padStart(2, '0')}`, name: `Writer ${n}`, role: 'Member', hasPin: true })),
   ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n): DevSeedUser => ({ phone: `+120255501${String(9 + n).padStart(2, '0')}`, name: `Reader ${n}`, role: 'Member', hasPin: true })),
   { phone: '+12025550119', name: 'Reader 10', role: 'Member', hasPin: false },

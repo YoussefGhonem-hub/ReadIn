@@ -56,6 +56,29 @@ describe('notification view (F17)', () => {
       expect(sentence(n, 'ar')).toBe(ar);
     });
 
+    it('a repost (F29): "X reposted your article", grouped per article with every Arabic plural, its icon and its article link', () => {
+      const repost = (actorCount: number) =>
+        testNotification({
+          type: 'article_reposted',
+          actorCount,
+          comment: null,
+          data: {},
+          article: { id: 'a1', slug: 'clean-code', title: 'Clean Code', language: 'en' },
+          link: 'readin://a/clean-code',
+        });
+      expect(notificationText(repost(1), transloco, 'en')).toEqual({ before: '', actor: 'Ahmed Samir', after: ' reposted your article' });
+      expect(sentence(repost(1), 'ar')).toBe('Ahmed Samir أعاد نشر مقالك');
+      expect(sentence(repost(2), 'ar')).toBe('Ahmed Samir وشخص تاني أعادوا نشر مقالك');
+      expect(sentence(repost(3), 'ar')).toBe('Ahmed Samir واتنين غيره أعادوا نشر مقالك');
+      expect(sentence(repost(5), 'ar')).toBe('Ahmed Samir و4 غيره أعادوا نشر مقالك');
+      expect(sentence(repost(2), 'en')).toBe('Ahmed Samir and 1 other reposted your article');
+      expect(sentence(repost(12), 'en')).toBe('Ahmed Samir and 11 others reposted your article');
+      expect(notificationIcon(repost(1))).toBe('Repeat2');
+      expect(notificationPath(repost(1), 'ar', ORIGIN)).toBe('/en/a/clean-code');
+      // A reposter who deleted their account.
+      expect(sentence(testNotification({ type: 'article_reposted', actor: null, actorCount: 1 }), 'en')).toBe('Deleted user reposted your article');
+    });
+
     it('a writer verification result says approved or not by data.approved; without it, the general line (F19)', () => {
       const result = (approved?: boolean) =>
         testNotification({ type: 'verification_result', actor: null, actorCount: 0, article: null, comment: null, data: approved === undefined ? {} : { approved }, link: 'readin://verification' });

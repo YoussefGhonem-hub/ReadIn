@@ -137,6 +137,72 @@ describe('PostCard (F34)', () => {
       http = t.http;
       expect(t.$('[data-card-label]')!.textContent!.trim()).toBe('مقال النهارده');
     });
+
+    it('the writer’s title on one line under the name, in its own direction, above the meta line (F14)', async () => {
+      const author = { id: 'writer-1', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true, headline: 'Frontend lead | React & Angular' };
+      const t = await render(testCard({ author }), { guest: true });
+      http = t.http;
+      const headline = t.$('[data-card-headline]')!;
+      expect(headline.textContent!.trim()).toBe('Frontend lead | React & Angular');
+      // Placed in the UI's direction; the text laid out and cut ("…") in its own direction (§14), so a title in the
+      // other script keeps its beginning.
+      expect(headline.hasAttribute('dir')).toBe(false);
+      expect(headline.classList).toContain('flex');
+      expect(headline.classList).not.toContain('truncate');
+      const text = headline.querySelector('bdi')!;
+      expect(text.getAttribute('dir')).toBe('auto');
+      expect(text.classList).toContain('truncate');
+      expect(text.classList).toContain('min-w-0');
+      expect(headline.getAttribute('title')).toBe('Frontend lead | React & Angular');
+      // Name, then the title, then field · time · reading time.
+      expect(headline.compareDocumentPosition(t.$('[data-card-meta]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(t.$('[data-card-author]')!.compareDocumentPosition(headline) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('no title line without a title (null, blank or an older API)', async () => {
+      for (const headline of [null, '   ', undefined]) {
+        TestBed.resetTestingModule();
+        const author = { id: 'writer-1', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true, headline };
+        const t = await render(testCard({ author }), { guest: true });
+        expect(t.$('[data-card-headline]')).toBeNull();
+        t.http.verify();
+      }
+    });
+
+    it('a repost label: "أعاد نشره {name}", the name a link to the profile in its own direction (F29)', async () => {
+      const reposter = { id: 'u-readin', displayName: 'ReadIn', username: 'readin', avatarUrl: null, isVerified: true };
+      const t = await render(testCard({ repostedBy: { user: reposter, othersCount: 0, repostedAt: '2026-11-03T10:00:00Z' } }), { guest: true });
+      http = t.http;
+      const label = t.$('[data-card-repost-label]')!;
+      expect(label.textContent!.replace(/\s+/g, ' ').trim()).toBe('أعاد نشره ReadIn');
+      const name = label.querySelector('[data-card-reposter]')!;
+      expect(name.getAttribute('href')).toBe('/@readin');
+      expect(name.getAttribute('dir')).toBe('auto');
+    });
+
+    it('several reposters: "{name} و N غيره" / "{name} and N others", with plurals', async () => {
+      const reposter = { id: 'u-karim', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true };
+      const label = async (othersCount: number, lang: 'ar' | 'en') => {
+        TestBed.resetTestingModule();
+        const t = await render(testCard({ repostedBy: { user: reposter, othersCount, repostedAt: '2026-11-03T12:00:00Z' } }), { guest: true, lang });
+        const text = t.$('[data-card-repost-label]')!.textContent!.replace(/\s+/g, ' ').trim();
+        t.http.verify();
+        return text;
+      };
+      expect(await label(1, 'ar')).toBe('Karim Hassan وشخص تاني أعادوا نشره');
+      expect(await label(3, 'ar')).toBe('Karim Hassan و3 غيره أعادوا نشره');
+      expect(await label(1, 'en')).toBe('Karim Hassan and 1 other reposted this');
+      expect(await label(4, 'en')).toBe('Karim Hassan and 4 others reposted this');
+      expect(await label(0, 'en')).toBe('Karim Hassan reposted this');
+    });
+
+    it('Today’s label wins over a repost label', async () => {
+      const reposter = { id: 'u-readin', displayName: 'ReadIn', username: 'readin', avatarUrl: null, isVerified: true };
+      const t = await render(testCard({ repostedBy: { user: reposter, othersCount: 0, repostedAt: '2026-11-03T10:00:00Z' } }), { guest: true, label: 'feedCard.todayLabel' });
+      http = t.http;
+      expect(t.$('[data-card-repost-label]')).toBeNull();
+      expect(t.$$('[data-card-label]')).toHaveLength(1);
+    });
   });
 
   describe('text', () => {
@@ -289,51 +355,128 @@ describe('PostCard (F34)', () => {
       expect(chips[3].querySelector('a')).toBeNull();
     });
 
-    it('the top reactions with the total, and the comment count', async () => {
+    it('the action bar has no counts row: up to 3 reaction emojis open who reacted, on the other side', async () => {
       const t = await render(testCard(), { guest: true });
       http = t.http;
-      const summary = t.$('[data-reactions-summary]')!;
-      expect(summary.textContent).toContain('💡❤️🔥');
+      expect(t.$('[data-card-counts]')).toBeNull();
+      const summary = t.$('[data-card-actions] [data-reactions-summary]')!;
+      expect(summary.textContent!.replace(/\s/g, '')).toBe('💡❤️🔥');
       expect(summary.getAttribute('aria-label')).toBe('12 تفاعل، شوف مين اتفاعل');
-      expect(t.$('[data-card-comment-count]')!.textContent!.trim()).toBe('3 تعليقات');
+      expect(summary.classList).toContain('ms-auto');
     });
 
-    it('no counts row while nothing has reactions or comments', async () => {
-      const t = await render(testCard({ reactionCount: 0, reactions: { insightful: 0, love: 0, fire: 0, mindBlown: 0 }, commentCount: 0 }), { guest: true });
+    it('a count of 0 shows no number, and no reaction emojis', async () => {
+      const t = await render(testCard({ reactionCount: 0, reactions: { insightful: 0, love: 0, fire: 0, mindBlown: 0 }, commentCount: 0, repostCount: 0 }), {
+        guest: true,
+        lang: 'en',
+      });
       http = t.http;
-      expect(t.$('[data-card-counts]')).toBeNull();
-      expect(t.$('[data-card-actions]')).not.toBeNull();
+      expect(t.$('[data-react-count]')).toBeNull();
+      expect(t.$('[data-card-comment-count]')).toBeNull();
+      expect(t.$('[data-repost-count]')).toBeNull();
+      expect(t.$('[data-reactions-summary]')).toBeNull();
+      expect(t.$('[data-react]')!.getAttribute('aria-label')).toBe('React');
+      expect(t.$('[data-card-comment]')!.getAttribute('aria-label')).toBe('Comment');
+      expect(t.$('[data-repost]')!.getAttribute('aria-label')).toBe('Repost');
     });
   });
 
   describe('action bar', () => {
-    it('React, Comment and Share are real buttons with labels; no Repost', async () => {
-      const t = await render(testCard(), { guest: true, lang: 'en' });
+    it('icons only: React, Comment, Repost, then Share, each named with its count (§26)', async () => {
+      const t = await render(testCard({ repostCount: 5 }), { guest: true, lang: 'en' });
       http = t.http;
       const bar = t.$('[data-card-actions]')!;
       expect(bar.getAttribute('role')).toBe('group');
-      expect([...bar.querySelectorAll('button')].map((b) => b.textContent!.trim())).toEqual(['💡React', 'Comment', 'Share']);
-      expect(bar.querySelector('[data-react]')!.getAttribute('aria-label')).toBe('React: Insightful');
+      const buttons = [...bar.querySelectorAll('button')];
+      // No text labels: only the counts beside the icons, and the reaction emojis on the other side.
+      expect(buttons.map((b) => b.textContent!.replace(/\s/g, ''))).toEqual(['12', '3', '5', '', '💡❤️🔥']);
+      expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(['React, 12', 'Comment, 3', 'Repost, 5', 'Share', '12 reactions, see who reacted']);
       expect(bar.querySelector('[data-react]')!.getAttribute('aria-keyshortcuts')).toBe('ArrowUp');
+      expect(bar.querySelector('[data-react]')!.getAttribute('aria-pressed')).toBe('false');
+      expect(bar.querySelector('[data-react] svg')).not.toBeNull(); // the 💡 line icon until you react
     });
 
-    it('a tap reacts 💡 at once (the reader’s store); ArrowUp opens the four reactions', async () => {
+    it('Arabic names: "تفاعل، 12", "تعليق، 3", "إعادة نشر، 5", "مشاركة"', async () => {
+      const t = await render(testCard({ repostCount: 5 }), { guest: true });
+      http = t.http;
+      expect(t.$('[data-react]')!.getAttribute('aria-label')).toBe('تفاعل، 12');
+      expect(t.$('[data-card-comment]')!.getAttribute('aria-label')).toBe('تعليق، 3');
+      expect(t.$('[data-repost]')!.getAttribute('aria-label')).toBe('إعادة نشر، 5');
+      expect(t.$('[data-card-share]')!.getAttribute('aria-label')).toBe('مشاركة');
+    });
+
+    it('a tap reacts 💡 at once and the icon shows it; ArrowUp opens the four reactions', async () => {
       const t = await render(testCard());
       http = t.http;
       const react = t.$('[data-card-actions] [data-react]')!;
       react.click();
       await t.stable();
       expect(react.getAttribute('data-my-reaction')).toBe('insightful');
-      expect(react.textContent).toContain('مفيد');
+      expect(react.getAttribute('aria-pressed')).toBe('true');
+      expect(react.querySelector('[data-react-icon]')!.textContent!.trim()).toBe('💡');
+      expect(react.getAttribute('aria-label')).toBe('تفاعلت: مفيد، 13');
       const req = t.http.expectOne(`${TEST_API}/articles/a1/reaction`);
       expect(req.request.body).toEqual({ type: 'insightful' });
       req.flush({ reactions: { insightful: 7, love: 3, fire: 2, mindBlown: 1 }, total: 13, myReaction: 'insightful' });
       await t.stable();
-      expect(t.$('[data-reaction-total]')!.textContent!.trim()).toBe('13');
+      expect(t.$('[data-react-count]')!.textContent!.trim()).toBe('13');
 
       react.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
       await t.stable();
       expect(t.$$('[data-card-actions] [data-reaction-picker] [role="menuitemradio"]')).toHaveLength(4);
+    });
+
+    it('Repost toggles at once and rolls back with the error when the API refuses (F29)', async () => {
+      const t = await render(testCard({ repostCount: 2 }));
+      http = t.http;
+      const repost = t.$('[data-repost]')!;
+      expect(repost.getAttribute('aria-pressed')).toBe('false');
+      repost.click();
+      await t.stable();
+      expect(repost.getAttribute('aria-pressed')).toBe('true');
+      expect(t.$('[data-repost-count]')!.textContent!.trim()).toBe('3');
+      const put = t.http.expectOne(`${TEST_API}/articles/a1/repost`);
+      expect(put.request.method).toBe('PUT');
+      put.flush({ repostCount: 3, isReposted: true });
+      await t.stable();
+
+      // Undo, refused: back to reposted, with the translated error.
+      repost.click();
+      await t.stable();
+      expect(repost.getAttribute('aria-pressed')).toBe('false');
+      expect(t.$('[data-repost-count]')!.textContent!.trim()).toBe('2');
+      const del = t.http.expectOne(`${TEST_API}/articles/a1/repost`);
+      expect(del.request.method).toBe('DELETE');
+      del.flush({ code: 'rate_limited', status: 429, title: 'Too many requests' }, { status: 429, statusText: 'Too Many Requests' });
+      await t.stable();
+      expect(repost.getAttribute('aria-pressed')).toBe('true');
+      expect(t.$('[data-repost-count]')!.textContent!.trim()).toBe('3');
+      expect(TestBed.inject(ToastService).toasts().at(-1)!.message).toBe('طلبات كتير، استنى شوية وجرّب تاني.');
+    });
+
+    it('on your own article Repost is disabled with the hint and never sends', async () => {
+      const own = testCard({ author: { id: 'user-1', displayName: 'Mona Adel', username: 'mona', avatarUrl: null, isVerified: false } });
+      const t = await render(own);
+      http = t.http;
+      const repost = t.$('[data-repost]')!;
+      expect(repost.getAttribute('aria-disabled')).toBe('true');
+      expect(repost.getAttribute('aria-pressed')).toBeNull();
+      expect(repost.getAttribute('title')).toBe('مينفعش تعيد نشر مقالك');
+      expect(t.$(`#${repost.getAttribute('aria-describedby')}`)!.textContent).toContain('مينفعش تعيد نشر مقالك');
+      repost.click();
+      await t.stable();
+      t.http.expectNone(`${TEST_API}/articles/a1/repost`);
+      expect(TestBed.inject(ToastService).toasts().at(-1)!.message).toBe('مينفعش تعيد نشر مقالك');
+    });
+
+    it('guests get the sign-in prompt for Repost and nothing is sent; the card is remembered', async () => {
+      const t = await render(testCard(), { guest: true });
+      http = t.http;
+      t.$('[data-repost]')!.click();
+      await t.stable();
+      expect(TestBed.inject(AuthPromptService).isOpen()).toBe(true);
+      t.http.expectNone(`${TEST_API}/articles/a1/repost`);
+      expect(TestBed.inject(FeedMemory).pendingReturn()).toMatchObject({ articleId: 'a1', comments: false });
     });
 
     it('Comment opens the comments in place on wide screens, with the top 2 and "Show all comments"', async () => {

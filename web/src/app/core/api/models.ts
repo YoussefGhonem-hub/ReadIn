@@ -14,7 +14,44 @@ export interface CursorPage<T> {
   nextCursor: string | null;
 }
 
-/** https URLs (≤ 2048); null or missing when not set. */
+/** A social link's platform (F14), lower case: exactly these 14. `website` and `other` accept any https site. */
+export type LinkPlatform =
+  | 'linkedin'
+  | 'x'
+  | 'instagram'
+  | 'facebook'
+  | 'youtube'
+  | 'tiktok'
+  | 'snapchat'
+  | 'threads'
+  | 'telegram'
+  | 'github'
+  | 'medium'
+  | 'behance'
+  | 'website'
+  | 'other';
+
+/**
+ * One social link on a profile (F14), in the member's order. `url` is the normalized https URL (≤ 500); `label` is the
+ * member's name for an `other` link (2–30 characters), null on every other platform.
+ */
+export interface ProfileLinkDto {
+  platform: LinkPlatform;
+  url: string;
+  label: string | null;
+}
+
+/** A link as `PATCH /me` takes it: `label` only for `other`; a URL without a scheme gets `https://` on the server. */
+export interface ProfileLinkInput {
+  platform: LinkPlatform;
+  url: string;
+  label?: string | null;
+}
+
+/**
+ * The profile links before the profile step (`{ github, linkedin, website }`). Kept only so an older API's answer can
+ * still be read (see `profileLinksOf`); the API sends `ProfileLinkDto[]` now.
+ */
 export interface ProfileLinks {
   github?: string | null;
   linkedin?: string | null;
@@ -47,7 +84,10 @@ export interface MeDto {
   username: string;
   avatarUrl: string | null;
   bio: string | null;
-  links: ProfileLinks;
+  /** The title (F14), null when empty. Missing from an API older than the profile step. */
+  headline?: string | null;
+  /** Social links (F14), in the member's order; `[]` when none. */
+  links: ProfileLinkDto[];
   uiLanguage: UiLanguage;
   articleLanguage: ArticleLanguage;
   theme: ThemePreference;
@@ -166,6 +206,8 @@ export interface CompleteProfileRequest {
   displayName: string;
   username: string;
   avatarUrl?: string | null;
+  /** The optional title (F14): left out keeps it, null or blank clears it. ≤ 120, one line. */
+  headline?: string | null;
 }
 
 export interface UsernameAvailabilityDto {
@@ -182,7 +224,16 @@ export interface UpdateProfileRequest {
   username: string;
   /** ≤ 300 */
   bio?: string | null;
-  links?: ProfileLinks;
+  /**
+   * The title (F14): left out keeps it, null or blank clears it. ≤ 120 after trimming (`profile.headline_too_long`), one
+   * line without control or direction-override characters (`profile.headline_invalid`), both in `errors.headline`.
+   */
+  headline?: string | null;
+  /**
+   * Social links (F14): left out or null keeps them, an array replaces the whole list (`[]` removes them all), in the
+   * order sent. Errors per link: `errors["links[i].url"]` etc. (`link.*` codes), `errors.links` for `link.too_many`.
+   */
+  links?: ProfileLinkInput[] | null;
   /**
    * Left out: keep the current avatar. null: remove it. An image you uploaded with `purpose=avatar`: set it.
    * `400 profile.avatar_invalid` (also for an unknown id), field `avatarAssetId`.
@@ -239,6 +290,28 @@ export interface AuthorDto {
   username: string;
   avatarUrl: string | null;
   isVerified: boolean;
+  /**
+   * The writer's title (F14): one line with "…" under the name on cards, the reader's author row and comment rows; null
+   * hides the line. Missing from an API older than the profile step.
+   */
+  headline?: string | null;
+}
+
+// ── Reposts (F29) ───────────────────────────────────────────
+
+/** `PUT` / `DELETE /articles/{id}/repost` (both idempotent). */
+export interface RepostStateDto {
+  repostCount: number;
+  isReposted: boolean;
+}
+
+/** Why a card is in the list: a repost placed it (Home → Following) or it is on a profile's Reposts tab. */
+export interface RepostLabelDto {
+  /** The newest reposter you follow (Following), or the profile's owner (Reposts tab); the name links to the profile. */
+  user: AuthorDto;
+  /** Other writers you follow who reposted it ("{name} و N غيره"); always 0 on the Reposts tab. */
+  othersCount: number;
+  repostedAt: string;
 }
 
 export interface FieldRefDto {
@@ -306,6 +379,12 @@ export interface ArticleCardDto {
   isAuthorMuted?: boolean;
   isFieldMuted?: boolean;
   isTopicMuted?: boolean;
+  /** F29: people who reposted it, the number beside the Repost icon (hidden at 0). Missing from an API older than F29. */
+  repostCount?: number;
+  /** F29: you reposted it; false for guests. */
+  isReposted?: boolean;
+  /** F29: the label "أعاد نشره {name}", only on Following cards a repost placed and on a profile's Reposts tab. */
+  repostedBy?: RepostLabelDto | null;
 }
 
 /** `GET /articles/{id}/preview?lang=` (F34): the first blocks, about 300 words, never cutting a block, at least one. */
@@ -555,6 +634,11 @@ export interface CommentDto {
    * guests and placeholders; missing from an API older than F28.
    */
   isAuthorMuted?: boolean;
+  /**
+   * You follow the comment's author (F11 row's "متابعة"): false for guests, on your own comments, for a deleted author and
+   * on placeholders. Missing from an API older than the profile step.
+   */
+  isFollowingAuthor?: boolean;
 }
 
 /** `GET /articles/{id}/comments`. `total` is the article's comment count (visible comments and replies). */
@@ -602,7 +686,18 @@ export interface ReportRequest {
   details?: string | null;
 }
 
-export type ModerationAction = 'hide' | 'unhide' | 'delete' | 'warn' | 'suspend' | 'unsuspend' | 'clear_category' | 'dismiss';
+export type ModerationAction =
+  | 'hide'
+  | 'unhide'
+  | 'delete'
+  | 'warn'
+  | 'suspend'
+  | 'unsuspend'
+  | 'clear_category'
+  // F14: remove all of a user's social links / their title (any user, note optional, no notice to the user).
+  | 'clear_links'
+  | 'clear_headline'
+  | 'dismiss';
 
 /**
  * `POST /moderation/actions` → 204 (permission `moderation.manage`; suspend / unsuspend also `users.suspend`).
@@ -653,6 +748,11 @@ export interface ModerationTargetDto {
   suspendedUntil?: string | null;
   /** Warn actions on this user so far. */
   warningCount?: number | null;
+  /**
+   * A user target's social links now (F14), for `clear_links`; null for articles and comments. The user's title is
+   * `author.headline` (for `clear_headline`). Missing from an API older than the profile step.
+   */
+  links?: ProfileLinkDto[] | null;
 }
 
 /** One target in the queue, with its reports in `status` grouped. */
@@ -695,6 +795,9 @@ export type ModerationLogAction =
   | 'user.unsuspend'
   // F31: a moderator cleared an offensive category name (`targetLabel` is the old name).
   | 'user.clear_category'
+  // F14: a moderator removed the user's links (`targetLabel`: the removed URLs) or title (`targetLabel`: the old title).
+  | 'user.clear_links'
+  | 'user.clear_headline'
   | 'reports.dismiss';
 
 export interface ModerationActionDto {
@@ -781,7 +884,10 @@ export interface ProfileDto {
   isVerified: boolean;
   /** Mixed text: rendered in the direction of its first strong character. */
   bio: string | null;
-  links: ProfileLinks;
+  /** The title (F14), shown in full under the name; null when empty. Missing from an API older than the profile step. */
+  headline?: string | null;
+  /** Social links (F14) in the member's order, for everyone including guests; `[]` when none. */
+  links: ProfileLinkDto[];
   /** In the user's order, at most 5. */
   expertise: ExpertiseFieldDto[];
   joinedAt: string;
@@ -1429,7 +1535,9 @@ export type NotificationType =
   | 'security_alert'
   /** F19: an admin approved or rejected your writer verification request (`data.approved`). */
   | 'verification_result'
-  | 'moderation_notice';
+  | 'moderation_notice'
+  /** F29: someone reposted your article (aggregated per article: actor = the latest reposter, `actorCount`, `article`). */
+  | 'article_reposted';
 
 /** What changed on the account (`security_alert`); the API's `SecurityChange`, camelCase. */
 export type SecurityChange =

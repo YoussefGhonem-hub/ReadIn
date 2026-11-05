@@ -40,11 +40,12 @@ for (const variant of VARIANTS) {
     await expect(react).toHaveAttribute('data-my-reaction', 'insightful');
     await expect(total).toHaveText('19');
 
-    // The picker shows the four reactions with their counts; pick ❤️.
+    // The floating bar shows the four reactions, LinkedIn-style: no numbers or text (the counts are in who reacted); pick ❤️.
     await bar.locator('[data-reaction-picker-toggle]').click();
     await expect(picker).toBeVisible();
     await expect(picker.locator('[data-reaction="insightful"]')).toHaveAttribute('aria-checked', 'true');
-    await expect(picker.locator('[data-reaction-count="insightful"]')).toHaveText('9');
+    await expect(picker).not.toContainText(/\d/);
+    await expect(picker.locator('[data-reaction="insightful"]')).toHaveAttribute('aria-label', lang === 'ar' ? 'مفيد' : 'Insightful');
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`reaction-picker-${suffix}.png`, {
       clip: await pickerArea(page),

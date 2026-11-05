@@ -1,6 +1,6 @@
 import { Injectable, PendingTasks, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
-import { ArticleCardDto } from '../../core/api/models';
+import { Observable, firstValueFrom } from 'rxjs';
+import { ArticleCardDto, CursorPage } from '../../core/api/models';
 import { ProfilesApi } from '../../core/api/profiles.api';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
 
@@ -14,7 +14,7 @@ const PAGE_SIZE = 20;
  */
 @Injectable()
 export class ProfileArticlesStore {
-  private readonly api = inject(ProfilesApi);
+  protected readonly api = inject(ProfilesApi);
   private readonly social = inject(ArticleSocialStore);
   private readonly tasks = inject(PendingTasks);
 
@@ -37,7 +37,7 @@ export class ProfileArticlesStore {
     // Keeps SSR waiting until the state is set, not just until the HTTP call ends.
     const done = this.tasks.add();
     try {
-      const page = await firstValueFrom(this.api.articles(username, { limit: PAGE_SIZE }));
+      const page = await firstValueFrom(this.page(username, { limit: PAGE_SIZE }));
       if (generation !== this.generation) return;
       this.social.absorb(page.items);
       this.items.set(page.items);
@@ -63,7 +63,7 @@ export class ProfileArticlesStore {
     if (this.status() !== 'loaded') return this.load(username);
     const generation = ++this.generation;
     try {
-      const page = await firstValueFrom(this.api.articles(username, { limit: PAGE_SIZE }));
+      const page = await firstValueFrom(this.page(username, { limit: PAGE_SIZE }));
       if (generation !== this.generation) return;
       this.social.absorb(page.items);
       this.items.set(page.items);
@@ -82,7 +82,7 @@ export class ProfileArticlesStore {
     this.loadingMore.set(true);
     this.loadMoreFailed.set(false);
     try {
-      const page = await firstValueFrom(this.api.articles(username, { cursor, limit: PAGE_SIZE }));
+      const page = await firstValueFrom(this.page(username, { cursor, limit: PAGE_SIZE }));
       if (generation !== this.generation) return;
       const seen = new Set(this.items().map((a) => a.id));
       this.social.absorb(page.items);
@@ -93,5 +93,10 @@ export class ProfileArticlesStore {
     } finally {
       if (generation === this.generation) this.loadingMore.set(false);
     }
+  }
+
+  /** One page of the list (the Reposts tab's store reads another endpoint). */
+  protected page(username: string, query: { cursor?: string | null; limit: number }): Observable<CursorPage<ArticleCardDto>> {
+    return this.api.articles(username, query);
   }
 }

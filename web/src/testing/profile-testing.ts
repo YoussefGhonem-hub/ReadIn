@@ -1,6 +1,6 @@
 import { FieldDto, ProfileDto } from '../app/core/api/models';
 
-/** Someone else's public profile as a signed-in viewer sees it (F14): verified, with a mixed ar/en bio. */
+/** Someone else's public profile as a signed-in viewer sees it (F14): verified, with a title, a mixed ar/en bio and two links. */
 export function testProfile(patch: Partial<ProfileDto> = {}): ProfileDto {
   return {
     id: 'writer-1',
@@ -9,8 +9,12 @@ export function testProfile(patch: Partial<ProfileDto> = {}): ProfileDto {
     avatarUrl: null,
     avatarVariants: null,
     isVerified: true,
+    headline: 'Frontend lead | Angular و performance',
     bio: 'Frontend lead. بكتب عن Angular والـ performance.',
-    links: { github: 'https://github.com/karim', linkedin: null, website: 'https://karim.dev/' },
+    links: [
+      { platform: 'github', url: 'https://github.com/karim', label: null },
+      { platform: 'website', url: 'https://karim.dev/', label: null },
+    ],
     expertise: [{ id: 'f1', slug: 'software', name: 'البرمجيات', icon: 'code', color: 'primary' }],
     joinedAt: '2026-02-14T09:00:00Z',
     stats: { articles: 12, followers: 340, following: 21, totalReads: 5120 },

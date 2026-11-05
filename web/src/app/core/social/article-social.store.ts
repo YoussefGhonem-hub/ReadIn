@@ -1,14 +1,15 @@
 import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Observable, Subject, firstValueFrom } from 'rxjs';
-import { ArticleCardDto, ArticleReactionsDto, REACTION_TYPES, ReactionCountsDto, ReactionType, SaveStateDto } from '../api/models';
+import { ArticleCardDto, ArticleReactionsDto, REACTION_TYPES, ReactionCountsDto, ReactionType, RepostStateDto, SaveStateDto } from '../api/models';
 import { ReactionsApi } from '../api/reactions.api';
+import { RepostsApi } from '../api/reposts.api';
 import { SavedApi } from '../api/saved.api';
 import { SessionStore } from '../auth/session.store';
 import { ErrorMessages } from '../i18n/error-messages';
 import { LiveArticleCounts } from '../realtime/realtime.service';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 
-/** What the UI shows about an article's reactions, saves and comments (F10, F13, F27). */
+/** What the UI shows about an article's reactions, saves, comments and reposts (F10, F13, F27, F29). */
 export interface ArticleSocialState {
   reactions: ReactionCountsDto;
   reactionCount: number;
@@ -16,6 +17,8 @@ export interface ArticleSocialState {
   isSaved: boolean;
   saveCount: number;
   commentCount: number;
+  repostCount: number;
+  isReposted: boolean;
 }
 
 interface Entry {
@@ -25,7 +28,8 @@ interface Entry {
   view: ArticleSocialState;
 }
 
-type Channel = 'reaction' | 'save';
+type Channel = 'reaction' | 'save' | 'repost';
+const CHANNELS: readonly Channel[] = ['reaction', 'save', 'repost'];
 
 const ZERO: ReactionCountsDto = { insightful: 0, love: 0, fire: 0, mindBlown: 0 };
 
@@ -42,6 +46,8 @@ export function socialStateOf(article: ArticleCardDto): ArticleSocialState {
     isSaved: !!article.isSaved,
     saveCount: article.saveCount ?? 0,
     commentCount: article.commentCount ?? 0,
+    repostCount: article.repostCount ?? 0,
+    isReposted: !!article.isReposted,
   };
 }
 
@@ -66,16 +72,17 @@ function sameReactions(a: ReactionCountsDto, b: ReactionCountsDto): boolean {
 }
 
 /**
- * Reactions and saves of the articles on screen, shared by feed cards, the reader and the Saved page, so an action in
- * one place shows everywhere. Actions are optimistic: the UI changes at once, one request per article and kind runs
- * at a time (quick taps coalesce into the latest wish), and a failure rolls back to what the server last confirmed and
- * shows the translated error. Live counters (F27) **replace** the numbers, never add to them, so the user's own action
- * is never counted twice.
+ * Reactions, saves and reposts (F29) of the articles on screen, shared by feed cards, the reader and the Saved page, so
+ * an action in one place shows everywhere. Actions are optimistic: the UI changes at once, one request per article and
+ * kind runs at a time (quick taps coalesce into the latest wish), and a failure rolls back to what the server last
+ * confirmed and shows the translated error. Live counters (F27) **replace** the numbers, never add to them, so the
+ * user's own action is never counted twice.
  */
 @Injectable({ providedIn: 'root' })
 export class ArticleSocialStore {
   private readonly reactionsApi = inject(ReactionsApi);
   private readonly savedApi = inject(SavedApi);
+  private readonly repostsApi = inject(RepostsApi);
   private readonly toasts = inject(ToastService);
   private readonly errors = inject(ErrorMessages);
   private readonly session = inject(SessionStore);
@@ -144,6 +151,18 @@ export class ArticleSocialStore {
     return this.syncSave(article.id);
   }
 
+  /** The Repost button (F29): reposts, or undoes your repost. */
+  toggleRepost(article: ArticleCardDto): Promise<void> {
+    return this.setReposted(article, !this.state(article).isReposted);
+  }
+
+  setReposted(article: ArticleCardDto, isReposted: boolean): Promise<void> {
+    const { view } = this.ensure(article);
+    if (view.isReposted === isReposted) return Promise.resolve();
+    this.patch(article.id, (entry) => ({ ...entry, view: { ...view, isReposted, repostCount: Math.max(0, view.repostCount + (isReposted ? 1 : -1)) } }));
+    return this.syncRepost(article.id);
+  }
+
   /** Adding to a collection saves the article first if needed (server side). */
   confirmSaved(article: ArticleCardDto): void {
     const { server } = this.ensure(article);
@@ -165,6 +184,7 @@ export class ArticleSocialStore {
     }
     if (live.commentCount !== null && live.commentCount !== base.commentCount) changes.commentCount = live.commentCount;
     if (live.saveCount !== null && live.saveCount !== base.saveCount) changes.saveCount = live.saveCount;
+    if (live.repostCount != null && live.repostCount !== base.repostCount) changes.repostCount = live.repostCount;
     if (!Object.keys(changes).length) return;
     this.ensure(article);
     this.patch(article.id, (entry) => ({ server: { ...entry.server, ...changes }, view: { ...entry.view, ...changes } }));
@@ -172,7 +192,7 @@ export class ArticleSocialStore {
 
   /** True while a request of `channel` (or any) is running for the article. */
   busy(articleId: string, channel?: Channel): boolean {
-    return channel ? this.inFlight.has(`${channel}:${articleId}`) : this.inFlight.has(`reaction:${articleId}`) || this.inFlight.has(`save:${articleId}`);
+    return channel ? this.inFlight.has(`${channel}:${articleId}`) : CHANNELS.some((c) => this.inFlight.has(`${c}:${articleId}`));
   }
 
   private async syncReaction(id: string): Promise<void> {
@@ -255,6 +275,44 @@ export class ArticleSocialStore {
       const isSaved = entry.view.isSaved === sent ? server.isSaved : entry.view.isSaved;
       const pending = isSaved === server.isSaved ? 0 : isSaved ? 1 : -1;
       return { server, view: { ...entry.view, isSaved, saveCount: Math.max(0, server.saveCount + pending) } };
+    });
+  }
+
+  /** Like saves: one request at a time, the newest wish wins, a failure rolls back to the server's state with the error. */
+  private async syncRepost(id: string): Promise<void> {
+    const key = `repost:${id}`;
+    if (this.inFlight.has(key)) return;
+    this.inFlight.add(key);
+    try {
+      for (;;) {
+        const entry = this.entries().get(id);
+        if (!entry) return;
+        const target = entry.view.isReposted;
+        if (target === entry.server.isReposted) {
+          this.patch(id, (e) => ({ ...e, view: { ...e.view, repostCount: e.server.repostCount } }));
+          return;
+        }
+        try {
+          const result = await firstValueFrom(target ? this.repostsApi.repost(id) : this.repostsApi.unrepost(id));
+          this.confirmRepost(id, result, target);
+        } catch (error) {
+          if (this.entries().get(id)?.view.isReposted !== target) continue;
+          this.patch(id, (e) => ({ ...e, view: { ...e.view, isReposted: e.server.isReposted, repostCount: e.server.repostCount } }));
+          this.toasts.error(this.errors.forError(error));
+          return;
+        }
+      }
+    } finally {
+      this.inFlight.delete(key);
+    }
+  }
+
+  private confirmRepost(id: string, result: RepostStateDto, sent: boolean): void {
+    this.patch(id, (entry) => {
+      const server = { ...entry.server, isReposted: result.isReposted, repostCount: result.repostCount };
+      const isReposted = entry.view.isReposted === sent ? server.isReposted : entry.view.isReposted;
+      const pending = isReposted === server.isReposted ? 0 : isReposted ? 1 : -1;
+      return { server, view: { ...entry.view, isReposted, repostCount: Math.max(0, server.repostCount + pending) } };
     });
   }
 

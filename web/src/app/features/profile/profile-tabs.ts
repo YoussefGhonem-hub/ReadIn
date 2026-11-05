@@ -22,6 +22,7 @@ import { fieldColor } from '../reading/reading-stats-card';
 import { loadMoreNearEnd } from './infinite-scroll';
 import { ProfileArticlesStore } from './profile-articles.store';
 import { PROFILE_ICONS } from './profile-icons';
+import { LinkIcon } from './link-icon';
 import { profileLinks } from './profile-links';
 
 /**
@@ -158,7 +159,7 @@ export class ProfileSaved {
 /** About tab (F14): bio, links, fields of expertise and the join date. */
 @Component({
   selector: 'rd-profile-about',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, FieldIcon, LocalizedDatePipe],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, FieldIcon, LocalizedDatePipe, LinkIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block py-4', 'data-profile-about': '' },
   template: `
@@ -173,12 +174,22 @@ export class ProfileSaved {
       <section class="mb-6" aria-labelledby="about-links">
         <h2 id="about-links" class="m-0 mb-1 text-sm font-semibold text-text-secondary">{{ 'profile.about.links' | transloco }}</h2>
         <ul class="m-0 flex list-none flex-col p-0">
-          @for (link of links(); track link.kind) {
+          @for (link of links(); track $index) {
             <li>
-              <a [href]="link.url" target="_blank" rel="me nofollow noopener noreferrer" class="inline-flex min-h-11 items-center gap-2 text-link no-underline hover:underline">
-                <svg [lucideIcon]="icons[link.kind]" [size]="18" class="shrink-0" aria-hidden="true"></svg>
-                <span class="text-text-primary">{{ 'profile.links.' + link.kind | transloco }}</span>
-                <bdi dir="ltr" class="text-sm">{{ link.label }}</bdi>
+              <a
+                [href]="link.url"
+                target="_blank"
+                rel="me nofollow ugc noopener noreferrer"
+                class="inline-flex min-h-11 max-w-full items-center gap-2 text-link no-underline hover:underline"
+                [attr.data-about-link]="link.platform"
+              >
+                <rd-link-icon [platform]="link.platform" [size]="18" />
+                @if (link.label; as label) {
+                  <span class="text-text-primary"><bdi dir="auto">{{ label }}</bdi></span>
+                } @else {
+                  <span class="text-text-primary">{{ 'profile.links.platforms.' + link.platform | transloco }}</span>
+                }
+                <bdi dir="ltr" class="min-w-0 truncate text-sm">{{ link.display }}</bdi>
                 <span class="sr-only">{{ 'profile.links.newTab' | transloco }}</span>
               </a>
             </li>

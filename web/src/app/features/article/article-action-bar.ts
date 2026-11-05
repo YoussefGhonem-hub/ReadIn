@@ -7,53 +7,56 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
 import { CompactNumberPipe, translatePlural } from '../../shared/pipes/format.pipes';
 import { ShareService } from '../../shared/social/share.service';
+import { RepostButton } from '../feed/repost-button';
 import { ArticleMenu, MenuArticle } from './article-menu';
 import { ReactionButton } from './reaction-button';
 import { REACTION_EMOJI, topReactions } from './reactions';
 import { ReactorsSheet } from './reactors-sheet';
 
 /**
- * Floating action bar of the reader (F04, F10, F11, F13): the reaction button, who reacted, comments (the count; a tap
- * takes you to them), save, share and the "⋯" menu (F22 report and moderation; F28 adds more). The reaction button
- * (reaction-button.ts, shared with the post card) reacts 💡 on a tap and removes your reaction when you have one;
- * holding it (touch), hovering it (mouse), its ⌃ button or ArrowUp open the picker with the four reactions and their
- * counts. Guests get the soft sign-in prompt. Counts come from ArticleSocialStore (optimistic, live counters on top).
+ * Floating action bar of the reader (F04, F10, F11, F13, F29): the reaction button, who reacted, comments (the count; a
+ * tap takes you to them), Repost with its count, save, share and the "⋯" menu (F22 report and moderation; F28 adds
+ * more). The reaction button (reaction-button.ts, shared with the post card) reacts 💡 on a tap and removes your reaction
+ * when you have one; holding it (touch), hovering it (mouse), its ⌃ button or ArrowUp open the floating reactions bar.
+ * Guests get the soft sign-in prompt. Counts come from ArticleSocialStore (optimistic, live counters on top).
  */
 @Component({
   selector: 'rd-article-action-bar',
-  imports: [TranslocoPipe, CompactNumberPipe, LucideDynamicIcon, ReactorsSheet, ArticleMenu, ReactionButton],
+  imports: [TranslocoPipe, CompactNumberPipe, LucideDynamicIcon, ReactorsSheet, ArticleMenu, ReactionButton, RepostButton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'fixed inset-x-0 bottom-0 z-30 block border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-raised',
   },
   template: `
-    <div class="mx-auto flex h-16 max-w-[720px] items-center justify-between gap-1 px-3">
-      <div class="relative flex min-w-0 items-center gap-1" data-reactions>
+    <div class="mx-auto flex h-16 max-w-[720px] items-center justify-between gap-1 px-2 sm:px-3">
+      <!-- Phones: tighter gaps and one reaction emoji (and no total below 400 px: it stays in the label), so the bar fits
+           with Repost (F29) at 360 px -->
+      <div class="relative flex min-w-0 items-center gap-0.5 sm:gap-1" data-reactions>
         <rd-reaction-button [article]="article()" />
 
         <button
           type="button"
           data-reactions-summary
-          class="flex h-11 min-w-11 items-center gap-1.5 rounded-md px-2 text-sm text-text-secondary hover:bg-surface-variant disabled:cursor-default disabled:hover:bg-transparent"
+          class="flex h-11 min-w-10 items-center gap-1.5 rounded-md px-1.5 text-sm text-text-secondary hover:bg-surface-variant disabled:cursor-default disabled:hover:bg-transparent sm:min-w-11 sm:px-2"
           [disabled]="state().reactionCount === 0"
           [attr.aria-label]="summaryLabel()"
           (click)="whoOpen.set(true)"
         >
           @if (topTypes().length) {
             <span class="flex items-center" aria-hidden="true">
-              @for (type of topTypes(); track type) {
-                <span class="-ms-1 text-base leading-none first:ms-0">{{ emoji[type] }}</span>
+              @for (type of topTypes(); track type; let first = $first) {
+                <span class="-ms-1 text-base leading-none first:ms-0" [class.max-sm:hidden]="!first">{{ emoji[type] }}</span>
               }
             </span>
           }
-          <span aria-hidden="true" data-reaction-total>{{ state().reactionCount | rdCompactNumber: lang() }}</span>
+          <span class="max-[399px]:hidden" aria-hidden="true" data-reaction-total>{{ state().reactionCount | rdCompactNumber: lang() }}</span>
         </button>
       </div>
 
-      <div class="flex shrink-0 items-center gap-1">
+      <div class="flex shrink-0 items-center gap-0.5 sm:gap-1">
         <button
           type="button"
-          class="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-primary-container px-3 text-sm font-semibold text-on-primary-container"
+          class="inline-flex min-h-11 items-center gap-1 rounded-md bg-primary-container px-2 text-sm font-semibold text-on-primary-container sm:gap-1.5 sm:px-3"
           aria-controls="comments"
           data-comment-count
           (click)="commentsOpen.emit()"
@@ -62,9 +65,10 @@ import { ReactorsSheet } from './reactors-sheet';
           {{ state().commentCount | rdCompactNumber: lang() }}
           <span class="sr-only">{{ 'article.comments' | transloco }}</span>
         </button>
+        <rd-repost-button [article]="article()" variant="bar" />
         <button
           type="button"
-          class="rd-icon-btn h-11 w-11 border-0"
+          class="rd-icon-btn h-11 w-10 border-0 sm:w-11"
           [class.text-primary]="state().isSaved"
           data-save
           [attr.aria-pressed]="state().isSaved"
@@ -73,7 +77,7 @@ import { ReactorsSheet } from './reactors-sheet';
         >
           <svg lucideIcon="Bookmark" [size]="20" [class.fill-current]="state().isSaved" aria-hidden="true"></svg>
         </button>
-        <button type="button" class="rd-icon-btn h-11 w-11 border-0" [attr.aria-label]="'common.share' | transloco" (click)="share()">
+        <button type="button" class="rd-icon-btn h-11 w-10 border-0 sm:w-11" [attr.aria-label]="'common.share' | transloco" (click)="share()">
           <svg lucideIcon="Share2" [size]="18" aria-hidden="true"></svg>
         </button>
         <rd-article-menu [article]="article()" [pdf]="true" (moderationChange)="moderationChange.emit($event)" />

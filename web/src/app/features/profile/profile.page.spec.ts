@@ -13,6 +13,7 @@ import { ProfilePage } from './profile.page';
 
 const isProfile = (username: string) => (r: { url: string }) => r.url === `${TEST_API}/users/${username}`;
 const isArticles = (username: string) => (r: { url: string }) => r.url === `${TEST_API}/users/${username}/articles`;
+const isReposts = (username: string) => (r: { url: string }) => r.url === `${TEST_API}/users/${username}/reposts`;
 
 describe('ProfilePage (F14)', () => {
   let http: HttpTestingController;
@@ -45,7 +46,13 @@ describe('ProfilePage (F14)', () => {
       await fixture.whenStable();
     };
     await stable();
-    return { fixture, root, stable, tabs: () => [...root.querySelectorAll('[data-profile-tab]')].map((t) => t.getAttribute('data-profile-tab')) };
+    /** Renders without waiting for the app to be stable: a list loading through PendingTasks waits for its answer. */
+    const settle = async () => {
+      await flushMicrotasks();
+      fixture.detectChanges();
+      await flushMicrotasks();
+    };
+    return { fixture, root, stable, settle, tabs: () => [...root.querySelectorAll('[data-profile-tab]')].map((t) => t.getAttribute('data-profile-tab')) };
   }
 
   /** Reading stats never answer in these tests: the card and heatmap stay on their skeletons. */
@@ -53,11 +60,15 @@ describe('ProfilePage (F14)', () => {
     return Object.assign(api, { stats: () => NEVER, heatmap: () => NEVER });
   }
 
-  it('someone else: name, verified, @handle LTR, Follows you, Follow, bio in its own direction, links, stats', async () => {
+  it('someone else: name, verified, title, @handle LTR, Follows you, Follow, bio in its own direction, link icons, stats', async () => {
     const { root } = await render(testProfile());
     const header = root.querySelector('[data-profile-header]')!;
     expect(header.querySelector('[data-profile-name]')!.textContent).toContain('Karim Hassan');
     expect(header.querySelector('[data-profile-name] svg')!.getAttribute('aria-label')).toBe('كاتب موثّق');
+    // The title in full, aligned with the name, isolated in its own direction (it starts with an English word).
+    expect(header.querySelector('[data-profile-headline]')!.textContent!.trim()).toBe('Frontend lead | Angular و performance');
+    expect(header.querySelector('[data-profile-headline]')!.getAttribute('dir')).toBeNull();
+    expect(header.querySelector('[data-profile-headline] rd-bdi-text')!.getAttribute('dir')).toBe('ltr');
     expect(header.querySelector('[data-profile-username]')!.getAttribute('dir')).toBe('ltr');
     expect(header.querySelector('[data-profile-username]')!.textContent).toBe('@karim');
     expect(header.querySelector('[data-profile-settings]')).toBeNull();
@@ -65,10 +76,13 @@ describe('ProfilePage (F14)', () => {
     expect(header.querySelector('[data-profile-follow] [data-follow]')).not.toBeNull();
     expect(header.querySelector('[data-edit-profile]')).toBeNull();
     expect(header.querySelector('[data-profile-bio]')!.getAttribute('dir')).toBe('ltr');
+    // Icons in the saved order, each named for its platform, opening in a new tab.
     const links = [...header.querySelectorAll<HTMLAnchorElement>('[data-profile-link]')];
     expect(links.map((a) => a.getAttribute('href'))).toEqual(['https://github.com/karim', 'https://karim.dev/']);
-    expect(links.every((a) => a.target === '_blank' && a.rel.includes('noopener'))).toBe(true);
-    expect(links[1].textContent).toContain('karim.dev');
+    expect(links.map((a) => a.getAttribute('aria-label'))).toEqual(['GitHub', 'الموقع']);
+    expect(links.every((a) => a.target === '_blank' && a.rel.split(' ').includes('noopener') && a.rel.split(' ').includes('me'))).toBe(true);
+    expect(links[0].querySelector('rd-link-icon svg')!.getAttribute('aria-hidden')).toBe('true');
+    expect(header.querySelector('#' + links[0].getAttribute('aria-describedby'))!.textContent).toContain('بيفتح في تاب جديدة');
     expect(header.querySelector('[data-stat="followers"]')!.getAttribute('href')).toBe('/@karim/followers');
     expect(header.querySelector('[data-stat="following"]')!.getAttribute('href')).toBe('/@karim/following');
     expect(header.querySelector('[data-stat="reads"]')!.textContent).toContain('5.1');
@@ -87,9 +101,9 @@ describe('ProfilePage (F14)', () => {
     await stable();
   });
 
-  it('tabs: Articles / Categories / Paths / About for someone else, with arrow keys mirrored in RTL', async () => {
-    const { root, tabs, stable } = await render(testProfile());
-    expect(tabs()).toEqual(['articles', 'categories', 'paths', 'about']);
+  it('tabs: Articles / Categories / Reposts / Paths / About for someone else, with arrow keys mirrored in RTL', async () => {
+    const { root, tabs, stable, settle } = await render(testProfile());
+    expect(tabs()).toEqual(['articles', 'categories', 'reposts', 'paths', 'about']);
     expect(root.querySelectorAll('[data-profile-articles] rd-post-card')).toHaveLength(2);
 
     const articles = root.querySelector<HTMLElement>('[data-profile-tab="articles"]')!;
@@ -105,6 +119,13 @@ describe('ProfilePage (F14)', () => {
     expect(cards[1].textContent).toContain('مقالات تانية');
 
     root.querySelector<HTMLElement>('[data-profile-tab="categories"]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    await settle();
+    expect(root.querySelector('[data-profile-tab="reposts"]')!.getAttribute('aria-selected')).toBe('true');
+    http.expectOne(isReposts('karim')).flush({ items: [], nextCursor: null });
+    await stable();
+    expect(root.querySelector('[data-profile-reposts] [data-reposts-empty]')!.textContent).toContain('مفيش إعادة نشر لسه');
+
+    root.querySelector<HTMLElement>('[data-profile-tab="reposts"]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     await stable();
     expect(root.querySelector('[data-profile-tab="paths"]')!.getAttribute('aria-selected')).toBe('true');
     // Private reading stats: their paths are private too (no request).
@@ -125,7 +146,7 @@ describe('ProfilePage (F14)', () => {
     expect(root.querySelector('[data-profile-settings]')!.getAttribute('href')).toBe('/settings');
     expect(root.querySelector('[data-profile-follow]')).toBeNull();
     expect(root.querySelector('[data-follows-you]')).toBeNull();
-    expect(tabs()).toEqual(['articles', 'categories', 'saved', 'paths', 'about']);
+    expect(tabs()).toEqual(['articles', 'categories', 'reposts', 'saved', 'paths', 'about']);
     expect(root.querySelector('[data-profile-reading] [data-public-stats] [role="switch"]')).not.toBeNull();
     expect(root.querySelector('[data-articles-empty]')!.textContent).toContain('لسه منشرتش مقالات');
 
@@ -134,6 +155,51 @@ describe('ProfilePage (F14)', () => {
     http.expectOne((r) => r.url === `${TEST_API}/me/saved`).flush({ items: [], nextCursor: null });
     await stable();
     expect(root.querySelector('[data-profile-saved] [data-saved-empty]')).not.toBeNull();
+  });
+
+  it('Reposts tab (F29): the reposted articles as post cards, newest first, then the next page; your own empty state', async () => {
+    const { root, stable, settle } = await render(testProfile());
+    (root.querySelector('[data-profile-tab="reposts"]') as HTMLElement).click();
+    await settle();
+    expect(root.querySelector('[data-profile-reposts] [aria-busy="true"]')).not.toBeNull();
+    const label = { user: { id: 'writer-1', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true }, othersCount: 0, repostedAt: '2026-11-04T09:00:00Z' };
+    const first = http.expectOne(isReposts('karim'));
+    expect(first.request.params.get('limit')).toBe('20');
+    first.flush({
+      items: [testCard({ id: 'r1', slug: 'r1', title: 'Newest repost', repostedBy: label }), testCard({ id: 'r2', slug: 'r2', title: 'Older repost', repostedBy: label })],
+      nextCursor: 'c2',
+    });
+    await stable();
+    const titles = () => [...root.querySelectorAll('[data-profile-reposts] rd-post-card')].map((c) => c.textContent);
+    expect(titles()).toEqual([expect.stringContaining('Newest repost'), expect.stringContaining('Older repost')]);
+    expect(root.querySelector('[data-reposts-end]')).toBeNull();
+
+    const own = await render(testProfile({ id: 'user-1', username: 'mona', isMe: true, readingStatsVisible: true }));
+    (own.root.querySelector('[data-profile-tab="reposts"]') as HTMLElement).click();
+    await own.settle();
+    http.expectOne(isReposts('mona')).flush({ items: [], nextCursor: null });
+    await own.stable();
+    expect(own.root.querySelector('[data-reposts-empty]')!.textContent).toContain('لما تعيد نشر مقال عجبك، هيظهر هنا وعند متابعينك.');
+  });
+
+  it('a failed Reposts tab offers a retry', async () => {
+    const { root, stable, settle } = await render(testProfile());
+    (root.querySelector('[data-profile-tab="reposts"]') as HTMLElement).click();
+    await settle();
+    http.expectOne(isReposts('karim')).flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
+    await stable();
+    (root.querySelector('[data-profile-reposts] rd-error-state button') as HTMLElement).click();
+    await settle();
+    http.expectOne(isReposts('karim')).flush({ items: [testCard({ id: 'r1', slug: 'r1' })], nextCursor: null });
+    await stable();
+    expect(root.querySelectorAll('[data-profile-reposts] rd-post-card')).toHaveLength(1);
+    expect(root.querySelector('[data-reposts-end]')).not.toBeNull();
+  });
+
+  it('no title and no links: neither line is shown', async () => {
+    const { root } = await render(testProfile({ headline: null, links: [] }));
+    expect(root.querySelector('[data-profile-headline]')).toBeNull();
+    expect(root.querySelector('[data-profile-links]')).toBeNull();
   });
 
   it('the session already knows it is you before the personalized copy arrives', async () => {

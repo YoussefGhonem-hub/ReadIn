@@ -11,7 +11,7 @@ import { MediaAssetDto } from '../../core/api/models';
 import { AuthService } from '../../core/auth/auth.service';
 import { ImageCompressor } from '../../shared/media/image-compressor';
 import { USERNAME_DEBOUNCE_MS } from '../../shared/utils/username';
-import { EditProfilePage, profileFieldErrors } from './edit-profile.page';
+import { EditProfilePage, linkFieldErrors, profileFieldErrors } from './edit-profile.page';
 import { ExpertisePicker, MAX_EXPERTISE, toggleExpertise } from './expertise-picker';
 
 const AVATAR: MediaAssetDto = {
@@ -40,7 +40,8 @@ const MINE = testProfile({
   username: 'mona',
   avatarUrl: 'https://cdn.test/old_256.webp',
   bio: 'Backend engineer.',
-  links: { github: 'https://github.com/mona', linkedin: null, website: null },
+  headline: 'Backend engineer | .NET',
+  links: [{ platform: 'github', url: 'https://github.com/mona', label: null }],
   expertise: [{ id: 'f1', slug: 'software', name: 'Software', icon: 'code', color: 'primary' }],
   isMe: true,
   followsYou: false,
@@ -104,22 +105,35 @@ describe('EditProfilePage (F14)', () => {
     return { fixture, root, stable, checkUsername, input, type, submit, patch };
   }
 
-  it('starts from your public profile: name, @username, bio with its counter, links, expertise', async () => {
+  it('starts from your public profile: name, @username, title, bio with its counter, links, expertise', async () => {
     const { root, input } = await render();
     expect(input('#edit-name').value).toBe('Mona Adel');
     expect(input('#edit-username').value).toBe('mona');
+    expect(input('#edit-headline').value).toBe('Backend engineer | .NET');
+    expect(input('#edit-headline').getAttribute('dir')).toBe('auto');
+    // Far from the limit: no counter yet.
+    expect(root.querySelector('[data-headline-count]')).toBeNull();
     expect(input('#edit-bio').value).toBe('Backend engineer.');
     expect(root.querySelector('[data-bio-count]')!.textContent!.trim()).toBe('17 / 300');
-    expect(input('[data-link-input="github"]').value).toBe('https://github.com/mona');
+    expect([...root.querySelectorAll('[data-link-row]')].map((r) => r.getAttribute('data-platform'))).toEqual(['github']);
+    expect(input('[data-link-row="0"] [data-link-url]').value).toBe('https://github.com/mona');
     expect(root.querySelector('[data-expertise="software"]')!.getAttribute('aria-pressed')).toBe('true');
     expect(root.querySelector('[data-avatar-preview] img')!.getAttribute('src')).toBe('https://cdn.test/old_256.webp');
     // Your own handle is fine: no "available" success message for it.
     expect(root.querySelector('[data-username-status]')!.textContent).toContain('من 3 لـ 30 حرف');
   });
 
-  it('saves without touching the photo: avatarAssetId left out, links normalized, fields in order', async () => {
+  it('saves without touching the photo: avatarAssetId left out, the title trimmed, the whole link list in order', async () => {
     const { root, type, submit, patch, stable } = await render();
-    await type('[data-link-input="linkedin"]', 'linkedin.com/in/mona');
+    await type('#edit-headline', '  Senior .NET Engineer  ');
+    // Add LinkedIn, typed without https://, then move it first.
+    (root.querySelector('[data-add-link]') as HTMLElement).click();
+    await stable();
+    (root.querySelector('[data-pick-platform="linkedin"]') as HTMLElement).click();
+    await stable();
+    await type('[data-link-row="1"] [data-link-url]', 'linkedin.com/in/mona');
+    (root.querySelector('[data-link-row="1"] [data-link-up]') as HTMLElement).click();
+    await stable();
     (root.querySelector('[data-expertise="medicine"]') as HTMLElement).click();
     await stable();
     await submit();
@@ -127,10 +141,16 @@ describe('EditProfilePage (F14)', () => {
     expect(req.request.body).toEqual({
       displayName: 'Mona Adel',
       username: 'mona',
+      headline: 'Senior .NET Engineer',
       bio: 'Backend engineer.',
-      links: { github: 'https://github.com/mona', linkedin: 'https://linkedin.com/in/mona', website: null },
+      links: [
+        { platform: 'linkedin', url: 'https://linkedin.com/in/mona' },
+        { platform: 'github', url: 'https://github.com/mona' },
+      ],
       expertiseFieldIds: ['f1', 'f2'],
     });
+    // The link is shown as it was sent.
+    expect((root.querySelector('[data-link-row="0"] [data-link-url]') as HTMLInputElement).value).toBe('https://linkedin.com/in/mona');
     expect('avatarAssetId' in req.request.body).toBe(false);
     expect('avatarUrl' in req.request.body).toBe(false);
     req.flush(null, { status: 204, statusText: 'No Content' });
@@ -163,15 +183,61 @@ describe('EditProfilePage (F14)', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
   });
 
-  it('checks the form first: a bio over 300 characters or a link that isn’t https never reaches the server', async () => {
-    const { root, type, submit } = await render();
+  it('checks the form first: a long bio or title, a link that isn’t https or not on its platform never reaches the server', async () => {
+    const { root, type, submit, stable } = await render();
     await type('#edit-bio', 'x'.repeat(301));
     expect(root.querySelector('[data-bio-count]')!.className).toContain('text-error');
-    await type('[data-link-input="website"]', 'http://mona.dev');
+    // The title's counter shows near the limit, in the error color past it.
+    await type('#edit-headline', 'x'.repeat(101));
+    expect(root.querySelector('[data-headline-count]')!.textContent!.trim()).toBe('101 / 120');
+    await type('#edit-headline', 'x'.repeat(121));
+    expect(root.querySelector('[data-headline-count]')!.className).toContain('text-error');
+    (root.querySelector('[data-add-link]') as HTMLElement).click();
+    await stable();
+    (root.querySelector('[data-pick-platform="website"]') as HTMLElement).click();
+    await stable();
+    await type('[data-link-row="1"] [data-link-url]', 'http://mona.dev');
+    await type('[data-link-row="0"] [data-link-url]', 'https://gitlab.com/mona');
     await submit();
     expect(root.querySelector('[data-field-error="bio"]')!.textContent).toContain('300');
-    expect(root.querySelector('[data-field-error="website"]')!.textContent).toContain('https://');
+    expect(root.querySelector('[data-field-error="headline"]')!.textContent).toContain('120 حرف أو أقل');
+    expect(root.querySelector('[data-link-row="0"] [data-link-error="url"]')!.textContent).toContain('الرابط ده مش على موقع المنصة اللي اخترتها.');
+    expect(root.querySelector('[data-link-row="1"] [data-link-error="url"]')!.textContent).toContain('الرابط لازم يبدأ بـ https.');
     http.expectNone((r) => r.method === 'PATCH');
+  });
+
+  it('an empty title is sent as null (it clears the title), and no links as []', async () => {
+    const { root, type, submit, patch, stable } = await render();
+    await type('#edit-headline', '   ');
+    (root.querySelector('[data-link-row="0"] [data-link-remove]') as HTMLElement).click();
+    await stable();
+    await submit();
+    const req = patch();
+    expect(req.request.body.headline).toBeNull();
+    expect(req.request.body.links).toEqual([]);
+    req.flush(null, { status: 204, statusText: 'No Content' });
+    await stable();
+  });
+
+  it('the server’s link errors land under their links by index, and go once the links change', async () => {
+    const { root, submit, patch, stable } = await render();
+    await submit();
+    patch().flush(problem(400, 'validation.failed', { 'links[0].url': ['link.host_mismatch'], headline: ['profile.headline_invalid'] }), {
+      status: 400,
+      statusText: 'Bad Request',
+    });
+    await flushMicrotasks(10);
+    TestBed.tick();
+    expect(root.querySelector('[data-link-row="0"] [data-link-error="url"]')!.textContent).toContain('الرابط ده مش على موقع المنصة اللي اخترتها.');
+    expect(root.querySelector('[data-field-error="headline"]')!.textContent).toContain('سطر واحد');
+    expect(root.querySelector('[data-error]')).toBeNull(); // no general message
+    expect(navigate).not.toHaveBeenCalled();
+
+    const url = root.querySelector<HTMLInputElement>('[data-link-row="0"] [data-link-url]')!;
+    url.value = 'https://github.com/mona-adel';
+    url.dispatchEvent(new Event('input'));
+    await stable();
+    expect(root.querySelector('[data-link-row="0"] [data-link-error="url"]')).toBeNull();
   });
 
   it('server errors land on their fields', async () => {
@@ -191,14 +257,14 @@ describe('EditProfilePage (F14)', () => {
     await type('#edit-username', 'mona');
     await checkUsername();
     await submit();
-    patch().flush(problem(400, 'validation.failed', { bio: ['validation.max_length'], 'links.gitHub': ['validation.url'] }), {
+    patch().flush(problem(400, 'validation.failed', { bio: ['validation.max_length'], 'links[0].url': ['link.https_required'] }), {
       status: 400,
       statusText: 'Bad Request',
     });
     await flushMicrotasks(10);
     TestBed.tick();
     expect(root.querySelector('[data-field-error="bio"]')).not.toBeNull();
-    expect(root.querySelector('[data-field-error="github"]')).not.toBeNull();
+    expect(root.querySelector('[data-link-row="0"] [data-link-error="url"]')).not.toBeNull();
     expect(navigate).not.toHaveBeenCalled();
   });
 
@@ -224,14 +290,46 @@ describe('profileFieldErrors', () => {
     const validation = new ApiError(
       400,
       'validation.failed',
-      problem(400, 'validation.failed', { displayName: ['validation.length'], 'links.linkedIn': ['validation.url'], 'expertiseFieldIds[5]': ['x'], username: ['user.username_taken'] }),
+      problem(400, 'validation.failed', {
+        displayName: ['validation.length'],
+        headline: ['profile.headline_too_long'],
+        'links[1].url': ['link.https_required'],
+        'expertiseFieldIds[5]': ['x'],
+        username: ['user.username_taken'],
+      }),
     );
     expect(profileFieldErrors(validation, translate)).toEqual({
       displayName: 'profile.edit.displayNameError',
-      linkedin: 'profile.edit.linkInvalid',
+      headline: 'errors.profile.headline_too_long',
       expertise: 'errors.profile.expertise_invalid',
       username: 'errors.user.username_taken',
     });
+    // Only link errors: shown under the links, never as a general message.
+    const links = new ApiError(400, 'validation.failed', problem(400, 'validation.failed', { 'links[0].label': ['link.label_required'] }));
+    expect(profileFieldErrors(links, translate)).toEqual({});
+  });
+
+  it('maps the link errors by index and part (case-insensitively), the list’s under `links`', () => {
+    const error = new ApiError(
+      400,
+      'validation.failed',
+      problem(400, 'validation.failed', {
+        links: ['link.too_many'],
+        'Links[0].Platform': ['link.duplicate_platform'],
+        'links[2].url': ['validation.required'],
+        'links[3].url': ['link.host_mismatch'],
+        'links[3].label': ['link.label_not_allowed'],
+        bio: ['validation.max_length'],
+      }),
+    );
+    expect(linkFieldErrors(error)).toEqual({
+      links: 'errors.link.too_many',
+      'links[0].platform': 'errors.link.duplicate_platform',
+      'links[2].url': 'profile.linksEditor.urlRequired',
+      'links[3].url': 'errors.link.host_mismatch',
+      'links[3].label': 'errors.link.label_not_allowed',
+    });
+    expect(linkFieldErrors(new Error('offline'))).toEqual({});
   });
 
   it('anything else is a general, translated message', () => {

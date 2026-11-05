@@ -33,6 +33,10 @@ describe('ProfilesApi (F14)', () => {
     expectCall('GET', `${TEST_API}/users/mona/articles?limit=20`);
     api.articles('mona', { cursor: 'c2', limit: 10 }).subscribe();
     expectCall('GET', `${TEST_API}/users/mona/articles?limit=10&cursor=c2`);
+    api.reposts('mona').subscribe();
+    expectCall('GET', `${TEST_API}/users/mona/reposts?limit=20`);
+    api.reposts('@mona', { cursor: 'r2', limit: 10 }).subscribe();
+    expectCall('GET', `${TEST_API}/users/mona/reposts?limit=10&cursor=r2`);
     api.stats('mona').subscribe();
     expectCall('GET', `${TEST_API}/users/mona/stats`);
     api.heatmap('mona').subscribe();
@@ -40,7 +44,18 @@ describe('ProfilesApi (F14)', () => {
   });
 
   it('edit profile and privacy', () => {
-    const body = { displayName: 'Mona', username: 'mona', bio: null, links: { github: null }, expertiseFieldIds: ['f1'], avatarAssetId: null };
+    const body = {
+      displayName: 'Mona',
+      username: 'mona',
+      bio: null,
+      headline: 'Senior .NET Engineer',
+      links: [
+        { platform: 'github' as const, url: 'https://github.com/mona' },
+        { platform: 'other' as const, url: 'https://mona.dev/talks', label: 'Talks' },
+      ],
+      expertiseFieldIds: ['f1'],
+      avatarAssetId: null,
+    };
     api.updateProfile(body).subscribe();
     expectCall('PATCH', `${TEST_API}/me`, body);
     api.updatePrivacy({ publicReadingStats: true }).subscribe();

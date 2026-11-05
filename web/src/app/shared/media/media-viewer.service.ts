@@ -4,12 +4,16 @@ import { Dialog, DialogRef } from '@angular/cdk/dialog';
 import { TranslocoService } from '@jsverse/transloco';
 import { LanguageService } from '../../core/i18n/language.service';
 import { MediaViewer, MediaViewerData } from './media-viewer';
+import { MEDIA_VIEWER_HISTORY_KEY, MediaViewerHistory } from './viewer-history';
 
-const HISTORY_KEY = 'rdMediaViewer';
+export { MEDIA_VIEWER_HISTORY_KEY } from './viewer-history';
 
 /**
  * Opens the full-screen media viewer. It pushes a history entry so the browser Back button (and the Android back
- * gesture) closes the viewer instead of leaving the page; closing it any other way pops that entry again.
+ * gesture) closes the viewer instead of leaving the page; closing it any other way (✕, Esc, swipe down) pops that entry
+ * again. That entry has the page's own URL, and moving into or out of it is kept from the router
+ * ({@link MediaViewerHistory}, `provideMediaViewerHistory()` in the app config), so the page keeps its scroll
+ * position; the dialog gives the focus back to the image or page that opened it (SPEC F26).
  */
 @Injectable({ providedIn: 'root' })
 export class MediaViewerService {
@@ -17,6 +21,7 @@ export class MediaViewerService {
   private readonly language = inject(LanguageService);
   private readonly transloco = inject(TranslocoService);
   private readonly document = inject(DOCUMENT);
+  private readonly viewerHistory = inject(MediaViewerHistory);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private current: DialogRef<void, MediaViewer> | null = null;
 
@@ -47,18 +52,20 @@ export class MediaViewerService {
 
     const history = window.history;
     const marker = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    history.pushState({ ...(history.state ?? {}), [HISTORY_KEY]: marker }, '');
-    let closedByBack = false;
-    const onPopState = () => {
-      closedByBack = true;
+    history.pushState({ ...(history.state ?? {}), [MEDIA_VIEWER_HISTORY_KEY]: marker }, '');
+    this.viewerHistory.pushed(window.location.href);
+    // Back (or any history move off the entry) closes the viewer; the entry is gone already then.
+    let closedByHistory = false;
+    this.viewerHistory.onLeave(() => {
+      closedByHistory = true;
       ref.close();
-    };
-    window.addEventListener('popstate', onPopState);
+    });
 
     ref.closed.subscribe(() => {
-      window.removeEventListener('popstate', onPopState);
+      this.viewerHistory.onLeave(null);
       this.current = null;
-      if (!closedByBack && history.state?.[HISTORY_KEY] === marker) history.back();
+      // ✕, Esc or swipe down: leave the viewer's entry, so Back then leaves the page as usual.
+      if (!closedByHistory && history.state?.[MEDIA_VIEWER_HISTORY_KEY] === marker) history.back();
     });
     return ref;
   }

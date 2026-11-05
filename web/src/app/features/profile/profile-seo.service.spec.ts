@@ -28,21 +28,29 @@ describe('ProfileSeoService (SPEC §23)', () => {
     expect(meta.getTag('property="og:type"')!.content).toBe('profile');
     expect(meta.getTag('property="og:image"')!.content).toBe('https://cdn.test/a_512.webp');
     expect(meta.getTag('property="profile:username"')!.content).toBe('karim');
-    expect(meta.getTag('name="description"')!.content).toBe('Writes about </script> and Angular.');
+    // The title (F14), then the bio.
+    expect(meta.getTag('name="description"')!.content).toBe('Frontend lead | Angular و performance · Writes about </script> and Angular.');
     expect(document.head.querySelector('link[rel="canonical"]')!.getAttribute('href')).toBe(`${environment.siteUrl}/@karim`);
     const script = document.head.querySelector('script[type="application/ld+json"]')!;
     expect(script.textContent).not.toContain('</script>');
     const data = JSON.parse(script.textContent!);
     expect(data['@type']).toBe('ProfilePage');
-    expect(data.mainEntity).toMatchObject({ name: 'Karim Hassan', alternateName: '@karim', sameAs: ['https://github.com/karim', 'https://karim.dev/'] });
+    expect(data.mainEntity).toMatchObject({
+      name: 'Karim Hassan',
+      alternateName: '@karim',
+      jobTitle: 'Frontend lead | Angular و performance',
+      sameAs: ['https://github.com/karim', 'https://karim.dev/'],
+    });
 
     seo.clear();
     expect(document.head.querySelector('link[rel="canonical"]')).toBeNull();
     expect(meta.getTag('property="og:type"')).toBeNull();
   });
 
-  it('falls back to a translated description without a bio', () => {
-    TestBed.inject(ProfileSeoService).apply(testProfile({ bio: null }));
+  it('falls back to a translated description without a title or a bio', () => {
+    TestBed.inject(ProfileSeoService).apply(testProfile({ bio: null, headline: 'Writer' }));
+    expect(TestBed.inject(Meta).getTag('name="description"')!.content).toBe('Writer');
+    TestBed.inject(ProfileSeoService).apply(testProfile({ bio: null, headline: null }));
     expect(TestBed.inject(Meta).getTag('name="description"')!.content).toBe('مقالات Karim Hassan على ReadIn.');
     TestBed.inject(ProfileSeoService).clear();
   });

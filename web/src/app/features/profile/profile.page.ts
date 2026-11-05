@@ -32,16 +32,18 @@ import { ReadingHeatmap } from '../reading/reading-heatmap';
 import { ReadingStatsCard } from '../reading/reading-stats-card';
 import { ProfileArticlesStore } from './profile-articles.store';
 import { ProfileHeader } from './profile-header';
+import { ProfileReposts } from './profile-reposts';
 import { ProfileSeoService } from './profile-seo.service';
 import { ProfileAbout, ProfileArticles, ProfilePaths, ProfileSaved } from './profile-tabs';
 import { PublicStatsSwitch } from './public-stats-switch';
 
-export type ProfileTab = 'articles' | 'categories' | 'saved' | 'paths' | 'about';
+export type ProfileTab = 'articles' | 'categories' | 'reposts' | 'saved' | 'paths' | 'about';
 
 /**
  * Profile (F14), `/@{username}`: server-rendered with its title and Open Graph tags (SPEC §23). Header and stats row,
  * reading stats when visible (yours always, with the "Show on my public profile" switch), and the tabs Articles /
- * Categories (F31; yours is the manage view when you can write) / Saved (yours only) / Paths / About. SSR is
+ * Categories (F31; yours is the manage view when you can write) / Reposts (F29, every profile) / Saved (yours only) /
+ * Paths / About. SSR is
  * anonymous: once hydrated and signed in, the profile and its articles load again with your token (Follow state,
  * "Follows you", your reactions and saves).
  */
@@ -59,6 +61,7 @@ export type ProfileTab = 'articles' | 'categories' | 'saved' | 'paths' | 'about'
     ProfilePaths,
     ProfileCategories,
     ManageCategories,
+    ProfileReposts,
     PublicStatsSwitch,
     ReadingStatsCard,
     ReadingHeatmap,
@@ -125,6 +128,9 @@ export type ProfileTab = 'articles' | 'categories' | 'saved' | 'paths' | 'about'
                 }
               </div>
             }
+          }
+          @case ('reposts') {
+            <rd-profile-reposts [username]="p.username" [isMe]="isMe()" />
           }
           @case ('saved') {
             <rd-profile-saved />
@@ -198,7 +204,7 @@ export class ProfilePage {
     return !!p && !this.isMe() && this.session.isAuthenticated() && this.mutes.isAuthorMuted(p.id, p.isMuted ?? false);
   });
   protected readonly tabs = computed<ProfileTab[]>(() =>
-    this.isMe() ? ['articles', 'categories', 'saved', 'paths', 'about'] : ['articles', 'categories', 'paths', 'about'],
+    this.isMe() ? ['articles', 'categories', 'reposts', 'saved', 'paths', 'about'] : ['articles', 'categories', 'reposts', 'paths', 'about'],
   );
   /** Your own Categories tab manages them (F31, `GET /me/categories` needs `articles.create`); readers see the public list. */
   protected readonly canManageCategories = computed(() => this.isMe() && this.session.permissions().has('articles.create'));

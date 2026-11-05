@@ -18,6 +18,8 @@ import { LocalizedDatePipe, PluralPipe, RelativeTimePipe } from '../../shared/pi
 import { Avatar } from '../../shared/ui/avatar';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { categoryLink } from '../categories/category-rules';
+import { LinkIcon } from '../profile/link-icon';
+import { profileLinks } from '../profile/profile-links';
 import { ModerationLogEntry, ReasonChips, TargetPreview, isTargetType, targetLink, textDir } from './moderation-ui';
 
 type CaseState = { status: 'loading' } | { status: 'loaded'; data: ModerationCaseDto } | { status: 'error'; notFound: boolean };
@@ -34,8 +36,8 @@ export interface CaseAction {
 /**
  * One case (F22), `/moderation/{type}/{id}`: the reported article, comment or user with a link to it, the reasons, the
  * actions a moderator can take (Dismiss, Hide / Unhide, Delete a comment, Warn or Suspend the author or the user,
- * Unsuspend; suspending needs `users.suspend`), a user's writer categories with "Clear name" for an offensive one
- * (F31), every report (reporter, reason, details, time, outcome) and the history. Each action is confirmed in a sheet with an optional note (required to warn and suspend); afterwards the
+ * Unsuspend; suspending needs `users.suspend`), a user's title and social links with "Clear title" / "Clear links"
+ * (F14), a user's writer categories with "Clear name" for an offensive one (F31), every report (reporter, reason, details, time, outcome) and the history. Each action is confirmed in a sheet with an optional note (required to warn and suspend); afterwards the
  * case and the nav badge load again.
  */
 @Component({
@@ -55,6 +57,7 @@ export interface CaseAction {
     ModerationLogEntry,
     ReasonChips,
     TargetPreview,
+    LinkIcon,
   ],
   providers: [provideModerationIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -108,6 +111,82 @@ export interface CaseAction {
             <p class="m-0 text-sm text-text-secondary">{{ 'moderation.case.noActions' | transloco }}</p>
           }
         </section>
+
+        <!-- A user's title and social links (F14): an abusive one is cleared, audited, with no notice to the user -->
+        @if (c.item.targetType === 'user') {
+          @let headline = c.item.target.author?.headline;
+          @let links = targetLinks();
+          <section class="mt-6" aria-labelledby="case-profile-title" data-case-profile>
+            <h2 id="case-profile-title" class="m-0 mb-3 text-base font-semibold">{{ 'moderation.case.profile' | transloco }}</h2>
+            <div class="flex flex-wrap items-start gap-3 border-b border-border pb-3">
+              <div class="min-w-0 flex-1">
+                <h3 class="m-0 text-sm font-semibold text-text-secondary">{{ 'moderation.case.headline' | transloco }}</h3>
+                @if (headline) {
+                  <p class="m-0 mt-1 [overflow-wrap:anywhere]" [attr.dir]="textDir(headline)" data-case-headline><rd-bdi-text [text]="headline" /></p>
+                } @else {
+                  <p class="m-0 mt-1 text-sm text-text-secondary" data-case-no-headline>{{ 'moderation.case.noHeadline' | transloco }}</p>
+                }
+              </div>
+              @if (headline) {
+                <button
+                  type="button"
+                  class="rd-btn rd-btn-outline min-h-11 shrink-0 gap-1.5 border-error px-3 text-sm text-error"
+                  data-case-clear-headline
+                  (click)="draft.set({ action: 'clear_headline', targetType: 'user', targetId: c.item.targetId, name: c.item.target.author?.displayName ?? null })"
+                >
+                  <svg lucideIcon="Eraser" [size]="16" aria-hidden="true"></svg>
+                  {{ 'moderation.actions.clearHeadline' | transloco }}
+                </button>
+              }
+            </div>
+            <div class="flex flex-wrap items-start gap-3 pt-3">
+              <div class="min-w-0 flex-1">
+                <h3 class="m-0 text-sm font-semibold text-text-secondary">
+                  {{ 'moderation.case.links' | transloco }} <span class="font-normal">({{ links.length }})</span>
+                </h3>
+                @if (links.length) {
+                  <ul class="m-0 mt-1 flex list-none flex-col p-0" data-case-links>
+                    @for (link of links; track $index) {
+                      <li class="flex min-h-11 items-center gap-2 text-sm" [attr.data-case-link]="link.platform">
+                        <rd-link-icon class="text-text-secondary" [platform]="link.platform" [size]="18" />
+                        <span class="shrink-0 font-semibold">
+                          @if (link.label; as label) {
+                            <bdi dir="auto">{{ label }}</bdi>
+                          } @else {
+                            {{ 'profile.links.platforms.' + link.platform | transloco }}
+                          }
+                        </span>
+                        <!-- The whole address, so a moderator sees exactly where it goes. -->
+                        <a
+                          [href]="link.url"
+                          target="_blank"
+                          rel="nofollow ugc noopener noreferrer"
+                          class="min-w-0 text-link [overflow-wrap:anywhere]"
+                          dir="ltr"
+                          data-case-link-url
+                          >{{ link.url }}</a
+                        >
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="m-0 mt-1 text-sm text-text-secondary" data-case-no-links>{{ 'moderation.case.noLinks' | transloco }}</p>
+                }
+              </div>
+              @if (links.length) {
+                <button
+                  type="button"
+                  class="rd-btn rd-btn-outline min-h-11 shrink-0 gap-1.5 border-error px-3 text-sm text-error"
+                  data-case-clear-links
+                  (click)="draft.set({ action: 'clear_links', targetType: 'user', targetId: c.item.targetId, name: c.item.target.author?.displayName ?? null })"
+                >
+                  <svg lucideIcon="Eraser" [size]="16" aria-hidden="true"></svg>
+                  {{ 'moderation.actions.clearLinks' | transloco }}
+                </button>
+              }
+            </div>
+          </section>
+        }
 
         <!-- A user's writer categories (F31): an offensive name is cleared to a neutral placeholder -->
         @if (c.item.targetType === 'user') {
@@ -262,6 +341,8 @@ export class ModerationCasePage {
     const data = this.data();
     return data ? targetLink(data.item, this.lang()) : null;
   });
+  /** A user target's social links now (F14), in their order; only http(s) addresses are shown as links. */
+  protected readonly targetLinks = computed(() => profileLinks(this.data()?.item.target.links ?? []));
 
   /** What a moderator can do here, by the target's type and state; suspending needs `users.suspend`. */
   protected readonly actions = computed<CaseAction[]>(() => {

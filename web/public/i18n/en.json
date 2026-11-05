@@ -252,6 +252,9 @@
       "limit": "You can mute at most 500 writers.",
       "own_article": "You can't do this on your own article."
     },
+    "repost": {
+      "own_article": "You can't repost your own article."
+    },
     "comment": {
       "not_found": "This comment doesn't exist.",
       "not_owner": "Only the author can change this comment.",
@@ -282,7 +285,21 @@
     "profile": {
       "stats_private": "These reading stats are private.",
       "avatar_invalid": "This photo can't be used. Upload it again.",
-      "expertise_invalid": "Pick up to 5 fields from the list."
+      "expertise_invalid": "Pick up to 5 fields from the list.",
+      "headline_too_long": "A title has at most 120 characters.",
+      "headline_invalid": "A title must be one line, without special characters."
+    },
+    "link": {
+      "too_many": "You can add up to 8 links.",
+      "platform_invalid": "Choose a platform from the list.",
+      "duplicate_platform": "You already have a link for this platform.",
+      "too_long": "A link has at most 500 characters.",
+      "https_required": "The link must start with https.",
+      "url_invalid": "This link isn't valid.",
+      "host_mismatch": "This link isn't on the platform you chose.",
+      "label_required": "Give this link a name.",
+      "label_invalid": "A link name has 2–30 characters on one line.",
+      "label_not_allowed": "Only \"Other\" links have a name."
     },
     "path": {
       "not_found": "This path doesn't exist.",
@@ -520,11 +537,11 @@
       "lead": "This permanently deletes your ReadIn account. You can't undo it, and we can't restore it.",
       "deletedTitle": "We delete right away",
       "deleted": {
-        "profile": "Your profile: name, @username, photo, bio and links",
+        "profile": "Your profile: name, @username, photo, title, bio and links",
         "contact": "Your phone number, email, password and recovery PIN",
         "signIn": "Your Google and Apple sign-in links. We also revoke ReadIn's access at Apple.",
         "articles": "Your drafts and any article that isn't published, with their images and PDFs, and every other photo or file you uploaded",
-        "activity": "Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people's mutes of you), and your \"Show less like this\" marks",
+        "activity": "Your interests, reading progress and stats, reactions, reposts, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people's mutes of you), and your \"Show less like this\" marks",
         "devices": "Your devices and notification tokens, so no notification reaches you",
         "security": "Your security log: sign-ins and account changes"
       },
@@ -919,6 +936,10 @@
         "reactions_milestone": {
           "label": "Reaction milestones",
           "hint": "When an article of yours reaches 10, 50 or 100 reactions"
+        },
+        "article_reposted": {
+          "label": "Reposts",
+          "hint": "When someone reposts your article"
         }
       },
       "alwaysOn": "Security alerts and moderation notices can't be turned off, and security alerts arrive even during quiet hours.",
@@ -966,6 +987,7 @@
     "previous": "Previous",
     "next": "Next",
     "open": "Open full screen: {{label}}",
+    "downloadDocument": "Download {{title}}",
     "pageCount": {
       "one": "1 page",
       "other": "{{count}} pages"
@@ -1618,7 +1640,42 @@
       "github": "GitHub",
       "linkedin": "LinkedIn",
       "website": "Website",
-      "newTab": "(opens in a new tab)"
+      "newTab": "(opens in a new tab)",
+      "platforms": {
+        "linkedin": "LinkedIn",
+        "x": "X",
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "youtube": "YouTube",
+        "tiktok": "TikTok",
+        "snapchat": "Snapchat",
+        "threads": "Threads",
+        "telegram": "Telegram",
+        "github": "GitHub",
+        "medium": "Medium",
+        "behance": "Behance",
+        "website": "Website",
+        "other": "Other"
+      }
+    },
+    "headline": {
+      "label": "Title (optional)",
+      "placeholder": "e.g. Senior Full Stack .NET Engineer | .NET | Angular",
+      "hint": "One line under your name on your posts and comments."
+    },
+    "linksEditor": {
+      "title": "Links",
+      "hint": "Up to {{max}}. They show on your profile in this order.",
+      "add": "Add link",
+      "pick": "Choose the platform",
+      "label": "Link name",
+      "labelPlaceholder": "e.g. My podcast",
+      "url": "{{name}} link",
+      "urlRequired": "Paste the link.",
+      "moveUp": "Move {{name}} up",
+      "moveDown": "Move {{name}} down",
+      "remove": "Remove the {{name}} link",
+      "full": "You've added {{max}} links, the most you can."
     },
     "tabs": {
       "label": "Profile sections",
@@ -1626,7 +1683,15 @@
       "categories": "Categories",
       "saved": "Saved",
       "paths": "Paths",
-      "about": "About"
+      "about": "About",
+      "reposts": "Reposts"
+    },
+    "reposts": {
+      "emptyOwnTitle": "You haven’t reposted anything yet",
+      "emptyOwnBody": "When you repost an article you like, it shows up here and for your followers.",
+      "emptyTitle": "No reposts yet",
+      "emptyBody": "The articles they repost show up here.",
+      "loadError": "We couldn’t load the reposts."
     },
     "articles": {
       "emptyOwnTitle": "You haven’t published yet",
@@ -2101,6 +2166,11 @@
       "categories": "Writer categories",
       "noCategories": "No categories.",
       "categoriesHint": "Clear an offensive name: the category becomes “Category 1” (or the next free number) and its old link stops working. Its articles stay in it.",
+      "profile": "Title and links",
+      "headline": "Title",
+      "noHeadline": "No title.",
+      "links": "Links",
+      "noLinks": "No links.",
       "actions": "Actions",
       "noActions": "No actions are available on this content right now.",
       "status": {
@@ -2133,6 +2203,8 @@
       "unsuspend": "Lift suspension",
       "clearCategory": "Clear name",
       "clearCategoryOf": "Clear the name “{{name}}”",
+      "clearLinks": "Clear links",
+      "clearHeadline": "Clear title",
       "done": {
         "hide": "Hidden",
         "unhide": "Visible again",
@@ -2141,6 +2213,8 @@
         "suspend": "Account suspended",
         "unsuspend": "Suspension lifted",
         "clear_category": "Category name cleared",
+        "clear_links": "Links cleared",
+        "clear_headline": "Title cleared",
         "dismiss": "Reports dismissed"
       }
     },
@@ -2153,6 +2227,8 @@
         "suspend": "Suspend {{name}}",
         "unsuspend": "Lift the suspension of {{name}}?",
         "clearCategory": "Clear the category name “{{name}}”?",
+        "clearLinks": "Clear all of {{name}}'s links?",
+        "clearHeadline": "Clear {{name}}'s title?",
         "dismiss": "Dismiss these reports?",
         "unhideArticle": "Unhide this article?",
         "unhideComment": "Unhide this comment?"
@@ -2165,6 +2241,8 @@
         "suspend": "They can't sign in or do anything until the suspension ends.",
         "unsuspend": "They can sign in and use ReadIn again right away.",
         "clearCategory": "The category gets a neutral name like “Category 1”, and its old link stops working. Its articles stay in it, and the writer isn't notified.",
+        "clearLinks": "Every link on their profile is removed. The open reports are resolved, and the user isn't notified.",
+        "clearHeadline": "The title under their name is removed everywhere. The open reports are resolved, and the user isn't notified.",
         "dismiss": "The open reports are closed without changing the content.",
         "unhideArticle": "Readers can see it everywhere again.",
         "unhideComment": "Everyone can see it again."
@@ -2202,6 +2280,8 @@
         "user.suspend": "suspended an account",
         "user.unsuspend": "lifted a suspension",
         "user.clear_category": "cleared a category name",
+        "user.clear_links": "cleared a user's links",
+        "user.clear_headline": "cleared a user's title",
         "reports.dismiss": "dismissed reports"
       },
       "until": "until {{date}}",
@@ -2274,6 +2354,13 @@
         "group": {
           "one": "{{name}} and 1 other published new articles",
           "other": "{{name}} and {{count}} others published new articles"
+        }
+      },
+      "article_reposted": {
+        "single": "{{name}} reposted your article",
+        "group": {
+          "one": "{{name}} and 1 other reposted your article",
+          "other": "{{name}} and {{count}} others reposted your article"
         }
       },
       "reactions_milestone": {
@@ -2461,5 +2548,45 @@
   },
   "me": {
     "viewProfile": "View profile"
+  },
+  "postBar": {
+    "react": "React",
+    "reactCount": "React, {{count}}",
+    "reacted": "Reacted: {{type}}",
+    "reactedCount": "Reacted: {{type}}, {{count}}",
+    "comment": "Comment",
+    "commentCount": "Comment, {{count}}",
+    "repost": "Repost",
+    "repostCount": "Repost, {{count}}",
+    "repostOwn": "You can't repost your own article",
+    "share": "Share"
+  },
+  "repostLabel": {
+    "one": "{{name}} reposted this",
+    "others": {
+      "one": "{{name}} and 1 other reposted this",
+      "other": "{{name}} and {{count}} others reposted this"
+    }
+  },
+  "commentBox": {
+    "placeholder": "Add a comment…",
+    "send": "Post comment",
+    "sendReply": "Post reply",
+    "emoji": "Add an emoji",
+    "cancelReply": "Cancel reply",
+    "cancelEdit": "Cancel editing"
+  },
+  "emojiPicker": {
+    "label": "Choose an emoji",
+    "categories": "Emoji categories",
+    "smileys": "Smileys",
+    "people": "People & gestures",
+    "hearts": "Hearts",
+    "nature": "Animals & nature",
+    "food": "Food & drink",
+    "activities": "Activities",
+    "travel": "Travel & places",
+    "objects": "Objects",
+    "symbols": "Symbols"
   }
 }

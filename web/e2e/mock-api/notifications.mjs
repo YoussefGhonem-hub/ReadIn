@@ -7,13 +7,15 @@
  * comments, a mention in a comment and one in an article, a milestone, a followed writer's article, today's article, a
  * streak reminder, a security alert, a moderation warning, a reserved verification result, a deleted actor); 4 of them
  * are unseen (the badge) and 5 unread.
+ * Viewers whose id starts with `u-notified-repost` also have two `article_reposted` entries (F29) on top: one reposter,
+ * and one article five people reposted (aggregated); the other `u-notified` lists stay as they were.
  * Everyone else starts with none, so the badge of the other suites stays empty. State is per viewer, so parallel tests
  * never share it. The fixtures are relative to NOW (the tests fix the browser clock there): "today" is 2026-11-04 in
  * Africa/Cairo, the mock user's time zone.
  */
 
 export const NOTIFICATIONS_NOW = '2026-11-04T10:00:00Z';
-const CONFIGURABLE = ['new_follower', 'article_comment', 'comment_reply', 'mention', 'reactions_milestone', 'followed_writer_article', 'daily_article', 'streak_reminder'];
+const CONFIGURABLE = ['new_follower', 'article_comment', 'comment_reply', 'mention', 'reactions_milestone', 'followed_writer_article', 'daily_article', 'streak_reminder', 'article_reposted'];
 const MODES = ['all', 'inApp', 'off'];
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const PAGE_LIMIT = 50;
@@ -108,6 +110,19 @@ export function createNotifications({ articles, writers, social, problem }) {
       item('n-warning', 'moderation_notice', '2026-11-01T10:00:00Z', { link: 'readin://notifications' }),
       item('n-verification', 'verification_result', '2026-10-31T10:00:00Z', { link: 'readin://notifications' }),
     ];
+    // F29: reposts of your articles (only for the repost suite's readers).
+    if (viewer.startsWith('u-notified-repost')) {
+      list.unshift(
+        item('n-repost', 'article_reposted', minutesBefore(5), { ...fresh, actorId: 'u-karim', slug: 'dependency-injection-ar', link: 'readin://a/dependency-injection-ar' }),
+        item('n-reposts', 'article_reposted', minutesBefore(10), {
+          ...fresh,
+          actorId: 'u-salma',
+          actorCount: 5,
+          slug: 'clean-architecture-whiteboard',
+          link: 'readin://a/clean-architecture-whiteboard',
+        }),
+      );
+    }
     // Older ones, so the list has a second page.
     for (let i = 1; i <= 13; i++) {
       const at = new Date(Date.parse('2026-10-30T12:00:00Z') - i * 86_400_000).toISOString();

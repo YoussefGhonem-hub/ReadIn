@@ -7,6 +7,10 @@
  * edits. A viewer's own profile is only visible to that viewer (as `isMe`); everyone else sees the seeded writers and
  * readers. Viewers start as the persona e2e/support/social.ts signs in with, "Sara Hassan" (@sara): `u-new-*` viewers
  * with an empty profile, every other `u-viewer-*` with a bio, a link and a field; `u-writer` is the demo writer Mona.
+ *
+ * Pre-production step (F14, F29): the title (`headline`, from server.mjs's writers) and the social links as an ordered
+ * array of `{ platform, url, label }`, with `PATCH /me`'s rules (contract: Profile → "Title and social links"), and the
+ * Reposts tab (`GET /users/{username}/reposts`).
  */
 
 const TODAY = '2026-11-03';
@@ -15,20 +19,125 @@ const MAX_EXPERTISE = 5;
 const USERNAME = /^[a-z0-9_]{3,30}$/;
 const MENTION_POLICIES = ['everyone', 'following', 'nobody'];
 
-/** What the seeded writers add on their profiles (bios come from server.mjs). About a third have public stats. */
+const link = (platform, url, label = null) => ({ platform, url, label });
+
+/** What the seeded writers add on their profiles (bios and titles come from server.mjs). About a third have public stats. */
 const WRITER_PROFILES = {
   'u-writer': {
-    links: { github: 'https://github.com/mona-adel', linkedin: 'https://www.linkedin.com/in/mona-adel', website: 'https://mona.dev' },
+    links: [
+      link('linkedin', 'https://www.linkedin.com/in/mona-adel'),
+      link('github', 'https://github.com/mona-adel'),
+      link('x', 'https://x.com/mona_adel'),
+      link('youtube', 'https://youtube.com/@mona-adel'),
+      link('website', 'https://mona.dev'),
+      link('other', 'https://podcasts.example/mona', 'بودكاست Backend'),
+    ],
     expertise: ['f-software'],
     joinedAt: '2026-01-10T09:00:00Z',
     totalReads: 5120,
     publicReadingStats: true,
   },
-  'u-readin': { links: { website: 'https://readin.app' }, expertise: ['f-software', 'f-medicine'], joinedAt: '2025-12-01T09:00:00Z', totalReads: 48200, publicReadingStats: false },
-  'u-karim': { links: { github: 'https://github.com/karim-hassan' }, expertise: ['f-software'], joinedAt: '2026-02-14T09:00:00Z', totalReads: 2310, publicReadingStats: false },
-  'u-salma': { links: { linkedin: 'https://www.linkedin.com/in/salma-ibrahim' }, expertise: ['f-software'], joinedAt: '2026-03-02T09:00:00Z', totalReads: 1890, publicReadingStats: true },
-  'u-omar': { links: {}, expertise: ['f-medicine'], joinedAt: '2026-05-20T09:00:00Z', totalReads: 640, publicReadingStats: false },
+  'u-readin': { links: [link('website', 'https://readin.app')], expertise: ['f-software', 'f-medicine'], joinedAt: '2025-12-01T09:00:00Z', totalReads: 48200, publicReadingStats: false },
+  'u-karim': { links: [link('github', 'https://github.com/karim-hassan')], expertise: ['f-software'], joinedAt: '2026-02-14T09:00:00Z', totalReads: 2310, publicReadingStats: false },
+  'u-salma': { links: [link('linkedin', 'https://www.linkedin.com/in/salma-ibrahim')], expertise: ['f-software'], joinedAt: '2026-03-02T09:00:00Z', totalReads: 1890, publicReadingStats: true },
+  'u-omar': { links: [], expertise: ['f-medicine'], joinedAt: '2026-05-20T09:00:00Z', totalReads: 640, publicReadingStats: false },
 };
+
+/**
+ * The writers' reposts (F29) on their profiles' Reposts tab, newest first there. The same reposts web1's reposts.mjs
+ * puts in the Following feed of its own viewers.
+ */
+const PROFILE_REPOSTS = {
+  'u-karim': [
+    { articleId: 'a-sleep-and-memory', at: '2026-11-03T12:00:00Z' },
+    { articleId: 'a-what-is-a-transformer-ar', at: '2026-11-02T20:00:00Z' },
+  ],
+  'u-readin': [
+    { articleId: 'a-sleep-and-memory', at: '2026-11-03T08:00:00Z' },
+    { articleId: 'a-react-server-components-explained', at: '2026-11-03T10:00:00Z' },
+  ],
+};
+
+// ── Links and title: PATCH /me's rules (contract "Title and social links") ──
+
+const PLATFORMS = ['linkedin', 'x', 'instagram', 'facebook', 'youtube', 'tiktok', 'snapchat', 'threads', 'telegram', 'github', 'medium', 'behance', 'website', 'other'];
+const HOSTS = {
+  linkedin: ['linkedin.com', 'lnkd.in'],
+  x: ['x.com', 'twitter.com'],
+  instagram: ['instagram.com', 'instagr.am'],
+  facebook: ['facebook.com', 'fb.com', 'fb.me'],
+  youtube: ['youtube.com', 'youtu.be'],
+  tiktok: ['tiktok.com'],
+  snapchat: ['snapchat.com'],
+  threads: ['threads.net', 'threads.com'],
+  telegram: ['t.me', 'telegram.me'],
+  github: ['github.com'],
+  medium: ['medium.com'],
+  behance: ['behance.net'],
+};
+/** Control, direction and isolate characters (by code point): a title or a label is one clean line. */
+const UNCLEAN = [
+  [0x00, 0x1f],
+  [0x7f, 0x9f],
+  [0x200e, 0x200f],
+  [0x2028, 0x2029],
+  [0x202a, 0x202e],
+  [0x2066, 0x2069],
+];
+const cleanLine = (text) => [...text].every((ch) => !UNCLEAN.some(([from, to]) => ch.codePointAt(0) >= from && ch.codePointAt(0) <= to));
+
+function urlProblem(platform, url) {
+  if (!url) return 'validation.required';
+  if (url.length > 500) return 'link.too_long';
+  if (url.slice(0, url.indexOf('://')).toLowerCase() !== 'https') return 'link.https_required';
+  if (/\s/.test(url) || !cleanLine(url)) return 'link.url_invalid';
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return 'link.url_invalid';
+  }
+  if (parsed.username || parsed.password || parsed.port) return 'link.url_invalid';
+  const host = parsed.hostname.replace(/\.+$/, '').toLowerCase();
+  if (!host.includes('.') || host.startsWith('[') || /^\d+(\.\d+){3}$/.test(host)) return 'link.url_invalid';
+  const hosts = HOSTS[platform];
+  return hosts && !hosts.some((h) => host === h || host.endsWith(`.${h}`)) ? 'link.host_mismatch' : null;
+}
+
+/** `links` of `PATCH /me` → `{ links }` normalized, or `{ errors }` keyed like the API (`links[2].url`). */
+function checkLinks(input) {
+  const errors = {};
+  if (!Array.isArray(input)) return { errors: { links: ['validation.invalid'] } };
+  if (input.length > 8) errors.links = ['link.too_many'];
+  const seen = new Set();
+  const links = input.map((item, i) => {
+    const platform = item?.platform;
+    if (!PLATFORMS.includes(platform)) errors[`links[${i}].platform`] = ['link.platform_invalid'];
+    else if (platform !== 'other' && seen.has(platform)) errors[`links[${i}].platform`] = ['link.duplicate_platform'];
+    seen.add(platform);
+    const raw = typeof item?.url === 'string' ? item.url.trim() : '';
+    const url = raw && !raw.includes('://') ? `https://${raw}` : raw;
+    const urlCode = urlProblem(platform, url);
+    if (urlCode) errors[`links[${i}].url`] = [urlCode];
+    const label = typeof item?.label === 'string' && item.label.trim() ? item.label.trim() : null;
+    let labelCode = null;
+    if (platform === 'other') {
+      if (!label) labelCode = 'link.label_required';
+      else if (label.length < 2 || label.length > 30 || !cleanLine(label)) labelCode = 'link.label_invalid';
+    } else if (label && PLATFORMS.includes(platform)) labelCode = 'link.label_not_allowed';
+    if (labelCode) errors[`links[${i}].label`] = [labelCode];
+    return { platform, url, label: platform === 'other' ? label : null };
+  });
+  return Object.keys(errors).length ? { errors } : { links };
+}
+
+/** `headline` of `PATCH /me` / complete profile: trimmed, blank → null, ≤ 120, one clean line. */
+function checkHeadline(value) {
+  const headline = typeof value === 'string' && value.trim() ? value.trim() : null;
+  if (headline && headline.length > 120) return { error: 'profile.headline_too_long' };
+  if (headline && !cleanLine(headline)) return { error: 'profile.headline_invalid' };
+  return { headline };
+}
 
 const READER_PERMISSIONS = ['articles.read', 'reactions.create', 'saved.manage', 'follows.manage'];
 
@@ -43,15 +152,6 @@ function addDays(date, days) {
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
-
-const isHttps = (url) => {
-  if (typeof url !== 'string' || url.length > 2048) return false;
-  try {
-    return new URL(url).protocol === 'https:';
-  } catch {
-    return false;
-  }
-};
 
 /**
  * @param {{
@@ -75,7 +175,7 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
       if (viewer === 'u-writer') {
         const mona = writers.find((w) => w.id === 'u-writer');
         const extra = WRITER_PROFILES['u-writer'];
-        own.set(viewer, { ...mona, links: { ...extra.links }, expertise: [...extra.expertise], joinedAt: extra.joinedAt, totalReads: extra.totalReads, avatarSeed: null, publicReadingStats: extra.publicReadingStats, whoCanMention: 'everyone' });
+        own.set(viewer, { ...mona, links: extra.links.map((l) => ({ ...l })), expertise: [...extra.expertise], joinedAt: extra.joinedAt, totalReads: extra.totalReads, avatarSeed: null, publicReadingStats: extra.publicReadingStats, whoCanMention: 'everyone' });
       } else {
         const fresh = viewer.startsWith('u-new');
         own.set(viewer, {
@@ -84,7 +184,8 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
           username: 'sara',
           isVerified: false,
           bio: fresh ? null : 'بقرا كل يوم عن الـ backend والـ system design.',
-          links: fresh ? {} : { github: 'https://github.com/sara-hassan' },
+          headline: null,
+          links: fresh ? [] : [link('github', 'https://github.com/sara-hassan')],
           expertise: fresh ? [] : ['f-software'],
           joinedAt: '2026-09-01T09:00:00Z',
           totalReads: 0,
@@ -105,10 +206,10 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
     if (writer) {
       if (viewer === writer.id) return ownProfile(viewer);
       const extra = WRITER_PROFILES[writer.id] ?? {};
-      return { ...writer, links: extra.links ?? {}, expertise: extra.expertise ?? [], joinedAt: extra.joinedAt ?? '2026-01-01T09:00:00Z', totalReads: extra.totalReads ?? 0, avatarSeed: null, publicReadingStats: !!extra.publicReadingStats };
+      return { ...writer, links: extra.links ?? [], expertise: extra.expertise ?? [], joinedAt: extra.joinedAt ?? '2026-01-01T09:00:00Z', totalReads: extra.totalReads ?? 0, avatarSeed: null, publicReadingStats: !!extra.publicReadingStats };
     }
     const reader = social.readers.find((r) => r.username === name);
-    if (reader) return { ...reader, bio: null, links: {}, expertise: [], joinedAt: '2026-06-01T09:00:00Z', totalReads: 0, avatarSeed: null, publicReadingStats: false };
+    if (reader) return { ...reader, bio: null, headline: reader.headline ?? null, links: [], expertise: [], joinedAt: '2026-06-01T09:00:00Z', totalReads: 0, avatarSeed: null, publicReadingStats: false };
     return null;
   }
 
@@ -132,7 +233,8 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
       ...avatarOf(record),
       isVerified: record.isVerified,
       bio: record.bio ?? null,
-      links: { github: record.links.github ?? null, linkedin: record.links.linkedin ?? null, website: record.links.website ?? null },
+      headline: record.headline ?? null,
+      links: (record.links ?? []).map((l) => ({ ...l })),
       expertise: record.expertise.flatMap((id) => {
         const f = fieldById.get(id);
         return f ? [{ id: f.id, slug: f.slug, name: uiLang === 'ar' ? f.nameAr : f.nameEn, icon: f.icon, color: f.color }] : [];
@@ -159,7 +261,9 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
     if (!viewer) return base;
     const record = ownProfile(viewer);
     // The demo writer stays the account the auth suites expect; no test edits it.
-    if (viewer === 'u-writer') return { ...base, privacy: privacyOf(record), interests: social.interestsOf(viewer) };
+    if (viewer === 'u-writer') {
+      return { ...base, headline: record.headline ?? null, links: record.links.map((l) => ({ ...l })), privacy: privacyOf(record), interests: social.interestsOf(viewer) };
+    }
     return {
       ...base,
       id: viewer,
@@ -170,7 +274,8 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
       username: record.username,
       avatarUrl: avatarOf(record).avatarUrl,
       bio: record.bio ?? null,
-      links: { ...record.links },
+      headline: record.headline ?? null,
+      links: record.links.map((l) => ({ ...l })),
       privacy: privacyOf(record),
       interests: social.interestsOf(viewer),
     };
@@ -231,12 +336,12 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
     if (displayName.length < 2 || displayName.length > 60) errors.displayName = ['validation.length'];
     if (!USERNAME.test(username)) errors.username = ['user.username_invalid'];
     if (typeof body?.bio === 'string' && body.bio.length > MAX_BIO) errors.bio = ['validation.max_length'];
-    // The API's property paths (C# GitHub / LinkedIn), camelCased.
-    const linkKeys = { github: 'links.gitHub', linkedin: 'links.linkedIn', website: 'links.website' };
-    for (const [kind, key] of Object.entries(linkKeys)) {
-      const url = body?.links?.[kind];
-      if (url !== null && url !== undefined && !isHttps(url)) errors[key] = ['validation.url'];
-    }
+    // headline: left out keeps it, null or blank clears it.
+    const title = body && 'headline' in body ? checkHeadline(body.headline) : { headline: record.headline ?? null };
+    if (title.error) errors.headline = [title.error];
+    // links: left out or null keeps them, an array replaces the whole list ([] clears), in the order sent.
+    const checked = Array.isArray(body?.links) ? checkLinks(body.links) : { links: record.links };
+    if (checked.errors) Object.assign(errors, checked.errors);
     if (Object.keys(errors).length) return validation(errors);
 
     const taken = username !== record.username && (username === 'taken' || writers.some((w) => w.username === username && w.id !== viewer) || social.readers.some((r) => r.username === username));
@@ -270,7 +375,8 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
       displayName,
       username,
       bio: typeof body.bio === 'string' && body.bio.trim() ? body.bio.trim() : null,
-      links: Object.fromEntries(Object.keys(linkKeys).flatMap((kind) => (body.links?.[kind] ? [[kind, body.links[kind]]] : []))),
+      headline: title.headline,
+      links: checked.links,
       avatarSeed,
       avatarUrl,
       expertise,
@@ -328,6 +434,32 @@ export function createProfiles({ me, articles, writers, fields, social, problem,
         const offset = Number(q.get('cursor') ?? 0) || 0;
         const limit = Math.min(50, Math.max(1, Number(q.get('limit') ?? 20) || 20));
         return [200, { items: items.slice(offset, offset + limit).map((a) => social.personalize(a, viewer)), nextCursor: offset + limit < items.length ? String(offset + limit) : null }];
+      },
+    ],
+    [
+      // F29: the Reposts tab, newest repost first; each card's `repostedBy` is this user.
+      'GET',
+      new RegExp(`^${API}/users/${USER}/reposts$`),
+      (q, [, username], _body, req) => {
+        const viewer = social.viewerOf(req);
+        const record = lookup(username, viewer);
+        if (!record) return notFound();
+        const user = { id: record.id, displayName: record.displayName, username: record.username, avatarUrl: avatarOf(record).avatarUrl, isVerified: record.isVerified, headline: record.headline ?? null };
+        const items = (PROFILE_REPOSTS[record.id] ?? [])
+          .flatMap(({ articleId, at }) => {
+            const article = articles.find((a) => a.id === articleId);
+            return article ? [{ article, at }] : [];
+          })
+          .sort((a, b) => b.at.localeCompare(a.at));
+        const offset = Number(q.get('cursor') ?? 0) || 0;
+        const limit = Math.min(50, Math.max(1, Number(q.get('limit') ?? 20) || 20));
+        return [
+          200,
+          {
+            items: items.slice(offset, offset + limit).map(({ article, at }) => social.personalize({ ...article, repostedBy: { user, othersCount: 0, repostedAt: at } }, viewer)),
+            nextCursor: offset + limit < items.length ? String(offset + limit) : null,
+          },
+        ];
       },
     ],
     [

@@ -40,6 +40,16 @@ export class ProfilesApi {
     return this.http.get<CursorPage<ArticleCardDto>>(`${this.profileUrl(username)}/articles`, { params, context: this.silent() });
   }
 
+  /**
+   * `GET /users/{username}/reposts` 🌐 (F29): the profile's Reposts tab, newest repost first; each card's `repostedBy`
+   * is this user. `404 user.not_found`.
+   */
+  reposts(username: string, query: { cursor?: string | null; limit?: number } = {}): Observable<CursorPage<ArticleCardDto>> {
+    let params = new HttpParams().set('limit', String(query.limit ?? 20));
+    if (query.cursor) params = params.set('cursor', query.cursor);
+    return this.http.get<CursorPage<ArticleCardDto>>(`${this.profileUrl(username)}/reposts`, { params, context: this.silent() });
+  }
+
   /** `GET /users/{username}/stats` 🌐, in that user's time zone. `403 profile.stats_private`. */
   stats(username: string): Observable<ReadingStatsDto> {
     return this.http.get<ReadingStatsDto>(`${this.profileUrl(username)}/stats`, { context: this.silent() });
