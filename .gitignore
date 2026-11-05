@@ -37,6 +37,7 @@ node_modules/
 web/dist/
 web/.angular/
 docs/design/app-store
+mobile/test/goldens
 web/coverage/
 web/test-results/
 web/playwright-report/
