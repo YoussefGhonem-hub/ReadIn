@@ -8,6 +8,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/security/credential_rules.dart';
 import '../../../media/domain/entities/media.dart';
 import '../../../media/domain/usecases/media_usecases.dart';
+import '../../../profile/domain/entities/profile_link.dart' show HeadlineRules;
 import '../../domain/entities/me.dart';
 import '../../domain/usecases/auth_usecases.dart';
 import 'form_support.dart';
@@ -59,7 +60,8 @@ class CompleteProfileState extends Equatable {
   List<Object?> get props => [username, usernameStatus, avatarUrl, uploadingAvatar, status, errors, failure];
 }
 
-/// Complete profile after sign up (SPEC §9.2): display name, a unique `@username` checked live, an optional avatar.
+/// Complete profile after sign up (SPEC §9.2): display name, a unique `@username` checked live, an optional avatar and
+/// an optional title (F14).
 @injectable
 class CompleteProfileCubit extends Cubit<CompleteProfileState> {
   CompleteProfileCubit(this._complete, this._check, this._pickImages, this._upload) : super(const CompleteProfileState());
@@ -138,11 +140,15 @@ class CompleteProfileCubit extends Cubit<CompleteProfileState> {
     return (variants.where((v) => v.width >= 256).firstOrNull ?? variants.last).url;
   }
 
-  Future<void> submit({required String displayName}) async {
+  /// The optional title's input (F14); the API's key for its errors too.
+  static const headlineField = 'headline';
+
+  Future<void> submit({required String displayName, String headline = ''}) async {
     if (state.submitting || state.uploadingAvatar) return;
     final name = displayName.trim();
     final username = state.username;
     final errors = Validate.collect({
+      headlineField: HeadlineRules.problem(headline),
       Fields.displayName: name.isEmpty
           ? CredentialCodes.required
           : (name.length < 2 ? FailureCodes.validationMinLength : (name.length > 60 ? FailureCodes.validationMaxLength : null)),
@@ -157,7 +163,12 @@ class CompleteProfileCubit extends Cubit<CompleteProfileState> {
     if (errors.isNotEmpty) return emit(state.copyWith(errors: errors, failure: () => null));
 
     emit(state.copyWith(status: FormStatus.submitting, errors: const {}, failure: () => null));
-    final result = await _complete(displayName: name, username: username, avatarUrl: state.avatarUrl);
+    final result = await _complete(
+      displayName: name,
+      username: username,
+      avatarUrl: state.avatarUrl,
+      headline: HeadlineRules.normalize(headline),
+    );
     if (isClosed) return;
     if (result.failureOrNull case final failure?) {
       final split = failure.toFormErrors(codeFields: const {FailureCodes.usernameTaken: Fields.username});

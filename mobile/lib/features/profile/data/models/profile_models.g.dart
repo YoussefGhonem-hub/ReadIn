@@ -6,18 +6,18 @@ part of 'profile_models.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_ProfileLinksModel _$ProfileLinksModelFromJson(Map<String, dynamic> json) =>
-    _ProfileLinksModel(
-      github: json['github'] as String?,
-      linkedin: json['linkedin'] as String?,
-      website: json['website'] as String?,
+_ProfileLinkModel _$ProfileLinkModelFromJson(Map<String, dynamic> json) =>
+    _ProfileLinkModel(
+      platform: json['platform'] as String,
+      url: json['url'] as String? ?? '',
+      label: json['label'] as String?,
     );
 
-Map<String, dynamic> _$ProfileLinksModelToJson(_ProfileLinksModel instance) =>
+Map<String, dynamic> _$ProfileLinkModelToJson(_ProfileLinkModel instance) =>
     <String, dynamic>{
-      'github': ?instance.github,
-      'linkedin': ?instance.linkedin,
-      'website': ?instance.website,
+      'platform': instance.platform,
+      'url': instance.url,
+      'label': ?instance.label,
     };
 
 _ExpertiseFieldModel _$ExpertiseFieldModelFromJson(Map<String, dynamic> json) =>
@@ -65,10 +65,11 @@ _ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) =>
         (k, e) => MapEntry(k, e as String),
       ),
       isVerified: json['isVerified'] as bool? ?? false,
+      headline: json['headline'] as String?,
       bio: json['bio'] as String?,
       links: json['links'] == null
-          ? const ProfileLinksModel()
-          : ProfileLinksModel.fromJson(json['links'] as Map<String, dynamic>),
+          ? const <ProfileLinkModel>[]
+          : const ProfileLinksJson().fromJson(json['links']),
       expertise:
           (json['expertise'] as List<dynamic>?)
               ?.map(
@@ -98,8 +99,9 @@ Map<String, dynamic> _$ProfileModelToJson(_ProfileModel instance) =>
       'avatarUrl': ?instance.avatarUrl,
       'avatarVariants': ?instance.avatarVariants,
       'isVerified': instance.isVerified,
+      'headline': ?instance.headline,
       'bio': ?instance.bio,
-      'links': instance.links.toJson(),
+      'links': ?const ProfileLinksJson().toJson(instance.links),
       'expertise': instance.expertise.map((e) => e.toJson()).toList(),
       'joinedAt': ?instance.joinedAt?.toIso8601String(),
       'stats': instance.stats.toJson(),

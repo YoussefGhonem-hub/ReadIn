@@ -1,18 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-/// GitHub / LinkedIn / website on a profile (F14). Null or empty: not set.
-class ProfileLinks extends Equatable {
-  const ProfileLinks({this.github, this.linkedin, this.website});
+import 'profile_link.dart';
 
-  final String? github;
-  final String? linkedin;
-  final String? website;
-
-  bool get isEmpty => [github, linkedin, website].every((link) => link == null || link.isEmpty);
-
-  @override
-  List<Object?> get props => [github, linkedin, website];
-}
+export 'profile_link.dart';
 
 /// A field of expertise on a profile (`ProfileDto.expertise`): `name` is in the request's UI language.
 class ExpertiseField extends Equatable {
@@ -62,8 +52,9 @@ class UserProfile extends Equatable {
     this.avatarUrl,
     this.avatarVariants = const {},
     this.isVerified = false,
+    this.headline,
     this.bio,
-    this.links = const ProfileLinks(),
+    this.links = const [],
     this.expertise = const [],
     this.joinedAt,
     this.stats = const ProfileStats(),
@@ -87,8 +78,13 @@ class UserProfile extends Equatable {
   /// Square variants by width (64 / 128 / 256 / 512); empty for no avatar or an old one without variants.
   final Map<int, String> avatarVariants;
   final bool isVerified;
+
+  /// The title under the name (F14), shown in full on the profile; null when there is none.
+  final String? headline;
   final String? bio;
-  final ProfileLinks links;
+
+  /// Social links (F14), in the member's order, at most 8; empty when there are none.
+  final List<ProfileLink> links;
 
   /// In the user's order, at most 5.
   final List<ExpertiseField> expertise;
@@ -127,6 +123,7 @@ class UserProfile extends Equatable {
         avatarUrl: avatarUrl,
         avatarVariants: avatarVariants,
         isVerified: isVerified,
+        headline: headline,
         bio: bio,
         links: links,
         expertise: expertise,
@@ -148,6 +145,7 @@ class UserProfile extends Equatable {
         avatarUrl,
         avatarVariants,
         isVerified,
+        headline,
         bio,
         links,
         expertise,
@@ -200,7 +198,8 @@ class ProfileUpdate extends Equatable {
     required this.displayName,
     required this.username,
     this.bio,
-    this.links = const ProfileLinks(),
+    this.headline,
+    this.links,
     this.avatar = const KeepAvatar(null),
     this.expertiseFieldIds,
   });
@@ -208,14 +207,19 @@ class ProfileUpdate extends Equatable {
   final String displayName;
   final String username;
   final String? bio;
-  final ProfileLinks links;
+
+  /// The title (F14); null or blank clears it. The form always sends it.
+  final String? headline;
+
+  /// The whole list in order (`[]` removes them all); null leaves the links unchanged.
+  final List<ProfileLink>? links;
   final AvatarChange avatar;
 
   /// 0–5 field ids in order; null leaves the expertise unchanged.
   final List<String>? expertiseFieldIds;
 
   @override
-  List<Object?> get props => [displayName, username, bio, links, avatar, expertiseFieldIds];
+  List<Object?> get props => [displayName, username, bio, headline, links, avatar, expertiseFieldIds];
 }
 
 /// Profile limits shared with the API (SPEC F14, contract-v1 `UpdateProfileRequest`).
@@ -223,6 +227,5 @@ abstract final class ProfileLimits {
   static const displayNameMin = 2;
   static const displayNameMax = 60;
   static const bioMax = 300;
-  static const linkMax = 2048;
   static const maxExpertise = 5;
 }

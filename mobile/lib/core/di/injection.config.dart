@@ -249,6 +249,8 @@ import '../../features/profile/presentation/cubit/privacy_cubit.dart' as _i977;
 import '../../features/profile/presentation/cubit/profile_articles_cubit.dart'
     as _i529;
 import '../../features/profile/presentation/cubit/profile_cubit.dart' as _i36;
+import '../../features/profile/presentation/cubit/profile_reposts_cubit.dart'
+    as _i25;
 import '../../features/reactions/data/datasources/reactions_api.dart' as _i824;
 import '../../features/reactions/data/repositories/reactions_repository_impl.dart'
     as _i399;
@@ -269,6 +271,12 @@ import '../../features/reading/presentation/cubit/reading_heatmap_cubit.dart'
 import '../../features/reading/presentation/cubit/reading_stats_cubit.dart'
     as _i487;
 import '../../features/reading/presentation/cubit/streak_cubit.dart' as _i884;
+import '../../features/reposts/data/datasources/reposts_api.dart' as _i495;
+import '../../features/reposts/data/repositories/reposts_repository_impl.dart'
+    as _i578;
+import '../../features/reposts/domain/repositories/reposts_repository.dart'
+    as _i123;
+import '../../features/reposts/domain/usecases/repost_usecases.dart' as _i86;
 import '../../features/saved/data/datasources/saved_api.dart' as _i693;
 import '../../features/saved/data/repositories/saved_repository_impl.dart'
     as _i165;
@@ -500,6 +508,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i824.ReactionsApi(gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i597.ReadingApi>(() => _i597.ReadingApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i495.RepostsApi>(() => _i495.RepostsApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i693.SavedApi>(() => _i693.SavedApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i478.SearchApi>(() => _i478.SearchApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i741.PreferencesApi>(
@@ -520,6 +529,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i848.DocumentFileDataSource>(
       () => _i848.DocumentFileDataSource(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i123.RepostsRepository>(
+      () => _i578.RepostsRepositoryImpl(gh<_i495.RepostsApi>()),
     );
     gh.lazySingleton<_i315.ReactionsRepository>(
       () => _i399.ReactionsRepositoryImpl(gh<_i824.ReactionsApi>()),
@@ -562,11 +574,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i591.GetUserArticles>(
       () => _i591.GetUserArticles(gh<_i894.ProfileRepository>()),
     );
+    gh.factory<_i591.GetUserReposts>(
+      () => _i591.GetUserReposts(gh<_i894.ProfileRepository>()),
+    );
     gh.lazySingleton<_i716.MutesRepository>(
       () => _i791.MutesRepositoryImpl(gh<_i240.MutesApi>()),
     );
     gh.lazySingleton<_i357.SearchRepository>(
       () => _i1017.SearchRepositoryImpl(gh<_i478.SearchApi>()),
+    );
+    gh.factoryParam<_i25.ProfileRepostsCubit, String, dynamic>(
+      (username, _) =>
+          _i25.ProfileRepostsCubit(gh<_i591.GetUserReposts>(), username),
     );
     gh.lazySingleton<_i854.RealtimeService>(
       () => _i854.RealtimeService(
@@ -694,6 +713,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i97.SearchGlossaryTerms>(
       () => _i97.SearchGlossaryTerms(gh<_i268.GlossaryRepository>()),
+    );
+    gh.factory<_i86.SetReposted>(
+      () => _i86.SetReposted(gh<_i123.RepostsRepository>()),
     );
     gh.factory<_i83.GetTag>(() => _i83.GetTag(gh<_i1070.TagsRepository>()));
     gh.factory<_i83.GetTagArticles>(
@@ -1053,9 +1075,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i772.ManageCategories>(),
       ),
     );
-    gh.lazySingleton<_i226.EngagementCubit>(
-      () => _i226.EngagementCubit(gh<_i27.SetReaction>(), gh<_i724.SetSaved>()),
-    );
     gh.factory<_i894.NotificationSettingsCubit>(
       () => _i894.NotificationSettingsCubit(
         gh<_i864.GetNotificationSettings>(),
@@ -1067,6 +1086,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i655.TagSuggestionsCubit>(
       () => _i655.TagSuggestionsCubit(gh<_i866.SuggestTags>()),
+    );
+    gh.lazySingleton<_i226.EngagementCubit>(
+      () => _i226.EngagementCubit(
+        gh<_i27.SetReaction>(),
+        gh<_i724.SetSaved>(),
+        gh<_i86.SetReposted>(),
+      ),
     );
     gh.lazySingleton<_i1040.PushService>(
       () => _i1040.PushService(

@@ -27,6 +27,9 @@ void main() {
 
   Future<void> pumpPathsTab(WidgetTester tester, UserProfile profile) async {
     await pumpRouted(tester, ProfileView(isTab: profile.isMe), opened: opened, providers: profileScreen(profile));
+    // The tab bar scrolls: with Reposts (F29) the Paths tab can start off screen.
+    await tester.ensureVisible(find.text('Paths'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Paths'));
     await tester.pumpAndSettle();
   }

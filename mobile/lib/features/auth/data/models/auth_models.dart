@@ -1,6 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/security/credential_rules.dart';
+import '../../../profile/data/models/profile_models.dart' show ProfileLinkModel, ProfileLinksJson;
+import '../../../profile/domain/entities/profile_link.dart' show HeadlineRules;
 import '../../domain/entities/auth_config.dart';
 import '../../domain/entities/external_credential.dart';
 import '../../domain/entities/me.dart';
@@ -21,8 +23,10 @@ abstract class MeModel with _$MeModel {
     required String username,
     String? avatarUrl,
     String? bio,
-    // The API writes nulls, e.g. `{ "gitHub": null }`.
-    @Default(<String, String?>{}) Map<String, String?> links,
+    // F14 title; older APIs leave it out.
+    String? headline,
+    // F14: an array of `{ platform, url, label }`; an older API's `{ github, linkedin, website }` still reads.
+    @ProfileLinksJson() @Default(<ProfileLinkModel>[]) List<ProfileLinkModel> links,
     @Default('ar') String uiLanguage,
     @Default('ar-EG') String articleLanguage,
     @Default('system') String theme,
@@ -54,10 +58,8 @@ abstract class MeModel with _$MeModel {
         username: username,
         avatarUrl: avatarUrl,
         bio: bio,
-        links: {
-          for (final entry in links.entries)
-            if (entry.value case final value? when value.isNotEmpty) entry.key: value,
-        },
+        headline: HeadlineRules.normalize(headline),
+        links: ProfileLinkModel.entities(links),
         uiLanguage: uiLanguage,
         articleLanguage: articleLanguage,
         theme: theme,
@@ -251,14 +253,22 @@ class ResetPasswordRequest {
   Map<String, dynamic> toJson() => {'resetToken': resetToken, 'newPassword': newPassword};
 }
 
+/// `PUT /me/profile/complete`. `headline` (the optional title, F14) is left out when empty: omitted keeps the title,
+/// and a new account has none.
 class CompleteProfileRequest {
-  const CompleteProfileRequest({required this.displayName, required this.username, this.avatarUrl});
+  const CompleteProfileRequest({required this.displayName, required this.username, this.avatarUrl, this.headline});
 
   final String displayName;
   final String username;
   final String? avatarUrl;
+  final String? headline;
 
-  Map<String, dynamic> toJson() => {'displayName': displayName, 'username': username, 'avatarUrl': ?avatarUrl};
+  Map<String, dynamic> toJson() => {
+        'displayName': displayName,
+        'username': username,
+        'avatarUrl': ?avatarUrl,
+        'headline': ?HeadlineRules.normalize(headline),
+      };
 }
 
 class SetRecoveryPinRequest {

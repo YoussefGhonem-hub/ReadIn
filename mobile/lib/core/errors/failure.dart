@@ -154,6 +154,20 @@ abstract final class FailureCodes {
   static const profileExpertiseInvalid = 'profile.expertise_invalid';
   static const validationUrl = 'validation.url';
 
+  // Title and social links (F14, pre-production step): validation codes under `headline` and `links[i].*`.
+  static const profileHeadlineTooLong = 'profile.headline_too_long';
+  static const profileHeadlineInvalid = 'profile.headline_invalid';
+  static const linkTooMany = 'link.too_many';
+  static const linkPlatformInvalid = 'link.platform_invalid';
+  static const linkDuplicatePlatform = 'link.duplicate_platform';
+  static const linkTooLong = 'link.too_long';
+  static const linkHttpsRequired = 'link.https_required';
+  static const linkUrlInvalid = 'link.url_invalid';
+  static const linkHostMismatch = 'link.host_mismatch';
+  static const linkLabelRequired = 'link.label_required';
+  static const linkLabelInvalid = 'link.label_invalid';
+  static const linkLabelNotAllowed = 'link.label_not_allowed';
+
   // Reactions, saved and follow (wave 1 contract: F10, F12, F13)
   static const reactionInvalid = 'reaction.invalid';
   static const collectionNameTaken = 'collection.name_taken';
@@ -166,6 +180,9 @@ abstract final class FailureCodes {
   static const muteSystemAccount = 'mute.system_account';
   static const muteLimit = 'mute.limit';
   static const muteOwnArticle = 'mute.own_article';
+
+  // Repost (F29)
+  static const repostOwnArticle = 'repost.own_article';
 
   // Comments (F11)
   static const commentNotFound = 'comment.not_found';

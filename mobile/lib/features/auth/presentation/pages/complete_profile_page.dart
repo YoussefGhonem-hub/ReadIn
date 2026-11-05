@@ -9,6 +9,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text_field.dart';
+import '../../../profile/presentation/widgets/headline_field.dart';
 import '../cubit/complete_profile_cubit.dart';
 import '../cubit/form_support.dart';
 import '../session/session_cubit.dart';
@@ -39,6 +40,7 @@ class CompleteProfileView extends StatefulWidget {
 class _CompleteProfileViewState extends State<CompleteProfileView> {
   late final TextEditingController _name;
   late final TextEditingController _username;
+  late final TextEditingController _headline;
 
   @override
   void initState() {
@@ -46,16 +48,18 @@ class _CompleteProfileViewState extends State<CompleteProfileView> {
     final me = context.read<SessionCubit>().state.me;
     _name = TextEditingController(text: CompleteProfileCubit.initialDisplayName(me));
     _username = TextEditingController(text: CompleteProfileCubit.initialUsername(me));
+    _headline = TextEditingController(text: me?.headline ?? '');
   }
 
   @override
   void dispose() {
     _name.dispose();
     _username.dispose();
+    _headline.dispose();
     super.dispose();
   }
 
-  void _submit() => context.read<CompleteProfileCubit>().submit(displayName: _name.text);
+  void _submit() => context.read<CompleteProfileCubit>().submit(displayName: _name.text, headline: _headline.text);
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +101,7 @@ class _CompleteProfileViewState extends State<CompleteProfileView> {
               autocorrect: false,
               enableSuggestions: false,
               keyboardType: TextInputType.visiblePassword, // no autocorrect, no capitals
-              textInputAction: TextInputAction.done,
+              textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.newUsername],
               inputFormatters: [
                 TextInputFormatter.withFunction(
@@ -106,7 +110,6 @@ class _CompleteProfileViewState extends State<CompleteProfileView> {
                 LengthLimitingTextInputFormatter(30),
               ],
               onChanged: cubit.usernameChanged,
-              onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
                 labelText: l10n.usernameLabel,
                 prefixIcon: const Icon(Icons.alternate_email_rounded),
@@ -114,6 +117,14 @@ class _CompleteProfileViewState extends State<CompleteProfileView> {
                 helperText: _usernameHelper(context, state),
                 errorText: errorText(context, state.errors[Fields.username] ?? _usernameError(state.usernameStatus)),
               ),
+            ),
+            const SizedBox(height: ReadInSpace.s4),
+            // The optional title (F14), as in Edit profile.
+            HeadlineField(
+              controller: _headline,
+              enabled: !busy,
+              textInputAction: TextInputAction.done,
+              error: errorText(context, state.errors[CompleteProfileCubit.headlineField]),
             ),
             const SizedBox(height: ReadInSpace.s6),
             SubmitButton(label: l10n.saveAndContinue, submitting: busy || state.uploadingAvatar, onPressed: _submit),

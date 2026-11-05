@@ -129,8 +129,13 @@ class CompleteProfile {
 
   final AccountRepository _accounts;
 
-  Future<Result<Me>> call({required String displayName, required String username, String? avatarUrl}) =>
-      _accounts.completeProfile(displayName: displayName.trim(), username: username.trim(), avatarUrl: avatarUrl);
+  Future<Result<Me>> call({required String displayName, required String username, String? avatarUrl, String? headline}) =>
+      _accounts.completeProfile(
+        displayName: displayName.trim(),
+        username: username.trim(),
+        avatarUrl: avatarUrl,
+        headline: headline?.trim(),
+      );
 }
 
 @injectable

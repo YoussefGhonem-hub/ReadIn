@@ -7,12 +7,14 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../comments/presentation/widgets/comments_sheet.dart';
 import '../../../reactions/presentation/widgets/reaction_button.dart';
 import '../../../reactions/presentation/widgets/who_reacted_sheet.dart';
+import '../../../reposts/presentation/widgets/repost_button.dart';
 import '../../../saved/presentation/widgets/save_button.dart';
 import '../../domain/entities/article.dart';
 import '../cubit/engagement_cubit.dart';
 
-/// The reader's action bar (F04): reaction (tap 💡, long press for the picker), per-type counts that open "who
-/// reacted", the comment count that opens the comments (F11), save and "add to collection". Counts follow
+/// The reader's action bar (F04): reaction (tap 💡, long press for the floating reactions bar), per-type counts that
+/// open "who reacted", the comment count that opens the comments (F11), repost with its count (F29), save and "add to
+/// collection". Counts follow
 /// [EngagementCubit], so the viewer's actions and live counters (F27) show at once. The reader adds its "⋯" [menu]
 /// last (F22, F28).
 class ReaderActionBar extends StatelessWidget {
@@ -53,6 +55,7 @@ class ReaderActionBar extends StatelessWidget {
                 ),
               ),
               CommentCount(count: engagement.commentCount, onTap: () => showCommentsSheet(context, article: article)),
+              RepostButton(article: article),
               SaveToggleButton(article: article),
               AddToCollectionButton(article: article),
               ?menu,

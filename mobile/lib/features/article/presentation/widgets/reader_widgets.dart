@@ -5,6 +5,7 @@ import '../../../../core/l10n/formatters.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/widgets/author_headline.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../categories/presentation/widgets/category_link.dart';
@@ -38,7 +39,8 @@ class ReadingProgressBar extends StatelessWidget {
   }
 }
 
-/// Field tag, title, subtitle and byline, with "في قسم {name}" when the writer put the article in a category (F31). A
+/// Field tag, title, subtitle and byline (name, the writer's title on one line with "…" when they have one, F14, then
+/// @username · date), with "في قسم {name}" when the writer put the article in a category (F31). A
 /// deleted author's byline is "Deleted user" with a neutral avatar and the date only: no @username, verified mark,
 /// category or [authorAction] (SPEC §9.6).
 class ArticleHeader extends StatelessWidget {
@@ -126,6 +128,7 @@ class ArticleHeader extends StatelessWidget {
                                 if (author.isVerified) ...[const SizedBox(width: 4), const VerifiedMark()],
                               ],
                             ),
+                            if (author.headline case final headline?) AuthorHeadline(headline),
                             Text(
                               // Isolated handle: in RTL, a bare "@readin · 8" would show as "readin · 8@".
                               '${Bidi.ltrIsolate('@${author.username}')} · ${formatDate(card.publishedAt, uiLang)}',

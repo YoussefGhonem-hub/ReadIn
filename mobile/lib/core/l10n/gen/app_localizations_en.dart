@@ -605,6 +605,199 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileErrUrl => 'Enter a full link that starts with https://';
 
   @override
+  String get profileHeadlineLabel => 'Title';
+
+  @override
+  String get profileHeadlineHint =>
+      'e.g. Senior Full Stack .NET Engineer | .NET';
+
+  @override
+  String get profileHeadlineHelper =>
+      'Optional. One line that shows under your name.';
+
+  @override
+  String get profileLinksSection => 'Links';
+
+  @override
+  String get profileLinksHint => 'Add up to 8 links to your accounts.';
+
+  @override
+  String get profileLinksFull => 'That\'s 8 links. Remove one to add another.';
+
+  @override
+  String profileLinksCountSemantics(int count, int max) {
+    return 'Links: $count of $max';
+  }
+
+  @override
+  String get profileLinkAdd => 'Add link';
+
+  @override
+  String get profileLinkPickPlatform => 'Choose a platform';
+
+  @override
+  String get profileLinkPlatformAdded => 'Already added';
+
+  @override
+  String get profileLinkChangePlatform => 'Change platform';
+
+  @override
+  String get profileLinkUrl => 'Link';
+
+  @override
+  String get profileLinkLabel => 'Link name';
+
+  @override
+  String get profileLinkLabelHint => 'e.g. My podcast';
+
+  @override
+  String get profileLinkOther => 'Other';
+
+  @override
+  String profileLinkOptions(String name) {
+    return '$name link options';
+  }
+
+  @override
+  String get profileLinkMoveUp => 'Move up';
+
+  @override
+  String get profileLinkMoveDown => 'Move down';
+
+  @override
+  String get profileLinkRemove => 'Remove link';
+
+  @override
+  String get profileTabReposts => 'Reposts';
+
+  @override
+  String get profileRepostsEmptyTitle => 'No reposts yet';
+
+  @override
+  String get profileRepostsEmptyBody =>
+      'The articles they repost show up here.';
+
+  @override
+  String get profileRepostsEmptyOwnTitle =>
+      'You haven\'t reposted anything yet';
+
+  @override
+  String get profileRepostsEmptyOwnBody =>
+      'When you repost an article you like, it shows up here and for your followers.';
+
+  @override
+  String get profileErrHeadlineTooLong => 'A title has at most 120 characters.';
+
+  @override
+  String get profileErrHeadlineInvalid =>
+      'A title must be one line, without special characters.';
+
+  @override
+  String get profileErrLinkTooMany => 'You can add up to 8 links.';
+
+  @override
+  String get profileErrLinkPlatformInvalid =>
+      'Choose a platform from the list.';
+
+  @override
+  String get profileErrLinkDuplicatePlatform =>
+      'You already have a link for this platform.';
+
+  @override
+  String get profileErrLinkTooLong => 'A link has at most 500 characters.';
+
+  @override
+  String get profileErrLinkHttpsRequired => 'The link must start with https.';
+
+  @override
+  String get profileErrLinkUrlInvalid => 'This link isn\'t valid.';
+
+  @override
+  String get profileErrLinkHostMismatch =>
+      'This link isn\'t on the platform you chose.';
+
+  @override
+  String get profileErrLinkLabelRequired => 'Give this link a name.';
+
+  @override
+  String get profileErrLinkLabelInvalid =>
+      'A link name has 2–30 characters on one line.';
+
+  @override
+  String get profileErrLinkLabelNotAllowed =>
+      'Only \"Other\" links have a name.';
+
+  @override
+  String get moderationUserLinks => 'Profile links';
+
+  @override
+  String get moderationUserNoLinks => 'No links.';
+
+  @override
+  String get moderationUserHeadline => 'Title';
+
+  @override
+  String get moderationUserNoHeadline => 'No title.';
+
+  @override
+  String get moderationClearLinks => 'Clear links';
+
+  @override
+  String moderationClearLinksTitle(String name) {
+    return 'Clear all of $name\'s links?';
+  }
+
+  @override
+  String get moderationClearLinksBody =>
+      'Every link on their profile is removed. They aren\'t notified, and the action is logged.';
+
+  @override
+  String get moderationLinksCleared => 'Links cleared';
+
+  @override
+  String get moderationClearHeadline => 'Clear title';
+
+  @override
+  String moderationClearHeadlineTitle(String name) {
+    return 'Clear $name\'s title?';
+  }
+
+  @override
+  String get moderationClearHeadlineBody =>
+      'The title under their name is removed from the profile, cards and comments. They aren\'t notified, and the action is logged.';
+
+  @override
+  String get moderationHeadlineCleared => 'Title cleared';
+
+  @override
+  String get moderationLogUserClearLinks => 'Cleared links';
+
+  @override
+  String get moderationLogUserClearHeadline => 'Cleared a title';
+
+  @override
+  String notifArticleReposted(String name, int others) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$name and $others others reposted your article',
+      one: '$name and 1 other reposted your article',
+      zero: '$name reposted your article',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notificationTypeArticleReposted => 'Reposts';
+
+  @override
+  String get notificationTypeArticleRepostedHint =>
+      'When someone reposts your article';
+
+  @override
+  String get pdfStripDownload => 'Download the PDF';
+
+  @override
   String get errValidation => 'Please check the highlighted fields.';
 
   @override
@@ -1219,7 +1412,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountDeletedProfile =>
-      'Your profile: name, @username, photo, bio and links';
+      'Your profile: name, @username, photo, title, bio and links';
 
   @override
   String get deleteAccountDeletedContact =>
@@ -1235,7 +1428,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountDeletedActivity =>
-      'Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people\'s mutes of you), and your \"Show less like this\" marks';
+      'Your interests, reading progress and stats, reactions, reposts, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people\'s mutes of you), and your \"Show less like this\" marks';
 
   @override
   String get deleteAccountDeletedDevices =>
@@ -3338,6 +3531,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errMuteOwnArticle => 'You can\'t do this on your own article.';
 
   @override
+  String get errRepostOwnArticle => 'You can\'t repost your own article.';
+
+  @override
   String get profileMenu => 'More options';
 
   @override
@@ -4207,6 +4403,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get postComment => 'Comment';
+
+  @override
+  String postBarReact(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'React, $count',
+      zero: 'React',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String postBarReacted(String reaction, int count) {
+    return 'Reacted: $reaction, $count';
+  }
+
+  @override
+  String postBarComment(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Comment, $count',
+      zero: 'Comment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String postBarRepost(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Repost, $count',
+      zero: 'Repost',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get repostOwnHint => 'You can\'t repost your own article';
+
+  @override
+  String repostLabelOne(String name) {
+    return '$name reposted this';
+  }
+
+  @override
+  String repostLabelMany(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name and $count others reposted this',
+      one: '$name and 1 other reposted this',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentBoxHint => 'Add a comment…';
+
+  @override
+  String get commentBoxReplyHint => 'Add a reply…';
+
+  @override
+  String get commentBoxEmoji => 'Emoji';
+
+  @override
+  String get commentBoxKeyboard => 'Back to the keyboard';
+
+  @override
+  String get commentBoxCancelReply => 'Cancel reply';
+
+  @override
+  String get commentBoxCancelEdit => 'Cancel editing';
+
+  @override
+  String get commentBoxEmojiSearch => 'Search emoji';
+
+  @override
+  String get commentBoxEmojiNoRecents => 'Emoji you use show up here';
+
+  @override
+  String get commentRowFollow => 'Follow';
 
   @override
   String get postOpenArticleHint => 'Opens the article';

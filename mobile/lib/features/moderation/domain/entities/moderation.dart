@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../../article/domain/entities/article.dart';
 import '../../../categories/domain/entities/writer_category.dart';
 import '../../../follow/domain/entities/follow.dart';
+import '../../../profile/domain/entities/profile_link.dart';
 
 /// Why something is reported (F22).
 enum ReportReason { spam, misinformation, harassment, copyright, other }
@@ -17,7 +18,8 @@ enum ReportStatus { open, resolved, dismissed }
 enum ModerationTargetState { visible, hidden, deleted, active, suspended }
 
 /// `ModerationActionRequest.action`. Allowed pairs: comment hide/unhide/delete/dismiss, article hide/unhide/dismiss,
-/// user warn/suspend/unsuspend/clear_category/dismiss (suspend and unsuspend also need `users.suspend`).
+/// user warn/suspend/unsuspend/clear_category/clear_links/clear_headline/dismiss (suspend and unsuspend also need
+/// `users.suspend`).
 enum ModerationActionType {
   hide,
   unhide,
@@ -28,10 +30,21 @@ enum ModerationActionType {
 
   /// Renames one of the user's writer categories to a neutral placeholder (F31), with [ModerationCommand.categoryId].
   clearCategory,
+
+  /// Removes all of the user's social links (F14).
+  clearLinks,
+
+  /// Removes the user's title (F14).
+  clearHeadline,
   dismiss;
 
-  /// The wire name: `clear_category`, otherwise [name].
-  String get wire => this == clearCategory ? 'clear_category' : name;
+  /// The wire name: `clear_category`, `clear_links`, `clear_headline`, otherwise [name].
+  String get wire => switch (this) {
+        clearCategory => 'clear_category',
+        clearLinks => 'clear_links',
+        clearHeadline => 'clear_headline',
+        _ => name,
+      };
 }
 
 /// `ModerationActionDto.action`: a row of the moderation log.
@@ -45,6 +58,8 @@ enum ModerationLogAction {
   userSuspend('user.suspend'),
   userUnsuspend('user.unsuspend'),
   userClearCategory('user.clear_category'),
+  userClearLinks('user.clear_links'),
+  userClearHeadline('user.clear_headline'),
   reportsDismiss('reports.dismiss'),
 
   /// An action this app version doesn't know yet.
@@ -116,9 +131,12 @@ class ModerationTarget extends Equatable {
     this.articleTitle,
     this.suspendedUntil,
     this.warningCount = 0,
+    this.links,
   });
 
   final ModerationTargetState state;
+
+  /// The user's title is [Author.headline] (F14).
   final Author? author;
 
   // Article
@@ -136,13 +154,16 @@ class ModerationTarget extends Equatable {
   final DateTime? suspendedUntil;
   final int warningCount;
 
+  /// User targets: their social links (F14), in their order; null for content targets (or an older API).
+  final List<ProfileLink>? links;
+
   bool get isHidden => state == ModerationTargetState.hidden;
   bool get isDeleted => state == ModerationTargetState.deleted;
   bool get isSuspended => state == ModerationTargetState.suspended;
 
   @override
   List<Object?> get props =>
-      [state, author, title, slug, language, body, articleId, articleSlug, articleTitle, suspendedUntil, warningCount];
+      [state, author, title, slug, language, body, articleId, articleSlug, articleTitle, suspendedUntil, warningCount, links];
 }
 
 /// `ModerationQueueItemDto`: one target and its reports in one [status].

@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../article/data/models/article_models.dart';
 import '../../../categories/data/models/category_models.dart';
 import '../../../follow/data/models/follow_models.dart';
+import '../../../profile/data/models/profile_models.dart' show ProfileLinkModel;
 import '../../domain/entities/moderation.dart';
 
 part 'moderation_models.freezed.dart';
@@ -101,6 +102,8 @@ abstract class ModerationTargetModel with _$ModerationTargetModel {
     String? articleTitle,
     DateTime? suspendedUntil,
     @Default(0) int warningCount,
+    // F14: user targets only (null for content).
+    List<ProfileLinkModel>? links,
   }) = _ModerationTargetModel;
 
   factory ModerationTargetModel.fromJson(Map<String, dynamic> json) => _$ModerationTargetModelFromJson(json);
@@ -118,6 +121,10 @@ abstract class ModerationTargetModel with _$ModerationTargetModel {
         articleTitle: articleTitle,
         suspendedUntil: suspendedUntil,
         warningCount: warningCount,
+        links: switch (links) {
+          final links? => ProfileLinkModel.entities(links),
+          null => null,
+        },
       );
 }
 

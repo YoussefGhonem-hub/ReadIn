@@ -28,7 +28,7 @@ import 'package:readin/features/home/presentation/pages/home_page.dart';
 import 'package:readin/features/notifications/presentation/cubit/unread_badge_cubit.dart';
 import 'package:readin/features/paths/presentation/cubit/article_path_cubit.dart';
 import 'package:readin/features/reactions/presentation/cubit/reactors_cubit.dart';
-import 'package:readin/features/reactions/presentation/widgets/reaction_picker.dart';
+import 'package:readin/features/reactions/presentation/widgets/reaction_bar.dart';
 import 'package:readin/features/reactions/presentation/widgets/who_reacted_sheet.dart';
 import 'package:readin/features/reading/domain/entities/reading.dart';
 import 'package:readin/features/reading/presentation/cubit/streak_cubit.dart';
@@ -152,14 +152,30 @@ void main() {
       await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/reader_action_bar_${variant.name}.png'));
     });
 
-    testWidgets('reaction picker ${variant.name}', (tester) async {
+    testWidgets('floating reactions bar ${variant.name}', (tester) async {
+      // F10: emoji only, the viewer's ❤️ on its circle; then 🔥 under the finger, grown and lifted.
+      final drag = ReactionBarDrag();
+      addTearDown(drag.dispose);
       await pump(
         tester,
         variant,
-        Scaffold(body: Center(child: ReactionPicker(selected: ReactionType.love, onSelected: (_) {}))),
+        Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: ReactionBar(selected: ReactionType.love, drag: drag, onPicked: (_) {}),
+            ),
+          ),
+        ),
         size: const Size(390, 160),
       );
-      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/reaction_picker_${variant.name}.png'));
+      await tester.pump(ReactionBar.enterDuration);
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/reaction_bar_${variant.name}.png'));
+
+      drag.move(tester.getCenter(find.text('🔥')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/reaction_bar_hover_${variant.name}.png'));
     });
 
     testWidgets('who reacted ${variant.name}', (tester) async {

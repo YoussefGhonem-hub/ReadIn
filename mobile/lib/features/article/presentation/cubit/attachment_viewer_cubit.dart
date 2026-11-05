@@ -71,13 +71,21 @@ class AttachmentViewerCubit extends Cubit<AttachmentViewerState> {
   String _title = '';
   TransferToken? _token;
 
-  void start({required String slug, required String language, required String title, DocumentAttachment? document}) {
+  /// [loadPages] false: only the download is wanted (the PDF strip's icon on a card), so the remaining pages aren't
+  /// fetched.
+  void start({
+    required String slug,
+    required String language,
+    required String title,
+    DocumentAttachment? document,
+    bool loadPages = true,
+  }) {
     _slug = slug;
     _language = language;
     _title = title;
     if (document == null) return;
     emit(AttachmentViewerState(document: document));
-    if (!document.hasAllPages) _loadAllPages();
+    if (loadPages && !document.hasAllPages) _loadAllPages();
   }
 
   Future<void> _loadAllPages() async {

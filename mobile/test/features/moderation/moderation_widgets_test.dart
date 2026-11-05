@@ -812,6 +812,71 @@ void main() {
       verify(caseCubit.refresh).called(1);
     });
 
+    testWidgets('user: their title and links (F14), in order, each address in full and left to right', (tester) async {
+      await pumpCase(tester, ModerationCase(item: userItem(headline: spammerHeadline, links: spammerLinks)));
+
+      expect(find.text('Title'), findsOneWidget);
+      expect(find.text('Profile links'), findsOneWidget);
+      expect(find.byKey(const ValueKey('case-headline')), findsOneWidget);
+      expect(tester.widget<Text>(find.byKey(const ValueKey('case-headline'))).data, contains('Crypto expert'));
+      expect(find.textContaining('t.me/free_crypto_deals'), findsOneWidget);
+      expect(find.textContaining('free-crypto.example/join?ref=readin'), findsOneWidget);
+      expect(find.text('Telegram'), findsOneWidget);
+      expect(find.text('Free coins'), findsOneWidget);
+      expect(tester.getTopLeft(find.byKey(const ValueKey('case-link-0'))).dy, lessThan(tester.getTopLeft(find.byKey(const ValueKey('case-link-1'))).dy));
+      expect(find.text('Clear title'), findsOneWidget);
+      expect(find.text('Clear links'), findsOneWidget);
+    });
+
+    testWidgets('user: with no title or links, says so and offers nothing to clear', (tester) async {
+      await pumpCase(tester, userCase());
+
+      expect(find.text('No title.'), findsOneWidget);
+      expect(find.text('No links.'), findsOneWidget);
+      expect(find.text('Clear title'), findsNothing);
+      expect(find.text('Clear links'), findsNothing);
+    });
+
+    testWidgets('user: "Clear links" asks first, with an optional note, then runs and reloads the case', (tester) async {
+      await pumpCase(tester, ModerationCase(item: userItem(headline: spammerHeadline, links: spammerLinks)));
+
+      await tester.ensureVisible(find.byKey(const ValueKey('case-clear-links')));
+      await tester.tap(find.descendant(of: find.byKey(const ValueKey('case-clear-links')), matching: find.byType(OutlinedButton)));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Clear all of'), findsOneWidget);
+      expect(find.textContaining("They aren't notified"), findsOneWidget);
+      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Clear links')).onPressed, isNotNull, reason: 'the note is optional');
+      await tester.enterText(find.byType(TextField), 'Scam links');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Clear links'));
+      await tester.pumpAndSettle();
+
+      verify(() => actions.run(const ModerationCommand(ModerationActionType.clearLinks, ModerationTargetRef.user('w-9'), note: 'Scam links')))
+          .called(1);
+      verify(caseCubit.refresh).called(1);
+      expect(find.text('Links cleared'), findsOneWidget);
+    });
+
+    testWidgets('user: "Clear title" asks first; Cancel does nothing, confirming without a note runs it', (tester) async {
+      await pumpCase(tester, ModerationCase(item: userItem(headline: spammerHeadline, links: spammerLinks)));
+
+      await tester.ensureVisible(find.byKey(const ValueKey('case-clear-headline')));
+      await tester.tap(find.descendant(of: find.byKey(const ValueKey('case-clear-headline')), matching: find.byType(OutlinedButton)));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('title?'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      verifyNever(() => actions.run(any()));
+
+      await tester.tap(find.descendant(of: find.byKey(const ValueKey('case-clear-headline')), matching: find.byType(OutlinedButton)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Clear title'));
+      await tester.pumpAndSettle();
+      verify(() => actions.run(const ModerationCommand(ModerationActionType.clearHeadline, ModerationTargetRef.user('w-9'), note: '')))
+          .called(1);
+      verify(caseCubit.refresh).called(1);
+    });
+
     testWidgets('user: Cancel on "Clear name" does nothing', (tester) async {
       await pumpCase(
         tester,

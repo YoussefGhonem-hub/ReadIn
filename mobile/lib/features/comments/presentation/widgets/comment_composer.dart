@@ -17,15 +17,22 @@ import '../../../auth/presentation/session/session_cubit.dart';
 import '../../domain/entities/comment_text.dart';
 import '../cubit/comments_cubit.dart';
 import '../cubit/mention_suggestions_cubit.dart';
+import 'comment_emoji_picker.dart';
 
-/// The composer pinned under the comments (F11): a multi-line field whose direction follows its text, a counter in the
-/// last 200 of 2000 characters, @mention suggestions while typing `@handle`, and the reply / edit bar. A new comment
-/// leaves the field at once (it shows as pending in the list) and comes back if the API refuses it.
+/// The comment box pinned under the comments (F11), the same in the reader and on feed cards: your avatar, then a
+/// rounded field ("اكتب تعليق…") whose direction follows its text, with the emoji button (an emoji picker in place of
+/// the keyboard) and the send icon inside it, disabled until there is text. Text and emoji only. A counter shows in the
+/// last 200 of 2000 characters, @mention suggestions while typing `@handle`, and the reply / edit bar above it with
+/// an ✕ to cancel. "Reply" puts the `@username` of the person replied to in the field, the caret after it (not when
+/// replying to yourself). A new comment leaves the field at once (it shows as pending in the list) and comes back if
+/// the API refuses it.
 class CommentComposer extends StatefulWidget {
   const CommentComposer({super.key, this.initialText = ''});
 
   /// For golden tests.
   final String initialText;
+
+  static const avatarSize = 32.0;
 
   @override
   State<CommentComposer> createState() => _CommentComposerState();
@@ -39,10 +46,14 @@ class _CommentComposerState extends State<CommentComposer> {
   MentionQuery? _mention;
   String? _prefill;
 
+  /// The emoji picker shows in place of the keyboard.
+  bool _emoji = false;
+
   @override
   void initState() {
     super.initState();
     _controller.addListener(_onChanged);
+    _focus.addListener(_onFocus);
   }
 
   @override
@@ -50,6 +61,22 @@ class _CommentComposerState extends State<CommentComposer> {
     _controller.dispose();
     _focus.dispose();
     super.dispose();
+  }
+
+  /// The field's outline follows the focus; tapping the field while the picker is open brings the keyboard back.
+  void _onFocus() => setState(() {
+        if (_focus.hasFocus) _emoji = false;
+      });
+
+  void _toggleEmoji() {
+    if (_emoji) {
+      setState(() => _emoji = false);
+      _focus.requestFocus();
+    } else {
+      // The keyboard goes away; the caret stays where it was, and emoji go in there.
+      _focus.unfocus();
+      setState(() => _emoji = true);
+    }
   }
 
   void _onChanged() {
@@ -79,9 +106,10 @@ class _CommentComposerState extends State<CommentComposer> {
     if (target.isEdit) {
       _setText(target.comment.body ?? '');
     } else {
-      // Replying to a reply mentions its author (the API joins the thread either way).
+      // A reply mentions the person replied to, so they are notified (F11); never yourself. The API drops a mention
+      // they don't allow and posts the reply anyway.
       final author = target.comment.author;
-      final mention = target.comment.isReply && author != null && author.id != myId ? '@${author.username} ' : '';
+      final mention = author != null && author.id != myId ? '@${author.username} ' : '';
       final replace = _controller.text.isEmpty || _controller.text == _prefill;
       _prefill = mention;
       if (replace) _setText(mention);
@@ -110,7 +138,14 @@ class _CommentComposerState extends State<CommentComposer> {
       _prefill = null;
     }
     context.read<MentionSuggestionsCubit>().clear();
-    final author = Author(id: me.id, displayName: me.displayName, username: me.username, avatarUrl: me.avatarUrl, isVerified: me.isVerified);
+    final author = Author(
+      id: me.id,
+      displayName: me.displayName,
+      username: me.username,
+      avatarUrl: me.avatarUrl,
+      isVerified: me.isVerified,
+      headline: me.headline,
+    );
     final failure = await cubit.submit(text, author: author);
     if (!mounted) return;
     if (failure == null) {
@@ -132,67 +167,111 @@ class _CommentComposerState extends State<CommentComposer> {
     final l10n = context.l10n;
     final colors = context.colors;
     final (target, sending) = context.select((CommentsCubit c) => (c.state.target, c.state.sending));
+    final me = context.select((SessionCubit c) => c.state.me);
     final suggestions = context.watch<MentionSuggestionsCubit>().state;
     final canSend = _controller.text.trim().isNotEmpty && !sending;
+    final editing = target?.isEdit ?? false;
     return BlocListener<CommentsCubit, CommentsState>(
       listenWhen: (a, b) => a.target != b.target,
       listener: (_, state) => _onTarget(state.target),
-      child: Material(
-        color: colors.surface,
-        shape: Border(top: BorderSide(color: colors.border)),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_mention != null && suggestions.isNotEmpty) MentionSuggestionList(users: suggestions, onPick: _pickMention),
-              if (target != null) _TargetBar(target: target, onCancel: _cancelTarget),
-              Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(ReadInSpace.s4, ReadInSpace.s2, ReadInSpace.s2, ReadInSpace.s2),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: BidiTextField(
-                        controller: _controller,
-                        focusNode: _focus,
-                        directionOf: CommentText.withoutMentions,
-                        minLines: 1,
-                        maxLines: 5,
-                        maxLength: CommentText.maxLength,
-                        counterWithin: CommentText.counterWithin,
-                        enabled: !sending,
-                        decoration: InputDecoration(
-                          hintText: target == null || target.isEdit ? l10n.commentsComposerHint : l10n.commentsReplyHint,
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s4, vertical: ReadInSpace.s3),
+      // Back closes the emoji picker first.
+      child: PopScope(
+        canPop: !_emoji,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && _emoji) setState(() => _emoji = false);
+        },
+        child: Material(
+          color: colors.surface,
+          shape: Border(top: BorderSide(color: colors.border)),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_mention != null && suggestions.isNotEmpty) MentionSuggestionList(users: suggestions, onPick: _pickMention),
+                if (target != null) _TargetBar(target: target, onCancel: _cancelTarget),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(ReadInSpace.s3, ReadInSpace.s2, ReadInSpace.s3, ReadInSpace.s2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Your avatar, lined up with the first line of the field.
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: ExcludeSemantics(
+                          child: UserAvatar(name: me?.displayName ?? '', url: me?.avatarUrl, size: CommentComposer.avatarSize),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: ReadInSpace.s1),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 2),
-                      child: sending
-                          ? const SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
-                            )
-                          : IconButton.filled(
-                              tooltip: target?.isEdit ?? false ? l10n.save : l10n.commentsSend,
-                              onPressed: canSend ? _send : null,
-                              icon: Icon(target?.isEdit ?? false ? Icons.check_rounded : Icons.send_rounded, size: 20),
-                              style: IconButton.styleFrom(
-                                disabledBackgroundColor: colors.surfaceVariant,
-                                disabledForegroundColor: colors.textSecondary,
+                      const SizedBox(width: ReadInSpace.s2),
+                      Expanded(
+                        child: _RoundedField(
+                          focused: _focus.hasFocus,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: BidiTextField(
+                                  controller: _controller,
+                                  focusNode: _focus,
+                                  directionOf: CommentText.withoutMentions,
+                                  minLines: 1,
+                                  maxLines: 5,
+                                  maxLength: CommentText.maxLength,
+                                  counterWithin: CommentText.counterWithin,
+                                  enabled: !sending,
+                                  // Emoji from the picker draw in color wherever an emoji font is listed.
+                                  style: context.textTheme.bodyLarge?.withEmoji(),
+                                  decoration: InputDecoration(
+                                    hintText: target == null || editing ? l10n.commentBoxHint : l10n.commentBoxReplyHint,
+                                    filled: false,
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    disabledBorder: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: const EdgeInsetsDirectional.fromSTEB(
+                                      ReadInSpace.s4,
+                                      ReadInSpace.s3,
+                                      ReadInSpace.s1,
+                                      ReadInSpace.s3,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                    ),
-                  ],
+                              IconButton(
+                                tooltip: _emoji ? l10n.commentBoxKeyboard : l10n.commentBoxEmoji,
+                                onPressed: sending ? null : _toggleEmoji,
+                                icon: Icon(
+                                  _emoji ? Icons.keyboard_alt_outlined : Icons.emoji_emotions_outlined,
+                                  size: 22,
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                              if (sending)
+                                const SizedBox(
+                                  width: 48,
+                                  height: 48,
+                                  child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                                )
+                              else
+                                IconButton(
+                                  tooltip: editing ? l10n.save : l10n.commentsSend,
+                                  onPressed: canSend ? _send : null,
+                                  icon: Icon(editing ? Icons.check_rounded : Icons.send_rounded, size: 22),
+                                  color: colors.primary,
+                                  disabledColor: colors.textSecondary.withValues(alpha: 0.5),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                if (_emoji) CommentEmojiPicker(controller: _controller),
+              ],
+            ),
           ),
         ),
       ),
@@ -200,7 +279,28 @@ class _CommentComposerState extends State<CommentComposer> {
   }
 }
 
-/// "Replying to Omar ✕" / "Editing your comment ✕" above the field.
+/// The comment field's rounded outline: a pill while it holds one line, the primary color while focused.
+class _RoundedField extends StatelessWidget {
+  const _RoundedField({required this.focused, required this.child});
+
+  final bool focused;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.bg,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: focused ? colors.primary : colors.border, width: focused ? 1.5 : 1),
+      ),
+      child: Padding(padding: const EdgeInsetsDirectional.only(end: 2), child: child),
+    );
+  }
+}
+
+/// "Replying to Omar ✕" / "Editing your comment ✕" above the field; the ✕ is "Cancel reply" / "Cancel editing".
 class _TargetBar extends StatelessWidget {
   const _TargetBar({required this.target, required this.onCancel});
 
@@ -230,9 +330,8 @@ class _TargetBar extends StatelessWidget {
               ),
             ),
             IconButton(
-              tooltip: l10n.cancel,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.close_rounded, size: 18),
+              tooltip: target.isEdit ? l10n.commentBoxCancelEdit : l10n.commentBoxCancelReply,
+              icon: const Icon(Icons.close_rounded, size: 20),
               onPressed: onCancel,
             ),
           ],

@@ -27,6 +27,8 @@ import '../../../reading/presentation/widgets/reading_stats_card.dart';
 import '../../domain/entities/profile.dart';
 import '../cubit/profile_articles_cubit.dart';
 import '../cubit/profile_cubit.dart';
+import '../cubit/profile_reposts_cubit.dart';
+import 'platform_icon.dart';
 import 'profile_header.dart';
 import 'public_reading_stats_switch.dart';
 
@@ -37,7 +39,7 @@ Widget profileTabOverlap(BuildContext context) =>
 // ── Articles ────────────────────────────────────────────────────────────────
 
 /// Published articles, newest first, with pull to refresh and infinite scroll. Needs a [ProfileArticlesCubit] above.
-class ProfileArticlesTab extends StatefulWidget {
+class ProfileArticlesTab extends StatelessWidget {
   const ProfileArticlesTab({super.key, required this.profile, this.onWrite});
 
   final UserProfile profile;
@@ -46,10 +48,58 @@ class ProfileArticlesTab extends StatefulWidget {
   final VoidCallback? onWrite;
 
   @override
-  State<ProfileArticlesTab> createState() => _ProfileArticlesTabState();
+  Widget build(BuildContext context) => _PostCardsTab<ProfileArticlesCubit>(
+        storageKey: 'profile-articles',
+        empty: _ArticlesEmpty(profile: profile, onWrite: onWrite),
+      );
 }
 
-class _ProfileArticlesTabState extends State<ProfileArticlesTab> with AutomaticKeepAliveClientMixin {
+// ── Reposts ─────────────────────────────────────────────────────────────────
+
+/// What [profile] reposted (F29): post cards, newest repost first, each labeled "أعاد نشره {name}", with pull to
+/// refresh, infinite scroll and an empty state. Every profile has it. Needs a [ProfileRepostsCubit] above.
+class ProfileRepostsTab extends StatefulWidget {
+  const ProfileRepostsTab({super.key, required this.profile});
+
+  final UserProfile profile;
+
+  @override
+  State<ProfileRepostsTab> createState() => _ProfileRepostsTabState();
+}
+
+class _ProfileRepostsTabState extends State<ProfileRepostsTab> {
+  @override
+  void initState() {
+    super.initState();
+    // Loaded the first time the tab is shown, not with the profile.
+    unawaited(context.read<ProfileRepostsCubit>().ensureLoaded());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return _PostCardsTab<ProfileRepostsCubit>(
+      storageKey: 'profile-reposts',
+      empty: widget.profile.isMe
+          ? EmptyView(icon: Icons.repeat_rounded, title: l10n.profileRepostsEmptyOwnTitle, body: l10n.profileRepostsEmptyOwnBody)
+          : EmptyView(icon: Icons.repeat_rounded, title: l10n.profileRepostsEmptyTitle, body: l10n.profileRepostsEmptyBody),
+    );
+  }
+}
+
+/// A tab of post cards from a [C] above it, full width one after another (F34), with pull to refresh (which also
+/// refreshes the profile and collapses the cards) and infinite scroll. Kept alive while switching tabs.
+class _PostCardsTab<C extends ArticleFeedCubit> extends StatefulWidget {
+  const _PostCardsTab({super.key, required this.storageKey, required this.empty});
+
+  final String storageKey;
+  final Widget empty;
+
+  @override
+  State<_PostCardsTab<C>> createState() => _PostCardsTabState<C>();
+}
+
+class _PostCardsTabState<C extends ArticleFeedCubit> extends State<_PostCardsTab<C>> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -57,16 +107,16 @@ class _ProfileArticlesTabState extends State<ProfileArticlesTab> with AutomaticK
   Future<void> _refresh() async {
     final profile = context.read<ProfileCubit?>();
     context.read<PostCardsCubit?>()?.reset();
-    await Future.wait([context.read<ProfileArticlesCubit>().refresh(), ?profile?.refresh()]);
+    await Future.wait([context.read<C>().refresh(), ?profile?.refresh()]);
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final cubit = context.read<ProfileArticlesCubit>();
-    return EngagementSeeder<ProfileArticlesCubit, FeedState>(
+    final cubit = context.read<C>();
+    return EngagementSeeder<C, FeedState>(
       cards: (state) => state.items,
-      child: BlocBuilder<ProfileArticlesCubit, FeedState>(
+      child: BlocBuilder<C, FeedState>(
         builder: (context, feed) => RefreshIndicator(
           onRefresh: _refresh,
           child: NotificationListener<ScrollNotification>(
@@ -75,7 +125,7 @@ class _ProfileArticlesTabState extends State<ProfileArticlesTab> with AutomaticK
               return false;
             },
             child: CustomScrollView(
-              key: const PageStorageKey('profile-articles'),
+              key: PageStorageKey(widget.storageKey),
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 profileTabOverlap(context),
@@ -89,7 +139,7 @@ class _ProfileArticlesTabState extends State<ProfileArticlesTab> with AutomaticK
                       SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: feed.failure!, onRetry: cubit.load)),
                     ],
                   FeedStatus.ready when feed.items.isEmpty => [
-                      SliverFillRemaining(hasScrollBody: false, child: _ArticlesEmpty(profile: widget.profile, onWrite: widget.onWrite)),
+                      SliverFillRemaining(hasScrollBody: false, child: widget.empty),
                     ],
                   // Post cards full width, one after another on the background (F34).
                   FeedStatus.ready => [
@@ -259,7 +309,7 @@ class ProfileAboutTab extends StatelessWidget {
     final l10n = context.l10n;
     final lang = Localizations.localeOf(context).languageCode;
     final bio = profile.bio;
-    final links = ProfileLinksRow.entries(context, profile.links);
+    final links = profile.links;
     final hasDetails = bio != null || links.isNotEmpty || profile.expertise.isNotEmpty;
     // The own stats come from /me/stats (the streak badge follows them); someone else's from their public endpoint.
     final statsOf = profile.isMe ? null : profile.username;
@@ -275,23 +325,29 @@ class ProfileAboutTab extends StatelessWidget {
               if (bio != null) _Section(title: l10n.profileAboutBio, child: ProfileBioText(bio, style: context.textTheme.bodyLarge?.copyWith(height: 1.6))),
               if (links.isNotEmpty)
                 _Section(
-                  title: l10n.profileLinks,
+                  title: l10n.profileLinksSection,
                   child: Column(
                     children: [
-                      for (final (icon, label, url) in links)
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          minTileHeight: 56,
-                          leading: Icon(icon, color: context.colors.primary),
-                          title: Text(label),
-                          subtitle: Text(
-                            Bidi.ltrIsolate(_display(url)),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.bodySmall,
+                      for (final link in links)
+                        Semantics(
+                          link: true,
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            minTileHeight: 56,
+                            leading: PlatformIcon(link.platform, color: context.colors.textPrimary),
+                            title: Text(Bidi.isolateOppositeRuns(
+                              linkPlatformName(l10n, link.platform, label: link.label),
+                              Directionality.of(context),
+                            )),
+                            subtitle: Text(
+                              Bidi.ltrIsolate(displayLink(link.url)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.textTheme.bodySmall,
+                            ),
+                            trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+                            onTap: () => openExternalLink(link.url),
                           ),
-                          trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                          onTap: () => openExternalLink(url),
                         ),
                     ],
                   ),
@@ -345,13 +401,14 @@ class ProfileAboutTab extends StatelessWidget {
     );
   }
 
-  /// `https://github.com/mona/` → `github.com/mona`.
-  static String _display(String url) {
-    final uri = Uri.tryParse(url);
-    if (uri == null || uri.host.isEmpty) return url;
-    final path = uri.path.endsWith('/') ? uri.path.substring(0, uri.path.length - 1) : uri.path;
-    return '${uri.host.startsWith('www.') ? uri.host.substring(4) : uri.host}$path';
-  }
+}
+
+/// `https://github.com/mona/` → `github.com/mona`.
+String displayLink(String url) {
+  final uri = Uri.tryParse(url);
+  if (uri == null || uri.host.isEmpty) return url;
+  final path = uri.path.endsWith('/') ? uri.path.substring(0, uri.path.length - 1) : uri.path;
+  return '${uri.host.startsWith('www.') ? uri.host.substring(4) : uri.host}$path';
 }
 
 class _Section extends StatelessWidget {

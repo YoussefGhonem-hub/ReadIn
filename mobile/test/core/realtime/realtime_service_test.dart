@@ -100,10 +100,21 @@ void main() {
       expect(connection.listening('live/articles/a1/reactions'), isTrue);
       expect(connection.listening('live/articles/a1/commentCount'), isTrue);
       expect(connection.listening('live/articles/a1/saveCount'), isTrue);
+      expect(connection.listening('live/articles/a1/repostCount'), isTrue);
 
       await subscription.cancel();
       await settle();
       expect(connection.listening('live/articles/a1/commentCount'), isFalse);
+    });
+
+    test('the repost counter (F29) comes with the others', () async {
+      final seen = <LiveArticleCounts>[];
+      final subscription = service.watchArticle('a1').listen(seen.add);
+      await settle();
+      connection.emit('live/articles/a1/repostCount', 5);
+      await settle();
+      expect(seen.last, const LiveArticleCounts(repostCount: 5));
+      await subscription.cancel();
     });
 
     test('ignore malformed values', () async {

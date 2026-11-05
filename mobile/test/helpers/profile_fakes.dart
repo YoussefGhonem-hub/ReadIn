@@ -14,6 +14,7 @@ import 'package:readin/features/profile/presentation/cubit/follow_list_cubit.dar
 import 'package:readin/features/profile/presentation/cubit/privacy_cubit.dart';
 import 'package:readin/features/profile/presentation/cubit/profile_articles_cubit.dart';
 import 'package:readin/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:readin/features/profile/presentation/cubit/profile_reposts_cubit.dart';
 import 'package:readin/features/saved/presentation/cubit/collections_cubit.dart';
 import 'package:readin/features/saved/presentation/cubit/saved_list_cubit.dart';
 
@@ -23,6 +24,8 @@ import 'social_fakes.dart';
 class MockProfileCubit extends MockCubit<ProfileState> implements ProfileCubit {}
 
 class MockProfileArticlesCubit extends MockCubit<FeedState> implements ProfileArticlesCubit {}
+
+class MockProfileRepostsCubit extends MockCubit<FeedState> implements ProfileRepostsCubit {}
 
 class MockEditProfileCubit extends MockCubit<EditProfileState> implements EditProfileCubit {}
 
@@ -40,6 +43,15 @@ MockProfileCubit profileCubit(UserProfile profile) => MockProfileCubit()..hold(P
 MockProfileArticlesCubit articlesCubit(List<ArticleCard> items, {String? nextCursor}) {
   final cubit = MockProfileArticlesCubit()..hold(FeedState(status: FeedStatus.ready, items: items, nextCursor: nextCursor));
   when(cubit.loadMore).thenAnswer((_) async {});
+  return cubit;
+}
+
+/// The Reposts tab (F29) holding [items] (an empty list shows the empty state).
+MockProfileRepostsCubit repostsCubit(List<ArticleCard> items, {String? nextCursor}) {
+  final cubit = MockProfileRepostsCubit()..hold(FeedState(status: FeedStatus.ready, items: items, nextCursor: nextCursor));
+  when(cubit.loadMore).thenAnswer((_) async {});
+  when(cubit.ensureLoaded).thenAnswer((_) async {});
+  when(cubit.refresh).thenAnswer((_) async {});
   return cubit;
 }
 
@@ -61,11 +73,17 @@ List<BlocProvider> appStores({Me? me = sampleMe, FollowsState follows = const Fo
 }
 
 /// What [ProfileView] needs above it, besides [appStores].
-List<BlocProvider> profileScreen(UserProfile profile, {List<ArticleCard> articles = const [], PrivacyState privacy = const PrivacyState()}) {
+List<BlocProvider> profileScreen(
+  UserProfile profile, {
+  List<ArticleCard> articles = const [],
+  List<ArticleCard> reposts = const [],
+  PrivacyState privacy = const PrivacyState(),
+}) {
   final saved = MockSavedListCubit()..hold(const SavedListState(status: SavedListStatus.ready));
   return [
     BlocProvider<ProfileCubit>.value(value: profileCubit(profile)),
     BlocProvider<ProfileArticlesCubit>.value(value: articlesCubit(articles)),
+    BlocProvider<ProfileRepostsCubit>.value(value: repostsCubit(reposts)),
     BlocProvider<SavedListCubit>.value(value: saved),
     BlocProvider<PrivacyCubit>.value(value: MockPrivacyCubit()..hold(privacy)),
   ];

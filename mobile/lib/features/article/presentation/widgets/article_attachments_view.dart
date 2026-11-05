@@ -102,7 +102,7 @@ class _DocumentBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _DocumentHeader(document: document, onTap: () => open(0)),
+        _DocumentHeader(article: article, document: document, onTap: () => open(0)),
         if (pages.isNotEmpty) ...[
           const SizedBox(height: ReadInSpace.s2),
           MediaCarousel(
@@ -147,10 +147,12 @@ class _DocumentBlock extends StatelessWidget {
   }
 }
 
-/// "📄 {title} · 12 pages".
+/// "📄 {title} · 12 pages", opening the viewer, then the download icon when the caller may download the file
+/// ([DocumentDownloadButton]): a separate button, so screen readers reach both.
 class _DocumentHeader extends StatelessWidget {
-  const _DocumentHeader({required this.document, required this.onTap});
+  const _DocumentHeader({required this.article, required this.document, required this.onTap});
 
+  final ArticleCard article;
   final DocumentAttachment document;
   final VoidCallback onTap;
 
@@ -160,39 +162,54 @@ class _DocumentHeader extends StatelessWidget {
     final l10n = context.l10n;
     final title = Bidi.isolateOppositeRuns(document.title, Directionality.of(context));
     final pages = l10n.pdfPageCount(document.pageCount);
-    return Semantics(
-      button: true,
-      label: '${l10n.openDocument}: ${document.title}, $pages',
-      onTap: onTap,
-      excludeSemantics: true,
-      child: Material(
-        color: colors.primaryContainer,
-        borderRadius: BorderRadius.circular(ReadInRadius.md),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(ReadInRadius.md),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s3, vertical: ReadInSpace.s2),
-            child: Row(
-              children: [
-                const Text('📄'),
-                const SizedBox(width: ReadInSpace.s2),
-                Expanded(
-                  child: Text.rich(
-                    TextSpan(children: [
-                      TextSpan(text: title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      TextSpan(text: ' · $pages'),
-                    ]),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.bodySmall?.copyWith(color: colors.onPrimaryContainer),
+    final radius = BorderRadius.circular(ReadInRadius.md);
+    return Material(
+      color: colors.primaryContainer,
+      borderRadius: radius,
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              button: true,
+              label: '${l10n.openDocument}: ${document.title}, $pages',
+              onTap: onTap,
+              excludeSemantics: true,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: radius,
+                child: ConstrainedBox(
+                  // A 48 px target, the download icon's height too: the strip keeps its height with or without it.
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s3, vertical: ReadInSpace.s2),
+                    child: Row(
+                      children: [
+                        const Text('📄'),
+                        const SizedBox(width: ReadInSpace.s2),
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(children: [
+                              TextSpan(text: title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                              TextSpan(text: ' · $pages'),
+                            ]),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.bodySmall?.copyWith(color: colors.onPrimaryContainer),
+                          ),
+                        ),
+                        Icon(Icons.open_in_full_rounded, size: 16, color: colors.onPrimaryContainer),
+                      ],
+                    ),
                   ),
                 ),
-                Icon(Icons.open_in_full_rounded, size: 16, color: colors.onPrimaryContainer),
-              ],
+              ),
             ),
           ),
-        ),
+          if (document.canDownload) ...[
+            Container(width: 1, height: 24, color: colors.onPrimaryContainer.withValues(alpha: 0.2)),
+            DocumentDownloadButton(article: article, document: document, color: colors.onPrimaryContainer),
+          ],
+        ],
       ),
     );
   }

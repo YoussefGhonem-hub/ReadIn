@@ -22,6 +22,7 @@ import '../../domain/entities/profile.dart';
 import '../cubit/privacy_cubit.dart';
 import '../cubit/profile_articles_cubit.dart';
 import '../cubit/profile_cubit.dart';
+import '../cubit/profile_reposts_cubit.dart';
 import '../profile_routes.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/profile_menu.dart';
@@ -86,6 +87,8 @@ class _ProfileProviders extends StatelessWidget {
         providers: [
           BlocProvider(create: (_) => getIt<ProfileCubit>()..load(username)),
           BlocProvider(create: (_) => getIt<ProfileArticlesCubit>(param1: username)..load()),
+          // F29: created, and loaded, when the Reposts tab is first shown.
+          BlocProvider(create: (_) => getIt<ProfileRepostsCubit>(param1: username)),
           BlocProvider(create: (_) => getIt<SavedListCubit>()..load()),
           BlocProvider(create: (_) => getIt<PrivacyCubit>()),
           // Created when a moderator warns or suspends from the "⋯" menu (F22).
@@ -125,9 +128,10 @@ class _SettingsButton extends StatelessWidget {
       );
 }
 
-/// A loaded profile, its header and tabs: Articles · Categories (F31) · Saved (own profile only) · Paths · About.
-/// Needs a [ProfileCubit] and [ProfileArticlesCubit] above it, plus [SavedListCubit] and [PrivacyCubit] on the own
-/// profile. The Categories tab makes its own cubit when it is first shown.
+/// A loaded profile, its header and tabs: Articles · Categories (F31) · Reposts (F29) · Saved (own profile only) ·
+/// Paths · About. Needs a [ProfileCubit], [ProfileArticlesCubit] and [ProfileRepostsCubit] above it, plus
+/// [SavedListCubit] and [PrivacyCubit] on the own profile. The Categories tab makes its own cubit when it is first
+/// shown.
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key, this.isTab = false});
 
@@ -199,6 +203,7 @@ class _ProfileContent extends StatelessWidget {
     final tabs = [
       Tab(text: l10n.profileTabArticles),
       Tab(text: l10n.profileTabCategories),
+      Tab(text: l10n.profileTabReposts),
       if (isMe) Tab(text: l10n.profileTabSaved),
       Tab(text: l10n.profileTabPaths),
       Tab(text: l10n.profileTabAbout),
@@ -233,6 +238,7 @@ class _ProfileContent extends StatelessWidget {
           children: [
             ProfileArticlesTab(profile: profile, onWrite: isMe ? () => context.go('/write') : null),
             ProfileCategoriesTab(username: profile.username, isMe: isMe, leading: profileTabOverlap),
+            ProfileRepostsTab(profile: profile),
             if (isMe) const SavedArticlesList(leading: profileTabOverlap),
             ProfilePathsTab(profile: profile),
             ProfileAboutTab(profile: profile, onEdit: isMe ? onEdit : null),

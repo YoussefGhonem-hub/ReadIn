@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../profile/domain/entities/profile_link.dart';
 import 'external_credential.dart';
 
 /// The signed-in user as stored in SQL Server (`MeDto`, docs/api/contract-v1.md).
@@ -12,7 +13,8 @@ class Me extends Equatable {
     this.email,
     this.avatarUrl,
     this.bio,
-    this.links = const {},
+    this.headline,
+    this.links = const [],
     this.uiLanguage = 'ar',
     this.articleLanguage = 'ar-EG',
     this.theme = 'system',
@@ -45,7 +47,12 @@ class Me extends Equatable {
   final String username;
   final String? avatarUrl;
   final String? bio;
-  final Map<String, String> links;
+
+  /// The title under the name (F14); null when there is none.
+  final String? headline;
+
+  /// Social links (F14), in the member's order.
+  final List<ProfileLink> links;
   final String uiLanguage;
   final String articleLanguage;
   final String theme;
@@ -99,6 +106,7 @@ class Me extends Equatable {
         username,
         avatarUrl,
         bio,
+        headline,
         links,
         uiLanguage,
         articleLanguage,

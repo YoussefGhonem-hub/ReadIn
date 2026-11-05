@@ -14,11 +14,10 @@ _MeModel _$MeModelFromJson(Map<String, dynamic> json) => _MeModel(
   username: json['username'] as String,
   avatarUrl: json['avatarUrl'] as String?,
   bio: json['bio'] as String?,
-  links:
-      (json['links'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(k, e as String?),
-      ) ??
-      const <String, String?>{},
+  headline: json['headline'] as String?,
+  links: json['links'] == null
+      ? const <ProfileLinkModel>[]
+      : const ProfileLinksJson().fromJson(json['links']),
   uiLanguage: json['uiLanguage'] as String? ?? 'ar',
   articleLanguage: json['articleLanguage'] as String? ?? 'ar-EG',
   theme: json['theme'] as String? ?? 'system',
@@ -60,7 +59,8 @@ Map<String, dynamic> _$MeModelToJson(_MeModel instance) => <String, dynamic>{
   'username': instance.username,
   'avatarUrl': ?instance.avatarUrl,
   'bio': ?instance.bio,
-  'links': instance.links,
+  'headline': ?instance.headline,
+  'links': ?const ProfileLinksJson().toJson(instance.links),
   'uiLanguage': instance.uiLanguage,
   'articleLanguage': instance.articleLanguage,
   'theme': instance.theme,

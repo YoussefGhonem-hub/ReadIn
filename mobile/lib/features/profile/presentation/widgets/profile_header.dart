@@ -13,6 +13,7 @@ import '../../../../shared/widgets/state_views.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../domain/entities/profile.dart';
 import '../profile_routes.dart';
+import 'platform_icon.dart';
 
 /// Counters on profiles: the exact number up to 9,999, then compact ("12.5K" / "12.5 ألف"), Western digits.
 String formatProfileCount(int value, String languageCode) => westernDigits(
@@ -66,7 +67,8 @@ class FollowsYouChip extends StatelessWidget {
   }
 }
 
-/// Avatar, name, verified badge, `@username`, "Follows you", bio, links, the follow / edit button and the stats row.
+/// Avatar, name, verified badge, the title (in full), `@username`, "Follows you", bio, links, the follow / edit button
+/// and the stats row.
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({super.key, required this.profile, this.onEdit});
 
@@ -77,11 +79,15 @@ class ProfileHeader extends StatelessWidget {
 
   static const avatarSize = 80.0;
 
+  /// The title line (tests find it by this key).
+  static const headlineKey = ValueKey('profile-headline');
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
     final bio = profile.bio;
+    final headline = profile.headline;
     return Padding(
       padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, ReadInSpace.s3),
       child: Column(
@@ -104,6 +110,15 @@ class ProfileHeader extends StatelessWidget {
                         ],
                       ),
                     ),
+                    // The title in full, wrapped, in its own direction (F14); none, no line.
+                    if (headline != null) ...[
+                      const SizedBox(height: 2),
+                      ProfileBioText(
+                        headline,
+                        key: headlineKey,
+                        style: context.textTheme.bodyMedium?.copyWith(color: colors.textPrimary, height: 1.4),
+                      ),
+                    ],
                     const SizedBox(height: 2),
                     UsernameText(profile.username, style: context.textTheme.bodyMedium?.copyWith(color: colors.textSecondary)),
                     if (profile.followsYou) ...[const SizedBox(height: ReadInSpace.s2), const FollowsYouChip()],
@@ -116,7 +131,7 @@ class ProfileHeader extends StatelessWidget {
             const SizedBox(height: ReadInSpace.s3),
             ProfileBioText(bio, maxLines: 4, style: context.textTheme.bodyMedium?.copyWith(height: 1.5)),
           ],
-          if (!profile.links.isEmpty) ...[
+          if (profile.links.isNotEmpty) ...[
             const SizedBox(height: ReadInSpace.s2),
             ProfileLinksRow(links: profile.links),
           ],
@@ -141,43 +156,48 @@ class ProfileHeader extends StatelessWidget {
   }
 }
 
-/// GitHub / LinkedIn / website, opened in the browser. Addresses stay left to right.
+/// The social links (F14) as a row of icons in the member's order, for everyone including guests. Each is a link
+/// named after its platform (or the label of an Other link) that opens in the system browser or the platform's app.
+/// The row keeps its order in RTL but the marks never mirror.
 class ProfileLinksRow extends StatelessWidget {
-  const ProfileLinksRow({super.key, required this.links});
+  const ProfileLinksRow({super.key, required this.links, this.onOpen = openExternalLink});
 
-  final ProfileLinks links;
+  final List<ProfileLink> links;
 
-  static List<(IconData, String, String)> entries(BuildContext context, ProfileLinks links) {
-    final l10n = context.l10n;
-    return [
-      if (links.github case final url? when url.isNotEmpty) (Icons.code_rounded, l10n.profileGithub, url),
-      if (links.linkedin case final url? when url.isNotEmpty) (Icons.work_outline_rounded, l10n.profileLinkedin, url),
-      if (links.website case final url? when url.isNotEmpty) (Icons.language_rounded, l10n.profileWebsite, url),
-    ];
-  }
+  /// Opens a link; tests replace it.
+  final Future<bool> Function(String url) onOpen;
+
+  static Key keyOf(int index) => ValueKey('profile-link-$index');
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final colors = context.colors;
     return Wrap(
       spacing: ReadInSpace.s1,
+      runSpacing: ReadInSpace.s1,
       children: [
-        for (final (icon, label, url) in entries(context, links))
-          Semantics(
-            link: true,
-            label: context.l10n.profileOpenLink(label),
-            excludeSemantics: true,
-            child: TextButton.icon(
-              onPressed: () => openExternalLink(url),
-              icon: Icon(icon, size: 18),
-              label: Text(label),
-              style: TextButton.styleFrom(
-                minimumSize: const Size(48, 48),
-                padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2),
-                foregroundColor: colors.primary,
+        for (final (i, link) in links.indexed)
+          Builder(builder: (context) {
+            final name = linkPlatformName(l10n, link.platform, label: link.label);
+            return Semantics(
+              key: keyOf(i),
+              link: true,
+              label: name,
+              onTap: () => onOpen(link.url),
+              excludeSemantics: true,
+              child: IconButton(
+                tooltip: name,
+                onPressed: () => onOpen(link.url),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  backgroundColor: colors.surfaceVariant,
+                  foregroundColor: colors.textPrimary,
+                ),
+                icon: PlatformIcon(link.platform, size: 20, color: colors.textPrimary),
               ),
-            ),
-          ),
+            );
+          }),
       ],
     );
   }

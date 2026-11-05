@@ -6,19 +6,61 @@ import '../../domain/entities/profile.dart';
 part 'profile_models.freezed.dart';
 part 'profile_models.g.dart';
 
-/// `ProfileDto.links`: the keys are `github`, `linkedin`, `website`; unset links are null.
+/// `ProfileLinkDto` `{ platform, url, label }` (F14).
 @freezed
-abstract class ProfileLinksModel with _$ProfileLinksModel {
-  const ProfileLinksModel._();
+abstract class ProfileLinkModel with _$ProfileLinkModel {
+  const ProfileLinkModel._();
 
-  const factory ProfileLinksModel({String? github, String? linkedin, String? website}) = _ProfileLinksModel;
+  const factory ProfileLinkModel({required String platform, @Default('') String url, String? label}) = _ProfileLinkModel;
 
-  factory ProfileLinksModel.fromJson(Map<String, dynamic> json) => _$ProfileLinksModelFromJson(json);
+  factory ProfileLinkModel.fromJson(Map<String, dynamic> json) => _$ProfileLinkModelFromJson(json);
 
-  static String? _blankToNull(String? value) => value == null || value.trim().isEmpty ? null : value.trim();
+  /// Null for a platform this app version doesn't know, or an empty link.
+  ProfileLink? toEntity() {
+    final kind = LinkPlatform.fromWire(platform);
+    final address = url.trim();
+    if (kind == null || address.isEmpty) return null;
+    final name = label?.trim() ?? '';
+    return ProfileLink(platform: kind, url: address, label: kind == LinkPlatform.other && name.isNotEmpty ? name : null);
+  }
 
-  ProfileLinks toEntity() =>
-      ProfileLinks(github: _blankToNull(github), linkedin: _blankToNull(linkedin), website: _blankToNull(website));
+  /// The links in their order, skipping the ones [toEntity] can't show.
+  static List<ProfileLink> entities(List<ProfileLinkModel> links) => [
+        for (final link in links) ?link.toEntity(),
+      ];
+
+  /// `PATCH /me` `links[]`: the URL as typed (the server adds `https://`), a label for Other only.
+  static Map<String, dynamic> request(ProfileLink link) => {
+        'platform': link.platform.wire,
+        'url': link.url.trim(),
+        if (link.platform == LinkPlatform.other) 'label': link.label?.trim(),
+      };
+}
+
+/// `links` in `ProfileDto` and `MeDto`: an array of [ProfileLinkModel]. An API from before the pre-production step sent
+/// `{ github, linkedin, website }`; those read as `github`, `linkedin`, `website` links, so an older server still
+/// shows them.
+class ProfileLinksJson implements JsonConverter<List<ProfileLinkModel>, Object?> {
+  const ProfileLinksJson();
+
+  static const _legacy = {'github': 'github', 'linkedin': 'linkedin', 'website': 'website'};
+
+  @override
+  List<ProfileLinkModel> fromJson(Object? json) => switch (json) {
+        final List<dynamic> list => [
+            for (final item in list)
+              if (item is Map<String, dynamic> && item['platform'] is String) ProfileLinkModel.fromJson(item),
+          ],
+        final Map<String, dynamic> map => [
+            for (final MapEntry(:key, :value) in map.entries)
+              if ((_legacy[key.toLowerCase()], value) case (final platform?, final String url) when url.trim().isNotEmpty)
+                ProfileLinkModel(platform: platform, url: url),
+          ],
+        _ => const [],
+      };
+
+  @override
+  Object? toJson(List<ProfileLinkModel> links) => [for (final link in links) link.toJson()];
 }
 
 /// `ProfileDto.expertise[]`.
@@ -69,8 +111,10 @@ abstract class ProfileModel with _$ProfileModel {
     // `{ "64": url, "128": url, "256": url, "512": url }`, or null.
     Map<String, String>? avatarVariants,
     @Default(false) bool isVerified,
+    // F14 title, shown in full on the profile; older APIs leave it out.
+    String? headline,
     String? bio,
-    @Default(ProfileLinksModel()) ProfileLinksModel links,
+    @ProfileLinksJson() @Default(<ProfileLinkModel>[]) List<ProfileLinkModel> links,
     @Default(<ExpertiseFieldModel>[]) List<ExpertiseFieldModel> expertise,
     DateTime? joinedAt,
     @Default(ProfileStatsModel()) ProfileStatsModel stats,
@@ -96,8 +140,9 @@ abstract class ProfileModel with _$ProfileModel {
             if (int.tryParse(key) case final width? when value.isNotEmpty) width: value,
         },
         isVerified: isVerified,
+        headline: HeadlineRules.normalize(headline),
         bio: bio == null || bio!.trim().isEmpty ? null : bio,
-        links: links.toEntity(),
+        links: ProfileLinkModel.entities(links),
         expertise: [for (final field in expertise) field.toEntity()],
         joinedAt: joinedAt,
         stats: stats.toEntity(),
@@ -113,9 +158,11 @@ abstract class ProfileModel with _$ProfileModel {
 /// `PATCH /me` body, built by hand because a missing key and `null` mean different things:
 /// - `avatarAssetId`: missing = keep the current avatar, `null` = remove it, an id = the new one (`GET /me` has no
 ///   asset id, so an untouched avatar must leave the key out);
-/// - `expertiseFieldIds`: missing = unchanged, `[]` = none.
+/// - `expertiseFieldIds`: missing = unchanged, `[]` = none;
+/// - `links` (F14): missing = unchanged, an array replaces the whole list in its order (`[]` removes them all);
+/// - `headline` (F14): missing = unchanged, `null` clears it. The form always sends it.
 ///
-/// The links are always sent, with nulls, as the server replaces all three. The old `avatarUrl` is never sent.
+/// The old `avatarUrl` is never sent.
 class UpdateProfileRequest {
   const UpdateProfileRequest(this.update);
 
@@ -130,11 +177,8 @@ class UpdateProfileRequest {
       'displayName': update.displayName,
       'username': update.username,
       'bio': _blankToNull(update.bio),
-      'links': {
-        'github': _blankToNull(links.github),
-        'linkedin': _blankToNull(links.linkedin),
-        'website': _blankToNull(links.website),
-      },
+      'headline': HeadlineRules.normalize(update.headline),
+      if (links != null) 'links': [for (final link in links) ProfileLinkModel.request(link)],
       ...switch (update.avatar) {
         NewAvatar(:final assetId) => {'avatarAssetId': assetId},
         RemoveAvatar() => {'avatarAssetId': null},

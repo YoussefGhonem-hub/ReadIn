@@ -65,6 +65,8 @@ extension ModerationLabels on AppLocalizations {
         ModerationLogAction.userSuspend => moderationLogUserSuspend,
         ModerationLogAction.userUnsuspend => moderationLogUserUnsuspend,
         ModerationLogAction.userClearCategory => moderationLogUserClearCategory,
+        ModerationLogAction.userClearLinks => moderationLogUserClearLinks,
+        ModerationLogAction.userClearHeadline => moderationLogUserClearHeadline,
         ModerationLogAction.reportsDismiss => moderationLogReportsDismiss,
         ModerationLogAction.unknown => moderationLogOther,
       };
@@ -98,6 +100,8 @@ IconData logActionIcon(ModerationLogAction action) => switch (action) {
       ModerationLogAction.userSuspend => Icons.block_rounded,
       ModerationLogAction.userUnsuspend => Icons.lock_open_rounded,
       ModerationLogAction.userClearCategory => Icons.folder_off_outlined,
+      ModerationLogAction.userClearLinks => Icons.link_off_rounded,
+      ModerationLogAction.userClearHeadline => Icons.badge_outlined,
       ModerationLogAction.reportsDismiss => Icons.done_all_rounded,
       ModerationLogAction.unknown => Icons.shield_outlined,
     };

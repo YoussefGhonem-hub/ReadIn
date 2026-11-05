@@ -18,6 +18,8 @@ import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/auth_widgets.dart';
 import '../../domain/entities/profile.dart';
 import '../cubit/edit_profile_cubit.dart';
+import '../widgets/headline_field.dart';
+import '../widgets/profile_links_editor.dart';
 
 /// `/profile/edit` (F14). The profile screen hands over the loaded [profile]; otherwise the own profile is loaded.
 /// Pops `true` once saved.
@@ -54,9 +56,7 @@ class _EditProfileViewState extends State<EditProfileView> {
   final _name = TextEditingController();
   final _username = TextEditingController();
   final _bio = TextEditingController();
-  final _github = TextEditingController();
-  final _linkedin = TextEditingController();
-  final _website = TextEditingController();
+  final _headline = TextEditingController();
   bool _filled = false;
 
   @override
@@ -73,26 +73,18 @@ class _EditProfileViewState extends State<EditProfileView> {
     _name.text = profile.displayName;
     _username.text = profile.username;
     _bio.text = profile.bio ?? '';
-    _github.text = profile.links.github ?? '';
-    _linkedin.text = profile.links.linkedin ?? '';
-    _website.text = profile.links.website ?? '';
+    _headline.text = profile.headline ?? '';
   }
 
   @override
   void dispose() {
-    for (final c in [_name, _username, _bio, _github, _linkedin, _website]) {
+    for (final c in [_name, _username, _bio, _headline]) {
       c.dispose();
     }
     super.dispose();
   }
 
-  void _submit() => context.read<EditProfileCubit>().submit(
-        displayName: _name.text,
-        bio: _bio.text,
-        github: _github.text,
-        linkedin: _linkedin.text,
-        website: _website.text,
-      );
+  void _submit() => context.read<EditProfileCubit>().submit(displayName: _name.text, bio: _bio.text, headline: _headline.text);
 
   @override
   Widget build(BuildContext context) {
@@ -150,28 +142,6 @@ class _Form extends StatelessWidget {
     final cubit = context.read<EditProfileCubit>();
     final busy = state.submitting;
     String? error(String field) => errorText(context, state.errors[field]);
-
-    Widget linkField(TextEditingController controller, String field, String label, IconData icon, String hint) => Padding(
-          padding: const EdgeInsets.only(bottom: ReadInSpace.s3),
-          child: TextField(
-            controller: controller,
-            enabled: !busy,
-            textDirection: TextDirection.ltr,
-            keyboardType: TextInputType.url,
-            autocorrect: false,
-            enableSuggestions: false,
-            textInputAction: TextInputAction.next,
-            inputFormatters: [LengthLimitingTextInputFormatter(ProfileLimits.linkMax)],
-            onChanged: (_) => cubit.edited(field),
-            decoration: InputDecoration(
-              labelText: label,
-              hintText: hint,
-              hintTextDirection: TextDirection.ltr,
-              prefixIcon: Icon(icon),
-              errorText: error(field),
-            ),
-          ),
-        );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, ReadInSpace.s6),
@@ -234,6 +204,13 @@ class _Form extends StatelessWidget {
           ),
         ),
         const SizedBox(height: ReadInSpace.s4),
+        HeadlineField(
+          controller: view._headline,
+          enabled: !busy,
+          error: error(ProfileFields.headline),
+          onChanged: (_) => cubit.edited(ProfileFields.headline),
+        ),
+        const SizedBox(height: ReadInSpace.s4),
         BidiTextField(
           controller: view._bio,
           enabled: !busy,
@@ -248,13 +225,9 @@ class _Form extends StatelessWidget {
             errorText: error(ProfileFields.bio),
           ),
         ),
-        const SizedBox(height: ReadInSpace.s4),
-        _SectionTitle(l10n.profileLinks),
-        const SizedBox(height: ReadInSpace.s3),
-        linkField(view._github, ProfileFields.github, l10n.profileGithub, Icons.code_rounded, 'https://github.com/…'),
-        linkField(view._linkedin, ProfileFields.linkedin, l10n.profileLinkedin, Icons.work_outline_rounded, 'https://linkedin.com/in/…'),
-        linkField(view._website, ProfileFields.website, l10n.profileWebsite, Icons.language_rounded, 'https://…'),
-        const SizedBox(height: ReadInSpace.s3),
+        const SizedBox(height: ReadInSpace.s5),
+        ProfileLinksEditor(state: state),
+        const SizedBox(height: ReadInSpace.s5),
         _ExpertisePicker(state: state),
       ],
     );

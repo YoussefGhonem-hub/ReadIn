@@ -262,7 +262,8 @@ class AttachmentsCubit extends Cubit<AttachmentsState> {
         localId: _nextId(),
         file: PickedMediaFile(path: '', name: name.toLowerCase().endsWith('.pdf') ? name : '$name.pdf', sizeBytes: asset.sizeBytes > 0 ? asset.sizeBytes : null),
         title: pdf.title ?? '',
-        allowDownload: pdf.allowDownload ?? false,
+        // An existing document keeps its own value (the draft's, else the upload's).
+        allowDownload: pdf.allowDownload ?? asset.allowDownload,
         phase: _phaseOf(asset),
         asset: asset,
       );

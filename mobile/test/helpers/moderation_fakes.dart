@@ -12,6 +12,7 @@ import 'package:readin/features/moderation/presentation/cubit/moderation_list_cu
 import 'package:readin/features/moderation/presentation/cubit/moderation_notices_cubit.dart';
 import 'package:readin/features/moderation/presentation/cubit/moderation_summary_cubit.dart';
 import 'package:readin/features/moderation/presentation/cubit/report_cubit.dart';
+import 'package:readin/features/profile/domain/entities/profile_link.dart';
 
 class MockModerationRepository extends Mock implements ModerationRepository {}
 
@@ -142,8 +143,22 @@ ModerationQueueItem commentItem({ReportStatus status = ReportStatus.open, Modera
       ),
     );
 
-/// A reported user (spam), suspended or not.
-ModerationQueueItem userItem({ReportStatus status = ReportStatus.open, bool suspended = false, DateTime? until}) => ModerationQueueItem(
+/// The spammer's abusive title and links (F14), as a user case shows them.
+const spammerHeadline = 'Crypto expert | اكسب 1000\$ في يوم';
+const spammerLinks = [
+  ProfileLink(platform: LinkPlatform.telegram, url: 'https://t.me/free_crypto_deals'),
+  ProfileLink(platform: LinkPlatform.other, url: 'https://free-crypto.example/join?ref=readin', label: 'Free coins'),
+];
+
+/// A reported user (spam), suspended or not; with [headline] and [links] (F14) when given.
+ModerationQueueItem userItem({
+  ReportStatus status = ReportStatus.open,
+  bool suspended = false,
+  DateTime? until,
+  String? headline,
+  List<ProfileLink>? links = const [],
+}) =>
+    ModerationQueueItem(
       targetType: ModerationTargetType.user,
       targetId: spammer.id,
       status: status,
@@ -154,9 +169,12 @@ ModerationQueueItem userItem({ReportStatus status = ReportStatus.open, bool susp
       closedAt: status == ReportStatus.open ? null : _ago(const Duration(days: 1)),
       target: ModerationTarget(
         state: suspended ? ModerationTargetState.suspended : ModerationTargetState.active,
-        author: spammer,
+        author: headline == null
+            ? spammer
+            : Author(id: spammer.id, displayName: spammer.displayName, username: spammer.username, headline: headline),
         suspendedUntil: until,
         warningCount: 2,
+        links: links,
       ),
     );
 

@@ -372,6 +372,57 @@ void main() {
     );
 
     blocTest<CompleteProfileCubit, CompleteProfileState>(
+      'the optional title (F14): one line of at most 120 characters, checked before saving',
+      build: build,
+      seed: () => const CompleteProfileState(username: 'youssef_h', usernameStatus: UsernameStatus.available),
+      act: (cubit) async {
+        await cubit.submit(displayName: 'Youssef', headline: 'x' * 121);
+        await cubit.submit(displayName: 'Youssef', headline: 'Flutter\nEngineer');
+      },
+      expect: () => const [
+        CompleteProfileState(
+          username: 'youssef_h',
+          usernameStatus: UsernameStatus.available,
+          errors: {CompleteProfileCubit.headlineField: FailureCodes.profileHeadlineTooLong},
+        ),
+        CompleteProfileState(
+          username: 'youssef_h',
+          usernameStatus: UsernameStatus.available,
+          errors: {CompleteProfileCubit.headlineField: FailureCodes.profileHeadlineInvalid},
+        ),
+      ],
+      verify: (_) => verifyNever(() => complete(
+            displayName: any(named: 'displayName'),
+            username: any(named: 'username'),
+            avatarUrl: any(named: 'avatarUrl'),
+            headline: any(named: 'headline'),
+          )),
+    );
+
+    blocTest<CompleteProfileCubit, CompleteProfileState>(
+      'saves the title trimmed; a blank one is left out; a server error lands on the field',
+      setUp: () {
+        when(() => complete(displayName: 'Youssef', username: 'youssef_h', headline: 'Flutter Engineer | Dart'))
+            .thenAnswer((_) async => const Err(Failure(
+                  FailureCodes.validationFailed,
+                  statusCode: 400,
+                  fieldErrors: {'headline': [FailureCodes.profileHeadlineInvalid]},
+                )));
+      },
+      build: build,
+      seed: () => const CompleteProfileState(username: 'youssef_h', usernameStatus: UsernameStatus.available),
+      act: (cubit) => cubit.submit(displayName: 'Youssef', headline: '  Flutter Engineer | Dart '),
+      skip: 1,
+      expect: () => const [
+        CompleteProfileState(
+          username: 'youssef_h',
+          usernameStatus: UsernameStatus.available,
+          errors: {CompleteProfileCubit.headlineField: FailureCodes.profileHeadlineInvalid},
+        ),
+      ],
+    );
+
+    blocTest<CompleteProfileCubit, CompleteProfileState>(
       'user.username_taken from the server marks the handle as taken',
       setUp: () => when(() => complete(displayName: 'Youssef', username: 'youssef', avatarUrl: null))
           .thenAnswer((_) async => const Err(Failure(FailureCodes.usernameTaken, statusCode: 409))),

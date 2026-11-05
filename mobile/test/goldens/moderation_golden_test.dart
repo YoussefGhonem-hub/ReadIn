@@ -141,6 +141,29 @@ void main() {
       await expectLater(find.byType(ModerationCaseView), matchesVariantGolden(variant, 'goldens/moderation_case_${variant.name}.png'));
     });
 
+    testWidgets('moderation user case with title and links ${variant.name}', (tester) async {
+      final caseCubit = MockModerationCaseCubit()
+        ..hold(ModerationCaseState(
+          status: ModerationCaseStatus.ready,
+          moderationCase: ModerationCase(
+            item: userItem(headline: spammerHeadline, links: spammerLinks),
+            reports: [report('rp-8', reason: ReportReason.spam)],
+          ),
+        ));
+      final actions = MockModerationActionCubit()..hold(null);
+      await pump(
+        tester,
+        variant,
+        const ModerationCaseView(type: ModerationTargetType.user),
+        size: const Size(390, 1500),
+        providers: [
+          BlocProvider<ModerationCaseCubit>.value(value: caseCubit),
+          BlocProvider<ModerationActionCubit>.value(value: actions),
+        ],
+      );
+      await expectLater(find.byType(ModerationCaseView), matchesVariantGolden(variant, 'goldens/moderation_user_case_${variant.name}.png'));
+    });
+
     testWidgets('hidden article ${variant.name}', (tester) async {
       final language = languageOf(variant);
       final article = ArticleDetails(

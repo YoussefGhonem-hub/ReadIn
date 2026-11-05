@@ -91,6 +91,9 @@ void main() {
 
       await pump(tester, variant, [...appStores(), ...profileScreen(otherProfile)], const ProfileView(), height: 1700);
       final l10n = await AppLocalizations.delegate.load(variant.locale);
+      // The tab bar scrolls: with Reposts (F29) the About tab starts off screen.
+      await tester.ensureVisible(find.text(l10n.profileTabAbout));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(l10n.profileTabAbout));
       await tester.pumpAndSettle();
 
@@ -98,9 +101,7 @@ void main() {
       await expectLater(find.byType(ProfileView), matchesVariantGolden(variant, 'goldens/profile_about_${variant.name}.png'));
     });
 
-    testWidgets('edit profile ${variant.name}', (tester) async {
-      final cubit = MockEditProfileCubit()
-        ..hold(EditProfileState(
+    EditProfileState editState({Map<String, String> errors = const {}}) => EditProfileState(
           load: EditProfileLoad.ready,
           profile: otherProfile,
           username: otherProfile.username,
@@ -108,11 +109,53 @@ void main() {
           fields: sampleFields,
           fieldsStatus: EditProfileLoad.ready,
           expertiseIds: const ['f-dotnet', 'f-ai'],
-          // A link the server refused (`validation.url` on `links.website`).
-          errors: const {ProfileFields.website: FailureCodes.validationUrl},
-        ));
+          links: [
+            for (final (i, link) in otherProfile.links.indexed)
+              LinkDraft(id: i, platform: link.platform, url: link.url, label: link.label ?? ''),
+          ],
+          errors: errors,
+        );
+
+    testWidgets('edit profile ${variant.name}', (tester) async {
+      final cubit = MockEditProfileCubit()..hold(editState());
       await pump(tester, variant, [...appStores(), BlocProvider<EditProfileCubit>.value(value: cubit)], const EditProfileView(), height: 1400);
       await expectLater(find.byType(EditProfileView), matchesVariantGolden(variant, 'goldens/profile_edit_${variant.name}.png'));
+    });
+
+    testWidgets('edit profile links editor ${variant.name}', (tester) async {
+      // Links the server refused, each error under its own field (F14).
+      final cubit = MockEditProfileCubit()
+        ..hold(editState(errors: const {
+          'links[2].url': FailureCodes.linkHostMismatch,
+          'links[4].label': FailureCodes.linkLabelInvalid,
+        }));
+      await pump(tester, variant, [...appStores(), BlocProvider<EditProfileCubit>.value(value: cubit)], const EditProfileView(), height: 1400);
+      final l10n = await AppLocalizations.delegate.load(variant.locale);
+      await tester.scrollUntilVisible(find.text(l10n.profileLinksSection), 300, scrollable: find.byType(Scrollable).first);
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, 120));
+      await tester.pumpAndSettle();
+      await expectLater(find.byType(EditProfileView), matchesVariantGolden(variant, 'goldens/profile_edit_links_${variant.name}.png'));
+    });
+
+    testWidgets('profile reposts tab ${variant.name}', (tester) async {
+      final owner = Author(id: otherProfile.id, displayName: otherProfile.displayName, username: otherProfile.username, isVerified: true);
+      final reposts = [
+        for (var i = 0; i < 2; i++)
+          postCard(
+            i + 3,
+            language: language,
+            cover: false,
+            repostCount: 4 - i,
+            reactions: const ReactionCounts(insightful: 5),
+            reactionCount: 5,
+            repostedBy: RepostLabel(user: owner, repostedAt: DateTime.utc(2026, 11, 1, 9 - i)),
+          ),
+      ];
+      await pump(tester, variant, [...appStores(), ...profileScreen(otherProfile, reposts: reposts)], const ProfileView(), height: 1300);
+      final l10n = await AppLocalizations.delegate.load(variant.locale);
+      await tester.tap(find.text(l10n.profileTabReposts));
+      await tester.pumpAndSettle();
+      await expectLater(find.byType(ProfileView), matchesVariantGolden(variant, 'goldens/profile_reposts_${variant.name}.png'));
     });
 
     testWidgets('followers list ${variant.name}', (tester) async {

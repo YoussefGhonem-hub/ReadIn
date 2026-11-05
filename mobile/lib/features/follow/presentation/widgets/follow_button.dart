@@ -19,6 +19,7 @@ class FollowButton extends StatelessWidget {
     this.initiallyFollowing = false,
     this.dense = false,
     this.text = false,
+    this.followLabel,
   });
 
   final String userId;
@@ -32,6 +33,9 @@ class FollowButton extends StatelessWidget {
 
   /// A text button with no fill (the post card's header, F34).
   final bool text;
+
+  /// What "Follow" says, e.g. "متابعة" on comment rows (F11). "Following" stays.
+  final String? followLabel;
 
   Future<void> _toggle(BuildContext context) async {
     if (!requireAccount(context)) return;
@@ -52,6 +56,7 @@ class FollowButton extends StatelessWidget {
       name: name,
       dense: dense,
       text: text,
+      followLabel: followLabel,
       onPressed: () => _toggle(context),
     );
   }
@@ -102,8 +107,8 @@ class FollowButtonView extends StatelessWidget {
               icon: Icon(following ? Icons.check_rounded : Icons.add_rounded, size: 18),
               label: label,
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2),
-                minimumSize: const Size(48, 44),
+                padding: EdgeInsets.symmetric(horizontal: dense ? ReadInSpace.s1 : ReadInSpace.s2),
+                minimumSize: dense ? const Size(44, 40) : const Size(48, 44),
                 foregroundColor: following ? colors.textSecondary : colors.primary,
                 disabledForegroundColor: colors.textSecondary,
                 textStyle: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),

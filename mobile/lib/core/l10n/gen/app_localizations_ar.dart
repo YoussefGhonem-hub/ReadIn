@@ -611,6 +611,195 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileErrUrl => 'اكتب لينك كامل بيبدأ بـ https://';
 
   @override
+  String get profileHeadlineLabel => 'المسمى';
+
+  @override
+  String get profileHeadlineHint =>
+      'مثلاً: Senior Full Stack .NET Engineer | .NET';
+
+  @override
+  String get profileHeadlineHelper => 'اختياري: سطر واحد بيظهر تحت اسمك.';
+
+  @override
+  String get profileLinksSection => 'روابط';
+
+  @override
+  String get profileLinksHint => 'ضيف لحد 8 روابط لحساباتك.';
+
+  @override
+  String get profileLinksFull => 'دول 8 روابط. شيل واحد عشان تضيف غيره.';
+
+  @override
+  String profileLinksCountSemantics(int count, int max) {
+    return 'الروابط: $count من $max';
+  }
+
+  @override
+  String get profileLinkAdd => 'إضافة رابط';
+
+  @override
+  String get profileLinkPickPlatform => 'اختار المنصة';
+
+  @override
+  String get profileLinkPlatformAdded => 'مضاف بالفعل';
+
+  @override
+  String get profileLinkChangePlatform => 'غيّر المنصة';
+
+  @override
+  String get profileLinkUrl => 'الرابط';
+
+  @override
+  String get profileLinkLabel => 'اسم الرابط';
+
+  @override
+  String get profileLinkLabelHint => 'مثلاً: البودكاست بتاعي';
+
+  @override
+  String get profileLinkOther => 'تاني';
+
+  @override
+  String profileLinkOptions(String name) {
+    return 'خيارات رابط $name';
+  }
+
+  @override
+  String get profileLinkMoveUp => 'حرّكه لفوق';
+
+  @override
+  String get profileLinkMoveDown => 'حرّكه لتحت';
+
+  @override
+  String get profileLinkRemove => 'شيل الرابط';
+
+  @override
+  String get profileTabReposts => 'إعادة النشر';
+
+  @override
+  String get profileRepostsEmptyTitle => 'مفيش إعادة نشر لسه';
+
+  @override
+  String get profileRepostsEmptyBody => 'المقالات اللي بيعيد نشرها هتظهر هنا.';
+
+  @override
+  String get profileRepostsEmptyOwnTitle => 'لسه معدتش نشر أي مقال';
+
+  @override
+  String get profileRepostsEmptyOwnBody =>
+      'لما تعيد نشر مقال عجبك، هيظهر هنا وعند متابعينك.';
+
+  @override
+  String get profileErrHeadlineTooLong => 'المسمى لازم يكون 120 حرف أو أقل.';
+
+  @override
+  String get profileErrHeadlineInvalid =>
+      'المسمى لازم يكون سطر واحد من غير رموز خاصة.';
+
+  @override
+  String get profileErrLinkTooMany => 'تقدر تضيف 8 روابط بس.';
+
+  @override
+  String get profileErrLinkPlatformInvalid => 'اختار المنصة من القايمة.';
+
+  @override
+  String get profileErrLinkDuplicatePlatform => 'عندك رابط للمنصة دي بالفعل.';
+
+  @override
+  String get profileErrLinkTooLong => 'الرابط لازم يكون 500 حرف أو أقل.';
+
+  @override
+  String get profileErrLinkHttpsRequired => 'الرابط لازم يبدأ بـ https.';
+
+  @override
+  String get profileErrLinkUrlInvalid => 'الرابط ده مش صحيح.';
+
+  @override
+  String get profileErrLinkHostMismatch =>
+      'الرابط ده مش على موقع المنصة اللي اخترتها.';
+
+  @override
+  String get profileErrLinkLabelRequired => 'اكتب اسم للرابط.';
+
+  @override
+  String get profileErrLinkLabelInvalid =>
+      'اسم الرابط لازم يكون من 2 لـ 30 حرف في سطر واحد.';
+
+  @override
+  String get profileErrLinkLabelNotAllowed => 'الاسم للروابط من نوع «تاني» بس.';
+
+  @override
+  String get moderationUserLinks => 'روابط البروفايل';
+
+  @override
+  String get moderationUserNoLinks => 'مفيش روابط.';
+
+  @override
+  String get moderationUserHeadline => 'المسمى';
+
+  @override
+  String get moderationUserNoHeadline => 'مفيش مسمى.';
+
+  @override
+  String get moderationClearLinks => 'امسح الروابط';
+
+  @override
+  String moderationClearLinksTitle(String name) {
+    return 'تمسح كل روابط $name؟';
+  }
+
+  @override
+  String get moderationClearLinksBody =>
+      'كل الروابط اللي في بروفايله هتتمسح. مش هيوصله إشعار، والإجراء هيتسجل.';
+
+  @override
+  String get moderationLinksCleared => 'الروابط اتمسحت';
+
+  @override
+  String get moderationClearHeadline => 'امسح المسمى';
+
+  @override
+  String moderationClearHeadlineTitle(String name) {
+    return 'تمسح مسمى $name؟';
+  }
+
+  @override
+  String get moderationClearHeadlineBody =>
+      'المسمى اللي تحت اسمه هيتمسح من البروفايل والكروت والتعليقات. مش هيوصله إشعار، والإجراء هيتسجل.';
+
+  @override
+  String get moderationHeadlineCleared => 'المسمى اتمسح';
+
+  @override
+  String get moderationLogUserClearLinks => 'مسح الروابط';
+
+  @override
+  String get moderationLogUserClearHeadline => 'مسح المسمى';
+
+  @override
+  String notifArticleReposted(String name, int others) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$name و$others غيره أعادوا نشر مقالك',
+      many: '$name و$others غيره أعادوا نشر مقالك',
+      few: '$name و$others غيره أعادوا نشر مقالك',
+      two: '$name واتنين غيره أعادوا نشر مقالك',
+      one: '$name وشخص تاني أعادوا نشر مقالك',
+      zero: '$name أعاد نشر مقالك',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notificationTypeArticleReposted => 'إعادة النشر';
+
+  @override
+  String get notificationTypeArticleRepostedHint => 'لما حد يعيد نشر مقالك';
+
+  @override
+  String get pdfStripDownload => 'حمّل ملف الـ PDF';
+
+  @override
   String get errValidation => 'راجع الخانات المعلّمة.';
 
   @override
@@ -1220,7 +1409,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteAccountDeletedProfile =>
-      'بروفايلك: الاسم واسم المستخدم والصورة والنبذة والروابط';
+      'بروفايلك: الاسم واسم المستخدم والصورة والمسمى والنبذة والروابط';
 
   @override
   String get deleteAccountDeletedContact =>
@@ -1236,7 +1425,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteAccountDeletedActivity =>
-      'اهتماماتك وتقدّمك في القراية وإحصائياتك، وتفاعلاتك وإعجاباتك بالتعليقات والبلاغات اللي بعتّها، والمقالات المحفوظة والمجموعات، وأقسام مقالاتك (مقالاتك المنشورة بتفضل من غير قسم)، واللي بتتابعهم واللي بيتابعوك، والكتّاب والمجالات والمواضيع اللي كتمتها (وكتم الناس ليك)، واختياراتك \"قلّل من النوع ده\"';
+      'اهتماماتك وتقدّمك في القراية وإحصائياتك، وتفاعلاتك وإعادات نشرك وإعجاباتك بالتعليقات والبلاغات اللي بعتّها، والمقالات المحفوظة والمجموعات، وأقسام مقالاتك (مقالاتك المنشورة بتفضل من غير قسم)، واللي بتتابعهم واللي بيتابعوك، والكتّاب والمجالات والمواضيع اللي كتمتها (وكتم الناس ليك)، واختياراتك \"قلّل من النوع ده\"';
 
   @override
   String get deleteAccountDeletedDevices =>
@@ -3370,6 +3559,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errMuteOwnArticle => 'مينفعش تعمل كده على مقالك.';
 
   @override
+  String get errRepostOwnArticle => 'مينفعش تعيد نشر مقالك.';
+
+  @override
   String get profileMenu => 'اختيارات تانية';
 
   @override
@@ -4259,6 +4451,90 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get postComment => 'تعليق';
+
+  @override
+  String postBarReact(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تفاعل، $count',
+      zero: 'تفاعل',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String postBarReacted(String reaction, int count) {
+    return 'تفاعلت: $reaction، $count';
+  }
+
+  @override
+  String postBarComment(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تعليق، $count',
+      zero: 'تعليق',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String postBarRepost(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'إعادة نشر، $count',
+      zero: 'إعادة نشر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get repostOwnHint => 'مينفعش تعيد نشر مقالك';
+
+  @override
+  String repostLabelOne(String name) {
+    return 'أعاد نشره $name';
+  }
+
+  @override
+  String repostLabelMany(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name و$count غيره أعادوا نشره',
+      one: '$name وشخص تاني أعادوا نشره',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentBoxHint => 'اكتب تعليق…';
+
+  @override
+  String get commentBoxReplyHint => 'اكتب ردك…';
+
+  @override
+  String get commentBoxEmoji => 'إيموجي';
+
+  @override
+  String get commentBoxKeyboard => 'ارجع للكيبورد';
+
+  @override
+  String get commentBoxCancelReply => 'إلغاء الرد';
+
+  @override
+  String get commentBoxCancelEdit => 'إلغاء التعديل';
+
+  @override
+  String get commentBoxEmojiSearch => 'دوّر على إيموجي';
+
+  @override
+  String get commentBoxEmojiNoRecents => 'الإيموجي اللي بتستخدمه هيظهر هنا';
+
+  @override
+  String get commentRowFollow => 'متابعة';
 
   @override
   String get postOpenArticleHint => 'بيفتح المقال';

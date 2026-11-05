@@ -12,6 +12,7 @@ _AuthorModel _$AuthorModelFromJson(Map<String, dynamic> json) => _AuthorModel(
   username: json['username'] as String,
   avatarUrl: json['avatarUrl'] as String?,
   isVerified: json['isVerified'] as bool? ?? false,
+  headline: json['headline'] as String?,
 );
 
 Map<String, dynamic> _$AuthorModelToJson(_AuthorModel instance) =>
@@ -21,6 +22,21 @@ Map<String, dynamic> _$AuthorModelToJson(_AuthorModel instance) =>
       'username': instance.username,
       'avatarUrl': ?instance.avatarUrl,
       'isVerified': instance.isVerified,
+      'headline': ?instance.headline,
+    };
+
+_RepostLabelModel _$RepostLabelModelFromJson(Map<String, dynamic> json) =>
+    _RepostLabelModel(
+      user: AuthorModel.fromJson(json['user'] as Map<String, dynamic>),
+      othersCount: (json['othersCount'] as num?)?.toInt() ?? 0,
+      repostedAt: DateTime.parse(json['repostedAt'] as String),
+    );
+
+Map<String, dynamic> _$RepostLabelModelToJson(_RepostLabelModel instance) =>
+    <String, dynamic>{
+      'user': instance.user.toJson(),
+      'othersCount': instance.othersCount,
+      'repostedAt': instance.repostedAt.toIso8601String(),
     };
 
 _FieldRefModel _$FieldRefModelFromJson(Map<String, dynamic> json) =>
@@ -60,51 +76,55 @@ Map<String, dynamic> _$ReactionCountsModelToJson(
   'mindBlown': instance.mindBlown,
 };
 
-_ArticleCardModel _$ArticleCardModelFromJson(Map<String, dynamic> json) =>
-    _ArticleCardModel(
-      id: json['id'] as String,
-      slug: json['slug'] as String,
-      language: json['language'] as String,
-      title: json['title'] as String,
-      subtitle: json['subtitle'] as String?,
-      coverUrl: json['coverUrl'] as String?,
-      field: FieldRefModel.fromJson(json['field'] as Map<String, dynamic>),
-      author: json['author'] == null
-          ? null
-          : AuthorModel.fromJson(json['author'] as Map<String, dynamic>),
-      readingTimeMinutes: (json['readingTimeMinutes'] as num?)?.toInt() ?? 1,
-      isAiAssisted: json['isAiAssisted'] as bool? ?? false,
-      versionBadge: json['versionBadge'] as String?,
-      publishedAt: DateTime.parse(json['publishedAt'] as String),
-      reactionCount: (json['reactionCount'] as num?)?.toInt() ?? 0,
-      commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
-      attachments: json['attachments'] == null
-          ? null
-          : ArticleAttachmentsModel.fromJson(
-              json['attachments'] as Map<String, dynamic>,
-            ),
-      reactions: json['reactions'] == null
-          ? null
-          : ReactionCountsModel.fromJson(
-              json['reactions'] as Map<String, dynamic>,
-            ),
-      saveCount: (json['saveCount'] as num?)?.toInt() ?? 0,
-      myReaction: json['myReaction'] as String?,
-      isSaved: json['isSaved'] as bool? ?? false,
-      excerpt: json['excerpt'] as String?,
-      hasMore: json['hasMore'] as bool? ?? false,
-      isFollowingAuthor: json['isFollowingAuthor'] as bool? ?? false,
-      tags: json['tags'] == null
-          ? const <TagRefModel>[]
-          : tagRefsFromJson(json['tags']),
-      tagCount: (json['tagCount'] as num?)?.toInt() ?? 0,
-      topic: json['topic'] == null
-          ? null
-          : FieldRefModel.fromJson(json['topic'] as Map<String, dynamic>),
-      isAuthorMuted: json['isAuthorMuted'] as bool? ?? false,
-      isFieldMuted: json['isFieldMuted'] as bool? ?? false,
-      isTopicMuted: json['isTopicMuted'] as bool? ?? false,
-    );
+_ArticleCardModel _$ArticleCardModelFromJson(
+  Map<String, dynamic> json,
+) => _ArticleCardModel(
+  id: json['id'] as String,
+  slug: json['slug'] as String,
+  language: json['language'] as String,
+  title: json['title'] as String,
+  subtitle: json['subtitle'] as String?,
+  coverUrl: json['coverUrl'] as String?,
+  field: FieldRefModel.fromJson(json['field'] as Map<String, dynamic>),
+  author: json['author'] == null
+      ? null
+      : AuthorModel.fromJson(json['author'] as Map<String, dynamic>),
+  readingTimeMinutes: (json['readingTimeMinutes'] as num?)?.toInt() ?? 1,
+  isAiAssisted: json['isAiAssisted'] as bool? ?? false,
+  versionBadge: json['versionBadge'] as String?,
+  publishedAt: DateTime.parse(json['publishedAt'] as String),
+  reactionCount: (json['reactionCount'] as num?)?.toInt() ?? 0,
+  commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
+  attachments: json['attachments'] == null
+      ? null
+      : ArticleAttachmentsModel.fromJson(
+          json['attachments'] as Map<String, dynamic>,
+        ),
+  reactions: json['reactions'] == null
+      ? null
+      : ReactionCountsModel.fromJson(json['reactions'] as Map<String, dynamic>),
+  saveCount: (json['saveCount'] as num?)?.toInt() ?? 0,
+  myReaction: json['myReaction'] as String?,
+  isSaved: json['isSaved'] as bool? ?? false,
+  excerpt: json['excerpt'] as String?,
+  hasMore: json['hasMore'] as bool? ?? false,
+  isFollowingAuthor: json['isFollowingAuthor'] as bool? ?? false,
+  tags: json['tags'] == null
+      ? const <TagRefModel>[]
+      : tagRefsFromJson(json['tags']),
+  tagCount: (json['tagCount'] as num?)?.toInt() ?? 0,
+  topic: json['topic'] == null
+      ? null
+      : FieldRefModel.fromJson(json['topic'] as Map<String, dynamic>),
+  isAuthorMuted: json['isAuthorMuted'] as bool? ?? false,
+  isFieldMuted: json['isFieldMuted'] as bool? ?? false,
+  isTopicMuted: json['isTopicMuted'] as bool? ?? false,
+  repostCount: (json['repostCount'] as num?)?.toInt() ?? 0,
+  isReposted: json['isReposted'] as bool? ?? false,
+  repostedBy: json['repostedBy'] == null
+      ? null
+      : RepostLabelModel.fromJson(json['repostedBy'] as Map<String, dynamic>),
+);
 
 Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
     <String, dynamic>{
@@ -136,6 +156,9 @@ Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
       'isAuthorMuted': instance.isAuthorMuted,
       'isFieldMuted': instance.isFieldMuted,
       'isTopicMuted': instance.isTopicMuted,
+      'repostCount': instance.repostCount,
+      'isReposted': instance.isReposted,
+      'repostedBy': ?instance.repostedBy?.toJson(),
     };
 
 _ArticlePreviewModel _$ArticlePreviewModelFromJson(Map<String, dynamic> json) =>
@@ -284,6 +307,8 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(
   isAuthorMuted: json['isAuthorMuted'] as bool? ?? false,
   isFieldMuted: json['isFieldMuted'] as bool? ?? false,
   isTopicMuted: json['isTopicMuted'] as bool? ?? false,
+  repostCount: (json['repostCount'] as num?)?.toInt() ?? 0,
+  isReposted: json['isReposted'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ArticleDetailsModelToJson(
@@ -323,4 +348,6 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'isAuthorMuted': instance.isAuthorMuted,
   'isFieldMuted': instance.isFieldMuted,
   'isTopicMuted': instance.isTopicMuted,
+  'repostCount': instance.repostCount,
+  'isReposted': instance.isReposted,
 };

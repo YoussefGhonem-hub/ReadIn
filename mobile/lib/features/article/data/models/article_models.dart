@@ -21,12 +21,36 @@ abstract class AuthorModel with _$AuthorModel {
     required String username,
     String? avatarUrl,
     @Default(false) bool isVerified,
+    // F14: the writer's title; blank is treated as none.
+    String? headline,
   }) = _AuthorModel;
 
   factory AuthorModel.fromJson(Map<String, dynamic> json) => _$AuthorModelFromJson(json);
 
-  Author toEntity() =>
-      Author(id: id, displayName: displayName, username: username, avatarUrl: avatarUrl, isVerified: isVerified);
+  Author toEntity() => Author(
+        id: id,
+        displayName: displayName,
+        username: username,
+        avatarUrl: avatarUrl,
+        isVerified: isVerified,
+        headline: headline == null || headline!.trim().isEmpty ? null : headline!.trim(),
+      );
+}
+
+/// `RepostLabelDto` (F29): `{ user, othersCount, repostedAt }`.
+@freezed
+abstract class RepostLabelModel with _$RepostLabelModel {
+  const RepostLabelModel._();
+
+  const factory RepostLabelModel({
+    required AuthorModel user,
+    @Default(0) int othersCount,
+    required DateTime repostedAt,
+  }) = _RepostLabelModel;
+
+  factory RepostLabelModel.fromJson(Map<String, dynamic> json) => _$RepostLabelModelFromJson(json);
+
+  RepostLabel toEntity() => RepostLabel(user: user.toEntity(), othersCount: math.max(0, othersCount), repostedAt: repostedAt);
 }
 
 @freezed
@@ -102,6 +126,10 @@ abstract class ArticleCardModel with _$ArticleCardModel {
     @Default(false) bool isAuthorMuted,
     @Default(false) bool isFieldMuted,
     @Default(false) bool isTopicMuted,
+    // F29: reposts, and the label on Following-feed cards a repost placed and on a profile's Reposts tab.
+    @Default(0) int repostCount,
+    @Default(false) bool isReposted,
+    RepostLabelModel? repostedBy,
   }) = _ArticleCardModel;
 
   factory ArticleCardModel.fromJson(Map<String, dynamic> json) => _$ArticleCardModelFromJson(json);
@@ -135,6 +163,9 @@ abstract class ArticleCardModel with _$ArticleCardModel {
         isAuthorMuted: isAuthorMuted,
         isFieldMuted: isFieldMuted,
         isTopicMuted: isTopicMuted,
+        repostCount: math.max(0, repostCount),
+        isReposted: isReposted,
+        repostedBy: repostedBy?.toEntity(),
       );
 }
 
@@ -252,6 +283,9 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     @Default(false) bool isAuthorMuted,
     @Default(false) bool isFieldMuted,
     @Default(false) bool isTopicMuted,
+    // F29: the reader's Repost button.
+    @Default(0) int repostCount,
+    @Default(false) bool isReposted,
   }) = _ArticleDetailsModel;
 
   factory ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
@@ -283,6 +317,8 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         isAuthorMuted: isAuthorMuted,
         isFieldMuted: isFieldMuted,
         isTopicMuted: isTopicMuted,
+        repostCount: math.max(0, repostCount),
+        isReposted: isReposted,
       );
 
   ArticleDetails toEntity({bool offline = false}) => ArticleDetails(

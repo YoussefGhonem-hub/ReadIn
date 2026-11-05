@@ -1136,6 +1136,330 @@ abstract class AppLocalizations {
   /// **'Enter a full link that starts with https://'**
   String get profileErrUrl;
 
+  /// No description provided for @profileHeadlineLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get profileHeadlineLabel;
+
+  /// No description provided for @profileHeadlineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Senior Full Stack .NET Engineer | .NET'**
+  String get profileHeadlineHint;
+
+  /// No description provided for @profileHeadlineHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. One line that shows under your name.'**
+  String get profileHeadlineHelper;
+
+  /// No description provided for @profileLinksSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Links'**
+  String get profileLinksSection;
+
+  /// No description provided for @profileLinksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add up to 8 links to your accounts.'**
+  String get profileLinksHint;
+
+  /// No description provided for @profileLinksFull.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s 8 links. Remove one to add another.'**
+  String get profileLinksFull;
+
+  /// No description provided for @profileLinksCountSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Links: {count} of {max}'**
+  String profileLinksCountSemantics(int count, int max);
+
+  /// No description provided for @profileLinkAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add link'**
+  String get profileLinkAdd;
+
+  /// No description provided for @profileLinkPickPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a platform'**
+  String get profileLinkPickPlatform;
+
+  /// No description provided for @profileLinkPlatformAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Already added'**
+  String get profileLinkPlatformAdded;
+
+  /// No description provided for @profileLinkChangePlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Change platform'**
+  String get profileLinkChangePlatform;
+
+  /// No description provided for @profileLinkUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get profileLinkUrl;
+
+  /// No description provided for @profileLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Link name'**
+  String get profileLinkLabel;
+
+  /// No description provided for @profileLinkLabelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. My podcast'**
+  String get profileLinkLabelHint;
+
+  /// No description provided for @profileLinkOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get profileLinkOther;
+
+  /// No description provided for @profileLinkOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} link options'**
+  String profileLinkOptions(String name);
+
+  /// No description provided for @profileLinkMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get profileLinkMoveUp;
+
+  /// No description provided for @profileLinkMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get profileLinkMoveDown;
+
+  /// No description provided for @profileLinkRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove link'**
+  String get profileLinkRemove;
+
+  /// No description provided for @profileTabReposts.
+  ///
+  /// In en, this message translates to:
+  /// **'Reposts'**
+  String get profileTabReposts;
+
+  /// No description provided for @profileRepostsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No reposts yet'**
+  String get profileRepostsEmptyTitle;
+
+  /// No description provided for @profileRepostsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The articles they repost show up here.'**
+  String get profileRepostsEmptyBody;
+
+  /// No description provided for @profileRepostsEmptyOwnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t reposted anything yet'**
+  String get profileRepostsEmptyOwnTitle;
+
+  /// No description provided for @profileRepostsEmptyOwnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'When you repost an article you like, it shows up here and for your followers.'**
+  String get profileRepostsEmptyOwnBody;
+
+  /// No description provided for @profileErrHeadlineTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'A title has at most 120 characters.'**
+  String get profileErrHeadlineTooLong;
+
+  /// No description provided for @profileErrHeadlineInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'A title must be one line, without special characters.'**
+  String get profileErrHeadlineInvalid;
+
+  /// No description provided for @profileErrLinkTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add up to 8 links.'**
+  String get profileErrLinkTooMany;
+
+  /// No description provided for @profileErrLinkPlatformInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a platform from the list.'**
+  String get profileErrLinkPlatformInvalid;
+
+  /// No description provided for @profileErrLinkDuplicatePlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a link for this platform.'**
+  String get profileErrLinkDuplicatePlatform;
+
+  /// No description provided for @profileErrLinkTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'A link has at most 500 characters.'**
+  String get profileErrLinkTooLong;
+
+  /// No description provided for @profileErrLinkHttpsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'The link must start with https.'**
+  String get profileErrLinkHttpsRequired;
+
+  /// No description provided for @profileErrLinkUrlInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This link isn\'t valid.'**
+  String get profileErrLinkUrlInvalid;
+
+  /// No description provided for @profileErrLinkHostMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This link isn\'t on the platform you chose.'**
+  String get profileErrLinkHostMismatch;
+
+  /// No description provided for @profileErrLinkLabelRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Give this link a name.'**
+  String get profileErrLinkLabelRequired;
+
+  /// No description provided for @profileErrLinkLabelInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'A link name has 2–30 characters on one line.'**
+  String get profileErrLinkLabelInvalid;
+
+  /// No description provided for @profileErrLinkLabelNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Only \"Other\" links have a name.'**
+  String get profileErrLinkLabelNotAllowed;
+
+  /// No description provided for @moderationUserLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile links'**
+  String get moderationUserLinks;
+
+  /// No description provided for @moderationUserNoLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'No links.'**
+  String get moderationUserNoLinks;
+
+  /// No description provided for @moderationUserHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get moderationUserHeadline;
+
+  /// No description provided for @moderationUserNoHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'No title.'**
+  String get moderationUserNoHeadline;
+
+  /// No description provided for @moderationClearLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear links'**
+  String get moderationClearLinks;
+
+  /// No description provided for @moderationClearLinksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all of {name}\'s links?'**
+  String moderationClearLinksTitle(String name);
+
+  /// No description provided for @moderationClearLinksBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every link on their profile is removed. They aren\'t notified, and the action is logged.'**
+  String get moderationClearLinksBody;
+
+  /// No description provided for @moderationLinksCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Links cleared'**
+  String get moderationLinksCleared;
+
+  /// No description provided for @moderationClearHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear title'**
+  String get moderationClearHeadline;
+
+  /// No description provided for @moderationClearHeadlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear {name}\'s title?'**
+  String moderationClearHeadlineTitle(String name);
+
+  /// No description provided for @moderationClearHeadlineBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The title under their name is removed from the profile, cards and comments. They aren\'t notified, and the action is logged.'**
+  String get moderationClearHeadlineBody;
+
+  /// No description provided for @moderationHeadlineCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Title cleared'**
+  String get moderationHeadlineCleared;
+
+  /// No description provided for @moderationLogUserClearLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared links'**
+  String get moderationLogUserClearLinks;
+
+  /// No description provided for @moderationLogUserClearHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared a title'**
+  String get moderationLogUserClearHeadline;
+
+  /// No description provided for @notifArticleReposted.
+  ///
+  /// In en, this message translates to:
+  /// **'{others, plural, =0{{name} reposted your article} =1{{name} and 1 other reposted your article} other{{name} and {others} others reposted your article}}'**
+  String notifArticleReposted(String name, int others);
+
+  /// No description provided for @notificationTypeArticleReposted.
+  ///
+  /// In en, this message translates to:
+  /// **'Reposts'**
+  String get notificationTypeArticleReposted;
+
+  /// No description provided for @notificationTypeArticleRepostedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When someone reposts your article'**
+  String get notificationTypeArticleRepostedHint;
+
+  /// No description provided for @pdfStripDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download the PDF'**
+  String get pdfStripDownload;
+
   /// No description provided for @errValidation.
   ///
   /// In en, this message translates to:
@@ -2207,7 +2531,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountDeletedProfile.
   ///
   /// In en, this message translates to:
-  /// **'Your profile: name, @username, photo, bio and links'**
+  /// **'Your profile: name, @username, photo, title, bio and links'**
   String get deleteAccountDeletedProfile;
 
   /// No description provided for @deleteAccountDeletedContact.
@@ -2231,7 +2555,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountDeletedActivity.
   ///
   /// In en, this message translates to:
-  /// **'Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people\'s mutes of you), and your \"Show less like this\" marks'**
+  /// **'Your interests, reading progress and stats, reactions, reposts, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people\'s mutes of you), and your \"Show less like this\" marks'**
   String get deleteAccountDeletedActivity;
 
   /// No description provided for @deleteAccountDeletedDevices.
@@ -5714,6 +6038,12 @@ abstract class AppLocalizations {
   /// **'You can\'t do this on your own article.'**
   String get errMuteOwnArticle;
 
+  /// No description provided for @errRepostOwnArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t repost your own article.'**
+  String get errRepostOwnArticle;
+
   /// No description provided for @profileMenu.
   ///
   /// In en, this message translates to:
@@ -7105,6 +7435,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Comment'**
   String get postComment;
+
+  /// No description provided for @postBarReact.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{React} other{React, {count}}}'**
+  String postBarReact(int count);
+
+  /// No description provided for @postBarReacted.
+  ///
+  /// In en, this message translates to:
+  /// **'Reacted: {reaction}, {count}'**
+  String postBarReacted(String reaction, int count);
+
+  /// No description provided for @postBarComment.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Comment} other{Comment, {count}}}'**
+  String postBarComment(int count);
+
+  /// No description provided for @postBarRepost.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Repost} other{Repost, {count}}}'**
+  String postBarRepost(int count);
+
+  /// No description provided for @repostOwnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t repost your own article'**
+  String get repostOwnHint;
+
+  /// No description provided for @repostLabelOne.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} reposted this'**
+  String repostLabelOne(String name);
+
+  /// No description provided for @repostLabelMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{name} and 1 other reposted this} other{{name} and {count} others reposted this}}'**
+  String repostLabelMany(String name, int count);
+
+  /// No description provided for @commentBoxHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a comment…'**
+  String get commentBoxHint;
+
+  /// No description provided for @commentBoxReplyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a reply…'**
+  String get commentBoxReplyHint;
+
+  /// No description provided for @commentBoxEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji'**
+  String get commentBoxEmoji;
+
+  /// No description provided for @commentBoxKeyboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the keyboard'**
+  String get commentBoxKeyboard;
+
+  /// No description provided for @commentBoxCancelReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel reply'**
+  String get commentBoxCancelReply;
+
+  /// No description provided for @commentBoxCancelEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel editing'**
+  String get commentBoxCancelEdit;
+
+  /// No description provided for @commentBoxEmojiSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search emoji'**
+  String get commentBoxEmojiSearch;
+
+  /// No description provided for @commentBoxEmojiNoRecents.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji you use show up here'**
+  String get commentBoxEmojiNoRecents;
+
+  /// No description provided for @commentRowFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow'**
+  String get commentRowFollow;
 
   /// No description provided for @postOpenArticleHint.
   ///

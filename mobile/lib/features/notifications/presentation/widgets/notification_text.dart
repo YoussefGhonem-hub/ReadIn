@@ -8,7 +8,8 @@ bool isActorNotification(NotificationType type) => switch (type) {
       NotificationType.articleComment ||
       NotificationType.commentReply ||
       NotificationType.mention ||
-      NotificationType.followedWriterArticle =>
+      NotificationType.followedWriterArticle ||
+      NotificationType.articleReposted =>
         true,
       _ => false,
     };
@@ -27,6 +28,8 @@ String notificationMessage(AppLocalizations l10n, AppNotification notification, 
     NotificationType.mention =>
       notification.comment == null ? l10n.notifMentionArticle(actor) : l10n.notifMention(actor, others),
     NotificationType.followedWriterArticle => l10n.notifFollowedWriterArticle(actor),
+    // "Ahmed reposted your article" / "Ahmed and 2 others reposted your article"; the title follows.
+    NotificationType.articleReposted => l10n.notifArticleReposted(actor, others),
     NotificationType.reactionsMilestone => switch (notification.threshold) {
         final threshold? when threshold > 0 => l10n.notifReactionsMilestone(threshold),
         _ => l10n.notifReactionsMilestoneGeneric,
@@ -72,6 +75,7 @@ String notificationTypeLabel(AppLocalizations l10n, NotificationType type) => sw
       NotificationType.followedWriterArticle => l10n.notificationTypeFollowedWriterArticle,
       NotificationType.dailyArticle => l10n.notificationTypeDailyArticle,
       NotificationType.streakReminder => l10n.notificationTypeStreakReminder,
+      NotificationType.articleReposted => l10n.notificationTypeArticleReposted,
       NotificationType.securityAlert => l10n.notificationSecurityAlerts,
       _ => l10n.notifications,
     };
@@ -79,6 +83,7 @@ String notificationTypeLabel(AppLocalizations l10n, NotificationType type) => sw
 /// What a configurable type covers, when its name alone doesn't say (Settings shows it under the name).
 String? notificationTypeHint(AppLocalizations l10n, NotificationType type) => switch (type) {
       NotificationType.mention => l10n.notificationTypeMentionHint,
+      NotificationType.articleReposted => l10n.notificationTypeArticleRepostedHint,
       _ => null,
     };
 

@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/bidi/bidi.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/widgets/author_headline.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../article/domain/entities/article.dart';
+import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../follow/presentation/cubit/follows_cubit.dart';
+import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../mutes/presentation/cubit/mutes_cubit.dart';
 import '../../../profile/presentation/profile_routes.dart';
 import '../../../profile/presentation/widgets/profile_link.dart';
@@ -145,9 +149,10 @@ class _MoreReplies extends StatelessWidget {
   }
 }
 
-/// One comment: avatar, name, `@username`, ✓, "الكاتب", pinned, relative time, "edited", the text in its own
-/// direction, then like, reply and the overflow menu. Placeholders (deleted, or hidden from this viewer) show one
-/// line instead.
+/// One comment (F11): the avatar, the name with ✓ and "الكاتب", the writer's title under it (one line with "…", in place
+/// of the `@username`), "متابعة" while you don't follow them and it isn't you, and "⋯"; then the text in its own
+/// direction, and one row with like, reply and the time ("edited"). The avatar and name open the profile.
+/// Placeholders (deleted, or hidden from this viewer) show one line instead.
 class CommentTile extends StatelessWidget {
   const CommentTile({
     super.key,
@@ -342,15 +347,6 @@ class _Content extends StatelessWidget {
     final l10n = context.l10n;
     final colors = context.colors;
     final author = comment.author;
-    final meta = context.textTheme.bodySmall?.copyWith(color: colors.textSecondary);
-    final time = pending
-        ? l10n.commentsSending
-        : commentTimeLabel(l10n, comment.createdAt, now: CommentClock.now(), languageCode: Localizations.localeOf(context).languageCode);
-    final metaParts = [
-      if (author != null) Bidi.ltrIsolate('@${author.username}'),
-      time,
-      if (comment.editedAt != null && !pending) l10n.commentsEdited,
-    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -365,29 +361,49 @@ class _Content extends StatelessWidget {
           const SizedBox(height: 2),
         ],
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Flexible(
-              child: author == null
-                  ? Text(
-                      l10n.commentsDeletedUser,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.titleSmall?.copyWith(color: colors.textSecondary),
-                    )
-                  : ProfileLink(
-                      username: author.username,
-                      beforeOpen: () => _closeSheet(context),
-                      child: BidiText(author.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall),
-                    ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: author == null
+                            ? Text(
+                                l10n.commentsDeletedUser,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.textTheme.titleSmall?.copyWith(color: colors.textSecondary),
+                              )
+                            : ProfileLink(
+                                username: author.username,
+                                beforeOpen: () => _closeSheet(context),
+                                child: BidiText(
+                                  author.displayName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: context.textTheme.titleSmall,
+                                ),
+                              ),
+                      ),
+                      if (author?.isVerified ?? false) ...[const SizedBox(width: 4), const VerifiedMark()],
+                      if (comment.isArticleAuthor) ...[
+                        const SizedBox(width: ReadInSpace.s2),
+                        InfoTag(label: l10n.commentsAuthorBadge, tone: InfoTagTone.primary),
+                      ],
+                    ],
+                  ),
+                  if (author?.headline case final headline?)
+                    AuthorHeadline(headline, style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
+                ],
+              ),
             ),
-            if (author?.isVerified ?? false) ...[const SizedBox(width: 4), const VerifiedMark()],
-            if (comment.isArticleAuthor) ...[
-              const SizedBox(width: ReadInSpace.s2),
-              InfoTag(label: l10n.commentsAuthorBadge, tone: InfoTagTone.primary),
-            ],
+            if (author != null && !pending) _CommentFollow(author: author, initiallyFollowing: comment.isFollowingAuthor),
+            _Menu(comment: comment, callbacks: callbacks, enabled: !pending, guest: guest),
           ],
         ),
-        Text(metaParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis, style: meta),
         if (comment.isHidden) ...[
           const SizedBox(height: ReadInSpace.s2),
           _HiddenNotice(text: l10n.commentsHiddenNotice),
@@ -398,8 +414,83 @@ class _Content extends StatelessWidget {
           mentions: comment.mentions,
           onMention: pending ? null : (mention) => _openProfile(context, mention.username),
         ),
-        _Actions(comment: comment, callbacks: callbacks, enabled: !pending, guest: guest),
+        _Actions(comment: comment, callbacks: callbacks, enabled: !pending),
       ],
+    );
+  }
+}
+
+/// "متابعة" on a comment by someone you don't follow (F11, F12), never on your own. Whether it shows is decided when
+/// the row first appears, from the follow store (seeded with `isFollowingAuthor`): following from it then reads
+/// "✓ Following" here and on every other row, card and profile of that writer. Guests get the sign-in prompt.
+class _CommentFollow extends StatefulWidget {
+  const _CommentFollow({required this.author, required this.initiallyFollowing});
+
+  final Author author;
+  final bool initiallyFollowing;
+
+  @override
+  State<_CommentFollow> createState() => _CommentFollowState();
+}
+
+class _CommentFollowState extends State<_CommentFollow> {
+  bool? _shown;
+
+  @override
+  Widget build(BuildContext context) {
+    final myId = context.select((SessionCubit? c) => c?.state.me?.id);
+    final following = context.select(
+      (FollowsCubit? c) => c?.state.isFollowing(widget.author.id, fallback: widget.initiallyFollowing),
+    );
+    // No follow store above (a screen shown on its own): no button.
+    if (following == null || widget.author.id == myId) return const SizedBox.shrink();
+    _shown ??= !following;
+    if (!_shown!) return const SizedBox.shrink();
+    return FollowButton(
+      userId: widget.author.id,
+      name: widget.author.displayName,
+      initiallyFollowing: widget.initiallyFollowing,
+      text: true,
+      dense: true,
+      followLabel: context.l10n.commentRowFollow,
+    );
+  }
+}
+
+/// "⋯": the comment's menu, when the viewer has anything in it.
+class _Menu extends StatelessWidget {
+  const _Menu({required this.comment, required this.callbacks, required this.enabled, required this.guest});
+
+  final Comment comment;
+  final CommentCallbacks callbacks;
+  final bool enabled;
+  final bool guest;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final menu = enabled ? commentMenuActions(comment, guest: guest) : const <CommentMenuAction>[];
+    if (menu.isEmpty) return const SizedBox(width: ReadInSpace.s1);
+    final authorId = comment.author?.id;
+    // A commenter the viewer muted: the item reads "Unmute commenter" (F28).
+    final authorMuted = !guest &&
+        context.select(
+          (MutesCubit? c) =>
+              authorId != null && (c?.state.isUserMuted(authorId, fallback: comment.isAuthorMuted) ?? comment.isAuthorMuted),
+        );
+    return SizedBox(
+      width: 40,
+      height: 40,
+      child: PopupMenuButton<CommentMenuAction>(
+        tooltip: l10n.commentsMenu,
+        padding: EdgeInsets.zero,
+        icon: Icon(Icons.more_horiz_rounded, color: colors.textSecondary, size: 20),
+        onSelected: (action) => callbacks.onMenu(comment, action),
+        itemBuilder: (context) => [
+          for (final action in menu) PopupMenuItem(value: action, child: _MenuLabel(action: action, authorMuted: authorMuted)),
+        ],
+      ),
     );
   }
 }
@@ -426,27 +517,23 @@ class _HiddenNotice extends StatelessWidget {
   }
 }
 
+/// Like and Reply, then the time ("Sending…" while pending) and "edited", in one row.
 class _Actions extends StatelessWidget {
-  const _Actions({required this.comment, required this.callbacks, required this.enabled, required this.guest});
+  const _Actions({required this.comment, required this.callbacks, required this.enabled});
 
   final Comment comment;
   final CommentCallbacks callbacks;
   final bool enabled;
-  final bool guest;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
-    final menu = enabled ? commentMenuActions(comment, guest: guest) : const <CommentMenuAction>[];
-    final authorId = comment.author?.id;
-    // A commenter the viewer muted: the item reads "Unmute commenter" (F28).
-    final authorMuted = !guest &&
-        context.select(
-          (MutesCubit? c) =>
-              authorId != null && (c?.state.isUserMuted(authorId, fallback: comment.isAuthorMuted) ?? comment.isAuthorMuted),
-        );
     final label = context.textTheme.labelMedium?.copyWith(color: colors.textSecondary, fontWeight: FontWeight.w600);
+    final time = enabled
+        ? commentTimeLabel(l10n, comment.createdAt, now: CommentClock.now(), languageCode: Localizations.localeOf(context).languageCode)
+        : l10n.commentsSending;
+    final meta = [time, if (comment.editedAt != null && enabled) l10n.commentsEdited].join(' · ');
     return Row(
       children: [
         CommentLikeButton(
@@ -470,16 +557,15 @@ class _Actions extends StatelessWidget {
             ),
           ),
         ),
-        const Spacer(),
-        if (menu.isNotEmpty)
-          PopupMenuButton<CommentMenuAction>(
-            tooltip: l10n.commentsMenu,
-            icon: Icon(Icons.more_horiz_rounded, color: colors.textSecondary, size: 20),
-            onSelected: (action) => callbacks.onMenu(comment, action),
-            itemBuilder: (context) => [
-              for (final action in menu) PopupMenuItem(value: action, child: _MenuLabel(action: action, authorMuted: authorMuted)),
-            ],
+        const SizedBox(width: ReadInSpace.s2),
+        Flexible(
+          child: Text(
+            meta,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary),
           ),
+        ),
       ],
     );
   }

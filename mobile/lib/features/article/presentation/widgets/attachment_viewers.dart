@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -123,6 +125,99 @@ class ViewerDownloadAction extends StatelessWidget {
       tooltip: l10n.viewerDownload,
       icon: const Icon(Icons.download_rounded),
       onPressed: () => context.read<AttachmentViewerCubit>().downloadAndShare(origin: _originOf(context)),
+    );
+  }
+}
+
+/// The download icon in a PDF's title strip on a card or under the article (SPEC F26): shown only when the caller may
+/// download it (`canDownload`: allowed by the writer, or the owner / a moderator). A tap downloads the original PDF
+/// (with the session's headers) and opens the system share sheet, where it can be saved to Files / Downloads or sent,
+/// as the full-screen viewer's "تحميل" does. A spinner shows the progress; a failure shows a message. The download's
+/// cubit is made on the first tap, so a card costs nothing until then.
+class DocumentDownloadButton extends StatefulWidget {
+  const DocumentDownloadButton({super.key, required this.article, required this.document, this.color, this.createCubit});
+
+  final ArticleCard article;
+  final DocumentAttachment document;
+
+  /// The icon's color (the strip's text color).
+  final Color? color;
+
+  /// Makes the cubit on the first tap; defaults to the app's (tests pass their own).
+  final AttachmentViewerCubit Function()? createCubit;
+
+  static const buttonKey = ValueKey('pdf-strip-download');
+
+  @override
+  State<DocumentDownloadButton> createState() => _DocumentDownloadButtonState();
+}
+
+class _DocumentDownloadButtonState extends State<DocumentDownloadButton> {
+  AttachmentViewerCubit? _cubit;
+  StreamSubscription<AttachmentViewerState>? _changes;
+  AttachmentViewerState _state = const AttachmentViewerState();
+
+  AttachmentViewerCubit _ensureCubit() {
+    final existing = _cubit;
+    if (existing != null) return existing;
+    final article = widget.article;
+    final cubit = (widget.createCubit?.call() ?? getIt<AttachmentViewerCubit>())
+      ..start(slug: article.slug, language: article.language, title: article.title, document: widget.document, loadPages: false);
+    _state = cubit.state;
+    _changes = cubit.stream.listen(_onState);
+    return _cubit = cubit;
+  }
+
+  void _onState(AttachmentViewerState state) {
+    if (!mounted) return;
+    final failed = state.download == DownloadStatus.failed && _state.download != DownloadStatus.failed;
+    setState(() => _state = state);
+    if (failed && state.downloadFailure != null) {
+      ScaffoldMessenger.maybeOf(context)
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(localizeFailure(context.l10n, state.downloadFailure!))));
+    }
+  }
+
+  Future<void> _download() async {
+    final origin = _originOf(context);
+    await _ensureCubit().downloadAndShare(origin: origin);
+  }
+
+  @override
+  void dispose() {
+    unawaited(_changes?.cancel());
+    unawaited(_cubit?.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    if (!widget.document.canDownload) return const SizedBox.shrink();
+    if (_state.download == DownloadStatus.downloading) {
+      return Semantics(
+        label: l10n.viewerDownloading,
+        liveRegion: true,
+        child: SizedBox.square(
+          dimension: 48,
+          child: Center(
+            child: SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(strokeWidth: 2.5, value: _state.downloadProgress, color: widget.color),
+            ),
+          ),
+        ),
+      );
+    }
+    return IconButton(
+      key: DocumentDownloadButton.buttonKey,
+      tooltip: l10n.pdfStripDownload,
+      icon: const Icon(Icons.download_rounded),
+      color: widget.color,
+      iconSize: 22,
+      style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+      onPressed: () => unawaited(_download()),
     );
   }
 }

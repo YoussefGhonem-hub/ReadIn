@@ -38,6 +38,7 @@ class Comment extends Equatable {
     this.canModerate = false,
     this.replies = const [],
     this.isAuthorMuted = false,
+    this.isFollowingAuthor = false,
   });
 
   final String id;
@@ -55,6 +56,10 @@ class Comment extends Equatable {
   /// The viewer muted the author (F28): the comment collapses to "تعليق من شخص كتمته" with "عرض"; its replies stay.
   /// False for guests and placeholders.
   final bool isAuthorMuted;
+
+  /// The viewer follows the author (F11, F12): the row shows "متابعة" while false (never on your own comments). False
+  /// for guests, your own comments, a deleted author and placeholders. It seeds the follow store.
+  final bool isFollowingAuthor;
 
   /// The "الكاتب" badge.
   final bool isArticleAuthor;
@@ -124,6 +129,7 @@ class Comment extends Equatable {
         canModerate: canModerate,
         replies: replies ?? this.replies,
         isAuthorMuted: isAuthorMuted,
+        isFollowingAuthor: isFollowingAuthor,
       );
 
   /// What a deleted top-level comment with replies becomes: a placeholder that keeps its thread.
@@ -161,6 +167,7 @@ class Comment extends Equatable {
         canModerate,
         replies,
         isAuthorMuted,
+        isFollowingAuthor,
       ];
 }
 

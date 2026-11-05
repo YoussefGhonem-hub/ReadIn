@@ -16,6 +16,7 @@ import 'package:readin/features/comments/presentation/widgets/comment_body.dart'
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/shared/widgets/app_network_image.dart';
 
+import '../helpers/comment_fixtures.dart';
 import '../helpers/fake_media.dart';
 import '../helpers/fixtures.dart';
 import '../helpers/post_card_fixtures.dart';
@@ -86,9 +87,11 @@ void main() {
             article: postCard(
               1,
               language: language,
+              author: monaTitled,
               reactions: const ReactionCounts(insightful: 40, love: 6, fire: 3, mindBlown: 1),
               reactionCount: 50,
               commentCount: 12,
+              repostCount: 3,
             ),
           ),
           PostCard(article: shortPostCard(language: language, authorDeleted: true)),
@@ -100,6 +103,35 @@ void main() {
     testWidgets('images, mixed text and the viewer reacted ${variant.name}', (tester) async {
       await pump(tester, variant, (_) => [PostCard(article: attachmentsPostCard(language: language))], height: 760);
       await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/post_card_images_${variant.name}.png'));
+    });
+
+    testWidgets('reposted by people you follow, the viewer reposted too ${variant.name}', (tester) async {
+      // F29: the label over the header (one reposter with others), the writer's title (F14), and the viewer's own
+      // repost lit in the bar; then a card with one repost.
+      await pump(
+        tester,
+        variant,
+        (_) => [
+          PostCard(
+            article: postCard(
+              5,
+              language: language,
+              cover: false,
+              author: omarTitled,
+              repostedBy: RepostLabel(user: monaTitled, othersCount: 2, repostedAt: DateTime.utc(2026, 11, 2, 9)),
+              reactions: const ReactionCounts(insightful: 7, fire: 2),
+              reactionCount: 9,
+              commentCount: 1,
+              repostCount: 14,
+              isReposted: true,
+              tags: const [],
+              tagCount: 0,
+            ),
+          ),
+          PostCard(article: shortPostCard(language: language).copyWithEngagement(repostCount: 1)),
+        ],
+      );
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/post_card_reposted_${variant.name}.png'));
     });
 
     testWidgets('expanded with the preview ${variant.name}', (tester) async {

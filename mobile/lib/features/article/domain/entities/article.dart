@@ -11,7 +11,14 @@ export '../../../tags/domain/entities/tag.dart' show TagRef;
 export 'reaction_counts.dart';
 
 class Author extends Equatable {
-  const Author({required this.id, required this.displayName, required this.username, this.avatarUrl, this.isVerified = false});
+  const Author({
+    required this.id,
+    required this.displayName,
+    required this.username,
+    this.avatarUrl,
+    this.isVerified = false,
+    this.headline,
+  });
 
   final String id;
   final String displayName;
@@ -19,8 +26,27 @@ class Author extends Equatable {
   final String? avatarUrl;
   final bool isVerified;
 
+  /// The writer's title (F14), e.g. "Senior .NET Engineer | Angular": one line with "…" under the name on cards, the
+  /// reader and comments. Null when they have none (the line is hidden).
+  final String? headline;
+
   @override
-  List<Object?> get props => [id, displayName, username, avatarUrl, isVerified];
+  List<Object?> get props => [id, displayName, username, avatarUrl, isVerified, headline];
+}
+
+/// `RepostLabelDto` (F29): why a repost placed this card, for the label "أعاد نشره {name}" / "{name} و N غيره".
+class RepostLabel extends Equatable {
+  const RepostLabel({required this.user, this.othersCount = 0, required this.repostedAt});
+
+  /// The newest reposter the viewer follows (or the profile's owner on its Reposts tab).
+  final Author user;
+
+  /// The other people the viewer follows who reposted it.
+  final int othersCount;
+  final DateTime repostedAt;
+
+  @override
+  List<Object?> get props => [user, othersCount, repostedAt];
 }
 
 class FieldRef extends Equatable {
@@ -71,6 +97,9 @@ class ArticleCard extends Equatable {
     this.isAuthorMuted = false,
     this.isFieldMuted = false,
     this.isTopicMuted = false,
+    this.repostCount = 0,
+    this.isReposted = false,
+    this.repostedBy,
   });
 
   /// The post card shows this many tags, then "+N" (F34).
@@ -142,6 +171,16 @@ class ArticleCard extends Equatable {
   /// The viewer muted [topic] (F28); false for guests and without a topic.
   final bool isTopicMuted;
 
+  /// How many people reposted the article (F29).
+  final int repostCount;
+
+  /// The viewer reposted it (F29); false for guests.
+  final bool isReposted;
+
+  /// Set on Following-feed cards a repost placed and on a profile's Reposts tab (F29): the card's label. Null
+  /// elsewhere.
+  final RepostLabel? repostedBy;
+
   /// "Read more" applies however short the excerpt is: the article goes on after it, or it has no excerpt yet.
   bool get continuesAfterExcerpt => excerpt == null || hasMore;
 
@@ -153,6 +192,8 @@ class ArticleCard extends Equatable {
     int? saveCount,
     ReactionType? Function()? myReaction,
     bool? isSaved,
+    int? repostCount,
+    bool? isReposted,
   }) =>
       ArticleCard(
         id: id,
@@ -183,6 +224,9 @@ class ArticleCard extends Equatable {
         isAuthorMuted: isAuthorMuted,
         isFieldMuted: isFieldMuted,
         isTopicMuted: isTopicMuted,
+        repostCount: repostCount ?? this.repostCount,
+        isReposted: isReposted ?? this.isReposted,
+        repostedBy: repostedBy,
       );
 
   @override
@@ -215,6 +259,9 @@ class ArticleCard extends Equatable {
         isAuthorMuted,
         isFieldMuted,
         isTopicMuted,
+        repostCount,
+        isReposted,
+        repostedBy,
       ];
 }
 

@@ -128,6 +128,45 @@ abstract final class ModerationFlows {
     );
   }
 
+  /// Remove all of [userId]'s social links (F14): asks first, with an optional note for the log; the user isn't
+  /// notified.
+  static Future<bool> clearLinks(BuildContext context, {required String userId, required String name}) async {
+    final l10n = context.l10n;
+    final note = await showModerationNoteDialog(
+      context,
+      title: l10n.moderationClearLinksTitle(embedContent(name)),
+      body: l10n.moderationClearLinksBody,
+      confirmLabel: l10n.moderationClearLinks,
+      noteRequired: false,
+      destructive: true,
+    );
+    if (note == null || !context.mounted) return false;
+    return _run(
+      context,
+      ModerationCommand(ModerationActionType.clearLinks, ModerationTargetRef.user(userId), note: note),
+      l10n.moderationLinksCleared,
+    );
+  }
+
+  /// Remove [userId]'s title (F14): asks first, with an optional note for the log; the user isn't notified.
+  static Future<bool> clearHeadline(BuildContext context, {required String userId, required String name}) async {
+    final l10n = context.l10n;
+    final note = await showModerationNoteDialog(
+      context,
+      title: l10n.moderationClearHeadlineTitle(embedContent(name)),
+      body: l10n.moderationClearHeadlineBody,
+      confirmLabel: l10n.moderationClearHeadline,
+      noteRequired: false,
+      destructive: true,
+    );
+    if (note == null || !context.mounted) return false;
+    return _run(
+      context,
+      ModerationCommand(ModerationActionType.clearHeadline, ModerationTargetRef.user(userId), note: note),
+      l10n.moderationHeadlineCleared,
+    );
+  }
+
   /// Close the target's open reports without touching it.
   static Future<bool> dismiss(BuildContext context, ModerationTargetRef target) async {
     final l10n = context.l10n;

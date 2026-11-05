@@ -10,6 +10,7 @@ import 'package:readin/features/auth/data/models/auth_models.dart';
 import 'package:readin/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:readin/features/auth/domain/entities/external_credential.dart';
 import 'package:readin/features/auth/domain/entities/me.dart';
+import 'package:readin/features/profile/domain/entities/profile_link.dart';
 
 import '../../helpers/fake_auth.dart';
 
@@ -315,13 +316,49 @@ void main() {
       'isProfileComplete': false,
       'hasRecoveryPin': false,
     }).toEntity();
-    expect(me.links, {'linkedIn': 'https://linkedin.com/in/r1'});
+    // An API from before the F14 links change: the old object reads as links of those platforms.
+    expect(me.links, const [ProfileLink(platform: LinkPlatform.linkedin, url: 'https://linkedin.com/in/r1')]);
+    expect(me.headline, isNull);
     expect(me.mustSetRecoveryPin, isTrue);
     expect(me.isProfileComplete, isFalse);
     expect(me.hasRecoveryPin, isFalse);
     // Without the Google/Apple fields (older API): a password, no external logins.
     expect(me.hasPassword, isTrue);
     expect(me.externalLogins, isEmpty);
+  });
+
+  test('MeDto: the title and the links array (F14), in order; [] is no links', () {
+    Me parse(Object? links, {String? headline}) => MeModel.fromJson({
+          'id': 'u-1',
+          'displayName': 'Reader 1',
+          'username': 'reader1',
+          'headline': headline,
+          'links': links,
+        }).toEntity();
+
+    final me = parse([
+      {'platform': 'instagram', 'url': 'https://instagram.com/r1', 'label': null},
+      {'platform': 'other', 'url': 'https://r1.dev', 'label': 'My site'},
+    ], headline: '  Flutter Engineer  ');
+    expect(me.headline, 'Flutter Engineer');
+    expect(me.links, const [
+      ProfileLink(platform: LinkPlatform.instagram, url: 'https://instagram.com/r1'),
+      ProfileLink(platform: LinkPlatform.other, url: 'https://r1.dev', label: 'My site'),
+    ]);
+    expect(parse(<Object>[]).links, isEmpty);
+    expect(parse(null, headline: ' ').headline, isNull);
+  });
+
+  test('PUT /me/profile/complete sends the optional title only when there is one', () {
+    expect(const CompleteProfileRequest(displayName: 'Mona', username: 'mona', headline: ' Staff Engineer ').toJson(), {
+      'displayName': 'Mona',
+      'username': 'mona',
+      'headline': 'Staff Engineer',
+    });
+    expect(const CompleteProfileRequest(displayName: 'Mona', username: 'mona', headline: '  ').toJson(), {
+      'displayName': 'Mona',
+      'username': 'mona',
+    });
   });
 
   test('MeDto with Google/Apple logins parses', () {

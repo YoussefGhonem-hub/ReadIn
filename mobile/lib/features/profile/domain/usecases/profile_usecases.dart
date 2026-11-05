@@ -30,6 +30,19 @@ class GetUserArticles {
       _repository.getArticles(username, cursor: cursor, limit: pageSize);
 }
 
+/// The Reposts tab of a profile (F29).
+@injectable
+class GetUserReposts {
+  const GetUserReposts(this._repository);
+
+  final ProfileRepository _repository;
+
+  static const pageSize = 20;
+
+  Future<Result<CursorPage<ArticleCard>>> call(String username, {String? cursor}) =>
+      _repository.getReposts(username, cursor: cursor, limit: pageSize);
+}
+
 /// Saves the edited profile, then refetches `GET /me` so the session (and every screen) shows it.
 @injectable
 class UpdateProfile {

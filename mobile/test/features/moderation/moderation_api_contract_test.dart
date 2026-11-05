@@ -8,6 +8,7 @@ import 'package:readin/features/follow/domain/entities/follow.dart';
 import 'package:readin/features/moderation/data/datasources/moderation_api.dart';
 import 'package:readin/features/moderation/data/repositories/moderation_repository_impl.dart';
 import 'package:readin/features/moderation/domain/entities/moderation.dart';
+import 'package:readin/features/profile/domain/entities/profile_link.dart';
 
 import '../../helpers/fake_auth.dart';
 import '../../helpers/social_fakes.dart';
@@ -234,8 +235,46 @@ void main() {
     expect((await repository().getCase(const ModerationTargetRef.article('art-7'))).valueOrNull!.categories, isNull);
   });
 
+  test("a user case shows the user's title and links (F14); content targets have no links", () async {
+    respond = (_) => {
+          'item': queueItemJson(
+            targetType: 'user',
+            targetId: 'w-9',
+            target: {
+              'state': 'active',
+              'author': {...author, 'headline': 'Crypto expert'},
+              'links': [
+                {'platform': 'telegram', 'url': 'https://t.me/deals', 'label': null},
+                {'platform': 'other', 'url': 'https://deals.example', 'label': 'Free coins'},
+              ],
+            },
+          ),
+          'reports': <Object>[],
+          'history': [actionJson('a-1', action: 'user.clear_links'), actionJson('a-2', action: 'user.clear_headline')],
+        };
+    final c = (await repository().getCase(const ModerationTargetRef.user('w-9'))).valueOrNull!;
+
+    expect(c.item.target.author?.headline, 'Crypto expert');
+    expect(c.item.target.links, const [
+      ProfileLink(platform: LinkPlatform.telegram, url: 'https://t.me/deals'),
+      ProfileLink(platform: LinkPlatform.other, url: 'https://deals.example', label: 'Free coins'),
+    ]);
+    expect(c.history.map((h) => h.action), [ModerationLogAction.userClearLinks, ModerationLogAction.userClearHeadline]);
+
+    respond = (_) => {'item': queueItemJson(), 'reports': <Object>[], 'history': <Object>[]};
+    expect((await repository().getCase(const ModerationTargetRef.article('art-7'))).valueOrNull!.item.target.links, isNull);
+  });
+
   group('POST /moderation/actions', () {
     setUp(() => respond = (_) => (204, null));
+
+    test('clear_links and clear_headline (F14) send the user and the optional note', () async {
+      await repository().act(const ModerationCommand(ModerationActionType.clearLinks, ModerationTargetRef.user('w-9'), note: 'Scam links'));
+      await repository().act(const ModerationCommand(ModerationActionType.clearHeadline, ModerationTargetRef.user('w-9')));
+
+      expect(requests[0].data, {'action': 'clear_links', 'targetType': 'user', 'targetId': 'w-9', 'note': 'Scam links'});
+      expect(requests[1].data, {'action': 'clear_headline', 'targetType': 'user', 'targetId': 'w-9'});
+    });
 
     test('hide with a note; unhide and dismiss without one', () async {
       await repository().act(const ModerationCommand(ModerationActionType.hide, ModerationTargetRef.article('art-7'), note: 'منقول'));

@@ -28,6 +28,21 @@ const omar = Author(id: 'w-2', displayName: 'Omar Khaled', username: 'omar_k');
 const mona = Author(id: 'w-1', displayName: 'منى عبد الله', username: 'mona_dev', isVerified: true);
 const sara = Author(id: 'w-3', displayName: 'سارة (.NET)', username: 'sara_net');
 
+/// The same people with a title (F14): the line under the name on comment rows, cards and the reader.
+const omarTitled = Author(
+  id: 'w-2',
+  displayName: 'Omar Khaled',
+  username: 'omar_k',
+  headline: 'Senior Backend Engineer | .NET | Azure | Microservices and distributed systems',
+);
+const monaTitled = Author(
+  id: 'w-1',
+  displayName: 'منى عبد الله',
+  username: 'mona_dev',
+  isVerified: true,
+  headline: 'مهندسة برمجيات | ASP.NET Core و Angular',
+);
+
 /// The signed-in viewer of the tests (`sampleMe`).
 const viewer = Author(id: 'u-1', displayName: 'Youssef Hassan', username: 'reader1');
 
@@ -51,6 +66,7 @@ Comment comment(
   bool? canReport,
   List<CommentMention> mentions = const [],
   List<Comment> replies = const [],
+  bool isFollowingAuthor = false,
 }) =>
     Comment(
       id: id,
@@ -75,6 +91,7 @@ Comment comment(
       canReport: canReport ?? (!own && body != null),
       canModerate: canModerate,
       replies: replies,
+      isFollowingAuthor: isFollowingAuthor,
     );
 
 /// A placeholder, as the API sends it: no text, no author, no actions.

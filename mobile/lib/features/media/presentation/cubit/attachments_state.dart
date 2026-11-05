@@ -72,7 +72,7 @@ class DocumentDraft extends Equatable {
     required this.localId,
     required this.file,
     required this.title,
-    this.allowDownload = false,
+    this.allowDownload = true,
     this.phase = UploadPhase.preparing,
     this.progress,
     this.asset,
@@ -85,7 +85,8 @@ class DocumentDraft extends Equatable {
   /// Required, pre-filled from the file name.
   final String title;
 
-  /// "Allow download", off by default.
+  /// "السماح بتحميل الملف" / "Allow download": on by default for a new PDF (SPEC F26, pre-production step); the writer
+  /// can turn it off. It is always sent with the upload.
   final bool allowDownload;
   final UploadPhase phase;
   final double? progress;

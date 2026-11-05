@@ -23,8 +23,11 @@ import 'package:readin/features/comments/presentation/widgets/comment_body.dart'
 import 'package:readin/features/follow/presentation/widgets/follow_button.dart';
 import 'package:readin/features/reactions/domain/entities/reactions.dart';
 import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart';
+import 'package:readin/features/reactions/presentation/widgets/reaction_button.dart';
+import 'package:readin/features/reposts/presentation/widgets/repost_label.dart';
 import 'package:readin/features/saved/domain/usecases/saved_usecases.dart';
 import 'package:readin/features/tags/presentation/widgets/tag_chip.dart';
+import 'package:readin/shared/widgets/author_headline.dart';
 
 import '../../helpers/comment_fixtures.dart';
 import '../../helpers/fixtures.dart';
@@ -327,6 +330,92 @@ void main() {
       expect(find.text(l10n.follow), findsOneWidget);
     });
 
+    testWidgets("the writer's title on one line under the name, above field · time; hidden without one (F14)", (tester) async {
+      await pump(tester, postCard(1, language: 'en', author: omarTitled));
+
+      final title = find.text(omarTitled.headline!);
+      expect(title, findsOneWidget);
+      final text = tester.widget<Text>(title);
+      expect(text.maxLines, 1);
+      expect(text.overflow, TextOverflow.ellipsis);
+      final name = tester.getRect(find.text('Omar Khaled'));
+      final meta = tester.getRect(find.textContaining('3 days ago'));
+      expect(tester.getRect(title).top, greaterThanOrEqualTo(name.bottom - 1));
+      expect(meta.top, greaterThanOrEqualTo(tester.getRect(title).bottom - 1), reason: 'field · time · reading time moved below it');
+
+      await pump(tester, postCard(1, language: 'en', author: omar));
+      expect(find.text(omarTitled.headline!), findsNothing);
+      expect(find.byType(AuthorHeadline), findsNothing);
+    });
+
+    testWidgets('a card a repost placed says who reposted it; the name opens their profile (F29)', (tester) async {
+      final reposter = RepostLabel(user: monaTitled, repostedAt: DateTime.utc(2026, 11, 2, 9));
+      await pump(tester, postCard(1, language: 'en', repostedBy: reposter));
+      expect(find.byType(RepostLabelText), findsOneWidget);
+      expect(find.textContaining('reposted this'), findsOneWidget);
+      expect(find.textContaining('منى عبد الله'), findsOneWidget);
+
+      await pump(tester, postCard(1, language: 'en', repostedBy: RepostLabel(user: omar, othersCount: 2, repostedAt: DateTime.utc(2026, 11, 2))));
+      expect(find.textContaining('and 2 others reposted this'), findsOneWidget);
+
+      await pump(tester, postCard(1, language: 'en', repostedBy: RepostLabel(user: omar, othersCount: 1, repostedAt: DateTime.utc(2026, 11, 2))));
+      expect(find.textContaining('and 1 other reposted this'), findsOneWidget);
+
+      // "مقال النهارده" wins over a repost label; without either there is no label row.
+      await pump(tester, postCard(1, language: 'en', repostedBy: reposter), label: "Today's article");
+      expect(find.byType(RepostLabelText), findsNothing);
+      await pump(tester, postCard(1, language: 'en'));
+      expect(find.byType(RepostLabelText), findsNothing);
+    });
+
+    testWidgets('the repost label opens the reposter\'s profile', (tester) async {
+      final opened = <String>[];
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => Scaffold(
+              body: ListView(children: [
+                PostCard(article: postCard(1, language: 'en', repostedBy: RepostLabel(user: mona, repostedAt: DateTime.utc(2026, 11, 2)))),
+              ]),
+            ),
+          ),
+          GoRoute(
+            path: '/u/:username',
+            builder: (_, state) {
+              opened.add(state.pathParameters['username']!);
+              return const Text('profile');
+            },
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      usePhoneSurface(tester);
+      await tester.pumpWidget(withCardStores(MaterialApp.router(
+        theme: AppTheme.light(AppLocales.en),
+        locale: AppLocales.en,
+        supportedLocales: AppLocales.supported,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        routerConfig: router,
+      )));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(RepostLabelText));
+      await tester.pumpAndSettle();
+      expect(opened, ['mona_dev']);
+    });
+
+    testWidgets('Arabic repost labels: one, "وشخص تاني" for one more, "و2 غيره" for more', (tester) async {
+      final ar = await AppLocalizations.delegate.load(AppLocales.ar);
+      const user = Author(id: 'w-9', displayName: 'Omar', username: 'omar');
+      String text(int others) => RepostLabelText.textOf(ar, RepostLabel(user: user, othersCount: others, repostedAt: DateTime.utc(2026)))
+          .replaceAll(Bidi.fsi, '')
+          .replaceAll(Bidi.pdi, '');
+      expect(text(0), 'أعاد نشره Omar');
+      expect(text(1), 'Omar وشخص تاني أعادوا نشره');
+      expect(text(2), 'Omar و2 غيره أعادوا نشره');
+    });
+
     testWidgets('no Follow for a writer you follow, your own article or a deleted user', (tester) async {
       await pump(tester, postCard(1, language: 'en', isFollowingAuthor: true));
       expect(find.byType(FollowButton), findsNothing);
@@ -391,26 +480,48 @@ void main() {
       expect(opened, ['/tags/${Uri.encodeComponent(tag.slug)}']);
     });
 
-    testWidgets('the label, the reaction total and "12 comments"; none of them while both are 0', (tester) async {
+    testWidgets('the label; each count beside its icon, none at 0; up to three reaction emojis', (tester) async {
       await pump(
         tester,
-        postCard(1, language: 'en', cover: false, reactions: const ReactionCounts(insightful: 4, love: 1), reactionCount: 5, commentCount: 12),
+        postCard(
+          1,
+          language: 'en',
+          cover: false,
+          reactions: const ReactionCounts(insightful: 4, love: 1),
+          reactionCount: 5,
+          commentCount: 12,
+          repostCount: 3,
+        ),
         label: "Today's article",
       );
       expect(find.text("Today's article"), findsOneWidget);
-      expect(find.text('5'), findsOneWidget);
-      expect(find.text(l10n.commentsCount(12)), findsOneWidget);
+      for (final count in ['5', '12', '3']) {
+        expect(find.descendant(of: find.byType(ActionBarItem), matching: find.text(count)), findsOneWidget, reason: count);
+      }
+      expect(find.text('💡'), findsOneWidget);
+      expect(find.text('❤️'), findsOneWidget);
+      expect(find.text(l10n.commentsCount(12)), findsNothing, reason: 'no "12 comments" row any more');
 
       await pump(tester, postCard(2, language: 'en', cover: false));
-      expect(find.text(l10n.commentsCount(0)), findsNothing);
       expect(find.text('0'), findsNothing);
+      expect(find.byType(ReactionStackSummary), findsOneWidget);
+      expect(find.text('💡'), findsNothing, reason: 'no emojis without reactions');
     });
 
-    testWidgets('the action bar: React, Comment and Share, always shown', (tester) async {
+    testWidgets('the action bar: React, Comment, Repost and Share as icons, with no text labels', (tester) async {
       await pump(tester, shortPostCard(language: 'en'));
-      expect(find.text(l10n.postReact), findsOneWidget);
-      expect(find.text(l10n.postComment), findsOneWidget);
-      expect(find.text(l10n.share), findsOneWidget);
+      expect(find.byIcon(Icons.lightbulb_outline_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.chat_bubble_outline_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.repeat_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.ios_share_rounded), findsOneWidget);
+      expect(find.text(l10n.postReact), findsNothing);
+      expect(find.text(l10n.postComment), findsNothing);
+      expect(find.text(l10n.share), findsNothing);
+      // Repost sits between Comment and Share.
+      final x = [Icons.chat_bubble_outline_rounded, Icons.repeat_rounded, Icons.ios_share_rounded]
+          .map((icon) => tester.getCenter(find.byIcon(icon)).dx)
+          .toList();
+      expect(x[0] < x[1] && x[1] < x[2], isTrue, reason: 'left to right in English');
     });
 
     testWidgets('a tap on React gives 💡 at once', (tester) async {
@@ -419,18 +530,21 @@ void main() {
       addTearDown(engagement.close);
       when(() => reactions.react('art-7', ReactionType.insightful)).thenAnswer((_) async =>
           const Ok(ArticleReactions(reactions: ReactionCounts(insightful: 1), total: 1, myReaction: ReactionType.insightful)));
+      final semantics = tester.ensureSemantics();
       await pump(tester, shortPostCard(language: 'en'), engagement: engagement);
 
-      await tester.tap(find.text(l10n.postReact));
+      await tester.tap(find.byType(ReactionButton));
       await tester.pump();
-      expect(find.text(l10n.reactionInsightful), findsOneWidget);
+      expect(find.bySemanticsLabel(l10n.postBarReacted(l10n.reactionInsightful, 1)), findsOneWidget);
+      expect(find.descendant(of: find.byType(ReactionButton), matching: find.text('💡')), findsOneWidget);
       await tester.pumpAndSettle();
       verify(() => reactions.react('art-7', ReactionType.insightful)).called(1);
+      semantics.dispose();
     });
 
     testWidgets('guests get the sign-in prompt instead of reacting', (tester) async {
       await pump(tester, shortPostCard(language: 'en'), session: const SessionState(status: SessionStatus.guest));
-      await tester.tap(find.text(l10n.postReact));
+      await tester.tap(find.byType(ReactionButton));
       await tester.pumpAndSettle();
       expect(find.text(l10n.signInPromptTitle), findsOneWidget);
     });
@@ -469,7 +583,7 @@ void main() {
       )));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text(l10n.postComment));
+      await tester.tap(find.byIcon(Icons.chat_bubble_outline_rounded));
       await tester.pumpAndSettle();
       expect(find.text('Great read'), findsOneWidget);
 
@@ -486,11 +600,19 @@ void main() {
 
     testWidgets('every action has a label for screen readers', (tester) async {
       final semantics = tester.ensureSemantics();
-      await pump(tester, postCard(1, language: 'en'));
+      await pump(tester, postCard(1, language: 'en', reactionCount: 12, commentCount: 4));
 
-      expect(find.bySemanticsLabel(l10n.reactAction), findsOneWidget);
-      expect(find.bySemanticsLabel(l10n.postComment), findsOneWidget);
+      // Each icon's name has its count, but only when there is one (F34, §26).
+      expect(find.bySemanticsLabel(l10n.postBarReact(12)), findsOneWidget);
+      expect(find.bySemanticsLabel('React, 12'), findsOneWidget);
+      expect(find.bySemanticsLabel(l10n.postBarComment(4)), findsOneWidget);
+      expect(find.bySemanticsLabel('Repost'), findsOneWidget);
       expect(find.bySemanticsLabel(l10n.share), findsOneWidget);
+      // Each is a real button for screen readers; React also has the long press (the floating bar).
+      expect(tester.getSemantics(find.byType(ReactionButton)), isSemantics(isButton: true, hasTapAction: true, hasLongPressAction: true));
+      for (final label in [l10n.postBarComment(4), 'Repost', l10n.share]) {
+        expect(tester.getSemantics(find.bySemanticsLabel(label)), isSemantics(isButton: true, hasTapAction: true), reason: label);
+      }
       expect(find.bySemanticsLabel(l10n.postCoverImage), findsOneWidget);
       expect(find.byTooltip(l10n.saveArticle), findsOneWidget);
       expect(find.byTooltip(l10n.articleMenu), findsOneWidget);

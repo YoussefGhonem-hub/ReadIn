@@ -1411,7 +1411,8 @@ as int,
 /// @nodoc
 mixin _$ModerationTargetModel {
 
- String get state; AuthorModel? get author; String? get title; String? get slug; String? get language; String? get body; String? get articleId; String? get articleSlug; String? get articleTitle; DateTime? get suspendedUntil; int get warningCount;
+ String get state; AuthorModel? get author; String? get title; String? get slug; String? get language; String? get body; String? get articleId; String? get articleSlug; String? get articleTitle; DateTime? get suspendedUntil; int get warningCount;// F14: user targets only (null for content).
+ List<ProfileLinkModel>? get links;
 /// Create a copy of ModerationTargetModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1424,16 +1425,16 @@ $ModerationTargetModelCopyWith<ModerationTargetModel> get copyWith => _$Moderati
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ModerationTargetModel&&(identical(other.state, state) || other.state == state)&&(identical(other.author, author) || other.author == author)&&(identical(other.title, title) || other.title == title)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.body, body) || other.body == body)&&(identical(other.articleId, articleId) || other.articleId == articleId)&&(identical(other.articleSlug, articleSlug) || other.articleSlug == articleSlug)&&(identical(other.articleTitle, articleTitle) || other.articleTitle == articleTitle)&&(identical(other.suspendedUntil, suspendedUntil) || other.suspendedUntil == suspendedUntil)&&(identical(other.warningCount, warningCount) || other.warningCount == warningCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ModerationTargetModel&&(identical(other.state, state) || other.state == state)&&(identical(other.author, author) || other.author == author)&&(identical(other.title, title) || other.title == title)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.body, body) || other.body == body)&&(identical(other.articleId, articleId) || other.articleId == articleId)&&(identical(other.articleSlug, articleSlug) || other.articleSlug == articleSlug)&&(identical(other.articleTitle, articleTitle) || other.articleTitle == articleTitle)&&(identical(other.suspendedUntil, suspendedUntil) || other.suspendedUntil == suspendedUntil)&&(identical(other.warningCount, warningCount) || other.warningCount == warningCount)&&const DeepCollectionEquality().equals(other.links, links));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,state,author,title,slug,language,body,articleId,articleSlug,articleTitle,suspendedUntil,warningCount);
+int get hashCode => Object.hash(runtimeType,state,author,title,slug,language,body,articleId,articleSlug,articleTitle,suspendedUntil,warningCount,const DeepCollectionEquality().hash(links));
 
 @override
 String toString() {
-  return 'ModerationTargetModel(state: $state, author: $author, title: $title, slug: $slug, language: $language, body: $body, articleId: $articleId, articleSlug: $articleSlug, articleTitle: $articleTitle, suspendedUntil: $suspendedUntil, warningCount: $warningCount)';
+  return 'ModerationTargetModel(state: $state, author: $author, title: $title, slug: $slug, language: $language, body: $body, articleId: $articleId, articleSlug: $articleSlug, articleTitle: $articleTitle, suspendedUntil: $suspendedUntil, warningCount: $warningCount, links: $links)';
 }
 
 
@@ -1444,7 +1445,7 @@ abstract mixin class $ModerationTargetModelCopyWith<$Res>  {
   factory $ModerationTargetModelCopyWith(ModerationTargetModel value, $Res Function(ModerationTargetModel) _then) = _$ModerationTargetModelCopyWithImpl;
 @useResult
 $Res call({
- String state, AuthorModel? author, String? title, String? slug, String? language, String? body, String? articleId, String? articleSlug, String? articleTitle, DateTime? suspendedUntil, int warningCount
+ String state, AuthorModel? author, String? title, String? slug, String? language, String? body, String? articleId, String? articleSlug, String? articleTitle, DateTime? suspendedUntil, int warningCount, List<ProfileLinkModel>? links
 });
 
 
@@ -1461,7 +1462,7 @@ class _$ModerationTargetModelCopyWithImpl<$Res>
 
 /// Create a copy of ModerationTargetModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? state = null,Object? author = freezed,Object? title = freezed,Object? slug = freezed,Object? language = freezed,Object? body = freezed,Object? articleId = freezed,Object? articleSlug = freezed,Object? articleTitle = freezed,Object? suspendedUntil = freezed,Object? warningCount = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? state = null,Object? author = freezed,Object? title = freezed,Object? slug = freezed,Object? language = freezed,Object? body = freezed,Object? articleId = freezed,Object? articleSlug = freezed,Object? articleTitle = freezed,Object? suspendedUntil = freezed,Object? warningCount = null,Object? links = freezed,}) {
   return _then(_self.copyWith(
 state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as String,author: freezed == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
@@ -1474,7 +1475,8 @@ as String?,articleSlug: freezed == articleSlug ? _self.articleSlug : articleSlug
 as String?,articleTitle: freezed == articleTitle ? _self.articleTitle : articleTitle // ignore: cast_nullable_to_non_nullable
 as String?,suspendedUntil: freezed == suspendedUntil ? _self.suspendedUntil : suspendedUntil // ignore: cast_nullable_to_non_nullable
 as DateTime?,warningCount: null == warningCount ? _self.warningCount : warningCount // ignore: cast_nullable_to_non_nullable
-as int,
+as int,links: freezed == links ? _self.links : links // ignore: cast_nullable_to_non_nullable
+as List<ProfileLinkModel>?,
   ));
 }
 /// Create a copy of ModerationTargetModel
@@ -1571,10 +1573,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String state,  AuthorModel? author,  String? title,  String? slug,  String? language,  String? body,  String? articleId,  String? articleSlug,  String? articleTitle,  DateTime? suspendedUntil,  int warningCount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String state,  AuthorModel? author,  String? title,  String? slug,  String? language,  String? body,  String? articleId,  String? articleSlug,  String? articleTitle,  DateTime? suspendedUntil,  int warningCount,  List<ProfileLinkModel>? links)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ModerationTargetModel() when $default != null:
-return $default(_that.state,_that.author,_that.title,_that.slug,_that.language,_that.body,_that.articleId,_that.articleSlug,_that.articleTitle,_that.suspendedUntil,_that.warningCount);case _:
+return $default(_that.state,_that.author,_that.title,_that.slug,_that.language,_that.body,_that.articleId,_that.articleSlug,_that.articleTitle,_that.suspendedUntil,_that.warningCount,_that.links);case _:
   return orElse();
 
 }
@@ -1592,10 +1594,10 @@ return $default(_that.state,_that.author,_that.title,_that.slug,_that.language,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String state,  AuthorModel? author,  String? title,  String? slug,  String? language,  String? body,  String? articleId,  String? articleSlug,  String? articleTitle,  DateTime? suspendedUntil,  int warningCount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String state,  AuthorModel? author,  String? title,  String? slug,  String? language,  String? body,  String? articleId,  String? articleSlug,  String? articleTitle,  DateTime? suspendedUntil,  int warningCount,  List<ProfileLinkModel>? links)  $default,) {final _that = this;
 switch (_that) {
 case _ModerationTargetModel():
-return $default(_that.state,_that.author,_that.title,_that.slug,_that.language,_that.body,_that.articleId,_that.articleSlug,_that.articleTitle,_that.suspendedUntil,_that.warningCount);case _:
+return $default(_that.state,_that.author,_that.title,_that.slug,_that.language,_that.body,_that.articleId,_that.articleSlug,_that.articleTitle,_that.suspendedUntil,_that.warningCount,_that.links);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1612,10 +1614,10 @@ return $default(_that.state,_that.author,_that.title,_that.slug,_that.language,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String state,  AuthorModel? author,  String? title,  String? slug,  String? language,  String? body,  String? articleId,  String? articleSlug,  String? articleTitle,  DateTime? suspendedUntil,  int warningCount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String state,  AuthorModel? author,  String? title,  String? slug,  String? language,  String? body,  String? articleId,  String? articleSlug,  String? articleTitle,  DateTime? suspendedUntil,  int warningCount,  List<ProfileLinkModel>? links)?  $default,) {final _that = this;
 switch (_that) {
 case _ModerationTargetModel() when $default != null:
-return $default(_that.state,_that.author,_that.title,_that.slug,_that.language,_that.body,_that.articleId,_that.articleSlug,_that.articleTitle,_that.suspendedUntil,_that.warningCount);case _:
+return $default(_that.state,_that.author,_that.title,_that.slug,_that.language,_that.body,_that.articleId,_that.articleSlug,_that.articleTitle,_that.suspendedUntil,_that.warningCount,_that.links);case _:
   return null;
 
 }
@@ -1627,7 +1629,7 @@ return $default(_that.state,_that.author,_that.title,_that.slug,_that.language,_
 @JsonSerializable()
 
 class _ModerationTargetModel extends ModerationTargetModel {
-  const _ModerationTargetModel({required this.state, this.author, this.title, this.slug, this.language, this.body, this.articleId, this.articleSlug, this.articleTitle, this.suspendedUntil, this.warningCount = 0}): super._();
+  const _ModerationTargetModel({required this.state, this.author, this.title, this.slug, this.language, this.body, this.articleId, this.articleSlug, this.articleTitle, this.suspendedUntil, this.warningCount = 0, final  List<ProfileLinkModel>? links}): _links = links,super._();
   factory _ModerationTargetModel.fromJson(Map<String, dynamic> json) => _$ModerationTargetModelFromJson(json);
 
 @override final  String state;
@@ -1641,6 +1643,17 @@ class _ModerationTargetModel extends ModerationTargetModel {
 @override final  String? articleTitle;
 @override final  DateTime? suspendedUntil;
 @override@JsonKey() final  int warningCount;
+// F14: user targets only (null for content).
+ final  List<ProfileLinkModel>? _links;
+// F14: user targets only (null for content).
+@override List<ProfileLinkModel>? get links {
+  final value = _links;
+  if (value == null) return null;
+  if (_links is EqualUnmodifiableListView) return _links;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
 
 /// Create a copy of ModerationTargetModel
 /// with the given fields replaced by the non-null parameter values.
@@ -1655,16 +1668,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ModerationTargetModel&&(identical(other.state, state) || other.state == state)&&(identical(other.author, author) || other.author == author)&&(identical(other.title, title) || other.title == title)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.body, body) || other.body == body)&&(identical(other.articleId, articleId) || other.articleId == articleId)&&(identical(other.articleSlug, articleSlug) || other.articleSlug == articleSlug)&&(identical(other.articleTitle, articleTitle) || other.articleTitle == articleTitle)&&(identical(other.suspendedUntil, suspendedUntil) || other.suspendedUntil == suspendedUntil)&&(identical(other.warningCount, warningCount) || other.warningCount == warningCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ModerationTargetModel&&(identical(other.state, state) || other.state == state)&&(identical(other.author, author) || other.author == author)&&(identical(other.title, title) || other.title == title)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.body, body) || other.body == body)&&(identical(other.articleId, articleId) || other.articleId == articleId)&&(identical(other.articleSlug, articleSlug) || other.articleSlug == articleSlug)&&(identical(other.articleTitle, articleTitle) || other.articleTitle == articleTitle)&&(identical(other.suspendedUntil, suspendedUntil) || other.suspendedUntil == suspendedUntil)&&(identical(other.warningCount, warningCount) || other.warningCount == warningCount)&&const DeepCollectionEquality().equals(other._links, _links));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,state,author,title,slug,language,body,articleId,articleSlug,articleTitle,suspendedUntil,warningCount);
+int get hashCode => Object.hash(runtimeType,state,author,title,slug,language,body,articleId,articleSlug,articleTitle,suspendedUntil,warningCount,const DeepCollectionEquality().hash(_links));
 
 @override
 String toString() {
-  return 'ModerationTargetModel(state: $state, author: $author, title: $title, slug: $slug, language: $language, body: $body, articleId: $articleId, articleSlug: $articleSlug, articleTitle: $articleTitle, suspendedUntil: $suspendedUntil, warningCount: $warningCount)';
+  return 'ModerationTargetModel(state: $state, author: $author, title: $title, slug: $slug, language: $language, body: $body, articleId: $articleId, articleSlug: $articleSlug, articleTitle: $articleTitle, suspendedUntil: $suspendedUntil, warningCount: $warningCount, links: $links)';
 }
 
 
@@ -1675,7 +1688,7 @@ abstract mixin class _$ModerationTargetModelCopyWith<$Res> implements $Moderatio
   factory _$ModerationTargetModelCopyWith(_ModerationTargetModel value, $Res Function(_ModerationTargetModel) _then) = __$ModerationTargetModelCopyWithImpl;
 @override @useResult
 $Res call({
- String state, AuthorModel? author, String? title, String? slug, String? language, String? body, String? articleId, String? articleSlug, String? articleTitle, DateTime? suspendedUntil, int warningCount
+ String state, AuthorModel? author, String? title, String? slug, String? language, String? body, String? articleId, String? articleSlug, String? articleTitle, DateTime? suspendedUntil, int warningCount, List<ProfileLinkModel>? links
 });
 
 
@@ -1692,7 +1705,7 @@ class __$ModerationTargetModelCopyWithImpl<$Res>
 
 /// Create a copy of ModerationTargetModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? state = null,Object? author = freezed,Object? title = freezed,Object? slug = freezed,Object? language = freezed,Object? body = freezed,Object? articleId = freezed,Object? articleSlug = freezed,Object? articleTitle = freezed,Object? suspendedUntil = freezed,Object? warningCount = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? state = null,Object? author = freezed,Object? title = freezed,Object? slug = freezed,Object? language = freezed,Object? body = freezed,Object? articleId = freezed,Object? articleSlug = freezed,Object? articleTitle = freezed,Object? suspendedUntil = freezed,Object? warningCount = null,Object? links = freezed,}) {
   return _then(_ModerationTargetModel(
 state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as String,author: freezed == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
@@ -1705,7 +1718,8 @@ as String?,articleSlug: freezed == articleSlug ? _self.articleSlug : articleSlug
 as String?,articleTitle: freezed == articleTitle ? _self.articleTitle : articleTitle // ignore: cast_nullable_to_non_nullable
 as String?,suspendedUntil: freezed == suspendedUntil ? _self.suspendedUntil : suspendedUntil // ignore: cast_nullable_to_non_nullable
 as DateTime?,warningCount: null == warningCount ? _self.warningCount : warningCount // ignore: cast_nullable_to_non_nullable
-as int,
+as int,links: freezed == links ? _self._links : links // ignore: cast_nullable_to_non_nullable
+as List<ProfileLinkModel>?,
   ));
 }
 

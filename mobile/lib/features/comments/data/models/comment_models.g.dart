@@ -61,6 +61,7 @@ _CommentModel _$CommentModelFromJson(Map<String, dynamic> json) =>
           ?.map((e) => CommentModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       isAuthorMuted: json['isAuthorMuted'] as bool? ?? false,
+      isFollowingAuthor: json['isFollowingAuthor'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$CommentModelToJson(_CommentModel instance) =>
@@ -87,6 +88,7 @@ Map<String, dynamic> _$CommentModelToJson(_CommentModel instance) =>
       'canModerate': instance.canModerate,
       'replies': ?instance.replies?.map((e) => e.toJson()).toList(),
       'isAuthorMuted': instance.isAuthorMuted,
+      'isFollowingAuthor': instance.isFollowingAuthor,
     };
 
 _CommentPageModel _$CommentPageModelFromJson(Map<String, dynamic> json) =>

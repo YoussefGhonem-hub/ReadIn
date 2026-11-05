@@ -114,6 +114,9 @@ _ModerationTargetModel _$ModerationTargetModelFromJson(
       ? null
       : DateTime.parse(json['suspendedUntil'] as String),
   warningCount: (json['warningCount'] as num?)?.toInt() ?? 0,
+  links: (json['links'] as List<dynamic>?)
+      ?.map((e) => ProfileLinkModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$ModerationTargetModelToJson(
@@ -130,6 +133,7 @@ Map<String, dynamic> _$ModerationTargetModelToJson(
   'articleTitle': ?instance.articleTitle,
   'suspendedUntil': ?instance.suspendedUntil?.toIso8601String(),
   'warningCount': instance.warningCount,
+  'links': ?instance.links?.map((e) => e.toJson()).toList(),
 };
 
 _ModerationQueueItemModel _$ModerationQueueItemModelFromJson(

@@ -18,6 +18,9 @@ enum NotificationType {
   verificationResult('verification_result'),
   moderationNotice('moderation_notice'),
 
+  /// Someone reposted your article (F29): aggregated per article, opens the article.
+  articleReposted('article_reposted'),
+
   /// A type this app version doesn't know yet: shown with generic text.
   unknown('');
 
@@ -39,6 +42,7 @@ enum NotificationType {
     followedWriterArticle,
     dailyArticle,
     streakReminder,
+    articleReposted,
   ];
 
   bool get isConfigurable => configurable.contains(this);

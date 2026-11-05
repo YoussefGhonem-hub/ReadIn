@@ -34,6 +34,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
       });
 
   @override
+  Future<Result<CursorPage<ArticleCard>>> getReposts(String username, {String? cursor, int limit = 20}) => guardApi(() async {
+        final page = await _api.getReposts(handle(username), cursor, limit);
+        return CursorPage(items: [for (final m in page.items) m.toEntity()], nextCursor: page.nextCursor);
+      });
+
+  @override
   Future<Result<void>> updateProfile(ProfileUpdate update) => guardApi(() => _api.updateProfile(UpdateProfileRequest(update)));
 
   @override

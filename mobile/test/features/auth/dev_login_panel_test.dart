@@ -15,7 +15,7 @@ void main() {
       expect(phones, isNot(contains('+12025550102')));
       expect(phones, isNot(contains('+12025550103')));
       expect(phones.toSet(), hasLength(phones.length));
-      expect(phones, hasLength(18));
+      expect(phones, hasLength(17));
 
       expect(DevLogin.users.where((user) => user.role == 'SuperAdmin').map((user) => user.phone), ['+12025550101']);
       for (final user in DevLogin.users) {
@@ -33,8 +33,12 @@ void main() {
       expect(DevLogin.users.where((user) => user.verified).map((user) => (user.phone, user.name, user.role)), [
         ('+12025550104', '.NET Writer', 'Member'),
         ('+12025550105', 'AI Writer', 'Member'),
-        ('+12025550106', 'Verified Writer', 'Member'),
       ]);
+    });
+
+    test('the "Verified Writer" demo account (+12025550106) is gone (no demo articles, pre-production step)', () {
+      expect(DevLogin.users.map((user) => user.phone), isNot(contains('+12025550106')));
+      expect(DevLogin.users.map((user) => user.name), isNot(contains('Verified Writer')));
     });
   });
 
@@ -57,13 +61,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('+1 202-555-0101 · SuperAdmin'), findsOneWidget);
-      for (final phone in ['0104', '0105', '0106']) {
+      for (final phone in ['0104', '0105']) {
         expect(find.textContaining('+1 202-555-$phone · Member'), findsOneWidget, reason: phone);
       }
-      expect(find.byType(VerifiedMark), findsNWidgets(3));
-      expect(find.text(l10n.verifiedWriter), findsNWidgets(3));
+      expect(find.byType(VerifiedMark), findsNWidgets(2));
+      expect(find.text(l10n.verifiedWriter), findsNWidgets(2));
+      expect(find.textContaining('+1 202-555-0106'), findsNothing);
       expect(find.textContaining('+1 202-555-0107 · Member'), findsOneWidget);
-      for (final gone in ['Admin User', 'Moderator User', 'VerifiedWriter', '· Admin', '· Moderator']) {
+      for (final gone in ['Admin User', 'Moderator User', 'VerifiedWriter', 'Verified Writer', '· Admin', '· Moderator']) {
         expect(find.textContaining(gone), findsNothing, reason: gone);
       }
 

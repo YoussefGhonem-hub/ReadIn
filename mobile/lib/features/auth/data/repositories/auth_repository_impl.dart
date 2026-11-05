@@ -122,9 +122,9 @@ class AccountRepositoryImpl implements AccountRepository {
       guardApi(() async => (await _api.usernameAvailable(username)).toEntity());
 
   @override
-  Future<Result<Me>> completeProfile({required String displayName, required String username, String? avatarUrl}) =>
+  Future<Result<Me>> completeProfile({required String displayName, required String username, String? avatarUrl, String? headline}) =>
       guardApi(() async => _publish(await _api.completeProfile(
-            CompleteProfileRequest(displayName: displayName, username: username, avatarUrl: avatarUrl),
+            CompleteProfileRequest(displayName: displayName, username: username, avatarUrl: avatarUrl, headline: headline),
           )));
 
   @override

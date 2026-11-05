@@ -24,6 +24,14 @@ abstract class ProfileApi {
     @Query('limit') int limit,
   );
 
+  /// The Reposts tab (F29): newest repost first, each card's `repostedBy` = this user.
+  @GET('/users/{username}/reposts')
+  Future<ArticleCardPageModel> getReposts(
+    @Path('username') String username,
+    @Query('cursor') String? cursor,
+    @Query('limit') int limit,
+  );
+
   @PATCH('/me')
   Future<void> updateProfile(@Body() UpdateProfileRequest body);
 

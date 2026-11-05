@@ -24,7 +24,11 @@ Map<String, dynamic> profileJson({
           : null,
       'isVerified': true,
       'bio': 'Backend engineer · .NET و SQL Server',
-      'links': {'github': 'https://github.com/mona', 'linkedin': null, 'website': null},
+      'headline': 'Senior Backend Engineer | .NET و SQL Server',
+      'links': [
+        {'platform': 'github', 'url': 'https://github.com/mona', 'label': null},
+        {'platform': 'other', 'url': 'https://mona.dev/podcast', 'label': 'بودكاست منى'},
+      ],
       'expertise': [
         {'id': 'f-dotnet', 'slug': 'dotnet', 'name': '.NET', 'icon': 'code-xml', 'color': 'callout-info-accent'},
         {'id': 'f-db', 'slug': 'databases', 'name': 'Databases', 'icon': 'database', 'color': 'accent'},
@@ -44,7 +48,14 @@ final otherProfile = UserProfile(
   username: 'mona_dev',
   isVerified: true,
   bio: 'Backend engineer بكتب عن ASP.NET Core و SQL Server (EF Core 10).',
-  links: const ProfileLinks(github: 'https://github.com/mona-dev', website: 'https://mona.dev/'),
+  headline: 'Senior Backend Engineer | ASP.NET Core و Azure',
+  links: const [
+    ProfileLink(platform: LinkPlatform.linkedin, url: 'https://www.linkedin.com/in/mona-dev'),
+    ProfileLink(platform: LinkPlatform.github, url: 'https://github.com/mona-dev'),
+    ProfileLink(platform: LinkPlatform.x, url: 'https://x.com/mona_dev'),
+    ProfileLink(platform: LinkPlatform.website, url: 'https://mona.dev/'),
+    ProfileLink(platform: LinkPlatform.other, url: 'https://mona.dev/podcast', label: 'بودكاست منى'),
+  ],
   expertise: const [
     ExpertiseField(id: 'f-dotnet', slug: 'dotnet', name: '.NET', icon: 'code-xml', color: 'callout-info-accent'),
     ExpertiseField(id: 'f-db', slug: 'databases', name: 'Databases', icon: 'database', color: 'accent'),
@@ -61,7 +72,7 @@ final ownProfile = UserProfile(
   displayName: 'Youssef Hassan',
   username: 'reader1',
   bio: 'بقرا كل يوم عن Flutter و Clean Architecture.',
-  links: const ProfileLinks(linkedin: 'https://www.linkedin.com/in/youssef'),
+  links: const [ProfileLink(platform: LinkPlatform.linkedin, url: 'https://www.linkedin.com/in/youssef')],
   joinedAt: DateTime.utc(2026, 3, 2),
   stats: const ProfileStats(articles: 3, followers: 48, following: 9, totalReads: 860),
   isMe: true,

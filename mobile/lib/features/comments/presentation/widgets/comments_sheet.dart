@@ -15,6 +15,7 @@ import '../../../article/domain/entities/article.dart';
 import '../../../article/presentation/cubit/engagement_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
+import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../moderation/domain/entities/moderation.dart';
 import '../../../moderation/presentation/cubit/report_cubit.dart';
 import '../../../moderation/presentation/widgets/report_sheet.dart';
@@ -75,10 +76,36 @@ class _CommentsViewState extends State<CommentsView> {
     onMoreReplies: (threadId) => unawaited(_cubit.loadMoreReplies(threadId)),
   );
 
+  /// Comments whose author's follow state already went to the follow store.
+  final _seeded = <String>{};
+
   @override
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
+    _seedFollows(_cubit.state);
+  }
+
+  /// Hands the follow store what the API said about each new comment's author (`isFollowingAuthor`), so "متابعة"
+  /// on every row of a writer agrees (F11, F12). Comments already handed over are skipped: their flag is as old as
+  /// the page they came with, and a follow made since must stay.
+  void _seedFollows(CommentsState state) {
+    final follows = context.read<FollowsCubit?>();
+    if (follows == null) return;
+    final fresh = <String, bool>{};
+    void add(Comment comment) {
+      final author = comment.author;
+      if (author == null || comment.isPlaceholder || !_seeded.add(comment.id)) return;
+      fresh[author.id] = comment.isFollowingAuthor || (fresh[author.id] ?? false);
+    }
+
+    for (final thread in [...state.threads, for (final c in state.incoming) CommentThread.of(c)]) {
+      add(thread.comment);
+      thread.replies.forEach(add);
+    }
+    final myId = context.read<SessionCubit>().state.me?.id;
+    fresh.remove(myId);
+    if (fresh.isNotEmpty) follows.seed(fresh);
   }
 
   @override
@@ -195,6 +222,10 @@ class _CommentsViewState extends State<CommentsView> {
         BlocListener<EngagementCubit, EngagementState>(
           listenWhen: (a, b) => a.of(article).commentCount != b.of(article).commentCount,
           listener: (context, state) => _cubit.syncTotal(state.of(article).commentCount),
+        ),
+        BlocListener<CommentsCubit, CommentsState>(
+          listenWhen: (a, b) => a.threads != b.threads || a.incoming != b.incoming,
+          listener: (_, state) => _seedFollows(state),
         ),
       ],
       child: Material(

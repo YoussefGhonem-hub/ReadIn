@@ -62,6 +62,9 @@ ArticleCard postCard(
   ReactionType? myReaction,
   bool isSaved = false,
   Author? author,
+  int repostCount = 0,
+  bool isReposted = false,
+  RepostLabel? repostedBy,
 }) {
   final base = sampleCard(i, language: language, authorDeleted: authorDeleted);
   return ArticleCard(
@@ -85,6 +88,9 @@ ArticleCard postCard(
     isFollowingAuthor: isFollowingAuthor,
     tags: tags,
     tagCount: tagCount,
+    repostCount: repostCount,
+    isReposted: isReposted,
+    repostedBy: repostedBy,
   );
 }
 

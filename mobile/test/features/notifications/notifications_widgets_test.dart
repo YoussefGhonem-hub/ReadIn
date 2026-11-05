@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
+import 'package:readin/core/push/push_links.dart';
 import 'package:readin/core/theme/app_theme.dart';
 import 'package:readin/features/auth/domain/entities/me.dart';
 import 'package:readin/features/auth/presentation/cubit/linked_accounts_cubit.dart';
@@ -27,6 +28,7 @@ import 'package:readin/features/profile/presentation/cubit/privacy_cubit.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/features/settings/presentation/pages/settings_page.dart';
+import 'package:readin/shared/widgets/badges.dart';
 
 import '../../helpers/fixtures.dart';
 import '../../helpers/notification_fixtures.dart';
@@ -124,9 +126,33 @@ void main() {
       expect(notificationTypeLabel(ar, NotificationType.mention), 'المنشن');
       expect(notificationTypeHint(en, NotificationType.mention), 'When someone mentions you in a comment or an article');
       expect(notificationTypeHint(ar, NotificationType.mention), 'لما حد يعمل لك منشن في تعليق أو مقال');
-      for (final type in NotificationType.configurable.where((type) => type != NotificationType.mention)) {
+      // Reposts (F29) say what they cover too, as the contract asks.
+      for (final type in NotificationType.configurable.where((type) => type != NotificationType.mention && type != NotificationType.articleReposted)) {
         expect(notificationTypeHint(en, type), isNull, reason: '${type.wire}: the name says it all');
       }
+    });
+
+    test('article_reposted (F29): who reposted your article, aggregated; its Settings row', () {
+      final one = row(NotificationType.articleReposted, article: diArticle);
+      expect(notificationMessage(en, one), 'Ahmed Samir reposted your article');
+      expect(notificationMessage(ar, one, name: 'أحمد'), 'أحمد أعاد نشر مقالك');
+      final three = row(NotificationType.articleReposted, actorCount: 3, article: diArticle);
+      expect(notificationMessage(en, three), 'Ahmed Samir and 2 others reposted your article');
+      expect(notificationMessage(ar, three, name: 'أحمد'), 'أحمد واتنين غيره أعادوا نشر مقالك');
+      expect(notificationMessage(ar, row(NotificationType.articleReposted, actorCount: 2), name: 'أحمد'), 'أحمد وشخص تاني أعادوا نشر مقالك');
+      expect(notificationMessage(ar, row(NotificationType.articleReposted, actorCount: 12), name: 'أحمد'), 'أحمد و11 غيره أعادوا نشر مقالك');
+      expect(notificationMessage(en, row(NotificationType.articleReposted, actor: null)), 'Deleted user reposted your article');
+      expect(isActorNotification(NotificationType.articleReposted), isTrue);
+
+      expect(NotificationType.fromWire('article_reposted'), NotificationType.articleReposted);
+      expect(NotificationType.articleReposted.isConfigurable, isTrue);
+      expect(NotificationType.configurable, hasLength(9));
+      expect(notificationTypeLabel(en, NotificationType.articleReposted), 'Reposts');
+      expect(notificationTypeLabel(ar, NotificationType.articleReposted), 'إعادة النشر');
+      expect(notificationTypeHint(en, NotificationType.articleReposted), 'When someone reposts your article');
+      expect(notificationTypeHint(ar, NotificationType.articleReposted), 'لما حد يعيد نشر مقالك');
+      // Its push opens the article, like the row.
+      expect(pushLinkToPath(one.link), '/a/di-dotnet');
     });
 
     test('the other types', () {
@@ -207,6 +233,25 @@ void main() {
     }
 
     for (final variant in Variant.all) {
+      testWidgets('article_reposted (F29): the reposter\'s avatar, the sentence, then the title ${variant.name}', (tester) async {
+        final l10n = await AppLocalizations.delegate.load(variant.locale);
+        final reposted = notification('n-repost', NotificationType.articleReposted, actor: mona, actorCount: 3, article: ragArticle);
+        await tester.pumpWidget(testApp(
+          Scaffold(body: NotificationTile(notification: reposted, onTap: () {})),
+          variant: variant,
+        ));
+        await tester.pump();
+
+        expect(find.byType(UserAvatar), findsOneWidget);
+        expect(find.byIcon(Icons.repeat_rounded), findsOneWidget);
+        expect(find.textContaining(notificationMessage(l10n, reposted, name: '').trim(), findRichText: true), findsOneWidget);
+        expect(find.textContaining(mona.displayName, findRichText: true), findsOneWidget);
+        // The English title in its own direction, also inside the Arabic screen.
+        expect(find.text(ragArticle.title), findsOneWidget);
+        expect(Directionality.of(tester.element(find.text(ragArticle.title))), TextDirection.ltr);
+        expect(tester.takeException(), isNull);
+      });
+
       testWidgets('a mention in an article: the sentence, then the title, and no excerpt ${variant.name}', (tester) async {
         final l10n = await AppLocalizations.delegate.load(variant.locale);
         final mention = mixedNotifications.singleWhere((n) => n.id == 'n-article-mention');
@@ -394,6 +439,17 @@ void main() {
         expect(find.byKey(NotificationTile.unreadDotKey), findsNWidgets(3), reason: 'read when it was opened');
       });
 
+      testWidgets('a repost (F29) opens the reposted article', (tester) async {
+        repository.items = [
+          notification('n-repost', NotificationType.articleReposted, actor: ahmed, actorCount: 2, article: diArticle),
+          ...mixedNotifications,
+        ];
+        await pumpRouter(tester);
+        await tapRow(tester, 'reposted your article');
+        expect(repository.calls, contains('read n-repost'));
+        expect(find.text('article di-dotnet #'), findsOneWidget);
+      });
+
       testWidgets('a mention in an article opens the article, not a comment', (tester) async {
         await pumpRouter(tester);
         await tester.scrollUntilVisible(find.textContaining('mentioned you in an article', findRichText: true), 300);
@@ -472,6 +528,15 @@ void main() {
           find.descendant(of: find.widgetWithText(ListTile, l10n.notificationTypeMention), matching: find.text(l10n.notificationTypeMentionHint)),
           findsOneWidget,
         );
+        // Reposts (F29), the 9th type, with its own selector and hint.
+        expect(
+          find.descendant(
+            of: find.widgetWithText(ListTile, l10n.notificationTypeArticleReposted),
+            matching: find.text(l10n.notificationTypeArticleRepostedHint),
+          ),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('mode-article_reposted')), findsOneWidget);
         expect(find.text(l10n.notificationSecurityAlerts), findsOneWidget);
         expect(find.text(l10n.quietHoursTitle), findsOneWidget);
         expect(find.text(l10n.quietHoursSwitch), findsOneWidget);

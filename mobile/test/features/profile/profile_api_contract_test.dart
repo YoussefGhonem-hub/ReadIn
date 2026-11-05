@@ -49,7 +49,12 @@ void main() {
       expect(profile.username, 'mona');
       expect(profile.isVerified, isTrue);
       expect(profile.bio, 'Backend engineer · .NET و SQL Server');
-      expect(profile.links, const ProfileLinks(github: 'https://github.com/mona'));
+      // F14: the title in full, and the links as an array in the member's order (Other keeps its label).
+      expect(profile.headline, 'Senior Backend Engineer | .NET و SQL Server');
+      expect(profile.links, const [
+        ProfileLink(platform: LinkPlatform.github, url: 'https://github.com/mona'),
+        ProfileLink(platform: LinkPlatform.other, url: 'https://mona.dev/podcast', label: 'بودكاست منى'),
+      ]);
       expect(profile.expertise.map((f) => f.slug), ['dotnet', 'databases']);
       expect(profile.expertise.first, const ExpertiseField(id: 'f-dotnet', slug: 'dotnet', name: '.NET', icon: 'code-xml', color: 'callout-info-accent'));
       expect(profile.joinedAt, DateTime.utc(2026, 1, 10, 9));
@@ -71,6 +76,49 @@ void main() {
       expect(profile.avatarVariants, isEmpty);
       expect(profile.avatarFor(160), isNull);
       expect(profile.bio, isNull);
+    });
+
+    test('no title and no links: a null headline and []; a blank title is no title', () async {
+      respond = (_) => {...profileJson(), 'headline': '   ', 'links': <Object>[]};
+
+      final profile = (await repository().getProfile('mona')).valueOrNull!;
+
+      expect(profile.headline, isNull);
+      expect(profile.links, isEmpty);
+    });
+
+    test('a platform this app version does not know, or an empty link, is skipped; order is kept', () async {
+      respond = (_) => {
+            ...profileJson(),
+            'links': [
+              {'platform': 'x', 'url': 'https://x.com/mona', 'label': null},
+              {'platform': 'mastodon', 'url': 'https://mastodon.social/@mona', 'label': null},
+              {'platform': 'youtube', 'url': '', 'label': null},
+              {'platform': 'linkedin', 'url': 'https://www.linkedin.com/in/mona', 'label': 'ignored'},
+            ],
+          };
+
+      final profile = (await repository().getProfile('mona')).valueOrNull!;
+
+      // A label on a named platform is ignored (only Other has one).
+      expect(profile.links, const [
+        ProfileLink(platform: LinkPlatform.x, url: 'https://x.com/mona'),
+        ProfileLink(platform: LinkPlatform.linkedin, url: 'https://www.linkedin.com/in/mona'),
+      ]);
+    });
+
+    test('an API from before the change still reads: { github, linkedin, website } become those links', () async {
+      respond = (_) => {
+            ...profileJson(),
+            'links': {'github': 'https://github.com/mona', 'linkedIn': null, 'website': 'https://mona.dev'},
+          };
+
+      final profile = (await repository().getProfile('mona')).valueOrNull!;
+
+      expect(profile.links, const [
+        ProfileLink(platform: LinkPlatform.github, url: 'https://github.com/mona'),
+        ProfileLink(platform: LinkPlatform.website, url: 'https://mona.dev'),
+      ]);
     });
 
     test('404 user.not_found', () async {
@@ -98,12 +146,39 @@ void main() {
     expect(page.nextCursor, 'c2');
   });
 
+  test('GET /users/{username}/reposts (F29) pages with cursor and limit, for the Reposts tab', () async {
+    respond = (_) => {
+          'items': [detailsJson(3)],
+          'nextCursor': null,
+        };
+
+    final page = (await repository().getReposts('@Mona', cursor: 'r1')).valueOrNull!;
+
+    expect(call(0), 'GET /users/mona/reposts');
+    expect(requests[0].queryParameters, {'cursor': 'r1', 'limit': 20});
+    expect(page.items.single.id, 'art-3');
+    expect(page.nextCursor, isNull);
+  });
+
+  test('GET /users/{username}/reposts: 404 user.not_found', () async {
+    respond = (_) => (404, {'status': 404, 'code': 'user.not_found', 'title': 'Not found'});
+
+    final failure = (await repository().getReposts('ghost')).failureOrNull!;
+
+    expect(failure.code, FailureCodes.userNotFound);
+  });
+
   group('PATCH /me', () {
     const base = ProfileUpdate(
       displayName: 'Mona Adel',
       username: 'mona',
       bio: '  Backend engineer  ',
-      links: ProfileLinks(github: 'https://github.com/mona', website: ' '),
+      headline: '  Senior Backend Engineer | .NET  ',
+      links: [
+        ProfileLink(platform: LinkPlatform.instagram, url: ' instagram.com/mona '),
+        ProfileLink(platform: LinkPlatform.github, url: 'https://github.com/mona'),
+        ProfileLink(platform: LinkPlatform.other, url: 'https://mona.dev/podcast', label: ' Podcast '),
+      ],
     );
 
     Future<Map<String, dynamic>> bodyOf(ProfileUpdate update) async {
@@ -114,18 +189,34 @@ void main() {
       return requests.last.data as Map<String, dynamic>;
     }
 
-    test('an untouched avatar and expertise leave their keys out; links are sent with nulls', () async {
+    test('an untouched avatar and expertise leave their keys out; links go as an array in order, the title trimmed', () async {
       final body = await bodyOf(base);
 
+      // The server adds `https://`; a label goes only with Other.
       expect(body, {
         'displayName': 'Mona Adel',
         'username': 'mona',
         'bio': 'Backend engineer',
-        'links': {'github': 'https://github.com/mona', 'linkedin': null, 'website': null},
+        'headline': 'Senior Backend Engineer | .NET',
+        'links': [
+          {'platform': 'instagram', 'url': 'instagram.com/mona'},
+          {'platform': 'github', 'url': 'https://github.com/mona'},
+          {'platform': 'other', 'url': 'https://mona.dev/podcast', 'label': 'Podcast'},
+        ],
       });
       expect(body.containsKey('avatarAssetId'), isFalse);
       expect(body.containsKey('avatarUrl'), isFalse);
       expect(body.containsKey('expertiseFieldIds'), isFalse);
+    });
+
+    test('untouched links are left out (kept); [] removes them all; a blank title is sent as null (cleared)', () async {
+      final kept = await bodyOf(const ProfileUpdate(displayName: 'M', username: 'mona', headline: '   '));
+      final removed = await bodyOf(const ProfileUpdate(displayName: 'M', username: 'mona', links: []));
+
+      expect(kept.containsKey('links'), isFalse);
+      expect(kept.containsKey('headline'), isTrue);
+      expect(kept['headline'], isNull);
+      expect(removed['links'], isEmpty);
     });
 
     test('a new avatar sends its asset id; removing sends null', () async {
@@ -181,20 +272,25 @@ void main() {
             'errors': {
               'displayName': ['validation.length'],
               'bio': ['validation.max_length'],
-              'links.gitHub': ['validation.url'],
-              'links.linkedIn': ['validation.url'],
-              'links.website': ['validation.url'],
+              'headline': ['profile.headline_too_long'],
+              'links': ['link.too_many'],
+              'links[0].url': ['link.host_mismatch'],
+              'links[1].platform': ['link.duplicate_platform'],
+              'links[2].label': ['link.label_invalid'],
             },
           });
       final failure = (await repository().updateProfile(base)).failureOrNull!;
       final split = EditProfileCubit.formErrorsOf(failure);
 
+      // Each link's error lands under its own field, by index (contract "Title and social links").
       expect(split.fields, {
         ProfileFields.displayName: 'validation.length',
         ProfileFields.bio: FailureCodes.validationMaxLength,
-        ProfileFields.github: FailureCodes.validationUrl,
-        ProfileFields.linkedin: FailureCodes.validationUrl,
-        ProfileFields.website: FailureCodes.validationUrl,
+        ProfileFields.headline: FailureCodes.profileHeadlineTooLong,
+        ProfileFields.links: FailureCodes.linkTooMany,
+        'links[0].url': FailureCodes.linkHostMismatch,
+        'links[1].platform': FailureCodes.linkDuplicatePlatform,
+        'links[2].label': FailureCodes.linkLabelInvalid,
       });
       expect(split.general, isNull);
     });

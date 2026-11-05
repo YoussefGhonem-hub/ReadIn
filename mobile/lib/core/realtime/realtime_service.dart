@@ -13,16 +13,19 @@ enum ReactionType { insightful, love, fire, mindBlown }
 /// deltas, so the user's own optimistic changes are never counted twice. A
 /// field is null until the API has published it; callers keep the REST value.
 class LiveArticleCounts extends Equatable {
-  const LiveArticleCounts({this.reactions, this.commentCount, this.saveCount});
+  const LiveArticleCounts({this.reactions, this.commentCount, this.saveCount, this.repostCount});
 
   final Map<ReactionType, int>? reactions;
   final int? commentCount;
   final int? saveCount;
 
+  /// `/live/articles/{id}/repostCount` (F29).
+  final int? repostCount;
+
   int? get reactionCount => reactions?.values.fold<int>(0, (sum, count) => sum + count);
 
   @override
-  List<Object?> get props => [reactions, commentCount, saveCount];
+  List<Object?> get props => [reactions, commentCount, saveCount, repostCount];
 }
 
 enum CommentEventType {
@@ -88,9 +91,10 @@ class RealtimeService {
       Map<ReactionType, int>? reactions;
       int? comments;
       int? saves;
+      int? reposts;
       final subscriptions = <StreamSubscription<Object?>>[];
       late final StreamController<LiveArticleCounts> controller;
-      void emit() => controller.add(LiveArticleCounts(reactions: reactions, commentCount: comments, saveCount: saves));
+      void emit() => controller.add(LiveArticleCounts(reactions: reactions, commentCount: comments, saveCount: saves, repostCount: reposts));
       controller = StreamController(
         onListen: () => subscriptions.addAll([
           connection.onValue('$base/reactions').listen((value) {
@@ -103,6 +107,10 @@ class RealtimeService {
           }),
           connection.onValue('$base/saveCount').listen((value) {
             saves = _toCount(value);
+            emit();
+          }),
+          connection.onValue('$base/repostCount').listen((value) {
+            reposts = _toCount(value);
             emit();
           }),
         ]),

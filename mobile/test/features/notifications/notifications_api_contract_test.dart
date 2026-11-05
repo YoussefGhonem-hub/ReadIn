@@ -155,6 +155,34 @@ void main() {
       expect(mention.link, 'readin://a/rag-vs-fine-tuning');
     });
 
+    test('article_reposted (F29): the latest reposter, how many, the article and its link', () async {
+      respond = (_) => {
+            'items': [
+              {
+                'id': 'n-7',
+                'type': 'article_reposted',
+                'createdAt': '2026-11-04T10:00:00Z',
+                'updatedAt': '2026-11-04T12:00:00Z',
+                'isRead': false,
+                'actor': {'id': 'u-1', 'displayName': 'Ahmed', 'username': 'ahmed', 'avatarUrl': null, 'isVerified': false},
+                'actorCount': 3,
+                'article': {'id': 'a-1', 'slug': 'rag-vs-fine-tuning', 'title': 'RAG vs fine-tuning', 'language': 'en'},
+                'comment': null,
+                'data': <String, Object?>{},
+                'link': 'readin://a/rag-vs-fine-tuning',
+              },
+            ],
+            'nextCursor': null,
+          };
+      final reposted = (await repository().list()).valueOrNull!.items.single;
+
+      expect(reposted.type, NotificationType.articleReposted);
+      expect((reposted.actor?.username, reposted.actorCount, reposted.otherActors), ('ahmed', 3, 2));
+      expect(reposted.article?.slug, 'rag-vs-fine-tuning');
+      expect(reposted.comment, isNull);
+      expect(reposted.link, 'readin://a/rag-vs-fine-tuning');
+    });
+
     test('a verification result says whether it was approved (F19); without data.approved it is generic', () async {
       Map<String, Object?> result(String id, Map<String, Object?> data) => {
             'id': id,
@@ -233,6 +261,20 @@ void main() {
         NotificationType.dailyArticle: NotificationMode.all,
       });
       expect(settings.modeOf(NotificationType.newFollower), NotificationMode.all, reason: 'absent = default');
+    });
+
+    test('article_reposted (F29) is the 9th configurable type: read and sent like the others', () async {
+      respond = (_) => {
+            'quietHours': {'enabled': true, 'start': '23:00', 'end': '07:00'},
+            'types': {'article_reposted': 'inApp'},
+          };
+      final settings = (await repository().getSettings()).valueOrNull!;
+      expect(settings.modeOf(NotificationType.articleReposted), NotificationMode.inApp);
+
+      respond = (_) => (204, null);
+      await repository().updateSettings(settings.withMode(NotificationType.articleReposted, NotificationMode.off));
+      final body = requests.last.data is String ? jsonDecode(requests.last.data as String) : requests.last.data;
+      expect((body as Map)['types'], {'article_reposted': 'off'});
     });
 
     test('PUT sends the whole NotificationSettingsDto', () async {

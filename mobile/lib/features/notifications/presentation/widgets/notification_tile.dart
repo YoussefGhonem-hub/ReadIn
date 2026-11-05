@@ -266,6 +266,7 @@ class _Leading extends StatelessWidget {
         NotificationType.securityAlert => (Icons.shield_outlined, colors.calloutDanger, colors.calloutDangerAccent),
         NotificationType.verificationResult => (Icons.verified_outlined, colors.calloutTip, colors.success),
         NotificationType.moderationNotice => (Icons.gavel_rounded, colors.calloutWarning, colors.calloutWarningAccent),
+        NotificationType.articleReposted => (Icons.repeat_rounded, colors.primary, colors.onPrimary),
         NotificationType.unknown => (Icons.notifications_none_rounded, colors.surfaceVariant, colors.textSecondary),
       };
 }

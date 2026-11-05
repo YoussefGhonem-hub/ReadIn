@@ -63,7 +63,8 @@ abstract interface class AccountRepository {
 
   Future<Result<UsernameAvailability>> checkUsername(String username);
 
-  Future<Result<Me>> completeProfile({required String displayName, required String username, String? avatarUrl});
+  /// `PUT /me/profile/complete`; [headline] is the optional title (F14), left out when empty.
+  Future<Result<Me>> completeProfile({required String displayName, required String username, String? avatarUrl, String? headline});
 
   /// The mandatory first PIN (`mustSetRecoveryPin`).
   Future<Result<Me>> setRecoveryPin(String pin);

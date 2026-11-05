@@ -13,6 +13,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/rdoc/rdoc_view.dart';
 import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/app_network_image.dart';
+import '../../../../shared/widgets/author_headline.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/state_views.dart';
@@ -29,6 +30,8 @@ import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../../reactions/presentation/widgets/reaction_button.dart';
 import '../../../reactions/presentation/widgets/who_reacted_sheet.dart';
 import '../../../reading/presentation/tracking/post_card_reading.dart';
+import '../../../reposts/presentation/widgets/repost_button.dart';
+import '../../../reposts/presentation/widgets/repost_label.dart';
 import '../../../saved/presentation/widgets/save_button.dart';
 import '../../../tags/presentation/widgets/tag_chip.dart';
 import '../../domain/entities/article.dart';
@@ -41,9 +44,10 @@ import 'article_share_button.dart';
 import 'attachment_viewers.dart';
 import 'post_card_text.dart';
 
-/// An article in a list as a social post (SPEC F34): an optional label, the writer with field, time and reading time
-/// (follow, save and "⋯" on the other side), the title, the beginning of the article with "Read more", the
-/// attachments or the cover, up to three tags, the counts and the action bar (react, comment, share).
+/// An article in a list as a social post (SPEC F34): an optional label ("مقال النهارده", or "أعاد نشره {name}" when a
+/// repost placed it, F29), the writer with their title and then field, time and reading time (follow, save and "⋯" on
+/// the other side), the title, the beginning of the article with "Read more", the attachments or the cover, up to three
+/// tags and the action bar: icons with their counts (react, comment, repost, share) and up to three reaction emojis.
 ///
 /// The card is not one link: the title opens the reader, the text expands in place, an image opens the viewer, the
 /// writer opens their profile and a tag its tag page (F32). Counts and the viewer's reaction and save follow [EngagementCubit] (live counters,
@@ -53,7 +57,8 @@ class PostCard extends StatefulWidget {
 
   final ArticleCard article;
 
-  /// Above the header, e.g. "مقال النهارده" on Home's daily article (F07).
+  /// Above the header, e.g. "مقال النهارده" on Home's daily article (F07). Without it, a card a repost placed shows
+  /// "أعاد نشره {name}" there ([ArticleCard.repostedBy], F29).
   final String? label;
 
   /// Opens the reader; by default the article's page is pushed.
@@ -184,7 +189,10 @@ class _PostCardState extends State<PostCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (widget.label case final label?) _PostLabel(label: label),
+                  if (widget.label case final label?)
+                    _PostLabel(label: label)
+                  else if (article.repostedBy case final repost?)
+                    _RepostedLabel(label: repost),
                   _PostHeader(
                     article: article,
                     hidden: view.hidden,
@@ -221,7 +229,7 @@ class _PostCardState extends State<PostCard> {
                       padding: const EdgeInsets.fromLTRB(ReadInSpace.s4, ReadInSpace.s3, ReadInSpace.s4, 0),
                       child: _PostTags(article: article),
                     ),
-                  _PostCounts(article: article, onComments: () => unawaited(_openComments())),
+                  const SizedBox(height: ReadInSpace.s3),
                   Divider(height: 1, indent: ReadInSpace.s4, endIndent: ReadInSpace.s4, color: colors.border),
                   _PostActions(article: article, onComments: () => unawaited(_openComments())),
                 ],
@@ -263,8 +271,32 @@ class _PostLabel extends StatelessWidget {
   }
 }
 
-/// Avatar and name (the profile), field · time since publishing · reading time; follow, save and "⋯" on the other
-/// side. A deleted author is "Deleted user", with no profile link and no follow (SPEC §9.6).
+/// "🔁 أعاد نشره {name}" over the header, with a hairline under it (F29). The name opens the reposter's profile.
+class _RepostedLabel extends StatelessWidget {
+  const _RepostedLabel({required this.label});
+
+  final RepostLabel label;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(ReadInSpace.s3, ReadInSpace.s1, ReadInSpace.s3, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(alignment: AlignmentDirectional.centerStart, child: RepostLabelText(label: label)),
+            const SizedBox(height: ReadInSpace.s1),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s1),
+              child: Divider(height: 1, color: context.colors.border),
+            ),
+          ],
+        ),
+      );
+}
+
+/// Avatar and name (the profile), the writer's title on one line with "…" (hidden without one, F14), then field ·
+/// time since publishing · reading time; follow, save and "⋯" on the other side. A deleted author is "Deleted user",
+/// with no profile link and no follow (SPEC §9.6).
 class _PostHeader extends StatelessWidget {
   const _PostHeader({required this.article, required this.hidden, required this.onModerated});
 
@@ -324,6 +356,7 @@ class _PostHeader extends StatelessWidget {
                           if (author.isVerified) ...[const SizedBox(width: 4), const VerifiedMark()],
                         ],
                       ),
+                      if (author.headline case final headline?) AuthorHeadline(headline),
                       metaText,
                     ],
                   ),
@@ -436,63 +469,9 @@ class _PostTags extends StatelessWidget {
       TagChipsWrap(tags: article.tags, more: article.tagCount - article.tags.length);
 }
 
-/// Up to three reaction emojis and the total (who reacted) and "12 تعليق" (the comments). Nothing while both are 0.
-class _PostCounts extends StatelessWidget {
-  const _PostCounts({required this.article, required this.onComments});
-
-  final ArticleCard article;
-  final VoidCallback onComments;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final engagement = context.select((EngagementCubit c) => c.state.of(article));
-    final reactions = engagement.reactionCount;
-    final comments = engagement.commentCount;
-    if (reactions <= 0 && comments <= 0) return const SizedBox(height: ReadInSpace.s2);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(ReadInSpace.s3, ReadInSpace.s1, ReadInSpace.s3, 0),
-      child: Row(
-        children: [
-          ReactionStackSummary(
-            reactions: engagement.reactions,
-            total: reactions,
-            onTap: () => unawaited(
-              showWhoReactedSheet(context, articleId: article.id, reactions: engagement.reactions, total: reactions),
-            ),
-          ),
-          const Spacer(),
-          if (comments > 0)
-            Semantics(
-              button: true,
-              label: l10n.commentsCount(comments),
-              onTapHint: l10n.commentsOpen,
-              excludeSemantics: true,
-              child: InkWell(
-                onTap: onComments,
-                borderRadius: BorderRadius.circular(ReadInRadius.sm),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 44),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s1),
-                    child: Center(
-                      widthFactor: 1,
-                      child: Text(
-                        l10n.commentsCount(comments),
-                        style: context.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// React, Comment and Share, always shown; none of them leaves the feed (F34).
+/// The action bar (F34), always shown, and none of it leaves the feed: React, Comment and Repost as icons with their
+/// counts beside them (none at 0), then Share; up to three reaction emojis on the other side open "who reacted". Each
+/// icon's accessible name has its count ("تفاعل، 12").
 class _PostActions extends StatelessWidget {
   const _PostActions({required this.article, required this.onComments});
 
@@ -502,62 +481,54 @@ class _PostActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
+    final engagement = context.select((EngagementCubit c) => c.state.of(article));
+    final comments = engagement.commentCount;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s1),
+      padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2),
       child: Row(
         children: [
-          Expanded(child: ReactionButton(article: article, labeled: true)),
-          Expanded(child: _ActionButton(icon: Icons.chat_bubble_outline_rounded, label: l10n.postComment, onTap: onComments)),
-          Expanded(
-            child: Builder(
-              builder: (context) => _ActionButton(
-                icon: Icons.ios_share_rounded,
-                label: l10n.share,
+          ReactionButton(article: article, showCount: true),
+          Semantics(
+            button: true,
+            label: l10n.postBarComment(comments),
+            onTapHint: l10n.commentsOpen,
+            onTap: onComments,
+            excludeSemantics: true,
+            child: ActionBarItem(
+              icon: Icon(Icons.chat_bubble_outline_rounded, size: 21, color: colors.textSecondary),
+              count: comments,
+              onTap: onComments,
+            ),
+          ),
+          RepostButton(article: article),
+          Builder(
+            builder: (context) => Semantics(
+              button: true,
+              label: l10n.share,
+              onTap: () => unawaited(ArticleShareButton.share(context, article)),
+              excludeSemantics: true,
+              child: ActionBarItem(
+                icon: Icon(Icons.ios_share_rounded, size: 21, color: colors.textSecondary),
                 onTap: () => unawaited(ArticleShareButton.share(context, article)),
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({required this.icon, required this.label, required this.onTap});
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = context.colors.textSecondary;
-    return Semantics(
-      button: true,
-      label: label,
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(ReadInRadius.sm),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 48),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 20, color: color),
-              const SizedBox(width: ReadInSpace.s1),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.w600),
-                ),
+          const Spacer(),
+          ReactionStackSummary(
+            reactions: engagement.reactions,
+            total: engagement.reactionCount,
+            showTotal: false,
+            onTap: () => unawaited(
+              showWhoReactedSheet(
+                context,
+                articleId: article.id,
+                reactions: engagement.reactions,
+                total: engagement.reactionCount,
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

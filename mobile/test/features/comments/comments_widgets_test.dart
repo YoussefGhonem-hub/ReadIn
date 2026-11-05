@@ -243,7 +243,8 @@ void main() {
       expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, '@omar_k ');
       expect(find.text('Replying to Omar Khaled'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Cancel'));
+      // The ✕ says what it cancels (F11).
+      await tester.tap(find.byTooltip('Cancel reply'));
       await tester.pump();
       expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, isEmpty);
       verify(cubit.clearTarget).called(1);

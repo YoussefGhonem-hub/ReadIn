@@ -127,6 +127,9 @@ void main() {
 
       await pump(tester, variant, [...appStores(), ...profileScreen(otherProfile)], const ProfileView(), height: 1100);
       final l10n = await AppLocalizations.delegate.load(variant.locale);
+      // The tab bar scrolls: with Reposts (F29) the Paths tab can start off screen.
+      await tester.ensureVisible(find.text(l10n.profileTabPaths));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(l10n.profileTabPaths));
       await tester.pumpAndSettle();
 

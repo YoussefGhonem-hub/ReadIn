@@ -301,10 +301,44 @@ void main() {
       verify: (cubit) {
         verify(() => repository.getUpload('doc-asset')).called(2);
         expect(cubit.state.canPublish, isTrue);
+        // "Allow download" is on by default for a new PDF (SPEC F26, pre-production step; it was off before).
         expect(cubit.state.requestItems, const [
-          AttachmentItem(mediaAssetId: 'doc-asset', order: 0, title: 'clean architecture notes', allowDownload: false),
+          AttachmentItem(mediaAssetId: 'doc-asset', order: 0, title: 'clean architecture notes', allowDownload: true),
         ]);
       },
+    );
+
+    blocTest<AttachmentsCubit, AttachmentsState>(
+      'a new PDF is uploaded with "Allow download" on, sent explicitly; the writer can turn it off',
+      setUp: () => stubDocumentUpload(Ok(documentAsset(status: MediaStatus.ready, pagesReady: 12))),
+      build: build,
+      act: (cubit) async {
+        cubit.setDocument(samplePdfFile);
+        await Future<void>.delayed(Duration.zero);
+        expect(cubit.state.document!.allowDownload, isTrue);
+        cubit.setAllowDownload(false);
+      },
+      verify: (cubit) {
+        verify(() => repository.uploadDocument(
+              any(),
+              title: any(named: 'title'),
+              allowDownload: true,
+              token: any(named: 'token'),
+              onProgress: any(named: 'onProgress'),
+            )).called(1);
+        expect(cubit.state.document!.allowDownload, isFalse);
+        expect(cubit.state.requestItems.single.allowDownload, isFalse);
+      },
+    );
+
+    blocTest<AttachmentsCubit, AttachmentsState>(
+      'an existing PDF being edited keeps its own value (off stays off)',
+      build: build,
+      act: (cubit) => cubit.seed(
+        const [AttachmentItem(mediaAssetId: 'doc-asset', order: 0, title: 'notes', allowDownload: false)],
+        [documentAsset(status: MediaStatus.ready, pagesReady: 12)],
+      ),
+      verify: (cubit) => expect(cubit.state.document!.allowDownload, isFalse),
     );
 
     blocTest<AttachmentsCubit, AttachmentsState>(

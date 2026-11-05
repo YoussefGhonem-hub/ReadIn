@@ -56,6 +56,8 @@ abstract class CommentModel with _$CommentModel {
     List<CommentModel>? replies,
     // F28: the viewer muted the author (collapsed to "تعليق من شخص كتمته").
     @Default(false) bool isAuthorMuted,
+    // F11: the viewer follows the author (the row's "متابعة"; seeds the follow store).
+    @Default(false) bool isFollowingAuthor,
   }) = _CommentModel;
 
   factory CommentModel.fromJson(Map<String, dynamic> json) => _$CommentModelFromJson(json);
@@ -83,6 +85,7 @@ abstract class CommentModel with _$CommentModel {
         canModerate: canModerate,
         replies: [for (final r in replies ?? const <CommentModel>[]) r.toEntity()],
         isAuthorMuted: isAuthorMuted,
+        isFollowingAuthor: isFollowingAuthor,
       );
 }
 

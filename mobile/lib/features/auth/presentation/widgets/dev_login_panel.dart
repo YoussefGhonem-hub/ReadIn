@@ -45,7 +45,8 @@ abstract final class DevLogin {
     SeedUser('+12025550101', 'Super Admin', 'SuperAdmin', hasPin: true),
     SeedUser('+12025550104', '.NET Writer', 'Member', hasPin: true, verified: true),
     SeedUser('+12025550105', 'AI Writer', 'Member', hasPin: true, verified: true),
-    SeedUser('+12025550106', 'Verified Writer', 'Member', hasPin: true, verified: true),
+    // +12025550106 ("Verified Writer") is gone with the demo articles (pre-production step): the .NET and AI writers
+    // are the verified demo accounts.
     SeedUser('+12025550107', 'Writer 1', 'Member', hasPin: true),
     SeedUser('+12025550108', 'Writer 2', 'Member', hasPin: true),
     SeedUser('+12025550109', 'Writer 3', 'Member', hasPin: true),

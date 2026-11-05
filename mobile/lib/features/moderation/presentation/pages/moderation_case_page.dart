@@ -9,11 +9,14 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/utils/link_opener.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../categories/presentation/category_routes.dart';
+import '../../../profile/domain/entities/profile_link.dart';
 import '../../../profile/presentation/profile_routes.dart';
+import '../../../profile/presentation/widgets/platform_icon.dart';
 import '../../domain/entities/moderation.dart';
 import '../cubit/moderation_action_cubit.dart';
 import '../cubit/moderation_case_cubit.dart';
@@ -86,6 +89,13 @@ class _CaseContent extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(ReadInSpace.s4, ReadInSpace.s3, ReadInSpace.s4, ReadInSpace.s8),
         children: [
           _TargetCard(item: c.item),
+          // A user's title and links (F14): an abusive one is reported with the user, and cleared here.
+          if (c.item.targetType == ModerationTargetType.user && !c.item.target.isDeleted && c.item.target.author != null) ...[
+            section(l10n.moderationUserHeadline),
+            _CaseHeadline(moderationCase: c),
+            section(l10n.moderationUserLinks),
+            _CaseLinks(moderationCase: c),
+          ],
           section(l10n.moderationActions),
           _CaseActions(moderationCase: c),
           // A user's writer categories (F31): an offensive name is reported with the user, and cleared here.
@@ -185,6 +195,132 @@ class _TargetCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// "امسح المسمى" / "امسح الروابط": destructive, and waiting while another action runs.
+class _ClearButton extends StatelessWidget {
+  const _ClearButton({super.key, required this.icon, required this.label, required this.onPressed});
+
+  final IconData icon;
+  final String label;
+  final Future<bool> Function() onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final busy = context.select((ModerationActionCubit c) => c.state != null);
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: OutlinedButton.icon(
+        onPressed: busy
+            ? null
+            : () async {
+                final cubit = context.read<ModerationCaseCubit>();
+                if (await onPressed()) await cubit.refresh();
+              },
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          foregroundColor: colors.error,
+          side: BorderSide(color: colors.error.withValues(alpha: 0.5)),
+        ),
+      ),
+    );
+  }
+}
+
+/// The user's title in full, in its own direction, with "امسح المسمى" (asks first, optional note); "No title." when
+/// there is none.
+class _CaseHeadline extends StatelessWidget {
+  const _CaseHeadline({required this.moderationCase});
+
+  final ModerationCase moderationCase;
+
+  static const clearKey = ValueKey('case-clear-headline');
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final user = moderationCase.item.target.author!;
+    final headline = user.headline;
+    if (headline == null) {
+      return Text(l10n.moderationUserNoHeadline, style: context.textTheme.bodyMedium?.copyWith(color: colors.textSecondary));
+    }
+    final dir = Bidi.detect(headline) ?? Directionality.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          Bidi.isolateOppositeRuns(headline, dir),
+          key: const ValueKey('case-headline'),
+          textDirection: dir,
+          style: context.textTheme.bodyLarge,
+        ),
+        const SizedBox(height: ReadInSpace.s2),
+        _ClearButton(
+          key: clearKey,
+          icon: Icons.badge_outlined,
+          label: l10n.moderationClearHeadline,
+          onPressed: () => ModerationFlows.clearHeadline(context, userId: moderationCase.item.targetId, name: user.displayName),
+        ),
+      ],
+    );
+  }
+}
+
+/// The user's links in their order: icon, name and address (left to right), each opening in the browser, then
+/// "امسح الروابط" (all of them; asks first, optional note); "No links." when there are none.
+class _CaseLinks extends StatelessWidget {
+  const _CaseLinks({required this.moderationCase});
+
+  final ModerationCase moderationCase;
+
+  static const clearKey = ValueKey('case-clear-links');
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final links = moderationCase.item.target.links ?? const <ProfileLink>[];
+    final user = moderationCase.item.target.author!;
+    if (links.isEmpty) {
+      return Text(l10n.moderationUserNoLinks, style: context.textTheme.bodyMedium?.copyWith(color: colors.textSecondary));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, link) in links.indexed)
+          Semantics(
+            key: ValueKey('case-link-$i'),
+            link: true,
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              minTileHeight: 56,
+              leading: PlatformIcon(link.platform, color: colors.textPrimary),
+              title: Text(Bidi.isolateOppositeRuns(linkPlatformName(l10n, link.platform, label: link.label), Directionality.of(context))),
+              // The whole address, so the moderator sees exactly what is linked.
+              subtitle: Text(
+                Bidi.ltrIsolate(link.url),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: context.textTheme.bodySmall,
+              ),
+              trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+              onTap: () => openExternalLink(link.url),
+            ),
+          ),
+        const SizedBox(height: ReadInSpace.s2),
+        _ClearButton(
+          key: clearKey,
+          icon: Icons.link_off_rounded,
+          label: l10n.moderationClearLinks,
+          onPressed: () => ModerationFlows.clearLinks(context, userId: moderationCase.item.targetId, name: user.displayName),
+        ),
+      ],
     );
   }
 }

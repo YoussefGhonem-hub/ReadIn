@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -18,10 +19,13 @@ import 'package:readin/features/profile/presentation/cubit/edit_profile_cubit.da
 import 'package:readin/features/profile/presentation/cubit/follow_list_cubit.dart';
 import 'package:readin/features/profile/presentation/cubit/privacy_cubit.dart';
 import 'package:readin/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:readin/features/profile/presentation/cubit/profile_reposts_cubit.dart';
 import 'package:readin/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:readin/features/profile/presentation/pages/follow_lists_page.dart';
 import 'package:readin/features/profile/presentation/pages/profile_page.dart';
+import 'package:readin/features/profile/presentation/widgets/headline_field.dart';
 import 'package:readin/features/profile/presentation/widgets/profile_header.dart';
+import 'package:readin/features/profile/presentation/widgets/profile_links_editor.dart';
 import 'package:readin/features/profile/presentation/widgets/public_reading_stats_switch.dart';
 import 'package:readin/features/reactions/presentation/widgets/who_reacted_sheet.dart';
 
@@ -74,6 +78,123 @@ void main() {
       expect(find.text(ar.profileArticlesEmptyTitle), findsOneWidget);
     });
 
+    testWidgets('the title shows in full under the name, in its own direction; none, no line', (tester) async {
+      await pump(tester, [...appStores(), ...profileScreen(otherProfile)], const ProfileView(), variant: Variant.all.first);
+
+      final headline = tester.widget<Text>(find.descendant(of: find.byKey(ProfileHeader.headlineKey), matching: find.byType(Text)));
+      expect(headline.data, contains('Senior Backend Engineer'));
+      // Mixed text starting in English: laid out left to right inside the Arabic screen, never cut.
+      expect(headline.textDirection, TextDirection.ltr);
+      expect(headline.maxLines, isNull);
+      expect(headline.overflow, isNull);
+
+      await pump(tester, [...appStores(), ...profileScreen(ownProfile)], const ProfileView(isTab: true));
+      expect(find.byKey(ProfileHeader.headlineKey), findsNothing);
+    });
+
+    testWidgets('links: icons under the bio in their order, each a link named after its platform, for guests too', (tester) async {
+      final semantics = tester.ensureSemantics();
+      for (final variant in Variant.all) {
+        await pump(tester, [...appStores(me: null), ...profileScreen(otherProfile)], const ProfileView(), variant: variant);
+        final names = ['LinkedIn', 'GitHub', 'X', variant.locale == AppLocales.ar ? 'الموقع' : 'Website', 'بودكاست منى'];
+        for (final (i, name) in names.indexed) {
+          final node = tester.getSemantics(find.byKey(ProfileLinksRow.keyOf(i)));
+          expect(node.label, name, reason: '${variant.name} $i');
+          expect(node.flagsCollection.isLink, isTrue);
+        }
+        // In order, start to end: RTL lays them out from the right.
+        final first = tester.getCenter(find.byKey(ProfileLinksRow.keyOf(0))).dx;
+        final last = tester.getCenter(find.byKey(ProfileLinksRow.keyOf(4))).dx;
+        expect(variant.locale == AppLocales.ar ? first > last : first < last, isTrue, reason: variant.name);
+      }
+      semantics.dispose();
+    });
+
+    testWidgets('no links: no row', (tester) async {
+      const plain = UserProfile(id: 'u-9', displayName: 'Plain', username: 'plain');
+      await pump(tester, [...appStores(), ...profileScreen(plain)], const ProfileView());
+
+      expect(find.byType(ProfileLinksRow), findsNothing);
+    });
+
+    testWidgets('a link icon opens its address outside the app (the system browser or the platform app)', (tester) async {
+      final opened = <String>[];
+      await pump(
+        tester,
+        appStores(),
+        Scaffold(
+          body: ProfileLinksRow(
+            links: otherProfile.links,
+            onOpen: (url) async {
+              opened.add(url);
+              return true;
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(ProfileLinksRow.keyOf(2)));
+      await tester.tap(find.byKey(ProfileLinksRow.keyOf(4)));
+
+      expect(opened, ['https://x.com/mona_dev', 'https://mona.dev/podcast']);
+    });
+
+    testWidgets('by default a link icon goes through url_launcher, outside the app (no in-app web view)', (tester) async {
+      final calls = <MethodCall>[];
+      const channel = MethodChannel('plugins.flutter.io/url_launcher');
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call);
+        return true;
+      });
+      addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
+      await pump(tester, appStores(), Scaffold(body: ProfileLinksRow(links: otherProfile.links)));
+
+      await tester.tap(find.byKey(ProfileLinksRow.keyOf(1)));
+      await tester.pump();
+
+      final launch = calls.singleWhere((c) => c.method == 'launch');
+      final args = launch.arguments as Map<Object?, Object?>;
+      expect(args['url'], 'https://github.com/mona-dev');
+      expect(args['useWebView'], isFalse);
+      expect(args['useSafariVC'], isFalse);
+    });
+
+    testWidgets('the Reposts tab: post cards newest first, or the empty state, on every profile', (tester) async {
+      await pump(
+        tester,
+        [...appStores(), ...profileScreen(otherProfile, reposts: [postCard(1, cover: false), postCard(2, cover: false)])],
+        const ProfileView(),
+        height: 2400,
+      );
+
+      // Articles · Categories · Reposts · Paths · About (no Saved on someone else's profile).
+      final tabs = tester.widgetList<Tab>(find.byType(Tab)).map((t) => t.text).toList();
+      expect(tabs, [l10n.profileTabArticles, l10n.profileTabCategories, l10n.profileTabReposts, l10n.profileTabPaths, l10n.profileTabAbout]);
+
+      await tester.tap(find.text(l10n.profileTabReposts));
+      await tester.pumpAndSettle();
+      expect(find.byType(PostCard), findsNWidgets(2));
+      final reposts = BlocProvider.of<ProfileRepostsCubit>(tester.element(find.byType(PostCard).first));
+      verify(reposts.ensureLoaded).called(1);
+
+      // The own profile: Reposts before Saved, and its own empty state.
+      await pump(tester, [...appStores(), ...profileScreen(ownProfile)], const ProfileView(isTab: true));
+      final own = tester.widgetList<Tab>(find.byType(Tab)).map((t) => t.text).toList();
+      expect(own.indexOf(l10n.profileTabReposts), own.indexOf(l10n.profileTabSaved) - 1);
+      await tester.tap(find.text(l10n.profileTabReposts));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.profileRepostsEmptyOwnTitle), findsOneWidget);
+    });
+
+    testWidgets("someone else's empty Reposts tab says so", (tester) async {
+      await pump(tester, [...appStores(), ...profileScreen(otherProfile)], const ProfileView());
+
+      await tester.tap(find.text(l10n.profileTabReposts));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.profileRepostsEmptyTitle), findsOneWidget);
+      expect(find.text(l10n.profileRepostsEmptyBody), findsOneWidget);
+    });
+
     testWidgets('a deleted or unknown user is "not available"; other errors can be retried', (tester) async {
       final cubit = MockProfileCubit()
         ..hold(const ProfileState(status: ProfileStatus.failure, failure: Failure(FailureCodes.userNotFound, statusCode: 404)));
@@ -95,6 +216,9 @@ void main() {
       );
       await pump(tester, [...appStores(), ...profileScreen(quiet)], const ProfileView(), height: 1400);
 
+      // The tab bar scrolls: with Reposts (F29) the About tab starts off screen.
+      await tester.ensureVisible(find.text(l10n.profileTabAbout));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(l10n.profileTabAbout));
       await tester.pumpAndSettle();
 
@@ -248,7 +372,18 @@ void main() {
   group('EditProfileView', () {
     late MockEditProfileCubit cubit;
 
-    EditProfileState ready({FormStatus status = FormStatus.idle, bool uploading = false, Map<String, String> errors = const {}}) =>
+    /// The links of [profile] as the cubit starts them.
+    List<LinkDraft> draftsOf(UserProfile profile) => [
+          for (final (i, link) in profile.links.indexed)
+            LinkDraft(id: i, platform: link.platform, url: link.url, label: link.label ?? ''),
+        ];
+
+    EditProfileState ready({
+      FormStatus status = FormStatus.idle,
+      bool uploading = false,
+      Map<String, String> errors = const {},
+      List<LinkDraft>? links,
+    }) =>
         EditProfileState(
           load: EditProfileLoad.ready,
           profile: otherProfile,
@@ -257,54 +392,172 @@ void main() {
           fields: sampleFields,
           fieldsStatus: EditProfileLoad.ready,
           expertiseIds: const ['f-dotnet'],
+          links: links ?? draftsOf(otherProfile),
           status: status,
           uploadingAvatar: uploading,
           errors: errors,
         );
+
+    setUpAll(() => registerFallbackValue(LinkPlatform.other));
 
     setUp(() {
       cubit = MockEditProfileCubit();
       when(() => cubit.submit(
             displayName: any(named: 'displayName'),
             bio: any(named: 'bio'),
-            github: any(named: 'github'),
-            linkedin: any(named: 'linkedin'),
-            website: any(named: 'website'),
+            headline: any(named: 'headline'),
           )).thenAnswer((_) async {});
       when(() => cubit.toggleExpertise(any())).thenReturn(null);
       when(() => cubit.edited(any())).thenReturn(null);
+      when(() => cubit.addLink(any())).thenReturn(null);
+      when(() => cubit.removeLink(any())).thenReturn(null);
+      when(() => cubit.moveLink(any(), any())).thenReturn(null);
+      when(() => cubit.reorderLinks(any(), any())).thenReturn(null);
+      when(() => cubit.linkUrlChanged(any(), any())).thenReturn(null);
+      when(() => cubit.linkLabelChanged(any(), any())).thenReturn(null);
+      when(() => cubit.changeLinkPlatform(any(), any())).thenReturn(null);
     });
 
-    Future<void> pumpEdit(WidgetTester tester, EditProfileState state) async {
+    Future<void> pumpEdit(WidgetTester tester, EditProfileState state, {Variant? variant}) async {
       cubit.hold(state);
-      // Tall enough to build the whole form, the expertise picker included.
-      await pump(tester, [...appStores(), BlocProvider<EditProfileCubit>.value(value: cubit)], const EditProfileView(), height: 1600);
+      // Tall enough to build the whole form, the links and the expertise picker included.
+      await pump(tester, [...appStores(), BlocProvider<EditProfileCubit>.value(value: cubit)], const EditProfileView(), height: 2600, variant: variant);
     }
 
     void verifyNoSubmit() => verifyNever(() => cubit.submit(
           displayName: any(named: 'displayName'),
           bio: any(named: 'bio'),
-          github: any(named: 'github'),
-          linkedin: any(named: 'linkedin'),
-          website: any(named: 'website'),
+          headline: any(named: 'headline'),
         ));
 
-    testWidgets('starts from the profile and saves what was typed', (tester) async {
+    Finder urlField(int id) => find.byKey(ValueKey('profile-link-url-$id'));
+
+    testWidgets('starts from the profile and saves what was typed, the title included', (tester) async {
       await pumpEdit(tester, ready());
 
       expect(find.text('منى عادل'), findsOneWidget);
+      expect(find.text(otherProfile.headline!), findsOneWidget);
       expect(find.text('https://github.com/mona-dev'), findsOneWidget);
-      await tester.enterText(find.widgetWithText(TextField, l10n.profileLinkedin), 'linkedin.com/in/mona');
+      await tester.enterText(find.byKey(HeadlineField.fieldKey), 'Staff Engineer | .NET');
       await tester.tap(find.text(l10n.save));
       await tester.pump();
 
-      verify(() => cubit.submit(
-            displayName: 'منى عادل',
-            bio: otherProfile.bio!,
-            github: 'https://github.com/mona-dev',
-            linkedin: 'linkedin.com/in/mona',
-            website: 'https://mona.dev/',
-          )).called(1);
+      verify(() => cubit.submit(displayName: 'منى عادل', bio: otherProfile.bio!, headline: 'Staff Engineer | .NET')).called(1);
+    });
+
+    testWidgets("the title is one line: a line break can't be typed; the counter shows near 120", (tester) async {
+      await pumpEdit(tester, ready());
+      final field = find.byKey(HeadlineField.fieldKey);
+
+      await tester.enterText(field, 'Line one\nline two');
+      await tester.pump();
+      expect(find.text('Line oneline two'), findsOneWidget);
+      expect(find.textContaining('/120'), findsNothing);
+      await tester.enterText(field, 'x' * 105);
+      await tester.pump();
+      expect(find.text('105/120'), findsOneWidget);
+      await tester.enterText(field, 'x' * 130);
+      await tester.pump();
+      expect(find.text('120/120'), findsOneWidget);
+    });
+
+    testWidgets('the links editor: each link with its platform, address and (for Other) name, in order', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await pumpEdit(tester, ready());
+
+      expect(find.text(l10n.profileLinksSection), findsOneWidget);
+      expect(find.text('5/8'), findsOneWidget);
+      final urls = [for (var id = 0; id < 5; id++) tester.widget<TextField>(urlField(id))];
+      expect(urls.map((f) => f.controller!.text), [
+        'https://www.linkedin.com/in/mona-dev',
+        'https://github.com/mona-dev',
+        'https://x.com/mona_dev',
+        'https://mona.dev/',
+        'https://mona.dev/podcast',
+      ]);
+      // Addresses are always left to right.
+      expect(urls.every((f) => f.textDirection == TextDirection.ltr), isTrue);
+      expect(find.text('بودكاست منى'), findsOneWidget);
+      // One name field, for the Other link only.
+      expect(find.byKey(const ValueKey('profile-link-label-4')), findsOneWidget);
+      expect(find.byKey(const ValueKey('profile-link-label-1')), findsNothing);
+      for (final name in ['LinkedIn', 'GitHub', 'X', l10n.profileWebsite, l10n.profileLinkOther]) {
+        expect(find.bySemanticsLabel('$name, ${l10n.profileLinkChangePlatform}'), findsOneWidget, reason: name);
+      }
+
+      await tester.enterText(urlField(1), 'github.com/mona');
+      verify(() => cubit.linkUrlChanged(1, 'github.com/mona')).called(1);
+      await tester.enterText(find.byKey(const ValueKey('profile-link-label-4')), 'Podcast');
+      verify(() => cubit.linkLabelChanged(4, 'Podcast')).called(1);
+      semantics.dispose();
+    });
+
+    testWidgets('"Add link" picks a platform; one that already has a link can\'t be picked again', (tester) async {
+      await pumpEdit(tester, ready());
+
+      await tester.ensureVisible(find.byKey(ProfileLinksEditor.addKey));
+      await tester.tap(find.byKey(ProfileLinksEditor.addKey));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.profileLinkPickPlatform), findsOneWidget);
+      expect(tester.widget<ListTile>(find.byKey(const ValueKey('link-platform-github'))).enabled, isFalse);
+      expect(find.text(l10n.profileLinkPlatformAdded), findsNWidgets(4)); // LinkedIn, GitHub, X, Website
+      expect(tester.widget<ListTile>(find.byKey(const ValueKey('link-platform-other'))).enabled, isTrue);
+
+      await tester.tap(find.byKey(const ValueKey('link-platform-instagram')));
+      await tester.pumpAndSettle();
+      verify(() => cubit.addLink(LinkPlatform.instagram)).called(1);
+    });
+
+    testWidgets("each link's menu moves it up or down and removes it", (tester) async {
+      await pumpEdit(tester, ready());
+
+      await tester.tap(find.byKey(const ValueKey('profile-link-menu-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.profileLinkMoveUp));
+      await tester.pumpAndSettle();
+      verify(() => cubit.moveLink(1, -1)).called(1);
+
+      // The first link has no "Move up".
+      await tester.tap(find.byKey(const ValueKey('profile-link-menu-0')));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.profileLinkMoveUp), findsNothing);
+      expect(find.text(l10n.profileLinkMoveDown), findsOneWidget);
+      await tester.tap(find.text(l10n.profileLinkRemove));
+      await tester.pumpAndSettle();
+      verify(() => cubit.removeLink(0)).called(1);
+    });
+
+    testWidgets('at 8 links "Add link" is off and says why', (tester) async {
+      final eight = [for (var i = 0; i < 8; i++) LinkDraft(id: i, platform: LinkPlatform.other, url: 'https://a$i.dev', label: 'Site $i')];
+      await pumpEdit(tester, ready(links: eight));
+
+      expect(find.text('8/8'), findsOneWidget);
+      expect(find.text(l10n.profileLinksFull), findsOneWidget);
+      expect(tester.widget<OutlinedButton>(find.byKey(ProfileLinksEditor.addKey)).onPressed, isNull);
+    });
+
+    testWidgets("each link error shows under its own field, in the screen's language", (tester) async {
+      final ar = await AppLocalizations.delegate.load(AppLocales.ar);
+      await pumpEdit(
+        tester,
+        ready(errors: const {
+          'links[1].url': FailureCodes.linkHostMismatch,
+          'links[4].label': FailureCodes.linkLabelInvalid,
+          'links[2].platform': FailureCodes.linkDuplicatePlatform,
+          ProfileFields.links: FailureCodes.linkTooMany,
+          ProfileFields.headline: FailureCodes.profileHeadlineTooLong,
+        }),
+        variant: Variant.all.first,
+      );
+
+      expect(find.text(ar.profileErrLinkHostMismatch), findsOneWidget);
+      expect(find.text(ar.profileErrLinkLabelInvalid), findsOneWidget);
+      expect(find.text(ar.profileErrLinkDuplicatePlatform), findsOneWidget);
+      expect(find.text(ar.profileErrLinkTooMany), findsOneWidget);
+      expect(find.text(ar.profileErrHeadlineTooLong), findsOneWidget);
+      // Under the GitHub link's address, not another one.
+      expect(find.descendant(of: urlField(1), matching: find.text(ar.profileErrLinkHostMismatch)), findsOneWidget);
     });
 
     testWidgets('while saving: a spinner and no second submit', (tester) async {
@@ -324,9 +577,9 @@ void main() {
     });
 
     testWidgets('errors show on their fields; expertise chips toggle', (tester) async {
-      await pumpEdit(tester, ready(errors: const {ProfileFields.website: FailureCodes.validationUrl, ProfileFields.avatar: FailureCodes.profileAvatarInvalid}));
+      await pumpEdit(tester, ready(errors: const {'links[3].url': FailureCodes.linkHttpsRequired, ProfileFields.avatar: FailureCodes.profileAvatarInvalid}));
 
-      expect(find.text(l10n.profileErrUrl), findsOneWidget);
+      expect(find.text(l10n.profileErrLinkHttpsRequired), findsOneWidget);
       expect(find.text(l10n.profileErrAvatarInvalid), findsOneWidget);
       expect(find.text('1/5'), findsOneWidget);
       await tester.ensureVisible(find.text('Frontend'));

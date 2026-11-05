@@ -247,8 +247,16 @@ void main() {
       return cubit;
     }
 
-    Future<void> submit(EditProfileCubit cubit, {String name = 'Mona Adel', String bio = '', String github = '', String website = ''}) =>
-        cubit.submit(displayName: name, bio: bio, github: github, linkedin: '', website: website);
+    Future<void> submit(EditProfileCubit cubit, {String name = 'Mona Adel', String bio = '', String headline = ''}) =>
+        cubit.submit(displayName: name, bio: bio, headline: headline);
+
+    /// Adds a link of [platform] and types [url] (and [label]) into it.
+    void addLink(EditProfileCubit cubit, LinkPlatform platform, String url, {String? label}) {
+      cubit.addLink(platform);
+      final id = cubit.state.links.last.id;
+      cubit.linkUrlChanged(id, url);
+      if (label != null) cubit.linkLabelChanged(id, label);
+    }
 
     test('starts from the handed-over profile: its handle counts as available, its expertise is picked', () async {
       final cubit = await started(otherProfile);
@@ -352,42 +360,150 @@ void main() {
       await cubit.close();
     });
 
-    test('validates the name, the links (https, completed) and a taken username before saving', () async {
-      final cubit = await started(otherProfile);
+    test('validates the name, the title and each link (the server\'s rules) before saving, errors under each field', () async {
+      final cubit = await started(ownProfile);
+      addLink(cubit, LinkPlatform.instagram, 'http://instagram.com/youssef'); // links[1]
+      addLink(cubit, LinkPlatform.x, 'https://github.com/youssef'); // links[2]
+      addLink(cubit, LinkPlatform.other, 'https://youssef.dev', label: 'x'); // links[3]
+      addLink(cubit, LinkPlatform.website, ''); // links[4]
+      addLink(cubit, LinkPlatform.github, 'https://user:pw@github.com/y'); // links[5]
 
-      await submit(cubit, name: ' M ', github: 'http://github.com/mona', website: 'ftp://mona.dev');
+      await submit(cubit, name: ' M ', headline: 'سطر\nتاني');
 
       expect(cubit.state.errors, {
         ProfileFields.displayName: FailureCodes.validationMinLength,
-        ProfileFields.github: FailureCodes.validationUrl,
-        ProfileFields.website: FailureCodes.validationUrl,
+        ProfileFields.headline: FailureCodes.profileHeadlineInvalid,
+        'links[1].url': FailureCodes.linkHttpsRequired,
+        'links[2].url': FailureCodes.linkHostMismatch,
+        'links[3].label': FailureCodes.linkLabelInvalid,
+        'links[4].url': FailureCodes.validationRequired,
+        'links[5].url': FailureCodes.linkUrlInvalid,
       });
       verifyNever(() => update(any()));
 
-      await submit(cubit, name: '');
+      await submit(cubit, name: '', headline: 'x' * 121);
       expect(cubit.state.errors[ProfileFields.displayName], CredentialCodes.required);
+      expect(cubit.state.errors[ProfileFields.headline], FailureCodes.profileHeadlineTooLong);
       await cubit.close();
     });
 
-    test('saves: untouched avatar and expertise are left out; bare links get https://', () async {
+    test('saves: untouched avatar, expertise and links are left out; the title is always sent', () async {
       when(() => update(any())).thenAnswer((_) async => const Ok(null));
       final cubit = await started(otherProfile);
 
-      await submit(cubit, name: ' منى عادل ', bio: ' bio ', github: 'github.com/mona-dev', website: 'https://mona.dev/');
+      await submit(cubit, name: ' منى عادل ', bio: ' bio ', headline: '  Staff Engineer | .NET  ');
 
       final sent = verify(() => update(captureAny())).captured.single as ProfileUpdate;
       expect(
         sent,
-        const ProfileUpdate(
-          displayName: 'منى عادل',
-          username: 'mona_dev',
-          bio: 'bio',
-          links: ProfileLinks(github: 'https://github.com/mona-dev', linkedin: '', website: 'https://mona.dev/'),
-        ),
+        const ProfileUpdate(displayName: 'منى عادل', username: 'mona_dev', bio: 'bio', headline: 'Staff Engineer | .NET'),
       );
+      expect(sent.links, isNull);
       expect(sent.expertiseFieldIds, isNull);
       expect(sent.avatar, const KeepAvatar(null));
       expect(cubit.state.status, FormStatus.success);
+      await cubit.close();
+    });
+
+    test('links start from the profile in its order; edited, they are sent whole, in the new order', () async {
+      when(() => update(any())).thenAnswer((_) async => const Ok(null));
+      final cubit = await started(otherProfile);
+      expect(cubit.state.links.map((l) => l.platform), [
+        LinkPlatform.linkedin,
+        LinkPlatform.github,
+        LinkPlatform.x,
+        LinkPlatform.website,
+        LinkPlatform.other,
+      ]);
+      final ids = [for (final link in cubit.state.links) link.id];
+
+      cubit
+        ..removeLink(ids[2]) // X
+        ..moveLink(ids[1], -1) // GitHub first
+        ..reorderLinks(3, 0); // the Other link to the top (a drag)
+      addLink(cubit, LinkPlatform.instagram, ' instagram.com/mona ');
+
+      await submit(cubit);
+
+      final sent = verify(() => update(captureAny())).captured.single as ProfileUpdate;
+      expect(sent.links, const [
+        ProfileLink(platform: LinkPlatform.other, url: 'https://mona.dev/podcast', label: 'بودكاست منى'),
+        ProfileLink(platform: LinkPlatform.github, url: 'https://github.com/mona-dev'),
+        ProfileLink(platform: LinkPlatform.linkedin, url: 'https://www.linkedin.com/in/mona-dev'),
+        ProfileLink(platform: LinkPlatform.website, url: 'https://mona.dev/'),
+        ProfileLink(platform: LinkPlatform.instagram, url: 'instagram.com/mona'),
+      ]);
+      await cubit.close();
+    });
+
+    test('removing every link sends [] (the server removes them all)', () async {
+      when(() => update(any())).thenAnswer((_) async => const Ok(null));
+      final cubit = await started(ownProfile);
+
+      cubit.removeLink(cubit.state.links.single.id);
+      await submit(cubit);
+
+      final sent = verify(() => update(captureAny())).captured.single as ProfileUpdate;
+      expect(sent.links, isEmpty);
+      await cubit.close();
+    });
+
+    test('at most 8 links; one per named platform, while Other may repeat', () async {
+      final cubit = await started(ownProfile); // LinkedIn already
+
+      cubit.addLink(LinkPlatform.linkedin);
+      expect(cubit.state.links, hasLength(1), reason: 'LinkedIn already has a link');
+      expect(cubit.state.usedPlatforms, {LinkPlatform.linkedin});
+
+      for (final platform in [LinkPlatform.x, LinkPlatform.other, LinkPlatform.other, LinkPlatform.github, LinkPlatform.medium]) {
+        cubit.addLink(platform);
+      }
+      cubit
+        ..addLink(LinkPlatform.other)
+        ..addLink(LinkPlatform.website);
+      expect(cubit.state.links, hasLength(8));
+      expect(cubit.state.linksFull, isTrue);
+
+      cubit.addLink(LinkPlatform.behance);
+      expect(cubit.state.links, hasLength(8));
+      expect(cubit.state.links.where((l) => l.platform == LinkPlatform.other), hasLength(3));
+
+      // Changing a link to a platform that is taken is refused; to a free one it works and drops Other's label.
+      final other = cubit.state.links.firstWhere((l) => l.platform == LinkPlatform.other);
+      cubit
+        ..linkLabelChanged(other.id, 'Podcast')
+        ..changeLinkPlatform(other.id, LinkPlatform.x);
+      expect(cubit.state.links.firstWhere((l) => l.id == other.id).platform, LinkPlatform.other);
+      cubit.changeLinkPlatform(other.id, LinkPlatform.youtube);
+      final changed = cubit.state.links.firstWhere((l) => l.id == other.id);
+      expect((changed.platform, changed.label), (LinkPlatform.youtube, ''));
+      await cubit.close();
+    });
+
+    test('a server error by index lands under that link; editing it, or moving links, clears it', () async {
+      when(() => update(any())).thenAnswer((_) async => const Err(Failure(
+            FailureCodes.validationFailed,
+            statusCode: 400,
+            fieldErrors: {
+              'links[0].url': [FailureCodes.linkHostMismatch],
+              'headline': [FailureCodes.profileHeadlineInvalid],
+            },
+          )));
+      final cubit = await started(ownProfile);
+      final id = cubit.state.links.single.id;
+      cubit.linkUrlChanged(id, 'https://www.linkedin.com/in/youssef-h');
+
+      await submit(cubit, headline: 'Flutter');
+
+      expect(cubit.state.errors, {'links[0].url': FailureCodes.linkHostMismatch, ProfileFields.headline: FailureCodes.profileHeadlineInvalid});
+      expect(cubit.state.failure, isNull);
+      cubit.linkUrlChanged(id, 'https://www.linkedin.com/in/youssef-hassan');
+      expect(cubit.state.errors.containsKey('links[0].url'), isFalse);
+
+      await submit(cubit, headline: 'Flutter');
+      expect(cubit.state.errors.containsKey('links[0].url'), isTrue);
+      cubit.addLink(LinkPlatform.github);
+      expect(cubit.state.errors.keys, [ProfileFields.headline]);
       await cubit.close();
     });
 

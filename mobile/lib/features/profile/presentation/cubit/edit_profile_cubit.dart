@@ -16,16 +16,44 @@ import '../../../taxonomy/domain/usecases/taxonomy_usecases.dart';
 import '../../domain/entities/profile.dart';
 import '../../domain/usecases/profile_usecases.dart';
 
-/// Inputs of the edit profile form; server errors are mapped onto them.
+/// Inputs of the edit profile form; server errors are mapped onto them. A link's inputs use the API's own keys:
+/// `links[2].url`, `links[2].label`, `links[2].platform` ([linkField]), and `links` for the whole list.
 abstract final class ProfileFields {
   static const displayName = 'displayName';
   static const username = 'username';
   static const bio = 'bio';
-  static const github = 'github';
-  static const linkedin = 'linkedin';
-  static const website = 'website';
+  static const headline = 'headline';
+  static const links = 'links';
   static const avatar = 'avatar';
   static const expertise = 'expertise';
+
+  static String linkField(int index, String part) => ProfileLinkRules.key(index, part);
+}
+
+/// A link being edited (F14): its own [id] keeps its inputs while the list is reordered.
+class LinkDraft extends Equatable {
+  const LinkDraft({required this.id, required this.platform, this.url = '', this.label = ''});
+
+  final int id;
+  final LinkPlatform platform;
+
+  /// As typed; the server adds `https://` when there is no scheme.
+  final String url;
+
+  /// Other only.
+  final String label;
+
+  ProfileLink toLink() => ProfileLink(
+        platform: platform,
+        url: url.trim(),
+        label: platform == LinkPlatform.other && label.trim().isNotEmpty ? label.trim() : null,
+      );
+
+  LinkDraft copyWith({LinkPlatform? platform, String? url, String? label}) =>
+      LinkDraft(id: id, platform: platform ?? this.platform, url: url ?? this.url, label: label ?? this.label);
+
+  @override
+  List<Object?> get props => [id, platform, url, label];
 }
 
 enum AvatarSource { gallery, camera }
@@ -45,6 +73,7 @@ class EditProfileState extends Equatable {
     this.fields = const [],
     this.fieldsStatus = EditProfileLoad.loading,
     this.expertiseIds = const [],
+    this.links = const [],
     this.status = FormStatus.idle,
     this.errors = const {},
     this.failure,
@@ -72,6 +101,9 @@ class EditProfileState extends Equatable {
   /// Chosen fields of expertise, in order, at most [ProfileLimits.maxExpertise].
   final List<String> expertiseIds;
 
+  /// The social links being edited (F14), in order, at most [ProfileLinkRules.maxLinks].
+  final List<LinkDraft> links;
+
   final FormStatus status;
 
   /// Field ([ProfileFields]) → error code.
@@ -83,6 +115,13 @@ class EditProfileState extends Equatable {
   bool get submitting => status == FormStatus.submitting;
   bool get busy => submitting || uploadingAvatar;
   bool get expertiseFull => expertiseIds.length >= ProfileLimits.maxExpertise;
+  bool get linksFull => links.length >= ProfileLinkRules.maxLinks;
+
+  /// Named platforms that already have a link (Other may repeat).
+  Set<LinkPlatform> get usedPlatforms => {
+        for (final link in links)
+          if (link.platform != LinkPlatform.other) link.platform,
+      };
 
   EditProfileState copyWith({
     EditProfileLoad? load,
@@ -96,6 +135,7 @@ class EditProfileState extends Equatable {
     List<Field>? fields,
     EditProfileLoad? fieldsStatus,
     List<String>? expertiseIds,
+    List<LinkDraft>? links,
     FormStatus? status,
     Map<String, String>? errors,
     Failure? Function()? failure,
@@ -112,6 +152,7 @@ class EditProfileState extends Equatable {
         fields: fields ?? this.fields,
         fieldsStatus: fieldsStatus ?? this.fieldsStatus,
         expertiseIds: expertiseIds ?? this.expertiseIds,
+        links: links ?? this.links,
         status: status ?? this.status,
         errors: errors ?? this.errors,
         failure: failure != null ? failure() : this.failure,
@@ -130,6 +171,7 @@ class EditProfileState extends Equatable {
         fields,
         fieldsStatus,
         expertiseIds,
+        links,
         status,
         errors,
         failure,
@@ -188,7 +230,13 @@ class EditProfileCubit extends Cubit<EditProfileState> {
         avatarUrl: () => profile.avatarUrl,
         avatar: KeepAvatar(profile.avatarUrl),
         expertiseIds: [for (final field in profile.expertise.take(ProfileLimits.maxExpertise)) field.id],
+        links: [
+          for (final link in profile.links)
+            LinkDraft(id: _nextLinkId++, platform: link.platform, url: link.url, label: link.label ?? ''),
+        ],
       ));
+
+  int _nextLinkId = 0;
 
   Future<void> loadFields() async {
     emit(state.copyWith(fieldsStatus: EditProfileLoad.loading));
@@ -283,17 +331,77 @@ class EditProfileCubit extends Cubit<EditProfileState> {
     if (state.errors.containsKey(field)) emit(state.copyWith(errors: {...state.errors}..remove(field)));
   }
 
-  /// `github.com/mona` → `https://github.com/mona`; empty stays empty.
-  static String normalizeLink(String value) {
-    final link = value.trim();
-    if (link.isEmpty || link.contains('://')) return link;
-    return 'https://$link';
+  // ── Links (F14) ─────────────────────────────────────────────
+
+  /// Adds an empty link of [platform] at the end; refused past 8 links or for a named platform that already has one.
+  void addLink(LinkPlatform platform) {
+    if (state.submitting || state.linksFull || state.usedPlatforms.contains(platform)) return;
+    _setLinks([...state.links, LinkDraft(id: _nextLinkId++, platform: platform)]);
   }
 
-  static bool isHttpsUrl(String value) {
-    if (value.length > ProfileLimits.linkMax) return false;
-    final uri = Uri.tryParse(value);
-    return uri != null && uri.isAbsolute && uri.scheme == 'https' && uri.host.isNotEmpty;
+  /// Another platform for link [id]; its label goes when it stops being Other.
+  void changeLinkPlatform(int id, LinkPlatform platform) {
+    final index = state.links.indexWhere((link) => link.id == id);
+    if (state.submitting || index < 0) return;
+    final link = state.links[index];
+    if (link.platform == platform) return;
+    if (platform != LinkPlatform.other && state.usedPlatforms.contains(platform)) return;
+    final links = [...state.links]..[index] = link.copyWith(platform: platform, label: platform == LinkPlatform.other ? link.label : '');
+    final errors = {...state.errors}
+      ..remove(ProfileFields.linkField(index, 'platform'))
+      ..remove(ProfileFields.linkField(index, 'url'))
+      ..remove(ProfileFields.linkField(index, 'label'));
+    emit(state.copyWith(links: links, errors: errors));
+  }
+
+  void linkUrlChanged(int id, String url) => _editLink(id, 'url', (link) => link.copyWith(url: url));
+
+  void linkLabelChanged(int id, String label) => _editLink(id, 'label', (link) => link.copyWith(label: label));
+
+  void _editLink(int id, String part, LinkDraft Function(LinkDraft link) change) {
+    final index = state.links.indexWhere((link) => link.id == id);
+    if (index < 0) return;
+    final links = [...state.links]..[index] = change(state.links[index]);
+    emit(state.copyWith(links: links, errors: {...state.errors}..remove(ProfileFields.linkField(index, part))));
+  }
+
+  void removeLink(int id) {
+    if (state.submitting) return;
+    _setLinks([...state.links.where((link) => link.id != id)]);
+  }
+
+  /// Moves link [id] one place up (`-1`) or down (`1`).
+  void moveLink(int id, int by) {
+    final from = state.links.indexWhere((link) => link.id == id);
+    final to = from + by;
+    if (state.submitting || from < 0 || to < 0 || to >= state.links.length) return;
+    final links = [...state.links];
+    links.insert(to, links.removeAt(from));
+    _setLinks(links);
+  }
+
+  /// A drag in the list ([ReorderableListView.onReorderItem]): the link at [oldIndex] ends up at [newIndex].
+  void reorderLinks(int oldIndex, int newIndex) {
+    if (state.submitting || oldIndex < 0 || oldIndex >= state.links.length || newIndex == oldIndex) return;
+    final links = [...state.links];
+    links.insert(newIndex.clamp(0, links.length - 1), links.removeAt(oldIndex));
+    _setLinks(links);
+  }
+
+  /// A new list or order: the per-link errors pointed at indexes that moved, so they go (saving checks again).
+  void _setLinks(List<LinkDraft> links) => emit(state.copyWith(
+        links: links,
+        errors: {...state.errors}..removeWhere((field, _) => field == ProfileFields.links || field.startsWith('links[')),
+      ));
+
+  bool get _linksChanged {
+    final before = state.profile?.links ?? const <ProfileLink>[];
+    final now = [for (final draft in state.links) draft.toLink()];
+    if (before.length != now.length) return true;
+    for (var i = 0; i < now.length; i++) {
+      if (before[i] != now[i]) return true;
+    }
+    return false;
   }
 
   bool get _expertiseChanged {
@@ -302,18 +410,13 @@ class EditProfileCubit extends Cubit<EditProfileState> {
     return before.length != now.length || [for (var i = 0; i < now.length; i++) before[i] != now[i]].any((d) => d);
   }
 
-  static String? _linkError(String link) => link.isEmpty || isHttpsUrl(link) ? null : FailureCodes.validationUrl;
-
-  Future<void> submit({
-    required String displayName,
-    required String bio,
-    required String github,
-    required String linkedin,
-    required String website,
-  }) async {
+  /// Saves (`PATCH /me`). The title always goes (blank clears it); the links only when they changed, as the whole list
+  /// in order, checked here first with the server's rules so each error shows under its own field.
+  Future<void> submit({required String displayName, required String bio, String headline = ''}) async {
     if (state.busy || state.load != EditProfileLoad.ready) return;
     final name = displayName.trim();
-    final links = (github: normalizeLink(github), linkedin: normalizeLink(linkedin), website: normalizeLink(website));
+    final linksChanged = _linksChanged;
+    final links = [for (final draft in state.links) draft.toLink()];
     final errors = Validate.collect({
       ProfileFields.displayName: name.isEmpty
           ? CredentialCodes.required
@@ -328,10 +431,9 @@ class EditProfileCubit extends Cubit<EditProfileState> {
               _ => null,
             },
       ProfileFields.bio: bio.trim().length > ProfileLimits.bioMax ? FailureCodes.validationMaxLength : null,
-      ProfileFields.github: _linkError(links.github),
-      ProfileFields.linkedin: _linkError(links.linkedin),
-      ProfileFields.website: _linkError(links.website),
-    });
+      ProfileFields.headline: HeadlineRules.problem(headline),
+    })
+      ..addAll(linksChanged ? ProfileLinkRules.check(links) : const {});
     if (errors.isNotEmpty) return emit(state.copyWith(errors: errors, failure: () => null));
 
     emit(state.copyWith(status: FormStatus.submitting, errors: const {}, failure: () => null));
@@ -339,7 +441,9 @@ class EditProfileCubit extends Cubit<EditProfileState> {
       displayName: name,
       username: state.username,
       bio: bio.trim(),
-      links: ProfileLinks(github: links.github, linkedin: links.linkedin, website: links.website),
+      headline: HeadlineRules.normalize(headline),
+      // Left out when untouched (kept on the server, even an old link that breaks a newer rule).
+      links: linksChanged ? links : null,
       avatar: state.avatar,
       // Left out when untouched (unchanged on the server); `[]` clears them.
       expertiseFieldIds: _expertiseChanged ? state.expertiseIds : null,
@@ -365,18 +469,20 @@ class EditProfileCubit extends Cubit<EditProfileState> {
     FailureCodes.profileExpertiseInvalid: ProfileFields.expertise,
   };
 
-  /// Request properties (camelCase, lower-cased here: `links.gitHub` → `links.github`) → inputs.
+  /// Request properties (camelCase, lower-cased here) → inputs.
   static const _propertyFields = {
     'displayname': ProfileFields.displayName,
     'username': ProfileFields.username,
     'bio': ProfileFields.bio,
-    'links.github': ProfileFields.github,
-    'links.linkedin': ProfileFields.linkedin,
-    'links.website': ProfileFields.website,
+    'headline': ProfileFields.headline,
+    'links': ProfileFields.links,
     'avatarassetid': ProfileFields.avatar,
     'avatarurl': ProfileFields.avatar,
     'expertisefieldids': ProfileFields.expertise,
   };
+
+  /// `links[2].url` (any case) → the input of that link's part.
+  static final _linkProperty = RegExp(r'^links\[(\d+)\]\.(platform|url|label)$');
 
   /// Splits a failed save: known codes and validation errors go to their input; anything else (or a validation error
   /// for no input on this form) is shown for the whole form.
@@ -387,7 +493,12 @@ class EditProfileCubit extends Cubit<EditProfileState> {
     var unmatched = false;
     for (final MapEntry(:key, :value) in failure.fieldErrors.entries) {
       if (value.isEmpty) continue;
-      final property = key.toLowerCase().replaceAll(RegExp(r'\[\d+\]$'), '');
+      final lower = key.toLowerCase();
+      if (_linkProperty.firstMatch(lower) case final match?) {
+        fields[ProfileFields.linkField(int.parse(match[1]!), match[2]!)] ??= value.first;
+        continue;
+      }
+      final property = lower.replaceAll(RegExp(r'\[\d+\]$'), '');
       final field = _propertyFields[property];
       if (field == null) {
         unmatched = true;

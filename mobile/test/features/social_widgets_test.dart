@@ -26,6 +26,7 @@ import 'package:readin/features/paths/presentation/cubit/article_path_cubit.dart
 import 'package:readin/features/reactions/domain/entities/reactions.dart';
 import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart';
 import 'package:readin/features/reactions/presentation/cubit/reactors_cubit.dart';
+import 'package:readin/features/reactions/presentation/widgets/reaction_bar.dart';
 import 'package:readin/features/reactions/presentation/widgets/reaction_button.dart';
 import 'package:readin/features/saved/domain/entities/saved.dart';
 import 'package:readin/features/saved/domain/usecases/saved_usecases.dart';
@@ -133,19 +134,23 @@ void main() {
       expect(find.byIcon(Icons.lightbulb_outline_rounded), findsOneWidget);
     });
 
-    testWidgets('a long press opens the picker; choosing changes the reaction', (tester) async {
+    testWidgets('a long press opens the floating bar (emoji only); tapping one picks it', (tester) async {
       when(() => reactions.react(card.id, ReactionType.fire)).thenAnswer((_) async => Ok(answer(ReactionType.fire)));
+      final semantics = tester.ensureSemantics();
       await pump(tester, Align(alignment: Alignment.bottomCenter, child: ReactionButton(article: card)));
 
       await tester.longPress(find.byType(ReactionButton));
       await tester.pumpAndSettle();
-      expect(find.text('Mind-blown'), findsOneWidget);
+      expect(find.byType(ReactionBar), findsOneWidget, reason: 'lifting the finger where it was pressed keeps it open');
+      expect(find.text('Mind-blown'), findsNothing, reason: 'no text in the bar');
+      expect(find.bySemanticsLabel('Mind-blown'), findsOneWidget);
 
-      await tester.tap(find.text('Fire'));
+      await tester.tap(find.bySemanticsLabel('Fire'));
       await tester.pumpAndSettle();
       verify(() => reactions.react(card.id, ReactionType.fire)).called(1);
-      expect(find.text('Mind-blown'), findsNothing, reason: 'the picker closed');
+      expect(find.byType(ReactionBar), findsNothing, reason: 'the bar closed');
       expect(find.text('🔥'), findsOneWidget);
+      semantics.dispose();
     });
 
     testWidgets('a refused reaction rolls back and says why', (tester) async {

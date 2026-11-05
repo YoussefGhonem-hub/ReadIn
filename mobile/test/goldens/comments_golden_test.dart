@@ -15,16 +15,22 @@ import 'package:readin/features/comments/presentation/widgets/comment_body.dart'
 import 'package:readin/features/comments/presentation/widgets/comment_composer.dart';
 import 'package:readin/features/comments/presentation/widgets/comment_tile.dart';
 import 'package:readin/features/comments/presentation/widgets/comments_sheet.dart';
+import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/comment_fixtures.dart';
 import '../helpers/fixtures.dart';
 import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
 
-/// Comments (F11) in ar/en × light/dark (SPEC §8.2): every comment state, the composer near its limit, the empty
-/// sheet, and the sheet with the "N new comments" pill as a guest sees it.
+/// Comments (F11) in ar/en × light/dark (SPEC §8.2): every comment state (rows with the writer's title, "Follow" and
+/// "⋯"), the comment box (empty, a reply with its @mention and ✕, near its limit, the emoji picker), the empty sheet,
+/// and the sheet with the "N new comments" pill as a guest sees it.
 void main() {
-  setUp(() => CommentClock.now = () => commentsNow);
+  setUp(() {
+    CommentClock.now = () => commentsNow;
+    SharedPreferences.setMockInitialValues({});
+  });
   tearDown(() => CommentClock.now = DateTime.now);
 
   final noop = CommentCallbacks(onLike: (_) {}, onReply: (_) {}, onMenu: (_, _) {}, onMoreReplies: (_) {});
@@ -51,6 +57,12 @@ void main() {
     return cubit;
   }
 
+  MockFollowsCubit follows() {
+    final cubit = MockFollowsCubit();
+    whenListen(cubit, const Stream<FollowsState>.empty(), initialState: const FollowsState());
+    return cubit;
+  }
+
   MockMentionSuggestionsCubit mentions() {
     final cubit = MockMentionSuggestionsCubit();
     whenListen(cubit, const Stream<List<Author>>.empty(), initialState: const <Author>[]);
@@ -71,6 +83,7 @@ void main() {
         providers: [
           BlocProvider<SessionCubit>.value(value: session(signedIn: signedIn)),
           BlocProvider<EngagementCubit>.value(value: engagement()),
+          BlocProvider<FollowsCubit>.value(value: follows()),
           BlocProvider<CommentsCubit>.value(value: comments(state)),
           BlocProvider<MentionSuggestionsCubit>.value(value: mentions()),
         ],
@@ -89,6 +102,7 @@ void main() {
     (
       CommentThread.of(comment(
         'c1',
+        author: omarTitled,
         body: 'شكراً @mona_dev على الشرح! الـ Dependency Injection في .NET بقى واضح.\nبس @ghost سأل عن Scoped.',
         mentions: const [monaMention],
         likeCount: 3,
@@ -100,7 +114,7 @@ void main() {
     (
       CommentThread.of(comment(
         'c2',
-        author: mona,
+        author: monaTitled,
         body: "Thanks everyone! I'll write a follow-up about Scoped vs Transient.",
         isArticleAuthor: true,
         isPinned: true,
@@ -116,6 +130,7 @@ void main() {
       CommentThread.of(comment(
         'c3',
         author: sara,
+        isFollowingAuthor: true,
         body: 'حد جرّب الكلام ده مع EF Core؟',
         replyCount: 4,
         likeCount: 1,
@@ -168,6 +183,7 @@ void main() {
 
     testWidgets('comment composer ${variant.name}', (tester) async {
       final reply = comment('r1', parentId: 'c3', author: omar);
+      final top = comment('c1', author: omarTitled);
       await pump(
         tester,
         variant,
@@ -176,6 +192,12 @@ void main() {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               const CommentComposer(),
+              const SizedBox(height: 24),
+              // A reply: "@omar_k " is already in the box (F11), with the ✕ that cancels the reply.
+              BlocProvider<CommentsCubit>.value(
+                value: comments(CommentsState(status: CommentsStatus.ready, target: ComposerTarget.reply(top))),
+                child: const CommentComposer(initialText: '@omar_k '),
+              ),
               const SizedBox(height: 24),
               BlocProvider<CommentsCubit>.value(
                 value: comments(CommentsState(status: CommentsStatus.ready, target: ComposerTarget.reply(reply))),
@@ -186,9 +208,23 @@ void main() {
             ],
           ),
         ),
-        size: const Size(390, 480),
+        size: const Size(390, 600),
       );
       await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/comment_composer_${variant.name}.png'));
+    });
+
+    testWidgets('comment box with the emoji picker ${variant.name}', (tester) async {
+      await pump(
+        tester,
+        variant,
+        const Scaffold(body: Align(alignment: Alignment.bottomCenter, child: CommentComposer(initialText: 'تمام 👍'))),
+        size: const Size(390, 520),
+      );
+      await tester.tap(find.byIcon(Icons.emoji_emotions_outlined));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.tag_faces));
+      await tester.pumpAndSettle();
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/comment_emoji_picker_${variant.name}.png'));
     });
 
     testWidgets('comments empty ${variant.name}', (tester) async {

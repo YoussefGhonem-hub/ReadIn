@@ -75,6 +75,9 @@ dependencies:
   country_flags: 4.1.2
   device_info_plus: 13.3.0
 
+  # The comment box's emoji picker (SPEC F11): emoji are ordinary text. Exact version, published 2026-09-01.
+  emoji_picker_flutter: 4.5.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -93,6 +96,9 @@ dev_dependencies:
   mocktail: ^1.0.5
   # Timers and clocks in the reading tracker tests (already resolved through flutter_test).
   fake_async: ^1.3.3
+  # In-memory preferences for the emoji picker's recent emoji in widget tests (already resolved through
+  # emoji_picker_flutter).
+  shared_preferences: 2.5.6
 
 # appflowy_editor's transitive packages, pinned to releases at least two weeks old when they were added (the
 # resolver otherwise picks ones from the last days). Drop each pin once a newer release has aged.
@@ -103,6 +109,8 @@ dependency_overrides:
   qr: 3.0.2
   vector_graphics: 1.2.4
   vector_graphics_compiler: 1.3.2
+  # emoji_picker_flutter's (through shared_preferences, its recent emoji): 2.5.x had four releases in ten days.
+  shared_preferences_android: 2.4.28
 
 flutter:
   uses-material-design: true
