@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RDocContext } from './rdoc-context';
+import { BlockMarks, RDocMarks } from './rdoc-marks';
 import { RDoc } from './rdoc.models';
 import { languageDir } from './rdoc.utils';
 import {
@@ -43,7 +44,7 @@ import {
     EmbedBlockView,
     SummaryBlockView,
   ],
-  providers: [RDocContext],
+  providers: [RDocContext, RDocMarks],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'rdoc block', '[attr.lang]': 'doc()?.language', '[attr.dir]': 'dir()' },
   template: `
@@ -101,9 +102,12 @@ export class RDocRenderer {
   readonly articleId = input<string | null>(null);
   /** Embeds as a link card instead of a player (a post card's preview, F34). */
   readonly embedsAsLinks = input(false);
+  /** Highlights to draw (F30), by block id; the reader's only. */
+  readonly marks = input<BlockMarks | null>(null);
   protected readonly dir = computed(() => languageDir(this.doc()?.language ?? 'ar-EG'));
 
   constructor() {
     inject(RDocContext).bind(this.doc, this.articleId, this.embedsAsLinks);
+    inject(RDocMarks).bind(this.marks);
   }
 }

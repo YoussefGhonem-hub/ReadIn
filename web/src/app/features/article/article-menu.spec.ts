@@ -4,13 +4,15 @@ import { testMe } from '../../../testing/auth-testing';
 import { TEST_API, flushMicrotasks, problem, setupSocialTesting, testCard } from '../../../testing/social-testing';
 import { ArticleModerationDto, FieldRefDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
+import { SessionStore } from '../../core/auth/session.store';
 import { FollowStore } from '../../core/social/follow.store';
 import { MuteStore } from '../../core/social/mute.store';
 import { ArticleActionBar } from './article-action-bar';
 import { ArticleMenu, MenuArticle } from './article-menu';
 
 const MODERATOR = ['articles.read', 'reports.create', 'moderation.manage', 'users.suspend'];
-const OTHERS = ['showLess', 'follow', 'muteAuthor', 'muteTopics', 'report'];
+// The reader's menu: Hide highlights (F30) right after Show less.
+const OTHERS = ['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'report'];
 const DOTNET: FieldRefDto = { id: 't1', slug: 'dotnet', name: '.NET', nameAr: 'دوت نت', nameEn: '.NET' };
 const FEED = { applies: true } as const;
 
@@ -68,7 +70,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     http = t.http;
     expect(t.$('[data-article-menu]')!.getAttribute('aria-label')).toBe('خيارات المقال');
     expect(await t.openMenu()).toEqual(OTHERS);
-    expect(OTHERS.map(t.label)).toEqual(['قلّل من النوع ده', 'تابع الكاتب', 'كتم الكاتب', 'كتم المواضيع', 'الإبلاغ عن المقال']);
+    expect(OTHERS.map(t.label)).toEqual(['قلّل من النوع ده', 'إخفاء الـ Highlights', 'تابع الكاتب', 'كتم الكاتب', 'كتم المواضيع', 'الإبلاغ عن المقال']);
     const report = document.querySelector('[data-menu-action="report"]')!;
     expect(report.classList).toContain('text-error');
     expect(document.querySelector('[data-menu-action="showLess"]')!.classList).not.toContain('text-error');
@@ -85,10 +87,51 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     expect(t.$('[data-report-sheet]')).toBeNull();
   });
 
-  it('your own article: Mute topics, then Download PDF (F33)', async () => {
+  it('Hide highlights (F30): saves showHighlights with the other preferences, the item flips; a failed save rolls back', async () => {
+    const t = await render();
+    http = t.http;
+    const session = TestBed.inject(SessionStore);
+    await t.openMenu();
+    expect(t.label('highlights')).toBe('إخفاء الـ Highlights');
+    expect(document.querySelector('[data-menu-action="highlights"]')!.getAttribute('aria-keyshortcuts')).toBe('Control+/');
+    await t.pick('highlights');
+    const hide = t.http.expectOne(`${TEST_API}/me/preferences`);
+    expect(hide.request.method).toBe('PUT');
+    expect(hide.request.body).toEqual({ uiLanguage: 'ar', articleLanguage: 'ar-EG', theme: 'system', timeZone: 'Africa/Cairo', reminderTime: '08:00', showHighlights: false });
+    // Optimistic: hidden before the server answers.
+    expect(session.me()!.showHighlights).toBe(false);
+    hide.flush(null, { status: 204, statusText: 'No Content' });
+    await t.stable();
+    await t.openMenu();
+    expect(t.label('highlights')).toBe('إظهار الـ Highlights');
+
+    await t.pick('highlights');
+    const show = t.http.expectOne(`${TEST_API}/me/preferences`);
+    expect(show.request.body.showHighlights).toBe(true);
+    show.flush(problem(500, 'server.error'), { status: 500, statusText: 'Server Error' });
+    await t.stable();
+    expect(session.me()!.showHighlights).toBe(false);
+  });
+
+  it('guests hide highlights on this device, with no sign-in prompt and no request', async () => {
+    localStorage.removeItem('rd.highlights.hidden');
+    const t = await render(testCard(), { guest: true });
+    http = t.http;
+    const prompt = TestBed.inject(AuthPromptService);
+    await t.openMenu();
+    await t.pick('highlights');
+    expect(prompt.isOpen()).toBe(false);
+    expect(localStorage.getItem('rd.highlights.hidden')).toBe('1');
+    await t.openMenu();
+    expect(t.label('highlights')).toBe('إظهار الـ Highlights');
+    await t.pick('highlights');
+    expect(localStorage.getItem('rd.highlights.hidden')).toBeNull();
+  });
+
+  it('your own article: Hide highlights, Mute topics, then Download PDF (F33)', async () => {
     const t = await render(testCard(), { myId: 'writer-1' });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['muteTopics', 'downloadPdf']);
+    expect(await t.openMenu()).toEqual(['highlights', 'muteTopics', 'downloadPdf']);
     expect(t.label('downloadPdf')).toBe('تحميل PDF');
   });
 
@@ -108,7 +151,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
       expect(req.request.params.get('lang')).toBe('en');
 
       // Open again while it builds: "بنجهز الـ PDF…", disabled, and a press asks for nothing more.
-      expect(await t.openMenu()).toEqual(['muteTopics', 'downloadPdf']);
+      expect(await t.openMenu()).toEqual(['highlights', 'muteTopics', 'downloadPdf']);
       const item = document.querySelector('[data-article-menu-panel] [data-menu-action="downloadPdf"]')!;
       expect(t.label('downloadPdf')).toBe('بنجهز الـ PDF…');
       expect(item.getAttribute('aria-disabled')).toBe('true');
@@ -153,15 +196,15 @@ describe('Reader "⋯" menu (F22, F28)', () => {
   it("a deleted author's article: no Follow and no Mute author", async () => {
     const t = await render(testCard({ author: null }));
     http = t.http;
-    expect(await t.openMenu()).toEqual(['showLess', 'muteTopics', 'report']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'muteTopics', 'report']);
   });
 
-  it('guests see every item and get the sign-in prompt for each, without a request', async () => {
+  it('guests see every item and get the sign-in prompt for each but Hide highlights, without a request', async () => {
     const t = await render(testCard(), { guest: true });
     http = t.http;
     const prompt = TestBed.inject(AuthPromptService);
     expect(await t.openMenu()).toEqual(OTHERS);
-    for (const action of OTHERS) {
+    for (const action of OTHERS.filter((a) => a !== 'highlights')) {
       prompt.close();
       if (!document.querySelector('[data-article-menu-panel]')) await t.openMenu();
       await t.pick(action);
@@ -364,7 +407,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     const t = await render(testCard(), { permissions: MODERATOR });
     http = t.http;
     // Report ends the reader's items; the moderator's item comes last, after a divider (as on mobile).
-    expect(await t.openMenu()).toEqual(['showLess', 'follow', 'muteAuthor', 'muteTopics', 'report', 'hide']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'report', 'hide']);
     expect(document.querySelector('[data-menu-action="hide"]')!.textContent!.trim()).toBe('إخفاء المقال');
     const dividers = document.querySelectorAll('[data-article-menu-panel] [data-menu-divider]');
     expect(dividers).toHaveLength(1);
@@ -400,7 +443,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
   it('a hidden article offers Unhide, at once with a toast', async () => {
     const t = await render({ ...testCard(), moderation: { hiddenAt: '2026-11-03T09:00:00Z', note: null } }, { permissions: MODERATOR });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['showLess', 'follow', 'muteAuthor', 'muteTopics', 'report', 'unhide']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'report', 'unhide']);
     await t.pick('unhide');
     const req = t.http.expectOne(`${TEST_API}/moderation/actions`);
     expect(req.request.body).toEqual({ action: 'unhide', targetType: 'article', targetId: 'a1' });
@@ -425,7 +468,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
   it('a moderator on their own article can mute its topics, download it and hide it, but not report it', async () => {
     const t = await render(testCard(), { permissions: MODERATOR, myId: 'writer-1' });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['muteTopics', 'downloadPdf', 'hide']);
+    expect(await t.openMenu()).toEqual(['highlights', 'muteTopics', 'downloadPdf', 'hide']);
     expect(document.querySelectorAll('[data-article-menu-panel] [data-menu-divider]')).toHaveLength(1);
   });
 });

@@ -16,12 +16,14 @@ import { ReportSheet, ReportTarget } from '../../shared/moderation/report-sheet'
 import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { MuteTopicsSheet } from '../../shared/mutes/mute-topics-sheet';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { HIGHLIGHT_ICON } from '../highlights/highlight-icons';
+import { HighlightsPrefs } from '../highlights/highlights-prefs';
 import { ArticlePdfService } from '../pdf/article-pdf.service';
 
 /** An article in the reader, with its moderation state when it is hidden (F22). */
 export type MenuArticle = ArticleCardDto & { moderation?: ArticleModerationDto | null };
 
-export type ArticleMenuAction = 'showLess' | 'follow' | 'muteAuthor' | 'muteTopics' | 'downloadPdf' | 'hide' | 'unhide' | 'report';
+export type ArticleMenuAction = 'showLess' | 'highlights' | 'follow' | 'muteAuthor' | 'muteTopics' | 'downloadPdf' | 'hide' | 'unhide' | 'report';
 
 /** What the items decide on: the article and where you stand with it. */
 export interface ArticleMenuContext {
@@ -37,6 +39,8 @@ export interface ArticleMenuContext {
   pdf: boolean;
   /** That article's PDF is being built (F33): the item says "بنجهز الـ PDF…", disabled, with a spinner. */
   pdfBuilding: boolean;
+  /** The reader's menu: highlights are shown or hidden (F30). Absent on a post card's menu. */
+  highlights?: 'shown' | 'hidden' | null;
 }
 
 type MenuIcon = string | LucideIconData;
@@ -54,6 +58,8 @@ export interface ArticleMenuEntry {
   moderation?: boolean;
   /** Working on it: disabled, with a spinning icon. */
   busy?: (ctx: ArticleMenuContext) => boolean;
+  /** Its keyboard shortcut (`aria-keyshortcuts`, and the item's tooltip). */
+  shortcut?: string;
 }
 
 /** An item as the menu shows it. */
@@ -66,6 +72,7 @@ export interface ArticleMenuItem {
   divider: boolean;
   /** Disabled, with a spinning icon (a PDF being built). */
   busy: boolean;
+  shortcut: string | null;
 }
 
 const hasOtherAuthor = (c: ArticleMenuContext) => !c.isOwn && !!c.article.author;
@@ -73,12 +80,21 @@ const hasOtherAuthor = (c: ArticleMenuContext) => !c.isOwn && !!c.article.author
 /**
  * The "⋯" menu, in the SPEC F28 order: the one list every item comes from (the reader's action bar and the post card's
  * header). Report ends the reader's items; the moderators' Hide/Unhide come last, after a divider (the same order on
- * mobile). A later feature adds its entry here and a case in {@link ArticleMenu.run}: F30 "إخفاء الـ Highlights" after
- * Show less. On your own article Mute topics stays, and the reader adds "تحميل PDF" (F33) before Report (and Hide for
- * moderators); Follow and Mute author need a writer (not a deleted account).
+ * mobile). A later feature adds its entry here and a case in {@link ArticleMenu.run}. The reader's "إخفاء الـ
+ * Highlights" (F30) comes after Show less, also on your own article. On your own article Mute topics stays, and the
+ * reader adds "تحميل PDF" (F33) before Report (and Hide for moderators); Follow and Mute author need a writer (not a
+ * deleted account).
  */
 export const ARTICLE_MENU: readonly ArticleMenuEntry[] = [
   { id: 'showLess', visible: (c) => !c.isOwn, labelKey: 'mute.menu.showLess', icon: MUTE_ICON.ThumbsDown },
+  // F30: the reader's menu only; "إظهار الـ Highlights" while they are hidden. Ctrl + / does the same.
+  {
+    id: 'highlights',
+    visible: (c) => !!c.highlights,
+    labelKey: (c) => (c.highlights === 'hidden' ? 'highlights.menu.show' : 'highlights.menu.hide'),
+    icon: HIGHLIGHT_ICON.Highlighter,
+    shortcut: 'Control+/',
+  },
   {
     id: 'follow',
     visible: hasOtherAuthor,
@@ -117,6 +133,7 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
     danger: entry.danger ?? false,
     divider: i > 0 && !!entry.moderation && !shown[i - 1].moderation,
     busy: entry.busy?.(ctx) ?? false,
+    shortcut: entry.shortcut ?? null,
   }));
 }
 
@@ -162,6 +179,8 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
             [cdkMenuItemDisabled]="item.busy"
             [attr.data-menu-action]="item.id"
             [attr.data-state]="item.id === 'downloadPdf' ? (item.busy ? 'building' : 'idle') : null"
+            [attr.aria-keyshortcuts]="item.shortcut"
+            [attr.title]="item.shortcut ? 'Ctrl + /' : null"
             (cdkMenuItemTriggered)="run(item.id)"
           >
             <svg [lucideIcon]="item.icon" [size]="16" [class.animate-spin]="item.busy" aria-hidden="true"></svg>
@@ -191,10 +210,13 @@ export class ArticleMenu {
   private readonly follows = inject(FollowStore);
   private readonly mutes = inject(MuteStore);
   private readonly pdfs = inject(ArticlePdfService);
+  private readonly highlightPrefs = inject(HighlightsPrefs);
 
   readonly article = input.required<MenuArticle>();
   /** The reader's menu: your own article also has "تحميل PDF" (F33). A post card's menu doesn't. */
   readonly pdf = input(false);
+  /** The reader's menu: "إخفاء الـ Highlights" / "إظهار الـ Highlights" (F30). A post card's menu doesn't have it. */
+  readonly highlights = input(false);
   /** Hidden (the new state) or visible again (null), after a moderator's action. */
   readonly moderationChange = output<ArticleModerationDto | null>();
   /**
@@ -220,12 +242,18 @@ export class ArticleMenu {
       authorMuted: signedIn && !!author && this.mutes.isAuthorMuted(author.id, article.isAuthorMuted ?? false),
       pdf: this.pdf(),
       pdfBuilding: this.pdfs.isBuilding(article.id),
+      highlights: this.highlights() ? (this.highlightPrefs.visible() ? 'shown' : 'hidden') : null,
     };
   });
 
   protected readonly items = computed(() => articleMenuItems(this.context()));
 
   protected run(action: ArticleMenuAction): void {
+    // Guests can hide highlights too: their device keeps the choice (F30).
+    if (action === 'highlights') {
+      void this.highlightPrefs.toggle();
+      return;
+    }
     if (!this.prompt.requireAuth()) return;
     const { article, authorMuted } = this.context();
     const author = article.author;

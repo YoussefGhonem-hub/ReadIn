@@ -111,6 +111,8 @@ export interface MeDto {
   interests: { fieldIds: string[]; topicIds: string[] };
   /** Missing from an API older than F14: every setting at its default. */
   privacy?: PrivacySettingsDto;
+  /** F30: draw highlight marks in the reader (default true; missing from an older API means true). */
+  showHighlights?: boolean;
 }
 
 // ── Auth (SPEC §9, ADR 0007, ADR 0009, ADR 0012) ────────────────
@@ -249,6 +251,8 @@ export interface UpdatePreferencesRequest {
   theme: ThemePreference;
   timeZone: string;
   reminderTime: string;
+  /** F30 "Hide highlights": omit to keep the current setting. */
+  showHighlights?: boolean;
 }
 
 export interface UpdateInterestsRequest {

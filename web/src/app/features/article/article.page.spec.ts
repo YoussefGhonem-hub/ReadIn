@@ -22,6 +22,12 @@ async function render(article: ArticleDetailsDto, lang: 'ar' | 'en' = 'ar', prov
   http.expectOne(`${TEST_API}/articles/${SLUG}?lang=en`).flush(article);
   await flushMicrotasks();
   fixture.detectChanges();
+  // Then its highlights (F30): none here.
+  http
+    .expectOne((r) => r.url === `${TEST_API}/articles/${article.id}/highlights`)
+    .flush({ articleId: article.id, language: article.language, mine: [], popular: [] });
+  await flushMicrotasks();
+  fixture.detectChanges();
   await fixture.whenStable();
   const root = fixture.nativeElement as HTMLElement;
   const byline = root.querySelector<HTMLElement>('[data-byline]')!;

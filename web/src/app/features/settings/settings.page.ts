@@ -14,21 +14,23 @@ import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../c
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
+import { Switch } from '../../shared/ui/switch';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { HighlightsPrefs } from '../highlights/highlights-prefs';
 import { AccountSettings } from './account/account-settings';
 import { PushPermissionRow } from './notifications/push-permission-row';
 import { ProfileSettings } from './profile-settings';
 
 /**
  * Settings (F18): theme, UI language, article language, reminder time, your interests (F12, their own page), what you
- * muted (F28, its own page), font size,
+ * muted (F28, its own page), font size, show highlights (F30),
  * notifications (push in this browser and a link to the notification preferences, F17), profile (with writer
  * verification, F19) and privacy, Moderation for moderators (F22; the side nav isn't there on narrow screens),
  * verification requests for admins (F19), account.
  */
 @Component({
   selector: 'rd-settings-page',
-  imports: [FormsModule, RouterLink, TranslocoPipe, Segmented, LucideDynamicIcon, AccountSettings, ProfileSettings, PushPermissionRow],
+  imports: [FormsModule, RouterLink, TranslocoPipe, Segmented, Switch, LucideDynamicIcon, AccountSettings, ProfileSettings, PushPermissionRow],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
   template: `
@@ -69,6 +71,16 @@ import { ProfileSettings } from './profile-settings';
 
       <span class="rd-label mt-5">{{ 'settings.fontSize' | transloco }}</span>
       <rd-segmented [options]="fontOptions()" [value]="readerPrefs.fontSize()" (valueChange)="readerPrefs.setFontSize($event)" [label]="'settings.fontSize' | transloco" />
+
+      <!-- Highlights in the reader (F30): synced when signed in, kept on this device for guests -->
+      <rd-switch
+        class="mt-5"
+        data-settings-highlights
+        [checked]="highlightPrefs.visible()"
+        [label]="'highlights.settings.label' | transloco"
+        [hint]="'highlights.settings.hint' | transloco"
+        (changed)="highlightPrefs.set($event)"
+      />
     </section>
 
     <!-- Reading (profile-backed) -->
@@ -178,6 +190,7 @@ export class SettingsPage {
   protected readonly theme = inject(ThemeService);
   protected readonly language = inject(LanguageService);
   protected readonly readerPrefs = inject(ReaderPrefsService);
+  protected readonly highlightPrefs = inject(HighlightsPrefs);
   protected readonly session = inject(SessionStore);
   protected readonly moderation = inject(ModerationSummaryStore);
   private readonly preferences = inject(PreferencesService);

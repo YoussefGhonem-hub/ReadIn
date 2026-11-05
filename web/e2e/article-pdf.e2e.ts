@@ -268,7 +268,8 @@ for (const variant of VARIANTS) {
     const panel = page.locator('[data-article-menu-panel]');
     const item = panel.locator('[data-menu-action="downloadPdf"]');
     await menuButton.click();
-    await expect(panel.locator('[data-menu-action]')).toHaveCount(2);
+    // Hide highlights (F30), Mute topics, then Download PDF.
+    await expect(panel.locator('[data-menu-action]')).toHaveCount(3);
     await expect(panel.locator('[data-menu-action]').last()).toHaveAttribute('data-menu-action', 'downloadPdf');
     await expect(item).toHaveText(t.download);
     await parkMouse(page);

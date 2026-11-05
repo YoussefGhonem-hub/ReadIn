@@ -147,6 +147,13 @@ export const CONTRACT_ERROR_CODES = [
   'mute.own_article',
   // Reposts (F29)
   'repost.own_article',
+  // Highlights (F30)
+  'highlight.text_mismatch',
+  'highlight.block_not_allowed',
+  'highlight.too_short',
+  'highlight.too_long',
+  'highlight.limit',
+  'highlight.not_found',
   // Comments (F11)
   'comment.not_found',
   'comment.not_owner',

@@ -255,6 +255,14 @@
     "repost": {
       "own_article": "You can't repost your own article."
     },
+    "highlight": {
+      "text_mismatch": "This text has changed in the article. Reload and try again.",
+      "block_not_allowed": "This part can't be highlighted.",
+      "too_short": "Select at least 3 characters.",
+      "too_long": "A highlight can be at most 1,000 characters.",
+      "limit": "You can have at most 100 highlights in one article.",
+      "not_found": "Highlight not found."
+    },
     "comment": {
       "not_found": "This comment doesn't exist.",
       "not_owner": "Only the author can change this comment.",
@@ -541,7 +549,7 @@
         "contact": "Your phone number, email, password and recovery PIN",
         "signIn": "Your Google and Apple sign-in links. We also revoke ReadIn's access at Apple.",
         "articles": "Your drafts and any article that isn't published, with their images and PDFs, and every other photo or file you uploaded",
-        "activity": "Your interests, reading progress and stats, reactions, reposts, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people's mutes of you), and your \"Show less like this\" marks",
+        "activity": "Your interests, reading progress and stats, reactions, reposts, highlights, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people's mutes of you), and your \"Show less like this\" marks",
         "devices": "Your devices and notification tokens, so no notification reaches you",
         "security": "Your security log: sign-ins and account changes"
       },
@@ -2588,5 +2596,33 @@
     "travel": "Travel & places",
     "objects": "Objects",
     "symbols": "Symbols"
+  },
+  "highlights": {
+    "toolbar": "Highlight options",
+    "create": "Highlight",
+    "remove": "Remove highlight",
+    "popular": "{{count}} readers highlighted this",
+    "created": "Highlighted.",
+    "removed": "Highlight removed.",
+    "hiddenStatus": "Highlights hidden.",
+    "shownStatus": "Highlights shown.",
+    "menu": {
+      "hide": "Hide highlights",
+      "show": "Show highlights"
+    },
+    "settings": {
+      "label": "Show highlights",
+      "hint": "Your highlights and the ones many readers made, in articles."
+    },
+    "saved": {
+      "sections": "Saved",
+      "articles": "Articles",
+      "highlights": "Highlights",
+      "versionAr": "Arabic version",
+      "versionEn": "English version",
+      "emptyTitle": "No highlights yet",
+      "emptyBody": "Select a sentence in an article and tap Highlight. It shows up here, grouped by article.",
+      "loadError": "Your highlights didn't load."
+    }
   }
 }

@@ -24,6 +24,7 @@ import { createCategories } from './categories.mjs';
 import { createEditor } from './editor.mjs';
 import { createPdf } from './pdf.mjs';
 import { createExplore } from './explore.mjs';
+import { createHighlights } from './highlights.mjs';
 import { createPaths } from './paths.mjs';
 import { createModeration } from './moderation.mjs';
 import { createMutes } from './mutes.mjs';
@@ -779,6 +780,17 @@ const verification = createVerification({
   proofPng: (seed) => mediaPng('photo', `proof-${seed}`, 640, 420),
   pdf: PDF,
 });
+// F30: highlights on every published article, the "Highlights lab" article (the shared offsets fixtures) and
+// `showHighlights` for `u-hl…` viewers (highlights.mjs).
+const highlights = createHighlights({
+  problem,
+  viewerOf: social.viewerOf,
+  details: (id) => {
+    const card = PUBLISHED.find((a) => a.id === id);
+    return card ? DETAILS.get(card.slug) : null;
+  },
+  labBase: () => DETAILS.get('dependency-injection-ar'),
+});
 
 const routes = [
   // Before profiles.mjs: `/users/mention-suggestions` is not a username.
@@ -797,9 +809,11 @@ const routes = [
     new RegExp(`^${API}/me$`),
     (_q, _m, _body, req) => {
       const viewer = social.viewerOf(req);
-      return [200, verification.decorateMe(profiles.meOf(viewer), viewer)];
+      return [200, highlights.decorateMe(verification.decorateMe(profiles.meOf(viewer), viewer), viewer)];
     },
   ],
+  // Highlights (F30): before the generic `GET /articles/{slug}` and the stateless `PUT /me/preferences`.
+  ...highlights.routes,
   ...categories.routes,
   ...editor.routes,
   ...createPdf({ problem, viewerOf: social.viewerOf, editor, articles: () => [...DETAILS.values()], pdf: PDF }).routes,

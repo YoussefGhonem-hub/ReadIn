@@ -5,21 +5,60 @@ import { BidiSegment, TextDir, segmentBidi } from '../directives/bidi';
 import { InlineContent, Mark } from './rdoc.models';
 import { RDocContext } from './rdoc-context';
 import { safeHttpUrl } from './rdoc.utils';
+import { MarkedPiece, NO_MARKS, TextMark, markPieces } from './text-marks';
+
+/** A BiDi run, cut into pieces where highlights (F30) start or end; `pieces` is null when none touches it. */
+type Segment = BidiSegment & { pieces: MarkedPiece[] | null };
 
 type InlineVm =
-  | { kind: 'text'; segments: BidiSegment[]; marks: Mark[] }
-  | { kind: 'term'; termId: string; text: string; segments: BidiSegment[] }
-  | { kind: 'mention'; handle: string; text: string }
+  | { kind: 'text'; segments: Segment[]; marks: Mark[] }
+  | { kind: 'term'; termId: string; text: string; segments: Segment[] }
+  | { kind: 'mention'; handle: string; text: string; pieces: MarkedPiece[] | null }
   | { kind: 'break' };
 
 /**
  * Renders RDoc inline nodes (SPEC §13.3). Runs in the opposite direction of the block are wrapped in `<bdi>` so
  * punctuation and word order never break (SPEC §14.2 rule 2). Inline code is isolated with `dir="ltr"`.
+ *
+ * Highlights (F30, `marks`) are drawn as plain `<span>`s inside each run, `<bdi>` and inline code: a run is never split
+ * or reordered, and the spans set no direction, so they can't change how mixed Arabic/English text is laid out.
  */
 @Component({
   selector: 'rd-inline',
   imports: [NgTemplateOutlet, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    /* A highlight is cut into one span per BiDi run: "skip-spaces: none" keeps the underline under a space at a span's
+       edge (Chromium skips those by default), so it runs on unbroken into the next run. */
+    .rd-hl-popular {
+      text-decoration-line: underline;
+      text-decoration-color: color-mix(in srgb, var(--rd-color-accent) 60%, transparent);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 0.28em;
+      text-decoration-skip-ink: none;
+      text-decoration-skip-spaces: none;
+      cursor: pointer;
+    }
+    .rd-hl-mine {
+      background-color: color-mix(in srgb, var(--rd-color-accent) 24%, transparent);
+      text-decoration-line: underline;
+      text-decoration-color: var(--rd-color-accent);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 0.28em;
+      text-decoration-skip-ink: none;
+      text-decoration-skip-spaces: none;
+      cursor: pointer;
+    }
+    @media (forced-colors: active) {
+      .rd-hl-mine {
+        background-color: Mark;
+        color: MarkText;
+      }
+      .rd-hl-popular {
+        text-decoration-color: LinkText;
+      }
+    }
+  `,
   template: `
     @for (node of vm(); track $index) {
       @switch (node.kind) {
@@ -32,7 +71,9 @@ type InlineVm =
           </button>
         }
         @case ('mention') {
-          <a class="rd-mention" [routerLink]="'/@' + node.handle"><bdi>{{ node.text }}</bdi></a>
+          <a class="rd-mention" [routerLink]="'/@' + node.handle"
+            ><bdi>@if (node.pieces) {<ng-container *ngTemplateOutlet="pieces; context: { pieces: node.pieces }" />} @else {{{ node.text }}}</bdi></a
+          >
         }
         @case ('break') {
           <br />
@@ -43,9 +84,29 @@ type InlineVm =
     <ng-template #plain let-segs="segs">
       @for (seg of segs; track $index) {
         @if (seg.isolate) {
-          <bdi>{{ seg.text }}</bdi>
+          <bdi>@if (seg.pieces) {<ng-container *ngTemplateOutlet="pieces; context: { pieces: seg.pieces }" />} @else {{{ seg.text }}}</bdi>
+        } @else if (seg.pieces) {
+          <ng-container *ngTemplateOutlet="pieces; context: { pieces: seg.pieces }" />
         } @else {
           <ng-container>{{ seg.text }}</ng-container>
+        }
+      }
+    </ng-template>
+
+    <!-- Highlights (F30): yours (with its id) and popular ones (with their count) -->
+    <ng-template #pieces let-pieces="pieces">
+      @for (piece of pieces; track $index) {
+        @if (piece.mine !== null || piece.count !== null) {
+          <span
+            class="rd-hl"
+            [class.rd-hl-mine]="piece.mine !== null"
+            [class.rd-hl-popular]="piece.count !== null"
+            [attr.data-hl-mine]="piece.mine"
+            [attr.data-hl-count]="piece.count"
+            >{{ piece.text }}</span
+          >
+        } @else {
+          <ng-container>{{ piece.text }}</ng-container>
         }
       }
     </ng-template>
@@ -69,7 +130,9 @@ type InlineVm =
             <mark><ng-container *ngTemplateOutlet="marked; context: { segs, marks, i: i + 1 }" /></mark>
           }
           @case ('code') {
-            <code class="rd-inline-code" dir="ltr">{{ joined(segs) }}</code>
+            <code class="rd-inline-code" dir="ltr"
+              >@if (segs[0]?.pieces; as codePieces) {<ng-container *ngTemplateOutlet="pieces; context: { pieces: codePieces }" />} @else {{{ joined(segs) }}}</code
+            >
           }
           @case ('link') {
             @let href = safeHref(mark.href);
@@ -95,9 +158,20 @@ export class InlineContentView {
   readonly nodes = input.required<InlineContent>();
   /** Resolved direction of the containing block. */
   readonly baseDir = input.required<TextDir>();
+  /** Highlights to draw (F30), in offsets of this content's plain text (text-marks.ts). */
+  readonly marks = input<readonly TextMark[]>(NO_MARKS);
 
   protected readonly vm = computed<InlineVm[]>(() => {
     const base = this.baseDir();
+    const highlights = this.marks();
+    let offset = 0;
+    /** The runs of a node's text, each with its highlight pieces; `offset` moves past the node. */
+    const cut = (segments: BidiSegment[]): Segment[] =>
+      segments.map((seg) => {
+        const pieces = highlights.length ? markPieces(seg.text, offset, highlights) : null;
+        offset += seg.text.length;
+        return { ...seg, pieces };
+      });
     return (this.nodes() ?? []).map((node): InlineVm => {
       switch (node.type) {
         case 'text': {
@@ -105,13 +179,17 @@ export class InlineContentView {
           // Inline code is isolated as a whole; its text is not split.
           const isCode = marks.some((m) => m.type === 'code');
           const ordered = isCode ? [...marks.filter((m) => m.type !== 'code'), { type: 'code' } as Mark] : marks;
-          return { kind: 'text', segments: isCode ? [{ text: node.text, isolate: false }] : segmentBidi(node.text, base), marks: ordered };
+          return { kind: 'text', segments: cut(isCode ? [{ text: node.text, isolate: false }] : segmentBidi(node.text, base)), marks: ordered };
         }
         case 'term':
-          return { kind: 'term', termId: node.termId, text: node.text, segments: segmentBidi(node.text, base) };
-        case 'mention':
-          return { kind: 'mention', handle: node.text.replace(/^@/, ''), text: node.text };
+          return { kind: 'term', termId: node.termId, text: node.text, segments: cut(segmentBidi(node.text, base)) };
+        case 'mention': {
+          const pieces = highlights.length ? markPieces(node.text, offset, highlights) : null;
+          offset += node.text.length;
+          return { kind: 'mention', handle: node.text.replace(/^@/, ''), text: node.text, pieces };
+        }
         default:
+          offset += 1; // a hard break is "\n" in the plain text
           return { kind: 'break' };
       }
     });

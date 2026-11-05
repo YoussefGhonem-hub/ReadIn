@@ -16,7 +16,7 @@ import { ReactorsSheet } from './reactors-sheet';
 /**
  * Floating action bar of the reader (F04, F10, F11, F13, F29): the reaction button, who reacted, comments (the count; a
  * tap takes you to them), Repost with its count, save, share and the "⋯" menu (F22 report and moderation; F28 adds
- * more). The reaction button (reaction-button.ts, shared with the post card) reacts 💡 on a tap and removes your reaction
+ * more; F30 Hide highlights). The reaction button (reaction-button.ts, shared with the post card) reacts 💡 on a tap and removes your reaction
  * when you have one; holding it (touch), hovering it (mouse), its ⌃ button or ArrowUp open the floating reactions bar.
  * Guests get the soft sign-in prompt. Counts come from ArticleSocialStore (optimistic, live counters on top).
  */
@@ -80,7 +80,7 @@ import { ReactorsSheet } from './reactors-sheet';
         <button type="button" class="rd-icon-btn h-11 w-10 border-0 sm:w-11" [attr.aria-label]="'common.share' | transloco" (click)="share()">
           <svg lucideIcon="Share2" [size]="18" aria-hidden="true"></svg>
         </button>
-        <rd-article-menu [article]="article()" [pdf]="true" (moderationChange)="moderationChange.emit($event)" />
+        <rd-article-menu [article]="article()" [pdf]="true" [highlights]="true" (moderationChange)="moderationChange.emit($event)" />
       </div>
     </div>
 

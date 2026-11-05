@@ -5,8 +5,10 @@ import { LucideDynamicIcon } from '@lucide/angular';
 import { BdiText } from '../../directives/bdi-text';
 import { InlineContentView } from '../inline-content';
 import { RDocContext } from '../rdoc-context';
+import { RDocMarks } from '../rdoc-marks';
 import { CalloutBlock, CodeBlock, CodeTabsBlock, DividerBlock, EmbedBlock, ImageBlock, TableBlock } from '../rdoc.models';
 import { resolveBlockDir, safeHttpUrl, youtubeId } from '../rdoc.utils';
+import { sameMarks } from '../text-marks';
 import { CodeView } from './code-view';
 
 @Component({
@@ -46,15 +48,17 @@ import { CodeView } from './code-view';
             {{ 'rdoc.callout.' + block().variant | transloco }}
           }
         </strong>
-        <rd-inline [nodes]="block().content" [baseDir]="dir()" />
+        <rd-inline [nodes]="block().content" [baseDir]="dir()" [marks]="marks()" />
       </div>
     </aside>
   `,
 })
 export class CalloutBlockView {
   private readonly ctx = inject(RDocContext);
+  private readonly highlights = inject(RDocMarks);
   readonly block = input.required<CalloutBlock>();
   protected readonly dir = computed(() => resolveBlockDir(this.block(), this.block().dir, this.ctx.fallbackDir()));
+  protected readonly marks = computed(() => this.highlights.of(this.block().id), { equal: sameMarks });
 }
 
 @Component({

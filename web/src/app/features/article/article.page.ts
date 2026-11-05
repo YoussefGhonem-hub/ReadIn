@@ -52,6 +52,8 @@ import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { LinesSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { categoryLink } from '../categories/category-rules';
+import { ArticleHighlightsStore, ReaderArticle } from '../highlights/article-highlights.store';
+import { ReaderHighlights } from '../highlights/reader-highlights';
 import { ArticleActionBar } from './article-action-bar';
 import { ArticleCover, ArticleHeadline, ArticleHealthNotice, ArticleSources, ArticleTrustRow } from './article-parts';
 import { ArticleSeoService } from './article-seo.service';
@@ -93,7 +95,9 @@ const TOC_MIN_HEADINGS = 3;
     NgComponentOutlet,
     RelatedArticles,
     MutedBanner,
+    ReaderHighlights,
   ],
+  providers: [ArticleHighlightsStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -242,7 +246,9 @@ const TOC_MIN_HEADINGS = 3;
           <rd-article-toc class="mb-6 block" [entries]="toc()" />
         }
 
-        <rd-rdoc [doc]="a.content" [articleId]="a.id" [style.--rd-article-size]="prefs.cssSize()" />
+        <!-- Highlights (F30): yours and the popular ones are drawn in the text; selecting text offers the toolbar -->
+        <rd-rdoc [doc]="a.content" [articleId]="a.id" [marks]="highlights.marks()" [style.--rd-article-size]="prefs.cssSize()" />
+        <rd-reader-highlights [content]="rdocElement()" />
 
         <!-- Post attachments (F26): after the content, before the sources -->
         @if (a.attachments; as attachments) {
@@ -367,6 +373,10 @@ export class ArticlePage {
   protected readonly collectionsOpen = signal(false);
   protected readonly progress = signal(0);
   private readonly articleEl = viewChild<ElementRef<HTMLElement>>('articleEl');
+  protected readonly highlights = inject(ArticleHighlightsStore);
+  private readonly rdoc = viewChild(RDocRenderer, { read: ElementRef });
+  /** The rendered content, where highlights are selected and tapped (F30). */
+  protected readonly rdocElement = computed(() => (this.rdoc()?.nativeElement as HTMLElement | undefined) ?? null);
   private readonly social = inject(ArticleSocialStore);
 
   /** The live comment count for the comments heading before the section loads (F11, F27). */
@@ -427,6 +437,15 @@ export class ArticlePage {
     });
     // Reaction, save and comment counts update live while the article is open (F27).
     bindLiveCounters(() => this.article());
+    // Highlights (F30) of the version on screen; a `highlight.text_mismatch` loads the article again.
+    const onScreen = computed<ReaderArticle | null>(
+      () => {
+        const a = this.article();
+        return a ? { id: a.id, language: a.language, content: a.content } : null;
+      },
+      { equal: (x, y) => x?.id === y?.id && x?.language === y?.language && x?.content === y?.content },
+    );
+    this.highlights.connect(onScreen, () => this.resource.reload());
     this.personalizeAfterHydration();
     effect(() => {
       // Real 404 status for crawlers when rendered on the server.

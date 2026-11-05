@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { firstValueFrom } from 'rxjs';
 import { isApiError } from '../../core/api/api.config';
@@ -13,9 +13,11 @@ import { detectDir } from '../../shared/directives/bidi';
 import { LocalizedDatePipe } from '../../shared/pipes/format.pipes';
 import { ArticleCard } from '../../shared/ui/article-card';
 import { FieldIcon } from '../../shared/ui/field-icon';
+import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { ArticleCardSkeleton, PostCardSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { PostCard } from '../feed/post-card';
+import { SavedHighlights } from '../highlights/saved-highlights';
 import { PathCard, PathCardSkeleton } from '../paths/path-card';
 import { SavedStore } from '../saved/saved.store';
 import { fieldColor } from '../reading/reading-stats-card';
@@ -97,10 +99,13 @@ export class ProfileArticles {
   }
 }
 
-/** Saved tab (F14, own profile only): your saved articles, newest first, as on the Saved page (F13). */
+/**
+ * Saved tab (F14, own profile only): your saved articles, newest first, as on the Saved page (F13), and a Highlights
+ * section (F30) with your highlights grouped by article (its own chunk, loaded when you switch to it).
+ */
 @Component({
   selector: 'rd-profile-saved',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, ArticleCard, ArticleCardSkeleton, EmptyState, ErrorState],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, ArticleCard, ArticleCardSkeleton, EmptyState, ErrorState, Segmented, SavedHighlights],
   providers: [SavedStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block', 'data-profile-saved': '' },
@@ -115,37 +120,57 @@ export class ProfileArticles {
         <svg lucideIcon="ChevronRight" [size]="14" class="rd-flip-rtl" aria-hidden="true"></svg>
       </a>
     </div>
-    @switch (store.status()) {
-      @case ('error') {
-        <rd-error-state [message]="'saved.loadError' | transloco" (retry)="store.load()" />
+    <!-- Saved articles, or your highlights (F30) -->
+    <rd-segmented class="mb-3" [options]="sections()" [(value)]="section" [label]="'highlights.saved.sections' | transloco" data-saved-sections />
+    @if (section() === 'highlights') {
+      @defer (on immediate) {
+        <rd-saved-highlights />
+      } @placeholder {
+        <rd-article-card-skeleton />
       }
-      @case ('loaded') {
-        @for (item of store.visible(); track item.article.id) {
-          <rd-article-card [article]="item.article" data-saved-item />
-        } @empty {
-          <rd-empty-state [title]="'saved.empty.title' | transloco" [message]="'saved.empty.body' | transloco" data-saved-empty />
+    } @else {
+      @switch (store.status()) {
+        @case ('error') {
+          <rd-error-state [message]="'saved.loadError' | transloco" (retry)="store.load()" />
         }
-        @if (store.loadingMore()) {
-          <rd-article-card-skeleton />
+        @case ('loaded') {
+          @for (item of store.visible(); track item.article.id) {
+            <rd-article-card [article]="item.article" data-saved-item />
+          } @empty {
+            <rd-empty-state [title]="'saved.empty.title' | transloco" [message]="'saved.empty.body' | transloco" data-saved-empty />
+          }
+          @if (store.loadingMore()) {
+            <rd-article-card-skeleton />
+          }
+          @if (store.loadMoreFailed()) {
+            <div class="py-4 text-center">
+              <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
+            </div>
+          }
         }
-        @if (store.loadMoreFailed()) {
-          <div class="py-4 text-center">
-            <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
-          </div>
+        @default {
+          @for (i of [1, 2, 3]; track i) {
+            <rd-article-card-skeleton />
+          }
         }
       }
-      @default {
-        @for (i of [1, 2, 3]; track i) {
-          <rd-article-card-skeleton />
-        }
-      }
+      <div #sentinel class="h-px" aria-hidden="true"></div>
     }
-    <div #sentinel class="h-px" aria-hidden="true"></div>
   `,
 })
 export class ProfileSaved {
   protected readonly store = inject(SavedStore);
   private readonly sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
+  private readonly transloco = inject(TranslocoService);
+  private readonly lang = inject(LanguageService).lang;
+  protected readonly section = signal<'articles' | 'highlights'>('articles');
+  protected readonly sections = computed<SegmentOption<'articles' | 'highlights'>[]>(() => {
+    this.lang(); // translated again when the UI language changes
+    return [
+      { value: 'articles', label: this.transloco.translate('highlights.saved.articles') },
+      { value: 'highlights', label: this.transloco.translate('highlights.saved.highlights') },
+    ];
+  });
 
   constructor() {
     void this.store.load();

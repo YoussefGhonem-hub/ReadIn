@@ -18,6 +18,8 @@ const CLEAN = 'a-clean-architecture-whiteboard';
 /** Mona's articles: the whole For you feed of the mock. */
 const MONA = [CLEAN, 'a-dependency-injection-ar', 'a-aspnet-core-cheatsheet', 'a-one-photo'];
 const OTHERS = ['showLess', 'follow', 'muteAuthor', 'muteTopics', 'report'];
+/** The reader's menu adds Hide highlights (F30) after Show less; a post card's doesn't. */
+const READER = ['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'report'];
 const ARCHITECTURE = { id: 't-architecture', slug: 'architecture', name: 'Architecture', nameAr: 'المعمارية', nameEn: 'Architecture', isSensitive: false };
 
 const cardOf = (page: Page, id: string): Locator => page.locator(`rd-post-card[data-post-card="${id}"]`).first();
@@ -109,7 +111,7 @@ for (const variant of VARIANTS) {
     const bar = page.locator('rd-article-action-bar');
     await expect(bar.locator('[data-react]')).toBeVisible({ timeout: FIRST_RENDER_MS });
     await openMenu(bar, page);
-    expect(await actions(page).evaluateAll((items) => items.map((i) => i.getAttribute('data-menu-action')))).toEqual(OTHERS);
+    expect(await actions(page).evaluateAll((items) => items.map((i) => i.getAttribute('data-menu-action')))).toEqual(READER);
     await pick(page, 'muteAuthor');
     await expectSignInPrompt(page);
     await openMenu(bar, page);
@@ -121,7 +123,7 @@ for (const variant of VARIANTS) {
     await restoreSessionAs(page, writer);
     await openArticle(page, '/en/a/clean-architecture-whiteboard');
     await openMenu(bar, page);
-    await expect(actions(page)).toHaveText([t('كتم المواضيع', 'Mute topics'), t('تحميل PDF', 'Download PDF')]);
+    await expect(actions(page)).toHaveText([t('إخفاء الـ Highlights', 'Hide highlights'), t('كتم المواضيع', 'Mute topics'), t('تحميل PDF', 'Download PDF')]);
   });
 
   test(`reader: the topics sheet, the muted-writer banner and collapsed comments — ${suffix}`, async ({ page, context, baseURL, request }) => {
