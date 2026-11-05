@@ -1454,7 +1454,10 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 
 ### 18.1 Principles
 - Seeders are **idempotent** (upsert by natural keys: role name, field slug, phone number, article slug) and **versioned** (`SeedHistory` stores name + version + checksum, so a seeder only re-runs when its data changes).
-- Run on startup in Development, and via `dotnet run --project ReadIn.Api -- seed` in Production.
+- **Runs automatically at API start in every environment, Production included**, with nothing to run by hand: `Database:MigrateOnStartup` and `Seed:RunOnStartup` are on by default. The first start on an empty production database creates the roles, fields, system accounts and the 300 articles. Later starts only touch what changed (`SeedHistory`), so they stay fast and never duplicate an article. `dotnet run --project ReadIn.Api -- seed [--force]` stays for manual runs.
+- **`content/` ships with the API:** `dotnet publish` and the container image include the `content/` folder, and `Content:RootPath` defaults to it, so production doesn't need the repo.
+- The API serves requests only after seeding finishes, so the first start takes longer and the host's health check must allow for it. A failed seeder logs a clear error and stops the start, like a failed migration.
+- Re-importing an article changes only its content and metadata, never its reactions, comments, saves or reads.
 - Environment-gated: **demo users and demo interactions are seeded only into the local database** (`Development` and `Testing` environments), never into production.
 - Passwords and PINs are **never** committed. They come from configuration: `Seed:DemoPassword`, `Seed:DemoPin` (must pass the weak-PIN policy), `Seed:SuperAdminPhone`, `Seed:SuperAdminPassword` (user-secrets locally, secret store in production).
 
