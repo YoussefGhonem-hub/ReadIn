@@ -80,7 +80,10 @@ void main() {
       const Stream<SessionState>.empty(),
       initialState: me == null ? const SessionState(status: SessionStatus.guest) : SessionState(status: SessionStatus.authenticated, me: me),
     );
-    await created?.close();
+    // A second pump in one test replaces the cubit; the old one closes after the test, not here. Its close awaits a
+    // stream cancel that completes outside the test's fake clock, so awaiting it in the test body never returns.
+    final previous = created;
+    if (previous != null) addTearDown(previous.close);
     created = mutesCubit(repository, session: session, follows: follows);
     final engagement = MockEngagementCubit();
     whenListen(engagement, const Stream<EngagementState>.empty(), initialState: const EngagementState());
