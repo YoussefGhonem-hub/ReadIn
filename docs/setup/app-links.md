@@ -10,10 +10,10 @@ needs from you is a domain, and each place below set to it.
 |---|---|---|
 | Web share button | Shares `{siteUrl}/{ar\|en}/a/{slug}`, the article's canonical URL | `web/src/environments/environment.ts` → `siteUrl` |
 | Mobile share button (reader, attachment viewer) | Shares the same URL, in the version being read | `mobile/config/prod.json` → `WEB_ORIGIN` |
-| Android App Links | The intent filter opens `https://{host}/ar/a/…` and `/en/a/…` in the app, after Android checks `/.well-known/assetlinks.json` | Host = `WEB_ORIGIN`, read by `mobile/android/app/build.gradle.kts` |
+| Android App Links | The intent filter opens `https://{host}/ar/a/…`, `/en/a/…` and `/tags/…` in the app, after Android checks `/.well-known/assetlinks.json` | Host = `WEB_ORIGIN`, read by `mobile/android/app/build.gradle.kts` |
 | iOS Universal Links | iOS opens the same paths in the app, after it checks `/.well-known/apple-app-site-association` | The Associated Domains entitlement (step 5 below) |
 | `/.well-known/*` files | The web's SSR server builds both files from its environment variables | `web/src/server/app-links.ts`, `web/src/server.ts` |
-| In the app | `/ar/a/{slug}` and `/en/a/{slug}` open the reader in that version (`/a/{slug}?lang=`) | `mobile/lib/app/router.dart`, `mobile/lib/core/push/push_links.dart` |
+| In the app | `/ar/a/{slug}` and `/en/a/{slug}` open the reader in that version (`/a/{slug}?lang=`); `/tags/{slug}` (and `readin://tags/{slug}`) opens the tag page (F32) | `mobile/lib/app/router.dart`, `mobile/lib/core/push/push_links.dart` |
 
 The app only opens links from the one domain in `WEB_ORIGIN`. A bad `WEB_ORIGIN` (not `https://`, or with a path)
 stops the Android build with a message.

@@ -425,3 +425,43 @@ The user approved it on 2026-11-04 (SPEC 2edf779, written by the SPEC session). 
   | Mobile `flutter test`, full | 124 s: 1646 tests | 84 s: 1446 tests (all 200 golden images still compared) |
   | Mobile goldens only | 58 s: 400 runs | 32 s: 200 runs |
   | Mobile while working (no goldens) | n/a | 58 s: 1246 tests |
+
+## Completing the SPEC (user request, 2026-11-05)
+The user approved the whole remaining list in order: F32, F16, F15, F31, F28, F29, F30, F33, the F24 quote card, F23,
+F25, the 6.6 leftovers + the F04 reading mode, the content check's 429, and a final SPEC review. Per feature: backend,
+web and mobile helpers (the backend writes the shared contract first, no shared files), then a test agent that only
+lists bugs, a fix agent, then the lead reviews, runs the full gates, commits and pushes.
+
+Decisions the user made for this list (2026-11-05):
+- reading mode hides the app bar and the action bar, and keeps the text and the progress bar;
+- Arabic terms on both clients: "السلسلة", "التجميد", "التاجات";
+- the official @readin account: one grouped notification a day per follower;
+- For you: your interests first; inside each group, popularity and freshness as in the SPEC, with pages that never
+  repeat or skip articles;
+- PDF status: polling every 2 s stays (the SPEC follows);
+- the daily upload quota counts every upload, deleted ones too;
+- the web's initial bundle under 500 kB without removing features.
+
+### Content check: HTTP 429 is a warning ✅ (c416c55)
+A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked
+again next run; `Retry-After` is honoured up to 30 s. Dead links still fail. SPEC §19.3 says so.
+
+### F32 Tags ✅
+- **Backend:**
+  - migration `Tags`: `NormalizedName` (unique), `IsSystem`, `CreatedById`, `CreatedAt`, `IsHidden`,
+    `EmptySince`, `ArticleTags.Position`;
+  - `LegacyTagsUpgrade` cleans, re-slugs and merges the old tags once, right after the migrations, on every start
+    (seed content's tags become system tags: `taxonomy.yaml` has no tag list, so the SPEC now says so);
+  - name rules and limits on save and publish (`tag.invalid`, `article.too_many_tags`, `tag.hidden`,
+    `tag.limit`); a publish racing another one on the same new tag retries once instead of failing;
+  - `GET /tags?q=`, `/tags/{slug}`, `/tags/{slug}/articles`; cards and details carry `TagRefDto { slug, name }`;
+  - `TagCleanupJob` daily (user tags with no articles for 30 days); account deletion nulls `CreatedById` (§9.6).
+- **Web and mobile:** tag links on cards and in the reader; the tag page (post cards, paging, empty, 404; web SSR +
+  `noindex`, mobile deep links `readin://tags/{slug}` and `https://{host}/tags/{slug}`); the editor tag field
+  (chips, suggestions, "Create new tag", max 5, the same rules as the server, server errors on the chip); Arabic says
+  "التاجات" / "تاج".
+- **Not in this round:** admin rename / merge / hide (F23; hiding must also refresh the cached tag pages and article
+  details). Muting (F28) has its seam (`ArticleVisibility.WithoutMutedFor`).
+- **Test round:** 8 bugs found and fixed (a query per bad tag name on save, the duplicate-tag race, tatweel-only
+  names, web error texts, Arabic symbol lists without isolates, three small mobile ones), plus the legacy upgrade
+  running in every deployment path (deployment.md §9).
