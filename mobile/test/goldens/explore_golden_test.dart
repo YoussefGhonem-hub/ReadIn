@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/errors/result.dart';
 import 'package:readin/features/article/presentation/cubit/post_cards_cubit.dart';
+import 'package:readin/features/comments/presentation/widgets/comment_body.dart' show CommentClock;
 import 'package:readin/features/explore/domain/entities/explore.dart';
 import 'package:readin/features/explore/domain/usecases/explore_usecases.dart';
 import 'package:readin/features/explore/presentation/cubit/explore_cubit.dart';
@@ -39,6 +40,9 @@ void main() {
     AppNetworkImage.providerFactory = FakeImageProvider.new;
   });
   tearDownAll(() => AppNetworkImage.providerFactory = NetworkImage.new);
+  // Post cards say how long ago they were published: a fixed "now" keeps the images from changing day by day.
+  setUp(() => CommentClock.now = () => DateTime.utc(2026, 11, 4, 18)); // "5 days ago"
+  tearDown(() => CommentClock.now = DateTime.now);
 
   bool isEn(Variant variant) => variant.locale.languageCode == 'en';
   String langOf(Variant variant) => isEn(variant) ? 'en' : 'ar';

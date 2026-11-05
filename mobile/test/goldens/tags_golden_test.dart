@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:readin/features/article/presentation/cubit/post_cards_cubit.dart';
+import 'package:readin/features/comments/presentation/widgets/comment_body.dart' show CommentClock;
 import 'package:readin/features/editor/domain/entities/editor_entities.dart';
 import 'package:readin/features/editor/presentation/cubit/article_editor_cubit.dart';
 import 'package:readin/features/editor/presentation/cubit/tag_suggestions_cubit.dart';
@@ -29,6 +30,9 @@ import '../helpers/test_app.dart';
 void main() {
   bool isEn(Variant variant) => variant.locale.languageCode == 'en';
   String languageOf(Variant variant) => isEn(variant) ? 'en' : 'ar-EG';
+  // Post cards say how long ago they were published: a fixed "now" keeps the images from changing day by day.
+  setUp(() => CommentClock.now = () => DateTime.utc(2026, 11, 4, 18)); // "5 days ago"
+  tearDown(() => CommentClock.now = DateTime.now);
 
   Future<void> pumpTagPage(WidgetTester tester, Variant variant, FakeTagsRepository repo, String slug, {double height = 1400}) async {
     usePhoneSurface(tester, size: Size(390, height));
