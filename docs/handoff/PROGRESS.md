@@ -560,3 +560,30 @@ again next run; `Retry-After` is honoured up to 30 s. Dead links still fail. SPE
   under a folding card, mobile paging repeats, suggestions, follow vs old mutes, empty states, error texts, deletion
   texts, mute from profile/comments, one route, one menu order, Explore rows, one wording, the For you tier cursor,
   14 more backend tests). **The fixes were not tried with the tests** (user rule).
+
+### F33 Download article PDF ✅ (track B)
+- **Backend:** `GET /articles/{id}/pdf?lang=` (permission `articles.export_pdf`, owner only, the published version
+  even with a working copy; 404 for anyone else, 409 hidden, 503 busy after 30 s, 500 after 60 s, 429 at 10 an hour per
+  API instance). RDoc → fully encoded print HTML with the web's BiDi rules (shared fixtures), embedded IBM Plex Sans
+  Arabic / Plex Sans / JetBrains Mono / Noto Sans / Noto Color Emoji (COLRv1) / Noto Sans Symbols 2 / Noto Sans Math
+  (OFL, licenses shipped), the logo, images from the uploads folder by stored path (external images print as link
+  cards). PuppeteerSharp drives an installed Chromium (never downloaded): JavaScript off, sandbox on, every request
+  aborted, at most 2 builds; a timed-out build closes only its own page, Chromium restarts only when it crashed.
+  Tagged PDF, H2/H3 bookmarks, metadata (an appended update adds the author and fixes mixed bookmark titles), Western
+  digits, the AI-assisted label, page-break CSS for rule 4, tables measured with the real fonts so words never split.
+  Tests for every No-bug rule (PdfPig: fonts embedded, text order, links, metadata, bookmarks, no blank pages, size;
+  two page baselines, one Arabic and one English).
+- **Web and mobile:** "تحميل PDF" in the reader's "⋯" (own article only, before Report) and on every published row in
+  My articles (two languages ask which first); "بنجهز الـ PDF…" while building; errors per the contract with "حاول
+  تاني" where it helps; web downloads with the server's file name, mobile saves to a temp file and opens the share
+  sheet. The item is on the reader's menu only, not on feed post cards.
+- **Deployment (user to do before production):** the API image needs Chromium (docs/setup/deployment.md §10: a Debian
+  aspnet base image with `apt install chromium`, `ContainerBaseImage` on publish, proxies allowing 100 s), and the
+  `seed` command must run once so Members get `articles.export_pdf` (until the roles change makes the sync run on
+  every start).
+- **Not verified here:** the backend tests on CI's Linux runner use its preinstalled Chrome; the two PDF page
+  baselines were approved on Windows with Chrome 156 (re-approve with `READIN_PDF_BASELINES_DIR` if CI differs).
+- **Test round:** the tests ran once (backend 2077/2077, web unit 1063/1063, Playwright article-pdf + editor 40/40,
+  mobile 1860/1860). 9 bugs fixed (emoji font left out, one failed build killing the other, split words in wide
+  tables, the AI label, the iPad share anchor on retry, wording, symbol fallback, code indentation, the permission
+  note), then the reader menu item. **The fixes and the menu item were not tried with the tests** (user rule).
