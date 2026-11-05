@@ -45,8 +45,9 @@ Two facts shape the design:
 - **Local and CI SQL Server has full-text:** `docker/sqlserver/Dockerfile` adds `mssql-server-fts` to the 2022 image.
   `docker-compose.yml` builds it (host port 14333 unchanged), and the integration tests build it through
   Testcontainers (kept after the run, so Docker's layer cache makes later builds instant). On CI the backend workflow
-  builds it with Buildx and keeps its apt layer in the GitHub Actions cache, so it is rebuilt only when the Dockerfile
-  or the base image changes. The integration tests run the article cases on both engines.
+  frees the runner's disk (the image is about 5 GB) and builds it with plain `docker build` on every run (about
+  80 s for the apt layer). A Buildx cache was tried first: loading its result needed a second copy of the image and
+  ran the runner out of disk. The integration tests run the article cases on both engines.
 
 ## Consequences
 
@@ -54,8 +55,7 @@ Two facts shape the design:
   before searching.
 - A full-text indexed column can't be altered. A migration that changes `SearchText` or `ExtractedText` must drop the
   index first and recreate it (`SearchEngineSetup.CreateSql`).
-- The full-text image is about 5 GB, and building it the first time takes a few minutes, locally and on CI (then CI
-  restores it from its cache).
+- The full-text image is about 5 GB, and building it the first time takes a few minutes, locally and on CI.
 - Production without full-text still searches correctly, but the fallback scans the normalized text. That is fine for
   thousands of articles. Larger corpora need full-text (or Azure AI Search / Elasticsearch, §22 Phase 3).
 - `SearchText` keeps one word breaker. If English stemming becomes important, a second, English-indexed column would

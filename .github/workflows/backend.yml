@@ -31,24 +31,22 @@ jobs:
       - name: Build
         run: dotnet build ReadIn.slnx --no-restore -c Release
 
-      # SQL Server with Full-Text Search for the integration tests (search, F16, ADR 0017), built from docker/sqlserver.
-      # Its apt layer (mssql-server-fts, ~2.7 GB, minutes to install) lives in the GitHub Actions cache, so it is built
-      # again only when the Dockerfile or the SQL Server base image changes. Loaded under the tag the tests look for
-      # (readin-sqlserver-fts:local): Testcontainers then uses it as it is, and the suite runs on the real full-text engine.
-      - uses: docker/setup-buildx-action@v3
+      # SQL Server with Full-Text Search for the integration tests (search, F16, ADR 0017), built from docker/sqlserver
+      # under the tag the tests look for (readin-sqlserver-fts:local): Testcontainers then uses it as it is, and the
+      # suite runs on the real full-text engine. The image is about 5 GB, more than the runner has free next to the
+      # .NET build, so the preinstalled Android SDK, GHC and CodeQL go first. Plain `docker build` writes straight
+      # into Docker (a Buildx container builder would need a second copy to load it). The apt layer takes about 80 s.
+      - name: Free disk space
+        working-directory: .
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          docker image prune --all --force
+          df -h /
 
       - name: SQL Server test image
-        uses: docker/build-push-action@v6
-        with:
-          context: docker/sqlserver
-          tags: readin-sqlserver-fts:local
-          load: true
-          cache-from: type=gha,scope=sqlserver-fts
-          cache-to: type=gha,scope=sqlserver-fts,mode=max,ignore-error=true
-
-      # The image is in Docker now: the builder's copy of its layers would only take disk space.
-      - name: Free the builder's disk space
-        run: docker buildx prune --all --force
+        working-directory: .
+        run: docker build --tag readin-sqlserver-fts:local docker/sqlserver
 
       # Unit + architecture + integration tests (Testcontainers runs the image above on the runner's Docker).
       - name: Test
