@@ -42,9 +42,14 @@ internal sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
     {
         builder.ToTable("Tags");
         builder.HasKey(t => t.Id);
-        builder.Property(t => t.Slug).HasMaxLength(64).IsRequired();
+        builder.Property(t => t.Slug).HasMaxLength(Tag.SlugColumnLength).IsRequired();
         builder.HasIndex(t => t.Slug).IsUnique();
-        builder.Property(t => t.Name).HasMaxLength(64).UseCollation(AppDbContext.SearchCollation).IsRequired();
+        builder.Property(t => t.Name).HasMaxLength(Tag.NameColumnLength).UseCollation(AppDbContext.SearchCollation).IsRequired();
+        // Compared exactly (ordinal), like TagNames.Normalize in C#: one tag per normalized name (SPEC F32).
+        builder.Property(t => t.NormalizedName).HasMaxLength(Tag.NameColumnLength).UseCollation(AppDbContext.OrdinalCollation).IsRequired();
+        builder.HasIndex(t => t.NormalizedName).IsUnique();
+        // No foreign key: account deletion nulls it (SPEC §9.6). Indexed for the new-tags-per-day limit.
+        builder.HasIndex(t => new { t.CreatedById, t.CreatedAt });
     }
 }
 

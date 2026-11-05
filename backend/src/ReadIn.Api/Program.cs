@@ -26,6 +26,8 @@ if (args.Contains("seed"))
 
 if (app.Configuration.GetValue("Database:MigrateOnStartup", false))
     await app.Services.InitializeDatabaseAsync(seed: app.Configuration.GetValue("Seed:RunOnStartup", false));
+else
+    await app.Services.UpgradeDataAsync(); // migrations applied elsewhere (`seed`, a SQL script, a bundle): docs/setup/deployment.md §9
 
 app.UseSerilogRequestLogging();
 app.UseApi();

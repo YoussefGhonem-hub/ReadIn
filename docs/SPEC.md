@@ -630,6 +630,7 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 | Deletion record: account id and time | `AuditLogs` (`account.deleted`) | **Retained**, no IP or other personal data | Proves the deletion happened and answers retried requests; kept with the security log |
 | Writer verification requests (field, job title, proof URL, note, decision) and their proof files (F19) | `VerificationRequests`, files in the private store (`Storage:PrivatePath`) | **Deleted** (cascade from `Users`); proof files right after the commit (a failed delete is finished by the daily proofs cleanup job). A decided request has no file any more | Proof is only needed while a request is pending |
 | Verification requests the account decided as an admin | `VerificationRequests.DecidedById` | **Anonymized**: the link to the account is removed (no FK; nulled explicitly) | The decision and its reason stay with the user it concerns |
+| Tags the account created (F32) | `Tags.CreatedById` | **Anonymized**: the link to the account is removed (no FK; nulled explicitly) | Tags are shared by everyone; a tag no article carries is still deleted by the daily cleanup |
 | Database, uploads and private files backups | backup storage | **Retained up to 14 days**, then overwritten | Disaster recovery ([deployment](setup/deployment.md)) |
 | Server logs | Serilog sink | May hold the account id and masked phone numbers (§9.5) for the log store's retention | Operations |
 
@@ -1053,7 +1054,7 @@ Tags are shared across the platform, so an article can be found by any tag on it
 
 **Upkeep**
 - Users with `taxonomy.manage` can rename, merge and hide tags (F23). A hidden tag can't be picked and its page returns 404.
-- A daily job deletes user-created tags that have had no articles for 30 days. System tags from `content/taxonomy.yaml` stay.
+- A daily job deletes user-created tags that have had no articles for 30 days. System tags stay: the tags the seed articles use (the `tags` in each article's `meta.json` under `content/articles/`).
 
 ### F33 — Download Article PDF (تحميل المقال PDF)
 A writer can download their own article as a clean, well-organized PDF that carries the ReadIn logo. The backend builds the file, so web and mobile get exactly the same result.
@@ -1376,7 +1377,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId (null once a deleted account's asset stays with its published article), Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
-| Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive (shows the health disclaimer, never blocks publishing), RequiresSources, IsEnabled), `Topics`, `Tags` (Slug, Name, NormalizedName, CreatedById (null: system tag), IsHidden), `ArticleTags`, `WriterCategories` (UserId, Name, NormalizedName, Slug, SortOrder; UserId+Slug unique, UserId+NormalizedName unique), `UserInterests` |
+| Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive (shows the health disclaimer, never blocks publishing), RequiresSources, IsEnabled), `Topics`, `Tags` (Slug (made once, URL-safe, unique), Name (the first spelling), NormalizedName (lower case + §22 normalization, unique, compared exactly: `Latin1_General_100_BIN2`), IsSystem (used by the seed content; never cleaned up), CreatedById (no FK; null for system tags and once the creator deleted the account), CreatedAt, IsHidden, EmptySince (no published article carries it since then; the daily cleanup, F32)), `ArticleTags` (ArticleId + TagId key, Position: the writer's order), `WriterCategories` (UserId, Name, NormalizedName, Slug, SortOrder; UserId+Slug unique, UserId+NormalizedName unique), `UserInterests` |
 | Articles | `Articles` (AuthorId (null: the author deleted their account, §9.6), FieldId, TopicId, WriterCategoryId (null: no category), Slug, Status Draft/Published/Archived, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, AutoCheckedAt, PublishedAt, QualityScore, counters, HiddenAt + HiddenById (hidden by a moderator, F22; no FK)), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, Excerpt `nvarchar(400)` + ExcerptHasMore (the F34 card text and whether the article holds more; Excerpt null until the backfill job fills a pre-F34 version), ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleDrafts` (ArticleId key, DocumentJson: the editor's working copy, Version concurrency token, HasChanges, SavedAt; F05), `ArticleRevisions` (ArticleId, RevisionNumber, Title, Languages, DocumentJson: the document of one publish, CreatedBy, CreatedAt), `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive) |
 | Engagement | `Reposts` (UserId+ArticleId unique, CreatedAt), `ArticleHighlights` (UserId, ArticleId, Language, BlockId, StartOffset, EndOffset, Text, CreatedAt), `UserMutes` (MuterId+MutedUserId unique), `ContentMutes` (UserId, TargetType Field/Topic, TargetId, unique), `ArticleFeedback` (UserId+ArticleId unique, Type ShowLess, CreatedAt), `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
@@ -1396,6 +1397,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 - `VerificationRequests(Status, SubmittedAt)` (the admin queue), `(UserId, SubmittedAt)` (the user's latest request) and `(UserId)` unique filtered on `[Status] = 'Pending'` (one pending request per user).
 - `Reactions(ArticleId, Type)`, `UserFollows(FolloweeId)`.
 - `Articles(WriterCategoryId, PublishedAt DESC)` and `ArticleTags(TagId, ArticleId)`, for the category and tag pages.
+- `Tags(Slug)` and `Tags(NormalizedName)` unique, `Tags(CreatedById, CreatedAt)` (new tags per writer per day, F32).
 - Full-Text index on `ArticleTranslations(SearchText)`, `MediaAssets(ExtractedText)` and `Users(DisplayName, Username)` (created with F16 Search; the columns and their collation exist already).
 - `Users(PhoneNumber)` unique, `RefreshTokens(TokenHash)` unique, `RefreshTokens(UserId, RevokedAt)`, `UserExternalLogins(Provider, Subject)` unique, `UserExternalLogins(UserId, Provider)` unique.
 - `ArticleAttachments(MediaAssetId)` unique (an asset belongs to one post), `MediaAssets(OwnerId, CreatedAt)` (quotas), `MediaAssets(CreatedAt)` (orphan cleanup).
@@ -1456,11 +1458,11 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | # | Seeder | Environments |
 |---|---|---|
 | 1 | Roles & Permissions | All |
-| 2 | Fields, Topics, Tags (from `content/taxonomy.yaml`) | All |
+| 2 | Fields and Topics (from `content/taxonomy.yaml`) | All |
 | 3 | System accounts (the official `ReadIn` account, `SuperAdmin`) | All |
 | 4 | Demo users (SQL Server) | Local only |
 | 5 | Official account avatar (`content/assets/readin-avatar.png` through the image pipeline) | All |
-| 6 | Articles (from `content/articles/`, status-aware, covers through the image pipeline, re-imported per article when its files change) | All, Production included |
+| 6 | Articles (from `content/articles/`, status-aware, covers through the image pipeline, re-imported per article when its files change). The tags in their `meta.json` become system tags (F32) | All, Production included |
 | 7 | Learning paths (`learningPaths` in `taxonomy.yaml` + each article's `learningPath`) | All |
 | 8 | Glossary terms (`content/glossary/*.yaml`, upserted by term id) and the article-term index, rebuilt when a glossary file or an article changes | All |
 | 9 | Demo interactions (follows, reactions, comments, saves, reading history, streaks, sample image/PDF attachments) | Local only |
@@ -1548,7 +1550,7 @@ dotnet run --project src/ReadIn.ContentStudio -- import
 | Length | 900–1,800 words per language, reading time 5–9 min (§13.5 formula) |
 | Text & BiDi | No emoji in body text (only the ❌/✅ tab labels), no raw HTML, alt text on images, Western digits and Arabic punctuation (، ؛ ؟) in `ar-EG`, no `ar-EG` block that would resolve LTR, glossary terms exist in `content/glossary/` |
 | **Code compiles** | C# with Roslyn (.NET 10, Web SDK implicit usings, ASP.NET Core/EF Core/Mapster/Mediator referenced), TypeScript/TSX with `tsc --noEmit` (React 19, Angular 22), Dart with `dart analyze`, Python byte-compiled **and run** with scikit-learn, JavaScript `node --check`, Bash `bash -n`, JSON/YAML parsed. `"compile": false` needs a reason in `meta.json`; other languages are listed as not compiled. A missing toolchain is an error |
-| Sources alive | Every source answers HTTP 200 after redirects (polite: 2 requests per host, retries with back-off; successes cached for a week) |
+| Sources alive | Every source answers HTTP 200 after redirects (polite: 2 requests per host, retries with back-off; successes cached for a week). A host that still answers 429 after the retries (it limits automated requests, as rfc-editor.org does) is a warning, not an error, and is checked again next run |
 | Duplicates | Unique slugs; titles compared by keyword similarity across all articles |
 | Trust & freshness | Matches the plan (field, topic, level, path, version badge, titles), `status: published`, `isAiAssisted: true`, `lastReviewedAt` (the pipeline check date), 2–5 sources, a 1200×630 `cover.webp` |
 

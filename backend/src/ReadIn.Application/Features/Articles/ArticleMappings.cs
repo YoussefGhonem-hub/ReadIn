@@ -14,11 +14,14 @@ public sealed class ArticleMappings : IRegister
     public void Register(TypeAdapterConfig config)
     {
         // A card has the article's first three tags (F34). Not Inherits: Mapster would give the details the card's map.
+        // Tags come in the writer's order; hidden ones (F32) are left out but stay on the article.
         CardMembers(config.NewConfig<Article, ArticleCardDto>())
-            .Map(d => d.Tags, s => s.Tags.OrderBy(t => t.TagId).Select(t => t.Tag.Name).Take(ArticleCardDto.MaxCardTags).ToList());
+            .Map(d => d.Tags, s => s.Tags.Where(t => !t.Tag.IsHidden).OrderBy(t => t.Position).ThenBy(t => t.TagId)
+                .Select(t => new TagRefDto(t.Tag.Slug, t.Tag.Name)).Take(ArticleCardDto.MaxCardTags).ToList());
 
         CardMembers(config.NewConfig<Article, ArticleDetailsDto>())
-            .Map(d => d.Tags, s => s.Tags.OrderBy(t => t.TagId).Select(t => t.Tag.Name).ToList())
+            .Map(d => d.Tags, s => s.Tags.Where(t => !t.Tag.IsHidden).OrderBy(t => t.Position).ThenBy(t => t.TagId)
+                .Select(t => new TagRefDto(t.Tag.Slug, t.Tag.Name)).ToList())
             .Map(d => d.AvailableLanguages, s => s.Translations.Select(t => t.Language).ToList())
             .Map(d => d.Summary, s => s.Translations.Any(t => t.Language == LocalizedProjection.Lang)
                 ? s.Translations.Where(t => t.Language == LocalizedProjection.Lang).Select(t => t.Summary).FirstOrDefault()
@@ -64,7 +67,7 @@ public sealed class ArticleMappings : IRegister
             .Map(d => d.HasMore, s => s.Translations.Any(t => t.Language == LocalizedProjection.Lang)
                 ? s.Translations.Where(t => t.Language == LocalizedProjection.Lang).Select(t => t.Excerpt == null || t.ExcerptHasMore).FirstOrDefault()
                 : s.Translations.Where(t => t.IsSource).Select(t => t.Excerpt == null || t.ExcerptHasMore).FirstOrDefault())
-            .Map(d => d.TagCount, s => s.Tags.Count())
+            .Map(d => d.TagCount, s => s.Tags.Count(t => !t.Tag.IsHidden))
             .Map(d => d.Field, s => new FieldRefDto(
                 s.Field.Id, s.Field.Slug,
                 LocalizedProjection.Ui == "en" ? s.Field.NameEn : s.Field.NameAr,

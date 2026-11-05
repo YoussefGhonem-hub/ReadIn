@@ -286,6 +286,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("TagId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
                     b.HasKey("ArticleId", "TagId");
 
                     b.HasIndex("TagId");
@@ -1591,21 +1594,47 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("EmptySince")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)")
                         .UseCollation("Arabic_100_CI_AI");
 
-                    b.Property<string>("Slug")
+                    b.Property<string>("NormalizedName")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
+                        .HasColumnType("nvarchar(64)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
+
                     b.HasIndex("Slug")
                         .IsUnique();
+
+                    b.HasIndex("CreatedById", "CreatedAt");
 
                     b.ToTable("Tags", (string)null);
                 });

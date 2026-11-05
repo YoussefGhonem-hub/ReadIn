@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Content;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Uploads;
+using ReadIn.Application.Features.Tags;
 using ReadIn.Application.Features.Uploads;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
@@ -24,7 +25,8 @@ internal sealed record DraftEvaluation(
 /// document of an article that has no working copy yet, and the live checks that decide whether it can be published.
 /// Saving is lenient (an unfinished article is fine); publishing requires an empty problem list.
 /// </summary>
-internal sealed class ArticleDrafts(IAppDbContext db, IRDocProcessor rdoc, IFileStorage storage, Mapster.TypeAdapterConfig mapping)
+internal sealed class ArticleDrafts(
+    IAppDbContext db, IRDocProcessor rdoc, IFileStorage storage, Mapster.TypeAdapterConfig mapping, ArticleTagging tagging)
 {
     public const int MinTitleLength = 5;
 
@@ -37,7 +39,8 @@ internal sealed class ArticleDrafts(IAppDbContext db, IRDocProcessor rdoc, IFile
         Translations = [.. document.Translations
             .OrderByDescending(t => t.Language == document.SourceLanguage)
             .Select(t => new DraftTranslation(t.Language, t.Title.Trim(), Blank(t.Subtitle), storage.ToStoredContent(t.Content)))],
-        Tags = [.. document.Tags.Select(t => t.Trim()).Where(t => t.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase)],
+        // Cleaned, with a repeat of the same tag dropped (SPEC F32); tags are created only when the article goes live.
+        Tags = TagNames.Distinct(document.Tags ?? []),
         Sources = [.. document.Sources.Select(s => new SourceDto(s.Title.Trim(), s.Url.Trim()))],
         CoverUrl = storage.ToStoredValue(Blank(document.CoverUrl)),
         VersionBadge = Blank(document.VersionBadge),
@@ -65,7 +68,7 @@ internal sealed class ArticleDrafts(IAppDbContext db, IRDocProcessor rdoc, IFile
             .Select(t => new DraftTranslation(t.Language, t.Title, t.Subtitle, JsonDocument.Parse(t.ContentJson).RootElement.Clone()))],
         FieldId = article.FieldId,
         TopicId = article.TopicId,
-        Tags = [.. article.Tags.Select(t => t.Tag.Name)],
+        Tags = [.. article.Tags.OrderBy(t => t.Position).ThenBy(t => t.TagId).Select(t => t.Tag.Name)], // hidden ones too (F32)
         Sources = [.. article.Sources.OrderBy(s => s.SortOrder).Select(s => new SourceDto(s.Title, s.Url))],
         CoverUrl = article.CoverUrl,
         VersionBadge = article.VersionBadge,
@@ -143,6 +146,7 @@ internal sealed class ArticleDrafts(IAppDbContext db, IRDocProcessor rdoc, IFile
             problems.Add(new DraftProblemDto(ArticleErrors.SourcesRequired.Code));
 
         var assets = await CheckAttachmentsAsync(articleId, authorId, document.Attachments, problems, cancellationToken);
+        problems.AddRange(await tagging.CheckAsync(articleId, authorId, document.Tags, cancellationToken));
         return new DraftEvaluation(problems, readingTime, field, assets);
     }
 

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using ReadIn.Application.Common.Content;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Uploads;
+using ReadIn.Application.Features.Tags;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Taxonomy;
@@ -33,6 +34,7 @@ internal sealed partial class ArticlesSeeder(
     IImageProcessor images,
     IFileStorage storage,
     UploadCleanup uploads,
+    ArticleTagging tagging,
     TimeProvider clock,
     ILogger<ArticlesSeeder> logger) : ISeeder
 {
@@ -138,7 +140,8 @@ internal sealed partial class ArticlesSeeder(
         var previousCover = article.CoverUrl;
         article.SetMetadata(cover.Value ?? previousCover, meta.VersionBadge, meta.IsAiAssisted);
         article.SetSources(meta.Sources.Select(s => (s.Title, s.Url)));
-        var tagged = article.SetTags(await UpsertTagsAsync(meta.Tags, ct));
+        // Seed content makes system tags (SPEC F32): never cleaned up, and exempt from the name rules for new tags.
+        var tagged = article.SetTags(await tagging.ResolveAsync(meta.Tags, createdById: null, ct));
         if (tagged.IsFailure) return tagged.Error;
 
         if (meta.IsPublishable && !article.IsPublished)
@@ -206,24 +209,6 @@ internal sealed partial class ArticlesSeeder(
             LogArchived(logger, article.Slug);
         }
         if (removed.Count > 0) await db.SaveChangesAsync(ct);
-    }
-
-    private async Task<List<Guid>> UpsertTagsAsync(IEnumerable<string> names, CancellationToken ct)
-    {
-        var ids = new List<Guid>();
-        foreach (var name in names.Distinct())
-        {
-            var slug = Tag.ToSlug(name);
-            var tag = db.Tags.Local.FirstOrDefault(t => t.Slug == slug)
-                ?? await db.Tags.FirstOrDefaultAsync(t => t.Slug == slug, ct);
-            if (tag is null)
-            {
-                tag = new Tag(slug, name);
-                db.Tags.Add(tag);
-            }
-            ids.Add(tag.Id);
-        }
-        return ids;
     }
 
     /// <summary>Checksum of an article folder's committed files (drafts and other files don't count).</summary>

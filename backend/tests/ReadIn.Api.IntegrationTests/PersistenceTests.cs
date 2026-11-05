@@ -26,7 +26,7 @@ public sealed class PersistenceTests(ApiFactory api)
 
         foreach (var slug in slugs)
         {
-            db.Tags.Add(new Tag(slug, slug));
+            db.Tags.Add(new Tag(slug, slug, slug, createdById: null, DateTime.UtcNow));
             await db.SaveChangesAsync(Ct);
         }
 

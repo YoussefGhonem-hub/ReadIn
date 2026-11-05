@@ -65,9 +65,14 @@ public static class ErrorMessages
         ["article.no_content"] = ("المقال فاضي، اكتب حاجة الأول.", "The article is empty. Write something first."),
         ["article.invalid_transition"] = ("مينفعش تعمل كده والمقال في حالته دي.", "You can't do that while the article is in this state."),
         ["article.slug_taken"] = ("الرابط ده مستخدم لمقال تاني.", "That link is already used by another article."),
-        ["article.tags.max_five"] = ("أقصى حاجة 5 تاجز للمقال.", "An article can have at most 5 tags."),
+        ["article.too_many_tags"] = ("أقصى حاجة 5 تاجات للمقال.", "An article can have at most 5 tags."),
         ["article.language_invalid"] = ("لغة المقال دي مش مدعومة.", "That article language isn't supported."),
         ["article.content_language_mismatch"] = ("لغة المحتوى مش زي لغة المقال.", "The content's language doesn't match the article's language."),
+        // Tags (SPEC F32)
+        ["tag.not_found"] = ("التاج ده مش موجود.", "Tag not found."),
+        ["tag.invalid"] = ("التاج لازم يكون من 2 لـ 30 حرف: حروف وأرقام ومسافات و \u2066- _ . + #\u2069 بس.", "A tag has 2–30 characters: letters, digits, spaces and - _ . + # only."),
+        ["tag.limit"] = ("عملت تاجات جديدة كتير النهارده. اختار من التاجات الموجودة، أو جرّب تاني بعدين.", "You've created a lot of new tags today. Pick existing tags, or try again later."),
+        ["tag.hidden"] = ("التاج ده مش متاح، اختار تاج تاني.", "This tag isn't available. Choose another one."),
         // Reactions, saved articles and follows (F10, F12, F13)
         ["reaction.invalid"] = ("الرياكشن ده مش موجود.", "This reaction doesn't exist."),
         ["collection.not_found"] = ("المجموعة مش موجودة.", "Collection not found."),

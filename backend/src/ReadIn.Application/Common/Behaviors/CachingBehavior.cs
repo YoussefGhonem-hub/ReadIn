@@ -21,6 +21,9 @@ public static class CacheTags
     public const string Articles = "articles";
     public const string Glossary = "glossary";
 
+    /// <summary>Tag suggestions and tag pages (F32); they also go with <see cref="Feed"/>, as article counts change.</summary>
+    public const string Tags = "tags";
+
     public static string Article(string slug) => $"article:{slug}";
 
     /// <summary>What is cached per article id (the card preview, F34); invalidated wherever <see cref="Article"/> is.</summary>

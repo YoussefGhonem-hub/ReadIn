@@ -7,6 +7,7 @@ using ReadIn.Application.Common.Content;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Glossary;
+using ReadIn.Application.Features.Tags;
 using ReadIn.Application.Features.Users;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
@@ -108,11 +109,28 @@ internal sealed class PublishArticleDraftCommandHandler(
     IRDocProcessor rdoc,
     ArticleTermsIndex termsIndex,
     UserMentions mentions,
+    ArticleTagging tagging,
     HybridCache cache,
     TimeProvider clock)
     : ICommandHandler<PublishArticleDraftCommand, Result<PublishedArticleDto>>
 {
     public async ValueTask<Result<PublishedArticleDto>> Handle(PublishArticleDraftCommand command, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await PublishAsync(command, cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex is not DbUpdateConcurrencyException)
+        {
+            // Lost a race: another publish saved a tag this one was creating (same name, or the same slug) a moment ago,
+            // or took the article slug, and a unique index refused the second copy (F32). Start over from what is stored:
+            // the tag is found this time and the slugs are picked again. A second failure is a real error.
+            db.ClearChangeTracker();
+            return await PublishAsync(command, cancellationToken);
+        }
+    }
+
+    private async Task<Result<PublishedArticleDto>> PublishAsync(PublishArticleDraftCommand command, CancellationToken cancellationToken)
     {
         var userId = currentUser.RequireUserId();
         var article = await drafts.LoadAsync(command.ArticleId, cancellationToken);
@@ -145,7 +163,8 @@ internal sealed class PublishArticleDraftCommandHandler(
         article.SetTaxonomy(field.Id, document.TopicId);
         var applied = article.ReplaceTranslations(document.SourceLanguage, versions, now);
         if (applied.IsFailure) return applied.Error;
-        var tagged = article.SetTags(await ArticleWriting.UpsertTagsAsync(db, document.Tags, cancellationToken));
+        // The checks above refused hidden tags and too many new ones (F32); a missing tag is created for this writer.
+        var tagged = article.SetTags(await tagging.ResolveAsync(document.Tags, userId, cancellationToken));
         if (tagged.IsFailure) return tagged.Error;
         article.SetSources(document.Sources.Select(s => (s.Title, s.Url)));
         article.SetMetadata(document.CoverUrl, document.VersionBadge, document.IsAiAssisted);

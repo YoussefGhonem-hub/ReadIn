@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using ReadIn.Application.Common.Content;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Articles.Editor;
+using ReadIn.Application.Features.Tags;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 
@@ -14,7 +15,7 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 /// Arabic draft whose live checks list what it still needs; the verified writer has a short draft and a published article
 /// with two revisions and unpublished changes in its working copy. Idempotent by slug.
 /// </summary>
-internal sealed class DemoEditorSeeder(AppDbContext db, IRDocProcessor rdoc, TimeProvider clock) : ISeeder
+internal sealed class DemoEditorSeeder(AppDbContext db, IRDocProcessor rdoc, ArticleTagging tagging, TimeProvider clock) : ISeeder
 {
     private const string SignalsSlug = "demo-editor-angular-signals-draft";
     private const string RiverpodSlug = "demo-editor-riverpod-draft";
@@ -77,6 +78,8 @@ internal sealed class DemoEditorSeeder(AppDbContext db, IRDocProcessor rdoc, Tim
         var article = Article.CreateDraft(authorId, fieldId, topicId: null, FoldersSlug);
         article.AddTranslation("en", first.Translations[0].Title, null, firstContent);
         article.SetSources(first.Sources.Select(s => (s.Title, s.Url)));
+        // The writer's own tags (F32), so the demo has user-created tags next to the system ones.
+        if (article.SetTags(await tagging.ResolveAsync(first.Tags, authorId, ct)).IsFailure) return;
         db.Articles.Add(article);
         await db.SaveChangesAsync(ct);
 

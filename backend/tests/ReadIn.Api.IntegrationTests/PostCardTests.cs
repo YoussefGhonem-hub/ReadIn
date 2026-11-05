@@ -50,9 +50,10 @@ public sealed class PostCardTests(ApiFactory api)
         forFollower["tagCount"]!.GetValue<int>().Should().Be(5);
 
         var details = await api.GuestClient().GetAsync($"/api/v1/articles/{article.Slug}", Ct).OkJsonAsync();
-        var allTags = details["tags"]!.AsArray().Select(t => t!.GetValue<string>()).ToList();
-        allTags.Should().HaveCount(5, "the details keep every tag").And.BeEquivalentTo(tags);
-        forFollower["tags"]!.AsArray().Select(t => t!.GetValue<string>()).Should().Equal(allTags.Take(3), "a card has the article's first three tags");
+        var allTags = details["tags"]!.AsArray().Select(t => t!["name"]!.GetValue<string>()).ToList();
+        allTags.Should().Equal(tags, "the details keep every tag, in the writer's order (F32)");
+        details["tags"]!.AsArray().Should().AllSatisfy(t => t!["slug"]!.GetValue<string>().Should().NotBeNullOrEmpty("a tag links to its page (F32)"));
+        forFollower["tags"]!.AsArray().Select(t => t!["name"]!.GetValue<string>()).Should().Equal(allTags.Take(3), "a card has the article's first three tags");
 
         (await ProfileCardAsync(api.GuestClient(), writer, article.Id))["isFollowingAuthor"]!.GetValue<bool>().Should().BeFalse("guests follow no one");
         (await ProfileCardAsync(writer.Client, writer, article.Id))["isFollowingAuthor"]!.GetValue<bool>().Should().BeFalse("never on your own article");

@@ -27,9 +27,6 @@ public sealed record GetArticleRevisionsQuery(Guid ArticleId) : IQuery<Result<IR
 [Authenticated]
 public sealed record GetArticleRevisionQuery(Guid ArticleId, int Number) : IQuery<Result<ArticleRevisionDetailsDto>>;
 
-/// <summary>GET /tags?q=: tag suggestions for the editor, most used first.</summary>
-public sealed record SearchTagsQuery(string? Query, int Limit) : IQuery<Result<IReadOnlyList<TagDto>>>;
-
 internal sealed class GetArticleForEditQueryHandler(ICurrentUser currentUser, ArticleDrafts drafts)
     : IQueryHandler<GetArticleForEditQuery, Result<ArticleEditDto>>
 {
@@ -182,28 +179,5 @@ internal sealed class GetArticleRevisionQueryHandler(IAppDbContext db, ICurrentU
         return new ArticleRevisionDetailsDto(
             revision.RevisionNumber, revision.CreatedAt, revision.Title, revision.Languages.Split(','),
             drafts.ToPublic(document), await drafts.MediaAsync(userId, document.Attachments, cancellationToken));
-    }
-}
-
-internal sealed class SearchTagsQueryHandler(IAppDbContext db) : IQueryHandler<SearchTagsQuery, Result<IReadOnlyList<TagDto>>>
-{
-    private const int MaxLimit = 20;
-
-    public async ValueTask<Result<IReadOnlyList<TagDto>>> Handle(SearchTagsQuery query, CancellationToken cancellationToken)
-    {
-        var text = (query.Query ?? string.Empty).Trim();
-        var slug = Tag.ToSlug(text);
-        var tags = db.Tags.AsNoTracking();
-        if (text.Length > 0) tags = tags.Where(t => t.Name.StartsWith(text) || (slug.Length > 0 && t.Slug.StartsWith(slug)));
-
-        // Hidden articles (F22) count for nothing, like everywhere readers look.
-        var published = db.Articles.Visible();
-        var found = await tags
-            .Select(t => new { t.Slug, t.Name, Count = published.Count(a => a.Tags.Any(x => x.TagId == t.Id)) })
-            .OrderByDescending(t => t.Count).ThenBy(t => t.Name)
-            .Take(Math.Clamp(query.Limit, 1, MaxLimit))
-            .ToListAsync(cancellationToken);
-
-        return found.Select(t => new TagDto(t.Slug, t.Name, t.Count)).ToList();
     }
 }

@@ -40,6 +40,13 @@ internal static class ArticleVisibility
         articles.Published().Where(a => a.HiddenAt == null);
 
     /// <summary>
+    /// The seam for F28 (mute and "show less"): leaves out the articles of writers, fields and topics
+    /// <paramref name="viewerId"/> muted. F28 isn't built yet, so nothing is left out; the lists that must honour mutes
+    /// (tag pages, F32) already go through it.
+    /// </summary>
+    public static IQueryable<Article> WithoutMutedFor(this IQueryable<Article> articles, Guid? viewerId) => articles;
+
+    /// <summary>
     /// The reader and what is done on one article (comments, reactions, saves, progress): <see cref="Visible"/>, plus a
     /// hidden article for its author and for moderators (SPEC F22). Everyone else gets <c>article.not_found</c>.
     /// </summary>

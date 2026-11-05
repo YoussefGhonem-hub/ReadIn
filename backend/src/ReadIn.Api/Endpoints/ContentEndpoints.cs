@@ -9,6 +9,7 @@ using ReadIn.Application.Features.Articles.Queries.GetArticleBySlug;
 using ReadIn.Application.Features.Articles.Queries.GetArticlePreview;
 using ReadIn.Application.Features.Feed.Queries.GetForYouFeed;
 using ReadIn.Application.Features.Feed.Queries.GetTodayArticle;
+using ReadIn.Application.Features.Tags;
 using ReadIn.Application.Features.Taxonomy;
 using ReadIn.Application.Features.Taxonomy.Queries.GetFields;
 using ReadIn.Application.Features.Taxonomy.Queries.GetTopicsByField;
@@ -31,12 +32,23 @@ internal sealed class TaxonomyEndpoints : IEndpointGroup
             .WithSummary("Topics of a field")
             .Produces<IReadOnlyList<TopicDto>>();
 
-        api.MapGet("/tags", async (string? q, int? limit, ISender sender, HttpContext http, CancellationToken ct) =>
+        // Tags (F32): shared by all writers; hidden ones are never shown.
+        var tags = api.MapGroup("/tags").WithTags("Tags").AllowAnonymous();
+
+        tags.MapGet("/", async (string? q, int? limit, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(new SearchTagsQuery(q, limit ?? 10), ct)).ToHttp(http))
-            .WithTags("Taxonomy")
-            .AllowAnonymous()
-            .WithSummary("Tag suggestions for the editor: names or slugs starting with q, most used first (F05)")
+            .WithSummary("The editor's tag suggestions: a word of the name (or the slug) starts with q; the exact match, then the most used")
             .Produces<IReadOnlyList<TagDto>>();
+
+        tags.MapGet("/{slug}", async (string slug, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new GetTagQuery(slug), ct)).ToHttp(http))
+            .WithSummary("A tag page's header: its name and how many published articles carry it; 404 tag.not_found when unknown or hidden")
+            .Produces<TagDto>();
+
+        tags.MapGet("/{slug}/articles", async (string slug, string? cursor, int? limit, ISender sender, ICurrentUser user, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new GetTagArticlesQuery(slug, cursor, limit ?? 20, user.UiLanguage), ct)).ToHttp(http))
+            .WithSummary("Published articles with the tag, from all writers, newest first, as cards")
+            .Produces<CursorPage<ArticleCardDto>>();
     }
 }
 

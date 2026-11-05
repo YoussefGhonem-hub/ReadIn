@@ -103,6 +103,11 @@ internal sealed partial class AccountEraser(
             await db.VerificationRequests
                 .Where(r => r.DecidedById == userId)
                 .ExecuteUpdateAsync(s => s.SetProperty(r => r.DecidedById, (Guid?)null), ct);
+            // F32: tags the account created stay shared, without their creator (still user tags, so the cleanup job
+            // may delete them once no article carries them).
+            await db.Tags
+                .Where(t => t.CreatedById == userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(t => t.CreatedById, (Guid?)null), ct);
             proofs = await db.VerificationRequests
                 .Where(r => r.UserId == userId && r.ProofFilePath != null)
                 .Select(r => r.ProofFilePath!)

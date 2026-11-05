@@ -64,4 +64,7 @@ public interface IAppDbContext
     DbSet<UserNotificationSetting> UserNotificationSettings { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Forgets every tracked entity and unsaved change, e.g. to start a command over after it lost a race.</summary>
+    void ClearChangeTracker();
 }

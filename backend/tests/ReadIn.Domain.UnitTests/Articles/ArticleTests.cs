@@ -246,6 +246,20 @@ public sealed class ArticleTests
     }
 
     [Fact]
+    public void Tags_keep_the_writers_order_and_a_repeat_counts_once()
+    {
+        var article = Draft(SoftwareField());
+        Guid a = Guid.NewGuid(), b = Guid.NewGuid(), c = Guid.NewGuid();
+
+        article.SetTags([a, b, a, c]).IsSuccess.Should().BeTrue();
+        article.Tags.OrderBy(t => t.Position).Select(t => t.TagId).Should().Equal(a, b, c);
+
+        article.SetTags([c, a]).IsSuccess.Should().BeTrue();
+        article.Tags.OrderBy(t => t.Position).Select(t => t.TagId).Should().Equal(c, a);
+        article.Tags.Select(t => t.Position).Should().BeEquivalentTo([0, 1]);
+    }
+
+    [Fact]
     public void Archived_articles_cannot_be_published()
     {
         var field = SoftwareField();

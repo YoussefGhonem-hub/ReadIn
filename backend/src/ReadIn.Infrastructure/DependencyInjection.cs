@@ -89,6 +89,7 @@ public static class DependencyInjection
         services.AddScoped<ArticleQualityJob>();
         services.AddScoped<ArticleExcerptsBackfillJob>();
         services.AddScoped<OrphanedUploadsCleanupJob>();
+        services.AddScoped<TagCleanupJob>();
         services.AddScoped<VerificationProofsCleanupJob>();
         services.AddScoped<IdentityCleanupJob>();
         services.AddScoped<LiveEventsCleanupJob>();
@@ -151,8 +152,21 @@ public static class DependencyInjection
         await using var scope = services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync(ct);
+        // Tags made before F32 get its rules once (SPEC F32); a no-op afterwards.
+        await LegacyTagsUpgrade.RunAsync(db, ct);
 
         if (seed) await scope.ServiceProvider.GetRequiredService<SeedRunner>().RunAsync(forceSeed, ct);
+    }
+
+    /// <summary>
+    /// The data upgrades that follow the migrations, for an API start that doesn't migrate itself: production may apply
+    /// the migrations as a SQL script or a bundle, which can't run C#. Tags made before F32 get its rules (SPEC F32).
+    /// Each upgrade waits for its migration, and is one or two small queries once done.
+    /// </summary>
+    public static async Task UpgradeDataAsync(this IServiceProvider services, CancellationToken ct = default)
+    {
+        await using var scope = services.CreateAsyncScope();
+        await LegacyTagsUpgrade.RunIfMigratedAsync(scope.ServiceProvider.GetRequiredService<AppDbContext>(), ct);
     }
 
     /// <summary>Registers recurring Hangfire jobs (no-op when Hangfire is disabled).</summary>
@@ -171,6 +185,7 @@ public static class DependencyInjection
         jobs.AddOrUpdate<OrphanedUploadsCleanupJob>("uploads-orphan-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3));
         jobs.AddOrUpdate<VerificationProofsCleanupJob>("verification-proofs-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 15));
         jobs.AddOrUpdate<IdentityCleanupJob>("identity-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 30));
+        jobs.AddOrUpdate<TagCleanupJob>("tags-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 45));
         jobs.AddOrUpdate<DailyArticleJob>("daily-article", job => job.RunAsync(CancellationToken.None), DailyArticleJob.Schedule);
         jobs.AddOrUpdate<LiveEventsCleanupJob>("rtdb-events-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Hourly());
         jobs.AddOrUpdate<NotificationPushJob>("notification-push", job => job.RunAsync(CancellationToken.None), Cron.Minutely());

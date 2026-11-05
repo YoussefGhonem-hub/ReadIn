@@ -183,14 +183,19 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         IsAiAssisted = isAiAssisted;
     }
 
-    public Result SetTags(IReadOnlyCollection<Guid> tagIds)
+    /// <summary>The article's tags in the writer's order (SPEC F32); a repeated id counts once.</summary>
+    public Result SetTags(IReadOnlyList<Guid> tagIds)
     {
         var distinct = tagIds.Distinct().ToList();
         if (distinct.Count > MaxTags) return ArticleErrors.TooManyTags;
 
         _tags.RemoveAll(t => !distinct.Contains(t.TagId));
-        foreach (var tagId in distinct.Where(id => _tags.All(t => t.TagId != id)))
-            _tags.Add(new ArticleTag(Id, tagId));
+        for (var position = 0; position < distinct.Count; position++)
+        {
+            var existing = _tags.FirstOrDefault(t => t.TagId == distinct[position]);
+            if (existing is null) _tags.Add(new ArticleTag(Id, distinct[position], position));
+            else if (existing.Position != position) existing.MoveTo(position);
+        }
         return Result.Success();
     }
 

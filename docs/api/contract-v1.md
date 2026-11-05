@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid` and `article.tags.max_five`, and the problem codes listed with `DraftProblemDto`.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
 
 `403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
@@ -93,7 +93,65 @@ A wrong `currentPassword` counts toward the same 15-minute lockout as sign in (`
 |---|---|---|
 | GET | `/fields` | `FieldDto[]` (enabled fields, ordered) |
 | GET | `/fields/{slug}/topics` | `TopicDto[]` |
-| GET | `/tags?q=&limit=10` | `TagDto[]`: tags whose name or slug starts with `q` (case ignored), most used first; empty `q` → most used (the editor's tag suggestions, F05) |
+
+### Tags (F32) 🌐 (Bearer optional) — SPEC F32
+
+Tags are shared by all writers. A tag has a display `name` (the first spelling anyone used) and a stable `slug`, the
+key of its page. Cards and the reader carry `TagRefDto`s: show `#name` with `dir="auto"` and link it to the tag page
+(web `/tags/{slug}`, mobile `/tags/:slug`, percent-encoding the slug: it may hold Arabic letters). Clients never build
+a slug from a name.
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/tags?q=&limit=10` | `TagDto[]`: the editor's suggestions. `q` is cleaned and normalized like a tag name (rules 1 and 3 below, so a leading `#` is dropped). A tag matches when a word of its normalized name starts with `q` (at the start, or after a space, `-`, `_` or `.`), or its slug starts with `q`'s slug (`csharp` finds `C#`). The tag named exactly `q` comes first, then the most used (`articleCount`), then by name. Empty `q`: the most used tags; `q` over 30 characters matches nothing. `limit` 1–20, default 10. Hidden tags are never suggested |
+| GET | `/tags/{slug}` | `TagDto`: the tag page's header. `404 tag.not_found` for an unknown or hidden tag |
+| GET | `/tags/{slug}/articles?cursor=&limit=` | `CursorPage<ArticleCardDto>`: every published article with the tag, from all writers, newest first, in the caller's article language and with the caller's `myReaction` / `isSaved` / `isFollowingAuthor` like every feed. Articles hidden by moderators (F22) and deleted ones are left out; for a signed-in caller, muted writers and topics will be too once F28 ships. `limit` 1–50, default 20. `404 tag.not_found` like `/tags/{slug}` |
+
+`articleCount` counts the published articles readers can see (not hidden by moderators, not deleted), the same for
+everyone; `0` means the tag page shows its empty state (web: `noindex`). The suggestions, the header and the guests'
+article pages (server rendering) are cached on the server and refreshed on publish, Update, hide/unhide and delete.
+
+**Tags on articles.** `ArticleCardDto.tags` has the article's first 3 tags and `ArticleDetailsDto.tags` all of them
+(≤ 5), as `TagRefDto` in the order the writer gave them; `tagCount` counts them all, for the card's "+N". A hidden tag is
+in none of these and not in `tagCount`, but it stays on its articles, so un-hiding it (F23) brings it back.
+**Breaking change (F32):** `tags` used to be `string[]` (names).
+
+**Tag names.** The server's rules; clients apply rules 1–3 before adding a chip, with inline messages.
+1. **Clean:** remove invisible format characters (Unicode `Cf`: LRM/RLM, bidi isolates, zero-width joiners), trim,
+   drop leading `#`s and trim again, turn every run of whitespace into one space, and write Arabic-Indic digits
+   (`٠–٩`, `۰–۹`) as `0–9`.
+2. **A new tag** needs 2–30 characters after cleaning (UTF-16 code units, i.e. JS / Dart `length`), only letters
+   (`\p{L}`), combining marks (`\p{M}`), digits (`\p{Nd}`), spaces and `- _ . + #` (so `C#`, `.NET` and `C++` work),
+   and at least one letter or digit (tatweel `ـ` U+0640 is a letter in Unicode but doesn't count here, so `ـــ` is
+   refused); otherwise `tag.invalid`. A name that matches an **existing** tag is always
+   accepted, even one older than these rules (e.g. `CI/CD`, `Span<T>`): add a picked suggestion as it is, without the
+   client check.
+3. **Same tag:** two names are one tag when their normalized forms are equal: the cleaned name in lower case with the
+   §22 Arabic normalization (remove diacritics U+064B–U+065F, U+0670, U+06D6–U+06ED and tatweel `ـ`; `أ إ آ ٱ → ا`,
+   `ى → ي`, `ة → ه`). So `AI`, `ai` and `#AI` are one tag, and it keeps its first spelling as `name`. Clients use this
+   to ignore a repeated chip and to know whether a suggestion matches the typed text exactly (else offer
+   "إنشاء تاج جديد: {name}" / "Create new tag: {name}").
+4. **Slugs** are made by the server when the tag is created and never change: the first spelling in lower case without
+   diacritics or tatweel, `#` → `sharp`, `+` → `plus`, a leading `.` → `dot`, every other run of characters that are
+   not letters or digits → one `-`, trimmed of `-` (`C#` → `csharp`, `.NET` → `dotnet`, `C++` → `cplusplus`,
+   `ASP.NET Core` → `asp-net-core`, `الذكاء الاصطناعي` → `الذكاء-الاصطناعي`); a clash gets `-2`, `-3`, ….
+
+**In the editor** (`ArticleDraftDocument.tags` holds names):
+- **Saving** (`POST /articles`, `PUT /articles/{id}/draft`) cleans the names and drops repeats of the same tag (the
+  first stays), and creates no tag. `400 validation.failed` when more than 5 remain or more than 50 names are sent
+  (`errors["document.tags"]: ["article.too_many_tags"]`; past 50 the names aren't checked one by one) or a name breaks
+  rule 2 (`errors["document.tags[i]"]: ["tag.invalid"]`, `i` = its index in the list sent). `document.tags` comes back cleaned.
+  A published article's working copy keeps all its tags, hidden ones included.
+- **Publish and Update** use the existing tag for each name and create the missing ones (owned by the writer; a system
+  tag from the seed content has no owner). Two live checks, reported in `checks.problems` on every save, so publishing
+  fails with them like with any other problem (`400` with the first problem's code and `problems`); each problem
+  carries the name in `DraftProblemDto.tag`:
+  - `tag.hidden`: the name is a hidden tag the published article doesn't already have (keeping one it has is fine);
+  - `tag.limit`: the writer would create more than 20 new tags in 24 hours (rolling). The new names past what is left
+    of the 20 get it, in document order.
+
+Tag error codes: `tag.not_found` (404), `tag.invalid` and `article.too_many_tags` (validation codes in `errors`),
+`tag.hidden` and `tag.limit` (problem codes: in `checks.problems`, and `400` on publish).
 
 ### Articles & Feed 🌐 (Bearer optional)
 
@@ -414,8 +472,8 @@ the whole `ArticleDraftDocument`, and publishing applies it. Readers only ever s
 field, an image block with `alt: ""`, attachments still processing or a block the RDoc schema rejects all come back in
 `checks.problems`. Only a malformed body is a `400 validation.failed`: more than 2 versions, duplicate languages,
 `sourceLanguage` not among them, `content` that is not an RDoc object in that language, more than 2000 blocks, more than
-5 tags, 30 sources or 10 attachments, too-long strings, non-http(s) URLs. Publishing re-runs the checks and fails while
-any problem remains.
+5 tags, 30 sources or 10 attachments, a new tag name that breaks the tag rules (see Tags), too-long strings, non-http(s)
+URLs. Publishing re-runs the checks and fails while any problem remains.
 
 - `version` starts at 1 and goes up with every save, discard and restore; a publish doesn't change it. An article
   created before the editor has `version: 0` until its first save.
@@ -686,8 +744,8 @@ interface ArticleCardDto {
   isAiAssisted: boolean;
   versionBadge: string | null;   // e.g. ".NET 10"
   publishedAt: string;
-  tags: string[];                // F34: on cards the first 3 tag names (ordered like ArticleDetailsDto.tags); all of them in ArticleDetailsDto
-  tagCount: number;              // F34: all the article's tags (0–5), for the card's "+N"
+  tags: TagRefDto[];             // F32/F34: on cards the first 3 tags, in the writer's order; all of them (≤ 5) in ArticleDetailsDto. Hidden tags left out. Was string[] before F32
+  tagCount: number;              // F34: all the article's visible tags (0–5), for the card's "+N"
   reactionCount: number;         // always the sum of `reactions`
   reactions: ReactionCountsDto;
   commentCount: number;          // 0 until F11
@@ -811,7 +869,7 @@ interface ArticleDraftDocument {
   translations: DraftTranslation[];      // 1 or 2, distinct languages
   fieldId: string | null;                // required to publish
   topicId: string | null;                // must belong to fieldId
-  tags: string[];                        // ≤ 5 names, 1..40 chars; new names become tags on publish
+  tags: string[];                        // ≤ 5 names (F32 rules, see Tags); stored cleaned, repeats dropped; new names become tags on publish
   sources: { title: string; url: string }[]; // ≤ 30; required to publish when the field has requiresSources
   coverUrl: string | null;               // from POST /uploads/images (purpose=cover)
   versionBadge: string | null;           // ≤ 30
@@ -853,11 +911,13 @@ interface DraftProblemDto {
   language: ArticleLanguage | null;      // translation problems
   blockId: string | null;                // the RDoc block (image alt, or the first block the schema rejects)
   mediaAssetId: string | null;           // attachment problems
+  tag: string | null;                    // tag problems: the name as in document.tags (F32)
 }
 // Problem codes: article.field_required, article.title_length, article.content_empty (no text and no attachments),
 // article.content_invalid, article.image_alt_required, article.sources_required, attachments.alt_text_required,
 // attachments.title_required, attachments.asset_not_ready (uploading, failed, missing or not yours),
-// attachments.mixed_kinds, attachments.single_document, media.in_use (shown in another article).
+// attachments.mixed_kinds, attachments.single_document, media.in_use (shown in another article),
+// tag.hidden (a hidden tag the published article doesn't have), tag.limit (over 20 new tags in 24 hours) (F32, see Tags).
 
 interface PublishedArticleDto { id: string; slug: string; publishedAt: string; revision: number; firstPublish: boolean }
 interface ArticleRevisionDto { number: number; createdAt: string; title: string; languages: ArticleLanguage[] }
@@ -878,14 +938,22 @@ interface MyArticleDto {
   reactionCount: number; commentCount: number; readCount: number;
 }
 
-interface TagDto { slug: string; name: string; articleCount: number } // articleCount: published articles
+// ── Tags (F32) ──────────────────────────────────────────────────────
+/** A tag on a card or in the reader: show "#name" (dir="auto"), link to /tags/{slug} (percent-encoded). */
+interface TagRefDto { slug: string; name: string }
+/** GET /tags?q= (suggestions) and GET /tags/{slug} (the tag page's header). Never a hidden tag. */
+interface TagDto {
+  slug: string;                  // stable; lower case letters (Arabic too), digits and "-"
+  name: string;                  // the first spelling, e.g. "C#", ".NET", "الذكاء الاصطناعي"
+  articleCount: number;          // published articles readers can see (not hidden, not deleted); 0 → empty state, noindex
+}
 
 interface ArticleDetailsDto extends ArticleCardDto {
   availableLanguages: ArticleLanguage[];
   summary: string | null;        // TL;DR plain text
   content: RDoc;                 // shared/rdoc/rdoc.schema.json
   topic: FieldRefDto | null;
-  // tags: all of the article's tags here (ArticleCardDto has the first 3); isFollowingAuthor comes from ArticleCardDto
+  // tags: all of the article's visible tags here as TagRefDto (ArticleCardDto has the first 3); isFollowingAuthor comes from ArticleCardDto
   sources: { title: string; url: string }[];
   readCount: number;             // saveCount comes from ArticleCardDto
   collectionIds: string[];       // the caller's collections that hold it, oldest entry first; [] for guests and unsaved articles

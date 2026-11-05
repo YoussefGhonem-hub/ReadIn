@@ -22,9 +22,15 @@ public sealed record FieldRefDto(Guid Id, string Slug, string Name, string NameA
 
 public sealed record SourceDto(string Title, string Url);
 
+/// <summary>
+/// A tag on a card or in the reader (SPEC F32): <see cref="Name"/> is shown as <c>#name</c>, <see cref="Slug"/> opens the
+/// tag page (<c>/tags/{slug}</c>). Hidden tags are never carried.
+/// </summary>
+public sealed record TagRefDto(string Slug, string Name);
+
 public record ArticleCardDto
 {
-    /// <summary>Tag names a card carries (SPEC F34); <see cref="TagCount"/> gives the rest as "+N".</summary>
+    /// <summary>Tags a card carries (SPEC F34); <see cref="TagCount"/> gives the rest as "+N".</summary>
     public const int MaxCardTags = 3;
 
     public Guid Id { get; init; }
@@ -55,12 +61,12 @@ public record ArticleCardDto
     public DateTime? PublishedAt { get; init; }
 
     /// <summary>
-    /// Tag names, ordered by tag id: the first <see cref="MaxCardTags"/> on cards (SPEC F34), all of them in
-    /// <see cref="ArticleDetailsDto"/>.
+    /// The article's visible tags in the writer's order (SPEC F32): the first <see cref="MaxCardTags"/> on cards (F34), all
+    /// of them in <see cref="ArticleDetailsDto"/>.
     /// </summary>
-    public IReadOnlyList<string> Tags { get; init; } = [];
+    public IReadOnlyList<TagRefDto> Tags { get; init; } = [];
 
-    /// <summary>All the article's tags (at most 5), for the card's "+N".</summary>
+    /// <summary>All the article's visible tags (at most 5), for the card's "+N".</summary>
     public int TagCount { get; init; }
 
     /// <summary>All reactions; always the sum of <see cref="Reactions"/>.</summary>

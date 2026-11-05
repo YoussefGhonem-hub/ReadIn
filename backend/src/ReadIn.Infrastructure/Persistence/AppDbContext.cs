@@ -25,6 +25,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     /// <summary>Case- and accent-insensitive Arabic collation for searchable text (SPEC §16.1).</summary>
     public const string SearchCollation = "Arabic_100_CI_AI";
 
+    /// <summary>Exact code-point comparison, for keys normalized in C# (e.g. <c>Tags.NormalizedName</c>, SPEC F32).</summary>
+    public const string OrdinalCollation = "Latin1_General_100_BIN2";
+
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
@@ -73,6 +76,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<SeedHistory> SeedHistory => Set<SeedHistory>();
+
+    public void ClearChangeTracker() => ChangeTracker.Clear();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

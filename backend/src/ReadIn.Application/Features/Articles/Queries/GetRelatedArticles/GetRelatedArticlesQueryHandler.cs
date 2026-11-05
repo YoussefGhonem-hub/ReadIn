@@ -34,7 +34,8 @@ internal sealed class GetRelatedArticlesQueryHandler(
         var source = await db.Articles.AsNoTracking()
             .Visible()
             .Where(a => a.Id == query.ArticleId)
-            .Select(a => new { a.Id, a.FieldId, a.TopicId, TagIds = a.Tags.Select(t => t.TagId).ToList() })
+            // A hidden tag (F32) is not shown, so it relates nothing either.
+            .Select(a => new { a.Id, a.FieldId, a.TopicId, TagIds = a.Tags.Where(t => !t.Tag.IsHidden).Select(t => t.TagId).ToList() })
             .FirstOrDefaultAsync(cancellationToken);
         if (source is null) return ArticleErrors.NotFound;
 

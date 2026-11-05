@@ -84,15 +84,22 @@ public sealed class ArticleTag
 {
     private ArticleTag() { } // EF
 
-    internal ArticleTag(Guid articleId, Guid tagId)
+    internal ArticleTag(Guid articleId, Guid tagId, int position)
     {
         ArticleId = articleId;
         TagId = tagId;
+        Position = position;
     }
 
     public Guid ArticleId { get; private set; }
     public Guid TagId { get; private set; }
+
+    /// <summary>The writer's order (SPEC F32): cards show the first three.</summary>
+    public int Position { get; private set; }
+
     public Taxonomy.Tag Tag { get; private set; } = default!;
+
+    internal void MoveTo(int position) => Position = position;
 }
 
 public sealed class ArticleSource

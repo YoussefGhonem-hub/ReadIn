@@ -373,7 +373,7 @@ public sealed class WritingTests(ApiFactory api)
         (await published.PublishedSlugAsync()).Should().Be("records-in-csharp-value-equality-made-easy");
 
         var article = await api.GuestClient().GetFromJsonAsync<JsonObject>("/api/v1/articles/records-in-csharp-value-equality-made-easy", Ct);
-        article!["tags"]!.AsArray().Select(t => t!.GetValue<string>()).Should().BeEquivalentTo("C#", "Records");
+        article!["tags"]!.AsArray().Select(t => t!["name"]!.GetValue<string>()).Should().BeEquivalentTo("C#", "Records");
         article.ContainsKey("isReviewed").Should().BeFalse("there is no review (ADR 0015)");
         article["content"]!["blocks"]![0]!["content"]![0]!["text"]!.GetValue<string>().Should().NotContain("‮");
     }

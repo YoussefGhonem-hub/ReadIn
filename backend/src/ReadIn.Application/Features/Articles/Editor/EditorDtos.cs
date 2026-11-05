@@ -45,7 +45,8 @@ public sealed record DraftChecksDto(IReadOnlyList<DraftReadingTimeDto> ReadingTi
 public sealed record DraftReadingTimeDto(string Language, int Minutes, int Words);
 
 /// <param name="Code">A stable error code; publishing fails with the first one.</param>
-public sealed record DraftProblemDto(string Code, string? Language = null, string? BlockId = null, Guid? MediaAssetId = null);
+/// <param name="Tag">The tag name (as in the document) of a <c>tag.hidden</c> or <c>tag.limit</c> problem (SPEC F32).</param>
+public sealed record DraftProblemDto(string Code, string? Language = null, string? BlockId = null, Guid? MediaAssetId = null, string? Tag = null);
 
 public sealed record PublishedArticleDto(Guid Id, string Slug, DateTime PublishedAt, int Revision, bool FirstPublish);
 
@@ -72,4 +73,8 @@ public sealed record MyArticleDto(
     int CommentCount,
     int ReadCount);
 
+/// <summary>
+/// A tag in the editor's suggestions (<c>GET /tags?q=</c>) and the tag page's header (<c>GET /tags/{slug}</c>), SPEC F32.
+/// <see cref="ArticleCount"/>: published articles readers can see (not hidden by moderators, not deleted).
+/// </summary>
 public sealed record TagDto(string Slug, string Name, int ArticleCount);

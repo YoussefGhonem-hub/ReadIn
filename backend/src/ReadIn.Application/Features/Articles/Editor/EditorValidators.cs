@@ -1,9 +1,13 @@
 using System.Text.Json;
 using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Uploads;
+using ReadIn.Application.Features.Tags;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
+using ReadIn.Domain.Taxonomy;
 
 namespace ReadIn.Application.Features.Articles.Editor;
 
@@ -18,9 +22,8 @@ internal sealed class ArticleDraftDocumentValidator : AbstractValidator<ArticleD
     public const int MaxBlocks = 2000;
     public const int MaxContentChars = 500_000;
     public const int MaxSources = 30;
-    public const int MaxTagLength = 40;
 
-    public ArticleDraftDocumentValidator(IFileStorage storage)
+    public ArticleDraftDocumentValidator(IFileStorage storage, IAppDbContext db)
     {
         RuleFor(d => d.SourceLanguage).Must(ArticleLanguages.IsValid).WithErrorCode(ArticleErrors.InvalidLanguage.Code);
         RuleFor(d => d.Translations)
@@ -37,8 +40,15 @@ internal sealed class ArticleDraftDocumentValidator : AbstractValidator<ArticleD
                 .OverridePropertyName("content").WithErrorCode(ArticleErrors.InvalidContent.Code);
         });
 
-        RuleFor(d => d.Tags).Must(t => t.Count <= Article.MaxTags).WithErrorCode(ArticleErrors.TooManyTags.Code);
-        RuleForEach(d => d.Tags).NotEmpty().MaximumLength(MaxTagLength);
+        // Tags (SPEC F32): at most 5 once repeats of the same tag are dropped. A name that would create a tag follows the
+        // rules; one that matches an existing tag is fine, even from before the rules (e.g. "CI/CD"). The names are only
+        // looked at when the list is short enough, and with one query at most.
+        RuleFor(d => d.Tags)
+            .Must(t => t is null || (t.Count <= TagNames.MaxRawCount && TagNames.Distinct(t).Count <= Article.MaxTags))
+            .WithErrorCode(ArticleErrors.TooManyTags.Code);
+        RuleFor(d => d.Tags)
+            .CustomAsync((tags, context, ct) => CheckTagNamesAsync(db, tags, context, ct))
+            .When(d => d.Tags is { Count: > 0 and <= TagNames.MaxRawCount });
 
         RuleFor(d => d.Sources).Must(s => s.Count <= MaxSources).WithErrorCode("validation.max_length");
         RuleForEach(d => d.Sources).ChildRules(source =>
@@ -75,19 +85,63 @@ internal sealed class ArticleDraftDocumentValidator : AbstractValidator<ArticleD
 
     private static bool IsHttpUrl(string? url) =>
         url is { Length: <= 2048 } && Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https";
+
+    /// <summary>
+    /// <c>tag.invalid</c> on <c>tags[i]</c> for each name that is neither a valid new tag name nor the name of an existing
+    /// tag. The names that break the rules are looked up together, in one query.
+    /// </summary>
+    private static async Task CheckTagNamesAsync(
+        IAppDbContext db, IReadOnlyList<string> tags, ValidationContext<ArticleDraftDocument> context, CancellationToken ct)
+    {
+        var rejected = new List<int>();
+        var lookups = new List<(int Index, string Key)>();
+        for (var i = 0; i < tags.Count; i++)
+        {
+            var name = tags[i];
+            if (name is null or { Length: > TagNames.MaxRawLength })
+            {
+                rejected.Add(i);
+                continue;
+            }
+            var cleaned = TagNames.Clean(name);
+            if (TagNames.IsValidNew(cleaned)) continue;
+
+            var key = cleaned.Length == 0 ? string.Empty : TagNames.Normalize(cleaned);
+            if (key.Length == 0) rejected.Add(i);
+            else lookups.Add((i, key));
+        }
+
+        if (lookups.Count > 0)
+        {
+            var keys = lookups.Select(l => l.Key).Distinct(StringComparer.Ordinal).ToList();
+            var existing = (await db.Tags.AsNoTracking()
+                .Where(t => keys.Contains(t.NormalizedName))
+                .Select(t => t.NormalizedName)
+                .ToListAsync(ct)).ToHashSet(StringComparer.Ordinal);
+            rejected.AddRange(lookups.Where(l => !existing.Contains(l.Key)).Select(l => l.Index));
+        }
+
+        foreach (var i in rejected.Order())
+        {
+            context.AddFailure(new ValidationFailure($"{context.PropertyPath}[{i}]", TaxonomyErrors.TagInvalid.Description)
+            {
+                ErrorCode = TaxonomyErrors.TagInvalid.Code,
+            });
+        }
+    }
 }
 
 internal sealed class CreateArticleDraftCommandValidator : AbstractValidator<CreateArticleDraftCommand>
 {
-    public CreateArticleDraftCommandValidator(IFileStorage storage) =>
-        RuleFor(c => c.Document).NotNull().SetValidator(new ArticleDraftDocumentValidator(storage));
+    public CreateArticleDraftCommandValidator(IFileStorage storage, IAppDbContext db) =>
+        RuleFor(c => c.Document).NotNull().SetValidator(new ArticleDraftDocumentValidator(storage, db));
 }
 
 internal sealed class SaveArticleDraftCommandValidator : AbstractValidator<SaveArticleDraftCommand>
 {
-    public SaveArticleDraftCommandValidator(IFileStorage storage)
+    public SaveArticleDraftCommandValidator(IFileStorage storage, IAppDbContext db)
     {
         RuleFor(c => c.BaseVersion).GreaterThanOrEqualTo(0);
-        RuleFor(c => c.Document).NotNull().SetValidator(new ArticleDraftDocumentValidator(storage));
+        RuleFor(c => c.Document).NotNull().SetValidator(new ArticleDraftDocumentValidator(storage, db));
     }
 }

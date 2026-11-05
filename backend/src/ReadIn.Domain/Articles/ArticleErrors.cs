@@ -8,7 +8,8 @@ public static class ArticleErrors
     public static readonly Error InvalidLanguage = Error.Validation("article.language_invalid", "Article language must be ar-EG or en.");
     public static readonly Error TranslationExists = Error.Conflict("article.translation_exists", "This language version already exists.");
     public static readonly Error TranslationNotFound = Error.NotFound("article.translation_not_found", "This language version does not exist.");
-    public static readonly Error TooManyTags = Error.Validation("article.tags.max_five", "An article can have at most 5 tags.");
+    /// <summary>More than 5 tags (SPEC F32); replaces the former <c>article.tags.max_five</c>.</summary>
+    public static readonly Error TooManyTags = Error.Validation("article.too_many_tags", "An article can have at most 5 tags.");
     public static readonly Error NoContent = Error.Validation("article.no_content", "Add at least one language version first.");
     public static readonly Error SourcesRequired = Error.Validation("article.sources_required", "Articles in this field must cite at least one source.");
     public static readonly Error NotOwner = Error.Forbidden("article.not_owner", "Only the author can change this article.");

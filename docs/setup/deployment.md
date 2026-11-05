@@ -259,3 +259,21 @@ Rules for every environment:
   24 hours (a delete that failed, or a file from a restore), plus stale `.tmp` leftovers.
 - **One server.** Like the uploads (section 7): with more than one API instance, swap `IPrivateFileStorage` for shared
   private storage (e.g. a private blob container with no public access) before scaling out.
+
+## 9. Database migrations and the data upgrades after them
+
+`Database:MigrateOnStartup` is off in production (`appsettings.json`), so a deployment applies the EF migrations itself,
+before the new version serves requests. Some releases also need a **data upgrade** right after their migration, written
+in C# because it uses the app's rules. Today there is one: tags made before F32 get their cleaned name, normalized name
+and URL-safe slug, and tags that are now one tag are merged (`LegacyTagsUpgrade`). Until it runs, those tags have a
+`~{id}` placeholder slug, so their links and pages don't work.
+
+- **Recommended:** run the `seed` command with the production settings
+  (`dotnet ReadIn.Api.dll seed`, or `dotnet run --project backend/src/ReadIn.Api -- seed`). It applies the migrations,
+  then the data upgrades, then the seeders (SPEC §18), and exits.
+- **A SQL script or a migrations bundle** (`dotnet ef migrations script --idempotent`, `dotnet ef migrations bundle`)
+  can't run C#. The API does the data upgrades at its next start, before it serves requests (`UpgradeDataAsync()` in
+  `ReadIn.Infrastructure/DependencyInjection.cs`), so start or restart the API **after** the script is applied.
+
+Each upgrade waits until its migration is applied and does nothing once it is done (one or two small queries per
+start), so running it again is always safe.

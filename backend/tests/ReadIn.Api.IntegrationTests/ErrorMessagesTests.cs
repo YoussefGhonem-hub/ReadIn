@@ -9,7 +9,7 @@ public sealed class ErrorMessagesTests
     [InlineData("article.no_content", "المقال فاضي، اكتب حاجة الأول.", "The article is empty. Write something first.")]
     [InlineData("article.invalid_transition", "مينفعش تعمل كده والمقال في حالته دي.", "You can't do that while the article is in this state.")]
     [InlineData("article.slug_taken", "الرابط ده مستخدم لمقال تاني.", "That link is already used by another article.")]
-    [InlineData("article.tags.max_five", "أقصى حاجة 5 تاجز للمقال.", "An article can have at most 5 tags.")]
+    [InlineData("article.too_many_tags", "أقصى حاجة 5 تاجات للمقال.", "An article can have at most 5 tags.")]
     [InlineData("article.language_invalid", "لغة المقال دي مش مدعومة.", "That article language isn't supported.")]
     [InlineData("article.content_language_mismatch", "لغة المحتوى مش زي لغة المقال.", "The content's language doesn't match the article's language.")]
     public void Article_codes_have_titles_in_arabic_and_english(string code, string arabic, string english)
@@ -31,6 +31,10 @@ public sealed class ErrorMessagesTests
     [InlineData("request.unsupported_media_type")]
     [InlineData("request.invalid")]
     [InlineData("route.not_found")]
+    [InlineData("tag.not_found")]
+    [InlineData("tag.invalid")]
+    [InlineData("tag.limit")]
+    [InlineData("tag.hidden")]
     public void Codes_the_clients_translate_have_titles_in_both_languages(string code)
     {
         ErrorMessages.Title(code, "ar").Should().NotBeNullOrWhiteSpace();

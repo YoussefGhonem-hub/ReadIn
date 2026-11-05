@@ -97,21 +97,3 @@ public sealed class Topic : Entity
         SortOrder = sortOrder;
     }
 }
-
-public sealed class Tag : Entity
-{
-    private Tag() { } // EF
-
-    public Tag(string slug, string name)
-    {
-        Slug = slug;
-        Name = name;
-    }
-
-    public string Slug { get; private set; } = default!;
-    public string Name { get; private set; } = default!;
-
-    public static string ToSlug(string name) =>
-        new string(name.Trim().ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) || c is '+' or '#' or '.' ? c : '-').ToArray())
-            .Trim('-');
-}
