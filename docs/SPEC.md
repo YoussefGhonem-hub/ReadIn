@@ -531,7 +531,7 @@ Sign in ─► Forgot password ─► (phone + PIN) ─► New password ─► S
 2. **Recovery PIN:** "اعمل PIN للطوارئ", explanation that it is needed if the password is forgotten, PIN input + confirm PIN. Errors for mismatch and weak PINs.
 3. **Confirm your number** (dialog): the number in large LTR text with the warning "هتستخدم الرقم ده في تسجيل الدخول، ومش هتقدر تسترجع حسابك لو الرقم غلط." Buttons: "صح، اعمل الحساب" / "تعديل".
 
-Then **Complete profile** (display name, unique `@username` with live availability check, optional avatar) → **Onboarding** ([F02](#f02--onboarding-3-steps)).
+Then **Complete profile** (display name, unique `@username` with live availability check, optional avatar, optional title) → **Onboarding** ([F02](#f02--onboarding-3-steps)).
 
 **Forgot password:**
 1. Phone field (pre-filled from Sign in) + PIN input → "كمّل". Generic error "رقم التليفون أو الـ PIN غلط". Link "نسيت الـ PIN كمان؟" opens the contact-support sheet.
@@ -688,7 +688,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Sign up is a 3-step stepper: phone + password → recovery PIN → confirm your number.
 - **Forgot password** with phone + recovery PIN → new password. "Forgot the PIN too" → contact support → Admin reset.
 - Mandatory "set recovery PIN" screen for accounts without a PIN.
-- Complete profile after sign up: display name, unique `@username`, optional avatar.
+- Complete profile after sign up: display name, unique `@username`, optional avatar, optional title.
 - Guest browsing with a soft prompt to sign in when trying to interact.
 - Sign out, sign out of all devices, delete account (the password, or Google/Apple for accounts without one): **immediate and for good**, Apple tokens revoked first, see [§9.6](#96-account-deletion--data-map).
 
@@ -711,7 +711,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 ### F04 — Article Reader
 - Reading progress bar, estimated reading time, table of contents for long articles.
 - **Language toggle** per article: `مصري+EN` / `EN` (shown only when both versions exist).
-- Trust row: verified writer badge, version badge (e.g. `.NET 10`), "AI-assisted" label when applicable.
+- Trust row: the writer's title (F14), verified writer badge, version badge (e.g. `.NET 10`), "AI-assisted" label when applicable.
 - Rich RDoc rendering: headings, callouts (tip/warning/info/danger), code blocks with copy button and filename, code tabs (C# / TypeScript / Dart), tables, steps, quotes, images with captions, glossary terms (tap → definition sheet).
 - **TL;DR summary** at the top (optional per article).
 - **Sources** section at the bottom (required by the field's `RequiresSources` setting, see F05).
@@ -804,12 +804,20 @@ Draft ──► Published ──► Archived
 - Saved articles available **offline** on mobile.
 
 ### F14 — Profile
-- Avatar, display name, username (`@handle`), verified badge, bio (mixed text), social links (below), fields of expertise.
+- Avatar, display name, username (`@handle`), verified badge, title (below), bio (mixed text), social links (below), fields of expertise.
 - Stats: articles, followers, following, total reads.
 - Tabs: **Articles** (all published articles, newest first) / **Categories** ([F31](#f31--writer-categories-أقسام-الكاتب)) / **Reposts** / **Saved** (own profile only, with a Highlights section) / **Paths** / **About**.
 - Reading stats card + heatmap (own profile, optional public).
 - Edit profile, including avatar upload (compressed, square-cropped variants 64/128/256/512).
 - The phone number is never shown on public profiles.
+
+**Title (المسمى)**
+- Any member can add a short title in Edit profile, and optionally in Complete profile, like "Senior Full Stack .NET Engineer | .NET | Angular".
+- **Rules:** optional, up to 120 characters, one line, mixed Arabic and English (§14.2), with no direction-override characters.
+- **Where it shows:** under the name on every post card (F34), in the reader's author row (F04) and on the profile. Cards and the reader cut it to one line with "…", and the profile shows all of it. With no title, the line is hidden.
+- It always shows the writer's current title, so changing it updates their older posts too. A title isn't checked by anyone: only the Verified badge (F19) means a review happened.
+- **Abuse:** a title is reported by reporting the user (F22), and the SuperAdmin can clear it from the case, audited.
+- **Data:** `Users.Headline` (`nvarchar(120)`), `headline` in `AuthorDto` (null when empty), the profile and `PATCH /me`. The official account's title is "مقال كل يوم يفرق معاك", and the demo writers get titles so it shows in development.
 
 **Social links**
 - Any member can add links to their accounts from Edit profile, in a "روابط" (Links) section with "+ إضافة رابط" (Add link): pick the platform, then paste the link. Links are optional.
@@ -1135,7 +1143,7 @@ Articles appear in lists as social posts, like on LinkedIn and Facebook, not as 
 | Part | Content |
 |---|---|
 | Label (optional) | "مقال النهارده" (F07) or "أعاد نشره {name}" (F29) |
-| Header | Avatar, name with the verified badge (or "Deleted user", with no profile link or follow). Under it: field · time since publishing · reading time. On the other side: "متابعة" (Follow) when you don't follow the writer and it isn't your article, Save, and "⋯" (F28) |
+| Header | Avatar, name with the verified badge (or "Deleted user", with no profile link or follow). Under it: the writer's title (F14) on one line, then field · time since publishing · reading time. On the other side: "متابعة" (Follow) when you don't follow the writer and it isn't your article, Save, and "⋯" (F28) |
 | Text | Title (up to 3 lines), then the beginning of the article, cut at 4 lines with "… اقرأ المزيد" (Read more) at the end of the last line. The button has its own `<bdi>`, so it never covers text or breaks mixed text (§14.2) |
 | Media | Attachments if there are any (F26), otherwise the cover at full width (16:9). With neither there is no image at all, and the old placeholder icon is gone |
 | Tags | Up to 3 tags (F32), then "+N" |
@@ -1388,7 +1396,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 ### 16.2 Tables
 | Area | Tables |
 |---|---|
-| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, IsVerified, VerifiedAt, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Bio, Links JSON (`[{ platform, url, label? }]`, F14), UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, WhoCanMention Everyone/Following/Nobody (default Everyone), IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
+| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, IsVerified, VerifiedAt, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Headline, Bio, Links JSON (`[{ platform, url, label? }]`, F14), UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, WhoCanMention Everyone/Following/Nobody (default Everyone), IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId (null once a deleted account's asset stays with its published article), Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
@@ -1434,7 +1442,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Area | Endpoints |
 |---|---|
 | Auth | `GET /auth/config` (PIN length, password rules) · `POST /auth/register` (phone, password, pin) · `POST /auth/login` · `POST /auth/refresh` · `POST /auth/logout` · `POST /auth/logout-all` · `POST /auth/recovery/verify-pin` → reset token · `POST /auth/recovery/reset-password` |
-| Me | `GET /me` (incl. `hasRecoveryPin`, `mustSetRecoveryPin`, `mustChangePassword`, `isProfileComplete`, `privacy`) · `PATCH /me` (incl. `avatarAssetId`, `expertiseFieldIds`, `links[]`) · `PUT /me/privacy` · `PUT /me/profile/complete` · `PUT /me/password` · `PUT /me/phone` · `POST /me/recovery-pin` (first set) · `PUT /me/recovery-pin` (change) · `PUT /me/preferences` · `PUT /me/interests` · `POST /me/devices` · `DELETE /me/devices/{token}` · `DELETE /me` · `GET /users/username-available?u=` |
+| Me | `GET /me` (incl. `hasRecoveryPin`, `mustSetRecoveryPin`, `mustChangePassword`, `isProfileComplete`, `privacy`) · `PATCH /me` (incl. `avatarAssetId`, `expertiseFieldIds`, `links[]`, `headline`) · `PUT /me/privacy` · `PUT /me/profile/complete` · `PUT /me/password` · `PUT /me/phone` · `POST /me/recovery-pin` (first set) · `PUT /me/recovery-pin` (change) · `PUT /me/preferences` · `PUT /me/interests` · `POST /me/devices` · `DELETE /me/devices/{token}` · `DELETE /me` · `GET /users/username-available?u=` |
 | Real-time | `POST /realtime/token` (Firebase custom token, used only to read the Realtime Database) |
 | Feed | `GET /feed/today` · `GET /feed/for-you` · `GET /feed/following` · `GET /feed/continue-reading` |
 | Articles | `GET /articles/{slug}?lang=` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` · `GET /articles/{id}/pdf?lang=` (own article, F33) · `GET /articles/{id}/preview?lang=` (first ~300 words as RDoc + `isComplete`, F34) |
