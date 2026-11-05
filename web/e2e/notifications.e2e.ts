@@ -30,13 +30,17 @@ for (const variant of VARIANTS) {
 
     // The badge: 4 unseen.
     await page.goto('/settings');
-    const bell = page.locator('rd-top-bar [data-notifications-link]');
+    // The bell of the bar on screen (the nav row's from md, the compact bar's below).
+    const bell = page.locator('rd-top-bar [data-notifications-link]:visible');
     await expect(bell.locator('[data-unread-badge]')).toBeVisible({ timeout: FIRST_RENDER_MS });
     await expect(bell).toHaveAttribute('aria-label', ar ? 'الإشعارات، 4 إشعارات جديدة' : 'Notifications, 4 new');
-    if (testInfo.project.name === 'desktop') await expect(page.locator('rd-side-nav [data-notifications-badge]')).toHaveText('4');
+    if (testInfo.project.name === 'desktop') await expect(page.locator('[data-top-nav] [data-notifications-link] [data-unread-badge]')).toBeVisible();
 
-    // Opening the center marks everything seen: the badge clears, on the server too.
+    // Opening the bell's dropdown marks everything seen: the badge clears, on the server too. "See all" opens the center.
     await bell.click();
+    const dropdown = page.locator('[data-notifications-dropdown]:visible');
+    await expect(dropdown).toBeVisible();
+    await dropdown.locator('[data-see-all]').click({ timeout: FIRST_RENDER_MS });
     await page.waitForURL((url) => url.pathname === '/notifications');
     await openCenter(page);
     await expect(bell.locator('[data-unread-badge]')).toHaveCount(0);

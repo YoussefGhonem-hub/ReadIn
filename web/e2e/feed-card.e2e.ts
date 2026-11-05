@@ -270,7 +270,7 @@ for (const variant of VARIANTS) {
     // Home from a link is a fresh feed (the web's "pull to refresh"); unsent text survives that too.
     await photo.locator('[data-card-title]').click();
     await page.waitForURL((url) => url.pathname === '/en/a/one-photo');
-    await page.locator('rd-top-bar a[href="/"]').click();
+    await page.locator('rd-top-bar [data-home-mark]').click();
     await page.waitForURL((url) => url.pathname === '/');
     await expect.poll(() => feedCalls).toBeGreaterThan(0);
     await expect(di.locator('[data-card-read-more]')).toBeVisible();

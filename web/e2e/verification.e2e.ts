@@ -177,10 +177,11 @@ for (const variant of VARIANTS) {
     const admin = await signInAsVerificationAdmin(page, request, variant);
     const desktop = testInfo.project.name === 'desktop';
 
-    // Desktop: the side nav entry; narrow screens: Settings → Admin.
+    // Desktop: the top bar's Me menu; narrow screens: Settings → Admin.
     await page.goto('/settings');
     if (desktop) {
-      const entry = page.locator('rd-side-nav a[href="/admin/verification"]');
+      await page.locator('[data-me-trigger="stacked"]').click({ timeout: FIRST_RENDER_MS });
+      const entry = page.locator('[data-me-menu] a[href="/admin/verification"]');
       await expect(entry).toHaveText(ar ? 'طلبات التوثيق' : 'Verification requests', { timeout: FIRST_RENDER_MS });
       await entry.click();
     } else {
@@ -347,8 +348,10 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-settings-verification]')).toBeVisible({ timeout: FIRST_RENDER_MS });
     await expect(page.locator('[data-settings-admin]')).toHaveCount(0);
     if (testInfo.project.name === 'desktop') {
-      await expect(page.locator('rd-side-nav a[href="/settings"]')).toBeVisible();
-      await expect(page.locator('rd-side-nav a[href="/admin/verification"]')).toHaveCount(0);
+      await page.locator('[data-me-trigger="stacked"]').click();
+      await expect(page.locator('[data-me-menu] a[href="/settings"]')).toBeVisible();
+      await expect(page.locator('[data-me-menu] a[href="/admin/verification"]')).toHaveCount(0);
+      await page.keyboard.press('Escape');
     }
     await page.goto('/admin/verification');
     await page.waitForURL((url) => url.pathname === '/', { timeout: FIRST_RENDER_MS });

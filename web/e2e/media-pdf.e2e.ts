@@ -91,7 +91,7 @@ for (const variant of VARIANTS) {
     // Home from the top bar (the reader's Back would return to the editor the article was published from). The post
     // card says how long ago the article was published: a fixed clock keeps the shot stable.
     await page.clock.setFixedTime(new Date('2026-11-04T09:00:00Z'));
-    await page.locator('rd-top-bar a[href="/"]').click();
+    await page.locator('rd-top-bar [data-home-mark]').click();
     await page.waitForURL((url) => url.pathname === '/');
     const card = page.locator('rd-post-card').filter({ has: page.locator('[data-attachments="document"]') });
     await expect(card.locator('[data-document-header]')).toContainText('Kubernetes basics');
@@ -139,7 +139,7 @@ test('the document viewer offers Download when allowed and saves the original un
 
   // Client-side navigation, so the feed comes from the routed call (a server-rendered "/" reuses the SSR response).
   await page.goto('/settings');
-  await page.locator('rd-top-bar a[href="/"]').click();
+  await page.locator('rd-top-bar [data-home-mark]').click();
   await page.waitForURL((url) => url.pathname === '/');
   const card = page.locator('rd-post-card').filter({ has: page.locator('[data-attachments="document"]') });
   await card.locator('[data-slide] > button').first().click();

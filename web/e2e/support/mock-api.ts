@@ -170,6 +170,9 @@ export const HIDE_COMMENTS = join(__dirname, 'hide-comments.css');
 /** `stylePath` for shots near the end of an article: hides the reader's floating action bar. */
 export const HIDE_READER_BAR = join(__dirname, 'hide-reader-bar.css');
 
+/** `stylePath` for shots of Home's middle column: hides the side columns (profile, suggestions, path, footer). */
+export const HIDE_HOME_RAILS = join(__dirname, 'hide-home-rails.css');
+
 /** Moves the pointer off any card so hover-only UI (carousel arrows) isn't captured. */
 export async function parkMouse(page: Page): Promise<void> {
   await page.mouse.move(1, 1);

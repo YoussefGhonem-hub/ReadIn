@@ -41,4 +41,21 @@ describe('FollowButton (F12)', () => {
     expect(TestBed.inject(AuthPromptService).isOpen()).toBe(true);
     http.expectNone(`${TEST_API}/users/writer-1/follow`);
   });
+
+  it('pill (Home’s suggestions): an outlined "+ Follow" that turns into a filled "✓ Following"', async () => {
+    const { fixture, http, button } = await render({ id: 'writer-1', displayName: 'Karim Hassan' }, false);
+    fixture.componentRef.setInput('pill', true);
+    fixture.detectChanges();
+    expect(button()!.classList).toContain('rounded-chip');
+    expect(button()!.classList).toContain('border-text-secondary');
+    expect(button()!.querySelector('svg')!.getAttribute('data-lucide') ?? button()!.innerHTML).toMatch(/plus/i);
+
+    button()!.click();
+    fixture.detectChanges();
+    expect(button()!.textContent).toContain('بتتابعه');
+    expect(button()!.classList).toContain('bg-primary-container');
+    expect(button()!.innerHTML).toMatch(/check/i);
+    http.expectOne(`${TEST_API}/users/writer-1/follow`).flush({ isFollowing: true, followerCount: 861 });
+    await flushMicrotasks();
+  });
 });

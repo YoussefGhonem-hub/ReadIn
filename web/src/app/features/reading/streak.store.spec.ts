@@ -182,4 +182,42 @@ describe('StreakStore', () => {
     expect(api.stats).not.toHaveBeenCalled();
     expect(store.streak()).toBeNull();
   });
+
+  it('keeps the whole answer for Home’s reading card, and forgets it on sign out', async () => {
+    const { session, store } = setup();
+    session.setMe(testMe());
+    TestBed.tick();
+    await flush();
+    expect(store.stats()?.articlesThisWeek).toBe(3);
+    expect(store.stats()?.minutesThisWeek).toBe(21);
+
+    session.setGuest();
+    TestBed.tick();
+    expect(store.stats()).toBeNull();
+  });
+
+  it('re-reads after an article was completed (this week’s numbers changed), never doubling a load in flight', async () => {
+    const pending = new Subject<ReadingStatsDto>();
+    let calls = 0;
+    const { api, session, store } = setup({ stats: () => (++calls === 1 ? pending : of(stats())) });
+    session.setMe(testMe());
+    TestBed.tick();
+    // The first load is still running: a refresh doesn't start another.
+    await store.refreshIfStale();
+    expect(api.stats).toHaveBeenCalledTimes(1);
+    pending.next(stats());
+    pending.complete();
+    await flush();
+
+    // Fresh: nothing to do.
+    await store.refreshIfStale();
+    expect(api.stats).toHaveBeenCalledTimes(1);
+
+    // Completing an article makes the stats stale even within 15 minutes.
+    store.applyProgress(result());
+    await store.refreshIfStale();
+    expect(api.stats).toHaveBeenCalledTimes(2);
+    await store.refreshIfStale();
+    expect(api.stats).toHaveBeenCalledTimes(2);
+  });
 });

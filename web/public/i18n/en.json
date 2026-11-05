@@ -18,11 +18,20 @@
     "verification": "Writer verification",
     "moderation": "Moderation",
     "admin": "Admin console",
-    "verificationRequests": "Verification requests"
+    "verificationRequests": "Verification requests",
+    "me": "Me",
+    "myArticles": "My articles",
+    "myPaths": "My paths"
   },
   "topbar": {
     "streakLabel": "Reading streak",
-    "streakDays": "{{count}} days"
+    "streakDays": "{{count}} days",
+    "theme": {
+      "label": "Theme",
+      "toDark": "Switch to dark mode",
+      "toLight": "Switch to light mode",
+      "named": "Theme: {{action}}"
+    }
   },
   "common": {
     "close": "Close",
@@ -648,6 +657,48 @@
       "label": "Your learning path",
       "next": "Next:",
       "prompt": "Learn step by step with learning paths"
+    },
+    "rails": {
+      "start": "Your account",
+      "end": "Suggestions for you"
+    },
+    "profileCard": {
+      "fields": "Your fields"
+    },
+    "reading": {
+      "title": "Your reading",
+      "streak": "Current streak",
+      "articlesThisWeek": "Articles this week",
+      "minutesThisWeek": "Minutes this week"
+    },
+    "shortcuts": {
+      "title": "Shortcuts"
+    },
+    "guest": {
+      "title": "Read every day, learn a bit more",
+      "body": "Create an account to save articles, follow the writers you like and build a reading streak."
+    },
+    "suggestions": {
+      "title": "Add to your feed",
+      "seeAll": "See all suggestions"
+    },
+    "suggestedPath": {
+      "title": "Suggested path",
+      "start": "Start"
+    },
+    "footer": {
+      "label": "About ReadIn",
+      "about": "About",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "help": "Help & contact"
+    },
+    "startPost": {
+      "label": "Start a post",
+      "prompt": "Start a post…",
+      "photo": "Photo",
+      "pdf": "PDF",
+      "article": "Article"
     }
   },
   "feedCard": {
@@ -2407,5 +2458,8 @@
       "badgeRemoved": "{{name}} isn't verified anymore",
       "badgeGone": "They don't have the Verified badge anymore."
     }
+  },
+  "me": {
+    "viewProfile": "View profile"
   }
 }

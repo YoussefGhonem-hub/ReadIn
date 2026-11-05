@@ -35,13 +35,17 @@ import { PostCard } from '../feed/post-card';
 import { StreakStore } from '../reading/streak.store';
 import { ContinueReadingCard } from './continue-reading-card';
 import { FollowingFeed } from './following-feed';
+import { HomeColumns } from './home-columns';
 import { HomeStore } from './home.store';
 import { LearningPathCard } from './learning-path-card';
+import { StartPostCard } from './start-post-card';
 
 type FeedTab = 'forYou' | 'following';
 
 /**
- * Home — "النهارده" (F03): today's article and the feeds as post cards (F34), in one centered column up to 640 px.
+ * Home — "النهارده" (F03): today's article and the feeds as post cards (F34), in the middle of three columns from `lg`
+ * (home-columns.ts: your profile, reading and shortcuts | the feed | suggestions, a path and the footer links), and in
+ * one centered column below it. Signed in, "Start a post" comes before today's article.
  * The page stays alive while you read (app.routes.ts `keepOnBack`), so Back finds it as you left it.
  */
 @Component({
@@ -58,11 +62,14 @@ type FeedTab = 'forYou' | 'following';
     FollowingFeed,
     ContinueReadingCard,
     LearningPathCard,
+    HomeColumns,
+    StartPostCard,
   ],
   providers: [HomeStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[640px] px-4 pt-5 lg:pt-8' },
+  host: { class: 'block' },
   template: `
+    <rd-home-columns>
     <header class="mb-5 flex items-center justify-between gap-3">
       <div>
         <h1 class="m-0 text-xl font-bold" dir="auto">
@@ -74,10 +81,14 @@ type FeedTab = 'forYou' | 'following';
         </h1>
         <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'home.sub' | transloco }}</p>
       </div>
+      <!-- From lg the streak is in the start column's reading card. -->
       @if (session.isAuthenticated()) {
         <rd-streak-badge class="lg:hidden" [streak]="streaks.streak()" />
       }
     </header>
+
+    <!-- Start a post (signed in, with articles.create) -->
+    <rd-start-post-card class="mb-5" />
 
     <!-- Today's article -->
     @switch (store.todayStatus()) {
@@ -188,6 +199,7 @@ type FeedTab = 'forYou' | 'following';
         <div #sentinel class="h-px" aria-hidden="true"></div>
       </section>
     }
+    </rd-home-columns>
   `,
 })
 export class HomePage {

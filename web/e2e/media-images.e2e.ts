@@ -89,7 +89,7 @@ for (const variant of VARIANTS) {
     // Home from the top bar (the reader's Back would return to the editor the article was published from). The post
     // card says how long ago the article was published: a fixed clock keeps the shot stable.
     await page.clock.setFixedTime(new Date('2026-11-04T09:00:00Z'));
-    await page.locator('rd-top-bar a[href="/"]').click();
+    await page.locator('rd-top-bar [data-home-mark]').click();
     await page.waitForURL((url) => url.pathname === '/');
     const feedCard = page.locator('rd-post-card').filter({ has: page.locator('[data-attachments="images"]') });
     await expect(feedCard.locator('[data-counter]')).toHaveText('1 / 3');

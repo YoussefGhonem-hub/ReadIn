@@ -1,7 +1,10 @@
-import { Injectable, PendingTasks, computed, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { Injectable, PendingTasks, computed, effect, inject, signal, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
+import { firstValueFrom, map } from 'rxjs';
 import { FieldRefDto, PathCardDto } from '../../core/api/models';
 import { PathsApi } from '../../core/api/paths.api';
+import { SessionStore } from '../../core/auth/session.store';
 
 export type PathsTab = 'all' | 'mine';
 export type PathsStatus = 'idle' | 'loading' | 'loaded' | 'error';
@@ -46,6 +49,17 @@ export class PathsStore {
     const items = this.current().items;
     return slug ? items.filter((p) => p.field.slug === slug) : items;
   });
+
+  constructor() {
+    // `/paths?tab=mine` (the top bar's Me menu → "My paths") opens My paths once you are signed in.
+    const route = inject(ActivatedRoute, { optional: true });
+    if (!route) return;
+    const session = inject(SessionStore);
+    const wantsMine = toSignal(route.queryParamMap.pipe(map((params) => params.get('tab') === 'mine')), { initialValue: false });
+    effect(() => {
+      if (wantsMine() && session.isAuthenticated()) untracked(() => this.setTab('mine'));
+    });
+  }
 
   loadAll(): Promise<void> {
     return this.load('all', () => this.api.list());

@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { Title } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 import { testPathCard, testProgress } from '../../../testing/paths-testing';
 import { TEST_API, flushMicrotasks, setupSocialTesting } from '../../../testing/social-testing';
 import { PathCardDto } from '../../core/api/models';
@@ -22,9 +23,10 @@ describe('PathsPage (F09)', () => {
 
   afterEach(() => http?.verify());
 
-  async function render(options: { guest?: boolean; all?: PathCardDto[] } = {}) {
+  async function render(options: { guest?: boolean; all?: PathCardDto[]; url?: string } = {}) {
     TestBed.resetTestingModule();
     ({ http } = setupSocialTesting({ guest: options.guest }));
+    if (options.url) await TestBed.inject(Router).navigateByUrl(options.url);
     const fixture = TestBed.createComponent(PathsPage);
     fixture.detectChanges();
     http.expectOne(`${TEST_API}/paths`).flush(options.all ?? ALL);
@@ -115,6 +117,19 @@ describe('PathsPage (F09)', () => {
     await stable();
     expect(TestBed.inject(AuthPromptService).isOpen()).toBe(true);
     expect(root.querySelector('[data-paths-tab="all"]')!.getAttribute('aria-selected')).toBe('true');
+    http.expectNone(`${TEST_API}/me/paths`);
+  });
+
+  it('/paths?tab=mine (the top bar’s Me menu) opens My paths once signed in; a guest stays on All paths', async () => {
+    const { root, stable, cards } = await render({ url: '/?tab=mine' });
+    http.expectOne(`${TEST_API}/me/paths`).flush([ALL[0]]);
+    await stable();
+    expect(root.querySelector('[data-paths-tab="mine"]')!.getAttribute('aria-selected')).toBe('true');
+    expect(cards()).toEqual(['aspnet-core-basics']);
+
+    const guest = await render({ guest: true, url: '/?tab=mine' });
+    expect(guest.root.querySelector('[data-paths-tab="all"]')!.getAttribute('aria-selected')).toBe('true');
+    expect(guest.cards()).toHaveLength(3);
     http.expectNone(`${TEST_API}/me/paths`);
   });
 

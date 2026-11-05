@@ -23,7 +23,7 @@ import { FollowStore } from '../../core/social/follow.store';
         [attr.aria-pressed]="following()"
         (click)="toggle()"
       >
-        <svg [lucideIcon]="following() ? 'UserCheck' : compact() ? 'Plus' : 'UserPlus'" [size]="16" aria-hidden="true"></svg>
+        <svg [lucideIcon]="icon()" [size]="16" aria-hidden="true"></svg>
         {{ (following() ? 'article.following' : 'article.follow') | transloco }}
         <span class="sr-only">{{ user().displayName }}</span>
       </button>
@@ -40,11 +40,22 @@ export class FollowButton {
   readonly initial = input(false);
   /** A text button in the primary color ("+ متابعة"), for the post card's header (F34). */
   readonly compact = input(false);
+  /** An outlined pill ("+ متابعة", then "✓ بتتابعه"), for Home's suggestions card. */
+  readonly pill = input(false);
 
   protected readonly isSelf = computed(() => this.session.isAuthenticated() && this.session.me()?.id === this.user().id);
   protected readonly following = computed(() => this.session.isAuthenticated() && this.follows.isFollowing(this.user().id, this.initial()));
 
+  protected readonly icon = computed(() => {
+    if (this.following()) return this.pill() ? 'Check' : 'UserCheck';
+    return this.compact() || this.pill() ? 'Plus' : 'UserPlus';
+  });
+
   protected readonly classes = computed(() => {
+    if (this.pill()) {
+      const base = 'inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1 rounded-chip border px-4 text-sm font-semibold transition-colors ';
+      return base + (this.following() ? 'border-transparent bg-primary-container text-on-primary-container' : 'border-text-secondary bg-transparent text-text-secondary hover:border-text-primary hover:bg-surface-variant hover:text-text-primary');
+    }
     if (this.compact()) {
       return 'inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md px-2 text-sm font-semibold text-primary hover:bg-primary-container';
     }

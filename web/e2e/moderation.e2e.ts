@@ -116,7 +116,14 @@ for (const variant of VARIANTS) {
     const cases = queue.locator('[data-case]');
     await expect(cases).toHaveCount(4, { timeout: FIRST_RENDER_MS });
     await expect(cases).toHaveText([/sleep/, /cheap-courses/, /Dina Fawzy/, /streak/]);
-    if (testInfo.project.name === 'desktop') await expect(page.locator('rd-side-nav [data-moderation-badge]')).toHaveText('4');
+    if (testInfo.project.name === 'desktop') {
+      // The top bar's Me button has a dot; its menu has the count.
+      await expect(page.locator('[data-me-trigger="stacked"] [data-me-attention]')).toBeVisible();
+      await page.locator('[data-me-trigger="stacked"]').click();
+      await expect(page.locator('[data-me-menu] [data-moderation-badge]')).toHaveText('4');
+      await page.keyboard.press('Escape');
+      await expect(page.locator('[data-me-menu]')).toHaveCount(0);
+    }
     await expect(page.locator('[data-type-chip="article"]')).toContainText('2');
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page.locator('rd-moderation-queue-page')).toHaveScreenshot(`moderation-queue-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
@@ -170,7 +177,7 @@ for (const variant of VARIANTS) {
     // Nothing open any more; the closed tabs and the log have them.
     await page.locator('[data-case-back]').click();
     await expect(page.locator('[data-queue-empty]')).toBeVisible();
-    if (testInfo.project.name === 'desktop') await expect(page.locator('rd-side-nav [data-moderation-badge]')).toHaveCount(0);
+    if (testInfo.project.name === 'desktop') await expect(page.locator('[data-me-trigger="stacked"] [data-me-attention]')).toHaveCount(0);
     await page.locator('[data-moderation-tab="resolved"]').click();
     await expect(page).toHaveURL(/status=resolved/);
     await expect(cases).toHaveCount(4);

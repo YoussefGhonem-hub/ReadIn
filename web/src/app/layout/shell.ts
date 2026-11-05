@@ -4,16 +4,16 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { filter, map, startWith } from 'rxjs';
 import { BottomNav } from './bottom-nav';
-import { SideNav } from './side-nav';
 import { TopBar } from './top-bar';
 
 /**
- * App shell: top bar, side nav (desktop), bottom nav (narrow screens). Routes can set `data.hideBottomNav`, and
- * `data.hideHeaderSearch` (the search page has its own box).
+ * App shell: the top bar (the destinations, theme toggle and Me menu from `md`) and the bottom nav below `md`. Each page
+ * sets its own max width and centers itself. Routes can set `data.hideBottomNav`, and `data.hideHeaderSearch` (the
+ * search page has its own box).
  */
 @Component({
   selector: 'rd-shell',
-  imports: [RouterOutlet, TranslocoPipe, TopBar, SideNav, BottomNav],
+  imports: [RouterOutlet, TranslocoPipe, TopBar, BottomNav],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a
@@ -22,14 +22,11 @@ import { TopBar } from './top-bar';
       >{{ 'nav.skipToContent' | transloco }}</a
     >
     <rd-top-bar [searchBox]="!routeData().hideHeaderSearch" />
-    <div class="mx-auto flex max-w-[1200px] gap-6 lg:px-6">
-      <rd-side-nav class="sticky top-16 hidden h-[calc(100dvh-4rem)] w-[232px] shrink-0 overflow-y-auto lg:block" />
-      <main id="main" class="min-w-0 flex-1 pb-28 lg:pb-12" tabindex="-1">
-        <router-outlet />
-      </main>
-    </div>
+    <main id="main" class="block min-w-0 pb-28 md:pb-12" tabindex="-1">
+      <router-outlet />
+    </main>
     @if (!routeData().hideBottomNav) {
-      <rd-bottom-nav class="lg:hidden" />
+      <rd-bottom-nav class="md:hidden" />
     }
   `,
 })

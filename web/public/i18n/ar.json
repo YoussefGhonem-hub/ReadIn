@@ -18,11 +18,20 @@
     "verification": "توثيق الكاتب",
     "moderation": "الإشراف",
     "admin": "لوحة التحكم",
-    "verificationRequests": "طلبات التوثيق"
+    "verificationRequests": "طلبات التوثيق",
+    "me": "أنا",
+    "myArticles": "مقالاتي",
+    "myPaths": "مساراتي"
   },
   "topbar": {
     "streakLabel": "سلسلة القراءة",
-    "streakDays": "{{count}} يوم"
+    "streakDays": "{{count}} يوم",
+    "theme": {
+      "label": "المظهر",
+      "toDark": "حوّل للوضع الداكن",
+      "toLight": "حوّل للوضع الفاتح",
+      "named": "المظهر: {{action}}"
+    }
   },
   "common": {
     "close": "إغلاق",
@@ -651,6 +660,48 @@
       "label": "مسارك",
       "next": "التالي:",
       "prompt": "اتعلم خطوة بخطوة مع المسارات"
+    },
+    "rails": {
+      "start": "حسابك",
+      "end": "اقتراحات ليك"
+    },
+    "profileCard": {
+      "fields": "مجالات خبرتك"
+    },
+    "reading": {
+      "title": "قرايتك",
+      "streak": "السلسلة الحالية",
+      "articlesThisWeek": "مقالات الأسبوع ده",
+      "minutesThisWeek": "دقايق القراية"
+    },
+    "shortcuts": {
+      "title": "اختصارات"
+    },
+    "guest": {
+      "title": "اقرا كل يوم واتعلم أكتر",
+      "body": "اعمل حساب علشان تحفظ المقالات، تتابع الكتّاب اللي بتحبهم، وتبني سلسلة قراية."
+    },
+    "suggestions": {
+      "title": "أضف لفيدك",
+      "seeAll": "شوف كل الاقتراحات"
+    },
+    "suggestedPath": {
+      "title": "مسار مقترح",
+      "start": "ابدأ"
+    },
+    "footer": {
+      "label": "عن ReadIn",
+      "about": "عن ReadIn",
+      "privacy": "الخصوصية",
+      "terms": "الشروط",
+      "help": "المساعدة والتواصل"
+    },
+    "startPost": {
+      "label": "ابدأ مقال جديد",
+      "prompt": "ابدأ مقال جديد…",
+      "photo": "صورة",
+      "pdf": "PDF",
+      "article": "مقال"
     }
   },
   "feedCard": {
@@ -2525,5 +2576,8 @@
       "badgeRemoved": "{{name}} مبقاش موثّق",
       "badgeGone": "مبقاش معاه علامة التوثيق."
     }
+  },
+  "me": {
+    "viewProfile": "عرض البروفايل"
   }
 }

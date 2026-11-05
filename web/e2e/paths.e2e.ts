@@ -1,5 +1,5 @@
 import { Page, expect, test } from '@playwright/test';
-import { HIDE_APP_CHROME, HIDE_COMMENTS, VARIANTS, hasScreenshot, imagesLoaded, parkMouse, useVariant } from './support/mock-api';
+import { HIDE_APP_CHROME, HIDE_COMMENTS, HIDE_HOME_RAILS, VARIANTS, hasScreenshot, imagesLoaded, parkMouse, useVariant } from './support/mock-api';
 import { expectSignInPrompt, signInAsReader } from './support/social';
 
 /**
@@ -171,12 +171,13 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-home-path-prompt]')).toHaveCount(0);
     await page.waitForLoadState('networkidle');
     await parkMouse(page);
-    // The two cards (the greeting's 🔥 badge loads on its own schedule, so it stays out of the shot).
+    // The two cards (the greeting's 🔥 badge loads on its own schedule, so it stays out of the shot; so do Home's side
+    // columns, whose suggestions and stats follow what other tests did).
     const top = (await resume.boundingBox())!;
     const bottom = (await path.boundingBox())!;
     if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`home-signed-in-${suffix}.png`, {
       clip: { x: 0, y: top.y - 16, width: page.viewportSize()!.width, height: bottom.y + bottom.height + 32 - top.y },
-      stylePath: HIDE_APP_CHROME,
+      stylePath: [HIDE_APP_CHROME, HIDE_HOME_RAILS],
     });
 
     // The card opens the path; Home again (fresh cards), and the next article opens the reader.

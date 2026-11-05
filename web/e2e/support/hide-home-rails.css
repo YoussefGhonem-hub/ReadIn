@@ -1,0 +1,4 @@
+/* Shots of Home's middle column: the side columns (their data changes as other tests follow, read and enroll) stay out. */
+rd-home-columns aside {
+  visibility: hidden !important;
+}
