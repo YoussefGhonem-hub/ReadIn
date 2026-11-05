@@ -28,6 +28,7 @@ import { injectNewArticles } from '../../core/realtime/live-signals';
 import { MUTE_SCOPE, MuteStore } from '../../core/social/mute.store';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { PostCardSkeleton } from '../../shared/ui/skeletons';
+import { ScrollRow } from '../../shared/ui/scroll-row';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { StreakBadge } from '../../shared/ui/streak-badge';
 import { PostCard } from '../feed/post-card';
@@ -47,6 +48,7 @@ type FeedTab = 'forYou' | 'following';
   selector: 'rd-home-page',
   imports: [
     TranslocoPipe,
+    ScrollRow,
     BdiText,
     PostCard,
     PostCardSkeleton,
@@ -97,7 +99,7 @@ type FeedTab = 'forYou' | 'following';
 
     <!-- Field chips (they filter For you; the Following feed has no field filter) -->
     @if (activeTab() === 'forYou') {
-      <div class="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1" role="toolbar" [attr.aria-label]="'home.filterByField' | transloco">
+      <rd-scroll-row class="mb-3" [label]="'home.filterByField' | transloco">
         <button type="button" class="rd-chip" [attr.aria-pressed]="store.selectedField() === null" (click)="store.selectField(null)">
           {{ 'home.allFields' | transloco }}
         </button>
@@ -111,7 +113,7 @@ type FeedTab = 'forYou' | 'following';
             <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
           </button>
         }
-      </div>
+      </rd-scroll-row>
     }
 
     <!-- Tabs -->

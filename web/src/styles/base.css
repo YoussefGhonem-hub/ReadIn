@@ -197,6 +197,10 @@
     font-size: var(--rd-text-meta-size);
     white-space: nowrap;
     cursor: pointer;
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease;
   }
 
   .rd-chip[aria-pressed='true'],
@@ -205,6 +209,82 @@
     border-color: var(--rd-color-primary);
     color: var(--rd-color-on-primary);
     font-weight: var(--rd-font-weight-semibold, 600);
+  }
+
+  .rd-chip:not([aria-pressed='true'], .is-active):hover {
+    border-color: var(--rd-color-primary);
+    color: var(--rd-color-text-primary);
+  }
+
+  /* A sideways-scrolling row of chips (rd-scroll-row): no scrollbar, the edges fade where more chips are hidden. */
+  .rd-scroll-row {
+    --rd-scroll-fade-start: 0px;
+    --rd-scroll-fade-end: 0px;
+    scrollbar-width: none;
+  }
+
+  .rd-scroll-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* The fade is fully clear for its first third, where the arrow sits, then eases the chips in. */
+  .rd-scroll-row-fade-start {
+    --rd-scroll-fade-start: 88px;
+  }
+
+  .rd-scroll-row-fade-end {
+    --rd-scroll-fade-end: 88px;
+  }
+
+  .rd-scroll-row:is(.rd-scroll-row-fade-start, .rd-scroll-row-fade-end) {
+    --rd-scroll-fade: linear-gradient(
+      var(--rd-scroll-fade-direction, to right),
+      transparent 0,
+      transparent calc(var(--rd-scroll-fade-start) * 0.35),
+      #000 var(--rd-scroll-fade-start),
+      #000 calc(100% - var(--rd-scroll-fade-end)),
+      transparent calc(100% - var(--rd-scroll-fade-end) * 0.35),
+      transparent 100%
+    );
+    mask-image: var(--rd-scroll-fade);
+  }
+
+  [dir='rtl'] .rd-scroll-row {
+    --rd-scroll-fade-direction: to left;
+  }
+
+  /* Its arrows: only where there is a mouse (touch users swipe), floating over the faded edge. */
+  .rd-scroll-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+    display: none;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9999px;
+    border: 1px solid var(--rd-color-border);
+    background: var(--rd-color-surface-raised);
+    color: var(--rd-color-text-primary);
+    box-shadow: var(--rd-elevation-card);
+    transform: translateY(-50%);
+    cursor: pointer;
+    transition:
+      color 150ms ease,
+      border-color 150ms ease,
+      transform 150ms ease;
+  }
+
+  .rd-scroll-arrow:hover {
+    border-color: var(--rd-color-primary);
+    color: var(--rd-color-primary);
+    transform: translateY(-50%) scale(1.06);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-scroll-arrow {
+      display: grid;
+    }
   }
 
   .rd-input {

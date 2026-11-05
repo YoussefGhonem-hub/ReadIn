@@ -11,6 +11,7 @@ import { PluralPipe, RelativeTimePipe } from '../../shared/pipes/format.pipes';
 import { CollectionNameSheet, CollectionPickerSheet, DeleteCollectionSheet } from '../../shared/social/collection-sheets';
 import { ArticleCard } from '../../shared/ui/article-card';
 import { ArticleCardSkeleton } from '../../shared/ui/skeletons';
+import { ScrollRow } from '../../shared/ui/scroll-row';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { SavedStore } from './saved.store';
@@ -27,6 +28,7 @@ export const SEARCH_DEBOUNCE_MS = 300;
   imports: [
     RouterLink,
     TranslocoPipe,
+    ScrollRow,
     LucideDynamicIcon,
     BdiText,
     PluralPipe,
@@ -69,7 +71,7 @@ export const SEARCH_DEBOUNCE_MS = 300;
 
     <!-- Collections -->
     <h2 class="m-0 mb-2 text-sm font-semibold">{{ 'saved.collections' | transloco }}</h2>
-    <div class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="toolbar" [attr.aria-label]="'saved.collections' | transloco" data-collection-chips>
+    <rd-scroll-row [label]="'saved.collections' | transloco" data-collection-chips>
       <button type="button" class="rd-chip" [attr.aria-pressed]="!store.collection()" (click)="store.setCollection(null)">
         {{ 'saved.allSaved' | transloco }}
       </button>
@@ -85,7 +87,7 @@ export const SEARCH_DEBOUNCE_MS = 300;
         <svg lucideIcon="Plus" [size]="14" aria-hidden="true"></svg>
         {{ 'collections.new' | transloco }}
       </button>
-    </div>
+    </rd-scroll-row>
 
     @if (selectedCollection(); as c) {
       <div class="rd-card mt-3 flex items-center gap-2 p-2 ps-3 shadow-none" data-collection-header>
@@ -104,14 +106,14 @@ export const SEARCH_DEBOUNCE_MS = 300;
     }
 
     <!-- Fields -->
-    <div class="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1" role="toolbar" [attr.aria-label]="'saved.filterByField' | transloco" data-field-chips>
+    <rd-scroll-row class="mt-3" [label]="'saved.filterByField' | transloco" data-field-chips>
       <button type="button" class="rd-chip" [attr.aria-pressed]="!store.field()" (click)="store.setField(null)">{{ 'saved.allFields' | transloco }}</button>
       @for (field of store.fields(); track field.id) {
         <button type="button" class="rd-chip" [attr.aria-pressed]="store.field() === field.slug" [attr.data-field-chip]="field.slug" (click)="store.setField(field.slug)">
           <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
         </button>
       }
-    </div>
+    </rd-scroll-row>
 
     <section class="mt-2" [attr.aria-label]="'saved.title' | transloco" aria-live="polite" data-saved-list>
       @switch (store.status()) {

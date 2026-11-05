@@ -4,6 +4,7 @@ import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
+import { ScrollRow } from '../../shared/ui/scroll-row';
 import { PathCard, PathCardSkeleton } from './path-card';
 import { PathSeoService } from './path-seo.service';
 import { PathsStore, PathsTab } from './paths.store';
@@ -15,7 +16,7 @@ import { reloadOnSessionChange } from './session-change';
  */
 @Component({
   selector: 'rd-paths-page',
-  imports: [TranslocoPipe, BdiText, EmptyState, ErrorState, PathCard, PathCardSkeleton],
+  imports: [TranslocoPipe, BdiText, EmptyState, ErrorState, PathCard, PathCardSkeleton, ScrollRow],
   providers: [PathsStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[720px] px-4 pt-5 lg:pt-8' },
@@ -46,7 +47,7 @@ import { reloadOnSessionChange } from './session-change';
     </div>
 
     @if (store.fields().length > 1) {
-      <div class="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1" role="toolbar" [attr.aria-label]="'paths.filterByField' | transloco" data-path-field-chips>
+      <rd-scroll-row class="mb-2" [label]="'paths.filterByField' | transloco" data-path-field-chips>
         <button type="button" class="rd-chip" [attr.aria-pressed]="!store.selectedField()" (click)="store.setField(null)">{{ 'paths.allFields' | transloco }}</button>
         @for (field of store.fields(); track field.id) {
           <button
@@ -59,7 +60,7 @@ import { reloadOnSessionChange } from './session-change';
             <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
           </button>
         }
-      </div>
+      </rd-scroll-row>
     }
 
     <section id="paths-panel" role="tabpanel" [attr.aria-labelledby]="'paths-tab-' + store.tab()" aria-live="polite" data-paths-list>
