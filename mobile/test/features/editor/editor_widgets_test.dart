@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:readin/core/bidi/bidi.dart';
 import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/errors/result.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
@@ -129,6 +130,219 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('settings-add-translation')));
       await tester.pump();
       expect(cubit.state.document.languages, ['ar-EG', 'en']);
+      await cubit.close();
+    });
+  });
+
+  group('tag field (F32)', () {
+    late ArticleEditorCubit cubit;
+    late MockTagSuggestionsCubit suggestions;
+    late List<String> searched;
+    late AppLocalizations l10n;
+
+    setUpAll(() async => l10n = await AppLocalizations.delegate.load(AppLocales.en));
+
+    Future<void> pumpField(
+      WidgetTester tester, {
+      List<ArticleTag> suggested = const [],
+      List<String> tags = const [],
+      ArticleEdit Function(String id)? edit,
+      Result<ArticleEdit>? createResult,
+      Variant variant = _en,
+    }) async {
+      usePhoneSurface(tester, size: const Size(390, 2400));
+      final repo = FakeArticleEditorRepository();
+      if (edit != null) repo.onGet = (id) => Ok(edit(id));
+      if (createResult != null) repo.onCreate = (_) => createResult;
+      final taxonomy = FakeTaxonomyRepository();
+      cubit = ArticleEditorCubit(
+        CreateArticle(repo),
+        GetArticleForEdit(repo),
+        SaveDraft(repo),
+        DiscardChanges(repo),
+        PublishArticle(repo),
+        RestoreRevision(repo),
+        DeleteArticle(repo),
+        GetFields(taxonomy),
+        GetTopics(taxonomy),
+        UploadImage(FakeMediaRepository()),
+        InMemoryEditorBackupStore(),
+      );
+      await cubit.open(articleId: edit == null ? null : 'art-1', language: 'ar-EG');
+      for (final tag in tags) {
+        cubit.addTag(tag, existing: true);
+      }
+      searched = [];
+      suggestions = MockTagSuggestionsCubit();
+      whenListen(suggestions, const Stream<List<ArticleTag>>.empty(), initialState: suggested);
+      when(() => suggestions.search(any())).thenAnswer((i) => searched.add(i.positionalArguments.first as String));
+      final attachments = MockAttachmentsCubit();
+      whenListen(attachments, const Stream<AttachmentsState>.empty(), initialState: const AttachmentsState());
+      await tester.pumpWidget(testApp(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ArticleEditorCubit>.value(value: cubit),
+            BlocProvider<TagSuggestionsCubit>.value(value: suggestions),
+            BlocProvider<AttachmentsCubit>.value(value: attachments),
+          ],
+          child: const Scaffold(body: ArticleSettingsPanel()),
+        ),
+        variant: variant,
+      ));
+      await tester.pump();
+    }
+
+    final input = find.byKey(const ValueKey('settings-tag-input'));
+    final create = find.byKey(const ValueKey('tag-create'));
+
+    Future<void> type(WidgetTester tester, String text) async {
+      await tester.enterText(input, text);
+      await tester.pump();
+    }
+
+    Future<void> enter(WidgetTester tester) async {
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+    }
+
+    testWidgets('typing asks for suggestions; a picked one is added as it is, even an older name', (tester) async {
+      await pumpField(tester, suggested: const [
+        ArticleTag(slug: 'ef-core', name: 'EF Core', articleCount: 24),
+        ArticleTag(slug: 'ci-cd', name: 'CI/CD', articleCount: 3),
+      ]);
+      await type(tester, '#e');
+      expect(searched.last, '#e', reason: 'what was typed; the cubit cleans it');
+      expect(find.text('EF Core'), findsOneWidget);
+      expect(find.text(l10n.tagPageArticleCount(24)), findsOneWidget);
+      expect(create, findsNothing, reason: 'one letter is too short for a new tag');
+
+      await tester.tap(find.byKey(const ValueKey('tag-suggestion-ci-cd')));
+      await tester.pump();
+      expect(cubit.state.document.tags, ['CI/CD']);
+      expect(find.byKey(const ValueKey('tag-suggestion-ci-cd')), findsNothing, reason: 'a chosen tag is no longer suggested');
+      expect(find.text('#CI/CD'), findsOneWidget);
+      expect(tester.widget<TextField>(find.descendant(of: input, matching: find.byType(TextField))).controller!.text, isEmpty);
+      await cubit.close();
+    });
+
+    testWidgets('a new name offers "Create new tag"; the typed spelling of an existing tag becomes that tag', (tester) async {
+      await pumpField(tester, suggested: const [ArticleTag(slug: 'ai', name: 'AI', articleCount: 40)]);
+      await type(tester, 'AI agents');
+      expect(find.text(l10n.tagCreate('${Bidi.fsi}AI agents${Bidi.pdi}')), findsOneWidget);
+      await tester.tap(create);
+      await tester.pump();
+      expect(cubit.state.document.tags, ['AI agents']);
+
+      await type(tester, '#ai');
+      expect(create, findsNothing, reason: '"ai" is the tag AI');
+      await enter(tester);
+      expect(cubit.state.document.tags, ['AI agents', 'AI'], reason: 'the first spelling is kept');
+      await cubit.close();
+    });
+
+    testWidgets('the rules show inline: characters at once, length on Enter, repeats ignored', (tester) async {
+      await pumpField(tester, tags: const ['dotnet']);
+      await type(tester, 'CI/CD');
+      expect(find.text(l10n.tagInvalidCharacters), findsOneWidget);
+      expect(create, findsNothing);
+      await enter(tester);
+      expect(cubit.state.document.tags, ['dotnet']);
+
+      await type(tester, 'x');
+      expect(find.text(l10n.tagTooShort), findsNothing, reason: 'it may still grow');
+      await enter(tester);
+      expect(find.text(l10n.tagTooShort), findsOneWidget);
+      await type(tester, 'x' * 31);
+      expect(find.text(l10n.tagTooLong), findsOneWidget);
+
+      await type(tester, '++');
+      expect(find.text(l10n.tagNoLetter), findsNothing, reason: 'a letter may still come');
+      expect(find.text(l10n.tagInvalidCharacters), findsNothing, reason: 'every character is allowed');
+      await enter(tester);
+      expect(find.text(l10n.tagNoLetter), findsOneWidget);
+      expect(cubit.state.document.tags, ['dotnet']);
+
+      await type(tester, 'DotNet');
+      await enter(tester);
+      expect(find.text(l10n.tagAlreadyAdded), findsOneWidget);
+      expect(cubit.state.document.tags, ['dotnet']);
+      await cubit.close();
+    });
+
+    testWidgets('a comma (or "،") adds a tag; pasted names are added one by one', (tester) async {
+      await pumpField(tester);
+      await type(tester, 'C#,');
+      expect(cubit.state.document.tags, ['C#']);
+      await type(tester, '.NET، C++, EF');
+      expect(cubit.state.document.tags, ['C#', '.NET', 'C++']);
+      expect(tester.widget<TextField>(find.descendant(of: input, matching: find.byType(TextField))).controller!.text, ' EF');
+      await tester.tap(find.byKey(const ValueKey('settings-tag-add')));
+      await tester.pump();
+      expect(cubit.state.document.tags, ['C#', '.NET', 'C++', 'EF']);
+      await cubit.close();
+    });
+
+    testWidgets('a repeat in a pasted list is skipped, and the names after it are still added', (tester) async {
+      await pumpField(tester, tags: const ['dotnet']);
+      await type(tester, 'Flutter, flutter، DotNet, Dart, Go');
+      expect(cubit.state.document.tags, ['dotnet', 'Flutter', 'Dart']);
+      expect(tester.widget<TextField>(find.descendant(of: input, matching: find.byType(TextField))).controller!.text, ' Go');
+      expect(find.text(l10n.tagAlreadyAdded), findsNothing);
+
+      // The first name that breaks a rule still stops there, with its message.
+      await type(tester, 'Rust, CI/CD, Zig,');
+      expect(cubit.state.document.tags, ['dotnet', 'Flutter', 'Dart', 'Rust']);
+      expect(tester.widget<TextField>(find.descendant(of: input, matching: find.byType(TextField))).controller!.text, 'CI/CD');
+      expect(find.text(l10n.tagInvalidCharacters), findsOneWidget);
+      await cubit.close();
+    });
+
+    testWidgets('at 5 tags the field is disabled with a hint; removing one enables it again', (tester) async {
+      await pumpField(tester, tags: const ['a1', 'b2', 'c3', 'd4', 'e5']);
+      expect(tester.widget<TextField>(find.descendant(of: input, matching: find.byType(TextField))).enabled, isFalse);
+      expect(find.text(l10n.tagsFull), findsOneWidget);
+      expect(find.text(l10n.tagsLimit(5)), findsOneWidget);
+      await tester.tap(find.byTooltip(l10n.removeTag('c3')));
+      await tester.pump();
+      expect(tester.widget<TextField>(find.descendant(of: input, matching: find.byType(TextField))).enabled, isTrue);
+      expect(find.text(l10n.tagsFull), findsNothing);
+      await cubit.close();
+    });
+
+    testWidgets("the API's hidden tag and daily limit mark their chips, with a message", (tester) async {
+      await pumpField(
+        tester,
+        edit: (id) => sampleEdit(
+          id: id,
+          document: sampleEdit().document.copyWith(tags: const ['Old', 'dotnet']),
+          checks: const DraftChecks(problems: [DraftProblem(DraftProblemCodes.tagHidden, tag: 'Old')]),
+        ),
+      );
+      expect(find.text(l10n.problemTagHidden('${Bidi.fsi}#Old${Bidi.pdi}')), findsOneWidget);
+      final chip = tester.widget<InputChip>(find.descendant(of: find.byKey(const ValueKey('tag-Old')), matching: find.byType(InputChip)));
+      expect(chip.avatar, isNotNull);
+      await tester.tap(find.byTooltip(l10n.removeTag('Old')));
+      await tester.pump();
+      expect(find.text(l10n.problemTagHidden('${Bidi.fsi}#Old${Bidi.pdi}')), findsNothing);
+      await cubit.close();
+    });
+
+    testWidgets('a save the API refused for its tags says why under the field', (tester) async {
+      await pumpField(
+        tester,
+        tags: const ['dotnet'],
+        createResult: const Err(Failure(
+          FailureCodes.validationFailed,
+          statusCode: 400,
+          fieldErrors: {
+            'document.tags[0]': [FailureCodes.tagInvalid],
+          },
+        )),
+      );
+      await cubit.save();
+      await tester.pump();
+      expect(cubit.state.saveStatus, SaveStatus.failed);
+      expect(find.text(l10n.errTagInvalid), findsOneWidget);
       await cubit.close();
     });
   });

@@ -61,7 +61,8 @@ class PreviewData {
       availableLanguages: document.languages,
       content: RDocSanitizer.forSave(t.content),
       topic: topic == null ? null : FieldRef(id: topic!.id, slug: topic!.slug, nameAr: topic!.nameAr, nameEn: topic!.nameEn),
-      tags: document.tags,
+      // Shown like the reader's tags, but without links: a new name has no tag page before it's published (F32).
+      tags: [for (final name in document.tags) TagRef(slug: '', name: name)],
       sources: document.sources,
     );
   }

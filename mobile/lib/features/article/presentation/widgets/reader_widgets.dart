@@ -9,6 +9,7 @@ import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../../settings/domain/entities/app_settings.dart';
+import '../../../tags/presentation/widgets/tag_chip.dart';
 import '../../domain/entities/article.dart';
 
 /// Thin amber progress bar pinned to the top of the reader (mockup "reader-progress").
@@ -207,24 +208,14 @@ class HealthDisclaimer extends StatelessWidget {
   }
 }
 
-/// The article's tags (`#tag`), as plain chips under the content: they don't open anything (F04).
+/// The article's tags (`#tag`) under the content (F04); each opens its tag page (F32).
 class ArticleTags extends StatelessWidget {
   const ArticleTags({super.key, required this.tags});
 
-  final List<String> tags;
+  final List<TagRef> tags;
 
   @override
-  Widget build(BuildContext context) {
-    if (tags.isEmpty) return const SizedBox.shrink();
-    return Wrap(
-      spacing: ReadInSpace.s2,
-      runSpacing: ReadInSpace.s2,
-      children: [
-        // InfoTag isolates a tag written in the other direction with its "#": "#EF Core" stays as is in RTL.
-        for (final tag in tags) InfoTag(label: '#$tag', tone: InfoTagTone.neutral),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => tags.isEmpty ? const SizedBox.shrink() : TagChipsWrap(tags: tags);
 }
 
 /// Mandatory sources list at the end of technical articles (SPEC §20).

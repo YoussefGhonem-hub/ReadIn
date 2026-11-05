@@ -23,7 +23,20 @@ void main() {
         "You can't do that while the article is in this state.",
       ),
       FailureCodes.articleSlugTaken: ('الرابط ده مستخدم لمقال تاني.', 'That link is already used by another article.'),
-      FailureCodes.articleTagsMaxFive: ('أقصى حاجة 5 تاجز للمقال.', 'An article can have at most 5 tags.'),
+      // F32: "التاجات" everywhere; the old code keeps its message.
+      FailureCodes.articleTagsMaxFive: ('أقصى حاجة 5 تاجات للمقال.', 'An article can have at most 5 tags.'),
+      FailureCodes.articleTooManyTags: ('أقصى حاجة 5 تاجات للمقال.', 'An article can have at most 5 tags.'),
+      FailureCodes.tagNotFound: ('التاج ده مش موجود.', 'Tag not found.'),
+      // The symbols in an LTR isolate, so they keep their order in Arabic (SPEC §14).
+      FailureCodes.tagInvalid: (
+        'التاج لازم يكون من 2 لـ 30 حرف: حروف وأرقام ومسافات و \u2066- _ . + #\u2069 بس.',
+        'A tag has 2–30 characters: letters, digits, spaces and - _ . + # only.',
+      ),
+      FailureCodes.tagLimit: (
+        'عملت تاجات جديدة كتير النهارده. اختار من التاجات الموجودة، أو جرّب تاني بعدين.',
+        "You've created a lot of new tags today. Pick existing tags, or try again later.",
+      ),
+      FailureCodes.tagHidden: ('التاج ده مش متاح، اختار تاج تاني.', "This tag isn't available. Choose another one."),
       FailureCodes.articleLanguageInvalid: ('لغة المقال دي مش مدعومة.', "That article language isn't supported."),
       FailureCodes.articleContentLanguageMismatch: (
         'لغة المحتوى مش زي لغة المقال.',

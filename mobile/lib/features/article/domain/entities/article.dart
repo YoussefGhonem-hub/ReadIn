@@ -2,8 +2,10 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../media/domain/entities/media.dart';
+import '../../../tags/domain/entities/tag.dart';
 import 'reaction_counts.dart';
 
+export '../../../tags/domain/entities/tag.dart' show TagRef;
 export 'reaction_counts.dart';
 
 class Author extends Equatable {
@@ -115,8 +117,8 @@ class ArticleCard extends Equatable {
   /// The viewer follows the author (F12); false for guests, their own articles and a deleted author.
   final bool isFollowingAuthor;
 
-  /// At most [maxCardTags] tag names, in the article's order (F34).
-  final List<String> tags;
+  /// At most [maxCardTags] tags, in the article's order (F34); each opens its tag page (F32).
+  final List<TagRef> tags;
 
   /// All the article's tags (at most 5), for "+N".
   final int tagCount;
@@ -291,7 +293,9 @@ class ArticleDetails extends Equatable {
   final String? summary;
   final RDocDocument content;
   final FieldRef? topic;
-  final List<String> tags;
+
+  /// All the article's tags (at most 5), in the writer's order (F32).
+  final List<TagRef> tags;
   final List<ArticleSource> sources;
   final int readCount;
 

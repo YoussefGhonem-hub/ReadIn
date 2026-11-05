@@ -840,7 +840,7 @@ as int,
 /// @nodoc
 mixin _$ArticleCardModel {
 
- String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel? get author; int get readingTimeMinutes; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; int get saveCount; String? get myReaction; bool get isSaved; String? get excerpt; bool get hasMore; bool get isFollowingAuthor; List<String> get tags; int get tagCount;
+ String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel? get author; int get readingTimeMinutes; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; int get saveCount; String? get myReaction; bool get isSaved; String? get excerpt; bool get hasMore; bool get isFollowingAuthor;@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> get tags; int get tagCount;
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -873,7 +873,7 @@ abstract mixin class $ArticleCardModelCopyWith<$Res>  {
   factory $ArticleCardModelCopyWith(ArticleCardModel value, $Res Function(ArticleCardModel) _then) = _$ArticleCardModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved, String? excerpt, bool hasMore, bool isFollowingAuthor, List<String> tags, int tagCount
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved, String? excerpt, bool hasMore, bool isFollowingAuthor,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, int tagCount
 });
 
 
@@ -915,7 +915,7 @@ as bool,excerpt: freezed == excerpt ? _self.excerpt : excerpt // ignore: cast_nu
 as String?,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
 as bool,isFollowingAuthor: null == isFollowingAuthor ? _self.isFollowingAuthor : isFollowingAuthor // ignore: cast_nullable_to_non_nullable
 as bool,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,tagCount: null == tagCount ? _self.tagCount : tagCount // ignore: cast_nullable_to_non_nullable
+as List<TagRefModel>,tagCount: null == tagCount ? _self.tagCount : tagCount // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }
@@ -1046,7 +1046,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor,  List<String> tags,  int tagCount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  int tagCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ArticleCardModel() when $default != null:
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount);case _:
@@ -1067,7 +1067,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor,  List<String> tags,  int tagCount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  int tagCount)  $default,) {final _that = this;
 switch (_that) {
 case _ArticleCardModel():
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount);case _:
@@ -1087,7 +1087,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor,  List<String> tags,  int tagCount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  int tagCount)?  $default,) {final _that = this;
 switch (_that) {
 case _ArticleCardModel() when $default != null:
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount);case _:
@@ -1102,7 +1102,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 @JsonSerializable()
 
 class _ArticleCardModel extends ArticleCardModel {
-  const _ArticleCardModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.saveCount = 0, this.myReaction, this.isSaved = false, this.excerpt, this.hasMore = false, this.isFollowingAuthor = false, final  List<String> tags = const <String>[], this.tagCount = 0}): _tags = tags,super._();
+  const _ArticleCardModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.saveCount = 0, this.myReaction, this.isSaved = false, this.excerpt, this.hasMore = false, this.isFollowingAuthor = false, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) final  List<TagRefModel> tags = const <TagRefModel>[], this.tagCount = 0}): _tags = tags,super._();
   factory _ArticleCardModel.fromJson(Map<String, dynamic> json) => _$ArticleCardModelFromJson(json);
 
 @override final  String id;
@@ -1127,8 +1127,8 @@ class _ArticleCardModel extends ArticleCardModel {
 @override final  String? excerpt;
 @override@JsonKey() final  bool hasMore;
 @override@JsonKey() final  bool isFollowingAuthor;
- final  List<String> _tags;
-@override@JsonKey() List<String> get tags {
+ final  List<TagRefModel> _tags;
+@override@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> get tags {
   if (_tags is EqualUnmodifiableListView) return _tags;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_tags);
@@ -1169,7 +1169,7 @@ abstract mixin class _$ArticleCardModelCopyWith<$Res> implements $ArticleCardMod
   factory _$ArticleCardModelCopyWith(_ArticleCardModel value, $Res Function(_ArticleCardModel) _then) = __$ArticleCardModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved, String? excerpt, bool hasMore, bool isFollowingAuthor, List<String> tags, int tagCount
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved, String? excerpt, bool hasMore, bool isFollowingAuthor,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, int tagCount
 });
 
 
@@ -1211,7 +1211,7 @@ as bool,excerpt: freezed == excerpt ? _self.excerpt : excerpt // ignore: cast_nu
 as String?,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
 as bool,isFollowingAuthor: null == isFollowingAuthor ? _self.isFollowingAuthor : isFollowingAuthor // ignore: cast_nullable_to_non_nullable
 as bool,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,tagCount: null == tagCount ? _self.tagCount : tagCount // ignore: cast_nullable_to_non_nullable
+as List<TagRefModel>,tagCount: null == tagCount ? _self.tagCount : tagCount // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }
@@ -2622,7 +2622,7 @@ as String?,
 /// @nodoc
 mixin _$ArticleDetailsModel {
 
- String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel? get author; int get readingTimeMinutes; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; String? get myReaction; bool get isSaved; List<String> get availableLanguages; String? get summary; Map<String, dynamic> get content; FieldRefModel? get topic; List<String> get tags; List<SourceModel> get sources; int get saveCount; int get readCount; bool get isFollowingAuthor; List<String> get collectionIds; MyProgressModel? get myProgress; ArticleModerationModel? get moderation;
+ String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel? get author; int get readingTimeMinutes; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; String? get myReaction; bool get isSaved; List<String> get availableLanguages; String? get summary; Map<String, dynamic> get content; FieldRefModel? get topic;@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> get tags; List<SourceModel> get sources; int get saveCount; int get readCount; bool get isFollowingAuthor; List<String> get collectionIds; MyProgressModel? get myProgress; ArticleModerationModel? get moderation;
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2655,7 +2655,7 @@ abstract mixin class $ArticleDetailsModelCopyWith<$Res>  {
   factory $ArticleDetailsModelCopyWith(ArticleDetailsModel value, $Res Function(ArticleDetailsModel) _then) = _$ArticleDetailsModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic, List<String> tags, List<SourceModel> sources, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds, MyProgressModel? myProgress, ArticleModerationModel? moderation
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, List<SourceModel> sources, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds, MyProgressModel? myProgress, ArticleModerationModel? moderation
 });
 
 
@@ -2697,7 +2697,7 @@ as List<String>,summary: freezed == summary ? _self.summary : summary // ignore:
 as String?,content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,topic: freezed == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
 as FieldRefModel?,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,sources: null == sources ? _self.sources : sources // ignore: cast_nullable_to_non_nullable
+as List<TagRefModel>,sources: null == sources ? _self.sources : sources // ignore: cast_nullable_to_non_nullable
 as List<SourceModel>,saveCount: null == saveCount ? _self.saveCount : saveCount // ignore: cast_nullable_to_non_nullable
 as int,readCount: null == readCount ? _self.readCount : readCount // ignore: cast_nullable_to_non_nullable
 as int,isFollowingAuthor: null == isFollowingAuthor ? _self.isFollowingAuthor : isFollowingAuthor // ignore: cast_nullable_to_non_nullable
@@ -2870,7 +2870,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel() when $default != null:
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.myProgress,_that.moderation);case _:
@@ -2891,7 +2891,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation)  $default,) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel():
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.myProgress,_that.moderation);case _:
@@ -2911,7 +2911,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic,  List<String> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation)?  $default,) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel() when $default != null:
 return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.myProgress,_that.moderation);case _:
@@ -2926,7 +2926,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 @JsonSerializable()
 
 class _ArticleDetailsModel extends ArticleDetailsModel {
-  const _ArticleDetailsModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.myReaction, this.isSaved = false, final  List<String> availableLanguages = const <String>[], this.summary, final  Map<String, dynamic> content = const <String, dynamic>{}, this.topic, final  List<String> tags = const <String>[], final  List<SourceModel> sources = const <SourceModel>[], this.saveCount = 0, this.readCount = 0, this.isFollowingAuthor = false, final  List<String> collectionIds = const <String>[], this.myProgress, this.moderation}): _availableLanguages = availableLanguages,_content = content,_tags = tags,_sources = sources,_collectionIds = collectionIds,super._();
+  const _ArticleDetailsModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.myReaction, this.isSaved = false, final  List<String> availableLanguages = const <String>[], this.summary, final  Map<String, dynamic> content = const <String, dynamic>{}, this.topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) final  List<TagRefModel> tags = const <TagRefModel>[], final  List<SourceModel> sources = const <SourceModel>[], this.saveCount = 0, this.readCount = 0, this.isFollowingAuthor = false, final  List<String> collectionIds = const <String>[], this.myProgress, this.moderation}): _availableLanguages = availableLanguages,_content = content,_tags = tags,_sources = sources,_collectionIds = collectionIds,super._();
   factory _ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
 
 @override final  String id;
@@ -2963,8 +2963,8 @@ class _ArticleDetailsModel extends ArticleDetailsModel {
 }
 
 @override final  FieldRefModel? topic;
- final  List<String> _tags;
-@override@JsonKey() List<String> get tags {
+ final  List<TagRefModel> _tags;
+@override@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> get tags {
   if (_tags is EqualUnmodifiableListView) return _tags;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_tags);
@@ -3023,7 +3023,7 @@ abstract mixin class _$ArticleDetailsModelCopyWith<$Res> implements $ArticleDeta
   factory _$ArticleDetailsModelCopyWith(_ArticleDetailsModel value, $Res Function(_ArticleDetailsModel) _then) = __$ArticleDetailsModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic, List<String> tags, List<SourceModel> sources, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds, MyProgressModel? myProgress, ArticleModerationModel? moderation
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, List<SourceModel> sources, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds, MyProgressModel? myProgress, ArticleModerationModel? moderation
 });
 
 
@@ -3065,7 +3065,7 @@ as List<String>,summary: freezed == summary ? _self.summary : summary // ignore:
 as String?,content: null == content ? _self._content : content // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,topic: freezed == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
 as FieldRefModel?,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,sources: null == sources ? _self._sources : sources // ignore: cast_nullable_to_non_nullable
+as List<TagRefModel>,sources: null == sources ? _self._sources : sources // ignore: cast_nullable_to_non_nullable
 as List<SourceModel>,saveCount: null == saveCount ? _self.saveCount : saveCount // ignore: cast_nullable_to_non_nullable
 as int,readCount: null == readCount ? _self.readCount : readCount // ignore: cast_nullable_to_non_nullable
 as int,isFollowingAuthor: null == isFollowingAuthor ? _self.isFollowingAuthor : isFollowingAuthor // ignore: cast_nullable_to_non_nullable

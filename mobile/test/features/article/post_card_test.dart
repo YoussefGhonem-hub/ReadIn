@@ -24,9 +24,11 @@ import 'package:readin/features/follow/presentation/widgets/follow_button.dart';
 import 'package:readin/features/reactions/domain/entities/reactions.dart';
 import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart';
 import 'package:readin/features/saved/domain/usecases/saved_usecases.dart';
+import 'package:readin/features/tags/presentation/widgets/tag_chip.dart';
 
 import '../../helpers/comment_fixtures.dart';
 import '../../helpers/fixtures.dart';
+import '../../helpers/path_fakes.dart' show routedTestApp;
 import '../../helpers/post_card_fixtures.dart';
 import '../../helpers/social_fakes.dart';
 import '../../helpers/test_app.dart';
@@ -345,15 +347,48 @@ void main() {
       expect(find.text(l10n.signInPromptTitle), findsOneWidget);
     });
 
-    testWidgets('up to three tags as plain chips, then +N', (tester) async {
+    testWidgets('up to three tags, each a link to its tag page, then a plain +N (F32)', (tester) async {
       final semantics = tester.ensureSemantics();
-      await pump(tester, postCard(1, language: 'en', cover: false));
+      final opened = <String>[];
+      usePhoneSurface(tester);
+      final (app, _) = routedTestApp(
+        withCardStores(Scaffold(body: ListView(children: [PostCard(article: postCard(1, language: 'en', cover: false))]))),
+        opened: opened,
+      );
+      await tester.pumpWidget(app);
+      await tester.pump();
 
-      expect(find.textContaining('#dotnet'), findsOneWidget);
+      expect(find.textContaining('#C#'), findsOneWidget);
       expect(find.textContaining('#Dependency Injection'), findsOneWidget);
       expect(find.textContaining('#ASP.NET Core'), findsOneWidget);
       expect(find.bySemanticsLabel(l10n.postMoreTags(2)), findsOneWidget);
+      expect(
+        tester.getSemantics(find.byKey(const ValueKey('tag-link-csharp'))),
+        isSemantics(label: '#C#', hint: l10n.tagOpenHint, isLink: true, hasTapAction: true),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('tag-link-csharp')));
+      await tester.pumpAndSettle();
+      expect(opened, ['/tags/csharp']);
       semantics.dispose();
+    });
+
+    testWidgets('an Arabic tag opens its page with the slug percent-encoded', (tester) async {
+      final opened = <String>[];
+      usePhoneSurface(tester);
+      const tag = TagRef(slug: 'الذكاء-الاصطناعي', name: 'الذكاء الاصطناعي');
+      final (app, _) = routedTestApp(
+        withCardStores(Scaffold(body: ListView(children: [PostCard(article: postCard(1, tags: const [tag], tagCount: 1))]))),
+        opened: opened,
+        variant: const Variant(AppLocales.ar, Brightness.light),
+      );
+      await tester.pumpWidget(app);
+      await tester.pump();
+
+      expect(find.byType(TagMoreChip), findsNothing, reason: 'no +N when every tag shows');
+      await tester.tap(find.byKey(ValueKey('tag-link-${tag.slug}')));
+      await tester.pumpAndSettle();
+      expect(opened, ['/tags/${Uri.encodeComponent(tag.slug)}']);
     });
 
     testWidgets('the label, the reaction total and "12 comments"; none of them while both are 0', (tester) async {

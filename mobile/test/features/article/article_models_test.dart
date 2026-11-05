@@ -119,13 +119,21 @@ void main() {
         'excerpt': 'لو انت شغال بـ ASP.NET Core، أكيد شفت الـ DI في كل حتة.',
         'hasMore': true,
         'isFollowingAuthor': true,
-        'tags': ['dotnet', 'DI', 'ASP.NET Core'],
+        'tags': [
+          {'slug': 'dotnet', 'name': '.NET'},
+          {'slug': 'di', 'name': 'DI'},
+          {'slug': 'asp-net-core', 'name': 'ASP.NET Core'},
+        ],
         'tagCount': 5,
       }).toEntity();
       expect(card.excerpt, startsWith('لو انت شغال'));
       expect(card.hasMore, isTrue);
       expect(card.isFollowingAuthor, isTrue);
-      expect(card.tags, ['dotnet', 'DI', 'ASP.NET Core']);
+      expect(card.tags, const [
+        TagRef(slug: 'dotnet', name: '.NET'),
+        TagRef(slug: 'di', name: 'DI'),
+        TagRef(slug: 'asp-net-core', name: 'ASP.NET Core'),
+      ]);
       expect(card.tagCount, 5);
     });
 
@@ -143,20 +151,68 @@ void main() {
       final card = ArticleCardModel.fromJson({
         ...detailsJson(2),
         'excerpt': '  ',
-        'tags': ['a', 'b', 'c', 'd'],
+        'tags': [for (final t in ['a1', 'b1', 'c1', 'd1']) {'slug': t, 'name': t}],
         'tagCount': 0,
       }).toEntity();
-      expect(card.tags, ['a', 'b', 'c']);
+      expect(card.tags.map((t) => t.name), ['a1', 'b1', 'c1']);
       expect(card.tagCount, 4);
       expect(card.excerpt, isNull);
     });
 
     test('engagement updates keep the post card fields', () {
-      final card = ArticleCardModel.fromJson({...detailsJson(2), 'excerpt': 'Short.', 'tags': ['dotnet'], 'tagCount': 1}).toEntity();
+      final card = ArticleCardModel.fromJson({
+        ...detailsJson(2),
+        'excerpt': 'Short.',
+        'tags': [
+          {'slug': 'csharp', 'name': 'C#'},
+        ],
+        'tagCount': 1,
+      }).toEntity();
       final updated = card.copyWithEngagement(commentCount: 9);
       expect(updated.excerpt, 'Short.');
-      expect(updated.tags, ['dotnet']);
+      expect(updated.tags, const [TagRef(slug: 'csharp', name: 'C#')]);
       expect(updated.tagCount, 1);
+    });
+  });
+
+  group('tags (F32)', () {
+    test('the reader gets all the tags as TagRefDto, in order; the card its first 3', () {
+      final json = {
+        ...detailsJson(1),
+        'tags': [
+          {'slug': 'csharp', 'name': 'C#'},
+          {'slug': 'dotnet', 'name': '.NET'},
+          {'slug': 'cplusplus', 'name': 'C++'},
+          {'slug': 'الذكاء-الاصطناعي', 'name': 'الذكاء الاصطناعي'},
+          {'slug': 'ai', 'name': 'AI'},
+        ],
+      };
+      final details = ArticleDetailsModel.fromJson(json).toEntity();
+      expect(details.tags.map((t) => t.name), ['C#', '.NET', 'C++', 'الذكاء الاصطناعي', 'AI']);
+      expect(details.tags[3].slug, 'الذكاء-الاصطناعي');
+      expect(details.tags.every((t) => t.hasPage), isTrue);
+      expect(details.card.tags.map((t) => t.slug), ['csharp', 'dotnet', 'cplusplus']);
+      expect(details.card.tagCount, 5);
+    });
+
+    test('the offline copy keeps the tag refs', () {
+      final model = ArticleDetailsModel.fromJson({
+        ...detailsJson(1),
+        'tags': [
+          {'slug': 'csharp', 'name': 'C#'},
+        ],
+      });
+      final copy = ArticleDetailsModel.fromJson(jsonDecode(jsonEncode(model.toJson())) as Map<String, dynamic>);
+      expect(copy.toEntity(offline: true).tags, const [TagRef(slug: 'csharp', name: 'C#')]);
+    });
+
+    test('an offline copy saved before F32 (names only) still opens: its tags have no page', () {
+      final details = ArticleDetailsModel.fromJson({
+        ...detailsJson(1),
+        'tags': ['dotnet', '  ', 'EF Core'],
+      }).toEntity(offline: true);
+      expect(details.tags, const [TagRef(slug: '', name: 'dotnet'), TagRef(slug: '', name: 'EF Core')]);
+      expect(details.tags.any((t) => t.hasPage), isFalse);
     });
 
     test('the preview parses its RDoc and whether it is the whole article', () {

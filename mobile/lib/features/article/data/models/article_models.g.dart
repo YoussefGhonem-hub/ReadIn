@@ -94,9 +94,9 @@ _ArticleCardModel _$ArticleCardModelFromJson(Map<String, dynamic> json) =>
       excerpt: json['excerpt'] as String?,
       hasMore: json['hasMore'] as bool? ?? false,
       isFollowingAuthor: json['isFollowingAuthor'] as bool? ?? false,
-      tags:
-          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-          const <String>[],
+      tags: json['tags'] == null
+          ? const <TagRefModel>[]
+          : tagRefsFromJson(json['tags']),
       tagCount: (json['tagCount'] as num?)?.toInt() ?? 0,
     );
 
@@ -124,7 +124,7 @@ Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
       'excerpt': ?instance.excerpt,
       'hasMore': instance.hasMore,
       'isFollowingAuthor': instance.isFollowingAuthor,
-      'tags': instance.tags,
+      'tags': tagRefsToJson(instance.tags),
       'tagCount': instance.tagCount,
     };
 
@@ -242,9 +242,9 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(
   topic: json['topic'] == null
       ? null
       : FieldRefModel.fromJson(json['topic'] as Map<String, dynamic>),
-  tags:
-      (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-      const <String>[],
+  tags: json['tags'] == null
+      ? const <TagRefModel>[]
+      : tagRefsFromJson(json['tags']),
   sources:
       (json['sources'] as List<dynamic>?)
           ?.map((e) => SourceModel.fromJson(e as Map<String, dynamic>))
@@ -293,7 +293,7 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'summary': ?instance.summary,
   'content': instance.content,
   'topic': ?instance.topic?.toJson(),
-  'tags': instance.tags,
+  'tags': tagRefsToJson(instance.tags),
   'sources': instance.sources.map((e) => e.toJson()).toList(),
   'saveCount': instance.saveCount,
   'readCount': instance.readCount,

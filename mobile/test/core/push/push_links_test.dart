@@ -28,9 +28,21 @@ void main() {
       'readin://u/mona_dev': '/u/mona_dev',
       'https://readin.app/@Mona_Dev': '/u/mona_dev',
       '/u/omar': '/u/omar',
+      // Tag pages (F32): the app's readin://tags/{slug} and the web's /tags/{slug}; an Arabic slug stays encoded.
+      'readin://tags/csharp': '/tags/csharp',
+      'https://readin.app/tags/asp-net-core': '/tags/asp-net-core',
+      'https://readin.app/tags/CSharp': '/tags/csharp',
+      '/tags/dotnet': '/tags/dotnet',
     };
     cases.forEach((link, path) {
       test('maps $link to $path', () => expect(pushLinkToPath(link), path));
+    });
+
+    test('an Arabic tag slug arrives decoded and goes to the router percent-encoded (F32)', () {
+      const slug = 'الذكاء-الاصطناعي';
+      final encoded = Uri.encodeComponent(slug);
+      expect(pushLinkToPath('readin://tags/$encoded'), '/tags/$encoded');
+      expect(pushLinkToPath('https://readin.app/tags/$slug'), '/tags/$encoded');
     });
 
     for (final link in [
@@ -52,6 +64,11 @@ void main() {
       'readin://u/..%2Fsettings/followers',
       'https://readin.app/@',
       'readin://u/..%2Fsettings',
+      'readin://tags',
+      'readin://tags/csharp/articles',
+      'readin://tags/..%2Fsettings',
+      'readin://tags/c%23',
+      'https://evil.example/tags/csharp',
       '',
       null,
     ]) {

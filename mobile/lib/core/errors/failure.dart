@@ -61,6 +61,8 @@ abstract final class FailureCodes {
   static const articleNoContent = 'article.no_content';
   static const articleInvalidTransition = 'article.invalid_transition';
   static const articleSlugTaken = 'article.slug_taken';
+
+  /// Replaced by [articleTooManyTags] in F32; still translated.
   static const articleTagsMaxFive = 'article.tags.max_five';
   static const articleLanguageInvalid = 'article.language_invalid';
   static const articleContentLanguageMismatch = 'article.content_language_mismatch';
@@ -177,6 +179,14 @@ abstract final class FailureCodes {
   static const moderationNoteRequired = 'moderation.note_required';
   static const moderationDurationInvalid = 'moderation.duration_invalid';
   static const moderationNoticeNotFound = 'moderation.notice_not_found';
+
+  // Tags (F32): `tag.invalid` and `article.too_many_tags` are validation codes (in `errors`), `tag.hidden` and
+  // `tag.limit` publish problems (in `checks.problems`).
+  static const tagNotFound = 'tag.not_found';
+  static const tagInvalid = 'tag.invalid';
+  static const tagHidden = 'tag.hidden';
+  static const tagLimit = 'tag.limit';
+  static const articleTooManyTags = 'article.too_many_tags';
 
   // Glossary (F21)
   static const glossaryTermNotFound = 'glossary.term_not_found';

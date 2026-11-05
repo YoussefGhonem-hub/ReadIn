@@ -247,6 +247,22 @@ void main() {
       DraftProblem('attachments.alt_text_required', mediaAssetId: 'a1'),
     ]);
 
+    // F32: a hidden tag, and new tags past the daily limit, name their tag.
+    respond = (_) => (400, {
+          'status': 400,
+          'code': 'tag.hidden',
+          'problems': [
+            {'code': 'tag.hidden', 'language': null, 'blockId': null, 'mediaAssetId': null, 'tag': 'Old'},
+            {'code': 'tag.limit', 'language': null, 'blockId': null, 'mediaAssetId': null, 'tag': 'الذكاء الاصطناعي'},
+          ],
+        });
+    final tags = (await repository.publish('art-1', baseVersion: 7)).failureOrNull! as DraftProblemsFailure;
+    expect(tags.code, FailureCodes.tagHidden);
+    expect(tags.problems, const [
+      DraftProblem(FailureCodes.tagHidden, tag: 'Old'),
+      DraftProblem(FailureCodes.tagLimit, tag: 'الذكاء الاصطناعي'),
+    ]);
+
     respond = (_) => (409, {'code': 'article.draft_conflict', 'status': 409});
     final conflict = (await repository.publish('art-1', baseVersion: 6)).failureOrNull;
     expect(conflict, isNot(isA<DraftProblemsFailure>()));
@@ -290,6 +306,32 @@ void main() {
     expect(call(1), 'GET /tags');
     expect(requests[1].uri.queryParameters, {'q': 'dot', 'limit': '10'});
     expect(tags.single, const ArticleTag(slug: 'dotnet', name: 'dotnet', articleCount: 12));
+
+    // The query is cleaned like a tag name (F32): no leading "#", one space between words.
+    await repository.suggestTags(' #ASP.NET   Core ');
+    expect(requests[2].uri.queryParameters, {'q': 'ASP.NET Core', 'limit': '10'});
+  });
+
+  test('saving cleans the tags like the API: a leading # and extra spaces go, blank names are dropped', () async {
+    respond = (_) => editJson;
+    final document = sampleEdit().document.copyWith(tags: const ['#C#', '  ASP.NET   Core ', ' ']);
+    await repository.saveDraft('art-1', baseVersion: 7, document: document);
+    expect(((requests.single.data as Map)['document'] as Map)['tags'], ['C#', 'ASP.NET Core']);
+  });
+
+  test('a 400 on save carries the tag validation codes for the field', () async {
+    respond = (_) => (400, {
+          'status': 400,
+          'code': 'validation.failed',
+          'errors': {
+            'document.tags': ['article.too_many_tags'],
+            'document.tags[1]': ['tag.invalid'],
+          },
+        });
+    final failure = (await repository.saveDraft('art-1', baseVersion: 7, document: sampleEdit().document)).failureOrNull!;
+    expect(failure.code, FailureCodes.validationFailed);
+    expect(failure.fieldErrors['document.tags'], [FailureCodes.articleTooManyTags]);
+    expect(failure.fieldErrors['document.tags[1]'], [FailureCodes.tagInvalid]);
   });
 
   test('the device backup keeps the whole document as it was typed', () {

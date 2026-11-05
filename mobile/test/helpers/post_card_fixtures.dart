@@ -37,6 +37,13 @@ const shortEnExcerpt = 'Quick tip: use AddScoped for any service that talks to a
 
 const sampleCover = 'https://api.readin.test/uploads/cover-1/1600.webp';
 
+/// A card's first three tags (F32 `TagRefDto`): a name with a symbol, an English phrase, and dots.
+const sampleTagRefs = [
+  TagRef(slug: 'csharp', name: 'C#'),
+  TagRef(slug: 'dependency-injection', name: 'Dependency Injection'),
+  TagRef(slug: 'asp-net-core', name: 'ASP.NET Core'),
+];
+
 /// A feed card: [sampleCard] with an excerpt in its language, three of five tags and a cover.
 ArticleCard postCard(
   int i, {
@@ -46,7 +53,7 @@ ArticleCard postCard(
   bool cover = true,
   bool authorDeleted = false,
   bool isFollowingAuthor = false,
-  List<String> tags = const ['dotnet', 'Dependency Injection', 'ASP.NET Core'],
+  List<TagRef> tags = sampleTagRefs,
   int tagCount = 5,
   ArticleAttachments? attachments,
   int reactionCount = 0,
@@ -102,7 +109,7 @@ ArticleCard attachmentsPostCard({String language = 'ar-EG'}) => postCard(
         kind: AttachmentsKind.images,
         images: [for (var i = 0; i < 3; i++) sampleImage(i)],
       ),
-      tags: const ['EF Core', 'performance'],
+      tags: const [TagRef(slug: 'ef-core', name: 'EF Core'), TagRef(slug: 'performance', name: 'performance')],
       tagCount: 2,
       reactions: const ReactionCounts(insightful: 9, love: 14, fire: 2),
       reactionCount: 25,

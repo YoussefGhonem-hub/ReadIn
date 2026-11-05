@@ -1423,7 +1423,7 @@ as int,
 /// @nodoc
 mixin _$DraftProblemModel {
 
- String get code; String? get language; String? get blockId; String? get mediaAssetId;
+ String get code; String? get language; String? get blockId; String? get mediaAssetId; String? get tag;
 /// Create a copy of DraftProblemModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1436,16 +1436,16 @@ $DraftProblemModelCopyWith<DraftProblemModel> get copyWith => _$DraftProblemMode
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DraftProblemModel&&(identical(other.code, code) || other.code == code)&&(identical(other.language, language) || other.language == language)&&(identical(other.blockId, blockId) || other.blockId == blockId)&&(identical(other.mediaAssetId, mediaAssetId) || other.mediaAssetId == mediaAssetId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DraftProblemModel&&(identical(other.code, code) || other.code == code)&&(identical(other.language, language) || other.language == language)&&(identical(other.blockId, blockId) || other.blockId == blockId)&&(identical(other.mediaAssetId, mediaAssetId) || other.mediaAssetId == mediaAssetId)&&(identical(other.tag, tag) || other.tag == tag));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,code,language,blockId,mediaAssetId);
+int get hashCode => Object.hash(runtimeType,code,language,blockId,mediaAssetId,tag);
 
 @override
 String toString() {
-  return 'DraftProblemModel(code: $code, language: $language, blockId: $blockId, mediaAssetId: $mediaAssetId)';
+  return 'DraftProblemModel(code: $code, language: $language, blockId: $blockId, mediaAssetId: $mediaAssetId, tag: $tag)';
 }
 
 
@@ -1456,7 +1456,7 @@ abstract mixin class $DraftProblemModelCopyWith<$Res>  {
   factory $DraftProblemModelCopyWith(DraftProblemModel value, $Res Function(DraftProblemModel) _then) = _$DraftProblemModelCopyWithImpl;
 @useResult
 $Res call({
- String code, String? language, String? blockId, String? mediaAssetId
+ String code, String? language, String? blockId, String? mediaAssetId, String? tag
 });
 
 
@@ -1473,12 +1473,13 @@ class _$DraftProblemModelCopyWithImpl<$Res>
 
 /// Create a copy of DraftProblemModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? language = freezed,Object? blockId = freezed,Object? mediaAssetId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? language = freezed,Object? blockId = freezed,Object? mediaAssetId = freezed,Object? tag = freezed,}) {
   return _then(_self.copyWith(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,language: freezed == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
 as String?,blockId: freezed == blockId ? _self.blockId : blockId // ignore: cast_nullable_to_non_nullable
 as String?,mediaAssetId: freezed == mediaAssetId ? _self.mediaAssetId : mediaAssetId // ignore: cast_nullable_to_non_nullable
+as String?,tag: freezed == tag ? _self.tag : tag // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -1564,10 +1565,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String? language,  String? blockId,  String? mediaAssetId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String? language,  String? blockId,  String? mediaAssetId,  String? tag)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DraftProblemModel() when $default != null:
-return $default(_that.code,_that.language,_that.blockId,_that.mediaAssetId);case _:
+return $default(_that.code,_that.language,_that.blockId,_that.mediaAssetId,_that.tag);case _:
   return orElse();
 
 }
@@ -1585,10 +1586,10 @@ return $default(_that.code,_that.language,_that.blockId,_that.mediaAssetId);case
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String? language,  String? blockId,  String? mediaAssetId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String? language,  String? blockId,  String? mediaAssetId,  String? tag)  $default,) {final _that = this;
 switch (_that) {
 case _DraftProblemModel():
-return $default(_that.code,_that.language,_that.blockId,_that.mediaAssetId);case _:
+return $default(_that.code,_that.language,_that.blockId,_that.mediaAssetId,_that.tag);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1605,10 +1606,10 @@ return $default(_that.code,_that.language,_that.blockId,_that.mediaAssetId);case
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String? language,  String? blockId,  String? mediaAssetId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String? language,  String? blockId,  String? mediaAssetId,  String? tag)?  $default,) {final _that = this;
 switch (_that) {
 case _DraftProblemModel() when $default != null:
-return $default(_that.code,_that.language,_that.blockId,_that.mediaAssetId);case _:
+return $default(_that.code,_that.language,_that.blockId,_that.mediaAssetId,_that.tag);case _:
   return null;
 
 }
@@ -1620,13 +1621,14 @@ return $default(_that.code,_that.language,_that.blockId,_that.mediaAssetId);case
 @JsonSerializable()
 
 class _DraftProblemModel extends DraftProblemModel {
-  const _DraftProblemModel({required this.code, this.language, this.blockId, this.mediaAssetId}): super._();
+  const _DraftProblemModel({required this.code, this.language, this.blockId, this.mediaAssetId, this.tag}): super._();
   factory _DraftProblemModel.fromJson(Map<String, dynamic> json) => _$DraftProblemModelFromJson(json);
 
 @override final  String code;
 @override final  String? language;
 @override final  String? blockId;
 @override final  String? mediaAssetId;
+@override final  String? tag;
 
 /// Create a copy of DraftProblemModel
 /// with the given fields replaced by the non-null parameter values.
@@ -1641,16 +1643,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DraftProblemModel&&(identical(other.code, code) || other.code == code)&&(identical(other.language, language) || other.language == language)&&(identical(other.blockId, blockId) || other.blockId == blockId)&&(identical(other.mediaAssetId, mediaAssetId) || other.mediaAssetId == mediaAssetId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DraftProblemModel&&(identical(other.code, code) || other.code == code)&&(identical(other.language, language) || other.language == language)&&(identical(other.blockId, blockId) || other.blockId == blockId)&&(identical(other.mediaAssetId, mediaAssetId) || other.mediaAssetId == mediaAssetId)&&(identical(other.tag, tag) || other.tag == tag));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,code,language,blockId,mediaAssetId);
+int get hashCode => Object.hash(runtimeType,code,language,blockId,mediaAssetId,tag);
 
 @override
 String toString() {
-  return 'DraftProblemModel(code: $code, language: $language, blockId: $blockId, mediaAssetId: $mediaAssetId)';
+  return 'DraftProblemModel(code: $code, language: $language, blockId: $blockId, mediaAssetId: $mediaAssetId, tag: $tag)';
 }
 
 
@@ -1661,7 +1663,7 @@ abstract mixin class _$DraftProblemModelCopyWith<$Res> implements $DraftProblemM
   factory _$DraftProblemModelCopyWith(_DraftProblemModel value, $Res Function(_DraftProblemModel) _then) = __$DraftProblemModelCopyWithImpl;
 @override @useResult
 $Res call({
- String code, String? language, String? blockId, String? mediaAssetId
+ String code, String? language, String? blockId, String? mediaAssetId, String? tag
 });
 
 
@@ -1678,12 +1680,13 @@ class __$DraftProblemModelCopyWithImpl<$Res>
 
 /// Create a copy of DraftProblemModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? language = freezed,Object? blockId = freezed,Object? mediaAssetId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? language = freezed,Object? blockId = freezed,Object? mediaAssetId = freezed,Object? tag = freezed,}) {
   return _then(_DraftProblemModel(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,language: freezed == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
 as String?,blockId: freezed == blockId ? _self.blockId : blockId // ignore: cast_nullable_to_non_nullable
 as String?,mediaAssetId: freezed == mediaAssetId ? _self.mediaAssetId : mediaAssetId // ignore: cast_nullable_to_non_nullable
+as String?,tag: freezed == tag ? _self.tag : tag // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -3754,275 +3757,6 @@ class __$MyArticlePageModelCopyWithImpl<$Res>
 items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<MyArticleModel>,nextCursor: freezed == nextCursor ? _self.nextCursor : nextCursor // ignore: cast_nullable_to_non_nullable
 as String?,
-  ));
-}
-
-
-}
-
-
-/// @nodoc
-mixin _$TagModel {
-
- String get slug; String get name; int get articleCount;
-/// Create a copy of TagModel
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$TagModelCopyWith<TagModel> get copyWith => _$TagModelCopyWithImpl<TagModel>(this as TagModel, _$identity);
-
-  /// Serializes this TagModel to a JSON map.
-  Map<String, dynamic> toJson();
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TagModel&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.name, name) || other.name == name)&&(identical(other.articleCount, articleCount) || other.articleCount == articleCount));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,slug,name,articleCount);
-
-@override
-String toString() {
-  return 'TagModel(slug: $slug, name: $name, articleCount: $articleCount)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $TagModelCopyWith<$Res>  {
-  factory $TagModelCopyWith(TagModel value, $Res Function(TagModel) _then) = _$TagModelCopyWithImpl;
-@useResult
-$Res call({
- String slug, String name, int articleCount
-});
-
-
-
-
-}
-/// @nodoc
-class _$TagModelCopyWithImpl<$Res>
-    implements $TagModelCopyWith<$Res> {
-  _$TagModelCopyWithImpl(this._self, this._then);
-
-  final TagModel _self;
-  final $Res Function(TagModel) _then;
-
-/// Create a copy of TagModel
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? slug = null,Object? name = null,Object? articleCount = null,}) {
-  return _then(_self.copyWith(
-slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,articleCount: null == articleCount ? _self.articleCount : articleCount // ignore: cast_nullable_to_non_nullable
-as int,
-  ));
-}
-
-}
-
-
-/// Adds pattern-matching-related methods to [TagModel].
-extension TagModelPatterns on TagModel {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _TagModel value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _TagModel() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _TagModel value)  $default,){
-final _that = this;
-switch (_that) {
-case _TagModel():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _TagModel value)?  $default,){
-final _that = this;
-switch (_that) {
-case _TagModel() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String slug,  String name,  int articleCount)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _TagModel() when $default != null:
-return $default(_that.slug,_that.name,_that.articleCount);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String slug,  String name,  int articleCount)  $default,) {final _that = this;
-switch (_that) {
-case _TagModel():
-return $default(_that.slug,_that.name,_that.articleCount);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String slug,  String name,  int articleCount)?  $default,) {final _that = this;
-switch (_that) {
-case _TagModel() when $default != null:
-return $default(_that.slug,_that.name,_that.articleCount);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class _TagModel extends TagModel {
-  const _TagModel({required this.slug, required this.name, this.articleCount = 0}): super._();
-  factory _TagModel.fromJson(Map<String, dynamic> json) => _$TagModelFromJson(json);
-
-@override final  String slug;
-@override final  String name;
-@override@JsonKey() final  int articleCount;
-
-/// Create a copy of TagModel
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$TagModelCopyWith<_TagModel> get copyWith => __$TagModelCopyWithImpl<_TagModel>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$TagModelToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TagModel&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.name, name) || other.name == name)&&(identical(other.articleCount, articleCount) || other.articleCount == articleCount));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,slug,name,articleCount);
-
-@override
-String toString() {
-  return 'TagModel(slug: $slug, name: $name, articleCount: $articleCount)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$TagModelCopyWith<$Res> implements $TagModelCopyWith<$Res> {
-  factory _$TagModelCopyWith(_TagModel value, $Res Function(_TagModel) _then) = __$TagModelCopyWithImpl;
-@override @useResult
-$Res call({
- String slug, String name, int articleCount
-});
-
-
-
-
-}
-/// @nodoc
-class __$TagModelCopyWithImpl<$Res>
-    implements _$TagModelCopyWith<$Res> {
-  __$TagModelCopyWithImpl(this._self, this._then);
-
-  final _TagModel _self;
-  final $Res Function(_TagModel) _then;
-
-/// Create a copy of TagModel
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? slug = null,Object? name = null,Object? articleCount = null,}) {
-  return _then(_TagModel(
-slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,articleCount: null == articleCount ? _self.articleCount : articleCount // ignore: cast_nullable_to_non_nullable
-as int,
   ));
 }
 

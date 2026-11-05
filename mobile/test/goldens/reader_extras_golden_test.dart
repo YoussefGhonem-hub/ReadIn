@@ -57,7 +57,9 @@ void main() {
             ],
         ],
       }),
-      tags: ar ? const ['صحة', 'blood-pressure'] : const ['health', 'blood-pressure'],
+      tags: ar
+          ? const [TagRef(slug: 'صحة', name: 'صحة'), TagRef(slug: 'blood-pressure', name: 'blood-pressure')]
+          : const [TagRef(slug: 'health', name: 'health'), TagRef(slug: 'blood-pressure', name: 'blood-pressure')],
       sources: const [ArticleSource(title: 'WHO: Hypertension', url: 'https://www.who.int/news-room/fact-sheets/detail/hypertension')],
     );
   }

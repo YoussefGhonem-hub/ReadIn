@@ -13,6 +13,7 @@ class BidiTextField extends StatefulWidget {
     this.decoration = const InputDecoration(),
     this.onChanged,
     this.onSubmitted,
+    this.onEditingComplete,
     this.maxLength,
     this.counterWithin,
     this.minLines,
@@ -31,6 +32,10 @@ class BidiTextField extends StatefulWidget {
   final InputDecoration decoration;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+
+  /// Replaces the default of the keyboard action (e.g. "done" closes the keyboard): a field that adds what was typed
+  /// and stays open for the next one.
+  final VoidCallback? onEditingComplete;
   final int? maxLength;
 
   /// With [maxLength]: show the character counter only when this close to the limit (long limits such as 5000
@@ -103,6 +108,7 @@ class _BidiTextFieldState extends State<BidiTextField> {
         decoration: widget.decoration,
         onChanged: widget.onChanged,
         onSubmitted: widget.onSubmitted,
+        onEditingComplete: widget.onEditingComplete,
         maxLength: widget.maxLength,
         buildCounter: widget.counterWithin == null ? null : _nearLimitCounter,
         minLines: widget.minLines,

@@ -4,6 +4,10 @@ import '../../../../core/errors/failure.dart';
 import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../article/domain/entities/article.dart';
 import '../../../media/domain/entities/media.dart';
+import '../../../tags/domain/services/tag_names.dart';
+
+// The tag suggestions (`TagDto`).
+export '../../../tags/domain/entities/tag.dart' show ArticleTag;
 
 /// Article languages (SPEC §14.1): every article has a source version and at most one translation.
 abstract final class ArticleLanguages {
@@ -21,8 +25,8 @@ abstract final class DraftLimits {
   static const minTitle = 5;
   static const maxTitle = 150;
   static const maxSubtitle = 250;
-  static const maxTags = 5;
-  static const maxTagLength = 40;
+  static const maxTags = TagNames.maxPerArticle;
+  static const maxTagLength = TagNames.maxLength;
   static const maxSources = 30;
   static const maxSourceTitle = 200;
   static const maxUrl = 2048;
@@ -168,6 +172,12 @@ abstract final class DraftProblemCodes {
   static const attachmentTitleRequired = FailureCodes.attachmentsTitleRequired;
   static const attachmentNotReady = FailureCodes.attachmentsAssetNotReady;
 
+  /// A hidden tag the published article doesn't already have (F32); only the API can tell.
+  static const tagHidden = FailureCodes.tagHidden;
+
+  /// More than 20 new tags in 24 hours (F32); only the API can tell.
+  static const tagLimit = FailureCodes.tagLimit;
+
   static const all = {
     fieldRequired,
     titleLength,
@@ -178,12 +188,17 @@ abstract final class DraftProblemCodes {
     attachmentAltRequired,
     attachmentTitleRequired,
     attachmentNotReady,
+    tagHidden,
+    tagLimit,
   };
+
+  /// The problems about one tag, carried in [DraftProblem.tag].
+  static const tagProblems = {tagHidden, tagLimit};
 }
 
 /// Why the article can't be published yet (`DraftProblemDto`).
 class DraftProblem extends Equatable {
-  const DraftProblem(this.code, {this.language, this.blockId, this.mediaAssetId});
+  const DraftProblem(this.code, {this.language, this.blockId, this.mediaAssetId, this.tag});
 
   final String code;
 
@@ -196,8 +211,11 @@ class DraftProblem extends Equatable {
   /// Attachment problems.
   final String? mediaAssetId;
 
+  /// Tag problems (F32): the name as in the document's tags.
+  final String? tag;
+
   @override
-  List<Object?> get props => [code, language, blockId, mediaAssetId];
+  List<Object?> get props => [code, language, blockId, mediaAssetId, tag];
 }
 
 /// Reading time of one translation (SPEC §13.5).
@@ -376,18 +394,6 @@ class MyArticle extends Equatable {
         commentCount,
         readCount,
       ];
-}
-
-/// `TagDto`: a tag suggestion.
-class ArticleTag extends Equatable {
-  const ArticleTag({required this.slug, required this.name, this.articleCount = 0});
-
-  final String slug;
-  final String name;
-  final int articleCount;
-
-  @override
-  List<Object?> get props => [slug, name, articleCount];
 }
 
 /// A publish refused with `400`: the first problem's code, and all of them (the ProblemDetails `problems` member).

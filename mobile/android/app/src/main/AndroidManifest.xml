@@ -30,8 +30,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <!-- App Links (SPEC F24): the web's article links, https://{domain}/ar/a/{slug} and /en/a/{slug}, open the
-                 article in the app. The host is the WEB_ORIGIN dart-define (android/app/build.gradle.kts); Android
-                 verifies it with /.well-known/assetlinks.json on that domain (docs/setup/app-links.md). -->
+                 article in the app, and its tag pages, https://{domain}/tags/{slug} (F32), the tag page. The host is the
+                 WEB_ORIGIN dart-define (android/app/build.gradle.kts); Android verifies it with
+                 /.well-known/assetlinks.json on that domain (docs/setup/app-links.md). -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -39,6 +40,7 @@
                 <data android:scheme="https" android:host="${appLinkHost}"/>
                 <data android:pathPrefix="/ar/a/"/>
                 <data android:pathPrefix="/en/a/"/>
+                <data android:pathPrefix="/tags/"/>
             </intent-filter>
         </activity>
         <!-- Background pushes use the channel the app creates at start (PushPlatform). -->

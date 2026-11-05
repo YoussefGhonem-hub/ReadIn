@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/bidi/bidi.dart';
+import '../../../../core/l10n/failure_messages.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
@@ -159,8 +161,13 @@ String problemMessage(AppLocalizations l10n, DraftProblem problem) => switch (pr
       DraftProblemCodes.attachmentAltRequired => l10n.problemAttachmentAlt,
       DraftProblemCodes.attachmentTitleRequired => l10n.problemAttachmentTitle,
       DraftProblemCodes.attachmentNotReady => l10n.problemAttachmentNotReady,
-      _ => l10n.errServer,
+      DraftProblemCodes.tagHidden => problem.tag == null ? l10n.errTagHidden : l10n.problemTagHidden(_isolated(problem.tag!)),
+      DraftProblemCodes.tagLimit => problem.tag == null ? l10n.errTagLimit : l10n.problemTagLimit(_isolated(problem.tag!)),
+      _ => localizeErrorCode(l10n, problem.code),
     };
+
+/// `#name` as a first-strong isolate: a tag in the other script keeps its place in the sentence.
+String _isolated(String tag) => '${Bidi.fsi}#$tag${Bidi.pdi}';
 
 /// Where tapping a problem goes.
 enum ProblemTarget { settings, title, content, block }

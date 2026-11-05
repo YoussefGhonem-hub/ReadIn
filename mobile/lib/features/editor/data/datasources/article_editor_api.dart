@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../../../tags/data/models/tag_models.dart';
 import '../models/article_editor_models.dart';
 
 part 'article_editor_api.g.dart';
@@ -61,7 +62,8 @@ abstract class ArticleEditorApi {
   @DELETE('/articles/{id}')
   Future<void> deleteArticle(@Path('id') String id);
 
-  /// Tags whose name or slug starts with [query], most used first.
+  /// The editor's suggestions (F32): tags with a word of their name, or their slug, starting with [query]; the exact
+  /// name first, then the most used. Never a hidden tag.
   @GET('/tags')
   Future<List<TagModel>> tags(@Query('q') String query, {@Query('limit') int limit = 10});
 }

@@ -137,17 +137,23 @@ abstract class ReadingTimeModel with _$ReadingTimeModel {
   ReadingTime toEntity() => ReadingTime(language: language, minutes: minutes, words: words);
 }
 
-/// `DraftProblemDto`.
+/// `DraftProblemDto`; `tag` names the tag of a `tag.hidden` or `tag.limit` problem (F32).
 @freezed
 abstract class DraftProblemModel with _$DraftProblemModel {
   const DraftProblemModel._();
 
-  const factory DraftProblemModel({required String code, String? language, String? blockId, String? mediaAssetId}) =
-      _DraftProblemModel;
+  const factory DraftProblemModel({
+    required String code,
+    String? language,
+    String? blockId,
+    String? mediaAssetId,
+    String? tag,
+  }) = _DraftProblemModel;
 
   factory DraftProblemModel.fromJson(Map<String, dynamic> json) => _$DraftProblemModelFromJson(json);
 
-  DraftProblem toEntity() => DraftProblem(code, language: language, blockId: blockId, mediaAssetId: mediaAssetId);
+  DraftProblem toEntity() =>
+      DraftProblem(code, language: language, blockId: blockId, mediaAssetId: mediaAssetId, tag: tag);
 }
 
 /// `DraftChecksDto`.
@@ -312,16 +318,4 @@ abstract class MyArticlePageModel with _$MyArticlePageModel {
   }) = _MyArticlePageModel;
 
   factory MyArticlePageModel.fromJson(Map<String, dynamic> json) => _$MyArticlePageModelFromJson(json);
-}
-
-/// `TagDto`.
-@freezed
-abstract class TagModel with _$TagModel {
-  const TagModel._();
-
-  const factory TagModel({required String slug, required String name, @Default(0) int articleCount}) = _TagModel;
-
-  factory TagModel.fromJson(Map<String, dynamic> json) => _$TagModelFromJson(json);
-
-  ArticleTag toEntity() => ArticleTag(slug: slug, name: name, articleCount: articleCount);
 }

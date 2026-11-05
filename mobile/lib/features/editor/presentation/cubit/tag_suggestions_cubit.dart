@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../tags/domain/services/tag_names.dart';
 import '../../domain/entities/editor_entities.dart';
 import '../../domain/usecases/editor_usecases.dart';
 
-/// Tag autocomplete for the metadata sheet: `GET /tags?q=` once typing pauses for [debounce]; an empty query asks
-/// for the most used tags. Answers for an older query are dropped; a failure just shows no suggestions.
+/// Tag autocomplete for the metadata sheet (F32): `GET /tags?q=` once typing pauses for [debounce]; an empty query
+/// asks for the most used tags. The query is cleaned like a tag name (`#AI` asks for `AI`). Answers for an older query
+/// are dropped; a failure just shows no suggestions.
 @injectable
 class TagSuggestionsCubit extends Cubit<List<ArticleTag>> {
   TagSuggestionsCubit(this._suggest) : super(const []);
@@ -20,7 +22,7 @@ class TagSuggestionsCubit extends Cubit<List<ArticleTag>> {
   String? _query;
 
   void search(String query) {
-    final q = query.trim();
+    final q = TagNames.clean(query);
     if (q == _query) return;
     _query = q;
     _timer?.cancel();

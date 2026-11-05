@@ -4,6 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../media/data/models/media_models.dart';
+import '../../../tags/data/models/tag_models.dart';
 import '../../domain/entities/article.dart';
 
 part 'article_models.freezed.dart';
@@ -64,7 +65,8 @@ abstract class ReactionCountsModel with _$ReactionCountsModel {
 
 /// `ArticleCardDto`. The wave 1 fields (`reactions`, `saveCount`, `myReaction`, `isSaved`) and the post card's
 /// (`excerpt`, `hasMore`, `isFollowingAuthor`, `tags`, `tagCount`, F34) have defaults, so an API that doesn't send them
-/// yet still parses. `author` is null when the author deleted their account (SPEC §9.6).
+/// yet still parses. `author` is null when the author deleted their account (SPEC §9.6). `tags` are `TagRefDto`s
+/// (F32); names alone, as before F32, still parse as tags without a page.
 @freezed
 abstract class ArticleCardModel with _$ArticleCardModel {
   const ArticleCardModel._();
@@ -92,7 +94,7 @@ abstract class ArticleCardModel with _$ArticleCardModel {
     String? excerpt,
     @Default(false) bool hasMore,
     @Default(false) bool isFollowingAuthor,
-    @Default(<String>[]) List<String> tags,
+    @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) @Default(<TagRefModel>[]) List<TagRefModel> tags,
     @Default(0) int tagCount,
   }) = _ArticleCardModel;
 
@@ -121,7 +123,7 @@ abstract class ArticleCardModel with _$ArticleCardModel {
         excerpt: excerpt == null || excerpt!.trim().isEmpty ? null : excerpt,
         hasMore: hasMore,
         isFollowingAuthor: isFollowingAuthor,
-        tags: tags.take(ArticleCard.maxCardTags).toList(),
+        tags: [for (final t in tags.take(ArticleCard.maxCardTags)) t.toEntity()],
         tagCount: math.max(tagCount, tags.length),
       );
 }
@@ -226,7 +228,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     String? summary,
     @Default(<String, dynamic>{}) Map<String, dynamic> content,
     FieldRefModel? topic,
-    @Default(<String>[]) List<String> tags,
+    @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) @Default(<TagRefModel>[]) List<TagRefModel> tags,
     @Default(<SourceModel>[]) List<SourceModel> sources,
     @Default(0) int saveCount,
     @Default(0) int readCount,
@@ -259,7 +261,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         myReaction: reactionTypeFromWire(myReaction),
         isSaved: isSaved,
         isFollowingAuthor: isFollowingAuthor,
-        tags: tags.take(ArticleCard.maxCardTags).toList(),
+        tags: [for (final t in tags.take(ArticleCard.maxCardTags)) t.toEntity()],
         tagCount: tags.length,
       );
 
@@ -269,7 +271,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         summary: summary,
         content: content.isEmpty ? RDocDocument.empty : RDocDocument.fromJson(content),
         topic: topic?.toEntity(),
-        tags: tags,
+        tags: [for (final t in tags) t.toEntity()],
         sources: [for (final s in sources) ArticleSource(title: s.title, url: s.url)],
         readCount: readCount,
         isFollowingAuthor: isFollowingAuthor,

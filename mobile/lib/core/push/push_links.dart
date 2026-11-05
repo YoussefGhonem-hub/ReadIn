@@ -26,8 +26,9 @@ String? pushNotificationId(Map<String, dynamic> data) {
 /// (`https://{domain}/ar/a/{slug}`, `/en/a/{slug}`, opened in that version; [AppLinks.webHost] only), profiles
 /// (`readin://u/{username}`, `https://{domain}/@{username}`) and their followers (`readin://u/{username}/followers`), the own reading stats
 /// (`readin://me/stats`), the account settings (`readin://settings/account`), writer verification
-/// (`readin://verification`, F19), the notification center and app paths open the matching screen; anything else
-/// returns null, so a push can never open an arbitrary location.
+/// (`readin://verification`, F19), tag pages (`readin://tags/{slug}`, `https://{domain}/tags/{slug}`, F32), the
+/// notification center and app paths open the matching screen; anything else returns null, so a push can never open
+/// an arbitrary location.
 String? pushLinkToPath(String? link) {
   final text = link?.trim() ?? '';
   if (text.isEmpty) return null;
@@ -64,6 +65,11 @@ String? pushLinkToPath(String? link) {
   if (parts.length == 2 && parts[0] == 'settings' && parts[1] == 'account') return '/settings?section=account';
   // A verification result (F19): the web's /verification is Settings → Writer verification here.
   if (parts.length == 1 && parts[0] == 'verification') return '/settings/verification';
+  // A tag's page (F32). The slug arrives decoded (it may hold Arabic letters) and goes back percent-encoded; slugs are
+  // lower case, so a link typed as /tags/CSharp still finds csharp.
+  if (parts.length == 2 && parts[0] == 'tags' && _isSlug(parts[1])) {
+    return '/tags/${Uri.encodeComponent(parts[1].toLowerCase())}';
+  }
   return null;
 }
 
@@ -90,3 +96,8 @@ final _handle = RegExp(r'^[A-Za-z0-9_.]{1,30}$');
 final _commentAnchor = RegExp(r'^comment-[A-Za-z0-9-]{1,64}$');
 
 bool _isHandle(String value) => _handle.hasMatch(value);
+
+/// A tag slug: letters (Arabic too), combining marks, digits and `-` (docs/api/contract-v1.md, "Tags").
+final _slug = RegExp(r'^[\p{L}\p{M}\p{Nd}-]{1,100}$', unicode: true);
+
+bool _isSlug(String value) => _slug.hasMatch(value);

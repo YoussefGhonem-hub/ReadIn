@@ -51,7 +51,7 @@ RDocDocument document({int headings = 3, int paragraphsPerSection = 1}) => RDocD
 ArticleDetails article({
   FieldRef field = dotnetField,
   RDocDocument? content,
-  List<String> tags = const [],
+  List<TagRef> tags = const [],
   String? summary,
 }) =>
     ArticleDetails(
@@ -157,11 +157,45 @@ void main() {
     });
   });
 
-  testWidgets('tags show as plain chips under the content (F04)', (tester) async {
-    await pumpBody(tester, article(tags: const ['csharp', 'di']), size: const Size(390, 1200));
+  testWidgets('tags show under the content and each opens its tag page (F04, F32)', (tester) async {
+    final opened = <String>[];
+    const tags = [TagRef(slug: 'csharp', name: 'C#'), TagRef(slug: 'cplusplus', name: 'C++')];
+    usePhoneSurface(tester, size: const Size(390, 1200));
+    final router = GoRouter(
+      initialLocation: '/a/article-1',
+      routes: [
+        GoRoute(path: '/a/:slug', builder: (_, _) => Scaffold(body: ReaderBody(article: article(tags: tags), bodyFontSize: 17))),
+        GoRoute(
+          path: '/tags/:slug',
+          builder: (_, state) {
+            opened.add(state.pathParameters['slug']!);
+            return const Text('tag page');
+          },
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(MaterialApp.router(
+      locale: AppLocales.en,
+      supportedLocales: AppLocales.supported,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      theme: AppTheme.light(AppLocales.en),
+      routerConfig: router,
+    ));
+    await tester.pumpAndSettle();
+
     expect(find.byType(ArticleTags), findsOneWidget);
+    expect(find.text('#C#'), findsOneWidget);
+    expect(find.text('#C++'), findsOneWidget);
+    await tester.tap(find.text('#C++'));
+    await tester.pumpAndSettle();
+    expect(opened, ['cplusplus']);
+    expect(find.text('tag page'), findsOneWidget);
+  });
+
+  testWidgets("a tag without a page (an offline copy from before tag pages) isn't a link", (tester) async {
+    await pumpBody(tester, article(tags: const [TagRef(slug: '', name: 'csharp')]), size: const Size(390, 1200));
     expect(find.text('#csharp'), findsOneWidget);
-    expect(find.text('#di'), findsOneWidget);
     expect(find.ancestor(of: find.text('#csharp'), matching: find.byType(InkWell)), findsNothing, reason: 'not tappable');
   });
 

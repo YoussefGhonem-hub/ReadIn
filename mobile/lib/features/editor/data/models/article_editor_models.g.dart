@@ -116,6 +116,7 @@ _DraftProblemModel _$DraftProblemModelFromJson(Map<String, dynamic> json) =>
       language: json['language'] as String?,
       blockId: json['blockId'] as String?,
       mediaAssetId: json['mediaAssetId'] as String?,
+      tag: json['tag'] as String?,
     );
 
 Map<String, dynamic> _$DraftProblemModelToJson(_DraftProblemModel instance) =>
@@ -124,6 +125,7 @@ Map<String, dynamic> _$DraftProblemModelToJson(_DraftProblemModel instance) =>
       'language': ?instance.language,
       'blockId': ?instance.blockId,
       'mediaAssetId': ?instance.mediaAssetId,
+      'tag': ?instance.tag,
     };
 
 _DraftChecksModel _$DraftChecksModelFromJson(Map<String, dynamic> json) =>
@@ -315,15 +317,3 @@ Map<String, dynamic> _$MyArticlePageModelToJson(_MyArticlePageModel instance) =>
       'items': instance.items.map((e) => e.toJson()).toList(),
       'nextCursor': ?instance.nextCursor,
     };
-
-_TagModel _$TagModelFromJson(Map<String, dynamic> json) => _TagModel(
-  slug: json['slug'] as String,
-  name: json['name'] as String,
-  articleCount: (json['articleCount'] as num?)?.toInt() ?? 0,
-);
-
-Map<String, dynamic> _$TagModelToJson(_TagModel instance) => <String, dynamic>{
-  'slug': instance.slug,
-  'name': instance.name,
-  'articleCount': instance.articleCount,
-};

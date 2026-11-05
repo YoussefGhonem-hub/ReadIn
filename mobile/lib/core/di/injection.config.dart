@@ -254,6 +254,12 @@ import '../../features/settings/presentation/cubit/interests_cubit.dart'
     as _i280;
 import '../../features/settings/presentation/cubit/settings_cubit.dart'
     as _i792;
+import '../../features/tags/data/datasources/tags_api.dart' as _i94;
+import '../../features/tags/data/repositories/tags_repository_impl.dart'
+    as _i160;
+import '../../features/tags/domain/repositories/tags_repository.dart' as _i1070;
+import '../../features/tags/domain/usecases/tag_usecases.dart' as _i83;
+import '../../features/tags/presentation/cubit/tag_cubits.dart' as _i909;
 import '../../features/taxonomy/data/datasources/taxonomy_api.dart' as _i421;
 import '../../features/taxonomy/data/repositories/taxonomy_repository_impl.dart'
     as _i551;
@@ -444,11 +450,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i741.PreferencesApi>(
       () => _i741.PreferencesApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i94.TagsApi>(() => _i94.TagsApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i421.TaxonomyApi>(
       () => _i421.TaxonomyApi(gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i1061.VerificationApi>(
       () => _i1061.VerificationApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i1070.TagsRepository>(
+      () => _i160.TagsRepositoryImpl(gh<_i94.TagsApi>()),
     );
     gh.lazySingleton<_i848.DocumentFileDataSource>(
       () => _i848.DocumentFileDataSource(gh<_i361.Dio>()),
@@ -596,6 +606,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i97.SearchGlossaryTerms>(
       () => _i97.SearchGlossaryTerms(gh<_i268.GlossaryRepository>()),
+    );
+    gh.factory<_i83.GetTag>(() => _i83.GetTag(gh<_i1070.TagsRepository>()));
+    gh.factory<_i83.GetTagArticles>(
+      () => _i83.GetTagArticles(gh<_i1070.TagsRepository>()),
     );
     gh.factory<_i463.GlossarySearchCubit>(
       () => _i463.GlossarySearchCubit(gh<_i97.SearchGlossaryTerms>()),
@@ -829,6 +843,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i924.SetPathEnrollment>(),
       ),
     );
+    gh.factory<_i909.TagCubit>(() => _i909.TagCubit(gh<_i83.GetTag>()));
     gh.factory<_i100.ModerationActionCubit>(
       () => _i100.ModerationActionCubit(
         gh<_i130.TakeModerationAction>(),
@@ -862,6 +877,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i504.DownloadDocument>(),
         gh<_i868.ShareService>(),
       ),
+    );
+    gh.factoryParam<_i909.TagArticlesCubit, String, dynamic>(
+      (slug, _) => _i909.TagArticlesCubit(gh<_i83.GetTagArticles>(), slug),
     );
     gh.factory<_i321.ReadingHeatmapCubit>(
       () => _i321.ReadingHeatmapCubit(gh<_i892.GetReadingHeatmap>()),

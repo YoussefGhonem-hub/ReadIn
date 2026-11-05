@@ -1,6 +1,7 @@
 import '../../../../shared/rdoc/editing/block_editing.dart';
 import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../media/domain/entities/media.dart';
+import '../../../tags/domain/services/tag_names.dart';
 import '../../../taxonomy/domain/entities/field.dart';
 import '../entities/editor_entities.dart';
 
@@ -53,9 +54,12 @@ abstract final class DraftChecker {
 
 extension ArticleDraftDocumentSave on ArticleDraftDocument {
   /// The document autosave sends: each translation's content with the blocks still being filled in left out
-  /// ([RDocSanitizer]), trimmed tags and sources.
+  /// ([RDocSanitizer]), and the tags cleaned like the API cleans them (F32).
   ArticleDraftDocument forSave() => copyWith(
         translations: [for (final t in translations) t.copyWith(content: RDocSanitizer.forSave(t.content))],
-        tags: [for (final tag in tags) if (tag.trim().isNotEmpty) tag.trim()],
+        tags: [
+          for (final tag in tags)
+            if (TagNames.clean(tag) case final name when name.isNotEmpty) name,
+        ],
       );
 }

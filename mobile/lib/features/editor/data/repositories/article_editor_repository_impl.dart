@@ -5,6 +5,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/models/cursor_page.dart';
 import '../../../../core/network/api_error_mapper.dart';
+import '../../../tags/domain/services/tag_names.dart';
 import '../../domain/entities/editor_entities.dart';
 import '../../domain/repositories/article_editor_repository.dart';
 import '../../domain/services/draft_checker.dart';
@@ -86,5 +87,5 @@ class ArticleEditorRepositoryImpl implements ArticleEditorRepository {
 
   @override
   Future<Result<List<ArticleTag>>> suggestTags(String query) =>
-      guardApi(() async => [for (final t in await _api.tags(query.trim())) t.toEntity()]);
+      guardApi(() async => [for (final t in await _api.tags(TagNames.clean(query))) t.toEntity()]);
 }

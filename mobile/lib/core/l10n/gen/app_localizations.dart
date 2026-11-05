@@ -4313,7 +4313,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagsHint.
   ///
   /// In en, this message translates to:
-  /// **'Type a tag and press enter'**
+  /// **'Type a tag, then Enter or a comma'**
   String get tagsHint;
 
   /// No description provided for @tagsLimit.
@@ -4327,6 +4327,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove {tag}'**
   String removeTag(String tag);
+
+  /// No description provided for @tagsFull.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s 5 tags, the most an article can have. Remove one to add another.'**
+  String get tagsFull;
+
+  /// No description provided for @tagsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get tagsAdd;
+
+  /// No description provided for @tagCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new tag: {name}'**
+  String tagCreate(String name);
+
+  /// No description provided for @tagSuggestionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested tags'**
+  String get tagSuggestionsLabel;
+
+  /// No description provided for @tagAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'The article already has this tag.'**
+  String get tagAlreadyAdded;
+
+  /// No description provided for @tagTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'A tag needs at least 2 characters.'**
+  String get tagTooShort;
+
+  /// No description provided for @tagTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'A tag can have at most 30 characters.'**
+  String get tagTooLong;
+
+  /// No description provided for @tagInvalidCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Use letters, digits, spaces and - _ . + # only.'**
+  String get tagInvalidCharacters;
+
+  /// No description provided for @tagNoLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'A tag needs at least one letter or digit.'**
+  String get tagNoLetter;
+
+  /// No description provided for @problemTagHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'The tag {name} isn\'t available. Remove it or choose another one.'**
+  String problemTagHidden(String name);
+
+  /// No description provided for @problemTagLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve created a lot of new tags today, so {name} can\'t be added now. Pick an existing tag, or try again later.'**
+  String problemTagLimit(String name);
 
   /// No description provided for @coverLabel.
   ///
@@ -6746,6 +6812,42 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 more tag} other{{count} more tags}}'**
   String postMoreTags(int count);
 
+  /// No description provided for @tagOpenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the tag page'**
+  String get tagOpenHint;
+
+  /// No description provided for @tagPageArticleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No articles yet} =1{1 article} other{{count} articles}}'**
+  String tagPageArticleCount(int count);
+
+  /// No description provided for @tagPageEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No articles with this tag yet'**
+  String get tagPageEmptyTitle;
+
+  /// No description provided for @tagPageEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Once someone publishes an article with this tag, you\'ll find it here.'**
+  String get tagPageEmptyBody;
+
+  /// No description provided for @tagNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This tag doesn\'t exist'**
+  String get tagNotFoundTitle;
+
+  /// No description provided for @tagNotFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It may have been removed or renamed. Try another tag.'**
+  String get tagNotFoundBody;
+
   /// No description provided for @errInterestsUnknown.
   ///
   /// In en, this message translates to:
@@ -6799,6 +6901,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An article can have at most 5 tags.'**
   String get errArticleTagsMaxFive;
+
+  /// No description provided for @errArticleTooManyTags.
+  ///
+  /// In en, this message translates to:
+  /// **'An article can have at most 5 tags.'**
+  String get errArticleTooManyTags;
+
+  /// No description provided for @errTagNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag not found.'**
+  String get errTagNotFound;
+
+  /// No description provided for @errTagInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'A tag has 2–30 characters: letters, digits, spaces and - _ . + # only.'**
+  String get errTagInvalid;
+
+  /// No description provided for @errTagLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve created a lot of new tags today. Pick existing tags, or try again later.'**
+  String get errTagLimit;
+
+  /// No description provided for @errTagHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'This tag isn\'t available. Choose another one.'**
+  String get errTagHidden;
 
   /// No description provided for @errArticleLanguageInvalid.
   ///

@@ -2550,7 +2550,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagsLabel => 'Tags';
 
   @override
-  String get tagsHint => 'Type a tag and press enter';
+  String get tagsHint => 'Type a tag, then Enter or a comma';
 
   @override
   String tagsLimit(int count) {
@@ -2560,6 +2560,47 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String removeTag(String tag) {
     return 'Remove $tag';
+  }
+
+  @override
+  String get tagsFull =>
+      'That\'s 5 tags, the most an article can have. Remove one to add another.';
+
+  @override
+  String get tagsAdd => 'Add';
+
+  @override
+  String tagCreate(String name) {
+    return 'Create new tag: $name';
+  }
+
+  @override
+  String get tagSuggestionsLabel => 'Suggested tags';
+
+  @override
+  String get tagAlreadyAdded => 'The article already has this tag.';
+
+  @override
+  String get tagTooShort => 'A tag needs at least 2 characters.';
+
+  @override
+  String get tagTooLong => 'A tag can have at most 30 characters.';
+
+  @override
+  String get tagInvalidCharacters =>
+      'Use letters, digits, spaces and - _ . + # only.';
+
+  @override
+  String get tagNoLetter => 'A tag needs at least one letter or digit.';
+
+  @override
+  String problemTagHidden(String name) {
+    return 'The tag $name isn\'t available. Remove it or choose another one.';
+  }
+
+  @override
+  String problemTagLimit(String name) {
+    return 'You\'ve created a lot of new tags today, so $name can\'t be added now. Pick an existing tag, or try again later.';
   }
 
   @override
@@ -4008,6 +4049,35 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get tagOpenHint => 'Opens the tag page';
+
+  @override
+  String tagPageArticleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles',
+      one: '1 article',
+      zero: 'No articles yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tagPageEmptyTitle => 'No articles with this tag yet';
+
+  @override
+  String get tagPageEmptyBody =>
+      'Once someone publishes an article with this tag, you\'ll find it here.';
+
+  @override
+  String get tagNotFoundTitle => 'This tag doesn\'t exist';
+
+  @override
+  String get tagNotFoundBody =>
+      'It may have been removed or renamed. Try another tag.';
+
+  @override
   String get errInterestsUnknown => 'Some fields or topics don\'t exist.';
 
   @override
@@ -4036,6 +4106,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errArticleTagsMaxFive => 'An article can have at most 5 tags.';
+
+  @override
+  String get errArticleTooManyTags => 'An article can have at most 5 tags.';
+
+  @override
+  String get errTagNotFound => 'Tag not found.';
+
+  @override
+  String get errTagInvalid =>
+      'A tag has 2–30 characters: letters, digits, spaces and - _ . + # only.';
+
+  @override
+  String get errTagLimit =>
+      'You\'ve created a lot of new tags today. Pick existing tags, or try again later.';
+
+  @override
+  String get errTagHidden => 'This tag isn\'t available. Choose another one.';
 
   @override
   String get errArticleLanguageInvalid =>

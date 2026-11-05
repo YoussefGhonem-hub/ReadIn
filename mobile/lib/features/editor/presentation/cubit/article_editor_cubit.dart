@@ -11,6 +11,7 @@ import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../article/domain/entities/article.dart';
 import '../../../media/domain/entities/media.dart';
 import '../../../media/domain/usecases/media_usecases.dart';
+import '../../../tags/domain/services/tag_names.dart';
 import '../../../taxonomy/domain/entities/field.dart';
 import '../../../taxonomy/domain/usecases/taxonomy_usecases.dart';
 import '../../domain/entities/editor_backup.dart';
@@ -20,6 +21,30 @@ import '../../domain/services/draft_checker.dart';
 import '../../domain/usecases/editor_usecases.dart';
 
 part 'article_editor_state.dart';
+
+/// What [ArticleEditorCubit.addTag] did with a name (F32).
+enum TagAddResult {
+  added,
+
+  /// Nothing left after cleaning.
+  empty,
+
+  /// The article already has that tag (ignoring case and Arabic normalization).
+  duplicate,
+
+  /// The article has 5 tags.
+  full,
+
+  /// A new tag needs 2 to 30 characters.
+  tooShort,
+  tooLong,
+
+  /// A new tag has letters, digits, spaces and `- _ . + #` only.
+  invalidCharacters,
+
+  /// A new tag needs a letter or digit (tatweel aside).
+  noLetter,
+}
 
 /// The article editor (F05): one article's working copy, every language version and its settings.
 ///
@@ -262,14 +287,31 @@ class ArticleEditorCubit extends Cubit<ArticleEditorState> {
 
   void selectTopic(String? topicId) => _edit(state.document.copyWith(topicId: () => topicId));
 
-  /// Adds a tag (trimmed, ≤ 40 characters, at most 5, no duplicates ignoring case).
-  bool addTag(String tag) {
-    final value = tag.trim().replaceAll(RegExp(r'\s+'), ' ');
+  /// Adds a tag (F32), [name] cleaned like the API cleans it (a leading `#` dropped, spaces collapsed). A repeat of a
+  /// tag the article has (ignoring case and Arabic normalization) and a sixth tag are not added. A new name must
+  /// follow the tag rules; an [existing] tag picked from the suggestions is added as it is, even one older than them.
+  TagAddResult addTag(String name, {bool existing = false}) {
+    final value = TagNames.clean(name);
     final tags = state.document.tags;
-    if (value.isEmpty || value.length > DraftLimits.maxTagLength || tags.length >= DraftLimits.maxTags) return false;
-    if (tags.any((t) => t.toLowerCase() == value.toLowerCase())) return false;
+    if (value.isEmpty) return TagAddResult.empty;
+    if (TagNames.containsTag(tags, value)) return TagAddResult.duplicate;
+    if (tags.length >= DraftLimits.maxTags) return TagAddResult.full;
+    if (!existing) {
+      switch (TagNames.validate(value)) {
+        case TagNameError.tooShort:
+          return TagAddResult.tooShort;
+        case TagNameError.tooLong:
+          return TagAddResult.tooLong;
+        case TagNameError.invalidCharacters:
+          return TagAddResult.invalidCharacters;
+        case TagNameError.noLetter:
+          return TagAddResult.noLetter;
+        case null:
+          break;
+      }
+    }
     _edit(state.document.copyWith(tags: [...tags, value]));
-    return true;
+    return TagAddResult.added;
   }
 
   void removeTag(String tag) => _edit(state.document.copyWith(tags: [...state.document.tags.where((t) => t != tag)]));

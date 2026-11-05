@@ -70,12 +70,17 @@ void main() {
       // A shared profile link (F14) opens too.
       expect(redirect('/u/mona', guest, fresh), isNull);
       expect(redirect('/u/mona/followers', guest, fresh), isNull);
+      // And a tag page (F32), from the app's deep link or the web's https://{domain}/tags/{slug}.
+      expect(redirect('/tags/csharp', guest, fresh), isNull);
+      expect(redirect('/tags/${Uri.encodeComponent('الذكاء-الاصطناعي')}', guest, fresh), isNull);
+      expect(redirect('/splash?from=%2Ftags%2Fcsharp', guest, fresh), '/tags/csharp');
     });
 
     test('can browse and read once Welcome was seen', () {
       expect(redirect('/home', guest), isNull);
       expect(redirect('/explore', guest), isNull);
       expect(redirect('/a/di-in-dotnet', guest), isNull);
+      expect(redirect('/tags/csharp', guest), isNull);
       expect(redirect('/settings', guest), isNull);
     });
 

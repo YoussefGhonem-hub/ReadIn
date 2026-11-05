@@ -146,15 +146,22 @@ class ArticleEditorState extends Equatable {
   /// Something is still uploading or processing: publishing waits for it.
   bool get uploading => uploads > 0 || attachmentsBusy;
 
-  /// The publish checks: the API's while they describe the document, else the device's (plus the API's
-  /// `content_invalid`, which only the API can tell).
+  /// The publish checks: the API's while they describe the document, else the device's, plus what only the API can
+  /// tell: `content_invalid`, and the `tag.hidden` / `tag.limit` of the tags the document still has (F32).
   List<DraftProblem> get problems {
     if (checksFresh && !dirty) return checks.problems;
     return [
       ...DraftChecker.problems(document, field: field, assets: attachmentAssets),
-      ...checks.problems.where((p) => p.code == DraftProblemCodes.contentInvalid),
+      ...checks.problems.where((p) =>
+          p.code == DraftProblemCodes.contentInvalid ||
+          (DraftProblemCodes.tagProblems.contains(p.code) && p.tag != null && TagNames.containsTag(document.tags, p.tag!))),
     ];
   }
+
+  /// The API's `tag.hidden` / `tag.limit` problem of the tag [name], if any (F32).
+  DraftProblem? tagProblemOf(String name) => problems
+      .where((p) => DraftProblemCodes.tagProblems.contains(p.code) && p.tag != null && TagNames.same(p.tag!, name))
+      .firstOrNull;
 
   ReadingTime? get readingTime => checks.readingTimeOf(activeLanguage);
 

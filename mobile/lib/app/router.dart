@@ -39,6 +39,8 @@ import '../features/settings/domain/entities/app_settings.dart';
 import '../features/settings/presentation/cubit/settings_cubit.dart';
 import '../features/settings/presentation/pages/interests_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
+import '../features/tags/presentation/pages/tag_page.dart';
+import '../features/tags/presentation/tag_routes.dart';
 import '../features/verification/presentation/pages/verification_page.dart';
 import 'main_shell.dart';
 import 'splash_page.dart';
@@ -80,6 +82,9 @@ abstract final class AppRoutes {
 
   /// A learning path (F09).
   static String path(String slug) => PathRoutes.of(slug);
+
+  /// A tag's page (F32).
+  static String tag(String slug) => TagRoutes.of(slug);
 
   /// `?lang=` of an article link: open that version (`ar-EG` / `en`) rather than the preferred one, e.g. the version
   /// Continue reading resumes (F03). Anything else is ignored.
@@ -130,8 +135,8 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
       targetPath == AppRoutes.interests ||
       targetPath == AppRoutes.readingStats ||
       targetPath == AppRoutes.verification;
-  // Shared links open for first-time guests too, without Welcome first.
-  final isArticle = targetPath.startsWith('/a/') || targetPath.startsWith('/u/');
+  // Shared links (articles, profiles, tag pages) open for first-time guests too, without Welcome first.
+  final isArticle = targetPath.startsWith('/a/') || targetPath.startsWith('/u/') || targetPath.startsWith('/tags/');
   String? stay() => atSplash ? target : null;
 
   if (session.isAuthenticated) {
@@ -195,6 +200,8 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
           language: AppRoutes.articleLanguage(state.uri),
         ),
       ),
+      // A tag's page (F32), guests allowed; its web link https://{domain}/tags/{slug} opens it too (App Links).
+      GoRoute(path: TagRoutes.pattern, builder: (_, state) => TagPage(slug: state.pathParameters['slug']!)),
       // The editor (F05), full screen above the tabs: a new article, or one of mine.
       GoRoute(path: EditorRoutes.newArticle, builder: (_, _) => const ArticleEditorPage()),
       GoRoute(path: '${AppRoutes.write}/:id', builder: (_, state) => ArticleEditorPage(articleId: state.pathParameters['id'])),

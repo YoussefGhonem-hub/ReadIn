@@ -407,19 +407,55 @@ void main() {
       await cubit.close();
     });
 
-    test('tags: trimmed, no duplicates, at most 5 of at most 40 characters', () async {
+    test('tags (F32): cleaned, the rules for new names, no repeats, at most 5', () async {
       final cubit = build();
       await cubit.open(language: 'ar-EG');
-      expect(cubit.addTag('  dotnet '), isTrue);
-      expect(cubit.addTag('DotNet'), isFalse);
-      expect(cubit.addTag('x' * 41), isFalse);
-      for (final t in ['a', 'b', 'c', 'd']) {
-        cubit.addTag(t);
-      }
-      expect(cubit.addTag('f'), isFalse);
-      expect(cubit.state.document.tags, ['dotnet', 'a', 'b', 'c', 'd']);
-      cubit.removeTag('a');
-      expect(cubit.state.document.tags, ['dotnet', 'b', 'c', 'd']);
+      expect(cubit.addTag('  #dotnet '), TagAddResult.added, reason: 'a leading # and the spaces go');
+      expect(cubit.addTag('DotNet'), TagAddResult.duplicate, reason: 'case-insensitive');
+      expect(cubit.addTag('   '), TagAddResult.empty);
+      expect(cubit.addTag('x'), TagAddResult.tooShort);
+      expect(cubit.addTag('x' * 31), TagAddResult.tooLong);
+      expect(cubit.addTag('CI/CD'), TagAddResult.invalidCharacters);
+      expect(cubit.addTag('++'), TagAddResult.noLetter);
+      expect(cubit.addTag('ــ'), TagAddResult.noLetter, reason: 'tatweel is no letter');
+      expect(cubit.addTag('CI/CD', existing: true), TagAddResult.added, reason: 'an existing tag is taken as it is');
+      expect(cubit.addTag('الذكاء  الاصطناعي'), TagAddResult.added);
+      expect(cubit.addTag('الذّكاء الإصطناعي'), TagAddResult.duplicate, reason: 'Arabic normalization');
+      expect(cubit.addTag('C#'), TagAddResult.added);
+      expect(cubit.addTag('.NET'), TagAddResult.added);
+      expect(cubit.addTag('C++'), TagAddResult.full);
+      expect(cubit.state.document.tags, ['dotnet', 'CI/CD', 'الذكاء الاصطناعي', 'C#', '.NET']);
+      cubit.removeTag('CI/CD');
+      expect(cubit.state.document.tags, ['dotnet', 'الذكاء الاصطناعي', 'C#', '.NET']);
+      expect(cubit.addTag('C++'), TagAddResult.added);
+      await cubit.close();
+    });
+
+    test("the API's tag.hidden and tag.limit stay while their tag does, and block publishing", () async {
+      repo.onGet = (id) => Ok(sampleEdit(
+            id: id,
+            document: sampleEdit().document.copyWith(tags: const ['Old', 'brand-new']),
+            checks: const DraftChecks(problems: [
+              DraftProblem(FailureCodes.tagHidden, tag: 'Old'),
+              DraftProblem(FailureCodes.tagLimit, tag: 'brand-new'),
+            ]),
+          ));
+      final cubit = build();
+      await cubit.open(articleId: 'art-1', language: 'ar-EG');
+      expect(cubit.state.problems.map((p) => p.code), [FailureCodes.tagHidden, FailureCodes.tagLimit]);
+      expect(cubit.state.tagProblemOf('old')?.code, FailureCodes.tagHidden, reason: 'the same tag, any case');
+      expect(cubit.state.canPublish, isFalse);
+
+      cubit.setTitle(ar, 'عنوان جديد للمقال ده');
+      expect(cubit.state.dirty, isTrue);
+      expect(cubit.state.problems.map((p) => p.code), [FailureCodes.tagHidden, FailureCodes.tagLimit],
+          reason: 'only the API can tell, so they stay between saves');
+      cubit.removeTag('Old');
+      expect(cubit.state.problems.map((p) => p.code), [FailureCodes.tagLimit]);
+      expect(cubit.state.tagProblemOf('Old'), isNull);
+      cubit.removeTag('brand-new');
+      expect(cubit.state.problems, isEmpty);
+      expect(cubit.state.canPublish, isTrue);
       await cubit.close();
     });
 

@@ -2584,10 +2584,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get topicNone => 'من غير موضوع';
 
   @override
-  String get tagsLabel => 'الـ Tags';
+  String get tagsLabel => 'التاجات';
 
   @override
-  String get tagsHint => 'اكتب tag ودوس Enter';
+  String get tagsHint => 'اكتب تاج ودوس Enter أو فاصلة';
 
   @override
   String tagsLimit(int count) {
@@ -2597,6 +2597,47 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String removeTag(String tag) {
     return 'شيل $tag';
+  }
+
+  @override
+  String get tagsFull =>
+      'دول 5 تاجات، أقصى عدد للمقال. شيل واحد عشان تضيف غيره.';
+
+  @override
+  String get tagsAdd => 'ضيف';
+
+  @override
+  String tagCreate(String name) {
+    return 'إنشاء تاج جديد: $name';
+  }
+
+  @override
+  String get tagSuggestionsLabel => 'تاجات مقترحة';
+
+  @override
+  String get tagAlreadyAdded => 'التاج ده موجود على المقال بالفعل.';
+
+  @override
+  String get tagTooShort => 'التاج لازم يكون حرفين على الأقل.';
+
+  @override
+  String get tagTooLong => 'التاج ميزيدش عن 30 حرف.';
+
+  @override
+  String get tagInvalidCharacters =>
+      'استخدم حروف وأرقام ومسافات و ⁦- _ . + #⁩ بس.';
+
+  @override
+  String get tagNoLetter => 'التاج لازم يكون فيه حرف أو رقم على الأقل.';
+
+  @override
+  String problemTagHidden(String name) {
+    return 'التاج $name مش متاح، شيله أو اختار تاج تاني.';
+  }
+
+  @override
+  String problemTagLimit(String name) {
+    return 'عملت تاجات جديدة كتير النهارده، فالتاج $name مش هيتضاف دلوقتي. اختار تاج موجود أو جرّب بعدين.';
   }
 
   @override
@@ -4057,12 +4098,43 @@ class AppLocalizationsAr extends AppLocalizations {
       locale: localeName,
       other: '$count تاج كمان',
       many: '$count تاج كمان',
-      few: '$count تاجز كمان',
+      few: '$count تاجات كمان',
       two: 'تاجين كمان',
       one: 'تاج كمان',
     );
     return '$_temp0';
   }
+
+  @override
+  String get tagOpenHint => 'بيفتح صفحة التاج';
+
+  @override
+  String tagPageArticleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مقال',
+      many: '$count مقال',
+      few: '$count مقالات',
+      two: 'مقالين',
+      one: 'مقال واحد',
+      zero: 'لسه مفيش مقالات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tagPageEmptyTitle => 'لسه مفيش مقالات بالتاج ده';
+
+  @override
+  String get tagPageEmptyBody => 'أول ما حد ينشر مقال بالتاج ده، هتلاقيه هنا.';
+
+  @override
+  String get tagNotFoundTitle => 'التاج ده مش موجود';
+
+  @override
+  String get tagNotFoundBody =>
+      'ممكن يكون اتشال أو اتغيّر اسمه. جرّب تاج تاني.';
 
   @override
   String get errInterestsUnknown => 'فيه مجالات أو مواضيع مش موجودة.';
@@ -4090,7 +4162,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errArticleSlugTaken => 'الرابط ده مستخدم لمقال تاني.';
 
   @override
-  String get errArticleTagsMaxFive => 'أقصى حاجة 5 تاجز للمقال.';
+  String get errArticleTagsMaxFive => 'أقصى حاجة 5 تاجات للمقال.';
+
+  @override
+  String get errArticleTooManyTags => 'أقصى حاجة 5 تاجات للمقال.';
+
+  @override
+  String get errTagNotFound => 'التاج ده مش موجود.';
+
+  @override
+  String get errTagInvalid =>
+      'التاج لازم يكون من 2 لـ 30 حرف: حروف وأرقام ومسافات و ⁦- _ . + #⁩ بس.';
+
+  @override
+  String get errTagLimit =>
+      'عملت تاجات جديدة كتير النهارده. اختار من التاجات الموجودة، أو جرّب تاني بعدين.';
+
+  @override
+  String get errTagHidden => 'التاج ده مش متاح، اختار تاج تاني.';
 
   @override
   String get errArticleLanguageInvalid => 'لغة المقال دي مش مدعومة.';

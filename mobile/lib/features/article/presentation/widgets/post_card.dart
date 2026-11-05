@@ -30,6 +30,7 @@ import '../../../reactions/presentation/widgets/reaction_button.dart';
 import '../../../reactions/presentation/widgets/who_reacted_sheet.dart';
 import '../../../reading/presentation/tracking/post_card_reading.dart';
 import '../../../saved/presentation/widgets/save_button.dart';
+import '../../../tags/presentation/widgets/tag_chip.dart';
 import '../../domain/entities/article.dart';
 import '../../domain/usecases/get_article_preview.dart';
 import '../cubit/engagement_cubit.dart';
@@ -44,8 +45,8 @@ import 'post_card_text.dart';
 /// (follow, save and "⋯" on the other side), the title, the beginning of the article with "Read more", the
 /// attachments or the cover, up to three tags, the counts and the action bar (react, comment, share).
 ///
-/// The card is not one link: the title opens the reader, the text expands in place, an image opens the viewer and the
-/// writer opens their profile. Counts and the viewer's reaction and save follow [EngagementCubit] (live counters,
+/// The card is not one link: the title opens the reader, the text expands in place, an image opens the viewer, the
+/// writer opens their profile and a tag its tag page (F32). Counts and the viewer's reaction and save follow [EngagementCubit] (live counters,
 /// F27). A [PostCardsCubit] above keeps the expanded cards of the list; without one the card keeps its own.
 class PostCard extends StatefulWidget {
   const PostCard({super.key, required this.article, this.label, this.onOpen});
@@ -424,30 +425,15 @@ class _PostMedia extends StatelessWidget {
   }
 }
 
-/// Up to three tags as plain chips, then "+N" (they don't open anything until tag pages, F32).
+/// Up to three tags, each opening its tag page (F32), then "+N", which opens nothing.
 class _PostTags extends StatelessWidget {
   const _PostTags({required this.article});
 
   final ArticleCard article;
 
   @override
-  Widget build(BuildContext context) {
-    final more = article.tagCount - article.tags.length;
-    return Wrap(
-      spacing: ReadInSpace.s2,
-      runSpacing: ReadInSpace.s2,
-      children: [
-        // InfoTag isolates a tag written in the other direction with its "#".
-        for (final tag in article.tags) InfoTag(label: '#$tag', tone: InfoTagTone.neutral),
-        if (more > 0)
-          Semantics(
-            label: context.l10n.postMoreTags(more),
-            excludeSemantics: true,
-            child: InfoTag(label: Bidi.ltrIsolate('+$more'), tone: InfoTagTone.neutral),
-          ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) =>
+      TagChipsWrap(tags: article.tags, more: article.tagCount - article.tags.length);
 }
 
 /// Up to three reaction emojis and the total (who reacted) and "12 تعليق" (the comments). Nothing while both are 0.
