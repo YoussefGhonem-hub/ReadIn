@@ -782,6 +782,10 @@ Draft ──► Published ──► Archived
 ### F11 — Comments & Replies
 - Threaded comments: top-level + replies (max depth 2, shown as one indented level with a connector line). Replying to a reply joins the same thread.
 - Sort: **Top** / **Newest**.
+- **Comment box:** your avatar, then a rounded field with "اكتب تعليق…" (Add a comment…) and an emoji button that opens an emoji picker. The same box is used in the reader and on feed cards, on web and mobile.
+- **Text and emoji only:** comments and replies have no images, GIFs or attachments, and there is no button or API field for them.
+- **Each comment shows:** the avatar, name and verified badge, the writer's title (F14) on one line under the name, the time, "متابعة" (Follow) when you don't follow them and it isn't you, and "⋯". Tapping the avatar or name opens the profile.
+- **Reply with a mention:** "رد" (Reply) opens the comment box with `@name` of the person you're replying to already in it, so they are mentioned and notified, and you can delete the mention. If they don't allow you to mention them (F18), the reply stays in the thread with no mention, and they still get the reply notification (F17).
 - Like comments, reply, `@mention` users (only people who allow the author, [F18](#f18--settings) "who can mention me"; any other `@handle` stays plain text; each mentioned user is notified, [F17](#f17--notifications)), edit (shows "edited"), delete (soft: a comment with replies stays as a "deleted" placeholder).
 - Writer badge "الكاتب" on the author's comments, author can **pin** one comment.
 - Mixed Arabic/English input renders correctly (`dir="auto"` per comment).
@@ -814,7 +818,7 @@ Draft ──► Published ──► Archived
 **Title (المسمى)**
 - Any member can add a short title in Edit profile, and optionally in Complete profile, like "Senior Full Stack .NET Engineer | .NET | Angular".
 - **Rules:** optional, up to 120 characters, one line, mixed Arabic and English (§14.2), with no direction-override characters.
-- **Where it shows:** under the name on every post card (F34), in the reader's author row (F04) and on the profile. Cards and the reader cut it to one line with "…", and the profile shows all of it. With no title, the line is hidden.
+- **Where it shows:** under the name on every post card (F34), in the reader's author row (F04), on comments and replies (F11) and on the profile. Everywhere except the profile it is cut to one line with "…", and the profile shows all of it. With no title, the line is hidden.
 - It always shows the writer's current title, so changing it updates their older posts too. A title isn't checked by anyone: only the Verified badge (F19) means a review happened.
 - **Abuse:** a title is reported by reporting the user (F22), and the SuperAdmin can clear it from the case, audited.
 - **Data:** `Users.Headline` (`nvarchar(120)`), `headline` in `AuthorDto` (null when empty), the profile and `PATCH /me`. The official account's title is "مقال كل يوم يفرق معاك", and the demo writers get titles so it shows in development.
@@ -1147,8 +1151,7 @@ Articles appear in lists as social posts, like on LinkedIn and Facebook, not as 
 | Text | Title (up to 3 lines), then the beginning of the article, cut at 4 lines with "… اقرأ المزيد" (Read more) at the end of the last line. The button has its own `<bdi>`, so it never covers text or breaks mixed text (§14.2) |
 | Media | Attachments if there are any (F26), otherwise the cover at full width (16:9). With neither there is no image at all, and the old placeholder icon is gone |
 | Tags | Up to 3 tags (F32), then "+N" |
-| Counts | Up to 3 reaction emojis with the total (opens who reacted), and on the other side "12 تعليق · 3 إعادة نشر" (opens the comments) |
-| Action bar | تفاعل (React), تعليق (Comment), إعادة نشر (Repost, F29), مشاركة (Share, F24). Always visible |
+| Action bar | **Icons only, with no text labels**, each with its count beside it: React, Comment, Repost (F29), then Share (F24), which has no count. A count of 0 shows no number. On the other side, up to 3 reaction emojis that open who reacted. Always visible. Each icon still has an accessible name with its count (§26) |
 
 Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when that feature ships.
 
@@ -1163,10 +1166,10 @@ Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when th
 - **Counting as read:** expanding alone is not a read. An article shown complete in the card counts under the F04 rule (70% seen and 30 seconds) through `PUT /articles/{id}/progress`, so short articles count toward streaks (F08). A cut-off article counts only in the reader.
 
 **React and comment while scrolling**
-- **React:** a tap gives 💡 or removes your reaction. A long press on mobile, or hover or the keyboard on web, opens the four reactions (F10). It updates at once and rolls back on failure.
-- **Comment on wide screens:** a section opens in place under the card, with the input, the top 2 comments and "عرض كل التعليقات", which loads more in place.
-- **Comment on phones (app and narrow web):** a bottom sheet with the full comments, and the feed stays where it was behind it.
-- All F11 rules apply: replies, mentions, mixed text, rate limits, editing and live updates.
+- **React:** a tap gives 💡 or removes your reaction, and the icon changes to show your reaction. A long press on mobile, or hover or the keyboard on web, opens the four reactions (F10). It updates at once and rolls back on failure.
+- **Comment on wide screens:** the comment icon opens a section in place under the card, with the comment box (F11), the top 2 comments and "عرض كل التعليقات", which loads more in place.
+- **Comment on phones (app and narrow web):** a bottom sheet with the comments and the comment box (F11), and the feed stays where it was behind it.
+- All F11 rules apply: the comment box and rows, replies, mentions, mixed text, rate limits, editing and live updates.
 - Guests get the sign-in prompt, then return to the same place in the feed.
 - Hidden, muted and deleted content follows the same rules as everywhere (F22, F28).
 
