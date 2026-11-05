@@ -37,6 +37,7 @@ class Comment extends Equatable {
     this.canReport = false,
     this.canModerate = false,
     this.replies = const [],
+    this.isAuthorMuted = false,
   });
 
   final String id;
@@ -50,6 +51,10 @@ class Comment extends Equatable {
 
   /// Null: a deleted account ("Deleted user"), or a placeholder.
   final Author? author;
+
+  /// The viewer muted the author (F28): the comment collapses to "تعليق من شخص كتمته" with "عرض"; its replies stay.
+  /// False for guests and placeholders.
+  final bool isAuthorMuted;
 
   /// The "الكاتب" badge.
   final bool isArticleAuthor;
@@ -118,6 +123,7 @@ class Comment extends Equatable {
         canReport: canReport,
         canModerate: canModerate,
         replies: replies ?? this.replies,
+        isAuthorMuted: isAuthorMuted,
       );
 
   /// What a deleted top-level comment with replies becomes: a placeholder that keeps its thread.
@@ -154,6 +160,7 @@ class Comment extends Equatable {
         canReport,
         canModerate,
         replies,
+        isAuthorMuted,
       ];
 }
 

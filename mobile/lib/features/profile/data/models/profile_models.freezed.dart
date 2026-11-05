@@ -832,7 +832,9 @@ as int,
 mixin _$ProfileModel {
 
  String get id; String get displayName; String get username; String? get avatarUrl;// `{ "64": url, "128": url, "256": url, "512": url }`, or null.
- Map<String, String>? get avatarVariants; bool get isVerified; String? get bio; ProfileLinksModel get links; List<ExpertiseFieldModel> get expertise; DateTime? get joinedAt; ProfileStatsModel get stats; bool get isMe; bool get isFollowing; bool get followsYou; bool get readingStatsVisible;
+ Map<String, String>? get avatarVariants; bool get isVerified; String? get bio; ProfileLinksModel get links; List<ExpertiseFieldModel> get expertise; DateTime? get joinedAt; ProfileStatsModel get stats; bool get isMe; bool get isFollowing; bool get followsYou; bool get readingStatsVisible;// F28: the viewer muted this user.
+ bool get isMuted;// F28: the official @readin account, which can't be muted.
+ bool get isSystemAccount;
 /// Create a copy of ProfileModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -845,16 +847,16 @@ $ProfileModelCopyWith<ProfileModel> get copyWith => _$ProfileModelCopyWithImpl<P
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProfileModel&&(identical(other.id, id) || other.id == id)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&const DeepCollectionEquality().equals(other.avatarVariants, avatarVariants)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.links, links) || other.links == links)&&const DeepCollectionEquality().equals(other.expertise, expertise)&&(identical(other.joinedAt, joinedAt) || other.joinedAt == joinedAt)&&(identical(other.stats, stats) || other.stats == stats)&&(identical(other.isMe, isMe) || other.isMe == isMe)&&(identical(other.isFollowing, isFollowing) || other.isFollowing == isFollowing)&&(identical(other.followsYou, followsYou) || other.followsYou == followsYou)&&(identical(other.readingStatsVisible, readingStatsVisible) || other.readingStatsVisible == readingStatsVisible));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProfileModel&&(identical(other.id, id) || other.id == id)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&const DeepCollectionEquality().equals(other.avatarVariants, avatarVariants)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.links, links) || other.links == links)&&const DeepCollectionEquality().equals(other.expertise, expertise)&&(identical(other.joinedAt, joinedAt) || other.joinedAt == joinedAt)&&(identical(other.stats, stats) || other.stats == stats)&&(identical(other.isMe, isMe) || other.isMe == isMe)&&(identical(other.isFollowing, isFollowing) || other.isFollowing == isFollowing)&&(identical(other.followsYou, followsYou) || other.followsYou == followsYou)&&(identical(other.readingStatsVisible, readingStatsVisible) || other.readingStatsVisible == readingStatsVisible)&&(identical(other.isMuted, isMuted) || other.isMuted == isMuted)&&(identical(other.isSystemAccount, isSystemAccount) || other.isSystemAccount == isSystemAccount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,displayName,username,avatarUrl,const DeepCollectionEquality().hash(avatarVariants),isVerified,bio,links,const DeepCollectionEquality().hash(expertise),joinedAt,stats,isMe,isFollowing,followsYou,readingStatsVisible);
+int get hashCode => Object.hash(runtimeType,id,displayName,username,avatarUrl,const DeepCollectionEquality().hash(avatarVariants),isVerified,bio,links,const DeepCollectionEquality().hash(expertise),joinedAt,stats,isMe,isFollowing,followsYou,readingStatsVisible,isMuted,isSystemAccount);
 
 @override
 String toString() {
-  return 'ProfileModel(id: $id, displayName: $displayName, username: $username, avatarUrl: $avatarUrl, avatarVariants: $avatarVariants, isVerified: $isVerified, bio: $bio, links: $links, expertise: $expertise, joinedAt: $joinedAt, stats: $stats, isMe: $isMe, isFollowing: $isFollowing, followsYou: $followsYou, readingStatsVisible: $readingStatsVisible)';
+  return 'ProfileModel(id: $id, displayName: $displayName, username: $username, avatarUrl: $avatarUrl, avatarVariants: $avatarVariants, isVerified: $isVerified, bio: $bio, links: $links, expertise: $expertise, joinedAt: $joinedAt, stats: $stats, isMe: $isMe, isFollowing: $isFollowing, followsYou: $followsYou, readingStatsVisible: $readingStatsVisible, isMuted: $isMuted, isSystemAccount: $isSystemAccount)';
 }
 
 
@@ -865,7 +867,7 @@ abstract mixin class $ProfileModelCopyWith<$Res>  {
   factory $ProfileModelCopyWith(ProfileModel value, $Res Function(ProfileModel) _then) = _$ProfileModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String displayName, String username, String? avatarUrl, Map<String, String>? avatarVariants, bool isVerified, String? bio, ProfileLinksModel links, List<ExpertiseFieldModel> expertise, DateTime? joinedAt, ProfileStatsModel stats, bool isMe, bool isFollowing, bool followsYou, bool readingStatsVisible
+ String id, String displayName, String username, String? avatarUrl, Map<String, String>? avatarVariants, bool isVerified, String? bio, ProfileLinksModel links, List<ExpertiseFieldModel> expertise, DateTime? joinedAt, ProfileStatsModel stats, bool isMe, bool isFollowing, bool followsYou, bool readingStatsVisible, bool isMuted, bool isSystemAccount
 });
 
 
@@ -882,7 +884,7 @@ class _$ProfileModelCopyWithImpl<$Res>
 
 /// Create a copy of ProfileModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? displayName = null,Object? username = null,Object? avatarUrl = freezed,Object? avatarVariants = freezed,Object? isVerified = null,Object? bio = freezed,Object? links = null,Object? expertise = null,Object? joinedAt = freezed,Object? stats = null,Object? isMe = null,Object? isFollowing = null,Object? followsYou = null,Object? readingStatsVisible = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? displayName = null,Object? username = null,Object? avatarUrl = freezed,Object? avatarVariants = freezed,Object? isVerified = null,Object? bio = freezed,Object? links = null,Object? expertise = null,Object? joinedAt = freezed,Object? stats = null,Object? isMe = null,Object? isFollowing = null,Object? followsYou = null,Object? readingStatsVisible = null,Object? isMuted = null,Object? isSystemAccount = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
@@ -899,6 +901,8 @@ as ProfileStatsModel,isMe: null == isMe ? _self.isMe : isMe // ignore: cast_null
 as bool,isFollowing: null == isFollowing ? _self.isFollowing : isFollowing // ignore: cast_nullable_to_non_nullable
 as bool,followsYou: null == followsYou ? _self.followsYou : followsYou // ignore: cast_nullable_to_non_nullable
 as bool,readingStatsVisible: null == readingStatsVisible ? _self.readingStatsVisible : readingStatsVisible // ignore: cast_nullable_to_non_nullable
+as bool,isMuted: null == isMuted ? _self.isMuted : isMuted // ignore: cast_nullable_to_non_nullable
+as bool,isSystemAccount: null == isSystemAccount ? _self.isSystemAccount : isSystemAccount // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -1002,10 +1006,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String displayName,  String username,  String? avatarUrl,  Map<String, String>? avatarVariants,  bool isVerified,  String? bio,  ProfileLinksModel links,  List<ExpertiseFieldModel> expertise,  DateTime? joinedAt,  ProfileStatsModel stats,  bool isMe,  bool isFollowing,  bool followsYou,  bool readingStatsVisible)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String displayName,  String username,  String? avatarUrl,  Map<String, String>? avatarVariants,  bool isVerified,  String? bio,  ProfileLinksModel links,  List<ExpertiseFieldModel> expertise,  DateTime? joinedAt,  ProfileStatsModel stats,  bool isMe,  bool isFollowing,  bool followsYou,  bool readingStatsVisible,  bool isMuted,  bool isSystemAccount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProfileModel() when $default != null:
-return $default(_that.id,_that.displayName,_that.username,_that.avatarUrl,_that.avatarVariants,_that.isVerified,_that.bio,_that.links,_that.expertise,_that.joinedAt,_that.stats,_that.isMe,_that.isFollowing,_that.followsYou,_that.readingStatsVisible);case _:
+return $default(_that.id,_that.displayName,_that.username,_that.avatarUrl,_that.avatarVariants,_that.isVerified,_that.bio,_that.links,_that.expertise,_that.joinedAt,_that.stats,_that.isMe,_that.isFollowing,_that.followsYou,_that.readingStatsVisible,_that.isMuted,_that.isSystemAccount);case _:
   return orElse();
 
 }
@@ -1023,10 +1027,10 @@ return $default(_that.id,_that.displayName,_that.username,_that.avatarUrl,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String displayName,  String username,  String? avatarUrl,  Map<String, String>? avatarVariants,  bool isVerified,  String? bio,  ProfileLinksModel links,  List<ExpertiseFieldModel> expertise,  DateTime? joinedAt,  ProfileStatsModel stats,  bool isMe,  bool isFollowing,  bool followsYou,  bool readingStatsVisible)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String displayName,  String username,  String? avatarUrl,  Map<String, String>? avatarVariants,  bool isVerified,  String? bio,  ProfileLinksModel links,  List<ExpertiseFieldModel> expertise,  DateTime? joinedAt,  ProfileStatsModel stats,  bool isMe,  bool isFollowing,  bool followsYou,  bool readingStatsVisible,  bool isMuted,  bool isSystemAccount)  $default,) {final _that = this;
 switch (_that) {
 case _ProfileModel():
-return $default(_that.id,_that.displayName,_that.username,_that.avatarUrl,_that.avatarVariants,_that.isVerified,_that.bio,_that.links,_that.expertise,_that.joinedAt,_that.stats,_that.isMe,_that.isFollowing,_that.followsYou,_that.readingStatsVisible);case _:
+return $default(_that.id,_that.displayName,_that.username,_that.avatarUrl,_that.avatarVariants,_that.isVerified,_that.bio,_that.links,_that.expertise,_that.joinedAt,_that.stats,_that.isMe,_that.isFollowing,_that.followsYou,_that.readingStatsVisible,_that.isMuted,_that.isSystemAccount);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1043,10 +1047,10 @@ return $default(_that.id,_that.displayName,_that.username,_that.avatarUrl,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String displayName,  String username,  String? avatarUrl,  Map<String, String>? avatarVariants,  bool isVerified,  String? bio,  ProfileLinksModel links,  List<ExpertiseFieldModel> expertise,  DateTime? joinedAt,  ProfileStatsModel stats,  bool isMe,  bool isFollowing,  bool followsYou,  bool readingStatsVisible)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String displayName,  String username,  String? avatarUrl,  Map<String, String>? avatarVariants,  bool isVerified,  String? bio,  ProfileLinksModel links,  List<ExpertiseFieldModel> expertise,  DateTime? joinedAt,  ProfileStatsModel stats,  bool isMe,  bool isFollowing,  bool followsYou,  bool readingStatsVisible,  bool isMuted,  bool isSystemAccount)?  $default,) {final _that = this;
 switch (_that) {
 case _ProfileModel() when $default != null:
-return $default(_that.id,_that.displayName,_that.username,_that.avatarUrl,_that.avatarVariants,_that.isVerified,_that.bio,_that.links,_that.expertise,_that.joinedAt,_that.stats,_that.isMe,_that.isFollowing,_that.followsYou,_that.readingStatsVisible);case _:
+return $default(_that.id,_that.displayName,_that.username,_that.avatarUrl,_that.avatarVariants,_that.isVerified,_that.bio,_that.links,_that.expertise,_that.joinedAt,_that.stats,_that.isMe,_that.isFollowing,_that.followsYou,_that.readingStatsVisible,_that.isMuted,_that.isSystemAccount);case _:
   return null;
 
 }
@@ -1058,7 +1062,7 @@ return $default(_that.id,_that.displayName,_that.username,_that.avatarUrl,_that.
 @JsonSerializable()
 
 class _ProfileModel extends ProfileModel {
-  const _ProfileModel({required this.id, required this.displayName, required this.username, this.avatarUrl, final  Map<String, String>? avatarVariants, this.isVerified = false, this.bio, this.links = const ProfileLinksModel(), final  List<ExpertiseFieldModel> expertise = const <ExpertiseFieldModel>[], this.joinedAt, this.stats = const ProfileStatsModel(), this.isMe = false, this.isFollowing = false, this.followsYou = false, this.readingStatsVisible = false}): _avatarVariants = avatarVariants,_expertise = expertise,super._();
+  const _ProfileModel({required this.id, required this.displayName, required this.username, this.avatarUrl, final  Map<String, String>? avatarVariants, this.isVerified = false, this.bio, this.links = const ProfileLinksModel(), final  List<ExpertiseFieldModel> expertise = const <ExpertiseFieldModel>[], this.joinedAt, this.stats = const ProfileStatsModel(), this.isMe = false, this.isFollowing = false, this.followsYou = false, this.readingStatsVisible = false, this.isMuted = false, this.isSystemAccount = false}): _avatarVariants = avatarVariants,_expertise = expertise,super._();
   factory _ProfileModel.fromJson(Map<String, dynamic> json) => _$ProfileModelFromJson(json);
 
 @override final  String id;
@@ -1092,6 +1096,10 @@ class _ProfileModel extends ProfileModel {
 @override@JsonKey() final  bool isFollowing;
 @override@JsonKey() final  bool followsYou;
 @override@JsonKey() final  bool readingStatsVisible;
+// F28: the viewer muted this user.
+@override@JsonKey() final  bool isMuted;
+// F28: the official @readin account, which can't be muted.
+@override@JsonKey() final  bool isSystemAccount;
 
 /// Create a copy of ProfileModel
 /// with the given fields replaced by the non-null parameter values.
@@ -1106,16 +1114,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProfileModel&&(identical(other.id, id) || other.id == id)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&const DeepCollectionEquality().equals(other._avatarVariants, _avatarVariants)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.links, links) || other.links == links)&&const DeepCollectionEquality().equals(other._expertise, _expertise)&&(identical(other.joinedAt, joinedAt) || other.joinedAt == joinedAt)&&(identical(other.stats, stats) || other.stats == stats)&&(identical(other.isMe, isMe) || other.isMe == isMe)&&(identical(other.isFollowing, isFollowing) || other.isFollowing == isFollowing)&&(identical(other.followsYou, followsYou) || other.followsYou == followsYou)&&(identical(other.readingStatsVisible, readingStatsVisible) || other.readingStatsVisible == readingStatsVisible));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProfileModel&&(identical(other.id, id) || other.id == id)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&const DeepCollectionEquality().equals(other._avatarVariants, _avatarVariants)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.links, links) || other.links == links)&&const DeepCollectionEquality().equals(other._expertise, _expertise)&&(identical(other.joinedAt, joinedAt) || other.joinedAt == joinedAt)&&(identical(other.stats, stats) || other.stats == stats)&&(identical(other.isMe, isMe) || other.isMe == isMe)&&(identical(other.isFollowing, isFollowing) || other.isFollowing == isFollowing)&&(identical(other.followsYou, followsYou) || other.followsYou == followsYou)&&(identical(other.readingStatsVisible, readingStatsVisible) || other.readingStatsVisible == readingStatsVisible)&&(identical(other.isMuted, isMuted) || other.isMuted == isMuted)&&(identical(other.isSystemAccount, isSystemAccount) || other.isSystemAccount == isSystemAccount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,displayName,username,avatarUrl,const DeepCollectionEquality().hash(_avatarVariants),isVerified,bio,links,const DeepCollectionEquality().hash(_expertise),joinedAt,stats,isMe,isFollowing,followsYou,readingStatsVisible);
+int get hashCode => Object.hash(runtimeType,id,displayName,username,avatarUrl,const DeepCollectionEquality().hash(_avatarVariants),isVerified,bio,links,const DeepCollectionEquality().hash(_expertise),joinedAt,stats,isMe,isFollowing,followsYou,readingStatsVisible,isMuted,isSystemAccount);
 
 @override
 String toString() {
-  return 'ProfileModel(id: $id, displayName: $displayName, username: $username, avatarUrl: $avatarUrl, avatarVariants: $avatarVariants, isVerified: $isVerified, bio: $bio, links: $links, expertise: $expertise, joinedAt: $joinedAt, stats: $stats, isMe: $isMe, isFollowing: $isFollowing, followsYou: $followsYou, readingStatsVisible: $readingStatsVisible)';
+  return 'ProfileModel(id: $id, displayName: $displayName, username: $username, avatarUrl: $avatarUrl, avatarVariants: $avatarVariants, isVerified: $isVerified, bio: $bio, links: $links, expertise: $expertise, joinedAt: $joinedAt, stats: $stats, isMe: $isMe, isFollowing: $isFollowing, followsYou: $followsYou, readingStatsVisible: $readingStatsVisible, isMuted: $isMuted, isSystemAccount: $isSystemAccount)';
 }
 
 
@@ -1126,7 +1134,7 @@ abstract mixin class _$ProfileModelCopyWith<$Res> implements $ProfileModelCopyWi
   factory _$ProfileModelCopyWith(_ProfileModel value, $Res Function(_ProfileModel) _then) = __$ProfileModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String displayName, String username, String? avatarUrl, Map<String, String>? avatarVariants, bool isVerified, String? bio, ProfileLinksModel links, List<ExpertiseFieldModel> expertise, DateTime? joinedAt, ProfileStatsModel stats, bool isMe, bool isFollowing, bool followsYou, bool readingStatsVisible
+ String id, String displayName, String username, String? avatarUrl, Map<String, String>? avatarVariants, bool isVerified, String? bio, ProfileLinksModel links, List<ExpertiseFieldModel> expertise, DateTime? joinedAt, ProfileStatsModel stats, bool isMe, bool isFollowing, bool followsYou, bool readingStatsVisible, bool isMuted, bool isSystemAccount
 });
 
 
@@ -1143,7 +1151,7 @@ class __$ProfileModelCopyWithImpl<$Res>
 
 /// Create a copy of ProfileModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? displayName = null,Object? username = null,Object? avatarUrl = freezed,Object? avatarVariants = freezed,Object? isVerified = null,Object? bio = freezed,Object? links = null,Object? expertise = null,Object? joinedAt = freezed,Object? stats = null,Object? isMe = null,Object? isFollowing = null,Object? followsYou = null,Object? readingStatsVisible = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? displayName = null,Object? username = null,Object? avatarUrl = freezed,Object? avatarVariants = freezed,Object? isVerified = null,Object? bio = freezed,Object? links = null,Object? expertise = null,Object? joinedAt = freezed,Object? stats = null,Object? isMe = null,Object? isFollowing = null,Object? followsYou = null,Object? readingStatsVisible = null,Object? isMuted = null,Object? isSystemAccount = null,}) {
   return _then(_ProfileModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
@@ -1160,6 +1168,8 @@ as ProfileStatsModel,isMe: null == isMe ? _self.isMe : isMe // ignore: cast_null
 as bool,isFollowing: null == isFollowing ? _self.isFollowing : isFollowing // ignore: cast_nullable_to_non_nullable
 as bool,followsYou: null == followsYou ? _self.followsYou : followsYou // ignore: cast_nullable_to_non_nullable
 as bool,readingStatsVisible: null == readingStatsVisible ? _self.readingStatsVisible : readingStatsVisible // ignore: cast_nullable_to_non_nullable
+as bool,isMuted: null == isMuted ? _self.isMuted : isMuted // ignore: cast_nullable_to_non_nullable
+as bool,isSystemAccount: null == isSystemAccount ? _self.isSystemAccount : isSystemAccount // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

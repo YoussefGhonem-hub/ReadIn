@@ -213,11 +213,16 @@ void main() {
 
     const editorialMe = Me(id: 'a-1', displayName: 'ReadIn Editorial', username: 'editorial');
 
+    // F28 added the reader's items (show less, follow, mute author, mute topics); moderator tools still come last.
     test('items: report unless it is yours; moderators hide or unhide', () {
-      expect(articleMenuItems(own: false, moderator: false, hidden: false), [ArticleMenuItem.report]);
-      expect(articleMenuItems(own: true, moderator: false, hidden: false), isEmpty);
-      expect(articleMenuItems(own: false, moderator: true, hidden: false), [ArticleMenuItem.report, ArticleMenuItem.hide]);
-      expect(articleMenuItems(own: true, moderator: true, hidden: true), [ArticleMenuItem.unhide]);
+      const readerItems = [ArticleMenuItem.showLess, ArticleMenuItem.follow, ArticleMenuItem.muteAuthor, ArticleMenuItem.muteTopics];
+      expect(articleMenuItems(own: false, moderator: false, hidden: false), [...readerItems, ArticleMenuItem.report]);
+      expect(articleMenuItems(own: true, moderator: false, hidden: false), [ArticleMenuItem.muteTopics]);
+      expect(
+        articleMenuItems(own: false, moderator: true, hidden: false),
+        [...readerItems, ArticleMenuItem.report, ArticleMenuItem.hide],
+      );
+      expect(articleMenuItems(own: true, moderator: true, hidden: true), [ArticleMenuItem.muteTopics, ArticleMenuItem.unhide]);
     });
 
     testWidgets('a reader can report, in the error color; nothing else', (tester) async {
@@ -230,10 +235,14 @@ void main() {
       expect(find.text('Hide article'), findsNothing);
     });
 
-    testWidgets('your own article has no menu (until F28 adds items)', (tester) async {
+    // Since F28 your own article has a menu, with Mute topics only: no report, no moderator tools for a reader.
+    testWidgets('your own article offers neither Report nor the moderator tools', (tester) async {
       await pumpMenu(tester, me: editorialMe);
+      await openMenu(tester);
 
-      expect(find.byTooltip('Article options'), findsNothing);
+      expect(find.text('Mute topics'), findsOneWidget);
+      expect(find.text('Report article'), findsNothing);
+      expect(find.text('Hide article'), findsNothing);
     });
 
     testWidgets('guests get the sign-in prompt', (tester) async {
@@ -347,9 +356,10 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('a reader can only report the user; your own profile has no menu', (tester) async {
+    testWidgets('a reader can only mute (F28) or report the user; your own profile has no menu', (tester) async {
       await pumpProfile(tester);
       await openMenu(tester);
+      expect(find.text('Mute user'), findsOneWidget);
       expect(find.text('Report user'), findsOneWidget);
       expect(find.text('Warn'), findsNothing);
       expect(find.text('Suspend account'), findsNothing);

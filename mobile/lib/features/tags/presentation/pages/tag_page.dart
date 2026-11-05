@@ -15,6 +15,7 @@ import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
 import '../../../article/presentation/widgets/post_card.dart';
 import '../../../home/presentation/cubit/feed_cubit.dart';
+import '../../../mutes/presentation/widgets/mute_gate.dart';
 import '../../domain/entities/tag.dart';
 import '../cubit/tag_cubits.dart';
 
@@ -102,50 +103,63 @@ class _TagContent extends StatelessWidget {
     return EngagementSeeder<TagArticlesCubit, FeedState>(
       cards: (state) => state.items,
       child: BlocBuilder<TagArticlesCubit, FeedState>(
-        builder: (context, feed) => RefreshIndicator(
-          onRefresh: () => _refresh(context),
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (n) {
-              if (n.metrics.axis == Axis.vertical && n.metrics.extentAfter < 600) unawaited(cubit.loadMore());
-              return false;
-            },
-            child: CustomScrollView(
-              key: PageStorageKey('tag-${tag.slug}'),
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(child: TagHeader(tag: tag)),
-                ...switch (feed.status) {
-                  FeedStatus.loading => [
-                      SliverList.list(children: [
-                        for (var i = 0; i < 2; i++) const Padding(padding: EdgeInsets.only(bottom: postCardGap), child: PostCardSkeleton()),
-                      ]),
-                    ],
-                  FeedStatus.failure when isTagNotFound(feed.failure) => [
-                      const SliverFillRemaining(hasScrollBody: false, child: _TagNotFound()),
-                    ],
-                  FeedStatus.failure => [
-                      SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: feed.failure!, onRetry: cubit.load)),
-                    ],
-                  FeedStatus.ready when feed.items.isEmpty => [
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: EmptyView(icon: Icons.article_outlined, title: l10n.tagPageEmptyTitle, body: l10n.tagPageEmptyBody),
-                      ),
-                    ],
-                  // Post cards full width, one after another on the background (F34).
-                  FeedStatus.ready => [
-                      SliverList.builder(
-                        itemCount: feed.items.length + 1,
-                        itemBuilder: (context, i) => i < feed.items.length
-                            ? Padding(padding: const EdgeInsets.only(bottom: postCardGap), child: PostCard(article: feed.items[i]))
-                            : _ListFooter(loadingMore: feed.loadingMore, failure: feed.loadMoreFailure, onRetry: cubit.loadMore),
-                      ),
-                    ],
-                },
-              ],
+        builder: (context, feed) {
+          // Mutes and "show less" can fold away every card loaded (F28): the next page loads by itself, and once none
+          // is left the page says it has no articles.
+          final allHidden = mutesHideAll(context, feed.items);
+          return RefreshIndicator(
+            onRefresh: () => _refresh(context),
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (n) {
+                if (n.metrics.axis == Axis.vertical && n.metrics.extentAfter < 600) unawaited(cubit.loadMore());
+                return false;
+              },
+              child: CustomScrollView(
+                key: PageStorageKey('tag-${tag.slug}'),
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(child: TagHeader(tag: tag)),
+                  ...switch (feed.status) {
+                    FeedStatus.loading => [
+                        SliverList.list(children: [
+                          for (var i = 0; i < 2; i++) const Padding(padding: EdgeInsets.only(bottom: postCardGap), child: PostCardSkeleton()),
+                        ]),
+                      ],
+                    FeedStatus.failure when isTagNotFound(feed.failure) => [
+                        const SliverFillRemaining(hasScrollBody: false, child: _TagNotFound()),
+                      ],
+                    FeedStatus.failure => [
+                        SliverFillRemaining(hasScrollBody: false, child: ErrorView(failure: feed.failure!, onRetry: cubit.load)),
+                      ],
+                    FeedStatus.ready when feed.items.isEmpty || (allHidden && !feed.hasMore) => [
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: EmptyView(icon: Icons.article_outlined, title: l10n.tagPageEmptyTitle, body: l10n.tagPageEmptyBody),
+                        ),
+                      ],
+                    // Post cards full width, one after another on the background (F34).
+                    FeedStatus.ready => [
+                        SliverList.builder(
+                          itemCount: feed.items.length + 1,
+                          itemBuilder: (context, i) => i < feed.items.length
+                              // Mutes and "show less" fold the card away at once (F28).
+                              ? MuteGate(
+                                  article: feed.items[i],
+                                  child: Padding(padding: const EdgeInsets.only(bottom: postCardGap), child: PostCard(article: feed.items[i])),
+                                )
+                              : LoadMoreWhileHidden(
+                                  active: allHidden && !feed.loadingMore && feed.loadMoreFailure == null,
+                                  onLoadMore: () => unawaited(cubit.loadMore()),
+                                  child: _ListFooter(loadingMore: feed.loadingMore, failure: feed.loadMoreFailure, onRetry: cubit.loadMore),
+                                ),
+                        ),
+                      ],
+                  },
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

@@ -18,6 +18,7 @@ import '../../../auth/presentation/widgets/require_account.dart';
 import '../../../moderation/domain/entities/moderation.dart';
 import '../../../moderation/presentation/cubit/report_cubit.dart';
 import '../../../moderation/presentation/widgets/report_sheet.dart';
+import '../../../mutes/presentation/widgets/mute_actions.dart';
 import '../../domain/entities/comment.dart';
 import '../cubit/comments_cubit.dart';
 import '../cubit/mention_suggestions_cubit.dart';
@@ -118,6 +119,11 @@ class _CommentsViewState extends State<CommentsView> {
       case CommentMenuAction.pin:
       case CommentMenuAction.unpin:
         _showFailure(await _cubit.setPinned(comment.id, pinned: action == CommentMenuAction.pin));
+      case CommentMenuAction.mute:
+        // Mute or unmute the commenter (F28), as the article menu's Mute author does; guests get the sign-in prompt.
+        final author = comment.author;
+        if (author == null || !requireAccount(context)) return;
+        await MuteActions.toggleUser(context, userId: author.id, name: author.displayName, fallback: comment.isAuthorMuted);
       case CommentMenuAction.report:
         // The shared report sheet (F22): the sign-in prompt for guests, then "thanks" once sent.
         await showReportSheet(context, target: ModerationTargetRef.comment(comment.id), cubit: widget.reportCubit);

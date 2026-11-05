@@ -181,6 +181,14 @@ import '../../features/moderation/presentation/cubit/moderation_summary_cubit.da
     as _i789;
 import '../../features/moderation/presentation/cubit/report_cubit.dart'
     as _i956;
+import '../../features/mutes/data/datasources/mutes_api.dart' as _i240;
+import '../../features/mutes/data/repositories/mutes_repository_impl.dart'
+    as _i791;
+import '../../features/mutes/domain/repositories/mutes_repository.dart'
+    as _i716;
+import '../../features/mutes/domain/usecases/mute_usecases.dart' as _i984;
+import '../../features/mutes/presentation/cubit/muted_list_cubit.dart' as _i991;
+import '../../features/mutes/presentation/cubit/mutes_cubit.dart' as _i729;
 import '../../features/notifications/data/datasources/notifications_api.dart'
     as _i352;
 import '../../features/notifications/data/notification_push_receipts.dart'
@@ -469,6 +477,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i320.ModerationApi>(
       () => _i320.ModerationApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i240.MutesApi>(() => _i240.MutesApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i352.NotificationsApi>(
       () => _i352.NotificationsApi(gh<_i361.Dio>()),
     );
@@ -539,6 +548,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i591.GetUserArticles>(
       () => _i591.GetUserArticles(gh<_i894.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i716.MutesRepository>(
+      () => _i791.MutesRepositoryImpl(gh<_i240.MutesApi>()),
     );
     gh.lazySingleton<_i357.SearchRepository>(
       () => _i1017.SearchRepositoryImpl(gh<_i478.SearchApi>()),
@@ -673,6 +685,18 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i463.GlossarySearchCubit>(
       () => _i463.GlossarySearchCubit(gh<_i97.SearchGlossaryTerms>()),
+    );
+    gh.factory<_i984.SetUserMuted>(
+      () => _i984.SetUserMuted(gh<_i716.MutesRepository>()),
+    );
+    gh.factory<_i984.SetContentMuted>(
+      () => _i984.SetContentMuted(gh<_i716.MutesRepository>()),
+    );
+    gh.factory<_i984.SetShowLess>(
+      () => _i984.SetShowLess(gh<_i716.MutesRepository>()),
+    );
+    gh.factory<_i984.GetMutes>(
+      () => _i984.GetMutes(gh<_i716.MutesRepository>()),
     );
     gh.factory<_i520.GlossaryTermCubit>(
       () => _i520.GlossaryTermCubit(gh<_i86.GetGlossaryTerm>()),
@@ -1351,6 +1375,15 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i371.SessionCubit>(),
       ),
     );
+    gh.lazySingleton<_i729.MutesCubit>(
+      () => _i729.MutesCubit(
+        gh<_i984.SetUserMuted>(),
+        gh<_i984.SetContentMuted>(),
+        gh<_i984.SetShowLess>(),
+        gh<_i371.SessionCubit>(),
+        gh<_i509.FollowsCubit>(),
+      ),
+    );
     gh.factory<_i1021.ChangeRecoveryPinCubit>(
       () => _i1021.ChangeRecoveryPinCubit(
         gh<_i46.GetAuthConfig>(),
@@ -1374,6 +1407,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i977.PrivacyCubit>(
       () =>
           _i977.PrivacyCubit(gh<_i591.SetPrivacy>(), gh<_i371.SessionCubit>()),
+    );
+    gh.factory<_i991.MutedListCubit>(
+      () => _i991.MutedListCubit(gh<_i984.GetMutes>(), gh<_i729.MutesCubit>()),
     );
     gh.lazySingleton<_i564.ModerationNoticesCubit>(
       () => _i564.ModerationNoticesCubit(

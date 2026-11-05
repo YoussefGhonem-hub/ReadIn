@@ -7,6 +7,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../mutes/presentation/widgets/mute_gate.dart';
 import '../../domain/entities/article.dart';
 import '../../domain/usecases/get_related_articles.dart';
 import '../cubit/related_articles_cubit.dart';
@@ -59,7 +60,9 @@ class _RelatedArticlesSectionState extends State<RelatedArticlesSection> {
           cards: (cards) => cards,
           child: BlocBuilder<RelatedArticlesCubit, List<ArticleCard>>(
             builder: (context, cards) {
-              if (cards.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+              final shown = cards.take(GetRelatedArticles.limit).toList();
+              // With every card folded away by mutes or "show less" (F28), the heading goes too.
+              if (shown.isEmpty || mutesHideAll(context, shown)) return const SliverToBoxAdapter(child: SizedBox.shrink());
               // Post cards full width under the heading, one after another on the background.
               return SliverPadding(
                 padding: const EdgeInsets.only(bottom: ReadInSpace.s8),
@@ -75,8 +78,13 @@ class _RelatedArticlesSectionState extends State<RelatedArticlesSection> {
                         ),
                       ),
                       const SizedBox(height: ReadInSpace.s3),
-                      for (final card in cards.take(GetRelatedArticles.limit))
-                        Padding(padding: const EdgeInsets.only(bottom: postCardGap), child: PostCard(article: card)),
+                      for (final card in shown)
+                        // Mutes and "show less" fold the card away at once (F28).
+                        MuteGate(
+                          key: ValueKey('related-${card.id}'),
+                          article: card,
+                          child: Padding(padding: const EdgeInsets.only(bottom: postCardGap), child: PostCard(article: card)),
+                        ),
                     ],
                   ),
                 ),

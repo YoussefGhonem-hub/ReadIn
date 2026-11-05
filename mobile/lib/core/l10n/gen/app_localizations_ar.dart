@@ -1236,7 +1236,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteAccountDeletedActivity =>
-      'اهتماماتك وتقدّمك في القراية وإحصائياتك، وتفاعلاتك وإعجاباتك بالتعليقات والبلاغات اللي بعتّها، والمقالات المحفوظة والمجموعات، وأقسام مقالاتك (مقالاتك المنشورة بتفضل من غير قسم)، واللي بتتابعهم واللي بيتابعوك';
+      'اهتماماتك وتقدّمك في القراية وإحصائياتك، وتفاعلاتك وإعجاباتك بالتعليقات والبلاغات اللي بعتّها، والمقالات المحفوظة والمجموعات، وأقسام مقالاتك (مقالاتك المنشورة بتفضل من غير قسم)، واللي بتتابعهم واللي بيتابعوك، والكتّاب والمجالات والمواضيع اللي كتمتها (وكتم الناس ليك)، واختياراتك \"قلّل من النوع ده\"';
 
   @override
   String get deleteAccountDeletedDevices =>
@@ -3200,6 +3200,134 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get articleHiddenBannerBody => 'مش ظاهر غير لكاتبه وللمشرفين.';
+
+  @override
+  String get articleMenuShowLess => 'قلّل من النوع ده';
+
+  @override
+  String get articleMenuFollow => 'تابع الكاتب';
+
+  @override
+  String get articleMenuUnfollow => 'إلغاء متابعة الكاتب';
+
+  @override
+  String get articleMenuMuteAuthor => 'كتم الكاتب';
+
+  @override
+  String get articleMenuUnmuteAuthor => 'إلغاء كتم الكاتب';
+
+  @override
+  String get articleMenuMuteTopics => 'كتم المواضيع';
+
+  @override
+  String get showLessDone => 'تمام، هتشوف مقالات أقل من النوع ده.';
+
+  @override
+  String muteDone(String name) {
+    return 'كتمت $name. مش هتشوف مقالاته ولا تعليقاته.';
+  }
+
+  @override
+  String muteUnmuted(String name) {
+    return 'لغيت كتم $name.';
+  }
+
+  @override
+  String get muteBannerTitle => 'انت كاتم الكاتب ده';
+
+  @override
+  String get muteBannerBody =>
+      'مقالاته وتعليقاته مش بتظهرلك، ومحدش غيرك يعرف إنك كاتمه.';
+
+  @override
+  String get muteUnmute => 'إلغاء الكتم';
+
+  @override
+  String muteUnmuteName(String name) {
+    return 'إلغاء كتم $name';
+  }
+
+  @override
+  String get muteTopicsTitle => 'كتم المواضيع';
+
+  @override
+  String get muteTopicsBody =>
+      'اللي تكتمه مش هيظهرلك في الفيد والاستكشاف والبحث. تقدر تلغيه من هنا أو من الإعدادات.';
+
+  @override
+  String get muteTopicsField => 'المجال كله، بكل مواضيعه';
+
+  @override
+  String get muteTopicsTopic => 'الموضوع ده بس';
+
+  @override
+  String muteTopicsToggle(String name) {
+    return 'كتم $name';
+  }
+
+  @override
+  String get muteCommentCollapsed => 'تعليق من شخص كتمته';
+
+  @override
+  String get muteCommentShow => 'عرض';
+
+  @override
+  String get muteSettingsEntry => 'اللي كتمته';
+
+  @override
+  String get muteSettingsEntryHint => 'الكتّاب والمجالات والمواضيع اللي كتمتها';
+
+  @override
+  String get mutePageTitle => 'اللي كتمته';
+
+  @override
+  String get mutePageWriters => 'الكتّاب';
+
+  @override
+  String get mutePageFields => 'المجالات';
+
+  @override
+  String get mutePageTopics => 'المواضيع';
+
+  @override
+  String mutePageTopicIn(String field) {
+    return 'في $field';
+  }
+
+  @override
+  String get mutePageEmptyTitle => 'مكتمتش حاجة لسه';
+
+  @override
+  String get mutePageEmptyBody =>
+      'اكتم كاتب أو مجال أو موضوع من اختيارات أي مقال، وهيظهر هنا.';
+
+  @override
+  String get mutePageSubtitle =>
+      'مش هيظهرولك في الفيد والاستكشاف والبحث، ومحدش بيعرف إنك كتمتهم.';
+
+  @override
+  String get muteMenuUser => 'كتم المستخدم';
+
+  @override
+  String get muteMenuUnmuteUser => 'إلغاء كتم المستخدم';
+
+  @override
+  String get muteMenuCommenter => 'كتم صاحب التعليق';
+
+  @override
+  String get muteMenuUnmuteCommenter => 'إلغاء كتم صاحب التعليق';
+
+  @override
+  String get errMuteSelf => 'مينفعش تكتم نفسك.';
+
+  @override
+  String get errMuteSystemAccount => 'مينفعش تكتم حساب ReadIn الرسمي.';
+
+  @override
+  String get errMuteLimit => 'وصلت لأقصى عدد كتّاب تكتمهم (500).';
+
+  @override
+  String get errMuteOwnArticle => 'مينفعش تعمل كده على مقالك.';
 
   @override
   String get profileMenu => 'اختيارات تانية';

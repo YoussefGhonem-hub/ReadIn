@@ -78,6 +78,10 @@ abstract class ProfileModel with _$ProfileModel {
     @Default(false) bool isFollowing,
     @Default(false) bool followsYou,
     @Default(false) bool readingStatsVisible,
+    // F28: the viewer muted this user.
+    @Default(false) bool isMuted,
+    // F28: the official @readin account, which can't be muted.
+    @Default(false) bool isSystemAccount,
   }) = _ProfileModel;
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) => _$ProfileModelFromJson(json);
@@ -101,6 +105,8 @@ abstract class ProfileModel with _$ProfileModel {
         isFollowing: isFollowing,
         followsYou: followsYou,
         readingStatsVisible: readingStatsVisible,
+        isMuted: isMuted,
+        isSystemAccount: isSystemAccount,
       );
 }
 

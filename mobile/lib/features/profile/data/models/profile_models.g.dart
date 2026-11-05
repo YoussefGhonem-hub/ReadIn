@@ -86,6 +86,8 @@ _ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) =>
       isFollowing: json['isFollowing'] as bool? ?? false,
       followsYou: json['followsYou'] as bool? ?? false,
       readingStatsVisible: json['readingStatsVisible'] as bool? ?? false,
+      isMuted: json['isMuted'] as bool? ?? false,
+      isSystemAccount: json['isSystemAccount'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ProfileModelToJson(_ProfileModel instance) =>
@@ -105,4 +107,6 @@ Map<String, dynamic> _$ProfileModelToJson(_ProfileModel instance) =>
       'isFollowing': instance.isFollowing,
       'followsYou': instance.followsYou,
       'readingStatsVisible': instance.readingStatsVisible,
+      'isMuted': instance.isMuted,
+      'isSystemAccount': instance.isSystemAccount,
     };

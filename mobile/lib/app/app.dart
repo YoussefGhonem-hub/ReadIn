@@ -15,6 +15,7 @@ import '../features/auth/presentation/session/suspended_session_listener.dart';
 import '../features/follow/presentation/cubit/follows_cubit.dart';
 import '../features/moderation/presentation/cubit/moderation_notices_cubit.dart';
 import '../features/moderation/presentation/widgets/moderation_notices_host.dart';
+import '../features/mutes/presentation/cubit/mutes_cubit.dart';
 import '../features/reading/presentation/cubit/streak_cubit.dart';
 import '../features/saved/presentation/cubit/collections_cubit.dart';
 import '../features/settings/domain/entities/app_settings.dart';
@@ -73,6 +74,7 @@ class _ReadInAppState extends State<ReadInApp> {
         BlocProvider.value(value: widget.social.follows),
         BlocProvider.value(value: widget.social.collections),
         BlocProvider.value(value: getIt<ModerationNoticesCubit>()), // follows the session itself (F22)
+        BlocProvider.value(value: getIt<MutesCubit>()), // follows the session itself (F28)
       ],
       child: BlocListener<SessionCubit, SessionState>(
         listenWhen: (a, b) => a.me != b.me,

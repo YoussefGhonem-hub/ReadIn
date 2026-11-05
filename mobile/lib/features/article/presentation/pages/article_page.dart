@@ -20,6 +20,7 @@ import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../glossary/presentation/widgets/glossary_sheet.dart';
 import '../../../moderation/presentation/cubit/moderation_action_cubit.dart';
+import '../../../mutes/presentation/widgets/muted_writer_banner.dart';
 import '../../../paths/presentation/widgets/next_in_path.dart';
 import '../../../profile/presentation/profile_routes.dart';
 import '../../../reading/presentation/tracking/reading_tracking.dart';
@@ -258,6 +259,16 @@ class _ArticleViewState extends State<ArticleView> {
                             onTerm: (term) => unawaited(_showTerm(term)),
                             // A heading picked in the table of contents wins over the resume.
                             beforeTocJump: () => _resume?.cancel(),
+                            // A muted writer's article still opens from a link, with "انت كاتم الكاتب ده" (F28).
+                            leading: switch (article.card.author) {
+                              final author? => MutedWriterBanner(
+                                  userId: author.id,
+                                  name: author.displayName,
+                                  initiallyMuted: article.card.isAuthorMuted,
+                                  padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, 0),
+                                ),
+                              null => null,
+                            },
                             trailing: [
                               NextInPathSliver(articleId: article.card.id),
                               RelatedArticlesSection(article: article.card),

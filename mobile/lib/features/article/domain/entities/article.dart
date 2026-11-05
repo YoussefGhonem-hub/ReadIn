@@ -67,6 +67,10 @@ class ArticleCard extends Equatable {
     this.isFollowingAuthor = false,
     this.tags = const [],
     this.tagCount = 0,
+    this.topic,
+    this.isAuthorMuted = false,
+    this.isFieldMuted = false,
+    this.isTopicMuted = false,
   });
 
   /// The post card shows this many tags, then "+N" (F34).
@@ -125,6 +129,19 @@ class ArticleCard extends Equatable {
   /// All the article's tags (at most 5), for "+N".
   final int tagCount;
 
+  /// The article's topic, if it has one (F28: the second toggle of the "كتم المواضيع" sheet).
+  final FieldRef? topic;
+
+  /// The viewer muted the author (F28); false for guests, their own articles and a deleted author. Lists that apply
+  /// mutes leave such cards out, so it is true mostly in the reader and on the writer's own pages.
+  final bool isAuthorMuted;
+
+  /// The viewer muted [field] (F28); false for guests.
+  final bool isFieldMuted;
+
+  /// The viewer muted [topic] (F28); false for guests and without a topic.
+  final bool isTopicMuted;
+
   /// "Read more" applies however short the excerpt is: the article goes on after it, or it has no excerpt yet.
   bool get continuesAfterExcerpt => excerpt == null || hasMore;
 
@@ -162,6 +179,10 @@ class ArticleCard extends Equatable {
         isFollowingAuthor: isFollowingAuthor,
         tags: tags,
         tagCount: tagCount,
+        topic: topic,
+        isAuthorMuted: isAuthorMuted,
+        isFieldMuted: isFieldMuted,
+        isTopicMuted: isTopicMuted,
       );
 
   @override
@@ -190,6 +211,10 @@ class ArticleCard extends Equatable {
         isFollowingAuthor,
         tags,
         tagCount,
+        topic,
+        isAuthorMuted,
+        isFieldMuted,
+        isTopicMuted,
       ];
 }
 

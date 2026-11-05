@@ -21,6 +21,7 @@ import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../home/presentation/cubit/feed_cubit.dart';
+import '../../../mutes/presentation/widgets/mute_gate.dart';
 import '../../domain/entities/explore.dart';
 import '../cubit/field_cubits.dart';
 import '../widgets/explore_widgets.dart';
@@ -175,6 +176,10 @@ class _FieldContent extends StatelessWidget {
   static List<Widget> _articles(BuildContext context, FeedState feed, FieldDetails field) {
     final l10n = context.l10n;
     final cubit = context.read<FieldArticlesCubit>();
+    final keepTopicId = field.topicOf(feed.fieldSlug)?.id;
+    // Mutes and "show less" can fold away every card loaded (F28): the next page loads by itself, and once none is
+    // left the page says it has no articles.
+    final allHidden = mutesHideAll(context, feed.items, keepFieldId: field.id, keepTopicId: keepTopicId);
     final title = SliverPadding(
       padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s3, ReadInSpace.s5, ReadInSpace.s2),
       sliver: SliverToBoxAdapter(child: ExploreSectionHeader(title: l10n.fieldArticles)),
@@ -208,7 +213,7 @@ class _FieldContent extends StatelessWidget {
             child: ErrorView(failure: feed.failure!, compact: true, onRetry: () => unawaited(cubit.load(fieldSlug: cubit.topic))),
           ),
         ],
-      FeedStatus.ready when feed.items.isEmpty => [
+      FeedStatus.ready when feed.items.isEmpty || (allHidden && !feed.hasMore) => [
           SliverFillRemaining(
             hasScrollBody: false,
             child: EmptyView(
@@ -225,14 +230,24 @@ class _FieldContent extends StatelessWidget {
           SliverList.builder(
             itemCount: feed.items.length + 1,
             itemBuilder: (context, i) => i < feed.items.length
-                ? Padding(
-                    padding: const EdgeInsets.only(bottom: postCardGap),
-                    child: PostCard(key: ValueKey('field-card-${feed.items[i].id}'), article: feed.items[i]),
+                // Mutes fold the card away at once (F28); the page's own field and picked topic stay, as on the server.
+                ? MuteGate(
+                    article: feed.items[i],
+                    keepFieldId: field.id,
+                    keepTopicId: keepTopicId,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: postCardGap),
+                      child: PostCard(key: ValueKey('field-card-${feed.items[i].id}'), article: feed.items[i]),
+                    ),
                   )
-                : ExploreListFooter(
-                    loadingMore: feed.loadingMore,
-                    failure: feed.loadMoreFailure,
-                    onRetry: () => unawaited(cubit.loadMore()),
+                : LoadMoreWhileHidden(
+                    active: allHidden && !feed.loadingMore && feed.loadMoreFailure == null,
+                    onLoadMore: () => unawaited(cubit.loadMore()),
+                    child: ExploreListFooter(
+                      loadingMore: feed.loadingMore,
+                      failure: feed.loadMoreFailure,
+                      onRetry: () => unawaited(cubit.loadMore()),
+                    ),
                   ),
           ),
         ],

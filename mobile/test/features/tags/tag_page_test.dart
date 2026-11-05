@@ -7,15 +7,20 @@ import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/features/article/presentation/cubit/post_cards_cubit.dart';
 import 'package:readin/features/article/presentation/widgets/post_card.dart';
+import 'package:readin/features/auth/presentation/session/session_cubit.dart';
+import 'package:readin/features/mutes/presentation/cubit/mutes_cubit.dart';
 import 'package:readin/features/tags/domain/entities/tag.dart';
 import 'package:readin/features/tags/domain/usecases/tag_usecases.dart';
 import 'package:readin/features/tags/presentation/cubit/tag_cubits.dart';
 import 'package:readin/features/tags/presentation/pages/tag_page.dart';
 import 'package:readin/shared/widgets/state_views.dart';
 
+import '../../helpers/fixtures.dart' show sampleMe;
+import '../../helpers/mute_fixtures.dart' show mutesCubit, okMutesRepository;
 import '../../helpers/path_fakes.dart' show pumpRouted;
 import '../../helpers/post_card_fixtures.dart';
 import '../../helpers/profile_fakes.dart';
+import '../../helpers/social_fakes.dart' show MockSessionCubit;
 import '../../helpers/tag_fixtures.dart';
 import '../../helpers/test_app.dart';
 
@@ -37,6 +42,7 @@ void main() {
     String slug, {
     Variant variant = en,
     bool settle = true,
+    List<BlocProvider> extra = const [],
   }) async {
     usePhoneSurface(tester);
     final header = TagCubit(GetTag(repo));
@@ -54,6 +60,7 @@ void main() {
           BlocProvider<TagCubit>.value(value: header),
           BlocProvider<TagArticlesCubit>.value(value: articles),
           BlocProvider<PostCardsCubit>.value(value: cards),
+          ...extra,
         ],
         const TagView(),
       ),
@@ -75,6 +82,32 @@ void main() {
     expect(find.text(l10nEn.tagPageArticleCount(42)), findsOneWidget);
     expect(find.byType(PostCard), findsWidgets);
     expect(repo.calls, ['tag csharp', 'articles csharp']);
+  });
+
+  // F28: a list that applies mutes counts only the cards it still shows.
+  testWidgets('every card folded away by "show less": the next page loads by itself, then the empty state', (tester) async {
+    final first = tagPageCards(csharpTag);
+    final second = tagPageCards(csharpTag, first: 3);
+    final repo = FakeTagsRepository(tags: const [csharpTag], pages: {'csharp': [first, second]});
+    final session = MockSessionCubit()..hold(const SessionState(status: SessionStatus.authenticated, me: sampleMe));
+    final mutes = mutesCubit(okMutesRepository(), session: session);
+    addTearDown(mutes.close);
+    for (final card in [...first, ...second]) {
+      expect(await mutes.showLess(card.id), isNull);
+    }
+
+    await pumpPage(tester, repo, 'csharp', extra: [BlocProvider<MutesCubit>.value(value: mutes)]);
+    await tester.pumpAndSettle();
+
+    expect(repo.calls, ['tag csharp', 'articles csharp', 'articles csharp c1']);
+    expect(find.text(l10nEn.tagPageEmptyTitle), findsOneWidget);
+
+    // Undo brings a card back, and the list with it.
+    expect(await mutes.undoShowLess(second.first.id), isNull);
+    await tester.pumpAndSettle();
+    expect(find.text(l10nEn.tagPageEmptyTitle), findsNothing);
+    // The other three stay folded away (offstage).
+    expect(find.byType(PostCard), findsOneWidget);
   });
 
   testWidgets('an Arabic tag reads right to left with its #', (tester) async {

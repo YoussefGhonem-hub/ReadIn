@@ -98,6 +98,12 @@ _ArticleCardModel _$ArticleCardModelFromJson(Map<String, dynamic> json) =>
           ? const <TagRefModel>[]
           : tagRefsFromJson(json['tags']),
       tagCount: (json['tagCount'] as num?)?.toInt() ?? 0,
+      topic: json['topic'] == null
+          ? null
+          : FieldRefModel.fromJson(json['topic'] as Map<String, dynamic>),
+      isAuthorMuted: json['isAuthorMuted'] as bool? ?? false,
+      isFieldMuted: json['isFieldMuted'] as bool? ?? false,
+      isTopicMuted: json['isTopicMuted'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
@@ -126,6 +132,10 @@ Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
       'isFollowingAuthor': instance.isFollowingAuthor,
       'tags': tagRefsToJson(instance.tags),
       'tagCount': instance.tagCount,
+      'topic': ?instance.topic?.toJson(),
+      'isAuthorMuted': instance.isAuthorMuted,
+      'isFieldMuted': instance.isFieldMuted,
+      'isTopicMuted': instance.isTopicMuted,
     };
 
 _ArticlePreviewModel _$ArticlePreviewModelFromJson(Map<String, dynamic> json) =>
@@ -271,6 +281,9 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(
       : WriterCategoryRefModel.fromJson(
           json['category'] as Map<String, dynamic>,
         ),
+  isAuthorMuted: json['isAuthorMuted'] as bool? ?? false,
+  isFieldMuted: json['isFieldMuted'] as bool? ?? false,
+  isTopicMuted: json['isTopicMuted'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ArticleDetailsModelToJson(
@@ -307,4 +320,7 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'myProgress': ?instance.myProgress?.toJson(),
   'moderation': ?instance.moderation?.toJson(),
   'category': ?instance.category?.toJson(),
+  'isAuthorMuted': instance.isAuthorMuted,
+  'isFieldMuted': instance.isFieldMuted,
+  'isTopicMuted': instance.isTopicMuted,
 };

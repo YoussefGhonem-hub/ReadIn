@@ -1235,7 +1235,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountDeletedActivity =>
-      'Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers';
+      'Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people\'s mutes of you), and your \"Show less like this\" marks';
 
   @override
   String get deleteAccountDeletedDevices =>
@@ -3166,6 +3166,135 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get articleHiddenBannerBody =>
       'Only its author and moderators can see it.';
+
+  @override
+  String get articleMenuShowLess => 'Show less like this';
+
+  @override
+  String get articleMenuFollow => 'Follow author';
+
+  @override
+  String get articleMenuUnfollow => 'Unfollow author';
+
+  @override
+  String get articleMenuMuteAuthor => 'Mute author';
+
+  @override
+  String get articleMenuUnmuteAuthor => 'Unmute author';
+
+  @override
+  String get articleMenuMuteTopics => 'Mute topics';
+
+  @override
+  String get showLessDone => 'Got it. You\'ll see fewer articles like this.';
+
+  @override
+  String muteDone(String name) {
+    return 'You muted $name. You won\'t see their articles or comments.';
+  }
+
+  @override
+  String muteUnmuted(String name) {
+    return 'You unmuted $name.';
+  }
+
+  @override
+  String get muteBannerTitle => 'You muted this writer';
+
+  @override
+  String get muteBannerBody =>
+      'Their articles and comments don\'t show up for you, and nobody else knows you muted them.';
+
+  @override
+  String get muteUnmute => 'Unmute';
+
+  @override
+  String muteUnmuteName(String name) {
+    return 'Unmute $name';
+  }
+
+  @override
+  String get muteTopicsTitle => 'Mute topics';
+
+  @override
+  String get muteTopicsBody =>
+      'What you mute won\'t show up in your feeds, Explore or Search. Unmute it here or in Settings.';
+
+  @override
+  String get muteTopicsField => 'The whole field, with all its topics';
+
+  @override
+  String get muteTopicsTopic => 'Just this topic';
+
+  @override
+  String muteTopicsToggle(String name) {
+    return 'Mute $name';
+  }
+
+  @override
+  String get muteCommentCollapsed => 'Comment from someone you muted';
+
+  @override
+  String get muteCommentShow => 'Show';
+
+  @override
+  String get muteSettingsEntry => 'Muted';
+
+  @override
+  String get muteSettingsEntryHint => 'Writers, fields and topics you muted';
+
+  @override
+  String get mutePageTitle => 'Muted';
+
+  @override
+  String get mutePageWriters => 'Writers';
+
+  @override
+  String get mutePageFields => 'Fields';
+
+  @override
+  String get mutePageTopics => 'Topics';
+
+  @override
+  String mutePageTopicIn(String field) {
+    return 'In $field';
+  }
+
+  @override
+  String get mutePageEmptyTitle => 'You haven\'t muted anything';
+
+  @override
+  String get mutePageEmptyBody =>
+      'Mute a writer, field or topic from any article\'s options and it shows up here.';
+
+  @override
+  String get mutePageSubtitle =>
+      'They don\'t show up in your feeds, Explore or Search, and nobody knows you muted them.';
+
+  @override
+  String get muteMenuUser => 'Mute user';
+
+  @override
+  String get muteMenuUnmuteUser => 'Unmute user';
+
+  @override
+  String get muteMenuCommenter => 'Mute commenter';
+
+  @override
+  String get muteMenuUnmuteCommenter => 'Unmute commenter';
+
+  @override
+  String get errMuteSelf => 'You can\'t mute yourself.';
+
+  @override
+  String get errMuteSystemAccount =>
+      'The official ReadIn account can\'t be muted.';
+
+  @override
+  String get errMuteLimit => 'You can mute at most 500 writers.';
+
+  @override
+  String get errMuteOwnArticle => 'You can\'t do this on your own article.';
 
   @override
   String get profileMenu => 'More options';

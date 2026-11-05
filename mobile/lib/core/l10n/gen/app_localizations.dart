@@ -2231,7 +2231,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountDeletedActivity.
   ///
   /// In en, this message translates to:
-  /// **'Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers'**
+  /// **'Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people\'s mutes of you), and your \"Show less like this\" marks'**
   String get deleteAccountDeletedActivity;
 
   /// No description provided for @deleteAccountDeletedDevices.
@@ -5413,6 +5413,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only its author and moderators can see it.'**
   String get articleHiddenBannerBody;
+
+  /// No description provided for @articleMenuShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less like this'**
+  String get articleMenuShowLess;
+
+  /// No description provided for @articleMenuFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow author'**
+  String get articleMenuFollow;
+
+  /// No description provided for @articleMenuUnfollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfollow author'**
+  String get articleMenuUnfollow;
+
+  /// No description provided for @articleMenuMuteAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute author'**
+  String get articleMenuMuteAuthor;
+
+  /// No description provided for @articleMenuUnmuteAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute author'**
+  String get articleMenuUnmuteAuthor;
+
+  /// No description provided for @articleMenuMuteTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute topics'**
+  String get articleMenuMuteTopics;
+
+  /// No description provided for @showLessDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it. You\'ll see fewer articles like this.'**
+  String get showLessDone;
+
+  /// No description provided for @muteDone.
+  ///
+  /// In en, this message translates to:
+  /// **'You muted {name}. You won\'t see their articles or comments.'**
+  String muteDone(String name);
+
+  /// No description provided for @muteUnmuted.
+  ///
+  /// In en, this message translates to:
+  /// **'You unmuted {name}.'**
+  String muteUnmuted(String name);
+
+  /// No description provided for @muteBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You muted this writer'**
+  String get muteBannerTitle;
+
+  /// No description provided for @muteBannerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Their articles and comments don\'t show up for you, and nobody else knows you muted them.'**
+  String get muteBannerBody;
+
+  /// No description provided for @muteUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get muteUnmute;
+
+  /// No description provided for @muteUnmuteName.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute {name}'**
+  String muteUnmuteName(String name);
+
+  /// No description provided for @muteTopicsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute topics'**
+  String get muteTopicsTitle;
+
+  /// No description provided for @muteTopicsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you mute won\'t show up in your feeds, Explore or Search. Unmute it here or in Settings.'**
+  String get muteTopicsBody;
+
+  /// No description provided for @muteTopicsField.
+  ///
+  /// In en, this message translates to:
+  /// **'The whole field, with all its topics'**
+  String get muteTopicsField;
+
+  /// No description provided for @muteTopicsTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Just this topic'**
+  String get muteTopicsTopic;
+
+  /// No description provided for @muteTopicsToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute {name}'**
+  String muteTopicsToggle(String name);
+
+  /// No description provided for @muteCommentCollapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment from someone you muted'**
+  String get muteCommentCollapsed;
+
+  /// No description provided for @muteCommentShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get muteCommentShow;
+
+  /// No description provided for @muteSettingsEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get muteSettingsEntry;
+
+  /// No description provided for @muteSettingsEntryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Writers, fields and topics you muted'**
+  String get muteSettingsEntryHint;
+
+  /// No description provided for @mutePageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get mutePageTitle;
+
+  /// No description provided for @mutePageWriters.
+  ///
+  /// In en, this message translates to:
+  /// **'Writers'**
+  String get mutePageWriters;
+
+  /// No description provided for @mutePageFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fields'**
+  String get mutePageFields;
+
+  /// No description provided for @mutePageTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Topics'**
+  String get mutePageTopics;
+
+  /// No description provided for @mutePageTopicIn.
+  ///
+  /// In en, this message translates to:
+  /// **'In {field}'**
+  String mutePageTopicIn(String field);
+
+  /// No description provided for @mutePageEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t muted anything'**
+  String get mutePageEmptyTitle;
+
+  /// No description provided for @mutePageEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute a writer, field or topic from any article\'s options and it shows up here.'**
+  String get mutePageEmptyBody;
+
+  /// No description provided for @mutePageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'They don\'t show up in your feeds, Explore or Search, and nobody knows you muted them.'**
+  String get mutePageSubtitle;
+
+  /// No description provided for @muteMenuUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute user'**
+  String get muteMenuUser;
+
+  /// No description provided for @muteMenuUnmuteUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute user'**
+  String get muteMenuUnmuteUser;
+
+  /// No description provided for @muteMenuCommenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute commenter'**
+  String get muteMenuCommenter;
+
+  /// No description provided for @muteMenuUnmuteCommenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute commenter'**
+  String get muteMenuUnmuteCommenter;
+
+  /// No description provided for @errMuteSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t mute yourself.'**
+  String get errMuteSelf;
+
+  /// No description provided for @errMuteSystemAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'The official ReadIn account can\'t be muted.'**
+  String get errMuteSystemAccount;
+
+  /// No description provided for @errMuteLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can mute at most 500 writers.'**
+  String get errMuteLimit;
+
+  /// No description provided for @errMuteOwnArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t do this on your own article.'**
+  String get errMuteOwnArticle;
 
   /// No description provided for @profileMenu.
   ///

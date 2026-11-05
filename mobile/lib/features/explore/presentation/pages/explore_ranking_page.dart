@@ -11,6 +11,7 @@ import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../article/presentation/widgets/engagement_seeder.dart';
 import '../../../article/presentation/widgets/post_card.dart';
 import '../../../home/presentation/cubit/feed_cubit.dart';
+import '../../../mutes/presentation/widgets/mute_gate.dart';
 import '../../domain/entities/explore.dart';
 import '../cubit/explore_cubit.dart';
 import '../widgets/explore_widgets.dart';
@@ -67,61 +68,74 @@ class ExploreRankingView extends StatelessWidget {
       body: EngagementSeeder<ExploreRankingCubit, FeedState>(
         cards: (state) => state.items,
         child: BlocBuilder<ExploreRankingCubit, FeedState>(
-          builder: (context, feed) => RefreshIndicator(
-            onRefresh: () => _refresh(context),
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (n) {
-                if (n.metrics.axis == Axis.vertical && n.metrics.extentAfter < 600) unawaited(cubit.loadMore());
-                return false;
-              },
-              child: CustomScrollView(
-                key: PageStorageKey('explore-${cubit.ranking.path}'),
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  ...switch (feed.status) {
-                    FeedStatus.loading => [
-                        SliverList.list(children: [
-                          for (var i = 0; i < 2; i++)
-                            const Padding(padding: EdgeInsets.only(bottom: postCardGap), child: PostCardSkeleton()),
-                        ]),
-                      ],
-                    FeedStatus.failure => [
-                        SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: ErrorView(failure: feed.failure!, onRetry: () => unawaited(cubit.load())),
-                        ),
-                      ],
-                    FeedStatus.ready when feed.items.isEmpty => [
-                        SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: EmptyView(
-                            icon: Icons.local_fire_department_outlined,
-                            title: emptyTitle,
-                            body: l10n.exploreRankingEmptyBody,
+          builder: (context, feed) {
+            // Mutes and "show less" can fold away every card loaded (F28): the next page loads by itself, and once
+            // none is left the page says it's empty.
+            final allHidden = mutesHideAll(context, feed.items);
+            return RefreshIndicator(
+              onRefresh: () => _refresh(context),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (n) {
+                  if (n.metrics.axis == Axis.vertical && n.metrics.extentAfter < 600) unawaited(cubit.loadMore());
+                  return false;
+                },
+                child: CustomScrollView(
+                  key: PageStorageKey('explore-${cubit.ranking.path}'),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    ...switch (feed.status) {
+                      FeedStatus.loading => [
+                          SliverList.list(children: [
+                            for (var i = 0; i < 2; i++)
+                              const Padding(padding: EdgeInsets.only(bottom: postCardGap), child: PostCardSkeleton()),
+                          ]),
+                        ],
+                      FeedStatus.failure => [
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: ErrorView(failure: feed.failure!, onRetry: () => unawaited(cubit.load())),
                           ),
-                        ),
-                      ],
-                    // Post cards full width, one after another on the background (F34).
-                    FeedStatus.ready => [
-                        SliverList.builder(
-                          itemCount: feed.items.length + 1,
-                          itemBuilder: (context, i) => i < feed.items.length
-                              ? Padding(
-                                  padding: const EdgeInsets.only(bottom: postCardGap),
-                                  child: PostCard(key: ValueKey('ranking-card-${feed.items[i].id}'), article: feed.items[i]),
-                                )
-                              : ExploreListFooter(
-                                  loadingMore: feed.loadingMore,
-                                  failure: feed.loadMoreFailure,
-                                  onRetry: () => unawaited(cubit.loadMore()),
-                                ),
-                        ),
-                      ],
-                  },
-                ],
+                        ],
+                      FeedStatus.ready when feed.items.isEmpty || (allHidden && !feed.hasMore) => [
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: EmptyView(
+                              icon: Icons.local_fire_department_outlined,
+                              title: emptyTitle,
+                              body: l10n.exploreRankingEmptyBody,
+                            ),
+                          ),
+                        ],
+                      // Post cards full width, one after another on the background (F34).
+                      FeedStatus.ready => [
+                          SliverList.builder(
+                            itemCount: feed.items.length + 1,
+                            itemBuilder: (context, i) => i < feed.items.length
+                                // Mutes and "show less" fold the card away at once (F28).
+                                ? MuteGate(
+                                    article: feed.items[i],
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(bottom: postCardGap),
+                                      child: PostCard(key: ValueKey('ranking-card-${feed.items[i].id}'), article: feed.items[i]),
+                                    ),
+                                  )
+                                : LoadMoreWhileHidden(
+                                    active: allHidden && !feed.loadingMore && feed.loadMoreFailure == null,
+                                    onLoadMore: () => unawaited(cubit.loadMore()),
+                                    child: ExploreListFooter(
+                                      loadingMore: feed.loadingMore,
+                                      failure: feed.loadMoreFailure,
+                                      onRetry: () => unawaited(cubit.loadMore()),
+                                    ),
+                                  ),
+                          ),
+                        ],
+                    },
+                  ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

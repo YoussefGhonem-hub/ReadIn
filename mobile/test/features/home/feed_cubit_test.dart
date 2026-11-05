@@ -53,6 +53,43 @@ void main() {
     verify: (_) => verify(() => repository.getForYou(fieldSlug: null, cursor: 'c2', limit: 20)).called(1),
   );
 
+  // F28: a "show less" mid-scroll moves the topic's other articles to the last tier, so a page can repeat a card.
+  blocTest<FeedCubit, FeedState>(
+    'loadMore drops a card already shown',
+    setUp: () {
+      when(() => repository.getForYou(fieldSlug: null, cursor: null, limit: 20)).thenAnswer((_) async => Ok(page1));
+      when(() => repository.getForYou(fieldSlug: null, cursor: 'c2', limit: 20))
+          .thenAnswer((_) async => Ok(CursorPage(items: [sampleCard(2), sampleCard(3), sampleCard(3)])));
+    },
+    build: build,
+    act: (cubit) async {
+      await cubit.load();
+      await cubit.loadMore();
+    },
+    skip: 3,
+    expect: () => [
+      FeedState(status: FeedStatus.ready, items: [sampleCard(1), sampleCard(2), sampleCard(3)]),
+    ],
+  );
+
+  blocTest<FollowingFeedCubit, FeedState>(
+    'the Following feed drops a card already shown too',
+    setUp: () {
+      when(() => repository.getFollowing(cursor: null, limit: 20)).thenAnswer((_) async => Ok(page1));
+      when(() => repository.getFollowing(cursor: 'c2', limit: 20))
+          .thenAnswer((_) async => Ok(CursorPage(items: [sampleCard(1), sampleCard(3)])));
+    },
+    build: () => FollowingFeedCubit(GetFollowingFeed(repository)),
+    act: (cubit) async {
+      await cubit.load();
+      await cubit.loadMore();
+    },
+    skip: 3,
+    expect: () => [
+      FeedState(status: FeedStatus.ready, items: [sampleCard(1), sampleCard(2), sampleCard(3)]),
+    ],
+  );
+
   blocTest<FeedCubit, FeedState>(
     'field filter resets the feed',
     setUp: () => when(() => repository.getForYou(fieldSlug: 'dotnet', cursor: null, limit: 20))

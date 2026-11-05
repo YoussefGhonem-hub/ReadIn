@@ -387,11 +387,13 @@ void main() {
       expect(find.text('Send report'), findsNothing);
     });
 
-    test("a guest's menu offers Report although the API's canReport is false; a reader's follows canReport", () {
+    test("a guest's menu offers Mute and Report although the API's canReport is false; a reader's follows canReport", () {
       final guestsView = comment('c1', canReport: false);
-      expect(commentMenuActions(guestsView, guest: true), [CommentMenuAction.report]);
+      // Mute the commenter (F28) comes right before Report.
+      expect(commentMenuActions(guestsView, guest: true), [CommentMenuAction.mute, CommentMenuAction.report]);
       expect(commentMenuActions(guestsView), isEmpty);
-      expect(commentMenuActions(comment('c1')), [CommentMenuAction.report]);
+      expect(commentMenuActions(comment('c1')), [CommentMenuAction.mute, CommentMenuAction.report]);
+      expect(commentMenuActions(comment('c1', author: null)), [CommentMenuAction.report], reason: 'a deleted account');
     });
 
     testWidgets('deleting your comment asks first', (tester) async {
@@ -422,6 +424,7 @@ void main() {
       expect(find.text('Pin'), findsOneWidget);
       expect(find.text('Hide (moderator)'), findsOneWidget);
       expect(find.text('Report'), findsNothing, reason: 'your own comment');
+      expect(find.text('Mute commenter'), findsNothing, reason: 'your own comment');
       expect(find.text('Delete (moderator)'), findsNothing, reason: 'own delete covers it');
     });
 

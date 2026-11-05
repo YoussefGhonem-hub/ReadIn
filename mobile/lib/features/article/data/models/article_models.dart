@@ -97,6 +97,11 @@ abstract class ArticleCardModel with _$ArticleCardModel {
     @Default(false) bool isFollowingAuthor,
     @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) @Default(<TagRefModel>[]) List<TagRefModel> tags,
     @Default(0) int tagCount,
+    // F28: the card's topic and the viewer's mutes.
+    FieldRefModel? topic,
+    @Default(false) bool isAuthorMuted,
+    @Default(false) bool isFieldMuted,
+    @Default(false) bool isTopicMuted,
   }) = _ArticleCardModel;
 
   factory ArticleCardModel.fromJson(Map<String, dynamic> json) => _$ArticleCardModelFromJson(json);
@@ -126,6 +131,10 @@ abstract class ArticleCardModel with _$ArticleCardModel {
         isFollowingAuthor: isFollowingAuthor,
         tags: [for (final t in tags.take(ArticleCard.maxCardTags)) t.toEntity()],
         tagCount: math.max(tagCount, tags.length),
+        topic: topic?.toEntity(),
+        isAuthorMuted: isAuthorMuted,
+        isFieldMuted: isFieldMuted,
+        isTopicMuted: isTopicMuted,
       );
 }
 
@@ -239,6 +248,10 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     ArticleModerationModel? moderation,
     // F31: the writer's category of the article, { slug, name } or null.
     WriterCategoryRefModel? category,
+    // F28: the viewer's mutes ("انت كاتم الكاتب ده" and the "كتم المواضيع" sheet).
+    @Default(false) bool isAuthorMuted,
+    @Default(false) bool isFieldMuted,
+    @Default(false) bool isTopicMuted,
   }) = _ArticleDetailsModel;
 
   factory ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
@@ -266,6 +279,10 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         isFollowingAuthor: isFollowingAuthor,
         tags: [for (final t in tags.take(ArticleCard.maxCardTags)) t.toEntity()],
         tagCount: tags.length,
+        topic: topic?.toEntity(),
+        isAuthorMuted: isAuthorMuted,
+        isFieldMuted: isFieldMuted,
+        isTopicMuted: isTopicMuted,
       );
 
   ArticleDetails toEntity({bool offline = false}) => ArticleDetails(

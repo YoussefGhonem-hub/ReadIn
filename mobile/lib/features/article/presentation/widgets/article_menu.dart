@@ -6,27 +6,57 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/widgets/action_feedback.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../auth/presentation/widgets/require_account.dart';
+import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../moderation/domain/entities/moderation.dart';
 import '../../../moderation/presentation/widgets/moderation_flows.dart';
 import '../../../moderation/presentation/widgets/report_sheet.dart';
+import '../../../mutes/presentation/cubit/mutes_cubit.dart';
+import '../../../mutes/presentation/widgets/mute_actions.dart';
+import '../../../mutes/presentation/widgets/mute_topics_sheet.dart';
 import '../../../profile/presentation/widgets/profile_header.dart' show ProfileBioText;
 import '../../domain/entities/article.dart';
 import '../cubit/article_cubit.dart';
 
-/// The items of the reader's "⋯" menu (SPEC F28). F28 adds show less, hide highlights, follow and mute here.
-enum ArticleMenuItem { report, hide, unhide }
+/// The items of an article's "⋯" menu (SPEC F28), in the order the menu shows them; moderator tools (F22) come last,
+/// after a divider. A later item (F30 "إخفاء الـ Highlights", F33 "تحميل PDF") is added here and in
+/// [articleMenuItems], [_ArticleMenuLabel] and [ArticleMenuView]'s `_onSelected`.
+enum ArticleMenuItem {
+  showLess,
+  follow,
+  muteAuthor,
+  muteTopics,
+  report,
+  hide,
+  unhide;
 
-/// What [article]'s menu offers the viewer: readers and guests can report it (not their own article); moderators can
-/// hide or unhide it. Guests get the sign-in prompt when they pick an item.
-List<ArticleMenuItem> articleMenuItems({required bool own, required bool moderator, required bool hidden}) => [
+  /// Moderator tools (F22).
+  bool get isModeration => this == hide || this == unhide;
+}
+
+/// What an article's menu offers the viewer, in the SPEC F28 order. Someone else's article: Show less, Follow author,
+/// Mute author, Mute topics and Report (follow and mute need an author: a deleted account has none, [hasAuthor]).
+/// Your own article: Mute topics only. Moderators can also hide or unhide it (F22). Guests see the reader's items and
+/// get the sign-in prompt for every one of them.
+List<ArticleMenuItem> articleMenuItems({
+  required bool own,
+  required bool moderator,
+  required bool hidden,
+  bool hasAuthor = true,
+}) =>
+    [
+      if (!own) ArticleMenuItem.showLess,
+      if (!own && hasAuthor) ...[ArticleMenuItem.follow, ArticleMenuItem.muteAuthor],
+      ArticleMenuItem.muteTopics,
       if (!own) ArticleMenuItem.report,
       if (moderator) hidden ? ArticleMenuItem.unhide : ArticleMenuItem.hide,
     ];
 
-/// The reader action bar's "⋯" (F22, F28). Nothing when it has no item for the viewer. Hiding needs an
-/// [ModerationActionCubit] and the [ArticleCubit] above (the reader provides them).
+/// The reader action bar's "⋯" (F22, F28). Hiding needs an [ModerationActionCubit] and the [ArticleCubit] above (the
+/// reader provides them).
 class ArticleMenuButton extends StatelessWidget {
   const ArticleMenuButton({super.key, required this.article});
 
@@ -41,8 +71,10 @@ class ArticleMenuButton extends StatelessWidget {
       );
 }
 
-/// "⋯" for one article: the reader's ([ArticleMenuButton]) and the post card's header (F34). Hiding and unhiding need
-/// an [ModerationActionCubit] above; [onModerated] then gets the article's new moderation (null once visible again).
+/// "⋯" for one article: the reader's ([ArticleMenuButton]) and the post card's header (F34), the same menu (F28).
+/// Show less and Mute author confirm with Undo ([MuteActions]); Mute topics opens its sheet; Follow author uses
+/// [FollowsCubit]. Hiding and unhiding need an [ModerationActionCubit] above; [onModerated] then gets the article's new
+/// moderation (null once visible again).
 class ArticleMenuView extends StatelessWidget {
   const ArticleMenuView({super.key, required this.card, required this.hidden, required this.onModerated});
 
@@ -51,8 +83,27 @@ class ArticleMenuView extends StatelessWidget {
   final ValueChanged<ArticleModeration?> onModerated;
 
   Future<void> _onSelected(BuildContext context, ArticleMenuItem item) async {
+    // Every item needs an account (F28); moderators are signed in.
+    if (!requireAccount(context)) return;
+    final author = card.author;
     final target = ModerationTargetRef.article(card.id);
     switch (item) {
+      case ArticleMenuItem.showLess:
+        await MuteActions.showLess(context, card);
+      case ArticleMenuItem.follow:
+        if (author == null) return;
+        final failure = await context.read<FollowsCubit>().toggle(author.id, fallback: card.isFollowingAuthor);
+        if (context.mounted) showActionFailure(context, failure);
+      case ArticleMenuItem.muteAuthor:
+        if (author == null) return;
+        // On a muted writer's article (the reader) the item unmutes.
+        if (context.read<MutesCubit>().state.isUserMuted(author.id, fallback: card.isAuthorMuted)) {
+          await MuteActions.unmuteAuthor(context, userId: author.id, name: author.displayName);
+        } else {
+          await MuteActions.muteAuthor(context, author);
+        }
+      case ArticleMenuItem.muteTopics:
+        await showMuteTopicsSheet(context, article: card);
       case ArticleMenuItem.report:
         await showReportSheet(context, target: target);
       case ArticleMenuItem.hide:
@@ -69,10 +120,19 @@ class ArticleMenuView extends StatelessWidget {
     final l10n = context.l10n;
     final colors = context.colors;
     final me = context.select((SessionCubit c) => c.state.me);
+    final authorId = card.author?.id;
+    final following = context.select(
+      (FollowsCubit? c) =>
+          authorId != null && (c?.state.isFollowing(authorId, fallback: card.isFollowingAuthor) ?? card.isFollowingAuthor),
+    );
+    final authorMuted = context.select(
+      (MutesCubit? c) => authorId != null && (c?.state.isUserMuted(authorId, fallback: card.isAuthorMuted) ?? card.isAuthorMuted),
+    );
     final items = articleMenuItems(
-      own: me != null && me.id == card.author?.id,
+      own: me != null && me.id == authorId,
       moderator: me?.isModerator ?? false,
       hidden: hidden,
+      hasAuthor: authorId != null,
     );
     if (items.isEmpty) return const SizedBox.shrink();
     return PopupMenuButton<ArticleMenuItem>(
@@ -82,9 +142,11 @@ class ArticleMenuView extends StatelessWidget {
       itemBuilder: (context) => [
         for (final item in items) ...[
           // Moderator tools sit apart from the reader's items.
-          if (item != items.first && item != ArticleMenuItem.report && items.contains(ArticleMenuItem.report))
-            const PopupMenuDivider(),
-          PopupMenuItem(value: item, child: _ArticleMenuLabel(item: item)),
+          if (item.isModeration && item != items.first) const PopupMenuDivider(),
+          PopupMenuItem(
+            value: item,
+            child: _ArticleMenuLabel(item: item, following: me != null && following, authorMuted: me != null && authorMuted),
+          ),
         ],
       ],
     );
@@ -92,15 +154,29 @@ class ArticleMenuView extends StatelessWidget {
 }
 
 class _ArticleMenuLabel extends StatelessWidget {
-  const _ArticleMenuLabel({required this.item});
+  const _ArticleMenuLabel({required this.item, required this.following, required this.authorMuted});
 
   final ArticleMenuItem item;
+
+  /// The viewer follows the author: "Unfollow author".
+  final bool following;
+
+  /// The viewer muted the author: "Unmute author".
+  final bool authorMuted;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
     final (icon, text) = switch (item) {
+      ArticleMenuItem.showLess => (Icons.thumb_down_off_alt_outlined, l10n.articleMenuShowLess),
+      ArticleMenuItem.follow => following
+          ? (Icons.person_remove_outlined, l10n.articleMenuUnfollow)
+          : (Icons.person_add_alt_outlined, l10n.articleMenuFollow),
+      ArticleMenuItem.muteAuthor => authorMuted
+          ? (Icons.volume_up_outlined, l10n.articleMenuUnmuteAuthor)
+          : (Icons.volume_off_outlined, l10n.articleMenuMuteAuthor),
+      ArticleMenuItem.muteTopics => (Icons.label_off_outlined, l10n.articleMenuMuteTopics),
       ArticleMenuItem.report => (Icons.flag_outlined, l10n.articleMenuReport),
       ArticleMenuItem.hide => (Icons.visibility_off_outlined, l10n.articleMenuHide),
       ArticleMenuItem.unhide => (Icons.visibility_outlined, l10n.articleMenuUnhide),
@@ -110,13 +186,13 @@ class _ArticleMenuLabel extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: color),
         const SizedBox(width: ReadInSpace.s3),
-        Text(text, style: TextStyle(color: color)),
+        Flexible(child: Text(text, style: TextStyle(color: color))),
       ],
     );
   }
 }
 
-/// "Hidden by moderators" above a hidden article, for its author and moderators (the only ones who can open it), with
+// "Hidden by moderators" above a hidden article, for its author and moderators (the only ones who can open it), with
 /// the moderator's note when there is one (F22).
 class HiddenArticleBanner extends StatelessWidget {
   const HiddenArticleBanner({super.key, required this.moderation});

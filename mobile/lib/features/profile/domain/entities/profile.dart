@@ -71,6 +71,8 @@ class UserProfile extends Equatable {
     this.isFollowing = false,
     this.followsYou = false,
     this.readingStatsVisible = false,
+    this.isMuted = false,
+    this.isSystemAccount = false,
   });
 
   final String id;
@@ -103,6 +105,13 @@ class UserProfile extends Equatable {
   /// True on the viewer's own profile, or when this user made their reading stats public.
   final bool readingStatsVisible;
 
+  /// The viewer muted this user (F28): "انت كاتم الكاتب ده" with "إلغاء الكتم". False for guests and on the viewer's
+  /// own profile.
+  final bool isMuted;
+
+  /// The official @readin account (F28): it can't be muted, so its "⋯" has no Mute.
+  final bool isSystemAccount;
+
   /// The smallest variant at least [size] px wide (the header asks for 2× its size), else [avatarUrl].
   String? avatarFor(double size) {
     if (avatarVariants.isEmpty) return avatarUrl;
@@ -127,6 +136,8 @@ class UserProfile extends Equatable {
         isFollowing: isFollowing ?? this.isFollowing,
         followsYou: followsYou,
         readingStatsVisible: readingStatsVisible,
+        isMuted: isMuted,
+        isSystemAccount: isSystemAccount,
       );
 
   @override
@@ -146,6 +157,8 @@ class UserProfile extends Equatable {
         isFollowing,
         followsYou,
         readingStatsVisible,
+        isMuted,
+        isSystemAccount,
       ];
 }
 

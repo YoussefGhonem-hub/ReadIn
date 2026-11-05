@@ -27,6 +27,7 @@ import '../features/moderation/domain/entities/moderation.dart';
 import '../features/moderation/presentation/moderation_routes.dart';
 import '../features/moderation/presentation/pages/moderation_case_page.dart';
 import '../features/moderation/presentation/pages/moderation_page.dart';
+import '../features/mutes/presentation/pages/muted_page.dart';
 import '../features/notifications/presentation/pages/notification_settings_page.dart';
 import '../features/notifications/presentation/pages/notifications_page.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
@@ -151,6 +152,7 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
       targetPath == AppRoutes.notifications ||
       targetPath == AppRoutes.notificationSettings ||
       targetPath == AppRoutes.interests ||
+      targetPath == MutedPage.path || // Settings → Muted (F28)
       targetPath == AppRoutes.readingStats ||
       targetPath == AppRoutes.verification;
   // Shared links (articles, profiles, tag pages, field pages) open for first-time guests too, without Welcome first.
@@ -210,6 +212,8 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.settings, builder: (_, state) => SettingsPage(section: SettingsSection.fromQuery(state.uri))),
       GoRoute(path: AppRoutes.notificationSettings, builder: (_, _) => const NotificationSettingsPage()),
       GoRoute(path: AppRoutes.interests, builder: (_, _) => const InterestsPage()),
+      // Settings → Muted (F28); it needs an account (the redirect above).
+      GoRoute(path: MutedPage.path, builder: (_, _) => const MutedPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
       GoRoute(path: AppRoutes.readingStats, builder: (_, _) => const ReadingStatsPage()),
       GoRoute(path: AppRoutes.verification, builder: (_, _) => const VerificationPage()),

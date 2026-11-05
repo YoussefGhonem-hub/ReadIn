@@ -15,6 +15,7 @@ import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../categories/presentation/widgets/categories_tab.dart';
 import '../../../moderation/presentation/cubit/moderation_action_cubit.dart';
+import '../../../mutes/presentation/widgets/muted_writer_banner.dart';
 import '../../../saved/presentation/cubit/saved_list_cubit.dart';
 import '../../../saved/presentation/pages/saved_page.dart';
 import '../../domain/entities/profile.dart';
@@ -207,6 +208,18 @@ class _ProfileContent extends StatelessWidget {
       child: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverToBoxAdapter(child: ProfileHeader(profile: profile, onEdit: onEdit)),
+          // A muted writer's profile still opens, with "انت كاتم الكاتب ده" under the header, as on the web; its tabs
+          // still list their articles (F28).
+          if (!isMe)
+            SliverToBoxAdapter(
+              child: MutedWriterBanner(
+                key: const ValueKey('profile-muted-banner'),
+                userId: profile.id,
+                name: profile.displayName,
+                initiallyMuted: profile.isMuted,
+                padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, 0, ReadInSpace.s5, ReadInSpace.s3),
+              ),
+            ),
           SliverOverlapAbsorber(
             handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
             sliver: SliverPersistentHeader(

@@ -155,6 +155,12 @@ abstract final class FailureCodes {
   static const collectionNotFound = 'collection.not_found';
   static const followSelf = 'follow.self';
 
+  // Mute & feedback (F28)
+  static const muteSelf = 'mute.self';
+  static const muteSystemAccount = 'mute.system_account';
+  static const muteLimit = 'mute.limit';
+  static const muteOwnArticle = 'mute.own_article';
+
   // Comments (F11)
   static const commentNotFound = 'comment.not_found';
   static const commentNotOwner = 'comment.not_owner';

@@ -54,6 +54,8 @@ abstract class CommentModel with _$CommentModel {
     @Default(false) bool canReport,
     @Default(false) bool canModerate,
     List<CommentModel>? replies,
+    // F28: the viewer muted the author (collapsed to "تعليق من شخص كتمته").
+    @Default(false) bool isAuthorMuted,
   }) = _CommentModel;
 
   factory CommentModel.fromJson(Map<String, dynamic> json) => _$CommentModelFromJson(json);
@@ -80,6 +82,7 @@ abstract class CommentModel with _$CommentModel {
         canReport: canReport,
         canModerate: canModerate,
         replies: [for (final r in replies ?? const <CommentModel>[]) r.toEntity()],
+        isAuthorMuted: isAuthorMuted,
       );
 }
 

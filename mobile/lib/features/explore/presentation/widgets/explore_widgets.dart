@@ -18,6 +18,7 @@ import '../../../article/presentation/cubit/engagement_cubit.dart';
 import '../../../article/presentation/widgets/article_card_tile.dart';
 import '../../../follow/domain/entities/follow.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
+import '../../../mutes/presentation/widgets/mute_gate.dart';
 import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../domain/entities/explore.dart';
 import '../explore_routes.dart';
@@ -179,11 +180,15 @@ class ExploreArticleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final engagement = context.select((EngagementCubit c) => c.state.of(article));
-    return ArticleCardTile(
-      key: ValueKey('explore-article-${article.id}'),
-      article: engagement.applyTo(article),
-      onTap: () => unawaited(GoRouter.maybeOf(context)?.push<void>('/a/${article.slug}')),
-      showAttachments: false,
+    // A writer, field or topic muted elsewhere (the reader) folds the row away too (F28).
+    return MuteGate(
+      article: article,
+      child: ArticleCardTile(
+        key: ValueKey('explore-article-${article.id}'),
+        article: engagement.applyTo(article),
+        onTap: () => unawaited(GoRouter.maybeOf(context)?.push<void>('/a/${article.slug}')),
+        showAttachments: false,
+      ),
     );
   }
 }

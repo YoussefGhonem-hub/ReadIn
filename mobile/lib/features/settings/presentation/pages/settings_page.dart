@@ -11,6 +11,7 @@ import '../../../auth/presentation/cubit/linked_accounts_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../moderation/presentation/cubit/moderation_summary_cubit.dart';
 import '../../../moderation/presentation/widgets/moderation_entry_tile.dart';
+import '../../../mutes/presentation/pages/muted_page.dart';
 import '../../../notifications/presentation/pages/notification_settings_page.dart';
 import '../../../profile/presentation/cubit/privacy_cubit.dart';
 import '../../../profile/presentation/widgets/public_reading_stats_switch.dart';
@@ -133,6 +134,8 @@ class _SettingsViewState extends State<SettingsView> {
             const ReminderTimeTile(confirmSaved: true),
             // Fields and topics followed after onboarding (F02, F12).
             if (session.isAuthenticated) const _InterestsEntry(),
+            // The writers, fields and topics muted from an article's "⋯" (F28), next to what you follow.
+            if (session.isAuthenticated) const _MutedEntry(),
           ]),
           // Per-type modes and quiet hours live on the account (F17).
           if (session.isAuthenticated) card(l10n.notifications, const [_NotificationSettingsEntry()]),
@@ -172,6 +175,25 @@ class _InterestsEntry extends StatelessWidget {
       subtitle: Text(l10n.settingsInterestsHint),
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: () => context.push(InterestsPage.path),
+    );
+  }
+}
+
+/// Settings → Muted (F18, F28).
+class _MutedEntry extends StatelessWidget {
+  const _MutedEntry();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      key: const ValueKey('settings-muted'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.volume_off_outlined),
+      title: Text(l10n.muteSettingsEntry),
+      subtitle: Text(l10n.muteSettingsEntryHint),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => context.push(MutedPage.path),
     );
   }
 }

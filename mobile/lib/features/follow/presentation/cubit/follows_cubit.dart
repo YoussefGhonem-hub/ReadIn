@@ -100,6 +100,14 @@ class FollowsCubit extends Cubit<FollowsState> {
     );
   }
 
+  /// A follow another action changed on the server (F28: muting a writer ends the follow, its Undo restores it), with
+  /// the writer's new follower count. Ignored while a follow request for that user is in flight.
+  void apply(String userId, {required bool isFollowing, int? followerCount}) {
+    final current = state.users[userId];
+    if (current?.pending ?? false) return;
+    _put(userId, FollowEntry(isFollowing: isFollowing, followerCount: followerCount ?? current?.followerCount));
+  }
+
   /// Another account (or a guest) is using the app.
   void reset() => emit(const FollowsState());
 

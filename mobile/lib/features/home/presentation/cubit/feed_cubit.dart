@@ -133,6 +133,9 @@ abstract class ArticleFeedCubit extends Cubit<FeedState> {
     );
   }
 
+  /// The next page, after the cards already shown. A card already in the list is dropped: a "show less" mid-scroll
+  /// (F28) moves the other articles of that topic to For you's last tier, where they come again, and so can an Undo
+  /// while paging in that tier (contract, "Show less").
   Future<void> loadMore() async {
     if (state.status != FeedStatus.ready || state.loadingMore || !state.hasMore) return;
     final generation = _generation;
@@ -141,11 +144,14 @@ abstract class ArticleFeedCubit extends Cubit<FeedState> {
     if (generation != _generation || isClosed) return;
     emit(result.fold(
       (failure) => state.copyWith(loadingMore: false, loadMoreFailure: () => failure),
-      (page) => state.copyWith(
-        loadingMore: false,
-        items: [...state.items, ...page.items],
-        nextCursor: () => page.nextCursor,
-      ),
+      (page) {
+        final seen = {for (final item in state.items) item.id};
+        return state.copyWith(
+          loadingMore: false,
+          items: [...state.items, ...page.items.where((item) => seen.add(item.id))],
+          nextCursor: () => page.nextCursor,
+        );
+      },
     ));
   }
 }

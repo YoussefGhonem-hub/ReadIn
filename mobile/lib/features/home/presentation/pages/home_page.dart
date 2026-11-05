@@ -22,6 +22,7 @@ import '../../../auth/presentation/widgets/require_account.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/cubit/suggested_writers_cubit.dart';
 import '../../../follow/presentation/widgets/suggested_writers.dart';
+import '../../../mutes/presentation/widgets/mute_gate.dart';
 import '../../../notifications/presentation/cubit/unread_badge_cubit.dart';
 import '../../../paths/presentation/path_routes.dart';
 import '../../../paths/presentation/widgets/home_path_card.dart';
@@ -210,10 +211,14 @@ class _HomeViewState extends State<HomeView> {
                                   if (state.loading) return const PostCardSkeleton();
                                   final today = state.today;
                                   if (today == null) return const SizedBox.shrink();
-                                  return _LiveArticleTile(
+                                  // Muting its writer, field or topic, or "show less", folds it away (F28).
+                                  return MuteGate(
                                     article: today,
-                                    label: context.l10n.todayArticle,
-                                    onTap: () => _open(today.slug),
+                                    child: _LiveArticleTile(
+                                      article: today,
+                                      label: context.l10n.todayArticle,
+                                      onTap: () => _open(today.slug),
+                                    ),
                                   );
                                 },
                               ),
@@ -397,29 +402,43 @@ class _ArticleFeedSliver<C extends ArticleFeedCubit> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocBuilder<C, FeedState>(
-        builder: (context, feed) => switch (feed.status) {
-          FeedStatus.loading => const SliverToBoxAdapter(child: _FeedSkeleton()),
-          FeedStatus.failure => SliverFillRemaining(
-              hasScrollBody: false,
-              child: ErrorView(
-                failure: feed.failure!,
-                compact: true,
-                onRetry: () => context.read<C>().load(fieldSlug: feed.fieldSlug),
+        builder: (context, feed) {
+          // Mutes and "show less" can fold away every card loaded (F28): then the next page loads by itself, and once
+          // none is left the list says it's empty.
+          final allHidden = mutesHideAll(context, feed.items);
+          return switch (feed.status) {
+            FeedStatus.loading => const SliverToBoxAdapter(child: _FeedSkeleton()),
+            FeedStatus.failure => SliverFillRemaining(
+                hasScrollBody: false,
+                child: ErrorView(
+                  failure: feed.failure!,
+                  compact: true,
+                  onRetry: () => context.read<C>().load(fieldSlug: feed.fieldSlug),
+                ),
               ),
-            ),
-          FeedStatus.ready when feed.items.isEmpty => emptyFillsRemaining
-              ? SliverFillRemaining(hasScrollBody: false, child: empty)
-              : SliverToBoxAdapter(child: empty),
-          // Post cards full width, one after another on the background (F34).
-          FeedStatus.ready => SliverList.builder(
-              itemCount: feed.items.length + 1,
-              itemBuilder: (context, i) => i < feed.items.length
-                  ? Padding(
-                      padding: const EdgeInsets.only(bottom: postCardGap),
-                      child: _LiveArticleTile(article: feed.items[i], onTap: () => onOpen(feed.items[i].slug)),
-                    )
-                  : _FeedFooter(state: feed, onRetry: context.read<C>().loadMore),
-            ),
+            FeedStatus.ready when feed.items.isEmpty || (allHidden && !feed.hasMore) => emptyFillsRemaining
+                ? SliverFillRemaining(hasScrollBody: false, child: empty)
+                : SliverToBoxAdapter(child: empty),
+            // Post cards full width, one after another on the background (F34).
+            FeedStatus.ready => SliverList.builder(
+                itemCount: feed.items.length + 1,
+                itemBuilder: (context, i) => i < feed.items.length
+                    // Mutes and "show less" fold the card away at once, and Undo brings it back in place (F28).
+                    ? MuteGate(
+                        key: ValueKey('feed-${feed.items[i].id}'),
+                        article: feed.items[i],
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: postCardGap),
+                          child: _LiveArticleTile(article: feed.items[i], onTap: () => onOpen(feed.items[i].slug)),
+                        ),
+                      )
+                    : LoadMoreWhileHidden(
+                        active: allHidden && !feed.loadingMore && feed.loadMoreFailure == null,
+                        onLoadMore: () => unawaited(context.read<C>().loadMore()),
+                        child: _FeedFooter(state: feed, onRetry: context.read<C>().loadMore),
+                      ),
+              ),
+          };
         },
       );
 }
