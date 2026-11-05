@@ -997,7 +997,7 @@ Mute author (كتم / إلغاء الكتم) is also on a profile's "⋯" (not o
 - One repost per user per article. You can't repost your own article (`repost.own_article`).
 - **Following feed:** an article a followed writer reposted appears at the time of the repost, labeled "أعاد نشره {name}". If several people you follow reposted it, it appears once, at the newest repost, labeled "{name} و N غيره". Articles you already got from a writer you follow aren't repeated.
 - **Profile:** a **Reposts** tab, newest first.
-- **Notification:** the author gets `article.reposted` (aggregated, respects preferences and mutes).
+- **Notification:** the author gets `article_reposted` (aggregated, respects preferences and mutes).
 - **Live:** `repostCount` is added to `/live/articles/{id}` and updates like other counters ([F27](#f27--real-time-updates)).
 - Article cards and details include `repostCount` and `isReposted`.
 - Muted writers' reposts don't appear, and neither do reposts of articles by muted writers or in muted fields and topics.
@@ -1497,7 +1497,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | 7 | Learning paths (`learningPaths` in `taxonomy.yaml` + each article's `learningPath`) | All |
 | 8 | Glossary terms (`content/glossary/*.yaml`, upserted by term id) and the article-term index, rebuilt when a glossary file or an article changes | All |
 | 9 | Demo interactions (follows, reactions, comments, saves, reading history, streaks) | Local only |
-| 10 | Demo reports (`demo-reports`, F22): open, resolved and dismissed reports on demo articles, comments and a user, and a warning notice for reader7 | Development only |
+| 10 | Demo reports (`demo-reports`, F22): open, resolved and dismissed reports on @readin's articles, comments and a user, and a warning notice for reader7 | Development only |
 | 11 | Demo notifications (`demo-notifications`, F17): a few read and unread entries of every kind for reader1, writer1, reader2 and reader7, without pushes | Development only |
 | 12 | Demo verification requests (`demo-verification`, F19): pending for writer1 (LinkedIn URL + PNG certificate), writer2 (GitHub URL only) and writer3 (PDF syndicate card only), reader5 rejected with a reason and the .NET Writer approved, both by the demo SuperAdmin (`+12025550101`); the proof files are drawn by the seeder into the private store; no notifications | Development only |
 
