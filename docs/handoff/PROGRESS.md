@@ -514,3 +514,27 @@ again next run; `Retry-After` is honoured up to 30 s. Dead links still fail. SPE
   cached lists.
 - **For the final review:** the writer Follow button says "متابعة" on the web and "تابع" on mobile (F12); Lucide hides
   icons that use `role="img"` + `aria-label` (e.g. the verified badge) from screen readers on the web.
+
+### F31 Writer categories ✅
+- **Backend:** migration `WriterCategories` (`WriterCategories` table cascading with the user,
+  `Articles.WriterCategoryId` set to null when a category goes, unique slug and normalized name per writer). Routes:
+  `GET /users/{username}/categories`, `/users/{username}/categories/{slug}` (+ `_other` for articles without a
+  category), `GET/POST /me/categories`, rename, reorder and delete, `PUT /articles/{id}/category` (outside the
+  article's version, so it never clashes with autosave). At most 50 per writer, held under a per-user lock so two
+  creates at once can't pass it. Counts only count visible articles. Caches carry the writer's tag plus `Feed` and
+  `Taxonomy`. Moderation action `clear_category` (the name becomes "قسم n" / "Category n" with a new slug) and
+  `ModerationCaseDto.categories`. Account deletion removes the categories, and kept articles lose their category.
+  Development only: `DemoCategoriesSeeder`.
+- **Web and mobile:** the Categories tab after Articles (visitors see non-empty categories, then "مقالات تانية"; a
+  writer with no categories gets the empty state), the owner's manage view (create, rename, reorder by drag or
+  move up/down, delete with the article count, empty rows marked "فاضي، والزوار مش شايفينه"), the category page (SSR
+  with `noindex` when empty, 404 when missing), the editor picker with "＋ قسم جديد", "في قسم {name}" in the reader,
+  moderation "امسح الاسم" with an optional note; deep links `readin://u/{u}/c/{slug}` and `https://{host}/@{u}/c/{slug}`.
+  The in-app account-deletion text and `public/delete-account.html` / `public/privacy.html` list writer categories
+  (the public pages need redeploying to Firebase Hosting).
+- **Category pages don't apply mutes** (like the profile's Articles tab: you open a writer's own pages on purpose).
+- **Test round:** the tests ran once (backend 1907/1907, web unit 993/996 with 3 load timeouts that pass alone,
+  Playwright for the touched screens 144/144, mobile 1745/1745). 10 bugs fixed, mostly web/mobile differences (error
+  texts, the empty tab, the empty-row mark, copy and plurals, moderation), plus the deletion screens, the limit race
+  and the unit-test warm-up. **The fixes were not tried with the tests** (user rule); only the builds, lint and
+  analyze ran after them.
