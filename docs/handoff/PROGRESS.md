@@ -465,3 +465,21 @@ again next run; `Retry-After` is honoured up to 30 s. Dead links still fail. SPE
 - **Test round:** 8 bugs found and fixed (a query per bad tag name on save, the duplicate-tag race, tatweel-only
   names, web error texts, Arabic symbol lists without isolates, three small mobile ones), plus the legacy upgrade
   running in every deployment path (deployment.md §9).
+
+### F16 Search ✅
+- **Backend:** `GET /search` (articles, users, topics, tags) and `/search/suggest`, rate limit `search` (60 a
+  minute). Two engines behind one interface, picked at startup: SQL Server Full-Text Search (`CONTAINSTABLE`, every
+  word a quoted prefix term) when installed, otherwise an escaped `LIKE`. Migration `SearchFullText` creates the
+  catalog and indexes only on a server with full-text. Names, topics and tags use normalized `LIKE` in both engines
+  (names aren't stored normalized). Ranking: place (title 1, text 0.6, PDF 0.4) × rank × quality × freshness.
+- **SQL image:** `docker/sqlserver/Dockerfile` (2022 + `mssql-server-fts`, ADR 0017): docker-compose builds it
+  (port 14333), Testcontainers builds it when missing, and backend CI caches it in the GitHub Actions cache.
+- **Web:** `/search` (server-rendered without results, `noindex`), tabs, filters, compact rows ("found in the
+  attached PDF"), recent searches, a lazy header combobox with suggestions; Back keeps the list.
+- **Mobile:** `/search` from the Explore tab's search bar, the same tabs, filters, states and recent searches.
+- **Test round:** 9 bugs fixed (an icon that pulled 24 editor icons into the initial bundle, error texts and labels
+  that differed between server, web and mobile, the PDF carousel in mobile search rows, an English tag pushed to the
+  wrong side in Arabic, the title-match rule, the CI image rebuild, docs, a missing golden). The reported ".NET" → "NET."
+  problem was checked pixel by pixel and isn't real.
+- **To know:** the full-text image is ~5 GB and takes ~5 minutes to build the first time; your local SQL container
+  needs `docker compose build sqlserver` then `docker compose up -d` (the data volume stays).
