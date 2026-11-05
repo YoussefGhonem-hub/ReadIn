@@ -48,9 +48,9 @@ function documentOf({ language = 'ar-EG', title, text, fieldId = 'f-software', t
 
 /**
  * @param {{ problem: Function, viewerOf: Function, fields: any[], assets: Map<string, any>, author: (viewer: string) => any, fieldRef: Function,
- *   tags: { find: (name: string) => any, refsOf: (names: string[]) => any[] } }} deps
+ *   tags: { find: (name: string) => any, refsOf: (names: string[]) => any[] }, categoryIdOf: (viewer: string, id: string) => string | null }} deps
  */
-export function createEditor({ problem, viewerOf, fields, assets, author, fieldRef, tags }) {
+export function createEditor({ problem, viewerOf, fields, assets, author, fieldRef, tags, categoryIdOf }) {
   const states = new Map();
   /** slug → { viewer, id } of every published editor article (the reader serves them). */
   const published = new Map();
@@ -183,6 +183,8 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
       document: record.document,
       media: record.document.attachments.map((a) => assets.get(a.mediaAssetId)).filter(Boolean),
       checks: checksOf(record.document, record.live),
+      // F31: not part of the document (categories.mjs keeps it).
+      categoryId: categoryIdOf(record.viewer, record.id),
     };
   }
 
@@ -399,5 +401,17 @@ export function createEditor({ problem, viewerOf, fields, assets, author, fieldR
     };
   }
 
-  return { routes, readerArticle };
+  /** The viewer's published articles as readers get them (the category pages, F31). */
+  function publishedOf(viewer) {
+    if (!states.has(viewer)) {
+      if (!viewer.startsWith('u-author')) return [];
+      stateOf(viewer);
+    }
+    return [...states.get(viewer).articles.values()].filter((a) => a.live).map((a) => readerArticle(a.slug));
+  }
+
+  /** One of the viewer's articles, draft or published. */
+  const owns = (viewer, id) => stateOf(viewer).articles.has(id);
+
+  return { routes, readerArticle, publishedOf, owns };
 }

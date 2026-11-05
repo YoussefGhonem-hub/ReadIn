@@ -7,6 +7,9 @@
  * works on their own copy of the seeded cases (3 + 1 open, 1 resolved, 1 dismissed), so parallel tests never see each
  * other's actions; an article a moderator hides is hidden (with the banner) for that moderator only. Viewers whose id
  * starts with `u-warned` start with two unacknowledged notices (a warning and a hidden article).
+ *
+ * A user case lists that user's writer categories (F31, from categories.mjs); `clear_category` renames one to "قسم {n}"
+ * with a new slug, for that moderator only (like their other actions).
  */
 
 const REASONS = ['spam', 'misinformation', 'harassment', 'copyright', 'other'];
@@ -14,7 +17,7 @@ const TYPES = ['article', 'comment', 'user'];
 const ALLOWED = {
   comment: ['hide', 'unhide', 'delete', 'dismiss'],
   article: ['hide', 'unhide', 'dismiss'],
-  user: ['warn', 'suspend', 'unsuspend', 'dismiss'],
+  user: ['warn', 'suspend', 'unsuspend', 'clear_category', 'dismiss'],
 };
 const NOW = '2026-11-03T09:00:00Z';
 const SEED_MODERATOR = { id: 'u-mod-seed', displayName: 'Nour Fawzy', username: 'nour_mod', avatarUrl: null, isVerified: false, bio: null, isFollowing: false, followsYou: false };
@@ -98,10 +101,14 @@ function seedLog() {
   ];
 }
 
+/** A name `clear_category` gives (or leaves alone): "قسم {n}" / "Category {n}". */
+const PLACEHOLDER = /^(قسم|Category) (\d+)$/;
+
 /**
- * @param {{ articles: any[], writers: any[], social: any, problem: (status: number, code: string, title: string) => any }} deps
+ * @param {{ articles: any[], writers: any[], social: any, problem: (status: number, code: string, title: string) => any,
+ *   categoriesOf: (userId: string) => any[] }} deps
  */
-export function createModeration({ articles, writers, social, problem }) {
+export function createModeration({ articles, writers, social, problem, categoriesOf }) {
   const articleById = new Map(articles.map((a) => [a.id, a]));
   const people = new Map([...writers, ...social.readers].map((u) => [u.id, u]));
   const commentById = new Map(COMMENTS.map((c) => [c.id, c]));
@@ -128,7 +135,7 @@ export function createModeration({ articles, writers, social, problem }) {
   };
 
   function stateOf(viewer) {
-    if (!moderators.has(viewer)) moderators.set(viewer, { cases: new Map(seedCases().map((c) => [`${c.targetType}:${c.targetId}`, c])), log: seedLog() });
+    if (!moderators.has(viewer)) moderators.set(viewer, { cases: new Map(seedCases().map((c) => [`${c.targetType}:${c.targetId}`, c])), log: seedLog(), cleared: new Map() });
     return moderators.get(viewer);
   }
 
@@ -210,6 +217,11 @@ export function createModeration({ articles, writers, social, problem }) {
     return user ? `@${user.username}` : null;
   }
 
+  /** A user's categories as this moderator sees them: with the names they cleared. */
+  function userCategories(state, userId) {
+    return categoriesOf(userId).map((c) => ({ ...c, ...(state.cleared.get(c.id) ?? {}) }));
+  }
+
   function actionDto(entry, viewer) {
     const c = { targetType: entry.targetType, targetId: entry.targetId };
     const owner = ownerOf(entry.targetType, entry.targetId);
@@ -218,7 +230,8 @@ export function createModeration({ articles, writers, social, problem }) {
       action: entry.action,
       targetType: entry.targetType,
       targetId: entry.targetId,
-      targetLabel: labelOf(c),
+      // A cleared category's old name (F31), else the target's label.
+      targetLabel: entry.label ?? labelOf(c),
       targetUser: owner ? summaryOf(owner, viewer) : null,
       moderator: entry.moderator ?? summaryOf(viewer, viewer),
       note: entry.note ?? null,
@@ -262,7 +275,8 @@ export function createModeration({ articles, writers, social, problem }) {
     if (!TYPES.includes(targetType) || !ALLOWED[targetType].includes(action)) return [400, problem(400, 'moderation.action_invalid', 'This action is not allowed here.')];
     if (typeof body.note === 'string' && body.note.length > 500) return validation('note', 'validation.max_length');
     if (!exists(targetType, targetId)) return [404, problem(404, `${targetType}.not_found`, 'Not found')];
-    if (targetType === 'user') {
+    // Clearing a category name (F31) is allowed on any user, like hiding content.
+    if (targetType === 'user' && action !== 'clear_category') {
       if (targetId === viewer) return [400, problem(400, 'moderation.self', 'You cannot moderate yourself.')];
       if (targetId.startsWith('u-mod') && action !== 'dismiss') return [403, problem(403, 'moderation.staff_target', 'Staff are protected.')];
     }
@@ -272,6 +286,19 @@ export function createModeration({ articles, writers, social, problem }) {
     }
 
     const state = stateOf(viewer);
+    let label = null;
+    if (action === 'clear_category') {
+      if (!body.categoryId) return validation('categoryId', 'validation.required');
+      const categories = userCategories(state, targetId);
+      const category = categories.find((x) => x.id === body.categoryId);
+      if (!category) return [404, problem(404, 'category.not_found', 'Category not found')];
+      if (PLACEHOLDER.test(category.name)) return [204, undefined];
+      const used = new Set(categories.map((x) => Number(PLACEHOLDER.exec(x.name)?.[2] ?? 0)));
+      let n = 1;
+      while (used.has(n)) n++;
+      state.cleared.set(category.id, { name: `قسم ${n}`, slug: `قسم-${n}` });
+      label = category.name;
+    }
     const c = caseOf(state, targetType, targetId);
     const at = new Date().toISOString();
     let reportsClosed = 0;
@@ -306,6 +333,9 @@ export function createModeration({ articles, writers, social, problem }) {
         if (c.state !== 'suspended') return [204, undefined];
         c.state = 'active';
         break;
+      case 'clear_category':
+        reportsClosed = closeOpen(c, 'resolved', viewer, at);
+        break;
       case 'dismiss':
         reportsClosed = closeOpen(c, 'dismissed', viewer, at);
         if (!reportsClosed) return [204, undefined];
@@ -315,7 +345,7 @@ export function createModeration({ articles, writers, social, problem }) {
       reportsClosed += closeOpen(caseOf(state, body.resolveReportsOf.targetType, body.resolveReportsOf.targetId), 'resolved', viewer, at);
     }
     const logged = action === 'dismiss' ? 'reports.dismiss' : `${targetType}.${action}`;
-    state.log.unshift({ id: `log-${viewer}-${nextId++}`, action: logged, targetType, targetId, note: body.note?.trim() || null, suspendedUntil, reportsClosed, createdAt: at });
+    state.log.unshift({ id: `log-${viewer}-${nextId++}`, action: logged, targetType, targetId, note: body.note?.trim() || null, suspendedUntil, reportsClosed, createdAt: at, label });
     return [204, undefined];
   }
 
@@ -439,6 +469,8 @@ export function createModeration({ articles, writers, social, problem }) {
             item: itemOf(c, status),
             reports: [...c.reports].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((r) => reportDto(r, viewer)),
             history: state.log.filter((e) => e.targetType === c.targetType && e.targetId === c.targetId).map((e) => actionDto(e, viewer)),
+            // F31: a user's categories, empty ones too, so an offensive name can be cleared.
+            categories: c.targetType === 'user' ? userCategories(state, c.targetId) : [],
           },
         ];
       }),

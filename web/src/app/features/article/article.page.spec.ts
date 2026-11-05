@@ -64,6 +64,20 @@ describe('ArticlePage byline', () => {
     expect(t.jsonLd()['keywords']).toBe('C#, الذكاء الاصطناعي');
   });
 
+  it('the writer\'s category (F31): "في قسم {name}" links to the category page by its slug; none without one', async () => {
+    const t = await render(testDetails({ category: { slug: 'نصايح-البرمجة', name: 'Angular tips' } }));
+    http = t.http;
+    const link = t.byline.querySelector<HTMLAnchorElement>('[data-article-category]')!;
+    // The name is isolated, so an English name keeps its direction in the Arabic sentence.
+    expect(link.textContent!.trim()).toBe('في قسم ⁨Angular tips⁩');
+    expect(link.getAttribute('href')).toBe(`/@karim/c/${encodeURIComponent('نصايح-البرمجة')}`);
+
+    TestBed.resetTestingModule();
+    const none = await render(testDetails({ category: null }), 'en');
+    http = none.http;
+    expect(none.byline.querySelector('[data-article-category]')).toBeNull();
+  });
+
   it('a deleted account’s article says “Deleted user”: a neutral avatar, no link, @username, verified mark or Follow (SPEC §9.6)', async () => {
     const t = await render(testDetails({ author: null, isFollowingAuthor: false }));
     http = t.http;

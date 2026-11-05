@@ -286,6 +286,8 @@ export class ModerationLogEntry {
         return 'Ban';
       case 'user.unsuspend':
         return 'UserRoundCheck';
+      case 'user.clear_category':
+        return 'Eraser';
       default:
         return 'CircleX';
     }

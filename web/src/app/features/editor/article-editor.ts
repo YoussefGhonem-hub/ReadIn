@@ -343,7 +343,11 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
               [fieldsFailed]="fieldsFailed()"
               [tagFlags]="tagFlags()"
               [tagErrors]="store.tagErrors()"
+              [categoryId]="store.categoryId()"
+              [categorySaving]="store.categorySaving()"
+              [categoryError]="store.categoryError()"
               (patch)="patchDocument($event)"
+              (categoryChange)="store.setCategory($event)"
               (retryFields)="loadFields()"
               (coverUploading)="coverUploading.set($event)"
             />

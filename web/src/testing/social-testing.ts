@@ -90,6 +90,19 @@ export function setupSocialTesting(options: { guest?: boolean; providers?: unkno
   return { http: TestBed.inject(HttpTestingController), session, toasts: TestBed.inject(ToastService) };
 }
 
+/** How long {@link warmUpPostCards} may take: the import is slow only when many test files run at once. */
+export const WARM_UP_TIMEOUT_MS = 60_000;
+
+/**
+ * Loads the post card's deferred chunk (the preview and the reader's renderer, F34) before a file's tests. Every card
+ * prefetches it once the page is idle, so the first test of a file that shows post cards would otherwise pay for a cold
+ * import, which under a full parallel run can pass a test's 5 s limit. Call it in `beforeAll` with
+ * {@link WARM_UP_TIMEOUT_MS}; the tests and their assertions stay as they are.
+ */
+export async function warmUpPostCards(): Promise<void> {
+  await import('../app/features/feed/card-preview');
+}
+
 /** Lets awaited HTTP results and the stores' follow-up requests run. */
 export async function flushMicrotasks(times = 6): Promise<void> {
   for (let i = 0; i < times; i++) await Promise.resolve();

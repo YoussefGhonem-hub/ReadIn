@@ -36,7 +36,7 @@ import { FollowStore } from '../../core/social/follow.store';
 import { bindLiveCounters } from '../../core/social/live-article';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { BdiText } from '../../shared/directives/bdi-text';
-import { detectDir } from '../../shared/directives/bidi';
+import { detectDir, isolate } from '../../shared/directives/bidi';
 import { ArticleAttachments } from '../../shared/media/article-attachments';
 import { LocalizedDatePipe } from '../../shared/pipes/format.pipes';
 import { CollectionPickerSheet } from '../../shared/social/collection-sheets';
@@ -49,6 +49,7 @@ import { Avatar } from '../../shared/ui/avatar';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { LinesSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
+import { categoryLink } from '../categories/category-rules';
 import { ArticleActionBar } from './article-action-bar';
 import { ArticleCover, ArticleHeadline, ArticleHealthNotice, ArticleSources, ArticleTrustRow } from './article-parts';
 import { ArticleSeoService } from './article-seo.service';
@@ -184,7 +185,16 @@ const TOC_MIN_HEADINGS = 3;
                   <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
                 }
               </a>
-              <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
+              <div class="text-xs text-text-secondary">
+                {{ a.publishedAt | rdDate: uiLang() : 'long' }}
+                <!-- The writer's category (F31): "في قسم {name}", the name isolated in its own direction. -->
+                @if (a.category; as category) {
+                  <span aria-hidden="true">·</span>
+                  <a [routerLink]="categoryLink(author.username, category.slug)" class="font-semibold text-link no-underline hover:underline" data-article-category>{{
+                    'article.inCategory' | transloco: { name: isolate(category.name) }
+                  }}</a>
+                }
+              </div>
             </div>
             <div class="ms-auto" data-author-follow>
               <rd-follow-button [user]="author" [initial]="a.isFollowingAuthor" />
@@ -287,6 +297,8 @@ export class ArticlePage {
   protected readonly uiLang = inject(LanguageService).lang;
   protected readonly tocMinHeadings = TOC_MIN_HEADINGS;
   protected readonly tagLink = tagLink;
+  protected readonly categoryLink = categoryLink;
+  protected readonly isolate = isolate;
 
   /** Route params (component input binding). */
   readonly lang = input<string>('ar');

@@ -11,13 +11,16 @@
  * signed-in viewer, so those flows run against it end to end. Tags (tags.mjs, F32) give every card and article its
  * `TagRefDto`s and serve the editor's suggestions and the tag pages. Search (search.mjs, F16) finds the articles (and
  * the attached PDF's text), writers, fields and topics, and tags. Explore and the field pages (explore.mjs, F15) rank
- * and list the same articles. It also serves generated PNGs for every media URL and fixture builders under `/__mock`.
+ * and list the same articles. Writer categories (categories.mjs, F31) keep each writer's own categories and give the
+ * reader its `category` and the editor its `categoryId`. It also serves generated PNGs for every media URL and fixture
+ * builders under `/__mock`.
  *
  * Run: `node e2e/mock-api/server.mjs` (playwright.config.ts starts it). Port: MOCK_API_PORT (default 5080).
  */
 import { createServer } from 'node:http';
 import { crc32, deflateSync } from 'node:zlib';
 import { encode } from 'blurhash';
+import { createCategories } from './categories.mjs';
 import { createEditor } from './editor.mjs';
 import { createExplore } from './explore.mjs';
 import { createPaths } from './paths.mjs';
@@ -714,6 +717,16 @@ const editor = createEditor({
   fieldRef,
   author: (viewer) => (viewer === 'u-writer' ? AUTHOR : { id: viewer, displayName: 'Mona Adel', username: 'mona', avatarUrl: null, isVerified: true }),
   tags: tagRegistry,
+  // Called per request, once `categories` exists.
+  categoryIdOf: (viewer, id) => categories.categoryIdOf(viewer, id),
+});
+const categories = createCategories({
+  problem,
+  viewerOf: social.viewerOf,
+  lookup: (username, viewer) => profiles.lookup(username, viewer),
+  articles: () => PUBLISHED,
+  editor,
+  personalize: social.personalize,
 });
 const tags = createTags({
   registry: tagRegistry,
@@ -746,7 +759,7 @@ const search = createSearch({
 });
 // Explore and field pages (F15): every published fixture, the tag pages' notes too (they are Software articles).
 const explore = createExplore({ articles: () => PUBLISHED, fields: FIELDS, topics: TOPICS, writers: WRITERS, social, paths, problem });
-const moderation = createModeration({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
+const moderation = createModeration({ articles: ALL_ARTICLES, writers: WRITERS, social, problem, categoriesOf: categories.categoriesOf });
 const notifications = createNotifications({ articles: ALL_ARTICLES, writers: WRITERS, social, problem });
 const verification = createVerification({
   writers: WRITERS,
@@ -777,6 +790,7 @@ const routes = [
       return [200, verification.decorateMe(profiles.meOf(viewer), viewer)];
     },
   ],
+  ...categories.routes,
   ...editor.routes,
   ...tags.routes,
   ...search.routes,
@@ -871,9 +885,9 @@ const routes = [
     new RegExp(`^${API}/articles/([^/]+)$`),
     (q, [, slug], _body, req) => {
       const viewer = social.viewerOf(req);
-      if (DETAILS.has(slug)) return [200, moderation.decorateArticle(social.personalize(DETAILS.get(slug), viewer), viewer)];
+      if (DETAILS.has(slug)) return [200, categories.decorateArticle(moderation.decorateArticle(social.personalize(DETAILS.get(slug), viewer), viewer))];
       const written = editor.readerArticle(decodeURIComponent(slug), q.get('lang'));
-      return written ? [200, written] : [404, problem(404, 'article.not_found', 'Article not found')];
+      return written ? [200, categories.decorateArticle(written)] : [404, problem(404, 'article.not_found', 'Article not found')];
     },
   ],
   // Phone + password sessions (docs/api/contract-v1.md → Auth). The cookie is the whole session: `readin_refresh=writer`.

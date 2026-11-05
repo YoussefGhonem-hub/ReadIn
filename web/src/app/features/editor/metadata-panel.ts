@@ -3,6 +3,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { ArticleDraftDocument, FieldDto, TopicDto } from '../../core/api/models';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Switch } from '../../shared/ui/switch';
+import { CategoryPicker } from './category-picker';
 import { CoverPicker } from './cover-picker';
 import { SourcesEditor } from './sources-editor';
 import { TagError, TagInput } from './tag-input';
@@ -11,10 +12,13 @@ export const VERSION_BADGE_MAX = 30;
 
 export type DocumentPatch = Partial<Omit<ArticleDraftDocument, 'translations' | 'sourceLanguage'>>;
 
-/** Article settings (F05): field (required to publish), topic, tags, cover, sources, version badge, AI label. */
+/**
+ * Article settings (F05): field (required to publish), topic, your category (F31: applied at once, not part of the
+ * draft), tags, cover, sources, version badge, AI label.
+ */
 @Component({
   selector: 'rd-metadata-panel',
-  imports: [TranslocoPipe, Switch, CoverPicker, SourcesEditor, TagInput],
+  imports: [TranslocoPipe, Switch, CategoryPicker, CoverPicker, SourcesEditor, TagInput],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-5' },
   template: `
@@ -43,6 +47,7 @@ export type DocumentPatch = Partial<Omit<ArticleDraftDocument, 'translations' | 
           }
         </select>
       </div>
+      <rd-category-picker [value]="categoryId()" [busy]="categorySaving()" [error]="categoryError()" (changed)="categoryChange.emit($event)" />
     </div>
 
     <rd-tag-input id="ed-tags" [tags]="document().tags" [flagged]="tagFlags()" [errors]="tagErrors()" (tagsChange)="patch.emit({ tags: $event })" />
@@ -88,7 +93,12 @@ export class MetadataPanel {
   readonly tagFlags = input<readonly string[]>([]);
   /** Why the last save was refused because of the tags. */
   readonly tagErrors = input<readonly TagError[]>([]);
+  /** The writer's category (F31) and its change on the way, kept outside the document. */
+  readonly categoryId = input<string | null>(null);
+  readonly categorySaving = input(false);
+  readonly categoryError = input<string | null>(null);
   readonly patch = output<DocumentPatch>();
+  readonly categoryChange = output<string | null>();
   readonly retryFields = output<void>();
   readonly coverUploading = output<boolean>();
 

@@ -20,9 +20,11 @@ export interface ModerationActionDraft {
   action: ModerationAction;
   targetType: ModerationTargetType;
   targetId: string;
-  /** The user's display name, for "Warn {name}" / "Suspend {name}". */
+  /** The user's display name, for "Warn {name}" / "Suspend {name}"; the category's name for `clear_category`. */
   name?: string | null;
   resolveReportsOf?: ModerationActionRequest['resolveReportsOf'];
+  /** `clear_category` (F31): the user's category whose name is cleared. */
+  categoryId?: string;
 }
 
 interface SheetCopy {
@@ -50,6 +52,8 @@ export function sheetCopy(draft: Pick<ModerationActionDraft, 'action' | 'targetT
       return { key: 'suspend', confirm: 'moderation.actions.suspend', note: 'required', danger: true, duration: true };
     case 'unsuspend':
       return { key: 'unsuspend', confirm: 'moderation.actions.unsuspend', note: 'optional', danger: false, duration: false };
+    case 'clear_category':
+      return { key: 'clearCategory', confirm: 'moderation.actions.clearCategory', note: 'optional', danger: true, duration: false };
     case 'dismiss':
       return { key: 'dismiss', confirm: 'moderation.actions.dismiss', note: 'optional', danger: false, duration: false };
   }
@@ -57,7 +61,8 @@ export function sheetCopy(draft: Pick<ModerationActionDraft, 'action' | 'targetT
 
 /**
  * Confirms one moderation action (F22) with a note and, for a suspension, its length (1, 7, 30 days or permanent). The
- * note is required for warn and suspend (the user sees it) and optional otherwise. Sends `POST /moderation/actions`,
+ * note is required for warn and suspend (the user sees it) and optional otherwise; clearing a writer category's name
+ * (F31) carries the category's id. Sends `POST /moderation/actions`,
  * thanks with a toast and emits `done`; a failure stays in the sheet with its translated message.
  */
 @Component({
@@ -208,6 +213,7 @@ export class ModerationActionSheet {
     if (note) request.note = note;
     if (draft.action === 'suspend') request.durationDays = this.duration();
     if (draft.resolveReportsOf) request.resolveReportsOf = draft.resolveReportsOf;
+    if (draft.action === 'clear_category' && draft.categoryId) request.categoryId = draft.categoryId;
     this.busy.set(true);
     this.error.set(null);
     try {

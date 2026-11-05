@@ -19,10 +19,11 @@ describe('profile URLs (SPEC §23)', () => {
     expect(match.consumed.map((s) => s.path)).toEqual(['@mona']);
     expect(match.posParams!['username'].path).toBe('mona');
 
-    // The lists under it are matched by the lazy profile routes.
+    // The lists and the category pages (F31) under it are matched by the lazy profile routes.
     expect(profileMatcher(segments('@mona', 'followers'))!.consumed.map((s) => s.path)).toEqual(['@mona']);
-    expect(profileRoutes.map((r) => r.path)).toEqual(['', 'followers', 'following']);
-    expect(profileRoutes.map((r) => r.data?.['list'] ?? null)).toEqual([null, 'followers', 'following']);
+    expect(profileMatcher(segments('@mona', 'c', 'asp-net-core'))!.consumed.map((s) => s.path)).toEqual(['@mona']);
+    expect(profileRoutes.map((r) => r.path)).toEqual(['', 'followers', 'following', 'c/:slug']);
+    expect(profileRoutes.map((r) => r.data?.['list'] ?? null)).toEqual([null, 'followers', 'following', null]);
   });
 
   it('is not a profile without a name after @', () => {

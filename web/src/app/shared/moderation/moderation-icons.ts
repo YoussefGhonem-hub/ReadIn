@@ -3,13 +3,14 @@ import { LUCIDE_ICONS, lucideLegacyIconMap } from '@lucide/angular';
 // One file per icon, not the `lucide` barrel: through the barrel (used by the initial bundle) they would be bundled there.
 import Ban from 'lucide/dist/esm/icons/ban.mjs';
 import Ellipsis from 'lucide/dist/esm/icons/ellipsis.mjs';
+import Eraser from 'lucide/dist/esm/icons/eraser.mjs';
 import Flag from 'lucide/dist/esm/icons/flag.mjs';
 import MessageSquare from 'lucide/dist/esm/icons/message-square.mjs';
 import ScrollText from 'lucide/dist/esm/icons/scroll-text.mjs';
 import UserRoundCheck from 'lucide/dist/esm/icons/user-round-check.mjs';
 
 /** Icons only reporting and moderation use (F22). Registered on the components that show them, out of the initial bundle. */
-const MODERATION_ICONS = { Ban, Ellipsis, Flag, MessageSquare, ScrollText, UserRoundCheck };
+const MODERATION_ICONS = { Ban, Ellipsis, Eraser, Flag, MessageSquare, ScrollText, UserRoundCheck };
 
 /** Adds {@link MODERATION_ICONS} to the app's icon registry for this component tree (`<svg lucideIcon="Flag">`). */
 export function provideModerationIcons(): Provider {

@@ -54,9 +54,9 @@ for (const variant of VARIANTS) {
     await expect(reading.locator('[data-public-stats]')).toHaveCount(0);
     await expect(reading.locator('rd-reading-stats-card')).toContainText(ar ? '12 يوم' : '12 days');
 
-    // Articles / Paths / About (Saved is only on your own profile).
+    // Articles / Categories / Paths / About (Saved is only on your own profile).
     const tabs = page.locator('[data-profile-tab]');
-    await expect(tabs).toHaveCount(3);
+    await expect(tabs).toHaveCount(4);
     await expect(page.locator('[data-profile-articles] rd-post-card')).toHaveCount(4);
 
     // About: bio, links, fields of expertise, join date. The screenshot shows this tab (the cards' media is lazy).
@@ -77,6 +77,10 @@ for (const variant of VARIANTS) {
     await page.locator('[data-profile-tab="about"]').focus();
     await page.keyboard.press('Home');
     await expect(page.locator('[data-profile-tab="articles"]')).toBeFocused();
+    await page.keyboard.press(dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight');
+    await expect(page.locator('[data-profile-tab="categories"]')).toBeFocused();
+    // Her categories (F31), then on to Paths.
+    await expect(page.locator('[data-profile-categories] [data-category-card]')).toHaveCount(3, { timeout: FIRST_RENDER_MS });
     await page.keyboard.press(dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight');
     await expect(page.locator('[data-profile-tab="paths"]')).toBeFocused();
     await expect(page.locator('[data-profile-tab="paths"]')).toHaveAttribute('aria-selected', 'true');
@@ -106,7 +110,7 @@ for (const variant of VARIANTS) {
     await expect(header.locator('[data-edit-profile]')).toBeVisible();
     await expect(header.locator('[data-profile-follow]')).toHaveCount(0);
     await expect(header.locator('[data-stat="following"]')).toContainText('2');
-    await expect(page.locator('[data-profile-tab]')).toHaveCount(4);
+    await expect(page.locator('[data-profile-tab]')).toHaveCount(5);
     await expect(page.locator('[data-articles-empty]')).toBeVisible();
     await expect(header.locator('[data-profile-bio]')).toHaveAttribute('dir', 'rtl');
 

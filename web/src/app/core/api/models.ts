@@ -326,6 +326,53 @@ export interface ArticleDetailsDto extends ArticleCardDto {
    * and the reader shows a "hidden" banner. Missing from an API older than F22.
    */
   moderation?: ArticleModerationDto | null;
+  /**
+   * The writer's category of the article (F31): the byline's "في قسم {name}", linking to
+   * `/@{author.username}/c/{slug}`. Null: none. Missing from an API older than F31.
+   */
+  category?: WriterCategoryRefDto | null;
+}
+
+// ── Writer categories (F31) ─────────────────────────────────
+
+/** A card of the profile's Categories tab and a row of the writer's manage list. Show `name` with `dir="auto"`. */
+export interface WriterCategoryDto {
+  id: string;
+  /** Made once from the name, never changes on rename; opens `/@{username}/c/{slug}` (percent-encoded: may be Arabic). */
+  slug: string;
+  /** 1–40 characters, the writer's spelling. */
+  name: string;
+  /** Articles readers can see in it, the same for everyone; 0 only in `GET /me/categories`. */
+  articleCount: number;
+  /** The writer's order, ascending; lists already come sorted. */
+  sortOrder: number;
+}
+
+/** `GET /users/{username}/categories`, `GET /me/categories`, `PUT /me/categories/order`. */
+export interface WriterCategoryListDto {
+  /** The profile: non-empty ones only; `/me`: all of them, empty ones included. */
+  items: WriterCategoryDto[];
+  /** Articles readers can see without a category: the last card, "مقالات تانية" (`/c/_other`); hidden when 0. */
+  uncategorizedCount: number;
+}
+
+/** `GET /users/{username}/categories/{slug}`: the category page's header. */
+export interface WriterCategoryPageDto {
+  /** Null for the uncategorized list (slug `_other`). */
+  id: string | null;
+  slug: string;
+  /** Null for `_other`: show "مقالات تانية" / "Other articles". */
+  name: string | null;
+  /** 0 → the empty state (and `noindex`). */
+  articleCount: number;
+  /** The writer: the page title ("{name} · {displayName}") and the link back to the profile. */
+  author: AuthorDto;
+}
+
+/** `ArticleDetailsDto.category`. */
+export interface WriterCategoryRefDto {
+  slug: string;
+  name: string;
 }
 
 // ── Reactions (F10) ─────────────────────────────────────────
@@ -488,11 +535,12 @@ export interface ReportRequest {
   details?: string | null;
 }
 
-export type ModerationAction = 'hide' | 'unhide' | 'delete' | 'warn' | 'suspend' | 'unsuspend' | 'dismiss';
+export type ModerationAction = 'hide' | 'unhide' | 'delete' | 'warn' | 'suspend' | 'unsuspend' | 'clear_category' | 'dismiss';
 
 /**
  * `POST /moderation/actions` → 204 (permission `moderation.manage`; suspend / unsuspend also `users.suspend`).
- * Allowed: comment hide/unhide/delete/dismiss · article hide/unhide/dismiss · user warn/suspend/unsuspend/dismiss.
+ * Allowed: comment hide/unhide/delete/dismiss · article hide/unhide/dismiss · user
+ * warn/suspend/unsuspend/clear_category/dismiss.
  */
 export interface ModerationActionRequest {
   action: ModerationAction;
@@ -504,6 +552,11 @@ export interface ModerationActionRequest {
   durationDays?: number | null;
   /** Also resolve these open reports (e.g. warning the author from an article's case). */
   resolveReportsOf?: { targetType: ModerationTargetType; targetId: string };
+  /**
+   * `clear_category` only (F31): one of the user's categories, renamed to a neutral placeholder ("قسم {n}") with a new
+   * slug. `404 category.not_found` when it isn't theirs.
+   */
+  categoryId?: string;
 }
 
 /** `GET /moderation/summary`: targets with open reports (the nav badge). */
@@ -573,6 +626,8 @@ export type ModerationLogAction =
   | 'user.warn'
   | 'user.suspend'
   | 'user.unsuspend'
+  // F31: a moderator cleared an offensive category name (`targetLabel` is the old name).
+  | 'user.clear_category'
   | 'reports.dismiss';
 
 export interface ModerationActionDto {
@@ -601,6 +656,11 @@ export interface ModerationCaseDto {
   reports: ModerationReportDto[];
   /** Actions on the target and, for an article or comment, on its author; newest first. */
   history: ModerationActionDto[];
+  /**
+   * A user case (F31): all of that user's writer categories, empty ones included, in their order, so a moderator can
+   * clear an offensive name (`clear_category`). `[]` for article and comment cases; missing from an older API.
+   */
+  categories?: WriterCategoryDto[] | null;
 }
 
 /** A warning, or "your article was hidden", for the affected user to acknowledge. */
@@ -789,6 +849,11 @@ export interface ArticleEditDto {
   /** The assets the document references (attachments, cover, image blocks). */
   media: MediaAssetDto[];
   checks: DraftChecksDto;
+  /**
+   * The writer's category (F31; null: none). Not part of `document`: changed at once with `PUT /articles/{id}/category`,
+   * so autosave, discard, restore and publish never touch it. Missing from an API older than F31.
+   */
+  categoryId?: string | null;
 }
 
 export interface PublishedArticleDto {

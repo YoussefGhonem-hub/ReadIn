@@ -53,6 +53,27 @@ describe('Tag errors (F32)', () => {
   });
 });
 
+describe('Writer category errors (F31)', () => {
+  // The API's wording (ErrorMessages.cs), as mobile has it.
+  const expected: Record<string, [string, string]> = {
+    'category.not_found': ['القسم ده مش موجود.', 'Category not found.'],
+    'category.not_owner': ['القسم ده مش بتاعك.', "This category isn't yours."],
+    'category.limit': ['وصلت لأقصى عدد أقسام (50).', 'You can have at most 50 categories.'],
+    'category.name_taken': ['عندك قسم بنفس الاسم بالفعل.', 'You already have a category with this name.'],
+    'category.name_invalid': [
+      'اسم القسم لازم يكون من 1 لـ 40 حرف، وفيه حرف أو رقم على الأقل.',
+      'A category name has 1–40 characters, with at least one letter or digit.',
+    ],
+  };
+
+  it('read like the API in both languages', () => {
+    for (const [code, [arabic, english]] of Object.entries(expected)) {
+      expect(lookup(ar, `errors.${code}`), code).toBe(arabic);
+      expect(lookup(en, `errors.${code}`), code).toBe(english);
+    }
+  });
+});
+
 describe('Suspended account message (F22)', () => {
   const suspended = (suspendedUntil?: string | null) =>
     new ApiError(403, 'user.suspended', { title: 'This account is suspended.', status: 403, code: 'user.suspended', ...(suspendedUntil === undefined ? {} : { suspendedUntil }) });

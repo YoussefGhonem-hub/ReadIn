@@ -2,7 +2,7 @@ import { RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Meta, Title } from '@angular/platform-browser';
-import { TEST_API, flushMicrotasks, problem, setupSocialTesting, testCard } from '../../../testing/social-testing';
+import { TEST_API, WARM_UP_TIMEOUT_MS, flushMicrotasks, problem, setupSocialTesting, testCard, warmUpPostCards } from '../../../testing/social-testing';
 import { ArticleCardDto, CursorPage, FieldPageDto, UserSummaryDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
@@ -54,6 +54,9 @@ function answer<T extends object>(req: TestRequest, body: Answer<T>): void {
 
 describe('FieldPage (F15)', () => {
   let http: HttpTestingController;
+
+  // The cards prefetch their preview chunk: load it once here, not inside the first test (see warmUpPostCards).
+  beforeAll(warmUpPostCards, WARM_UP_TIMEOUT_MS);
   let response: { status?: number };
   const url = `${TEST_API}/fields/software`;
   const articlesOf = (topic: string | null, cursor: string | null = null) => (r: { url: string; params: { get(name: string): string | null; has(name: string): boolean } }) =>

@@ -162,6 +162,12 @@ export const CONTRACT_ERROR_CODES = [
   'profile.stats_private',
   'profile.avatar_invalid',
   'profile.expertise_invalid',
+  // Writer categories (F31): category.name_invalid comes in a validation failure's `errors.name`
+  'category.not_found',
+  'category.not_owner',
+  'category.limit',
+  'category.name_taken',
+  'category.name_invalid',
   // Learning paths (F09)
   'path.not_found',
   'path.slug_taken',

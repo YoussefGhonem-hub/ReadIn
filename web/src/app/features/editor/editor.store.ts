@@ -157,6 +157,15 @@ export class ArticleEditorStore {
   readonly hasUnpublishedChanges = signal(false);
   readonly checks = signal<DraftChecksDto | null>(null);
   readonly media = signal<MediaAssetDto[]>([]);
+  /**
+   * The writer's category (F31; null: none). Not part of the document: {@link setCategory} applies it at once with
+   * `PUT /articles/{id}/category`, so autosave, discard, restore and publish never change it.
+   */
+  readonly categoryId = signal<string | null>(null);
+  /** A category change on its way to the server. */
+  readonly categorySaving = signal(false);
+  /** Why the last category change was refused (the picker shows it); the category went back. */
+  readonly categoryError = signal<string | null>(null);
 
   // ── Local state ──
   readonly document = signal<ArticleDraftDocument>(emptyDocument('ar-EG'));
@@ -189,6 +198,8 @@ export class ArticleEditorStore {
   private autosaveTimer: ReturnType<typeof setTimeout> | null = null;
   private backupTimer: ReturnType<typeof setTimeout> | null = null;
   private inFlight: Promise<boolean> | null = null;
+  private categorySeq = 0;
+  private categoryWrites = 0;
   private destroyed = false;
   /** Called once the first save created the article (the page puts the id in the URL). */
   onCreated: ((id: string) => void) | null = null;
@@ -400,6 +411,8 @@ export class ArticleEditorStore {
     this.hasUnpublishedChanges.set(dto.hasUnpublishedChanges);
     this.checks.set(dto.checks ?? null);
     this.media.set(dto.media ?? []);
+    // A save that answers while a category change is on its way carries the old one: the change wins.
+    if (!this.categoryWrites) this.categoryId.set(dto.categoryId ?? null);
     if (replaceDocument) {
       this.clearTimers();
       this.document.set(normalizeDocument(dto.document));
@@ -407,6 +420,39 @@ export class ArticleEditorStore {
       this.changeSeq++;
       this.dirty.set(false);
       this.saveStatus.set('saved');
+    }
+  }
+
+  // ── Category (F31) ─────────────────────────────────────
+
+  /**
+   * Puts the article in a category, or in none (`null`), at once (`PUT /articles/{id}/category`). A new article is
+   * saved first (`POST /articles`), then its category is set. Shown right away; resolves false, with the previous
+   * category back and {@link categoryError} set, when it can't be applied.
+   */
+  async setCategory(categoryId: string | null): Promise<boolean> {
+    if (categoryId === this.categoryId() && !this.categoryError()) return true;
+    const previous = this.categoryId();
+    const seq = ++this.categorySeq;
+    this.categoryId.set(categoryId);
+    this.categoryError.set(null);
+    this.categoryWrites++;
+    this.categorySaving.set(true);
+    try {
+      if (!this.articleId()) await this.save();
+      const id = this.articleId();
+      if (!id) throw new Error(this.saveError() ?? 'unknown');
+      await firstValueFrom(this.api.setCategory(id, categoryId));
+      return true;
+    } catch (error) {
+      if (seq === this.categorySeq) {
+        this.categoryId.set(previous);
+        this.categoryError.set(isApiError(error) ? error.code : error instanceof Error && error.message ? error.message : 'unknown');
+      }
+      return false;
+    } finally {
+      this.categoryWrites--;
+      if (!this.categoryWrites) this.categorySaving.set(false);
     }
   }
 

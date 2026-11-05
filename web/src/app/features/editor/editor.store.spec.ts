@@ -57,6 +57,7 @@ class FakeArticlesApi {
     return of(this.server);
   });
   delete = vi.fn(() => of(undefined));
+  setCategory = vi.fn((): Observable<void> => of(undefined));
 }
 
 describe('ArticleEditorStore (autosave, local backup, conflicts)', () => {
@@ -380,6 +381,65 @@ describe('ArticleEditorStore (autosave, local backup, conflicts)', () => {
       expect(store.document().sourceLanguage).toBe('en');
       expect(only.language).toBe('en');
       expect(only.content.language).toBe('en');
+    });
+  });
+
+  describe('the category (F31)', () => {
+    it('comes with the article and is not part of the document', async () => {
+      api.server = editDto({ categoryId: 'c1' });
+      await store.open(USER, 'a1');
+      expect(store.categoryId()).toBe('c1');
+      expect('categoryId' in store.document()).toBe(false);
+    });
+
+    it('applies at once with PUT /articles/{id}/category, without a save, a version or a publish', async () => {
+      api.server = editDto({ version: 3 });
+      await store.open(USER, 'a1');
+      expect(await store.setCategory('c2')).toBe(true);
+      expect(api.setCategory).toHaveBeenCalledWith('a1', 'c2');
+      expect(store.categoryId()).toBe('c2');
+      expect(api.saveDraft).not.toHaveBeenCalled();
+      expect(store.version()).toBe(3);
+      expect(store.dirty()).toBe(false);
+
+      expect(await store.setCategory(null)).toBe(true);
+      expect(api.setCategory).toHaveBeenLastCalledWith('a1', null);
+    });
+
+    it('a new article is saved first (POST /articles), then its category is set', async () => {
+      store.startNew(USER, 'ar-EG');
+      expect(await store.setCategory('c1')).toBe(true);
+      expect(api.create).toHaveBeenCalledTimes(1);
+      expect(api.setCategory).toHaveBeenCalledWith('a1', 'c1');
+      expect(store.articleId()).toBe('a1');
+      // The create's answer (no category yet) doesn't undo the pick.
+      expect(store.categoryId()).toBe('c1');
+    });
+
+    it('a refused change goes back to the previous category with the reason', async () => {
+      api.server = editDto({ categoryId: 'c1' });
+      await store.open(USER, 'a1');
+      api.setCategory.mockReturnValueOnce(fail(new ApiError(403, 'category.not_owner', { code: 'category.not_owner', status: 403 })));
+      expect(await store.setCategory('someone-elses')).toBe(false);
+      expect(store.categoryId()).toBe('c1');
+      expect(store.categoryError()).toBe('category.not_owner');
+      expect(store.categorySaving()).toBe(false);
+    });
+
+    it('an autosave answering while the change is on its way keeps the new category', async () => {
+      api.server = editDto({ categoryId: 'c1' });
+      await store.open(USER, 'a1');
+      const put = new Subject<void>();
+      api.setCategory.mockReturnValueOnce(put);
+      const done = store.setCategory('c2');
+      expect(store.categorySaving()).toBe(true);
+      typeTitle('Changed while the category is saving');
+      await store.save();
+      expect(store.categoryId()).toBe('c2');
+      put.next();
+      put.complete();
+      expect(await done).toBe(true);
+      expect(store.categorySaving()).toBe(false);
     });
   });
 });

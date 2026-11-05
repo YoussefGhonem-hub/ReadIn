@@ -80,6 +80,15 @@ export class ArticlesApi {
     return this.http.post<ArticleEditDto>(this.url(id, `/revisions/${revision}/restore`), { baseVersion }, { context: this.silent() });
   }
 
+  /**
+   * `PUT /articles/{id}/category` → `204` (F31): your article (draft or published) in that category, or in none
+   * (`null`). At once: no publish, no revision, and the working copy's `version` stays. `404 article.not_found` /
+   * `category.not_found`, `403 article.not_owner` / `category.not_owner`.
+   */
+  setCategory(id: string, categoryId: string | null): Observable<void> {
+    return this.http.put<void>(this.url(id, '/category'), { categoryId }, { context: this.silent() });
+  }
+
   /** `DELETE /articles/{id}` → `204` (drafts at once; published articles leave the feeds). */
   delete(id: string): Observable<void> {
     return this.http.delete<void>(this.url(id), { context: this.silent() });

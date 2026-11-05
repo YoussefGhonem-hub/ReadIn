@@ -25,6 +25,7 @@ import { HydrationWindow } from '../../core/http/hydration-window';
 import { LanguageService } from '../../core/i18n/language.service';
 import { FollowStore } from '../../core/social/follow.store';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
+import { ManageCategories, ProfileCategories } from '../categories/profile-categories';
 import { ReadingHeatmap } from '../reading/reading-heatmap';
 import { ReadingStatsCard } from '../reading/reading-stats-card';
 import { ProfileArticlesStore } from './profile-articles.store';
@@ -33,13 +34,14 @@ import { ProfileSeoService } from './profile-seo.service';
 import { ProfileAbout, ProfileArticles, ProfilePaths, ProfileSaved } from './profile-tabs';
 import { PublicStatsSwitch } from './public-stats-switch';
 
-export type ProfileTab = 'articles' | 'saved' | 'paths' | 'about';
+export type ProfileTab = 'articles' | 'categories' | 'saved' | 'paths' | 'about';
 
 /**
  * Profile (F14), `/@{username}`: server-rendered with its title and Open Graph tags (SPEC §23). Header and stats row,
  * reading stats when visible (yours always, with the "Show on my public profile" switch), and the tabs Articles /
- * Saved (yours only) / Paths / About. SSR is anonymous: once hydrated and signed in, the profile and its articles load
- * again with your token (Follow state, "Follows you", your reactions and saves).
+ * Categories (F31; yours is the manage view when you can write) / Saved (yours only) / Paths / About. SSR is
+ * anonymous: once hydrated and signed in, the profile and its articles load again with your token (Follow state,
+ * "Follows you", your reactions and saves).
  */
 @Component({
   selector: 'rd-profile-page',
@@ -53,6 +55,8 @@ export type ProfileTab = 'articles' | 'saved' | 'paths' | 'about';
     ProfileSaved,
     ProfileAbout,
     ProfilePaths,
+    ProfileCategories,
+    ManageCategories,
     PublicStatsSwitch,
     ReadingStatsCard,
     ReadingHeatmap,
@@ -97,6 +101,22 @@ export type ProfileTab = 'articles' | 'saved' | 'paths' | 'about';
       </div>
       <section [id]="'profile-panel-' + tab()" role="tabpanel" [attr.aria-labelledby]="'profile-tab-' + tab()" tabindex="-1">
         @switch (tab()) {
+          @case ('categories') {
+            <!-- Its own chunk (with the manage view's drag and drop), loaded when the tab opens. -->
+            @defer (on immediate) {
+              @if (canManageCategories()) {
+                <rd-manage-categories [username]="p.username" />
+              } @else {
+                <rd-profile-categories [username]="p.username" />
+              }
+            } @placeholder {
+              <div class="grid gap-3 py-4 sm:grid-cols-2" aria-busy="true">
+                @for (i of [1, 2, 3, 4]; track i) {
+                  <div class="rd-skeleton h-16 w-full rounded-card"></div>
+                }
+              </div>
+            }
+          }
           @case ('saved') {
             <rd-profile-saved />
           }
@@ -162,7 +182,11 @@ export class ProfilePage {
     return !!p && (p.isMe || (this.session.isAuthenticated() && this.session.me()?.id === p.id));
   });
   protected readonly statsVisible = computed(() => this.isMe() || !!this.profile()?.readingStatsVisible);
-  protected readonly tabs = computed<ProfileTab[]>(() => (this.isMe() ? ['articles', 'saved', 'paths', 'about'] : ['articles', 'paths', 'about']));
+  protected readonly tabs = computed<ProfileTab[]>(() =>
+    this.isMe() ? ['articles', 'categories', 'saved', 'paths', 'about'] : ['articles', 'categories', 'paths', 'about'],
+  );
+  /** Your own Categories tab manages them (F31, `GET /me/categories` needs `articles.create`); readers see the public list. */
+  protected readonly canManageCategories = computed(() => this.isMe() && this.session.permissions().has('articles.create'));
   protected readonly tab = signal<ProfileTab>('articles');
 
   constructor() {

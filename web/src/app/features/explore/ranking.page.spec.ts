@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
-import { TEST_API, flushMicrotasks, problem, setupSocialTesting, testCard } from '../../../testing/social-testing';
+import { TEST_API, WARM_UP_TIMEOUT_MS, flushMicrotasks, problem, setupSocialTesting, testCard, warmUpPostCards } from '../../../testing/social-testing';
 import { ArticleCardDto, CursorPage } from '../../core/api/models';
 import { RankingPage } from './ranking.page';
 
@@ -12,6 +12,9 @@ const page = (from: number, count: number, nextCursor: string | null): CursorPag
 
 describe('RankingPage (F15 "See all")', () => {
   let http: HttpTestingController;
+
+  // The cards prefetch their preview chunk: load it once here, not inside the first test (see warmUpPostCards).
+  beforeAll(warmUpPostCards, WARM_UP_TIMEOUT_MS);
 
   afterEach(() => http?.verify());
 

@@ -351,6 +351,56 @@ describe('Moderation (F22)', () => {
       expect(t.actions()).toEqual(['warn', 'dismiss']);
     });
 
+    it('a user case lists their writer categories; "Clear name" sends clear_category with the category (F31)', async () => {
+      const categories = [
+        { id: 'cat-1', slug: 'rude', name: 'مقالات للأغبيا بس', articleCount: 0, sortOrder: 1 },
+        { id: 'cat-2', slug: 'notes', name: 'Notes', articleCount: 3, sortOrder: 2 },
+      ];
+      const t = await render('user', 'u9', caseOf(item('user', 'u9'), { categories }));
+      const rows = t.$$('[data-case-category]');
+      expect(rows).toHaveLength(2);
+      expect(rows[0].querySelector('[data-case-category-name]')!.getAttribute('dir')).toBe('auto');
+      expect(rows[0].querySelector('a')!.getAttribute('href')).toBe('/@omar_dev/c/rude');
+      expect(rows[0].textContent).toContain('لسه مفيش مقالات');
+      expect(rows[1].textContent).toContain('3 مقالات');
+      // Not one of the case's own actions.
+      expect(t.actions()).toEqual(['warn', 'suspend', 'dismiss']);
+
+      rows[0].querySelector<HTMLElement>('[data-case-clear-category]')!.click();
+      await t.stable();
+      expect(t.$('[data-moderation-sheet]')!.getAttribute('data-moderation-action')).toBe('clear_category');
+      expect(t.$('#moderation-sheet-title')!.textContent!.trim()).toBe('تمسح اسم القسم «\u2068مقالات للأغبيا بس\u2069»؟');
+      t.$('[data-moderation-confirm]')!.click();
+      const req = http.expectOne(ACTIONS);
+      expect(req.request.body).toEqual({ action: 'clear_category', targetType: 'user', targetId: 'u9', categoryId: 'cat-1' });
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await t.stable();
+      const cleared = item('user', 'u9', { status: 'resolved', closedAt: '2026-11-03T09:00:00Z' });
+      http.expectOne(`${TEST_API}/moderation/reports/user/u9`).flush(
+        caseOf(cleared, {
+          categories: [{ ...categories[0], name: 'قسم 1', slug: 'قسم-1' }, categories[1]],
+          history: [logOf('h1', { action: 'user.clear_category', targetType: 'user', targetId: 'u9', targetLabel: 'مقالات للأغبيا بس', note: null })],
+        }),
+      );
+      answerSummary(http);
+      await t.stable();
+      expect(t.$$('[data-case-category-name]').map((n) => n.textContent!.trim())).toEqual(['قسم 1', 'Notes']);
+      expect(t.$('[data-case-history]')!.textContent).toContain('مسح اسم قسم');
+      expect(t.$('[data-case-history] [data-log-entry]')!.getAttribute('data-log-action')).toBe('user.clear_category');
+    });
+
+    it('a user without categories: the section says so (as on mobile)', async () => {
+      const t = await render('user', 'u9', caseOf(item('user', 'u9'), { categories: [] }));
+      expect(t.$('#case-categories-title')!.textContent).toContain('أقسام الكاتب');
+      expect(t.$('[data-case-no-categories]')!.textContent!.trim()).toBe('مفيش أقسام.');
+      expect(t.$$('[data-case-category]')).toHaveLength(0);
+    });
+
+    it('article and comment cases have no categories section', async () => {
+      const t = await render('article', 'a1', caseOf(item('article', 'a1'), { categories: [] }));
+      expect(t.$('[data-case-categories]')).toBeNull();
+    });
+
     it('a deleted comment by a deleted account can only be dismissed', async () => {
       const gone = item('comment', 'c2', { target: { state: 'deleted', author: null, body: 'old text', articleSlug: 'x', articleTitle: 'X' } });
       const t = await render('comment', 'c2', caseOf(gone));

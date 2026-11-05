@@ -14,9 +14,10 @@ import { BdiText } from '../../shared/directives/bdi-text';
 import { isolate } from '../../shared/directives/bidi';
 import { ModerationActionDraft, ModerationActionSheet } from '../../shared/moderation/moderation-action-sheet';
 import { provideModerationIcons } from '../../shared/moderation/moderation-icons';
-import { LocalizedDatePipe, RelativeTimePipe } from '../../shared/pipes/format.pipes';
+import { LocalizedDatePipe, PluralPipe, RelativeTimePipe } from '../../shared/pipes/format.pipes';
 import { Avatar } from '../../shared/ui/avatar';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
+import { categoryLink } from '../categories/category-rules';
 import { ModerationLogEntry, ReasonChips, TargetPreview, isTargetType, targetLink, textDir } from './moderation-ui';
 
 type CaseState = { status: 'loading' } | { status: 'loaded'; data: ModerationCaseDto } | { status: 'error'; notFound: boolean };
@@ -33,8 +34,8 @@ export interface CaseAction {
 /**
  * One case (F22), `/moderation/{type}/{id}`: the reported article, comment or user with a link to it, the reasons, the
  * actions a moderator can take (Dismiss, Hide / Unhide, Delete a comment, Warn or Suspend the author or the user,
- * Unsuspend; suspending needs `users.suspend`), every report (reporter, reason, details, time, outcome) and the
- * history. Each action is confirmed in a sheet with an optional note (required to warn and suspend); afterwards the
+ * Unsuspend; suspending needs `users.suspend`), a user's writer categories with "Clear name" for an offensive one
+ * (F31), every report (reporter, reason, details, time, outcome) and the history. Each action is confirmed in a sheet with an optional note (required to warn and suspend); afterwards the
  * case and the nav badge load again.
  */
 @Component({
@@ -46,6 +47,7 @@ export interface CaseAction {
     BdiText,
     Avatar,
     LocalizedDatePipe,
+    PluralPipe,
     RelativeTimePipe,
     EmptyState,
     ErrorState,
@@ -106,6 +108,48 @@ export interface CaseAction {
             <p class="m-0 text-sm text-text-secondary">{{ 'moderation.case.noActions' | transloco }}</p>
           }
         </section>
+
+        <!-- A user's writer categories (F31): an offensive name is cleared to a neutral placeholder -->
+        @if (c.item.targetType === 'user') {
+          <section class="mt-6" aria-labelledby="case-categories-title" data-case-categories>
+            <h2 id="case-categories-title" class="m-0 mb-1 text-base font-semibold">
+              {{ 'moderation.case.categories' | transloco }} <span class="font-normal text-text-secondary">({{ c.categories?.length ?? 0 }})</span>
+            </h2>
+            @if (!c.categories?.length) {
+              <p class="m-0 text-sm text-text-secondary" data-case-no-categories>{{ 'moderation.case.noCategories' | transloco }}</p>
+            } @else {
+              <p class="m-0 text-sm text-text-secondary">{{ 'moderation.case.categoriesHint' | transloco }}</p>
+            }
+            <ul class="m-0 list-none divide-y divide-border p-0">
+              @for (category of c.categories; track category.id) {
+                <li class="flex items-center gap-3 py-2" [attr.data-case-category]="category.id">
+                  <div class="min-w-0 flex-1">
+                    @if (c.item.target.author; as user) {
+                      <a [routerLink]="categoryLink(user.username, category.slug)" class="text-text-primary no-underline hover:underline">
+                        <span class="block truncate font-semibold"><bdi dir="auto" data-case-category-name>{{ category.name }}</bdi></span>
+                      </a>
+                    } @else {
+                      <span class="block truncate font-semibold"><bdi dir="auto" data-case-category-name>{{ category.name }}</bdi></span>
+                    }
+                    <span class="block text-xs text-text-secondary">{{
+                      category.articleCount ? (category.articleCount | rdPlural: 'reading.articles' : lang()) : ('categories.noArticles' | transloco)
+                    }}</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="rd-btn rd-btn-outline min-h-11 shrink-0 gap-1.5 border-error px-3 text-sm text-error"
+                    data-case-clear-category
+                    [attr.aria-label]="'moderation.actions.clearCategoryOf' | transloco: { name: isolate(category.name) }"
+                    (click)="draft.set({ action: 'clear_category', targetType: 'user', targetId: c.item.targetId, categoryId: category.id, name: category.name })"
+                  >
+                    <svg lucideIcon="Eraser" [size]="16" aria-hidden="true"></svg>
+                    {{ 'moderation.actions.clearCategory' | transloco }}
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
 
         <!-- Reports -->
         <section class="mt-6" aria-labelledby="case-reports-title">
@@ -213,6 +257,7 @@ export class ModerationCasePage {
   protected readonly draft = signal<ModerationActionDraft | null>(null);
   protected readonly textDir = textDir;
   protected readonly isolate = isolate;
+  protected readonly categoryLink = categoryLink;
   protected readonly link = computed(() => {
     const data = this.data();
     return data ? targetLink(data.item, this.lang()) : null;

@@ -87,13 +87,24 @@ describe('ProfilePage (F14)', () => {
     await stable();
   });
 
-  it('tabs: Articles / Paths / About for someone else, with arrow keys mirrored in RTL', async () => {
+  it('tabs: Articles / Categories / Paths / About for someone else, with arrow keys mirrored in RTL', async () => {
     const { root, tabs, stable } = await render(testProfile());
-    expect(tabs()).toEqual(['articles', 'paths', 'about']);
+    expect(tabs()).toEqual(['articles', 'categories', 'paths', 'about']);
     expect(root.querySelectorAll('[data-profile-articles] rd-post-card')).toHaveLength(2);
 
     const articles = root.querySelector<HTMLElement>('[data-profile-tab="articles"]')!;
     articles.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })); // RTL: the next tab
+    await stable();
+    expect(root.querySelector('[data-profile-tab="categories"]')!.getAttribute('aria-selected')).toBe('true');
+    // Categories (F31, its own deferred chunk): their public list, with "مقالات تانية" last.
+    await stable();
+    http.expectOne(`${TEST_API}/users/karim/categories`).flush({ items: [{ id: 'c1', slug: 'angular', name: 'Angular', articleCount: 3, sortOrder: 1 }], uncategorizedCount: 2 });
+    await stable();
+    const cards = [...root.querySelectorAll('[data-profile-categories] [data-category-card]')];
+    expect(cards.map((c) => c.getAttribute('data-category-card'))).toEqual(['angular', '_other']);
+    expect(cards[1].textContent).toContain('مقالات تانية');
+
+    root.querySelector<HTMLElement>('[data-profile-tab="categories"]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     await stable();
     expect(root.querySelector('[data-profile-tab="paths"]')!.getAttribute('aria-selected')).toBe('true');
     // Private reading stats: their paths are private too (no request).
@@ -114,7 +125,7 @@ describe('ProfilePage (F14)', () => {
     expect(root.querySelector('[data-profile-settings]')!.getAttribute('href')).toBe('/settings');
     expect(root.querySelector('[data-profile-follow]')).toBeNull();
     expect(root.querySelector('[data-follows-you]')).toBeNull();
-    expect(tabs()).toEqual(['articles', 'saved', 'paths', 'about']);
+    expect(tabs()).toEqual(['articles', 'categories', 'saved', 'paths', 'about']);
     expect(root.querySelector('[data-profile-reading] [data-public-stats] [role="switch"]')).not.toBeNull();
     expect(root.querySelector('[data-articles-empty]')!.textContent).toContain('لسه منشرتش مقالات');
 

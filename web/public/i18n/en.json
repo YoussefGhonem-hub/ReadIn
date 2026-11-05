@@ -286,6 +286,13 @@
       "not_found": "This request doesn't exist anymore.",
       "proof_not_found": "The proof file isn't there anymore.",
       "already_decided": "This request was already decided."
+    },
+    "category": {
+      "not_found": "Category not found.",
+      "not_owner": "This category isn't yours.",
+      "limit": "You can have at most 50 categories.",
+      "name_taken": "You already have a category with this name.",
+      "name_invalid": "A category name has 1–40 characters, with at least one letter or digit."
     }
   },
   "auth": {
@@ -495,7 +502,7 @@
         "contact": "Your phone number, email, password and recovery PIN",
         "signIn": "Your Google and Apple sign-in links. We also revoke ReadIn's access at Apple.",
         "articles": "Your drafts and any article that isn't published, with their images and PDFs, and every other photo or file you uploaded",
-        "activity": "Your interests, reading progress, stats, reactions, saved articles and follows",
+        "activity": "Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers",
         "devices": "Your devices and notification tokens, so no notification reaches you",
         "security": "Your security log: sign-ins and account changes"
       },
@@ -657,6 +664,7 @@
   "article": {
     "aiAssisted": "AI-assisted",
     "verifiedWriter": "Verified writer",
+    "inCategory": "In {{name}}",
     "healthDisclaimer": "This information is for awareness only and is not a substitute for a doctor's advice.",
     "toc": "In this article",
     "sources": "Sources",
@@ -1175,6 +1183,13 @@
       "fieldPlaceholder": "Choose a field",
       "topic": "Topic (optional)",
       "topicNone": "No specific topic",
+      "category": "Category",
+      "categoryNone": "No category",
+      "categoryNew": "＋ New category",
+      "categoryNewLabel": "Name of the new category",
+      "categoryHint": "Optional: groups the article with others on your profile. A change applies right away.",
+      "categorySaving": "Saving the category…",
+      "categoryLoadError": "We couldn't load your categories.",
       "tags": "Tags",
       "tagPlaceholder": "Add a tag",
       "tagsHint": "Up to 5. Press Enter or type a comma to add one.",
@@ -1531,6 +1546,7 @@
     "tabs": {
       "label": "Profile sections",
       "articles": "Articles",
+      "categories": "Categories",
       "saved": "Saved",
       "paths": "Paths",
       "about": "About"
@@ -1625,6 +1641,64 @@
       "report": "Report user",
       "warn": "Warn",
       "suspend": "Suspend account"
+    }
+  },
+  "categories": {
+    "other": "Other articles",
+    "noArticles": "No articles yet",
+    "tab": {
+      "label": "Categories",
+      "loadError": "We couldn't load the categories.",
+      "emptyTitle": "No categories yet",
+      "emptyBody": "When this writer groups their articles into categories, you'll find them here."
+    },
+    "manage": {
+      "hint": "Group your articles into categories. Your profile shows them in this order.",
+      "newLabel": "New category",
+      "namePlaceholder": "Category name",
+      "create": "Add",
+      "created": "“{{name}}” added",
+      "limit": "You have {{max}} categories, the most you can have. Delete one to add another.",
+      "listLabel": "Your categories",
+      "emptyTitle": "Organize your articles",
+      "emptyBody": "Create categories like “Backend tips”, then put your articles in them from the editor. Readers see them on your profile.",
+      "emptyCategory": "Empty: visitors don't see it",
+      "dragHint": "Drag a category, or use the arrows, to change the order readers see.",
+      "moveUp": "Move “{{name}}” up",
+      "moveDown": "Move “{{name}}” down",
+      "moved": "“{{name}}” is now {{position}} of {{total}}",
+      "moveFailed": "We couldn't save the new order. Try again.",
+      "rename": "Rename “{{name}}”",
+      "renameLabel": "New name for “{{name}}”",
+      "delete": "Delete “{{name}}”",
+      "deleteTitle": "Delete “{{name}}”?",
+      "deleteBody": {
+        "one": "This category has 1 article. It stays published, without a category.",
+        "other": "This category has {{count}} articles. They stay published, without a category."
+      },
+      "deleteBodyEmpty": "This category is empty.",
+      "deleteConfirm": "Delete",
+      "deleted": "“{{name}}” deleted",
+      "rules": {
+        "tooLong": "A category name has at most {{max}} characters.",
+        "noLetter": "A category name needs at least one letter or digit."
+      }
+    },
+    "page": {
+      "kicker": "Category",
+      "kickerOther": "No category",
+      "articles": "Articles in {{name}}",
+      "end": "You've seen every article here.",
+      "emptyTitle": "No articles in this category yet",
+      "emptyBody": "Once the writer adds articles to it, you'll find them here.",
+      "otherEmptyTitle": "No articles without a category",
+      "otherEmptyBody": "Every article of this writer is in a category.",
+      "backToProfile": "Go to the writer's profile",
+      "notFoundTitle": "This category doesn't exist",
+      "notFoundBody": "It may have been deleted, or the link is wrong.",
+      "loadError": "We couldn't load this category.",
+      "metaDescription": "{{articles}} by {{writer}} in “{{name}}” on ReadIn.",
+      "metaDescriptionEmpty": "“{{name}}”, a category by {{writer}} on ReadIn."
     }
   },
   "reading": {
@@ -1896,6 +1970,9 @@
       "reports": "Reports",
       "history": "History",
       "noHistory": "No actions yet.",
+      "categories": "Writer categories",
+      "noCategories": "No categories.",
+      "categoriesHint": "Clear an offensive name: the category becomes “Category 1” (or the next free number) and its old link stops working. Its articles stay in it.",
       "actions": "Actions",
       "noActions": "No actions are available on this content right now.",
       "status": {
@@ -1926,6 +2003,8 @@
       "suspend": "Suspend account",
       "suspendAuthor": "Suspend the author's account",
       "unsuspend": "Lift suspension",
+      "clearCategory": "Clear name",
+      "clearCategoryOf": "Clear the name “{{name}}”",
       "done": {
         "hide": "Hidden",
         "unhide": "Visible again",
@@ -1933,6 +2012,7 @@
         "warn": "Warning sent",
         "suspend": "Account suspended",
         "unsuspend": "Suspension lifted",
+        "clear_category": "Category name cleared",
         "dismiss": "Reports dismissed"
       }
     },
@@ -1944,6 +2024,7 @@
         "warn": "Warn {{name}}",
         "suspend": "Suspend {{name}}",
         "unsuspend": "Lift the suspension of {{name}}?",
+        "clearCategory": "Clear the category name “{{name}}”?",
         "dismiss": "Dismiss these reports?",
         "unhideArticle": "Unhide this article?",
         "unhideComment": "Unhide this comment?"
@@ -1955,6 +2036,7 @@
         "warn": "They get a notice with this note and have to confirm they read it.",
         "suspend": "They can't sign in or do anything until the suspension ends.",
         "unsuspend": "They can sign in and use ReadIn again right away.",
+        "clearCategory": "The category gets a neutral name like “Category 1”, and its old link stops working. Its articles stay in it, and the writer isn't notified.",
         "dismiss": "The open reports are closed without changing the content.",
         "unhideArticle": "Readers can see it everywhere again.",
         "unhideComment": "Everyone can see it again."
@@ -1991,6 +2073,7 @@
         "user.warn": "warned a user",
         "user.suspend": "suspended an account",
         "user.unsuspend": "lifted a suspension",
+        "user.clear_category": "cleared a category name",
         "reports.dismiss": "dismissed reports"
       },
       "until": "until {{date}}",
