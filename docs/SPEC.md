@@ -804,12 +804,22 @@ Draft ──► Published ──► Archived
 - Saved articles available **offline** on mobile.
 
 ### F14 — Profile
-- Avatar, display name, username (`@handle`), verified badge, bio (mixed text), links (GitHub, LinkedIn, website), fields of expertise.
+- Avatar, display name, username (`@handle`), verified badge, bio (mixed text), social links (below), fields of expertise.
 - Stats: articles, followers, following, total reads.
 - Tabs: **Articles** (all published articles, newest first) / **Categories** ([F31](#f31--writer-categories-أقسام-الكاتب)) / **Reposts** / **Saved** (own profile only, with a Highlights section) / **Paths** / **About**.
 - Reading stats card + heatmap (own profile, optional public).
 - Edit profile, including avatar upload (compressed, square-cropped variants 64/128/256/512).
 - The phone number is never shown on public profiles.
+
+**Social links**
+- Any member can add links to their accounts from Edit profile, in a "روابط" (Links) section with "+ إضافة رابط" (Add link): pick the platform, then paste the link. Links are optional.
+- **Platforms, each with its own icon:** LinkedIn, X, Instagram, Facebook, YouTube, TikTok, Snapchat, Threads, Telegram, GitHub, Medium, Behance, Website, and **Other** for anything else, with a label of 2–30 characters. Brand icons come from one bundled set, used the same on web and mobile.
+- **Rules:** at most 8 links in total and one per platform (Other can repeat). Each is at most 500 characters and `https` only (`instagram.com/name` becomes `https://instagram.com/name`), with no username or password in the URL. A named platform's link must be on that platform's site, so an Instagram link has to be on `instagram.com`. Website and Other accept any `https` site. A bad link shows an error under its field, in both languages.
+- **On the profile:** a row of icons under the bio, for everyone including guests. Each has an accessible name ("Instagram", or the label for Other) and icons don't mirror in RTL. With no links, the row is hidden.
+- **Opening a link:** in the system browser or the platform's app. On web, a new tab with `rel="nofollow ugc noopener noreferrer"`.
+- **Abuse:** a link is reported by reporting the user (F22), and the SuperAdmin can clear that user's links from the case, audited.
+- `links` in `GET /users/{username}`, `GET /me` and `PATCH /me` becomes an array of `{ platform, url, label? }`. Stored GitHub, LinkedIn and website links carry over.
+- Links are deleted with the account (§9.6).
 
 ### F15 — Explore
 API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Explore and field pages": endpoints, ranking windows and weights).
@@ -1378,7 +1388,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 ### 16.2 Tables
 | Area | Tables |
 |---|---|
-| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, IsVerified, VerifiedAt, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Bio, Links JSON, UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, WhoCanMention Everyone/Following/Nobody (default Everyone), IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
+| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, IsVerified, VerifiedAt, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Bio, Links JSON (`[{ platform, url, label? }]`, F14), UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, WhoCanMention Everyone/Following/Nobody (default Everyone), IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId (null once a deleted account's asset stays with its published article), Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
@@ -1424,7 +1434,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Area | Endpoints |
 |---|---|
 | Auth | `GET /auth/config` (PIN length, password rules) · `POST /auth/register` (phone, password, pin) · `POST /auth/login` · `POST /auth/refresh` · `POST /auth/logout` · `POST /auth/logout-all` · `POST /auth/recovery/verify-pin` → reset token · `POST /auth/recovery/reset-password` |
-| Me | `GET /me` (incl. `hasRecoveryPin`, `mustSetRecoveryPin`, `mustChangePassword`, `isProfileComplete`, `privacy`) · `PATCH /me` (incl. `avatarAssetId`, `expertiseFieldIds`) · `PUT /me/privacy` · `PUT /me/profile/complete` · `PUT /me/password` · `PUT /me/phone` · `POST /me/recovery-pin` (first set) · `PUT /me/recovery-pin` (change) · `PUT /me/preferences` · `PUT /me/interests` · `POST /me/devices` · `DELETE /me/devices/{token}` · `DELETE /me` · `GET /users/username-available?u=` |
+| Me | `GET /me` (incl. `hasRecoveryPin`, `mustSetRecoveryPin`, `mustChangePassword`, `isProfileComplete`, `privacy`) · `PATCH /me` (incl. `avatarAssetId`, `expertiseFieldIds`, `links[]`) · `PUT /me/privacy` · `PUT /me/profile/complete` · `PUT /me/password` · `PUT /me/phone` · `POST /me/recovery-pin` (first set) · `PUT /me/recovery-pin` (change) · `PUT /me/preferences` · `PUT /me/interests` · `POST /me/devices` · `DELETE /me/devices/{token}` · `DELETE /me` · `GET /users/username-available?u=` |
 | Real-time | `POST /realtime/token` (Firebase custom token, used only to read the Realtime Database) |
 | Feed | `GET /feed/today` · `GET /feed/for-you` · `GET /feed/following` · `GET /feed/continue-reading` |
 | Articles | `GET /articles/{slug}?lang=` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` · `GET /articles/{id}/pdf?lang=` (own article, F33) · `GET /articles/{id}/preview?lang=` (first ~300 words as RDoc + `isComplete`, F34) |
