@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "language": "en",
+  "blocks": [
+    { "id": "sum", "type": "summary", "content": [
+      { "type": "text", "text": "TL;DR: " },
+      { "type": "term", "termId": "dependency-injection", "text": "Dependency Injection" },
+      { "type": "text", "text": " makes code easier to test and to change." }
+    ]},
+    { "id": "intro", "type": "paragraph", "content": [
+      { "type": "text", "text": "This article exercises the ReadIn PDF: every block type, English with Arabic inside (الحقن), numbers like 2026 and 0.4, and emoji ☕ 🚀 👩‍💻." }
+    ]},
+    { "id": "h-why", "type": "heading", "level": 2, "content": [
+      { "type": "text", "text": "Why use " }, { "type": "text", "text": "DI", "marks": [{ "type": "code" }] }, { "type": "text", "text": " at all?" }
+    ]},
+    { "id": "marks", "type": "paragraph", "content": [
+      { "type": "text", "text": "If you work with " },
+      { "type": "text", "text": "ASP.NET Core", "marks": [{ "type": "bold" }] },
+      { "type": "text", "text": ", read " },
+      { "type": "text", "text": "the official docs", "marks": [{ "type": "link", "href": "https://learn.microsoft.com/aspnet/core/fundamentals/dependency-injection" }] },
+      { "type": "text", "text": ", with " },
+      { "type": "text", "text": "italic", "marks": [{ "type": "italic" }] },
+      { "type": "text", "text": ", " },
+      { "type": "text", "text": "highlighted", "marks": [{ "type": "highlight" }] },
+      { "type": "text", "text": " and " },
+      { "type": "text", "text": "struck", "marks": [{ "type": "strike" }] },
+      { "type": "text", "text": " words. Thanks to " },
+      { "type": "mention", "userId": "0195f3a0-0000-7000-8000-000000000001", "text": "@editorial" },
+      { "type": "hardBreak" },
+      { "type": "text", "text": "A new line after a hard break 🇪🇬." }
+    ]},
+    { "id": "mixed", "type": "bulletList", "items": [
+      [{ "type": "text", "text": "Use DI (الحقن) everywhere." }],
+      [{ "type": "text", "text": "Read daily. Grow daily." }],
+      [{ "type": "text", "text": "React ولا Angular؟ الاتنين كويسين." }],
+      [{ "type": "text", "text": "@youssef_dev شكراً على الشرح!" }]
+    ]},
+    { "id": "ol", "type": "orderedList", "items": [
+      [{ "type": "text", "text": "Create an interface." }],
+      [{ "type": "text", "text": "Register it in " }, { "type": "text", "text": "Program.cs", "marks": [{ "type": "code" }] }, { "type": "text", "text": "." }]
+    ]},
+    { "id": "h-start", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "Where to start" }] },
+    { "id": "st", "type": "steps", "items": [
+      { "title": "Write the interface", "content": [{ "type": "text", "text": "For example IOrderService." }] },
+      { "title": "Implement it", "content": [{ "type": "text", "text": "OrderService implements the interface." }] },
+      { "title": "Register the service", "content": [{ "type": "text", "text": "With AddScoped in Program.cs." }] }
+    ]},
+    { "id": "c-tip", "type": "callout", "variant": "tip", "title": "Important tip", "content": [{ "type": "text", "text": "Use AddScoped for anything that touches a DbContext." }] },
+    { "id": "c-info", "type": "callout", "variant": "info", "content": [{ "type": "text", "text": "The built-in container is enough for 90% of projects." }] },
+    { "id": "c-warn", "type": "callout", "variant": "warning", "content": [{ "type": "text", "text": "Don't inject a scoped service into a singleton (captive dependency)." }] },
+    { "id": "c-danger", "type": "callout", "variant": "danger", "content": [{ "type": "text", "text": "Never call BuildServiceProvider() inside ConfigureServices." }] },
+    { "id": "code-short", "type": "code", "lang": "csharp", "filename": "Program.cs", "highlightLines": [2],
+      "code": "var builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddScoped<IOrderService, OrderService>();\nvar app = builder.Build();\napp.MapGet(\"/orders/{id}\", async (Guid id, IOrderService orders) => await orders.FindAsync(id));\napp.Run();\n// end of short code" },
+    { "id": "long-url", "type": "paragraph", "content": [
+      { "type": "text", "text": "A very long link that must wrap and never leave the page: " },
+      { "type": "text", "text": "https://example.com/a/really/long/path/that/keeps/going/and/going/without/any/spaces/at/all/readin-pdf-stress-test-0123456789abcdefghijklmnopqrstuvwxyz-0123456789abcdefghijklmnopqrstuvwxyz?query=value&another=another-value", "marks": [{ "type": "link", "href": "https://example.com/a/really/long/path/that/keeps/going/and/going/without/any/spaces/at/all/readin-pdf-stress-test-0123456789abcdefghijklmnopqrstuvwxyz-0123456789abcdefghijklmnopqrstuvwxyz?query=value&another=another-value" }] },
+      { "type": "text", "text": " and a long word: Pneumonoultramicroscopicsilicovolcanoconiosis_and_then_some_more_letters_without_any_space_ReadInLongWordEnd." }
+    ]},
+    { "id": "h-table", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "A wide table with 12 columns" }] },
+    { "id": "wide-table", "type": "table", "header": [
+      [{ "type": "text", "text": "C1" }], [{ "type": "text", "text": "C2" }], [{ "type": "text", "text": "C3" }], [{ "type": "text", "text": "C4" }],
+      [{ "type": "text", "text": "C5" }], [{ "type": "text", "text": "C6" }], [{ "type": "text", "text": "C7" }], [{ "type": "text", "text": "C8" }],
+      [{ "type": "text", "text": "C9" }], [{ "type": "text", "text": "C10" }], [{ "type": "text", "text": "C11" }], [{ "type": "text", "text": "WideTableLastHeader" }]
+    ], "rows": [
+      [[{ "type": "text", "text": "Singleton" }], [{ "type": "text", "text": "once" }], [{ "type": "text", "text": "VeryLongIdentifierWithoutSpacesThatMustWrapInsideItsCell" }], [{ "type": "text", "text": "1" }], [{ "type": "text", "text": "2" }], [{ "type": "text", "text": "3" }], [{ "type": "text", "text": "4" }], [{ "type": "text", "text": "5" }], [{ "type": "text", "text": "6" }], [{ "type": "text", "text": "7" }], [{ "type": "text", "text": "8" }], [{ "type": "text", "text": "WideRowOneEnd" }]],
+      [[{ "type": "text", "text": "Scoped" }], [{ "type": "text", "text": "per request" }], [{ "type": "text", "text": "نص عربي جوه جدول إنجليزي" }], [{ "type": "text", "text": "10" }], [{ "type": "text", "text": "20" }], [{ "type": "text", "text": "30" }], [{ "type": "text", "text": "40" }], [{ "type": "text", "text": "50" }], [{ "type": "text", "text": "60" }], [{ "type": "text", "text": "70" }], [{ "type": "text", "text": "80" }], [{ "type": "text", "text": "WideRowTwoEnd" }]]
+    ]},
+    { "id": "img-wide", "type": "image", "src": "rdoc-asset://uploads/images/2026/11/22222222222222222222222222222222_1600.webp", "alt": "A diagram of the DI container", "caption": "The container builds the object graph for you." },
+    { "id": "h-long-code", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "Long code continues on the next page" }] },
+    { "id": "code-long", "type": "code", "lang": "csharp", "filename": "OrderService.cs",
+      "code": "namespace Shop.Orders;\n\npublic sealed class OrderService(IOrderRepository orders, IClock clock) : IOrderService\n{\n    public async Task<Order?> FindAsync(Guid id) => await orders.FindAsync(id);\n\n    public async Task<Order> CreateAsync(CreateOrder command)\n    {\n        var order = new Order(command.Id, command.CustomerId, clock.UtcNow);\n        foreach (var line in command.Lines) order.AddLine(line.ProductId, line.Quantity, line.UnitPrice);\n        await orders.AddAsync(order);\n        return order;\n    }\n\n    public async Task<IReadOnlyList<Order>> RecentAsync(int count)\n    {\n        var result = await orders.ListAsync(o => o.CreatedAt > clock.UtcNow.AddDays(-30), orderBy: o => o.CreatedAt, descending: true, take: count, includeLines: true, includeCustomer: true, includePayments: true, includeShipments: true, trackChanges: false);\n        return result;\n    }\n\n    public async Task CancelAsync(Guid id, string reason)\n    {\n        var order = await orders.FindAsync(id) ?? throw new InvalidOperationException(\"Not found\");\n        order.Cancel(reason, clock.UtcNow);\n        await orders.SaveAsync(order);\n    }\n\n    public async Task ShipAsync(Guid id)\n    {\n        var order = await orders.FindAsync(id) ?? throw new InvalidOperationException(\"Not found\");\n        order.Ship(clock.UtcNow);\n        await orders.SaveAsync(order);\n    }\n}\n// LongCodeLastLine" },
+    { "id": "tabs", "type": "codeTabs", "tabs": [
+      { "label": "C#", "lang": "csharp", "code": "public interface IClock { DateTime UtcNow { get; } }" },
+      { "label": "TypeScript", "lang": "typescript", "code": "export interface Clock { now(): Date; }" }
+    ]},
+    { "id": "h-tall", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "A very tall image" }] },
+    { "id": "img-tall", "type": "image", "src": "rdoc-asset://uploads/images/2026/11/11111111111111111111111111111111_800.webp", "alt": "A tall image", "caption": "TallImageCaption: the tall image stays inside the page with its caption." },
+    { "id": "q1", "type": "quote", "cite": "Martin Fowler", "content": [
+      { "type": "text", "text": "Inversion of Control is a common phenomenon that you come across when extending frameworks." }
+    ]},
+    { "id": "div", "type": "divider" },
+    { "id": "emb-yt", "type": "embed", "provider": "youtube", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+    { "id": "img-external", "type": "image", "src": "https://picsum.photos/seed/readin-di/1200/630", "alt": "An image from outside ReadIn", "caption": "ExternalImageCaption: never fetched." },
+    { "id": "h-text", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "Plain paragraphs" }] },
+    { "id": "p-1", "type": "paragraph", "content": [{ "type": "text", "text": "This paragraph is ordinary text to see how pages break. The PDF keeps at least two lines of a paragraph on each side of a break, headings never stay alone at the bottom of a page, and images stay with their captions. When you download an article from ReadIn as a PDF it should be clean and easy to read and to print, with English and Arabic (العربي) in the right places and numbers like 3.14, 1,000 and 2026 in Western digits." }] },
+    { "id": "p-2", "type": "paragraph", "content": [{ "type": "text", "text": "A second paragraph: performance matters, but readability matters more. Write code the next person understands, and use clear names like CalculateInvoiceTotal instead of Calc. When you write tests, make each one check a single behaviour and name it after it, like Order_is_cancelled_when_payment_fails." }] },
+    { "id": "h-last", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "One last thing" }] },
+    { "id": "p-last", "type": "paragraph", "content": [{ "type": "text", "text": "Done! This is the last line of the article ✅ EnglishFixtureLastLine." }] }
+  ]
+}

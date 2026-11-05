@@ -62,6 +62,10 @@ public sealed record ArticleRevisionDetailsDto(
     int Number, DateTime CreatedAt, string Title, IReadOnlyList<string> Languages, ArticleDraftDocument Document, IReadOnlyList<MediaAssetDto> Media)
     : ArticleRevisionDto(Number, CreatedAt, Title, Languages);
 
+/// <param name="PublishedLanguages">
+/// The language versions readers see (the published ones, source language first), e.g. for "Download PDF" (SPEC F33),
+/// which asks which one when there are two. Empty for a draft; a language only in the working copy isn't listed.
+/// </param>
 public sealed record MyArticleDto(
     Guid Id,
     string Status,
@@ -76,7 +80,8 @@ public sealed record MyArticleDto(
     bool HasUnpublishedChanges,
     int ReactionCount,
     int CommentCount,
-    int ReadCount);
+    int ReadCount,
+    IReadOnlyList<string> PublishedLanguages);
 
 /// <summary>
 /// A tag in the editor's suggestions (<c>GET /tags?q=</c>) and the tag page's header (<c>GET /tags/{slug}</c>), SPEC F32.

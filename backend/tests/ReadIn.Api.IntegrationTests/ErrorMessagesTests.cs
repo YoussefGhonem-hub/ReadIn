@@ -47,6 +47,10 @@ public sealed class ErrorMessagesTests
     [InlineData("category.limit")]
     [InlineData("category.name_taken")]
     [InlineData("category.name_invalid")]
+    [InlineData("article.pdf_hidden")]
+    [InlineData("article.pdf_busy")]
+    [InlineData("article.pdf_failed")]
+    [InlineData("article.pdf_limit")]
     public void Codes_the_clients_translate_have_titles_in_both_languages(string code)
     {
         ErrorMessages.Title(code, "ar").Should().NotBeNullOrWhiteSpace();

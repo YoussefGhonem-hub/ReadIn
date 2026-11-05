@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "language": "ar-EG",
+  "blocks": [
+    { "id": "intro", "type": "paragraph", "content": [
+      { "type": "text", "text": "المقال ده بيجرّب الـ PDF بتاع ReadIn: كل أنواع البلوكات، نص عربي فيه English، أرقام زي 2026 و 0.4، و emoji ☕ 🚀." }
+    ]},
+    { "id": "sum", "type": "summary", "content": [
+      { "type": "text", "text": "الخلاصة: الـ " },
+      { "type": "term", "termId": "dependency-injection", "text": "Dependency Injection" },
+      { "type": "text", "text": " بيخلّي الكود أسهل في الـ testing والصيانة." }
+    ]},
+    { "id": "h-why", "type": "heading", "level": 2, "content": [
+      { "type": "text", "text": "ليه أصلاً نستخدم " },
+      { "type": "text", "text": "DI", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": "؟" }
+    ]},
+    { "id": "marks", "type": "paragraph", "dir": "auto", "content": [
+      { "type": "text", "text": "لو انت شغال بـ " },
+      { "type": "text", "text": "ASP.NET Core", "marks": [{ "type": "bold" }] },
+      { "type": "text", "text": "، أكيد شفت " },
+      { "type": "text", "text": "الدوكيومنتيشن الرسمية", "marks": [{ "type": "link", "href": "https://learn.microsoft.com/aspnet/core/fundamentals/dependency-injection" }] },
+      { "type": "text", "text": "، وكلام " },
+      { "type": "text", "text": "مايل", "marks": [{ "type": "italic" }] },
+      { "type": "text", "text": " و " },
+      { "type": "text", "text": "متعلّم عليه", "marks": [{ "type": "highlight" }] },
+      { "type": "text", "text": " و " },
+      { "type": "text", "text": "متشطّب", "marks": [{ "type": "strike" }] },
+      { "type": "text", "text": ". شكراً لـ " },
+      { "type": "mention", "userId": "0195f3a0-0000-7000-8000-000000000001", "text": "@editorial" },
+      { "type": "hardBreak" },
+      { "type": "text", "text": "سطر جديد بعد hardBreak فيه " },
+      { "type": "term", "termId": "dependency-injection", "text": "Dependency Injection" },
+      { "type": "text", "text": " 👩‍💻 🇪🇬." }
+    ]},
+    { "id": "mixed", "type": "bulletList", "items": [
+      [{ "type": "text", "text": "أنا بستخدم ASP.NET Core." }],
+      [{ "type": "text", "text": "يعني إيه Dependency Injection؟" }],
+      [{ "type": "text", "text": "الـ lifetime (Scoped) مهم جداً." }],
+      [{ "type": "text", "text": "قريت 12 مقال في 30 يوم، بمعدل 0.4 مقال/يوم." }],
+      [{ "type": "text", "text": "اتعمل upgrade لـ .NET 10 و Angular 21." }],
+      [{ "type": "text", "text": "شوف https://learn.microsoft.com/dotnet/ للتفاصيل." }],
+      [{ "type": "text", "text": "شكراً @youssef_dev على الشرح!" }],
+      [{ "type": "text", "text": "استخدم services.AddScoped<IFoo, Foo>() هنا." }],
+      [{ "type": "text", "text": "مقال النهارده جاهز ☕ — Clean Architecture" }],
+      [{ "type": "text", "text": "افتح backend/src/ReadIn.Api/Program.cs الأول." }]
+    ]},
+    { "id": "ol", "type": "orderedList", "items": [
+      [{ "type": "text", "text": "اعمل interface." }],
+      [{ "type": "text", "text": "سجّله في " }, { "type": "text", "text": "Program.cs", "marks": [{ "type": "code" }] }, { "type": "text", "text": "." }],
+      [{ "type": "text", "text": "Use DI (الحقن) everywhere." }]
+    ]},
+    { "id": "h-start", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "تبدأ منين؟" }] },
+    { "id": "st", "type": "steps", "items": [
+      { "title": "اعمل الـ interface", "content": [{ "type": "text", "text": "مثلاً IOrderService بيوصف اللي الـ service بتعمله." }] },
+      { "title": "اكتب الـ implementation", "content": [{ "type": "text", "text": "OrderService بيعمل implement للـ interface." }] },
+      { "title": "سجّل الـ service", "content": [{ "type": "text", "text": "باستخدام AddScoped في Program.cs." }] }
+    ]},
+    { "id": "c-tip", "type": "callout", "variant": "tip", "title": "نصيحة مهمة", "content": [
+      { "type": "text", "text": "استخدم " }, { "type": "text", "text": "AddScoped", "marks": [{ "type": "code" }] },
+      { "type": "text", "text": " لأي service بتتعامل مع DbContext، عشان كل request ياخد نسخته." }
+    ]},
+    { "id": "c-info", "type": "callout", "variant": "info", "content": [{ "type": "text", "text": "الـ container الافتراضي كفاية لـ 90% من المشاريع." }] },
+    { "id": "c-warn", "type": "callout", "variant": "warning", "content": [{ "type": "text", "text": "متحقنش Scoped service جوه Singleton (captive dependency)." }] },
+    { "id": "c-danger", "type": "callout", "variant": "danger", "content": [{ "type": "text", "text": "متستخدمش " }, { "type": "text", "text": "BuildServiceProvider()", "marks": [{ "type": "code" }] }, { "type": "text", "text": " جوه ConfigureServices." }] },
+    { "id": "code-short", "type": "code", "lang": "csharp", "filename": "Program.cs", "highlightLines": [2, 5],
+      "code": "var builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddScoped<IOrderService, OrderService>();\nbuilder.Services.AddSingleton(TimeProvider.System);\n\nvar app = builder.Build();\napp.MapGet(\"/orders/{id}\", async (Guid id, IOrderService orders) => await orders.FindAsync(id));\n\n// تعليق بالعربي جوه الكود: الكود دايماً من الشمال لليمين\napp.MapPost(\"/orders\", async (CreateOrder body, IOrderService orders) => Results.Created($\"/orders/{body.Id}\", await orders.CreateAsync(body)));\n\napp.Run();\n// end of short code" },
+    { "id": "long-url", "type": "paragraph", "content": [
+      { "type": "text", "text": "لينك طويل جداً لازم يتلف ومايخرجش برّه الصفحة: " },
+      { "type": "text", "text": "https://example.com/a/really/long/path/that/keeps/going/and/going/without/any/spaces/at/all/readin-pdf-stress-test-0123456789abcdefghijklmnopqrstuvwxyz-0123456789abcdefghijklmnopqrstuvwxyz-0123456789abcdefghijklmnopqrstuvwxyz?query=value&another=another-value&yet-another=1234567890", "marks": [{ "type": "link", "href": "https://example.com/a/really/long/path/that/keeps/going/and/going/without/any/spaces/at/all/readin-pdf-stress-test-0123456789abcdefghijklmnopqrstuvwxyz-0123456789abcdefghijklmnopqrstuvwxyz-0123456789abcdefghijklmnopqrstuvwxyz?query=value&another=another-value&yet-another=1234567890" }] },
+      { "type": "text", "text": " وكمان كلمة طويلة: Pneumonoultramicroscopicsilicovolcanoconiosis_and_then_some_more_letters_without_any_space_ReadInLongWordEnd." }
+    ]},
+    { "id": "h-table", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "جدول عريض فيه 12 عمود" }] },
+    { "id": "wide-table", "type": "table", "header": [
+      [{ "type": "text", "text": "العمود 1" }], [{ "type": "text", "text": "Column 2" }], [{ "type": "text", "text": "العمود 3" }],
+      [{ "type": "text", "text": "Column 4" }], [{ "type": "text", "text": "العمود 5" }], [{ "type": "text", "text": "Column 6" }],
+      [{ "type": "text", "text": "العمود 7" }], [{ "type": "text", "text": "Column 8" }], [{ "type": "text", "text": "العمود 9" }],
+      [{ "type": "text", "text": "Column 10" }], [{ "type": "text", "text": "العمود 11" }], [{ "type": "text", "text": "WideTableLastHeader" }]
+    ], "rows": [
+      [[{ "type": "text", "text": "Singleton" }], [{ "type": "text", "text": "مرة واحدة" }], [{ "type": "text", "text": "VeryLongIdentifierWithoutSpacesThatMustWrapInsideItsCell" }], [{ "type": "text", "text": "1" }], [{ "type": "text", "text": "2" }], [{ "type": "text", "text": "3" }], [{ "type": "text", "text": "4" }], [{ "type": "text", "text": "5" }], [{ "type": "text", "text": "6" }], [{ "type": "text", "text": "7" }], [{ "type": "text", "text": "8" }], [{ "type": "text", "text": "WideRowOneEnd" }]],
+      [[{ "type": "text", "text": "Scoped" }], [{ "type": "text", "text": "مرة لكل request" }], [{ "type": "text", "text": "نص عربي طويل شوية جوه خلية ضيقة لازم يتلف على كذا سطر" }], [{ "type": "text", "text": "10" }], [{ "type": "text", "text": "20" }], [{ "type": "text", "text": "30" }], [{ "type": "text", "text": "40" }], [{ "type": "text", "text": "50" }], [{ "type": "text", "text": "60" }], [{ "type": "text", "text": "70" }], [{ "type": "text", "text": "80" }], [{ "type": "text", "text": "WideRowTwoEnd" }]],
+      [[{ "type": "text", "text": "Transient" }], [{ "type": "text", "text": "كل مرة تطلبه" }], [{ "type": "text", "text": "https://example.com/inside/a/table/cell/that/is/long" }], [{ "type": "text", "text": "100" }], [{ "type": "text", "text": "200" }], [{ "type": "text", "text": "300" }], [{ "type": "text", "text": "400" }], [{ "type": "text", "text": "500" }], [{ "type": "text", "text": "600" }], [{ "type": "text", "text": "700" }], [{ "type": "text", "text": "800" }], [{ "type": "text", "text": "WideRowThreeEnd" }]]
+    ]},
+    { "id": "img-wide", "type": "image", "src": "rdoc-asset://uploads/images/2026/11/22222222222222222222222222222222_1600.webp", "darkSrc": "rdoc-asset://uploads/images/2026/11/33333333333333333333333333333333_1600.webp", "alt": "رسم توضيحي للـ DI container", "caption": "الـ container بيبني الـ object graph بالنيابة عنك." },
+    { "id": "h-long-code", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "كود طويل بيكمّل في الصفحة اللي بعدها" }] },
+    { "id": "code-long", "type": "code", "lang": "csharp", "filename": "OrderService.cs",
+      "code": "namespace Shop.Orders;\n\npublic sealed class OrderService(IOrderRepository orders, IClock clock, ILogger<OrderService> logger) : IOrderService\n{\n    public async Task<Order?> FindAsync(Guid id)\n    {\n        logger.LogInformation(\"Finding order {Id}\", id);\n        return await orders.FindAsync(id);\n    }\n\n    public async Task<Order> CreateAsync(CreateOrder command)\n    {\n        var order = new Order(command.Id, command.CustomerId, clock.UtcNow);\n        foreach (var line in command.Lines) order.AddLine(line.ProductId, line.Quantity, line.UnitPrice);\n        await orders.AddAsync(order);\n        return order;\n    }\n\n    public async Task CancelAsync(Guid id, string reason)\n    {\n        var order = await orders.FindAsync(id) ?? throw new InvalidOperationException($\"Order {id} was not found.\");\n        order.Cancel(reason, clock.UtcNow);\n        await orders.SaveAsync(order);\n    }\n\n    public async Task<IReadOnlyList<Order>> RecentAsync(int count)\n    {\n        var result = await orders.ListAsync(o => o.CreatedAt > clock.UtcNow.AddDays(-30), orderBy: o => o.CreatedAt, descending: true, take: count, includeLines: true, includeCustomer: true, includePayments: true, includeShipments: true, trackChanges: false, cancellationToken: CancellationToken.None);\n        return result;\n    }\n\n    public async Task<decimal> TotalAsync(Guid id)\n    {\n        var order = await orders.FindAsync(id);\n        return order?.Lines.Sum(l => l.Quantity * l.UnitPrice) ?? 0m;\n    }\n\n    public async Task ShipAsync(Guid id)\n    {\n        var order = await orders.FindAsync(id) ?? throw new InvalidOperationException(\"Not found\");\n        order.Ship(clock.UtcNow);\n        await orders.SaveAsync(order);\n    }\n\n    public async Task RefundAsync(Guid id, decimal amount)\n    {\n        var order = await orders.FindAsync(id) ?? throw new InvalidOperationException(\"Not found\");\n        order.Refund(amount, clock.UtcNow);\n        await orders.SaveAsync(order);\n    }\n}\n// LongCodeLastLine" },
+    { "id": "tabs", "type": "codeTabs", "tabs": [
+      { "label": "C#", "lang": "csharp", "filename": "IClock.cs", "code": "public interface IClock { DateTime UtcNow { get; } }", "compile": false },
+      { "label": "TypeScript", "lang": "typescript", "code": "export interface Clock { now(): Date; }" },
+      { "label": "Dart", "lang": "dart", "code": "abstract interface class Clock { DateTime now(); }" }
+    ]},
+    { "id": "h-tall", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "صورة طويلة جداً" }] },
+    { "id": "img-tall", "type": "image", "src": "rdoc-asset://uploads/images/2026/11/11111111111111111111111111111111_800.webp", "alt": "صورة طويلة", "caption": "TallImageCaption: الصورة الطويلة لازم تفضل جوه الصفحة مع الكابشن بتاعها." },
+    { "id": "q1", "type": "quote", "cite": "Martin Fowler", "content": [
+      { "type": "text", "text": "Inversion of Control is a common phenomenon that you come across when extending frameworks." }
+    ]},
+    { "id": "div", "type": "divider" },
+    { "id": "emb-yt", "type": "embed", "provider": "youtube", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+    { "id": "emb-gist", "type": "embed", "provider": "github-gist", "url": "https://gist.github.com/readin/0123456789abcdef0123456789abcdef" },
+    { "id": "img-external", "type": "image", "src": "https://picsum.photos/seed/readin-di/1200/630", "alt": "صورة من برّه ReadIn", "caption": "ExternalImageCaption: الصورة دي مش من ReadIn فمش بتتحمّل." },
+    { "id": "h-long-table", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "جدول طويل الـ header بتاعه بيتكرر" }] },
+    { "id": "long-table", "type": "table", "header": [
+      [{ "type": "text", "text": "LongTableHeader" }], [{ "type": "text", "text": "الوصف" }], [{ "type": "text", "text": "القيمة" }]
+    ], "rows": [
+      [[{ "type": "text", "text": "Row 01" }], [{ "type": "text", "text": "سطر في جدول طويل بيكمّل في الصفحة اللي بعدها" }], [{ "type": "text", "text": "1" }]],
+      [[{ "type": "text", "text": "Row 02" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "2" }]],
+      [[{ "type": "text", "text": "Row 03" }], [{ "type": "text", "text": "سطر فيه English words كمان" }], [{ "type": "text", "text": "3" }]],
+      [[{ "type": "text", "text": "Row 04" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "4" }]],
+      [[{ "type": "text", "text": "Row 05" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "5" }]],
+      [[{ "type": "text", "text": "Row 06" }], [{ "type": "text", "text": "سطر في جدول طويل فيه كلام كتير شوية عشان يبقى أطول من سطر واحد ويتلف جوه الخلية" }], [{ "type": "text", "text": "6" }]],
+      [[{ "type": "text", "text": "Row 07" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "7" }]],
+      [[{ "type": "text", "text": "Row 08" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "8" }]],
+      [[{ "type": "text", "text": "Row 09" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "9" }]],
+      [[{ "type": "text", "text": "Row 10" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "10" }]],
+      [[{ "type": "text", "text": "Row 11" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "11" }]],
+      [[{ "type": "text", "text": "Row 12" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "12" }]],
+      [[{ "type": "text", "text": "Row 13" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "13" }]],
+      [[{ "type": "text", "text": "Row 14" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "14" }]],
+      [[{ "type": "text", "text": "Row 15" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "15" }]],
+      [[{ "type": "text", "text": "Row 16" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "16" }]],
+      [[{ "type": "text", "text": "Row 17" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "17" }]],
+      [[{ "type": "text", "text": "Row 18" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "18" }]],
+      [[{ "type": "text", "text": "Row 19" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "19" }]],
+      [[{ "type": "text", "text": "Row 20" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "20" }]],
+      [[{ "type": "text", "text": "Row 21" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "21" }]],
+      [[{ "type": "text", "text": "Row 22" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "22" }]],
+      [[{ "type": "text", "text": "Row 23" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "23" }]],
+      [[{ "type": "text", "text": "Row 24" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "24" }]],
+      [[{ "type": "text", "text": "Row 25" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "25" }]],
+      [[{ "type": "text", "text": "Row 26" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "26" }]],
+      [[{ "type": "text", "text": "Row 27" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "27" }]],
+      [[{ "type": "text", "text": "Row 28" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "28" }]],
+      [[{ "type": "text", "text": "Row 29" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "29" }]],
+      [[{ "type": "text", "text": "Row 30" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "30" }]],
+      [[{ "type": "text", "text": "Row 31" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "31" }]],
+      [[{ "type": "text", "text": "Row 32" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "32" }]],
+      [[{ "type": "text", "text": "Row 33" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "33" }]],
+      [[{ "type": "text", "text": "Row 34" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "34" }]],
+      [[{ "type": "text", "text": "Row 35" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "35" }]],
+      [[{ "type": "text", "text": "Row 36" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "36" }]],
+      [[{ "type": "text", "text": "Row 37" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "37" }]],
+      [[{ "type": "text", "text": "Row 38" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "38" }]],
+      [[{ "type": "text", "text": "Row 39" }], [{ "type": "text", "text": "سطر في جدول طويل" }], [{ "type": "text", "text": "39" }]],
+      [[{ "type": "text", "text": "Row 40" }], [{ "type": "text", "text": "آخر سطر في الجدول الطويل" }], [{ "type": "text", "text": "40" }]]
+    ]},
+    { "id": "h-text", "type": "heading", "level": 2, "content": [{ "type": "text", "text": "فقرات عادية" }] },
+    { "id": "p-1", "type": "paragraph", "content": [{ "type": "text", "text": "الفقرة دي نص عادي طويل عشان نشوف الصفحات بتتقسم إزاي. الـ PDF لازم يحافظ على سطرين على الأقل من كل فقرة في كل ناحية من الفاصل، والعناوين ماتفضلش لوحدها في آخر الصفحة، والصور تفضل مع الكابشن بتاعها. لما تقرا مقال على ReadIn وتحمّله PDF، المفروض تلاقيه منظّم وسهل يتقري ويتطبع، والحروف العربي متوصلة ومترتبة صح، والكلام الإنجليزي زي Clean Architecture و Domain-Driven Design في مكانه، والأرقام زي 3.14 و 1,000 و 2026 مكتوبة بالأرقام الإنجليزي." }] },
+    { "id": "p-2", "type": "paragraph", "content": [{ "type": "text", "text": "فقرة تانية: الـ performance مهم، بس الـ readability أهم. اكتب كود يفهمه اللي بعدك، واستخدم أسماء واضحة زي CalculateInvoiceTotal بدل Calc. ولما تكتب tests، خلّي كل test بيختبر حاجة واحدة بس، وسمّيه باسم بيوصف السلوك اللي بيختبره، زي Order_is_cancelled_when_payment_fails. الكلام ده بيبان أكتر لما المشروع يكبر والفريق يزيد." }] },
+    { "id": "p-3", "type": "paragraph", "content": [{ "type": "text", "text": "فقرة تالتة فيها قايمة أرقام: 1، 2، 3، 4، 5، 6، 7، 8، 9، 10. وفيها نسبة 75% ومبلغ 1,250.50 جنيه وتاريخ 2026-11-05 ووقت 14:30. كل ده لازم يطلع بالأرقام الإنجليزي (Western digits) في كل حتة في الملف، زي ما بنعمل في التطبيق والموقع." }] },
+    { "id": "h-last", "type": "heading", "level": 3, "content": [{ "type": "text", "text": "آخر حاجة" }] },
+    { "id": "p-last", "type": "paragraph", "content": [{ "type": "text", "text": "خلصنا! ده آخر سطر في المقال ✅ ArabicFixtureLastLine." }] }
+  ]
+}

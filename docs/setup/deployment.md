@@ -277,3 +277,92 @@ and URL-safe slug, and tags that are now one tag are merged (`LegacyTagsUpgrade`
 
 Each upgrade waits until its migration is applied and does nothing once it is done (one or two small queries per
 start), so running it again is always safe.
+
+## 10. Chromium for article PDFs (SPEC F33)
+
+`GET /api/v1/articles/{id}/pdf` prints an article with **headless Chromium** through PuppeteerSharp. Chromium is installed
+with the server or the image and is **never downloaded at runtime**. The fonts (IBM Plex Sans Arabic, IBM Plex Sans,
+JetBrains Mono, Noto Sans, Noto Color Emoji, and Noto Sans Symbols 2 and Noto Sans Math for symbols such as ★ and ⇒), the
+logo and the icons ship inside the API and are inlined into every file, so the server needs no fonts of its own. Their
+licenses are published next to the API in `licenses/fonts/` (SIL OFL 1.1; Lucide icons: ISC).
+
+**The permission.** F33 adds `articles.export_pdf` to Member and every role above it. Permissions are read from the
+database, and only the seeders write them, so **run the `seed` command (§9) once with this release**. A deployment by
+SQL script or migrations bundle alone leaves the roles without it, and every PDF answers `403`.
+
+**How the API finds Chromium:** `ArticlePdf:ChromiumPath`, else the `PUPPETEER_EXECUTABLE_PATH` environment variable,
+else the usual install paths: Chrome on Windows (`Program Files\Google\Chrome\Application\chrome.exe`) and macOS, and
+`/usr/bin/chromium`, `/usr/bin/chromium-browser`, `/usr/bin/google-chrome(-stable)` or `/opt/google/chrome/chrome` on
+Linux. Without one, every PDF answers `500 article.pdf_failed` and the log says "Chrome/Chromium for article PDFs was
+not found"; nothing else in the API needs Chromium.
+
+| Key | Default | Notes |
+|---|---|---|
+| `ArticlePdf:ChromiumPath` | (empty) | The `chrome`/`chromium` executable, when it isn't in a usual place |
+| `ArticlePdf:WebBaseUrl` | `https://readin.app` | The web app's origin: the article link at the end, profile links, and the host in the footer |
+| `ArticlePdf:MaxConcurrentBuilds` | `2` | Builds at the same time, per API instance |
+| `ArticlePdf:QueueTimeout` | `00:00:30` | Wait for a free build, then `503 article.pdf_busy` |
+| `ArticlePdf:BuildTimeout` | `00:01:00` | One build, then `500 article.pdf_failed`; that build's page is closed (Chromium restarts only if it crashed) |
+| `RateLimits:ArticlePdfPerHour` | `10` | Per user, in memory: per API instance, and it starts over on a restart |
+
+**What Chromium is allowed to do.** One browser per API instance, started on the first PDF and restarted only when it
+crashed, disconnected or stopped answering; a build that fails or runs out of time closes only its own page, so the
+other build carries on. Its sandbox stays on (never add `--no-sandbox`), each page runs with JavaScript off, every
+request except the page's own `data:` URLs is aborted, and the browser's proxy points at `127.0.0.1:9` as a second
+wall, so article content can't make the server fetch anything. Plan about 150–250 MB of memory per build.
+
+**Response time.** A request may wait 30 s for a slot and then build for up to 60 s. Every proxy in front of the API
+must allow at least **100 s** for `/api/v1/articles/*/pdf` (nginx `proxy_read_timeout 120s;`; IIS's ASP.NET Core Module
+default of 2 minutes is enough; Cloudflare's proxied limit is exactly 100 s).
+
+### Docker image
+
+The SDK container build (`dotnet publish … /t:PublishContainer`, `backend.yml`) starts from
+`mcr.microsoft.com/dotnet/aspnet`, which has no Chromium. Publish onto a base image that has it:
+
+```dockerfile
+# Base image for the API with Chromium (rebuild it monthly for Chromium's security fixes).
+# A Debian tag: Debian ships a real `chromium` package (Ubuntu's is only a snap shim and doesn't run in a container).
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-trixie-slim
+USER root
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends chromium \
+ && rm -rf /var/lib/apt/lists/*
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+USER app
+```
+
+```bash
+docker build -t ghcr.io/<owner>/readin-api-base:chromium -f api-base.Dockerfile .
+docker push ghcr.io/<owner>/readin-api-base:chromium
+dotnet publish backend/src/ReadIn.Api -c Release /t:PublishContainer \
+  -p:ContainerBaseImage=ghcr.io/<owner>/readin-api-base:chromium   # plus the registry/repository/tags of backend.yml
+```
+
+The API runs as the non-root `app` user, which Chromium's sandbox needs. The sandbox also needs unprivileged user
+namespaces: if Chromium fails to start with "No usable sandbox!", run the container with Chrome's seccomp profile
+(`--security-opt seccomp=chrome.json`, from the Chromium/Puppeteer docs) or on a host that allows user namespaces
+(`kernel.unprivileged_userns_clone=1`). Don't turn the sandbox off instead.
+
+### Windows Server / IIS
+
+Install Google Chrome (it updates itself), or extract a pinned [Chrome for Testing](https://googlechromelabs.github.io/chrome-for-testing/)
+build to e.g. `C:\ReadIn\chromium` and set `ArticlePdf__ChromiumPath=C:\ReadIn\chromium\chrome.exe` (then update it
+yourself every month). The app pool identity needs **read & execute** on that folder and a writable `%TEMP%` (each
+launch makes a throwaway profile there).
+
+### Linux server (no Docker)
+
+Debian: `sudo apt-get install chromium` (found at `/usr/bin/chromium`). Run the API as a normal user, never as root.
+
+### Local development and CI
+
+- **Local:** an installed Chrome is found on its own (Windows, macOS, Linux). Otherwise set `ArticlePdf:ChromiumPath`
+  in user-secrets, or `PUPPETEER_EXECUTABLE_PATH`.
+- **Tests:** the article PDF tests (`ReadIn.Infrastructure.UnitTests/Pdf`, `ArticlePdfTests`) print with the real
+  Chromium found the same way, so it must be installed where the tests run. GitHub's `ubuntu-latest` runner already
+  has Google Chrome at `/usr/bin/google-chrome`. To pin a version there, add a step such as
+  `browser-actions/setup-chrome` with a fixed `chrome-version` and export its path as `PUPPETEER_EXECUTABLE_PATH`.
+- **Page baselines:** two page images (`Pdf/baselines/*.png`, one Arabic, one English) are compared with a small
+  tolerance. After a deliberate layout change, set `READIN_PDF_BASELINES_DIR` to that folder, run the test once, look
+  at the new images and commit them. `READIN_PDF_OUT=<folder>` writes the test PDFs and every page as PNG for a look.

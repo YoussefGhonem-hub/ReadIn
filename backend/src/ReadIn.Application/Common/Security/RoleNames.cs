@@ -32,7 +32,7 @@ public static class RoleMatrix
 {
     private static readonly string[] MemberPermissions =
     [
-        P.Articles.Read, P.Articles.Create, P.Comments.Create, P.Reactions.Create,
+        P.Articles.Read, P.Articles.Create, P.Articles.ExportPdf, P.Comments.Create, P.Reactions.Create,
         P.Follows.Manage, P.Saved.Manage, P.Reports.Create,
     ];
 

@@ -50,6 +50,12 @@
     <PackageVersion Include="Magick.NET-Q8-AnyCPU" Version="14.17.2" />
   </ItemGroup>
 
+  <ItemGroup Label="Article PDF (SPEC F33)">
+    <!-- Drives headless Chromium over the DevTools protocol to print articles as PDFs (MIT). Chromium itself is installed
+         on the host, never downloaded at runtime (docs/setup/deployment.md). -->
+    <PackageVersion Include="PuppeteerSharp" Version="25.15.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Api">
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.14" />
     <!-- Same version JwtBearer brings in; verifies Google/Apple ID tokens in Infrastructure (ADR 0012). -->

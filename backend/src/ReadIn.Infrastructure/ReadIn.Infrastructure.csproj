@@ -32,6 +32,15 @@
     <PackageReference Include="PDFtoImage" />
     <PackageReference Include="PdfPig" />
     <PackageReference Include="Magick.NET-Q8-AnyCPU" />
+    <PackageReference Include="PuppeteerSharp" />
+  </ItemGroup>
+
+  <!-- Article PDF (SPEC F33): fonts, the logo and the callout icons are inlined into every PDF from this assembly, so a
+       PDF never depends on the server's fonts or the network. Their licenses ship next to the API (OFL). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Pdf\Resources\*.ttf;Pdf\Resources\*.png;Pdf\Resources\*.svg;Pdf\Resources\*.css"
+                      LogicalName="ReadIn.Pdf.%(Filename)%(Extension)" />
+    <None Include="Pdf\Resources\licenses\*.txt" Link="licenses\fonts\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -860,6 +860,81 @@ URLs. Publishing re-runs the checks and fails while any problem remains.
   suspended account becomes a plain `text` node with the same text (no link). What readers, the working copy and the
   revision get is the checked version. Newly mentioned users get a `mention` notification (see Notifications).
 
+### Article PDF (F33) — SPEC F33
+
+Bearer, permission `articles.export_pdf` (Member and up, SPEC §10.2), and only on your own article.
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/articles/{id}/pdf?lang=` | → `200 application/pdf`: the article's **published** version in one language as a PDF, built in the request and never stored (A4, always the light theme, the ReadIn logo). Errors below are ProblemDetails JSON, as everywhere |
+
+**Who, which article, which version**
+- `{id}` is the article id (`ArticleDetailsDto.id`, `MyArticleDto.id`).
+- Only the author. Anyone else (moderators too), an unknown or deleted article and a draft (never published) get
+  `404 article.not_found`. Published and archived articles have a PDF.
+- Clients show "تحميل PDF" / "Download PDF" only on your own article: in the reader's "⋯" menu (F28) when
+  `ArticleDetailsDto.author?.id` is your id, and in My articles on each article of the **Published** tab
+  (`MyArticleDto.status === 'published'`), never on drafts.
+- The file is always the **published** version, even while the working copy has unpublished changes
+  (`hasUnpublishedChanges`).
+- `lang` (`ar-EG` | `en`) is the version to print. **Reader:** `ArticleDetailsDto.language`, the version on screen.
+  **My articles:** `MyArticleDto.publishedLanguages` (added in F33), the published versions with the source language
+  first: one entry → send it without asking; two → ask which first ("أنهي نسخة؟"), in that order. A missing, unknown or
+  unpublished `lang` prints the source language, as on the other article endpoints; the file name says which one.
+- Hidden by moderators (F22): `409 article.pdf_hidden`, because the file carries the ReadIn logo. Clients still show
+  the item (My articles doesn't know it's hidden); the message explains.
+
+**The 200 response**
+- `Content-Type: application/pdf`, `Content-Length`, `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`
+  and `Content-Disposition: attachment; filename="readin-article.pdf"; filename*=UTF-8''{slug}-{lang}.pdf`.
+  CORS exposes `Content-Disposition` to the web origin.
+- **File name** `{slug}-{lang}.pdf`: the article's slug and the printed language, e.g. `clean-code-en.pdf`,
+  `article-1a2b3c4d-ar-EG.pdf`. `filename*` is RFC 5987 (UTF-8, percent-encoded), so any slug works, Arabic included
+  (today's slugs are ASCII: the title's Latin words, else `article-xxxxxxxx`): clients take the name from `filename*`
+  (percent-decode the part after `UTF-8''`). `filename` is always the ASCII fallback `readin-article.pdf`, used only
+  when `filename*` is missing or doesn't decode.
+- **Web:** a normal download: fetch with the Bearer token → blob → an object URL on `<a download="{name}">`, clicked,
+  then revoked. **Mobile:** write the bytes to a temp file named `{name}` and open the system share sheet
+  (`share_plus`), so the user saves or sends it; no storage permission.
+- A typical article is under 5 MB.
+
+**Time and limits** (all counted per API instance)
+- A request may wait up to 30 s for a build slot, then the build has up to 60 s. Give this call a receive timeout of at
+  least **100 s** (not the client's default). While it runs, the item shows "بنجهز الـ PDF…" / "Preparing the PDF…",
+  disabled, with a spinner; a second tap does nothing.
+- At most 2 builds at a time; a request that gets no slot within 30 s: `503 article.pdf_busy`.
+- A build that fails or takes more than 60 s: `500 article.pdf_failed` (a crashed Chromium is restarted).
+- 10 requests per user per hour: `429 article.pdf_limit`. ASP.NET Core's rate limiter, partitioned by user: a fixed
+  one-hour window from the user's first request; every request counts whatever its answer, except the 429s. The count is
+  in memory, so it is per API instance (with several instances a user can get more) and starts over when the API
+  restarts. It runs before the other checks, so a limited user gets `429` for any article.
+
+**Errors and what clients show** (other codes, e.g. `403 user.suspended`, keep their usual messages)
+
+| Status and code | When | Clients show (ar / en) | "حاول تاني" / "Try again" |
+|---|---|---|---|
+| `401 auth.unauthorized` | not signed in, token expired | the usual refresh, then sign-in flow | — |
+| `404 article.not_found` | not your article, unknown, deleted, a draft | "المقال مش موجود." / "Article not found." | no |
+| `409 article.pdf_hidden` | hidden by moderators | "المشرفين خفّوا المقال ده، فمينفعش يتحمّل PDF." / "Moderators hid this article, so it can't be downloaded as a PDF." | no |
+| `429 article.pdf_limit` | more than 10 in the hour | "حمّلت PDFs كتير الساعة دي. حاول تاني بعد شوية." / "You've downloaded many PDFs this hour. Try again later." | yes |
+| `503 article.pdf_busy` | no build slot within 30 s | "فيه PDFs كتير بتتجهز دلوقتي. حاول تاني كمان شوية." / "Many PDFs are being prepared right now. Try again in a moment." | yes |
+| `500 article.pdf_failed` (and `server.error`, a client timeout, any other failure) | the build failed or took too long | "معرفناش نجهّز الـ PDF. حاول تاني." / "We couldn't prepare the PDF. Try again." | yes |
+| no connection (client side) | offline before or during the call | "محتاج إنترنت عشان تحمّل الـ PDF." / "You need an internet connection to download the PDF." | yes |
+
+**What the file holds** (the full layout is SPEC F33): A4 portrait, always light; direction from the article language
+(`ar-EG` RTL, `en` LTR), not the app's; the logo at the top of page 1 and in every page's footer with `readin.app` and
+`2 / 5`; the title, the writer with the verified badge, publish date, reading time, the AI-assisted label ("بمساعدة AI" /
+"AI-assisted", SPEC §20) when the article has it, field and topic, tags, the health disclaimer for sensitive fields and
+the cover; the content; then attachments, Sources and "منشور على ReadIn" /
+"Published on ReadIn" with the article's link. No comments, reactions, counters, related articles, highlights or app
+buttons. Real, selectable text with clickable links and embedded fonts; a tagged PDF with bookmarks from H2/H3 and the
+title, author and language in its metadata. The server fetches nothing remote: images come from its own uploads (the
+1600 variant; the cover's 1200), an image block whose `src` isn't a ReadIn upload prints as a card with its alt text or
+caption and its link, and embeds become link cards.
+
+Article PDF error codes: `article.pdf_hidden` (409), `article.pdf_busy` (503), `article.pdf_failed` (500),
+`article.pdf_limit` (429).
+
 ### Media (Bearer) — see [ADR 0011](../adr/0011-media-pipeline-and-pdf-preview.md)
 
 | Method | Path | Body → Response |
@@ -1356,6 +1431,7 @@ interface MyArticleDto {
   publishedAt: string | null;
   hasUnpublishedChanges: boolean;
   reactionCount: number; commentCount: number; readCount: number;
+  publishedLanguages: ArticleLanguage[]; // F33: the published versions, source language first; [] for a draft. Two → "Download PDF" asks which
 }
 
 // ── Tags (F32) ──────────────────────────────────────────────────────
@@ -1757,6 +1833,15 @@ interface AdminPathDto {
 Validation codes (in `errors`) for this area: `reaction.invalid` (`type`), `validation.required` /
 `validation.max_length` (`name` of a collection, `q`). Error codes: `collection.not_found`, `collection.name_taken`,
 `collection.limit`, `follow.self`, `topic.not_found`.
+
+```ts
+// ── Article PDF (F33) ───────────────────────────────────────────────
+// GET /articles/{id}/pdf answers the file itself (application/pdf, see Article PDF), never JSON; its errors are
+// ProblemDetails. F33 adds no DTO of its own. Clients read:
+//   reader:      ArticleDetailsDto.id, .language (the version on screen, sent as `lang`), .author?.id (your id → your article)
+//   My articles: MyArticleDto.id, .status === 'published', .publishedLanguages (added in F33; two entries → ask which)
+//   file name:   Content-Disposition filename* (RFC 5987) → "{slug}-{lang}.pdf"; fallback filename "readin-article.pdf"
+```
 
 ## Push payloads (FCM)
 

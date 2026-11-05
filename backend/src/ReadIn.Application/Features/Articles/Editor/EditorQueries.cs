@@ -92,10 +92,25 @@ internal sealed class GetMyArticlesQueryHandler(IAppDbContext db, ICurrentUser c
         var fieldIds = page.Select(r => documents[r.Id] is { } d ? d.FieldId : r.FieldId).OfType<Guid>().Distinct().ToList();
         var fields = await db.Fields.AsNoTracking().Where(f => fieldIds.Contains(f.Id)).ToDictionaryAsync(f => f.Id, cancellationToken);
 
-        return new CursorPage<MyArticleDto>([.. page.Select(r => ToDto(r, documents[r.Id], fields, query.UiLanguage))], next);
+        // The versions readers see (F33's language question): the published translations, source language first.
+        var publishedIds = page.Where(r => r.PublishedAt is not null).Select(r => r.Id).ToList();
+        var languages = publishedIds.Count == 0
+            ? new Dictionary<Guid, IReadOnlyList<string>>()
+            : (await db.ArticleTranslations.AsNoTracking()
+                    .Where(t => publishedIds.Contains(t.ArticleId))
+                    .Select(t => new { t.ArticleId, t.Language, t.IsSource })
+                    .ToListAsync(cancellationToken))
+                .GroupBy(t => t.ArticleId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => (IReadOnlyList<string>)[.. g.OrderByDescending(t => t.IsSource).ThenBy(t => t.Language, StringComparer.Ordinal).Select(t => t.Language)]);
+
+        return new CursorPage<MyArticleDto>(
+            [.. page.Select(r => ToDto(r, documents[r.Id], fields, languages.GetValueOrDefault(r.Id) ?? [], query.UiLanguage))], next);
     }
 
-    private MyArticleDto ToDto(Row row, ArticleDraftDocument? document, IReadOnlyDictionary<Guid, Field> fields, string uiLanguage)
+    private MyArticleDto ToDto(
+        Row row, ArticleDraftDocument? document, IReadOnlyDictionary<Guid, Field> fields, IReadOnlyList<string> publishedLanguages, string uiLanguage)
     {
         // A never-published draft shows its working copy; a published article what readers see.
         var source = document?.Translations.FirstOrDefault(t => t.Language == document.SourceLanguage);
@@ -118,7 +133,8 @@ internal sealed class GetMyArticlesQueryHandler(IAppDbContext db, ICurrentUser c
             row.PublishedAt is not null && row.HasChanges,
             row.ReactionCount,
             row.CommentCount,
-            row.ReadCount);
+            row.ReadCount,
+            publishedLanguages);
     }
 
     private int ReadingTime(DraftTranslation translation)

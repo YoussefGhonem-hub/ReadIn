@@ -1,0 +1,137 @@
+/* Article PDF (SPEC F33): A4, always the light theme (SPEC §15.2 light tokens), the fonts of §15.3.
+   Page breaks follow No-bug rule 4; nothing may leave the margins (rule 3). */
+@page { size: A4; margin: 16mm 18mm 22mm 18mm; }
+
+html {
+  background: #FFFFFF;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  margin: 0;
+  color: #1A1A1A;
+  font-size: 11.5pt;
+  line-height: 1.8;
+  font-weight: 400;
+  font-variant-numeric: lining-nums;
+  font-kerning: normal;
+  overflow-wrap: anywhere;
+  text-rendering: geometricPrecision;
+}
+
+/* The emoji, then the symbol fonts last: a character the text fonts lack never comes from the server's fonts (rule 2). */
+body.ar { font-family: "ReadIn Plex Arabic", "ReadIn Plex", "ReadIn Noto", "ReadIn Emoji", "ReadIn Symbols", "ReadIn Math"; }
+body.en { font-family: "ReadIn Plex", "ReadIn Plex Arabic", "ReadIn Noto", "ReadIn Emoji", "ReadIn Symbols", "ReadIn Math"; }
+code, pre, .mono { font-family: "ReadIn Mono", "ReadIn Plex Arabic", "ReadIn Noto", "ReadIn Emoji", "ReadIn Symbols", "ReadIn Math";
+  font-variant-ligatures: none; font-feature-settings: "calt" 0, "liga" 0; }
+
+a { color: #0F5E52; text-decoration: underline; text-decoration-thickness: 0.5pt; text-underline-offset: 2pt; }
+strong, b { font-weight: 700; }
+mark { background: #FFF0C2; color: inherit; padding: 0 1pt; }
+s { text-decoration-thickness: 0.75pt; }
+
+/* ---- First page ---- */
+.masthead { margin: 0 0 7mm; }
+.masthead .logo { display: block; width: 32mm; height: auto; margin: 0 0 7mm; }
+.title { font-size: 24pt; line-height: 1.45; font-weight: 700; margin: 0 0 2mm; }
+.subtitle { font-size: 13pt; line-height: 1.6; color: #6B6B6B; margin: 0 0 4mm; }
+.byline { font-size: 11pt; font-weight: 600; margin: 0; }
+.byline a { color: #1A1A1A; text-decoration: none; }
+.verified { display: inline-block; color: #0F5E52; vertical-align: -1.5pt; margin-inline-start: 1mm; }
+.verified svg { width: 11pt; height: 11pt; display: block; }
+.meta { font-size: 9.5pt; line-height: 1.7; color: #6B6B6B; margin: 0; }
+.tags { margin: 2.5mm 0 0; padding: 0; list-style: none; font-size: 9pt; line-height: 1.5; }
+.tags li { display: inline-block; margin: 0 0 1.5mm; margin-inline-end: 1.5mm; padding: 0.6mm 2.6mm; border-radius: 99px;
+  background: #E3F1EE; color: #0A493F; }
+.disclaimer { margin: 4mm 0 0; padding: 2.5mm 3.5mm; border-radius: 2mm; background: #FDF3E1; color: #1A1A1A;
+  font-size: 9.5pt; line-height: 1.6; border-inline-start: 1mm solid #A86400; break-inside: avoid; }
+.cover { margin: 6mm 0 0; }
+
+/* ---- Content ---- */
+.content > :first-child { margin-top: 0; }
+p { margin: 0 0 3.5mm; orphans: 2; widows: 2; }
+/* Padding, not only margin: at the top of a page the margin is dropped, and the marks above Arabic letters (e.g. the
+   tanween in "جداً") must stay inside the heading's own box, or Chromium paints them at the bottom of the previous page. */
+h2, h3 { font-weight: 600; break-after: avoid; break-inside: avoid; orphans: 2; widows: 2; padding-top: 1.5mm; }
+h2 { font-size: 17pt; line-height: 1.6; margin: 5.5mm 0 1.5mm; }
+h3 { font-size: 14pt; line-height: 1.6; margin: 4mm 0 1mm; }
+ul, ol { margin: 0 0 3.5mm; padding: 0; padding-inline-start: 7mm; }
+li { margin: 0 0 1.2mm; break-inside: avoid; orphans: 2; widows: 2; }
+
+.summary { margin: 0 0 6mm; padding: 4mm 5mm; border-radius: 3mm; background: #E3F1EE; break-inside: avoid; }
+.summary-label { display: block; font-size: 10pt; font-weight: 700; color: #0A493F; margin: 0 0 1mm; }
+.summary p:last-child { margin-bottom: 0; }
+
+.steps { list-style: none; margin: 0 0 4mm; padding: 0; }
+.step { display: flex; gap: 3mm; margin: 0 0 3mm; break-inside: avoid; }
+.step-number { flex: none; width: 7mm; height: 7mm; border-radius: 50%; background: #0F5E52; color: #FFFFFF;
+  font-size: 9.5pt; font-weight: 700; line-height: 7mm; text-align: center; margin-top: 0.6mm; }
+.step-body { flex: 1; min-width: 0; }
+.step-title { display: block; font-weight: 700; }
+
+blockquote { margin: 0 0 4mm; padding: 1mm 0; padding-inline-start: 4.5mm; border-inline-start: 1mm solid #0F5E52; }
+blockquote p { margin: 0; }
+.cite { display: block; margin-top: 1mm; font-size: 10pt; color: #6B6B6B; }
+
+hr { border: 0; border-top: 0.5pt solid #E8E4DC; margin: 6mm 0; }
+
+.callout { display: flex; gap: 3mm; margin: 0 0 4mm; padding: 3.5mm 4mm; border-radius: 3mm; border-inline-start: 1mm solid;
+  break-inside: avoid; }
+.callout-icon { flex: none; margin-top: 1mm; }
+.callout-icon svg { width: 13pt; height: 13pt; display: block; }
+.callout-body { flex: 1; min-width: 0; }
+.callout-title { display: block; font-weight: 700; }
+.callout-tip { background: #E8F3EF; border-color: #0F5E52; } .callout-tip .callout-icon { color: #0F5E52; }
+.callout-info { background: #EEF1F5; border-color: #3B6EA5; } .callout-info .callout-icon { color: #3B6EA5; }
+.callout-warning { background: #FDF3E1; border-color: #A86400; } .callout-warning .callout-icon { color: #A86400; }
+.callout-danger { background: #FBEAEA; border-color: #C0392B; } .callout-danger .callout-icon { color: #C0392B; }
+
+/* Code: always LTR on a light background, long lines wrap and are never cut. Up to 20 lines never split. */
+.code { direction: ltr; text-align: left; margin: 0 0 4mm; border: 0.5pt solid #E8E4DC; border-radius: 2mm;
+  background: #F6F4EF; }
+.code-short { break-inside: avoid; }
+.code-head { font-size: 8.5pt; line-height: 1.5; color: #6B6B6B; padding: 1.5mm 3mm; border-bottom: 0.5pt solid #E8E4DC;
+  break-after: avoid; }
+.code pre { margin: 0; padding: 2.5mm 3mm; font-size: 9.5pt; line-height: 1.55; white-space: pre-wrap;
+  overflow-wrap: anywhere; word-break: break-word; tab-size: 4; }
+/* A long line wraps under its own indentation, 2 columns further in (a hanging indent), so its rest never reads as a
+   new line. --indent is the line's leading whitespace, set per line by the server. */
+.code .line { display: block; min-height: 1.55em; break-inside: avoid; --wrap: calc(var(--indent, 0ch) + 2ch);
+  padding-left: var(--wrap); text-indent: calc(-1 * var(--wrap)); }
+.code .hl { background: #FFF0C2; margin: 0 -3mm; padding-right: 3mm; padding-left: calc(3mm + var(--wrap)); }
+code.inline { font-size: 0.86em; background: #F3F0EA; border-radius: 1mm; padding: 0 1mm; overflow-wrap: anywhere; }
+.tabs { margin: 0 0 4mm; }
+.tabs .code { margin-bottom: 2.5mm; }
+
+/* Tables: full width, wrapping text, the header repeats on each page, a row never splits. Text wraps at spaces only, so
+   no number or word splits: the server sets each column's width from its measured words (PdfTableLayout) and a smaller
+   font on a table too wide for the page. Only a token wider than its column (a long URL or identifier) breaks.
+   Padding in em, so it shrinks with that font. */
+.table { margin: 0 0 4mm; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 10pt; line-height: 1.6; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th, td { border: 0.5pt solid #E8E4DC; padding: 0.425em 0.57em; vertical-align: top; text-align: start;
+  overflow-wrap: break-word; word-break: normal; }
+th code.inline, td code.inline { overflow-wrap: break-word; }
+th { background: #F3F0EA; font-weight: 600; }
+
+/* Images: up to the content width and one page, never upscaled, always with their caption. */
+figure { margin: 0 0 5mm; break-inside: avoid; }
+figure img { display: block; max-width: 100%; max-height: 222mm; width: auto; height: auto; margin: 0 auto; }
+figcaption { margin-top: 2mm; font-size: 9.5pt; line-height: 1.6; color: #6B6B6B; text-align: center; }
+
+.card { margin: 0 0 4mm; padding: 3mm 4mm; border: 0.5pt solid #E8E4DC; border-radius: 3mm; break-inside: avoid; }
+.card-label { display: block; font-size: 10pt; font-weight: 700; }
+.card-text { display: block; font-size: 10pt; color: #6B6B6B; }
+.url { font-size: 9.5pt; overflow-wrap: anywhere; word-break: break-all; }
+
+/* ---- End of the article ---- */
+.end { margin-top: 8mm; }
+.end-label { display: block; font-size: 12pt; font-weight: 700; margin: 0 0 2.5mm; break-after: avoid; }
+.end-section { margin: 0 0 6mm; }
+.sources { margin: 0; padding: 0; padding-inline-start: 6mm; font-size: 10pt; line-height: 1.6; }
+.sources li { margin: 0 0 2mm; }
+.published { padding-top: 4mm; border-top: 0.5pt solid #E8E4DC; font-size: 10pt; line-height: 1.6; break-inside: avoid; }
+.published strong { display: block; }

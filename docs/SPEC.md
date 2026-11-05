@@ -1082,7 +1082,7 @@ A writer can download their own article as a clean, well-organized PDF that carr
 - A4 portrait on white paper, always the light theme, whatever theme the app uses. Colors are the light tokens in §15.2.
 - Direction follows the article language (`ar-EG` RTL, `en` LTR), not the app language. Labels in the file ("المصادر" / "Sources") follow it too.
 - **Logo:** the approved `docs/design/app-store/logo/lockup.png` (R + ر mark with the ReadIn wordmark), copied into the API's resources, never redrawn or recolored. 32 mm wide at the top of the first page and 18 mm wide in every page's footer. No watermark over the text.
-- **First page:** logo, title, writer's name with the verified badge, publish date, reading time, field and topic, tags, the health disclaimer on Medicine and Public Health articles (§20), then the cover image. No phone number or other private data.
+- **First page:** logo, title, writer's name with the verified badge, publish date, reading time, the AI-assisted label when the article has it (§20), field and topic, tags, the health disclaimer on Medicine and Public Health articles (§20), then the cover image. No phone number or other private data.
 - **Footer on every page:** a thin line, then the logo, `readin.app` and the page number as `2 / 5`.
 - **End of the article:** attachments, Sources with their full clickable URLs, then "منشور على ReadIn" (Published on ReadIn) with a link to the article.
 - **Left out:** comments, reactions, counters, related articles, highlights and app buttons.
@@ -1105,7 +1105,7 @@ A writer can download their own article as a clean, well-organized PDF that carr
 
 **No-bug rules** (each one has a test in §27, and a failure blocks the release)
 1. **Arabic and mixed text:** letters connected and in the right order, and English, numbers and punctuation inside Arabic in the right place, using the same rules and shared fixtures as §14.2.
-2. **No empty squares:** IBM Plex Sans Arabic, IBM Plex Sans, JetBrains Mono, Noto Sans (fallback) and Noto Color Emoji ship with the API and are embedded in the file. Nothing depends on fonts installed on the server.
+2. **No empty squares:** IBM Plex Sans Arabic, IBM Plex Sans, JetBrains Mono, Noto Sans (fallback), Noto Color Emoji, and Noto Sans Symbols 2 and Noto Sans Math (symbols such as ★ and ⇒) ship with the API and are embedded in the file. Nothing depends on fonts installed on the server.
 3. **Nothing cut off:** long URLs, long words, code, tables and images stay inside the margins.
 4. **Clean page breaks:** a heading stays with the lines after it, and an image stays with its caption. Callouts, list items, table rows and code of up to 20 lines don't split. Paragraphs keep at least 2 lines on each side of a break. Longer code and tables continue on the next page. There are no blank pages, including at the end.
 5. **Real text:** text can be selected and searched, links can be clicked, and pages are never images.
@@ -1797,7 +1797,7 @@ Uploads live inside the API folder, so deployments must never delete them:
 
 Deploy targets (suggested): API + SSR on a single server or container host (with the uploads rules in [§28.3](#283-uploads-in-production-wwwrootuploads)), SQL Server, mobile via Play Console / App Store Connect (Fastlane).
 
-The API host and `backend.yml` need Chromium and its system libraries for F33, installed with the image or server setup and never downloaded at runtime. Steps go in [`docs/setup/deployment.md`](setup/deployment.md) when F33 is built.
+The API host and `backend.yml` need Chromium and its system libraries for F33, installed with the image or server setup and never downloaded at runtime. The steps are in [`docs/setup/deployment.md` §10](setup/deployment.md#10-chromium-for-article-pdfs-spec-f33).
 
 ---
 

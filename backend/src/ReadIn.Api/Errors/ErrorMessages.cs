@@ -132,6 +132,11 @@ public static class ErrorMessages
         ["verification.not_found"] = ("طلب التوثيق ده مش موجود.", "Verification request not found."),
         ["verification.proof_not_found"] = ("الطلب ده مفيهوش ملف.", "This request has no proof file."),
         ["verification.status_invalid"] = ("الحالة لازم تكون pending أو approved أو rejected.", "Status must be pending, approved or rejected."),
+        // Article PDF (SPEC F33)
+        ["article.pdf_hidden"] = ("المشرفين خفّوا المقال ده، فمينفعش يتحمّل PDF.", "Moderators hid this article, so it can't be downloaded as a PDF."),
+        ["article.pdf_busy"] = ("فيه PDFs كتير بتتجهز دلوقتي. حاول تاني كمان شوية.", "Many PDFs are being prepared right now. Try again in a moment."),
+        ["article.pdf_failed"] = ("معرفناش نجهّز الـ PDF. حاول تاني.", "We couldn't prepare the PDF. Try again."),
+        ["article.pdf_limit"] = ("حمّلت PDFs كتير الساعة دي. حاول تاني بعد شوية.", "You've downloaded many PDFs this hour. Try again later."),
         // Notifications (SPEC F17)
         ["notification.not_found"] = ("الإشعار ده مش موجود.", "Notification not found."),
         ["notification.type_invalid"] = ("نوع الإشعار ده مش موجود أو مينفعش يتغيّر.", "Unknown or not configurable notification type."),

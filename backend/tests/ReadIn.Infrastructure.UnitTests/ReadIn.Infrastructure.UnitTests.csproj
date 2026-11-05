@@ -21,6 +21,10 @@
   <ItemGroup>
     <!-- Media fixtures (ADR 0011): real JPEG/PNG/WebP/HEIC images and normal, encrypted, corrupted and 101-page PDFs. -->
     <None Include="../fixtures/media/**/*" LinkBase="fixtures/media" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Article PDF (SPEC F33, §27): the shared stress fixtures, the shared BiDi samples and the page baselines. -->
+    <None Include="../../../shared/rdoc/examples/pdf/*.json" LinkBase="fixtures/rdoc-pdf" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../../shared/bidi/fixtures.json" Link="fixtures/bidi/fixtures.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Pdf/baselines/*.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

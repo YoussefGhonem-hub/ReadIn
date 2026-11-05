@@ -72,6 +72,7 @@ public static class DependencyInjection
         services.AddSingleton<IPrivateFileStorage>(sp => sp.GetRequiredService<LocalPrivateFileStorage>());
         services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
         services.AddMedia(configuration, IsHangfireEnabled(configuration));
+        Pdf.ArticlePdfRegistration.AddArticlePdf(services, configuration); // SPEC F33
         services.AddPush(configuration, environment);
 
         var connectionString = configuration.GetConnectionString(ConnectionStringName)
