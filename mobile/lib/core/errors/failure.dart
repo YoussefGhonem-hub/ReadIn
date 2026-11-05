@@ -188,6 +188,11 @@ abstract final class FailureCodes {
   static const tagLimit = 'tag.limit';
   static const articleTooManyTags = 'article.too_many_tags';
 
+  // Search (F16): the app checks the query and the filters first, so these are rare.
+  static const searchQueryInvalid = 'search.query_invalid';
+  static const searchTypeInvalid = 'search.type_invalid';
+  static const searchFilterInvalid = 'search.filter_invalid';
+
   // Glossary (F21)
   static const glossaryTermNotFound = 'glossary.term_not_found';
   // Learning paths (F09); the last three come from the admin endpoints only.

@@ -4137,6 +4137,100 @@ class AppLocalizationsAr extends AppLocalizations {
       'ممكن يكون اتشال أو اتغيّر اسمه. جرّب تاج تاني.';
 
   @override
+  String get searchHint => 'دوّر على مقالات وكتّاب ومواضيع وتاجات';
+
+  @override
+  String get searchFieldHint => 'دوّر في ReadIn';
+
+  @override
+  String get searchTabArticles => 'المقالات';
+
+  @override
+  String get searchTabWriters => 'الكتّاب';
+
+  @override
+  String get searchTabTopics => 'المواضيع';
+
+  @override
+  String get searchTabTags => 'التاجات';
+
+  @override
+  String get searchRecentTitle => 'آخر حاجات دوّرت عليها';
+
+  @override
+  String get searchRecentClearAll => 'امسح الكل';
+
+  @override
+  String searchRecentRemove(String query) {
+    return 'شيل «$query» من آخر حاجات دوّرت عليها';
+  }
+
+  @override
+  String get searchIdleTitle => 'عايز تقرا عن إيه؟';
+
+  @override
+  String get searchIdleBody =>
+      'دوّر على مقالات وكتّاب ومواضيع وتاجات، بالعربي أو بالإنجليزي.';
+
+  @override
+  String searchNoResultsTitle(String query) {
+    return 'مفيش نتايج لـ «$query»';
+  }
+
+  @override
+  String get searchNoResultsTip =>
+      'جرّب كلمة تانية أو أقصر، أو دوّر في تاب تاني.';
+
+  @override
+  String get searchNoResultsFilteredTitle => 'مفيش نتايج بالفلاتر دي';
+
+  @override
+  String searchNoResultsFiltersTip(String query) {
+    return 'امسح الفلاتر عشان تشوف كل اللي فيه «$query».';
+  }
+
+  @override
+  String get searchFoundInPdf => 'لقيناها في ملف الـ PDF المرفق';
+
+  @override
+  String get searchFilterField => 'المجال';
+
+  @override
+  String get searchFilterLanguage => 'لغة المقال';
+
+  @override
+  String get searchFilterReadingTime => 'مدة القراءة';
+
+  @override
+  String searchFilterValue(String filter, String value) {
+    return '$filter: $value';
+  }
+
+  @override
+  String get searchFieldAll => 'كل المجالات';
+
+  @override
+  String get searchLanguageAny => 'كل اللغات';
+
+  @override
+  String get searchReadingTimeAny => 'أي مدة';
+
+  @override
+  String get searchReadingTimeUpTo5 => 'لحد 5 دقايق';
+
+  @override
+  String get searchReadingTime5To10 => 'من 5 لـ 10 دقايق';
+
+  @override
+  String get searchReadingTimeOver10 => 'أكتر من 10 دقايق';
+
+  @override
+  String get searchClearFilters => 'امسح الفلاتر';
+
+  @override
+  String get searchKindField => 'مجال';
+
+  @override
   String get errInterestsUnknown => 'فيه مجالات أو مواضيع مش موجودة.';
 
   @override
@@ -4208,4 +4302,15 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get errReportStatusInvalid =>
       'حالة البلاغ لازم تكون مفتوح أو اتحل أو اترفض.';
+
+  @override
+  String get errSearchQueryInvalid =>
+      'اكتب من حرف لـ 100 حرف، وفيهم حرف أو رقم على الأقل.';
+
+  @override
+  String get errSearchTypeInvalid =>
+      'نوع البحث لازم يكون مقالات أو كتّاب أو مواضيع أو تاجات.';
+
+  @override
+  String get errSearchFilterInvalid => 'فلاتر البحث دي مش صحيحة.';
 }

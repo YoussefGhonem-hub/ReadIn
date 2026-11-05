@@ -61,9 +61,12 @@ class _SuggestedWritersListState extends State<SuggestedWritersList> {
 
 /// Avatar, name, @handle, a line of bio, "follows you" and the follow button. The person opens their profile (F14).
 class WriterTile extends StatelessWidget {
-  const WriterTile({super.key, required this.user});
+  const WriterTile({super.key, required this.user, this.onOpen});
 
   final UserSummary user;
+
+  /// Runs before the profile opens, e.g. search remembering the query (F16).
+  final VoidCallback? onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +81,7 @@ class WriterTile extends StatelessWidget {
           Expanded(
             child: ProfileLink(
               username: user.username,
+              beforeOpen: onOpen,
               child: Row(
                 children: [
                   UserAvatar(name: user.displayName, url: user.avatarUrl, size: 44),

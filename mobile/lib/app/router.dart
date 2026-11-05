@@ -35,6 +35,9 @@ import '../features/profile/presentation/pages/profile_page.dart';
 import '../features/profile/presentation/profile_routes.dart';
 import '../features/reading/presentation/pages/reading_stats_page.dart';
 import '../features/saved/presentation/pages/saved_page.dart';
+import '../features/search/domain/entities/search.dart';
+import '../features/search/presentation/pages/search_page.dart';
+import '../features/search/presentation/search_routes.dart';
 import '../features/settings/domain/entities/app_settings.dart';
 import '../features/settings/presentation/cubit/settings_cubit.dart';
 import '../features/settings/presentation/pages/interests_page.dart';
@@ -73,6 +76,7 @@ abstract final class AppRoutes {
   static const moderation = ModerationRoutes.home;
   static const editProfile = ProfileRoutes.edit;
   static const paths = PathRoutes.list;
+  static const search = SearchRoutes.path;
 
   /// The reader. Shared web links (`https://{domain}/{ar|en}/a/{slug}`, F24) arrive here as `/a/{slug}?lang=`.
   static String article(String slug) => '/a/$slug';
@@ -202,6 +206,14 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       ),
       // A tag's page (F32), guests allowed; its web link https://{domain}/tags/{slug} opens it too (App Links).
       GoRoute(path: TagRoutes.pattern, builder: (_, state) => TagPage(slug: state.pathParameters['slug']!)),
+      // Search (F16), full screen above the tabs, guests allowed: from Explore's search bar, or `/search?q=&type=`.
+      GoRoute(
+        path: AppRoutes.search,
+        builder: (_, state) => SearchPage(
+          initialQuery: state.uri.queryParameters['q'],
+          initialType: SearchType.fromWire(state.uri.queryParameters['type']),
+        ),
+      ),
       // The editor (F05), full screen above the tabs: a new article, or one of mine.
       GoRoute(path: EditorRoutes.newArticle, builder: (_, _) => const ArticleEditorPage()),
       GoRoute(path: '${AppRoutes.write}/:id', builder: (_, state) => ArticleEditorPage(articleId: state.pathParameters['id'])),

@@ -6,8 +6,9 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../paths/presentation/path_routes.dart';
 import '../../../paths/presentation/widgets/home_path_card.dart';
+import '../../../search/presentation/widgets/search_entry_bar.dart';
 
-/// Explore (F15, Phase 2). Until it ships, the way in to the learning paths (F09).
+/// Explore (F15, Phase 2). Until it ships: the search bar (F16) at its top, and the way in to the learning paths (F09).
 class ExplorePage extends StatelessWidget {
   const ExplorePage({super.key});
 
@@ -17,6 +18,10 @@ class ExplorePage extends StatelessWidget {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, 0),
+              child: SearchEntryBar(),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s3, ReadInSpace.s5, 0),
               child: PathsPromptRow(onTap: () => context.push(PathRoutes.list)),

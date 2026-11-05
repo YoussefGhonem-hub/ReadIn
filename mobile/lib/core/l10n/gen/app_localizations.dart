@@ -6848,6 +6848,174 @@ abstract class AppLocalizations {
   /// **'It may have been removed or renamed. Try another tag.'**
   String get tagNotFoundBody;
 
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search articles, writers, topics and tags'**
+  String get searchHint;
+
+  /// No description provided for @searchFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search ReadIn'**
+  String get searchFieldHint;
+
+  /// No description provided for @searchTabArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles'**
+  String get searchTabArticles;
+
+  /// No description provided for @searchTabWriters.
+  ///
+  /// In en, this message translates to:
+  /// **'Writers'**
+  String get searchTabWriters;
+
+  /// No description provided for @searchTabTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Topics'**
+  String get searchTabTopics;
+
+  /// No description provided for @searchTabTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get searchTabTags;
+
+  /// No description provided for @searchRecentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent searches'**
+  String get searchRecentTitle;
+
+  /// No description provided for @searchRecentClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get searchRecentClearAll;
+
+  /// No description provided for @searchRecentRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove “{query}” from recent searches'**
+  String searchRecentRemove(String query);
+
+  /// No description provided for @searchIdleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to read about?'**
+  String get searchIdleTitle;
+
+  /// No description provided for @searchIdleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Search articles, writers, topics and tags, in Arabic or English.'**
+  String get searchIdleBody;
+
+  /// No description provided for @searchNoResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No results for “{query}”'**
+  String searchNoResultsTitle(String query);
+
+  /// No description provided for @searchNoResultsTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another word or a shorter one, or look in another tab.'**
+  String get searchNoResultsTip;
+
+  /// No description provided for @searchNoResultsFilteredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No results with these filters'**
+  String get searchNoResultsFilteredTitle;
+
+  /// No description provided for @searchNoResultsFiltersTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the filters to see everything that matches “{query}”.'**
+  String searchNoResultsFiltersTip(String query);
+
+  /// No description provided for @searchFoundInPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Found in the attached PDF'**
+  String get searchFoundInPdf;
+
+  /// No description provided for @searchFilterField.
+  ///
+  /// In en, this message translates to:
+  /// **'Field'**
+  String get searchFilterField;
+
+  /// No description provided for @searchFilterLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Article language'**
+  String get searchFilterLanguage;
+
+  /// No description provided for @searchFilterReadingTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading time'**
+  String get searchFilterReadingTime;
+
+  /// No description provided for @searchFilterValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{filter}: {value}'**
+  String searchFilterValue(String filter, String value);
+
+  /// No description provided for @searchFieldAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All fields'**
+  String get searchFieldAll;
+
+  /// No description provided for @searchLanguageAny.
+  ///
+  /// In en, this message translates to:
+  /// **'All languages'**
+  String get searchLanguageAny;
+
+  /// No description provided for @searchReadingTimeAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any length'**
+  String get searchReadingTimeAny;
+
+  /// No description provided for @searchReadingTimeUpTo5.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 5 min'**
+  String get searchReadingTimeUpTo5;
+
+  /// No description provided for @searchReadingTime5To10.
+  ///
+  /// In en, this message translates to:
+  /// **'5–10 min'**
+  String get searchReadingTime5To10;
+
+  /// No description provided for @searchReadingTimeOver10.
+  ///
+  /// In en, this message translates to:
+  /// **'Over 10 min'**
+  String get searchReadingTimeOver10;
+
+  /// No description provided for @searchClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get searchClearFilters;
+
+  /// No description provided for @searchKindField.
+  ///
+  /// In en, this message translates to:
+  /// **'Field'**
+  String get searchKindField;
+
   /// No description provided for @errInterestsUnknown.
   ///
   /// In en, this message translates to:
@@ -6979,6 +7147,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The report status must be open, resolved or dismissed.'**
   String get errReportStatusInvalid;
+
+  /// No description provided for @errSearchQueryInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Type 1–100 characters, with at least one letter or digit.'**
+  String get errSearchQueryInvalid;
+
+  /// No description provided for @errSearchTypeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The search type must be articles, writers, topics or tags.'**
+  String get errSearchTypeInvalid;
+
+  /// No description provided for @errSearchFilterInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'These search filters aren\'t valid.'**
+  String get errSearchFilterInvalid;
 }
 
 class _AppLocalizationsDelegate

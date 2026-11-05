@@ -241,6 +241,15 @@ import '../../features/saved/domain/usecases/saved_usecases.dart' as _i724;
 import '../../features/saved/presentation/cubit/collections_cubit.dart'
     as _i272;
 import '../../features/saved/presentation/cubit/saved_list_cubit.dart' as _i339;
+import '../../features/search/data/datasources/recent_searches_store.dart'
+    as _i1027;
+import '../../features/search/data/datasources/search_api.dart' as _i478;
+import '../../features/search/data/repositories/search_repository_impl.dart'
+    as _i1017;
+import '../../features/search/domain/repositories/search_repository.dart'
+    as _i357;
+import '../../features/search/domain/usecases/search_usecases.dart' as _i212;
+import '../../features/search/presentation/cubit/search_cubit.dart' as _i341;
 import '../../features/settings/data/datasources/preferences_api.dart' as _i741;
 import '../../features/settings/data/datasources/settings_local_data_source.dart'
     as _i599;
@@ -354,6 +363,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i115.PhoneCountryMemory>(
       () => _i115.PhoneCountryMemory(gh<_i892.KeyValueStore>()),
     );
+    gh.lazySingleton<_i1027.RecentSearchesStore>(
+      () => _i1027.RecentSearchesStore(gh<_i892.KeyValueStore>()),
+    );
     gh.lazySingleton<_i599.SettingsLocalDataSource>(
       () => _i599.SettingsLocalDataSource(gh<_i892.KeyValueStore>()),
     );
@@ -447,6 +459,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i597.ReadingApi>(() => _i597.ReadingApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i693.SavedApi>(() => _i693.SavedApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i478.SearchApi>(() => _i478.SearchApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i741.PreferencesApi>(
       () => _i741.PreferencesApi(gh<_i361.Dio>()),
     );
@@ -500,6 +513,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i591.GetUserArticles>(
       () => _i591.GetUserArticles(gh<_i894.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i357.SearchRepository>(
+      () => _i1017.SearchRepositoryImpl(gh<_i478.SearchApi>()),
     );
     gh.lazySingleton<_i854.RealtimeService>(
       () => _i854.RealtimeService(
@@ -616,6 +632,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i520.GlossaryTermCubit>(
       () => _i520.GlossaryTermCubit(gh<_i86.GetGlossaryTerm>()),
+    );
+    gh.factory<_i212.SearchContent>(
+      () => _i212.SearchContent(gh<_i357.SearchRepository>()),
     );
     gh.factory<_i788.GetComments>(
       () => _i788.GetComments(gh<_i670.CommentsRepository>()),
@@ -995,6 +1014,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i509.FollowsCubit>(),
         userId,
         kind,
+      ),
+    );
+    gh.factory<_i341.SearchCubit>(
+      () => _i341.SearchCubit(
+        gh<_i212.SearchContent>(),
+        gh<_i1027.RecentSearchesStore>(),
+        gh<_i172.GetFields>(),
+        gh<_i509.FollowsCubit>(),
       ),
     );
     gh.lazySingleton<_i881.AccountDeviceData>(

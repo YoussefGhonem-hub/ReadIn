@@ -4078,6 +4078,100 @@ class AppLocalizationsEn extends AppLocalizations {
       'It may have been removed or renamed. Try another tag.';
 
   @override
+  String get searchHint => 'Search articles, writers, topics and tags';
+
+  @override
+  String get searchFieldHint => 'Search ReadIn';
+
+  @override
+  String get searchTabArticles => 'Articles';
+
+  @override
+  String get searchTabWriters => 'Writers';
+
+  @override
+  String get searchTabTopics => 'Topics';
+
+  @override
+  String get searchTabTags => 'Tags';
+
+  @override
+  String get searchRecentTitle => 'Recent searches';
+
+  @override
+  String get searchRecentClearAll => 'Clear all';
+
+  @override
+  String searchRecentRemove(String query) {
+    return 'Remove “$query” from recent searches';
+  }
+
+  @override
+  String get searchIdleTitle => 'What do you want to read about?';
+
+  @override
+  String get searchIdleBody =>
+      'Search articles, writers, topics and tags, in Arabic or English.';
+
+  @override
+  String searchNoResultsTitle(String query) {
+    return 'No results for “$query”';
+  }
+
+  @override
+  String get searchNoResultsTip =>
+      'Try another word or a shorter one, or look in another tab.';
+
+  @override
+  String get searchNoResultsFilteredTitle => 'No results with these filters';
+
+  @override
+  String searchNoResultsFiltersTip(String query) {
+    return 'Clear the filters to see everything that matches “$query”.';
+  }
+
+  @override
+  String get searchFoundInPdf => 'Found in the attached PDF';
+
+  @override
+  String get searchFilterField => 'Field';
+
+  @override
+  String get searchFilterLanguage => 'Article language';
+
+  @override
+  String get searchFilterReadingTime => 'Reading time';
+
+  @override
+  String searchFilterValue(String filter, String value) {
+    return '$filter: $value';
+  }
+
+  @override
+  String get searchFieldAll => 'All fields';
+
+  @override
+  String get searchLanguageAny => 'All languages';
+
+  @override
+  String get searchReadingTimeAny => 'Any length';
+
+  @override
+  String get searchReadingTimeUpTo5 => 'Up to 5 min';
+
+  @override
+  String get searchReadingTime5To10 => '5–10 min';
+
+  @override
+  String get searchReadingTimeOver10 => 'Over 10 min';
+
+  @override
+  String get searchClearFilters => 'Clear filters';
+
+  @override
+  String get searchKindField => 'Field';
+
+  @override
   String get errInterestsUnknown => 'Some fields or topics don\'t exist.';
 
   @override
@@ -4152,4 +4246,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errReportStatusInvalid =>
       'The report status must be open, resolved or dismissed.';
+
+  @override
+  String get errSearchQueryInvalid =>
+      'Type 1–100 characters, with at least one letter or digit.';
+
+  @override
+  String get errSearchTypeInvalid =>
+      'The search type must be articles, writers, topics or tags.';
+
+  @override
+  String get errSearchFilterInvalid => 'These search filters aren\'t valid.';
 }

@@ -14,14 +14,17 @@ import 'article_attachments_view.dart';
 /// Compact article row (mockup "article-card"): thumbnail, title, author ·
 /// reading time, reaction/comment counts, then the post's images or PDF
 /// pages full width (F26). Lists people scan rather than read keep it (Saved,
-/// learning paths, "Next in path", the editor's preview); feeds show the post
-/// card instead (F34).
+/// learning paths, "Next in path", the editor's preview, search results);
+/// feeds show the post card instead (F34). Search results leave the
+/// attachments out ([showAttachments]), like the web.
 class ArticleCardTile extends StatelessWidget {
   const ArticleCardTile({
     super.key,
     required this.article,
     required this.onTap,
     this.actions = const [],
+    this.note,
+    this.showAttachments = true,
   });
 
   final ArticleCard article;
@@ -29,6 +32,20 @@ class ArticleCardTile extends StatelessWidget {
 
   /// Buttons at the end of the counters line, e.g. save (F13).
   final List<Widget> actions;
+
+  /// A line under the counters, e.g. search's "Found in the attached PDF" (F16).
+  final Widget? note;
+
+  /// The post's images or PDF pages full width below the row. Without them (search results, F16) the thumbnail falls
+  /// back to the first image, or the PDF's first page, when the article has no cover.
+  final bool showAttachments;
+
+  String? get _thumbnailUrl {
+    final cover = article.coverUrl;
+    final attachments = article.attachments;
+    if ((cover != null && cover.isNotEmpty) || showAttachments || attachments == null) return cover;
+    return attachments.images.firstOrNull?.variants.firstOrNull?.url ?? attachments.document?.pages.firstOrNull?.thumbUrl;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,12 +55,12 @@ class ArticleCardTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s3),
         decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.border))),
-        child: article.attachments == null
-            ? _Summary(article: article, actions: actions)
+        child: !showAttachments || article.attachments == null
+            ? _Summary(article: article, thumbnailUrl: _thumbnailUrl, actions: actions, note: note)
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _Summary(article: article, actions: actions),
+                  _Summary(article: article, thumbnailUrl: _thumbnailUrl, actions: actions, note: note),
                   const SizedBox(height: ReadInSpace.s3),
                   ArticleAttachmentsView(article: article),
                 ],
@@ -54,10 +71,12 @@ class ArticleCardTile extends StatelessWidget {
 }
 
 class _Summary extends StatelessWidget {
-  const _Summary({required this.article, required this.actions});
+  const _Summary({required this.article, required this.thumbnailUrl, required this.actions, this.note});
 
   final ArticleCard article;
+  final String? thumbnailUrl;
   final List<Widget> actions;
+  final Widget? note;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +89,7 @@ class _Summary extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ArticleThumbnail(url: article.coverUrl),
+        ArticleThumbnail(url: thumbnailUrl),
         const SizedBox(width: ReadInSpace.s3),
         Expanded(
           child: Column(
@@ -120,6 +139,7 @@ class _Summary extends StatelessWidget {
                 _Counts(article: article)
               else
                 Row(children: [Expanded(child: _Counts(article: article)), ...actions]),
+              if (note case final note?) ...[const SizedBox(height: ReadInSpace.s1), note],
             ],
           ),
         ),
