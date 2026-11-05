@@ -1425,7 +1425,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteAccountDeletedActivity =>
-      'اهتماماتك وتقدّمك في القراية وإحصائياتك، وتفاعلاتك وإعادات نشرك وإعجاباتك بالتعليقات والبلاغات اللي بعتّها، والمقالات المحفوظة والمجموعات، وأقسام مقالاتك (مقالاتك المنشورة بتفضل من غير قسم)، واللي بتتابعهم واللي بيتابعوك، والكتّاب والمجالات والمواضيع اللي كتمتها (وكتم الناس ليك)، واختياراتك \"قلّل من النوع ده\"';
+      'اهتماماتك وتقدّمك في القراية وإحصائياتك، وتفاعلاتك وإعادات نشرك والجمل اللي علّمتها (الـ Highlights) وإعجاباتك بالتعليقات والبلاغات اللي بعتّها، والمقالات المحفوظة والمجموعات، وأقسام مقالاتك (مقالاتك المنشورة بتفضل من غير قسم)، واللي بتتابعهم واللي بيتابعوك، والكتّاب والمجالات والمواضيع اللي كتمتها (وكتم الناس ليك)، واختياراتك \"قلّل من النوع ده\"';
 
   @override
   String get deleteAccountDeletedDevices =>
@@ -5105,4 +5105,78 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get suggestedPathTitle => 'مسار مقترح';
+
+  @override
+  String get highlightAction => 'علّم';
+
+  @override
+  String get highlightRemove => 'شيل العلامة';
+
+  @override
+  String highlightCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count قارئ علّموا الجملة دي',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get highlightAdded => 'اتعلّمت';
+
+  @override
+  String get highlightRemoved => 'اتشالت العلامة';
+
+  @override
+  String get highlightMenuHide => 'إخفاء الـ Highlights';
+
+  @override
+  String get highlightMenuShow => 'إظهار الـ Highlights';
+
+  @override
+  String get highlightSettingTitle => 'إظهار الـ Highlights';
+
+  @override
+  String get highlightSettingHint =>
+      'علاماتك والجمل اللي قرّاء كتير علّموها جوه المقالات.';
+
+  @override
+  String get highlightSavedTab => 'الـ Highlights';
+
+  @override
+  String get highlightSavedEmptyTitle => 'لسه معلّمتش على أي جملة';
+
+  @override
+  String get highlightSavedEmptyBody =>
+      'اختار جملة في أي مقال ودوس «علّم»، وهتلاقيها هنا.';
+
+  @override
+  String get highlightSavedOpen => 'افتح المقال عند الجملة دي';
+
+  @override
+  String get highlightSavedVersionAr => 'النسخة العربي';
+
+  @override
+  String get highlightSavedVersionEn => 'النسخة الإنجليزي';
+
+  @override
+  String get errHighlightTextMismatch =>
+      'النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.';
+
+  @override
+  String get errHighlightBlockNotAllowed => 'مينفعش تعمل Highlight للجزء ده.';
+
+  @override
+  String get errHighlightTooShort => 'اختار 3 حروف على الأقل.';
+
+  @override
+  String get errHighlightTooLong => 'الـ Highlight لازم يكون 1000 حرف أو أقل.';
+
+  @override
+  String get errHighlightLimit =>
+      'وصلت لأقصى عدد Highlights في المقال ده (100).';
+
+  @override
+  String get errHighlightNotFound => 'الـ Highlight ده مش موجود.';
 }

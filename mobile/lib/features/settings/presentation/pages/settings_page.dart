@@ -9,6 +9,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/cubit/linked_accounts_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../highlights/presentation/widgets/show_highlights_switch.dart';
 import '../../../moderation/presentation/cubit/moderation_summary_cubit.dart';
 import '../../../moderation/presentation/widgets/moderation_entry_tile.dart';
 import '../../../mutes/presentation/pages/muted_page.dart';
@@ -132,6 +133,8 @@ class _SettingsViewState extends State<SettingsView> {
             const FontSizeSelector(),
             const SizedBox(height: ReadInSpace.s3),
             const ReminderTimeTile(confirmSaved: true),
+            // Highlights in the reader (F30): guests too, kept on the device.
+            const ShowHighlightsSwitch(),
             // Fields and topics followed after onboarding (F02, F12).
             if (session.isAuthenticated) const _InterestsEntry(),
             // The writers, fields and topics muted from an article's "⋯" (F28), next to what you follow.

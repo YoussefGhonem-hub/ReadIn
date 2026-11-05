@@ -62,6 +62,16 @@ class SettingsCubit extends Cubit<AppSettings> {
 
   Future<Failure?> setFontSize(ArticleFontSize size) => _update(state.copyWith(fontSize: size));
 
+  /// "Hide highlights" / "Show highlights" (F30): the reader's "⋯" item and Settings. Saved to the account when signed in
+  /// (going back to what the account has when that fails); a guest's choice stays on this device.
+  Future<Failure?> setShowHighlights(bool show) {
+    final previous = state.showHighlights;
+    return _update(
+      state.copyWith(showHighlights: show),
+      revert: (current) => current.copyWith(showHighlights: previous),
+    );
+  }
+
   Future<void> markWelcomeSeen() => _update(state.copyWith(welcomeSeen: true));
 
   /// Called when the session changes. For an existing account the profile is
@@ -80,6 +90,7 @@ class SettingsCubit extends Cubit<AppSettings> {
       uiLanguage: me.uiLanguage,
       articleLanguage: me.articleLanguage,
       reminderTime: me.reminderTime,
+      showHighlights: me.showHighlights,
     );
     await _apply(fromProfile, push: false);
   }

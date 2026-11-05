@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UpdatePreferencesRequest {
 
- String get uiLanguage; String get articleLanguage; String get theme; String get timeZone; String get reminderTime;
+ String get uiLanguage; String get articleLanguage; String get theme; String get timeZone; String get reminderTime;// F30 "Hide highlights": left out (null) keeps the account's setting.
+ bool? get showHighlights;
 /// Create a copy of UpdatePreferencesRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +29,16 @@ $UpdatePreferencesRequestCopyWith<UpdatePreferencesRequest> get copyWith => _$Up
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UpdatePreferencesRequest&&(identical(other.uiLanguage, uiLanguage) || other.uiLanguage == uiLanguage)&&(identical(other.articleLanguage, articleLanguage) || other.articleLanguage == articleLanguage)&&(identical(other.theme, theme) || other.theme == theme)&&(identical(other.timeZone, timeZone) || other.timeZone == timeZone)&&(identical(other.reminderTime, reminderTime) || other.reminderTime == reminderTime));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UpdatePreferencesRequest&&(identical(other.uiLanguage, uiLanguage) || other.uiLanguage == uiLanguage)&&(identical(other.articleLanguage, articleLanguage) || other.articleLanguage == articleLanguage)&&(identical(other.theme, theme) || other.theme == theme)&&(identical(other.timeZone, timeZone) || other.timeZone == timeZone)&&(identical(other.reminderTime, reminderTime) || other.reminderTime == reminderTime)&&(identical(other.showHighlights, showHighlights) || other.showHighlights == showHighlights));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,uiLanguage,articleLanguage,theme,timeZone,reminderTime);
+int get hashCode => Object.hash(runtimeType,uiLanguage,articleLanguage,theme,timeZone,reminderTime,showHighlights);
 
 @override
 String toString() {
-  return 'UpdatePreferencesRequest(uiLanguage: $uiLanguage, articleLanguage: $articleLanguage, theme: $theme, timeZone: $timeZone, reminderTime: $reminderTime)';
+  return 'UpdatePreferencesRequest(uiLanguage: $uiLanguage, articleLanguage: $articleLanguage, theme: $theme, timeZone: $timeZone, reminderTime: $reminderTime, showHighlights: $showHighlights)';
 }
 
 
@@ -48,7 +49,7 @@ abstract mixin class $UpdatePreferencesRequestCopyWith<$Res>  {
   factory $UpdatePreferencesRequestCopyWith(UpdatePreferencesRequest value, $Res Function(UpdatePreferencesRequest) _then) = _$UpdatePreferencesRequestCopyWithImpl;
 @useResult
 $Res call({
- String uiLanguage, String articleLanguage, String theme, String timeZone, String reminderTime
+ String uiLanguage, String articleLanguage, String theme, String timeZone, String reminderTime, bool? showHighlights
 });
 
 
@@ -65,14 +66,15 @@ class _$UpdatePreferencesRequestCopyWithImpl<$Res>
 
 /// Create a copy of UpdatePreferencesRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? uiLanguage = null,Object? articleLanguage = null,Object? theme = null,Object? timeZone = null,Object? reminderTime = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? uiLanguage = null,Object? articleLanguage = null,Object? theme = null,Object? timeZone = null,Object? reminderTime = null,Object? showHighlights = freezed,}) {
   return _then(_self.copyWith(
 uiLanguage: null == uiLanguage ? _self.uiLanguage : uiLanguage // ignore: cast_nullable_to_non_nullable
 as String,articleLanguage: null == articleLanguage ? _self.articleLanguage : articleLanguage // ignore: cast_nullable_to_non_nullable
 as String,theme: null == theme ? _self.theme : theme // ignore: cast_nullable_to_non_nullable
 as String,timeZone: null == timeZone ? _self.timeZone : timeZone // ignore: cast_nullable_to_non_nullable
 as String,reminderTime: null == reminderTime ? _self.reminderTime : reminderTime // ignore: cast_nullable_to_non_nullable
-as String,
+as String,showHighlights: freezed == showHighlights ? _self.showHighlights : showHighlights // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 
@@ -157,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime,  bool? showHighlights)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UpdatePreferencesRequest() when $default != null:
-return $default(_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime);case _:
+return $default(_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime,_that.showHighlights);case _:
   return orElse();
 
 }
@@ -178,10 +180,10 @@ return $default(_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZon
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime,  bool? showHighlights)  $default,) {final _that = this;
 switch (_that) {
 case _UpdatePreferencesRequest():
-return $default(_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime);case _:
+return $default(_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime,_that.showHighlights);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +200,10 @@ return $default(_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZon
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uiLanguage,  String articleLanguage,  String theme,  String timeZone,  String reminderTime,  bool? showHighlights)?  $default,) {final _that = this;
 switch (_that) {
 case _UpdatePreferencesRequest() when $default != null:
-return $default(_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime);case _:
+return $default(_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZone,_that.reminderTime,_that.showHighlights);case _:
   return null;
 
 }
@@ -213,7 +215,7 @@ return $default(_that.uiLanguage,_that.articleLanguage,_that.theme,_that.timeZon
 @JsonSerializable()
 
 class _UpdatePreferencesRequest implements UpdatePreferencesRequest {
-  const _UpdatePreferencesRequest({required this.uiLanguage, required this.articleLanguage, required this.theme, required this.timeZone, required this.reminderTime});
+  const _UpdatePreferencesRequest({required this.uiLanguage, required this.articleLanguage, required this.theme, required this.timeZone, required this.reminderTime, this.showHighlights});
   factory _UpdatePreferencesRequest.fromJson(Map<String, dynamic> json) => _$UpdatePreferencesRequestFromJson(json);
 
 @override final  String uiLanguage;
@@ -221,6 +223,8 @@ class _UpdatePreferencesRequest implements UpdatePreferencesRequest {
 @override final  String theme;
 @override final  String timeZone;
 @override final  String reminderTime;
+// F30 "Hide highlights": left out (null) keeps the account's setting.
+@override final  bool? showHighlights;
 
 /// Create a copy of UpdatePreferencesRequest
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +239,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpdatePreferencesRequest&&(identical(other.uiLanguage, uiLanguage) || other.uiLanguage == uiLanguage)&&(identical(other.articleLanguage, articleLanguage) || other.articleLanguage == articleLanguage)&&(identical(other.theme, theme) || other.theme == theme)&&(identical(other.timeZone, timeZone) || other.timeZone == timeZone)&&(identical(other.reminderTime, reminderTime) || other.reminderTime == reminderTime));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpdatePreferencesRequest&&(identical(other.uiLanguage, uiLanguage) || other.uiLanguage == uiLanguage)&&(identical(other.articleLanguage, articleLanguage) || other.articleLanguage == articleLanguage)&&(identical(other.theme, theme) || other.theme == theme)&&(identical(other.timeZone, timeZone) || other.timeZone == timeZone)&&(identical(other.reminderTime, reminderTime) || other.reminderTime == reminderTime)&&(identical(other.showHighlights, showHighlights) || other.showHighlights == showHighlights));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,uiLanguage,articleLanguage,theme,timeZone,reminderTime);
+int get hashCode => Object.hash(runtimeType,uiLanguage,articleLanguage,theme,timeZone,reminderTime,showHighlights);
 
 @override
 String toString() {
-  return 'UpdatePreferencesRequest(uiLanguage: $uiLanguage, articleLanguage: $articleLanguage, theme: $theme, timeZone: $timeZone, reminderTime: $reminderTime)';
+  return 'UpdatePreferencesRequest(uiLanguage: $uiLanguage, articleLanguage: $articleLanguage, theme: $theme, timeZone: $timeZone, reminderTime: $reminderTime, showHighlights: $showHighlights)';
 }
 
 
@@ -255,7 +259,7 @@ abstract mixin class _$UpdatePreferencesRequestCopyWith<$Res> implements $Update
   factory _$UpdatePreferencesRequestCopyWith(_UpdatePreferencesRequest value, $Res Function(_UpdatePreferencesRequest) _then) = __$UpdatePreferencesRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String uiLanguage, String articleLanguage, String theme, String timeZone, String reminderTime
+ String uiLanguage, String articleLanguage, String theme, String timeZone, String reminderTime, bool? showHighlights
 });
 
 
@@ -272,14 +276,15 @@ class __$UpdatePreferencesRequestCopyWithImpl<$Res>
 
 /// Create a copy of UpdatePreferencesRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? uiLanguage = null,Object? articleLanguage = null,Object? theme = null,Object? timeZone = null,Object? reminderTime = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? uiLanguage = null,Object? articleLanguage = null,Object? theme = null,Object? timeZone = null,Object? reminderTime = null,Object? showHighlights = freezed,}) {
   return _then(_UpdatePreferencesRequest(
 uiLanguage: null == uiLanguage ? _self.uiLanguage : uiLanguage // ignore: cast_nullable_to_non_nullable
 as String,articleLanguage: null == articleLanguage ? _self.articleLanguage : articleLanguage // ignore: cast_nullable_to_non_nullable
 as String,theme: null == theme ? _self.theme : theme // ignore: cast_nullable_to_non_nullable
 as String,timeZone: null == timeZone ? _self.timeZone : timeZone // ignore: cast_nullable_to_non_nullable
 as String,reminderTime: null == reminderTime ? _self.reminderTime : reminderTime // ignore: cast_nullable_to_non_nullable
-as String,
+as String,showHighlights: freezed == showHighlights ? _self.showHighlights : showHighlights // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 

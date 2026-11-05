@@ -14,6 +14,7 @@ _UpdatePreferencesRequest _$UpdatePreferencesRequestFromJson(
   theme: json['theme'] as String,
   timeZone: json['timeZone'] as String,
   reminderTime: json['reminderTime'] as String,
+  showHighlights: json['showHighlights'] as bool?,
 );
 
 Map<String, dynamic> _$UpdatePreferencesRequestToJson(
@@ -24,4 +25,5 @@ Map<String, dynamic> _$UpdatePreferencesRequestToJson(
   'theme': instance.theme,
   'timeZone': instance.timeZone,
   'reminderTime': instance.reminderTime,
+  'showHighlights': ?instance.showHighlights,
 };

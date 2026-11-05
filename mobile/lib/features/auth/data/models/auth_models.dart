@@ -32,6 +32,8 @@ abstract class MeModel with _$MeModel {
     @Default('system') String theme,
     @Default('UTC') String timeZone,
     @Default('08:00') String reminderTime,
+    // F30 "Hide highlights"; older APIs leave it out (shown).
+    @Default(true) bool showHighlights,
     @Default(false) bool isVerified,
     @Default(false) bool onboardingCompleted,
     @Default(false) bool mustChangePassword,
@@ -65,6 +67,7 @@ abstract class MeModel with _$MeModel {
         theme: theme,
         timeZone: timeZone,
         reminderTime: reminderTime,
+        showHighlights: showHighlights,
         isVerified: isVerified,
         onboardingCompleted: onboardingCompleted,
         mustChangePassword: mustChangePassword,

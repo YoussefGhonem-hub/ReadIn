@@ -4,6 +4,7 @@ import '../../../core/bidi/bidi.dart';
 import '../../../core/l10n/l10n_x.dart';
 import '../../../core/theme/theme_x.dart';
 import '../../../core/theme/tokens.g.dart';
+import '../highlights/rdoc_highlights.dart' show RHighlightExcluded;
 import '../rdoc_document.dart';
 import '../rdoc_scope.dart';
 import '../rdoc_text.dart';
@@ -35,7 +36,7 @@ class RParagraphView extends StatelessWidget {
     final dir = resolveBlockDir(context, block.dir, block.content);
     return Directionality(
       textDirection: dir,
-      child: RDocText(block.content, style: rdocBodyStyle(context, dir), direction: dir),
+      child: RDocText(block.content, style: rdocBodyStyle(context, dir), direction: dir, unit: 0),
     );
   }
 }
@@ -55,7 +56,7 @@ class RHeadingView extends StatelessWidget {
       header: true,
       child: Padding(
         padding: const EdgeInsetsDirectional.only(top: ReadInSpace.s3),
-        child: Directionality(textDirection: dir, child: RDocText(block.content, style: style, direction: dir)),
+        child: Directionality(textDirection: dir, child: RDocText(block.content, style: style, direction: dir, unit: 0)),
       ),
     );
   }
@@ -84,12 +85,15 @@ class RListView extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 28,
-                    child: Text(
-                      block.ordered ? '${i + 1}.' : '•',
-                      style: style.copyWith(color: context.colors.primary, fontWeight: FontWeight.w600),
+                    // Bullets and numbers are never part of a highlight (F30).
+                    child: RHighlightExcluded(
+                      child: Text(
+                        block.ordered ? '${i + 1}.' : '•',
+                        style: style.copyWith(color: context.colors.primary, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                  Expanded(child: RDocText(block.items[i], style: style, direction: dir)),
+                  Expanded(child: RDocText(block.items[i], style: style, direction: dir, unit: i)),
                 ],
               ),
             ),
@@ -181,7 +185,7 @@ class RQuoteView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            RDocText(block.content, style: style, direction: dir),
+            RDocText(block.content, style: style, direction: dir, unit: 0),
             if (block.cite != null && block.cite!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: ReadInSpace.s1),
@@ -237,7 +241,7 @@ class RCalloutView extends StatelessWidget {
                       Bidi.isolateOppositeRuns(block.title!, dir),
                       style: style.copyWith(fontWeight: FontWeight.w700, height: 1.5),
                     ),
-                  RDocText(block.content, style: style, direction: dir),
+                  RDocText(block.content, style: style, direction: dir, unit: 0),
                 ],
               ),
             ),
@@ -259,7 +263,7 @@ class RSummaryView extends StatelessWidget {
     final dir = resolveBlockDir(context, block.dir, block.content);
     return SummaryBox(
       direction: dir,
-      child: RDocText(block.content, style: rdocBodyStyle(context, dir, factor: 0.94), direction: dir),
+      child: RDocText(block.content, style: rdocBodyStyle(context, dir, factor: 0.94), direction: dir, unit: 0),
     );
   }
 }
@@ -281,9 +285,12 @@ class SummaryBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.l10n.tldr,
-            style: context.textTheme.labelMedium?.copyWith(color: colors.onPrimaryContainer, fontWeight: FontWeight.w700),
+          // The label is never part of a highlight (F30).
+          RHighlightExcluded(
+            child: Text(
+              context.l10n.tldr,
+              style: context.textTheme.labelMedium?.copyWith(color: colors.onPrimaryContainer, fontWeight: FontWeight.w700),
+            ),
           ),
           const SizedBox(height: ReadInSpace.s1),
           Directionality(textDirection: direction, child: child),

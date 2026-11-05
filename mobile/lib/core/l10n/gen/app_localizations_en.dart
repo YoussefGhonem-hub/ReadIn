@@ -1428,7 +1428,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountDeletedActivity =>
-      'Your interests, reading progress and stats, reactions, reposts, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people\'s mutes of you), and your \"Show less like this\" marks';
+      'Your interests, reading progress and stats, reactions, reposts, highlights, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people\'s mutes of you), and your \"Show less like this\" marks';
 
   @override
   String get deleteAccountDeletedDevices =>
@@ -5048,4 +5048,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suggestedPathTitle => 'Suggested path';
+
+  @override
+  String get highlightAction => 'Highlight';
+
+  @override
+  String get highlightRemove => 'Remove highlight';
+
+  @override
+  String highlightCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count readers highlighted this',
+      one: '1 reader highlighted this',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get highlightAdded => 'Highlighted';
+
+  @override
+  String get highlightRemoved => 'Highlight removed';
+
+  @override
+  String get highlightMenuHide => 'Hide highlights';
+
+  @override
+  String get highlightMenuShow => 'Show highlights';
+
+  @override
+  String get highlightSettingTitle => 'Show highlights';
+
+  @override
+  String get highlightSettingHint =>
+      'Your highlights and the sentences many readers marked, in articles.';
+
+  @override
+  String get highlightSavedTab => 'Highlights';
+
+  @override
+  String get highlightSavedEmptyTitle => 'No highlights yet';
+
+  @override
+  String get highlightSavedEmptyBody =>
+      'Select a sentence in an article and tap Highlight to keep it here.';
+
+  @override
+  String get highlightSavedOpen => 'Open the article at this highlight';
+
+  @override
+  String get highlightSavedVersionAr => 'Arabic version';
+
+  @override
+  String get highlightSavedVersionEn => 'English version';
+
+  @override
+  String get errHighlightTextMismatch =>
+      'This text has changed in the article. Reload and try again.';
+
+  @override
+  String get errHighlightBlockNotAllowed => 'This part can\'t be highlighted.';
+
+  @override
+  String get errHighlightTooShort => 'Select at least 3 characters.';
+
+  @override
+  String get errHighlightTooLong =>
+      'A highlight can be at most 1,000 characters.';
+
+  @override
+  String get errHighlightLimit =>
+      'You can have at most 100 highlights in one article.';
+
+  @override
+  String get errHighlightNotFound => 'Highlight not found.';
 }

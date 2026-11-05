@@ -20,6 +20,7 @@ class Me extends Equatable {
     this.theme = 'system',
     this.timeZone = 'UTC',
     this.reminderTime = '08:00',
+    this.showHighlights = true,
     this.isVerified = false,
     this.onboardingCompleted = false,
     this.mustChangePassword = false,
@@ -58,6 +59,9 @@ class Me extends Equatable {
   final String theme;
   final String timeZone;
   final String reminderTime;
+
+  /// `showHighlights`: the reader draws highlights (F30, "Hide highlights"); synced through `PUT /me/preferences`.
+  final bool showHighlights;
   final bool isVerified;
   final bool onboardingCompleted;
 
@@ -113,6 +117,7 @@ class Me extends Equatable {
         theme,
         timeZone,
         reminderTime,
+        showHighlights,
         isVerified,
         onboardingCompleted,
         mustChangePassword,

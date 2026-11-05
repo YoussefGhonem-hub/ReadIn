@@ -2555,7 +2555,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountDeletedActivity.
   ///
   /// In en, this message translates to:
-  /// **'Your interests, reading progress and stats, reactions, reposts, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people\'s mutes of you), and your \"Show less like this\" marks'**
+  /// **'Your interests, reading progress and stats, reactions, reposts, highlights, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers, the writers, fields and topics you muted (and other people\'s mutes of you), and your \"Show less like this\" marks'**
   String get deleteAccountDeletedActivity;
 
   /// No description provided for @deleteAccountDeletedDevices.
@@ -8443,6 +8443,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Suggested path'**
   String get suggestedPathTitle;
+
+  /// No description provided for @highlightAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight'**
+  String get highlightAction;
+
+  /// No description provided for @highlightRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove highlight'**
+  String get highlightRemove;
+
+  /// No description provided for @highlightCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 reader highlighted this} other{{count} readers highlighted this}}'**
+  String highlightCount(int count);
+
+  /// No description provided for @highlightAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlighted'**
+  String get highlightAdded;
+
+  /// No description provided for @highlightRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight removed'**
+  String get highlightRemoved;
+
+  /// No description provided for @highlightMenuHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide highlights'**
+  String get highlightMenuHide;
+
+  /// No description provided for @highlightMenuShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show highlights'**
+  String get highlightMenuShow;
+
+  /// No description provided for @highlightSettingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show highlights'**
+  String get highlightSettingTitle;
+
+  /// No description provided for @highlightSettingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your highlights and the sentences many readers marked, in articles.'**
+  String get highlightSettingHint;
+
+  /// No description provided for @highlightSavedTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlights'**
+  String get highlightSavedTab;
+
+  /// No description provided for @highlightSavedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No highlights yet'**
+  String get highlightSavedEmptyTitle;
+
+  /// No description provided for @highlightSavedEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a sentence in an article and tap Highlight to keep it here.'**
+  String get highlightSavedEmptyBody;
+
+  /// No description provided for @highlightSavedOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the article at this highlight'**
+  String get highlightSavedOpen;
+
+  /// No description provided for @highlightSavedVersionAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic version'**
+  String get highlightSavedVersionAr;
+
+  /// No description provided for @highlightSavedVersionEn.
+  ///
+  /// In en, this message translates to:
+  /// **'English version'**
+  String get highlightSavedVersionEn;
+
+  /// No description provided for @errHighlightTextMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This text has changed in the article. Reload and try again.'**
+  String get errHighlightTextMismatch;
+
+  /// No description provided for @errHighlightBlockNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This part can\'t be highlighted.'**
+  String get errHighlightBlockNotAllowed;
+
+  /// No description provided for @errHighlightTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least 3 characters.'**
+  String get errHighlightTooShort;
+
+  /// No description provided for @errHighlightTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'A highlight can be at most 1,000 characters.'**
+  String get errHighlightTooLong;
+
+  /// No description provided for @errHighlightLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can have at most 100 highlights in one article.'**
+  String get errHighlightLimit;
+
+  /// No description provided for @errHighlightNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight not found.'**
+  String get errHighlightNotFound;
 }
 
 class _AppLocalizationsDelegate

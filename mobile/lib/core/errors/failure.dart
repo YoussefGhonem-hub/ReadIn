@@ -184,6 +184,14 @@ abstract final class FailureCodes {
   // Repost (F29)
   static const repostOwnArticle = 'repost.own_article';
 
+  // Highlights (F30)
+  static const highlightTextMismatch = 'highlight.text_mismatch';
+  static const highlightBlockNotAllowed = 'highlight.block_not_allowed';
+  static const highlightTooShort = 'highlight.too_short';
+  static const highlightTooLong = 'highlight.too_long';
+  static const highlightLimit = 'highlight.limit';
+  static const highlightNotFound = 'highlight.not_found';
+
   // Comments (F11)
   static const commentNotFound = 'comment.not_found';
   static const commentNotOwner = 'comment.not_owner';

@@ -148,6 +148,18 @@ import '../../features/glossary/presentation/cubit/glossary_search_cubit.dart'
     as _i463;
 import '../../features/glossary/presentation/cubit/glossary_term_cubit.dart'
     as _i520;
+import '../../features/highlights/data/datasources/highlights_api.dart'
+    as _i188;
+import '../../features/highlights/data/repositories/highlights_repository_impl.dart'
+    as _i665;
+import '../../features/highlights/domain/repositories/highlights_repository.dart'
+    as _i121;
+import '../../features/highlights/domain/usecases/highlight_usecases.dart'
+    as _i159;
+import '../../features/highlights/presentation/cubit/article_highlights_cubit.dart'
+    as _i984;
+import '../../features/highlights/presentation/cubit/my_highlights_cubit.dart'
+    as _i1027;
 import '../../features/home/data/datasources/feed_api.dart' as _i931;
 import '../../features/home/data/repositories/feed_repository_impl.dart'
     as _i198;
@@ -490,6 +502,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i234.GlossaryApi>(
       () => _i234.GlossaryApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i188.HighlightsApi>(
+      () => _i188.HighlightsApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i931.FeedApi>(() => _i931.FeedApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i757.MediaApi>(() => _i757.MediaApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i320.ModerationApi>(
@@ -613,6 +628,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i954.FeedRepository>(
       () => _i198.FeedRepositoryImpl(gh<_i931.FeedApi>()),
+    );
+    gh.lazySingleton<_i121.HighlightsRepository>(
+      () => _i665.HighlightsRepositoryImpl(gh<_i188.HighlightsApi>()),
     );
     gh.lazySingleton<_i760.FollowRepository>(
       () => _i299.FollowRepositoryImpl(gh<_i73.FollowApi>()),
@@ -786,6 +804,15 @@ extension GetItInjectableX on _i174.GetIt {
       (ranking, _) =>
           _i742.ExploreRankingCubit(gh<_i248.GetExploreRanking>(), ranking),
     );
+    gh.factory<_i159.GetArticleHighlights>(
+      () => _i159.GetArticleHighlights(gh<_i121.HighlightsRepository>()),
+    );
+    gh.factory<_i159.EditHighlights>(
+      () => _i159.EditHighlights(gh<_i121.HighlightsRepository>()),
+    );
+    gh.factory<_i159.GetMyHighlights>(
+      () => _i159.GetMyHighlights(gh<_i121.HighlightsRepository>()),
+    );
     gh.factory<_i864.GetNotifications>(
       () => _i864.GetNotifications(gh<_i563.NotificationsRepository>()),
     );
@@ -908,6 +935,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i924.SetPathEnrollment>(
       () => _i924.SetPathEnrollment(gh<_i755.PathsRepository>()),
     );
+    gh.factory<_i984.ArticleHighlightsCubit>(
+      () => _i984.ArticleHighlightsCubit(
+        gh<_i159.GetArticleHighlights>(),
+        gh<_i159.EditHighlights>(),
+      ),
+    );
     gh.factory<_i360.MentionSuggestionsCubit>(
       () => _i360.MentionSuggestionsCubit(gh<_i788.SuggestMentions>()),
     );
@@ -983,6 +1016,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factoryParam<_i835.UserPathsCubit, String, dynamic>(
       (username, _) => _i835.UserPathsCubit(gh<_i924.GetUserPaths>(), username),
+    );
+    gh.factory<_i1027.MyHighlightsCubit>(
+      () => _i1027.MyHighlightsCubit(gh<_i159.GetMyHighlights>()),
     );
     gh.factory<_i535.SaveInterests>(
       () => _i535.SaveInterests(gh<_i185.InterestsRepository>()),

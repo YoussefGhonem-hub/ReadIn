@@ -5,8 +5,8 @@ enum ThemePreference { system, light, dark }
 /// Reader font size control S / M / L / XL (SPEC §11 F04).
 enum ArticleFontSize { s, m, l, xl }
 
-/// Local app preferences (SPEC §11 F18). Theme, languages and reminder time
-/// are synced to the profile when signed in; the rest is device-only. Notification preferences live on the server
+/// Local app preferences (SPEC §11 F18). Theme, languages, reminder time and "Show highlights" (F30)
+/// are synced to the profile when signed in; the rest is device-only. A guest's "Show highlights" stays on the device. Notification preferences live on the server
 /// (F17, `NotificationSettings`).
 class AppSettings extends Equatable {
   const AppSettings({
@@ -16,6 +16,7 @@ class AppSettings extends Equatable {
     this.reminderTime = '08:00',
     this.fontSize = ArticleFontSize.m,
     this.welcomeSeen = false,
+    this.showHighlights = true,
   });
 
   final ThemePreference theme;
@@ -33,6 +34,9 @@ class AppSettings extends Equatable {
   /// The onboarding welcome step was shown once (guests may skip sign-up).
   final bool welcomeSeen;
 
+  /// The reader draws highlights, yours and popular ones, and offers the Highlight toolbar (F30).
+  final bool showHighlights;
+
   AppSettings copyWith({
     ThemePreference? theme,
     String? uiLanguage,
@@ -40,6 +44,7 @@ class AppSettings extends Equatable {
     String? reminderTime,
     ArticleFontSize? fontSize,
     bool? welcomeSeen,
+    bool? showHighlights,
   }) =>
       AppSettings(
         theme: theme ?? this.theme,
@@ -48,6 +53,7 @@ class AppSettings extends Equatable {
         reminderTime: reminderTime ?? this.reminderTime,
         fontSize: fontSize ?? this.fontSize,
         welcomeSeen: welcomeSeen ?? this.welcomeSeen,
+        showHighlights: showHighlights ?? this.showHighlights,
       );
 
   /// True when a field that lives on the server profile differs.
@@ -55,8 +61,9 @@ class AppSettings extends Equatable {
       theme != other.theme ||
       uiLanguage != other.uiLanguage ||
       articleLanguage != other.articleLanguage ||
-      reminderTime != other.reminderTime;
+      reminderTime != other.reminderTime ||
+      showHighlights != other.showHighlights;
 
   @override
-  List<Object?> get props => [theme, uiLanguage, articleLanguage, reminderTime, fontSize, welcomeSeen];
+  List<Object?> get props => [theme, uiLanguage, articleLanguage, reminderTime, fontSize, welcomeSeen, showHighlights];
 }

@@ -12,6 +12,8 @@ abstract class UpdatePreferencesRequest with _$UpdatePreferencesRequest {
     required String theme,
     required String timeZone,
     required String reminderTime,
+    // F30 "Hide highlights": left out (null) keeps the account's setting.
+    bool? showHighlights,
   }) = _UpdatePreferencesRequest;
 
   factory UpdatePreferencesRequest.fromJson(Map<String, dynamic> json) => _$UpdatePreferencesRequestFromJson(json);

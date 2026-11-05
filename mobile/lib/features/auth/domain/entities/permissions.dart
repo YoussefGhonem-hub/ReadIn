@@ -17,6 +17,9 @@ abstract final class Permissions {
 
   /// Suspend and unsuspend accounts (holders of the permission: today the SuperAdmin; F22).
   static const usersSuspend = 'users.suspend';
+
+  /// Highlight sentences in articles and remove your highlights (every Member, F30).
+  static const highlightsCreate = 'highlights.create';
 }
 
 extension MePermissions on Me {
@@ -28,4 +31,7 @@ extension MePermissions on Me {
 
   /// Can suspend and unsuspend accounts.
   bool get canSuspend => can(Permissions.usersSuspend);
+
+  /// Gets the reader's Highlight toolbar (F30).
+  bool get canHighlight => can(Permissions.highlightsCreate);
 }

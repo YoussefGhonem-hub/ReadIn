@@ -14,6 +14,8 @@ import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../categories/presentation/widgets/categories_tab.dart';
+import '../../../highlights/presentation/cubit/my_highlights_cubit.dart';
+import '../../../highlights/presentation/widgets/saved_highlights_list.dart';
 import '../../../moderation/presentation/cubit/moderation_action_cubit.dart';
 import '../../../mutes/presentation/widgets/muted_writer_banner.dart';
 import '../../../saved/presentation/cubit/saved_list_cubit.dart';
@@ -239,7 +241,7 @@ class _ProfileContent extends StatelessWidget {
             ProfileArticlesTab(profile: profile, onWrite: isMe ? () => context.go('/write') : null),
             ProfileCategoriesTab(username: profile.username, isMe: isMe, leading: profileTabOverlap),
             ProfileRepostsTab(profile: profile),
-            if (isMe) const SavedArticlesList(leading: profileTabOverlap),
+            if (isMe) const _ProfileSavedTab(),
             ProfilePathsTab(profile: profile),
             ProfileAboutTab(profile: profile, onEdit: isMe ? onEdit : null),
           ],
@@ -247,6 +249,48 @@ class _ProfileContent extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The own profile's Saved tab (F14): the saved articles, and the Highlights section (F30) from the switch at its top.
+/// The highlights load when the section is first shown.
+class _ProfileSavedTab extends StatefulWidget {
+  const _ProfileSavedTab();
+
+  @override
+  State<_ProfileSavedTab> createState() => _ProfileSavedTabState();
+}
+
+class _ProfileSavedTabState extends State<_ProfileSavedTab> {
+  bool _highlights = false;
+
+  Widget _leading(BuildContext context) {
+    final l10n = context.l10n;
+    return SliverMainAxisGroup(
+      slivers: [
+        profileTabOverlap(context),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s4, ReadInSpace.s5, 0),
+          sliver: SliverToBoxAdapter(
+            child: SegmentedButton<bool>(
+              showSelectedIcon: false,
+              segments: [
+                ButtonSegment(value: false, label: Text(l10n.savedTabArticles), icon: const Icon(Icons.bookmark_border_rounded)),
+                ButtonSegment(value: true, label: Text(l10n.highlightSavedTab), icon: const Icon(Icons.border_color_outlined)),
+              ],
+              selected: {_highlights},
+              onSelectionChanged: (v) => setState(() => _highlights = v.first),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => BlocProvider(
+        create: (_) => getIt<MyHighlightsCubit>()..load(),
+        child: _highlights ? SavedHighlightsList(leading: _leading) : SavedArticlesList(leading: _leading),
+      );
 }
 
 /// The tab bar, pinned under the app bar once the header scrolls away.

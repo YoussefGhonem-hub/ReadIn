@@ -13,6 +13,7 @@ import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
+import '../../../highlights/presentation/cubit/article_highlights_cubit.dart';
 import '../../../moderation/domain/entities/moderation.dart';
 import '../../../moderation/presentation/widgets/moderation_flows.dart';
 import '../../../moderation/presentation/widgets/report_sheet.dart';
@@ -20,14 +21,17 @@ import '../../../mutes/presentation/cubit/mutes_cubit.dart';
 import '../../../mutes/presentation/widgets/mute_actions.dart';
 import '../../../mutes/presentation/widgets/mute_topics_sheet.dart';
 import '../../../profile/presentation/widgets/profile_header.dart' show ProfileBioText;
+import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../../domain/entities/article.dart';
 import '../cubit/article_cubit.dart';
 
 /// The items of an article's "⋯" menu (SPEC F28), in the order the menu shows them; moderator tools (F22) come last,
-/// after a divider. A later item (F30 "إخفاء الـ Highlights") is added here and in [articleMenuItems],
-/// [_ArticleMenuLabel] and [ArticleMenuView]'s `_onSelected`.
+/// after a divider.
 enum ArticleMenuItem {
   showLess,
+
+  /// "إخفاء الـ Highlights" / "إظهار الـ Highlights" (F30): the reader, your own article too. No sign-in needed.
+  highlights,
   follow,
   muteAuthor,
   muteTopics,
@@ -45,16 +49,19 @@ enum ArticleMenuItem {
 /// What an article's menu offers the viewer, in the SPEC F28 order. Someone else's article: Show less, Follow author,
 /// Mute author, Mute topics and Report (follow and mute need an author: a deleted account has none, [hasAuthor]).
 /// Your own article: Mute topics, and in the reader ([pdf]) "تحميل PDF" (F33). Moderators can also hide or unhide it
-/// (F22). Guests see the reader's items and get the sign-in prompt for every one of them.
+/// (F22). Guests see the reader's items and get the sign-in prompt for every one of them, except Hide highlights. The
+/// reader ([highlights]) has "إخفاء الـ Highlights" right after Show less (F30), on your own article too.
 List<ArticleMenuItem> articleMenuItems({
   required bool own,
   required bool moderator,
   required bool hidden,
   bool hasAuthor = true,
   bool pdf = false,
+  bool highlights = false,
 }) =>
     [
       if (!own) ArticleMenuItem.showLess,
+      if (highlights) ArticleMenuItem.highlights,
       if (!own && hasAuthor) ...[ArticleMenuItem.follow, ArticleMenuItem.muteAuthor],
       ArticleMenuItem.muteTopics,
       if (own && pdf) ArticleMenuItem.downloadPdf,
@@ -91,13 +98,22 @@ class ArticleMenuView extends StatelessWidget {
   final ValueChanged<ArticleModeration?> onModerated;
 
   Future<void> _onSelected(BuildContext context, ArticleMenuItem item) async {
-    // Every item needs an account (F28); moderators are signed in.
+    // Hide highlights works for guests too: their choice stays on the device (F30).
+    if (item == ArticleMenuItem.highlights) {
+      final settings = context.read<SettingsCubit>();
+      final failure = await settings.setShowHighlights(!settings.state.showHighlights);
+      if (context.mounted) showActionFailure(context, failure);
+      return;
+    }
+    // Every other item needs an account (F28); moderators are signed in.
     if (!requireAccount(context)) return;
     final author = card.author;
     final target = ModerationTargetRef.article(card.id);
     switch (item) {
       case ArticleMenuItem.showLess:
         await MuteActions.showLess(context, card);
+      case ArticleMenuItem.highlights:
+        break;
       case ArticleMenuItem.follow:
         if (author == null) return;
         final failure = await context.read<FollowsCubit>().toggle(author.id, fallback: card.isFollowingAuthor);
@@ -141,12 +157,16 @@ class ArticleMenuView extends StatelessWidget {
     );
     // Null without an [ArticlePdfCubit] above: a post card's menu has no "تحميل PDF".
     final pdfBuilding = context.select((ArticlePdfCubit? c) => c?.state.isBuilding(card.id));
+    // The reader's highlights (F30): only with an [ArticleHighlightsCubit] above, so not on a post card.
+    final highlights = context.select((ArticleHighlightsCubit? c) => c != null);
+    final highlightsShown = context.select((SettingsCubit? c) => c?.state.showHighlights ?? true);
     final items = articleMenuItems(
       own: me != null && me.id == authorId,
       moderator: me?.isModerator ?? false,
       hidden: hidden,
       hasAuthor: authorId != null,
       pdf: pdfBuilding != null,
+      highlights: highlights,
     );
     if (items.isEmpty) return const SizedBox.shrink();
     return PopupMenuButton<ArticleMenuItem>(
@@ -166,6 +186,7 @@ class ArticleMenuView extends StatelessWidget {
               following: me != null && following,
               authorMuted: me != null && authorMuted,
               pdfBuilding: pdfBuilding == true,
+              highlightsShown: highlightsShown,
             ),
           ),
         ],
@@ -175,7 +196,13 @@ class ArticleMenuView extends StatelessWidget {
 }
 
 class _ArticleMenuLabel extends StatelessWidget {
-  const _ArticleMenuLabel({required this.item, required this.following, required this.authorMuted, this.pdfBuilding = false});
+  const _ArticleMenuLabel({
+    required this.item,
+    required this.following,
+    required this.authorMuted,
+    this.pdfBuilding = false,
+    this.highlightsShown = true,
+  });
 
   final ArticleMenuItem item;
 
@@ -188,12 +215,18 @@ class _ArticleMenuLabel extends StatelessWidget {
   /// The article's PDF is being built: "Preparing the PDF…" with a spinner.
   final bool pdfBuilding;
 
+  /// Highlights are drawn: "Hide highlights" (else "Show highlights").
+  final bool highlightsShown;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
     final (icon, text) = switch (item) {
       ArticleMenuItem.showLess => (Icons.thumb_down_off_alt_outlined, l10n.articleMenuShowLess),
+      ArticleMenuItem.highlights => highlightsShown
+          ? (Icons.format_color_reset_outlined, l10n.highlightMenuHide)
+          : (Icons.border_color_outlined, l10n.highlightMenuShow),
       ArticleMenuItem.follow => following
           ? (Icons.person_remove_outlined, l10n.articleMenuUnfollow)
           : (Icons.person_add_alt_outlined, l10n.articleMenuFollow),

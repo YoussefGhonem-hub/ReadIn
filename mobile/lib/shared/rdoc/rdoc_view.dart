@@ -5,9 +5,11 @@ import '../../core/theme/tokens.g.dart';
 import 'blocks/code_blocks.dart';
 import 'blocks/media_blocks.dart';
 import 'blocks/text_blocks.dart';
+import 'highlights/rdoc_highlights.dart';
 import 'rdoc_document.dart';
 import 'rdoc_scope.dart';
 
+export 'highlights/rdoc_highlights.dart';
 export 'rdoc_document.dart';
 export 'rdoc_scope.dart';
 
@@ -38,7 +40,8 @@ class RBlockView extends StatelessWidget {
     return Padding(
       key: ValueKey('rdoc-${block.type}-${block.id}'),
       padding: const EdgeInsets.only(bottom: ReadInSpace.s4),
-      child: child,
+      // Under [RDocHighlights] (the reader, F30) a highlightable block selects its text and draws its marks.
+      child: withHighlights(context, block, child),
     );
   }
 }

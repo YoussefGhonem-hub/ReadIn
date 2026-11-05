@@ -32,6 +32,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
           theme: settings.theme.name,
           timeZone: timeZone,
           reminderTime: settings.reminderTime,
+          showHighlights: settings.showHighlights,
         )));
   }
 

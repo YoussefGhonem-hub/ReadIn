@@ -21,6 +21,8 @@ import '../../../comments/presentation/widgets/comments_sheet.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../glossary/presentation/widgets/glossary_sheet.dart';
+import '../../../highlights/presentation/cubit/article_highlights_cubit.dart';
+import '../../../highlights/presentation/widgets/reader_highlights.dart';
 import '../../../moderation/presentation/cubit/moderation_action_cubit.dart';
 import '../../../mutes/presentation/widgets/muted_writer_banner.dart';
 import '../../../paths/presentation/widgets/next_in_path.dart';
@@ -65,6 +67,8 @@ class ArticlePage extends StatelessWidget {
         BlocProvider(create: (_) => getIt<ModerationActionCubit>()),
         // "تحميل PDF" in the "⋯" menu on your own article (F33); its failures show here, with "حاول تاني".
         BlocProvider(create: (_) => getIt<ArticlePdfCubit>()),
+        // Highlights (F30): yours and the popular ones for the version on screen, loaded once they are shown.
+        BlocProvider(create: (_) => getIt<ArticleHighlightsCubit>()),
       ],
       child: ArticlePdfFeedback(child: ReadingTracking(child: ArticleView(anchor: anchor))),
     );
@@ -102,6 +106,12 @@ class _ArticleViewState extends State<ArticleView> {
 
   // A link to a comment opens the comments once (F17).
   bool _commentsOpened = false;
+
+  /// The block the link points at (`#{blockId}`), if it isn't a comment's anchor.
+  String? get _blockAnchor {
+    final anchor = widget.anchor;
+    return anchor == null || anchor.isEmpty || anchor.startsWith('comment-') ? null : anchor;
+  }
 
   @override
   void initState() {
@@ -256,37 +266,44 @@ class _ArticleViewState extends State<ArticleView> {
                       ArticleStatus.ready => NotificationListener<Notification>(
                           // While resuming, the jumps stay between the reader and its resume.
                           onNotification: (notification) => _resume?.onNotification(notification) ?? false,
-                          child: ReaderBody(
+                          // Selecting text to highlight, and the marks (F30).
+                          child: ReaderHighlights(
                             article: article!,
-                            controller: _scroll,
-                            bodyFontSize: _fontSizeFor(fontSize),
-                            onTerm: (term) => unawaited(_showTerm(term)),
-                            // A heading picked in the table of contents wins over the resume.
-                            beforeTocJump: () => _resume?.cancel(),
-                            // A muted writer's article still opens from a link, with "انت كاتم الكاتب ده" (F28).
-                            leading: switch (article.card.author) {
-                              final author? => MutedWriterBanner(
-                                  userId: author.id,
-                                  name: author.displayName,
-                                  initiallyMuted: article.card.isAuthorMuted,
-                                  padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, 0),
-                                ),
-                              null => null,
-                            },
-                            trailing: [
-                              NextInPathSliver(articleId: article.card.id),
-                              RelatedArticlesSection(article: article.card),
-                            ],
-                            // Nobody can follow a deleted account (SPEC §9.6).
-                            authorAction: switch (article.card.author) {
-                              final author? => FollowButton(
-                                  userId: author.id,
-                                  name: author.displayName,
-                                  initiallyFollowing: article.isFollowingAuthor,
-                                  dense: true,
-                                ),
-                              null => null,
-                            },
+                            onTextChanged: () => unawaited(context.read<ArticleCubit>().reloadVersion()),
+                            child: ReaderBody(
+                              article: article,
+                              controller: _scroll,
+                              // A link to a block (Saved → Highlights, F30) opens the article there.
+                              initialBlockId: _blockAnchor,
+                              bodyFontSize: _fontSizeFor(fontSize),
+                              onTerm: (term) => unawaited(_showTerm(term)),
+                              // A heading picked in the table of contents wins over the resume.
+                              beforeTocJump: () => _resume?.cancel(),
+                              // A muted writer's article still opens from a link, with "انت كاتم الكاتب ده" (F28).
+                              leading: switch (article.card.author) {
+                                final author? => MutedWriterBanner(
+                                    userId: author.id,
+                                    name: author.displayName,
+                                    initiallyMuted: article.card.isAuthorMuted,
+                                    padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s2, ReadInSpace.s5, 0),
+                                  ),
+                                null => null,
+                              },
+                              trailing: [
+                                NextInPathSliver(articleId: article.card.id),
+                                RelatedArticlesSection(article: article.card),
+                              ],
+                              // Nobody can follow a deleted account (SPEC §9.6).
+                              authorAction: switch (article.card.author) {
+                                final author? => FollowButton(
+                                    userId: author.id,
+                                    name: author.displayName,
+                                    initiallyFollowing: article.isFollowingAuthor,
+                                    dense: true,
+                                  ),
+                                null => null,
+                              },
+                            ),
                           ),
                         ),
                     },
@@ -387,6 +404,7 @@ class ReaderBody extends StatefulWidget {
     this.leading,
     this.trailing = const [],
     this.beforeTocJump,
+    this.initialBlockId,
   });
 
   final ArticleDetails article;
@@ -406,12 +424,26 @@ class ReaderBody extends StatefulWidget {
   /// Runs before a heading of the table of contents scrolls the reader (the reader stops resuming).
   final VoidCallback? beforeTocJump;
 
+  /// A block to bring to the top once the article is laid out: a link to a block (Saved → Highlights, F30).
+  final String? initialBlockId;
+
   @override
   State<ReaderBody> createState() => _ReaderBodyState();
 }
 
 class _ReaderBodyState extends State<ReaderBody> {
   final _locator = RDocBlockLocator();
+
+  @override
+  void initState() {
+    super.initState();
+    final block = widget.initialBlockId;
+    if (block != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_locator.reveal(block, duration: Duration.zero));
+      });
+    }
+  }
 
   /// A heading picked in the table of contents: scrolled to the top of the reader.
   void _jumpTo(TocEntry entry) {

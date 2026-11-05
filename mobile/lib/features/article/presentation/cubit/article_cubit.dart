@@ -64,6 +64,16 @@ class ArticleCubit extends Cubit<ArticleState> {
     if (_slug != null) await load(_slug!, preferredLanguage: preferredLanguage);
   }
 
+  /// Loads the version on screen again and keeps showing it meanwhile: a highlight found its text changed by the author
+  /// (F30, `highlight.text_mismatch`). A failure keeps the version shown.
+  Future<void> reloadVersion() async {
+    final current = state.article;
+    if (_slug == null || current == null) return;
+    final result = await _getArticle(_slug!, language: current.card.language);
+    if (isClosed || state.article?.card.language != current.card.language) return;
+    result.fold((_) {}, (article) => emit(ArticleState(status: ArticleStatus.ready, article: article)));
+  }
+
   /// A moderator hid the article ([moderation]) or showed it again (null) from the reader's menu (F22).
   void setModeration(ArticleModeration? moderation) {
     final article = state.article;
