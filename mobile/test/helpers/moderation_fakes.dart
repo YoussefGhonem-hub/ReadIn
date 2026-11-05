@@ -32,15 +32,59 @@ class MockModerationNoticesCubit extends MockCubit<List<ModerationNotice>> imple
 /// "Now" for moderation times in tests and goldens: 2026-11-02 12:00 UTC.
 final moderationNow = DateTime.utc(2026, 11, 2, 12);
 
-/// The viewer as a moderator (`moderation.manage`), with or without `users.suspend`.
+/// What a Member holds (SPEC §10.2): reading, writing, interacting, reporting. No moderation.
+const memberPermissions = [
+  'articles.read',
+  Permissions.articlesCreate,
+  'articles.export_pdf',
+  'comments.create',
+  'reactions.create',
+  'follows.manage',
+  'saved.manage',
+  Permissions.reportsCreate,
+];
+
+/// What the SuperAdmin holds (SPEC §10.2): everything.
+const superAdminPermissions = [
+  ...memberPermissions,
+  'articles.feature',
+  Permissions.moderationManage,
+  Permissions.usersSuspend,
+  'users.reset_password',
+  'users.read.pii',
+  'verification.manage',
+  'taxonomy.manage',
+  'paths.manage',
+  'system.settings',
+];
+
+/// The viewer who moderates: the SuperAdmin (`+12025550101`), the only holder of `moderation.manage` today (SPEC §10).
+/// [canSuspend] false drops `users.suspend`, as a later staff role might: the app gates on permissions, never on the
+/// role name, so the role stays `SuperAdmin` here.
 Me moderatorMe({bool canSuspend = true}) => Me(
-      id: 'u-mod',
-      phoneNumber: '+12025550103',
-      displayName: 'Moderator User',
-      username: 'moderator',
+      id: 'u-super',
+      phoneNumber: '+12025550101',
+      displayName: 'Super Admin',
+      username: 'superadmin',
       onboardingCompleted: true,
-      roles: const ['Moderator'],
-      permissions: [Permissions.reportsCreate, Permissions.moderationManage, if (canSuspend) Permissions.usersSuspend],
+      roles: const ['SuperAdmin'],
+      permissions: [
+        for (final permission in superAdminPermissions)
+          if (canSuspend || permission != Permissions.usersSuspend) permission,
+      ],
+    );
+
+/// A Member with the Verified badge (`isVerified`): every Member permission and none of the moderation ones. The
+/// badge isn't a role and opens nothing.
+Me verifiedMemberMe() => const Me(
+      id: 'u-104',
+      phoneNumber: '+12025550104',
+      displayName: '.NET Writer',
+      username: 'dotnet_writer',
+      onboardingCompleted: true,
+      isVerified: true,
+      roles: ['Member'],
+      permissions: memberPermissions,
     );
 
 const modAuthorAr = Author(id: 'w-1', displayName: 'منى عبد الله', username: 'mona_dev', isVerified: true);
@@ -49,7 +93,7 @@ const spammer = Author(id: 'w-9', displayName: 'Free Crypto Deals', username: 'c
 
 const reporterA = UserSummary(id: 'r-1', displayName: 'سارة (.NET)', username: 'sara_net');
 const reporterB = UserSummary(id: 'r-2', displayName: 'Youssef Hassan', username: 'reader1');
-const moderatorSummary = UserSummary(id: 'u-mod', displayName: 'Moderator User', username: 'moderator');
+const moderatorSummary = UserSummary(id: 'u-super', displayName: 'Super Admin', username: 'superadmin');
 
 DateTime _ago(Duration d) => moderationNow.subtract(d);
 

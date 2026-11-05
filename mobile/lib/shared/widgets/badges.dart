@@ -99,7 +99,8 @@ class InfoTag extends StatelessWidget {
 
 enum InfoTagTone { primary, success, accent, neutral }
 
-/// ✓ next to verified writers (VerifiedWriter role).
+/// ✓ next to verified writers: the Verified badge, shown from `isVerified` (`Users.IsVerified`, F19). It's a badge,
+/// not a role: a verified writer is still a Member.
 class VerifiedMark extends StatelessWidget {
   const VerifiedMark({super.key, this.size = 14});
 

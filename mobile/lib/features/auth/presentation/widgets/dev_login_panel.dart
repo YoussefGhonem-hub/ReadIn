@@ -6,15 +6,31 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/phone/phone_numbers.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/widgets/badges.dart';
 
 /// A local seed user (SPEC §18.3). The numbers are in the reserved fictional range +1 202 555 01XX.
 class SeedUser {
-  const SeedUser(this.phone, this.name, this.role, {required this.hasPin});
+  const SeedUser(
+    this.phone,
+    this.name,
+    this.role, {
+    required this.hasPin,
+    this.verified = false,
+    this.suspended = false,
+  });
 
   final String phone;
   final String name;
+
+  /// The account's one role (SPEC §10): `Member` or `SuperAdmin`.
   final String role;
   final bool hasPin;
+
+  /// Has the Verified badge (`isVerified`, F19): a badge, not a role, so the account stays a Member.
+  final bool verified;
+
+  /// Suspended (F22): a state, not a role, shown as "· موقوف" / "· suspended" after the role, as on the web.
+  final bool suspended;
 }
 
 /// The dev login panel (SPEC §18.3): debug builds of the dev flavor only. [kReleaseMode] is a compile-time constant,
@@ -27,11 +43,9 @@ abstract final class DevLogin {
 
   static const users = [
     SeedUser('+12025550101', 'Super Admin', 'SuperAdmin', hasPin: true),
-    SeedUser('+12025550102', 'Admin User', 'Admin', hasPin: true),
-    SeedUser('+12025550103', 'Moderator User', 'Moderator', hasPin: true),
-    SeedUser('+12025550104', '.NET Writer', 'VerifiedWriter', hasPin: true),
-    SeedUser('+12025550105', 'AI Writer', 'VerifiedWriter', hasPin: true),
-    SeedUser('+12025550106', 'Verified Writer', 'VerifiedWriter', hasPin: true),
+    SeedUser('+12025550104', '.NET Writer', 'Member', hasPin: true, verified: true),
+    SeedUser('+12025550105', 'AI Writer', 'Member', hasPin: true, verified: true),
+    SeedUser('+12025550106', 'Verified Writer', 'Member', hasPin: true, verified: true),
     SeedUser('+12025550107', 'Writer 1', 'Member', hasPin: true),
     SeedUser('+12025550108', 'Writer 2', 'Member', hasPin: true),
     SeedUser('+12025550109', 'Writer 3', 'Member', hasPin: true),
@@ -45,7 +59,7 @@ abstract final class DevLogin {
     SeedUser('+12025550117', 'Reader 8', 'Member', hasPin: true),
     SeedUser('+12025550118', 'Reader 9', 'Member', hasPin: true),
     SeedUser('+12025550119', 'Reader 10', 'Member', hasPin: false),
-    SeedUser('+12025550120', 'Suspended User', 'Member (suspended)', hasPin: false),
+    SeedUser('+12025550120', 'Suspended User', 'Member', hasPin: false, suspended: true),
   ];
 }
 
@@ -86,8 +100,30 @@ class DevLoginSheet extends StatelessWidget {
               return ListTile(
                 onTap: () => Navigator.of(context).pop(user),
                 title: Text(user.name, textDirection: TextDirection.ltr, textAlign: TextAlign.start),
-                subtitle: Text(
-                  '${PhoneNumbers.formatE164(user.phone)} · ${user.role}',
+                subtitle: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: '${PhoneNumbers.formatE164(user.phone)} · ${user.role}'),
+                      if (user.suspended) TextSpan(text: ' · ${l10n.devLoginSuspended}'),
+                      if (user.verified) ...[
+                        const TextSpan(text: ' '),
+                        // One piece, so a wrapped line moves "✓ Verified writer" down whole.
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            textDirection: TextDirection.ltr,
+                            children: [
+                              // The label next to it says the same, so screen readers hear it once.
+                              const ExcludeSemantics(child: VerifiedMark()),
+                              const SizedBox(width: 4),
+                              Text(l10n.verifiedWriter),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                   textDirection: TextDirection.ltr,
                   textAlign: TextAlign.start,
                 ),

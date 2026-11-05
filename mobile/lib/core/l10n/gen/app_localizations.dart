@@ -2438,6 +2438,12 @@ abstract class AppLocalizations {
   /// **'No recovery PIN'**
   String get devLoginNoPin;
 
+  /// No description provided for @devLoginSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'suspended'**
+  String get devLoginSuspended;
+
   /// No description provided for @errPhoneInvalid.
   ///
   /// In en, this message translates to:
@@ -6991,6 +6997,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This request isn\'t waiting for review anymore.'**
   String get errVerificationNotFound;
+
+  /// No description provided for @errVerificationNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'This user isn\'t verified.'**
+  String get errVerificationNotVerified;
+
+  /// No description provided for @errVerificationSystemAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'This is ReadIn\'s official account; its badge stays.'**
+  String get errVerificationSystemAccount;
 
   /// No description provided for @healthDisclaimer.
   ///

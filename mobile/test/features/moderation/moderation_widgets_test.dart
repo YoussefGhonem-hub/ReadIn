@@ -18,6 +18,7 @@ import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/presentation/cubit/article_cubit.dart';
 import 'package:readin/features/article/presentation/widgets/article_menu.dart';
 import 'package:readin/features/auth/domain/entities/me.dart';
+import 'package:readin/features/auth/domain/entities/permissions.dart';
 import 'package:readin/features/auth/presentation/cubit/linked_accounts_cubit.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/auth/presentation/session/suspended_session_listener.dart';
@@ -241,6 +242,30 @@ void main() {
       expect(find.text('Hide article'), findsNothing);
     });
 
+    // SPEC §10: the badge isn't a role, and the tools follow moderation.manage, never a role name.
+    testWidgets('a verified Member reports but gets no moderator tools', (tester) async {
+      await pumpMenu(tester, me: verifiedMemberMe());
+      await openMenu(tester);
+
+      expect(find.text('Report article'), findsOneWidget);
+      expect(find.text('Hide article'), findsNothing);
+    });
+
+    testWidgets('the tools follow moderation.manage, never the role name', (tester) async {
+      await pumpMenu(tester, me: const Me(id: 'u-x', displayName: 'Role only', username: 'role_only', roles: ['SuperAdmin']));
+      await openMenu(tester);
+      expect(find.text('Hide article'), findsNothing, reason: 'a role name without the permission opens nothing');
+    });
+
+    testWidgets('moderation.manage alone shows them, whatever the role', (tester) async {
+      await pumpMenu(
+        tester,
+        me: const Me(id: 'u-y', displayName: 'Staff', username: 'staff', roles: ['Member'], permissions: [Permissions.moderationManage]),
+      );
+      await openMenu(tester);
+      expect(find.text('Hide article'), findsOneWidget);
+    });
+
     // Since F28 your own article has a menu, with Mute topics only: no report, no moderator tools for a reader.
     testWidgets('your own article offers neither Report nor the moderator tools', (tester) async {
       await pumpMenu(tester, me: editorialMe);
@@ -374,6 +399,16 @@ void main() {
       expect(find.byTooltip('More options'), findsNothing);
     });
 
+    testWidgets('a verified Member can only mute or report too: the badge opens nothing', (tester) async {
+      await pumpProfile(tester, me: verifiedMemberMe());
+      await openMenu(tester);
+
+      expect(find.text('Mute user'), findsOneWidget);
+      expect(find.text('Report user'), findsOneWidget);
+      expect(find.text('Warn'), findsNothing);
+      expect(find.text('Suspend account'), findsNothing);
+    });
+
     testWidgets('guests get the sign-in prompt', (tester) async {
       await pumpProfile(tester, me: null);
       await openMenu(tester);
@@ -475,6 +510,20 @@ void main() {
 
     testWidgets('only moderators get in', (tester) async {
       await pump(tester, page());
+
+      expect(find.text('This page is for moderators'), findsOneWidget);
+      expect(find.text('Open'), findsNothing);
+    });
+
+    testWidgets('a verified Member is kept out: the badge opens nothing', (tester) async {
+      await pump(tester, page(), me: verifiedMemberMe());
+
+      expect(find.text('This page is for moderators'), findsOneWidget);
+      expect(find.text('Open'), findsNothing);
+    });
+
+    testWidgets('the page follows moderation.manage, never the role name', (tester) async {
+      await pump(tester, page(), me: const Me(id: 'u-x', displayName: 'Role only', username: 'role_only', roles: ['SuperAdmin']));
 
       expect(find.text('This page is for moderators'), findsOneWidget);
       expect(find.text('Open'), findsNothing);
@@ -854,6 +903,13 @@ void main() {
       verifyNever(caseCubit.refresh);
     });
 
+    testWidgets('a verified Member is kept out of a case', (tester) async {
+      await pumpCase(tester, userCase(), me: verifiedMemberMe());
+
+      expect(find.text('This page is for moderators'), findsOneWidget);
+      expect(find.text('Suspend account'), findsNothing);
+    });
+
     testWidgets('only moderators; a failed load can be retried', (tester) async {
       await pumpCase(tester, articleCase(), me: sampleMe);
       expect(find.text('This page is for moderators'), findsOneWidget);
@@ -905,6 +961,13 @@ void main() {
       final readerSummary = await pumpSettings(tester, sampleMe);
       expect(find.text('Moderation'), findsNothing);
       verifyNever(readerSummary.load);
+    });
+
+    testWidgets('no Moderation for a verified Member: the badge opens nothing', (tester) async {
+      final summary = await pumpSettings(tester, verifiedMemberMe());
+
+      expect(find.text('Moderation'), findsNothing);
+      verifyNever(summary.load);
     });
   });
 

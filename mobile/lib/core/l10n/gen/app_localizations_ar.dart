@@ -1354,6 +1354,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devLoginNoPin => 'معندوش PIN';
 
   @override
+  String get devLoginSuspended => 'موقوف';
+
+  @override
   String get errPhoneInvalid => 'رقم الموبايل ده مش صحيح.';
 
   @override
@@ -4198,6 +4201,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errVerificationNotFound => 'الطلب ده مبقاش مستني مراجعة.';
+
+  @override
+  String get errVerificationNotVerified => 'المستخدم ده مش موثّق.';
+
+  @override
+  String get errVerificationSystemAccount =>
+      'ده حساب ReadIn الرسمي، والتوثيق بتاعه ثابت.';
 
   @override
   String get healthDisclaimer =>

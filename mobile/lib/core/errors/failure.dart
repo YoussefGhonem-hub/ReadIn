@@ -234,6 +234,10 @@ abstract final class FailureCodes {
   static const verificationAlreadyPending = 'verification.already_pending';
   static const verificationAlreadyVerified = 'verification.already_verified';
   static const verificationNotFound = 'verification.not_found';
+  // Removing a badge (`DELETE /admin/users/{id}/verification`, `verification.manage`): the user has none.
+  static const verificationNotVerified = 'verification.not_verified';
+  // ... or the official @readin account, whose badge stays.
+  static const verificationSystemAccount = 'verification.system_account';
 
   // Client-side
   static const requestCancelled = 'request.cancelled';

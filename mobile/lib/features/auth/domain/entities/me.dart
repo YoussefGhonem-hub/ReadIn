@@ -66,6 +66,8 @@ class Me extends Equatable {
   /// Google / Apple sign-ins linked to this account.
   final List<ExternalLogin> externalLogins;
 
+  /// `["Member"]` or `["SuperAdmin"]` (SPEC §10). Never gate on a role name: check [permissions] with [can], and
+  /// the Verified badge with [isVerified].
   final List<String> roles;
   final List<String> permissions;
   final List<String> interestFieldIds;

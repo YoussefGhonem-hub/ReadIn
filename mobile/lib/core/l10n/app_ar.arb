@@ -407,6 +407,7 @@
   "devLoginBody": "مستخدمين الـ seed المحليين. لو DEV_DEMO_PASSWORD متحدد، الضغطة بتدخلك على طول؛ غير كده بتكتب الرقم بس.",
   "devLoginHasPin": "عنده PIN",
   "devLoginNoPin": "معندوش PIN",
+  "devLoginSuspended": "موقوف",
   "errPhoneInvalid": "رقم الموبايل ده مش صحيح.",
   "errPhoneTaken": "الرقم ده عليه حساب بالفعل",
   "errPhoneUnchanged": "ده رقمك الحالي بالفعل.",
@@ -1193,6 +1194,8 @@
   "errVerificationAlreadyPending": "عندك طلب تحت المراجعة بالفعل.",
   "errVerificationAlreadyVerified": "انت كاتب موثّق بالفعل.",
   "errVerificationNotFound": "الطلب ده مبقاش مستني مراجعة.",
+  "errVerificationNotVerified": "المستخدم ده مش موثّق.",
+  "errVerificationSystemAccount": "ده حساب ReadIn الرسمي، والتوثيق بتاعه ثابت.",
 
   "healthDisclaimer": "المعلومات دي للتوعية ولا تغني عن استشارة الطبيب.",
   "articleToc": "محتويات المقال",

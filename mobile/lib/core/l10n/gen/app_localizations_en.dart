@@ -1354,6 +1354,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devLoginNoPin => 'No recovery PIN';
 
   @override
+  String get devLoginSuspended => 'suspended';
+
+  @override
   String get errPhoneInvalid => 'Enter a valid mobile number.';
 
   @override
@@ -4146,6 +4149,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errVerificationNotFound =>
       'This request isn\'t waiting for review anymore.';
+
+  @override
+  String get errVerificationNotVerified => 'This user isn\'t verified.';
+
+  @override
+  String get errVerificationSystemAccount =>
+      'This is ReadIn\'s official account; its badge stays.';
 
   @override
   String get healthDisclaimer =>

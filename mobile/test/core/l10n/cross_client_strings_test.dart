@@ -80,6 +80,21 @@ void main() {
     expect(localizeErrorCode(en, 'concurrency.conflict'), 'Someone else changed this. Refresh and try again.');
   });
 
+  // The roles change (SPEC §10): removing a Verified badge the user doesn't have (`DELETE /admin/users/{id}/verification`).
+  test('verification.not_verified reads the same as on the web', () {
+    expect(FailureCodes.verificationNotVerified, 'verification.not_verified');
+    expect(localizeErrorCode(ar, FailureCodes.verificationNotVerified), 'المستخدم ده مش موثّق.');
+    expect(localizeErrorCode(en, FailureCodes.verificationNotVerified), "This user isn't verified.");
+    expect(localizeFailure(en, const Failure(FailureCodes.verificationNotVerified, statusCode: 409)), "This user isn't verified.");
+  });
+
+  // ... and the official @readin account keeps its badge.
+  test('verification.system_account reads the same as on the web', () {
+    expect(FailureCodes.verificationSystemAccount, 'verification.system_account');
+    expect(localizeErrorCode(ar, FailureCodes.verificationSystemAccount), 'ده حساب ReadIn الرسمي، والتوثيق بتاعه ثابت.');
+    expect(localizeErrorCode(en, FailureCodes.verificationSystemAccount), "This is ReadIn's official account; its badge stays.");
+  });
+
   test('day counts are plurals', () {
     expect(en.streakSemantics(1), 'Reading streak: 1 day');
     expect(en.streakSemantics(4), 'Reading streak: 4 days');

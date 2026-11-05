@@ -438,6 +438,7 @@
   "devLoginBody": "Local seed users (SPEC §18.3). With DEV_DEMO_PASSWORD set, a tap signs in; otherwise it fills the number.",
   "devLoginHasPin": "Has a recovery PIN",
   "devLoginNoPin": "No recovery PIN",
+  "devLoginSuspended": "suspended",
   "errPhoneInvalid": "Enter a valid mobile number.",
   "errPhoneTaken": "This number already has an account.",
   "errPhoneUnchanged": "This is already your number.",
@@ -1319,6 +1320,8 @@
   "errVerificationAlreadyPending": "You already have a request under review.",
   "errVerificationAlreadyVerified": "You're already a verified writer.",
   "errVerificationNotFound": "This request isn't waiting for review anymore.",
+  "errVerificationNotVerified": "This user isn't verified.",
+  "errVerificationSystemAccount": "This is ReadIn's official account; its badge stays.",
 
   "healthDisclaimer": "This information is for awareness only and is not a substitute for a doctor's advice.",
   "articleToc": "In this article",
