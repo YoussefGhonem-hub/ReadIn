@@ -69,6 +69,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<UserMute> UserMutes => Set<UserMute>();
     public DbSet<ContentMute> ContentMutes => Set<ContentMute>();
     public DbSet<ArticleFeedback> ArticleFeedback => Set<ArticleFeedback>();
+    public DbSet<ArticleHighlight> ArticleHighlights => Set<ArticleHighlight>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
     public DbSet<Report> Reports => Set<Report>();

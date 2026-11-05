@@ -58,6 +58,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.WhoCanMention).HasConversion<string>().HasMaxLength(10)
             .HasDefaultValue(MentionPolicy.Everyone).HasSentinel(MentionPolicy.Everyone);
 
+        // "Hide highlights" (F30, F18): on unless turned off; existing accounts get it on too.
+        builder.Property(u => u.ShowHighlights).HasDefaultValue(true).HasSentinel(true);
+
         builder.Ignore(u => u.OnboardingCompleted);
         builder.Ignore(u => u.HasRecoveryPin);
         builder.Ignore(u => u.HasPassword);

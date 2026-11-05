@@ -61,6 +61,9 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     /// <summary>Privacy (SPEC F18): who may @mention the user in comments and articles. Everyone by default.</summary>
     public MentionPolicy WhoCanMention { get; private set; } = MentionPolicy.Everyone;
 
+    /// <summary>Highlight marks are drawn in the reader (SPEC F30, F18 "Hide highlights"). On by default, synced across devices.</summary>
+    public bool ShowHighlights { get; private set; } = true;
+
     /// <summary>
     /// Quiet hours (SPEC F17): pushes other than security alerts wait until <see cref="QuietHoursEnd"/>, in
     /// <see cref="TimeZone"/>. The window may span midnight; the end is exclusive.
@@ -341,6 +344,9 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     /// <c>/live/users/{id}</c> again, so the user's other devices follow.
     /// </summary>
     public void NotificationsChanged() => Raise(() => new UserNotificationsChangedDomainEvent(Id));
+
+    /// <summary>"Hide highlights" (SPEC F30): the reader's menu item, Ctrl + / on web and Settings (F18).</summary>
+    public void SetShowHighlights(bool show) => ShowHighlights = show;
 
     public Result SetPreferences(string uiLanguage, string articleLanguage, ThemePreference theme, string timeZone, TimeOnly reminderTime)
     {

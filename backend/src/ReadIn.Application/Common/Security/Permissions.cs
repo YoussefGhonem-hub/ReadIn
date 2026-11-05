@@ -29,6 +29,12 @@ public static class Permissions
         public const string Create = "reposts.create";
     }
 
+    /// <summary>Highlight text in articles and remove your highlights (SPEC F30).</summary>
+    public static class Highlights
+    {
+        public const string Create = "highlights.create";
+    }
+
     public static class Follows
     {
         public const string Manage = "follows.manage";
@@ -85,6 +91,7 @@ public static class Permissions
         [Comments.Create] = "Comment and reply",
         [Reactions.Create] = "React to articles",
         [Reposts.Create] = "Repost articles",
+        [Highlights.Create] = "Highlight text in articles",
         [Follows.Manage] = "Follow writers and fields",
         [Saved.Manage] = "Save articles and manage collections",
         [Reports.Create] = "Report content",

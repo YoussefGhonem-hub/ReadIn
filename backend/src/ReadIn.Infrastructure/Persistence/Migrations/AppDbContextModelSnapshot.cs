@@ -468,6 +468,63 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("ArticleFeedback", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Engagement.ArticleHighlight", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BlockId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EndOffset")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(5)");
+
+                    b.Property<int>("StartOffset")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId", "Language", "BlockId", "StartOffset", "EndOffset");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("ArticleId", "Language", "BlockId", "StartOffset", "EndOffset"), new[] { "UserId" });
+
+                    b.HasIndex("UserId", "ArticleId", "Language", "BlockId", "StartOffset", "EndOffset")
+                        .IsUnique();
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("UserId", "ArticleId", "Language", "BlockId", "StartOffset", "EndOffset"), new[] { "CreatedAt" });
+
+                    b.ToTable("ArticleHighlights", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ArticleHighlights_Range", "[StartOffset] >= 0 AND [EndOffset] > [StartOffset] AND [EndOffset] - [StartOffset] <= 1000");
+                        });
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Engagement.Collection", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2040,6 +2097,11 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(64)");
 
+                    b.Property<bool>("ShowHighlights")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<DateTime?>("SuspendedUntil")
                         .HasColumnType("datetime2");
 
@@ -2453,6 +2515,21 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Engagement.ArticleFeedback", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Articles.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.ArticleHighlight", b =>
                 {
                     b.HasOne("ReadIn.Domain.Articles.Article", null)
                         .WithMany()

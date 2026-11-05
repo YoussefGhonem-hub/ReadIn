@@ -21,7 +21,8 @@ namespace ReadIn.Infrastructure.Identity;
 /// audit stamps lose the account id, and audit entries of actions the account took on other accounts stay without its
 /// IP address. The deletion itself is recorded as <see cref="AuditActions.AccountDeleted"/>
 /// with the account id and time only. Right after the commit: uploaded files, private verification proofs (F19), the Realtime Database node, the cached
-/// details of the articles that stay, and the counters of the articles the account reacted to, saved or reposted. A file that fails
+/// details of the articles that stay, the counters of the articles the account reacted to, saved or reposted, and the cached
+/// popular highlights (F30) of the articles it highlighted (its highlights go by cascade). A file that fails
 /// to delete is picked up by <see cref="Jobs.OrphanedUploadsCleanupJob"/>.
 /// </summary>
 internal sealed partial class AccountEraser(
@@ -40,6 +41,7 @@ internal sealed partial class AccountEraser(
         List<string> proofs = [];
         List<string> keptSlugs = [];
         List<Guid> engaged = [];
+        List<Guid> highlighted = [];
         var deletedArticles = 0;
         var erased = false;
 
@@ -54,6 +56,8 @@ internal sealed partial class AccountEraser(
                 .Union(db.SavedArticles.Where(s => s.UserId == userId).Select(s => s.ArticleId))
                 .Union(db.Reposts.Where(r => r.UserId == userId).Select(r => r.ArticleId))
                 .ToListAsync(ct);
+            // Articles whose popular highlights (F30) change once this account's highlights (cascade) are gone.
+            highlighted = await db.ArticleHighlights.Where(h => h.UserId == userId).Select(h => h.ArticleId).Distinct().ToListAsync(ct);
             // Comments whose like count changes once this account's likes are gone.
             var liked = await db.CommentLikes.Where(l => l.UserId == userId).Select(l => l.CommentId).ToListAsync(ct);
 
@@ -222,6 +226,7 @@ internal sealed partial class AccountEraser(
             if (keptSlugs.Count > 0)
                 await cache.RemoveByTagAsync([CacheTags.Feed, CacheTags.Articles, .. keptSlugs.Select(CacheTags.Article)], cancellationToken);
             if (engaged.Count > 0) await counters.RecomputeAsync(engaged, cancellationToken);
+            if (highlighted.Count > 0) await cache.RemoveByTagAsync([.. highlighted.Select(CacheTags.ArticleHighlights)], cancellationToken);
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {

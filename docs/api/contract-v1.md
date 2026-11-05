@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). Writer categories: `category.not_found`, `category.not_owner`, `category.limit`, `category.name_taken`, `category.name_invalid` (see Writer categories). Profile links and title (pre-production step): the validation codes `link.*` and `profile.headline_*` (see Profile). Reposts (F29): `repost.own_article` (see Reposts). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). Writer categories: `category.not_found`, `category.not_owner`, `category.limit`, `category.name_taken`, `category.name_invalid` (see Writer categories). Profile links and title (pre-production step): the validation codes `link.*` and `profile.headline_*` (see Profile). Reposts (F29): `repost.own_article` (see Reposts). Highlights (F30): `highlight.text_mismatch`, `highlight.block_not_allowed`, `highlight.too_short`, `highlight.too_long`, `highlight.limit`, `highlight.not_found` (see Highlights). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
 
 `403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
@@ -43,7 +43,7 @@ says "moderators" or "admins", it means whoever holds the permission named, toda
 
 | Permission | Member | SuperAdmin | What it opens |
 |---|:-:|:-:|---|
-| `articles.read` (Guest too), `articles.create`, `articles.export_pdf`, `comments.create`, `reactions.create`, `reposts.create` (F29, new), `follows.manage`, `saved.manage`, `reports.create` | ✅ | ✅ | reading, writing, interacting, reporting |
+| `articles.read` (Guest too), `articles.create`, `articles.export_pdf`, `comments.create`, `reactions.create`, `reposts.create` (F29, new), `highlights.create` (F30, new), `follows.manage`, `saved.manage`, `reports.create` | ✅ | ✅ | reading, writing, interacting, reporting |
 | `moderation.manage` | | ✅ | `/moderation/*` (the queue, the log, the nav badge), hide / unhide / delete in the article, comment and profile menus |
 | `users.suspend` | | ✅ | `suspend` / `unsuspend` in `POST /moderation/actions` |
 | `verification.manage` | | ✅ | `/admin/verification-requests/*` and `DELETE /admin/users/{id}/verification` (the admin verification queue) |
@@ -100,7 +100,7 @@ at a time (single-flight) and always keep the newest token.
 | POST | `/me/phone-sign-in` | `{ phoneNumber, password, recoveryPin, external: ExternalCredential }` → `200 SessionDto`; other sessions end. Google/Apple-only accounts add phone + password + PIN, confirmed with a linked provider. Same validation codes as `/auth/register`; `409 auth.phone_taken`, `409 auth.phone_sign_in_exists`, `400 auth.external_mismatch` |
 | POST | `/me/external-logins` | `{ credential: ExternalCredential, password?, external?: ExternalCredential }` → `200 MeDto`. Links Google/Apple; confirm with the password or a fresh token of an already linked provider. `409 auth.external_in_use` (belongs to another account), `409 auth.external_conflict`, `400 auth.wrong_password`, `400 auth.confirmation_required`, `400 auth.external_mismatch` |
 | DELETE | `/me/external-logins/{provider}` | → `200 MeDto`. `400 auth.last_sign_in_method` (it's the only way to sign in), `404 auth.external_login_not_found` |
-| PUT | `/me/preferences` | `UpdatePreferencesRequest` → `204` |
+| PUT | `/me/preferences` | `UpdatePreferencesRequest` → `204`. `showHighlights` (F30) is optional: omitted keeps the current setting |
 | PUT | `/me/interests` | `UpdateInterestsRequest` → `204` (at least 3 field ids + topic ids combined) |
 | POST | `/me/devices` | `RegisterDeviceRequest` → `204` (FCM token upsert) |
 | DELETE | `/me/devices/{token}` | → `204` (idempotent; call on sign out, URL-encode the token) |
@@ -488,6 +488,106 @@ Repost error code: `repost.own_article` (400):
 |---|---|---|
 | `400 repost.own_article` | "مينفعش تعيد نشر مقالك." | "You can't repost your own article." |
 
+### Highlights (F30) — SPEC F30
+
+Readers mark text in an article; everyone sees the ranges many readers marked. Reading is 🌐 (Bearer optional). Writes:
+Bearer, permission **`highlights.create`** (every member, new in `GET /me` `permissions`), rate limit `writes` (30 a
+minute). Guests get `401 auth.unauthorized`: clients show the sign-in prompt instead of calling.
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/articles/{id}/highlights?lang=` | 🌐 → `200 ArticleHighlightsDto`. `lang` picks the version like `GET /articles/{slug}` (unknown or missing → the source language; `language` says which). `mine`: your highlights on that version in document order (`[]` for guests). `popular`: at most 5, most marked first. `404 article.not_found` for unknown, unpublished and deleted articles, and for a hidden one to everyone but its author and moderators |
+| POST | `/articles/{id}/highlights` | `CreateHighlightRequest` → `201 HighlightCreatedDto` (made a highlight, maybe joining some of yours), or `200 HighlightCreatedDto` when the range is already inside one of yours (nothing changed, `replacedIds: []`). Checks and errors below |
+| DELETE | `/highlights/{id}` | → `204`. `404 highlight.not_found` when it isn't one of yours (someone else's answers the same) or is already gone: treat it as removed |
+| GET | `/me/highlights?cursor=&limit=` | Bearer → `CursorPage<HighlightGroupDto>`: the profile's Saved tab, **Highlights** section (F14). `limit` 1–50 groups, default 20. Rules below |
+
+**Offsets** (fixtures: [`shared/rdoc/highlight-fixtures.json`](../../shared/rdoc/highlight-fixtures.json); the
+backend's extraction and both clients' selection mapping are tested against it):
+- `startOffset` (inclusive) and `endOffset` (exclusive) count **UTF-16 code units** (JavaScript and Dart `String`
+  indexes) in the block's **plain text**, and `text` is exactly `plainText.slice(startOffset, endOffset)`. Nothing is
+  normalized (no NFC, no Arabic normalization).
+- A block's plain text is its inline nodes in order: `text`, `term` and `mention` give their `text` (a mention gives
+  its `@username` text), `hardBreak` gives `"\n"`; marks add nothing. A list's plain text is its items' texts joined by
+  one `"\n"`, and each item is its own unit: a highlight never crosses from one item into another. A callout's title, a
+  quote's cite, the summary's label and list bullets or numbers are never part of the plain text.
+- Highlightable blocks: `paragraph`, `heading`, `bulletList` / `orderedList` items, `quote`, `callout`, `summary`.
+  Never `code`, `codeTabs`, `table`, `steps`, `image`, `divider`, `embed`.
+- Isolate and embedding characters a renderer inserts (U+2066–U+2069 and U+202A–U+202E: Flutter's isolates, any
+  `<bdi>` text) never count. Stored content never holds them (the server strips them on save), so a renderer that
+  inserts them subtracts them when mapping a selection.
+- **Selection → range** (clients): order the two ends; take the block (list: the item) where the selection starts; if
+  that block can't be highlighted, show no toolbar; clip the end to the end of that block's (item's) text; trim
+  whitespace at both ends (U+0009–U+000D, U+0020, U+0085, U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F,
+  U+205F, U+3000); fewer than 3 code units left → no **Highlight** button; more than 1,000 → show `highlight.too_long`
+  without calling. A selection that starts in a callout's title starts at the callout's text.
+
+**Creating** (`POST`), checked in this order:
+1. A malformed body is `400 validation.failed`: `language` (`validation.required`, `article.language_invalid`),
+   `blockId` (`validation.required`, `validation.invalid` when it isn't `^[A-Za-z0-9_-]{1,64}$`), `startOffset` and
+   `endOffset` (`validation.required`, `validation.invalid` for a negative offset or `endOffset ≤ startOffset`), `text`
+   (`validation.required`).
+2. `404 article.not_found`, as `GET`.
+3. `400 highlight.text_mismatch` when the article has no `language` version or the block isn't in it;
+   `400 highlight.block_not_allowed` when the block is a code, code tabs, table, steps, image, divider or embed block
+   (whatever the offsets and text).
+4. `400 highlight.text_mismatch`: an offset falls past the block's text or inside a surrogate pair, the range crosses a
+   list item, or `text` isn't exactly the text at those offsets. Usually the author updated the article meanwhile: reload
+   the article and its highlights. (A `text` holding half a surrogate pair isn't valid JSON text and is refused before
+   these checks with a `400`.)
+5. Whitespace at both ends is trimmed, as above (the stored range is the trimmed one). `400 highlight.too_short` below
+   3 code units, `400 highlight.too_long` above 1,000.
+6. **Joining:** your highlights in the same version and block that overlap or touch the range become one highlight
+   covering them all (`text` from the block; `400 highlight.too_long` if that is over 1,000). `replacedIds` lists the
+   ones it replaced (deleted); `highlight` is the new one (`createdAt` now). So your highlights in a block never overlap,
+   and selecting inside one of yours offers **Remove** (`DELETE` it). A range already inside one of yours changes
+   nothing: `200` with that highlight.
+7. `400 highlight.limit`: more than 100 of your highlights on this article (both versions together; joined ones count
+   once).
+
+**When the author updates the article.** A highlight belongs to the published text of its version. After an Update, a
+highlight whose `text` is no longer at its offsets (its block changed, was removed, or became a type that can't be
+highlighted) is not returned anywhere (`mine`, `popular`, `/me/highlights`) and doesn't count toward popular ranges or
+the limit; it is deleted the next time you highlight in that version. Nobody is told. `ar-EG` highlights show only on
+the `ar-EG` version and `en` ones only on `en`.
+
+**Popular.** A range (the same block, offsets and text, in that version) marked by **at least 3 readers**. For a
+signed-in viewer, writers they muted (F28) don't count; guests count everyone. At most 5, most marked first, then in
+document order. `count` includes the viewer when they marked it too, so `popular` and `mine` can hold the same range:
+draw it as yours; tapping it still shows the count. Who marked what is never sent to anyone. The server caches each
+version's block texts and popular ranges once for all readers (dropped on publish, Update, hide, delete and on every
+highlight change); `mine` and the mute adjustment are read per request, never cached.
+
+**Saved → Highlights** (`GET /me/highlights`). One group per article **version** you highlighted (`article.language`),
+holding all your highlights on it, newest first. Groups are ordered by `latestAt`, newest first, then by article id and
+language; the cursor encodes that, so paging never repeats or skips a group while nothing changes (a new highlight
+moves its group to the top: drop groups you already show). `latestAt` is the time of your newest highlight on that
+version, also when an Update hid it (it then isn't listed, so `latestAt` can be newer than every highlight shown). Left out: articles you can no
+longer open (hidden, deleted, unpublished), highlights an Update hid, and groups with nothing left. Mutes don't apply
+(as in Saved). `article.title` is that version's title, `author` is `null` for a deleted account. Tapping a highlight
+opens the article in that language scrolled to `blockId`, like a block link.
+
+**Hide highlights** (`showHighlights`, F18). `MeDto.showHighlights` (default `true`); `PUT /me/preferences` takes
+`showHighlights?: boolean` (omitted keeps it; send the other preferences as they are in `MeDto`). The reader's "⋯" item
+"إخفاء الـ Highlights" / "Hide highlights" ("إظهار الـ Highlights" / "Show highlights" while hidden), `Ctrl + /` on web
+and the Settings toggle flip it: optimistic, rolled back on failure. While hidden, no mark (yours or popular) is drawn
+and selecting text shows no Highlight toolbar; clients may skip `GET` until shown again. Guests can use the menu item
+and the shortcut too: their choice stays on the device (no sign-in prompt).
+
+**Account deletion (SPEC §9.6).** The account's highlights are deleted with it (cascade) and leave the popular counts at
+once (the cached copies are dropped). Highlights on its deleted articles go with those articles; other people's
+highlights on its kept articles stay.
+
+Highlight error codes:
+
+| Code | Arabic | English |
+|---|---|---|
+| `400 highlight.text_mismatch` | "النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني." | "This text has changed in the article. Reload and try again." |
+| `400 highlight.block_not_allowed` | "مينفعش تعمل Highlight للجزء ده." | "This part can't be highlighted." |
+| `400 highlight.too_short` | "اختار 3 حروف على الأقل." | "Select at least 3 characters." |
+| `400 highlight.too_long` | "الـ Highlight لازم يكون 1000 حرف أو أقل." | "A highlight can be at most 1,000 characters." |
+| `400 highlight.limit` | "وصلت لأقصى عدد Highlights في المقال ده (100)." | "You can have at most 100 highlights in one article." |
+| `404 highlight.not_found` | "الـ Highlight ده مش موجود." | "Highlight not found." |
+
 ### Saved (F13; Bearer, permission `saved.manage`, rate limit `writes` on writes)
 
 | Method | Path | Body → Response |
@@ -576,9 +676,10 @@ of the day (unmuting doesn't bring the first back); `204` only when nothing elig
 `ProfileDto`. In lists that apply mutes they are `false` (such cards are left out), except a field page's own field
 and picked topic. Cards now carry `topic` (it was on `ArticleDetailsDto` only).
 
-**The "⋯" menu** (reader action bar and post-card header, F04/F34), in this order: Show less, Follow author, Mute author,
-Mute topics, Report (error color), then the moderator's Hide/Unhide after a divider. On your own article only Mute
-topics stays (later: Hide highlights F30, Download PDF F33). Guests get the sign-in prompt for every item. Mute/Unmute
+**The "⋯" menu** (reader action bar and post-card header, F04/F34), in this order: Show less, Hide highlights (the
+reader only, F30), Follow author, Mute author, Mute topics, Report (error color), then the moderator's Hide/Unhide after
+a divider. On your own article only Hide highlights and Mute topics stay (and Download PDF, F33). Guests get the sign-in
+prompt for every item except Hide highlights, which a guest's device keeps locally (F30). Mute/Unmute
 is also on a profile's "⋯" (not your own, not the official account) and a comment's "⋯" (the commenter; not your own
 comments), with the same Undo. After Mute author, remove every card by that writer from the list
 on screen; after Show less, that card; after a field or topic toggle, the cards in it (animated unless reduce motion is
@@ -1354,6 +1455,7 @@ interface MeDto {
   theme: ThemePreference;
   timeZone: string;
   reminderTime: string;          // "08:00"
+  showHighlights: boolean;       // F30: draw highlight marks in the reader; default true. PUT /me/preferences
   isVerified: boolean;           // the Verified badge (Users.IsVerified), not a role
   onboardingCompleted: boolean;  // true once ≥ 3 interests are saved
   mustChangePassword: boolean;   // after an admin reset (users.reset_password), or the production SuperAdmin's first sign in
@@ -1392,6 +1494,7 @@ interface UpdatePreferencesRequest {
   theme: ThemePreference;
   timeZone: string;
   reminderTime: string;          // "HH:mm"
+  showHighlights?: boolean;      // F30 "Hide highlights": omit to keep the current setting
 }
 
 interface UpdateInterestsRequest { fieldIds: string[]; topicIds: string[] }
@@ -1489,6 +1592,53 @@ interface RepostLabelDto {
   user: AuthorDto;               // the newest reposter you follow (Following feed), or the profile's owner (Reposts tab); name links to /@{username}
   othersCount: number;           // other writers you follow who reposted it; always 0 on the Reposts tab
   repostedAt: string;            // that repost's time: where the item is placed
+}
+
+// ── Highlights (F30) ──────────────────────────────────────────────
+// Offsets: UTF-16 code units in the block's plain text, end exclusive (shared/rdoc/highlight-fixtures.json).
+interface CreateHighlightRequest {  // POST /articles/{id}/highlights
+  language: ArticleLanguage;     // the version being read (ArticleHighlightsDto.language)
+  blockId: string;
+  startOffset: number;
+  endOffset: number;
+  text: string;                  // exactly plainText.slice(startOffset, endOffset)
+}
+interface HighlightDto {           // one of yours; never sent to anyone else
+  id: string;
+  blockId: string;
+  startOffset: number;
+  endOffset: number;
+  text: string;
+  createdAt: string;
+}
+interface PopularHighlightDto {    // marked by ≥ 3 readers; no ids, no names
+  blockId: string;
+  startOffset: number;
+  endOffset: number;
+  text: string;
+  count: number;                 // "N قارئ علّموا الجملة دي" / "N readers highlighted this"; your muted writers don't count
+}
+interface ArticleHighlightsDto {   // GET /articles/{id}/highlights?lang=
+  articleId: string;
+  language: ArticleLanguage;     // the version these belong to
+  mine: HighlightDto[];          // document order; [] for guests
+  popular: PopularHighlightDto[]; // ≤ 5, most marked first, then document order
+}
+interface HighlightCreatedDto {    // POST → 201 (made) or 200 (already inside one of yours)
+  highlight: HighlightDto;       // the highlight now covering the range
+  replacedIds: string[];         // your highlights it joined (deleted): drop them
+}
+interface HighlightGroupDto {      // GET /me/highlights: one article version
+  article: HighlightArticleDto;
+  highlights: HighlightDto[];    // all of yours on it, newest first
+  latestAt: string;              // your newest highlight on it (also one an Update hid): groups come newest first by it
+}
+interface HighlightArticleDto {
+  id: string;
+  slug: string;
+  language: ArticleLanguage;     // open the article in this version, at the highlight's blockId
+  title: string;                 // that version's title
+  author: AuthorDto | null;      // null: the author deleted their account
 }
 
 interface FollowStateDto { isFollowing: boolean; followerCount: number }

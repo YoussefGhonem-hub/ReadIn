@@ -58,6 +58,7 @@ public interface IAppDbContext
     DbSet<UserMute> UserMutes { get; }
     DbSet<ContentMute> ContentMutes { get; }
     DbSet<ArticleFeedback> ArticleFeedback { get; }
+    DbSet<ArticleHighlight> ArticleHighlights { get; }
     DbSet<Comment> Comments { get; }
     DbSet<CommentLike> CommentLikes { get; }
     DbSet<Report> Reports { get; }

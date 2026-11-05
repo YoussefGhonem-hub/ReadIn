@@ -62,6 +62,13 @@ public static class ErrorMessages
         ["link.label_not_allowed"] = ("الاسم للروابط من نوع «تاني» بس.", "Only \"Other\" links have a name."),
         // Reposts (F29)
         ["repost.own_article"] = ("مينفعش تعيد نشر مقالك.", "You can't repost your own article."),
+        // Highlights (F30)
+        ["highlight.text_mismatch"] = ("النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.", "This text has changed in the article. Reload and try again."),
+        ["highlight.block_not_allowed"] = ("مينفعش تعمل Highlight للجزء ده.", "This part can't be highlighted."),
+        ["highlight.too_short"] = ("اختار 3 حروف على الأقل.", "Select at least 3 characters."),
+        ["highlight.too_long"] = ("الـ Highlight لازم يكون 1000 حرف أو أقل.", "A highlight can be at most 1,000 characters."),
+        ["highlight.limit"] = ("وصلت لأقصى عدد Highlights في المقال ده (100).", "You can have at most 100 highlights in one article."),
+        ["highlight.not_found"] = ("الـ Highlight ده مش موجود.", "Highlight not found."),
         ["field.not_found"] = ("المجال مش موجود.", "Field not found."),
         ["topic.not_in_field"] = ("الموضوع مش تابع للمجال ده.", "The topic doesn't belong to this field."),
         ["topic.not_found"] = ("الموضوع مش موجود.", "Topic not found."),

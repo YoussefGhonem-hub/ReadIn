@@ -16,6 +16,7 @@ internal sealed class UpdatePreferencesCommandHandler(IAppDbContext db, ICurrent
         UpdatePreferencesCommandValidator.TryParseTime(command.ReminderTime, out var reminder);
         var result = user.SetPreferences(command.UiLanguage, command.ArticleLanguage, command.Theme, command.TimeZone, reminder);
         if (result.IsFailure) return result;
+        if (command.ShowHighlights is { } showHighlights) user.SetShowHighlights(showHighlights);
 
         await db.SaveChangesAsync(cancellationToken);
         return Result.Success();

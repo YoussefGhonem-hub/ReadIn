@@ -33,7 +33,7 @@ public static class RoleMatrix
         new(RoleIds.Member, RoleNames.Member, "Default for every signed-up user, with or without the Verified badge.",
         [
             P.Articles.Read, P.Articles.Create, P.Articles.ExportPdf, P.Comments.Create, P.Reactions.Create, P.Reposts.Create,
-            P.Follows.Manage, P.Saved.Manage, P.Reports.Create,
+            P.Highlights.Create, P.Follows.Manage, P.Saved.Manage, P.Reports.Create,
         ]),
         new(RoleIds.SuperAdmin, RoleNames.SuperAdmin, "The app's owner. Full access, moderation and verification included.", [.. P.All.Keys]),
     ];

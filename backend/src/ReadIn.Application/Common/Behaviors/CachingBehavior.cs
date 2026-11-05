@@ -34,6 +34,12 @@ public static class CacheTags
 
     /// <summary>What is cached per article id (the card preview, F34); invalidated wherever <see cref="Article"/> is.</summary>
     public static string ArticleById(Guid id) => $"article-id:{id}";
+
+    /// <summary>
+    /// An article's popular highlight ranges (F30), shared by every reader; dropped on every highlight change on the
+    /// article and when an account with highlights is deleted. Content changes drop them through <see cref="ArticleById"/>.
+    /// </summary>
+    public static string ArticleHighlights(Guid id) => $"article-highlights:{id}";
 }
 
 internal sealed class CachingBehavior<TMessage, TResponse>(HybridCache cache) : IPipelineBehavior<TMessage, TResponse>

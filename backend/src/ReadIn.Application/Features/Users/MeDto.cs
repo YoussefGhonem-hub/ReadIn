@@ -35,6 +35,10 @@ public sealed record MeDto
     public ThemePreference Theme { get; init; }
     public string TimeZone { get; init; } = default!;
     public string ReminderTime { get; init; } = default!;
+
+    /// <summary>Highlight marks are shown in the reader (SPEC F30, F18); default on, changed with PUT /me/preferences.</summary>
+    public bool ShowHighlights { get; init; } = true;
+
     public bool IsVerified { get; init; }
     public bool OnboardingCompleted { get; init; }
 
