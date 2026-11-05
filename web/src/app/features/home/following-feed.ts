@@ -14,7 +14,7 @@ import { HomeStore } from './home.store';
   selector: 'rd-suggested-writers',
   imports: [TranslocoPipe, UserRow, FollowButton],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'rd-card block p-4 shadow-none' },
+  host: { class: 'rd-card block p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5' },
   template: `
     <section aria-labelledby="suggested-writers-title" data-suggested-writers>
       <h2 id="suggested-writers-title" class="m-0 mb-1 text-base font-semibold">{{ 'home.following.suggested' | transloco }}</h2>
@@ -68,12 +68,12 @@ export class SuggestedWriters {
   template: `
     @switch (store.followingStatus()) {
       @case ('error') {
-        <rd-error-state [message]="'home.following.error' | transloco" (retry)="store.loadFollowing()" />
+        <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'home.following.error' | transloco" (retry)="store.loadFollowing()" />
       }
       @case ('loaded') {
         <!-- Muted cards fold away but stay in the list (Undo puts them back): count the ones still shown (F28). -->
         @if (anyShown() || store.followingCursor()) {
-          <div class="flex flex-col gap-3 pt-3" data-feed>
+          <div class="flex flex-col gap-2" data-feed>
             @for (article of store.following(); track article.id) {
               <rd-post-card [article]="article" />
             }
@@ -82,8 +82,8 @@ export class SuggestedWriters {
             }
           </div>
         } @else {
-          <div class="flex flex-col gap-4 pb-6" data-following-empty>
-            <rd-empty-state [title]="'home.following.title' | transloco" [message]="'home.following.body' | transloco" />
+          <div class="flex flex-col gap-2 pb-6" data-following-empty>
+            <rd-empty-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [title]="'home.following.title' | transloco" [message]="'home.following.body' | transloco" />
             <rd-suggested-writers />
             @if (followedSomeone()) {
               <button type="button" class="rd-btn rd-btn-primary w-full" data-following-refresh (click)="store.loadFollowing()">
@@ -102,7 +102,7 @@ export class SuggestedWriters {
         }
       }
       @default {
-        <div class="flex flex-col gap-3 pt-3">
+        <div class="flex flex-col gap-2">
           @for (i of [1, 2, 3]; track i) {
             <rd-post-card-skeleton />
           }

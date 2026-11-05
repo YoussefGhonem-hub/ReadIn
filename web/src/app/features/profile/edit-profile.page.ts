@@ -131,26 +131,27 @@ export function profileFieldErrors(error: unknown, translate: (error: unknown) =
  * Edit profile (F14), `/settings/profile`: photo (uploaded with `purpose=avatar`, previewed from its 256 px variant,
  * removable), name, @username with the live availability check, the title (one line, ≤ 120), bio with a counter, the
  * social links (up to 8 of 14 platforms, in order; see LinksEditor) and up to 5 fields of expertise. Saving shows a spinner and can't be sent twice; server errors land on their fields.
+ * A header card, then the form's parts as cards: the photo, who you are, the links, the fields, and Save.
  */
 @Component({
   selector: 'rd-edit-profile-page',
   imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LucideDynamicIcon, ErrorState, ExpertisePicker, HeadlineField, LinksEditor],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
+  host: { class: 'mx-auto flex max-w-[640px] flex-col gap-2 px-4 pt-5 lg:pt-8' },
   template: `
-    <header class="mb-6">
-      <h1 class="m-0 text-2xl font-bold">{{ 'profile.edit.title' | transloco }}</h1>
+    <header class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5">
+      <h1 class="m-0 text-xl font-bold lg:text-2xl">{{ 'profile.edit.title' | transloco }}</h1>
       <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'profile.edit.subtitle' | transloco }}</p>
     </header>
 
     @switch (status()) {
       @case ('error') {
-        <rd-error-state [message]="'profile.edit.loadError' | transloco" (retry)="load()" />
+        <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'profile.edit.loadError' | transloco" (retry)="load()" />
       }
       @case ('ready') {
-        <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-5 pb-10" novalidate data-edit-profile-form>
+        <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-2 pb-10" novalidate data-edit-profile-form>
           <!-- Photo -->
-          <section class="rd-card flex items-center gap-4 p-4 shadow-none" aria-labelledby="edit-avatar-title">
+          <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 flex items-center gap-4 p-4 lg:p-5" aria-labelledby="edit-avatar-title">
             <span class="rd-photo grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-container text-3xl font-bold text-on-primary-container" data-avatar-preview>
               @if (avatarUrl(); as src) {
                 <img [src]="src" alt="" width="80" height="80" class="h-full w-full object-cover" referrerpolicy="no-referrer" />
@@ -185,104 +186,107 @@ export function profileFieldErrors(error: unknown, translate: (error: unknown) =
             <input #fileInput type="file" class="hidden" [accept]="avatarTypes" (change)="pickAvatar($event)" tabindex="-1" aria-hidden="true" data-avatar-input />
           </section>
 
-          <!-- Name -->
-          <div>
-            <label class="rd-label" for="edit-name">{{ 'profile.edit.displayName' | transloco }}</label>
-            <input
-              id="edit-name"
-              class="rd-input"
-              formControlName="displayName"
-              autocomplete="name"
-              maxlength="60"
-              dir="auto"
-              [attr.aria-invalid]="!!errorFor('displayName') || null"
-              [attr.aria-describedby]="errorFor('displayName') ? 'edit-name-error' : null"
-            />
-            @if (errorFor('displayName'); as key) {
-              <p id="edit-name-error" class="rd-field-error" data-field-error="displayName">{{ key | transloco }}</p>
-            }
-          </div>
-
-          <!-- Username -->
-          <div>
-            <label class="rd-label" for="edit-username">{{ 'profile.edit.username' | transloco }}</label>
-            <div class="rd-field-group" dir="ltr" [class.is-invalid]="!!usernameError()">
-              <span class="rd-field-addon cursor-default border-0 border-e border-solid border-border" aria-hidden="true"><svg lucideIcon="AtSign" [size]="16"></svg></span>
+          <!-- Who you are: name, @username, title and bio -->
+          <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 flex flex-col gap-5 p-4 lg:p-5">
+            <!-- Name -->
+            <div>
+              <label class="rd-label" for="edit-name">{{ 'profile.edit.displayName' | transloco }}</label>
               <input
-                id="edit-username"
-                class="rd-field-input"
-                formControlName="username"
-                dir="ltr"
-                autocapitalize="off"
-                autocorrect="off"
-                spellcheck="false"
-                autocomplete="username"
-                maxlength="30"
-                [attr.aria-invalid]="!!usernameError() || null"
-                aria-describedby="edit-username-status"
-                (input)="cleanUsername($event)"
+                id="edit-name"
+                class="rd-input"
+                formControlName="displayName"
+                autocomplete="name"
+                maxlength="60"
+                dir="auto"
+                [attr.aria-invalid]="!!errorFor('displayName') || null"
+                [attr.aria-describedby]="errorFor('displayName') ? 'edit-name-error' : null"
               />
-              <span class="grid w-10 place-items-center" aria-hidden="true">
-                @switch (usernameStatus()) {
-                  @case ('checking') {
-                    <svg lucideIcon="LoaderCircle" [size]="16" class="animate-spin text-text-secondary"></svg>
-                  }
-                  @case ('available') {
-                    <svg lucideIcon="CircleCheck" [size]="16" class="text-success"></svg>
-                  }
-                  @case ('taken') {
-                    <svg lucideIcon="CircleX" [size]="16" class="text-error"></svg>
-                  }
-                  @case ('invalid') {
-                    <svg lucideIcon="CircleX" [size]="16" class="text-error"></svg>
-                  }
-                }
-              </span>
-            </div>
-            <p
-              id="edit-username-status"
-              class="m-0 mt-1 text-xs"
-              [class]="usernameError() ? 'text-error' : usernameStatus() === 'available' && usernameChanged() ? 'text-success' : 'text-text-secondary'"
-              aria-live="polite"
-              data-username-status
-            >
-              {{ usernameMessage() | transloco }}
-            </p>
-          </div>
-
-          <!-- Title (F14): optional, one line -->
-          <rd-headline-field [control]="form.controls.headline" inputId="edit-headline" [error]="errorFor('headline')" />
-
-          <!-- Bio -->
-          <div>
-            <label class="rd-label" for="edit-bio">{{ 'profile.edit.bio' | transloco }}</label>
-            <textarea
-              id="edit-bio"
-              class="rd-input py-2 leading-relaxed"
-              formControlName="bio"
-              dir="auto"
-              rows="4"
-              [placeholder]="'profile.edit.bioPlaceholder' | transloco"
-              [attr.aria-invalid]="!!errorFor('bio') || null"
-              aria-describedby="edit-bio-count"
-            ></textarea>
-            <div class="mt-1 flex items-start justify-between gap-3">
-              @if (errorFor('bio'); as key) {
-                <p class="rd-field-error m-0" data-field-error="bio">{{ key | transloco: { max: maxBio } }}</p>
-              } @else {
-                <span></span>
+              @if (errorFor('displayName'); as key) {
+                <p id="edit-name-error" class="rd-field-error" data-field-error="displayName">{{ key | transloco }}</p>
               }
-              <span id="edit-bio-count" class="shrink-0 text-xs" [class]="bioLength() > maxBio ? 'font-semibold text-error' : 'text-text-secondary'" dir="ltr" data-bio-count>
-                {{ 'profile.edit.bioCount' | transloco: { count: bioLength(), max: maxBio } }}
-              </span>
+            </div>
+
+            <!-- Username -->
+            <div>
+              <label class="rd-label" for="edit-username">{{ 'profile.edit.username' | transloco }}</label>
+              <div class="rd-field-group" dir="ltr" [class.is-invalid]="!!usernameError()">
+                <span class="rd-field-addon cursor-default border-0 border-e border-solid border-border" aria-hidden="true"><svg lucideIcon="AtSign" [size]="16"></svg></span>
+                <input
+                  id="edit-username"
+                  class="rd-field-input"
+                  formControlName="username"
+                  dir="ltr"
+                  autocapitalize="off"
+                  autocorrect="off"
+                  spellcheck="false"
+                  autocomplete="username"
+                  maxlength="30"
+                  [attr.aria-invalid]="!!usernameError() || null"
+                  aria-describedby="edit-username-status"
+                  (input)="cleanUsername($event)"
+                />
+                <span class="grid w-10 place-items-center" aria-hidden="true">
+                  @switch (usernameStatus()) {
+                    @case ('checking') {
+                      <svg lucideIcon="LoaderCircle" [size]="16" class="animate-spin text-text-secondary"></svg>
+                    }
+                    @case ('available') {
+                      <svg lucideIcon="CircleCheck" [size]="16" class="text-success"></svg>
+                    }
+                    @case ('taken') {
+                      <svg lucideIcon="CircleX" [size]="16" class="text-error"></svg>
+                    }
+                    @case ('invalid') {
+                      <svg lucideIcon="CircleX" [size]="16" class="text-error"></svg>
+                    }
+                  }
+                </span>
+              </div>
+              <p
+                id="edit-username-status"
+                class="m-0 mt-1 text-xs"
+                [class]="usernameError() ? 'text-error' : usernameStatus() === 'available' && usernameChanged() ? 'text-success' : 'text-text-secondary'"
+                aria-live="polite"
+                data-username-status
+              >
+                {{ usernameMessage() | transloco }}
+              </p>
+            </div>
+
+            <!-- Title (F14): optional, one line -->
+            <rd-headline-field [control]="form.controls.headline" inputId="edit-headline" [error]="errorFor('headline')" />
+
+            <!-- Bio -->
+            <div>
+              <label class="rd-label" for="edit-bio">{{ 'profile.edit.bio' | transloco }}</label>
+              <textarea
+                id="edit-bio"
+                class="rd-input py-2 leading-relaxed"
+                formControlName="bio"
+                dir="auto"
+                rows="4"
+                [placeholder]="'profile.edit.bioPlaceholder' | transloco"
+                [attr.aria-invalid]="!!errorFor('bio') || null"
+                aria-describedby="edit-bio-count"
+              ></textarea>
+              <div class="mt-1 flex items-start justify-between gap-3">
+                @if (errorFor('bio'); as key) {
+                  <p class="rd-field-error m-0" data-field-error="bio">{{ key | transloco: { max: maxBio } }}</p>
+                } @else {
+                  <span></span>
+                }
+                <span id="edit-bio-count" class="shrink-0 text-xs" [class]="bioLength() > maxBio ? 'font-semibold text-error' : 'text-text-secondary'" dir="ltr" data-bio-count>
+                  {{ 'profile.edit.bioCount' | transloco: { count: bioLength(), max: maxBio } }}
+                </span>
+              </div>
             </div>
           </div>
 
           <!-- Links (F14): up to 8, in the member's order -->
-          <rd-links-editor [(rows)]="links" [errors]="linkErrors()" [disabled]="busy()" />
+          <rd-links-editor class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" [(rows)]="links" [errors]="linkErrors()" [disabled]="busy()" />
 
           <!-- Expertise -->
-          <div>
+          <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5">
             <h2 id="edit-expertise-title" class="rd-label m-0 mb-2">{{ 'profile.edit.expertise' | transloco }}</h2>
             @switch (fieldsStatus()) {
               @case ('error') {
@@ -307,29 +311,36 @@ export function profileFieldErrors(error: unknown, translate: (error: unknown) =
             }
           </div>
 
-          @if (generalError(); as message) {
-            <p class="rd-alert rd-alert-error" role="alert" data-error>{{ message }}</p>
-          }
-
-          <div class="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
-            <a [routerLink]="profileLink()" class="rd-btn rd-btn-ghost">{{ 'common.cancel' | transloco }}</a>
-            <button type="submit" class="rd-btn rd-btn-primary min-w-36" [disabled]="uploading()" [attr.aria-busy]="busy() || null" data-submit>
-              @if (busy()) {
-                <svg lucideIcon="LoaderCircle" [size]="18" class="animate-spin" aria-hidden="true"></svg>
-                {{ 'common.saving' | transloco }}
-              } @else {
-                {{ 'profile.edit.save' | transloco }}
-              }
-            </button>
+          <!-- Save: the form's last card -->
+          <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 flex flex-col gap-3 p-4 lg:p-5">
+            @if (generalError(); as message) {
+              <p class="rd-alert rd-alert-error m-0" role="alert" data-error>{{ message }}</p>
+            }
+            <div class="flex flex-wrap items-center justify-end gap-2">
+              <a [routerLink]="profileLink()" class="rd-btn rd-btn-ghost">{{ 'common.cancel' | transloco }}</a>
+              <button type="submit" class="rd-btn rd-btn-primary min-w-36" [disabled]="uploading()" [attr.aria-busy]="busy() || null" data-submit>
+                @if (busy()) {
+                  <svg lucideIcon="LoaderCircle" [size]="18" class="animate-spin" aria-hidden="true"></svg>
+                  {{ 'common.saving' | transloco }}
+                } @else {
+                  {{ 'profile.edit.save' | transloco }}
+                }
+              </button>
+            </div>
           </div>
         </form>
       }
       @default {
-        <div class="flex flex-col gap-5" aria-busy="true" data-edit-loading>
-          <div class="rd-skeleton h-28 w-full rounded-card"></div>
-          @for (i of [1, 2, 3]; track i) {
-            <div class="flex flex-col gap-2"><div class="rd-skeleton h-3 w-24"></div><div class="rd-skeleton h-11 w-full"></div></div>
-          }
+        <div class="flex flex-col gap-2" aria-busy="true" data-edit-loading>
+          <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 flex items-center gap-4 p-4 lg:p-5">
+            <div class="rd-skeleton h-20 w-20 shrink-0 rounded-full"></div>
+            <div class="flex flex-1 flex-col gap-2"><div class="rd-skeleton h-3 w-24"></div><div class="rd-skeleton h-11 w-40"></div></div>
+          </div>
+          <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 flex flex-col gap-5 p-4 lg:p-5">
+            @for (i of [1, 2, 3]; track i) {
+              <div class="flex flex-col gap-2"><div class="rd-skeleton h-3 w-24"></div><div class="rd-skeleton h-11 w-full"></div></div>
+            }
+          </div>
         </div>
       }
     }

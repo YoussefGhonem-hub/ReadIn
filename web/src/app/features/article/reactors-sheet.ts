@@ -37,7 +37,7 @@ interface TabState {
       <div data-reactors-sheet>
         <h2 id="reactors-title" class="m-0 pe-10 text-xl font-semibold">{{ 'article.reactions.whoReacted' | transloco }}</h2>
 
-        <div class="-mx-1 mt-3 flex gap-1 overflow-x-auto border-b border-border px-1" role="tablist" [attr.aria-label]="'article.reactions.label' | transloco">
+        <div class="-mx-1 mt-3 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" [attr.aria-label]="'article.reactions.label' | transloco">
           @for (tab of tabs(); track tab.key) {
             <button
               type="button"

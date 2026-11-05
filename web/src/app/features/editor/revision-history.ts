@@ -21,93 +21,99 @@ import { ArticlePreview, PreviewAuthor } from './article-preview';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block', 'data-revisions': '' },
   template: `
-    @if (selected(); as revision) {
-      <div class="mb-4 flex flex-wrap items-center gap-2">
-        <button type="button" class="rd-btn rd-btn-ghost min-h-9 px-2 text-sm" data-revisions-back (click)="selected.set(null)">
-          <svg lucideIcon="ChevronRight" [size]="16" class="ltr:rotate-180" aria-hidden="true"></svg>
-          {{ 'editor.revisions.back' | transloco }}
-        </button>
-        <h2 class="m-0 flex-1 text-base font-semibold">
-          {{ 'editor.revisions.revision' | transloco: { number: revision.number } }}
-          <span class="font-normal text-text-secondary">· {{ revision.createdAt | rdDate: lang() : 'long' }}</span>
-        </h2>
-        @if (languageOptions().length > 1) {
-          <rd-segmented class="min-w-36" [options]="languageOptions()" [(value)]="previewLanguage" [label]="'editor.preview.version' | transloco" />
-        }
-        <button type="button" class="rd-btn rd-btn-primary min-h-10 px-4 text-sm" [disabled]="busy()" data-restore-revision (click)="restore.emit(revision.number)">
-          <svg lucideIcon="RotateCcw" [size]="16" aria-hidden="true"></svg>
-          {{ 'editor.revisions.restore' | transloco }}
-        </button>
-      </div>
-      <div class="rd-card p-4 shadow-none">
-        <rd-article-preview
-          [document]="revision.document"
-          [language]="previewLanguage()"
-          [media]="mediaOf(revision)"
-          [field]="fieldOf(revision)"
-          [author]="author()"
-          [publishedAt]="revision.createdAt"
-          [uiLang]="lang()"
-        />
-      </div>
-    } @else {
-      <h2 class="m-0 mb-1 text-lg font-semibold">{{ 'editor.revisions.title' | transloco }}</h2>
-      <p class="m-0 mb-4 text-sm text-text-secondary">{{ 'editor.revisions.subtitle' | transloco }}</p>
-      @switch (status()) {
-        @case ('error') {
-          <rd-error-state [message]="'editor.revisions.loadError' | transloco" (retry)="load()" />
-        }
-        @case ('loaded') {
-          <ol class="m-0 flex list-none flex-col gap-2 p-0">
-            @for (revision of revisions(); track revision.number; let first = $first) {
-              <li>
-                <button
-                  type="button"
-                  class="rd-card flex w-full items-center gap-3 p-3 text-start shadow-none"
-                  [disabled]="opening() !== null"
-                  [attr.data-revision]="revision.number"
-                  (click)="open(revision)"
-                >
-                  <span class="grid h-9 w-9 shrink-0 place-items-center rounded-chip bg-primary-container text-sm font-semibold text-on-primary-container" dir="ltr">{{ revision.number }}</span>
-                  <span class="min-w-0 flex-1">
-                    <span class="block truncate font-semibold">
-                      @if (revision.title) {
-                        <rd-bdi-text [text]="revision.title" />
-                      } @else {
-                        {{ 'editor.myArticles.untitled' | transloco }}
-                      }
+    <div class="rd-card overflow-clip shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+      @if (selected(); as revision) {
+        <!-- One revision: its bar (back, which one, version, Restore), then the preview. -->
+        <div class="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 lg:px-5">
+          <button type="button" class="rd-btn rd-btn-ghost -ms-2 min-h-9 px-2 text-sm" data-revisions-back (click)="selected.set(null)">
+            <svg lucideIcon="ChevronRight" [size]="16" class="ltr:rotate-180" aria-hidden="true"></svg>
+            {{ 'editor.revisions.back' | transloco }}
+          </button>
+          <h2 class="m-0 flex-1 text-base font-semibold">
+            {{ 'editor.revisions.revision' | transloco: { number: revision.number } }}
+            <span class="font-normal text-text-secondary">· {{ revision.createdAt | rdDate: lang() : 'long' }}</span>
+          </h2>
+          @if (languageOptions().length > 1) {
+            <rd-segmented class="min-w-36" [options]="languageOptions()" [(value)]="previewLanguage" [label]="'editor.preview.version' | transloco" />
+          }
+          <button type="button" class="rd-btn rd-btn-primary min-h-10 px-4 text-sm" [disabled]="busy()" data-restore-revision (click)="restore.emit(revision.number)">
+            <svg lucideIcon="RotateCcw" [size]="16" aria-hidden="true"></svg>
+            {{ 'editor.revisions.restore' | transloco }}
+          </button>
+        </div>
+        <div class="px-4 py-6 lg:px-5">
+          <rd-article-preview
+            [document]="revision.document"
+            [language]="previewLanguage()"
+            [media]="mediaOf(revision)"
+            [field]="fieldOf(revision)"
+            [author]="author()"
+            [publishedAt]="revision.createdAt"
+            [uiLang]="lang()"
+          />
+        </div>
+      } @else {
+        <!-- The list: title, then one row per revision. -->
+        <div class="px-4 pb-2 pt-4 lg:px-5 lg:pt-5">
+          <h2 class="m-0 mb-1 text-lg font-semibold">{{ 'editor.revisions.title' | transloco }}</h2>
+          <p class="m-0 text-sm text-text-secondary">{{ 'editor.revisions.subtitle' | transloco }}</p>
+        </div>
+        @switch (status()) {
+          @case ('error') {
+            <rd-error-state [message]="'editor.revisions.loadError' | transloco" (retry)="load()" />
+          }
+          @case ('loaded') {
+            <ol class="m-0 list-none divide-y divide-border p-0">
+              @for (revision of revisions(); track revision.number; let first = $first) {
+                <li>
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-3 px-4 py-3 text-start hover:bg-surface-variant focus-visible:-outline-offset-2 lg:px-5"
+                    [disabled]="opening() !== null"
+                    [attr.data-revision]="revision.number"
+                    (click)="open(revision)"
+                  >
+                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-chip bg-primary-container text-sm font-semibold text-on-primary-container" dir="ltr">{{ revision.number }}</span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate font-semibold">
+                        @if (revision.title) {
+                          <rd-bdi-text [text]="revision.title" />
+                        } @else {
+                          {{ 'editor.myArticles.untitled' | transloco }}
+                        }
+                      </span>
+                      <span class="block text-xs text-text-secondary">
+                        {{ revision.createdAt | rdRelativeTime: lang() }}
+                        @if (first) {
+                          · <span class="font-semibold text-success">{{ 'editor.revisions.live' | transloco }}</span>
+                        }
+                      </span>
                     </span>
-                    <span class="block text-xs text-text-secondary">
-                      {{ revision.createdAt | rdRelativeTime: lang() }}
-                      @if (first) {
-                        · <span class="font-semibold text-success">{{ 'editor.revisions.live' | transloco }}</span>
-                      }
-                    </span>
-                  </span>
-                  @if (opening() === revision.number) {
-                    <svg lucideIcon="LoaderCircle" [size]="16" class="animate-spin" aria-hidden="true"></svg>
-                  } @else {
-                    <svg lucideIcon="ChevronLeft" [size]="16" class="text-text-secondary ltr:rotate-180" aria-hidden="true"></svg>
-                  }
-                </button>
-              </li>
-            } @empty {
-              <li class="rd-card p-4 text-sm text-text-secondary shadow-none" data-revisions-empty>{{ 'editor.revisions.empty' | transloco }}</li>
+                    @if (opening() === revision.number) {
+                      <svg lucideIcon="LoaderCircle" [size]="16" class="animate-spin" aria-hidden="true"></svg>
+                    } @else {
+                      <svg lucideIcon="ChevronLeft" [size]="16" class="text-text-secondary ltr:rotate-180" aria-hidden="true"></svg>
+                    }
+                  </button>
+                </li>
+              } @empty {
+                <li class="px-4 py-4 text-sm text-text-secondary lg:px-5" data-revisions-empty>{{ 'editor.revisions.empty' | transloco }}</li>
+              }
+            </ol>
+            @if (openFailed()) {
+              <p class="rd-alert rd-alert-error mx-4 mb-4 mt-1 lg:mx-5" role="alert">{{ 'editor.revisions.openError' | transloco }}</p>
             }
-          </ol>
-          @if (openFailed()) {
-            <p class="rd-alert rd-alert-error mt-3" role="alert">{{ 'editor.revisions.openError' | transloco }}</p>
+          }
+          @default {
+            <div class="flex flex-col gap-2 px-4 pb-4 pt-2 lg:px-5 lg:pb-5" aria-busy="true">
+              @for (i of [1, 2, 3]; track i) {
+                <div class="rd-skeleton h-12"></div>
+              }
+            </div>
           }
         }
-        @default {
-          <div class="flex flex-col gap-2" aria-busy="true">
-            @for (i of [1, 2, 3]; track i) {
-              <div class="rd-skeleton h-16"></div>
-            }
-          </div>
-        }
       }
-    }
+    </div>
   `,
 })
 export class RevisionHistory {

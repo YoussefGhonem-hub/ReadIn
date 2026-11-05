@@ -17,8 +17,8 @@ export const QUEUE_PAGE_SIZE = 20;
 
 /**
  * The reports queue (F22), `/moderation?status=&type=`: Open / Resolved / Dismissed, filtered by type (All, Articles,
- * Comments, Users). One card per reported target: its preview, the reasons with their counts, how many reports and
- * when the last came (or when the case was closed); a card opens its case. Moderators only (route guard), rendered in
+ * Comments, Users). One row per reported target: its preview, the reasons with their counts, how many reports and
+ * when the last came (or when the case was closed); a row opens its case. Moderators only (route guard), rendered in
  * the browser; the URL keeps the tab and filter, so every view can be linked to.
  */
 @Component({
@@ -26,93 +26,98 @@ export const QUEUE_PAGE_SIZE = 20;
   imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, RelativeTimePipe, EmptyState, ErrorState, ModerationHeader, ReasonChips, TargetPreview],
   providers: [provideModerationIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[720px] px-4 pt-5 lg:pt-8' },
+  host: { class: 'mx-auto block max-w-[720px] px-4 pb-10 pt-5 lg:pt-8' },
   template: `
-    <rd-moderation-header [active]="currentStatus()" [type]="currentType()" />
+    <!-- One card: the title and tabs, the type filter, then the cases. -->
+    <div class="rd-card overflow-clip shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+      <rd-moderation-header [active]="currentStatus()" [type]="currentType()" />
 
-    <!-- Type filter -->
-    <div class="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1" role="toolbar" [attr.aria-label]="'moderation.types.label' | transloco" data-type-filter>
-      <button type="button" class="rd-chip" [attr.aria-pressed]="!currentType()" data-type-chip="all" (click)="setType(null)">
-        {{ 'moderation.types.all' | transloco }}
-        @if (counts(); as c) {
-          <span class="opacity-80 tabular-nums" aria-hidden="true">{{ c.total }}</span>
-        }
-      </button>
-      @for (type of types; track type) {
-        <button type="button" class="rd-chip" [attr.aria-pressed]="currentType() === type" [attr.data-type-chip]="type" (click)="setType(type)">
-          {{ 'moderation.types.' + type | transloco }}
+      <!-- Type filter -->
+      <div class="flex gap-2 overflow-x-auto border-b border-border px-4 py-3 lg:px-5" role="toolbar" [attr.aria-label]="'moderation.types.label' | transloco" data-type-filter>
+        <button type="button" class="rd-chip" [attr.aria-pressed]="!currentType()" data-type-chip="all" (click)="setType(null)">
+          {{ 'moderation.types.all' | transloco }}
           @if (counts(); as c) {
-            <span class="opacity-80 tabular-nums" aria-hidden="true">{{ c[type] }}</span>
+            <span class="opacity-80 tabular-nums" aria-hidden="true">{{ c.total }}</span>
           }
         </button>
-      }
-    </div>
-
-    <section class="mt-3" [attr.aria-label]="'moderation.tabs.' + currentStatus() | transloco" aria-live="polite" data-moderation-queue>
-      @switch (list.status()) {
-        @case ('error') {
-          <rd-error-state [message]="'moderation.loadError' | transloco" (retry)="list.load()" />
-        }
-        @case ('loaded') {
-          @if (list.items().length) {
-            <ol class="m-0 flex list-none flex-col gap-3 p-0">
-              @for (item of list.items(); track item.targetType + item.targetId) {
-                <li>
-                  <a
-                    [routerLink]="['/moderation', item.targetType, item.targetId]"
-                    class="rd-card block p-4 text-inherit no-underline shadow-none transition-colors hover:border-primary"
-                    [attr.data-case]="item.targetType + ':' + item.targetId"
-                  >
-                    <rd-target-preview [item]="item" [compact]="true" />
-                    <rd-reason-chips class="mt-3" [reasons]="item.reasons" />
-                    <p class="m-0 mt-3 flex flex-wrap items-center gap-x-2 text-xs text-text-secondary">
-                      <span class="inline-flex items-center gap-1 font-semibold text-text-primary" data-report-count>
-                        <svg lucideIcon="Flag" [size]="14" aria-hidden="true"></svg>{{ reportCount(item) }}
-                      </span>
-                      ·
-                      @if (item.closedAt && item.status !== 'open') {
-                        <span>{{ 'moderation.closedAt' | transloco: { time: (item.closedAt | rdRelativeTime: lang()) } }}</span>
-                      } @else {
-                        <span>{{ 'moderation.lastReport' | transloco: { time: (item.lastReportedAt | rdRelativeTime: lang()) } }}</span>
-                      }
-                    </p>
-                  </a>
-                </li>
-              }
-            </ol>
-            @if (list.hasMore()) {
-              <button
-                type="button"
-                class="rd-btn rd-btn-outline mt-3 w-full"
-                [disabled]="list.loadingMore()"
-                [attr.aria-busy]="list.loadingMore()"
-                data-queue-more
-                (click)="list.loadMore()"
-              >
-                {{ (list.moreFailed() ? 'common.retry' : 'moderation.more') | transloco }}
-              </button>
+        @for (type of types; track type) {
+          <button type="button" class="rd-chip" [attr.aria-pressed]="currentType() === type" [attr.data-type-chip]="type" (click)="setType(type)">
+            {{ 'moderation.types.' + type | transloco }}
+            @if (counts(); as c) {
+              <span class="opacity-80 tabular-nums" aria-hidden="true">{{ c[type] }}</span>
             }
-          } @else {
-            <rd-empty-state
-              [title]="'moderation.empty.' + currentStatus() + '.title' | transloco"
-              [message]="'moderation.empty.' + currentStatus() + '.body' | transloco"
-              data-queue-empty
-            />
+          </button>
+        }
+      </div>
+
+      <section [attr.aria-label]="'moderation.tabs.' + currentStatus() | transloco" aria-live="polite" data-moderation-queue>
+        @switch (list.status()) {
+          @case ('error') {
+            <rd-error-state [message]="'moderation.loadError' | transloco" (retry)="list.load()" />
+          }
+          @case ('loaded') {
+            @if (list.items().length) {
+              <ol class="m-0 list-none divide-y divide-border p-0">
+                @for (item of list.items(); track item.targetType + item.targetId) {
+                  <li>
+                    <a
+                      [routerLink]="['/moderation', item.targetType, item.targetId]"
+                      class="block px-4 py-4 text-inherit no-underline transition-colors hover:bg-surface-variant focus-visible:-outline-offset-2 lg:px-5"
+                      [attr.data-case]="item.targetType + ':' + item.targetId"
+                    >
+                      <rd-target-preview [item]="item" [compact]="true" />
+                      <rd-reason-chips class="mt-3" [reasons]="item.reasons" />
+                      <p class="m-0 mt-3 flex flex-wrap items-center gap-x-2 text-xs text-text-secondary">
+                        <span class="inline-flex items-center gap-1 font-semibold text-text-primary" data-report-count>
+                          <svg lucideIcon="Flag" [size]="14" aria-hidden="true"></svg>{{ reportCount(item) }}
+                        </span>
+                        ·
+                        @if (item.closedAt && item.status !== 'open') {
+                          <span>{{ 'moderation.closedAt' | transloco: { time: (item.closedAt | rdRelativeTime: lang()) } }}</span>
+                        } @else {
+                          <span>{{ 'moderation.lastReport' | transloco: { time: (item.lastReportedAt | rdRelativeTime: lang()) } }}</span>
+                        }
+                      </p>
+                    </a>
+                  </li>
+                }
+              </ol>
+              @if (list.hasMore()) {
+                <div class="border-t border-border p-3">
+                  <button
+                    type="button"
+                    class="rd-btn rd-btn-outline w-full"
+                    [disabled]="list.loadingMore()"
+                    [attr.aria-busy]="list.loadingMore()"
+                    data-queue-more
+                    (click)="list.loadMore()"
+                  >
+                    {{ (list.moreFailed() ? 'common.retry' : 'moderation.more') | transloco }}
+                  </button>
+                </div>
+              }
+            } @else {
+              <rd-empty-state
+                [title]="'moderation.empty.' + currentStatus() + '.title' | transloco"
+                [message]="'moderation.empty.' + currentStatus() + '.body' | transloco"
+                data-queue-empty
+              />
+            }
+          }
+          @default {
+            <div class="flex flex-col divide-y divide-border" aria-busy="true" data-queue-loading>
+              @for (i of skeletons; track i) {
+                <div class="flex flex-col gap-2 px-4 py-4 lg:px-5" aria-hidden="true">
+                  <div class="rd-skeleton h-4 w-16"></div>
+                  <div class="rd-skeleton h-5 w-4/5"></div>
+                  <div class="rd-skeleton h-3 w-1/3"></div>
+                </div>
+              }
+            </div>
           }
         }
-        @default {
-          <div class="flex flex-col gap-3" aria-busy="true" data-queue-loading>
-            @for (i of skeletons; track i) {
-              <div class="rd-card flex flex-col gap-2 p-4 shadow-none" aria-hidden="true">
-                <div class="rd-skeleton h-4 w-16"></div>
-                <div class="rd-skeleton h-5 w-4/5"></div>
-                <div class="rd-skeleton h-3 w-1/3"></div>
-              </div>
-            }
-          </div>
-        }
-      }
-    </section>
+      </section>
+    </div>
   `,
 })
 export class ModerationQueuePage {

@@ -38,6 +38,39 @@
     color: var(--rd-color-on-primary-container);
   }
 
+  /* Scrollbars (the page and every scrolling box): slim, rounded and in the theme's colors, so they follow light and
+     dark; the thumb turns primary while you point at it or drag it. Chromium and Safari style the pseudo-elements;
+     Firefox only knows `scrollbar-color`. Boxes that hide their scrollbar (rd-scroll-row) keep doing so. */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    min-height: 40px;
+    border: 3px solid transparent;
+    border-radius: var(--rd-radius-chip);
+    background-color: color-mix(in srgb, var(--rd-color-text-secondary) 45%, transparent);
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover,
+  ::-webkit-scrollbar-thumb:active {
+    background-color: var(--rd-color-primary);
+  }
+
+  @supports not selector(::-webkit-scrollbar) {
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in srgb, var(--rd-color-text-secondary) 45%, transparent) transparent;
+    }
+  }
+
   /* Avatars/photos get a subtle border in dark mode (SPEC §15.5 rule 5). */
   .rd-photo {
     box-shadow: 0 0 0 1px transparent;

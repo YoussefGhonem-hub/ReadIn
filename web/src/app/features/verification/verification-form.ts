@@ -47,7 +47,7 @@ interface ServerErrors {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
-    <form class="rd-card flex flex-col gap-5 p-5 shadow-none" novalidate (submit)="submit($event)" data-verification-form [attr.aria-busy]="sending() || null">
+    <form class="rd-card flex flex-col gap-5 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" novalidate (submit)="submit($event)" data-verification-form [attr.aria-busy]="sending() || null">
       <h2 class="m-0 text-lg font-semibold">{{ (from() ? 'verification.form.againTitle' : 'verification.form.title') | transloco }}</h2>
 
       <!-- Field -->

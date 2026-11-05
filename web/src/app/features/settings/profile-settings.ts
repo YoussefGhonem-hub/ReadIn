@@ -15,10 +15,10 @@ import { WhoCanMention } from './who-can-mention';
   selector: 'rd-profile-settings',
   imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, PublicStatsSwitch, VerificationRow, WhoCanMention],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block' },
+  host: { class: 'flex flex-col gap-2' },
   template: `
     @if (session.isAuthenticated()) {
-      <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="settings-profile" data-settings-profile>
+      <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="settings-profile" data-settings-profile>
         <h2 id="settings-profile" class="m-0 mb-2 text-base font-semibold">{{ 'settings.profile.title' | transloco }}</h2>
         <ul class="m-0 list-none divide-y divide-border p-0">
           <li>
@@ -42,7 +42,7 @@ import { WhoCanMention } from './who-can-mention';
       </section>
     }
 
-    <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="settings-privacy" data-settings-privacy>
+    <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="settings-privacy" data-settings-privacy>
       <h2 id="settings-privacy" class="m-0 mb-3 text-base font-semibold">{{ 'settings.privacy.title' | transloco }}</h2>
       @if (session.isAuthenticated()) {
         <rd-public-stats-switch labelKey="settings.privacy.publicStats" hintKey="settings.privacy.publicStatsHint" />

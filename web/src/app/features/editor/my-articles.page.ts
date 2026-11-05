@@ -48,143 +48,146 @@ const TABS: readonly ArticleStatus[] = ['draft', 'published'];
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[720px] px-4 pb-16 pt-5 lg:pt-8' },
   template: `
-    <header class="mb-4 flex flex-wrap items-start justify-between gap-3">
-      <div class="min-w-0">
-        <h1 class="m-0 text-2xl font-bold">{{ 'editor.myArticles.title' | transloco }}</h1>
-        <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'editor.myArticles.subtitle' | transloco }}</p>
+    <!-- One card: the header (title, New article), the Drafts / Published tabs and the list. -->
+    <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+      <header class="flex flex-wrap items-start justify-between gap-3 px-4 pt-4 lg:px-5 lg:pt-5">
+        <div class="min-w-0">
+          <h1 class="m-0 text-xl font-bold lg:text-2xl">{{ 'editor.myArticles.title' | transloco }}</h1>
+          <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'editor.myArticles.subtitle' | transloco }}</p>
+        </div>
+        <a routerLink="/write/new" class="rd-btn rd-btn-primary" data-new-article>
+          <svg lucideIcon="Plus" [size]="18" aria-hidden="true"></svg>
+          {{ 'editor.myArticles.new' | transloco }}
+        </a>
+      </header>
+
+      <div class="mt-3 flex gap-5 border-b border-border px-4 lg:px-5" role="tablist" [attr.aria-label]="'editor.myArticles.title' | transloco">
+        @for (t of tabs; track t) {
+          <button
+            type="button"
+            role="tab"
+            [id]="'my-tab-' + t"
+            [attr.aria-controls]="'my-panel'"
+            [attr.aria-selected]="store.tab() === t"
+            [attr.tabindex]="store.tab() === t ? 0 : -1"
+            [attr.data-my-tab]="t"
+            class="-mb-px min-h-11 shrink-0 border-b-2 px-1 text-sm"
+            [class]="store.tab() === t ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary'"
+            (click)="select(t)"
+            (keydown)="onTabKey($event)"
+          >
+            {{ 'editor.myArticles.tabs.' + t | transloco }}
+          </button>
+        }
       </div>
-      <a routerLink="/write/new" class="rd-btn rd-btn-primary" data-new-article>
-        <svg lucideIcon="Plus" [size]="18" aria-hidden="true"></svg>
-        {{ 'editor.myArticles.new' | transloco }}
-      </a>
-    </header>
 
-    <div class="flex gap-5 border-b border-border" role="tablist" [attr.aria-label]="'editor.myArticles.title' | transloco">
-      @for (t of tabs; track t) {
-        <button
-          type="button"
-          role="tab"
-          [id]="'my-tab-' + t"
-          [attr.aria-controls]="'my-panel'"
-          [attr.aria-selected]="store.tab() === t"
-          [attr.tabindex]="store.tab() === t ? 0 : -1"
-          [attr.data-my-tab]="t"
-          class="-mb-px min-h-11 shrink-0 border-b-2 px-1 text-sm"
-          [class]="store.tab() === t ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary'"
-          (click)="select(t)"
-          (keydown)="onTabKey($event)"
-        >
-          {{ 'editor.myArticles.tabs.' + t | transloco }}
-        </button>
-      }
-    </div>
-
-    <section id="my-panel" role="tabpanel" [attr.aria-labelledby]="'my-tab-' + store.tab()" tabindex="-1" aria-live="polite" data-my-articles>
-      @switch (store.status()) {
-        @case ('error') {
-          <rd-error-state [message]="'editor.myArticles.loadError' | transloco" (retry)="store.load()" />
-        }
-        @case ('loaded') {
-          <ul class="m-0 list-none p-0">
-            @for (article of store.items(); track article.id) {
-              <li class="flex gap-3 border-b border-border py-4" [attr.data-my-article]="article.id">
-                <div class="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-primary-container" aria-hidden="true">
-                  @if (article.coverUrl) {
-                    <img [src]="article.coverUrl" alt="" class="h-full w-full object-cover" loading="lazy" />
-                  } @else {
-                    <div class="grid h-full w-full place-items-center text-on-primary-container">
-                      <svg lucideIcon="FileText" [size]="22"></svg>
+      <section id="my-panel" role="tabpanel" [attr.aria-labelledby]="'my-tab-' + store.tab()" tabindex="-1" aria-live="polite" data-my-articles>
+        @switch (store.status()) {
+          @case ('error') {
+            <rd-error-state [message]="'editor.myArticles.loadError' | transloco" (retry)="store.load()" />
+          }
+          @case ('loaded') {
+            <ul class="m-0 list-none divide-y divide-border p-0">
+              @for (article of store.items(); track article.id) {
+                <li class="flex gap-3 px-4 py-4 lg:px-5" [attr.data-my-article]="article.id">
+                  <div class="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-primary-container" aria-hidden="true">
+                    @if (article.coverUrl) {
+                      <img [src]="article.coverUrl" alt="" class="h-full w-full object-cover" loading="lazy" />
+                    } @else {
+                      <div class="grid h-full w-full place-items-center text-on-primary-container">
+                        <svg lucideIcon="FileText" [size]="22"></svg>
+                      </div>
+                    }
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
+                      @if (article.field; as field) {
+                        <span class="rd-tag"><rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" /></span>
+                      } @else {
+                        <span class="rd-tag rd-tag-neutral">{{ 'editor.myArticles.noField' | transloco }}</span>
+                      }
+                      @if (article.hasUnpublishedChanges) {
+                        <span class="rd-tag rd-tag-accent" data-unpublished-chip>{{ 'editor.myArticles.unpublishedChanges' | transloco }}</span>
+                      }
                     </div>
-                  }
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
-                    @if (article.field; as field) {
-                      <span class="rd-tag"><rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" /></span>
-                    } @else {
-                      <span class="rd-tag rd-tag-neutral">{{ 'editor.myArticles.noField' | transloco }}</span>
-                    }
-                    @if (article.hasUnpublishedChanges) {
-                      <span class="rd-tag rd-tag-accent" data-unpublished-chip>{{ 'editor.myArticles.unpublishedChanges' | transloco }}</span>
-                    }
-                  </div>
-                  <h2 class="m-0 line-clamp-2 text-[15px] font-semibold leading-snug" [attr.dir]="titleDir(article)" [attr.lang]="article.title ? article.language : null" data-my-title>
-                    @if (article.title) {
-                      <rd-bdi-text [text]="article.title" />
-                    } @else {
-                      <span class="text-text-secondary">{{ 'editor.myArticles.untitled' | transloco }}</span>
-                    }
-                  </h2>
-                  <p class="m-0 mt-1 flex flex-wrap gap-x-2 text-xs text-text-secondary">
-                    <span>{{ article.readingTimeMinutes | rdReadingTime: lang() }}</span>
-                    <span aria-hidden="true">·</span>
-                    @if (article.publishedAt) {
-                      <span>{{ 'editor.myArticles.publishedOn' | transloco: { date: (article.publishedAt | rdDate: lang()) } }}</span>
+                    <h2 class="m-0 line-clamp-2 text-[15px] font-semibold leading-snug" [attr.dir]="titleDir(article)" [attr.lang]="article.title ? article.language : null" data-my-title>
+                      @if (article.title) {
+                        <rd-bdi-text [text]="article.title" />
+                      } @else {
+                        <span class="text-text-secondary">{{ 'editor.myArticles.untitled' | transloco }}</span>
+                      }
+                    </h2>
+                    <p class="m-0 mt-1 flex flex-wrap gap-x-2 text-xs text-text-secondary">
+                      <span>{{ article.readingTimeMinutes | rdReadingTime: lang() }}</span>
                       <span aria-hidden="true">·</span>
-                    }
-                    <span>{{ 'editor.myArticles.editedAt' | transloco: { time: (article.savedAt | rdRelativeTime: lang()) } }}</span>
-                  </p>
-                  @if (article.status === 'published') {
-                    <p class="m-0 mt-1 flex gap-3 text-xs text-text-secondary">
-                      <span class="inline-flex items-center gap-1" [attr.aria-label]="article.reactionCount | rdPlural: 'editor.myArticles.reactions' : lang()">
-                        <svg lucideIcon="Lightbulb" [size]="13" aria-hidden="true"></svg>{{ article.reactionCount | rdCompactNumber: lang() }}
-                      </span>
-                      <span class="inline-flex items-center gap-1" [attr.aria-label]="article.commentCount | rdPlural: 'editor.myArticles.comments' : lang()">
-                        <svg lucideIcon="MessageCircle" [size]="13" aria-hidden="true"></svg>{{ article.commentCount | rdCompactNumber: lang() }}
-                      </span>
-                      <span class="inline-flex items-center gap-1" [attr.aria-label]="article.readCount | rdPlural: 'editor.myArticles.reads' : lang()">
-                        <svg lucideIcon="Eye" [size]="13" aria-hidden="true"></svg>{{ article.readCount | rdCompactNumber: lang() }}
-                      </span>
+                      @if (article.publishedAt) {
+                        <span>{{ 'editor.myArticles.publishedOn' | transloco: { date: (article.publishedAt | rdDate: lang()) } }}</span>
+                        <span aria-hidden="true">·</span>
+                      }
+                      <span>{{ 'editor.myArticles.editedAt' | transloco: { time: (article.savedAt | rdRelativeTime: lang()) } }}</span>
                     </p>
-                  }
-                  <div class="mt-2 flex flex-wrap gap-2">
-                    <a [routerLink]="['/write', article.id]" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" data-edit-article>
-                      <svg lucideIcon="Pencil" [size]="15" aria-hidden="true"></svg>
-                      {{ 'editor.myArticles.edit' | transloco }}
-                    </a>
-                    @if (article.slug && article.status === 'published') {
-                      <a [routerLink]="link(article)" class="rd-btn rd-btn-ghost min-h-9 px-3 text-sm" data-view-article>{{ 'editor.myArticles.view' | transloco }}</a>
-                    }
                     @if (article.status === 'published') {
-                      <!-- F33: the published version as a PDF; two language versions ask which first. -->
-                      <rd-pdf-download [articleId]="article.id" [languages]="pdfLanguages(article)" />
+                      <p class="m-0 mt-1 flex gap-3 text-xs text-text-secondary">
+                        <span class="inline-flex items-center gap-1" [attr.aria-label]="article.reactionCount | rdPlural: 'editor.myArticles.reactions' : lang()">
+                          <svg lucideIcon="Lightbulb" [size]="13" aria-hidden="true"></svg>{{ article.reactionCount | rdCompactNumber: lang() }}
+                        </span>
+                        <span class="inline-flex items-center gap-1" [attr.aria-label]="article.commentCount | rdPlural: 'editor.myArticles.comments' : lang()">
+                          <svg lucideIcon="MessageCircle" [size]="13" aria-hidden="true"></svg>{{ article.commentCount | rdCompactNumber: lang() }}
+                        </span>
+                        <span class="inline-flex items-center gap-1" [attr.aria-label]="article.readCount | rdPlural: 'editor.myArticles.reads' : lang()">
+                          <svg lucideIcon="Eye" [size]="13" aria-hidden="true"></svg>{{ article.readCount | rdCompactNumber: lang() }}
+                        </span>
+                      </p>
                     }
-                    <button type="button" class="rd-btn rd-btn-ghost min-h-9 px-3 text-sm text-error" data-delete-article (click)="confirming.set(article)">
-                      <svg lucideIcon="Trash2" [size]="15" aria-hidden="true"></svg>
-                      {{ 'editor.myArticles.delete' | transloco }}
-                    </button>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <a [routerLink]="['/write', article.id]" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" data-edit-article>
+                        <svg lucideIcon="Pencil" [size]="15" aria-hidden="true"></svg>
+                        {{ 'editor.myArticles.edit' | transloco }}
+                      </a>
+                      @if (article.slug && article.status === 'published') {
+                        <a [routerLink]="link(article)" class="rd-btn rd-btn-ghost min-h-9 px-3 text-sm" data-view-article>{{ 'editor.myArticles.view' | transloco }}</a>
+                      }
+                      @if (article.status === 'published') {
+                        <!-- F33: the published version as a PDF; two language versions ask which first. -->
+                        <rd-pdf-download [articleId]="article.id" [languages]="pdfLanguages(article)" />
+                      }
+                      <button type="button" class="rd-btn rd-btn-ghost min-h-9 px-3 text-sm text-error" data-delete-article (click)="confirming.set(article)">
+                        <svg lucideIcon="Trash2" [size]="15" aria-hidden="true"></svg>
+                        {{ 'editor.myArticles.delete' | transloco }}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </li>
-            } @empty {
-              <li>
-                @if (store.tab() === 'draft') {
-                  <rd-empty-state [title]="'editor.myArticles.emptyDrafts.title' | transloco" [message]="'editor.myArticles.emptyDrafts.body' | transloco" data-my-empty>
-                    <a routerLink="/write/new" class="rd-btn rd-btn-primary mt-3">{{ 'editor.myArticles.new' | transloco }}</a>
-                  </rd-empty-state>
-                } @else {
-                  <rd-empty-state [title]="'editor.myArticles.emptyPublished.title' | transloco" [message]="'editor.myArticles.emptyPublished.body' | transloco" data-my-empty />
-                }
-              </li>
+                </li>
+              } @empty {
+                <li>
+                  @if (store.tab() === 'draft') {
+                    <rd-empty-state [title]="'editor.myArticles.emptyDrafts.title' | transloco" [message]="'editor.myArticles.emptyDrafts.body' | transloco" data-my-empty>
+                      <a routerLink="/write/new" class="rd-btn rd-btn-primary mt-3">{{ 'editor.myArticles.new' | transloco }}</a>
+                    </rd-empty-state>
+                  } @else {
+                    <rd-empty-state [title]="'editor.myArticles.emptyPublished.title' | transloco" [message]="'editor.myArticles.emptyPublished.body' | transloco" data-my-empty />
+                  }
+                </li>
+              }
+            </ul>
+            @if (store.current().loadingMore) {
+              <rd-article-card-skeleton class="px-4 lg:px-5" />
             }
-          </ul>
-          @if (store.current().loadingMore) {
-            <rd-article-card-skeleton />
+            @if (store.current().loadMoreFailed) {
+              <div class="border-t border-border py-4 text-center">
+                <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
+              </div>
+            }
           }
-          @if (store.current().loadMoreFailed) {
-            <div class="py-4 text-center">
-              <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
-            </div>
-          }
-        }
-        @default {
-          @for (i of [1, 2, 3]; track i) {
-            <rd-article-card-skeleton />
+          @default {
+            @for (i of [1, 2, 3]; track i) {
+              <rd-article-card-skeleton class="px-4 lg:px-5" />
+            }
           }
         }
-      }
-      <div #sentinel class="h-px" aria-hidden="true"></div>
-    </section>
+        <div #sentinel class="h-px" aria-hidden="true"></div>
+      </section>
+    </div>
 
     <rd-bottom-sheet
       [open]="!!confirming()"

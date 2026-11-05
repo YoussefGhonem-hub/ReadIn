@@ -26,6 +26,7 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { FollowStore } from '../../core/social/follow.store';
 import { MuteStore, keepMutedContent } from '../../core/social/mute.store';
 import { MutedBanner } from '../../shared/mutes/muted-banner';
+import { ScrollRow } from '../../shared/ui/scroll-row';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { ManageCategories, ProfileCategories } from '../categories/profile-categories';
 import { ReadingHeatmap } from '../reading/reading-heatmap';
@@ -52,6 +53,7 @@ export type ProfileTab = 'articles' | 'categories' | 'reposts' | 'saved' | 'path
   imports: [
     RouterLink,
     TranslocoPipe,
+    ScrollRow,
     EmptyState,
     ErrorState,
     ProfileHeader,
@@ -70,18 +72,24 @@ export type ProfileTab = 'articles' | 'categories' | 'reposts' | 'saved' | 'path
   // The writer's own page keeps muted content: you opened it on purpose (F28).
   providers: [ProfileArticlesStore, keepMutedContent()],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[720px] px-4 pt-5 lg:pt-8' },
+  host: { class: 'mx-auto flex max-w-[720px] flex-col gap-2 px-4 pt-5 lg:pt-8' },
   template: `
+    <!-- Cards on the page's canvas, 8px apart: the top card (banner, photo, who they are, actions, stats), the reading
+         stats, the tabs, then the tab's content (post cards, or one card). -->
     @if (profile(); as p) {
       <rd-profile-header [profile]="p" [isMe]="isMe()" />
 
       <!-- A writer you muted (F28): their page still opens, with the way to unmute -->
       @if (muted()) {
-        <rd-muted-banner class="mt-4" [user]="p" />
+        <rd-muted-banner [user]="p" />
       }
 
       @if (statsVisible()) {
-        <section class="rd-card mt-5 block p-4 shadow-none" aria-labelledby="profile-reading-title" data-profile-reading>
+        <section
+          class="rd-card block p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5"
+          aria-labelledby="profile-reading-title"
+          data-profile-reading
+        >
           <h2 id="profile-reading-title" class="m-0 mb-3 text-base font-semibold">{{ 'profile.readingStats.title' | transloco }}</h2>
           @if (isMe()) {
             <rd-public-stats-switch class="mb-4 border-b border-border pb-2" />
@@ -91,43 +99,49 @@ export type ProfileTab = 'articles' | 'categories' | 'reposts' | 'saved' | 'path
         </section>
       }
 
-      <!-- Tabs -->
-      <div class="-mx-4 mt-5 flex gap-5 overflow-x-auto border-b border-border px-4" role="tablist" [attr.aria-label]="'profile.tabs.label' | transloco">
-        @for (t of tabs(); track t) {
-          <button
-            type="button"
-            role="tab"
-            [id]="'profile-tab-' + t"
-            [attr.aria-controls]="'profile-panel-' + t"
-            [attr.aria-selected]="tab() === t"
-            [attr.tabindex]="tab() === t ? 0 : -1"
-            [attr.data-profile-tab]="t"
-            class="-mb-px min-h-11 shrink-0 border-b-2 px-1 text-sm"
-            [class]="tab() === t ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary'"
-            (click)="selectTab(t)"
-            (keydown)="onTabKey($event)"
-          >
-            {{ 'profile.tabs.' + t | transloco }}
-          </button>
-        }
+      <!-- The tabs card. The row scrolls sideways on narrow screens without a scrollbar (its edges fade, with arrows
+           where there is a mouse) and never up and down; the active tab's line sits on the card's edge. -->
+      <div class="rd-card px-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" data-profile-tabs>
+        <rd-scroll-row [role]="'tablist'" [label]="'profile.tabs.label' | transloco" [flush]="true">
+          @for (t of tabs(); track t) {
+            <button
+              type="button"
+              role="tab"
+              [id]="'profile-tab-' + t"
+              [attr.aria-controls]="'profile-panel-' + t"
+              [attr.aria-selected]="tab() === t"
+              [attr.tabindex]="tab() === t ? 0 : -1"
+              [attr.data-profile-tab]="t"
+              class="min-h-12 shrink-0 border-b-2 px-2 text-sm"
+              [class]="tab() === t ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'"
+              (click)="selectTab(t)"
+              (keydown)="onTabKey($event)"
+            >
+              {{ 'profile.tabs.' + t | transloco }}
+            </button>
+          }
+        </rd-scroll-row>
       </div>
       <section [id]="'profile-panel-' + tab()" role="tabpanel" [attr.aria-labelledby]="'profile-tab-' + tab()" tabindex="-1">
         @switch (tab()) {
           @case ('categories') {
-            <!-- Its own chunk (with the manage view's drag and drop), loaded when the tab opens. -->
-            @defer (on immediate) {
-              @if (canManageCategories()) {
-                <rd-manage-categories [username]="p.username" />
-              } @else {
-                <rd-profile-categories [username]="p.username" />
-              }
-            } @placeholder {
-              <div class="grid gap-3 py-4 sm:grid-cols-2" aria-busy="true">
-                @for (i of [1, 2, 3, 4]; track i) {
-                  <div class="rd-skeleton h-16 w-full rounded-card"></div>
+            <!-- One card around the categories (their tiles, or the manage list). Its own chunk (with the manage view's
+                 drag and drop), loaded when the tab opens. -->
+            <div class="rd-card px-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:px-5" data-profile-categories-card>
+              @defer (on immediate) {
+                @if (canManageCategories()) {
+                  <rd-manage-categories [username]="p.username" />
+                } @else {
+                  <rd-profile-categories [username]="p.username" />
                 }
-              </div>
-            }
+              } @placeholder {
+                <div class="grid gap-3 py-4 sm:grid-cols-2" aria-busy="true">
+                  @for (i of [1, 2, 3, 4]; track i) {
+                    <div class="rd-skeleton h-16 w-full rounded-card"></div>
+                  }
+                </div>
+              }
+            </div>
           }
           @case ('reposts') {
             <rd-profile-reposts [username]="p.username" [isMe]="isMe()" />
@@ -147,23 +161,29 @@ export type ProfileTab = 'articles' | 'categories' | 'reposts' | 'saved' | 'path
         }
       </section>
     } @else if (notFound()) {
-      <rd-empty-state [title]="'profile.notFound.title' | transloco" [message]="'profile.notFound.body' | transloco" data-profile-not-found>
+      <rd-empty-state
+        class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+        [title]="'profile.notFound.title' | transloco"
+        [message]="'profile.notFound.body' | transloco"
+        data-profile-not-found
+      >
         <a routerLink="/" class="rd-btn rd-btn-primary mt-3">{{ 'comingSoon.backHome' | transloco }}</a>
       </rd-empty-state>
     } @else if (resource.status() === 'error') {
-      <rd-error-state [message]="'profile.loadError' | transloco" (retry)="resource.reload()" />
+      <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'profile.loadError' | transloco" (retry)="resource.reload()" />
     } @else {
-      <div class="flex flex-col gap-4" aria-busy="true" data-profile-loading>
-        <div class="flex items-center gap-4">
-          <div class="rd-skeleton h-20 w-20 shrink-0 rounded-full"></div>
-          <div class="flex flex-1 flex-col gap-2">
-            <div class="rd-skeleton h-5 w-1/2"></div>
-            <div class="rd-skeleton h-4 w-1/3"></div>
-            <div class="rd-skeleton mt-1 h-11 w-24"></div>
+      <!-- The top card's shape while the profile loads -->
+      <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" aria-busy="true" data-profile-loading>
+        <div class="h-20 rounded-t-[calc(var(--rd-radius-card)-1px)] bg-surface-variant max-sm:rounded-none sm:h-24 lg:h-28"></div>
+        <div class="flex flex-col gap-2 px-4 pb-5 lg:px-6">
+          <div class="-mt-12 w-fit rounded-full bg-surface p-1 lg:-mt-16">
+            <div class="rd-skeleton h-24 w-24 rounded-full lg:h-28 lg:w-28"></div>
           </div>
+          <div class="rd-skeleton mt-1 h-6 w-1/2"></div>
+          <div class="rd-skeleton h-4 w-1/3"></div>
+          <div class="rd-skeleton h-4 w-full"></div>
+          <div class="rd-skeleton mt-2 h-11 w-32"></div>
         </div>
-        <div class="rd-skeleton h-4 w-full"></div>
-        <div class="rd-skeleton h-14 w-full"></div>
       </div>
     }
   `,

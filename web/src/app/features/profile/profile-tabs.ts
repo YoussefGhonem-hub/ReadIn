@@ -28,8 +28,8 @@ import { LinkIcon } from './link-icon';
 import { profileLinks } from './profile-links';
 
 /**
- * Articles tab (F14): the user's published articles as post cards (F34), with infinite scroll. The page owns the
- * store (SSR loads it).
+ * Articles tab (F14): the user's published articles as post cards (F34), 8px apart on the page's canvas, with infinite
+ * scroll; the empty and error states are a card of their own. The page owns the store (SSR loads it).
  */
 @Component({
   selector: 'rd-profile-articles',
@@ -39,11 +39,11 @@ import { profileLinks } from './profile-links';
   template: `
     @switch (store.status()) {
       @case ('error') {
-        <rd-error-state [message]="'profile.articles.loadError' | transloco" (retry)="store.load(username())" />
+        <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'profile.articles.loadError' | transloco" (retry)="store.load(username())" />
       }
       @case ('loaded') {
         @if (store.items().length) {
-          <div class="flex flex-col gap-3 pt-3">
+          <div class="flex flex-col gap-2">
             @for (article of store.items(); track article.id) {
               <rd-post-card [article]="article" />
             }
@@ -53,13 +53,23 @@ import { profileLinks } from './profile-links';
           </div>
         } @else {
           @if (isMe()) {
-            <rd-empty-state [title]="'profile.articles.emptyOwnTitle' | transloco" [message]="'profile.articles.emptyOwnBody' | transloco" data-articles-empty>
+            <rd-empty-state
+              class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+              [title]="'profile.articles.emptyOwnTitle' | transloco"
+              [message]="'profile.articles.emptyOwnBody' | transloco"
+              data-articles-empty
+            >
               @if (canWrite()) {
                 <a routerLink="/write" class="rd-btn rd-btn-primary mt-3">{{ 'profile.articles.write' | transloco }}</a>
               }
             </rd-empty-state>
           } @else {
-            <rd-empty-state [title]="'profile.articles.emptyTitle' | transloco" [message]="'profile.articles.emptyBody' | transloco" data-articles-empty />
+            <rd-empty-state
+              class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+              [title]="'profile.articles.emptyTitle' | transloco"
+              [message]="'profile.articles.emptyBody' | transloco"
+              data-articles-empty
+            />
           }
         }
         @if (store.loadMoreFailed()) {
@@ -72,7 +82,7 @@ import { profileLinks } from './profile-links';
         }
       }
       @default {
-        <div class="flex flex-col gap-3 pt-3">
+        <div class="flex flex-col gap-2">
           @for (i of [1, 2, 3]; track i) {
             <rd-post-card-skeleton />
           }
@@ -100,61 +110,68 @@ export class ProfileArticles {
 }
 
 /**
- * Saved tab (F14, own profile only): your saved articles, newest first, as on the Saved page (F13), and a Highlights
- * section (F30) with your highlights grouped by article (its own chunk, loaded when you switch to it).
+ * Saved tab (F14, own profile only), one card: your saved articles, newest first, as rows like on the Saved page (F13),
+ * and a Highlights section (F30) with your highlights grouped by article (its own chunk, loaded when you switch to it).
  */
 @Component({
   selector: 'rd-profile-saved',
   imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, ArticleCard, ArticleCardSkeleton, EmptyState, ErrorState, Segmented, SavedHighlights],
   providers: [SavedStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block', 'data-profile-saved': '' },
+  host: { class: 'rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 block', 'data-profile-saved': '' },
   template: `
-    <div class="flex flex-wrap items-center justify-between gap-2 py-3 text-xs text-text-secondary">
+    <div class="flex flex-wrap items-center justify-between gap-2 px-4 pt-2 text-xs text-text-secondary lg:px-5">
       <span class="inline-flex items-center gap-1.5">
         <svg lucideIcon="LockKeyhole" [size]="14" aria-hidden="true"></svg>
         {{ 'profile.saved.onlyYou' | transloco }}
       </span>
-      <a routerLink="/saved" class="rd-btn rd-btn-ghost min-h-11 px-2 text-xs text-primary" data-open-saved>
+      <a routerLink="/saved" class="rd-btn rd-btn-ghost -me-2 min-h-11 px-2 text-xs text-primary" data-open-saved>
         {{ 'profile.saved.openAll' | transloco }}
         <svg lucideIcon="ChevronRight" [size]="14" class="rd-flip-rtl" aria-hidden="true"></svg>
       </a>
     </div>
     <!-- Saved articles, or your highlights (F30) -->
-    <rd-segmented class="mb-3" [options]="sections()" [(value)]="section" [label]="'highlights.saved.sections' | transloco" data-saved-sections />
+    <div class="px-4 pb-3 lg:px-5">
+      <rd-segmented [options]="sections()" [(value)]="section" [label]="'highlights.saved.sections' | transloco" data-saved-sections />
+    </div>
     @if (section() === 'highlights') {
-      @defer (on immediate) {
-        <rd-saved-highlights />
-      } @placeholder {
-        <rd-article-card-skeleton />
-      }
+      <!-- The highlight groups are tiles in this card. -->
+      <div class="px-4 pb-1 lg:px-5">
+        @defer (on immediate) {
+          <rd-saved-highlights />
+        } @placeholder {
+          <rd-article-card-skeleton />
+        }
+      </div>
     } @else {
-      @switch (store.status()) {
-        @case ('error') {
-          <rd-error-state [message]="'saved.loadError' | transloco" (retry)="store.load()" />
+      <div class="border-t border-border">
+        @switch (store.status()) {
+          @case ('error') {
+            <rd-error-state [message]="'saved.loadError' | transloco" (retry)="store.load()" />
+          }
+          @case ('loaded') {
+            @for (item of store.visible(); track item.article.id) {
+              <rd-article-card class="px-4 lg:px-5" [article]="item.article" data-saved-item />
+            } @empty {
+              <rd-empty-state [title]="'saved.empty.title' | transloco" [message]="'saved.empty.body' | transloco" data-saved-empty />
+            }
+            @if (store.loadingMore()) {
+              <rd-article-card-skeleton class="px-4 lg:px-5" />
+            }
+            @if (store.loadMoreFailed()) {
+              <div class="border-t border-border py-4 text-center">
+                <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
+              </div>
+            }
+          }
+          @default {
+            @for (i of [1, 2, 3]; track i) {
+              <rd-article-card-skeleton class="px-4 lg:px-5" />
+            }
+          }
         }
-        @case ('loaded') {
-          @for (item of store.visible(); track item.article.id) {
-            <rd-article-card [article]="item.article" data-saved-item />
-          } @empty {
-            <rd-empty-state [title]="'saved.empty.title' | transloco" [message]="'saved.empty.body' | transloco" data-saved-empty />
-          }
-          @if (store.loadingMore()) {
-            <rd-article-card-skeleton />
-          }
-          @if (store.loadMoreFailed()) {
-            <div class="py-4 text-center">
-              <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
-            </div>
-          }
-        }
-        @default {
-          @for (i of [1, 2, 3]; track i) {
-            <rd-article-card-skeleton />
-          }
-        }
-      }
-      <div #sentinel class="h-px" aria-hidden="true"></div>
+        <div #sentinel class="h-px" aria-hidden="true"></div>
+      </div>
     }
   `,
 })
@@ -181,12 +198,12 @@ export class ProfileSaved {
   }
 }
 
-/** About tab (F14): bio, links, fields of expertise and the join date. */
+/** About tab (F14), one card: bio, links, fields of expertise and the join date. */
 @Component({
   selector: 'rd-profile-about',
   imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, FieldIcon, LocalizedDatePipe, LinkIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block py-4', 'data-profile-about': '' },
+  host: { class: 'rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 block p-4 lg:p-5', 'data-profile-about': '' },
   template: `
     @let p = profile();
     @if (p.bio) {
@@ -246,7 +263,7 @@ export class ProfileSaved {
         }
       </p>
     }
-    <p class="m-0 inline-flex items-center gap-2 text-sm text-text-secondary" data-profile-joined>
+    <p class="m-0 flex items-center gap-2 text-sm text-text-secondary" data-profile-joined>
       <svg [lucideIcon]="icons.calendar" [size]="16" aria-hidden="true"></svg>
       {{ 'profile.about.joined' | transloco: { date: (p.joinedAt | rdDate: lang() : 'monthYear') } }}
     </p>
@@ -265,30 +282,37 @@ export class ProfileAbout {
 }
 
 /**
- * Paths tab (F09, F14): the user's enrolled paths with their progress and completion badges, in progress first. Shown
- * under the same rule as the reading stats (yours, or made public); otherwise the private state.
+ * Paths tab (F09, F14): the user's enrolled paths with their progress and completion badges, in progress first, as path
+ * cards 8px apart (the private, empty and error states are a card of their own). Shown under the same rule as the
+ * reading stats (yours, or made public); otherwise the private state.
  */
 @Component({
   selector: 'rd-profile-paths',
   imports: [RouterLink, TranslocoPipe, EmptyState, ErrorState, PathCard, PathCardSkeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block py-4', 'data-profile-paths': '' },
+  host: { class: 'block', 'data-profile-paths': '' },
   template: `
     @if (!visible() || status() === 'private') {
-      <rd-empty-state [title]="'profile.paths.privateTitle' | transloco" [message]="'profile.paths.privateBody' | transloco" data-paths-private />
+      <rd-empty-state
+        class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+        [title]="'profile.paths.privateTitle' | transloco"
+        [message]="'profile.paths.privateBody' | transloco"
+        data-paths-private
+      />
     } @else {
       @switch (status()) {
         @case ('error') {
-          <rd-error-state [message]="'profile.paths.loadError' | transloco" (retry)="load()" />
+          <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'profile.paths.loadError' | transloco" (retry)="load()" />
         }
         @case ('loaded') {
-          <ul class="m-0 flex list-none flex-col gap-3 p-0">
+          <ul class="m-0 flex list-none flex-col gap-2 p-0">
             @for (path of paths(); track path.id) {
               <li><rd-path-card [path]="path" /></li>
             }
           </ul>
           @if (!paths().length) {
             <rd-empty-state
+              class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
               [title]="'profile.paths.emptyTitle' | transloco"
               [message]="(isMe() ? 'profile.paths.emptyOwnBody' : 'profile.paths.emptyBody') | transloco"
               data-paths-empty
@@ -300,7 +324,7 @@ export class ProfileAbout {
           }
         }
         @default {
-          <div class="flex flex-col gap-3" aria-busy="true">
+          <div class="flex flex-col gap-2" aria-busy="true">
             @for (i of [1, 2]; track i) {
               <rd-path-card-skeleton />
             }

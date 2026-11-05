@@ -25,25 +25,25 @@ import { TagSeoService } from './tag-seo.service';
   imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, PluralPipe, PostCard, PostCardSkeleton, EmptyState, ErrorState],
   providers: [TagPageStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[640px] px-4 pt-4 lg:pt-8' },
+  host: { class: 'mx-auto flex max-w-[640px] flex-col gap-2 px-4 pt-4 lg:pt-8' },
   template: `
     <!-- Back to the page you came from in the app, else Home (a plain link to Home without JavaScript) -->
-    <a href="/" class="rd-icon-btn mb-3" [attr.aria-label]="'common.back' | transloco" data-tag-back (click)="goBack($event)">
+    <a href="/" class="rd-icon-btn mb-1" [attr.aria-label]="'common.back' | transloco" data-tag-back (click)="goBack($event)">
       <svg lucideIcon="ArrowRight" [size]="18" class="ltr:rotate-180" aria-hidden="true"></svg>
     </a>
 
     @switch (store.status()) {
       @case ('loaded') {
         @if (store.tag(); as tag) {
-          <header data-tag-header>
+          <header class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" data-tag-header>
             <p class="m-0 text-xs font-semibold text-text-secondary">{{ 'tags.page.kicker' | transloco }}</p>
             <!-- The name keeps its own direction, isolated; the heading lines up with the page like the lines around it. -->
-            <h1 class="m-0 break-words text-2xl font-bold leading-snug"><bdi dir="auto" data-tag-name>#{{ tag.name }}</bdi></h1>
+            <h1 class="m-0 break-words text-xl font-bold leading-snug lg:text-2xl"><bdi dir="auto" data-tag-name>#{{ tag.name }}</bdi></h1>
             <p class="m-0 mt-1 text-sm text-text-secondary" data-tag-count>{{ tag.articleCount | rdPlural: 'reading.articles' : lang() }}</p>
           </header>
 
           @if (store.items().length) {
-            <section class="flex flex-col gap-3 pt-4" [attr.aria-label]="'tags.page.articles' | transloco: { name: '#' + tag.name }" data-tag-articles>
+            <section class="flex flex-col gap-2" [attr.aria-label]="'tags.page.articles' | transloco: { name: '#' + tag.name }" data-tag-articles>
               @for (article of store.items(); track article.id) {
                 <rd-post-card [article]="article" [priorityMedia]="article.id === firstMediaId()" />
               }
@@ -65,30 +65,40 @@ import { TagSeoService } from './tag-seo.service';
           }
           <!-- Muted cards fold away but stay in the list (Undo puts them back): count the ones still shown (F28). -->
           @if (!anyShown() && !store.nextCursor()) {
-            <rd-empty-state [title]="'tags.page.emptyTitle' | transloco" [message]="'tags.page.emptyBody' | transloco" data-tag-empty>
+            <rd-empty-state
+              class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+              [title]="'tags.page.emptyTitle' | transloco"
+              [message]="'tags.page.emptyBody' | transloco"
+              data-tag-empty
+            >
               <a routerLink="/" class="rd-btn rd-btn-primary mt-3">{{ 'tags.page.browse' | transloco }}</a>
             </rd-empty-state>
           }
         }
       }
       @case ('notFound') {
-        <rd-empty-state [title]="'tags.page.notFoundTitle' | transloco" [message]="'tags.page.notFoundBody' | transloco" data-tag-not-found>
+        <rd-empty-state
+          class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+          [title]="'tags.page.notFoundTitle' | transloco"
+          [message]="'tags.page.notFoundBody' | transloco"
+          data-tag-not-found
+        >
           <a routerLink="/" class="rd-btn rd-btn-primary mt-3">{{ 'comingSoon.backHome' | transloco }}</a>
         </rd-empty-state>
       }
       @case ('error') {
-        <rd-error-state [message]="'tags.page.loadError' | transloco" (retry)="store.load(slug())" />
+        <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'tags.page.loadError' | transloco" (retry)="store.load(slug())" />
       }
       @default {
-        <div aria-busy="true" data-tag-loading>
-          <div class="rd-skeleton h-3 w-10"></div>
-          <div class="rd-skeleton mt-2 h-8 w-1/2"></div>
-          <div class="rd-skeleton mt-2 h-4 w-24"></div>
-          <div class="flex flex-col gap-3 pt-4">
-            @for (i of [1, 2, 3]; track i) {
-              <rd-post-card-skeleton />
-            }
+        <div class="flex flex-col gap-2" aria-busy="true" data-tag-loading>
+          <div class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" aria-hidden="true">
+            <div class="rd-skeleton h-3 w-10"></div>
+            <div class="rd-skeleton mt-2 h-8 w-1/2"></div>
+            <div class="rd-skeleton mt-2 h-4 w-24"></div>
           </div>
+          @for (i of [1, 2, 3]; track i) {
+            <rd-post-card-skeleton />
+          }
         </div>
       }
     }

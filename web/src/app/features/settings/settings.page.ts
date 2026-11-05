@@ -26,18 +26,20 @@ import { ProfileSettings } from './profile-settings';
  * muted (F28, its own page), font size, show highlights (F30),
  * notifications (push in this browser and a link to the notification preferences, F17), profile (with writer
  * verification, F19) and privacy, Moderation for moderators (F22; the side nav isn't there on narrow screens),
- * verification requests for admins (F19), account.
+ * verification requests for admins (F19), account. A header card, then each section as a card.
  */
 @Component({
   selector: 'rd-settings-page',
   imports: [FormsModule, RouterLink, TranslocoPipe, Segmented, Switch, LucideDynamicIcon, AccountSettings, ProfileSettings, PushPermissionRow],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
+  host: { class: 'mx-auto flex max-w-[640px] flex-col gap-2 px-4 pt-5 lg:pt-8' },
   template: `
-    <h1 class="mb-6 mt-0 text-2xl font-bold">{{ 'settings.title' | transloco }}</h1>
+    <header class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" data-settings-header>
+      <h1 class="m-0 text-xl font-bold lg:text-2xl">{{ 'settings.title' | transloco }}</h1>
+    </header>
 
     <!-- Appearance -->
-    <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="appearance">
+    <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="appearance">
       <h2 id="appearance" class="m-0 mb-4 text-base font-semibold">{{ 'settings.appearance' | transloco }}</h2>
       <span class="rd-label">{{ 'settings.theme.label' | transloco }}</span>
       <div class="grid grid-cols-3 gap-2" role="radiogroup" [attr.aria-label]="'settings.theme.label' | transloco">
@@ -84,7 +86,7 @@ import { ProfileSettings } from './profile-settings';
     </section>
 
     <!-- Reading (profile-backed) -->
-    <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="reading">
+    <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="reading">
       <h2 id="reading" class="m-0 mb-1 text-base font-semibold">{{ 'settings.reading' | transloco }}</h2>
       @if (!session.isAuthenticated()) {
         <p class="m-0 mb-3 text-sm text-text-secondary">{{ 'settings.signInForSync' | transloco }}</p>
@@ -129,7 +131,7 @@ import { ProfileSettings } from './profile-settings';
     </section>
 
     <!-- Notifications (F17): push in this browser, and what you get (its own page) -->
-    <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="notifications" data-settings-notifications>
+    <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="notifications" data-settings-notifications>
       <h2 id="notifications" class="m-0 mb-2 text-base font-semibold">{{ 'settings.notifications.title' | transloco }}</h2>
       @if (session.isAuthenticated()) {
         <ul class="m-0 list-none divide-y divide-border p-0">
@@ -155,7 +157,7 @@ import { ProfileSettings } from './profile-settings';
 
     <!-- Moderation (F22), for moderators -->
     @if (moderation.canModerate()) {
-      <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="settings-moderation" data-settings-moderation>
+      <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="settings-moderation" data-settings-moderation>
         <h2 id="settings-moderation" class="m-0 mb-2 text-base font-semibold">{{ 'moderation.title' | transloco }}</h2>
         <a routerLink="/moderation" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline">
           <svg lucideIcon="ShieldAlert" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
@@ -170,7 +172,7 @@ import { ProfileSettings } from './profile-settings';
 
     <!-- Admin (F19): verification requests, for admins (the side nav isn't there on narrow screens) -->
     @if (session.hasPermission('verification.manage')) {
-      <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="settings-admin" data-settings-admin>
+      <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="settings-admin" data-settings-admin>
         <h2 id="settings-admin" class="m-0 mb-2 text-base font-semibold">{{ 'settings.admin.title' | transloco }}</h2>
         <a routerLink="/admin/verification" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline" data-settings-verification-requests>
           <svg lucideIcon="BadgeCheck" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>

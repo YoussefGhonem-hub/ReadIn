@@ -132,9 +132,12 @@ for (const variant of VARIANTS) {
     await expect(tags.first()).toHaveAttribute('data-tag', 'csharp');
     await expect(tags.first()).toContainText('#C#');
     // The row follows the page's direction: an English tag starts on the page's start side, not next to the count.
+    // The rows sit inside the results card with their own start padding, so the name starts right after it.
     const tagName = (await tags.first().locator('bdi').boundingBox())!;
     const tagRow = (await tags.first().boundingBox())!;
-    expect(lang === 'ar' ? tagRow.x + tagRow.width - (tagName.x + tagName.width) : tagName.x - tagRow.x).toBeLessThan(2);
+    const rowPadding = await tags.first().evaluate((row) => parseFloat(getComputedStyle(row).paddingInlineStart));
+    const fromStart = lang === 'ar' ? tagRow.x + tagRow.width - (tagName.x + tagName.width) : tagName.x - tagRow.x;
+    expect(Math.abs(fromStart - rowPadding)).toBeLessThan(2);
     await tags.first().click();
     await page.waitForURL((url) => url.pathname === '/tags/csharp');
     await expect(page.locator('[data-tag-name]')).toHaveText('#C#', { timeout: FIRST_RENDER_MS });

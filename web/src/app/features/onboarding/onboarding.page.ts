@@ -38,7 +38,8 @@ const MIN_INTERESTS = 3;
         }
       </div>
 
-      <main class="mt-8">
+      <!-- One card, like the sign-in screens. -->
+      <main class="rd-card mt-8 p-6 sm:p-8">
         @switch (step()) {
           @case (1) {
             <section class="text-center">

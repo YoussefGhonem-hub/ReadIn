@@ -74,8 +74,23 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
   providers: [ArticleEditorStore, AttachmentDraft],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
+    /* The title and subtitle grow with their text (field-sizing from .rd-autogrow) and never scroll: Arabic glyphs
+       overflow a leading-snug line box by a pixel or two, which made the shared rule (overflow-y: auto) show a
+       scrollbar inside the field. No max-height either: a 150-character title is many lines on a phone. */
     .title {
       resize: none;
+      overflow: hidden;
+      max-height: none;
+    }
+    /* Without field-sizing (older Firefox) the field can't grow: it scrolls instead of hiding text, and the title
+       starts two lines tall so most titles fit. */
+    @supports not (field-sizing: content) {
+      .title {
+        overflow-y: auto;
+      }
+      .title-main {
+        min-height: 2lh;
+      }
     }
     .title::placeholder {
       color: var(--rd-color-text-secondary);
@@ -83,7 +98,7 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
     }
     @media (min-width: 64rem) {
       .layout {
-        grid-template-columns: minmax(0, 1fr) 300px;
+        grid-template-columns: minmax(0, 1fr) 288px;
       }
     }
   `,
@@ -91,18 +106,22 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
   template: `
     @switch (store.loadState()) {
       @case ('loading') {
-        <div class="flex flex-col gap-4" aria-busy="true">
+        <div class="rd-card flex flex-col gap-4 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" aria-busy="true">
           <div class="rd-skeleton h-10 w-2/3"></div>
           <rd-lines-skeleton [count]="8" />
         </div>
       }
       @case ('notFound') {
-        <rd-empty-state [title]="'errors.article.not_found' | transloco" [message]="'editor.notFoundBody' | transloco">
-          <a routerLink="/write" class="rd-btn rd-btn-primary mt-3">{{ 'editor.back' | transloco }}</a>
-        </rd-empty-state>
+        <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+          <rd-empty-state [title]="'errors.article.not_found' | transloco" [message]="'editor.notFoundBody' | transloco">
+            <a routerLink="/write" class="rd-btn rd-btn-primary mt-3">{{ 'editor.back' | transloco }}</a>
+          </rd-empty-state>
+        </div>
       }
       @case ('error') {
-        <rd-error-state [message]="'editor.loadError' | transloco" (retry)="openArticle()" />
+        <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+          <rd-error-state [message]="'editor.loadError' | transloco" (retry)="openArticle()" />
+        </div>
       }
       @default {
         <!-- Header: back, save status, preview / history, Publish or Update -->
@@ -204,34 +223,38 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
         }
 
         @if (mode() === 'preview') {
-          <div class="mb-4 flex flex-wrap items-center gap-3" data-preview-controls>
-            <p class="m-0 flex-1 text-sm text-text-secondary">{{ 'editor.preview.note' | transloco }}</p>
-            <rd-segmented class="min-w-36" [options]="themeOptions()" [(value)]="previewTheme" [label]="'editor.preview.theme' | transloco" data-preview-theme />
-            @if (languageOptions().length > 1) {
-              <rd-segmented class="min-w-36" [options]="languageOptions()" [(value)]="previewLanguage" [label]="'editor.preview.version' | transloco" data-preview-language />
-            }
-          </div>
-          <div class="rounded-card border border-border bg-bg px-4 py-6">
-            <rd-article-preview
-              [document]="store.document()"
-              [language]="previewLanguage()"
-              [media]="store.media()"
-              [field]="selectedField()"
-              [topic]="selectedTopic()"
-              [author]="author()"
-              [minutes]="previewMinutes()"
-              [publishedAt]="store.publishedAt()"
-              [slug]="store.slug()"
-              [uiLang]="lang()"
-            />
+          <!-- One card: the preview's controls, then the article as readers get it. -->
+          <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+            <div class="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3 lg:px-5" data-preview-controls>
+              <p class="m-0 flex-1 text-sm text-text-secondary">{{ 'editor.preview.note' | transloco }}</p>
+              <rd-segmented class="min-w-36" [options]="themeOptions()" [(value)]="previewTheme" [label]="'editor.preview.theme' | transloco" data-preview-theme />
+              @if (languageOptions().length > 1) {
+                <rd-segmented class="min-w-36" [options]="languageOptions()" [(value)]="previewLanguage" [label]="'editor.preview.version' | transloco" data-preview-language />
+              }
+            </div>
+            <div class="px-4 py-6 lg:px-5">
+              <rd-article-preview
+                [document]="store.document()"
+                [language]="previewLanguage()"
+                [media]="store.media()"
+                [field]="selectedField()"
+                [topic]="selectedTopic()"
+                [author]="author()"
+                [minutes]="previewMinutes()"
+                [publishedAt]="store.publishedAt()"
+                [slug]="store.slug()"
+                [uiLang]="lang()"
+              />
+            </div>
           </div>
         } @else if (mode() === 'history' && store.articleId(); as id) {
           <rd-revision-history [articleId]="id" [author]="author()" [fields]="fields()" [media]="store.media()" [busy]="!!store.action()" (restore)="confirm.set({ kind: 'restore', revision: $event })" />
         }
 
         <!-- Editing (kept alive while previewing, so uploads and undo history survive) -->
-        <div class="layout grid gap-6" [hidden]="mode() !== 'edit'" data-edit-area>
-          <div class="min-w-0">
+        <div class="layout grid items-start gap-2 lg:gap-6" [hidden]="mode() !== 'edit'" data-edit-area>
+          <!-- The writing card: language versions, title, subtitle, the block editor and the attachments. -->
+          <div class="rd-card min-w-0 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5">
             <div class="mb-4 flex flex-wrap items-center gap-2" data-languages>
               @if (store.document().translations.length === 1) {
                 <span class="text-sm text-text-secondary" id="ed-language-label">{{ 'editor.language.label' | transloco }}</span>
@@ -278,7 +301,7 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
               <textarea
                 id="ed-title"
                 rows="1"
-                class="title rd-autogrow block w-full border-0 bg-transparent p-0 text-[28px] font-semibold leading-snug outline-none lg:text-[32px]"
+                class="title title-main rd-autogrow block w-full border-0 bg-transparent p-0 text-[28px] font-semibold leading-snug outline-none lg:text-[32px]"
                 [rdAutoDir]="t.title"
                 [attr.lang]="t.language"
                 [maxLength]="titleMax"
@@ -320,13 +343,19 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
               />
             }
 
-            <section id="ed-attachments" class="mt-8 border-t border-border pt-5" tabindex="-1" [attr.aria-labelledby]="'ed-attachments-title'">
+            <section
+              id="ed-attachments"
+              class="-mx-4 -mb-4 mt-8 border-t border-border px-4 pb-4 pt-5 lg:-mx-5 lg:-mb-5 lg:px-5 lg:pb-5"
+              tabindex="-1"
+              [attr.aria-labelledby]="'ed-attachments-title'"
+            >
               <h2 id="ed-attachments-title" class="m-0 mb-3 text-sm font-semibold">{{ 'attachments.label' | transloco }}</h2>
               <rd-attachment-bar [draft]="attachments" />
             </section>
           </div>
 
-          <aside class="flex flex-col gap-6" [attr.aria-label]="'editor.meta.title' | transloco">
+          <!-- The side panel: a stack of cards (checks, details, cover, sources, labels, then delete). -->
+          <aside class="flex flex-col gap-2" [attr.aria-label]="'editor.meta.title' | transloco">
             <rd-checks-panel
               id="ed-checks"
               tabindex="-1"
@@ -351,7 +380,7 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
               (retryFields)="loadFields()"
               (coverUploading)="coverUploading.set($event)"
             />
-            <div class="flex flex-col gap-2 border-t border-border pt-4" data-danger-zone>
+            <div class="rd-card flex flex-col gap-1 p-2 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" data-danger-zone>
               @if (store.isPublished() && store.hasUnpublishedChanges()) {
                 <button type="button" class="rd-btn rd-btn-outline justify-start text-sm" [disabled]="!!store.action()" data-discard (click)="confirm.set({ kind: 'discard' })">
                   <svg lucideIcon="RotateCcw" [size]="16" aria-hidden="true"></svg>

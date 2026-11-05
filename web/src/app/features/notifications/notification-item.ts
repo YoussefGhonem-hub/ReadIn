@@ -28,8 +28,8 @@ import { isActorType, notificationIcon, notificationText, verificationOutcome } 
       <span class="relative mt-0.5 shrink-0">
         @if (actorBased()) {
           <!-- Unread rows share the avatar's soft color: a ring keeps its circle visible. -->
-          <rd-avatar [name]="n.actor?.displayName ?? ''" [src]="n.actor?.avatarUrl ?? null" [generic]="!n.actor" [size]="44" [class]="n.isRead ? '' : 'ring-2 ring-bg'" />
-          <span class="absolute -bottom-1 -end-1 grid h-6 w-6 place-items-center rounded-full border-2 border-bg bg-primary text-on-primary" aria-hidden="true">
+          <rd-avatar [name]="n.actor?.displayName ?? ''" [src]="n.actor?.avatarUrl ?? null" [generic]="!n.actor" [size]="44" [class]="n.isRead ? '' : 'ring-2 ring-surface'" />
+          <span class="absolute -bottom-1 -end-1 grid h-6 w-6 place-items-center rounded-full border-2 border-surface bg-primary text-on-primary" aria-hidden="true">
             <svg [lucideIcon]="icon()" [size]="12"></svg>
           </span>
         } @else {
@@ -115,7 +115,7 @@ export class NotificationItem {
   });
   protected readonly rowClass = computed(
     () =>
-      'flex w-full items-start gap-3 rounded-md px-3 py-3 text-start text-inherit no-underline ' +
+      'flex w-full items-start gap-3 rounded-none px-4 py-3 text-start text-inherit no-underline focus-visible:-outline-offset-2 lg:px-5 ' +
       (this.notification().isRead ? 'hover:bg-surface-variant' : 'bg-primary-container'),
   );
 

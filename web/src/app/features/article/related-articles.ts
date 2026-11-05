@@ -29,10 +29,18 @@ export interface RelatedArticlesRef {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
+    <!-- One card: the title row, then the post cards as its rows (their own frame, rounding, shadow and phone bleed give
+         way to a line between rows; the last one keeps the card's bottom corners) -->
     @if (anyShown()) {
-      <section class="mt-10" aria-labelledby="related-title" data-related>
-        <h2 id="related-title" class="m-0 text-lg font-semibold">{{ 'article.related' | transloco }}</h2>
-        <div class="mt-4 flex flex-col gap-3">
+      <section
+        class="rd-card mt-2 p-0 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+        aria-labelledby="related-title"
+        data-related
+      >
+        <h2 id="related-title" class="m-0 px-4 py-3 text-lg font-semibold lg:px-5 lg:py-4">{{ 'article.related' | transloco }}</h2>
+        <div
+          class="flex flex-col [&>rd-post-card]:mx-0 [&>rd-post-card]:rounded-none [&>rd-post-card]:border-x-0 [&>rd-post-card]:border-b-0 [&>rd-post-card]:shadow-none sm:[&>rd-post-card:last-child]:rounded-b-card"
+        >
           @for (card of cards(); track card.id) {
             <rd-post-card [article]="card" />
           }

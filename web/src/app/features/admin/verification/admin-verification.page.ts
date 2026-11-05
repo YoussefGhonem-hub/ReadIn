@@ -55,47 +55,55 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[1100px] px-4 pb-10 pt-5 lg:pt-8' },
   template: `
-    <header class="mb-4">
-      <h1 class="m-0 text-2xl font-bold">{{ 'verification.admin.title' | transloco }}</h1>
-      <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'verification.admin.subtitle' | transloco }}</p>
-    </header>
-    <nav class="-mx-4 flex gap-5 overflow-x-auto border-b border-border px-4" [attr.aria-label]="'verification.admin.tabs.label' | transloco" data-verification-tabs>
-      @for (tab of tabs; track tab) {
-        <a
-          [routerLink]="path"
-          [queryParams]="{ status: tab === 'pending' ? null : tab }"
-          class="-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm no-underline"
-          [class]="currentTab() === tab ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'"
-          [attr.aria-current]="currentTab() === tab ? 'page' : null"
-          [attr.data-verification-tab]="tab"
-        >
-          {{ 'verification.admin.tabs.' + tab | transloco }}
-        </a>
-      }
-    </nav>
+    <!-- The header card: title and the status tabs (their underline sits on the card's edge). -->
+    <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+      <header class="px-4 pt-4 lg:px-5 lg:pt-5">
+        <h1 class="m-0 text-xl font-bold lg:text-2xl">{{ 'verification.admin.title' | transloco }}</h1>
+        <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'verification.admin.subtitle' | transloco }}</p>
+      </header>
+      <nav class="mt-3 flex gap-5 overflow-x-auto px-4 lg:px-5" [attr.aria-label]="'verification.admin.tabs.label' | transloco" data-verification-tabs>
+        @for (tab of tabs; track tab) {
+          <a
+            [routerLink]="path"
+            [queryParams]="{ status: tab === 'pending' ? null : tab }"
+            class="inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm no-underline"
+            [class]="currentTab() === tab ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'"
+            [attr.aria-current]="currentTab() === tab ? 'page' : null"
+            [attr.data-verification-tab]="tab"
+          >
+            {{ 'verification.admin.tabs.' + tab | transloco }}
+          </a>
+        }
+      </nav>
+    </div>
 
-    <div class="mt-4 lg:grid lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-start lg:gap-6">
-      <!-- The list -->
-      <section class="lg:block" [class.hidden]="!!selectedId()" [attr.aria-label]="'verification.admin.tabs.' + currentTab() | transloco" aria-live="polite" data-verification-list>
+    <div class="mt-2 lg:grid lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-start lg:gap-6">
+      <!-- The list: one card of rows -->
+      <section
+        class="rd-card overflow-clip shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:block"
+        [class.hidden]="!!selectedId()"
+        [attr.aria-label]="'verification.admin.tabs.' + currentTab() | transloco"
+        aria-live="polite"
+        data-verification-list
+      >
         @switch (store.status()) {
           @case ('error') {
             <rd-error-state [message]="'verification.admin.loadError' | transloco" (retry)="store.load()" />
           }
           @case ('loaded') {
             @if (store.items().length) {
-              <ol class="m-0 flex list-none flex-col gap-2 p-0">
+              <ol class="m-0 list-none divide-y divide-border p-0">
                 @for (item of store.items(); track item.id) {
                   <li>
                     <a
                       [routerLink]="path"
                       [queryParams]="{ status: statusParam(), id: item.id }"
-                      class="rd-card flex items-start gap-3 p-3 text-inherit no-underline shadow-none transition-colors hover:border-primary"
-                      [class.border-primary]="selectedId() === item.id"
-                      [class.bg-primary-container]="selectedId() === item.id"
+                      class="flex items-start gap-3 px-4 py-3 text-inherit no-underline transition-colors focus-visible:-outline-offset-2 lg:px-5"
+                      [class]="selectedId() === item.id ? 'bg-primary-container' : 'hover:bg-surface-variant'"
                       [attr.aria-current]="selectedId() === item.id ? 'true' : null"
                       [attr.data-verification-row]="item.id"
                     >
-                      <rd-avatar [name]="item.user.displayName" [src]="item.user.avatarUrl" [size]="40" />
+                      <rd-avatar [name]="item.user.displayName" [src]="item.user.avatarUrl" [size]="40" [class]="selectedId() === item.id ? 'ring-2 ring-surface' : ''" />
                       <span class="min-w-0 flex-1">
                         <span class="flex min-w-0 items-center gap-1 text-sm font-semibold">
                           <rd-bdi-text class="truncate" [text]="item.user.displayName" />
@@ -117,9 +125,11 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
                 }
               </ol>
               @if (store.nextCursor()) {
-                <button type="button" class="rd-btn rd-btn-outline mt-3 w-full" [disabled]="store.loadingMore()" [attr.aria-busy]="store.loadingMore()" (click)="store.loadMore()" data-verification-more>
-                  {{ (store.moreFailed() ? 'common.retry' : 'verification.admin.more') | transloco }}
-                </button>
+                <div class="border-t border-border p-3">
+                  <button type="button" class="rd-btn rd-btn-outline w-full" [disabled]="store.loadingMore()" [attr.aria-busy]="store.loadingMore()" (click)="store.loadMore()" data-verification-more>
+                    {{ (store.moreFailed() ? 'common.retry' : 'verification.admin.more') | transloco }}
+                  </button>
+                </div>
               }
             } @else {
               <rd-empty-state
@@ -130,9 +140,9 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
             }
           }
           @default {
-            <div class="flex flex-col gap-2" aria-busy="true" data-verification-list-loading>
+            <div class="flex flex-col divide-y divide-border" aria-busy="true" data-verification-list-loading>
               @for (i of skeletons; track i) {
-                <div class="rd-card flex gap-3 p-3 shadow-none" aria-hidden="true">
+                <div class="flex gap-3 px-4 py-3 lg:px-5" aria-hidden="true">
                   <div class="rd-skeleton h-10 w-10 rounded-full"></div>
                   <div class="flex flex-1 flex-col gap-2">
                     <div class="rd-skeleton h-4 w-2/5"></div>
@@ -149,12 +159,12 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
       <!-- The request -->
       <section class="lg:block" [class.hidden]="!selectedId()" [attr.aria-label]="'verification.admin.detail.label' | transloco" data-verification-detail-pane>
         @if (selectedId()) {
-          <a [routerLink]="path" [queryParams]="{ status: statusParam() }" class="mb-3 inline-flex min-h-11 items-center gap-1.5 text-sm text-text-secondary no-underline hover:text-text-primary lg:hidden" data-verification-back>
+          <a [routerLink]="path" [queryParams]="{ status: statusParam() }" class="mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-text-secondary no-underline hover:text-text-primary lg:hidden" data-verification-back>
             <svg lucideIcon="ArrowLeft" [size]="16" class="rd-flip-rtl" aria-hidden="true"></svg>
             {{ 'verification.admin.back' | transloco }}
           </a>
           @if (selected(); as r) {
-            <article class="rd-card p-5 shadow-none" [attr.data-verification-detail]="r.id" [attr.data-status]="r.status">
+            <article class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" [attr.data-verification-detail]="r.id" [attr.data-status]="r.status">
               <header class="flex items-start gap-3">
                 <rd-avatar [name]="r.user.displayName" [src]="r.user.avatarUrl" [size]="48" />
                 <div class="min-w-0 flex-1">
@@ -250,10 +260,12 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
           } @else {
             @switch (detailStatus()) {
               @case ('error') {
-                <rd-error-state [message]="detailError()" (retry)="reloadDetail()" />
+                <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+                  <rd-error-state [message]="detailError()" (retry)="reloadDetail()" />
+                </div>
               }
               @default {
-                <div class="rd-card flex flex-col gap-3 p-5 shadow-none" aria-busy="true" data-verification-detail-loading>
+                <div class="rd-card flex flex-col gap-3 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" aria-busy="true" data-verification-detail-loading>
                   <div class="rd-skeleton h-12 w-1/2"></div>
                   <div class="rd-skeleton h-4 w-3/4"></div>
                   <div class="rd-skeleton h-40 w-full"></div>

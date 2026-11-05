@@ -29,30 +29,32 @@ type Status = 'loading' | 'loaded' | 'error';
   imports: [NgTemplateOutlet, RouterLink, TranslocoPipe, LucideDynamicIcon, Avatar, FieldIcon, EmptyState, ErrorState],
   providers: [provideMuteIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[640px] px-4 pb-16 pt-6' },
+  host: { class: 'mx-auto flex max-w-[640px] flex-col gap-2 px-4 pb-16 pt-5 lg:pt-8' },
   template: `
-    <a routerLink="/settings" class="-ms-1 mb-2 inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-sm text-text-secondary no-underline hover:text-text-primary" data-back-to-settings>
-      <svg lucideIcon="ArrowRight" [size]="18" class="shrink-0 ltr:rotate-180" aria-hidden="true"></svg>
-      {{ 'mute.settings.back' | transloco }}
-    </a>
-    <h1 class="m-0 text-2xl font-bold">{{ 'mute.settings.title' | transloco }}</h1>
-    <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'mute.settings.subtitle' | transloco }}</p>
+    <header class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 px-4 pb-4 pt-2 lg:px-5 lg:pb-5 lg:pt-3">
+      <a routerLink="/settings" class="-ms-1 inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-sm text-text-secondary no-underline hover:text-text-primary" data-back-to-settings>
+        <svg lucideIcon="ArrowRight" [size]="18" class="shrink-0 ltr:rotate-180" aria-hidden="true"></svg>
+        {{ 'mute.settings.back' | transloco }}
+      </a>
+      <h1 class="m-0 mt-1 text-xl font-bold lg:text-2xl">{{ 'mute.settings.title' | transloco }}</h1>
+      <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'mute.settings.subtitle' | transloco }}</p>
+    </header>
 
     @switch (status()) {
       @case ('error') {
-        <rd-error-state class="mt-6" [message]="'mute.settings.loadError' | transloco" (retry)="load()" />
+        <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'mute.settings.loadError' | transloco" (retry)="load()" />
       }
       @case ('loaded') {
         @if (empty()) {
-          <rd-empty-state class="mt-6" [title]="'mute.settings.emptyTitle' | transloco" [message]="'mute.settings.emptyBody' | transloco" data-muted-empty />
+          <rd-empty-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [title]="'mute.settings.emptyTitle' | transloco" [message]="'mute.settings.emptyBody' | transloco" data-muted-empty />
         } @else {
-          <div class="rd-card mt-5 shadow-none" data-muted-list>
+          <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" data-muted-list>
             @if (users().length) {
               <section aria-labelledby="muted-writers">
-                <h2 id="muted-writers" class="m-0 px-4 pb-1 pt-4 text-sm font-semibold text-text-secondary">{{ 'mute.settings.writers' | transloco }}</h2>
+                <h2 id="muted-writers" class="m-0 px-4 pb-1 pt-4 text-sm font-semibold text-text-secondary lg:px-5">{{ 'mute.settings.writers' | transloco }}</h2>
                 <ul class="m-0 list-none divide-y divide-border p-0">
                   @for (user of users(); track user.id) {
-                    <li class="flex items-center gap-3 px-4 py-3" data-muted-user [attr.data-muted-id]="user.id">
+                    <li class="flex items-center gap-3 px-4 py-3 lg:px-5" data-muted-user [attr.data-muted-id]="user.id">
                       <a [routerLink]="'/@' + user.username" class="flex shrink-0 rounded-full" tabindex="-1" aria-hidden="true">
                         <rd-avatar [name]="user.displayName" [src]="user.avatarUrl" [size]="40" />
                       </a>
@@ -73,10 +75,10 @@ type Status = 'loading' | 'loaded' | 'error';
             }
             @if (fields().length) {
               <section [class.border-t]="users().length" class="border-border" aria-labelledby="muted-fields">
-                <h2 id="muted-fields" class="m-0 px-4 pb-1 pt-4 text-sm font-semibold text-text-secondary">{{ 'mute.settings.fields' | transloco }}</h2>
+                <h2 id="muted-fields" class="m-0 px-4 pb-1 pt-4 text-sm font-semibold text-text-secondary lg:px-5">{{ 'mute.settings.fields' | transloco }}</h2>
                 <ul class="m-0 list-none divide-y divide-border p-0">
                   @for (field of fields(); track field.id) {
-                    <li class="flex items-center gap-3 px-4 py-3" data-muted-field [attr.data-muted-id]="field.id">
+                    <li class="flex items-center gap-3 px-4 py-3 lg:px-5" data-muted-field [attr.data-muted-id]="field.id">
                       <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-variant" [style.color]="color(field.color)">
                         <rd-field-icon [name]="field.icon" [size]="20" />
                       </span>
@@ -89,10 +91,10 @@ type Status = 'loading' | 'loaded' | 'error';
             }
             @if (topics().length) {
               <section [class.border-t]="users().length || fields().length" class="border-border" aria-labelledby="muted-topics">
-                <h2 id="muted-topics" class="m-0 px-4 pb-1 pt-4 text-sm font-semibold text-text-secondary">{{ 'mute.settings.topics' | transloco }}</h2>
+                <h2 id="muted-topics" class="m-0 px-4 pb-1 pt-4 text-sm font-semibold text-text-secondary lg:px-5">{{ 'mute.settings.topics' | transloco }}</h2>
                 <ul class="m-0 list-none divide-y divide-border p-0">
                   @for (topic of topics(); track topic.id) {
-                    <li class="flex items-center gap-3 px-4 py-3" data-muted-topic [attr.data-muted-id]="topic.id">
+                    <li class="flex items-center gap-3 px-4 py-3 lg:px-5" data-muted-topic [attr.data-muted-id]="topic.id">
                       <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-variant" [style.color]="color(topic.field.color)">
                         <rd-field-icon [name]="topic.field.icon" [size]="20" />
                       </span>
@@ -110,7 +112,7 @@ type Status = 'loading' | 'loaded' | 'error';
         }
       }
       @default {
-        <div class="rd-card mt-5 flex flex-col gap-4 p-4 shadow-none" aria-busy="true" data-muted-loading>
+        <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 flex flex-col gap-4 p-4 lg:p-5" aria-busy="true" data-muted-loading>
           @for (i of [1, 2, 3]; track i) {
             <div class="flex items-center gap-3">
               <div class="rd-skeleton h-10 w-10 shrink-0 rounded-full"></div>

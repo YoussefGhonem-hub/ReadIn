@@ -70,135 +70,146 @@ type FeedTab = 'forYou' | 'following';
   host: { class: 'block' },
   template: `
     <rd-home-columns>
-    <header class="mb-5 flex items-center justify-between gap-3">
-      <div>
-        <h1 class="m-0 text-xl font-bold" dir="auto">
-          @if (firstName(); as name) {
-            {{ 'home.greetingName' | transloco: { greeting: (greetingKey() | transloco), name: name } }}
-          } @else {
-            {{ greetingKey() | transloco }} 👋
+    <!-- The greeting on the page; everything under it in cards, 8px apart like the side columns. -->
+    <div class="flex flex-col gap-2">
+      <header class="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <h1 class="m-0 text-xl font-bold" dir="auto">
+            @if (firstName(); as name) {
+              {{ 'home.greetingName' | transloco: { greeting: (greetingKey() | transloco), name: name } }}
+            } @else {
+              {{ greetingKey() | transloco }} 👋
+            }
+          </h1>
+          <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'home.sub' | transloco }}</p>
+        </div>
+        <!-- From lg the streak is in the start column's reading card. -->
+        @if (session.isAuthenticated()) {
+          <rd-streak-badge class="lg:hidden" [streak]="streaks.streak()" />
+        }
+      </header>
+
+      <!-- Start a post (signed in, with articles.create). Keep a static class on it: without one, hydration leaves the
+           server-rendered "hidden" (a guest there) next to "block" once you are signed in. -->
+      <rd-start-post-card class="shrink-0" />
+
+      <!-- Today's article -->
+      @switch (store.todayStatus()) {
+        @case ('loading') {
+          <rd-post-card-skeleton />
+        }
+        @case ('loaded') {
+          @if (store.today(); as today) {
+            <rd-post-card [article]="today" label="feedCard.todayLabel" [priorityMedia]="!!(today.attachments || today.coverUrl)" data-today-card />
           }
-        </h1>
-        <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'home.sub' | transloco }}</p>
-      </div>
-      <!-- From lg the streak is in the start column's reading card. -->
-      @if (session.isAuthenticated()) {
-        <rd-streak-badge class="lg:hidden" [streak]="streaks.streak()" />
-      }
-    </header>
-
-    <!-- Start a post (signed in, with articles.create) -->
-    <rd-start-post-card class="mb-5" />
-
-    <!-- Today's article -->
-    @switch (store.todayStatus()) {
-      @case ('loading') {
-        <rd-post-card-skeleton class="mb-6" />
-      }
-      @case ('loaded') {
-        @if (store.today(); as today) {
-          <rd-post-card class="mb-6" [article]="today" label="feedCard.todayLabel" [priorityMedia]="!!(today.attachments || today.coverUrl)" data-today-card />
         }
       }
-    }
 
-    <!-- Continue reading (signed in) and your learning path, or the way to the paths (F03, F09) -->
-    @if (continueItem(); as item) {
-      <rd-continue-reading-card class="mb-3" [item]="item" />
-    }
-    <rd-learning-path-card class="mb-6" [path]="store.activePath()" [loading]="pathLoading()" />
+      <!-- Continue reading (signed in) and your learning path, or the way to the paths (F03, F09) -->
+      @if (continueItem(); as item) {
+        <rd-continue-reading-card [item]="item" />
+      }
+      <rd-learning-path-card [path]="store.activePath()" [loading]="pathLoading()" />
 
-    <!-- Field chips (they filter For you; the Following feed has no field filter) -->
-    @if (activeTab() === 'forYou') {
-      <rd-scroll-row class="mb-3" [label]="'home.filterByField' | transloco">
-        <button type="button" class="rd-chip" [attr.aria-pressed]="store.selectedField() === null" (click)="store.selectField(null)">
-          {{ 'home.allFields' | transloco }}
-        </button>
-        @for (field of store.fields(); track field.id) {
-          <button
-            type="button"
-            class="rd-chip"
-            [attr.aria-pressed]="store.selectedField() === field.slug"
-            (click)="store.selectField(field.slug)"
-          >
-            <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
+      <!-- The feed's card: the For you / Following tabs, then the field chips that filter For you (the Following feed has
+           no field filter). Under the chips the tab row has a line; without them the active tab's line is the card's edge. -->
+      <div class="rd-card p-0 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" data-home-feed-bar>
+        <div class="flex gap-6 px-4 lg:px-5" [class]="activeTab() === 'forYou' ? 'border-b border-border' : ''" role="tablist">
+          @for (tab of tabs; track tab) {
+            <button
+              type="button"
+              role="tab"
+              [id]="'home-tab-' + tab"
+              [attr.aria-controls]="'home-panel-' + tab"
+              [attr.aria-selected]="activeTab() === tab"
+              [attr.tabindex]="activeTab() === tab ? 0 : -1"
+              [attr.data-home-tab]="tab"
+              class="-mb-px min-h-12 border-b-2 text-sm"
+              [class]="activeTab() === tab ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary'"
+              (click)="selectTab(tab)"
+              (keydown)="onTabKey($event)"
+            >
+              {{ 'home.tabs.' + tab | transloco }}
+            </button>
+          }
+        </div>
+        @if (activeTab() === 'forYou') {
+          <div class="px-4 py-2 lg:px-5">
+            <rd-scroll-row [label]="'home.filterByField' | transloco">
+              <button type="button" class="rd-chip" [attr.aria-pressed]="store.selectedField() === null" (click)="store.selectField(null)">
+                {{ 'home.allFields' | transloco }}
+              </button>
+              @for (field of store.fields(); track field.id) {
+                <button
+                  type="button"
+                  class="rd-chip"
+                  [attr.aria-pressed]="store.selectedField() === field.slug"
+                  (click)="store.selectField(field.slug)"
+                >
+                  <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
+                </button>
+              }
+            </rd-scroll-row>
+          </div>
+        }
+      </div>
+
+      @if (newArticles.available()) {
+        <div class="pointer-events-none sticky top-20 z-20 flex justify-center py-2">
+          <button type="button" class="rd-btn rd-btn-primary pointer-events-auto min-h-9 px-4 text-sm shadow-raised" (click)="showNewArticles()">
+            {{ 'home.newArticles' | transloco }}
           </button>
-        }
-      </rd-scroll-row>
-    }
-
-    <!-- Tabs -->
-    <div class="mb-1 flex gap-6 border-b border-border" role="tablist">
-      @for (tab of tabs; track tab) {
-        <button
-          type="button"
-          role="tab"
-          [id]="'home-tab-' + tab"
-          [attr.aria-controls]="'home-panel-' + tab"
-          [attr.aria-selected]="activeTab() === tab"
-          [attr.tabindex]="activeTab() === tab ? 0 : -1"
-          [attr.data-home-tab]="tab"
-          class="-mb-px border-b-2 pb-2 text-sm"
-          [class]="activeTab() === tab ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary'"
-          (click)="selectTab(tab)"
-          (keydown)="onTabKey($event)"
-        >
-          {{ 'home.tabs.' + tab | transloco }}
-        </button>
+        </div>
       }
-    </div>
 
-    @if (newArticles.available()) {
-      <div class="pointer-events-none sticky top-20 z-20 flex justify-center py-2">
-        <button type="button" class="rd-btn rd-btn-primary pointer-events-auto min-h-9 px-4 text-sm shadow-raised" (click)="showNewArticles()">
-          {{ 'home.newArticles' | transloco }}
-        </button>
-      </div>
-    }
-
-    @if (activeTab() === 'following') {
-      <section id="home-panel-following" role="tabpanel" aria-labelledby="home-tab-following">
-        <rd-following-feed />
-      </section>
-    } @else {
-      <section id="home-panel-forYou" role="tabpanel" aria-labelledby="home-tab-forYou" aria-live="polite">
-        @switch (store.feedStatus()) {
-          @case ('error') {
-            <rd-error-state [message]="'home.feedError' | transloco" (retry)="store.retryFeed()" />
-          }
-          @case ('loaded') {
-            <div class="flex flex-col gap-3 pt-3" data-feed>
-              @for (article of store.items(); track article.id) {
-                <rd-post-card [article]="article" [priorityMedia]="article.id === firstMediaId()" />
+      @if (activeTab() === 'following') {
+        <section id="home-panel-following" role="tabpanel" aria-labelledby="home-tab-following">
+          <rd-following-feed />
+        </section>
+      } @else {
+        <section id="home-panel-forYou" role="tabpanel" aria-labelledby="home-tab-forYou" aria-live="polite">
+          @switch (store.feedStatus()) {
+            @case ('error') {
+              <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'home.feedError' | transloco" (retry)="store.retryFeed()" />
+            }
+            @case ('loaded') {
+              <div class="flex flex-col gap-2" data-feed>
+                @for (article of store.items(); track article.id) {
+                  <rd-post-card [article]="article" [priorityMedia]="article.id === firstMediaId()" />
+                }
+                <!-- Muted cards fold away but stay in the list (Undo puts them back): count the ones still shown (F28). -->
+                @if (!anyShown() && !store.nextCursor()) {
+                  <rd-empty-state
+                    class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+                    [title]="'home.empty.title' | transloco"
+                    [message]="'home.empty.body' | transloco"
+                  />
+                }
+                @if (store.loadingMore()) {
+                  <rd-post-card-skeleton />
+                }
+              </div>
+              @if (store.loadMoreFailed()) {
+                <div class="py-4 text-center">
+                  <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
+                </div>
               }
-              <!-- Muted cards fold away but stay in the list (Undo puts them back): count the ones still shown (F28). -->
-              @if (!anyShown() && !store.nextCursor()) {
-                <rd-empty-state [title]="'home.empty.title' | transloco" [message]="'home.empty.body' | transloco" />
+              @if (anyShown() && !store.nextCursor()) {
+                <p class="py-6 text-center text-sm text-text-secondary">{{ 'home.endOfFeed' | transloco }}</p>
               }
-              @if (store.loadingMore()) {
-                <rd-post-card-skeleton />
-              }
-            </div>
-            @if (store.loadMoreFailed()) {
-              <div class="py-4 text-center">
-                <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
+            }
+            @default {
+              <div class="flex flex-col gap-2">
+                @for (i of [1, 2, 3]; track i) {
+                  <rd-post-card-skeleton />
+                }
               </div>
             }
-            @if (anyShown() && !store.nextCursor()) {
-              <p class="py-6 text-center text-sm text-text-secondary">{{ 'home.endOfFeed' | transloco }}</p>
-            }
           }
-          @default {
-            <div class="flex flex-col gap-3 pt-3">
-              @for (i of [1, 2, 3]; track i) {
-                <rd-post-card-skeleton />
-              }
-            </div>
-          }
-        }
-        <div #sentinel class="h-px" aria-hidden="true"></div>
-      </section>
-    }
+          <div #sentinel class="h-px" aria-hidden="true"></div>
+        </section>
+      }
+    </div>
     </rd-home-columns>
   `,
 })

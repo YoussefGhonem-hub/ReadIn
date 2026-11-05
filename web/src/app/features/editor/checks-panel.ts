@@ -16,7 +16,7 @@ import { CheckTarget, checkItems, readingTimeOf } from './checks';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
-    <section class="rd-card p-4 shadow-none" aria-labelledby="rd-checks-title" data-checks>
+    <section class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" aria-labelledby="rd-checks-title" data-checks>
       <h2 id="rd-checks-title" class="m-0 mb-2 text-sm font-semibold">{{ 'editor.checks.title' | transloco }}</h2>
       <div aria-live="polite">
         @if (!checks()) {

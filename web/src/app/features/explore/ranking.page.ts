@@ -22,15 +22,15 @@ const TEXTS: Record<ExploreRanking, string> = { trending: 'explore.lists.trendin
   selector: 'rd-ranking-page',
   imports: [TranslocoPipe, LucideDynamicIcon, CardPagesList],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[640px] px-4 pt-4 lg:pt-8' },
+  host: { class: 'mx-auto flex max-w-[640px] flex-col gap-2 px-4 pt-4 lg:pt-8' },
   template: `
     @let key = texts();
     <!-- Back to the page you came from in the app, else Explore (a plain link to Explore without JavaScript) -->
-    <a href="/explore" class="rd-icon-btn mb-3" [attr.aria-label]="'common.back' | transloco" data-ranking-back (click)="goBack($event)">
+    <a href="/explore" class="rd-icon-btn mb-1" [attr.aria-label]="'common.back' | transloco" data-ranking-back (click)="goBack($event)">
       <svg lucideIcon="ArrowRight" [size]="18" class="ltr:rotate-180" aria-hidden="true"></svg>
     </a>
-    <header class="mb-4" [attr.data-ranking]="ranking()">
-      <h1 class="m-0 text-2xl font-bold">{{ key + '.title' | transloco }}</h1>
+    <header class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" [attr.data-ranking]="ranking()">
+      <h1 class="m-0 text-xl font-bold lg:text-2xl">{{ key + '.title' | transloco }}</h1>
       <p class="m-0 mt-1 text-sm text-text-secondary">{{ key + '.sub' | transloco }}</p>
     </header>
     <rd-card-pages-list

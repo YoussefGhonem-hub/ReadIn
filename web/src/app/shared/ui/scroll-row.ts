@@ -33,7 +33,9 @@ const PAGE_RATIO = 0.8;
   template: `
     <div
       #track
-      class="rd-scroll-row flex gap-2 overflow-x-auto overscroll-x-contain px-4 py-1"
+      class="rd-scroll-row flex gap-2 overflow-x-auto overscroll-x-contain px-4"
+      [class.py-1]="!flush()"
+      [class.overflow-y-hidden]="flush()"
       [class.rd-scroll-row-fade-start]="canStart()"
       [class.rd-scroll-row-fade-end]="canEnd()"
       [attr.role]="role()"
@@ -60,6 +62,11 @@ export class ScrollRow {
   /** Accessible name of the row (e.g. "Filter by field"). */
   readonly label = input<string | null>(null);
   readonly role = input<string>('toolbar');
+  /**
+   * A row of tabs rather than chips (e.g. the profile's, `role="tablist"`): no padding above and below, so the tabs'
+   * bottom line is the row's edge, and it never scrolls up and down.
+   */
+  readonly flush = input(false);
 
   /** More chips are hidden before the visible part (left in LTR, right in RTL). */
   protected readonly canStart = signal(false);

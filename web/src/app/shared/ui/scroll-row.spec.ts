@@ -16,17 +16,28 @@ import { ScrollRow } from './scroll-row';
 })
 class Host {}
 
+@Component({
+  imports: [ScrollRow],
+  template: `
+    <rd-scroll-row [role]="'tablist'" label="Profile" [flush]="true">
+      <button type="button" role="tab">Articles</button>
+      <button type="button" role="tab">About</button>
+    </rd-scroll-row>
+  `,
+})
+class TabsHost {}
+
 interface Layout {
   scrollWidth: number;
   clientWidth: number;
   scrollLeft: number;
 }
 
-async function render(lang: UiLanguage = 'en'): Promise<ComponentFixture<Host>> {
+async function render<T = Host>(lang: UiLanguage = 'en', host: new () => T = Host as new () => T): Promise<ComponentFixture<T>> {
   TestBed.configureTestingModule({
     providers: [provideAppIcons(), { provide: LanguageService, useValue: { lang: signal(lang), dir: signal(lang === 'ar' ? 'rtl' : 'ltr') } }],
   });
-  const fixture = TestBed.createComponent(Host);
+  const fixture = TestBed.createComponent(host);
   await fixture.whenStable();
   return fixture;
 }
@@ -132,5 +143,25 @@ describe('ScrollRow', () => {
     chip.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
 
     expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', inline: 'nearest', behavior: expect.any(String) });
+  });
+
+  it('as a row of tabs (flush): the tablist itself, with no padding above and below and no vertical scrolling', async () => {
+    const fixture = await render('en', TabsHost);
+    const host = (fixture.nativeElement as HTMLElement).querySelector('rd-scroll-row') as HTMLElement;
+    const row = host.querySelector('[data-scroll-track]') as HTMLElement;
+
+    expect(row.getAttribute('role')).toBe('tablist');
+    expect(row.getAttribute('aria-label')).toBe('Profile');
+    expect(host.getAttribute('role')).toBeNull();
+    expect(row.querySelectorAll('[role="tab"]').length).toBe(2);
+    expect(row.classList.contains('rd-scroll-row')).toBe(true);
+    expect(row.classList.contains('py-1')).toBe(false);
+    expect(row.classList.contains('overflow-y-hidden')).toBe(true);
+  });
+
+  it('chips keep their padding above and below', async () => {
+    const fixture = await render();
+    expect(track(fixture).classList.contains('py-1')).toBe(true);
+    expect(track(fixture).classList.contains('overflow-y-hidden')).toBe(false);
   });
 });

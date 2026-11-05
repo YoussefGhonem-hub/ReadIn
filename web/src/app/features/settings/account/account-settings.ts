@@ -39,7 +39,7 @@ type Sheet = 'phone' | 'password' | 'pin' | 'signOutEverywhere' | 'addPhone';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
-    <section class="rd-card p-5 shadow-none" aria-labelledby="account" data-account>
+    <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="account" data-account>
       <h2 id="account" class="m-0 mb-4 text-base font-semibold">{{ 'settings.account' | transloco }}</h2>
       @if (session.isAuthenticated()) {
         <div class="flex items-center gap-3">

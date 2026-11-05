@@ -44,7 +44,7 @@ type MeVariant = 'icon' | 'stacked';
   providers: [{ provide: MeMenuHost, useExisting: TopBar }],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'sticky top-0 z-30 block border-b border-border bg-bg/90 backdrop-blur',
+    class: 'sticky top-0 z-30 block border-b border-border bg-surface',
     '(document:pointerdown)': 'onDocumentPointer($event)',
     '(document:keydown.escape)': 'onEscape()',
   },
@@ -138,7 +138,7 @@ type MeVariant = 'icon' | 'stacked';
               <span class="relative">
                 <rd-avatar [name]="session.displayName()" [src]="session.avatarUrl()" [size]="24" />
                 @if (attention()) {
-                  <span class="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-error ring-2 ring-bg" aria-hidden="true" data-me-attention></span>
+                  <span class="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-error ring-2 ring-surface" aria-hidden="true" data-me-attention></span>
                 }
               </span>
               <span class="sr-only items-center gap-0.5 text-xs leading-4 lg:not-sr-only lg:flex">
@@ -181,7 +181,7 @@ type MeVariant = 'icon' | 'stacked';
             >
               <rd-avatar [name]="session.displayName()" [src]="session.avatarUrl()" [size]="32" />
               @if (attention()) {
-                <span class="absolute end-0 top-0 h-2.5 w-2.5 rounded-full bg-error ring-2 ring-bg" aria-hidden="true" data-me-attention></span>
+                <span class="absolute end-0 top-0 h-2.5 w-2.5 rounded-full bg-error ring-2 ring-surface" aria-hidden="true" data-me-attention></span>
               }
               <span class="sr-only">{{ 'nav.me' | transloco }}</span>
             </button>

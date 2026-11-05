@@ -9,7 +9,8 @@ import { Avatar } from '../../shared/ui/avatar';
 
 /**
  * Writers in a row that scrolls sideways (F15: Explore's new writers, a field's top writers): photo, name, @handle and
- * Follow (F12; none on your own tile, guests get the sign-in prompt). The photo and name open the profile.
+ * Follow (F12; none on your own tile, guests get the sign-in prompt). The photo and name open the profile. It sits in a
+ * card padded `p-4 lg:p-5` and scrolls to the card's edges.
  */
 @Component({
   selector: 'rd-writer-rail',
@@ -17,7 +18,7 @@ import { Avatar } from '../../shared/ui/avatar';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
-    <ul class="-mx-4 my-0 flex list-none gap-3 overflow-x-auto px-4 pb-2 pt-1" [attr.aria-label]="label()">
+    <ul class="-mx-4 my-0 flex list-none gap-3 overflow-x-auto px-4 pb-2 pt-1 lg:-mx-5 lg:px-5" [attr.aria-label]="label()">
       @for (user of users(); track user.id) {
         <!-- Relative: the Follow button's screen-reader text stays inside the scroller, so it can't widen the page. -->
         <li class="relative w-40 shrink-0" data-writer [attr.data-user]="user.id">
@@ -51,7 +52,7 @@ export class WriterRail {
 @Component({
   selector: 'rd-writer-rail-skeleton',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: '-mx-4 flex gap-3 overflow-hidden px-4 pb-2 pt-1', 'aria-hidden': 'true' },
+  host: { class: '-mx-4 flex gap-3 overflow-hidden px-4 pb-2 pt-1 lg:-mx-5 lg:px-5', 'aria-hidden': 'true' },
   template: `
     @for (i of [1, 2, 3, 4]; track i) {
       <div class="rd-card flex w-40 shrink-0 flex-col items-center gap-2 p-3 shadow-none">

@@ -21,7 +21,8 @@ export const SEARCH_DEBOUNCE_MS = 300;
 
 /**
  * Saved (F13): your saved articles, newest first, with title search, field chips and collections (create, rename,
- * delete, filter by one, add/remove an article). Signed-in only (authGuard), rendered in the browser.
+ * delete, filter by one, add/remove an article). A header card (title, search, collections, fields), then the list
+ * card. Signed-in only (authGuard), rendered in the browser.
  */
 @Component({
   selector: 'rd-saved-page',
@@ -43,86 +44,90 @@ export const SEARCH_DEBOUNCE_MS = 300;
   ],
   providers: [SavedStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[720px] px-4 pt-5 lg:pt-8' },
+  host: { class: 'mx-auto flex max-w-[720px] flex-col gap-2 px-4 pt-5 lg:pt-8' },
   template: `
-    <header class="mb-4">
-      <h1 class="m-0 text-2xl font-bold">{{ 'saved.title' | transloco }}</h1>
-      <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'saved.sub' | transloco }}</p>
-    </header>
+    <!-- The header card: title, search, collections (and the open one's name and actions), then the field chips. -->
+    <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 px-4 pb-3 pt-4 lg:px-5 lg:pt-5" data-saved-header>
+      <header class="mb-4">
+        <h1 class="m-0 text-xl font-bold lg:text-2xl">{{ 'saved.title' | transloco }}</h1>
+        <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'saved.sub' | transloco }}</p>
+      </header>
 
-    <!-- Search (debounced) -->
-    <div class="relative mb-4" role="search">
-      <svg lucideIcon="Search" [size]="18" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-text-secondary" aria-hidden="true"></svg>
-      <input
-        id="saved-search"
-        type="search"
-        class="rd-input ps-10"
-        dir="auto"
-        autocomplete="off"
-        enterkeyhint="search"
-        data-saved-search
-        [attr.aria-label]="'saved.search' | transloco"
-        [placeholder]="'saved.search' | transloco"
-        [value]="searchText()"
-        (input)="onSearchInput($event)"
-        (keydown.enter)="searchNow()"
-      />
+      <!-- Search (debounced) -->
+      <div class="relative mb-4" role="search">
+        <svg lucideIcon="Search" [size]="18" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-text-secondary" aria-hidden="true"></svg>
+        <input
+          id="saved-search"
+          type="search"
+          class="rd-input ps-10"
+          dir="auto"
+          autocomplete="off"
+          enterkeyhint="search"
+          data-saved-search
+          [attr.aria-label]="'saved.search' | transloco"
+          [placeholder]="'saved.search' | transloco"
+          [value]="searchText()"
+          (input)="onSearchInput($event)"
+          (keydown.enter)="searchNow()"
+        />
+      </div>
+
+      <!-- Collections -->
+      <h2 class="m-0 mb-2 text-sm font-semibold">{{ 'saved.collections' | transloco }}</h2>
+      <rd-scroll-row [label]="'saved.collections' | transloco" data-collection-chips>
+        <button type="button" class="rd-chip" [attr.aria-pressed]="!store.collection()" (click)="store.setCollection(null)">
+          {{ 'saved.allSaved' | transloco }}
+        </button>
+        @for (c of collections.collections(); track c.id) {
+          <button type="button" class="rd-chip" [attr.aria-pressed]="store.collection() === c.id" [attr.data-collection-chip]="c.id" (click)="store.setCollection(c.id)">
+            <svg lucideIcon="Folder" [size]="14" aria-hidden="true"></svg>
+            <rd-bdi-text [text]="c.name" />
+            <span class="opacity-80" aria-hidden="true">{{ c.articleCount }}</span>
+            <span class="sr-only">{{ c.articleCount | rdPlural: 'collections.articleCount' : lang() }}</span>
+          </button>
+        }
+        <button type="button" class="rd-chip border-dashed" data-new-collection-chip (click)="openCreate()">
+          <svg lucideIcon="Plus" [size]="14" aria-hidden="true"></svg>
+          {{ 'collections.new' | transloco }}
+        </button>
+      </rd-scroll-row>
+
+      @if (selectedCollection(); as c) {
+        <div class="mt-3 flex items-center gap-2 rounded-md border border-border bg-surface-variant p-2 ps-3" data-collection-header>
+          <svg lucideIcon="Folder" [size]="18" class="shrink-0 text-primary" aria-hidden="true"></svg>
+          <div class="min-w-0 flex-1">
+            <span class="block truncate font-semibold"><rd-bdi-text [text]="c.name" /></span>
+            <span class="text-xs text-text-secondary">{{ c.articleCount | rdPlural: 'collections.articleCount' : lang() }}</span>
+          </div>
+          <button type="button" class="rd-icon-btn h-11 w-11 border-0" data-rename-collection [attr.aria-label]="'collections.rename' | transloco" (click)="openRename(c)">
+            <svg lucideIcon="Pencil" [size]="18" aria-hidden="true"></svg>
+          </button>
+          <button type="button" class="rd-icon-btn h-11 w-11 border-0 text-error hover:text-error" data-delete-collection [attr.aria-label]="'collections.delete' | transloco" (click)="deleting.set(c)">
+            <svg lucideIcon="Trash2" [size]="18" aria-hidden="true"></svg>
+          </button>
+        </div>
+      }
+
+      <!-- Fields -->
+      <rd-scroll-row class="mt-3" [label]="'saved.filterByField' | transloco" data-field-chips>
+        <button type="button" class="rd-chip" [attr.aria-pressed]="!store.field()" (click)="store.setField(null)">{{ 'saved.allFields' | transloco }}</button>
+        @for (field of store.fields(); track field.id) {
+          <button type="button" class="rd-chip" [attr.aria-pressed]="store.field() === field.slug" [attr.data-field-chip]="field.slug" (click)="store.setField(field.slug)">
+            <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
+          </button>
+        }
+      </rd-scroll-row>
     </div>
 
-    <!-- Collections -->
-    <h2 class="m-0 mb-2 text-sm font-semibold">{{ 'saved.collections' | transloco }}</h2>
-    <rd-scroll-row [label]="'saved.collections' | transloco" data-collection-chips>
-      <button type="button" class="rd-chip" [attr.aria-pressed]="!store.collection()" (click)="store.setCollection(null)">
-        {{ 'saved.allSaved' | transloco }}
-      </button>
-      @for (c of collections.collections(); track c.id) {
-        <button type="button" class="rd-chip" [attr.aria-pressed]="store.collection() === c.id" [attr.data-collection-chip]="c.id" (click)="store.setCollection(c.id)">
-          <svg lucideIcon="Folder" [size]="14" aria-hidden="true"></svg>
-          <rd-bdi-text [text]="c.name" />
-          <span class="opacity-80" aria-hidden="true">{{ c.articleCount }}</span>
-          <span class="sr-only">{{ c.articleCount | rdPlural: 'collections.articleCount' : lang() }}</span>
-        </button>
-      }
-      <button type="button" class="rd-chip border-dashed" data-new-collection-chip (click)="openCreate()">
-        <svg lucideIcon="Plus" [size]="14" aria-hidden="true"></svg>
-        {{ 'collections.new' | transloco }}
-      </button>
-    </rd-scroll-row>
-
-    @if (selectedCollection(); as c) {
-      <div class="rd-card mt-3 flex items-center gap-2 p-2 ps-3 shadow-none" data-collection-header>
-        <svg lucideIcon="Folder" [size]="18" class="shrink-0 text-primary" aria-hidden="true"></svg>
-        <div class="min-w-0 flex-1">
-          <span class="block truncate font-semibold"><rd-bdi-text [text]="c.name" /></span>
-          <span class="text-xs text-text-secondary">{{ c.articleCount | rdPlural: 'collections.articleCount' : lang() }}</span>
-        </div>
-        <button type="button" class="rd-icon-btn h-11 w-11 border-0" data-rename-collection [attr.aria-label]="'collections.rename' | transloco" (click)="openRename(c)">
-          <svg lucideIcon="Pencil" [size]="18" aria-hidden="true"></svg>
-        </button>
-        <button type="button" class="rd-icon-btn h-11 w-11 border-0 text-error hover:text-error" data-delete-collection [attr.aria-label]="'collections.delete' | transloco" (click)="deleting.set(c)">
-          <svg lucideIcon="Trash2" [size]="18" aria-hidden="true"></svg>
-        </button>
-      </div>
-    }
-
-    <!-- Fields -->
-    <rd-scroll-row class="mt-3" [label]="'saved.filterByField' | transloco" data-field-chips>
-      <button type="button" class="rd-chip" [attr.aria-pressed]="!store.field()" (click)="store.setField(null)">{{ 'saved.allFields' | transloco }}</button>
-      @for (field of store.fields(); track field.id) {
-        <button type="button" class="rd-chip" [attr.aria-pressed]="store.field() === field.slug" [attr.data-field-chip]="field.slug" (click)="store.setField(field.slug)">
-          <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
-        </button>
-      }
-    </rd-scroll-row>
-
-    <section class="mt-2" [attr.aria-label]="'saved.title' | transloco" aria-live="polite" data-saved-list>
+    <!-- The list card: the saved articles as rows, and the loading, empty and error states in their place. -->
+    <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-0" [attr.aria-label]="'saved.title' | transloco" aria-live="polite" data-saved-list>
       @switch (store.status()) {
         @case ('error') {
           <rd-error-state [message]="'saved.loadError' | transloco" (retry)="store.load()" />
         }
         @case ('loaded') {
           @for (item of store.visible(); track item.article.id) {
-            <rd-article-card [article]="item.article" data-saved-item [attr.data-article]="item.article.id">
+            <rd-article-card class="px-4 lg:px-5" [article]="item.article" data-saved-item [attr.data-article]="item.article.id">
               <div rdCardFooter class="relative z-10 mt-2 flex items-center justify-between gap-2 text-xs text-text-secondary">
                 <span>{{ 'saved.savedAt' | transloco: { time: (item.savedAt | rdRelativeTime: lang()) } }}</span>
                 <button type="button" class="rd-btn rd-btn-ghost min-h-11 gap-1.5 px-2 text-xs" data-item-collections (click)="picking.set(item.article)">
@@ -148,17 +153,17 @@ export const SEARCH_DEBOUNCE_MS = 300;
             }
           }
           @if (store.loadingMore()) {
-            <rd-article-card-skeleton />
+            <rd-article-card-skeleton class="px-4 lg:px-5" />
           }
           @if (store.loadMoreFailed()) {
-            <div class="py-4 text-center">
+            <div class="border-t border-border py-4 text-center">
               <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
             </div>
           }
         }
         @default {
           @for (i of [1, 2, 3]; track i) {
-            <rd-article-card-skeleton />
+            <rd-article-card-skeleton class="px-4 lg:px-5" />
           }
         }
       }

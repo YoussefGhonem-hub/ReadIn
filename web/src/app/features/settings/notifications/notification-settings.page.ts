@@ -49,24 +49,26 @@ type Status = 'loading' | 'loaded' | 'error';
   imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, Segmented, Switch, ErrorState, PushPermissionRow],
   providers: [provideNotificationIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
+  host: { class: 'mx-auto flex max-w-[640px] flex-col gap-2 px-4 pt-5 lg:pt-8' },
   template: `
-    <a routerLink="/settings" class="-ms-1 mb-2 inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-sm text-text-secondary no-underline hover:text-text-primary" data-back-to-settings>
-      <svg lucideIcon="ArrowRight" [size]="18" class="shrink-0 ltr:rotate-180" aria-hidden="true"></svg>
-      {{ 'settings.notifications.back' | transloco }}
-    </a>
-    <h1 class="mb-6 mt-0 text-2xl font-bold">{{ 'settings.notifications.preferences' | transloco }}</h1>
+    <header class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 px-4 pb-4 pt-2 lg:px-5 lg:pb-5 lg:pt-3">
+      <a routerLink="/settings" class="-ms-1 inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-sm text-text-secondary no-underline hover:text-text-primary" data-back-to-settings>
+        <svg lucideIcon="ArrowRight" [size]="18" class="shrink-0 ltr:rotate-180" aria-hidden="true"></svg>
+        {{ 'settings.notifications.back' | transloco }}
+      </a>
+      <h1 class="m-0 mt-1 text-xl font-bold lg:text-2xl">{{ 'settings.notifications.preferences' | transloco }}</h1>
+    </header>
 
     @switch (status()) {
       @case ('error') {
-        <rd-error-state [message]="'settings.notifications.loadError' | transloco" (retry)="load()" />
+        <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'settings.notifications.loadError' | transloco" (retry)="load()" />
       }
       @case ('loaded') {
-        <section class="rd-card mb-5 p-5 shadow-none" [attr.aria-label]="'settings.push.title' | transloco">
+        <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" [attr.aria-label]="'settings.push.title' | transloco">
           <rd-push-permission-row />
         </section>
 
-        <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="notification-types" data-notification-types>
+        <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="notification-types" data-notification-types>
           <h2 id="notification-types" class="m-0 mb-1 text-base font-semibold">{{ 'settings.notifications.typesTitle' | transloco }}</h2>
           <p class="m-0 mb-2 text-sm text-text-secondary">{{ 'settings.notifications.modesHint' | transloco }}</p>
           <ul class="m-0 list-none divide-y divide-border p-0">
@@ -93,7 +95,7 @@ type Status = 'loading' | 'loaded' | 'error';
           </p>
         </section>
 
-        <section class="rd-card mb-5 p-5 shadow-none" aria-labelledby="quiet-hours" data-quiet-hours>
+        <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="quiet-hours" data-quiet-hours>
           <h2 id="quiet-hours" class="m-0 mb-3 flex items-center gap-2 text-base font-semibold">
             <svg lucideIcon="MoonStar" [size]="18" class="text-text-secondary" aria-hidden="true"></svg>
             {{ 'settings.notifications.quietHours.title' | transloco }}
@@ -148,10 +150,10 @@ type Status = 'loading' | 'loaded' | 'error';
         </section>
       }
       @default {
-        <div class="flex flex-col gap-5" aria-busy="true" data-notification-settings-loading>
-          <div class="rd-skeleton h-20 w-full rounded-card"></div>
-          <div class="rd-skeleton h-96 w-full rounded-card"></div>
-          <div class="rd-skeleton h-40 w-full rounded-card"></div>
+        <div class="flex flex-col gap-2" aria-busy="true" data-notification-settings-loading>
+          <div class="rd-skeleton h-20 w-full rounded-card max-sm:-mx-4 max-sm:w-auto max-sm:rounded-none"></div>
+          <div class="rd-skeleton h-96 w-full rounded-card max-sm:-mx-4 max-sm:w-auto max-sm:rounded-none"></div>
+          <div class="rd-skeleton h-40 w-full rounded-card max-sm:-mx-4 max-sm:w-auto max-sm:rounded-none"></div>
         </div>
       }
     }

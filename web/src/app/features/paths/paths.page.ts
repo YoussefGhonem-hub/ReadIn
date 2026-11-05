@@ -19,73 +19,94 @@ import { reloadOnSessionChange } from './session-change';
   imports: [TranslocoPipe, BdiText, EmptyState, ErrorState, PathCard, PathCardSkeleton, ScrollRow],
   providers: [PathsStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[720px] px-4 pt-5 lg:pt-8' },
+  host: { class: 'mx-auto flex max-w-[720px] flex-col gap-2 px-4 pt-5 lg:pt-8' },
   template: `
-    <header class="mb-4">
-      <h1 class="m-0 text-2xl font-bold">{{ 'paths.title' | transloco }}</h1>
-      <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'paths.sub' | transloco }}</p>
-    </header>
+    <!-- The header card: title, the tabs edge to edge, then the field chips. Under the chips the tab row has a line;
+         without them the active tab's line is the card's edge. The path cards follow, 8px apart. -->
+    <div class="rd-card p-0 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" data-paths-header>
+      <header class="px-4 pb-1 pt-4 lg:px-5 lg:pt-5">
+        <h1 class="m-0 text-xl font-bold lg:text-2xl">{{ 'paths.title' | transloco }}</h1>
+        <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'paths.sub' | transloco }}</p>
+      </header>
 
-    <div class="mb-3 flex gap-6 border-b border-border" role="tablist" [attr.aria-label]="'paths.tabs.label' | transloco">
-      @for (tab of tabs; track tab) {
-        <button
-          type="button"
-          role="tab"
-          [id]="'paths-tab-' + tab"
-          aria-controls="paths-panel"
-          [attr.aria-selected]="store.tab() === tab"
-          [attr.tabindex]="store.tab() === tab ? 0 : -1"
-          [attr.data-paths-tab]="tab"
-          class="-mb-px min-h-11 border-b-2 text-sm"
-          [class]="store.tab() === tab ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary'"
-          (click)="selectTab(tab)"
-          (keydown)="onTabKey($event)"
-        >
-          {{ 'paths.tabs.' + tab | transloco }}
-        </button>
-      }
-    </div>
-
-    @if (store.fields().length > 1) {
-      <rd-scroll-row class="mb-2" [label]="'paths.filterByField' | transloco" data-path-field-chips>
-        <button type="button" class="rd-chip" [attr.aria-pressed]="!store.selectedField()" (click)="store.setField(null)">{{ 'paths.allFields' | transloco }}</button>
-        @for (field of store.fields(); track field.id) {
+      <div
+        class="flex gap-6 px-4 lg:px-5"
+        [class]="store.fields().length > 1 ? 'border-b border-border' : ''"
+        role="tablist"
+        [attr.aria-label]="'paths.tabs.label' | transloco"
+      >
+        @for (tab of tabs; track tab) {
           <button
             type="button"
-            class="rd-chip"
-            [attr.aria-pressed]="store.selectedField() === field.slug"
-            [attr.data-path-field-chip]="field.slug"
-            (click)="store.setField(field.slug)"
+            role="tab"
+            [id]="'paths-tab-' + tab"
+            aria-controls="paths-panel"
+            [attr.aria-selected]="store.tab() === tab"
+            [attr.tabindex]="store.tab() === tab ? 0 : -1"
+            [attr.data-paths-tab]="tab"
+            class="-mb-px min-h-12 border-b-2 text-sm"
+            [class]="store.tab() === tab ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary'"
+            (click)="selectTab(tab)"
+            (keydown)="onTabKey($event)"
           >
-            <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
+            {{ 'paths.tabs.' + tab | transloco }}
           </button>
         }
-      </rd-scroll-row>
-    }
+      </div>
+
+      @if (store.fields().length > 1) {
+        <div class="px-4 py-2 lg:px-5">
+          <rd-scroll-row [label]="'paths.filterByField' | transloco" data-path-field-chips>
+            <button type="button" class="rd-chip" [attr.aria-pressed]="!store.selectedField()" (click)="store.setField(null)">{{ 'paths.allFields' | transloco }}</button>
+            @for (field of store.fields(); track field.id) {
+              <button
+                type="button"
+                class="rd-chip"
+                [attr.aria-pressed]="store.selectedField() === field.slug"
+                [attr.data-path-field-chip]="field.slug"
+                (click)="store.setField(field.slug)"
+              >
+                <rd-bdi-text [text]="lang() === 'ar' ? field.nameAr : field.nameEn" />
+              </button>
+            }
+          </rd-scroll-row>
+        </div>
+      }
+    </div>
 
     <section id="paths-panel" role="tabpanel" [attr.aria-labelledby]="'paths-tab-' + store.tab()" aria-live="polite" data-paths-list>
       @switch (store.status()) {
         @case ('error') {
-          <rd-error-state [message]="'paths.loadError' | transloco" (retry)="store.retry()" />
+          <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'paths.loadError' | transloco" (retry)="store.retry()" />
         }
         @case ('loaded') {
-          <ul class="m-0 flex list-none flex-col gap-3 p-0">
+          <ul class="m-0 flex list-none flex-col gap-2 p-0">
             @for (path of store.visible(); track path.id) {
               <li><rd-path-card [path]="path" /></li>
             }
           </ul>
           @if (!store.visible().length) {
             @if (store.tab() === 'mine') {
-              <rd-empty-state [title]="'paths.mineEmpty.title' | transloco" [message]="'paths.mineEmpty.body' | transloco" data-paths-mine-empty>
+              <rd-empty-state
+                class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+                [title]="'paths.mineEmpty.title' | transloco"
+                [message]="'paths.mineEmpty.body' | transloco"
+                data-paths-mine-empty
+              >
                 <button type="button" class="rd-btn rd-btn-primary mt-3" (click)="selectTab('all')">{{ 'paths.mineEmpty.browse' | transloco }}</button>
               </rd-empty-state>
             } @else {
-              <rd-empty-state [title]="'paths.empty.title' | transloco" [message]="'paths.empty.body' | transloco" data-paths-empty />
+              <rd-empty-state
+                class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+                [title]="'paths.empty.title' | transloco"
+                [message]="'paths.empty.body' | transloco"
+                data-paths-empty
+              />
             }
           }
         }
         @default {
-          <div class="flex flex-col gap-3" aria-busy="true">
+          <div class="flex flex-col gap-2" aria-busy="true">
             @for (i of [1, 2, 3]; track i) {
               <rd-path-card-skeleton />
             }

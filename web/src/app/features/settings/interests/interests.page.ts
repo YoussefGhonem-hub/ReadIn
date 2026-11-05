@@ -36,21 +36,23 @@ function toggled(ids: ReadonlySet<string>, id: string, on: boolean): ReadonlySet
   selector: 'rd-interests-page',
   imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, ErrorState, InterestChips, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[640px] px-4 pb-16 pt-6' },
+  host: { class: 'mx-auto flex max-w-[640px] flex-col gap-2 px-4 pb-16 pt-5 lg:pt-8' },
   template: `
-    <a routerLink="/settings" class="-ms-1 mb-2 inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-sm text-text-secondary no-underline hover:text-text-primary" data-back-to-settings>
-      <svg lucideIcon="ArrowRight" [size]="18" class="shrink-0 ltr:rotate-180" aria-hidden="true"></svg>
-      {{ 'settings.interests.back' | transloco }}
-    </a>
-    <h1 class="m-0 text-2xl font-bold">{{ 'settings.interests.title' | transloco }}</h1>
-    <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'settings.interests.subtitle' | transloco }}</p>
+    <header class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 px-4 pb-4 pt-2 lg:px-5 lg:pb-5 lg:pt-3">
+      <a routerLink="/settings" class="-ms-1 inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-sm text-text-secondary no-underline hover:text-text-primary" data-back-to-settings>
+        <svg lucideIcon="ArrowRight" [size]="18" class="shrink-0 ltr:rotate-180" aria-hidden="true"></svg>
+        {{ 'settings.interests.back' | transloco }}
+      </a>
+      <h1 class="m-0 mt-1 text-xl font-bold lg:text-2xl">{{ 'settings.interests.title' | transloco }}</h1>
+      <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'settings.interests.subtitle' | transloco }}</p>
+    </header>
 
     @switch (status()) {
       @case ('error') {
-        <rd-error-state class="mt-6" (retry)="load()" />
+        <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" (retry)="load()" />
       }
       @case ('loaded') {
-        <section data-interests>
+        <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" data-interests>
           <rd-interest-chips
             [fields]="fields()"
             [topics]="topics()"
@@ -61,13 +63,13 @@ function toggled(ids: ReadonlySet<string>, id: string, on: boolean): ReadonlySet
             (fieldToggle)="toggleField($event)"
             (topicToggle)="toggleTopic($event)"
           />
-          <p class="m-0 mt-6 text-sm text-text-secondary" aria-live="polite" data-interest-count>
+          <p class="m-0 mt-5 border-t border-border pt-4 text-sm text-text-secondary" aria-live="polite" data-interest-count>
             {{ count() | rdPlural: 'settings.interests.count' : lang() }}
           </p>
         </section>
       }
       @default {
-        <div class="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3" aria-busy="true" data-interests-loading>
+        <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 grid grid-cols-2 gap-2 p-4 sm:grid-cols-3 lg:p-5" aria-busy="true" data-interests-loading>
           @for (i of [1, 2, 3, 4, 5, 6]; track i) {
             <div class="rd-skeleton h-12 rounded-md"></div>
           }

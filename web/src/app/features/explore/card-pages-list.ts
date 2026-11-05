@@ -11,7 +11,8 @@ import { CardPages } from './card-pages';
  * A {@link CardPages} list as post cards (F34): skeletons while the first page loads, an error with Retry, the empty
  * state (content inside the element goes under its message), infinite scroll with Retry when a page fails, and a line
  * once everything is shown. Muted cards fold away but stay in the list (Undo puts them back in place), so the empty
- * state counts the cards still shown, in the page's MUTE_SCOPE (F28).
+ * state counts the cards still shown, in the page's MUTE_SCOPE (F28). The empty and error states are cards, like the
+ * posts.
  */
 @Component({
   selector: 'rd-card-pages-list',
@@ -23,7 +24,7 @@ import { CardPages } from './card-pages';
     @switch (list.status()) {
       @case ('loaded') {
         @if (list.items().length) {
-          <div class="flex flex-col gap-3" data-card-list>
+          <div class="flex flex-col gap-2" data-card-list>
             @for (article of list.items(); track article.id) {
               <rd-post-card [article]="article" [priorityMedia]="article.id === firstMediaId()" />
             }
@@ -44,16 +45,16 @@ import { CardPages } from './card-pages';
           }
         }
         @if (!anyShown() && !list.nextCursor()) {
-          <rd-empty-state [title]="emptyTitle()" [message]="emptyBody()" data-list-empty>
+          <rd-empty-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [title]="emptyTitle()" [message]="emptyBody()" data-list-empty>
             <ng-content />
           </rd-empty-state>
         }
       }
       @case ('error') {
-        <rd-error-state [message]="errorText()" (retry)="list.load()" />
+        <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="errorText()" (retry)="list.load()" />
       }
       @default {
-        <div class="flex flex-col gap-3" aria-busy="true" data-list-loading>
+        <div class="flex flex-col gap-2" aria-busy="true" data-list-loading>
           @for (i of [1, 2, 3]; track i) {
             <rd-post-card-skeleton />
           }

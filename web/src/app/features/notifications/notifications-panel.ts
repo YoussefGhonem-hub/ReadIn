@@ -30,7 +30,7 @@ export const PANEL_ITEMS = 8;
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex max-h-[min(70vh,560px)] flex-col', 'data-notifications-panel': '' },
   template: `
-    <header class="flex min-h-14 items-center justify-between gap-2 border-b border-border px-4 py-2">
+    <header class="flex min-h-14 items-center justify-between gap-2 border-b border-border px-4 py-2 lg:px-5">
       <h2 class="m-0 text-base font-semibold">{{ 'notifications.title' | transloco }}</h2>
       @if (store.status() === 'loaded' && store.items().length) {
         <button
@@ -46,7 +46,7 @@ export const PANEL_ITEMS = 8;
       }
     </header>
 
-    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1" [attr.aria-busy]="store.status() === 'loading' || null">
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain" [attr.aria-busy]="store.status() === 'loading' || null">
       @switch (store.status()) {
         @case ('error') {
           <div class="flex flex-col items-center gap-3 px-4 py-8 text-center" data-panel-error>
@@ -56,7 +56,7 @@ export const PANEL_ITEMS = 8;
         }
         @case ('loaded') {
           @if (latest().length) {
-            <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
+            <ul class="m-0 list-none divide-y divide-border p-0">
               @for (n of latest(); track n.id) {
                 <li><rd-notification-item [notification]="n" [path]="paths().get(n.id) ?? null" (opened)="opened(n)" /></li>
               }
@@ -72,9 +72,9 @@ export const PANEL_ITEMS = 8;
           }
         }
         @default {
-          <div class="flex flex-col" data-panel-loading>
+          <div class="flex flex-col divide-y divide-border" data-panel-loading>
             @for (i of [1, 2, 3, 4]; track i) {
-              <div class="flex items-start gap-3 px-3 py-3" aria-hidden="true">
+              <div class="flex items-start gap-3 px-4 py-3 lg:px-5" aria-hidden="true">
                 <div class="rd-skeleton h-11 w-11 shrink-0 rounded-full"></div>
                 <div class="flex flex-1 flex-col gap-2 pt-1"><div class="rd-skeleton h-3 w-3/4"></div><div class="rd-skeleton h-3 w-1/3"></div></div>
               </div>

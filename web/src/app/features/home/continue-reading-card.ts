@@ -20,7 +20,7 @@ import { ProgressBar } from '../../shared/ui/progress-bar';
   host: { class: 'block' },
   template: `
     @let a = item().article;
-    <a [routerLink]="link()" class="rd-card flex items-center gap-3 p-3 text-inherit no-underline shadow-none transition-colors hover:bg-surface-variant" data-continue-reading>
+    <a [routerLink]="link()" class="rd-card flex items-center gap-3 p-3 text-inherit no-underline shadow-none transition-colors hover:bg-surface-variant max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 max-sm:px-4" data-continue-reading>
       <span class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-primary-container" aria-hidden="true">
         @if (a.coverUrl) {
           <img [src]="a.coverUrl" alt="" class="h-full w-full object-cover" />

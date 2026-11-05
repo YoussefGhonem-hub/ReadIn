@@ -46,145 +46,148 @@ type Stage = 'about' | 'confirm';
   selector: 'rd-delete-account-page',
   imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LucideDynamicIcon, BottomSheet, ExternalButtons, PasswordField],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[640px] px-4 pt-6' },
+  host: { class: 'mx-auto block max-w-[640px] px-4 pt-5 lg:pt-8' },
   template: `
-    <a routerLink="/settings" class="mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-text-secondary no-underline hover:text-text-primary" data-back-to-settings>
-      <svg lucideIcon="ArrowLeft" [size]="16" class="rd-flip-rtl" aria-hidden="true"></svg>{{ 'nav.settings' | transloco }}
-    </a>
+    <!-- One card, as on the other Settings pages: the way back, then the stage (what goes and what stays, or confirm). -->
+    <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 px-4 pb-5 pt-2 sm:px-6 sm:pb-6 sm:pt-3" data-delete-card>
+      <a routerLink="/settings" class="-ms-1 mb-2 inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-sm text-text-secondary no-underline hover:text-text-primary" data-back-to-settings>
+        <svg lucideIcon="ArrowLeft" [size]="16" class="rd-flip-rtl" aria-hidden="true"></svg>{{ 'nav.settings' | transloco }}
+      </a>
 
-    @if (stage() === 'about') {
-      <section class="rd-card p-5 shadow-none sm:p-6" aria-labelledby="delete-about-title" data-delete-about>
-        <span class="grid h-12 w-12 place-items-center rounded-card bg-callout-danger text-error" aria-hidden="true">
-          <svg lucideIcon="Trash2" [size]="22"></svg>
-        </span>
-        <h1 #heading id="delete-about-title" tabindex="-1" class="m-0 mt-4 text-2xl font-bold outline-none">{{ 'account.delete.title' | transloco }}</h1>
-        <p class="m-0 mt-2" data-lead>{{ 'account.delete.lead' | transloco }}</p>
+      @if (stage() === 'about') {
+        <section aria-labelledby="delete-about-title" data-delete-about>
+          <span class="grid h-12 w-12 place-items-center rounded-card bg-callout-danger text-error" aria-hidden="true">
+            <svg lucideIcon="Trash2" [size]="22"></svg>
+          </span>
+          <h1 #heading id="delete-about-title" tabindex="-1" class="m-0 mt-4 text-xl font-bold outline-none lg:text-2xl">{{ 'account.delete.title' | transloco }}</h1>
+          <p class="m-0 mt-2" data-lead>{{ 'account.delete.lead' | transloco }}</p>
 
-        <h2 class="m-0 mt-6 text-base font-semibold">{{ 'account.delete.deletedTitle' | transloco }}</h2>
-        <ul class="m-0 mt-2 flex list-none flex-col gap-2 p-0 text-sm" data-deleted>
-          @for (key of deleted; track key) {
-            <li class="flex items-start gap-2">
-              <svg lucideIcon="CircleX" [size]="16" class="mt-0.5 shrink-0 text-error" aria-hidden="true"></svg>
-              <span>{{ 'account.delete.deleted.' + key | transloco }}</span>
-            </li>
-          }
-        </ul>
+          <h2 class="m-0 mt-6 text-base font-semibold">{{ 'account.delete.deletedTitle' | transloco }}</h2>
+          <ul class="m-0 mt-2 flex list-none flex-col gap-2 p-0 text-sm" data-deleted>
+            @for (key of deleted; track key) {
+              <li class="flex items-start gap-2">
+                <svg lucideIcon="CircleX" [size]="16" class="mt-0.5 shrink-0 text-error" aria-hidden="true"></svg>
+                <span>{{ 'account.delete.deleted.' + key | transloco }}</span>
+              </li>
+            }
+          </ul>
 
-        <h2 class="m-0 mt-6 text-base font-semibold">{{ 'account.delete.keptTitle' | transloco }}</h2>
-        <ul class="m-0 mt-2 flex list-none flex-col gap-2 p-0 text-sm" data-kept>
-          @for (key of kept; track key) {
-            <li class="flex items-start gap-2">
-              <svg lucideIcon="Info" [size]="16" class="mt-0.5 shrink-0 text-text-secondary" aria-hidden="true"></svg>
-              <span>{{ 'account.delete.kept.' + key | transloco }}</span>
-            </li>
-          }
-        </ul>
+          <h2 class="m-0 mt-6 text-base font-semibold">{{ 'account.delete.keptTitle' | transloco }}</h2>
+          <ul class="m-0 mt-2 flex list-none flex-col gap-2 p-0 text-sm" data-kept>
+            @for (key of kept; track key) {
+              <li class="flex items-start gap-2">
+                <svg lucideIcon="Info" [size]="16" class="mt-0.5 shrink-0 text-text-secondary" aria-hidden="true"></svg>
+                <span>{{ 'account.delete.kept.' + key | transloco }}</span>
+              </li>
+            }
+          </ul>
 
-        <p class="m-0 mt-6 rounded-md bg-surface-variant p-3 text-sm" data-after>{{ 'account.delete.after' | transloco }}</p>
+          <p class="m-0 mt-6 rounded-md bg-surface-variant p-3 text-sm" data-after>{{ 'account.delete.after' | transloco }}</p>
 
-        <div class="mt-6 flex flex-col gap-2 sm:flex-row-reverse">
-          <button type="button" class="rd-btn rd-btn-primary flex-1" (click)="toConfirm()" data-continue>{{ 'common.continue' | transloco }}</button>
-          <a routerLink="/settings" class="rd-btn rd-btn-outline flex-1 no-underline">{{ 'common.cancel' | transloco }}</a>
-        </div>
-      </section>
-    } @else {
-      <section class="rd-card p-5 shadow-none sm:p-6" aria-labelledby="delete-confirm-title" data-delete-confirm>
-        <h1 #heading id="delete-confirm-title" tabindex="-1" class="m-0 text-2xl font-bold outline-none">{{ 'account.delete.confirmTitle' | transloco }}</h1>
+          <div class="mt-6 flex flex-col gap-2 sm:flex-row-reverse">
+            <button type="button" class="rd-btn rd-btn-primary flex-1" (click)="toConfirm()" data-continue>{{ 'common.continue' | transloco }}</button>
+            <a routerLink="/settings" class="rd-btn rd-btn-outline flex-1 no-underline">{{ 'common.cancel' | transloco }}</a>
+          </div>
+        </section>
+      } @else {
+        <section aria-labelledby="delete-confirm-title" data-delete-confirm>
+          <h1 #heading id="delete-confirm-title" tabindex="-1" class="m-0 text-xl font-bold outline-none lg:text-2xl">{{ 'account.delete.confirmTitle' | transloco }}</h1>
 
-        <form [formGroup]="form" (ngSubmit)="review()" class="mt-4 flex flex-col gap-4" novalidate data-delete-form>
-          <fieldset [disabled]="busy()" class="m-0 flex min-w-0 flex-col gap-4 border-0 p-0">
-            @if (held(); as credential) {
-              <div class="rd-alert rd-alert-success flex flex-wrap items-center gap-2" data-confirmed>
-                <svg lucideIcon="CircleCheck" [size]="18" class="shrink-0 text-success" aria-hidden="true"></svg>
-                <span class="flex-1">{{ 'account.delete.confirmedWith' | transloco: { provider: providerName(credential.provider) } }}</span>
-                <button type="button" class="rd-btn rd-btn-ghost min-h-9 px-2 text-sm" (click)="confirmAgain()" data-confirm-again>
-                  {{ 'account.delete.confirmAgain' | transloco }}
-                </button>
-              </div>
-            } @else {
-              @if (hasPassword()) {
-                <div>
-                  <label class="rd-label" for="delete-account-password">{{ 'auth.password' | transloco }}</label>
-                  <rd-password-field
-                    inputId="delete-account-password"
-                    autocomplete="current-password"
-                    formControlName="password"
-                    [invalid]="!!passwordError()"
-                    [describedBy]="passwordError() ? 'delete-account-password-error' : null"
-                  />
-                  @if (passwordError()) {
-                    <p id="delete-account-password-error" class="rd-field-error">{{ passwordError()! | transloco }}</p>
-                  }
+          <form [formGroup]="form" (ngSubmit)="review()" class="mt-4 flex flex-col gap-4" novalidate data-delete-form>
+            <fieldset [disabled]="busy()" class="m-0 flex min-w-0 flex-col gap-4 border-0 p-0">
+              @if (held(); as credential) {
+                <div class="rd-alert rd-alert-success flex flex-wrap items-center gap-2" data-confirmed>
+                  <svg lucideIcon="CircleCheck" [size]="18" class="shrink-0 text-success" aria-hidden="true"></svg>
+                  <span class="flex-1">{{ 'account.delete.confirmedWith' | transloco: { provider: providerName(credential.provider) } }}</span>
+                  <button type="button" class="rd-btn rd-btn-ghost min-h-9 px-2 text-sm" (click)="confirmAgain()" data-confirm-again>
+                    {{ 'account.delete.confirmAgain' | transloco }}
+                  </button>
                 </div>
-              }
-              @if (providers().length) {
+              } @else {
                 @if (hasPassword()) {
-                  <p class="m-0 text-center text-xs text-text-secondary">{{ 'common.or' | transloco }}</p>
-                } @else {
-                  <p class="m-0 text-sm text-text-secondary">{{ 'account.delete.confirmProvider' | transloco }}</p>
+                  <div>
+                    <label class="rd-label" for="delete-account-password">{{ 'auth.password' | transloco }}</label>
+                    <rd-password-field
+                      inputId="delete-account-password"
+                      autocomplete="current-password"
+                      formControlName="password"
+                      [invalid]="!!passwordError()"
+                      [describedBy]="passwordError() ? 'delete-account-password-error' : null"
+                    />
+                    @if (passwordError()) {
+                      <p id="delete-account-password-error" class="rd-field-error">{{ passwordError()! | transloco }}</p>
+                    }
+                  </div>
                 }
-                <rd-external-buttons
-                  [only]="providers()"
-                  [busy]="busy()"
-                  text="signin_with"
-                  [appleLabel]="'account.delete.confirmApple' | transloco"
-                  (credential)="picked($event)"
-                  data-delete-external
-                />
-              } @else if (!hasPassword() && providersLoaded() && !appleNeeded()) {
-                <!-- Nothing this browser can confirm with (e.g. Apple only, and the web has no Apple sign in yet). -->
-                <div class="rd-alert rd-alert-info" data-no-confirm-here>
-                  <p class="m-0">{{ (appleLinked() ? 'account.delete.appleUnavailable' : 'errors.auth.provider_disabled') | transloco }}</p>
-                  <a [href]="mailto" class="mt-1 inline-block font-semibold text-link">{{ 'account.delete.emailUs' | transloco }}: <span class="font-latin" dir="ltr">{{ email }}</span></a>
-                </div>
+                @if (providers().length) {
+                  @if (hasPassword()) {
+                    <p class="m-0 text-center text-xs text-text-secondary">{{ 'common.or' | transloco }}</p>
+                  } @else {
+                    <p class="m-0 text-sm text-text-secondary">{{ 'account.delete.confirmProvider' | transloco }}</p>
+                  }
+                  <rd-external-buttons
+                    [only]="providers()"
+                    [busy]="busy()"
+                    text="signin_with"
+                    [appleLabel]="'account.delete.confirmApple' | transloco"
+                    (credential)="picked($event)"
+                    data-delete-external
+                  />
+                } @else if (!hasPassword() && providersLoaded() && !appleNeeded()) {
+                  <!-- Nothing this browser can confirm with (e.g. Apple only, and the web has no Apple sign in yet). -->
+                  <div class="rd-alert rd-alert-info" data-no-confirm-here>
+                    <p class="m-0">{{ (appleLinked() ? 'account.delete.appleUnavailable' : 'errors.auth.provider_disabled') | transloco }}</p>
+                    <a [href]="mailto" class="mt-1 inline-block font-semibold text-link">{{ 'account.delete.emailUs' | transloco }}: <span class="font-latin" dir="ltr">{{ email }}</span></a>
+                  </div>
+                }
+                @if (confirmMissing()) {
+                  <p class="rd-field-error m-0" data-confirm-first>{{ 'account.delete.confirmFirst' | transloco }}</p>
+                }
               }
-              @if (confirmMissing()) {
-                <p class="rd-field-error m-0" data-confirm-first>{{ 'account.delete.confirmFirst' | transloco }}</p>
-              }
+
+              <label class="flex items-start gap-2 text-sm">
+                <input type="checkbox" formControlName="understood" class="mt-0.5 h-5 w-5 shrink-0 accent-error" data-understood />
+                <span class="font-semibold">{{ 'account.delete.understand' | transloco }}</span>
+              </label>
+            </fieldset>
+
+            @if (appleNeeded() && !appleHere()) {
+              <div class="rd-alert rd-alert-error" role="alert" data-apple-unavailable>
+                <p class="m-0">{{ 'account.delete.appleUnavailable' | transloco }}</p>
+                <a [href]="mailto" class="mt-1 inline-block font-semibold text-link">{{ 'account.delete.emailUs' | transloco }}: <span class="font-latin" dir="ltr">{{ email }}</span></a>
+              </div>
+            } @else if (error()) {
+              <div class="rd-alert rd-alert-error flex flex-wrap items-center gap-2" role="alert" data-delete-error>
+                <span class="min-w-0 flex-1">{{ error() }}</span>
+                @if (canRetry()) {
+                  <button #retryButton type="button" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" [disabled]="busy()" (click)="retry()" data-retry>
+                    <svg lucideIcon="RotateCw" [size]="16" aria-hidden="true"></svg>{{ 'common.retry' | transloco }}
+                  </button>
+                }
+              </div>
             }
 
-            <label class="flex items-start gap-2 text-sm">
-              <input type="checkbox" formControlName="understood" class="mt-0.5 h-5 w-5 shrink-0 accent-error" data-understood />
-              <span class="font-semibold">{{ 'account.delete.understand' | transloco }}</span>
-            </label>
-          </fieldset>
-
-          @if (appleNeeded() && !appleHere()) {
-            <div class="rd-alert rd-alert-error" role="alert" data-apple-unavailable>
-              <p class="m-0">{{ 'account.delete.appleUnavailable' | transloco }}</p>
-              <a [href]="mailto" class="mt-1 inline-block font-semibold text-link">{{ 'account.delete.emailUs' | transloco }}: <span class="font-latin" dir="ltr">{{ email }}</span></a>
-            </div>
-          } @else if (error()) {
-            <div class="rd-alert rd-alert-error flex flex-wrap items-center gap-2" role="alert" data-delete-error>
-              <span class="min-w-0 flex-1">{{ error() }}</span>
-              @if (canRetry()) {
-                <button #retryButton type="button" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" [disabled]="busy()" (click)="retry()" data-retry>
-                  <svg lucideIcon="RotateCw" [size]="16" aria-hidden="true"></svg>{{ 'common.retry' | transloco }}
-                </button>
+            <button
+              #submitButton
+              type="submit"
+              class="rd-btn w-full bg-error text-on-error"
+              [disabled]="busy() || !value().understood"
+              [attr.aria-busy]="busy()"
+              data-delete-submit
+            >
+              @if (busy()) {
+                <svg lucideIcon="LoaderCircle" [size]="18" class="animate-spin" aria-hidden="true"></svg>
+                {{ 'account.delete.deleting' | transloco }}
+              } @else {
+                <svg lucideIcon="Trash2" [size]="18" aria-hidden="true"></svg>
+                {{ 'account.delete.submit' | transloco }}
               }
-            </div>
-          }
-
-          <button
-            #submitButton
-            type="submit"
-            class="rd-btn w-full bg-error text-on-error"
-            [disabled]="busy() || !value().understood"
-            [attr.aria-busy]="busy()"
-            data-delete-submit
-          >
-            @if (busy()) {
-              <svg lucideIcon="LoaderCircle" [size]="18" class="animate-spin" aria-hidden="true"></svg>
-              {{ 'account.delete.deleting' | transloco }}
-            } @else {
-              <svg lucideIcon="Trash2" [size]="18" aria-hidden="true"></svg>
-              {{ 'account.delete.submit' | transloco }}
-            }
-          </button>
-          <button type="button" class="rd-btn rd-btn-outline w-full" [disabled]="busy()" (click)="toAbout()" data-back>{{ 'common.back' | transloco }}</button>
-        </form>
-      </section>
-    }
+            </button>
+            <button type="button" class="rd-btn rd-btn-outline w-full" [disabled]="busy()" (click)="toAbout()" data-back>{{ 'common.back' | transloco }}</button>
+          </form>
+        </section>
+      }
+    </div>
 
     <p class="m-0 mt-4 text-center text-sm">
       <a [href]="deletionPageUrl" target="_blank" rel="noopener" class="text-text-secondary underline underline-offset-2" data-delete-by-email>

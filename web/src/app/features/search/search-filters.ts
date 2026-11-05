@@ -58,7 +58,7 @@ export class SearchFilter {
  * The Articles tab's filters (F16): field, article language and reading time (`≤ 5`, `5–10`, `> 10` minutes), plus
  * "Clear filters" while any is set. The fields come from `GET /fields`; a field slug that isn't one of them (an old
  * link) still shows as chosen. Not hydrated: the browser renders it again once the fields are in, so the server's
- * copy can't mismatch.
+ * copy can't mismatch. A row of the search page's header card, padded like the card.
  */
 @Component({
   selector: 'rd-search-filters',
@@ -66,7 +66,7 @@ export class SearchFilter {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     ngSkipHydration: 'true',
-    class: '-mx-4 flex gap-2 overflow-x-auto px-4 py-3',
+    class: 'flex gap-2 overflow-x-auto px-4 py-3 lg:px-5',
     role: 'group',
     '[attr.aria-label]': 'label()',
     'data-search-filters': '',

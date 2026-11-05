@@ -30,7 +30,7 @@ import { ProgressBar } from '../../shared/ui/progress-bar';
   template: `
     @if (loading()) {
       <!-- The size of the card: the title row, the bar and the button. -->
-      <div class="rd-card p-4 shadow-none" aria-hidden="true" data-home-path-loading>
+      <div class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" aria-hidden="true" data-home-path-loading>
         <div class="flex items-center gap-3">
           <div class="rd-skeleton h-10 w-10 shrink-0 rounded-full"></div>
           <div class="flex flex-1 flex-col gap-2">
@@ -42,7 +42,7 @@ import { ProgressBar } from '../../shared/ui/progress-bar';
         <div class="rd-skeleton mt-3 h-11"></div>
       </div>
     } @else if (path(); as p) {
-      <section class="rd-card relative p-4 shadow-none transition-colors hover:bg-surface-variant" aria-labelledby="home-path-title" data-home-path>
+      <section class="rd-card relative p-4 shadow-none transition-colors hover:bg-surface-variant max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" aria-labelledby="home-path-title" data-home-path>
         <div class="flex items-center gap-3">
           <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-container text-on-primary-container" aria-hidden="true">
             <svg lucideIcon="Route" [size]="20"></svg>
@@ -73,7 +73,7 @@ import { ProgressBar } from '../../shared/ui/progress-bar';
         }
       </section>
     } @else {
-      <a routerLink="/paths" class="rd-card flex h-14 items-center gap-3 px-3 text-inherit no-underline shadow-none transition-colors hover:bg-surface-variant" data-home-path-prompt>
+      <a routerLink="/paths" class="rd-card flex h-14 items-center gap-3 px-3 text-inherit no-underline shadow-none transition-colors hover:bg-surface-variant max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 max-sm:px-4" data-home-path-prompt>
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-container text-on-primary-container" aria-hidden="true">
           <svg lucideIcon="Route" [size]="18"></svg>
         </span>

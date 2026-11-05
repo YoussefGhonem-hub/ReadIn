@@ -29,7 +29,7 @@ const NEAR_VIEWPORT = '600px 0px';
   host: { class: 'block', 'data-next-in-path': '' },
   template: `
     @if (block(); as b) {
-      <section class="rd-card mt-10 p-4 shadow-none" aria-labelledby="next-in-path-title" data-next-in-path-block>
+      <section class="rd-card mt-2 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" aria-labelledby="next-in-path-title" data-next-in-path-block>
         <div class="flex items-start gap-3">
           <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-container text-on-primary-container" aria-hidden="true">
             <svg lucideIcon="Route" [size]="20"></svg>

@@ -25,7 +25,7 @@ interface StartAction {
   host: { '[class]': "visible() ? 'block' : 'hidden'" },
   template: `
     @if (visible()) {
-      <section class="rd-card px-4 pb-2 pt-3 shadow-none" [attr.aria-label]="'home.startPost.label' | transloco" data-start-post>
+      <section class="rd-card px-4 pb-2 pt-3 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [attr.aria-label]="'home.startPost.label' | transloco" data-start-post>
         <div class="flex items-center gap-3">
           <rd-avatar [name]="session.displayName()" [src]="session.avatarUrl()" [size]="48" />
           <a

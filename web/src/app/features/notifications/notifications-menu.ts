@@ -52,7 +52,7 @@ let nextId = 0;
         <span class="relative">
           <svg lucideIcon="Bell" [size]="22" aria-hidden="true"></svg>
           @if (badge.count() > 0) {
-            <span class="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-bg" aria-hidden="true" data-unread-badge></span>
+            <span class="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-surface" aria-hidden="true" data-unread-badge></span>
           }
         </span>
         <span class="hidden text-xs leading-4 lg:block" aria-hidden="true">{{ 'nav.notifications' | transloco }}</span>
@@ -100,9 +100,9 @@ let nextId = 0;
         @if (panelComponent(); as component) {
           <ng-container *ngComponentOutlet="component; inputs: panelInputs" />
         } @else {
-          <div class="flex flex-col p-1" aria-hidden="true">
+          <div class="flex flex-col divide-y divide-border" aria-hidden="true">
             @for (i of [1, 2, 3]; track i) {
-              <div class="flex items-start gap-3 px-3 py-3">
+              <div class="flex items-start gap-3 px-4 py-3 lg:px-5">
                 <div class="rd-skeleton h-11 w-11 shrink-0 rounded-full"></div>
                 <div class="flex flex-1 flex-col gap-2 pt-1"><div class="rd-skeleton h-3 w-3/4"></div><div class="rd-skeleton h-3 w-1/3"></div></div>
               </div>

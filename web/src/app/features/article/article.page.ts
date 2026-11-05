@@ -106,9 +106,12 @@ const TOC_MIN_HEADINGS = 3;
       <div class="absolute start-0 top-0 h-full bg-accent transition-[width] duration-100" [style.width.%]="progress() * 100"></div>
     </div>
 
-    <article class="mx-auto max-w-[720px] px-4 pb-28 pt-4" #articleEl>
-      <!-- Reader toolbar -->
-      <div class="mb-4 flex items-center justify-between gap-2">
+    <!-- A stack of cards on the canvas, 8px apart: the article (the text keeps the reading width inside the card's padding),
+         Next in path, Related articles and the comments. On phones the cards go edge to edge. The <article> itself stays
+         the whole column, as the reading progress, the resume position and the reading tracker measure it. -->
+    <article class="mx-auto flex max-w-[calc(var(--rd-layout-reading-width)_+_6rem_+_2px)] flex-col px-4 pb-28 pt-4" #articleEl>
+      <!-- Reader toolbar, on the canvas above the card -->
+      <div class="mb-2 flex items-center justify-between gap-2">
         <!-- Back to the page you came from in the app, else Home (a plain link to Home without JavaScript) -->
         <a href="/" class="rd-icon-btn" [attr.aria-label]="'common.back' | transloco" data-reader-back (click)="goBack($event)">
           <svg lucideIcon="ArrowRight" [size]="18" class="ltr:rotate-180"></svg>
@@ -137,143 +140,157 @@ const TOC_MIN_HEADINGS = 3;
       </div>
 
       @if (fontPanel()) {
-        <div class="mb-4 rd-card p-3 shadow-none">
+        <div class="rd-card mb-2 p-3 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:p-4">
           <span class="rd-label">{{ 'article.fontSize' | transloco }}</span>
           <rd-segmented [options]="fontOptions()" [value]="prefs.fontSize()" (valueChange)="prefs.setFontSize($event)" [label]="'article.fontSize' | transloco" />
         </div>
       }
 
       @if (article(); as a) {
-        @if (a.language !== requestedLanguage()) {
-          <p class="mb-4 rounded-md bg-callout-info p-3 text-sm" role="status">{{ 'article.fallbackNotice' | transloco }}</p>
-        }
+        <!-- The article card, from the notices to the tags. The sources close it (the card's bottom part, below), as their
+             own element so Next in path stays right after them. -->
+        <div class="rd-card rounded-b-none border-b-0 p-4 pb-0 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:p-6 sm:pb-0 lg:p-8 lg:pb-0" data-article-card>
+          @if (a.language !== requestedLanguage()) {
+            <p class="mb-4 rounded-md bg-callout-info p-3 text-sm" role="status">{{ 'article.fallbackNotice' | transloco }}</p>
+          }
 
-        <!-- Hidden by moderators (F22): only its author and moderators get here -->
-        @if (a.moderation; as hidden) {
-          <section class="mb-4 flex gap-3 rounded-card bg-callout-warning p-4 text-sm" role="status" aria-labelledby="hidden-banner-title" data-hidden-banner>
-            <svg lucideIcon="EyeOff" [size]="20" class="mt-0.5 shrink-0 text-callout-warning-accent" aria-hidden="true"></svg>
-            <div class="min-w-0 flex-1">
-              <h2 id="hidden-banner-title" class="m-0 text-base font-semibold">{{ 'article.hiddenBanner.title' | transloco }}</h2>
-              <p class="m-0 mt-1 text-text-secondary">
-                {{ (isAuthor() ? 'article.hiddenBanner.author' : 'article.hiddenBanner.moderator') | transloco }}
-                · {{ 'article.hiddenBanner.since' | transloco: { date: (hidden.hiddenAt | rdDate: uiLang() : 'long') } }}
-              </p>
-              @if (hidden.note) {
-                <p class="m-0 mt-2"><span class="font-semibold">{{ 'article.hiddenBanner.note' | transloco }}:</span> <rd-bdi-text [text]="hidden.note" /></p>
-              }
-            </div>
-          </section>
-        }
-
-        <!-- A writer you muted (F28): a direct link still opens, with the way to unmute -->
-        @if (mutedAuthor(); as author) {
-          <rd-muted-banner class="mb-4" [user]="author" />
-        }
-
-        @if (a.coverUrl) {
-          <rd-article-cover [url]="a.coverUrl" />
-        }
-        <rd-article-headline
-          [field]="uiLang() === 'ar' ? a.field.nameAr : a.field.nameEn"
-          [topic]="a.topic ? (uiLang() === 'ar' ? a.topic.nameAr : a.topic.nameEn) : null"
-          [minutes]="a.readingTimeMinutes"
-          [title]="a.title"
-          [subtitle]="a.subtitle"
-          [language]="a.language"
-          [uiLang]="uiLang()"
-        />
-
-        <!-- Byline -->
-        <div class="mt-5 flex items-center gap-3" data-byline>
-          @if (a.author; as author) {
-            <!-- The name below is the link for keyboards and screen readers; the photo is the same link for taps. -->
-            <a [routerLink]="'/@' + author.username" class="flex shrink-0 rounded-full" tabindex="-1" aria-hidden="true" data-author-avatar>
-              <rd-avatar [name]="author.displayName" [src]="author.avatarUrl" [size]="40" />
-            </a>
-            <div class="min-w-0">
-              <a [routerLink]="'/@' + author.username" class="inline-flex items-center gap-1 font-semibold text-text-primary no-underline">
-                {{ author.displayName }}
-                @if (author.isVerified) {
-                  <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
-                }
-              </a>
-              <!-- The writer's title (F14): one line with "…", on the UI's start side, laid out and cut in its own direction -->
-              @if (author.headline?.trim(); as headline) {
-                <p class="m-0 flex text-xs leading-snug text-text-secondary" [attr.title]="headline" data-author-headline>
-                  <bdi dir="auto" class="min-w-0 truncate">{{ headline }}</bdi>
+          <!-- Hidden by moderators (F22): only its author and moderators get here -->
+          @if (a.moderation; as hidden) {
+            <section class="mb-4 flex gap-3 rounded-card bg-callout-warning p-4 text-sm" role="status" aria-labelledby="hidden-banner-title" data-hidden-banner>
+              <svg lucideIcon="EyeOff" [size]="20" class="mt-0.5 shrink-0 text-callout-warning-accent" aria-hidden="true"></svg>
+              <div class="min-w-0 flex-1">
+                <h2 id="hidden-banner-title" class="m-0 text-base font-semibold">{{ 'article.hiddenBanner.title' | transloco }}</h2>
+                <p class="m-0 mt-1 text-text-secondary">
+                  {{ (isAuthor() ? 'article.hiddenBanner.author' : 'article.hiddenBanner.moderator') | transloco }}
+                  · {{ 'article.hiddenBanner.since' | transloco: { date: (hidden.hiddenAt | rdDate: uiLang() : 'long') } }}
                 </p>
-              }
-              <div class="text-xs text-text-secondary">
-                {{ a.publishedAt | rdDate: uiLang() : 'long' }}
-                <!-- The writer's category (F31): "في قسم {name}", the name isolated in its own direction. -->
-                @if (a.category; as category) {
-                  <span aria-hidden="true">·</span>
-                  <a [routerLink]="categoryLink(author.username, category.slug)" class="font-semibold text-link no-underline hover:underline" data-article-category>{{
-                    'article.inCategory' | transloco: { name: isolate(category.name) }
-                  }}</a>
+                @if (hidden.note) {
+                  <p class="m-0 mt-2"><span class="font-semibold">{{ 'article.hiddenBanner.note' | transloco }}:</span> <rd-bdi-text [text]="hidden.note" /></p>
                 }
               </div>
-            </div>
-            <div class="ms-auto" data-author-follow>
-              <rd-follow-button [user]="author" [initial]="a.isFollowingAuthor" />
-            </div>
-          } @else {
-            <!-- The author deleted their account (SPEC §9.6): no name, photo, profile link or follow. -->
-            <rd-avatar [generic]="true" [size]="40" />
-            <div class="min-w-0">
-              <span class="font-semibold text-text-secondary" data-deleted-author>{{ 'common.deletedUser' | transloco }}</span>
-              <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
-            </div>
+            </section>
+          }
+
+          <!-- A writer you muted (F28): a direct link still opens, with the way to unmute -->
+          @if (mutedAuthor(); as author) {
+            <rd-muted-banner class="mb-4" [user]="author" />
+          }
+
+          @if (a.coverUrl) {
+            <rd-article-cover [url]="a.coverUrl" />
+          }
+          <rd-article-headline
+            [field]="uiLang() === 'ar' ? a.field.nameAr : a.field.nameEn"
+            [topic]="a.topic ? (uiLang() === 'ar' ? a.topic.nameAr : a.topic.nameEn) : null"
+            [minutes]="a.readingTimeMinutes"
+            [title]="a.title"
+            [subtitle]="a.subtitle"
+            [language]="a.language"
+            [uiLang]="uiLang()"
+          />
+
+          <!-- Byline -->
+          <div class="mt-5 flex items-center gap-3" data-byline>
+            @if (a.author; as author) {
+              <!-- The name below is the link for keyboards and screen readers; the photo is the same link for taps. -->
+              <a [routerLink]="'/@' + author.username" class="flex shrink-0 rounded-full" tabindex="-1" aria-hidden="true" data-author-avatar>
+                <rd-avatar [name]="author.displayName" [src]="author.avatarUrl" [size]="40" />
+              </a>
+              <div class="min-w-0">
+                <a [routerLink]="'/@' + author.username" class="inline-flex items-center gap-1 font-semibold text-text-primary no-underline">
+                  {{ author.displayName }}
+                  @if (author.isVerified) {
+                    <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                  }
+                </a>
+                <!-- The writer's title (F14): one line with "…", on the UI's start side, laid out and cut in its own direction -->
+                @if (author.headline?.trim(); as headline) {
+                  <p class="m-0 flex text-xs leading-snug text-text-secondary" [attr.title]="headline" data-author-headline>
+                    <bdi dir="auto" class="min-w-0 truncate">{{ headline }}</bdi>
+                  </p>
+                }
+                <div class="text-xs text-text-secondary">
+                  {{ a.publishedAt | rdDate: uiLang() : 'long' }}
+                  <!-- The writer's category (F31): "في قسم {name}", the name isolated in its own direction. -->
+                  @if (a.category; as category) {
+                    <span aria-hidden="true">·</span>
+                    <a [routerLink]="categoryLink(author.username, category.slug)" class="font-semibold text-link no-underline hover:underline" data-article-category>{{
+                      'article.inCategory' | transloco: { name: isolate(category.name) }
+                    }}</a>
+                  }
+                </div>
+              </div>
+              <div class="ms-auto" data-author-follow>
+                <rd-follow-button [user]="author" [initial]="a.isFollowingAuthor" />
+              </div>
+            } @else {
+              <!-- The author deleted their account (SPEC §9.6): no name, photo, profile link or follow. -->
+              <rd-avatar [generic]="true" [size]="40" />
+              <div class="min-w-0">
+                <span class="font-semibold text-text-secondary" data-deleted-author>{{ 'common.deletedUser' | transloco }}</span>
+                <div class="text-xs text-text-secondary">{{ a.publishedAt | rdDate: uiLang() : 'long' }}</div>
+              </div>
+            }
+          </div>
+
+          <!-- Trust row (SPEC §20) -->
+          <rd-article-trust-row [verified]="!!a.author?.isVerified" [versionBadge]="a.versionBadge" [aiAssisted]="a.isAiAssisted" />
+
+          <!-- Medicine and Public Health (SPEC F04, §20) -->
+          @if (a.field.isSensitive) {
+            <rd-article-health-notice />
+          }
+
+          @if (a.summary && !hasSummaryBlock()) {
+            <aside class="rd-summary mb-6" role="note" [attr.dir]="summaryDir()" [attr.lang]="a.language">
+              <span class="rd-summary-label">{{ 'rdoc.summary' | transloco }}</span>
+              <rd-bdi-text [text]="a.summary" />
+            </aside>
+          }
+
+          @if (toc().length >= tocMinHeadings) {
+            <rd-article-toc class="mb-6 block" [entries]="toc()" />
+          }
+
+          <!-- Highlights (F30): yours and the popular ones are drawn in the text; selecting text offers the toolbar -->
+          <rd-rdoc [doc]="a.content" [articleId]="a.id" [marks]="highlights.marks()" [style.--rd-article-size]="prefs.cssSize()" />
+          <rd-reader-highlights [content]="rdocElement()" />
+
+          <!-- Post attachments (F26): after the content, before the sources -->
+          @if (a.attachments; as attachments) {
+            <rd-article-attachments class="mt-8" [attachments]="attachments" [article]="a" />
+          }
+
+          <!-- Tags (F32): each opens its tag page -->
+          @if (a.tags.length) {
+            <ul class="mt-8 flex list-none flex-wrap gap-2 p-0" [attr.aria-label]="'feedCard.tags' | transloco" data-article-tags>
+              @for (tag of a.tags; track tag.slug) {
+                <li class="flex">
+                  <a [routerLink]="tagLink(tag)" class="rd-tag rd-tag-neutral no-underline hover:text-primary hover:underline" dir="auto" [attr.data-article-tag]="tag.slug">#{{ tag.name }}</a>
+                </li>
+              }
+            </ul>
           }
         </div>
 
-        <!-- Trust row (SPEC §20) -->
-        <rd-article-trust-row [verified]="!!a.author?.isVerified" [versionBadge]="a.versionBadge" [aiAssisted]="a.isAiAssisted" />
-
-        <!-- Medicine and Public Health (SPEC F04, §20) -->
-        @if (a.field.isSensitive) {
-          <rd-article-health-notice />
-        }
-
-        @if (a.summary && !hasSummaryBlock()) {
-          <aside class="rd-summary mb-6" role="note" [attr.dir]="summaryDir()" [attr.lang]="a.language">
-            <span class="rd-summary-label">{{ 'rdoc.summary' | transloco }}</span>
-            <rd-bdi-text [text]="a.summary" />
-          </aside>
-        }
-
-        @if (toc().length >= tocMinHeadings) {
-          <rd-article-toc class="mb-6 block" [entries]="toc()" />
-        }
-
-        <!-- Highlights (F30): yours and the popular ones are drawn in the text; selecting text offers the toolbar -->
-        <rd-rdoc [doc]="a.content" [articleId]="a.id" [marks]="highlights.marks()" [style.--rd-article-size]="prefs.cssSize()" />
-        <rd-reader-highlights [content]="rdocElement()" />
-
-        <!-- Post attachments (F26): after the content, before the sources -->
-        @if (a.attachments; as attachments) {
-          <rd-article-attachments class="mt-8" [attachments]="attachments" [article]="a" />
-        }
-
-        <!-- Tags (F32): each opens its tag page -->
-        @if (a.tags.length) {
-          <ul class="mt-8 flex list-none flex-wrap gap-2 p-0" [attr.aria-label]="'feedCard.tags' | transloco" data-article-tags>
-            @for (tag of a.tags; track tag.slug) {
-              <li class="flex">
-                <a [routerLink]="tagLink(tag)" class="rd-tag rd-tag-neutral no-underline hover:text-primary hover:underline" dir="auto" [attr.data-article-tag]="tag.slug">#{{ tag.name }}</a>
-              </li>
-            }
-          </ul>
-        }
-
-        <!-- Sources (mandatory for technical content, SPEC §20) -->
-        <rd-article-sources [sources]="a.sources" />
+        <!-- Sources (mandatory for technical content, SPEC §20): the article card's bottom part -->
+        <rd-article-sources
+          class="rd-card rounded-t-none border-t-0 px-4 pb-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8"
+          [sources]="a.sources"
+        />
         <rd-next-in-path [articleId]="a.id" />
 
         <rd-related-articles [article]="a" />
 
-        <!-- Comments (F11): their code and data load when they near the viewport or the comment button is pressed -->
-        <section #commentsAnchor id="comments" class="mt-10 border-t border-border pt-6" style="scroll-margin-top: 5rem" aria-labelledby="comments-title">
+        <!-- Comments (F11), in their own card: their code and data load when they near the viewport or the comment button is
+             pressed -->
+        <section
+          #commentsAnchor
+          id="comments"
+          class="rd-card mt-2 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:p-6 lg:p-8"
+          style="scroll-margin-top: 5rem"
+          aria-labelledby="comments-title"
+        >
           @if (commentsSection(); as section) {
             <ng-container *ngComponentOutlet="section; inputs: { article: a }" />
           } @else {
@@ -283,19 +300,22 @@ const TOC_MIN_HEADINGS = 3;
           }
         </section>
       } @else {
-        @if (notFound()) {
-          <rd-empty-state [title]="'errors.article.not_found' | transloco" [message]="'article.notFoundBody' | transloco">
-            <a routerLink="/" class="rd-btn rd-btn-primary mt-3">{{ 'comingSoon.backHome' | transloco }}</a>
-          </rd-empty-state>
-        } @else if (resource.status() === 'error') {
-          <rd-error-state [message]="'article.loadError' | transloco" (retry)="resource.reload()" />
-        } @else {
-          <div class="flex flex-col gap-4" aria-busy="true">
-            <div class="rd-skeleton h-8 w-4/5"></div>
-            <div class="rd-skeleton h-5 w-1/2"></div>
-            <rd-lines-skeleton class="mt-6" [count]="9" />
-          </div>
-        }
+        <!-- Loading, not found and errors in the article card's place, so the page doesn't jump -->
+        <div class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:p-6 lg:p-8">
+          @if (notFound()) {
+            <rd-empty-state [title]="'errors.article.not_found' | transloco" [message]="'article.notFoundBody' | transloco">
+              <a routerLink="/" class="rd-btn rd-btn-primary mt-3">{{ 'comingSoon.backHome' | transloco }}</a>
+            </rd-empty-state>
+          } @else if (resource.status() === 'error') {
+            <rd-error-state [message]="'article.loadError' | transloco" (retry)="resource.reload()" />
+          } @else {
+            <div class="flex flex-col gap-4" aria-busy="true">
+              <div class="rd-skeleton h-8 w-4/5"></div>
+              <div class="rd-skeleton h-5 w-1/2"></div>
+              <rd-lines-skeleton class="mt-6" [count]="9" />
+            </div>
+          }
+        </div>
       }
     </article>
 

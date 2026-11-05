@@ -28,17 +28,17 @@ import { CategorySeoService } from './category-seo.service';
   // A writer's own page keeps muted content (F28).
   providers: [CategoryPageStore, keepMutedContent()],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'mx-auto block max-w-[640px] px-4 pt-4 lg:pt-8' },
+  host: { class: 'mx-auto flex max-w-[640px] flex-col gap-2 px-4 pt-4 lg:pt-8' },
   template: `
     <!-- Back to the page you came from in the app, else the writer's profile (a plain link without JavaScript) -->
-    <a [href]="profilePath()" class="rd-icon-btn mb-3" [attr.aria-label]="'common.back' | transloco" data-category-back (click)="goBack($event)">
+    <a [href]="profilePath()" class="rd-icon-btn mb-1" [attr.aria-label]="'common.back' | transloco" data-category-back (click)="goBack($event)">
       <svg lucideIcon="ArrowRight" [size]="18" class="ltr:rotate-180" aria-hidden="true"></svg>
     </a>
 
     @switch (store.status()) {
       @case ('loaded') {
         @if (store.category(); as category) {
-          <header data-category-header>
+          <header class="rd-card px-4 pb-4 pt-2 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:px-5 lg:pb-5 lg:pt-3" data-category-header>
             <a
               [routerLink]="profilePath()"
               class="-ms-1 inline-flex min-h-11 max-w-full items-center gap-2 rounded-md px-1 text-sm text-text-secondary no-underline hover:text-text-primary"
@@ -50,7 +50,7 @@ import { CategorySeoService } from './category-seo.service';
               <span class="shrink-0">{{ (category.id ? 'categories.page.kicker' : 'categories.page.kickerOther') | transloco }}</span>
             </a>
             <!-- The name keeps its own direction, isolated; the heading lines up with the page like the lines around it. -->
-            <h1 class="m-0 mt-1 break-words text-2xl font-bold leading-snug">
+            <h1 class="m-0 mt-1 break-words text-xl font-bold leading-snug lg:text-2xl">
               <bdi dir="auto" data-category-name>{{ displayName() }}</bdi>
             </h1>
             <p class="m-0 mt-1 text-sm text-text-secondary" data-category-count>
@@ -59,7 +59,7 @@ import { CategorySeoService } from './category-seo.service';
           </header>
 
           @if (store.items().length) {
-            <section class="flex flex-col gap-3 pt-4" [attr.aria-label]="'categories.page.articles' | transloco: { name: displayName() }" data-category-articles>
+            <section class="flex flex-col gap-2" [attr.aria-label]="'categories.page.articles' | transloco: { name: displayName() }" data-category-articles>
               @for (article of store.items(); track article.id) {
                 <rd-post-card [article]="article" [priorityMedia]="article.id === firstMediaId()" />
               }
@@ -81,6 +81,7 @@ import { CategorySeoService } from './category-seo.service';
           } @else {
             <!-- "مقالات تانية" isn't a category: its empty state says so in its own words. -->
             <rd-empty-state
+              class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
               [title]="(category.id ? 'categories.page.emptyTitle' : 'categories.page.otherEmptyTitle') | transloco"
               [message]="(category.id ? 'categories.page.emptyBody' : 'categories.page.otherEmptyBody') | transloco"
               data-category-empty
@@ -91,7 +92,12 @@ import { CategorySeoService } from './category-seo.service';
         }
       }
       @case ('notFound') {
-        <rd-empty-state [title]="'categories.page.notFoundTitle' | transloco" [message]="'categories.page.notFoundBody' | transloco" data-category-not-found>
+        <rd-empty-state
+          class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
+          [title]="'categories.page.notFoundTitle' | transloco"
+          [message]="'categories.page.notFoundBody' | transloco"
+          data-category-not-found
+        >
           @if (store.notFoundCode() === 'category.not_found') {
             <a [routerLink]="profilePath()" class="rd-btn rd-btn-primary mt-3">{{ 'categories.page.backToProfile' | transloco }}</a>
           } @else {
@@ -100,21 +106,21 @@ import { CategorySeoService } from './category-seo.service';
         </rd-empty-state>
       }
       @case ('error') {
-        <rd-error-state [message]="'categories.page.loadError' | transloco" (retry)="store.load(username(), slug())" />
+        <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'categories.page.loadError' | transloco" (retry)="store.load(username(), slug())" />
       }
       @default {
-        <div aria-busy="true" data-category-loading>
-          <div class="flex items-center gap-2">
-            <div class="rd-skeleton h-7 w-7 rounded-full"></div>
-            <div class="rd-skeleton h-4 w-28"></div>
+        <div class="flex flex-col gap-2" aria-busy="true" data-category-loading>
+          <div class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" aria-hidden="true">
+            <div class="flex items-center gap-2">
+              <div class="rd-skeleton h-7 w-7 rounded-full"></div>
+              <div class="rd-skeleton h-4 w-28"></div>
+            </div>
+            <div class="rd-skeleton mt-2 h-8 w-1/2"></div>
+            <div class="rd-skeleton mt-2 h-4 w-24"></div>
           </div>
-          <div class="rd-skeleton mt-2 h-8 w-1/2"></div>
-          <div class="rd-skeleton mt-2 h-4 w-24"></div>
-          <div class="flex flex-col gap-3 pt-4">
-            @for (i of [1, 2, 3]; track i) {
-              <rd-post-card-skeleton />
-            }
-          </div>
+          @for (i of [1, 2, 3]; track i) {
+            <rd-post-card-skeleton />
+          }
         </div>
       }
     }

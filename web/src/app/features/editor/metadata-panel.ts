@@ -14,15 +14,17 @@ export type DocumentPatch = Partial<Omit<ArticleDraftDocument, 'translations' | 
 
 /**
  * Article settings (F05): field (required to publish), topic, your category (F31: applied at once, not part of the
- * draft), tags, cover, sources, version badge, AI label.
+ * draft), tags, cover, sources, version badge, AI label. A stack of cards: the details (field, topic, category, tags),
+ * the cover, the sources, then what readers see next to the title (version badge, AI label).
  */
 @Component({
   selector: 'rd-metadata-panel',
   imports: [TranslocoPipe, Switch, CategoryPicker, CoverPicker, SourcesEditor, TagInput],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'flex flex-col gap-5' },
+  host: { class: 'flex flex-col gap-2' },
   template: `
-    <div class="grid gap-4">
+    <section class="rd-card flex flex-col gap-4 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" aria-labelledby="ed-details-title" data-details-card>
+      <h2 id="ed-details-title" class="m-0 text-sm font-semibold">{{ 'editor.meta.title' | transloco }}</h2>
       <div>
         <label class="rd-label" for="ed-field">{{ 'editor.meta.field' | transloco }} *</label>
         <select id="ed-field" class="rd-input" data-field [value]="document().fieldId ?? ''" (change)="selectField(valueOf($event))">
@@ -48,38 +50,40 @@ export type DocumentPatch = Partial<Omit<ArticleDraftDocument, 'translations' | 
         </select>
       </div>
       <rd-category-picker [value]="categoryId()" [busy]="categorySaving()" [error]="categoryError()" (changed)="categoryChange.emit($event)" />
+      <rd-tag-input id="ed-tags" [tags]="document().tags" [flagged]="tagFlags()" [errors]="tagErrors()" (tagsChange)="patch.emit({ tags: $event })" />
+    </section>
+
+    <div class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" data-cover-card>
+      <rd-cover-picker [url]="document().coverUrl" (urlChange)="patch.emit({ coverUrl: $event })" (uploadingChange)="coverUploading.emit($event)" />
     </div>
 
-    <rd-tag-input id="ed-tags" [tags]="document().tags" [flagged]="tagFlags()" [errors]="tagErrors()" (tagsChange)="patch.emit({ tags: $event })" />
-
-    <rd-cover-picker [url]="document().coverUrl" (urlChange)="patch.emit({ coverUrl: $event })" (uploadingChange)="coverUploading.emit($event)" />
-
-    <div id="ed-sources" tabindex="-1">
+    <div id="ed-sources" class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" tabindex="-1">
       <rd-sources-editor [sources]="document().sources" [required]="sourcesRequired()" (sourcesChange)="patch.emit({ sources: $event })" />
     </div>
 
-    <div>
-      <label class="rd-label" for="ed-version">{{ 'editor.meta.versionBadge' | transloco }}</label>
-      <input
-        id="ed-version"
-        class="rd-input"
-        dir="ltr"
-        [maxLength]="versionMax"
-        [value]="document().versionBadge ?? ''"
-        [placeholder]="'editor.meta.versionBadgePlaceholder' | transloco"
-        data-version-badge
-        (input)="patch.emit({ versionBadge: valueOf($event).trim() ? valueOf($event) : null })"
+    <div class="rd-card flex flex-col gap-4 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" data-labels-card>
+      <div>
+        <label class="rd-label" for="ed-version">{{ 'editor.meta.versionBadge' | transloco }}</label>
+        <input
+          id="ed-version"
+          class="rd-input"
+          dir="ltr"
+          [maxLength]="versionMax"
+          [value]="document().versionBadge ?? ''"
+          [placeholder]="'editor.meta.versionBadgePlaceholder' | transloco"
+          data-version-badge
+          (input)="patch.emit({ versionBadge: valueOf($event).trim() ? valueOf($event) : null })"
+        />
+        <p class="rd-field-hint">{{ 'editor.meta.versionBadgeHint' | transloco }}</p>
+      </div>
+      <rd-switch
+        [checked]="document().isAiAssisted"
+        [label]="'editor.aiAssisted' | transloco"
+        [hint]="'editor.aiAssistedHint' | transloco"
+        data-ai-assisted
+        (changed)="patch.emit({ isAiAssisted: $event })"
       />
-      <p class="rd-field-hint">{{ 'editor.meta.versionBadgeHint' | transloco }}</p>
     </div>
-
-    <rd-switch
-      [checked]="document().isAiAssisted"
-      [label]="'editor.aiAssisted' | transloco"
-      [hint]="'editor.aiAssistedHint' | transloco"
-      data-ai-assisted
-      (changed)="patch.emit({ isAiAssisted: $event })"
-    />
   `,
 })
 export class MetadataPanel {

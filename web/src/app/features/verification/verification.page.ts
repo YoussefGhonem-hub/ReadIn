@@ -32,18 +32,22 @@ import { VerificationStore } from './verification.store';
       <svg lucideIcon="ArrowRight" [size]="18" class="shrink-0 ltr:rotate-180" aria-hidden="true"></svg>
       {{ 'verification.back' | transloco }}
     </a>
-    <h1 class="m-0 text-2xl font-bold">{{ 'verification.title' | transloco }}</h1>
-    <p class="m-0 mb-6 mt-1 text-sm text-text-secondary">{{ 'verification.intro' | transloco }}</p>
+    <header class="rd-card mb-2 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5">
+      <h1 class="m-0 text-xl font-bold lg:text-2xl">{{ 'verification.title' | transloco }}</h1>
+      <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'verification.intro' | transloco }}</p>
+    </header>
 
     @switch (store.status()) {
       @case ('error') {
-        <rd-error-state [message]="'verification.loadError' | transloco" (retry)="store.load()" />
+        <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+          <rd-error-state [message]="'verification.loadError' | transloco" (retry)="store.load()" />
+        </div>
       }
       @case ('loaded') {
         @let request = store.request();
         @switch (store.view()) {
           @case ('verified') {
-            <section class="rd-card flex items-start gap-4 p-5 shadow-none" data-verification-status="verified">
+            <section class="rd-card flex items-start gap-4 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" data-verification-status="verified">
               <span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary-container text-on-primary-container" aria-hidden="true">
                 <svg lucideIcon="BadgeCheck" [size]="26"></svg>
               </span>
@@ -62,7 +66,7 @@ import { VerificationStore } from './verification.store';
             </section>
           }
           @case ('pending') {
-            <section class="rd-card p-5 shadow-none" data-verification-status="pending">
+            <section class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" data-verification-status="pending">
               <div class="flex items-start gap-4">
                 <span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-callout-warning text-text-primary" aria-hidden="true">
                   <svg lucideIcon="Hourglass" [size]="24"></svg>
@@ -90,7 +94,7 @@ import { VerificationStore } from './verification.store';
             @if (again()) {
               <rd-verification-form [from]="request" (cancelled)="again.set(false)" />
             } @else {
-              <section class="rd-card p-5 shadow-none" data-verification-status="rejected">
+              <section class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" data-verification-status="rejected">
                 <div class="flex items-start gap-4">
                   <span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-callout-danger text-error" aria-hidden="true">
                     <svg lucideIcon="BadgeX" [size]="24"></svg>
@@ -120,7 +124,7 @@ import { VerificationStore } from './verification.store';
             }
           }
           @case ('unavailable') {
-            <section class="rd-card flex items-start gap-4 p-5 shadow-none" data-verification-status="unavailable">
+            <section class="rd-card flex items-start gap-4 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" data-verification-status="unavailable">
               <span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface-variant text-text-secondary" aria-hidden="true">
                 <svg lucideIcon="Info" [size]="24"></svg>
               </span>
@@ -136,7 +140,7 @@ import { VerificationStore } from './verification.store';
         }
       }
       @default {
-        <div class="rd-card flex flex-col gap-3 p-5 shadow-none" aria-busy="true" data-verification-loading>
+        <div class="rd-card flex flex-col gap-3 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5" aria-busy="true" data-verification-loading>
           <div class="rd-skeleton h-6 w-1/2"></div>
           <div class="rd-skeleton h-4 w-3/4"></div>
           <div class="rd-skeleton h-11 w-full"></div>

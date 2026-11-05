@@ -89,7 +89,7 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
   providers: [SearchStore, provideSearchIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Opening a result (any link in the results, also by keyboard) keeps the query in your recent searches.
-  host: { class: 'mx-auto block max-w-[720px] px-4 pt-4 lg:pt-8', '(click)': 'onResultsClick($event)' },
+  host: { class: 'mx-auto flex max-w-[720px] flex-col gap-2 px-4 pt-4 lg:pt-8', '(click)': 'onResultsClick($event)' },
   // The box has its own ✕ on the side of the page's direction; the browser's sits wherever the typed text starts.
   styles: `
     input::-webkit-search-cancel-button {
@@ -98,68 +98,82 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
   `,
   template: `
     <h1 class="sr-only">{{ 'nav.search' | transloco }}</h1>
-    <form role="search" class="relative" (submit)="$event.preventDefault(); submit()">
-      <svg lucideIcon="Search" [size]="20" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-text-secondary" aria-hidden="true"></svg>
-      <!-- Empty, the placeholder follows the page; typed, the text keeps its own direction (both sides padded for either). -->
-      <input
-        #box
-        id="search-input"
-        type="search"
-        class="rd-input min-h-12 px-11 text-base"
-        [attr.dir]="text() ? 'auto' : null"
-        autocomplete="off"
-        autocapitalize="off"
-        spellcheck="false"
-        enterkeyhint="search"
-        data-search-input
-        [maxLength]="inputMaxLength"
-        [attr.aria-label]="'search.label' | transloco"
-        [placeholder]="'search.placeholder' | transloco"
-        [value]="text()"
-        (input)="onInput($event)"
-      />
-      @if (text()) {
-        <button
-          type="button"
-          class="absolute end-1 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md text-text-secondary hover:bg-surface-variant hover:text-text-primary"
-          [attr.aria-label]="'search.clear' | transloco"
-          data-search-clear
-          (click)="clearBox()"
+    <!-- The header card: the box, then the tabs edge to edge and the Articles tab's filters. Under the filters the tab
+         row has a line; without them the active tab's line is the card's edge. -->
+    <div class="rd-card p-0 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" data-search-header>
+      <div class="px-4 pt-4 lg:px-5 lg:pt-5" [class]="request() ? 'pb-1' : 'pb-4 lg:pb-5'">
+        <form role="search" class="relative" (submit)="$event.preventDefault(); submit()">
+          <svg lucideIcon="Search" [size]="20" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-text-secondary" aria-hidden="true"></svg>
+          <!-- Empty, the placeholder follows the page; typed, the text keeps its own direction (both sides padded for either). -->
+          <input
+            #box
+            id="search-input"
+            type="search"
+            class="rd-input min-h-12 px-11 text-base"
+            [attr.dir]="text() ? 'auto' : null"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            enterkeyhint="search"
+            data-search-input
+            [maxLength]="inputMaxLength"
+            [attr.aria-label]="'search.label' | transloco"
+            [placeholder]="'search.placeholder' | transloco"
+            [value]="text()"
+            (input)="onInput($event)"
+          />
+          @if (text()) {
+            <button
+              type="button"
+              class="absolute end-1 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md text-text-secondary hover:bg-surface-variant hover:text-text-primary"
+              [attr.aria-label]="'search.clear' | transloco"
+              data-search-clear
+              (click)="clearBox()"
+            >
+              <svg lucideIcon="X" [size]="18" aria-hidden="true"></svg>
+            </button>
+          }
+        </form>
+      </div>
+
+      @if (request(); as r) {
+        <div
+          class="flex gap-5 overflow-x-auto overflow-y-hidden px-4 [scrollbar-width:none] lg:px-5 [&::-webkit-scrollbar]:hidden"
+          [class]="r.type === 'articles' ? 'border-b border-border' : ''"
+          role="tablist"
+          [attr.aria-label]="'search.tabs.label' | transloco"
+          data-search-tabs
         >
-          <svg lucideIcon="X" [size]="18" aria-hidden="true"></svg>
-        </button>
+          @for (t of types; track t) {
+            <button
+              type="button"
+              role="tab"
+              [id]="'search-tab-' + t"
+              aria-controls="search-panel"
+              [attr.aria-selected]="r.type === t"
+              [attr.tabindex]="r.type === t ? 0 : -1"
+              [attr.data-search-tab]="t"
+              class="-mb-px min-h-12 shrink-0 border-b-2 px-1 text-sm"
+              [class]="r.type === t ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary'"
+              (click)="selectType(t)"
+              (keydown)="onTabKey($event)"
+            >
+              {{ 'search.tabs.' + t | transloco }}
+            </button>
+          }
+        </div>
+        @if (r.type === 'articles') {
+          <rd-search-filters [request]="r" (changed)="setFilters($event)" />
+        }
       }
-    </form>
+    </div>
 
     @if (request(); as r) {
-      <div class="-mx-4 mt-3 flex gap-5 overflow-x-auto border-b border-border px-4" role="tablist" [attr.aria-label]="'search.tabs.label' | transloco" data-search-tabs>
-        @for (t of types; track t) {
-          <button
-            type="button"
-            role="tab"
-            [id]="'search-tab-' + t"
-            aria-controls="search-panel"
-            [attr.aria-selected]="r.type === t"
-            [attr.tabindex]="r.type === t ? 0 : -1"
-            [attr.data-search-tab]="t"
-            class="-mb-px min-h-11 shrink-0 border-b-2 px-1 text-sm"
-            [class]="r.type === t ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary'"
-            (click)="selectType(t)"
-            (keydown)="onTabKey($event)"
-          >
-            {{ 'search.tabs.' + t | transloco }}
-          </button>
-        }
-      </div>
-      @if (r.type === 'articles') {
-        <rd-search-filters [request]="r" (changed)="setFilters($event)" />
-      }
-
+      <!-- The list card: the results as rows, and the loading, empty and error states in their place. -->
       <section
         id="search-panel"
         role="tabpanel"
-        class="block"
-        [class.pt-2]="r.type !== 'articles'"
+        class="rd-card overflow-hidden p-0 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
         [attr.aria-labelledby]="'search-tab-' + r.type"
         [attr.aria-busy]="store.status() === 'loading' || null"
         [attr.data-status]="store.status()"
@@ -172,7 +186,14 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
                 @case ('articles') {
                   <div>
                     @for (result of store.articles(); track result.article.id) {
-                      <rd-article-card [article]="result.article" [withAttachments]="false" data-search-article [attr.data-article]="result.article.id" [attr.data-matched-in]="result.matchedIn">
+                      <rd-article-card
+                        class="px-4 lg:px-5"
+                        [article]="result.article"
+                        [withAttachments]="false"
+                        data-search-article
+                        [attr.data-article]="result.article.id"
+                        [attr.data-matched-in]="result.matchedIn"
+                      >
                         @if (result.matchedIn === 'attachment') {
                           <p rdCardFooter class="m-0 ms-[84px] mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-primary" data-in-attachment>
                             <svg lucideIcon="FileText" [size]="14" class="shrink-0" aria-hidden="true"></svg>
@@ -186,7 +207,7 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
                 @case ('users') {
                   <ul class="m-0 list-none divide-y divide-border p-0">
                     @for (user of store.users(); track user.id) {
-                      <li data-search-user [attr.data-user]="user.username">
+                      <li class="px-4 py-1 lg:px-5" data-search-user [attr.data-user]="user.username">
                         <rd-user-row [user]="user" [bio]="user.bio" [note]="user.followsYou ? ('profile.followsYou' | transloco) : null">
                           <rd-follow-button [user]="user" [initial]="user.isFollowing" />
                         </rd-user-row>
@@ -203,7 +224,7 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
                         <a
                           [routerLink]="route.commands"
                           [queryParams]="route.queryParams"
-                          class="flex min-h-14 items-center gap-3 rounded-md py-2 text-inherit no-underline hover:bg-surface-variant"
+                          class="flex min-h-14 items-center gap-3 px-4 py-2 text-inherit no-underline hover:bg-surface-variant lg:px-5"
                           data-search-topic
                           [attr.data-kind]="topic.kind"
                         >
@@ -233,7 +254,7 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
                       <li>
                         <a
                           [routerLink]="tagLink(tag)"
-                          class="flex min-h-12 items-center gap-3 rounded-md py-2 text-inherit no-underline hover:bg-surface-variant"
+                          class="flex min-h-12 items-center gap-3 px-4 py-2 text-inherit no-underline hover:bg-surface-variant lg:px-5"
                           data-search-tag
                           [attr.data-tag]="tag.slug"
                         >
@@ -250,7 +271,7 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
                 <ng-container *ngTemplateOutlet="skeleton; context: { $implicit: r.type, count: 1 }" />
               }
               @if (store.loadMoreFailed()) {
-                <div class="py-4 text-center">
+                <div class="border-t border-border py-4 text-center">
                   <button type="button" class="rd-btn rd-btn-outline" data-search-load-more-retry (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
                 </div>
               }
@@ -258,7 +279,7 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
                 <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
                 <div #sentinel class="h-px" aria-hidden="true"></div>
               } @else {
-                <p class="m-0 py-6 text-center text-sm text-text-secondary" data-search-end>{{ 'search.end' | transloco }}</p>
+                <p class="m-0 border-t border-border px-4 py-4 text-center text-sm text-text-secondary" data-search-end>{{ 'search.end' | transloco }}</p>
               }
             } @else if (store.hasFilters()) {
               <rd-empty-state [title]="'search.empty.filteredTitle' | transloco" [message]="'search.empty.filteredBody' | transloco: { q: isolate(r.q) }" data-search-empty="filtered">
@@ -283,8 +304,8 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
     } @else if (ready()) {
       <!-- No query: your recent searches, or where to start. Only in the browser: they live on this device. -->
       @if (recent.items().length) {
-        <section class="pt-4" aria-labelledby="recent-searches-title" data-recent-searches>
-          <div class="flex items-center justify-between gap-2">
+        <section class="rd-card px-2 pb-2 pt-1 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:px-3" aria-labelledby="recent-searches-title" data-recent-searches>
+          <div class="flex items-center justify-between gap-2 ps-2">
             <h2 id="recent-searches-title" class="m-0 text-sm font-semibold text-text-secondary">{{ 'search.recent.title' | transloco }}</h2>
             <button type="button" class="rd-btn rd-btn-ghost min-h-11 px-2 text-sm" data-recent-clear (click)="clearRecent()">{{ 'search.recent.clearAll' | transloco }}</button>
           </div>
@@ -314,7 +335,7 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
           </ul>
         </section>
       } @else {
-        <section class="flex flex-col items-center gap-2 px-6 py-12 text-center" data-search-start>
+        <section class="rd-card flex flex-col items-center gap-2 px-6 py-12 text-center shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" data-search-start>
           <span class="mb-2 grid h-14 w-14 place-items-center rounded-card bg-primary-container text-on-primary-container" aria-hidden="true">
             <svg lucideIcon="Search" [size]="26"></svg>
           </span>
@@ -329,9 +350,9 @@ const SEARCH_PATH = /^\/search(?:[?#]|$)/;
       <div aria-hidden="true" data-search-loading>
         @for (i of rows(count); track i) {
           @if (type === 'articles') {
-            <rd-article-card-skeleton />
+            <rd-article-card-skeleton class="px-4 lg:px-5" />
           } @else {
-            <div class="flex items-center gap-3 border-t border-border py-3 first:border-t-0">
+            <div class="flex items-center gap-3 border-t border-border px-4 py-3 first:border-t-0 lg:px-5">
               @if (type !== 'tags') {
                 <div class="rd-skeleton h-10 w-10 shrink-0 rounded-full"></div>
               }

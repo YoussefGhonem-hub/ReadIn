@@ -48,18 +48,21 @@ export function targetLink(item: Pick<ModerationQueueItemDto, 'targetType' | 'ta
   }
 }
 
-/** The moderation page's title and its tabs: Open / Resolved / Dismissed (the queue, `?status=`) and Log. */
+/**
+ * The moderation page's title and its tabs: Open / Resolved / Dismissed (the queue, `?status=`) and Log. The top of the
+ * page's card: the tabs run edge to edge.
+ */
 @Component({
   selector: 'rd-moderation-header',
   imports: [RouterLink, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
-    <header class="mb-4">
-      <h1 class="m-0 text-2xl font-bold">{{ 'moderation.title' | transloco }}</h1>
+    <header class="px-4 pt-4 lg:px-5 lg:pt-5">
+      <h1 class="m-0 text-xl font-bold lg:text-2xl">{{ 'moderation.title' | transloco }}</h1>
       <p class="m-0 mt-1 text-sm text-text-secondary">{{ 'moderation.subtitle' | transloco }}</p>
     </header>
-    <nav class="-mx-4 flex gap-5 overflow-x-auto border-b border-border px-4" [attr.aria-label]="'moderation.tabs.label' | transloco" data-moderation-tabs>
+    <nav class="mt-3 flex gap-5 overflow-x-auto border-b border-border px-4 lg:px-5" [attr.aria-label]="'moderation.tabs.label' | transloco" data-moderation-tabs>
       @for (tab of tabs; track tab) {
         <a
           [routerLink]="tab === 'log' ? '/moderation/log' : '/moderation'"

@@ -18,8 +18,8 @@ export class ProfileRepostsStore extends ProfileArticlesStore {
 
 /**
  * Reposts tab (F14, F29), on every profile: the articles this user reposted as post cards (F34), newest repost first,
- * each with its "أعاد نشره {name}" label (`repostedBy`), with infinite scroll and an empty state. Loaded when the tab
- * opens (it isn't server-rendered: the tab isn't in the URL).
+ * each with its "أعاد نشره {name}" label (`repostedBy`), 8px apart, with infinite scroll; the empty and error states are
+ * a card of their own. Loaded when the tab opens (it isn't server-rendered: the tab isn't in the URL).
  */
 @Component({
   selector: 'rd-profile-reposts',
@@ -30,11 +30,11 @@ export class ProfileRepostsStore extends ProfileArticlesStore {
   template: `
     @switch (store.status()) {
       @case ('error') {
-        <rd-error-state [message]="'profile.reposts.loadError' | transloco" (retry)="store.load(username())" />
+        <rd-error-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [message]="'profile.reposts.loadError' | transloco" (retry)="store.load(username())" />
       }
       @case ('loaded') {
         @if (store.items().length) {
-          <div class="flex flex-col gap-3 pt-3">
+          <div class="flex flex-col gap-2">
             @for (article of store.items(); track article.id) {
               <rd-post-card [article]="article" data-repost-item />
             }
@@ -44,6 +44,7 @@ export class ProfileRepostsStore extends ProfileArticlesStore {
           </div>
         } @else {
           <rd-empty-state
+            class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0"
             [title]="(isMe() ? 'profile.reposts.emptyOwnTitle' : 'profile.reposts.emptyTitle') | transloco"
             [message]="(isMe() ? 'profile.reposts.emptyOwnBody' : 'profile.reposts.emptyBody') | transloco"
             data-reposts-empty
@@ -59,7 +60,7 @@ export class ProfileRepostsStore extends ProfileArticlesStore {
         }
       }
       @default {
-        <div class="flex flex-col gap-3 pt-3" aria-busy="true">
+        <div class="flex flex-col gap-2" aria-busy="true">
           @for (i of [1, 2]; track i) {
             <rd-post-card-skeleton />
           }
