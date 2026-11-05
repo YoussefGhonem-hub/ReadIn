@@ -31,7 +31,7 @@ public sealed record GetFieldPageQuery(string Slug, string UiLanguage) : IQuery<
 /// <summary>
 /// GET /fields/{slug}/articles?topic=: the field's articles (or one topic's), newest first, as feed cards (SPEC F15,
 /// F34), keyset-paginated over (PublishedAt DESC, Id DESC). Guests get a cached page (server rendering); a signed-in
-/// caller's page leaves out what they muted once F28 ships.
+/// caller's page leaves out the writers and other topics they muted and what they marked "show less" (F28).
 /// </summary>
 [RequirePermission(Permissions.Articles.Read)]
 public sealed record GetFieldArticlesQuery(string Slug, string? Topic, string? Cursor, int Limit, string UiLanguage)
@@ -184,7 +184,10 @@ internal sealed class GetFieldArticlesQueryHandler(
     private async Task<CursorPage<ArticleCardDto>> LoadAsync(
         Guid fieldId, Guid? topicId, TimeCursor? cursor, int limit, string ui, string? articleLanguage, Guid? viewerId, CancellationToken ct)
     {
-        var articles = rankings.Visible().Where(a => a.FieldId == fieldId).WithoutMutedFor(viewerId);
+        var articles = rankings.Visible().Where(a => a.FieldId == fieldId)
+            // The page's own field and the topic picked stay, though muted: the reader opened them (F28).
+            .WithoutMutedFor(db, viewerId, openedFieldId: fieldId, openedTopicId: topicId)
+            .WithoutShownLessFor(db, viewerId);
         if (topicId is { } topic) articles = articles.Where(a => a.TopicId == topic);
         if (cursor is { } after)
         {

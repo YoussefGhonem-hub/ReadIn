@@ -54,6 +54,9 @@ public interface IAppDbContext
     DbSet<Collection> Collections { get; }
     DbSet<CollectionItem> CollectionItems { get; }
     DbSet<UserFollow> UserFollows { get; }
+    DbSet<UserMute> UserMutes { get; }
+    DbSet<ContentMute> ContentMutes { get; }
+    DbSet<ArticleFeedback> ArticleFeedback { get; }
     DbSet<Comment> Comments { get; }
     DbSet<CommentLike> CommentLikes { get; }
     DbSet<Report> Reports { get; }

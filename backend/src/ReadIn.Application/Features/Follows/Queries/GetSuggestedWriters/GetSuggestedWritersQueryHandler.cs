@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Search;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 
@@ -43,6 +44,7 @@ internal sealed class GetSuggestedWritersQueryHandler(IAppDbContext db, ICurrent
             .Where(u => u.Id != userId)
             .Where(u => !(u.IsSuspended && (u.SuspendedUntil == null || u.SuspendedUntil > now)))
             .Where(u => !db.UserFollows.Any(f => f.FollowerId == userId && f.FolloweeId == u.Id))
+            .WithoutMutedFor(db, userId)
             .Where(u => published.Any(a => a.AuthorId == u.Id))
             .OrderByDescending(u => u.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter))
             .ThenByDescending(u => db.UserFollows.Count(f => f.FolloweeId == u.Id))

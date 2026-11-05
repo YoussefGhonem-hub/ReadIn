@@ -31,7 +31,7 @@ public sealed class PeopleSearch(IAppDbContext db, ICurrentUser currentUser, IFi
         if (take == 0) return ([], null);
 
         var viewerId = currentUser.UserId;
-        var users = db.Users.AsNoTracking().Findable(clock.GetUtcNow().UtcDateTime).WithoutMutedFor(viewerId);
+        var users = db.Users.AsNoTracking().Findable(clock.GetUtcNow().UtcDateTime).WithoutMutedFor(db, viewerId);
 
         var byName = users;
         foreach (var word in terms.Words)

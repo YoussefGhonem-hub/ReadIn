@@ -18,10 +18,27 @@ public sealed class DailyArticlePicker(IAppDbContext db)
     private const int MaxMinutes = 10;
     private const int GuestRotationSize = 30;
 
-    /// <summary>The stored pick of <paramref name="localDate"/>, or a new one, stored now. Null when nothing is eligible.</summary>
+    /// <summary>
+    /// The stored pick of <paramref name="localDate"/>, or a new one, stored now. Null when nothing is eligible. A stored
+    /// pick the user has since muted (its writer, field or topic) or marked "show less" is replaced by the next eligible
+    /// one, stored in its place, so it stays the same for the rest of the day (SPEC F28).
+    /// </summary>
     public async Task<Guid?> GetOrPickAsync(Guid userId, DateOnly localDate, CancellationToken cancellationToken)
     {
-        if (await StoredPickAsync(userId, localDate, cancellationToken) is { } stored) return stored;
+        if (await StoredPickAsync(userId, localDate, cancellationToken) is { } stored)
+        {
+            if (await IsWantedByAsync(userId, stored, cancellationToken)) return stored;
+
+            // The algorithm leaves out what the user muted, so the replacement never is; null when nothing is left.
+            var replacement = await PickAsync(userId, localDate, cancellationToken);
+            if (replacement is not { } next) return null;
+
+            await db.DailyPicks
+                .Where(p => p.UserId == userId && p.Date == localDate && p.ArticleId == stored)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.ArticleId, next).SetProperty(p => p.OpenedAt, (DateTime?)null), cancellationToken);
+            // A concurrent request may have replaced it first; its choice is the same unless the data moved, so read it back.
+            return await StoredPickAsync(userId, localDate, cancellationToken);
+        }
 
         var articleId = await PickAsync(userId, localDate, cancellationToken);
         if (articleId is null) return null;
@@ -87,14 +104,22 @@ public sealed class DailyArticlePicker(IAppDbContext db)
         var (userId, language, fieldIds, topicIds, excludedField) = profile;
 
         // F09: the active path's next unread article comes first, unless it would make 3 days in a row of one field.
-        // Paths are curated, so any article a reader can open qualifies (length and interests don't apply).
-        if (profile.PathNext is { } pathNext && pathNext.FieldId != excludedField) return pathNext.ArticleId;
+        // Paths are curated, so any article a reader can open qualifies (length and interests don't apply), unless the
+        // user muted it or marked it "show less" (F28).
+        if (profile.PathNext is { } pathNext && pathNext.FieldId != excludedField
+            && await IsWantedByAsync(userId, pathNext.ArticleId, cancellationToken))
+        {
+            return pathNext.ArticleId;
+        }
 
         // Read = completed (≥ 70% and ≥ 30 seconds, SPEC F04), the single "read" marker.
         var completed = db.ReadingProgress.Where(r => r.UserId == userId && r.CompletedAt != null).Select(r => r.ArticleId);
 
-        // A writer never gets their own article as Today's article.
-        var unread = Readable().Where(a => a.AuthorId != userId && !completed.Contains(a.Id));
+        // A writer never gets their own article as Today's article, nor what they muted or marked "show less" (F28).
+        var unread = Readable()
+            .Where(a => a.AuthorId != userId && !completed.Contains(a.Id))
+            .WithoutMutedFor(db, userId)
+            .WithoutShownLessFor(db, userId);
         var hasInterests = fieldIds.Count + topicIds.Count > 0;
 
         var inLanguage = unread.Where(a => a.Translations.Any(t => t.Language == language));
@@ -198,6 +223,17 @@ public sealed class DailyArticlePicker(IAppDbContext db)
 
     /// <summary>What readers can open (hidden articles never become anyone's pick, SPEC F22).</summary>
     private IQueryable<Article> Readable() => db.Articles.AsNoTracking().Visible();
+
+    /// <summary>
+    /// <paramref name="articleId"/> isn't by a writer, in a field or topic <paramref name="userId"/> muted, nor marked "show
+    /// less" (F28). A hidden or deleted pick counts as wanted here: the hero card leaves those out on its own (F22).
+    /// </summary>
+    private Task<bool> IsWantedByAsync(Guid userId, Guid articleId, CancellationToken ct) =>
+        db.Articles.AsNoTracking().IgnoreQueryFilters()
+            .Where(a => a.Id == articleId)
+            .WithoutMutedFor(db, userId)
+            .WithoutShownLessFor(db, userId)
+            .AnyAsync(ct);
 }
 
 /// <param name="ExcludedFieldId">The field of the last two days' picks when both were the same field.</param>

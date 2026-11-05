@@ -54,7 +54,11 @@ internal sealed class GetRelatedArticlesQueryHandler(
                 || (source.TopicId != null && a.TopicId == source.TopicId)
                 || a.Tags.Any(t => source.TagIds.Contains(t.TagId))
                 || db.ArticleTerms.Any(t => t.ArticleId == a.Id && termIds.Contains(t.TermId)));
-        if (viewerId is not null) candidates = candidates.Where(a => a.AuthorId != viewerId);
+        if (viewerId is not null)
+        {
+            // Not your own, nor what you muted or marked "show less" (F28).
+            candidates = candidates.Where(a => a.AuthorId != viewerId).WithoutMutedFor(db, viewerId).WithoutShownLessFor(db, viewerId);
+        }
 
         var ids = await candidates
             .Select(a => new

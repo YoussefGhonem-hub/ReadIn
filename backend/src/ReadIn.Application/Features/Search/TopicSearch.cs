@@ -30,11 +30,11 @@ public sealed class TopicSearch(IAppDbContext db, ICurrentUser currentUser)
         var viewerId = currentUser.UserId;
         var english = UiLanguages.Normalize(uiLanguage) == UiLanguages.English;
 
-        var fields = await db.Fields.AsNoTracking().Where(f => f.IsEnabled).WithoutMutedFor(viewerId)
+        var fields = await db.Fields.AsNoTracking().Where(f => f.IsEnabled).WithoutMutedFor(db, viewerId)
             .Select(f => new { f.Id, f.Slug, f.NameAr, f.NameEn, f.Icon, f.Color })
             .ToListAsync(ct);
         var fieldIds = fields.Select(f => f.Id).ToList();
-        var topics = await db.Topics.AsNoTracking().Where(t => fieldIds.Contains(t.FieldId)).WithoutMutedFor(viewerId)
+        var topics = await db.Topics.AsNoTracking().Where(t => fieldIds.Contains(t.FieldId)).WithoutMutedFor(db, viewerId)
             .Select(t => new { t.Id, t.FieldId, t.Slug, t.NameAr, t.NameEn })
             .ToListAsync(ct);
 

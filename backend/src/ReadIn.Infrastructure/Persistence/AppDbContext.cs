@@ -65,6 +65,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Collection> Collections => Set<Collection>();
     public DbSet<CollectionItem> CollectionItems => Set<CollectionItem>();
     public DbSet<UserFollow> UserFollows => Set<UserFollow>();
+    public DbSet<UserMute> UserMutes => Set<UserMute>();
+    public DbSet<ContentMute> ContentMutes => Set<ContentMute>();
+    public DbSet<ArticleFeedback> ArticleFeedback => Set<ArticleFeedback>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
     public DbSet<Report> Reports => Set<Report>();

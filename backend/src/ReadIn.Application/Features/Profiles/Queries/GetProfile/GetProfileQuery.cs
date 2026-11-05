@@ -44,6 +44,8 @@ internal sealed class GetProfileQueryHandler(IAppDbContext db, ICurrentUser curr
                 Following = db.UserFollows.Count(f => f.FollowerId == u.Id),
                 IsFollowing = db.UserFollows.Any(f => f.FollowerId == viewer && f.FolloweeId == u.Id),
                 FollowsYou = db.UserFollows.Any(f => f.FollowerId == u.Id && f.FolloweeId == viewer),
+                // F28: "انت كاتم الكاتب ده" with "إلغاء الكتم"; the profile still lists their articles.
+                IsMuted = db.UserMutes.Any(m => m.MuterId == viewer && m.MutedUserId == u.Id),
             })
             .FirstAsync(cancellationToken);
 
@@ -76,6 +78,10 @@ internal sealed class GetProfileQueryHandler(IAppDbContext db, ICurrentUser curr
             isMe,
             facts.IsFollowing,
             facts.FollowsYou,
-            new ProfileOwner(user.Id, user.PublicReadingStats).ReadingStatsVisibleTo(currentUser.UserId));
+            new ProfileOwner(user.Id, user.PublicReadingStats).ReadingStatsVisibleTo(currentUser.UserId))
+        {
+            IsMuted = facts.IsMuted,
+            IsSystemAccount = user.IsSystemAccount,
+        };
     }
 }

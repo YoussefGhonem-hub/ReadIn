@@ -1,3 +1,6 @@
+using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Features.Mutes;
+using ReadIn.Domain.Engagement;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
 
@@ -15,14 +18,33 @@ internal static class SearchVisibility
         users.Where(u => u.IsProfileComplete && !(u.IsSuspended && (u.SuspendedUntil == null || u.SuspendedUntil > now)));
 
     /// <summary>
-    /// The seam for F28 (mute): leaves out the writers <paramref name="viewerId"/> muted. F28 isn't built yet, so nothing
-    /// is left out. Articles go through <c>ArticleVisibility.WithoutMutedFor</c>.
+    /// Leaves out the writers <paramref name="viewerId"/> muted (SPEC F28): people search, Explore's new writers and a
+    /// field's top writers. Guests keep everyone. Articles go through <c>ArticleVisibility.WithoutMutedFor</c>.
     /// </summary>
-    public static IQueryable<User> WithoutMutedFor(this IQueryable<User> users, Guid? viewerId) => users;
+    public static IQueryable<User> WithoutMutedFor(this IQueryable<User> users, IAppDbContext db, Guid? viewerId)
+    {
+        if (viewerId is not { } viewer) return users;
 
-    /// <summary>The F28 seam for muted fields (see <see cref="WithoutMutedFor(IQueryable{User}, Guid?)"/>).</summary>
-    public static IQueryable<Field> WithoutMutedFor(this IQueryable<Field> fields, Guid? viewerId) => fields;
+        var muted = db.MutedUserIds(viewer);
+        return users.Where(u => !muted.Contains(u.Id));
+    }
 
-    /// <summary>The F28 seam for muted topics (see <see cref="WithoutMutedFor(IQueryable{User}, Guid?)"/>).</summary>
-    public static IQueryable<Topic> WithoutMutedFor(this IQueryable<Topic> topics, Guid? viewerId) => topics;
+    /// <summary>Leaves out the fields <paramref name="viewerId"/> muted (Explore's field tiles, topic search).</summary>
+    public static IQueryable<Field> WithoutMutedFor(this IQueryable<Field> fields, IAppDbContext db, Guid? viewerId)
+    {
+        if (viewerId is not { } viewer) return fields;
+
+        var muted = db.MutedIds(viewer, ContentMuteTarget.Field);
+        return fields.Where(f => !muted.Contains(f.Id));
+    }
+
+    /// <summary>Leaves out the topics <paramref name="viewerId"/> muted, and those of the fields they muted (topic search).</summary>
+    public static IQueryable<Topic> WithoutMutedFor(this IQueryable<Topic> topics, IAppDbContext db, Guid? viewerId)
+    {
+        if (viewerId is not { } viewer) return topics;
+
+        var mutedTopics = db.MutedIds(viewer, ContentMuteTarget.Topic);
+        var mutedFields = db.MutedIds(viewer, ContentMuteTarget.Field);
+        return topics.Where(t => !mutedTopics.Contains(t.Id) && !mutedFields.Contains(t.FieldId));
+    }
 }

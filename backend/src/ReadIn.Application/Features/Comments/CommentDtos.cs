@@ -21,6 +21,12 @@ public sealed record CommentDto
     public string? Body { get; init; }
     public AuthorDto? Author { get; init; }
 
+    /// <summary>
+    /// The viewer muted the author (SPEC F28): clients collapse it to "تعليق من شخص كتمته" with "عرض", which expands it
+    /// locally (the body is still sent). Its replies stay. False for guests, placeholders and deleted authors.
+    /// </summary>
+    public bool IsAuthorMuted { get; init; }
+
     /// <summary>Written by the article's author: the "الكاتب" badge.</summary>
     public bool IsArticleAuthor { get; init; }
     public IReadOnlyList<MentionDto> Mentions { get; init; } = [];

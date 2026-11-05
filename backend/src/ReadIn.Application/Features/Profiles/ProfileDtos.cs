@@ -31,7 +31,20 @@ public sealed record ProfileDto(
     bool IsMe,
     bool IsFollowing,
     bool FollowsYou,
-    bool ReadingStatsVisible);
+    bool ReadingStatsVisible)
+{
+    /// <summary>
+    /// The viewer muted this user (SPEC F28): the profile shows "انت كاتم الكاتب ده" with "إلغاء الكتم". False for guests
+    /// and on your own profile. The profile and its tabs still list the writer's articles.
+    /// </summary>
+    public bool IsMuted { get; init; }
+
+    /// <summary>
+    /// The official ReadIn account (<c>@readin</c>, SPEC F28): it can't be muted (<c>mute.system_account</c>), so the
+    /// profile's "⋯" leaves Mute out.
+    /// </summary>
+    public bool IsSystemAccount { get; init; }
+}
 
 public sealed record ExpertiseFieldDto(Guid Id, string Slug, string Name, string Icon, string Color);
 

@@ -16,6 +16,7 @@ namespace ReadIn.Application.Features.Comments;
 /// <item>A deleted or (for others) hidden top-level comment that still has replies is a placeholder; otherwise it is left
 /// out. Replies are never placeholders.</item>
 /// <item>A comment whose author deleted their account has a null <see cref="CommentDto.Author"/>.</item>
+/// <item>A comment by a writer the viewer muted is flagged (<see cref="CommentDto.IsAuthorMuted"/>, F28): clients collapse it.</item>
 /// </list>
 /// </summary>
 public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IFileStorage storage)
@@ -84,6 +85,7 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
             .ToDictionaryAsync(a => a.Id, a => a.AuthorId, ct);
 
         var liked = new HashSet<Guid>();
+        var muted = new HashSet<Guid>();
         if (ViewerId is { } viewer)
         {
             var all = ordered.Select(r => r.Id).Concat(replies.Select(r => r.Id)).ToList();
@@ -91,22 +93,32 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
                 .Where(l => l.UserId == viewer && all.Contains(l.CommentId))
                 .Select(l => l.CommentId)
                 .ToListAsync(ct)];
+
+            // The writers among these comments the viewer muted (F28).
+            var authors = ordered.Concat(replies).Where(r => r.AuthorId != null).Select(r => r.AuthorId!.Value).Distinct().ToList();
+            if (authors.Count > 0)
+            {
+                muted = [.. await db.UserMutes.AsNoTracking()
+                    .Where(m => m.MuterId == viewer && authors.Contains(m.MutedUserId))
+                    .Select(m => m.MutedUserId)
+                    .ToListAsync(ct)];
+            }
         }
 
         var repliesByParent = replies.ToLookup(r => r.ParentId!.Value);
         return [.. ordered.Select(row =>
         {
             var articleAuthor = articleAuthors.GetValueOrDefault(row.ArticleId);
-            var dto = ToDto(row, articleAuthor, liked);
+            var dto = ToDto(row, articleAuthor, liked, muted);
             if (!withReplies || row.ParentId is not null) return dto;
-            return dto with { Replies = [.. repliesByParent[row.Id].Select(r => ToDto(r, articleAuthor, liked))] };
+            return dto with { Replies = [.. repliesByParent[row.Id].Select(r => ToDto(r, articleAuthor, liked, muted))] };
         })];
     }
 
     public async Task<CommentDto?> LoadOneAsync(Guid id, CancellationToken ct) =>
         (await LoadAsync([id], withReplies: false, ct)).FirstOrDefault();
 
-    private CommentDto ToDto(CommentRow row, Guid? articleAuthorId, HashSet<Guid> liked)
+    private CommentDto ToDto(CommentRow row, Guid? articleAuthorId, HashSet<Guid> liked, HashSet<Guid> muted)
     {
         var viewer = ViewerId;
         var own = viewer is not null && row.AuthorId == viewer;
@@ -135,6 +147,7 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
             ParentId = row.ParentId,
             Body = row.Body,
             Author = author,
+            IsAuthorMuted = !own && row.AuthorId is { } authorId && muted.Contains(authorId),
             IsArticleAuthor = row.AuthorId is not null && row.AuthorId == articleAuthorId,
             Mentions = row.Mentions,
             LikeCount = row.LikeCount,

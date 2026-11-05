@@ -59,6 +59,10 @@ public record ArticleCardDto
 
     public string? CoverUrl { get; init; }
     public FieldRefDto Field { get; init; } = default!;
+
+    /// <summary>The article's topic, if it has one (on cards since F28: the "كتم المواضيع" sheet shows it).</summary>
+    public FieldRefDto? Topic { get; init; }
+
     /// <summary>Null when the author deleted their account; clients show "Deleted user" (SPEC §9.6).</summary>
     public AuthorDto? Author { get; init; }
     public int ReadingTimeMinutes { get; init; }
@@ -90,6 +94,18 @@ public record ArticleCardDto
 
     /// <summary>The viewer follows the author; false for guests, on your own articles and for a deleted author.</summary>
     public bool IsFollowingAuthor { get; init; }
+
+    /// <summary>
+    /// The viewer muted the author (SPEC F28): the reader's "انت كاتم الكاتب ده" banner. False for guests, on your own
+    /// articles and for a deleted author. Lists that apply mutes never carry such a card.
+    /// </summary>
+    public bool IsAuthorMuted { get; init; }
+
+    /// <summary>The viewer muted the article's field (the "كتم المواضيع" sheet's toggle); false for guests.</summary>
+    public bool IsFieldMuted { get; init; }
+
+    /// <summary>The viewer muted the article's topic; false for guests and without a topic.</summary>
+    public bool IsTopicMuted { get; init; }
 
     /// <summary>1–10 images or one PDF (ADR 0011). Loaded after the projection by <see cref="ArticleAttachmentsReader"/>.</summary>
     public ArticleAttachmentsDto? Attachments { get; init; }
@@ -132,7 +148,6 @@ public sealed record ArticleDetailsDto : ArticleCardDto
     /// <summary>RDoc document (shared/rdoc/rdoc.schema.json).</summary>
     public JsonElement Content { get; init; }
 
-    public FieldRefDto? Topic { get; init; }
     public IReadOnlyList<SourceDto> Sources { get; init; } = [];
     public int ReadCount { get; init; }
 

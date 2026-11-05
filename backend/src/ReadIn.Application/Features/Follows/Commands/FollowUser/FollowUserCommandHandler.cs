@@ -16,26 +16,39 @@ internal sealed class FollowUserCommandHandler(IAppDbContext db, ICurrentUser cu
         var followeeId = command.UserId;
         if (!await db.Users.AnyAsync(u => u.Id == followeeId, cancellationToken)) return UserErrors.NotFound;
 
-        if (!await IsFollowingAsync(followerId, followeeId, cancellationToken))
+        var followed = await FollowAsync(db, followerId, followeeId, clock.GetUtcNow().UtcDateTime, cancellationToken);
+        if (followed.IsFailure) return followed.Error;
+
+        return await db.FollowStateAsync(followerId, followeeId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Follows <paramref name="followeeId"/> (idempotent) and ends a mute of them: following and muting never hold at once
+    /// (SPEC F28). Also the Undo of a mute that ended a follow (<c>DELETE /users/{id}/mute?restoreFollow=true</c>).
+    /// </summary>
+    internal static async Task<Result> FollowAsync(IAppDbContext db, Guid followerId, Guid followeeId, DateTime now, CancellationToken ct)
+    {
+        if (!await IsFollowingAsync(db, followerId, followeeId, ct))
         {
-            var follow = UserFollow.Create(followerId, followeeId, clock.GetUtcNow().UtcDateTime);
+            var follow = UserFollow.Create(followerId, followeeId, now);
             if (follow.IsFailure) return follow.Error;
 
             db.UserFollows.Add(follow.Value);
             try
             {
-                await db.SaveChangesAsync(cancellationToken);
+                await db.SaveChangesAsync(ct);
             }
             catch (DbUpdateException)
             {
                 // Followed by a concurrent request (unique index): the outcome is the same.
-                if (!await IsFollowingAsync(followerId, followeeId, cancellationToken)) throw;
+                if (!await IsFollowingAsync(db, followerId, followeeId, ct)) throw;
             }
         }
 
-        return await db.FollowStateAsync(followerId, followeeId, cancellationToken);
+        await db.UserMutes.Where(m => m.MuterId == followerId && m.MutedUserId == followeeId).ExecuteDeleteAsync(ct);
+        return Result.Success();
     }
 
-    private Task<bool> IsFollowingAsync(Guid followerId, Guid followeeId, CancellationToken ct) =>
+    private static Task<bool> IsFollowingAsync(IAppDbContext db, Guid followerId, Guid followeeId, CancellationToken ct) =>
         db.UserFollows.AsNoTracking().AnyAsync(f => f.FollowerId == followerId && f.FolloweeId == followeeId, ct);
 }

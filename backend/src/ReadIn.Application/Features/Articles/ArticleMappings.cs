@@ -30,12 +30,6 @@ public sealed class ArticleMappings : IRegister
                 .Where(t => t.Language == LocalizedProjection.Lang)
                 .Select(t => t.ContentJson).FirstOrDefault()
                 ?? s.Translations.Where(t => t.IsSource).Select(t => t.ContentJson).FirstOrDefault())
-            .Map(d => d.Topic, s => s.Topic == null
-                ? null
-                : new FieldRefDto(
-                    s.Topic.Id, s.Topic.Slug,
-                    LocalizedProjection.Ui == "en" ? s.Topic.NameEn : s.Topic.NameAr,
-                    s.Topic.NameAr, s.Topic.NameEn, s.Field.IsSensitive))
             .Map(d => d.Sources, s => s.Sources.OrderBy(x => x.SortOrder).Select(x => new SourceDto(x.Title, x.Url)).ToList())
             // The hide note is loaded by the handler (latest article.hide in ModerationActions).
             .Map(d => d.Moderation, s => s.HiddenAt == null ? null : new ArticleModerationDto(s.HiddenAt.Value, null))
@@ -74,6 +68,13 @@ public sealed class ArticleMappings : IRegister
                 s.Field.Id, s.Field.Slug,
                 LocalizedProjection.Ui == "en" ? s.Field.NameEn : s.Field.NameAr,
                 s.Field.NameAr, s.Field.NameEn, s.Field.IsSensitive))
+            // Cards carry the topic too since F28 (the "كتم المواضيع" sheet); a topic carries its field's flag.
+            .Map(d => d.Topic, s => s.Topic == null
+                ? null
+                : new FieldRefDto(
+                    s.Topic.Id, s.Topic.Slug,
+                    LocalizedProjection.Ui == "en" ? s.Topic.NameEn : s.Topic.NameAr,
+                    s.Topic.NameAr, s.Topic.NameEn, s.Field.IsSensitive))
             .Map(d => d.Author, s => s.Author == null ? null : new AuthorDto(
                 s.Author.Id, s.Author.DisplayName, s.Author.Username, s.Author.AvatarUrl,
                 s.Author.Roles.Any(r => r.RoleId == RoleIds.VerifiedWriter)))
@@ -84,5 +85,8 @@ public sealed class ArticleMappings : IRegister
             .Ignore(d => d.Attachments!)
             .Ignore(d => d.MyReaction!)
             .Ignore(d => d.IsSaved)
-            .Ignore(d => d.IsFollowingAuthor);
+            .Ignore(d => d.IsFollowingAuthor)
+            .Ignore(d => d.IsAuthorMuted)
+            .Ignore(d => d.IsFieldMuted)
+            .Ignore(d => d.IsTopicMuted);
 }

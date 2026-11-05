@@ -69,11 +69,12 @@ internal sealed class GetExploreQueryHandler(
         IReadOnlyList<ArticleCardDto> trending = snapshot.Trending, mostSaved = snapshot.MostSaved;
         if (viewerId is { } viewer)
         {
-            // The F28 seams: nothing is muted yet, but the cached lists are shared, so mutes apply here.
+            // The cached lists are shared, so the caller's mutes and "show less" marks (F28) apply here.
             var articleIds = trending.Concat(mostSaved).Select(c => c.Id).Distinct().ToList();
-            var keptArticles = (await db.Articles.AsNoTracking().Where(a => articleIds.Contains(a.Id)).WithoutMutedFor(viewer)
+            var keptArticles = (await db.Articles.AsNoTracking().Where(a => articleIds.Contains(a.Id))
+                .WithoutMutedFor(db, viewer).WithoutShownLessFor(db, viewer)
                 .Select(a => a.Id).ToListAsync(ct)).ToHashSet();
-            var keptFields = (await db.Fields.AsNoTracking().WithoutMutedFor(viewer).Select(f => f.Id).ToListAsync(ct)).ToHashSet();
+            var keptFields = (await db.Fields.AsNoTracking().WithoutMutedFor(db, viewer).Select(f => f.Id).ToListAsync(ct)).ToHashSet();
             trending = [.. trending.Where(c => keptArticles.Contains(c.Id))];
             mostSaved = [.. mostSaved.Where(c => keptArticles.Contains(c.Id))];
             fields = [.. fields.Where(f => keptFields.Contains(f.Id))];

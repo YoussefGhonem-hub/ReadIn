@@ -24,7 +24,11 @@ internal sealed class GetFollowingFeedQueryHandler(
         var articles = db.Articles.AsNoTracking()
             .Visible()
             .Where(a => a.PublishedAt != null)
-            .Where(a => db.UserFollows.Any(f => f.FollowerId == userId && f.FolloweeId == a.AuthorId));
+            .Where(a => db.UserFollows.Any(f => f.FollowerId == userId && f.FolloweeId == a.AuthorId))
+            // A followed writer is never muted (the two end each other), but their muted fields and topics, and what you
+            // marked "show less", stay out (F28).
+            .WithoutMutedFor(db, userId)
+            .WithoutShownLessFor(db, userId);
 
         if (TimeCursor.Decode(query.Cursor) is { } cursor)
         {

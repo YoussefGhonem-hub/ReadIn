@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Options;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
+using ReadIn.Application.Features.Mutes;
 using ReadIn.Application.Features.Uploads;
 using ReadIn.Domain.Articles;
+using ReadIn.Domain.Engagement;
 
 namespace ReadIn.Application.Features.Articles;
 
@@ -40,11 +42,36 @@ internal static class ArticleVisibility
         articles.Published().Where(a => a.HiddenAt == null);
 
     /// <summary>
-    /// The seam for F28 (mute and "show less"): leaves out the articles of writers, fields and topics
-    /// <paramref name="viewerId"/> muted. F28 isn't built yet, so nothing is left out; the lists that must honour mutes
-    /// (tag pages, F32) already go through it.
+    /// Leaves out the articles of the writers, fields and topics <paramref name="viewerId"/> muted (SPEC F28): For you,
+    /// Following, Today's article, Related, Explore, Search, field and tag pages. Guests keep everything. A field page
+    /// passes its own field (<paramref name="openedFieldId"/>) and the topic picked (<paramref name="openedTopicId"/>):
+    /// the reader opened those, so their own mutes don't empty the page (muted writers and other topics still go).
     /// </summary>
-    public static IQueryable<Article> WithoutMutedFor(this IQueryable<Article> articles, Guid? viewerId) => articles;
+    public static IQueryable<Article> WithoutMutedFor(
+        this IQueryable<Article> articles, IAppDbContext db, Guid? viewerId, Guid? openedFieldId = null, Guid? openedTopicId = null)
+    {
+        if (viewerId is not { } viewer) return articles;
+
+        var users = db.MutedUserIds(viewer);
+        var fields = db.MutedIds(viewer, ContentMuteTarget.Field).Where(id => id != openedFieldId);
+        var topics = db.MutedIds(viewer, ContentMuteTarget.Topic).Where(id => id != openedTopicId);
+        return articles.Where(a =>
+            !(a.AuthorId != null && users.Contains(a.AuthorId.Value)) &&
+            !fields.Contains(a.FieldId) &&
+            !(a.TopicId != null && topics.Contains(a.TopicId.Value)));
+    }
+
+    /// <summary>
+    /// Leaves out the articles <paramref name="viewerId"/> marked "show less" (SPEC F28): every feed that applies mutes
+    /// except Search, where the reader looks for something on purpose.
+    /// </summary>
+    public static IQueryable<Article> WithoutShownLessFor(this IQueryable<Article> articles, IAppDbContext db, Guid? viewerId)
+    {
+        if (viewerId is not { } viewer) return articles;
+
+        var marked = db.ShownLessIds(viewer);
+        return articles.Where(a => !marked.Contains(a.Id));
+    }
 
     /// <summary>
     /// The reader and what is done on one article (comments, reactions, saves, progress): <see cref="Visible"/>, plus a

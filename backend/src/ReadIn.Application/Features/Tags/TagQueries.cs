@@ -40,7 +40,7 @@ public sealed record GetTagQuery(string Slug) : IQuery<Result<TagDto>>, ICachedQ
 /// <summary>
 /// GET /tags/{slug}/articles: every published article with the tag, from all writers, newest first, as feed cards
 /// (SPEC F32, F34), keyset-paginated over (PublishedAt DESC, Id DESC). Guests get a cached page (server rendering);
-/// a signed-in caller's page leaves out what they muted once F28 ships.
+/// a signed-in caller's page leaves out what they muted or marked "show less" (F28).
 /// </summary>
 [RequirePermission(Permissions.Articles.Read)]
 public sealed record GetTagArticlesQuery(string Slug, string? Cursor, int Limit, string UiLanguage)
@@ -157,7 +157,7 @@ internal sealed class GetTagArticlesQueryHandler(
     private async Task<CursorPage<ArticleCardDto>> LoadAsync(
         Guid tagId, TimeCursor? cursor, int limit, string uiLanguage, string? articleLanguage, Guid? viewerId, CancellationToken ct)
     {
-        var articles = TagSlugs.ArticlesWith(db, tagId).WithoutMutedFor(viewerId);
+        var articles = TagSlugs.ArticlesWith(db, tagId).WithoutMutedFor(db, viewerId).WithoutShownLessFor(db, viewerId);
         if (cursor is { } after)
         {
             articles = articles.Where(a =>

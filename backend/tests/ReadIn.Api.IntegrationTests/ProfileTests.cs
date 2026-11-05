@@ -101,7 +101,7 @@ public sealed class ProfileTests(ApiFactory api)
 
         profile.Select(p => p.Key).Should().BeEquivalentTo(
             "id", "displayName", "username", "avatarUrl", "avatarVariants", "isVerified", "bio", "links", "expertise", "joinedAt",
-            "stats", "isMe", "isFollowing", "followsYou", "readingStatsVisible");
+            "stats", "isMe", "isFollowing", "followsYou", "readingStatsVisible", "isMuted", "isSystemAccount");
         profile["id"]!.GetValue<Guid>().Should().Be(writer.Id);
         profile["displayName"]!.GetValue<string>().Should().Be("Mona Adel");
         profile["bio"]!.GetValue<string>().Should().Be("Backend engineer · .NET و SQL Server");

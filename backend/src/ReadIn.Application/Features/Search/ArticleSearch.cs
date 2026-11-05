@@ -126,8 +126,8 @@ public sealed class ArticleSearch(
     private async Task<List<RankedArticle>> LoadAsync(
         SearchTerms terms, ArticleSearchFilters filters, string preferredLanguage, Guid? viewerId, CancellationToken ct)
     {
-        // What readers can open (SPEC F22), then the caller's mutes (F28 seam) and the filters.
-        var articles = db.Articles.AsNoTracking().Visible().WithoutMutedFor(viewerId).Where(a => a.PublishedAt != null);
+        // What readers can open (SPEC F22), then the caller's mutes (F28; "show less" doesn't apply) and the filters.
+        var articles = db.Articles.AsNoTracking().Visible().WithoutMutedFor(db, viewerId).Where(a => a.PublishedAt != null);
         if (filters.FieldSlug is { } field) articles = articles.Where(a => a.Field.Slug == field);
 
         var versions = db.ArticleTranslations.AsNoTracking().Where(t => articles.Any(a => a.Id == t.ArticleId));

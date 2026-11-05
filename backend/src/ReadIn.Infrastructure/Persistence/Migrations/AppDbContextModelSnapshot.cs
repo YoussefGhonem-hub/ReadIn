@@ -436,6 +436,36 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("RolePermissions", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Engagement.ArticleFeedback", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId");
+
+                    b.HasIndex("UserId", "ArticleId")
+                        .IsUnique();
+
+                    b.ToTable("ArticleFeedback", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Engagement.Collection", b =>
                 {
                     b.Property<Guid>("Id")
@@ -610,6 +640,34 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("CommentMentions", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Engagement.ContentMute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "TargetType", "TargetId")
+                        .IsUnique();
+
+                    b.ToTable("ContentMutes", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Engagement.Reaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -699,6 +757,31 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("UserFollows", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.UserMute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("MutedUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MuterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MutedUserId");
+
+                    b.HasIndex("MuterId", "MutedUserId")
+                        .IsUnique();
+
+                    b.ToTable("UserMutes", (string)null);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Glossary.ArticleTerm", b =>
@@ -2336,6 +2419,21 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Engagement.ArticleFeedback", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Articles.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Engagement.Collection", b =>
                 {
                     b.HasOne("ReadIn.Domain.Users.User", null)
@@ -2408,6 +2506,15 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Engagement.ContentMute", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Engagement.Reaction", b =>
                 {
                     b.HasOne("ReadIn.Domain.Articles.Article", null)
@@ -2459,6 +2566,23 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Navigation("Followee");
 
                     b.Navigation("Follower");
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Engagement.UserMute", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", "MutedUser")
+                        .WithMany()
+                        .HasForeignKey("MutedUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("MuterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MutedUser");
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Glossary.ArticleTerm", b =>

@@ -632,6 +632,7 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 | Verification requests the account decided as an admin | `VerificationRequests.DecidedById` | **Anonymized**: the link to the account is removed (no FK; nulled explicitly) | The decision and its reason stay with the user it concerns |
 | Tags the account created (F32) | `Tags.CreatedById` | **Anonymized**: the link to the account is removed (no FK; nulled explicitly) | Tags are shared by everyone; a tag no article carries is still deleted by the daily cleanup |
 | Writer categories (F31) | `WriterCategories`, `Articles.WriterCategoryId` | **Deleted** (cascade); the published articles that stay lose their category (`ON DELETE SET NULL`) | They only group the writer's own articles |
+| Mutes and "show less" marks (F28): the writers, fields and topics the account muted, other people's mutes of the account, its "show less" marks | `UserMutes`, `ContentMutes`, `ArticleFeedback` | **Deleted** (cascade from `Users`; mutes *of* the account deleted explicitly) | Private choices; nobody was ever told about them |
 | Database, uploads and private files backups | backup storage | **Retained up to 14 days**, then overwritten | Disaster recovery ([deployment](setup/deployment.md)) |
 | Server logs | Serilog sink | May hold the account id and masked phone numbers (§9.5) for the log store's retention | Operations |
 
@@ -956,6 +957,8 @@ The reader's action bar has a "⋯" menu (web + mobile). Guests get a sign-in pr
 | **كتم المواضيع** (Mute topics) | A sheet with the article's field and topic, each with a toggle. Undo by toggling it back. |
 | **تحميل PDF** (Download PDF) | Downloads your article as a PDF ([F33](#f33--download-article-pdf-تحميل-المقال-pdf)). Shown only on your own article. |
 | **الإبلاغ عن المقال** (Report article) | Opens the report sheet with reason + details ([F22](#f22--reporting--moderation)). Shown in the error color, hidden on your own article. |
+
+Mute author (كتم / إلغاء الكتم) is also on a profile's "⋯" (not on your own profile or the official account) and on a comment's "⋯" (mutes the commenter; not on your own comments), with the same rules and Undo, so someone who only writes comments can be muted too.
 
 **What muting changes:**
 - Muted writers, fields and topics disappear from For you, Following, Today's article, Related, Explore, Search and article lists on field pages.

@@ -41,6 +41,7 @@ public sealed record NotificationRequest(Guid UserId, string Type)
 /// job is signalled and the recipients' unread counts are published under <c>/live/users/{id}</c>.
 /// <list type="bullet">
 /// <item>Nobody is notified about their own action; system, suspended and deleted accounts get nothing.</item>
+/// <item>Nothing comes from a writer the recipient muted (F28): the request is dropped, so no entry and no actor.</item>
 /// <item><see cref="NotificationMode.Off"/> writes nothing; <see cref="NotificationMode.InApp"/> writes the entry without a push.</item>
 /// <item>Idempotent: a dedupe key is written once per user, and an actor already in an aggregated entry with the same
 /// activity changes nothing, so the outbox's at-least-once delivery never duplicates anything.</item>
@@ -95,6 +96,17 @@ public sealed class NotificationWriter(
                 .ToListAsync(ct))
             .ToDictionary(s => (s.UserId, s.Type), s => s.Mode);
 
+        // F28: a muted writer's activity tells the recipient nothing, and joins no aggregated entry of theirs.
+        var actorIds = requests.Where(r => r.ActorId is not null).Select(r => r.ActorId!.Value).Distinct().ToList();
+        var muted = actorIds.Count == 0
+            ? []
+            : (await db.UserMutes.AsNoTracking()
+                    .Where(m => userIds.Contains(m.MuterId) && actorIds.Contains(m.MutedUserId))
+                    .Select(m => new { m.MuterId, m.MutedUserId })
+                    .ToListAsync(ct))
+                .Select(m => (m.MuterId, m.MutedUserId))
+                .ToHashSet();
+
         var keys = requests.Where(r => r.DedupeKey is not null).Select(r => r.DedupeKey!).Distinct().ToList();
         var existing = keys.Count == 0
             ? []
@@ -110,6 +122,7 @@ public sealed class NotificationWriter(
         {
             var request = requests[i];
             if (request.ActorId == request.UserId || !recipients.TryGetValue(request.UserId, out var recipient)) continue;
+            if (request.ActorId is { } actor && muted.Contains((request.UserId, actor))) continue;
 
             var mode = NotificationTypes.IsConfigurable(request.Type)
                 ? modes.GetValueOrDefault((request.UserId, request.Type), NotificationMode.All)

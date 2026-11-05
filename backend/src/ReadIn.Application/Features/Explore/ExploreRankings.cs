@@ -177,8 +177,8 @@ public sealed class ExploreRankings(IAppDbContext db, TimeProvider clock, Hybrid
 
     /// <summary>
     /// Cards for <paramref name="ids"/> in that order, as SQL projects them (before URLs, attachments and the caller's
-    /// state: <see cref="ArticleCards.CompleteAsync"/>). Articles no longer visible, or muted by
-    /// <paramref name="viewerId"/> once F28 ships, are left out.
+    /// state: <see cref="ArticleCards.CompleteAsync"/>). Articles no longer visible, or muted or marked
+    /// "show less" by <paramref name="viewerId"/> (F28), are left out.
     /// </summary>
     internal async Task<List<ArticleCardDto>> CardsAsync(
         IReadOnlyList<Guid> ids, string uiLanguage, string? articleLanguage, Guid? viewerId, CancellationToken ct)
@@ -190,7 +190,8 @@ public sealed class ExploreRankings(IAppDbContext db, TimeProvider clock, Hybrid
         {
             projected = await Visible()
                 .Where(a => wanted.Contains(a.Id))
-                .WithoutMutedFor(viewerId)
+                .WithoutMutedFor(db, viewerId)
+                .WithoutShownLessFor(db, viewerId)
                 .ProjectToType<ArticleCardDto>(mapping)
                 .ToListAsync(ct);
         }
@@ -214,7 +215,7 @@ public sealed class ExploreRankings(IAppDbContext db, TimeProvider clock, Hybrid
     /// <summary>
     /// The caller's side of a cached list of people: only those still <see cref="ExploreWriters.Listed"/> (someone
     /// suspended, or who deleted their account, since the list was cached leaves it at once), absolute avatar URLs,
-    /// <c>isFollowing</c> / <c>followsYou</c>, and (once F28 ships) without the writers they muted. Guests get the URLs.
+    /// <c>isFollowing</c> / <c>followsYou</c>, and without the writers they muted (F28). Guests get the URLs.
     /// </summary>
     internal async Task<List<UserSummaryDto>> ForViewerAsync(IReadOnlyList<UserSummaryDto> users, Guid? viewerId, CancellationToken ct)
     {
@@ -222,7 +223,7 @@ public sealed class ExploreRankings(IAppDbContext db, TimeProvider clock, Hybrid
 
         // One small query by primary key on every request, after the cache.
         var ids = users.Select(u => u.Id).ToList();
-        var kept = (await db.Users.AsNoTracking().Where(u => ids.Contains(u.Id)).Listed(Now).WithoutMutedFor(viewerId)
+        var kept = (await db.Users.AsNoTracking().Where(u => ids.Contains(u.Id)).Listed(Now).WithoutMutedFor(db, viewerId)
             .Select(u => u.Id).ToListAsync(ct)).ToHashSet();
         var withUrls = users.Where(u => kept.Contains(u.Id)).Select(u => u.WithPublicUrls(storage)).ToList();
         if (viewerId is not { } viewer || withUrls.Count == 0) return withUrls;

@@ -149,6 +149,9 @@ internal sealed partial class AccountEraser(
 
             // Followers of this account (FolloweeId has no cascade: one path from UserFollows to Users only).
             await db.UserFollows.Where(f => f.FolloweeId == userId).ExecuteDeleteAsync(ct);
+            // F28: mutes *of* this account (MutedUserId has no cascade either). Its own mutes, content mutes and "show
+            // less" marks go with the UserId/MuterId cascades.
+            await db.UserMutes.Where(m => m.MutedUserId == userId).ExecuteDeleteAsync(ct);
             // F17: the account as the actor of other people's notifications (ActorId has no cascade either). Their entries
             // stay: a comment it wrote still shows, as by "Deleted user".
             await db.NotificationActors.Where(a => a.ActorId == userId).ExecuteDeleteAsync(ct);

@@ -89,6 +89,11 @@ public static class ErrorMessages
         ["search.query_invalid"] = ("اكتب من حرف لـ 100 حرف، وفيهم حرف أو رقم على الأقل.", "Type 1–100 characters, with at least one letter or digit."),
         ["search.type_invalid"] = ("نوع البحث لازم يكون مقالات أو كتّاب أو مواضيع أو تاجات.", "The search type must be articles, writers, topics or tags."),
         ["search.filter_invalid"] = ("فلاتر البحث دي مش صحيحة.", "These search filters aren't valid."),
+        // Mute & feedback (SPEC F28)
+        ["mute.self"] = ("مينفعش تكتم نفسك.", "You can't mute yourself."),
+        ["mute.system_account"] = ("مينفعش تكتم حساب ReadIn الرسمي.", "The official ReadIn account can't be muted."),
+        ["mute.limit"] = ("وصلت لأقصى عدد كتّاب تكتمهم (500).", "You can mute at most 500 writers."),
+        ["mute.own_article"] = ("مينفعش تعمل كده على مقالك.", "You can't do this on your own article."),
         // Learning paths (F09)
         ["path.not_found"] = ("المسار مش موجود.", "Learning path not found."),
         ["path.slug_taken"] = ("فيه مسار تاني بنفس الرابط.", "Another learning path uses this slug."),

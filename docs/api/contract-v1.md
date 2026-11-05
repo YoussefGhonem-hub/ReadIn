@@ -107,7 +107,7 @@ a slug from a name.
 |---|---|---|
 | GET | `/tags?q=&limit=10` | `TagDto[]`: the editor's suggestions. `q` is cleaned and normalized like a tag name (rules 1 and 3 below, so a leading `#` is dropped). A tag matches when a word of its normalized name starts with `q` (at the start, or after a space, `-`, `_` or `.`), or its slug starts with `q`'s slug (`csharp` finds `C#`). The tag named exactly `q` comes first, then the most used (`articleCount`), then by name. Empty `q`: the most used tags; `q` over 30 characters matches nothing. `limit` 1–20, default 10. Hidden tags are never suggested |
 | GET | `/tags/{slug}` | `TagDto`: the tag page's header. `404 tag.not_found` for an unknown or hidden tag |
-| GET | `/tags/{slug}/articles?cursor=&limit=` | `CursorPage<ArticleCardDto>`: every published article with the tag, from all writers, newest first, in the caller's article language and with the caller's `myReaction` / `isSaved` / `isFollowingAuthor` like every feed. Articles hidden by moderators (F22) and deleted ones are left out; for a signed-in caller, muted writers and topics will be too once F28 ships. `limit` 1–50, default 20. `404 tag.not_found` like `/tags/{slug}` |
+| GET | `/tags/{slug}/articles?cursor=&limit=` | `CursorPage<ArticleCardDto>`: every published article with the tag, from all writers, newest first, in the caller's article language and with the caller's `myReaction` / `isSaved` / `isFollowingAuthor` like every feed. Articles hidden by moderators (F22) and deleted ones are left out; for a signed-in caller, so are the writers, fields and topics they muted and the articles they marked "show less" (F28). `limit` 1–50, default 20. `404 tag.not_found` like `/tags/{slug}` |
 
 `articleCount` counts the published articles readers can see (not hidden by moderators, not deleted), the same for
 everyone; `0` means the tag page shows its empty state (web: `noindex`). The suggestions, the header and the guests'
@@ -178,7 +178,7 @@ wildcards.
 **Articles** (`type=articles`, `SearchArticleDto`)
 - Only articles readers can open (as `GET /articles/{slug}`): published, not deleted, in an enabled field and not
   hidden by moderators (F22), not even for their author. For a signed-in caller, muted writers, fields and topics are
-  left out too once F28 ships. One result per article.
+  left out too (F28; "show less" marks are not). One result per article.
 - Searched: each language version's title + text (`SearchText`), and the text of the post's attached PDF
   (`ExtractedText`, F26). All words must be in one version's title + text, or all in the PDF. A PDF counts only while it
   is attached to an article that can be opened, and once it is processed: unattached PDFs and PDFs of unpublished or
@@ -212,7 +212,7 @@ wildcards.
 **Users** (`type=users`, `UserSummaryDto`)
 - People whose display name holds every word, or whose `@username` starts with `q` (for a one-word `q`).
 - Left out: deleted accounts, suspended accounts (while suspended), accounts that haven't completed their profile (the
-  `@reader_…` placeholder), and, once F28 ships, writers the caller muted. System accounts (the official `@readin`) are
+  `@reader_…` placeholder), and writers the caller muted (F28). System accounts (the official `@readin`) are
   found like everyone, and so is the caller (`isFollowing: false`; show no Follow button on your own row).
 - Order: an exact `@username` or display name first, then a username or display name that starts with `q`, then the
   rest; within each, verified first, then the most followers, then `@username`. Follow with `PUT /users/{id}/follow`
@@ -220,7 +220,7 @@ wildcards.
 
 **Topics** (`type=topics`, `SearchTopicDto`)
 - Enabled fields and their topics whose Arabic or English name holds every word, or whose slug starts with `q` made into
-  a slug (Tags rule 4, so `C#` finds `csharp`). Once F28 ships, fields and topics the caller muted are left out.
+  a slug (Tags rule 4, so `C#` finds `csharp`). Fields and topics the caller muted, and the topics of a muted field, are left out (F28).
 - Order: an exact name (either language) first, then fields before topics, then the most articles, then the name in
   `Accept-Language`.
 - Opens the field page (F15) on web and mobile: `/f/{fieldSlug}` for a field, `/f/{fieldSlug}?topic={topicSlug}` for a
@@ -272,18 +272,18 @@ per article, in the caller's article language (guests: `Accept-Language`, `ar` �
 with the caller's `myReaction` / `isSaved` / `isFollowingAuthor` like every feed. Clients show the two rankings ("See
 all") and the field articles as the **post card** (F34); Explore's `trending` / `mostSaved` previews show their first 3
 as the compact article row, with "See all" next to the section title. For a signed-in caller, muted writers, fields and
-topics will be left out too once F28 ships. `limit` 1–50, default 20; a cursor that doesn't decode starts from the
+topics, and articles marked "show less", are left out too (F28; a field page keeps its own field and the picked topic). `limit` 1–50, default 20; a cursor that doesn't decode starts from the
 first page.
 
 **Explore (`ExploreDto`).** A section with nothing in it is `[]`; clients hide it.
 - `fields`: every enabled field in display order (as `GET /fields`), empty ones included, with `articleCount` (articles
-  readers can see, the same for everyone). Opens the field page; topics are reached there. Once F28 ships, fields the
-  caller muted are left out.
+  readers can see, the same for everyone). Opens the field page; topics are reached there. Fields the caller muted are
+  left out (F28).
 - `trending`: the first 6 of `/explore/trending`. `mostSaved`: the first 6 of `/explore/most-saved`.
 - `newWriters`: ≤ 10 people whose first article was published in the last 30 days, latest first publish first (the
   first article = the earliest `publishedAt` among their articles readers can see). Left out: system accounts (the
   official `@readin`), suspended accounts (while suspended), deleted accounts, profiles not completed (the
-  `@reader_…` placeholder), and, once F28 ships, writers the caller muted. The caller can be listed (`isFollowing:
+  `@reader_…` placeholder), and writers the caller muted (F28). The caller can be listed (`isFollowing:
   false`; show no Follow button on your own row). Follow with `PUT /users/{id}/follow` (guests get the sign-in prompt).
 - `featuredPaths`: ≤ 6 published paths flagged featured (`LearningPaths.IsFeatured`), in featured order
   (`FeaturedOrder`, then the editorial order), as `PathCardDto` like `/paths` (a path with no article a reader can open
@@ -356,9 +356,9 @@ Explore error codes: `field.not_found` (404), `topic.not_found` (404).
 | Method | Path | Response |
 |---|---|---|
 | GET | `/articles/{slug}?lang=` | `ArticleDetailsDto` |
-| GET | `/feed/for-you?field=&cursor=&limit=` | `CursorPage<ArticleCardDto>`. Signed in: the articles in the user's interests first, then all the other published articles, newest first within each group (the cursor remembers the group, so paging never repeats or skips an article). Guests, users without interests, and any `field` filter: latest published. `field` is a field slug. |
+| GET | `/feed/for-you?field=&cursor=&limit=` | `CursorPage<ArticleCardDto>`. Signed in: the articles in the user's interests first, then all the other published articles, newest first within each group (the cursor remembers the group, so paging never repeats or skips an article). Guests, users without interests, and any `field` filter: latest published. Signed in, what you muted or marked "show less" is left out, and the topics (or fields) you marked "show less" in the last 90 days come last, in a tier of their own (F28, see Mute & feedback). `field` is a field slug. |
 | GET | `/feed/today` | `ArticleCardDto` or `204` when no pick is available yet |
-| GET | `/feed/following?cursor=&limit=` | Bearer → `CursorPage<ArticleCardDto>`: published articles by the writers you follow, newest first (the Home "Following" tab) |
+| GET | `/feed/following?cursor=&limit=` | Bearer → `CursorPage<ArticleCardDto>`: published articles by the writers you follow, newest first (the Home "Following" tab), without your muted fields and topics and "show less" articles (F28) |
 | GET | `/articles/{id}/related?lang=&limit=` | `ArticleCardDto[]`, 0–`limit` cards (1–10, default 4) for the end of the reader (F04). `lang` is the version being read; cards use it when they have it, else their source language. `404 article.not_found` when the article isn't published |
 | GET | `/articles/{id}/preview?lang=` | `ArticlePreviewDto`: what a feed card's "Read more" shows (F34). `content` is an RDoc document with the article's first whole blocks, in order, until about 300 words of text (the block that reaches 300 is kept whole, so there is always at least one block, and a cut preview never ends on a heading or divider); `isComplete` is true when that is the whole article. `lang` picks the version like `GET /articles/{slug}` (an unknown or missing version gives the source language; `language` says which). Visible exactly like the article: `404 article.not_found` for unknown, unpublished and deleted articles, and for a hidden one to everyone but its author and moderators. Cached like the details and invalidated with them (publish, Update, hide/unhide, delete) |
 
@@ -426,6 +426,86 @@ come from the article's denormalized columns, which the outbox updates right aft
 | PUT | `/me/interests/fields/{fieldId}` | → `200 InterestsDto` (follow a field = an interest, F02; idempotent). `404 field.not_found` |
 | PUT | `/me/interests/topics/{topicId}` | → `200 InterestsDto` (idempotent). `404 topic.not_found` |
 | DELETE | `/me/interests/fields/{fieldId}`, `/me/interests/topics/{topicId}` | → `200 InterestsDto` (idempotent). `400 user.interests.min_three` when fewer than 3 interests would remain |
+
+### Mute & feedback (F28) — SPEC F28
+
+Bearer on every route (guests: `401 auth.unauthorized`; clients show the sign-in prompt instead of calling). Writes need
+`follows.manage` (every member) and use the `writes` rate limit (30 a minute); `GET /me/mutes` is unthrottled.
+
+| Method | Path | Body → Response |
+|---|---|---|
+| PUT | `/users/{id}/mute` | → `200 UserMuteStateDto` (idempotent). Mutes the writer and ends your follow of them (`followRemoved: true` when there was one). `400 mute.self`, `400 mute.system_account` (the official `@readin`), `400 mute.limit` (500 muted writers), `404 user.not_found` (unknown or deleted). A suspended account can be muted |
+| DELETE | `/users/{id}/mute?restoreFollow=` | → `200 UserMuteStateDto` (idempotent; `followRemoved: false`). `restoreFollow=true` also follows the writer again, as `PUT /users/{id}/follow`: the toast's Undo after a mute whose answer had `followRemoved: true`. The banner and Settings → Muted leave it out. `404 user.not_found` |
+| PUT | `/me/mutes/fields/{id}` | → `200 ContentMutesDto` (idempotent). `404 field.not_found` (unknown or disabled) |
+| DELETE | `/me/mutes/fields/{id}` | → `200 ContentMutesDto` (idempotent, any id) |
+| PUT | `/me/mutes/topics/{id}` | → `200 ContentMutesDto` (idempotent). `404 topic.not_found` |
+| DELETE | `/me/mutes/topics/{id}` | → `200 ContentMutesDto` (idempotent, any id) |
+| GET | `/me/mutes` | → `200 MutesDto`: Settings → Muted (F18). Writers, fields and topics, each newest mute first, not paged |
+| PUT | `/articles/{id}/show-less` | → `204` (idempotent: a repeat changes nothing). "قلّل من النوع ده". `400 mute.own_article`, `404 article.not_found` (an article you can't open, as `GET /articles/{slug}`) |
+| DELETE | `/articles/{id}/show-less` | → `204` (idempotent, any id): the toast's Undo |
+
+**Mute a writer.** Private: the writer isn't told, keeps seeing your content, and their follow of you stays. Muting
+ends your follow of them, and following a writer you muted (`PUT /users/{id}/follow`) ends the mute, so the two never
+hold at once. For you, their articles leave the lists below, their comments and replies collapse
+(`CommentDto.isAuthorMuted`) and their activity sends you no notification. Direct links still open: the reader
+(`ArticleDetailsDto.isAuthorMuted`) and the profile (`ProfileDto.isMuted`) show "انت كاتم الكاتب ده" with "إلغاء
+الكتم" (`DELETE /users/{id}/mute`); the profile's tabs and category pages still list their articles.
+
+**Mute a field or topic** (the "كتم المواضيع" sheet): one toggle for the card's `field` (`isFieldMuted`) and one for its
+`topic` (`isTopicMuted`; no row when `topic` is `null`). On = `PUT`, off = `DELETE`; set both toggles from the returned
+`ContentMutesDto`. Your interests (F02, F12) don't change, but a mute wins over an interest. A muted field hides its
+topics' articles too (and its topics in Search); a topic mute is kept apart, so it stays when the field is unmuted.
+
+**Show less.** The article leaves your feeds (every list below but Search) until you Undo. Its topic, or its field when
+it has no topic, is **lowered in For you** for 90 days from then: For you's tiers become (1) your interests, (2) all
+the others, (3) lowered articles (their topic is one you lowered, or their field is), each newest first; without
+interests, or with a `field` filter, (1) the rest and (2) lowered. Guests are unchanged. The cursor names the tier, so
+paging never repeats or skips a card while your marks stay the same; a Show less mid-scroll moves the other articles of
+that topic to the last tier, where they can come again, so drop ids you already show. Undo deletes the mark and the
+lowering it caused (another mark on the same topic keeps it lowered). A cursor whose tier no longer exists (the Undo
+removed the lowered tier while you paged in it) restarts the last tier from the top, so nothing is skipped; again, drop
+ids you already show. There is no list of these marks.
+
+**Where mutes apply** (signed-in callers; guests see everything):
+
+| List | Muted writers | Muted fields and topics | Show less |
+|---|---|---|---|
+| For you, Following, Today's article, Related | left out | left out | left out (For you also lowers the topic) |
+| Explore `trending` / `mostSaved` and both rankings, tag pages | left out | left out | left out |
+| Explore `fields` and `newWriters`, a field's top writers, suggested writers (`/users/suggested`) | left out | muted fields left out | — |
+| `/fields/{slug}/articles` | left out | the other muted topics left out; the page's own field and the topic picked in `topic` are shown (you opened them) | left out |
+| Search | articles and people left out | articles, fields and topics left out | kept (you searched for it) |
+| Profile tabs, category pages, saved, paths, continue reading, glossary | kept | kept | kept |
+
+Today's article: the pick skips them. When the day's pick is by a writer you then mute, in a field or topic you then
+mute, or one you mark Show less, `GET /feed/today` gives the next eligible pick instead, and that one stays for the rest
+of the day (unmuting doesn't bring the first back); `204` only when nothing eligible is left.
+
+**Viewer flags** (filled per caller like `isSaved`, never cached; `false` for guests): `isAuthorMuted`, `isFieldMuted`,
+`isTopicMuted` on every `ArticleCardDto` and `ArticleDetailsDto`, `isAuthorMuted` on every `CommentDto`, `isMuted` on
+`ProfileDto`. In lists that apply mutes they are `false` (such cards are left out), except a field page's own field
+and picked topic. Cards now carry `topic` (it was on `ArticleDetailsDto` only).
+
+**The "⋯" menu** (reader action bar and post-card header, F04/F34), in this order: Show less, Follow author, Mute author,
+Mute topics, Report (error color), then the moderator's Hide/Unhide after a divider. On your own article only Mute
+topics stays (later: Hide highlights F30, Download PDF F33). Guests get the sign-in prompt for every item. Mute/Unmute
+is also on a profile's "⋯" (not your own, not the official account) and a comment's "⋯" (the commenter; not your own
+comments), with the same Undo. After Mute author, remove every card by that writer from the list
+on screen; after Show less, that card; after a field or topic toggle, the cards in it (animated unless reduce motion is
+on). Undo puts them back in place. In the reader, Mute author shows the banner instead of leaving the page.
+
+**Comments (F11).** `isAuthorMuted: true` → show "تعليق من شخص كتمته" with "عرض", which expands it locally (the body is
+in the DTO). Replies under it render as usual; counts don't change. The same in feed-card comments (F34).
+
+**Notifications (F17).** No entry, and no actor in an aggregated entry, comes from a writer you muted: follows,
+comments, replies, mentions (comments and articles). Entries written before the mute stay. Milestones and the daily
+article have no actor and still come (the daily pick skips muted content).
+
+**Account deletion (SPEC §9.6).** The account's mutes, both ways (whom it muted, who muted it), and its show-less marks
+are deleted.
+
+Mute error codes: `mute.self`, `mute.system_account`, `mute.limit`, `mute.own_article` (all 400), plus `user.not_found`,
+`field.not_found`, `topic.not_found` and `article.not_found` (404).
 
 ### Comments (F11; writes: Bearer)
 
@@ -1029,6 +1109,7 @@ interface ArticleCardDto {
   hasMore: boolean;              // F34: the article holds more than `excerpt` (cut text, later blocks, skipped blocks); true when excerpt is null
   coverUrl: string | null;
   field: FieldRefDto;
+  topic: FieldRefDto | null;     // F28: the article's topic (on cards since F28; it was on ArticleDetailsDto only), for the "كتم المواضيع" sheet
   author: AuthorDto | null;      // null: the author deleted their account (SPEC §9.6); show "Deleted user", no profile link or follow
   readingTimeMinutes: number;
   isAiAssisted: boolean;
@@ -1043,6 +1124,9 @@ interface ArticleCardDto {
   myReaction: ReactionType | null; // the caller's reaction; null for guests
   isSaved: boolean;              // the caller saved it; false for guests
   isFollowingAuthor: boolean;    // the caller follows the author; false for guests, on your own articles and for a deleted author
+  isAuthorMuted: boolean;        // F28: the caller muted the author (the reader's "انت كاتم الكاتب ده" banner); false for guests, on your own articles and for a deleted author
+  isFieldMuted: boolean;         // F28: the caller muted `field` (the sheet's toggle); false for guests
+  isTopicMuted: boolean;         // F28: the caller muted `topic`; false for guests and without a topic
   attachments: ArticleAttachmentsDto | null;  // feed cards carry at most the first 10 PDF pages
 }
 
@@ -1075,6 +1159,22 @@ interface UserSummaryDto {
 
 interface InterestsDto { fieldIds: string[]; topicIds: string[] }  // as in MeDto.interests
 
+// ── Mute & feedback (F28) ─────────────────────────────────────────
+interface UserMuteStateDto {     // PUT / DELETE /users/{id}/mute
+  isMuted: boolean;
+  isFollowing: boolean;          // after the change: a mute always ends your follow; DELETE ?restoreFollow=true follows again
+  followerCount: number;         // the writer's followers after the change
+  followRemoved: boolean;        // PUT: this mute ended your follow, so Undo sends restoreFollow=true; always false on DELETE
+}
+interface ContentMutesDto { fieldIds: string[]; topicIds: string[] } // every field and topic you muted, after the change
+interface MutesDto {             // GET /me/mutes (Settings → Muted); each list newest mute first
+  users: UserSummaryDto[];       // isFollowing is always false (a mute ends the follow); suspended accounts stay listed
+  fields: MutedFieldDto[];
+  topics: MutedTopicDto[];
+}
+interface MutedFieldDto { id: string; slug: string; name: string; nameAr: string; nameEn: string; icon: string; color: string } // name in Accept-Language; icon = Lucide name, color = token
+interface MutedTopicDto { id: string; slug: string; name: string; nameAr: string; nameEn: string; field: MutedFieldDto }
+
 // ── Profile (F14) ─────────────────────────────────────────────────
 interface ProfileDto {
   id: string;
@@ -1094,6 +1194,8 @@ interface ProfileDto {
   isFollowing: boolean;          // false for guests and on your own profile
   followsYou: boolean;           // false for guests and on your own profile
   readingStatsVisible: boolean;  // isMe, or the user turned on publicReadingStats: then /stats and /stats/heatmap answer 200
+  isMuted: boolean;              // F28: the caller muted this user: "انت كاتم الكاتب ده" + "إلغاء الكتم"; false for guests and on your own profile
+  isSystemAccount: boolean;      // F28: the official @readin account; it can't be muted, so the profile's "⋯" has no Mute
 }
 
 interface ExpertiseFieldDto { id: string; slug: string; name: string; icon: string; color: string } // name localized by Accept-Language
@@ -1563,6 +1665,7 @@ interface CommentDto {
   parentId: string | null;       // the thread's top-level comment; null for top-level comments
   body: string | null;           // null for placeholders; render with dir="auto"
   author: AuthorDto | null;      // null: "Deleted user" (or a placeholder)
+  isAuthorMuted: boolean;        // F28: the caller muted the author: collapse to "تعليق من شخص كتمته" + "عرض" (expands locally); replies stay. false for guests and placeholders
   isArticleAuthor: boolean;      // the "الكاتب" badge
   mentions: { userId: string; username: string }[];  // link exactly these @handles
   likeCount: number;
