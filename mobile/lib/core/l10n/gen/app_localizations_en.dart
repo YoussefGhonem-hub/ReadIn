@@ -4172,6 +4172,118 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchKindField => 'Field';
 
   @override
+  String get exploreFields => 'Fields';
+
+  @override
+  String get exploreTrending => 'Trending this week';
+
+  @override
+  String get exploreMostSaved => 'Most saved';
+
+  @override
+  String get exploreNewWriters => 'New writers';
+
+  @override
+  String get exploreFeaturedPaths => 'Featured paths';
+
+  @override
+  String get exploreSeeAll => 'See all';
+
+  @override
+  String exploreSeeAllSection(String section) {
+    return 'See all: $section';
+  }
+
+  @override
+  String get exploreEmptyTitle => 'Nothing to explore yet';
+
+  @override
+  String get exploreEmptyBody =>
+      'Fields, articles, writers and paths show up here once people start publishing.';
+
+  @override
+  String get exploreTrendingEmptyTitle => 'Nothing is trending this week yet';
+
+  @override
+  String get exploreMostSavedEmptyTitle => 'No saved articles yet';
+
+  @override
+  String get exploreRankingEmptyBody =>
+      'Check back soon, or browse the fields on Explore.';
+
+  @override
+  String fieldArticleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles',
+      one: '1 article',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fieldFollowerCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count followers',
+      one: '1 follower',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fieldFollow => 'Follow field';
+
+  @override
+  String get fieldFollowTopic => 'Follow topic';
+
+  @override
+  String get fieldKeepThree =>
+      'Keep at least 3 interests. Follow another field or topic first.';
+
+  @override
+  String get fieldTopics => 'Topics in this field';
+
+  @override
+  String get fieldTopWriters => 'Top writers in this field';
+
+  @override
+  String get fieldArticles => 'Latest articles';
+
+  @override
+  String get fieldEmptyTitle => 'No articles in this field yet';
+
+  @override
+  String get fieldEmptyBody =>
+      'Follow it and you\'ll see new articles as soon as they\'re published.';
+
+  @override
+  String get fieldTopicEmptyTitle => 'No articles in this topic yet';
+
+  @override
+  String get fieldNotFoundTitle => 'This field doesn\'t exist';
+
+  @override
+  String get fieldNotFoundBody =>
+      'It may have been removed, or the link is wrong.';
+
+  @override
+  String get fieldGoToExplore => 'Browse other fields';
+
+  @override
+  String get fieldTopicNotFoundTitle => 'This topic doesn\'t exist';
+
+  @override
+  String fieldTopicNotFoundBody(String field) {
+    return 'It isn\'t one of the topics of $field, or it was removed.';
+  }
+
+  @override
+  String get fieldShowAllArticles => 'All articles in this field';
+
+  @override
   String get errInterestsUnknown => 'Some fields or topics don\'t exist.';
 
   @override

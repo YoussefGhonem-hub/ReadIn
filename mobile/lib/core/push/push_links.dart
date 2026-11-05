@@ -26,8 +26,9 @@ String? pushNotificationId(Map<String, dynamic> data) {
 /// (`https://{domain}/ar/a/{slug}`, `/en/a/{slug}`, opened in that version; [AppLinks.webHost] only), profiles
 /// (`readin://u/{username}`, `https://{domain}/@{username}`) and their followers (`readin://u/{username}/followers`), the own reading stats
 /// (`readin://me/stats`), the account settings (`readin://settings/account`), writer verification
-/// (`readin://verification`, F19), tag pages (`readin://tags/{slug}`, `https://{domain}/tags/{slug}`, F32), the
-/// notification center and app paths open the matching screen; anything else returns null, so a push can never open
+/// (`readin://verification`, F19), tag pages (`readin://tags/{slug}`, `https://{domain}/tags/{slug}`, F32), field pages
+/// (`readin://f/{slug}`, `https://{domain}/f/{slug}`, with `?topic=`, F15), the notification center and app paths open
+/// the matching screen; anything else returns null, so a push can never open
 /// an arbitrary location.
 String? pushLinkToPath(String? link) {
   final text = link?.trim() ?? '';
@@ -69,6 +70,12 @@ String? pushLinkToPath(String? link) {
   // lower case, so a link typed as /tags/CSharp still finds csharp.
   if (parts.length == 2 && parts[0] == 'tags' && _isSlug(parts[1])) {
     return '/tags/${Uri.encodeComponent(parts[1].toLowerCase())}';
+  }
+  // A field's page (F15), on one of its topics with `?topic=` (the only query a link keeps). Slugs are lower case.
+  if (parts.length == 2 && parts[0] == 'f' && _isSlug(parts[1])) {
+    final field = '/f/${Uri.encodeComponent(parts[1].toLowerCase())}';
+    final topic = uri.queryParameters['topic']?.trim() ?? '';
+    return _isSlug(topic) ? '$field?topic=${Uri.encodeQueryComponent(topic.toLowerCase())}' : field;
   }
   return null;
 }

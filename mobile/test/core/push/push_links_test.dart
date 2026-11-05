@@ -33,6 +33,14 @@ void main() {
       'https://readin.app/tags/asp-net-core': '/tags/asp-net-core',
       'https://readin.app/tags/CSharp': '/tags/csharp',
       '/tags/dotnet': '/tags/dotnet',
+      // Field pages (F15): the app's readin://f/{slug} and the web's /f/{slug}, keeping a topic (?topic=) and nothing else.
+      'readin://f/dotnet': '/f/dotnet',
+      'https://readin.app/f/DotNet': '/f/dotnet',
+      'https://readin.app/f/dotnet?topic=EF-Core': '/f/dotnet?topic=ef-core',
+      'readin://f/dotnet?topic=ef-core&utm_source=x': '/f/dotnet?topic=ef-core',
+      'https://readin.app/f/dotnet?topic=': '/f/dotnet',
+      'https://readin.app/f/dotnet?topic=..%2Fsettings': '/f/dotnet',
+      '/f/ai-fundamentals': '/f/ai-fundamentals',
     };
     cases.forEach((link, path) {
       test('maps $link to $path', () => expect(pushLinkToPath(link), path));
@@ -69,6 +77,10 @@ void main() {
       'readin://tags/..%2Fsettings',
       'readin://tags/c%23',
       'https://evil.example/tags/csharp',
+      'readin://f',
+      'readin://f/dotnet/articles',
+      'readin://f/..%2Fsettings',
+      'https://evil.example/f/dotnet',
       '',
       null,
     ]) {

@@ -74,6 +74,10 @@ void main() {
       expect(redirect('/tags/csharp', guest, fresh), isNull);
       expect(redirect('/tags/${Uri.encodeComponent('الذكاء-الاصطناعي')}', guest, fresh), isNull);
       expect(redirect('/splash?from=%2Ftags%2Fcsharp', guest, fresh), '/tags/csharp');
+      // And a field page (F15), from a deep link or the web's https://{domain}/f/{slug}, with its topic.
+      expect(redirect('/f/dotnet', guest, fresh), isNull);
+      expect(redirect('/f/dotnet?topic=ef-core', guest, fresh), isNull);
+      expect(redirect('/splash?from=%2Ff%2Fdotnet%3Ftopic%3Def-core', guest, fresh), '/f/dotnet?topic=ef-core');
     });
 
     test('can browse and read once Welcome was seen', () {
@@ -81,6 +85,8 @@ void main() {
       expect(redirect('/explore', guest), isNull);
       expect(redirect('/a/di-in-dotnet', guest), isNull);
       expect(redirect('/tags/csharp', guest), isNull);
+      expect(redirect('/f/dotnet', guest), isNull);
+      expect(redirect('/explore/trending', guest), isNull);
       expect(redirect('/settings', guest), isNull);
     });
 

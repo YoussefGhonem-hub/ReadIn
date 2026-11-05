@@ -4231,6 +4231,125 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchKindField => 'مجال';
 
   @override
+  String get exploreFields => 'المجالات';
+
+  @override
+  String get exploreTrending => 'الترند الأسبوع ده';
+
+  @override
+  String get exploreMostSaved => 'الأكتر حفظًا';
+
+  @override
+  String get exploreNewWriters => 'كتّاب جداد';
+
+  @override
+  String get exploreFeaturedPaths => 'مسارات مختارة';
+
+  @override
+  String get exploreSeeAll => 'عرض الكل';
+
+  @override
+  String exploreSeeAllSection(String section) {
+    return 'عرض الكل: $section';
+  }
+
+  @override
+  String get exploreEmptyTitle => 'لسه مفيش حاجة تستكشفها';
+
+  @override
+  String get exploreEmptyBody =>
+      'المجالات والمقالات والكتّاب والمسارات هتظهر هنا أول ما الناس تبدأ تنشر.';
+
+  @override
+  String get exploreTrendingEmptyTitle =>
+      'لسه مفيش مقالات عليها تفاعل الأسبوع ده';
+
+  @override
+  String get exploreMostSavedEmptyTitle => 'لسه محدش حفظ مقالات';
+
+  @override
+  String get exploreRankingEmptyBody =>
+      'ارجع بعد شوية، أو اتفرج على المجالات في صفحة الاستكشاف.';
+
+  @override
+  String fieldArticleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مقال',
+      many: '$count مقال',
+      few: '$count مقالات',
+      two: 'مقالين',
+      one: 'مقال واحد',
+      zero: '0 مقال',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fieldFollowerCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count متابع',
+      many: '$count متابع',
+      few: '$count متابعين',
+      two: 'متابعين اتنين',
+      one: 'متابع واحد',
+      zero: '0 متابع',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fieldFollow => 'تابع المجال';
+
+  @override
+  String get fieldFollowTopic => 'تابع الموضوع';
+
+  @override
+  String get fieldKeepThree =>
+      'لازم تفضل متابع 3 اهتمامات على الأقل. تابع مجال أو موضوع تاني الأول.';
+
+  @override
+  String get fieldTopics => 'مواضيع المجال';
+
+  @override
+  String get fieldTopWriters => 'أبرز الكتّاب في المجال ده';
+
+  @override
+  String get fieldArticles => 'أحدث المقالات';
+
+  @override
+  String get fieldEmptyTitle => 'لسه مفيش مقالات في المجال ده';
+
+  @override
+  String get fieldEmptyBody => 'تابعه، وأول ما حد ينشر فيه هيظهرلك.';
+
+  @override
+  String get fieldTopicEmptyTitle => 'لسه مفيش مقالات في الموضوع ده';
+
+  @override
+  String get fieldNotFoundTitle => 'المجال ده مش موجود';
+
+  @override
+  String get fieldNotFoundBody => 'يمكن اتشال، أو اللينك غلط.';
+
+  @override
+  String get fieldGoToExplore => 'اتفرج على مجالات تانية';
+
+  @override
+  String get fieldTopicNotFoundTitle => 'الموضوع ده مش موجود';
+
+  @override
+  String fieldTopicNotFoundBody(String field) {
+    return 'الموضوع ده مش من مواضيع $field، أو اتشال.';
+  }
+
+  @override
+  String get fieldShowAllArticles => 'كل مقالات المجال';
+
+  @override
   String get errInterestsUnknown => 'فيه مجالات أو مواضيع مش موجودة.';
 
   @override

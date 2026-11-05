@@ -15,7 +15,11 @@ import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/presentation/session/session_cubit.dart';
 import '../features/editor/presentation/pages/article_editor_page.dart';
 import '../features/editor/presentation/pages/my_articles_page.dart';
+import '../features/explore/domain/entities/explore.dart';
+import '../features/explore/presentation/explore_routes.dart';
 import '../features/explore/presentation/pages/explore_page.dart';
+import '../features/explore/presentation/pages/explore_ranking_page.dart';
+import '../features/explore/presentation/pages/field_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/moderation/domain/entities/moderation.dart';
 import '../features/moderation/presentation/moderation_routes.dart';
@@ -90,6 +94,9 @@ abstract final class AppRoutes {
   /// A tag's page (F32).
   static String tag(String slug) => TagRoutes.of(slug);
 
+  /// A field's page (F15), on one of its topics with [topic].
+  static String field(String slug, {String? topic}) => ExploreRoutes.field(slug, topic: topic);
+
   /// `?lang=` of an article link: open that version (`ar-EG` / `en`) rather than the preferred one, e.g. the version
   /// Continue reading resumes (F03). Anything else is ignored.
   static String? articleLanguage(Uri uri) => switch (uri.queryParameters['lang']) {
@@ -139,8 +146,11 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
       targetPath == AppRoutes.interests ||
       targetPath == AppRoutes.readingStats ||
       targetPath == AppRoutes.verification;
-  // Shared links (articles, profiles, tag pages) open for first-time guests too, without Welcome first.
-  final isArticle = targetPath.startsWith('/a/') || targetPath.startsWith('/u/') || targetPath.startsWith('/tags/');
+  // Shared links (articles, profiles, tag pages, field pages) open for first-time guests too, without Welcome first.
+  final isArticle = targetPath.startsWith('/a/') ||
+      targetPath.startsWith('/u/') ||
+      targetPath.startsWith('/tags/') ||
+      targetPath.startsWith('/f/');
   String? stay() => atSplash ? target : null;
 
   if (session.isAuthenticated) {
@@ -206,6 +216,15 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       ),
       // A tag's page (F32), guests allowed; its web link https://{domain}/tags/{slug} opens it too (App Links).
       GoRoute(path: TagRoutes.pattern, builder: (_, state) => TagPage(slug: state.pathParameters['slug']!)),
+      // A field's page (F15), guests allowed: `?topic=` selects a chip (the link Search gives topics); its web link
+      // https://{domain}/f/{slug} opens it too (App Links).
+      GoRoute(
+        path: ExploreRoutes.fieldPattern,
+        builder: (_, state) => FieldPage(slug: state.pathParameters['slug']!, topic: ExploreRoutes.topicOf(state.uri)),
+      ),
+      // Explore's rankings in full ("See all", F15), above the tabs.
+      for (final ranking in ExploreRanking.values)
+        GoRoute(path: ExploreRoutes.ranking(ranking), builder: (_, _) => ExploreRankingPage(ranking: ranking)),
       // Search (F16), full screen above the tabs, guests allowed: from Explore's search bar, or `/search?q=&type=`.
       GoRoute(
         path: AppRoutes.search,

@@ -7016,6 +7016,180 @@ abstract class AppLocalizations {
   /// **'Field'**
   String get searchKindField;
 
+  /// No description provided for @exploreFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fields'**
+  String get exploreFields;
+
+  /// No description provided for @exploreTrending.
+  ///
+  /// In en, this message translates to:
+  /// **'Trending this week'**
+  String get exploreTrending;
+
+  /// No description provided for @exploreMostSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Most saved'**
+  String get exploreMostSaved;
+
+  /// No description provided for @exploreNewWriters.
+  ///
+  /// In en, this message translates to:
+  /// **'New writers'**
+  String get exploreNewWriters;
+
+  /// No description provided for @exploreFeaturedPaths.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured paths'**
+  String get exploreFeaturedPaths;
+
+  /// No description provided for @exploreSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get exploreSeeAll;
+
+  /// No description provided for @exploreSeeAllSection.
+  ///
+  /// In en, this message translates to:
+  /// **'See all: {section}'**
+  String exploreSeeAllSection(String section);
+
+  /// No description provided for @exploreEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to explore yet'**
+  String get exploreEmptyTitle;
+
+  /// No description provided for @exploreEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Fields, articles, writers and paths show up here once people start publishing.'**
+  String get exploreEmptyBody;
+
+  /// No description provided for @exploreTrendingEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is trending this week yet'**
+  String get exploreTrendingEmptyTitle;
+
+  /// No description provided for @exploreMostSavedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved articles yet'**
+  String get exploreMostSavedEmptyTitle;
+
+  /// No description provided for @exploreRankingEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check back soon, or browse the fields on Explore.'**
+  String get exploreRankingEmptyBody;
+
+  /// No description provided for @fieldArticleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 article} other{{count} articles}}'**
+  String fieldArticleCount(int count);
+
+  /// No description provided for @fieldFollowerCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 follower} other{{count} followers}}'**
+  String fieldFollowerCount(int count);
+
+  /// No description provided for @fieldFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow field'**
+  String get fieldFollow;
+
+  /// No description provided for @fieldFollowTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow topic'**
+  String get fieldFollowTopic;
+
+  /// No description provided for @fieldKeepThree.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep at least 3 interests. Follow another field or topic first.'**
+  String get fieldKeepThree;
+
+  /// No description provided for @fieldTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Topics in this field'**
+  String get fieldTopics;
+
+  /// No description provided for @fieldTopWriters.
+  ///
+  /// In en, this message translates to:
+  /// **'Top writers in this field'**
+  String get fieldTopWriters;
+
+  /// No description provided for @fieldArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest articles'**
+  String get fieldArticles;
+
+  /// No description provided for @fieldEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No articles in this field yet'**
+  String get fieldEmptyTitle;
+
+  /// No description provided for @fieldEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow it and you\'ll see new articles as soon as they\'re published.'**
+  String get fieldEmptyBody;
+
+  /// No description provided for @fieldTopicEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No articles in this topic yet'**
+  String get fieldTopicEmptyTitle;
+
+  /// No description provided for @fieldNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This field doesn\'t exist'**
+  String get fieldNotFoundTitle;
+
+  /// No description provided for @fieldNotFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It may have been removed, or the link is wrong.'**
+  String get fieldNotFoundBody;
+
+  /// No description provided for @fieldGoToExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse other fields'**
+  String get fieldGoToExplore;
+
+  /// No description provided for @fieldTopicNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This topic doesn\'t exist'**
+  String get fieldTopicNotFoundTitle;
+
+  /// No description provided for @fieldTopicNotFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It isn\'t one of the topics of {field}, or it was removed.'**
+  String fieldTopicNotFoundBody(String field);
+
+  /// No description provided for @fieldShowAllArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'All articles in this field'**
+  String get fieldShowAllArticles;
+
   /// No description provided for @errInterestsUnknown.
   ///
   /// In en, this message translates to:

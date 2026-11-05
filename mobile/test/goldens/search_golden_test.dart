@@ -1,20 +1,28 @@
 @Tags(['golden'])
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:readin/core/storage/key_value_store.dart';
+import 'package:readin/features/explore/domain/usecases/explore_usecases.dart';
+import 'package:readin/features/explore/presentation/cubit/explore_cubit.dart';
 import 'package:readin/features/explore/presentation/pages/explore_page.dart';
+import 'package:readin/features/follow/domain/usecases/follow_usecases.dart';
+import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/features/search/data/datasources/recent_searches_store.dart';
 import 'package:readin/features/search/domain/entities/search.dart';
 import 'package:readin/features/search/presentation/cubit/search_cubit.dart';
 import 'package:readin/features/search/presentation/pages/search_page.dart';
 import 'package:readin/shared/widgets/app_network_image.dart';
 
+import '../helpers/explore_fixtures.dart' show FakeExploreRepository;
 import '../helpers/fake_media.dart';
 import '../helpers/profile_fakes.dart';
 import '../helpers/search_fixtures.dart';
+import '../helpers/social_fakes.dart' show MockFollowRepository;
 import '../helpers/test_app.dart';
 
 /// Search (F16) in ar/light and en/dark (SPEC §27): Explore's search bar, the recent searches, article results as
@@ -62,9 +70,18 @@ void main() {
 
     testWidgets('search explore entry ${variant.name}', (tester) async {
       usePhoneSurface(tester);
-      await tester.pumpWidget(testApp(const ExplorePage(), variant: variant));
+      // Explore (F15) while its sections load: the search bar is there already.
+      final store = FollowsCubit(SetFollowing(MockFollowRepository()));
+      final explore = ExploreCubit(GetExplore(FakeExploreRepository()..gate = Completer<void>()), store);
+      addTearDown(explore.close);
+      addTearDown(store.close);
+      unawaited(explore.load());
+      await tester.pumpWidget(testApp(
+        provided([...appStores(), BlocProvider<ExploreCubit>.value(value: explore)], const ExploreView()),
+        variant: variant,
+      ));
       await tester.pump();
-      await expectLater(find.byType(ExplorePage), matchesVariantGolden(variant, 'goldens/search_explore_${variant.name}.png'));
+      await expectLater(find.byType(ExploreView), matchesVariantGolden(variant, 'goldens/search_explore_${variant.name}.png'));
     });
 
     testWidgets('search recent ${variant.name}', (tester) async {

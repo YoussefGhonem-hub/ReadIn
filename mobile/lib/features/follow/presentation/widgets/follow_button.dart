@@ -68,6 +68,7 @@ class FollowButtonView extends StatelessWidget {
     this.pending = false,
     this.dense = false,
     this.text = false,
+    this.followLabel,
   });
 
   final bool following;
@@ -79,6 +80,9 @@ class FollowButtonView extends StatelessWidget {
   final bool text;
   final VoidCallback onPressed;
 
+  /// What "Follow" says when it isn't a person: "Follow field", "Follow topic" (F15). "Following" stays.
+  final String? followLabel;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -86,7 +90,7 @@ class FollowButtonView extends StatelessWidget {
     final onTap = pending ? null : onPressed;
     final padding = EdgeInsets.symmetric(horizontal: dense ? 12 : 16);
     const minimumSize = Size(64, 44);
-    final label = Text(following ? l10n.followingState : l10n.follow);
+    final label = Text(following ? l10n.followingState : followLabel ?? l10n.follow);
     return Semantics(
       button: true,
       toggled: following,

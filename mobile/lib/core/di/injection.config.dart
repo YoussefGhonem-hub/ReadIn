@@ -98,6 +98,15 @@ import '../../features/editor/presentation/cubit/my_articles_cubit.dart'
 import '../../features/editor/presentation/cubit/revisions_cubit.dart' as _i836;
 import '../../features/editor/presentation/cubit/tag_suggestions_cubit.dart'
     as _i655;
+import '../../features/explore/data/datasources/explore_api.dart' as _i814;
+import '../../features/explore/data/repositories/explore_repository_impl.dart'
+    as _i93;
+import '../../features/explore/domain/entities/explore.dart' as _i1019;
+import '../../features/explore/domain/repositories/explore_repository.dart'
+    as _i471;
+import '../../features/explore/domain/usecases/explore_usecases.dart' as _i248;
+import '../../features/explore/presentation/cubit/explore_cubit.dart' as _i742;
+import '../../features/explore/presentation/cubit/field_cubits.dart' as _i852;
 import '../../features/follow/data/datasources/follow_api.dart' as _i73;
 import '../../features/follow/data/repositories/follow_repository_impl.dart'
     as _i299;
@@ -437,6 +446,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i880.ArticleEditorApi>(
       () => _i880.ArticleEditorApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i814.ExploreApi>(() => _i814.ExploreApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i73.FollowApi>(() => _i73.FollowApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i234.GlossaryApi>(
       () => _i234.GlossaryApi(gh<_i361.Dio>()),
@@ -507,6 +517,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i221.ImageCompressor>(),
         gh<_i848.DocumentFileDataSource>(),
       ),
+    );
+    gh.lazySingleton<_i471.ExploreRepository>(
+      () => _i93.ExploreRepositoryImpl(gh<_i814.ExploreApi>()),
     );
     gh.factory<_i591.GetProfile>(
       () => _i591.GetProfile(gh<_i894.ProfileRepository>()),
@@ -617,6 +630,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i130.AcknowledgeModerationNotice>(
       () => _i130.AcknowledgeModerationNotice(gh<_i106.ModerationRepository>()),
     );
+    gh.factory<_i248.GetExplore>(
+      () => _i248.GetExplore(gh<_i471.ExploreRepository>()),
+    );
+    gh.factory<_i248.GetExploreRanking>(
+      () => _i248.GetExploreRanking(gh<_i471.ExploreRepository>()),
+    );
+    gh.factory<_i248.GetFieldDetails>(
+      () => _i248.GetFieldDetails(gh<_i471.ExploreRepository>()),
+    );
+    gh.factory<_i248.GetFieldArticles>(
+      () => _i248.GetFieldArticles(gh<_i471.ExploreRepository>()),
+    );
+    gh.factory<_i248.GetFieldWriters>(
+      () => _i248.GetFieldWriters(gh<_i471.ExploreRepository>()),
+    );
     gh.factory<_i86.GetGlossaryTerm>(
       () => _i86.GetGlossaryTerm(gh<_i268.GlossaryRepository>()),
     );
@@ -672,6 +700,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i437.ModerationLogCubit>(
       () => _i437.ModerationLogCubit(gh<_i130.GetModerationLog>()),
+    );
+    gh.factoryParam<_i742.ExploreRankingCubit, _i1019.ExploreRanking, dynamic>(
+      (ranking, _) =>
+          _i742.ExploreRankingCubit(gh<_i248.GetExploreRanking>(), ranking),
     );
     gh.factory<_i864.GetNotifications>(
       () => _i864.GetNotifications(gh<_i563.NotificationsRepository>()),
@@ -869,6 +901,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i789.ModerationSummaryCubit>(),
       ),
     );
+    gh.factoryParam<_i852.FieldArticlesCubit, String, dynamic>(
+      (slug, _) => _i852.FieldArticlesCubit(gh<_i248.GetFieldArticles>(), slug),
+    );
     gh.factory<_i646.FollowingFeedCubit>(
       () => _i646.FollowingFeedCubit(gh<_i251.GetFollowingFeed>()),
     );
@@ -1024,6 +1059,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i509.FollowsCubit>(),
       ),
     );
+    gh.factory<_i742.ExploreCubit>(
+      () =>
+          _i742.ExploreCubit(gh<_i248.GetExplore>(), gh<_i509.FollowsCubit>()),
+    );
     gh.lazySingleton<_i881.AccountDeviceData>(
       () => _i881.AccountDeviceData(
         gh<_i1040.PushService>(),
@@ -1062,6 +1101,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i506.AccountApi>(),
         gh<_i348.AuthSessionStore>(),
         gh<_i881.AccountDeviceData>(),
+      ),
+    );
+    gh.factoryParam<_i852.FieldWritersCubit, String, dynamic>(
+      (slug, _) => _i852.FieldWritersCubit(
+        gh<_i248.GetFieldWriters>(),
+        gh<_i509.FollowsCubit>(),
+        slug,
       ),
     );
     gh.factory<_i46.SignOut>(
@@ -1259,6 +1305,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i46.GetAuthConfig>(),
         gh<_i46.ChangePhoneNumber>(),
         gh<_i115.PhoneCountryMemory>(),
+      ),
+    );
+    gh.factory<_i852.FieldCubit>(
+      () => _i852.FieldCubit(
+        gh<_i248.GetFieldDetails>(),
+        gh<_i471.SetInterest>(),
+        gh<_i371.SessionCubit>(),
       ),
     );
     gh.factory<_i977.PrivacyCubit>(

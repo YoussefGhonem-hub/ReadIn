@@ -8,7 +8,11 @@ import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/core/storage/key_value_store.dart';
 import 'package:readin/features/article/presentation/widgets/article_attachments_view.dart';
 import 'package:readin/features/article/presentation/widgets/article_card_tile.dart';
+import 'package:readin/features/explore/domain/usecases/explore_usecases.dart';
+import 'package:readin/features/explore/presentation/cubit/explore_cubit.dart';
 import 'package:readin/features/explore/presentation/pages/explore_page.dart';
+import 'package:readin/features/follow/domain/usecases/follow_usecases.dart';
+import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/features/follow/presentation/widgets/follow_button.dart';
 import 'package:readin/features/follow/presentation/widgets/suggested_writers.dart';
 import 'package:readin/features/search/data/datasources/recent_searches_store.dart';
@@ -19,10 +23,12 @@ import 'package:readin/features/search/presentation/pages/search_page.dart';
 import 'package:readin/features/search/presentation/widgets/search_result_rows.dart';
 import 'package:readin/shared/widgets/state_views.dart';
 
+import '../../helpers/explore_fixtures.dart' show FakeExploreRepository;
 import '../../helpers/media_fixtures.dart' show samplePage;
 import '../../helpers/path_fakes.dart' show pumpRouted;
 import '../../helpers/profile_fakes.dart';
 import '../../helpers/search_fixtures.dart';
+import '../../helpers/social_fakes.dart' show MockFollowRepository;
 import '../../helpers/test_app.dart';
 
 /// The search screen (F16): Explore's way in, recent searches, results as you type, the four tabs, the Articles
@@ -69,7 +75,13 @@ void main() {
 
   testWidgets("Explore's search bar opens the search screen", (tester) async {
     final opened = <String>[];
-    await pumpRouted(tester, const ExplorePage(), opened: opened);
+    // Explore (F15) still loading: its search bar works already.
+    final store = FollowsCubit(SetFollowing(MockFollowRepository()));
+    final explore = ExploreCubit(GetExplore(FakeExploreRepository()..gate = Completer<void>()), store);
+    addTearDown(explore.close);
+    addTearDown(store.close);
+    unawaited(explore.load());
+    await pumpRouted(tester, const ExploreView(), opened: opened, providers: [BlocProvider<ExploreCubit>.value(value: explore)]);
     expect(find.text(l10nEn.searchHint), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('search-entry')));
     await tester.pumpAndSettle();
