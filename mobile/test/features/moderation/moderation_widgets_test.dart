@@ -21,6 +21,7 @@ import 'package:readin/features/auth/domain/entities/me.dart';
 import 'package:readin/features/auth/presentation/cubit/linked_accounts_cubit.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/auth/presentation/session/suspended_session_listener.dart';
+import 'package:readin/features/categories/domain/entities/writer_category.dart';
 import 'package:readin/features/moderation/domain/entities/moderation.dart';
 import 'package:readin/features/moderation/domain/usecases/moderation_usecases.dart';
 import 'package:readin/features/moderation/presentation/cubit/moderation_action_cubit.dart';
@@ -707,6 +708,119 @@ void main() {
       expect(find.widgetWithText(OutlinedButton, 'Lift suspension'), findsNothing);
       expect(find.widgetWithText(OutlinedButton, 'Suspend account'), findsNothing);
       expect(find.widgetWithText(OutlinedButton, 'Warn'), findsOneWidget);
+    });
+
+    testWidgets('user: their categories (F31), each name cleared after asking', (tester) async {
+      await pumpCase(
+        tester,
+        ModerationCase(
+          item: userItem(),
+          reports: [report('rp-8', reason: ReportReason.harassment)],
+          categories: const [
+            WriterCategory(id: 'c-1', slug: 'bad', name: 'اسم وحش جدًا', articleCount: 2, sortOrder: 1),
+            WriterCategory(id: 'c-2', slug: 'ef-core', name: 'EF Core', sortOrder: 2),
+          ],
+        ),
+      );
+
+      // The same section title as on the web (F31 fix round 1: was "Their categories").
+      expect(find.text('Writer categories'), findsOneWidget);
+      expect(find.textContaining('اسم وحش جدًا'), findsOneWidget);
+      expect(find.text('2 articles'), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const ValueKey('case-category-clear-c-1')));
+      await tester.tap(find.byKey(const ValueKey('case-category-clear-c-1')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Clear the category name “'), findsOneWidget);
+      expect(find.textContaining('Category 1'), findsOneWidget, reason: 'says what the name becomes');
+      expect(find.textContaining("the writer isn't notified"), findsOneWidget);
+      // An optional note, for the log (as on the web).
+      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Clear name')).onPressed, isNotNull, reason: 'the note is optional');
+      await tester.enterText(find.byType(TextField), 'Offensive name');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Clear name'));
+      await tester.pumpAndSettle();
+      verify(
+        () => actions.run(
+          const ModerationCommand(ModerationActionType.clearCategory, ModerationTargetRef.user('w-9'), note: 'Offensive name', categoryId: 'c-1'),
+        ),
+      ).called(1);
+      verify(caseCubit.refresh).called(1);
+    });
+
+    testWidgets('user: Cancel on "Clear name" does nothing', (tester) async {
+      await pumpCase(
+        tester,
+        ModerationCase(item: userItem(), categories: const [WriterCategory(id: 'c-1', slug: 'bad', name: 'Bad', articleCount: 1, sortOrder: 1)]),
+      );
+      await tester.ensureVisible(find.byKey(const ValueKey('case-category-clear-c-1')));
+      await tester.tap(find.byKey(const ValueKey('case-category-clear-c-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      verifyNever(() => actions.run(any()));
+      verifyNever(caseCubit.refresh);
+    });
+
+    testWidgets('user: a category name opens its page (a link)', (tester) async {
+      usePhoneSurface(tester, size: const Size(390, 1800));
+      caseCubit = MockModerationCaseCubit()
+        ..hold(ModerationCaseState(
+          status: ModerationCaseStatus.ready,
+          moderationCase: ModerationCase(
+            item: userItem(),
+            categories: const [WriterCategory(id: 'c-1', slug: 'نصايح-backend', name: 'نصايح Backend', articleCount: 2, sortOrder: 1)],
+          ),
+        ));
+      actions = actionCubit();
+      final opened = <String>[];
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => MultiBlocProvider(
+              providers: [BlocProvider<ModerationCaseCubit>.value(value: caseCubit), BlocProvider<ModerationActionCubit>.value(value: actions)],
+              child: const ModerationCaseView(type: ModerationTargetType.user),
+            ),
+          ),
+          GoRoute(
+            path: '/u/:username/c/:slug',
+            builder: (_, state) {
+              opened.add('${state.pathParameters['username']} ${state.pathParameters['slug']}');
+              return const Scaffold(body: Text('category page'));
+            },
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(BlocProvider<SessionCubit>.value(
+        value: sessionOf(moderatorMe()),
+        child: MaterialApp.router(
+          theme: AppTheme.light(AppLocales.en),
+          locale: AppLocales.en,
+          supportedLocales: AppLocales.supported,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          routerConfig: router,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final name = find.byKey(const ValueKey('case-category-open-c-1'));
+      await tester.ensureVisible(name);
+      expect(tester.getSemantics(name), isSemantics(isLink: true, hasTapAction: true, hint: 'Opens the category'));
+      expect(tester.getSize(name).height, greaterThanOrEqualTo(48));
+      await tester.tap(name);
+      await tester.pumpAndSettle();
+      expect(opened, ['crypto_deals نصايح-backend'], reason: 'the slug, decoded; never the name');
+      expect(find.text('category page'), findsOneWidget);
+    });
+
+    testWidgets('user: no categories says so; a content case has no categories section', (tester) async {
+      await pumpCase(tester, ModerationCase(item: userItem(), categories: const []));
+      expect(find.text('Writer categories'), findsOneWidget);
+      expect(find.text('No categories.'), findsOneWidget);
+
+      await pumpCase(tester, articleCase());
+      expect(find.text('Writer categories'), findsNothing);
     });
 
     testWidgets('a refusal says why and keeps the case', (tester) async {

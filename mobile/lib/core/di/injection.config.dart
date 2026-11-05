@@ -70,6 +70,16 @@ import '../../features/auth/presentation/cubit/linked_accounts_cubit.dart'
 import '../../features/auth/presentation/cubit/sign_in_cubit.dart' as _i329;
 import '../../features/auth/presentation/cubit/sign_up_cubit.dart' as _i102;
 import '../../features/auth/presentation/session/session_cubit.dart' as _i371;
+import '../../features/categories/data/datasources/categories_api.dart'
+    as _i494;
+import '../../features/categories/data/repositories/categories_repository_impl.dart'
+    as _i245;
+import '../../features/categories/domain/repositories/categories_repository.dart'
+    as _i488;
+import '../../features/categories/domain/usecases/category_usecases.dart'
+    as _i772;
+import '../../features/categories/presentation/cubit/category_cubits.dart'
+    as _i297;
 import '../../features/comments/data/datasources/comments_api.dart' as _i1070;
 import '../../features/comments/data/repositories/comments_repository_impl.dart'
     as _i589;
@@ -440,6 +450,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i462.ArticleApi>(() => _i462.ArticleApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i506.AccountApi>(() => _i506.AccountApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i494.CategoriesApi>(
+      () => _i494.CategoriesApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i1070.CommentsApi>(
       () => _i1070.CommentsApi(gh<_i361.Dio>()),
     );
@@ -556,6 +569,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i760.FollowRepository>(
       () => _i299.FollowRepositoryImpl(gh<_i73.FollowApi>()),
+    );
+    gh.lazySingleton<_i488.CategoriesRepository>(
+      () => _i245.CategoriesRepositoryImpl(gh<_i494.CategoriesApi>()),
     );
     gh.factory<_i904.GetArticle>(
       () => _i904.GetArticle(gh<_i904.ArticleRepository>()),
@@ -830,6 +846,24 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i360.MentionSuggestionsCubit>(
       () => _i360.MentionSuggestionsCubit(gh<_i788.SuggestMentions>()),
     );
+    gh.factory<_i772.GetUserCategories>(
+      () => _i772.GetUserCategories(gh<_i488.CategoriesRepository>()),
+    );
+    gh.factory<_i772.GetCategoryPage>(
+      () => _i772.GetCategoryPage(gh<_i488.CategoriesRepository>()),
+    );
+    gh.factory<_i772.GetCategoryArticles>(
+      () => _i772.GetCategoryArticles(gh<_i488.CategoriesRepository>()),
+    );
+    gh.factory<_i772.GetMyCategories>(
+      () => _i772.GetMyCategories(gh<_i488.CategoriesRepository>()),
+    );
+    gh.factory<_i772.ManageCategories>(
+      () => _i772.ManageCategories(gh<_i488.CategoriesRepository>()),
+    );
+    gh.factory<_i772.SetArticleCategory>(
+      () => _i772.SetArticleCategory(gh<_i488.CategoriesRepository>()),
+    );
     gh.factory<_i172.GetFields>(
       () => _i172.GetFields(gh<_i263.TaxonomyRepository>()),
     );
@@ -925,6 +959,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i646.FeedCubit>(
       () => _i646.FeedCubit(gh<_i251.GetForYouFeed>()),
     );
+    gh.factoryParam<_i297.ProfileCategoriesCubit, String, dynamic>(
+      (username, _) =>
+          _i297.ProfileCategoriesCubit(gh<_i772.GetUserCategories>(), username),
+    );
     gh.factory<_i189.AttachmentViewerCubit>(
       () => _i189.AttachmentViewerCubit(
         gh<_i904.GetArticle>(),
@@ -950,6 +988,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i151.ModerationCaseCubit>(
       () => _i151.ModerationCaseCubit(gh<_i130.GetModerationCase>()),
     );
+    gh.factory<_i297.CategoryPageCubit>(
+      () => _i297.CategoryPageCubit(gh<_i772.GetCategoryPage>()),
+    );
     gh.factory<_i221.VerificationFormCubit>(
       () => _i221.VerificationFormCubit(
         gh<_i172.GetFields>(),
@@ -957,19 +998,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i295.SubmitVerificationRequest>(),
       ),
     );
-    gh.factory<_i840.ArticleEditorCubit>(
-      () => _i840.ArticleEditorCubit(
-        gh<_i866.CreateArticle>(),
-        gh<_i866.GetArticleForEdit>(),
-        gh<_i866.SaveDraft>(),
-        gh<_i866.DiscardChanges>(),
-        gh<_i866.PublishArticle>(),
-        gh<_i866.RestoreRevision>(),
-        gh<_i866.DeleteArticle>(),
-        gh<_i172.GetFields>(),
-        gh<_i172.GetTopics>(),
-        gh<_i504.UploadImage>(),
-        gh<_i413.EditorBackupStore>(),
+    gh.factory<_i297.MyCategoriesCubit>(
+      () => _i297.MyCategoriesCubit(
+        gh<_i772.GetMyCategories>(),
+        gh<_i772.ManageCategories>(),
       ),
     );
     gh.lazySingleton<_i226.EngagementCubit>(
@@ -992,6 +1024,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i709.PushPlatform>(),
         gh<_i455.DevicesApi>(),
         gh<_i822.PushReadReceipts>(),
+      ),
+    );
+    gh.factoryParam<_i297.CategoryArticlesCubit, String, String>(
+      (username, slug) => _i297.CategoryArticlesCubit(
+        gh<_i772.GetCategoryArticles>(),
+        username,
+        slug,
       ),
     );
     gh.factory<_i571.AttachmentsCubit>(
@@ -1018,6 +1057,24 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i866.GetMyArticles>(),
         gh<_i866.DeleteArticle>(),
         gh<_i413.EditorBackupStore>(),
+      ),
+    );
+    gh.factory<_i840.ArticleEditorCubit>(
+      () => _i840.ArticleEditorCubit(
+        gh<_i866.CreateArticle>(),
+        gh<_i866.GetArticleForEdit>(),
+        gh<_i866.SaveDraft>(),
+        gh<_i866.DiscardChanges>(),
+        gh<_i866.PublishArticle>(),
+        gh<_i866.RestoreRevision>(),
+        gh<_i866.DeleteArticle>(),
+        gh<_i172.GetFields>(),
+        gh<_i172.GetTopics>(),
+        gh<_i504.UploadImage>(),
+        gh<_i413.EditorBackupStore>(),
+        gh<_i772.GetMyCategories>(),
+        gh<_i772.ManageCategories>(),
+        gh<_i772.SetArticleCategory>(),
       ),
     );
     gh.factory<_i807.OnboardingCubit>(

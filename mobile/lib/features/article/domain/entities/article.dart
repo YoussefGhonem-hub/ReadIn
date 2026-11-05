@@ -1,10 +1,12 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../shared/rdoc/rdoc_document.dart';
+import '../../../categories/domain/entities/writer_category.dart';
 import '../../../media/domain/entities/media.dart';
 import '../../../tags/domain/entities/tag.dart';
 import 'reaction_counts.dart';
 
+export '../../../categories/domain/entities/writer_category.dart' show WriterCategoryRef;
 export '../../../tags/domain/entities/tag.dart' show TagRef;
 export 'reaction_counts.dart';
 
@@ -284,6 +286,7 @@ class ArticleDetails extends Equatable {
     this.myProgress,
     this.isOfflineCopy = false,
     this.moderation,
+    this.category,
   });
 
   final ArticleCard card;
@@ -315,6 +318,9 @@ class ArticleDetails extends Equatable {
   /// Hidden by moderators (F22); null while the article is visible.
   final ArticleModeration? moderation;
 
+  /// The writer's category of the article (F31): the author row's "في قسم {name}" link. Null for none.
+  final WriterCategoryRef? category;
+
   /// `saveCount` moved up to the card in wave 1 (still on `ArticleDetailsDto` through inheritance).
   int get saveCount => card.saveCount;
 
@@ -340,6 +346,7 @@ class ArticleDetails extends Equatable {
         isOfflineCopy: isOfflineCopy,
         myProgress: myProgress,
         moderation: moderation,
+        category: category,
       );
 
   @override
@@ -357,5 +364,6 @@ class ArticleDetails extends Equatable {
         myProgress,
         isOfflineCopy,
         moderation,
+        category,
       ];
 }

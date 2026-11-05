@@ -1236,7 +1236,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteAccountDeletedActivity =>
-      'اهتماماتك وتقدّمك في القراية وإحصائياتك وتفاعلاتك والمقالات المحفوظة واللي بتتابعهم';
+      'اهتماماتك وتقدّمك في القراية وإحصائياتك، وتفاعلاتك وإعجاباتك بالتعليقات والبلاغات اللي بعتّها، والمقالات المحفوظة والمجموعات، وأقسام مقالاتك (مقالاتك المنشورة بتفضل من غير قسم)، واللي بتتابعهم واللي بيتابعوك';
 
   @override
   String get deleteAccountDeletedDevices =>
@@ -4432,4 +4432,187 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errSearchFilterInvalid => 'فلاتر البحث دي مش صحيحة.';
+
+  @override
+  String get profileTabCategories => 'الأقسام';
+
+  @override
+  String get categoriesOther => 'مقالات تانية';
+
+  @override
+  String categoryArticleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مقال',
+      many: '$count مقال',
+      few: '$count مقالات',
+      two: 'مقالين',
+      one: 'مقال واحد',
+      zero: 'لسه مفيش مقالات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get categoryOpenHint => 'بيفتح القسم';
+
+  @override
+  String get categoriesEmptyTitle => 'لسه مفيش أقسام';
+
+  @override
+  String get categoriesEmptyBody =>
+      'لما الكاتب ده يرتّب مقالاته في أقسام، هتلاقيها هنا.';
+
+  @override
+  String get categoriesOwnHint =>
+      'رتّب مقالاتك في أقسام. بروفايلك هيعرضها بالترتيب ده.';
+
+  @override
+  String get categoryNew => 'قسم جديد';
+
+  @override
+  String get categoriesFull =>
+      'عندك 50 قسم، وده أقصى عدد. امسح قسم عشان تضيف واحد جديد.';
+
+  @override
+  String get categoriesEmptyOwnTitle => 'رتّب مقالاتك';
+
+  @override
+  String get categoriesEmptyOwnBody =>
+      'اعمل أقسام زي «نصايح Backend»، وبعدين حط مقالاتك فيها من المحرر. القرّاء هيشوفوها في بروفايلك.';
+
+  @override
+  String get categoryEmptyOwn => 'فاضي، والزوار مش شايفينه';
+
+  @override
+  String get categoryRenameTitle => 'غيّر اسم القسم';
+
+  @override
+  String get categoryNameLabel => 'اسم القسم';
+
+  @override
+  String get categoryNameHint => 'مثلًا: نصايح Backend';
+
+  @override
+  String get categoryNameTooLong => 'اسم القسم أقصاه 40 حرف.';
+
+  @override
+  String get categoryNameNoLetter =>
+      'اسم القسم لازم يكون فيه حرف أو رقم على الأقل.';
+
+  @override
+  String get categoryMoveUp => 'طلّعه لفوق';
+
+  @override
+  String get categoryMoveDown => 'نزّله لتحت';
+
+  @override
+  String get categoryDragHandle => 'اسحب عشان ترتّب';
+
+  @override
+  String get categoryMenu => 'اختيارات القسم';
+
+  @override
+  String categoryDeleteTitle(String name) {
+    return 'تمسح «$name»؟';
+  }
+
+  @override
+  String categoryDeleteBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'القسم ده فيه $count مقال، وهيفضلوا منشورين من غير قسم.',
+      many: 'القسم ده فيه $count مقال، وهيفضلوا منشورين من غير قسم.',
+      few: 'القسم ده فيه $count مقالات، وهيفضلوا منشورين من غير قسم.',
+      two: 'القسم ده فيه مقالين، وهيفضلوا منشورين من غير قسم.',
+      one: 'القسم ده فيه مقال واحد، وهيفضل منشور من غير قسم.',
+      zero: 'القسم ده فاضي.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get categoryDeleted => 'القسم اتمسح';
+
+  @override
+  String get categoryPageEmptyTitle => 'لسه مفيش مقالات في القسم ده';
+
+  @override
+  String get categoryPageEmptyBody =>
+      'أول ما الكاتب يحط فيه مقالات، هتلاقيها هنا.';
+
+  @override
+  String get categoryOtherEmptyTitle => 'مفيش مقالات من غير قسم';
+
+  @override
+  String get categoryOtherEmptyBody => 'كل مقالات الكاتب ده في أقسام.';
+
+  @override
+  String get categoryNotFoundTitle => 'القسم ده مش موجود';
+
+  @override
+  String get categoryNotFoundBody => 'ممكن يكون اتمسح، أو اللينك غلط.';
+
+  @override
+  String get categoryWriterProfile => 'روح لبروفايل الكاتب';
+
+  @override
+  String articleInCategory(String name) {
+    return 'في قسم $name';
+  }
+
+  @override
+  String get editorCategoryLabel => 'القسم';
+
+  @override
+  String get editorCategoryNone => 'من غير قسم';
+
+  @override
+  String get editorCategoryHint =>
+      'اختياري: بيجمّع المقال مع مقالات زيه في بروفايلك. أي تغيير بيتطبق على طول.';
+
+  @override
+  String get editorCategoryLoadFailed => 'معرفناش نجيب أقسامك.';
+
+  @override
+  String get moderationCategoriesTitle => 'أقسام الكاتب';
+
+  @override
+  String get moderationCategoriesEmpty => 'مفيش أقسام.';
+
+  @override
+  String get moderationClearCategory => 'امسح الاسم';
+
+  @override
+  String moderationClearCategoryTitle(String name) {
+    return 'تمسح اسم القسم «$name»؟';
+  }
+
+  @override
+  String get moderationClearCategoryBody =>
+      'القسم هياخد اسم محايد زي «قسم 1»، ولينكه القديم هيبطل يشتغل. المقالات اللي فيه هتفضل فيه، والكاتب مش هيوصله إشعار.';
+
+  @override
+  String get moderationCategoryCleared => 'اسم القسم اتمسح';
+
+  @override
+  String get moderationLogUserClearCategory => 'مسح اسم قسم';
+
+  @override
+  String get errCategoryNotFound => 'القسم ده مش موجود.';
+
+  @override
+  String get errCategoryNotOwner => 'القسم ده مش بتاعك.';
+
+  @override
+  String get errCategoryLimit => 'وصلت لأقصى عدد أقسام (50).';
+
+  @override
+  String get errCategoryNameTaken => 'عندك قسم بنفس الاسم بالفعل.';
+
+  @override
+  String get errCategoryNameInvalid =>
+      'اسم القسم لازم يكون من 1 لـ 40 حرف، وفيه حرف أو رقم على الأقل.';
 }

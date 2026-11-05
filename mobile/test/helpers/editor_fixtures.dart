@@ -166,6 +166,7 @@ ArticleEdit sampleEdit({
   bool hasUnpublishedChanges = false,
   DateTime? savedAt,
   List<MediaAsset> media = const [],
+  String? categoryId,
 }) =>
     ArticleEdit(
       id: id,
@@ -178,6 +179,7 @@ ArticleEdit sampleEdit({
       document: document ?? mixedDocument(),
       media: media,
       checks: checks,
+      categoryId: categoryId,
     );
 
 List<MyArticle> sampleMyArticles(ArticleLifecycle status) => status == ArticleLifecycle.draft

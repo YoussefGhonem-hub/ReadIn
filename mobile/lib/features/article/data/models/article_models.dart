@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../shared/rdoc/rdoc_document.dart';
+import '../../../categories/data/models/category_models.dart';
 import '../../../media/data/models/media_models.dart';
 import '../../../tags/data/models/tag_models.dart';
 import '../../domain/entities/article.dart';
@@ -236,6 +237,8 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     @Default(<String>[]) List<String> collectionIds,
     MyProgressModel? myProgress,
     ArticleModerationModel? moderation,
+    // F31: the writer's category of the article, { slug, name } or null.
+    WriterCategoryRefModel? category,
   }) = _ArticleDetailsModel;
 
   factory ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
@@ -279,5 +282,6 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         myProgress: myProgress?.toEntity(),
         isOfflineCopy: offline,
         moderation: moderation?.toEntity(),
+        category: category?.toEntity(),
       );
 }

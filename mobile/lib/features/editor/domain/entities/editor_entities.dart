@@ -258,6 +258,7 @@ class ArticleEdit extends Equatable {
     this.hasUnpublishedChanges = false,
     this.media = const [],
     this.checks = DraftChecks.empty,
+    this.categoryId,
   });
 
   final String id;
@@ -279,10 +280,15 @@ class ArticleEdit extends Equatable {
   final List<MediaAsset> media;
   final DraftChecks checks;
 
+  /// The writer's category of the article (F31), null for none. Not part of [document]: autosave, discard, restore and
+  /// publish never change it; `PUT /articles/{id}/category` does, at once.
+  final String? categoryId;
+
   bool get isPublished => status == ArticleLifecycle.published;
 
   @override
-  List<Object?> get props => [id, status, slug, publishedAt, version, savedAt, hasUnpublishedChanges, document, media, checks];
+  List<Object?> get props =>
+      [id, status, slug, publishedAt, version, savedAt, hasUnpublishedChanges, document, media, checks, categoryId];
 }
 
 /// `PublishedArticleDto`.

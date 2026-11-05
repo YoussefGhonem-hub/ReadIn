@@ -2,6 +2,9 @@ import 'me.dart';
 
 /// Permission names in `MeDto.permissions` (SPEC §10.2). Clients only hide what the API refuses anyway.
 abstract final class Permissions {
+  /// Write articles, and group them into writer categories (Member and up, F05, F31).
+  static const articlesCreate = 'articles.create';
+
   /// Report articles, comments and users (Member and up, F22).
   static const reportsCreate = 'reports.create';
 
@@ -13,6 +16,9 @@ abstract final class Permissions {
 }
 
 extension MePermissions on Me {
+  /// Writes articles and manages their own writer categories (`GET /me/categories` needs it).
+  bool get canWrite => can(Permissions.articlesCreate);
+
   /// Sees the moderation tools: Settings → Moderation, hide / unhide, warn.
   bool get isModerator => can(Permissions.moderationManage);
 

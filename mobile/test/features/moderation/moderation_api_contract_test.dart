@@ -213,6 +213,27 @@ void main() {
     expect(c.history.map((h) => h.action), [ModerationLogAction.userSuspend, ModerationLogAction.unknown]);
   });
 
+  test('a user case carries their writer categories (F31), empty ones included; content cases have none', () async {
+    respond = (_) => {
+          'item': queueItemJson(),
+          'reports': <Object>[],
+          'history': [actionJson('a-1', action: 'user.clear_category')],
+          'categories': [
+            {'id': 'c-1', 'slug': 'شتيمة', 'name': 'اسم وحش', 'articleCount': 2, 'sortOrder': 1},
+            {'id': 'c-2', 'slug': 'ef-core', 'name': 'EF Core', 'articleCount': 0, 'sortOrder': 2},
+          ],
+        };
+    final c = (await repository().getCase(const ModerationTargetRef.user('w-9'))).valueOrNull!;
+    expect(c.categories?.map((x) => (x.id, x.name, x.articleCount)), [('c-1', 'اسم وحش', 2), ('c-2', 'EF Core', 0)]);
+    expect(c.history.single.action, ModerationLogAction.userClearCategory);
+
+    respond = (_) => {'item': queueItemJson(), 'reports': <Object>[], 'history': <Object>[], 'categories': <Object>[]};
+    expect((await repository().getCase(const ModerationTargetRef.article('art-7'))).valueOrNull!.categories, isEmpty);
+    // An API from before F31 sends none.
+    respond = (_) => {'item': queueItemJson(), 'reports': <Object>[], 'history': <Object>[]};
+    expect((await repository().getCase(const ModerationTargetRef.article('art-7'))).valueOrNull!.categories, isNull);
+  });
+
   group('POST /moderation/actions', () {
     setUp(() => respond = (_) => (204, null));
 
@@ -263,6 +284,11 @@ void main() {
       });
       expect(requests[3].data, {'action': 'unsuspend', 'targetType': 'user', 'targetId': 'w-1'});
       expect(requests[4].data, {'action': 'delete', 'targetType': 'comment', 'targetId': 'c-1'});
+    });
+
+    test('clear_category (F31) sends the user and the category', () async {
+      await repository().act(const ModerationCommand(ModerationActionType.clearCategory, ModerationTargetRef.user('w-9'), categoryId: 'c-1'));
+      expect(requests[0].data, {'action': 'clear_category', 'targetType': 'user', 'targetId': 'w-9', 'categoryId': 'c-1'});
     });
 
     test('refusals keep their codes', () async {

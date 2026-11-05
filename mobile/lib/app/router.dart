@@ -13,6 +13,8 @@ import '../features/auth/presentation/pages/sign_in_page.dart';
 import '../features/auth/presentation/pages/sign_up_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/presentation/session/session_cubit.dart';
+import '../features/categories/presentation/category_routes.dart';
+import '../features/categories/presentation/pages/category_page.dart';
 import '../features/editor/presentation/pages/article_editor_page.dart';
 import '../features/editor/presentation/pages/my_articles_page.dart';
 import '../features/explore/domain/entities/explore.dart';
@@ -94,6 +96,9 @@ abstract final class AppRoutes {
   /// A tag's page (F32).
   static String tag(String slug) => TagRoutes.of(slug);
 
+  /// A writer's category page (F31).
+  static String category(String username, String slug) => CategoryRoutes.of(username, slug);
+
   /// A field's page (F15), on one of its topics with [topic].
   static String field(String slug, {String? topic}) => ExploreRoutes.field(slug, topic: topic);
 
@@ -123,6 +128,8 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
   // The web's article links (/ar/a/{slug}, /en/a/{slug}) arrive through App Links and Universal Links (F24): they open
   // the reader in the version that was shared.
   if (webArticleRoute(uri) case final article?) return article;
+  // The web's category pages (/@{username}/c/{slug}, F31) and profiles (/@{username}) are /u/… here.
+  if (webProfileRoute(uri) case final profile?) return profile;
 
   final location = uri.path;
   final atSplash = location == AppRoutes.splash;
@@ -258,6 +265,12 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
         path: '/u/:username',
         builder: (_, state) => ProfilePage(username: state.pathParameters['username']!),
         routes: [
+          // A writer's category page (F31), guests allowed; `_other` is "مقالات تانية". Its web link
+          // https://{domain}/@{username}/c/{slug} opens it too (App Links).
+          GoRoute(
+            path: CategoryRoutes.subPattern,
+            builder: (_, state) => CategoryPage(username: state.pathParameters['username']!, slug: state.pathParameters['slug']!),
+          ),
           for (final kind in FollowListKind.values)
             GoRoute(
               path: kind.name,

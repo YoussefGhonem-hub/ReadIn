@@ -10,6 +10,9 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/app_network_image.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../../shared/widgets/bidi_text_field.dart';
+import '../../../categories/domain/entities/writer_category.dart';
+import '../../../categories/domain/services/category_names.dart';
+import '../../../categories/presentation/widgets/category_dialogs.dart';
 import '../../../media/domain/usecases/media_usecases.dart';
 import '../../../media/presentation/cubit/attachments_cubit.dart';
 import '../../../media/presentation/widgets/attachment_bar.dart';
@@ -19,8 +22,8 @@ import '../cubit/article_editor_cubit.dart';
 import '../cubit/tag_suggestions_cubit.dart';
 import 'editor_widgets.dart';
 
-/// Opens the article settings (F05 metadata): language versions, field and topic, tags, cover, sources, version
-/// badge, AI-assisted and the attachments.
+/// Opens the article settings (F05 metadata): language versions, field and topic, the writer's category (F31), tags,
+/// cover, sources, version badge, AI-assisted and the attachments.
 Future<void> showArticleSettingsSheet(BuildContext context) {
   final editor = context.read<ArticleEditorCubit>();
   final attachments = context.read<AttachmentsCubit>();
@@ -68,6 +71,8 @@ class ArticleSettingsPanel extends StatelessWidget {
             _LanguagesSection(state: state, enabled: enabled),
             const _SectionGap(),
             _FieldSection(state: state, enabled: enabled),
+            const SizedBox(height: ReadInSpace.s3),
+            _CategorySection(state: state, enabled: enabled),
             const _SectionGap(),
             _TagsSection(state: state, enabled: enabled),
             const _SectionGap(),
@@ -205,6 +210,128 @@ class _FieldSection extends StatelessWidget {
           ],
           onChanged: enabled && state.topics.isNotEmpty ? cubit.selectTopic : null,
         ),
+      ],
+    );
+  }
+}
+
+/// The optional "القسم" picker (F31): no category, one of the writer's categories (in their order), or "＋ قسم جديد",
+/// which asks for a name, creates it and puts the article in it. A choice applies at once (a new article is saved
+/// first), so it isn't part of the draft: no publish, no revision.
+class _CategorySection extends StatefulWidget {
+  const _CategorySection({required this.state, required this.enabled});
+
+  final ArticleEditorState state;
+  final bool enabled;
+
+  @override
+  State<_CategorySection> createState() => _CategorySectionState();
+}
+
+class _CategorySectionState extends State<_CategorySection> {
+  static const _newCategory = '\u0000new';
+
+  /// Rebuilds the dropdown after "＋ قسم جديد" was picked and the dialog closed, so it shows the article's category again.
+  int _reset = 0;
+
+  Future<void> _changed(String? value) async {
+    final cubit = context.read<ArticleEditorCubit>();
+    if (value != _newCategory) {
+      await cubit.setCategory(value);
+      return;
+    }
+    final l10n = context.l10n;
+    final created = await showCategoryNameDialog<WriterCategory>(
+      context,
+      title: l10n.categoryNew,
+      action: l10n.createAction,
+      existing: cubit.state.categories,
+      submit: cubit.createCategory,
+    );
+    if (!mounted) return;
+    setState(() => _reset++);
+    if (created != null) await cubit.setCategory(created.id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final state = widget.state;
+    final dir = Directionality.of(context);
+    final loading = state.categoriesStatus == EditorLoadStatus.loading;
+    final failed = state.categoriesStatus == EditorLoadStatus.failure;
+    final full = state.categories.length >= CategoryNames.maxPerWriter;
+    // Until the list arrives, a category the article has can't be named: the field waits.
+    final value = state.categoryId == null || state.category != null ? state.categoryId : null;
+    final enabled = widget.enabled && !loading && !failed && !state.categoryBusy;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<String?>(
+          key: ValueKey('settings-category-${state.categories.length}-$value-$_reset'),
+          initialValue: value,
+          isExpanded: true,
+          decoration: InputDecoration(
+            labelText: l10n.editorCategoryLabel,
+            prefixIcon: const Icon(Icons.folder_outlined),
+            suffixIcon: state.categoryBusy || loading
+                ? const Padding(
+                    padding: EdgeInsets.all(ReadInSpace.s3),
+                    child: SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                  )
+                : null,
+            helperText: l10n.editorCategoryHint,
+            helperMaxLines: 3,
+          ),
+          items: [
+            DropdownMenuItem<String?>(child: Text(l10n.editorCategoryNone)),
+            for (final c in state.categories)
+              DropdownMenuItem<String?>(
+                value: c.id,
+                child: Text(Bidi.isolateOppositeRuns(c.name, dir), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+            if (!full)
+              DropdownMenuItem<String?>(
+                key: const ValueKey('settings-category-new'),
+                value: _newCategory,
+                child: Row(
+                  children: [
+                    Icon(Icons.add_rounded, size: 20, color: colors.primary),
+                    const SizedBox(width: ReadInSpace.s2),
+                    Flexible(
+                      child: Text(
+                        l10n.categoryNew,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: colors.primary, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+          // The menu shows "＋ قسم جديد" as a choice; the field itself never keeps it.
+          selectedItemBuilder: (context) => [
+            Text(l10n.editorCategoryNone, maxLines: 1, overflow: TextOverflow.ellipsis),
+            for (final c in state.categories)
+              Text(Bidi.isolateOppositeRuns(c.name, dir), maxLines: 1, overflow: TextOverflow.ellipsis),
+            if (!full) Text(l10n.categoryNew, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ],
+          onChanged: enabled ? (v) => _changed(v) : null,
+        ),
+        if (failed)
+          Row(
+            children: [
+              Expanded(
+                child: Text(l10n.editorCategoryLoadFailed, style: context.textTheme.bodySmall?.copyWith(color: colors.error)),
+              ),
+              TextButton(
+                key: const ValueKey('settings-category-retry'),
+                onPressed: context.read<ArticleEditorCubit>().loadCategories,
+                child: Text(l10n.retry),
+              ),
+            ],
+          ),
       ],
     );
   }

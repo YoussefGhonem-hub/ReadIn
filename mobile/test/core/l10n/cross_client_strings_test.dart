@@ -37,6 +37,15 @@ void main() {
         "You've created a lot of new tags today. Pick existing tags, or try again later.",
       ),
       FailureCodes.tagHidden: ('التاج ده مش متاح، اختار تاج تاني.', "This tag isn't available. Choose another one."),
+      // F31: writer categories.
+      FailureCodes.categoryNotFound: ('القسم ده مش موجود.', 'Category not found.'),
+      FailureCodes.categoryNotOwner: ('القسم ده مش بتاعك.', "This category isn't yours."),
+      FailureCodes.categoryLimit: ('وصلت لأقصى عدد أقسام (50).', 'You can have at most 50 categories.'),
+      FailureCodes.categoryNameTaken: ('عندك قسم بنفس الاسم بالفعل.', 'You already have a category with this name.'),
+      FailureCodes.categoryNameInvalid: (
+        'اسم القسم لازم يكون من 1 لـ 40 حرف، وفيه حرف أو رقم على الأقل.',
+        'A category name has 1–40 characters, with at least one letter or digit.',
+      ),
       FailureCodes.articleLanguageInvalid: ('لغة المقال دي مش مدعومة.', "That article language isn't supported."),
       FailureCodes.articleContentLanguageMismatch: (
         'لغة المحتوى مش زي لغة المقال.',

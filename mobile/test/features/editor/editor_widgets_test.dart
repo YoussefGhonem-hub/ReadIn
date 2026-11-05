@@ -11,6 +11,7 @@ import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/errors/result.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
+import 'package:readin/features/categories/domain/usecases/category_usecases.dart';
 import 'package:readin/features/comments/presentation/cubit/mention_suggestions_cubit.dart';
 import 'package:readin/features/editor/data/datasources/editor_backup_store.dart';
 import 'package:readin/features/editor/domain/entities/editor_entities.dart';
@@ -26,12 +27,16 @@ import 'package:readin/features/media/presentation/cubit/attachments_cubit.dart'
 import 'package:readin/features/taxonomy/domain/usecases/taxonomy_usecases.dart';
 import 'package:readin/shared/rdoc/rdoc_document.dart';
 
+import '../../helpers/category_fixtures.dart';
 import '../../helpers/comment_fixtures.dart';
 import '../../helpers/editor_fixtures.dart';
 import '../../helpers/fixtures.dart';
 import '../../helpers/test_app.dart';
 
 const _en = Variant(AppLocales.en, Brightness.light);
+
+/// The writer has no categories (F31): the settings sheet's picker offers "No category" and "New category" only.
+final _noCategories = FakeCategoriesRepository();
 
 void main() {
   late MockMentionSuggestionsCubit mentions;
@@ -100,6 +105,9 @@ void main() {
         GetTopics(taxonomy),
         UploadImage(FakeMediaRepository()),
         InMemoryEditorBackupStore(),
+        GetMyCategories(_noCategories),
+        ManageCategories(_noCategories),
+        SetArticleCategory(_noCategories),
       );
       await cubit.open(language: 'ar-EG');
       final tags = MockTagSuggestionsCubit();
@@ -167,6 +175,9 @@ void main() {
         GetTopics(taxonomy),
         UploadImage(FakeMediaRepository()),
         InMemoryEditorBackupStore(),
+        GetMyCategories(_noCategories),
+        ManageCategories(_noCategories),
+        SetArticleCategory(_noCategories),
       );
       await cubit.open(articleId: edit == null ? null : 'art-1', language: 'ar-EG');
       for (final tag in tags) {
@@ -388,6 +399,9 @@ void main() {
         GetTopics(taxonomy),
         UploadImage(FakeMediaRepository()),
         InMemoryEditorBackupStore(),
+        GetMyCategories(_noCategories),
+        ManageCategories(_noCategories),
+        SetArticleCategory(_noCategories),
       );
     });
 
@@ -448,6 +462,119 @@ void main() {
       expect(repo.calls.last, 'save art-1 v9');
       expect(cubit.state.conflicted, isFalse);
       await tester.runAsync(cubit.close);
+    });
+  });
+
+  group('category picker (F31)', () {
+    late ArticleEditorCubit cubit;
+    late FakeCategoriesRepository categories;
+    late FakeArticleEditorRepository repo;
+    late AppLocalizations l10n;
+
+    setUpAll(() async => l10n = await AppLocalizations.delegate.load(AppLocales.en));
+
+    Future<void> pumpPanel(WidgetTester tester, {String? categoryId, bool isNew = false}) async {
+      usePhoneSurface(tester, size: const Size(390, 1400));
+      repo = FakeArticleEditorRepository()
+        ..onGet = ((id) => Ok(sampleEdit(id: id, categoryId: categoryId)))
+        ..onCreate = ((doc) => Ok(sampleEdit(id: 'new-1', version: 1, document: doc)));
+      categories = FakeCategoriesRepository(mine: const [backendTips, efCore]);
+      final taxonomy = FakeTaxonomyRepository();
+      cubit = ArticleEditorCubit(
+        CreateArticle(repo),
+        GetArticleForEdit(repo),
+        SaveDraft(repo),
+        DiscardChanges(repo),
+        PublishArticle(repo),
+        RestoreRevision(repo),
+        DeleteArticle(repo),
+        GetFields(taxonomy),
+        GetTopics(taxonomy),
+        UploadImage(FakeMediaRepository()),
+        InMemoryEditorBackupStore(),
+        GetMyCategories(categories),
+        ManageCategories(categories),
+        SetArticleCategory(categories),
+      );
+      await cubit.open(articleId: isNew ? null : 'art-1', language: 'en');
+      final tags = MockTagSuggestionsCubit();
+      whenListen(tags, const Stream<List<ArticleTag>>.empty(), initialState: const <ArticleTag>[]);
+      when(() => tags.search(any())).thenReturn(null);
+      final attachments = MockAttachmentsCubit();
+      whenListen(attachments, const Stream<AttachmentsState>.empty(), initialState: const AttachmentsState());
+      await tester.pumpWidget(testApp(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ArticleEditorCubit>.value(value: cubit),
+            BlocProvider<TagSuggestionsCubit>.value(value: tags),
+            BlocProvider<AttachmentsCubit>.value(value: attachments),
+          ],
+          child: const Scaffold(body: ArticleSettingsPanel()),
+        ),
+        variant: _en,
+      ));
+      await tester.pump();
+    }
+
+    Finder picker() => find.byWidgetPredicate((w) => w is DropdownButtonFormField<String?> && '${w.key}'.contains('settings-category'));
+
+    Future<void> choose(WidgetTester tester, String label) async {
+      await tester.tap(picker());
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining(label).last);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('shows the article\'s category; choosing another applies it at once', (tester) async {
+      await pumpPanel(tester, categoryId: 'c-2');
+      expect(find.text(l10n.editorCategoryLabel), findsOneWidget);
+      expect(find.descendant(of: picker(), matching: find.text('EF Core')), findsOneWidget);
+
+      await choose(tester, 'Backend');
+      expect(categories.calls.last, 'set art-1 c-1');
+      expect(cubit.state.categoryId, 'c-1');
+      expect(repo.calls, ['get art-1'], reason: 'not part of the draft: no save');
+
+      await choose(tester, l10n.editorCategoryNone);
+      expect(categories.calls.last, 'set art-1 none');
+      expect(cubit.state.categoryId, isNull);
+      await cubit.close();
+    });
+
+    testWidgets('"New category" asks for a name, creates it and puts the article in it', (tester) async {
+      await pumpPanel(tester);
+      await choose(tester, l10n.categoryNew);
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      await tester.enterText(find.byKey(const ValueKey('category-name-input')), 'EF core');
+      await tester.pump();
+      expect(find.text(l10n.errCategoryNameTaken), findsOneWidget);
+
+      await tester.enterText(find.byKey(const ValueKey('category-name-input')), 'Flutter');
+      await tester.tap(find.byKey(const ValueKey('category-name-submit')));
+      await tester.pumpAndSettle();
+      expect(categories.calls, containsAllInOrder(['create Flutter', 'set art-1 c-new-3']));
+      expect(cubit.state.category?.name, 'Flutter');
+      expect(find.descendant(of: picker(), matching: find.text('Flutter')), findsOneWidget);
+      await cubit.close();
+    });
+
+    testWidgets('cancelling "New category" keeps the article\'s category', (tester) async {
+      await pumpPanel(tester, categoryId: 'c-2');
+      await choose(tester, l10n.categoryNew);
+      await tester.tap(find.text(l10n.cancel));
+      await tester.pumpAndSettle();
+      expect(find.descendant(of: picker(), matching: find.text('EF Core')), findsOneWidget);
+      expect(categories.calls.where((c) => c.startsWith('set') || c.startsWith('create')), isEmpty);
+      await cubit.close();
+    });
+
+    testWidgets('a new article is saved first, then put in the category', (tester) async {
+      await pumpPanel(tester, isNew: true);
+      await choose(tester, 'EF Core');
+      expect(repo.calls, ['create']);
+      expect(categories.calls.last, 'set new-1 c-2');
+      await cubit.close();
     });
   });
 }

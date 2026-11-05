@@ -7,6 +7,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../categories/presentation/widgets/category_link.dart';
 import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../../settings/domain/entities/app_settings.dart';
 import '../../../tags/presentation/widgets/tag_chip.dart';
@@ -37,8 +38,9 @@ class ReadingProgressBar extends StatelessWidget {
   }
 }
 
-/// Field tag, title, subtitle and byline. A deleted author's byline is "Deleted user" with a neutral avatar and the
-/// date only: no @username, verified mark or [authorAction] (SPEC §9.6).
+/// Field tag, title, subtitle and byline, with "في قسم {name}" when the writer put the article in a category (F31). A
+/// deleted author's byline is "Deleted user" with a neutral avatar and the date only: no @username, verified mark,
+/// category or [authorAction] (SPEC §9.6).
 class ArticleHeader extends StatelessWidget {
   const ArticleHeader({super.key, required this.article, required this.titleScale, this.authorAction});
 
@@ -140,6 +142,12 @@ class ArticleHeader extends StatelessWidget {
             if (author != null && authorAction != null) ...[const SizedBox(width: ReadInSpace.s2), authorAction!],
           ],
         ),
+        // "في قسم {name}" (F31), under the byline, lined up with the name. Its 48 dp tap area leaves room above it.
+        if (author != null && article.category != null)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 36 + ReadInSpace.s2 - ReadInSpace.s1),
+            child: CategoryLink(username: author.username, category: article.category!),
+          ),
       ],
     );
   }

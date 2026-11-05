@@ -41,6 +41,12 @@ void main() {
       'https://readin.app/f/dotnet?topic=': '/f/dotnet',
       'https://readin.app/f/dotnet?topic=..%2Fsettings': '/f/dotnet',
       '/f/ai-fundamentals': '/f/ai-fundamentals',
+      // A writer's category pages (F31): the app's readin://u/{username}/c/{slug} and the web's /@{username}/c/{slug};
+      // "مقالات تانية" is _other. Slugs are matched ignoring case.
+      'readin://u/mona_dev/c/ef-core': '/u/mona_dev/c/ef-core',
+      'https://readin.app/@Mona_Dev/c/EF-Core': '/u/mona_dev/c/ef-core',
+      'https://readin.app/@mona_dev/c/_other': '/u/mona_dev/c/_other',
+      '/u/omar/c/flutter-notes': '/u/omar/c/flutter-notes',
     };
     cases.forEach((link, path) {
       test('maps $link to $path', () => expect(pushLinkToPath(link), path));
@@ -81,6 +87,14 @@ void main() {
       'readin://f/dotnet/articles',
       'readin://f/..%2Fsettings',
       'https://evil.example/f/dotnet',
+      'readin://u/mona/c',
+      'readin://u/mona/c/ef-core/articles',
+      'readin://u/mona/c/..%2Fsettings',
+      'readin://u/mona/c/_admin',
+      'https://readin.app/@mona/c',
+      'https://readin.app/@mona/x/ef-core',
+      'https://readin.app/@mona/c/ef-core/x',
+      'https://evil.example/@mona/c/ef-core',
       '',
       null,
     ]) {
@@ -98,6 +112,22 @@ void main() {
     test('leaves every other path alone', () {
       for (final path in ['/a/x', '/fr/a/x', '/ar/b/x', '/ar/a', '/ar/a/x/y', '/home', '/']) {
         expect(webArticleRoute(Uri.parse(path)), isNull, reason: path);
+      }
+    });
+  });
+
+  group('webProfileRoute', () {
+    test("maps the web's profile and category links, which App Links hand to the router, to /u/… (F14, F31)", () {
+      expect(webProfileRoute(Uri.parse('https://readin.app/@Mona_Dev')), '/u/mona_dev');
+      expect(webProfileRoute(Uri.parse('/@mona_dev/c/ef-core')), '/u/mona_dev/c/ef-core');
+      expect(webProfileRoute(Uri.parse('/@mona_dev/c/_other')), '/u/mona_dev/c/_other');
+      final encoded = Uri.encodeComponent('نصايح-backend');
+      expect(webProfileRoute(Uri.parse('/@mona_dev/c/$encoded')), '/u/mona_dev/c/$encoded', reason: 'an Arabic slug stays encoded');
+    });
+
+    test('leaves every other path alone', () {
+      for (final path in ['/u/mona', '/@', '/@mona/c', '/@mona/followers', '/@mona/c/x/y', '/@..%2Fsettings', '/home', '/']) {
+        expect(webProfileRoute(Uri.parse(path)), isNull, reason: path);
       }
     });
   });

@@ -30,8 +30,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <!-- App Links (SPEC F24): the web's article links, https://{domain}/ar/a/{slug} and /en/a/{slug}, open the
-                 article in the app, its tag pages, https://{domain}/tags/{slug} (F32), the tag page, and its field
-                 pages, https://{domain}/f/{slug} (F15), the field page. The host is the
+                 article in the app, its tag pages, https://{domain}/tags/{slug} (F32), the tag page, its field
+                 pages, https://{domain}/f/{slug} (F15), the field page, and a writer's category pages,
+                 https://{domain}/@{username}/c/{slug} (F31), the category page. The host is the
                  WEB_ORIGIN dart-define (android/app/build.gradle.kts); Android verifies it with
                  /.well-known/assetlinks.json on that domain (docs/setup/app-links.md). -->
             <intent-filter android:autoVerify="true">
@@ -43,6 +44,7 @@
                 <data android:pathPrefix="/en/a/"/>
                 <data android:pathPrefix="/tags/"/>
                 <data android:pathPrefix="/f/"/>
+                <data android:pathPattern="/@.*/c/.*"/>
             </intent-filter>
         </activity>
         <!-- Background pushes use the channel the app creates at start (PushPlatform). -->

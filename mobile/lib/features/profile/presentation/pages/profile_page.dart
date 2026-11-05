@@ -13,6 +13,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../categories/presentation/widgets/categories_tab.dart';
 import '../../../moderation/presentation/cubit/moderation_action_cubit.dart';
 import '../../../saved/presentation/cubit/saved_list_cubit.dart';
 import '../../../saved/presentation/pages/saved_page.dart';
@@ -123,8 +124,9 @@ class _SettingsButton extends StatelessWidget {
       );
 }
 
-/// A loaded profile, its header and tabs: Articles · Saved (own profile only) · Paths · About. Needs a [ProfileCubit]
-/// and [ProfileArticlesCubit] above it, plus [SavedListCubit] and [PrivacyCubit] on the own profile.
+/// A loaded profile, its header and tabs: Articles · Categories (F31) · Saved (own profile only) · Paths · About.
+/// Needs a [ProfileCubit] and [ProfileArticlesCubit] above it, plus [SavedListCubit] and [PrivacyCubit] on the own
+/// profile. The Categories tab makes its own cubit when it is first shown.
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key, this.isTab = false});
 
@@ -195,6 +197,7 @@ class _ProfileContent extends StatelessWidget {
     final isMe = profile.isMe;
     final tabs = [
       Tab(text: l10n.profileTabArticles),
+      Tab(text: l10n.profileTabCategories),
       if (isMe) Tab(text: l10n.profileTabSaved),
       Tab(text: l10n.profileTabPaths),
       Tab(text: l10n.profileTabAbout),
@@ -216,6 +219,7 @@ class _ProfileContent extends StatelessWidget {
         body: TabBarView(
           children: [
             ProfileArticlesTab(profile: profile, onWrite: isMe ? () => context.go('/write') : null),
+            ProfileCategoriesTab(username: profile.username, isMe: isMe, leading: profileTabOverlap),
             if (isMe) const SavedArticlesList(leading: profileTabOverlap),
             ProfilePathsTab(profile: profile),
             ProfileAboutTab(profile: profile, onEdit: isMe ? onEdit : null),

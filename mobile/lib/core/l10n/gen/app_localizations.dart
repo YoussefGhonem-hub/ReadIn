@@ -2231,7 +2231,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountDeletedActivity.
   ///
   /// In en, this message translates to:
-  /// **'Your interests, reading progress, stats, reactions, saved articles and follows'**
+  /// **'Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers'**
   String get deleteAccountDeletedActivity;
 
   /// No description provided for @deleteAccountDeletedDevices.
@@ -7339,6 +7339,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'These search filters aren\'t valid.'**
   String get errSearchFilterInvalid;
+
+  /// No description provided for @profileTabCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get profileTabCategories;
+
+  /// No description provided for @categoriesOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other articles'**
+  String get categoriesOther;
+
+  /// No description provided for @categoryArticleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No articles yet} =1{1 article} other{{count} articles}}'**
+  String categoryArticleCount(int count);
+
+  /// No description provided for @categoryOpenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the category'**
+  String get categoryOpenHint;
+
+  /// No description provided for @categoriesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories yet'**
+  String get categoriesEmptyTitle;
+
+  /// No description provided for @categoriesEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'When this writer groups their articles into categories, you\'ll find them here.'**
+  String get categoriesEmptyBody;
+
+  /// No description provided for @categoriesOwnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Group your articles into categories. Your profile shows them in this order.'**
+  String get categoriesOwnHint;
+
+  /// No description provided for @categoryNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New category'**
+  String get categoryNew;
+
+  /// No description provided for @categoriesFull.
+  ///
+  /// In en, this message translates to:
+  /// **'You have 50 categories, the most you can have. Delete one to add another.'**
+  String get categoriesFull;
+
+  /// No description provided for @categoriesEmptyOwnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize your articles'**
+  String get categoriesEmptyOwnTitle;
+
+  /// No description provided for @categoriesEmptyOwnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create categories like “Backend tips”, then put your articles in them from the editor. Readers see them on your profile.'**
+  String get categoriesEmptyOwnBody;
+
+  /// No description provided for @categoryEmptyOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty: visitors don\'t see it'**
+  String get categoryEmptyOwn;
+
+  /// No description provided for @categoryRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename category'**
+  String get categoryRenameTitle;
+
+  /// No description provided for @categoryNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category name'**
+  String get categoryNameLabel;
+
+  /// No description provided for @categoryNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Backend tips'**
+  String get categoryNameHint;
+
+  /// No description provided for @categoryNameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'A category name has at most 40 characters.'**
+  String get categoryNameTooLong;
+
+  /// No description provided for @categoryNameNoLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'A category name needs at least one letter or digit.'**
+  String get categoryNameNoLetter;
+
+  /// No description provided for @categoryMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get categoryMoveUp;
+
+  /// No description provided for @categoryMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get categoryMoveDown;
+
+  /// No description provided for @categoryDragHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get categoryDragHandle;
+
+  /// No description provided for @categoryMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Category options'**
+  String get categoryMenu;
+
+  /// No description provided for @categoryDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String categoryDeleteTitle(String name);
+
+  /// No description provided for @categoryDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{This category is empty.} =1{This category has 1 article. It stays published, without a category.} other{This category has {count} articles. They stay published, without a category.}}'**
+  String categoryDeleteBody(int count);
+
+  /// No description provided for @categoryDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Category deleted'**
+  String get categoryDeleted;
+
+  /// No description provided for @categoryPageEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No articles in this category yet'**
+  String get categoryPageEmptyTitle;
+
+  /// No description provided for @categoryPageEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Once the writer adds articles to it, you\'ll find them here.'**
+  String get categoryPageEmptyBody;
+
+  /// No description provided for @categoryOtherEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No articles without a category'**
+  String get categoryOtherEmptyTitle;
+
+  /// No description provided for @categoryOtherEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every article of this writer is in a category.'**
+  String get categoryOtherEmptyBody;
+
+  /// No description provided for @categoryNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This category doesn\'t exist'**
+  String get categoryNotFoundTitle;
+
+  /// No description provided for @categoryNotFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It may have been deleted, or the link is wrong.'**
+  String get categoryNotFoundBody;
+
+  /// No description provided for @categoryWriterProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the writer\'s profile'**
+  String get categoryWriterProfile;
+
+  /// No description provided for @articleInCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'In {name}'**
+  String articleInCategory(String name);
+
+  /// No description provided for @editorCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get editorCategoryLabel;
+
+  /// No description provided for @editorCategoryNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No category'**
+  String get editorCategoryNone;
+
+  /// No description provided for @editorCategoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional: groups the article with others on your profile. A change applies right away.'**
+  String get editorCategoryHint;
+
+  /// No description provided for @editorCategoryLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your categories.'**
+  String get editorCategoryLoadFailed;
+
+  /// No description provided for @moderationCategoriesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Writer categories'**
+  String get moderationCategoriesTitle;
+
+  /// No description provided for @moderationCategoriesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories.'**
+  String get moderationCategoriesEmpty;
+
+  /// No description provided for @moderationClearCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear name'**
+  String get moderationClearCategory;
+
+  /// No description provided for @moderationClearCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the category name “{name}”?'**
+  String moderationClearCategoryTitle(String name);
+
+  /// No description provided for @moderationClearCategoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The category gets a neutral name like “Category 1”, and its old link stops working. Its articles stay in it, and the writer isn\'t notified.'**
+  String get moderationClearCategoryBody;
+
+  /// No description provided for @moderationCategoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Category name cleared'**
+  String get moderationCategoryCleared;
+
+  /// No description provided for @moderationLogUserClearCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared a category name'**
+  String get moderationLogUserClearCategory;
+
+  /// No description provided for @errCategoryNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Category not found.'**
+  String get errCategoryNotFound;
+
+  /// No description provided for @errCategoryNotOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'This category isn\'t yours.'**
+  String get errCategoryNotOwner;
+
+  /// No description provided for @errCategoryLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can have at most 50 categories.'**
+  String get errCategoryLimit;
+
+  /// No description provided for @errCategoryNameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a category with this name.'**
+  String get errCategoryNameTaken;
+
+  /// No description provided for @errCategoryNameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'A category name has 1–40 characters, with at least one letter or digit.'**
+  String get errCategoryNameInvalid;
 }
 
 class _AppLocalizationsDelegate

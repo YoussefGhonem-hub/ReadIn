@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../article/domain/entities/article.dart';
+import '../../../categories/domain/entities/writer_category.dart';
 import '../../../follow/domain/entities/follow.dart';
 
 /// Why something is reported (F22).
@@ -16,8 +17,22 @@ enum ReportStatus { open, resolved, dismissed }
 enum ModerationTargetState { visible, hidden, deleted, active, suspended }
 
 /// `ModerationActionRequest.action`. Allowed pairs: comment hide/unhide/delete/dismiss, article hide/unhide/dismiss,
-/// user warn/suspend/unsuspend/dismiss (suspend and unsuspend also need `users.suspend`).
-enum ModerationActionType { hide, unhide, delete, warn, suspend, unsuspend, dismiss }
+/// user warn/suspend/unsuspend/clear_category/dismiss (suspend and unsuspend also need `users.suspend`).
+enum ModerationActionType {
+  hide,
+  unhide,
+  delete,
+  warn,
+  suspend,
+  unsuspend,
+
+  /// Renames one of the user's writer categories to a neutral placeholder (F31), with [ModerationCommand.categoryId].
+  clearCategory,
+  dismiss;
+
+  /// The wire name: `clear_category`, otherwise [name].
+  String get wire => this == clearCategory ? 'clear_category' : name;
+}
 
 /// `ModerationActionDto.action`: a row of the moderation log.
 enum ModerationLogAction {
@@ -29,6 +44,7 @@ enum ModerationLogAction {
   userWarn('user.warn'),
   userSuspend('user.suspend'),
   userUnsuspend('user.unsuspend'),
+  userClearCategory('user.clear_category'),
   reportsDismiss('reports.dismiss'),
 
   /// An action this app version doesn't know yet.
@@ -234,18 +250,23 @@ class ModerationLogEntry extends Equatable {
 }
 
 /// `ModerationCaseDto`: a target, all its reports (newest first) and its history (newest first; for content, the
-/// actions on its author too).
+/// actions on its author too). A user's case also has their writer categories (F31), so an offensive name can be
+/// cleared.
 class ModerationCase extends Equatable {
-  const ModerationCase({required this.item, this.reports = const [], this.history = const []});
+  const ModerationCase({required this.item, this.reports = const [], this.history = const [], this.categories});
 
   final ModerationQueueItem item;
   final List<ModerationReport> reports;
   final List<ModerationLogEntry> history;
 
+  /// A user case: the user's categories, empty ones included, in their order. Empty for article and comment cases;
+  /// null from an API that doesn't send them.
+  final List<WriterCategory>? categories;
+
   int get openReports => reports.where((r) => r.status == ReportStatus.open).length;
 
   @override
-  List<Object?> get props => [item, reports, history];
+  List<Object?> get props => [item, reports, history, categories];
 }
 
 /// The article of an `article_hidden` notice.
@@ -276,7 +297,7 @@ class ModerationNotice extends Equatable {
 
 /// A moderator's action (`POST /moderation/actions`).
 class ModerationCommand extends Equatable {
-  const ModerationCommand(this.action, this.target, {this.note, this.durationDays, this.resolveReportsOf});
+  const ModerationCommand(this.action, this.target, {this.note, this.durationDays, this.resolveReportsOf, this.categoryId});
 
   final ModerationActionType action;
   final ModerationTargetRef target;
@@ -290,6 +311,9 @@ class ModerationCommand extends Equatable {
   /// Also closes these open reports, e.g. warning an author from an article's case.
   final ModerationTargetRef? resolveReportsOf;
 
+  /// `clear_category` only: which of the user's categories (F31).
+  final String? categoryId;
+
   @override
-  List<Object?> get props => [action, target, note, durationDays, resolveReportsOf];
+  List<Object?> get props => [action, target, note, durationDays, resolveReportsOf, categoryId];
 }

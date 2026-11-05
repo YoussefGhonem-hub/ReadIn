@@ -266,6 +266,11 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(
       : ArticleModerationModel.fromJson(
           json['moderation'] as Map<String, dynamic>,
         ),
+  category: json['category'] == null
+      ? null
+      : WriterCategoryRefModel.fromJson(
+          json['category'] as Map<String, dynamic>,
+        ),
 );
 
 Map<String, dynamic> _$ArticleDetailsModelToJson(
@@ -301,4 +306,5 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'collectionIds': instance.collectionIds,
   'myProgress': ?instance.myProgress?.toJson(),
   'moderation': ?instance.moderation?.toJson(),
+  'category': ?instance.category?.toJson(),
 };

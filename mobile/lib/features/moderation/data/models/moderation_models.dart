@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../article/data/models/article_models.dart';
+import '../../../categories/data/models/category_models.dart';
 import '../../../follow/data/models/follow_models.dart';
 import '../../domain/entities/moderation.dart';
 
@@ -38,12 +39,13 @@ abstract class ModerationActionRequest with _$ModerationActionRequest {
     String? note,
     int? durationDays,
     ModerationTargetRefModel? resolveReportsOf,
+    String? categoryId,
   }) = _ModerationActionRequest;
 
   factory ModerationActionRequest.fromJson(Map<String, dynamic> json) => _$ModerationActionRequestFromJson(json);
 
   factory ModerationActionRequest.of(ModerationCommand command) => ModerationActionRequest(
-        action: command.action.name,
+        action: command.action.wire,
         targetType: command.target.type.name,
         targetId: command.target.id,
         note: command.note,
@@ -52,6 +54,7 @@ abstract class ModerationActionRequest with _$ModerationActionRequest {
           final ref? => ModerationTargetRefModel(targetType: ref.type.name, targetId: ref.id),
           null => null,
         },
+        categoryId: command.categoryId,
       );
 }
 
@@ -261,6 +264,8 @@ abstract class ModerationCaseModel with _$ModerationCaseModel {
     required ModerationQueueItemModel item,
     @Default(<ModerationReportModel>[]) List<ModerationReportModel> reports,
     @Default(<ModerationActionModel>[]) List<ModerationActionModel> history,
+    // F31: a user case's writer categories, empty ones included ([] for content cases; null from an older API).
+    List<WriterCategoryModel>? categories,
   }) = _ModerationCaseModel;
 
   factory ModerationCaseModel.fromJson(Map<String, dynamic> json) => _$ModerationCaseModelFromJson(json);

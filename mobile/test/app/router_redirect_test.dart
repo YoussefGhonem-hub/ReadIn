@@ -60,6 +60,23 @@ void main() {
     });
   });
 
+  group('web profile and category links (F14, F31)', () {
+    test('/@{username}/c/{slug} opens the category page, /@{username} the profile, for everyone', () {
+      for (final session in [const SessionState(), guest, onboarded]) {
+        expect(redirect('/@Mona_Dev/c/EF-Core', session, fresh), '/u/mona_dev/c/ef-core');
+        expect(redirect('https://readin.app/@mona_dev/c/_other', session), '/u/mona_dev/c/_other');
+        expect(redirect('/@mona_dev', session), '/u/mona_dev');
+      }
+    });
+
+    test('a category page opens for a first-time guest, without Welcome first', () {
+      expect(redirect('/u/mona_dev/c/ef-core', guest, fresh), isNull);
+      expect(redirect('/u/mona_dev/c/${Uri.encodeComponent('نصايح-backend')}', guest, fresh), isNull);
+      expect(redirect('/splash?from=%2Fu%2Fmona_dev%2Fc%2Fef-core', guest, fresh), '/u/mona_dev/c/ef-core');
+      expect(AppRoutes.category('@mona_dev', 'نصايح-backend'), '/u/mona_dev/c/${Uri.encodeComponent('نصايح-backend')}');
+    });
+  });
+
   group('guests', () {
     test('first-time guests see Welcome, except on article deep links and sign-in screens', () {
       expect(redirect('/home', guest, fresh), AppRoutes.welcome);

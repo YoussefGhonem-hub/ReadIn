@@ -4,6 +4,7 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/errors/result.dart';
+import 'package:readin/features/categories/domain/usecases/category_usecases.dart';
 import 'package:readin/features/editor/data/datasources/editor_backup_store.dart';
 import 'package:readin/features/editor/domain/entities/editor_backup.dart';
 import 'package:readin/features/editor/domain/entities/editor_entities.dart';
@@ -14,6 +15,7 @@ import 'package:readin/features/media/domain/usecases/media_usecases.dart';
 import 'package:readin/features/taxonomy/domain/usecases/taxonomy_usecases.dart';
 import 'package:readin/shared/rdoc/rdoc_document.dart';
 
+import '../../helpers/category_fixtures.dart';
 import '../../helpers/editor_fixtures.dart';
 import '../../helpers/media_fixtures.dart';
 
@@ -21,6 +23,7 @@ void main() {
   late FakeArticleEditorRepository repo;
   late InMemoryEditorBackupStore backups;
   late FakeMediaRepository media;
+  late FakeCategoriesRepository categories;
   var now = DateTime.utc(2026, 11, 3, 12);
 
   setUp(() {
@@ -29,6 +32,7 @@ void main() {
     repo.onCreate = (doc) => Ok(sampleEdit(id: 'new-1', version: 1, document: doc));
     backups = InMemoryEditorBackupStore();
     media = FakeMediaRepository();
+    categories = FakeCategoriesRepository(mine: const [backendTips, efCore]);
     now = DateTime.utc(2026, 11, 3, 12);
   });
 
@@ -46,6 +50,9 @@ void main() {
       GetTopics(taxonomy),
       UploadImage(media),
       backups,
+      GetMyCategories(categories),
+      ManageCategories(categories),
+      SetArticleCategory(categories),
       clock: () => now,
     );
   }
@@ -498,6 +505,131 @@ void main() {
       expect(cubit.state.canPublish, isFalse);
       cubit.setAttachments(items, busy: false, assets: {'a1': imageAsset('a1')});
       expect(cubit.state.canPublish, isTrue);
+      await cubit.close();
+    });
+  });
+
+  group('category (F31)', () {
+    test('the picker lists the writer\'s categories and the article\'s one, which is not part of the draft', () async {
+      repo.onGet = (id) => Ok(sampleEdit(id: id, categoryId: 'c-2'));
+      final cubit = build();
+      await cubit.open(articleId: 'art-1', language: 'ar-EG');
+      await pumpEventQueue();
+      expect(cubit.state.categoriesStatus, EditorLoadStatus.ready);
+      expect(cubit.state.categories, const [backendTips, efCore]);
+      expect(cubit.state.categoryId, 'c-2');
+      expect(cubit.state.category, efCore);
+      expect(cubit.state.dirty, isFalse);
+      await cubit.close();
+    });
+
+    test('a change applies at once with PUT, without a save or a new version', () async {
+      repo.onGet = (id) => Ok(sampleEdit(id: id, status: ArticleLifecycle.published, categoryId: 'c-2'));
+      final cubit = build();
+      await cubit.open(articleId: 'art-1', language: 'ar-EG');
+
+      expect(await cubit.setCategory('c-1'), isNull);
+      expect(categories.calls.last, 'set art-1 c-1');
+      expect(cubit.state.categoryId, 'c-1');
+      expect(cubit.state.categoryBusy, isFalse);
+      expect(cubit.state.dirty, isFalse);
+      expect(cubit.state.hasUnpublishedChanges, isFalse, reason: 'no republish');
+      expect(cubit.state.version, 3);
+      expect(repo.calls, ['get art-1'], reason: 'no save, no publish');
+
+      expect(await cubit.setCategory(null), isNull);
+      expect(categories.calls.last, 'set art-1 none');
+      expect(cubit.state.categoryId, isNull);
+      await cubit.close();
+    });
+
+    test('a later save answer does not undo the choice', () async {
+      repo.onGet = (id) => Ok(sampleEdit(id: id));
+      // The API's save answers keep their category: the one PUT set.
+      repo.onSave = (id, v, doc) => Ok(sampleEdit(id: id, version: v + 1, document: doc, categoryId: categories.articleCategories[id]));
+      final cubit = build();
+      await cubit.open(articleId: 'art-1', language: 'ar-EG');
+      await cubit.setCategory('c-1');
+      cubit.setTitle(ar, 'عنوان تاني عن الـ DI');
+      expect(await cubit.save(), isTrue);
+      expect(cubit.state.categoryId, 'c-1');
+      await cubit.close();
+    });
+
+    test('a new article is saved first (POST /articles), then its category is set', () async {
+      final cubit = build();
+      await cubit.open(language: 'ar-EG');
+      expect(cubit.state.isNew, isTrue);
+
+      expect(await cubit.setCategory('c-2'), isNull);
+      expect(repo.calls, ['create']);
+      expect(categories.calls.last, 'set new-1 c-2');
+      expect(cubit.state.articleId, 'new-1');
+      expect(cubit.state.categoryId, 'c-2');
+      await cubit.close();
+    });
+
+    test('a refusal goes back to the API\'s category with a notice; a deleted one reloads the list', () async {
+      repo.onGet = (id) => Ok(sampleEdit(id: id, categoryId: 'c-1'));
+      final cubit = build();
+      await cubit.open(articleId: 'art-1', language: 'ar-EG');
+      await pumpEventQueue();
+
+      categories.failures['set'] = const Failure(FailureCodes.networkOffline);
+      final failure = await cubit.setCategory('c-2');
+      expect(failure?.code, FailureCodes.networkOffline);
+      expect(cubit.state.categoryId, 'c-1');
+      expect(cubit.state.notice?.code, FailureCodes.networkOffline);
+
+      categories.failures.clear();
+      categories.mine = [backendTips];
+      final gone = await cubit.setCategory('c-2');
+      expect(gone?.code, FailureCodes.categoryNotFound);
+      await pumpEventQueue();
+      expect(cubit.state.categories, const [backendTips]);
+      expect(cubit.state.categoryId, 'c-1');
+      await cubit.close();
+    });
+
+    test('a new article that can\'t be saved keeps no category', () async {
+      repo.onCreate = (_) => const Err(Failure(FailureCodes.networkOffline));
+      final cubit = build();
+      await cubit.open(language: 'ar-EG');
+      final failure = await cubit.setCategory('c-1');
+      expect(failure, isNotNull);
+      expect(cubit.state.categoryId, isNull);
+      expect(categories.calls.where((c) => c.startsWith('set')), isEmpty);
+      await cubit.close();
+    });
+
+    test('"＋ قسم جديد" creates the category last in the picker', () async {
+      repo.onGet = (id) => Ok(sampleEdit(id: id));
+      final cubit = build();
+      await cubit.open(articleId: 'art-1', language: 'ar-EG');
+      await pumpEventQueue();
+      final created = await cubit.createCategory('Flutter');
+      expect(created.isOk, isTrue);
+      expect(cubit.state.categories.last.name, 'Flutter');
+      expect(cubit.state.categoryId, isNull, reason: 'the picker puts the article in it next');
+
+      final taken = await cubit.createCategory('ef core');
+      expect(taken.failureOrNull?.code, FailureCodes.categoryNameTaken);
+      expect(cubit.state.categories, hasLength(3));
+      await cubit.close();
+    });
+
+    test('a failed list says so and can be retried', () async {
+      categories.failure = const Failure(FailureCodes.networkOffline);
+      repo.onGet = (id) => Ok(sampleEdit(id: id));
+      final cubit = build();
+      await cubit.open(articleId: 'art-1', language: 'ar-EG');
+      await pumpEventQueue();
+      expect(cubit.state.categoriesStatus, EditorLoadStatus.failure);
+
+      categories.failure = null;
+      await cubit.loadCategories();
+      expect(cubit.state.categoriesStatus, EditorLoadStatus.ready);
+      expect(cubit.state.categories, hasLength(2));
       await cubit.close();
     });
   });

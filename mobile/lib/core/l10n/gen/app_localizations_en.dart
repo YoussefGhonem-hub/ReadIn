@@ -1235,7 +1235,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountDeletedActivity =>
-      'Your interests, reading progress, stats, reactions, saved articles and follows';
+      'Your interests, reading progress and stats, reactions, comment likes and the reports you filed, saved articles and collections, your writer categories (your published articles stay, without a category), the people you follow and your followers';
 
   @override
   String get deleteAccountDeletedDevices =>
@@ -4369,4 +4369,187 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errSearchFilterInvalid => 'These search filters aren\'t valid.';
+
+  @override
+  String get profileTabCategories => 'Categories';
+
+  @override
+  String get categoriesOther => 'Other articles';
+
+  @override
+  String categoryArticleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles',
+      one: '1 article',
+      zero: 'No articles yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get categoryOpenHint => 'Opens the category';
+
+  @override
+  String get categoriesEmptyTitle => 'No categories yet';
+
+  @override
+  String get categoriesEmptyBody =>
+      'When this writer groups their articles into categories, you\'ll find them here.';
+
+  @override
+  String get categoriesOwnHint =>
+      'Group your articles into categories. Your profile shows them in this order.';
+
+  @override
+  String get categoryNew => 'New category';
+
+  @override
+  String get categoriesFull =>
+      'You have 50 categories, the most you can have. Delete one to add another.';
+
+  @override
+  String get categoriesEmptyOwnTitle => 'Organize your articles';
+
+  @override
+  String get categoriesEmptyOwnBody =>
+      'Create categories like “Backend tips”, then put your articles in them from the editor. Readers see them on your profile.';
+
+  @override
+  String get categoryEmptyOwn => 'Empty: visitors don\'t see it';
+
+  @override
+  String get categoryRenameTitle => 'Rename category';
+
+  @override
+  String get categoryNameLabel => 'Category name';
+
+  @override
+  String get categoryNameHint => 'e.g. Backend tips';
+
+  @override
+  String get categoryNameTooLong =>
+      'A category name has at most 40 characters.';
+
+  @override
+  String get categoryNameNoLetter =>
+      'A category name needs at least one letter or digit.';
+
+  @override
+  String get categoryMoveUp => 'Move up';
+
+  @override
+  String get categoryMoveDown => 'Move down';
+
+  @override
+  String get categoryDragHandle => 'Drag to reorder';
+
+  @override
+  String get categoryMenu => 'Category options';
+
+  @override
+  String categoryDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String categoryDeleteBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'This category has $count articles. They stay published, without a category.',
+      one:
+          'This category has 1 article. It stays published, without a category.',
+      zero: 'This category is empty.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get categoryDeleted => 'Category deleted';
+
+  @override
+  String get categoryPageEmptyTitle => 'No articles in this category yet';
+
+  @override
+  String get categoryPageEmptyBody =>
+      'Once the writer adds articles to it, you\'ll find them here.';
+
+  @override
+  String get categoryOtherEmptyTitle => 'No articles without a category';
+
+  @override
+  String get categoryOtherEmptyBody =>
+      'Every article of this writer is in a category.';
+
+  @override
+  String get categoryNotFoundTitle => 'This category doesn\'t exist';
+
+  @override
+  String get categoryNotFoundBody =>
+      'It may have been deleted, or the link is wrong.';
+
+  @override
+  String get categoryWriterProfile => 'Go to the writer\'s profile';
+
+  @override
+  String articleInCategory(String name) {
+    return 'In $name';
+  }
+
+  @override
+  String get editorCategoryLabel => 'Category';
+
+  @override
+  String get editorCategoryNone => 'No category';
+
+  @override
+  String get editorCategoryHint =>
+      'Optional: groups the article with others on your profile. A change applies right away.';
+
+  @override
+  String get editorCategoryLoadFailed => 'Couldn\'t load your categories.';
+
+  @override
+  String get moderationCategoriesTitle => 'Writer categories';
+
+  @override
+  String get moderationCategoriesEmpty => 'No categories.';
+
+  @override
+  String get moderationClearCategory => 'Clear name';
+
+  @override
+  String moderationClearCategoryTitle(String name) {
+    return 'Clear the category name “$name”?';
+  }
+
+  @override
+  String get moderationClearCategoryBody =>
+      'The category gets a neutral name like “Category 1”, and its old link stops working. Its articles stay in it, and the writer isn\'t notified.';
+
+  @override
+  String get moderationCategoryCleared => 'Category name cleared';
+
+  @override
+  String get moderationLogUserClearCategory => 'Cleared a category name';
+
+  @override
+  String get errCategoryNotFound => 'Category not found.';
+
+  @override
+  String get errCategoryNotOwner => 'This category isn\'t yours.';
+
+  @override
+  String get errCategoryLimit => 'You can have at most 50 categories.';
+
+  @override
+  String get errCategoryNameTaken =>
+      'You already have a category with this name.';
+
+  @override
+  String get errCategoryNameInvalid =>
+      'A category name has 1–40 characters, with at least one letter or digit.';
 }

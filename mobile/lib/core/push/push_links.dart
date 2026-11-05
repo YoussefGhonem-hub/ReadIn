@@ -24,7 +24,8 @@ String? pushNotificationId(Map<String, dynamic> data) {
 /// Maps a push or notification link to an in-app route (SPEC §21.1, F17). Deep links
 /// (`readin://a/{slug}#comment-{id}`, which keeps the comment anchor), the web's article links
 /// (`https://{domain}/ar/a/{slug}`, `/en/a/{slug}`, opened in that version; [AppLinks.webHost] only), profiles
-/// (`readin://u/{username}`, `https://{domain}/@{username}`) and their followers (`readin://u/{username}/followers`), the own reading stats
+/// (`readin://u/{username}`, `https://{domain}/@{username}`) and their followers (`readin://u/{username}/followers`), a
+/// writer's category pages (`readin://u/{username}/c/{slug}`, `https://{domain}/@{username}/c/{slug}`, F31), the own reading stats
 /// (`readin://me/stats`), the account settings (`readin://settings/account`), writer verification
 /// (`readin://verification`, F19), tag pages (`readin://tags/{slug}`, `https://{domain}/tags/{slug}`, F32), field pages
 /// (`readin://f/{slug}`, `https://{domain}/f/{slug}`, with `?topic=`, F15), the notification center and app paths open
@@ -58,9 +59,9 @@ String? pushLinkToPath(String? link) {
   if (parts.length == 3 && parts[0] == 'u' && _isHandle(parts[1]) && parts[2] == 'followers') {
     return '/u/${parts[1].toLowerCase()}/followers';
   }
-  if (parts.length == 1 && parts[0].startsWith('@') && _isHandle(parts[0].substring(1))) {
-    return '/u/${parts[0].substring(1).toLowerCase()}';
-  }
+  // A writer's category page (F31): the app's /u/{username}/c/{slug} and the web's /@{username}/c/{slug}.
+  if (parts.length == 4 && parts[0] == 'u' && _isHandle(parts[1]) && parts[2] == 'c') return _category(parts[1], parts[3]);
+  if (_webProfile(parts) case final path?) return path;
   // The streak reminder and security alerts (F17).
   if (parts.length == 2 && parts[0] == 'me' && parts[1] == 'stats') return '/me/stats';
   if (parts.length == 2 && parts[0] == 'settings' && parts[1] == 'account') return '/settings?section=account';
@@ -84,6 +85,31 @@ String? pushLinkToPath(String? link) {
 /// the router (F24): `/a/{slug}?lang=ar-EG|en`, so the reader opens the version that was shared. Null for any other
 /// path.
 String? webArticleRoute(Uri uri) => _webArticle(uri.pathSegments.where((s) => s.isNotEmpty).toList(), uri.fragment);
+
+/// The app's route for the web's profile and category links, `/@{username}` and `/@{username}/c/{slug}` (F14, F31),
+/// which App Links and Universal Links hand to the router: `/u/{username}` and `/u/{username}/c/{slug}`. Null for any
+/// other path.
+String? webProfileRoute(Uri uri) => _webProfile(uri.pathSegments.where((s) => s.isNotEmpty).toList());
+
+String? _webProfile(List<String> parts) {
+  if (parts.isEmpty || !parts[0].startsWith('@')) return null;
+  final handle = parts[0].substring(1);
+  if (!_isHandle(handle)) return null;
+  if (parts.length == 1) return '/u/${handle.toLowerCase()}';
+  if (parts.length == 3 && parts[1] == 'c') return _category(handle, parts[2]);
+  return null;
+}
+
+/// `/u/{username}/c/{slug}`: the slug arrives decoded (it may hold Arabic letters) and goes back percent-encoded; it is
+/// matched ignoring case, so it goes lower case. `_other` is "مقالات تانية". Null for anything that isn't a slug.
+String? _category(String username, String slug) {
+  final value = slug.toLowerCase();
+  if (value != _otherCategory && !_isSlug(value)) return null;
+  return '/u/${username.toLowerCase()}/c/${Uri.encodeComponent(value)}';
+}
+
+/// The reserved slug of a writer's articles without a category (CategoryRoutes.otherSlug).
+const _otherCategory = '_other';
 
 String? _webArticle(List<String> parts, String fragment) {
   if (parts.length != 3 || parts[1] != 'a' || (parts[0] != 'ar' && parts[0] != 'en')) return null;

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../shared/widgets/action_feedback.dart';
+import '../../../categories/domain/entities/writer_category.dart';
 import '../../domain/entities/moderation.dart';
 import '../cubit/moderation_action_cubit.dart';
 import 'moderation_dialogs.dart';
@@ -104,6 +105,27 @@ abstract final class ModerationFlows {
     );
     if (!confirmed || !context.mounted) return false;
     return _run(context, ModerationCommand(ModerationActionType.unsuspend, ModerationTargetRef.user(userId)), l10n.moderationUnsuspended);
+  }
+
+  /// Clear the offensive name of one of [userId]'s writer categories (F31): it becomes a neutral placeholder ("قسم 1")
+  /// with a new slug, so its old links stop working; its articles stay in it. Asks first, with an optional note for the
+  /// log (the writer isn't notified).
+  static Future<bool> clearCategory(BuildContext context, {required String userId, required WriterCategory category}) async {
+    final l10n = context.l10n;
+    final note = await showModerationNoteDialog(
+      context,
+      title: l10n.moderationClearCategoryTitle(embedContent(category.name)),
+      body: l10n.moderationClearCategoryBody,
+      confirmLabel: l10n.moderationClearCategory,
+      noteRequired: false,
+      destructive: true,
+    );
+    if (note == null || !context.mounted) return false;
+    return _run(
+      context,
+      ModerationCommand(ModerationActionType.clearCategory, ModerationTargetRef.user(userId), note: note, categoryId: category.id),
+      l10n.moderationCategoryCleared,
+    );
   }
 
   /// Close the target's open reports without touching it.

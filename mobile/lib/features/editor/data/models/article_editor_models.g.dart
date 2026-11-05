@@ -174,6 +174,7 @@ _ArticleEditModel _$ArticleEditModelFromJson(Map<String, dynamic> json) =>
       checks: json['checks'] == null
           ? const DraftChecksModel()
           : DraftChecksModel.fromJson(json['checks'] as Map<String, dynamic>),
+      categoryId: json['categoryId'] as String?,
     );
 
 Map<String, dynamic> _$ArticleEditModelToJson(_ArticleEditModel instance) =>
@@ -188,6 +189,7 @@ Map<String, dynamic> _$ArticleEditModelToJson(_ArticleEditModel instance) =>
       'document': instance.document.toJson(),
       'media': instance.media.map((e) => e.toJson()).toList(),
       'checks': instance.checks.toJson(),
+      'categoryId': ?instance.categoryId,
     };
 
 _PublishedArticleModel _$PublishedArticleModelFromJson(

@@ -49,6 +49,7 @@ _ModerationActionRequest _$ModerationActionRequestFromJson(
       : ModerationTargetRefModel.fromJson(
           json['resolveReportsOf'] as Map<String, dynamic>,
         ),
+  categoryId: json['categoryId'] as String?,
 );
 
 Map<String, dynamic> _$ModerationActionRequestToJson(
@@ -60,6 +61,7 @@ Map<String, dynamic> _$ModerationActionRequestToJson(
   'note': ?instance.note,
   'durationDays': ?instance.durationDays,
   'resolveReportsOf': ?instance.resolveReportsOf?.toJson(),
+  'categoryId': ?instance.categoryId,
 };
 
 _ModerationSummaryModel _$ModerationSummaryModelFromJson(
@@ -297,6 +299,9 @@ _ModerationCaseModel _$ModerationCaseModelFromJson(Map<String, dynamic> json) =>
               )
               .toList() ??
           const <ModerationActionModel>[],
+      categories: (json['categories'] as List<dynamic>?)
+          ?.map((e) => WriterCategoryModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$ModerationCaseModelToJson(
@@ -305,6 +310,7 @@ Map<String, dynamic> _$ModerationCaseModelToJson(
   'item': instance.item.toJson(),
   'reports': instance.reports.map((e) => e.toJson()).toList(),
   'history': instance.history.map((e) => e.toJson()).toList(),
+  'categories': ?instance.categories?.map((e) => e.toJson()).toList(),
 };
 
 _ModerationNoticeArticleModel _$ModerationNoticeArticleModelFromJson(

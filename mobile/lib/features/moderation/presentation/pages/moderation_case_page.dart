@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/bidi/bidi.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
@@ -11,6 +12,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../categories/presentation/category_routes.dart';
 import '../../../profile/presentation/profile_routes.dart';
 import '../../domain/entities/moderation.dart';
 import '../cubit/moderation_action_cubit.dart';
@@ -86,6 +88,11 @@ class _CaseContent extends StatelessWidget {
           _TargetCard(item: c.item),
           section(l10n.moderationActions),
           _CaseActions(moderationCase: c),
+          // A user's writer categories (F31): an offensive name is reported with the user, and cleared here.
+          if (c.item.targetType == ModerationTargetType.user && c.categories != null) ...[
+            section(l10n.moderationCategoriesTitle),
+            _CaseCategories(moderationCase: c),
+          ],
           section(l10n.moderationReportsTitle(c.reports.length)),
           for (final (i, report) in c.reports.indexed) ...[
             if (i > 0) Divider(height: 1, color: colors.border),
@@ -177,6 +184,108 @@ class _TargetCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// A user's writer categories (F31), in their order, each opening its category page and with "Clear name" (asks
+/// first, with an optional note): the name becomes a neutral placeholder. Names keep their own direction.
+class _CaseCategories extends StatelessWidget {
+  const _CaseCategories({required this.moderationCase});
+
+  final ModerationCase moderationCase;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final categories = moderationCase.categories ?? const [];
+    final userId = moderationCase.item.targetId;
+    final username = moderationCase.item.target.author?.username;
+    final busy = context.select((ModerationActionCubit c) => c.state != null);
+    if (categories.isEmpty) {
+      return Text(l10n.moderationCategoriesEmpty, style: context.textTheme.bodyMedium?.copyWith(color: colors.textSecondary));
+    }
+    final dir = Directionality.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, category) in categories.indexed) ...[
+          if (i > 0) Divider(height: 1, color: colors.border),
+          Padding(
+            key: ValueKey('case-category-${category.id}'),
+            padding: const EdgeInsets.symmetric(vertical: ReadInSpace.s2),
+            child: Row(
+              children: [
+                ExcludeSemantics(child: Icon(Icons.folder_outlined, size: 20, color: colors.textSecondary)),
+                const SizedBox(width: ReadInSpace.s3),
+                Expanded(
+                  child: _CategoryName(
+                    key: ValueKey('case-category-open-${category.id}'),
+                    // The category page, like on the web; a deleted account has none.
+                    onOpen: username == null ? null : () => unawaited(context.push<void>(CategoryRoutes.of(username, category.slug))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          Bidi.isolateOppositeRuns(category.name, Bidi.detect(category.name) ?? dir),
+                          textDirection: Bidi.detect(category.name) ?? dir,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        Text(l10n.categoryArticleCount(category.articleCount), style: context.textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: ReadInSpace.s2),
+                OutlinedButton.icon(
+                  key: ValueKey('case-category-clear-${category.id}'),
+                  onPressed: busy
+                      ? null
+                      : () async {
+                          final cubit = context.read<ModerationCaseCubit>();
+                          if (await ModerationFlows.clearCategory(context, userId: userId, category: category)) await cubit.refresh();
+                        },
+                  icon: const Icon(Icons.folder_off_outlined, size: 18),
+                  label: Text(l10n.moderationClearCategory),
+                  style: OutlinedButton.styleFrom(foregroundColor: colors.error, side: BorderSide(color: colors.error.withValues(alpha: 0.5))),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// A category's name and count: a link to its page (one tap target with the link role and the "opens the category"
+/// hint, reachable by keyboard), or plain text when there is no page to open.
+class _CategoryName extends StatelessWidget {
+  const _CategoryName({super.key, required this.onOpen, required this.child});
+
+  final VoidCallback? onOpen;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final onOpen = this.onOpen;
+    if (onOpen == null) return child;
+    return MergeSemantics(
+      child: Semantics(
+        link: true,
+        hint: context.l10n.categoryOpenHint,
+        child: InkWell(
+          onTap: onOpen,
+          borderRadius: BorderRadius.circular(ReadInRadius.sm),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Align(alignment: AlignmentDirectional.centerStart, child: child),
+          ),
+        ),
       ),
     );
   }

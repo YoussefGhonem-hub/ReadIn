@@ -9,6 +9,8 @@ import '../../../../core/errors/result.dart';
 import '../../../../shared/rdoc/editing/inline_editing.dart';
 import '../../../../shared/rdoc/rdoc_document.dart';
 import '../../../article/domain/entities/article.dart';
+import '../../../categories/domain/entities/writer_category.dart';
+import '../../../categories/domain/usecases/category_usecases.dart';
 import '../../../media/domain/entities/media.dart';
 import '../../../media/domain/usecases/media_usecases.dart';
 import '../../../tags/domain/services/tag_names.dart';
@@ -56,6 +58,7 @@ enum TagAddResult {
 /// * **Conflicts**: `409 article.draft_conflict` stops autosave until the writer reloads the API's copy or keeps
 ///   theirs.
 /// * **Publish / Update**, discard changes, restore a revision, delete.
+/// * **Category** (F31): not part of the document; the picker applies it at once with `PUT /articles/{id}/category`.
 @injectable
 class ArticleEditorCubit extends Cubit<ArticleEditorState> {
   ArticleEditorCubit(
@@ -69,7 +72,10 @@ class ArticleEditorCubit extends Cubit<ArticleEditorState> {
     this._getFields,
     this._getTopics,
     this._uploadImage,
-    this._backups, {
+    this._backups,
+    this._getCategories,
+    this._manageCategories,
+    this._setCategory, {
     @ignoreParam this.autosaveInterval = const Duration(seconds: 10),
     @ignoreParam this.backupDelay = const Duration(seconds: 1),
     @ignoreParam DateTime Function() clock = DateTime.now,
@@ -87,6 +93,9 @@ class ArticleEditorCubit extends Cubit<ArticleEditorState> {
   final GetTopics _getTopics;
   final UploadImage _uploadImage;
   final EditorBackupStore _backups;
+  final GetMyCategories _getCategories;
+  final ManageCategories _manageCategories;
+  final SetArticleCategory _setCategory;
   final DateTime Function() _now;
 
   final Duration autosaveInterval;
@@ -102,6 +111,9 @@ class ArticleEditorCubit extends Cubit<ArticleEditorState> {
   int _sourceKeys = 0;
   String? _topicsFor;
 
+  /// The category the API has for the article: where a failed change goes back to.
+  String? _serverCategoryId;
+
   String get _backupKey => EditorBackup.keyFor(state.articleId);
 
   // ── Open ─────────────────────────────────────────────────
@@ -111,6 +123,7 @@ class ArticleEditorCubit extends Cubit<ArticleEditorState> {
     _autosave?.cancel();
     _autosave = Timer.periodic(autosaveInterval, (_) => _tick());
     unawaited(_loadFields());
+    unawaited(loadCategories());
     final key = EditorBackup.keyFor(articleId);
 
     if (articleId == null) {
@@ -217,7 +230,10 @@ class ArticleEditorCubit extends Cubit<ArticleEditorState> {
       sources: replaceDocument ? _rowsFor(document.sources) : state.sources,
       dirty: replaceDocument ? false : state.dirty,
       documentRevision: replaceDocument ? state.documentRevision + 1 : state.documentRevision,
+      // A category change on its way wins over an answer that was sent before it.
+      categoryId: state.categoryBusy ? null : () => edit.categoryId,
     ));
+    if (!state.categoryBusy) _serverCategoryId = edit.categoryId;
     if (replaceDocument) _loadTopicsFor(document.fieldId);
   }
 
@@ -399,6 +415,59 @@ class ArticleEditorCubit extends Cubit<ArticleEditorState> {
     );
     _edit(state.document.copyWith(sourceLanguage: target, translations: [moved]), activeLanguage: target);
     emit(state.copyWith(documentRevision: state.documentRevision + 1));
+  }
+
+  // ── Category (F31) ───────────────────────────────────────
+
+  /// The writer's categories for the picker (`GET /me/categories`), loaded on open; again to retry.
+  Future<void> loadCategories() async {
+    emit(state.copyWith(categoriesStatus: EditorLoadStatus.loading));
+    final result = await _getCategories();
+    if (isClosed) return;
+    emit(result.fold(
+      (_) => state.copyWith(categoriesStatus: EditorLoadStatus.failure),
+      (list) => state.copyWith(categoriesStatus: EditorLoadStatus.ready, categories: list.items),
+    ));
+  }
+
+  /// "＋ قسم جديد": `POST /me/categories`, added last to the picker. The picker then puts the article in it.
+  Future<Result<WriterCategory>> createCategory(String name) async {
+    final result = await _manageCategories.create(name);
+    if (isClosed) return result;
+    if (result case Ok(value: final category)) {
+      emit(state.copyWith(categories: [...state.categories, category], categoriesStatus: EditorLoadStatus.ready));
+    }
+    return result;
+  }
+
+  /// Puts the article in [categoryId] (null: none) at once, with `PUT /articles/{id}/category`: no publish, no
+  /// revision, and the working copy's version stays. A new article is saved first (`POST /articles`). The picker shows
+  /// the choice right away and goes back to the API's category (with a notice) when it fails. Null when it worked.
+  Future<Failure?> setCategory(String? categoryId) async {
+    if (!state.isReady || state.categoryBusy || categoryId == state.categoryId) return null;
+    emit(state.copyWith(categoryId: () => categoryId, categoryBusy: true));
+    if (state.isNew) {
+      final saved = await save();
+      if (isClosed) return null;
+      if (!saved || state.articleId == null) {
+        final failure = state.saveFailure ?? const Failure(FailureCodes.serverError);
+        emit(state.copyWith(categoryId: () => _serverCategoryId, categoryBusy: false, notice: failure));
+        return failure;
+      }
+    }
+    final result = await _setCategory(state.articleId!, categoryId);
+    if (isClosed) return result.failureOrNull;
+    switch (result) {
+      case Ok():
+        _serverCategoryId = categoryId;
+        emit(state.copyWith(categoryBusy: false));
+        return null;
+      case Err(:final failure):
+        emit(state.copyWith(categoryId: () => _serverCategoryId, categoryBusy: false, notice: failure));
+        // Deleted on another device: the picker catches up.
+        if (failure.code == FailureCodes.categoryNotFound) unawaited(loadCategories());
+        return failure;
+    }
   }
 
   // ── Uploads ──────────────────────────────────────────────

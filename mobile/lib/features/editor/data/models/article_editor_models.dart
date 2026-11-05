@@ -190,6 +190,8 @@ abstract class ArticleEditModel with _$ArticleEditModel {
     required ArticleDraftDocumentModel document,
     @Default(<MediaAssetModel>[]) List<MediaAssetModel> media,
     @Default(DraftChecksModel()) DraftChecksModel checks,
+    // F31: the writer's category, not part of the document (`PUT /articles/{id}/category`).
+    String? categoryId,
   }) = _ArticleEditModel;
 
   factory ArticleEditModel.fromJson(Map<String, dynamic> json) => _$ArticleEditModelFromJson(json);
@@ -205,6 +207,7 @@ abstract class ArticleEditModel with _$ArticleEditModel {
         document: document.toEntity(),
         media: [for (final m in media) m.toEntity()],
         checks: checks.toEntity(),
+        categoryId: categoryId,
       );
 }
 

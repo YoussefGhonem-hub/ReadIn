@@ -58,6 +58,8 @@ Future<GoRouter> pumpRouted(
       GoRoute(path: '/:first', builder: (_, state) => stub(state)),
       GoRoute(path: '/:first/:second', builder: (_, state) => stub(state)),
       GoRoute(path: '/:first/:second/:third', builder: (_, state) => stub(state)),
+      // e.g. a category page, /u/{username}/c/{slug} (F31).
+      GoRoute(path: '/:first/:second/:third/:fourth', builder: (_, state) => stub(state)),
     ],
   );
   final app = MaterialApp.router(

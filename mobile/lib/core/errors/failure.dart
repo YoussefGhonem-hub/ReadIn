@@ -188,6 +188,14 @@ abstract final class FailureCodes {
   static const tagLimit = 'tag.limit';
   static const articleTooManyTags = 'article.too_many_tags';
 
+  // Writer categories (F31): `category.name_invalid` is a validation code (in `errors.name`), `category.limit` also
+  // one (in `errors.categoryIds`).
+  static const categoryNotFound = 'category.not_found';
+  static const categoryNotOwner = 'category.not_owner';
+  static const categoryLimit = 'category.limit';
+  static const categoryNameTaken = 'category.name_taken';
+  static const categoryNameInvalid = 'category.name_invalid';
+
   // Search (F16): the app checks the query and the filters first, so these are rare.
   static const searchQueryInvalid = 'search.query_invalid';
   static const searchTypeInvalid = 'search.type_invalid';

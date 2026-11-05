@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:readin/core/bidi/bidi.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/core/theme/app_theme.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
@@ -53,6 +54,7 @@ ArticleDetails article({
   RDocDocument? content,
   List<TagRef> tags = const [],
   String? summary,
+  WriterCategoryRef? category,
 }) =>
     ArticleDetails(
       card: ArticleCard(
@@ -69,6 +71,7 @@ ArticleDetails article({
       content: content ?? document(headings: 0),
       tags: tags,
       summary: summary,
+      category: category,
     );
 
 Future<void> pumpBody(WidgetTester tester, ArticleDetails article, {Size size = const Size(390, 844)}) async {
@@ -191,6 +194,77 @@ void main() {
     await tester.pumpAndSettle();
     expect(opened, ['cplusplus']);
     expect(find.text('tag page'), findsOneWidget);
+  });
+
+  group('the writer\'s category (F31)', () {
+    testWidgets('"In {name}" under the byline opens the category page', (tester) async {
+      final opened = <String>[];
+      usePhoneSurface(tester, size: const Size(390, 1200));
+      const category = WriterCategoryRef(slug: 'نصايح-backend', name: 'نصايح Backend');
+      final router = GoRouter(
+        initialLocation: '/a/article-1',
+        routes: [
+          GoRoute(
+            path: '/a/:slug',
+            builder: (_, _) => Scaffold(body: ReaderBody(article: article(category: category), bodyFontSize: 17)),
+          ),
+          GoRoute(
+            path: '/u/:username/c/:slug',
+            builder: (_, state) {
+              opened.add('${state.pathParameters['username']} ${state.pathParameters['slug']}');
+              return const Text('category page');
+            },
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(MaterialApp.router(
+        locale: AppLocales.en,
+        supportedLocales: AppLocales.supported,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        theme: AppTheme.light(AppLocales.en),
+        routerConfig: router,
+      ));
+      await tester.pumpAndSettle();
+
+      final link = find.byKey(const ValueKey('article-category-link'));
+      expect(link, findsOneWidget);
+      final label = tester.widget<Text>(find.descendant(of: link, matching: find.byType(Text))).data!;
+      expect(label, startsWith('In '));
+      // The name in its own isolate (its English run isolated too), so it keeps its direction in the sentence.
+      expect(label, startsWith('In ${Bidi.fsi}'));
+      expect(label.replaceAll(Bidi.fsi, '').replaceAll(Bidi.lri, '').replaceAll(Bidi.pdi, ''), 'In نصايح Backend');
+      expect(tester.getSemantics(link.first), isSemantics(isLink: true, hasTapAction: true, hint: 'Opens the category'));
+      // A finger-sized tap area (48 dp, SPEC §26), while the ink stays the height of a byline line.
+      expect(tester.getSize(link).height, greaterThanOrEqualTo(48));
+      expect(tester.getSize(find.descendant(of: link, matching: find.byType(InkWell))).height, lessThan(48));
+      // A tap near the top edge of the area, outside the ink, still opens it.
+      await tester.tapAt(tester.getTopLeft(link) + const Offset(24, 2));
+      await tester.pumpAndSettle();
+      expect(opened, ['editorial نصايح-backend']);
+      router.pop();
+      await tester.pumpAndSettle();
+      opened.clear();
+      await tester.tap(link);
+      await tester.pumpAndSettle();
+      expect(opened, ['editorial نصايح-backend'], reason: 'the slug, decoded; never the name');
+      expect(find.text('category page'), findsOneWidget);
+    });
+
+    testWidgets('no category, no line', (tester) async {
+      await pumpBody(tester, article());
+      expect(find.byKey(const ValueKey('article-category-link')), findsNothing);
+    });
+
+    testWidgets('Arabic says "في قسم {name}"', (tester) async {
+      usePhoneSurface(tester);
+      await tester.pumpWidget(testApp(
+        Scaffold(body: ReaderBody(article: article(category: const WriterCategoryRef(slug: 'ef-core', name: 'EF Core')), bodyFontSize: 17)),
+      ));
+      await tester.pump();
+      expect(find.textContaining('في قسم'), findsOneWidget);
+      expect(find.textContaining('EF Core'), findsOneWidget);
+    });
   });
 
   testWidgets("a tag without a page (an offline copy from before tag pages) isn't a link", (tester) async {

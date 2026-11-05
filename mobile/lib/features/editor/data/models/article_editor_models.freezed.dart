@@ -1976,7 +1976,8 @@ as List<DraftProblemModel>,
 /// @nodoc
 mixin _$ArticleEditModel {
 
- String get id; String get status; String? get slug; DateTime? get publishedAt; int get version; DateTime? get savedAt; bool get hasUnpublishedChanges; ArticleDraftDocumentModel get document; List<MediaAssetModel> get media; DraftChecksModel get checks;
+ String get id; String get status; String? get slug; DateTime? get publishedAt; int get version; DateTime? get savedAt; bool get hasUnpublishedChanges; ArticleDraftDocumentModel get document; List<MediaAssetModel> get media; DraftChecksModel get checks;// F31: the writer's category, not part of the document (`PUT /articles/{id}/category`).
+ String? get categoryId;
 /// Create a copy of ArticleEditModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1989,16 +1990,16 @@ $ArticleEditModelCopyWith<ArticleEditModel> get copyWith => _$ArticleEditModelCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleEditModel&&(identical(other.id, id) || other.id == id)&&(identical(other.status, status) || other.status == status)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.version, version) || other.version == version)&&(identical(other.savedAt, savedAt) || other.savedAt == savedAt)&&(identical(other.hasUnpublishedChanges, hasUnpublishedChanges) || other.hasUnpublishedChanges == hasUnpublishedChanges)&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other.media, media)&&(identical(other.checks, checks) || other.checks == checks));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleEditModel&&(identical(other.id, id) || other.id == id)&&(identical(other.status, status) || other.status == status)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.version, version) || other.version == version)&&(identical(other.savedAt, savedAt) || other.savedAt == savedAt)&&(identical(other.hasUnpublishedChanges, hasUnpublishedChanges) || other.hasUnpublishedChanges == hasUnpublishedChanges)&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other.media, media)&&(identical(other.checks, checks) || other.checks == checks)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,status,slug,publishedAt,version,savedAt,hasUnpublishedChanges,document,const DeepCollectionEquality().hash(media),checks);
+int get hashCode => Object.hash(runtimeType,id,status,slug,publishedAt,version,savedAt,hasUnpublishedChanges,document,const DeepCollectionEquality().hash(media),checks,categoryId);
 
 @override
 String toString() {
-  return 'ArticleEditModel(id: $id, status: $status, slug: $slug, publishedAt: $publishedAt, version: $version, savedAt: $savedAt, hasUnpublishedChanges: $hasUnpublishedChanges, document: $document, media: $media, checks: $checks)';
+  return 'ArticleEditModel(id: $id, status: $status, slug: $slug, publishedAt: $publishedAt, version: $version, savedAt: $savedAt, hasUnpublishedChanges: $hasUnpublishedChanges, document: $document, media: $media, checks: $checks, categoryId: $categoryId)';
 }
 
 
@@ -2009,7 +2010,7 @@ abstract mixin class $ArticleEditModelCopyWith<$Res>  {
   factory $ArticleEditModelCopyWith(ArticleEditModel value, $Res Function(ArticleEditModel) _then) = _$ArticleEditModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String status, String? slug, DateTime? publishedAt, int version, DateTime? savedAt, bool hasUnpublishedChanges, ArticleDraftDocumentModel document, List<MediaAssetModel> media, DraftChecksModel checks
+ String id, String status, String? slug, DateTime? publishedAt, int version, DateTime? savedAt, bool hasUnpublishedChanges, ArticleDraftDocumentModel document, List<MediaAssetModel> media, DraftChecksModel checks, String? categoryId
 });
 
 
@@ -2026,7 +2027,7 @@ class _$ArticleEditModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleEditModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? status = null,Object? slug = freezed,Object? publishedAt = freezed,Object? version = null,Object? savedAt = freezed,Object? hasUnpublishedChanges = null,Object? document = null,Object? media = null,Object? checks = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? status = null,Object? slug = freezed,Object? publishedAt = freezed,Object? version = null,Object? savedAt = freezed,Object? hasUnpublishedChanges = null,Object? document = null,Object? media = null,Object? checks = null,Object? categoryId = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -2038,7 +2039,8 @@ as DateTime?,hasUnpublishedChanges: null == hasUnpublishedChanges ? _self.hasUnp
 as bool,document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
 as ArticleDraftDocumentModel,media: null == media ? _self.media : media // ignore: cast_nullable_to_non_nullable
 as List<MediaAssetModel>,checks: null == checks ? _self.checks : checks // ignore: cast_nullable_to_non_nullable
-as DraftChecksModel,
+as DraftChecksModel,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 /// Create a copy of ArticleEditModel
@@ -2141,10 +2143,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String status,  String? slug,  DateTime? publishedAt,  int version,  DateTime? savedAt,  bool hasUnpublishedChanges,  ArticleDraftDocumentModel document,  List<MediaAssetModel> media,  DraftChecksModel checks)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String status,  String? slug,  DateTime? publishedAt,  int version,  DateTime? savedAt,  bool hasUnpublishedChanges,  ArticleDraftDocumentModel document,  List<MediaAssetModel> media,  DraftChecksModel checks,  String? categoryId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ArticleEditModel() when $default != null:
-return $default(_that.id,_that.status,_that.slug,_that.publishedAt,_that.version,_that.savedAt,_that.hasUnpublishedChanges,_that.document,_that.media,_that.checks);case _:
+return $default(_that.id,_that.status,_that.slug,_that.publishedAt,_that.version,_that.savedAt,_that.hasUnpublishedChanges,_that.document,_that.media,_that.checks,_that.categoryId);case _:
   return orElse();
 
 }
@@ -2162,10 +2164,10 @@ return $default(_that.id,_that.status,_that.slug,_that.publishedAt,_that.version
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String status,  String? slug,  DateTime? publishedAt,  int version,  DateTime? savedAt,  bool hasUnpublishedChanges,  ArticleDraftDocumentModel document,  List<MediaAssetModel> media,  DraftChecksModel checks)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String status,  String? slug,  DateTime? publishedAt,  int version,  DateTime? savedAt,  bool hasUnpublishedChanges,  ArticleDraftDocumentModel document,  List<MediaAssetModel> media,  DraftChecksModel checks,  String? categoryId)  $default,) {final _that = this;
 switch (_that) {
 case _ArticleEditModel():
-return $default(_that.id,_that.status,_that.slug,_that.publishedAt,_that.version,_that.savedAt,_that.hasUnpublishedChanges,_that.document,_that.media,_that.checks);case _:
+return $default(_that.id,_that.status,_that.slug,_that.publishedAt,_that.version,_that.savedAt,_that.hasUnpublishedChanges,_that.document,_that.media,_that.checks,_that.categoryId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2182,10 +2184,10 @@ return $default(_that.id,_that.status,_that.slug,_that.publishedAt,_that.version
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String status,  String? slug,  DateTime? publishedAt,  int version,  DateTime? savedAt,  bool hasUnpublishedChanges,  ArticleDraftDocumentModel document,  List<MediaAssetModel> media,  DraftChecksModel checks)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String status,  String? slug,  DateTime? publishedAt,  int version,  DateTime? savedAt,  bool hasUnpublishedChanges,  ArticleDraftDocumentModel document,  List<MediaAssetModel> media,  DraftChecksModel checks,  String? categoryId)?  $default,) {final _that = this;
 switch (_that) {
 case _ArticleEditModel() when $default != null:
-return $default(_that.id,_that.status,_that.slug,_that.publishedAt,_that.version,_that.savedAt,_that.hasUnpublishedChanges,_that.document,_that.media,_that.checks);case _:
+return $default(_that.id,_that.status,_that.slug,_that.publishedAt,_that.version,_that.savedAt,_that.hasUnpublishedChanges,_that.document,_that.media,_that.checks,_that.categoryId);case _:
   return null;
 
 }
@@ -2197,7 +2199,7 @@ return $default(_that.id,_that.status,_that.slug,_that.publishedAt,_that.version
 @JsonSerializable()
 
 class _ArticleEditModel extends ArticleEditModel {
-  const _ArticleEditModel({required this.id, this.status = 'draft', this.slug, this.publishedAt, this.version = 1, this.savedAt, this.hasUnpublishedChanges = false, required this.document, final  List<MediaAssetModel> media = const <MediaAssetModel>[], this.checks = const DraftChecksModel()}): _media = media,super._();
+  const _ArticleEditModel({required this.id, this.status = 'draft', this.slug, this.publishedAt, this.version = 1, this.savedAt, this.hasUnpublishedChanges = false, required this.document, final  List<MediaAssetModel> media = const <MediaAssetModel>[], this.checks = const DraftChecksModel(), this.categoryId}): _media = media,super._();
   factory _ArticleEditModel.fromJson(Map<String, dynamic> json) => _$ArticleEditModelFromJson(json);
 
 @override final  String id;
@@ -2216,6 +2218,8 @@ class _ArticleEditModel extends ArticleEditModel {
 }
 
 @override@JsonKey() final  DraftChecksModel checks;
+// F31: the writer's category, not part of the document (`PUT /articles/{id}/category`).
+@override final  String? categoryId;
 
 /// Create a copy of ArticleEditModel
 /// with the given fields replaced by the non-null parameter values.
@@ -2230,16 +2234,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleEditModel&&(identical(other.id, id) || other.id == id)&&(identical(other.status, status) || other.status == status)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.version, version) || other.version == version)&&(identical(other.savedAt, savedAt) || other.savedAt == savedAt)&&(identical(other.hasUnpublishedChanges, hasUnpublishedChanges) || other.hasUnpublishedChanges == hasUnpublishedChanges)&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other._media, _media)&&(identical(other.checks, checks) || other.checks == checks));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleEditModel&&(identical(other.id, id) || other.id == id)&&(identical(other.status, status) || other.status == status)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.version, version) || other.version == version)&&(identical(other.savedAt, savedAt) || other.savedAt == savedAt)&&(identical(other.hasUnpublishedChanges, hasUnpublishedChanges) || other.hasUnpublishedChanges == hasUnpublishedChanges)&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other._media, _media)&&(identical(other.checks, checks) || other.checks == checks)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,status,slug,publishedAt,version,savedAt,hasUnpublishedChanges,document,const DeepCollectionEquality().hash(_media),checks);
+int get hashCode => Object.hash(runtimeType,id,status,slug,publishedAt,version,savedAt,hasUnpublishedChanges,document,const DeepCollectionEquality().hash(_media),checks,categoryId);
 
 @override
 String toString() {
-  return 'ArticleEditModel(id: $id, status: $status, slug: $slug, publishedAt: $publishedAt, version: $version, savedAt: $savedAt, hasUnpublishedChanges: $hasUnpublishedChanges, document: $document, media: $media, checks: $checks)';
+  return 'ArticleEditModel(id: $id, status: $status, slug: $slug, publishedAt: $publishedAt, version: $version, savedAt: $savedAt, hasUnpublishedChanges: $hasUnpublishedChanges, document: $document, media: $media, checks: $checks, categoryId: $categoryId)';
 }
 
 
@@ -2250,7 +2254,7 @@ abstract mixin class _$ArticleEditModelCopyWith<$Res> implements $ArticleEditMod
   factory _$ArticleEditModelCopyWith(_ArticleEditModel value, $Res Function(_ArticleEditModel) _then) = __$ArticleEditModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String status, String? slug, DateTime? publishedAt, int version, DateTime? savedAt, bool hasUnpublishedChanges, ArticleDraftDocumentModel document, List<MediaAssetModel> media, DraftChecksModel checks
+ String id, String status, String? slug, DateTime? publishedAt, int version, DateTime? savedAt, bool hasUnpublishedChanges, ArticleDraftDocumentModel document, List<MediaAssetModel> media, DraftChecksModel checks, String? categoryId
 });
 
 
@@ -2267,7 +2271,7 @@ class __$ArticleEditModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleEditModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? status = null,Object? slug = freezed,Object? publishedAt = freezed,Object? version = null,Object? savedAt = freezed,Object? hasUnpublishedChanges = null,Object? document = null,Object? media = null,Object? checks = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? status = null,Object? slug = freezed,Object? publishedAt = freezed,Object? version = null,Object? savedAt = freezed,Object? hasUnpublishedChanges = null,Object? document = null,Object? media = null,Object? checks = null,Object? categoryId = freezed,}) {
   return _then(_ArticleEditModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -2279,7 +2283,8 @@ as DateTime?,hasUnpublishedChanges: null == hasUnpublishedChanges ? _self.hasUnp
 as bool,document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
 as ArticleDraftDocumentModel,media: null == media ? _self._media : media // ignore: cast_nullable_to_non_nullable
 as List<MediaAssetModel>,checks: null == checks ? _self.checks : checks // ignore: cast_nullable_to_non_nullable
-as DraftChecksModel,
+as DraftChecksModel,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

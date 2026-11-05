@@ -65,6 +65,10 @@ class ArticleEditorState extends Equatable {
     this.documentRevision = 0,
     this.fields = const [],
     this.topics = const [],
+    this.categoryId,
+    this.categories = const [],
+    this.categoriesStatus = EditorLoadStatus.ready,
+    this.categoryBusy = false,
   });
 
   final EditorLoadStatus loadStatus;
@@ -135,6 +139,20 @@ class ArticleEditorState extends Equatable {
   /// Topics of the selected field.
   final List<Topic> topics;
 
+  /// The article's writer category (F31), null for none. Not part of [document]: the picker sets it at once with
+  /// `PUT /articles/{id}/category`.
+  final String? categoryId;
+
+  /// The writer's categories for the picker (`GET /me/categories`, empty ones included), in their order.
+  final List<WriterCategory> categories;
+  final EditorLoadStatus categoriesStatus;
+
+  /// A category change is on its way to the API.
+  final bool categoryBusy;
+
+  /// [categoryId] as one of [categories]; null for none, or while the list hasn't loaded.
+  WriterCategory? get category => categories.where((c) => c.id == categoryId).firstOrNull;
+
   bool get isNew => articleId == null;
   bool get isPublished => lifecycle == ArticleLifecycle.published;
   bool get isReady => loadStatus == EditorLoadStatus.ready;
@@ -203,6 +221,10 @@ class ArticleEditorState extends Equatable {
     int? documentRevision,
     List<Field>? fields,
     List<Topic>? topics,
+    String? Function()? categoryId,
+    List<WriterCategory>? categories,
+    EditorLoadStatus? categoriesStatus,
+    bool? categoryBusy,
   }) =>
       ArticleEditorState(
         loadStatus: loadStatus ?? this.loadStatus,
@@ -238,6 +260,10 @@ class ArticleEditorState extends Equatable {
         documentRevision: documentRevision ?? this.documentRevision,
         fields: fields ?? this.fields,
         topics: topics ?? this.topics,
+        categoryId: categoryId != null ? categoryId() : this.categoryId,
+        categories: categories ?? this.categories,
+        categoriesStatus: categoriesStatus ?? this.categoriesStatus,
+        categoryBusy: categoryBusy ?? this.categoryBusy,
       );
 
   @override
@@ -275,5 +301,9 @@ class ArticleEditorState extends Equatable {
         documentRevision,
         fields,
         topics,
+        categoryId,
+        categories,
+        categoriesStatus,
+        categoryBusy,
       ];
 }

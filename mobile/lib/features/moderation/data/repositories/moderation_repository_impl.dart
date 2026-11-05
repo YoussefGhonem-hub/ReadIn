@@ -43,6 +43,10 @@ class ModerationRepositoryImpl implements ModerationRepository {
           item: item,
           reports: [for (final report in dto.reports) report.toEntity()],
           history: [for (final action in dto.history) ?action.toEntity()],
+          categories: switch (dto.categories) {
+            final categories? => [for (final c in categories) c.toEntity()],
+            null => null,
+          },
         );
       });
 
