@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -11,6 +12,7 @@ import 'package:readin/core/errors/failure.dart';
 import 'package:readin/core/errors/result.dart';
 import 'package:readin/core/l10n/l10n_x.dart';
 import 'package:readin/core/theme/app_theme.dart';
+import 'package:readin/core/theme/tokens.g.dart' show ReadInArticleFontScale;
 import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/article/presentation/cubit/post_cards_cubit.dart';
@@ -27,6 +29,7 @@ import 'package:readin/features/reactions/presentation/widgets/reaction_button.d
 import 'package:readin/features/reposts/presentation/widgets/repost_label.dart';
 import 'package:readin/features/saved/domain/usecases/saved_usecases.dart';
 import 'package:readin/features/tags/presentation/widgets/tag_chip.dart';
+import 'package:readin/shared/rdoc/rdoc_scope.dart';
 import 'package:readin/shared/widgets/author_headline.dart';
 
 import '../../helpers/comment_fixtures.dart';
@@ -99,6 +102,39 @@ void main() {
       final isolated = Bidi.isolateOppositeRuns(shown, TextDirection.rtl);
       expect(Bidi.fsi.allMatches(isolated).length, Bidi.pdi.allMatches(isolated).length);
     });
+
+    // The cut is measured with the style the card draws with, inherited parts included: with the theme's letter
+    // spacing (here exaggerated) left out of the measure, "… Read more" used to spill past the 4th line and vanish.
+    for (final letterSpacing in [0.25, 1.5]) {
+      testWidgets('inherited letter spacing $letterSpacing: "… Read more" still ends the 4th line', (tester) async {
+        usePhoneSurface(tester);
+        await tester.pumpWidget(testApp(
+          Material(
+            child: DefaultTextStyle.merge(
+              style: TextStyle(letterSpacing: letterSpacing),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: RDocScope(
+                    baseDirection: TextDirection.ltr,
+                    bodyFontSize: ReadInArticleFontScale.s,
+                    child: PostExcerpt(text: enExcerpt * 2, direction: TextDirection.ltr, continues: true, onExpand: () {}),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          variant: en,
+        ));
+
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText().contains(l10n.postReadMore)),
+        );
+        expect(paragraph.didExceedMaxLines, isFalse, reason: 'the whole of "… Read more" is drawn on the last line');
+        expect(paragraph.text.style?.letterSpacing, letterSpacing, reason: 'measured and drawn with the inherited spacing');
+      });
+    }
   });
 
   group('PostCardsCubit', () {

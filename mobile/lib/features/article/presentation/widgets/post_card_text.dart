@@ -182,6 +182,9 @@ class PostExcerpt extends StatelessWidget {
   /// What the collapsed card shows of [text] before [more]: null when the whole text fits in [maxLines] lines and
   /// nothing follows it (no button), else the longest beginning cut at a word that leaves room for [more] on the last
   /// line. Opposite-direction runs are isolated after cutting, so a cut never leaves an isolate open.
+  ///
+  /// [style] must be the style the text is drawn with, inherited parts included ([drawnStyle]): measuring with less
+  /// (say, without the theme's letter spacing) cuts too little, and "… Read more" spills past the last line.
   @visibleForTesting
   static String? fit({
     required String text,
@@ -193,6 +196,8 @@ class PostExcerpt extends StatelessWidget {
     required bool continues,
     TextScaler textScaler = TextScaler.noScaling,
     Locale? locale,
+    TextHeightBehavior? textHeightBehavior,
+    TextWidthBasis textWidthBasis = TextWidthBasis.parent,
   }) {
     bool fits(String body, {required bool withMore}) {
       final painter = TextPainter(
@@ -204,6 +209,8 @@ class PostExcerpt extends StatelessWidget {
         textScaler: textScaler,
         maxLines: maxLines,
         locale: locale,
+        textHeightBehavior: textHeightBehavior,
+        textWidthBasis: textWidthBasis,
       )..layout(maxWidth: maxWidth);
       final result = !painter.didExceedMaxLines;
       painter.dispose();
@@ -240,11 +247,22 @@ class PostExcerpt extends StatelessWidget {
 
   static bool _isSpace(int c) => c == 0x20 || c == 0x0A || c == 0x09 || c == 0xA0;
 
+  /// The style a [Text] given [style] really draws with: merged into the ambient [DefaultTextStyle] (the theme's letter
+  /// spacing, for one) and made bold when the system asks for bold text, as [Text.build] does.
+  @visibleForTesting
+  static TextStyle drawnStyle(BuildContext context, TextStyle style) {
+    var drawn = style.inherit ? DefaultTextStyle.of(context).style.merge(style) : style;
+    if (MediaQuery.boldTextOf(context)) drawn = drawn.merge(const TextStyle(fontWeight: FontWeight.bold));
+    return drawn;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
-    final style = rdocBodyStyle(context, direction);
+    final defaults = DefaultTextStyle.of(context);
+    // Measured and drawn with the same style, so the cut leaves exactly the room "… Read more" takes.
+    final style = drawnStyle(context, rdocBodyStyle(context, direction));
     final moreStyle = style.copyWith(color: colors.primary, fontWeight: FontWeight.w600);
     final more = moreLabel(l10n.postReadMore);
     return LayoutBuilder(
@@ -259,6 +277,8 @@ class PostExcerpt extends StatelessWidget {
           continues: continues,
           textScaler: MediaQuery.textScalerOf(context),
           locale: Localizations.maybeLocaleOf(context),
+          textHeightBehavior: defaults.textHeightBehavior ?? DefaultTextHeightBehavior.maybeOf(context),
+          textWidthBasis: defaults.textWidthBasis,
         );
         if (shown == null) {
           return Text(Bidi.isolateOppositeRuns(text, direction), textDirection: direction, style: style);

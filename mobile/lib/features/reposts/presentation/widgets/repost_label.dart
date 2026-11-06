@@ -82,27 +82,20 @@ class _RepostCaptionTextState extends State<RepostCaptionText> {
   Widget build(BuildContext context) {
     final caption = widget.caption;
     final direction = Bidi.detect(caption) ?? Directionality.of(context);
-    // The card's text size and the font of the caption's own script. The style is also the default one here, so the
-    // text is drawn exactly as [PostExcerpt.fit] measures it (nothing such as the theme's letter spacing is inherited,
-    // which could push "Read more" past the last line).
+    // The card's text size and the font of the caption's own script, drawn like the excerpt under it ([PostExcerpt]
+    // measures with the style it draws with, inherited letter spacing included).
     return RDocScope(
       baseDirection: direction,
       bodyFontSize: ReadInArticleFontScale.s,
       child: Builder(
-        builder: (context) {
-          final style = rdocBodyStyle(context, direction);
-          return DefaultTextStyle(
-            style: style,
-            child: _expanded
-                ? Text(Bidi.isolateOppositeRuns(caption, direction), textDirection: direction, style: style)
-                : PostExcerpt(
-                    text: caption,
-                    direction: direction,
-                    continues: false,
-                    onExpand: () => setState(() => _expanded = true),
-                  ),
-          );
-        },
+        builder: (context) => _expanded
+            ? Text(Bidi.isolateOppositeRuns(caption, direction), textDirection: direction, style: rdocBodyStyle(context, direction))
+            : PostExcerpt(
+                text: caption,
+                direction: direction,
+                continues: false,
+                onExpand: () => setState(() => _expanded = true),
+              ),
       ),
     );
   }
