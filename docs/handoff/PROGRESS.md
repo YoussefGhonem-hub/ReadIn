@@ -481,8 +481,10 @@ Later decisions (user, 2026-11-05):
 - **TestFlight on the hosted API (user decision, 2026-11-06):** the user made the repository public, so standard GitHub
   runners are free, and deployed the API to `https://ghyoussef-002-site4.ftempurl.com`. `mobile/config/prod.json` points
   `API_BASE_URL` there. `WEB_ORIGIN` stays `https://readin.app`, which doesn't resolve yet, so links the app shares or
-  opens on the web don't work until the domain and the web app are live. The user asked for the `ios-4` build. `.claude/settings.json`
-  is tracked and now public (see the open security item); nothing was removed from history.
+  opens on the web don't work until the domain and the web app are live. `.claude/settings.json` is tracked and now
+  public; nothing was removed from history. The user asked for this build: `ios-4` failed because `google_sign_in_ios`
+  6.3.8 and `firebase-ios-sdk` 13.1.1 need different `gtm-session-fetcher` majors, so `ios.yml` now widens the plugin's
+  GoogleSignIn range to what 6.4.0 allows (same native code; 6.4.0 itself needs Flutter 3.47). Next build: `ios-5`.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked

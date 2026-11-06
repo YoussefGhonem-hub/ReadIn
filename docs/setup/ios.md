@@ -113,3 +113,4 @@ The repository is private, so macOS runner minutes count **10×** against the Gi
 | `The bundle version must be higher` | Re-run the workflow (each run gets a new build number). |
 | Provisioning profile doesn't include `aps-environment` | Make sure **Push Notifications** is enabled on the App ID, then re-run. |
 | Provisioning profile doesn't include `com.apple.developer.applesignin` | Enable **Sign in with Apple** on the App ID, then re-run. |
+| `Could not resolve package dependencies` naming `googlesignin-ios` and `firebase-ios-sdk` | `ios.yml` widens the GoogleSignIn range in `google_sign_in_ios` 6.3.x. Keep that step until the project moves to Flutter 3.47 and `google_sign_in_ios` 6.4. |
