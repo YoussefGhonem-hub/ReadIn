@@ -1,7 +1,7 @@
-Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 292 articles are done.
+Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 312 articles are done.
 
 PART 1: AUTOMATIC SEEDING ON ANY NEW DATABASE
-Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 292 new ones.
+Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 312 new ones.
 
 1. Make Database:MigrateOnStartup and Seed:RunOnStartup true by default in every environment. Keep the manual `seed [--force]` command.
 2. Include the content/ folder in `dotnet publish` and in the container image, and make Content:RootPath default to it, so Production doesn't need the repo.
@@ -20,7 +20,7 @@ Goal: when the API starts against any new, empty database, in any environment in
 7. Update docs/setup/deployment.md, including the settings I must provide (such as Seed:SuperAdminPhone and Seed:SuperAdminPassword) and the health check allowance for a slow first start.
 
 PART 2: WRITE THE ARTICLES
-Write one article for every topic in docs/advanced-article-topics.md (292 topics).
+Write one article for every topic in docs/advanced-article-topics.md (312 topics).
 
 Two versions of every article:
 1. English (en.json): written entirely in English.
@@ -40,6 +40,7 @@ Article rules:
 - Psychology topics: add a `psychology` topic under the `science` field and use peer-reviewed sources. Say plainly when the evidence is weak, disputed or failed to replicate. Give no diagnosis or treatment advice, and tell readers with a real problem to see a specialist.
 - Relationship topics: use the same `psychology` topic and the same rules. Say when a study's samples are mostly Western and may not apply everywhere. Never tell a reader to stay in or leave a relationship. In any topic that touches abuse, safety comes first, and readers are told to seek qualified local help. Don't invent phone numbers or organizations. Attachment styles are tendencies, not diagnoses or fixed labels, so articles must not present them as a way to diagnose yourself or your partner.
 - Public health topics: use the `public-health` field, with a new topic where needed. Use sources such as WHO, national health agencies and peer-reviewed research, and give the year of any number, since these figures change. Give no personal medical advice, and tell readers to ask a doctor about their own case.
+- Everyday Health topics: these are the exception to "level": "advanced" and to skipping the basics. Use `public-health`, "level": "intermediate", and practical language for general readers, with the Public Health rules above. Give no medicine or supplement doses, and send readers to a doctor or pharmacist for those. Don't promise cures, and call out popular claims the evidence doesn't support.
 - Engineering topics: use the `engineering` field, with one topic for each engineering branch below. Explain the principles and name the relevant standards where you can. Give no step-by-step instructions for dangerous work, such as high voltage, pressure vessels or chemical reactions, and say when a licensed engineer is required.
 
 Images:
@@ -47,7 +48,7 @@ Images:
 - Use only the standard cover from `node tools/content-covers/render.mjs --slug <slug>`, because validation requires cover.webp.
 
 Process:
-- Write all 292 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
+- Write all 312 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
 - For each article, run compose, validate and render.mjs. An article isn't done until validate passes, including the code and link checks.
 - Update any test or SPEC text that depends on the number 300 to the new total.
 
@@ -82,8 +83,9 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 | [Psychology of Relationships](#psychology-of-relationships) | 20 |
 | [Attachment and Relationships](#attachment-and-relationships) | 20 |
 | [Public Health](#public-health) | 20 |
+| [Everyday Health](#everyday-health) | 20 |
 | [Engineering](#engineering) | 30 |
-| **Total** | **292** |
+| **Total** | **312** |
 
 ## Databases
 
@@ -410,6 +412,37 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 18. **Mental health at population scale:** measuring prevalence, stigma, and task-sharing.
 19. **QALYs and DALYs:** how health systems compare interventions, and the ethics of those comparisons.
 20. **Pandemic measures:** what the evidence from COVID-19 shows about masks, closures, and communication.
+
+## Everyday Health
+
+### Immunity
+
+1. **"Boosting" your immunity:** what the phrase gets wrong, what really supports the immune system, and why an overactive one is a problem too.
+2. **Immunity supplements:** what the evidence says about vitamin C, vitamin D, and zinc, and when they can harm.
+3. **Sleep and immunity:** what lost sleep does to your defenses.
+4. **Exercise and infections:** how regular activity helps, and the debate over hard training.
+5. **Chronic stress and immunity:** how long-term stress changes the immune response.
+6. **Gut bacteria and probiotics:** what is known, and where the marketing runs ahead of the science.
+7. **Adult vaccines:** why vaccination doesn't end in childhood, and how to ask your doctor what you need.
+
+### Smoking
+
+8. **What smoking does to the body:** cancer, heart, lungs, and the less known effects.
+9. **What happens after you quit:** how the body recovers over hours, months, and years.
+10. **Nicotine addiction:** why quitting is hard, and what withdrawal really is.
+11. **How to quit smoking:** what the evidence says about counseling, nicotine replacement, and prescription medicines.
+12. **Relapse:** triggers, slips, and why one failed attempt doesn't mean you can't quit.
+13. **Shisha:** why the water doesn't make it safe, and how it compares with cigarettes.
+14. **Vaping and heated tobacco:** what is known about the risks, for smokers and for people who never smoked.
+15. **Secondhand smoke:** the effects on children, pregnancy, and people who live with smokers.
+
+### Daily Health
+
+16. **High blood pressure:** why it is silent, how to measure it at home correctly, and the role of salt.
+17. **Preventing type 2 diabetes:** what prediabetes means, and what prevention trials showed about lifestyle change.
+18. **Physical activity:** what WHO recommends, and the risks of sitting too long.
+19. **Sleep:** how much adults need, and what the evidence says about improving it.
+20. **Antibiotics:** when they don't help, and the harm of taking them without a prescription.
 
 ## Engineering
 
