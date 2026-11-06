@@ -782,11 +782,25 @@ Draft ──► Published ──► Archived
 - **Reaction picker, like LinkedIn:** the four reactions in a floating bar with no numbers or labels (the counts stay in the who-reacted list). On hover on web or a long press on mobile, the bar and its reactions animate in one after the other, the one under the pointer grows and rises, and picking one plays a short animation. It respects "reduce motion" (§26).
 
 ### F11 — Comments & Replies
-- Threaded comments: top-level + replies (max depth 2, shown as one indented level with a connector line). Replying to a reply joins the same thread.
+- Threaded comments: top-level + replies (max depth 2, shown as one indented level). Replying to a reply joins the same thread.
+- **Replies in pages (like Facebook and LinkedIn):**
+  - A thread first shows only its first reply.
+  - "عرض المزيد من الردود" (show N more replies) shows up to 5 more at a time, and "إخفاء الردود" (Hide replies) folds the thread back to its first reply.
+  - Your own new reply, and replies that arrive live, show at once at the end of the thread.
 - Sort: **Top** / **Newest**.
 - **Comment box:** your avatar, then a rounded field with "اكتب تعليق…" (Add a comment…) an emoji button that opens an emoji picker, and a send icon, disabled until there is text, with no text button like "نشر". Reply boxes look the same. The same box is used in the reader and on feed cards, on web and mobile.
 - **Text and emoji only:** comments and replies have no images, GIFs or attachments, and there is no button or API field for them.
 - **Each comment shows:** the avatar, name and verified badge, the writer's title (F14) on one line under the name (not their `@username`), the time, "متابعة" (Follow) when you don't follow them and it isn't you, and "⋯". Tapping the avatar or name opens the profile.
+- **Compact layout:**
+  - A small avatar: 32 px, or 24 px for replies.
+  - A rounded bubble holding the name row, the title and the text.
+  - Under the bubble, one short row of text actions: Like (with its count) and Reply.
+- **Profile card on hover (web, devices with a mouse):** resting the pointer on an `@mention` (in comments and in articles), or on a commenter's name or avatar, opens a small card about that person:
+  - the avatar, name, verified badge, `@username` and title;
+  - "Follows you", when they do;
+  - their follower and article counts;
+  - a Follow button, or "View profile" on your own card.
+  On touch screens a tap opens the profile as before.
 - **Reply with a mention:** "رد" (Reply) opens the comment box with `@name` of the person you're replying to already in it, so they are mentioned and notified, and you can delete the mention. If they don't allow you to mention them (F18), the reply stays in the thread with no mention, and they still get the reply notification (F17).
 - Like comments, reply, `@mention` users (only people who allow the author, [F18](#f18--settings) "who can mention me"; any other `@handle` stays plain text; each mentioned user is notified, [F17](#f17--notifications)), edit (shows "edited"), delete (soft: a comment with replies stays as a "deleted" placeholder).
 - Writer badge "الكاتب" on the author's comments, author can **pin** one comment.
