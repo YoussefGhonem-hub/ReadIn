@@ -1,7 +1,7 @@
-Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 312 articles are done.
+Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 352 articles are done.
 
 PART 1: AUTOMATIC SEEDING ON ANY NEW DATABASE
-Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 312 new ones.
+Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 352 new ones.
 
 1. Make Database:MigrateOnStartup and Seed:RunOnStartup true by default in every environment. Keep the manual `seed [--force]` command.
 2. Include the content/ folder in `dotnet publish` and in the container image, and make Content:RootPath default to it, so Production doesn't need the repo.
@@ -20,7 +20,7 @@ Goal: when the API starts against any new, empty database, in any environment in
 7. Update docs/setup/deployment.md, including the settings I must provide (such as Seed:SuperAdminPhone and Seed:SuperAdminPassword) and the health check allowance for a slow first start.
 
 PART 2: WRITE THE ARTICLES
-Write one article for every topic in docs/advanced-article-topics.md (312 topics).
+Write one article for every topic in docs/advanced-article-topics.md (352 topics).
 
 Two versions of every article:
 1. English (en.json): written entirely in English.
@@ -41,6 +41,7 @@ Article rules:
 - Relationship topics: use the same `psychology` topic and the same rules. Say when a study's samples are mostly Western and may not apply everywhere. Never tell a reader to stay in or leave a relationship. In any topic that touches abuse, safety comes first, and readers are told to seek qualified local help. Don't invent phone numbers or organizations. Attachment styles are tendencies, not diagnoses or fixed labels, so articles must not present them as a way to diagnose yourself or your partner.
 - Public health topics: use the `public-health` field, with a new topic where needed. Use sources such as WHO, national health agencies and peer-reviewed research, and give the year of any number, since these figures change. Give no personal medical advice, and tell readers to ask a doctor about their own case.
 - Everyday Health topics: these are the exception to "level": "advanced" and to skipping the basics. Use `public-health`, "level": "intermediate", and practical language for general readers, with the Public Health rules above. Give no medicine or supplement doses, and send readers to a doctor or pharmacist for those. Don't promise cures, and call out popular claims the evidence doesn't support.
+- Business and Commerce topics: these are also an exception to "level": "advanced". Use the `business` field with one topic per section below, "level": "intermediate", and practical language for students and new graduates. Use the Egyptian context where it fits, naming the law or standard and its year, because laws, tax rates and prices change. Give no personal investment, tax or legal advice, promise no profits, and tell readers to ask a qualified accountant or lawyer about their own case.
 - Engineering topics: use the `engineering` field, with one topic for each engineering branch below. Explain the principles and name the relevant standards where you can. Give no step-by-step instructions for dangerous work, such as high voltage, pressure vessels or chemical reactions, and say when a licensed engineer is required.
 
 Images:
@@ -48,7 +49,7 @@ Images:
 - Use only the standard cover from `node tools/content-covers/render.mjs --slug <slug>`, because validation requires cover.webp.
 
 Process:
-- Write all 312 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
+- Write all 352 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
 - For each article, run compose, validate and render.mjs. An article isn't done until validate passes, including the code and link checks.
 - Update any test or SPEC text that depends on the number 300 to the new total.
 
@@ -85,7 +86,8 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 | [Public Health](#public-health) | 20 |
 | [Everyday Health](#everyday-health) | 20 |
 | [Engineering](#engineering) | 30 |
-| **Total** | **312** |
+| [Business and Commerce](#business-and-commerce) | 40 |
+| **Total** | **352** |
 
 ## Databases
 
@@ -505,3 +507,69 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 28. **PID control in practice:** tuning, phase margin, integral windup, and when PID isn't enough.
 29. **The Kalman filter:** sensor fusion, its assumptions, and how it fails.
 30. **Robot kinematics:** inverse kinematics, singularities, and motion planning.
+
+## Business and Commerce
+
+### Accounting
+
+1. **Profit vs cash:** accrual accounting, and how a profitable company can still run out of cash.
+2. **Reading financial statements:** the income statement, balance sheet, and cash flow statement, and how they connect.
+3. **Depreciation:** the common methods, and how the choice changes reported profit.
+4. **Inventory costing:** FIFO vs weighted average, and why IFRS doesn't allow LIFO.
+5. **IFRS and Egyptian Accounting Standards:** how they relate and where they differ.
+6. **Auditing:** what an auditor's opinion really means, and what it doesn't promise.
+7. **Cost accounting:** fixed and variable costs, and break-even analysis.
+8. **CMA, CPA, or ACCA:** what each certificate is for, and how to choose.
+
+### Finance and Investment
+
+9. **Time value of money:** why a pound today is worth more than a pound next year.
+10. **NPV vs IRR:** how companies choose projects, and when IRR misleads.
+11. **Financial ratios:** liquidity, profitability, and debt, and how to avoid misreading them.
+12. **Working capital:** why growing too fast can sink a company.
+13. **Stocks, bonds, and funds:** how each one works, and the risk each carries.
+14. **Diversification and risk:** why risk and return go together, and what "guaranteed returns" should make you ask.
+15. **Interest rates and inflation:** how central bank decisions reach your salary, loans, and savings.
+16. **Valuing a startup:** how investors put a number on a company with no profit.
+
+### Marketing
+
+17. **From the 4Ps to the 7Ps:** what the marketing mix means for products and services.
+18. **Segmentation and positioning:** why "everyone" isn't a target market.
+19. **Customer acquisition cost and lifetime value:** the numbers behind any marketing budget.
+20. **Pricing psychology:** anchoring, discounts, and charm prices, and what the evidence supports.
+21. **Digital marketing funnels:** awareness to purchase, and how to read ad metrics.
+22. **Brand building:** what a brand really is, and how long it takes.
+
+### Management
+
+23. **Porter's Five Forces:** analyzing an industry, and where the model falls short.
+24. **SWOT analysis:** why most SWOTs are useless, and how to make one lead to decisions.
+25. **KPIs and OKRs:** the difference, and how measuring the wrong thing backfires.
+26. **Change management:** why so many change efforts fail.
+27. **Project management:** Agile vs Waterfall outside software.
+
+### Human Resources
+
+28. **Hiring:** what predicts job performance, and why unstructured interviews do it poorly.
+29. **Pay and motivation:** what money can and can't do, and how pay structures work.
+30. **Egyptian labor law basics:** contracts, leave, and termination, as every employee and manager should know them.
+
+### Economics
+
+31. **Inflation:** its causes, how it's measured, and who gets hurt most.
+32. **Exchange rates:** what a devaluation does to prices, exports, and companies.
+33. **GDP:** what it measures and what it misses.
+34. **Supply and demand in real markets:** price controls, shortages, and black markets.
+
+### Tax and Business Law
+
+35. **Tax basics in Egypt:** VAT, income tax, and corporate tax, and how they differ.
+36. **E-invoicing in Egypt:** how the system works, and what companies must do.
+37. **Choosing a company type:** sole proprietorship, partnership, and LLC, and what each means for your liability.
+
+### Careers
+
+38. **Choosing a specialization:** accounting, finance, marketing, or HR, and what the work is really like.
+39. **Your first job:** the Excel and practical skills employers ask of new graduates.
+40. **Personal finance for new graduates:** budgeting, saving, and debt on a first salary.
