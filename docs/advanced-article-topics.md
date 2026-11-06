@@ -1,7 +1,7 @@
-Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 272 articles are done.
+Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 292 articles are done.
 
 PART 1: AUTOMATIC SEEDING ON ANY NEW DATABASE
-Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 272 new ones.
+Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 292 new ones.
 
 1. Make Database:MigrateOnStartup and Seed:RunOnStartup true by default in every environment. Keep the manual `seed [--force]` command.
 2. Include the content/ folder in `dotnet publish` and in the container image, and make Content:RootPath default to it, so Production doesn't need the repo.
@@ -20,7 +20,7 @@ Goal: when the API starts against any new, empty database, in any environment in
 7. Update docs/setup/deployment.md, including the settings I must provide (such as Seed:SuperAdminPhone and Seed:SuperAdminPassword) and the health check allowance for a slow first start.
 
 PART 2: WRITE THE ARTICLES
-Write one article for every topic in docs/advanced-article-topics.md (272 topics).
+Write one article for every topic in docs/advanced-article-topics.md (292 topics).
 
 Two versions of every article:
 1. English (en.json): written entirely in English.
@@ -38,7 +38,7 @@ Article rules:
 - Don't repeat an existing article in content/articles. If a topic overlaps one, link to it.
 - Security topics: explain the flaw and how to defend against it, with no ready-to-use attack steps against real systems.
 - Psychology topics: add a `psychology` topic under the `science` field and use peer-reviewed sources. Say plainly when the evidence is weak, disputed or failed to replicate. Give no diagnosis or treatment advice, and tell readers with a real problem to see a specialist.
-- Relationship topics: use the same `psychology` topic and the same rules. Say when a study's samples are mostly Western and may not apply everywhere. Never tell a reader to stay in or leave a relationship. In any topic that touches abuse, safety comes first, and readers are told to seek qualified local help. Don't invent phone numbers or organizations.
+- Relationship topics: use the same `psychology` topic and the same rules. Say when a study's samples are mostly Western and may not apply everywhere. Never tell a reader to stay in or leave a relationship. In any topic that touches abuse, safety comes first, and readers are told to seek qualified local help. Don't invent phone numbers or organizations. Attachment styles are tendencies, not diagnoses or fixed labels, so articles must not present them as a way to diagnose yourself or your partner.
 - Public health topics: use the `public-health` field, with a new topic where needed. Use sources such as WHO, national health agencies and peer-reviewed research, and give the year of any number, since these figures change. Give no personal medical advice, and tell readers to ask a doctor about their own case.
 - Engineering topics: use the `engineering` field, with one topic for each engineering branch below. Explain the principles and name the relevant standards where you can. Give no step-by-step instructions for dangerous work, such as high voltage, pressure vessels or chemical reactions, and say when a licensed engineer is required.
 
@@ -47,7 +47,7 @@ Images:
 - Use only the standard cover from `node tools/content-covers/render.mjs --slug <slug>`, because validation requires cover.webp.
 
 Process:
-- Write all 272 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
+- Write all 292 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
 - For each article, run compose, validate and render.mjs. An article isn't done until validate passes, including the code and link checks.
 - Update any test or SPEC text that depends on the number 300 to the new total.
 
@@ -80,9 +80,10 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 | [System Design](#system-design) | 39 |
 | [Psychology](#psychology) | 20 |
 | [Psychology of Relationships](#psychology-of-relationships) | 20 |
+| [Attachment and Relationships](#attachment-and-relationships) | 20 |
 | [Public Health](#public-health) | 20 |
 | [Engineering](#engineering) | 30 |
-| **Total** | **272** |
+| **Total** | **292** |
 
 ## Databases
 
@@ -358,6 +359,34 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 18. **The five love languages:** a popular idea tested against the research.
 19. **Couples therapy:** the evidence for Emotionally Focused and Integrative Behavioral Couple Therapy, what they can't fix, and when they aren't suitable.
 20. **Coercive control:** how abuse differs from ordinary conflict, and why safety comes before couples therapy.
+
+## Attachment and Relationships
+
+### Attachment and Its Types
+
+1. **Bowlby's attachment theory:** its evolutionary roots and internal working models.
+2. **The Strange Situation:** how Ainsworth identified secure, avoidant, and ambivalent infants, and the critiques of the test.
+3. **Disorganized attachment:** what Main and Solomon found, and why it must not be used to judge parents.
+4. **Types or dimensions:** why the research treats adult attachment as levels of anxiety and avoidance, not fixed boxes.
+5. **Secure attachment:** the secure base and safe haven, and why secure doesn't mean perfect.
+6. **Anxious attachment:** hyperactivating strategies, protest behavior, and the fear of abandonment.
+7. **Dismissive-avoidant attachment:** deactivating strategies, and what the studies show about emotions kept out of sight.
+8. **Fearful-avoidant attachment:** wanting closeness and fearing it, its links to early adversity, and the limits of the evidence.
+9. **Stability and change:** how much attachment shifts over life, and what "earned security" means.
+10. **Measuring attachment:** the Adult Attachment Interview vs self-report scales, and why they often disagree.
+11. **Passing attachment across generations:** parental sensitivity and the "transmission gap".
+12. **Genes and attachment:** what twin studies show from infancy to adolescence.
+13. **Attachment across cultures:** the debate over whether the theory is universal.
+14. **Oxytocin:** what the research shows about bonding, and why "the love hormone" is misleading.
+
+### Relationships
+
+15. **Attachment injuries:** how a moment of betrayal damages trust, and how couples work to rebuild it.
+16. **Breakups:** grief, rumination, and what recovery looks like over time.
+17. **Infidelity:** what predicts it, what recovery looks like, and the problem with the data.
+18. **Perpetual problems:** the claim that most couple conflicts never get solved, and what the evidence behind it is.
+19. **Trauma bonding:** what the research supports, what the popular term gets wrong, and why safety comes first.
+20. **Self-expansion:** why new experiences together can keep a long relationship alive.
 
 ## Public Health
 
