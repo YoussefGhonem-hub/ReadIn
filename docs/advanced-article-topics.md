@@ -1,7 +1,7 @@
-Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 222 articles are done.
+Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 272 articles are done.
 
 PART 1: AUTOMATIC SEEDING ON ANY NEW DATABASE
-Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 222 new ones.
+Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 272 new ones.
 
 1. Make Database:MigrateOnStartup and Seed:RunOnStartup true by default in every environment. Keep the manual `seed [--force]` command.
 2. Include the content/ folder in `dotnet publish` and in the container image, and make Content:RootPath default to it, so Production doesn't need the repo.
@@ -20,7 +20,7 @@ Goal: when the API starts against any new, empty database, in any environment in
 7. Update docs/setup/deployment.md, including the settings I must provide (such as Seed:SuperAdminPhone and Seed:SuperAdminPassword) and the health check allowance for a slow first start.
 
 PART 2: WRITE THE ARTICLES
-Write one article for every topic in docs/advanced-article-topics.md (222 topics).
+Write one article for every topic in docs/advanced-article-topics.md (272 topics).
 
 Two versions of every article:
 1. English (en.json): written entirely in English.
@@ -39,13 +39,15 @@ Article rules:
 - Security topics: explain the flaw and how to defend against it, with no ready-to-use attack steps against real systems.
 - Psychology topics: add a `psychology` topic under the `science` field and use peer-reviewed sources. Say plainly when the evidence is weak, disputed or failed to replicate. Give no diagnosis or treatment advice, and tell readers with a real problem to see a specialist.
 - Relationship topics: use the same `psychology` topic and the same rules. Say when a study's samples are mostly Western and may not apply everywhere. Never tell a reader to stay in or leave a relationship. In any topic that touches abuse, safety comes first, and readers are told to seek qualified local help. Don't invent phone numbers or organizations.
+- Public health topics: use the `public-health` field, with a new topic where needed. Use sources such as WHO, national health agencies and peer-reviewed research, and give the year of any number, since these figures change. Give no personal medical advice, and tell readers to ask a doctor about their own case.
+- Engineering topics: use the `engineering` field, with one topic for each engineering branch below. Explain the principles and name the relevant standards where you can. Give no step-by-step instructions for dangerous work, such as high voltage, pressure vessels or chemical reactions, and say when a licensed engineer is required.
 
 Images:
 - Don't create custom images, diagrams or SVGs. They would take too long.
 - Use only the standard cover from `node tools/content-covers/render.mjs --slug <slug>`, because validation requires cover.webp.
 
 Process:
-- Write all 222 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
+- Write all 272 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
 - For each article, run compose, validate and render.mjs. An article isn't done until validate passes, including the code and link checks.
 - Update any test or SPEC text that depends on the number 300 to the new total.
 
@@ -78,7 +80,9 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 | [System Design](#system-design) | 39 |
 | [Psychology](#psychology) | 20 |
 | [Psychology of Relationships](#psychology-of-relationships) | 20 |
-| **Total** | **222** |
+| [Public Health](#public-health) | 20 |
+| [Engineering](#engineering) | 30 |
+| **Total** | **272** |
 
 ## Databases
 
@@ -354,3 +358,88 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 18. **The five love languages:** a popular idea tested against the research.
 19. **Couples therapy:** the evidence for Emotionally Focused and Integrative Behavioral Couple Therapy, what they can't fix, and when they aren't suitable.
 20. **Coercive control:** how abuse differs from ordinary conflict, and why safety comes before couples therapy.
+
+## Public Health
+
+1. **Study designs:** cohort, case-control, and randomized trials, and how each one can mislead.
+2. **R0 and Rt:** what reproduction numbers really measure and how they get misread.
+3. **Herd immunity:** why the threshold isn't one fixed number.
+4. **Vaccine efficacy vs effectiveness:** how each is measured, and what waning protection means.
+5. **Screening and base rates:** false positives, overdiagnosis, and why testing everyone can backfire.
+6. **Nutrition epidemiology:** confounding, self-reported diets, and why food studies keep contradicting each other.
+7. **Relative vs absolute risk:** how headlines make a small risk sound huge.
+8. **Antimicrobial resistance:** how it spreads between people, animals, and the environment, and the One Health approach.
+9. **Social determinants of health:** how income, education, and housing affect health.
+10. **Air pollution:** how PM2.5 harms the body, and what the dose-response evidence shows.
+11. **Water and sanitation:** what clean water and sanitation achieved, and where they fall short.
+12. **Obesity at population level:** the food environment, and the evidence on sugar taxes and labeling.
+13. **Tobacco control:** which policies worked, and the dispute over vaping.
+14. **Egypt's hepatitis C program:** how national screening and treatment worked at scale.
+15. **Health misinformation:** why it spreads, and the evidence for prebunking.
+16. **Disease surveillance:** sentinel sites, syndromic data, and wastewater monitoring.
+17. **Heat and health:** how heat waves kill, who is most at risk, and what adaptation works.
+18. **Mental health at population scale:** measuring prevalence, stigma, and task-sharing.
+19. **QALYs and DALYs:** how health systems compare interventions, and the ethics of those comparisons.
+20. **Pandemic measures:** what the evidence from COVID-19 shows about masks, closures, and communication.
+
+## Engineering
+
+### Mechanical Engineering
+
+1. **Fatigue failure:** S-N curves, and why parts break well below their yield strength.
+2. **Tribology:** friction, wear, lubrication regimes, and the Stribeck curve.
+3. **Heat exchanger design:** LMTD vs ε-NTU, fouling, and the real trade-offs.
+
+### Electrical Engineering
+
+4. **Power system stability:** frequency, inertia, and how cascading blackouts happen.
+5. **Power electronics:** IGBT vs SiC, switching losses, and inverter design.
+6. **Renewables on the grid:** grid-following vs grid-forming inverters.
+
+### Civil Engineering
+
+7. **Reinforced concrete durability:** cracking, chloride attack, and rebar corrosion.
+8. **Seismic design:** ductility, base isolation, and why buildings are designed to be damaged but not collapse.
+9. **Soil liquefaction:** how solid ground behaves like a liquid, and what it means for foundations.
+
+### Chemical Engineering
+
+10. **Thermal runaway in reactors:** heat balance, past industrial disasters, and layers of protection.
+11. **Distillation:** McCabe-Thiele, azeotropes, and why it consumes so much energy.
+12. **Catalyst deactivation:** poisoning, sintering, and fouling, with Haber-Bosch as an example.
+
+### Aerospace Engineering
+
+13. **Transonic flight:** shock waves, wave drag, and supercritical wings.
+14. **Orbital mechanics:** delta-v, Hohmann transfers, and gravity assists.
+15. **Flutter:** how airflow and structure feed each other, and how it is tested safely.
+
+### Biomedical Engineering
+
+16. **MRI physics:** spin, T1 and T2, and how a signal becomes an image.
+17. **Implant biocompatibility:** the foreign body response, and why materials fail inside the body.
+18. **Medical device safety:** Therac-25, risk management, and safety-critical software.
+
+### Materials Engineering
+
+19. **Creep and superalloys:** why turbine blades survive near their melting point.
+20. **Lithium-ion degradation:** SEI growth, lithium plating, and dendrites.
+21. **Composite failure:** delamination, and why damage can be invisible.
+
+### Industrial Engineering
+
+22. **Theory of Constraints:** bottlenecks, and queueing in real factories.
+23. **Statistical process control:** control charts, process capability, and the limits of Six Sigma.
+24. **Reliability engineering:** the bathtub curve, Weibull analysis, and FMEA.
+
+### Environmental Engineering
+
+25. **Desalination:** reverse osmosis, its minimum energy limit, and what to do with the brine.
+26. **Wastewater treatment:** activated sludge, nutrient removal, and water reuse.
+27. **Life cycle assessment:** system boundaries, and why results can be argued either way.
+
+### Control and Robotics Engineering
+
+28. **PID control in practice:** tuning, phase margin, integral windup, and when PID isn't enough.
+29. **The Kalman filter:** sensor fusion, its assumptions, and how it fails.
+30. **Robot kinematics:** inverse kinematics, singularities, and motion planning.
