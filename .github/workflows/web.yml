@@ -1,8 +1,9 @@
 name: web
 
+# Runs on main and on the dev → main pull request, not on dev pushes (user decision, 2026-11-06: GitHub minutes stay for iOS builds).
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths: ["web/**", "design/tokens.json", "tools/tokens/**", "shared/**", ".github/workflows/web.yml"]
   pull_request:
     paths: ["web/**", "design/tokens.json", "tools/tokens/**", "shared/**", ".github/workflows/web.yml"]

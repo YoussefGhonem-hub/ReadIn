@@ -1863,6 +1863,8 @@ Uploads live inside the API folder, so deployments must never delete them:
 | `mobile.yml` | changes in `mobile/**` | analyze → test → golden tests → build APK/IPA (release on tags) |
 | `content.yml` | changes in `content/**` | RDoc schema validation → code compile checks → link checks |
 
+These four run on pushes to `main` and on the `dev → main` pull request, not on pushes to `dev` (user decision, 2026-11-06: GitHub minutes stay for iOS builds), so the [§29](#29-git-workflow--conventions) gates are the only check on `dev`. `ios.yml` runs only on `ios-*` tags and uploads to TestFlight.
+
 Deploy targets (suggested): API + SSR on a single server or container host (with the uploads rules in [§28.3](#283-uploads-in-production-wwwrootuploads)), SQL Server, mobile via Play Console / App Store Connect (Fastlane).
 
 The API host and `backend.yml` need Chromium and its system libraries for F33, installed with the image or server setup and never downloaded at runtime. The steps are in [`docs/setup/deployment.md` §10](setup/deployment.md#10-chromium-for-article-pdfs-spec-f33).
@@ -1907,4 +1909,4 @@ A feature is **done** only when:
 - [ ] Accessibility checks pass (contrast, labels, font scaling).
 - [ ] Seed data updated so the feature is visible in development.
 - [ ] API documented in OpenAPI, ADR added if an architectural decision was made.
-- [ ] CI green on all affected workflows.
+- [ ] The local gates in [§29](#29-git-workflow--conventions) pass (pushes to `dev` run no CI; see [§28.4](#284-cicd-github-actions)).

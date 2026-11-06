@@ -494,8 +494,8 @@ prints `<p>sandbox ok</p>` inside the page's HTML, or "No usable sandbox!".
   allows. After a deliberate layout change:
   - Windows: set `READIN_PDF_BASELINES_DIR` to `backend/tests/ReadIn.Infrastructure.UnitTests/Pdf/baselines`, run the
     test once, look at the new images and commit them.
-  - Linux: push. The failing CI run uploads the new images as the `pdf-page-images` artifact, already named
-    `*.linux.png`. Download them with `gh run download <run-id> -n pdf-page-images -D
+  - Linux: open the `dev → main` pull request, because pushes to `dev` don't run CI. The failing CI run uploads the new
+    images as the `pdf-page-images` artifact, already named `*.linux.png`. Download them with `gh run download <run-id> -n pdf-page-images -D
     backend/tests/ReadIn.Infrastructure.UnitTests/Pdf/baselines`, look at them, and commit them. On any Linux machine
     the same variable writes them too, with the Chrome version of `CHROME_VERSION` (Debian's chromium 156.0.8078.79 and
     Chrome for Testing 156.0.8078.80 gave byte-identical images).

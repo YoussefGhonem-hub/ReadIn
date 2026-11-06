@@ -31,8 +31,7 @@ and what is next is in [docs/handoff/PROGRESS.md](docs/handoff/PROGRESS.md).
   the implementation. After the bugs from that run are fixed, no tests run again (not the whole suite, not the fixed
   part). Before committing a fix, run only `dotnet build ReadIn.slnx`, `npm run lint`, `npm run build` and
   `flutter analyze` (plus `flutter gen-l10n` / `build_runner` when their inputs changed, and new baselines for the
-  screens a fix changed). Then commit and push `dev`. If the GitHub check fails after the push, fix it before starting
-  the next feature. No test is deleted or weakened.
+  screens a fix changed). Then commit and push `dev`. No test is deleted or weakened.
 - Screenshots and goldens run in `ar/light` and `en/dark` only (SPEC §27): together they cover both directions and both
   themes. Don't add the other two combinations back. Mobile widget and logic tests keep all four combinations.
 - Playwright workers: 4 to 6 when no other build or test run is using the machine (`--workers=4`), 2 when one is. If
@@ -40,14 +39,17 @@ and what is next is in [docs/handoff/PROGRESS.md](docs/handoff/PROGRESS.md).
   passing.
 
 ## Gates before every push
+- Pushes to `dev` run no GitHub checks (user decision, 2026-11-06: GitHub minutes stay for iOS builds), so these local
+  gates are the only check. Don't wait for CI, and don't turn it back on for `dev` unless the user asks. The checks
+  still run on `main` and on the `dev → main` pull request.
 - **Backend**, from `backend/`: `dotnet build ReadIn.slnx`, then `dotnet test --solution ReadIn.slnx --no-build`.
   Always the whole suite: backend tests are never cut down. `dotnet test tests/X` runs zero tests here. Docker must be
   running (Testcontainers SQL Server). Keep SQL Server on host port 14333.
 - **Web**: `npm run lint`, `npm test`, `npm run build` (SSR), and the Playwright specs for the screens the feature
-  touched (the full suite only when the user asks; CI still runs it). When another e2e run is active, use other ports:
+  touched (the full suite only when the user asks). When another e2e run is active, use other ports:
   `E2E_APP_PORT=4310 E2E_MOCK_PORT=5310 npx playwright test …`.
 - **Mobile**: `flutter analyze` and `flutter test`, goldens included. Generated code must match
-  `dart run build_runner build` (CI checks it).
+  `dart run build_runner build`.
 - Fix failures. Never skip, delete or weaken a test to make it pass, and never delete a test that checks behaviour.
 
 ## Generated code and migrations

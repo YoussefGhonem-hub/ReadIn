@@ -472,6 +472,12 @@ Later decisions (user, 2026-11-05):
   Settings → Billing & plans). The last runs that did start (f6551dee) passed. Until billing is fixed, CI can't check
   the pushes; the local gates (build, lint, analyze, and the per-feature test run) still run before each push, and the
   CI runs will need re-running (`gh run rerun <id>`) once it is fixed.
+- **CI on `dev` turned off (user decision, 2026-11-06):** pushes to `dev` no longer run `backend`, `web`, `mobile` or
+  `content`. They still run on `main`, on `v*` tags (`mobile`) and on the `dev → main` pull request. Use from 2026-11-03
+  to 2026-11-06 was about 2135 counted minutes, close to the Free plan's 2000: `mobile` 1237 (Windows goldens 826),
+  `backend` 386, iOS 230, `content` 164, `web` 118. This replaces the note above: the blocked runs don't need
+  re-running, and the local gates are the only check on `dev`. iOS builds (`ios-*` tags) still need GitHub's billing
+  fixed or the minutes renewed.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked

@@ -1,8 +1,9 @@
 name: mobile
 
+# Runs on main, v* tags and the dev → main pull request, not on dev pushes (user decision, 2026-11-06: GitHub minutes stay for iOS builds).
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     tags: ["v*"]
     paths: ["mobile/**", "design/tokens.json", "tools/tokens/**", "shared/**", ".github/workflows/mobile.yml"]
   pull_request:
