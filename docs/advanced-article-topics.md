@@ -1,7 +1,7 @@
-Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 202 articles are done.
+Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 222 articles are done.
 
 PART 1: AUTOMATIC SEEDING ON ANY NEW DATABASE
-Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 202 new ones.
+Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 222 new ones.
 
 1. Make Database:MigrateOnStartup and Seed:RunOnStartup true by default in every environment. Keep the manual `seed [--force]` command.
 2. Include the content/ folder in `dotnet publish` and in the container image, and make Content:RootPath default to it, so Production doesn't need the repo.
@@ -20,7 +20,7 @@ Goal: when the API starts against any new, empty database, in any environment in
 7. Update docs/setup/deployment.md, including the settings I must provide (such as Seed:SuperAdminPhone and Seed:SuperAdminPassword) and the health check allowance for a slow first start.
 
 PART 2: WRITE THE ARTICLES
-Write one article for every topic in docs/advanced-article-topics.md (202 topics).
+Write one article for every topic in docs/advanced-article-topics.md (222 topics).
 
 Two versions of every article:
 1. English (en.json): written entirely in English.
@@ -38,13 +38,14 @@ Article rules:
 - Don't repeat an existing article in content/articles. If a topic overlaps one, link to it.
 - Security topics: explain the flaw and how to defend against it, with no ready-to-use attack steps against real systems.
 - Psychology topics: add a `psychology` topic under the `science` field and use peer-reviewed sources. Say plainly when the evidence is weak, disputed or failed to replicate. Give no diagnosis or treatment advice, and tell readers with a real problem to see a specialist.
+- Relationship topics: use the same `psychology` topic and the same rules. Say when a study's samples are mostly Western and may not apply everywhere. Never tell a reader to stay in or leave a relationship. In any topic that touches abuse, safety comes first, and readers are told to seek qualified local help. Don't invent phone numbers or organizations.
 
 Images:
 - Don't create custom images, diagrams or SVGs. They would take too long.
 - Use only the standard cover from `node tools/content-covers/render.mjs --slug <slug>`, because validation requires cover.webp.
 
 Process:
-- Write all 202 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
+- Write all 222 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
 - For each article, run compose, validate and render.mjs. An article isn't done until validate passes, including the code and link checks.
 - Update any test or SPEC text that depends on the number 300 to the new total.
 
@@ -76,7 +77,8 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 | [Security](#security) | 16 |
 | [System Design](#system-design) | 39 |
 | [Psychology](#psychology) | 20 |
-| **Total** | **202** |
+| [Psychology of Relationships](#psychology-of-relationships) | 20 |
+| **Total** | **222** |
 
 ## Databases
 
@@ -329,3 +331,26 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 18. **Task switching:** the real cost of interruptions, attention residue, and the myth of multitasking.
 19. **Burnout:** Maslach's model, its overlap with depression, and why the causes are often in the workplace.
 20. **The Dunning-Kruger effect:** the original finding, and the argument that much of it is a statistical artifact.
+
+## Psychology of Relationships
+
+1. **The Four Horsemen:** criticism, contempt, defensiveness, and stonewalling, and how far Gottman's divorce predictions really hold up.
+2. **The demand-withdraw pattern:** why one partner pushes, the other pulls away, and each reaction feeds the other.
+3. **Repair attempts:** how couples recover during a fight, and positive sentiment override.
+4. **Perceived partner responsiveness:** why feeling understood and cared for predicts relationship quality.
+5. **Capitalization:** how you respond to your partner's good news, and why it can matter as much as support in hard times.
+6. **The anxious-avoidant cycle:** how two attachment styles trigger each other in a marriage.
+7. **The investment model:** satisfaction, alternatives, and investment, and why people stay or leave.
+8. **The vulnerability-stress-adaptation model:** why outside stress changes how couples treat each other.
+9. **Dyadic coping:** how partners handle stress together, and how work stress spills into the home.
+10. **Marital satisfaction over time:** the decline after the honeymoon, and the debate over the U-shaped curve.
+11. **The transition to parenthood:** what changes in a marriage after a first child, and what protects it.
+12. **Household labor and fairness:** the mental load, and why perceived fairness can matter more than exact shares.
+13. **Money conflict:** why arguments about money run hotter and last longer, and what they are really about.
+14. **Family of origin and in-laws:** Bowen's differentiation of self, and setting boundaries while staying close.
+15. **Forgiveness:** what it is and isn't, and when forgiving can make things worse.
+16. **Jealousy and digital monitoring:** what the research says about checking a partner's phone, and how trust erodes.
+17. **Desire discrepancy:** different levels of sexual desire in long-term relationships, and how couples talk about it.
+18. **The five love languages:** a popular idea tested against the research.
+19. **Couples therapy:** the evidence for Emotionally Focused and Integrative Behavioral Couple Therapy, what they can't fix, and when they aren't suitable.
+20. **Coercive control:** how abuse differs from ordinary conflict, and why safety comes before couples therapy.
