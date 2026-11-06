@@ -87,6 +87,15 @@ export class ArticleHighlightsStore {
     );
   }
 
+  /**
+   * The article changed under a selection (`highlight.text_mismatch`, or the quote card's `quote.text_mismatch`, F24):
+   * loads the article and its highlights again.
+   */
+  textChanged(): void {
+    this.reloadArticle();
+    this.reload();
+  }
+
   /** Loads the version on screen again. */
   reload(): void {
     this.loadedKey = null;
@@ -127,10 +136,7 @@ export class ArticleHighlightsStore {
     } catch (error) {
       this.mine.update((list) => list.filter((h) => h.id !== temp.id));
       this.toasts.error(this.errors.forError(error));
-      if (isApiError(error) && error.code === 'highlight.text_mismatch') {
-        this.reloadArticle();
-        this.reload();
-      }
+      if (isApiError(error) && error.code === 'highlight.text_mismatch') this.textChanged();
       return false;
     }
   }

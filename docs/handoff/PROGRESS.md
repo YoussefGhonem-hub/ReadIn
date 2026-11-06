@@ -460,6 +460,13 @@ Later decisions (user, 2026-11-05):
   card → F23 admin console (with the paths and tag management screens, no role management) → the small leftovers
   (incl. the reading-mode button and the web initial bundle under 500 kB) → the final SPEC review. **F25 (offline) is
   postponed by the user:** not built now, and the final review doesn't count it as a gap.
+- **Changes on 2026-11-06 (user):** a new F33 rule first, right after the F24 quote card: any signed-in member
+  downloads the PDF of any published article they can open; only the writer downloads an archived one; a hidden
+  article gives the writer `409 article.pdf_hidden` and everyone else `404`; "Download PDF" in the reader's "⋯" for
+  every member, guests get the sign-in prompt; the limits stay. **F23 (admin console) is postponed until the user
+  says to start it** (its contract draft is ready, nothing built). The order is now: F24 quote card → the F33 change →
+  the small leftovers → the final review (F23 and F25 not counted as gaps). The web's Arabic UI is Modern Standard
+  Arabic (SPEC §14.4); mobile keeps its Egyptian Arabic.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked
@@ -695,3 +702,27 @@ then two fixers). Per part, what was built and **what was actually tried**:
   hidden highlights, the Saved list order, one query instead of one per group, the screen-reader announcement, web and
   mobile made the same (labels, tap to remove, where Saved → Highlights lives), a gap in an underline.
   **The fixes were not tried with the tests** (user rule).
+
+### F24 Quote card ✅
+- **Backend:** `POST /articles/{id}/quote-card` → PNG (1080 × 1080 or 1200 × 630), drawn by the F33 Chromium (sandbox
+  on, JavaScript off, every request blocked, fonts and logo inlined, text HTML-encoded) from the F30 selection range,
+  checked against the version's current text; 3–400 characters, never cut (the font shrinks to a minimum); guests
+  allowed; 30 per hour per user or guest IP; shares the PDF build slots (`quote.busy` / `quote.failed`); hidden:
+  `409 quote.hidden` for its author and moderators, 404 for everyone else; nothing stored. The card takes the
+  reader's direction for the quoted block, so an Arabic quote that starts with an English term reads right to left.
+  ADR 0019; settings in deployment.md §10 (`QuoteCard:*`, `RateLimits:QuoteCardPerHour`), the card's link from
+  `ArticlePdf:WebBaseUrl` (app-links.md).
+- **Web and mobile:** "Share quote" next to Highlight in the F30 selection toolbar (guests too; not in code/tables,
+  under 3 characters, on hidden articles or while highlights are hidden; over 400 says so without a call), a sheet
+  with the card's preview, light/dark and square/landscape (one request per look), Share (Web Share with the file /
+  the system share sheet), Download / Save, Copy link, every error with retry where it helps; a changed text reloads
+  the article. The web's Arabic is Modern Standard Arabic (§14.4), the mobile's Egyptian.
+- **Tried for real:** the cards drawn by real Chromium (two image baselines, plus an English-first Arabic quote drawn
+  and looked at); in Playwright a real mouse selection, the download event (PNG signature and size), the share
+  fallback, a guest, errors and offline; on mobile the share writes a real temp file in a widget test. Not tried: the
+  real share sheet / Save dialog on a device.
+- **Test round:** the tests ran once (backend 2418/2418, web unit 1380/1380, Playwright 70/70 on a clean HEAD + F24
+  copy, mobile 2345/2345). Fixed: the card's direction (block, not the quote's first letter), focus back in the
+  article when the dialog closes, a changed text reloads the article on web, the SPEC line, the same wording on both
+  clients, Copy link and a quote-aware preview label on mobile, two missing tests. **The fixes were not tried with the
+  tests** (user rule).

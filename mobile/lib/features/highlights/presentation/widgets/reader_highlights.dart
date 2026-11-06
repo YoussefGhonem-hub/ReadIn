@@ -14,14 +14,16 @@ import '../../../article/domain/entities/article.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
+import '../../../quote_card/domain/entities/quote_card.dart';
+import '../../../quote_card/presentation/widgets/quote_card_sheet.dart';
 import '../../../settings/domain/entities/app_settings.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
 import '../cubit/article_highlights_cubit.dart';
 
 /// The reader's highlights (F30) around its body: with an [ArticleHighlightsCubit] above (the reader provides one), the
 /// article's highlightable blocks select text with the Highlight / Remove toolbar and draw yours and the popular ranges,
-/// unless "Hide highlights" is on (F18, F28). A device copy (offline) has none. Without the cubit (the editor preview)
-/// it is just [child].
+/// unless "Hide highlights" is on (F18, F28). The same toolbar offers Share quote (F24). A device copy (offline) has
+/// none. Without the cubit (the editor preview) it is just [child].
 class ReaderHighlights extends StatefulWidget {
   const ReaderHighlights({super.key, required this.article, required this.child, this.onTextChanged});
 
@@ -88,6 +90,25 @@ class _ReaderHighlightsState extends State<ReaderHighlights> {
     }
   }
 
+  /// Share quote (F24): 3–400 characters open the quote card sheet (guests too); more say `quote.too_long` without
+  /// calling the API.
+  void _shareQuote(BuildContext _, HighlightSelection selection) {
+    final range = selection.range;
+    if (range == null || range.length < QuoteCardLimits.minLength) return;
+    if (range.length > QuoteCardLimits.maxLength) return showActionMessage(context, context.l10n.errQuoteCardTooLong);
+    unawaited(showQuoteCardSheet(
+      context,
+      article: _card,
+      range: range,
+      // `quote.text_mismatch`: the article and its highlights load again, as after `highlight.text_mismatch`.
+      onTextChanged: () {
+        if (!mounted) return;
+        widget.onTextChanged?.call();
+        _reload();
+      },
+    ));
+  }
+
   Future<void> _remove(BuildContext _, String id) async {
     final failure = await _cubit!.remove(id);
     if (!mounted) return;
@@ -135,6 +156,8 @@ class _ReaderHighlightsState extends State<ReaderHighlights> {
           onRemove: (context, id) => unawaited(_remove(context, id)),
           onCountTap: _showCount,
           onMineTap: _showMine,
+          // Not on an article hidden by moderators (`quote.hidden`).
+          onShareQuote: widget.article.isHidden ? null : _shareQuote,
           child: widget.child,
         ),
       ),

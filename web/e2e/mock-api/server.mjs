@@ -30,6 +30,7 @@ import { createModeration } from './moderation.mjs';
 import { createMutes } from './mutes.mjs';
 import { createNotifications } from './notifications.mjs';
 import { createProfiles } from './profiles.mjs';
+import { createQuoteCards } from './quote-card.mjs';
 import { createReposts } from './reposts.mjs';
 import { createSearch, textOfBlocks } from './search.mjs';
 import { createSocial } from './social.mjs';
@@ -817,6 +818,14 @@ const routes = [
   ...categories.routes,
   ...editor.routes,
   ...createPdf({ problem, viewerOf: social.viewerOf, editor, articles: () => [...DETAILS.values()], pdf: PDF }).routes,
+  // Quote cards (F24): the reader's articles and the Highlights lab; hidden ones as moderators see them (moderation.mjs).
+  ...createQuoteCards({
+    problem,
+    viewerOf: social.viewerOf,
+    articleFor: highlights.articleFor,
+    hiddenFor: (article, viewer) => !!moderation.decorateArticle({ id: article.id }, viewer).moderation,
+    png,
+  }).routes,
   ...tags.routes,
   ...search.routes,
   ...explore.routes,

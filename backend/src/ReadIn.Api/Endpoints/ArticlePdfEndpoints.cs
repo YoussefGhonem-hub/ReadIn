@@ -44,7 +44,7 @@ internal sealed class ArticlePdfEndpoints : IEndpointGroup
         $"attachment; filename=\"{ArticlePdfFile.AsciiFileName}\"; filename*=UTF-8''{Rfc5987(fileName)}";
 
     /// <summary>RFC 5987 <c>attr-char</c>s stay; every other UTF-8 byte is percent-encoded.</summary>
-    private static string Rfc5987(string value)
+    internal static string Rfc5987(string value)
     {
         var encoded = new StringBuilder(value.Length * 3);
         foreach (var b in Encoding.UTF8.GetBytes(value))

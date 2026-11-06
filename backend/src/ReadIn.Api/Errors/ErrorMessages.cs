@@ -162,6 +162,15 @@ public static class ErrorMessages
         ["article.pdf_busy"] = ("فيه PDFs كتير بتتجهز دلوقتي. حاول تاني كمان شوية.", "Many PDFs are being prepared right now. Try again in a moment."),
         ["article.pdf_failed"] = ("معرفناش نجهّز الـ PDF. حاول تاني.", "We couldn't prepare the PDF. Try again."),
         ["article.pdf_limit"] = ("حمّلت PDFs كتير الساعة دي. حاول تاني بعد شوية.", "You've downloaded many PDFs this hour. Try again later."),
+        // Quote card (SPEC F24)
+        ["quote.text_mismatch"] = ("النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.", "This text has changed in the article. Reload and try again."),
+        ["quote.block_not_allowed"] = ("مينفعش تشارك الجزء ده كاقتباس.", "This part can't be shared as a quote."),
+        ["quote.too_short"] = ("اختار 3 حروف على الأقل.", "Select at least 3 characters."),
+        ["quote.too_long"] = ("الاقتباس لازم يكون 400 حرف أو أقل. اختار جزء أصغر.", "A quote can be at most 400 characters. Select less text."),
+        ["quote.hidden"] = ("المشرفين خفّوا المقال ده، فمينفعش تشارك منه اقتباس.", "Moderators hid this article, so its quotes can't be shared."),
+        ["quote.limit"] = ("عملت كروت اقتباس كتير الساعة دي. حاول تاني بعد شوية.", "You've made many quote cards this hour. Try again later."),
+        ["quote.busy"] = ("فيه كروت كتير بتتجهز دلوقتي. حاول تاني كمان شوية.", "Many cards are being prepared right now. Try again in a moment."),
+        ["quote.failed"] = ("معرفناش نجهّز كارت الاقتباس. حاول تاني.", "We couldn't prepare the quote card. Try again."),
         // Notifications (SPEC F17)
         ["notification.not_found"] = ("الإشعار ده مش موجود.", "Notification not found."),
         ["notification.type_invalid"] = ("نوع الإشعار ده مش موجود أو مينفعش يتغيّر.", "Unknown or not configurable notification type."),

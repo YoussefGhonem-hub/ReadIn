@@ -20,3 +20,4 @@ One file per decision: `NNNN-short-title.md` (Context, Decision, Consequences).
 - [0016 — Immediate account deletion, with Apple token revocation](0016-immediate-account-deletion.md)
 - [0017 — Search: SQL Server Full-Text Search, with a LIKE fallback](0017-search-full-text-with-like-fallback.md)
 - [0018 — Two roles (Member, SuperAdmin), and Verified is a badge](0018-two-roles-and-a-verified-badge.md)
+- [0019 — Quote cards are drawn by the server, from a checked F30 range](0019-quote-cards-drawn-by-the-server.md)

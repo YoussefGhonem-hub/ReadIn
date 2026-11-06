@@ -263,6 +263,16 @@ import '../../features/profile/presentation/cubit/profile_articles_cubit.dart'
 import '../../features/profile/presentation/cubit/profile_cubit.dart' as _i36;
 import '../../features/profile/presentation/cubit/profile_reposts_cubit.dart'
     as _i25;
+import '../../features/quote_card/data/datasources/quote_card_data_source.dart'
+    as _i695;
+import '../../features/quote_card/data/repositories/quote_card_repository_impl.dart'
+    as _i751;
+import '../../features/quote_card/domain/repositories/quote_card_repository.dart'
+    as _i962;
+import '../../features/quote_card/domain/usecases/make_quote_card.dart'
+    as _i490;
+import '../../features/quote_card/presentation/cubit/quote_card_cubit.dart'
+    as _i78;
 import '../../features/reactions/data/datasources/reactions_api.dart' as _i824;
 import '../../features/reactions/data/repositories/reactions_repository_impl.dart'
     as _i399;
@@ -353,6 +363,7 @@ import '../l10n/current_locale.dart' as _i1026;
 import '../network/request_context.dart' as _i194;
 import '../phone/countries.dart' as _i115;
 import '../platform/device_name_service.dart' as _i1018;
+import '../platform/file_save_service.dart' as _i595;
 import '../platform/share_service.dart' as _i868;
 import '../platform/time_zone_service.dart' as _i878;
 import '../push/devices_api.dart' as _i455;
@@ -384,6 +395,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => registerModule.secureStorage,
     );
     gh.lazySingleton<_i1026.CurrentLocale>(() => _i1026.CurrentLocale());
+    gh.lazySingleton<_i595.FileSaveService>(() => _i595.FileSaveService());
     gh.lazySingleton<_i868.ShareService>(() => _i868.ShareService());
     gh.lazySingleton<_i878.TimeZoneService>(() => _i878.TimeZoneService());
     gh.lazySingleton<_i815.AppleSignInDataSource>(
@@ -544,6 +556,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i848.DocumentFileDataSource>(
       () => _i848.DocumentFileDataSource(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i695.QuoteCardDataSource>(
+      () => _i695.QuoteCardDataSource(gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i123.RepostsRepository>(
       () => _i578.RepostsRepositoryImpl(gh<_i495.RepostsApi>()),
@@ -765,6 +780,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i212.SearchContent>(
       () => _i212.SearchContent(gh<_i357.SearchRepository>()),
+    );
+    gh.lazySingleton<_i962.QuoteCardRepository>(
+      () => _i751.QuoteCardRepositoryImpl(gh<_i695.QuoteCardDataSource>()),
     );
     gh.factory<_i788.GetComments>(
       () => _i788.GetComments(gh<_i670.CommentsRepository>()),
@@ -1008,11 +1026,25 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i789.ModerationSummaryCubit>(
       () => _i789.ModerationSummaryCubit(gh<_i130.GetModerationSummary>()),
     );
+    gh.factory<_i490.MakeQuoteCard>(
+      () => _i490.MakeQuoteCard(gh<_i962.QuoteCardRepository>()),
+    );
+    gh.factory<_i490.PrepareQuoteCardFile>(
+      () => _i490.PrepareQuoteCardFile(gh<_i962.QuoteCardRepository>()),
+    );
     gh.factory<_i172.ArticleLiveCubit>(
       () => _i172.ArticleLiveCubit(gh<_i854.RealtimeService>()),
     );
     gh.factory<_i136.LiveFeedCubit>(
       () => _i136.LiveFeedCubit(gh<_i854.RealtimeService>()),
+    );
+    gh.factory<_i78.QuoteCardCubit>(
+      () => _i78.QuoteCardCubit(
+        gh<_i490.MakeQuoteCard>(),
+        gh<_i490.PrepareQuoteCardFile>(),
+        gh<_i868.ShareService>(),
+        gh<_i595.FileSaveService>(),
+      ),
     );
     gh.factory<_i284.ArticleCubit>(
       () => _i284.ArticleCubit(gh<_i904.GetArticle>()),

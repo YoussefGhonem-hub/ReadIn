@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using ReadIn.Application.Features.Articles.QuoteCards;
 using ReadIn.Infrastructure.Pdf;
 
 namespace ReadIn.Infrastructure.UnitTests.Pdf;
@@ -131,6 +132,27 @@ public sealed class PdfBuildGateTests
 
         await FluentActions.Awaiting(() => build).Should().ThrowAsync<OperationCanceledException>();
         restarted.Should().BeFalse();
+    }
+
+    /// <summary>SPEC F24: quote cards take the same slots as PDFs, with their own wait, time and codes.</summary>
+    [Fact]
+    public async Task Quote_cards_share_the_slots_with_their_own_limits_and_codes()
+    {
+        using var gate = Gate(TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60), slots: 1);
+        var card = new BuildLimits("quote card", TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(300),
+            QuoteCardErrors.Busy, QuoteCardErrors.Failed);
+        var release = new TaskCompletionSource();
+        var pdf = gate.RunAsync(async _ => { await release.Task; return 1; }, NoRestart, CancellationToken.None);
+
+        var waiting = await gate.RunAsync(_ => Task.FromResult(2), NoRestart, card, CancellationToken.None);
+        release.SetResult();
+        (await pdf).IsSuccess.Should().BeTrue();
+        var slow = await gate.RunAsync(_ => new TaskCompletionSource<int>().Task, NoRestart, card, CancellationToken.None);
+        var drawn = await gate.RunAsync(_ => Task.FromResult(3), NoRestart, card, CancellationToken.None);
+
+        waiting.Error!.Code.Should().Be("quote.busy", "a PDF holds the only slot, and a card waits only 200 ms");
+        slow.Error!.Code.Should().Be("quote.failed", "a card has its own, shorter time");
+        drawn.Value.Should().Be(3);
     }
 
     private static void InterlockedMax(ref int target, int value)

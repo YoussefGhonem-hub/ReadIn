@@ -25,6 +25,8 @@
     <None Include="../../../shared/rdoc/examples/pdf/*.json" LinkBase="fixtures/rdoc-pdf" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../../shared/bidi/fixtures.json" Link="fixtures/bidi/fixtures.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Pdf/baselines/*.png" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Quote cards (SPEC F24): the approved images, one Arabic light square and one English dark landscape. -->
+    <None Update="QuoteCards/baselines/*.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

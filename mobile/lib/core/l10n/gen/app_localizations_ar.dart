@@ -5215,4 +5215,96 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errHighlightNotFound => 'الـ Highlight ده مش موجود.';
+
+  @override
+  String get quoteCardAction => 'شارك اقتباس';
+
+  @override
+  String get quoteCardTitle => 'شارك اقتباس';
+
+  @override
+  String get quoteCardHint =>
+      'صورة للجزء اللي اخترته للسوشيال ميديا، ومعاها لينك المقال.';
+
+  @override
+  String get quoteCardThemeLabel => 'ألوان الكارت';
+
+  @override
+  String get quoteCardFormatLabel => 'مقاس الكارت';
+
+  @override
+  String get quoteCardSquare => 'مربع';
+
+  @override
+  String get quoteCardLandscape => 'بالعرض';
+
+  @override
+  String get quoteCardShare => 'شارك';
+
+  @override
+  String get quoteCardSave => 'احفظ';
+
+  @override
+  String get quoteCardCopyLink => 'انسخ اللينك';
+
+  @override
+  String get quoteCardLinkCopied => 'اتنسخ اللينك';
+
+  @override
+  String get quoteCardCopyFailed => 'معرفناش ننسخ اللينك.';
+
+  @override
+  String get quoteCardSaved => 'اتحفظ الكارت.';
+
+  @override
+  String get quoteCardSaveFailed => 'معرفناش نحفظ الكارت. جرّب تاني.';
+
+  @override
+  String get quoteCardShareFailed => 'معرفناش نفتح المشاركة. جرّب تاني.';
+
+  @override
+  String get quoteCardPreparing => 'بنجهز الكارت…';
+
+  @override
+  String quoteCardPreview(String quote) {
+    return 'كارت اقتباس: $quote';
+  }
+
+  @override
+  String get quoteCardRetry => 'حاول تاني';
+
+  @override
+  String get errQuoteCardNotFound => 'المقال مش موجود.';
+
+  @override
+  String get errQuoteCardHidden =>
+      'المشرفين خفّوا المقال ده، فمينفعش تشارك منه اقتباس.';
+
+  @override
+  String get errQuoteCardTextMismatch =>
+      'النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.';
+
+  @override
+  String get errQuoteCardBlockNotAllowed => 'مينفعش تشارك الجزء ده كاقتباس.';
+
+  @override
+  String get errQuoteCardTooShort => 'اختار 3 حروف على الأقل.';
+
+  @override
+  String get errQuoteCardTooLong =>
+      'الاقتباس لازم يكون 400 حرف أو أقل. اختار جزء أصغر.';
+
+  @override
+  String get errQuoteCardLimit =>
+      'عملت كروت اقتباس كتير الساعة دي. حاول تاني بعد شوية.';
+
+  @override
+  String get errQuoteCardBusy =>
+      'فيه كروت كتير بتتجهز دلوقتي. حاول تاني كمان شوية.';
+
+  @override
+  String get errQuoteCardFailed => 'معرفناش نجهّز كارت الاقتباس. حاول تاني.';
+
+  @override
+  String get errQuoteCardOffline => 'محتاج إنترنت عشان تعمل كارت اقتباس.';
 }

@@ -155,6 +155,15 @@ export const CONTRACT_ERROR_CODES = [
   'highlight.too_long',
   'highlight.limit',
   'highlight.not_found',
+  // Quote card (F24): POST /articles/{id}/quote-card
+  'quote.text_mismatch',
+  'quote.block_not_allowed',
+  'quote.too_short',
+  'quote.too_long',
+  'quote.hidden',
+  'quote.limit',
+  'quote.busy',
+  'quote.failed',
   // Comments (F11)
   'comment.not_found',
   'comment.not_owner',

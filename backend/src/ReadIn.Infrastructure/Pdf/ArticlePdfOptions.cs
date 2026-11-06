@@ -11,10 +11,13 @@ public sealed class ArticlePdfOptions
     /// </summary>
     public string? ChromiumPath { get; set; }
 
-    /// <summary>The web app's origin, for the article link at the end, profile links and the footer's host name.</summary>
+    /// <summary>
+    /// The web app's origin, for the article link at the end, profile links and the footer's host name; quote cards
+    /// (SPEC F24) print their article link from it too.
+    /// </summary>
     public string WebBaseUrl { get; set; } = "https://readin.app";
 
-    /// <summary>Builds at the same time (per API instance).</summary>
+    /// <summary>Builds at the same time (per API instance), article PDFs and quote cards together.</summary>
     public int MaxConcurrentBuilds { get; set; } = 2;
 
     /// <summary>How long a request waits for a free build, then <c>503 article.pdf_busy</c>.</summary>

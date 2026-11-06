@@ -1,0 +1,97 @@
+/* Quote card (SPEC F24, ADR 0019): the §15.2 colour tokens in light and dark, the §15.3 fonts. The page has no script;
+   the renderer sets the quote's font size from outside (the DevTools DOM domain) so it fits its box, and never cuts it. */
+html, body { margin: 0; padding: 0; }
+
+body {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+  background: var(--page);
+  color: var(--text);
+  font-variant-numeric: lining-nums;
+  font-kerning: normal;
+  text-rendering: geometricPrecision;
+}
+
+/* Emoji, then the symbol fonts last: a character the text fonts lack never comes from the server's fonts. */
+body.rtl { font-family: "ReadIn Plex Arabic", "ReadIn Plex", "ReadIn Noto", "ReadIn Emoji", "ReadIn Symbols", "ReadIn Math"; }
+body.ltr { font-family: "ReadIn Plex", "ReadIn Plex Arabic", "ReadIn Noto", "ReadIn Emoji", "ReadIn Symbols", "ReadIn Math"; }
+
+/* §15.2: page = primary.container, card = surface, then border, text.primary, text.secondary, primary, accent. */
+.light { --page: #E3F1EE; --card: #FFFFFF; --line: #E8E4DC; --text: #1A1A1A; --muted: #6B6B6B; --primary: #0F5E52; --accent: #F2A93B; }
+.dark  { --page: #16302A; --card: #1B1E1C; --line: #2E322F; --text: #ECEAE6; --muted: #A3A39E; --primary: #3FB8A3; --accent: #F5B95A; }
+
+.square    { --w: 1080px; --h: 1080px; --inset: 48px; --pad: 64px; --radius: 40px; --mark: 64px; --mark-gap: 24px;
+             --gap: 28px; --title: 32px; --name: 26px; --logo: 208px; --url: 22px; }
+.landscape { --w: 1200px; --h: 630px; --inset: 32px; --pad: 44px; --radius: 32px; --mark: 40px; --mark-gap: 14px;
+             --gap: 18px; --title: 24px; --name: 20px; --logo: 150px; --url: 18px; }
+
+.frame {
+  box-sizing: border-box;
+  position: absolute;
+  inset: var(--inset);
+  display: flex;
+  flex-direction: column;
+  padding: var(--pad);
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 2px solid var(--line);
+}
+
+.mark { flex: none; width: var(--mark); height: var(--mark); margin-bottom: var(--mark-gap); color: var(--accent); }
+.mark svg { display: block; width: 100%; height: 100%; }
+.rtl .mark svg { transform: scaleX(-1); }
+
+/* The quote's box takes the room left; the quote is centred in it and measured against it. */
+.qbox { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+.quote {
+  flex: none;
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* Every text block keeps its own direction (dir) but lines up with the card's start edge. */
+.rtl .quote, .rtl .title { text-align: right; }
+.ltr .quote, .ltr .title { text-align: left; }
+
+.meta { flex: none; margin-top: var(--gap); padding-top: var(--gap); border-top: 2px solid var(--line); }
+.title {
+  font-size: var(--title);
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.landscape .title { -webkit-line-clamp: 1; }
+
+.byline { display: flex; align-items: center; gap: 0.35em; margin-top: 6px; font-size: var(--name); line-height: 1.4; color: var(--muted); }
+.name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.verified { flex: none; display: block; width: 0.95em; height: 0.95em; color: var(--primary); }
+.verified svg { display: block; width: 100%; height: 100%; }
+
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: var(--gap); }
+.logo { flex: none; display: block; width: var(--logo); height: auto; }
+.url {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-family: "ReadIn Plex", "ReadIn Plex Arabic", "ReadIn Noto";
+  font-size: var(--url);
+  color: var(--muted);
+}
+
+/* Landscape: the title and the writer beside the logo, so the quote keeps its room. */
+.landscape .meta { display: flex; align-items: center; gap: 32px; }
+.landscape .about { flex: 1 1 auto; min-width: 0; }
+/* A column: flex-end is the inline end, so the right in LTR and the left in RTL. */
+.landscape .brand { flex: none; flex-direction: column; align-items: flex-end; gap: 8px; margin-top: 0; }

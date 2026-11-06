@@ -74,6 +74,33 @@ describe('Writer category errors (F31)', () => {
   });
 });
 
+describe('Quote card errors (F24)', () => {
+  // The contract's table (docs/api/contract-v1.md → Quote card (F24)): its English, and its Arabic said in Modern Standard
+  // Arabic (SPEC §14.4; mobile keeps the contract's Egyptian wording).
+  const expected: Record<string, [string, string]> = {
+    'quote.text_mismatch': ['تغيّر هذا النص في المقال. حدّث الصفحة وحاول مرة أخرى.', 'This text has changed in the article. Reload and try again.'],
+    'quote.block_not_allowed': ['لا يمكن مشاركة هذا الجزء كاقتباس.', "This part can't be shared as a quote."],
+    'quote.too_short': ['حدّد 3 أحرف على الأقل.', 'Select at least 3 characters.'],
+    'quote.too_long': ['يجب ألا يتجاوز الاقتباس 400 حرف. حدّد جزءًا أقصر.', 'A quote can be at most 400 characters. Select less text.'],
+    'quote.hidden': ['أخفى المشرفون هذا المقال، لذا لا يمكن مشاركة اقتباس منه.', "Moderators hid this article, so its quotes can't be shared."],
+    'quote.limit': ['أنشأت بطاقات اقتباس كثيرة خلال هذه الساعة. حاول مرة أخرى لاحقًا.', "You've made many quote cards this hour. Try again later."],
+    'quote.busy': ['يجري الآن تجهيز بطاقات كثيرة. حاول مرة أخرى بعد قليل.', 'Many cards are being prepared right now. Try again in a moment.'],
+    'quote.failed': ['تعذّر تجهيز بطاقة الاقتباس. حاول مرة أخرى.', "We couldn't prepare the quote card. Try again."],
+  };
+
+  it('read like the API in both languages', () => {
+    for (const [code, [arabic, english]] of Object.entries(expected)) {
+      expect(lookup(ar, `errors.${code}`), code).toBe(arabic);
+      expect(lookup(en, `errors.${code}`), code).toBe(english);
+    }
+  });
+
+  it('the dialog says "Article not found." and that the internet is needed, as the contract does', () => {
+    expect([ar.quoteCard.notFound, en.quoteCard.notFound]).toEqual(['المقال غير موجود.', 'Article not found.']);
+    expect([ar.quoteCard.offline, en.quoteCard.offline]).toEqual(['تحتاج إلى اتصال بالإنترنت لإنشاء بطاقة اقتباس.', 'You need an internet connection to make a quote card.']);
+  });
+});
+
 describe('Suspended account message (F22)', () => {
   const suspended = (suspendedUntil?: string | null) =>
     new ApiError(403, 'user.suspended', { title: 'This account is suspended.', status: 403, code: 'user.suspended', ...(suspendedUntil === undefined ? {} : { suspendedUntil }) });

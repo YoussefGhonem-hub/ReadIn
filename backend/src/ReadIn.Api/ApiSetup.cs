@@ -74,7 +74,7 @@ public static class ApiSetup
         services.AddCors(options =>
         {
             // Credentials: the web's refresh token travels as an HttpOnly cookie on /auth calls (SPEC §9.3).
-            // Content-Disposition: the web names a downloaded article PDF after the server's file name (SPEC F33).
+            // Content-Disposition: the web names a downloaded article PDF (SPEC F33) and a quote card (F24) after the server's file name.
             options.AddPolicy(CorsPolicy, policy => policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()
                 .WithExposedHeaders("Content-Disposition"));
             options.AddPolicy(UploadsStaticFiles.CorsPolicy, policy => policy.WithOrigins(origins).WithMethods("GET", "HEAD"));
@@ -149,6 +149,8 @@ public static class ApiSetup
                 }));
             // SPEC F33: 10 article PDFs per user per hour, answered with 429 article.pdf_limit.
             options.AddPolicy<string, ArticlePdfRateLimitPolicy>(ArticlePdfRateLimitPolicy.Name);
+            // SPEC F24: 30 quote cards per user per hour (guests per IP), answered with 429 quote.limit.
+            options.AddPolicy<string, QuoteCardRateLimitPolicy>(QuoteCardRateLimitPolicy.Name);
         });
 
         services.AddResponseCompression(options =>

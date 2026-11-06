@@ -5,6 +5,7 @@ import {
   ElementRef,
   Injector,
   PLATFORM_ID,
+  Type,
   afterNextRender,
   computed,
   effect,
@@ -14,12 +15,15 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { NgComponentOutlet, isPlatformBrowser } from '@angular/common';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { HighlightRange, selectionToHighlight } from '../../shared/rdoc/selection-offsets';
+import { ToastService } from '../../shared/ui/toast/toast.service';
+import { QuoteCardArticle, QuoteCardSource, quoteOffer } from '../quote-card/quote-card';
+import { QUOTE_ICON } from '../quote-card/quote-card-icons';
 import { ArticleHighlightsStore, isPendingHighlight } from './article-highlights.store';
 import { HIGHLIGHT_ICON } from './highlight-icons';
 import { HighlightsPrefs } from './highlights-prefs';
@@ -36,6 +40,8 @@ interface ToolbarState {
   count: number | null;
   /** More than 1,000 characters: said instead of Highlight. */
   tooLong: boolean;
+  /** Share quote (F24): the range to draw, `too_long` (over 400: said when pressed, nothing is asked), or not offered. */
+  quote: HighlightRange | 'too_long' | null;
 }
 
 /** The space between the text and the toolbar, and the top bar it must not hide under. */
@@ -51,13 +57,17 @@ const BLOCK_ANCHOR = /^#b-([A-Za-z0-9_-]{1,64})$/;
  * popular one (also said through the live region, as the toolbar takes no focus). Tapping a highlight shows the same
  * toolbar. Guests get the sign-in prompt from Highlight. While highlights are hidden nothing shows.
  *
+ * Next to Highlight, **Share quote** (F24) opens the quote card dialog for the same range (3–400 characters; a longer
+ * selection says so when pressed, without asking the server), for guests and for readers who can't highlight too. It
+ * shows only while the page gives `quoteArticle` (not on an article hidden by moderators). The dialog is a lazy chunk.
+ *
  * Keyboard: with a selection, Tab moves into the toolbar and Escape closes it; `Ctrl + /` (⌘ / on a Mac) shows or
  * hides every highlight, announced to screen readers. A link with `#b-{blockId}` scrolls to that block once the article
  * is on screen (the resume position is skipped for links with an anchor, F04).
  */
 @Component({
   selector: 'rd-reader-highlights',
-  imports: [TranslocoPipe, LucideDynamicIcon],
+  imports: [TranslocoPipe, LucideDynamicIcon, NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
   styles: `
@@ -68,6 +78,8 @@ const BLOCK_ANCHOR = /^#b-([A-Za-z0-9_-]{1,64})$/;
       display: flex;
       align-items: center;
       gap: 2px;
+      /* Its own width, not what is left right of its center (it is fixed, with left at its center), so labels don't wrap. */
+      width: max-content;
       max-width: calc(100vw - 16px);
       padding: 4px;
       border: 1px solid var(--rd-color-border);
@@ -116,9 +128,18 @@ const BLOCK_ANCHOR = /^#b-([A-Za-z0-9_-]{1,64})$/;
             {{ 'highlights.remove' | transloco }}
           </button>
         }
+        @if (t.quote; as quote) {
+          <button type="button" class="rd-btn rd-btn-ghost min-h-11 gap-1.5 px-3 text-sm" data-quote-share-open (click)="shareQuote(quote)">
+            <svg [lucideIcon]="quoteIcons.Quote" [size]="16" class="shrink-0 text-primary" aria-hidden="true"></svg>
+            {{ 'quoteCard.share' | transloco }}
+          </button>
+        }
       </div>
     }
     <span class="sr-only" aria-live="polite" data-highlights-status>{{ announcement() }}</span>
+    @if (quoteDialog(); as dialog) {
+      <ng-container *ngComponentOutlet="dialog; inputs: quoteInputs()" />
+    }
   `,
 })
 export class ReaderHighlights {
@@ -127,11 +148,24 @@ export class ReaderHighlights {
   private readonly session = inject(SessionStore);
   private readonly prompt = inject(AuthPromptService);
   private readonly transloco = inject(TranslocoService);
+  private readonly toasts = inject(ToastService);
   private readonly injector = inject(Injector);
   protected readonly icons = HIGHLIGHT_ICON;
+  protected readonly quoteIcons = QUOTE_ICON;
 
   /** The rendered article (`<rd-rdoc>`). */
   readonly content = input<HTMLElement | null>(null);
+  /** The version quotes are shared from (F24); null: no Share quote (e.g. an article hidden by moderators). */
+  readonly quoteArticle = input<QuoteCardArticle | null>(null);
+
+  /** The quote card dialog, once its chunk has loaded, and the quote it shows (null: closed). */
+  protected readonly quoteDialog = signal<Type<unknown> | null>(null);
+  private readonly quoteSource = signal<QuoteCardSource | null>(null);
+  protected readonly quoteInputs = computed(() => ({ source: this.quoteSource(), dismiss: this.closeQuote, textChanged: this.quoteTextChanged }));
+  private readonly closeQuote = () => this.quoteSource.set(null);
+  /** `quote.text_mismatch`: the article and its highlights load again, as after `highlight.text_mismatch`. */
+  private readonly quoteTextChanged = () => this.store.textChanged();
+  private quoteChunk: Promise<boolean> | null = null;
 
   protected readonly state = signal<ToolbarState | null>(null);
   protected readonly position = signal({ top: -9999, left: -9999 });
@@ -233,6 +267,57 @@ export class ReaderHighlights {
     if (await this.store.remove(id)) this.announcement.set(this.transloco.translate('highlights.removed'));
   }
 
+  /**
+   * Share quote (F24): opens the quote card dialog for the range (its chunk loads on the first press; offline it can't,
+   * and says the internet is needed). Over 400 characters it only says so. The selection goes, so the toolbar doesn't
+   * come back under the dialog. Focus moves to the quoted block first, so the dialog gives it back there when it closes
+   * (the toolbar's button is gone by then), not to the top of the page (§26).
+   */
+  protected async shareQuote(quote: HighlightRange | 'too_long'): Promise<void> {
+    const article = this.quoteArticle();
+    this.close();
+    if (!article) return;
+    if (quote === 'too_long') {
+      this.toasts.error(this.transloco.translate('errors.quote.too_long'));
+      return;
+    }
+    document.getSelection()?.removeAllRanges();
+    this.focusBlock(quote.blockId);
+    this.quoteSource.set({ article, range: quote });
+    if (!(await this.loadQuoteDialog())) {
+      this.quoteSource.set(null);
+      const retry = { label: this.transloco.translate('quoteCard.retry'), run: () => void this.shareQuote(quote) };
+      this.toasts.error(this.transloco.translate('quoteCard.offline'), retry);
+    }
+  }
+
+  /**
+   * Focuses the block a quote comes from, else the article (`<rd-rdoc>`), without scrolling: focusable by script only
+   * (`tabindex="-1"`) when it isn't focusable already.
+   */
+  private focusBlock(blockId: string): void {
+    const host = this.content();
+    if (!host) return;
+    const target = host.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`) ?? host;
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+  }
+
+  /** Resolves false when the dialog's chunk didn't load (offline); the next press tries again. */
+  private loadQuoteDialog(): Promise<boolean> {
+    this.quoteChunk ??= import('../quote-card/quote-card-dialog').then(
+      ({ QuoteCardDialog }) => {
+        this.quoteDialog.set(QuoteCardDialog);
+        return true;
+      },
+      () => {
+        this.quoteChunk = null;
+        return false;
+      },
+    );
+    return this.quoteChunk;
+  }
+
   /** Escape: the toolbar goes, the selection stays. */
   protected dismiss(): void {
     const hadFocus = this.bar()?.nativeElement.contains(document.activeElement);
@@ -261,7 +346,7 @@ export class ReaderHighlights {
   private readSelection(): void {
     const host = this.content();
     const selection = document.getSelection();
-    if (!host || !this.store.visible() || !selection || selection.rangeCount === 0 || selection.isCollapsed) {
+    if (!host || !this.store.visible() || !selection || selection.rangeCount === 0 || selection.isCollapsed || this.quoteSource()) {
       // A tapped mark's toolbar stays until the next tap.
       if (this.state()?.kind !== 'mark') this.close();
       return;
@@ -269,22 +354,30 @@ export class ReaderHighlights {
     const range = selection.getRangeAt(0).cloneRange();
     const result = selectionToHighlight(host, range);
     const anchor = () => (typeof range.getBoundingClientRect === 'function' ? range.getBoundingClientRect() : null);
-    if (result.kind === 'too_long') return this.open({ kind: 'selection', range: null, removeId: null, count: null, tooLong: true }, anchor);
+    if (result.kind === 'too_long') {
+      return this.open({ kind: 'selection', range: null, removeId: null, count: null, tooLong: true, quote: this.quoteFor(null, true) }, anchor);
+    }
     if (result.kind === 'too_short') {
       // Too little for Highlight, but a word inside one of yours still offers Remove (as on mobile).
       const own = result.range && this.canWrite() ? this.store.mineContaining(result.range) : null;
       if (!own || !result.range) return this.close();
-      return this.open({ kind: 'selection', range: null, removeId: own.id, count: this.store.popularCount(result.range), tooLong: false }, anchor);
+      return this.open({ kind: 'selection', range: null, removeId: own.id, count: this.store.popularCount(result.range), tooLong: false, quote: null }, anchor);
     }
     if (result.kind !== 'ok') return this.close();
     const mine = this.store.mineContaining(result.range);
     const count = this.store.popularCount(result.range);
     const canWrite = this.canWrite();
-    if (!canWrite && count === null) return this.close();
+    const quote = this.quoteFor(result.range, false);
+    if (!canWrite && count === null && !quote) return this.close();
     this.open(
-      { kind: 'selection', range: canWrite && !mine ? result.range : null, removeId: canWrite && mine ? mine.id : null, count, tooLong: false },
+      { kind: 'selection', range: canWrite && !mine ? result.range : null, removeId: canWrite && mine ? mine.id : null, count, tooLong: false, quote },
       anchor,
     );
+  }
+
+  /** What Share quote offers for the selection (F24): nothing while the page gives no article to quote from. */
+  private quoteFor(range: HighlightRange | null, tooLongForHighlight: boolean): HighlightRange | 'too_long' | null {
+    return this.quoteArticle() ? quoteOffer(range, tooLongForHighlight) : null;
   }
 
   private onMarkClick(event: MouseEvent, host: HTMLElement): void {
@@ -296,7 +389,7 @@ export class ReaderHighlights {
     const count = mark.getAttribute('data-hl-count');
     const removeId = mine && !isPendingHighlight(mine) && this.session.isAuthenticated() && this.canWrite() ? mine : null;
     if (!removeId && count === null) return;
-    this.open({ kind: 'mark', range: null, removeId, count: count === null ? null : Number(count), tooLong: false }, () => mark.getBoundingClientRect());
+    this.open({ kind: 'mark', range: null, removeId, count: count === null ? null : Number(count), tooLong: false, quote: null }, () => mark.getBoundingClientRect());
   }
 
   private onKeydown(event: KeyboardEvent): void {

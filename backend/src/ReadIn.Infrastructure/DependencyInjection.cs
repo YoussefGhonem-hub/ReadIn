@@ -73,6 +73,7 @@ public static class DependencyInjection
         services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
         services.AddMedia(configuration, IsHangfireEnabled(configuration));
         Pdf.ArticlePdfRegistration.AddArticlePdf(services, configuration); // SPEC F33
+        QuoteCards.QuoteCardRegistration.AddQuoteCards(services, configuration); // SPEC F24, on the F33 Chromium
         services.AddPush(configuration, environment);
 
         var connectionString = configuration.GetConnectionString(ConnectionStringName)

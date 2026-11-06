@@ -312,6 +312,18 @@ not found"; nothing else in the API needs Chromium.
 | `ArticlePdf:BuildTimeout` | `00:01:00` | One build, then `500 article.pdf_failed`; that build's page is closed (Chromium restarts only if it crashed) |
 | `RateLimits:ArticlePdfPerHour` | `10` | Per user, in memory: per API instance, and it starts over on a restart |
 
+**Quote cards (SPEC F24)** are drawn by the same Chromium on the same build slots: `ArticlePdf:MaxConcurrentBuilds`
+counts PDFs and cards together, and the card's article link uses `ArticlePdf:WebBaseUrl`. Their own settings:
+
+| Key | Default | Notes |
+|---|---|---|
+| `QuoteCard:QueueTimeout` | `00:00:10` | Wait for a free slot, then `503 quote.busy` |
+| `QuoteCard:BuildTimeout` | `00:00:20` | One card, then `500 quote.failed` |
+| `RateLimits:QuoteCardPerHour` | `30` | Per user, guests per IP address; in memory, per API instance |
+
+`POST /api/v1/articles/*/quote-card` answers within 30 s at most (10 s wait + 20 s draw), so no proxy change is needed.
+Nothing new to install: the dark lockup and the quote mark ship inside the API like the other PDF resources.
+
 **What Chromium is allowed to do.** One browser per API instance, started on the first PDF and restarted only when it
 crashed, disconnected or stopped answering; a build that fails or runs out of time closes only its own page, so the
 other build carries on. Its sandbox stays on (never add `--no-sandbox`), each page runs with JavaScript off, every

@@ -74,7 +74,9 @@ stops the Android build with a message.
 - iOS: Apple fetches the file through its CDN, `https://app-site-association.cdn-apple.com/a/v1/{domain}`, which can
   lag by hours. Then open a link from Notes or Messages (typing it into Safari doesn't open the app).
 
-## Not built yet
+## Quote card
 
-SPEC F24 also has a **quote card**: select text in an article and share it as an image (light/dark). It is not
-built.
+SPEC F24 also has a **quote card**: select text in an article and share it as an image (light/dark, square or
+landscape). The API draws it (`POST /articles/{id}/quote-card`, contract "Quote card (F24)"); the link on the card is
+`ArticlePdf:WebBaseUrl` + `/{ar|en}/a/{slug}`, so set `ArticlePdf:WebBaseUrl` to the same domain as `siteUrl` and
+`WEB_ORIGIN`.

@@ -16,4 +16,21 @@ class ShareService {
         fileNameOverrides: fileName == null ? null : [fileName],
         sharePositionOrigin: origin,
       ));
+
+  /// A file with a message beside it (the F24 quote card: its PNG and the article's link).
+  Future<void> shareFileWithText(
+    String path, {
+    required String mimeType,
+    required String text,
+    String? subject,
+    String? fileName,
+    Rect? origin,
+  }) =>
+      SharePlus.instance.share(ShareParams(
+        files: [XFile(path, mimeType: mimeType)],
+        text: text,
+        subject: subject,
+        fileNameOverrides: fileName == null ? null : [fileName],
+        sharePositionOrigin: origin,
+      ));
 }

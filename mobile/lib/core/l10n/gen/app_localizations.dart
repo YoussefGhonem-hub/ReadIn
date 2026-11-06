@@ -8641,6 +8641,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Highlight not found.'**
   String get errHighlightNotFound;
+
+  /// No description provided for @quoteCardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share quote'**
+  String get quoteCardAction;
+
+  /// No description provided for @quoteCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share quote'**
+  String get quoteCardTitle;
+
+  /// No description provided for @quoteCardHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A picture of your selection for social media, with the article link.'**
+  String get quoteCardHint;
+
+  /// No description provided for @quoteCardThemeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Card colors'**
+  String get quoteCardThemeLabel;
+
+  /// No description provided for @quoteCardFormatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Card size'**
+  String get quoteCardFormatLabel;
+
+  /// No description provided for @quoteCardSquare.
+  ///
+  /// In en, this message translates to:
+  /// **'Square'**
+  String get quoteCardSquare;
+
+  /// No description provided for @quoteCardLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Landscape'**
+  String get quoteCardLandscape;
+
+  /// No description provided for @quoteCardShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get quoteCardShare;
+
+  /// No description provided for @quoteCardSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get quoteCardSave;
+
+  /// No description provided for @quoteCardCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get quoteCardCopyLink;
+
+  /// No description provided for @quoteCardLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get quoteCardLinkCopied;
+
+  /// No description provided for @quoteCardCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t copy the link.'**
+  String get quoteCardCopyFailed;
+
+  /// No description provided for @quoteCardSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Card saved.'**
+  String get quoteCardSaved;
+
+  /// No description provided for @quoteCardSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t save the card. Try again.'**
+  String get quoteCardSaveFailed;
+
+  /// No description provided for @quoteCardShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t open sharing. Try again.'**
+  String get quoteCardShareFailed;
+
+  /// No description provided for @quoteCardPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing the card…'**
+  String get quoteCardPreparing;
+
+  /// No description provided for @quoteCardPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote card: {quote}'**
+  String quoteCardPreview(String quote);
+
+  /// No description provided for @quoteCardRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get quoteCardRetry;
+
+  /// No description provided for @errQuoteCardNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Article not found.'**
+  String get errQuoteCardNotFound;
+
+  /// No description provided for @errQuoteCardHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderators hid this article, so its quotes can\'t be shared.'**
+  String get errQuoteCardHidden;
+
+  /// No description provided for @errQuoteCardTextMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This text has changed in the article. Reload and try again.'**
+  String get errQuoteCardTextMismatch;
+
+  /// No description provided for @errQuoteCardBlockNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This part can\'t be shared as a quote.'**
+  String get errQuoteCardBlockNotAllowed;
+
+  /// No description provided for @errQuoteCardTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least 3 characters.'**
+  String get errQuoteCardTooShort;
+
+  /// No description provided for @errQuoteCardTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'A quote can be at most 400 characters. Select less text.'**
+  String get errQuoteCardTooLong;
+
+  /// No description provided for @errQuoteCardLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve made many quote cards this hour. Try again later.'**
+  String get errQuoteCardLimit;
+
+  /// No description provided for @errQuoteCardBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Many cards are being prepared right now. Try again in a moment.'**
+  String get errQuoteCardBusy;
+
+  /// No description provided for @errQuoteCardFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t prepare the quote card. Try again.'**
+  String get errQuoteCardFailed;
+
+  /// No description provided for @errQuoteCardOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'You need an internet connection to make a quote card.'**
+  String get errQuoteCardOffline;
 }
 
 class _AppLocalizationsDelegate

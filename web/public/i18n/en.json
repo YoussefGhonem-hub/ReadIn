@@ -264,6 +264,16 @@
       "limit": "You can have at most 100 highlights in one article.",
       "not_found": "Highlight not found."
     },
+    "quote": {
+      "text_mismatch": "This text has changed in the article. Reload and try again.",
+      "block_not_allowed": "This part can't be shared as a quote.",
+      "too_short": "Select at least 3 characters.",
+      "too_long": "A quote can be at most 400 characters. Select less text.",
+      "hidden": "Moderators hid this article, so its quotes can't be shared.",
+      "limit": "You've made many quote cards this hour. Try again later.",
+      "busy": "Many cards are being prepared right now. Try again in a moment.",
+      "failed": "We couldn't prepare the quote card. Try again."
+    },
     "comment": {
       "not_found": "This comment doesn't exist.",
       "not_owner": "Only the author can change this comment.",
@@ -2655,5 +2665,24 @@
       "emptyBody": "Select a sentence in an article and tap Highlight. It shows up here, grouped by article.",
       "loadError": "Your highlights didn't load."
     }
+  },
+  "quoteCard": {
+    "share": "Share quote",
+    "title": "Share quote",
+    "hint": "A picture of your selection for social media, with the article link.",
+    "alt": "Quote card: {{quote}}",
+    "preparing": "Preparing the card…",
+    "ready": "The card is ready.",
+    "theme": "Card colors",
+    "format": "Card size",
+    "square": "Square",
+    "landscape": "Landscape",
+    "shareImage": "Share",
+    "download": "Download",
+    "copyLink": "Copy link",
+    "copyFailed": "We couldn't copy the link.",
+    "retry": "Try again",
+    "notFound": "Article not found.",
+    "offline": "You need an internet connection to make a quote card."
   }
 }

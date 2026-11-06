@@ -13,6 +13,14 @@ public sealed record RDocTextUnit(int Start, int End);
 public sealed record RDocTextBlock(string Id, string Type, string? Text, IReadOnlyList<RDocTextUnit> Units)
 {
     public bool IsHighlightable => Text is not null;
+
+    /// <summary>
+    /// <c>rtl</c> or <c>ltr</c>: the direction the reader gives the block (SPEC §14.2 rule 1, the web's
+    /// <c>resolveBlockDir</c>, the PDF's <c>BidiText.ResolveBlockDir</c>): its explicit <c>dir</c>, else its first strong
+    /// character, with inline code skipped and a callout's title first. Null when it has neither (the article's language
+    /// decides), and for a block that can't be highlighted. A quote card takes it (SPEC F24).
+    /// </summary>
+    public string? Dir { get; init; }
 }
 
 /// <summary>
@@ -62,8 +70,13 @@ public static class RDocBlockText
     {
         if (SingleUnitTypes.Contains(type))
         {
-            var text = block.TryGetProperty("content", out var content) ? Inline(content) : string.Empty;
-            return new RDocTextBlock(id, type, text, [new RDocTextUnit(0, text.Length)]);
+            var hasContent = block.TryGetProperty("content", out var content);
+            var text = hasContent ? Inline(content) : string.Empty;
+            var title = type == "callout" && Str(block, "title") is { Length: > 0 } calloutTitle ? calloutTitle + " " : string.Empty;
+            return new RDocTextBlock(id, type, text, [new RDocTextUnit(0, text.Length)])
+            {
+                Dir = BlockDir(block, title + (hasContent ? DirText(content) : string.Empty)),
+            };
         }
 
         if (ListTypes.Contains(type) && block.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
@@ -77,11 +90,48 @@ public static class RDocBlockText
                 sb.Append(Inline(item));
                 units.Add(new RDocTextUnit(start, sb.Length));
             }
-            return new RDocTextBlock(id, type, sb.ToString(), units);
+            return new RDocTextBlock(id, type, sb.ToString(), units)
+            {
+                Dir = BlockDir(block, string.Join(' ', items.EnumerateArray().Select(DirText))),
+            };
         }
 
         return new RDocTextBlock(id, type, null, []);
     }
+
+    /// <summary>An explicit <c>rtl</c>/<c>ltr</c> wins; <c>auto</c> (the default) follows the first strong character.</summary>
+    private static string? BlockDir(JsonElement block, string dirText) =>
+        Str(block, "dir") is TextDirection.Rtl or TextDirection.Ltr ? Str(block, "dir") : TextDirection.FirstStrong(dirText);
+
+    /// <summary>
+    /// The text a block's direction is resolved from (the web's <c>inlineText</c>): text without the code mark, terms and
+    /// mentions; any other node is a line break. Inline code is skipped so a leading <c>AddScoped</c> doesn't flip an Arabic block.
+    /// </summary>
+    private static string DirText(JsonElement nodes)
+    {
+        if (nodes.ValueKind != JsonValueKind.Array) return string.Empty;
+        var sb = new StringBuilder();
+        foreach (var node in nodes.EnumerateArray())
+        {
+            switch (node.ValueKind == JsonValueKind.Object ? Str(node, "type") : null)
+            {
+                case "text" when !HasCodeMark(node):
+                case "term" or "mention":
+                    sb.Append(Str(node, "text"));
+                    break;
+                case "text":
+                    break;
+                default:
+                    sb.Append('\n');
+                    break;
+            }
+        }
+        return sb.ToString();
+    }
+
+    private static bool HasCodeMark(JsonElement node) =>
+        node.TryGetProperty("marks", out var marks) && marks.ValueKind == JsonValueKind.Array
+        && marks.EnumerateArray().Any(m => m.ValueKind == JsonValueKind.Object && Str(m, "type") == "code");
 
     private static string Inline(JsonElement nodes)
     {

@@ -29,6 +29,7 @@ class RDocHighlights extends InheritedWidget {
     required this.onRemove,
     this.onCountTap,
     this.onMineTap,
+    this.onShareQuote,
   });
 
   /// Off while highlights are hidden: the same tree, so the reader keeps its place when they are toggled.
@@ -53,6 +54,11 @@ class RDocHighlights extends InheritedWidget {
   /// One of your highlights was tapped (with [canHighlight]): offer Remove, as selecting inside it does. Without it, a
   /// tap on yours shows only the count, when it is popular too.
   final RHighlightMineTapHandler? onMineTap;
+
+  /// **Share quote** (F24) next to Highlight, for an [HighlightSelectionStatus.ok] or [HighlightSelectionStatus.tooLong]
+  /// selection (3 code units or more), whatever [canHighlight] says (guests and members alike). Null: no button (the
+  /// article is hidden by moderators).
+  final RHighlightHandler? onShareQuote;
 
   /// The enclosing highlights, or null when there are none or they are hidden.
   static RDocHighlights? maybeOf(BuildContext context) {
@@ -93,7 +99,8 @@ TextStyle highlightPieceStyle(TextStyle style, RHighlightPiece piece, ReadInColo
 }
 
 /// A highlightable block (paragraph, heading, list, quote, callout, summary) under [RDocHighlights]: long-press
-/// selection with the toolbar's **Highlight**, or **Remove** inside one of your highlights, next to Copy and Select all.
+/// selection with the toolbar's **Highlight**, or **Remove** inside one of your highlights, then **Share quote** (F24),
+/// next to Copy and Select all.
 /// Its text units ([RHighlightUnit]) report what is selected; the first one holding part of the selection decides
 /// ([mapBlockSelection]). Each block selects on its own, so a selection never leaves the block it started in.
 class RHighlightableBlock extends StatefulWidget {
@@ -146,6 +153,9 @@ class _RHighlightableBlockState extends State<RHighlightableBlock> {
     final canHighlight = highlights != null &&
         highlights.canHighlight &&
         (selection.status == HighlightSelectionStatus.ok || selection.status == HighlightSelectionStatus.tooLong);
+    final shareQuote = highlights?.onShareQuote;
+    final canShareQuote = shareQuote != null &&
+        (selection.status == HighlightSelectionStatus.ok || selection.status == HighlightSelectionStatus.tooLong);
 
     void done() {
       region
@@ -168,6 +178,14 @@ class _RHighlightableBlockState extends State<RHighlightableBlock> {
           onPressed: () {
             done();
             highlights.onHighlight(context, selection);
+          },
+        ),
+      if (canShareQuote)
+        ContextMenuButtonItem(
+          label: l10n.quoteCardAction,
+          onPressed: () {
+            done();
+            shareQuote(context, selection);
           },
         ),
       ...region.contextMenuButtonItems,

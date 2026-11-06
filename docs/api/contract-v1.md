@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). Writer categories: `category.not_found`, `category.not_owner`, `category.limit`, `category.name_taken`, `category.name_invalid` (see Writer categories). Profile links and title (pre-production step): the validation codes `link.*` and `profile.headline_*` (see Profile). Reposts (F29): `repost.own_article` and the validation code `repost.caption_too_long` (see Reposts). Highlights (F30): `highlight.text_mismatch`, `highlight.block_not_allowed`, `highlight.too_short`, `highlight.too_long`, `highlight.limit`, `highlight.not_found` (see Highlights). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). Writer categories: `category.not_found`, `category.not_owner`, `category.limit`, `category.name_taken`, `category.name_invalid` (see Writer categories). Profile links and title (pre-production step): the validation codes `link.*` and `profile.headline_*` (see Profile). Reposts (F29): `repost.own_article` and the validation code `repost.caption_too_long` (see Reposts). Highlights (F30): `highlight.text_mismatch`, `highlight.block_not_allowed`, `highlight.too_short`, `highlight.too_long`, `highlight.limit`, `highlight.not_found` (see Highlights). Quote card (F24): `quote.text_mismatch`, `quote.block_not_allowed`, `quote.too_short`, `quote.too_long`, `quote.hidden`, `quote.limit`, `quote.busy`, `quote.failed` (see Quote card). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
 
 `403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
@@ -1302,6 +1302,115 @@ caption and its link, and embeds become link cards.
 
 Article PDF error codes: `article.pdf_hidden` (409), `article.pdf_busy` (503), `article.pdf_failed` (500),
 `article.pdf_limit` (429).
+
+### Quote card (F24) — SPEC F24
+
+🌐 Bearer optional, permission `articles.read` (guests have it). Rate limit `quote-card`: 30 cards per hour per user,
+guests per IP address. See [ADR 0019](../adr/0019-quote-cards-drawn-by-the-server.md).
+
+| Method | Path | Body → Response |
+|---|---|---|
+| POST | `/articles/{id}/quote-card` | `QuoteCardRequest` → `200 image/png`: a picture of the selected text for social media, drawn by the server with the F33 headless Chromium and never stored. Errors below are ProblemDetails JSON, as everywhere |
+
+```ts
+interface QuoteCardRequest {      // POST /articles/{id}/quote-card; {id} = ArticleDetailsDto.id
+  language: ArticleLanguage;      // the version on screen (ArticleDetailsDto.language)
+  blockId: string;                // the F30 selection range, exactly as for POST /articles/{id}/highlights
+  startOffset: number;            // UTF-16 code units in the block's plain text, end exclusive
+  endOffset: number;
+  text: string;                   // exactly plainText.slice(startOffset, endOffset)
+  theme: 'light' | 'dark';
+  format: 'square' | 'landscape'; // 1080 × 1080 px | 1200 × 630 px
+}
+```
+
+**The selection.** The same `{ blockId, startOffset, endOffset, text }` the reader computes for **Highlight** (Highlights
+(F30) → Offsets; [`shared/rdoc/highlight-fixtures.json`](../../shared/rdoc/highlight-fixtures.json)): offsets in the
+block's plain text, the selection clipped to the first block (list: item) it touches, whitespace trimmed at both ends.
+The same blocks as Highlight: paragraph, heading, list items, quote, callout, summary; never code, code tabs, table,
+steps, image, divider or embed (no **Share quote** button there). Length after trimming: **3–400** code units (a
+highlight may be up to 1,000). Clients check before calling: under 3 → no button; over 400 → show `quote.too_long`
+without calling. The server checks everything again against the version's current text (as for a highlight), so a card
+never shows words the article doesn't have. It draws the trimmed text.
+
+**Who and which article.** Like the reader: guests and members, on any published article they can open.
+- Unknown, unpublished (draft, archived) and deleted articles: `404 article.not_found`.
+- Hidden by moderators (F22): `404 article.not_found` for everyone but its author and moderators, who get
+  `409 quote.hidden` (the card carries the ReadIn logo). Clients hide **Share quote** while
+  `ArticleDetailsDto.moderation` is set.
+- A `language` the article has no version in: `400 quote.text_mismatch` (clients always send the version on screen).
+
+**Checked in this order**
+1. The rate limit: `429 quote.limit` (below).
+2. A malformed body is `400 validation.failed`: `language` (`validation.required`, `article.language_invalid`),
+   `blockId` (`validation.required`, `validation.invalid` when it isn't `^[A-Za-z0-9_-]{1,64}$`), `startOffset` and
+   `endOffset` (`validation.required`, `validation.invalid` for a negative offset or `endOffset ≤ startOffset`), `text`
+   (`validation.required`), `theme` and `format` (`validation.required`, `validation.invalid` for another value).
+3. `404 article.not_found`, then `409 quote.hidden`, as above.
+4. `400 quote.text_mismatch` when the version or the block isn't there; `400 quote.block_not_allowed` for a code, code
+   tabs, table, steps, image, divider or embed block (whatever the offsets and text).
+5. `400 quote.text_mismatch`: an offset falls past the block's text or inside a surrogate pair, the range crosses a list
+   item, or `text` isn't exactly the text at those offsets. Usually the author updated the article meanwhile: reload it.
+6. Whitespace at both ends is trimmed; `400 quote.too_short` below 3 code units, `400 quote.too_long` above 400.
+7. Drawing: `503 quote.busy`, `500 quote.failed` (below).
+
+**The 200 response**
+- `Content-Type: image/png`, exactly **1080 × 1080** (square, for Instagram and WhatsApp) or **1200 × 630** (landscape,
+  for X, Facebook and LinkedIn) pixels; usually 30–150 KB.
+- `Content-Disposition: inline; filename="readin-quote.png"; filename*=UTF-8''readin-quote-{slug}.png`: RFC 5987, as the
+  PDF (take the name from `filename*`, percent-decoded; `readin-quote.png` is the ASCII fallback). CORS exposes
+  `Content-Disposition` to the web origin.
+- `Cache-Control: private, max-age=600` and `X-Content-Type-Options: nosniff`. HTTP caches never keep a POST answer, so
+  clients keep the images of the open sheet in memory (keyed by the whole request) and reuse them when the user switches
+  back to a theme or format; **Share** and **Save** use the bytes already shown, with no new call.
+
+**What the card shows.** Its direction is the one the reader gives the quoted block (§14.2 rule 1: the block's
+explicit `dir`, else its first strong character with inline code skipped, else the article language), not the quote's
+own first strong character: an Arabic sentence selected from its English term on ("ASP.NET Core، أكيد شفت …") still reads
+right to left. Its words come from the article language ("مستخدم محذوف" / "Deleted user"), not the app's.
+- The quote, large, under a quotation mark; mixed Arabic/English isolated as in the reader (§14.2); hard breaks stay
+  line breaks. A long quote gets a smaller font, down to a readable minimum, and is **never cut**; if it still doesn't
+  fit, its line breaks become spaces, and only text nobody selects to share (e.g. 400 wide letters without a space) goes
+  below that size.
+- The article's title in that version (at most 2 lines on a square card, 1 on a landscape one, then "…"), and the
+  writer's display name with the verified badge (`isVerified`), or "مستخدم محذوف" / "Deleted user" for a deleted
+  account. No photo, counters or other data.
+- The ReadIn logo (the approved lockup; its dark version on dark cards) and the article's link without `https://`,
+  e.g. `readin.app/en/a/clean-code`: the F24 share link `{web origin}/{ar|en}/a/{slug}` of the quoted version.
+- Light or dark colours from §15.2, the §15.3 fonts (with Noto fallbacks, emoji and symbols) shipped with the API.
+
+**Time and limits** (all counted per API instance)
+- The cards share the F33 Chromium and its build slots: at most 2 PDFs and cards are drawn at a time. A card waits up
+  to 10 s for a slot (`503 quote.busy`) and then has 20 s (`500 quote.failed`); it usually takes well under a second.
+  Give the call a receive timeout of at least **40 s**. While it loads, the sheet shows a box of the card's shape with a
+  spinner, and the theme/format switches and **Share** / **Save** stay usable for the images already loaded.
+- 30 cards per hour per user, guests per IP address: `429 quote.limit`. ASP.NET Core's rate limiter, a fixed one-hour
+  window from the first request; every request counts whatever its answer, except the 429s. The count is in memory, so
+  it is per API instance and starts over when the API restarts. It runs before every other check.
+
+**Errors and what clients show** (other codes, e.g. `403 user.suspended`, keep their usual messages)
+
+| Status and code | When | Clients show (ar / en) | "حاول تاني" / "Try again" |
+|---|---|---|---|
+| `400 validation.failed` | a malformed body (a client bug) | the generic error message | no |
+| `404 article.not_found` | unknown, unpublished, deleted, or hidden from you | "المقال مش موجود." / "Article not found." | no |
+| `409 quote.hidden` | hidden by moderators (you are its author or a moderator) | "المشرفين خفّوا المقال ده، فمينفعش تشارك منه اقتباس." / "Moderators hid this article, so its quotes can't be shared." | no |
+| `400 quote.text_mismatch` | the text changed, or the range is wrong | "النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني." / "This text has changed in the article. Reload and try again." | no |
+| `400 quote.block_not_allowed` | code, table, steps, image, divider or embed | "مينفعش تشارك الجزء ده كاقتباس." / "This part can't be shared as a quote." | no |
+| `400 quote.too_short` | under 3 characters after trimming | "اختار 3 حروف على الأقل." / "Select at least 3 characters." | no |
+| `400 quote.too_long` | over 400 characters after trimming | "الاقتباس لازم يكون 400 حرف أو أقل. اختار جزء أصغر." / "A quote can be at most 400 characters. Select less text." | no |
+| `429 quote.limit` | more than 30 in the hour | "عملت كروت اقتباس كتير الساعة دي. حاول تاني بعد شوية." / "You've made many quote cards this hour. Try again later." | yes |
+| `503 quote.busy` | no build slot within 10 s | "فيه كروت كتير بتتجهز دلوقتي. حاول تاني كمان شوية." / "Many cards are being prepared right now. Try again in a moment." | yes |
+| `500 quote.failed` (and `server.error`, a client timeout, any other failure) | drawing failed or took over 20 s | "معرفناش نجهّز كارت الاقتباس. حاول تاني." / "We couldn't prepare the quote card. Try again." | yes |
+| no connection (client side) | offline before or during the call | "محتاج إنترنت عشان تعمل كارت اقتباس." / "You need an internet connection to make a quote card." | yes |
+
+The Arabic above is the mobile app's; the web says the same in Modern Standard Arabic (SPEC §14.4), e.g. «تغيّر هذا
+النص في المقال. حدّث الصفحة وحاول مرة أخرى.» and «إعادة المحاولة». On `quote.text_mismatch` both clients load the
+article and its highlights again, as for `highlight.text_mismatch`. Both sheets offer **Share**, **Download** (web) /
+**Save** (mobile) and **Copy link**.
+
+Quote card error codes: `quote.text_mismatch`, `quote.block_not_allowed`, `quote.too_short`, `quote.too_long` (400),
+`quote.hidden` (409), `quote.limit` (429), `quote.busy` (503), `quote.failed` (500).
 
 ### Media (Bearer) — see [ADR 0011](../adr/0011-media-pipeline-and-pdf-preview.md)
 

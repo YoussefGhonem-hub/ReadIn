@@ -42,13 +42,13 @@ const POPULAR = {
 };
 
 /** U+0009–U+000D, U+0020, U+0085, U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000. */
-const isSpace = (c) =>
+export const isSpace = (c) =>
   (c >= 0x09 && c <= 0x0d) || c === 0x20 || c === 0x85 || c === 0xa0 || c === 0x1680 || (c >= 0x2000 && c <= 0x200a) || c === 0x2028 || c === 0x2029 || c === 0x202f || c === 0x205f || c === 0x3000;
 
 const inlineText = (content) => (content ?? []).map((n) => (n.type === 'hardBreak' ? '\n' : n.text)).join('');
 
-/** A block's plain text and its units (list items), or null when it can't be highlighted. */
-function plainOf(block) {
+/** A block's plain text and its units (list items), or null when it can't be highlighted (also quoted, F24). */
+export function plainOf(block) {
   if (!HIGHLIGHTABLE.has(block.type)) return null;
   if (block.type === 'bulletList' || block.type === 'orderedList') {
     const items = [];
@@ -280,5 +280,6 @@ export function createHighlights({ problem, viewerOf, details, labBase }) {
     return { ...me, showHighlights: shown.get(viewer) ?? true, permissions: [...new Set([...(me.permissions ?? []), 'highlights.create'])] };
   }
 
-  return { routes, decorateMe };
+  // `articleFor`: the reader's article version by id, the lab article too (the quote cards' checks, F24).
+  return { routes, decorateMe, articleFor };
 }

@@ -252,9 +252,10 @@ const TOC_MIN_HEADINGS = 3;
             <rd-article-toc class="mb-6 block" [entries]="toc()" />
           }
 
-          <!-- Highlights (F30): yours and the popular ones are drawn in the text; selecting text offers the toolbar -->
+          <!-- Highlights (F30): yours and the popular ones are drawn in the text; selecting text offers the toolbar, with
+               Share quote (F24) unless moderators hid the article -->
           <rd-rdoc [doc]="a.content" [articleId]="a.id" [marks]="highlights.marks()" [style.--rd-article-size]="prefs.cssSize()" />
-          <rd-reader-highlights [content]="rdocElement()" />
+          <rd-reader-highlights [content]="rdocElement()" [quoteArticle]="a.moderation ? null : { id: a.id, language: a.language, url: shareUrl() }" />
 
           <!-- Post attachments (F26): after the content, before the sources -->
           @if (a.attachments; as attachments) {

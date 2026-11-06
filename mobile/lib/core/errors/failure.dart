@@ -193,6 +193,16 @@ abstract final class FailureCodes {
   static const highlightLimit = 'highlight.limit';
   static const highlightNotFound = 'highlight.not_found';
 
+  // Quote card (F24)
+  static const quoteTextMismatch = 'quote.text_mismatch';
+  static const quoteBlockNotAllowed = 'quote.block_not_allowed';
+  static const quoteTooShort = 'quote.too_short';
+  static const quoteTooLong = 'quote.too_long';
+  static const quoteHidden = 'quote.hidden';
+  static const quoteLimit = 'quote.limit';
+  static const quoteBusy = 'quote.busy';
+  static const quoteFailed = 'quote.failed';
+
   // Comments (F11)
   static const commentNotFound = 'comment.not_found';
   static const commentNotOwner = 'comment.not_owner';

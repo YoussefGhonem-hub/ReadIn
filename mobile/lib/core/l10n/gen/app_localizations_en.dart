@@ -5161,4 +5161,99 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errHighlightNotFound => 'Highlight not found.';
+
+  @override
+  String get quoteCardAction => 'Share quote';
+
+  @override
+  String get quoteCardTitle => 'Share quote';
+
+  @override
+  String get quoteCardHint =>
+      'A picture of your selection for social media, with the article link.';
+
+  @override
+  String get quoteCardThemeLabel => 'Card colors';
+
+  @override
+  String get quoteCardFormatLabel => 'Card size';
+
+  @override
+  String get quoteCardSquare => 'Square';
+
+  @override
+  String get quoteCardLandscape => 'Landscape';
+
+  @override
+  String get quoteCardShare => 'Share';
+
+  @override
+  String get quoteCardSave => 'Save';
+
+  @override
+  String get quoteCardCopyLink => 'Copy link';
+
+  @override
+  String get quoteCardLinkCopied => 'Link copied';
+
+  @override
+  String get quoteCardCopyFailed => 'We couldn\'t copy the link.';
+
+  @override
+  String get quoteCardSaved => 'Card saved.';
+
+  @override
+  String get quoteCardSaveFailed => 'We couldn\'t save the card. Try again.';
+
+  @override
+  String get quoteCardShareFailed => 'We couldn\'t open sharing. Try again.';
+
+  @override
+  String get quoteCardPreparing => 'Preparing the card…';
+
+  @override
+  String quoteCardPreview(String quote) {
+    return 'Quote card: $quote';
+  }
+
+  @override
+  String get quoteCardRetry => 'Try again';
+
+  @override
+  String get errQuoteCardNotFound => 'Article not found.';
+
+  @override
+  String get errQuoteCardHidden =>
+      'Moderators hid this article, so its quotes can\'t be shared.';
+
+  @override
+  String get errQuoteCardTextMismatch =>
+      'This text has changed in the article. Reload and try again.';
+
+  @override
+  String get errQuoteCardBlockNotAllowed =>
+      'This part can\'t be shared as a quote.';
+
+  @override
+  String get errQuoteCardTooShort => 'Select at least 3 characters.';
+
+  @override
+  String get errQuoteCardTooLong =>
+      'A quote can be at most 400 characters. Select less text.';
+
+  @override
+  String get errQuoteCardLimit =>
+      'You\'ve made many quote cards this hour. Try again later.';
+
+  @override
+  String get errQuoteCardBusy =>
+      'Many cards are being prepared right now. Try again in a moment.';
+
+  @override
+  String get errQuoteCardFailed =>
+      'We couldn\'t prepare the quote card. Try again.';
+
+  @override
+  String get errQuoteCardOffline =>
+      'You need an internet connection to make a quote card.';
 }
