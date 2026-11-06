@@ -184,7 +184,7 @@ describe('block stage (handle, menu, drag and drop)', () => {
     const handle = $('[data-block-handle]')!;
     expect(handle.classList).toContain('shown');
     expect(handle.dataset['for']).toBe('p2');
-    expect(handle.style.left).toBe('602px'); // right of the column (RTL start), 2 px away
+    expect(handle.style.left).toBe('606px'); // right of the column (RTL start), 6 px away
     expect($('[data-block-grip]')!.getAttribute('aria-label')).toBe('خيارات العنصر');
     expect($('[data-block-delete]')!.getAttribute('aria-label')).toBe('حذف العنصر');
 

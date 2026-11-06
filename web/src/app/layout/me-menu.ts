@@ -32,81 +32,84 @@ const THEME_ICONS: Record<ThemePreference, string> = { light: 'Sun', dark: 'Moon
     id: 'rd-me-menu',
     role: 'menu',
     '[attr.aria-label]': 'label()',
-    class: 'rd-card block w-72 p-2 text-text-primary shadow-raised',
+    class: 'rd-card block w-72 p-1.5 text-text-primary shadow-raised',
     '(keydown)': 'onKeydown($event)',
     'data-me-menu': '',
   },
   template: `
-    <div role="none" class="flex items-center gap-3 px-2 pb-3 pt-2">
-      <rd-avatar [name]="session.displayName()" [src]="session.avatarUrl()" [size]="56" />
-      <div id="rd-me-menu-who" role="none" class="min-w-0 flex-1">
-        <span class="flex items-center gap-1 font-semibold">
-          <rd-bdi-text class="truncate" [text]="session.displayName() ?? ''" />
-          @if (verified()) {
-            <svg lucideIcon="BadgeCheck" [size]="16" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
-          }
-        </span>
-        <span class="block truncate text-sm text-text-secondary"><bdi dir="ltr">&#64;{{ session.username() }}</bdi></span>
+    <!-- Who you are: a soft card with the avatar, the name and handle, and "View profile" -->
+    <div role="none" class="rounded-md bg-surface-variant p-3">
+      <div role="none" class="flex items-center gap-3">
+        <rd-avatar [name]="session.displayName()" [src]="session.avatarUrl()" [size]="44" />
+        <div id="rd-me-menu-who" role="none" class="min-w-0 flex-1 leading-5">
+          <span class="flex items-center gap-1 text-[15px] font-semibold">
+            <rd-bdi-text class="truncate" [text]="session.displayName() ?? ''" />
+            @if (verified()) {
+              <svg lucideIcon="BadgeCheck" [size]="16" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+            }
+          </span>
+          <span class="block truncate text-[13px] text-text-secondary"><bdi dir="ltr">&#64;{{ session.username() }}</bdi></span>
+        </div>
       </div>
-    </div>
-    <a
-      role="menuitem"
-      tabindex="-1"
-      [routerLink]="profileLink()"
-      class="rd-btn rd-btn-outline mb-2 flex min-h-9 w-full rounded-chip text-sm no-underline"
-      aria-describedby="rd-me-menu-who"
-      (click)="picked()"
-      data-me-item="profile"
-      >{{ 'me.viewProfile' | transloco }}</a
-    >
-
-    <div role="separator" class="my-1 h-px bg-border"></div>
-    @for (item of items(); track item.id) {
       <a
         role="menuitem"
         tabindex="-1"
-        [routerLink]="item.path"
-        [queryParams]="item.queryParams ?? null"
-        [class]="rowClass"
+        [routerLink]="profileLink()"
+        class="mt-3 flex min-h-8 w-full items-center justify-center rounded-sm border border-border bg-surface px-3 text-[13px] font-semibold text-primary no-underline transition-colors hover:border-primary focus:border-primary pointer-coarse:min-h-10"
+        aria-describedby="rd-me-menu-who"
         (click)="picked()"
-        [attr.data-me-item]="item.id"
+        data-me-item="profile"
+        >{{ 'me.viewProfile' | transloco }}</a
       >
-        <svg [lucideIcon]="item.icon" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
-        <span class="min-w-0 flex-1">{{ item.labelKey | transloco }}</span>
-        @if (item.id === 'moderation' && moderation.total() > 0) {
-          <span class="min-w-6 rounded-chip bg-error px-1.5 text-center text-xs font-semibold leading-5 text-on-error" aria-hidden="true" data-moderation-badge>{{
-            moderation.total() > 99 ? '99+' : moderation.total()
-          }}</span>
-          <span class="sr-only">{{ moderationLabel() }}</span>
-        }
-      </a>
-    }
+    </div>
 
-    <div role="separator" class="my-1 h-px bg-border"></div>
-    <div role="group" aria-labelledby="rd-me-menu-appearance" data-me-appearance>
-      <span id="rd-me-menu-appearance" role="none" class="block px-3 pb-1 pt-2 text-xs font-semibold text-text-secondary">{{
-        'settings.appearance' | transloco
-      }}</span>
-      @for (option of themes; track option) {
-        <button
-          type="button"
-          role="menuitemradio"
+    <div role="none" class="pt-1">
+      @for (item of items(); track item.id) {
+        <a
+          role="menuitem"
           tabindex="-1"
-          [attr.aria-checked]="theme.preference() === option"
-          [class]="rowClass + ' w-full cursor-pointer text-start'"
-          (click)="setTheme(option)"
-          [attr.data-me-theme]="option"
+          [routerLink]="item.path"
+          [queryParams]="item.queryParams ?? null"
+          [class]="rowClass"
+          (click)="picked()"
+          [attr.data-me-item]="item.id"
         >
-          <svg [lucideIcon]="themeIcons[option]" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
-          <span class="min-w-0 flex-1">{{ 'settings.theme.' + option | transloco }}</span>
-          @if (theme.preference() === option) {
-            <svg lucideIcon="Check" [size]="18" class="shrink-0 text-primary" aria-hidden="true"></svg>
+          <svg [lucideIcon]="item.icon" [size]="18" [class]="iconClass" aria-hidden="true"></svg>
+          <span class="min-w-0 flex-1">{{ item.labelKey | transloco }}</span>
+          @if (item.id === 'moderation' && moderation.total() > 0) {
+            <span class="min-w-6 rounded-chip bg-error px-1.5 text-center text-xs font-semibold leading-5 text-on-error" aria-hidden="true" data-moderation-badge>{{
+              moderation.total() > 99 ? '99+' : moderation.total()
+            }}</span>
+            <span class="sr-only">{{ moderationLabel() }}</span>
           }
-        </button>
+        </a>
       }
     </div>
 
-    <div role="separator" class="my-1 h-px bg-border"></div>
+    <div role="separator" class="-mx-1.5 my-1.5 h-px bg-border"></div>
+    <!-- Appearance: one row with a segmented control at its end; each choice keeps its name for screen readers and shows it as a tooltip -->
+    <div role="group" aria-labelledby="rd-me-menu-appearance" class="flex min-h-10 items-center gap-3 ps-3 pe-1" data-me-appearance>
+      <span id="rd-me-menu-appearance" role="none" class="min-w-0 flex-1 truncate text-sm text-text-secondary">{{ 'settings.appearance' | transloco }}</span>
+      <div role="none" class="flex shrink-0 gap-0.5 rounded-sm border border-border bg-surface-variant p-0.5">
+        @for (option of themes; track option) {
+          <button
+            type="button"
+            role="menuitemradio"
+            tabindex="-1"
+            [attr.aria-checked]="theme.preference() === option"
+            [title]="'settings.theme.' + option | transloco"
+            [class]="segmentClass"
+            (click)="setTheme(option)"
+            [attr.data-me-theme]="option"
+          >
+            <svg [lucideIcon]="themeIcons[option]" [size]="16" aria-hidden="true"></svg>
+            <span class="sr-only">{{ 'settings.theme.' + option | transloco }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <div role="separator" class="-mx-1.5 my-1.5 h-px bg-border"></div>
     <button
       type="button"
       role="menuitem"
@@ -116,7 +119,7 @@ const THEME_ICONS: Record<ThemePreference, string> = { light: 'Sun', dark: 'Moon
       (click)="signOut()"
       data-me-item="signOut"
     >
-      <svg lucideIcon="LogOut" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+      <svg lucideIcon="LogOut" [size]="18" [class]="iconClass + ' rd-flip-rtl'" aria-hidden="true"></svg>
       <span class="min-w-0 flex-1">{{ 'auth.signOut' | transloco }}</span>
     </button>
   `,
@@ -138,7 +141,11 @@ export class MeMenu {
   protected readonly themes = THEME_PREFERENCES;
   protected readonly themeIcons = THEME_ICONS;
   protected readonly rowClass =
-    'flex min-h-11 items-center gap-3 rounded-md border-0 bg-transparent px-3 text-sm text-text-primary no-underline outline-offset-[-2px] hover:bg-surface-variant focus:bg-surface-variant';
+    'group flex min-h-10 items-center gap-3 rounded-sm border-0 bg-transparent px-3 text-sm text-text-primary no-underline outline-offset-[-2px] transition-colors hover:bg-surface-variant focus:bg-surface-variant pointer-coarse:min-h-11';
+  protected readonly iconClass = 'shrink-0 text-text-secondary transition-colors group-hover:text-text-primary group-focus:text-text-primary';
+  /** One choice of the Appearance control; the chosen one is a raised chip in the brand colour. */
+  protected readonly segmentClass =
+    'grid h-7 w-9 cursor-pointer place-items-center rounded-[6px] border-0 bg-transparent text-text-secondary outline-offset-0 transition-colors hover:text-text-primary focus:text-text-primary pointer-coarse:h-9 pointer-coarse:w-11 aria-checked:bg-surface aria-checked:text-primary aria-checked:shadow-[0_1px_2px_rgb(0_0_0/0.12)] dark:aria-checked:bg-surface-raised dark:aria-checked:shadow-[inset_0_0_0_1px_var(--rd-color-border)]';
   protected readonly signingOut = signal(false);
 
   protected readonly label = computed(() => this.transloco.translate('nav.me', {}, this.lang()));

@@ -101,8 +101,15 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
         grid-template-columns: minmax(0, 1fr) 288px;
       }
     }
+    @media (min-width: 80rem) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr) 320px;
+      }
+    }
   `,
-  host: { class: 'mx-auto block max-w-[1100px] px-4 pb-16 pt-4 lg:pt-6', '[attr.data-editor-state]': 'store.loadState()' },
+  // The whole width of the window, with a small margin (not the page container): long lines of code and wide tables
+  // fit, and the settings stay beside the text.
+  host: { class: 'block w-full px-4 pb-16 pt-4 lg:px-6 lg:pt-6', '[attr.data-editor-state]': 'store.loadState()' },
   template: `
     @switch (store.loadState()) {
       @case ('loading') {
@@ -254,7 +261,8 @@ type Confirm = { kind: 'discard' } | { kind: 'delete' } | { kind: 'removeTransla
         <!-- Editing (kept alive while previewing, so uploads and undo history survive) -->
         <div class="layout grid items-start gap-2 lg:gap-6" [hidden]="mode() !== 'edit'" data-edit-area>
           <!-- The writing card: language versions, title, subtitle, the block editor and the attachments. -->
-          <div class="rd-card min-w-0 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5">
+          <!-- Wide inline padding on large screens: the block handle (grip + trash) sits there, beside the text. -->
+          <div class="rd-card min-w-0 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 lg:p-5 lg:px-12">
             <div class="mb-4 flex flex-wrap items-center gap-2" data-languages>
               @if (store.document().translations.length === 1) {
                 <span class="text-sm text-text-secondary" id="ed-language-label">{{ 'editor.language.label' | transloco }}</span>

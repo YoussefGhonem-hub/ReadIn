@@ -20,9 +20,11 @@ import { blockIndexById, blockPositions, deleteBlockTr, moveBlockTr, selectedBlo
 import { placePopup } from './popup-place';
 
 /** Space between the handle and the text, in px. */
-const GAP = 2;
+const GAP = 6;
+/** The handle is a small pill: its padding plus border around the buttons, in px. */
+const PAD = 4;
 /** The handle's buttons: small next to a mouse, 44 px on touch screens. */
-const FINE = { width: 22, height: 24 };
+const FINE = { width: 24, height: 24 };
 const COARSE = { width: 44, height: 44 };
 /** What a dragged block carries (not text: dropped anywhere else, it inserts nothing). */
 const BLOCK_MIME = 'application/x-readin-block';
@@ -71,19 +73,42 @@ interface MenuState {
       display: block;
       position: relative;
     }
+    /* A small floating pill at the block's start edge: the grip and the trash, on the raised surface. */
     .handle {
       position: absolute;
       z-index: 5;
       display: flex;
       flex-direction: column;
       gap: 2px;
+      padding: ${PAD - 1}px;
+      border: 1px solid var(--rd-color-border);
+      border-radius: 10px;
+      background: var(--rd-color-surface-raised);
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / 0.06),
+        0 4px 12px rgb(0 0 0 / 0.07);
       visibility: hidden;
       opacity: 0;
-      transition: opacity 120ms ease;
+      transform: scale(0.96);
+      transition:
+        opacity 120ms ease,
+        transform 120ms ease,
+        visibility 0s linear 120ms;
     }
     .handle.shown {
       visibility: visible;
       opacity: 1;
+      transform: none;
+      transition:
+        opacity 120ms ease,
+        transform 120ms ease;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .handle,
+      .handle.shown {
+        transform: none;
+        transition: none;
+      }
     }
     /* Side by side, the grip next to the text: on its left in an RTL article, on its right in an LTR one. */
     .handle.row {
@@ -99,11 +124,14 @@ interface MenuState {
       height: ${FINE.height}px;
       padding: 0;
       border: 0;
-      border-radius: var(--rd-radius-sm);
+      border-radius: 7px;
       background: transparent;
       color: var(--rd-color-text-secondary);
       cursor: pointer;
       touch-action: manipulation;
+      transition:
+        background-color 120ms ease,
+        color 120ms ease;
     }
     .coarse .btn {
       width: ${COARSE.width}px;
@@ -122,9 +150,17 @@ interface MenuState {
       outline: 2px solid var(--rd-color-primary);
       outline-offset: 1px;
     }
+    /* Delete stays quiet until you point at it: then the error colour on a soft tint of it. */
     .trash:hover,
     .trash:focus-visible {
+      background: color-mix(in srgb, var(--rd-color-error) 12%, transparent);
       color: var(--rd-color-error);
+    }
+    .trash:active {
+      background: color-mix(in srgb, var(--rd-color-error) 20%, transparent);
+    }
+    .trash:focus-visible {
+      outline-color: var(--rd-color-error);
     }
     .bridge {
       position: absolute;
@@ -581,7 +617,7 @@ export class BlockStage {
     const rtl = this.dir() === 'rtl';
     const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
     const room = rtl ? viewportWidth - content.right : content.left;
-    const fits = content.width > 0 && room >= this.size.width + GAP;
+    const fits = content.width > 0 && room >= this.size.width + 2 * PAD + GAP;
     if (fits !== this.gutter) {
       this.gutter = fits;
       this.gutterChange.emit(fits);
@@ -589,13 +625,13 @@ export class BlockStage {
 
     const dom = fits && id ? this.domOf(view, id) : null;
     const rect = dom?.getBoundingClientRect();
-    const top = dom && rect ? rect.top - stage.top + firstLineOffset(dom, this.size.height) : 0;
+    const top = dom && rect ? rect.top - stage.top + firstLineOffset(dom, this.size.height) - PAD : 0;
     // Side by side (the grip next to the text) where the gutter is wide enough and nothing else is there (the settings
     // column beside the editor); stacked in a narrow gutter.
-    const wide = this.size.width * 2 + 2 + GAP;
+    const wide = this.size.width * 2 + 2 + 2 * PAD + GAP;
     const edge = rtl ? content.right : content.left;
-    const row = room >= wide && this.free(rtl ? edge + wide - 1 : edge - wide + 1, stage.top + top + this.size.height / 2);
-    const width = row ? wide : this.size.width + GAP;
+    const row = room >= wide && this.free(rtl ? edge + wide - 1 : edge - wide + 1, stage.top + top + PAD + this.size.height / 2);
+    const width = row ? wide : this.size.width + 2 * PAD + GAP;
     this.bridge.set(fits ? { left: rtl ? content.right - stage.left : content.left - stage.left - width, width } : null);
 
     if (!dom || !id) {

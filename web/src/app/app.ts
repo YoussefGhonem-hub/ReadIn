@@ -6,14 +6,17 @@ import { ThemeService } from './core/theme/theme.service';
 import { TermSheetService } from './shared/rdoc/rdoc-context';
 import { SignInPrompt } from './shared/ui/sign-in-prompt';
 import { ToastHost } from './shared/ui/toast/toast-host';
+import { TooltipHost } from './shared/ui/tooltip/tooltip-host';
 
 @Component({
   selector: 'rd-root',
-  imports: [RouterOutlet, ToastHost, SignInPrompt, NgComponentOutlet],
+  imports: [RouterOutlet, ToastHost, TooltipHost, SignInPrompt, NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <router-outlet />
     <rd-toast-host />
+    <!-- Every title on the site shows as this tooltip instead of the browser's -->
+    <rd-tooltip-host />
     <rd-sign-in-prompt />
     @if (termSheet(); as sheet) {
       <ng-container *ngComponentOutlet="sheet" />
