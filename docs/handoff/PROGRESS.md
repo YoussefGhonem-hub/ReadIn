@@ -478,6 +478,11 @@ Later decisions (user, 2026-11-05):
   `backend` 386, iOS 230, `content` 164, `web` 118. This replaces the note above: the blocked runs don't need
   re-running, and the local gates are the only check on `dev`. iOS builds (`ios-*` tags) still need GitHub's billing
   fixed or the minutes renewed.
+- **TestFlight on the hosted API (user decision, 2026-11-06):** the user made the repository public, so standard GitHub
+  runners are free, and deployed the API to `https://ghyoussef-002-site4.ftempurl.com`. `mobile/config/prod.json` points
+  `API_BASE_URL` there. `WEB_ORIGIN` stays `https://readin.app`, which doesn't resolve yet, so links the app shares or
+  opens on the web don't work until the domain and the web app are live. The user asked for the `ios-4` build. `.claude/settings.json`
+  is tracked and now public (see the open security item); nothing was removed from history.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked
