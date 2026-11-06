@@ -661,7 +661,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 |---|:-:|:-:|:-:|
 | `articles.read` | ✅ | ✅ | ✅ |
 | `articles.create` | | ✅ | ✅ |
-| `articles.export_pdf` (own articles only, [F33](#f33--download-article-pdf-تحميل-المقال-pdf)) | | ✅ | ✅ |
+| `articles.export_pdf` ([F33](#f33--download-article-pdf-تحميل-المقال-pdf)) | | ✅ | ✅ |
 | `articles.feature` | | | ✅ |
 | `comments.create` / `reactions.create` / `reposts.create` / `highlights.create` | | ✅ | ✅ |
 | `follows.manage` / `saved.manage` | | ✅ | ✅ |
@@ -723,7 +723,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Remembers the last scroll position: on open, the reader goes back to where you left off (unless you finished the article or the link points at a block) and offers "Start over". Marks the article as "read" when ≥ 70% scrolled **and** ≥ 30 seconds spent.
 - Related articles + "Next in path" at the end. Related ranks the same topic first, then the same field, then shared tags and glossary terms; it skips your own articles, puts the ones you've read last, and leaves the article's path neighbours to "Next in path". Related articles are post cards ([F34](#f34--post-style-feed-card-كارت-البوست)).
 - Report article (from the "⋯" menu).
-- Download PDF of your own article (from the "⋯" menu, [F33](#f33--download-article-pdf-تحميل-المقال-pdf)).
+- Download PDF for signed-in members (from the "⋯" menu, [F33](#f33--download-article-pdf-تحميل-المقال-pdf)).
 - Highlights: mark sentences, see popular ones, hide them ([F30](#f30--highlights)).
 
 ### F05 — Article Editor (Write)
@@ -995,7 +995,7 @@ The reader's action bar has a "⋯" menu (web + mobile). Guests get a sign-in pr
 | **تابع الكاتب** (Follow author) | Follow or unfollow ([F12](#f12--follow)). Hidden on your own article. |
 | **كتم الكاتب** (Mute author) | Hides the writer's articles and comments from you. Removes your follow of them. Hidden on your own article. Undo from the toast. |
 | **كتم المواضيع** (Mute topics) | A sheet with the article's field and topic, each with a toggle. Undo by toggling it back. |
-| **تحميل PDF** (Download PDF) | Downloads your article as a PDF ([F33](#f33--download-article-pdf-تحميل-المقال-pdf)). Shown only on your own article. |
+| **تحميل PDF** (Download PDF) | Downloads the article as a PDF ([F33](#f33--download-article-pdf-تحميل-المقال-pdf)). |
 | **الإبلاغ عن المقال** (Report article) | Opens the report sheet with reason + details ([F22](#f22--reporting--moderation)). Shown in the error color, hidden on your own article. |
 
 Mute author (كتم / إلغاء الكتم) is also on a profile's "⋯" (not on your own profile or the official account) and on a comment's "⋯" (mutes the commenter; not on your own comments), with the same rules and Undo, so someone who only writes comments can be muted too.
@@ -1113,16 +1113,16 @@ Tags are shared across the platform, so an article can be found by any tag on it
 - A daily job deletes user-created tags that have had no articles for 30 days. System tags stay: the tags the seed articles use (the `tags` in each article's `meta.json` under `content/articles/`).
 
 ### F33 — Download Article PDF (تحميل المقال PDF)
-A writer can download their own article as a clean, well-organized PDF that carries the ReadIn logo. The backend builds the file, so web and mobile get exactly the same result.
+Any signed-in member can download any article they can read as a clean, well-organized PDF that carries the ReadIn logo. The backend builds the file, so web and mobile get exactly the same result.
 
 **Who and what**
-- Any author, for their own articles, with no verification needed. For anyone else the endpoint answers `404 article.not_found`.
-- Published and archived articles only. The PDF shows the published version, even when a working copy has unpublished edits (F05). Drafts have no PDF.
+- Any signed-in member, for any article they can open, with no verification needed. Guests get the sign-in prompt (F28).
+- Published articles, and an author's own archived articles. The PDF shows the published version, even when a working copy has unpublished edits (F05). Drafts have no PDF.
 - One PDF per language. In the reader it is the version on screen. In My articles, an article with two versions asks which one.
-- An article hidden by moderators (F22) can't be downloaded, because the file carries the ReadIn logo: `409 article.pdf_hidden`.
+- An article hidden by moderators (F22) can't be downloaded, because the file carries the ReadIn logo: `409 article.pdf_hidden` for its author and `404 article.not_found` for everyone else.
 
 **Where**
-- Reader: "تحميل PDF" (Download PDF) in the "⋯" menu, on your own article only (F28).
+- Reader: "تحميل PDF" (Download PDF) in the "⋯" menu (F28).
 - My articles (F05): the same action on each article in the Published tab.
 - While the file is built the action shows "بنجهز الـ PDF…". A failure shows an error with "حاول تاني". With no connection it says internet is needed.
 - Web: a normal browser download. Mobile: the system share sheet, to save the file or send it, with no storage permission.
@@ -1165,7 +1165,7 @@ A writer can download their own article as a clean, well-organized PDF that carr
 **How it's built**
 - `GET /articles/{id}/pdf?lang=`: `IArticlePdfRenderer` in Infrastructure turns RDoc into print HTML with all text HTML-encoded, and **headless Chromium** (through **PuppeteerSharp**) prints it. Chromium is the engine browsers use for Arabic shaping, BiDi and page breaks, which is the hard part of this feature. Building on the device would give two different files, and a pure .NET PDF library would have to prove all of that again.
 - The footer template gets its own inline font and logo, because Chromium doesn't pass the page's fonts to it.
-- **Built in the request, nothing stored:** only owners use it, and its input is validated RDoc rather than an uploaded file. The PDF is streamed and discarded, so there is no table, no file on disk and nothing new in §9.6.
+- **Built in the request, nothing stored:** the limits below keep the load small, and its input is validated RDoc rather than an uploaded file. The PDF is streamed and discarded, so there is no table, no file on disk and nothing new in §9.6.
 - **Limits:** at most 2 builds at a time; a request waits up to 30 seconds, then `503 article.pdf_busy`. A build has 60 seconds, then `500 article.pdf_failed`, and Chromium restarts if it crashed. 10 PDFs per user per hour: `429 article.pdf_limit`.
 
 ### F34 — Post-style Feed Card (كارت البوست)
@@ -1486,7 +1486,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Me | `GET /me` (incl. `hasRecoveryPin`, `mustSetRecoveryPin`, `mustChangePassword`, `isProfileComplete`, `privacy`) · `PATCH /me` (incl. `avatarAssetId`, `expertiseFieldIds`, `links[]`, `headline`) · `PUT /me/privacy` · `PUT /me/profile/complete` · `PUT /me/password` · `PUT /me/phone` · `POST /me/recovery-pin` (first set) · `PUT /me/recovery-pin` (change) · `PUT /me/preferences` (incl. `showHighlights`, F30) · `PUT /me/interests` · `POST /me/devices` · `DELETE /me/devices/{token}` · `DELETE /me` · `GET /users/username-available?u=` |
 | Real-time | `POST /realtime/token` (Firebase custom token, used only to read the Realtime Database) |
 | Feed | `GET /feed/today` · `GET /feed/for-you` · `GET /feed/following` · `GET /feed/continue-reading` |
-| Articles | `GET /articles/{slug}?lang=` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` · `GET /articles/{id}/pdf?lang=` (own article, F33) · `POST /articles/{id}/quote-card` (`{ language, blockId, startOffset, endOffset, text, theme, format }` → PNG, F24) · `GET /articles/{id}/preview?lang=` (first ~300 words as RDoc + `isComplete`, F34) |
+| Articles | `GET /articles/{slug}?lang=` · `GET /articles/{id}/related` · `PUT /articles/{id}/progress` · `GET /articles/{id}/pdf?lang=` (signed-in members, F33) · `POST /articles/{id}/quote-card` (`{ language, blockId, startOffset, endOffset, text, theme, format }` → PNG, F24) · `GET /articles/{id}/preview?lang=` (first ~300 words as RDoc + `isComplete`, F34) |
 | Editor (F05) | `GET /me/articles?status=draft\|published` · `POST /articles` (new draft) · `GET /articles/{id}/edit` · `PUT /articles/{id}/draft` (autosave, `baseVersion`) · `DELETE /articles/{id}/draft` (discard) · `POST /articles/{id}/publish` (publish or Update) · `GET /articles/{id}/revisions` · `GET /articles/{id}/revisions/{n}` · `POST /articles/{id}/revisions/{n}/restore` · `DELETE /articles/{id}` |
 | Reactions | `PUT /articles/{id}/reaction` · `DELETE /articles/{id}/reaction` · `GET /articles/{id}/reactions` |
 | Reposts | `PUT /articles/{id}/repost` · `DELETE /articles/{id}/repost` (idempotent, return `{ repostCount, isReposted }`) · `GET /users/{username}/reposts` |
@@ -1793,7 +1793,7 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
 | E2E | — | Playwright critical flows | `integration_test` critical flows |
 | BiDi | RDoc text extraction tests | Mixed-text fixtures | Mixed-text fixtures |
 | Post card (F34) | Excerpt rules, `preview` cut at block boundaries and visibility | Expand, react and comment without leaving the feed, scroll position kept, mixed-text excerpts, screenshots in `ar/light` and `en/dark` | The same flows, comment sheet, goldens in `ar/light` and `en/dark` |
-| PDF (F33) | Built from `shared/rdoc/` fixtures with every block type, mixed text, emoji, a very long URL, a wide table, long code and a tall image. PdfPig checks embedded fonts, text, links, metadata and no blank pages. Page images are compared with baselines, one Arabic and one English, since the file is always light | Menu item (own article only) and download flow | Menu item (own article only) and share sheet |
+| PDF (F33) | Built from `shared/rdoc/` fixtures with every block type, mixed text, emoji, a very long URL, a wide table, long code and a tall image. PdfPig checks embedded fonts, text, links, metadata and no blank pages. Page images are compared with baselines, one Arabic and one English, since the file is always light | Menu item and download flow | Menu item and share sheet |
 
 **Critical flows (E2E on both platforms):** sign up (phone + password + PIN) → complete profile → onboarding → read today's article → react → comment → reply → save → follow writer → switch theme → switch article language → sign out → forgot password (phone + PIN) → sign in with the new password.
 
