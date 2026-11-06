@@ -37,6 +37,8 @@ internal sealed class RepostConfiguration : IEntityTypeConfiguration<Repost>
     {
         builder.ToTable("Reposts");
         builder.HasKey(r => r.Id);
+        // "Repost with your thoughts": plain text, trimmed, null when there is none.
+        builder.Property(r => r.Caption).HasMaxLength(Repost.MaxCaptionLength);
 
         // One repost per user per article.
         builder.HasIndex(r => new { r.UserId, r.ArticleId }).IsUnique();

@@ -62,6 +62,7 @@ public static class ErrorMessages
         ["link.label_not_allowed"] = ("الاسم للروابط من نوع «تاني» بس.", "Only \"Other\" links have a name."),
         // Reposts (F29)
         ["repost.own_article"] = ("مينفعش تعيد نشر مقالك.", "You can't repost your own article."),
+        ["repost.caption_too_long"] = ("رأيك لازم يكون 500 حرف أو أقل.", "Your thoughts must be 500 characters or fewer."),
         // Highlights (F30)
         ["highlight.text_mismatch"] = ("النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.", "This text has changed in the article. Reload and try again."),
         ["highlight.block_not_allowed"] = ("مينفعش تعمل Highlight للجزء ده.", "This part can't be highlighted."),

@@ -101,7 +101,10 @@ internal sealed class GetFollowingFeedQueryHandler(
             next);
     }
 
-    /// <summary>"أعاد نشره {name}" / "{name} و N غيره": the newest reposter you follow, and how many others you follow reposted it.</summary>
+    /// <summary>
+    /// "أعاد نشره {name}" / "{name} و N غيره": the newest reposter you follow, with their caption, and how many others you
+    /// follow reposted it (their captions aren't shown).
+    /// </summary>
     private async Task<Dictionary<Guid, RepostLabelDto>> LabelsAsync(IReadOnlyList<Guid> articleIds, IQueryable<Guid> followees, CancellationToken ct)
     {
         if (articleIds.Count == 0) return [];
@@ -112,6 +115,7 @@ internal sealed class GetFollowingFeedQueryHandler(
             {
                 r.ArticleId,
                 r.CreatedAt,
+                r.Caption,
                 User = new AuthorDto(r.User.Id, r.User.DisplayName, r.User.Username, r.User.AvatarUrl, r.User.IsVerified, r.User.Headline),
             })
             .ToListAsync(ct);
@@ -122,7 +126,7 @@ internal sealed class GetFollowingFeedQueryHandler(
             {
                 var newest = g.OrderByDescending(r => r.CreatedAt).ThenByDescending(r => r.User.Id).First();
                 var user = newest.User with { AvatarUrl = storage.ToPublicUrl(newest.User.AvatarUrl) };
-                return new RepostLabelDto(user, g.Count() - 1, newest.CreatedAt);
+                return new RepostLabelDto(user, g.Count() - 1, newest.CreatedAt, newest.Caption);
             });
     }
 }

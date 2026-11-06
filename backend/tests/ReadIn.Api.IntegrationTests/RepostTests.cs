@@ -3,14 +3,15 @@ using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ReadIn.Api.Errors;
 using ReadIn.Infrastructure.Persistence;
 
 namespace ReadIn.Api.IntegrationTests;
 
 /// <summary>
-/// F29 Repost end to end (SPEC F29, contract "Reposts"): the toggle, the Following feed with its labels and a stable
-/// cursor, the profile's Reposts tab, the <c>article_reposted</c> notification, the live counter, mutes, account deletion
-/// and the counters rebuild.
+/// F29 Repost end to end (SPEC F29, contract "Reposts"): the toggle, the caption ("repost with your thoughts") and
+/// <c>GET</c> of your repost, the Following feed with its labels and a stable cursor, the profile's Reposts tab, the
+/// <c>article_reposted</c> notification, the live counter, mutes, account deletion and the counters rebuild.
 /// </summary>
 [Collection(ApiCollection.Name)]
 public sealed class RepostTests(ApiFactory api)
@@ -24,6 +25,18 @@ public sealed class RepostTests(ApiFactory api)
 
     private static Task<JsonObject> UndoAsync(SignedInUser user, Guid articleId) =>
         user.Client.DeleteAsync($"/api/v1/articles/{articleId}/repost", Ct).OkJsonAsync();
+
+    /// <summary>PUT with a JSON body, e.g. <c>new { caption = "..." }</c>.</summary>
+    private static Task<HttpResponseMessage> PutRepostAsync(SignedInUser user, Guid articleId, object body) =>
+        user.Client.PutAsJsonAsync($"/api/v1/articles/{articleId}/repost", body, Ct);
+
+    private static Task<JsonObject> RepostWithAsync(SignedInUser user, Guid articleId, object body) =>
+        PutRepostAsync(user, articleId, body).OkJsonAsync();
+
+    private static Task<JsonObject> StateAsync(SignedInUser user, Guid articleId) =>
+        user.Client.GetAsync($"/api/v1/articles/{articleId}/repost", Ct).OkJsonAsync();
+
+    private static string? Caption(JsonNode? holder) => holder!["caption"]?.GetValue<string>();
 
     private static async Task<List<JsonObject>> FollowingAsync(SignedInUser user, int limit = 50)
     {
@@ -61,8 +74,8 @@ public sealed class RepostTests(ApiFactory api)
         var second = await api.UserAsync("Second Reposter");
 
         var state = await RepostAsync(reader, articleId);
-        state.ToJsonString().Should().Be("""{"repostCount":1,"isReposted":true}""");
-        (await RepostAsync(reader, articleId)).ToJsonString().Should().Be("""{"repostCount":1,"isReposted":true}""", "a second repost changes nothing");
+        state.ToJsonString().Should().Be("""{"repostCount":1,"isReposted":true,"caption":null}""");
+        (await RepostAsync(reader, articleId)).ToJsonString().Should().Be("""{"repostCount":1,"isReposted":true,"caption":null}""", "a second repost changes nothing");
         (await RepostAsync(second, articleId))["repostCount"]!.GetValue<int>().Should().Be(2);
 
         var details = await reader.Client.GetAsync($"/api/v1/articles/{slug}", Ct).OkJsonAsync();
@@ -74,8 +87,8 @@ public sealed class RepostTests(ApiFactory api)
         (card["repostCount"]!.GetValue<int>(), card["isReposted"]!.GetValue<bool>()).Should().Be((2, false));
         card["repostedBy"].Should().BeNull();
 
-        (await UndoAsync(reader, articleId)).ToJsonString().Should().Be("""{"repostCount":1,"isReposted":false}""");
-        (await UndoAsync(reader, articleId)).ToJsonString().Should().Be("""{"repostCount":1,"isReposted":false}""", "undo is idempotent");
+        (await UndoAsync(reader, articleId)).ToJsonString().Should().Be("""{"repostCount":1,"isReposted":false,"caption":null}""");
+        (await UndoAsync(reader, articleId)).ToJsonString().Should().Be("""{"repostCount":1,"isReposted":false,"caption":null}""", "undo is idempotent");
 
         (await InDbAsync(db => db.Articles.Where(a => a.Id == articleId).Select(a => a.RepostCount).SingleAsync(Ct))).Should().Be(1);
         var live = api.Realtime.CountersFor(articleId);
@@ -153,7 +166,8 @@ public sealed class RepostTests(ApiFactory api)
         top["user"]!["username"]!.GetValue<string>().Should().Be(Username(secondReposter));
         top["othersCount"]!.GetValue<int>().Should().Be(1, "the other writer you follow who reposted it; unfollowed ones don't count");
         top["repostedAt"]!.GetValue<DateTime>().Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
-        top.AsObject().Select(p => p.Key).Should().Equal("user", "othersCount", "repostedAt");
+        top.AsObject().Select(p => p.Key).Should().Equal("user", "othersCount", "repostedAt", "caption");
+        top["caption"].Should().BeNull("reposted without thoughts");
 
         feed[1]["repostedBy"].Should().BeNull("the followed author's own post, placed by its publish");
         var moved = feed[2]["repostedBy"]!;
@@ -348,6 +362,188 @@ public sealed class RepostTests(ApiFactory api)
         api.Realtime.CountersFor(articleId)[^1].RepostCount.Should().Be(1);
         (await api.GuestClient().GetAsync($"/api/v1/articles/{slug}", Ct).OkJsonAsync())["repostCount"]!.GetValue<int>().Should().Be(1);
         (await NotificationsAsync(author)).Single()!["actorCount"]!.GetValue<int>().Should().Be(1, "the deleted reposter is gone as an actor");
+    }
+
+    [Fact]
+    public async Task A_repost_with_thoughts_keeps_them_trimmed_with_unified_line_breaks()
+    {
+        var author = await api.UserAsync();
+        var (articleId, _) = await author.Client.PublishAsync();
+        var (blank, _) = await author.Client.PublishAsync();
+        var reader = await api.UserAsync();
+
+        var state = await RepostWithAsync(reader, articleId, new { caption = "  \r\nرأيي في المقال:\r\nuseful for .NET devs  \r\n" });
+        Caption(state).Should().Be("رأيي في المقال:\nuseful for .NET devs");
+        (state["repostCount"]!.GetValue<int>(), state["isReposted"]!.GetValue<bool>()).Should().Be((1, true));
+        (await InDbAsync(db => db.Reposts.Where(r => r.ArticleId == articleId).Select(r => r.Caption).SingleAsync(Ct)))
+            .Should().Be("رأيي في المقال:\nuseful for .NET devs");
+
+        // Only spaces and line breaks: no caption.
+        Caption(await RepostWithAsync(reader, blank, new { caption = " \r\n\t " })).Should().BeNull();
+        (await InDbAsync(db => db.Reposts.Where(r => r.ArticleId == blank).Select(r => r.Caption).SingleAsync(Ct))).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Editing_the_thoughts_keeps_the_reposts_time_count_and_single_notification()
+    {
+        var author = await api.UserAsync("Thoughtful Author");
+        var (articleId, _) = await author.Client.PublishAsync();
+        var reader = await api.UserAsync();
+
+        await RepostWithAsync(reader, articleId, new { caption = "First take" });
+        var createdAt = await InDbAsync(db => db.Reposts.Where(r => r.ArticleId == articleId).Select(r => r.CreatedAt).SingleAsync(Ct));
+        var entry = (await NotificationsAsync(author)).Should().ContainSingle().Subject!;
+        var published = api.Realtime.CountersFor(articleId).Count;
+
+        (await RepostWithAsync(reader, articleId, new { caption = "Second take" })).ToJsonString()
+            .Should().Be("""{"repostCount":1,"isReposted":true,"caption":"Second take"}""");
+        await RepostWithAsync(reader, articleId, new { caption = "" });
+        await RepostAsync(reader, articleId);
+
+        (await InDbAsync(db => db.Reposts.Where(r => r.ArticleId == articleId).Select(r => r.CreatedAt).SingleAsync(Ct)))
+            .Should().Be(createdAt, "the repost keeps its first time");
+        (await InDbAsync(db => db.Articles.Where(a => a.Id == articleId).Select(a => a.RepostCount).SingleAsync(Ct))).Should().Be(1);
+        api.Realtime.CountersFor(articleId).Should().HaveCount(published, "an edit raises nothing, so nothing is recounted");
+
+        var after = (await NotificationsAsync(author)).Should().ContainSingle("an edit sends no new notification").Subject!;
+        after["id"]!.GetValue<Guid>().Should().Be(entry["id"]!.GetValue<Guid>());
+        after["actorCount"]!.GetValue<int>().Should().Be(1);
+        after["updatedAt"]!.GetValue<DateTime>().Should().Be(entry["updatedAt"]!.GetValue<DateTime>());
+    }
+
+    [Fact]
+    public async Task A_missing_or_null_caption_keeps_it_and_an_empty_one_clears_it()
+    {
+        var author = await api.UserAsync();
+        var (articleId, _) = await author.Client.PublishAsync();
+        var (other, _) = await author.Client.PublishAsync();
+        var reader = await api.UserAsync();
+
+        Caption(await RepostWithAsync(reader, articleId, new { caption = "Keep me" })).Should().Be("Keep me");
+        Caption(await RepostAsync(reader, articleId)).Should().Be("Keep me", "no body");
+        Caption(await RepostWithAsync(reader, articleId, new { })).Should().Be("Keep me", "no caption member");
+        Caption(await RepostWithAsync(reader, articleId, new { caption = (string?)null })).Should().Be("Keep me", "a null caption");
+        Caption(await RepostWithAsync(reader, articleId, new { caption = "Changed my mind" })).Should().Be("Changed my mind");
+
+        (await RepostWithAsync(reader, articleId, new { caption = "" })).ToJsonString()
+            .Should().Be("""{"repostCount":1,"isReposted":true,"caption":null}""", "an empty caption clears it and the repost stays");
+        Caption(await StateAsync(reader, articleId)).Should().BeNull();
+
+        // On a new repost, a null caption is none.
+        (await RepostWithAsync(reader, other, new { caption = (string?)null })).ToJsonString()
+            .Should().Be("""{"repostCount":1,"isReposted":true,"caption":null}""");
+    }
+
+    [Fact]
+    public async Task Thoughts_over_500_characters_are_refused_and_change_nothing()
+    {
+        var author = await api.UserAsync();
+        var (articleId, _) = await author.Client.PublishAsync();
+        var reader = await api.UserAsync();
+        var longest = new string('ع', 500);
+
+        var problem = await PutRepostAsync(reader, articleId, new { caption = longest + "!" }).ProblemAsync(HttpStatusCode.BadRequest, "validation.failed");
+        problem["errors"]!["caption"]!.AsArray().Select(c => c!.GetValue<string>()).Should().Equal("repost.caption_too_long");
+        (await StateAsync(reader, articleId))["isReposted"]!.GetValue<bool>().Should().BeFalse("nothing was reposted");
+
+        // 500 characters after trimming fit.
+        Caption(await RepostWithAsync(reader, articleId, new { caption = $"  \r\n{longest}\r\n  " })).Should().Be(longest);
+
+        // Too long on an existing repost keeps its caption.
+        await PutRepostAsync(reader, articleId, new { caption = $"{longest}\r\nmore" }).ProblemAsync(HttpStatusCode.BadRequest, "validation.failed");
+        Caption(await StateAsync(reader, articleId)).Should().Be(longest);
+
+        // The title clients fall back to.
+        ErrorMessages.Title("repost.caption_too_long", "ar").Should().Be("رأيك لازم يكون 500 حرف أو أقل.");
+        ErrorMessages.Title("repost.caption_too_long", "en").Should().Be("Your thoughts must be 500 characters or fewer.");
+    }
+
+    [Fact]
+    public async Task Get_answers_your_repost_with_its_caption()
+    {
+        var author = await api.UserAsync();
+        var (articleId, _) = await author.Client.PublishAsync();
+        var reader = await api.UserAsync();
+        var other = await api.UserAsync();
+
+        (await StateAsync(reader, articleId)).ToJsonString().Should().Be("""{"repostCount":0,"isReposted":false,"caption":null}""");
+        await RepostWithAsync(other, articleId, new { caption = "Someone else's thoughts" });
+        (await StateAsync(reader, articleId)).ToJsonString()
+            .Should().Be("""{"repostCount":1,"isReposted":false,"caption":null}""", "another reposter's caption is never yours");
+
+        await RepostWithAsync(reader, articleId, new { caption = "Mine\r\ntoo" });
+        (await StateAsync(reader, articleId)).ToJsonString().Should().Be("""{"repostCount":2,"isReposted":true,"caption":"Mine\ntoo"}""");
+        (await StateAsync(author, articleId)).ToJsonString().Should().Be("""{"repostCount":2,"isReposted":false,"caption":null}""", "your own article");
+
+        (await api.GuestClient().GetAsync($"/api/v1/articles/{articleId}/repost", Ct)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        await reader.Client.GetAsync($"/api/v1/articles/{Guid.NewGuid()}/repost", Ct).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
+
+        // Hidden by a moderator: not found for readers, as the article itself.
+        var admin = (await api.SuperAdminAsync()).Client;
+        (await admin.PostAsJsonAsync("/api/v1/moderation/actions", new { action = "hide", targetType = "article", targetId = articleId, note = "Spam" }, Ct))
+            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await reader.Client.GetAsync($"/api/v1/articles/{articleId}/repost", Ct).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
+    }
+
+    [Fact]
+    public async Task Undoing_a_repost_deletes_its_caption()
+    {
+        var author = await api.UserAsync();
+        var (articleId, _) = await author.Client.PublishAsync();
+        var reader = await api.UserAsync();
+
+        await RepostWithAsync(reader, articleId, new { caption = "Gone with it" });
+        (await UndoAsync(reader, articleId)).ToJsonString().Should().Be("""{"repostCount":0,"isReposted":false,"caption":null}""");
+        (await StateAsync(reader, articleId)).ToJsonString().Should().Be("""{"repostCount":0,"isReposted":false,"caption":null}""");
+        (await InDbAsync(db => db.Reposts.AnyAsync(r => r.ArticleId == articleId, Ct))).Should().BeFalse();
+
+        Caption(await RepostAsync(reader, articleId)).Should().BeNull("reposting again starts without the old thoughts");
+    }
+
+    [Fact]
+    public async Task Labels_carry_the_named_reposters_thoughts_on_the_following_feed_and_the_reposts_tab()
+    {
+        var viewer = await api.UserAsync();
+        var first = await api.UserAsync("First Thinker");
+        var second = await api.UserAsync("Second Thinker");
+        var writer = await api.UserAsync();
+        await FollowAsync(viewer, first);
+        await FollowAsync(viewer, second);
+        var (articleId, _) = await writer.Client.PublishAsync("Worth a thought");
+        var (plain, _) = await writer.Client.PublishAsync("Reposted without thoughts");
+
+        await RepostWithAsync(first, articleId, new { caption = "رأي الأول\r\nfirst's thoughts" });
+        await RepostWithAsync(second, articleId, new { caption = "Second's thoughts" });
+        await RepostAsync(first, plain);
+
+        var feed = await FollowingAsync(viewer);
+        feed.Select(Id).Should().Equal([plain, articleId]);
+        Caption(feed[0]["repostedBy"]).Should().BeNull("a repost without thoughts");
+        var label = feed[1]["repostedBy"]!;
+        label["user"]!["id"]!.GetValue<Guid>().Should().Be(second.Id);
+        label["othersCount"]!.GetValue<int>().Should().Be(1);
+        Caption(label).Should().Be("Second's thoughts", "only the named reposter's thoughts show");
+
+        // Editing the thoughts changes the label, not the item's place.
+        await RepostWithAsync(second, articleId, new { caption = "Second's thoughts, edited" });
+        var edited = await FollowingAsync(viewer);
+        edited.Select(Id).Should().Equal([plain, articleId]);
+        Caption(edited[1]["repostedBy"]).Should().Be("Second's thoughts, edited");
+        edited[1]["repostedBy"]!["repostedAt"]!.GetValue<DateTime>().Should().Be(label["repostedAt"]!.GetValue<DateTime>());
+
+        // When the named reposter undoes, the next one is named with their own thoughts.
+        await UndoAsync(second, articleId);
+        var next = (await FollowingAsync(viewer)).Single(c => Id(c) == articleId)["repostedBy"]!;
+        next["user"]!["id"]!.GetValue<Guid>().Should().Be(first.Id);
+        next["othersCount"]!.GetValue<int>().Should().Be(0);
+        Caption(next).Should().Be("رأي الأول\nfirst's thoughts");
+
+        // The Reposts tab: the owner's thoughts on each card.
+        var tab = (await api.GuestClient().GetAsync($"/api/v1/users/{Username(first)}/reposts", Ct).OkJsonAsync())["items"]!.AsArray();
+        tab.Select(c => Id(c!)).Should().Equal(plain, articleId);
+        Caption(tab[0]!["repostedBy"]).Should().BeNull();
+        Caption(tab[1]!["repostedBy"]).Should().Be("رأي الأول\nfirst's thoughts");
+        tab[1]!["repostedBy"]!.AsObject().Select(p => p.Key).Should().Equal("user", "othersCount", "repostedAt", "caption");
     }
 
     [Fact]

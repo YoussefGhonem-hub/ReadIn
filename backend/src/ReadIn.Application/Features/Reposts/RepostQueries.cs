@@ -8,6 +8,7 @@ using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Profiles;
+using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 
@@ -49,7 +50,7 @@ internal sealed class GetProfileRepostsQueryHandler(
             .OrderByDescending(r => r.CreatedAt)
             .ThenByDescending(r => r.Id)
             .Take(limit + 1)
-            .Select(r => new { r.Id, r.ArticleId, r.CreatedAt })
+            .Select(r => new { r.Id, r.ArticleId, r.CreatedAt, r.Caption })
             .ToListAsync(ct);
 
         string? next = null;
@@ -81,7 +82,24 @@ internal sealed class GetProfileRepostsQueryHandler(
         var ordered = page.Where(p => byId.ContainsKey(p.ArticleId)).ToList();
         var completed = await cards.CompleteAsync([.. ordered.Select(p => byId[p.ArticleId])], ct);
         return new CursorPage<ArticleCardDto>(
-            [.. completed.Select((card, i) => card with { RepostedBy = new RepostLabelDto(reposter, 0, ordered[i].CreatedAt) })],
+            [.. completed.Select((card, i) => card with { RepostedBy = new RepostLabelDto(reposter, 0, ordered[i].CreatedAt, ordered[i].Caption) })],
             next);
+    }
+}
+
+/// <summary>
+/// GET /articles/{id}/repost (SPEC F29): your repost of an article you can open, with its caption; it prefills "Edit your
+/// thoughts". Not reposted: <c>isReposted: false</c> and no caption. Same 404 rules as the writes.
+/// </summary>
+[Authenticated]
+public sealed record GetRepostStateQuery(Guid ArticleId) : IQuery<Result<RepostStateDto>>;
+
+internal sealed class GetRepostStateQueryHandler(IAppDbContext db, ICurrentUser currentUser)
+    : IQueryHandler<GetRepostStateQuery, Result<RepostStateDto>>
+{
+    public async ValueTask<Result<RepostStateDto>> Handle(GetRepostStateQuery query, CancellationToken ct)
+    {
+        if (!await db.Articles.AsNoTracking().VisibleTo(currentUser).AnyAsync(a => a.Id == query.ArticleId, ct)) return ArticleErrors.NotFound;
+        return await RepostStates.ReadAsync(db, currentUser.RequireUserId(), query.ArticleId, ct);
     }
 }

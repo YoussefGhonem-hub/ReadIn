@@ -67,24 +67,37 @@ internal sealed class RepostEndpoints : IEndpointGroup
     {
         var articles = api.MapGroup("/articles").WithTags("Reposts");
 
-        articles.MapPut("/{id:guid}/repost", async (Guid id, ISender sender, HttpContext http, CancellationToken ct) =>
-                (await sender.Send(new RepostArticleCommand(id), ct)).ToHttp(http))
+        articles.MapPut("/{id:guid}/repost", async (Guid id, RepostRequest? body, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new RepostArticleCommand(id, body?.Caption), ct)).ToHttp(http))
             .RequireAuthorization()
             .RequireRateLimiting(RateLimitPolicies.Writes)
-            .WithSummary("Repost an article (reposts.create); 400 repost.own_article on your own")
+            .WithSummary("Repost an article, optionally with your thoughts, or set the caption of your repost (reposts.create); "
+                + "400 repost.own_article on your own")
+            .Produces<RepostStateDto>();
+
+        articles.MapGet("/{id:guid}/repost", async (Guid id, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new GetRepostStateQuery(id), ct)).ToHttp(http))
+            .RequireAuthorization()
+            .WithSummary("Your repost of an article now, with its caption")
             .Produces<RepostStateDto>();
 
         articles.MapDelete("/{id:guid}/repost", async (Guid id, ISender sender, HttpContext http, CancellationToken ct) =>
                 (await sender.Send(new UndoRepostCommand(id), ct)).ToHttp(http))
             .RequireAuthorization()
             .RequireRateLimiting(RateLimitPolicies.Writes)
-            .WithSummary("Undo your repost (idempotent)")
+            .WithSummary("Undo your repost and its caption (idempotent)")
             .Produces<RepostStateDto>();
     }
 }
 
 /// <summary>Body of PUT /articles/{id}/reaction. A string, so an unknown reaction is the validation code reaction.invalid.</summary>
 internal sealed record SetReactionRequest(string? Type);
+
+/// <summary>
+/// Optional body of PUT /articles/{id}/repost. A missing or null caption: none on a new repost, unchanged on an existing
+/// one; a string sets it, and an empty one clears it.
+/// </summary>
+internal sealed record RepostRequest(string? Caption);
 
 /// <summary>F13 Saved articles and collections (SPEC §17.2).</summary>
 internal sealed class SavedEndpoints : IEndpointGroup

@@ -770,6 +770,10 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ArticleId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Caption")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
