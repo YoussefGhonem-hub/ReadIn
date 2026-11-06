@@ -2699,5 +2699,14 @@
     "retry": "Try again",
     "notFound": "Article not found.",
     "offline": "You need an internet connection to make a quote card."
+  },
+  "followingDock": {
+    "title": "Following",
+    "search": "Search people you follow",
+    "empty": "You don't follow anyone yet.",
+    "noResults": "No one you follow matches “{{q}}”",
+    "error": "We couldn't load the people you follow.",
+    "suggested": "Writers you might like",
+    "suggestedHint": "Based on your interests"
   }
 }

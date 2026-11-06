@@ -816,6 +816,7 @@ Draft ──► Published ──► Archived
 - Followers / following lists with search.
 - Following feed tab on Home.
 - Suggested writers to follow (by field overlap).
+- **Following panel (web, wide screens):** signed-in members get the people they follow in a panel docked at the bottom corner of the window, on the end side. It stays closed to its header bar until clicked, and each browser remembers whether it was left open. Open, it has a search box (name or @username), then the people you follow, newest first: each row opens their profile and shows "Follows you" when they do. When you follow fewer than 5 people, writers you might like follow, from `GET /users/suggested` (field overlap), each with Follow. No messages: it is a list, not a chat. Not shown on phones, in narrow windows or in the editor.
 
 ### F13 — Saved Articles (Bookmarks)
 - Save / unsave from card or reader.
