@@ -18,11 +18,13 @@
   "errorTitle": "حصلت مشكلة",
   "emptyTitle": "مفيش حاجة هنا لسه",
 
-  "navHome": "النهارده",
+  "navHome": "الرئيسية",
   "navExplore": "استكشف",
   "navWrite": "اكتب",
   "navSaved": "المحفوظات",
   "navProfile": "حسابي",
+  "navMore": "المزيد",
+  "moreDarkMode": "الوضع الداكن",
   "notifications": "الإشعارات",
 
   "greetingMorning": "صباح الخير يا {name} 👋",

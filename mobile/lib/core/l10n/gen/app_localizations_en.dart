@@ -55,7 +55,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptyTitle => 'Nothing here yet';
 
   @override
-  String get navHome => 'Today';
+  String get navHome => 'Home';
 
   @override
   String get navExplore => 'Explore';
@@ -68,6 +68,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navProfile => 'Profile';
+
+  @override
+  String get navMore => 'More';
+
+  @override
+  String get moreDarkMode => 'Dark mode';
 
   @override
   String get notifications => 'Notifications';

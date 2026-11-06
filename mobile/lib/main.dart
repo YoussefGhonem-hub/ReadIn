@@ -6,6 +6,7 @@ import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'app/app.dart';
 import 'app/live_session_bridge.dart';
 import 'app/social_session_bridge.dart';
+import 'core/config/app_config.dart';
 import 'core/di/injection.dart';
 import 'core/push/push_service.dart';
 import 'core/realtime/realtime_service.dart';
@@ -18,7 +19,7 @@ import 'shared/media/media_cache_manager.dart';
 ///   flutter run --dart-define-from-file=config/dev.json
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MediaCacheManager.register();
+  MediaCacheManager.register(AppConfig.fromEnvironment());
   await Hive.initFlutter();
   await configureDependencies();
 

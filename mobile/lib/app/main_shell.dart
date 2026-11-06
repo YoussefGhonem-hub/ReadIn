@@ -6,12 +6,14 @@ import 'package:go_router/go_router.dart';
 
 import '../core/di/injection.dart';
 import '../features/auth/presentation/session/session_cubit.dart';
+import '../features/home/presentation/widgets/more_sheet.dart';
 import '../features/notifications/presentation/cubit/unread_badge_cubit.dart';
 import '../shared/widgets/sign_in_prompt.dart';
 import 'main_nav_bar.dart';
 
-/// Bottom navigation shell: Explore · Write · (the ReadIn mark, Home) · Saved · Profile ([MainNavBar]). It hands the
-/// app's unread count (F17) to the tabs' top bars, and re-reads it when the app comes back to the foreground.
+/// Bottom navigation shell: Explore · Write · (the ReadIn mark, Home) · Saved · More ([MainNavBar]); Profile opens from
+/// the More sheet. It hands the app's unread count (F17) to the tabs' top bars and the More sheet, and re-reads it
+/// when the app comes back to the foreground.
 class MainShell extends StatefulWidget {
   const MainShell({super.key, required this.navigationShell});
 
@@ -57,6 +59,7 @@ class _MainShellState extends State<MainShell> {
             }
             navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex);
           },
+          onMore: () => unawaited(showMoreSheet(context, unread: _unread)),
         ),
       ),
     );

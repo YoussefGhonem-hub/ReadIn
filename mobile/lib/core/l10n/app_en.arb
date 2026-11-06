@@ -18,11 +18,13 @@
   "errorTitle": "Something went wrong",
   "emptyTitle": "Nothing here yet",
 
-  "navHome": "Today",
+  "navHome": "Home",
   "navExplore": "Explore",
   "navWrite": "Write",
   "navSaved": "Saved",
   "navProfile": "Profile",
+  "navMore": "More",
+  "moreDarkMode": "Dark mode",
   "notifications": "Notifications",
 
   "greetingMorning": "Good morning, {name} 👋",

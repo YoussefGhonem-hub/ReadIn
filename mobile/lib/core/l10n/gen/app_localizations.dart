@@ -191,7 +191,7 @@ abstract class AppLocalizations {
   /// No description provided for @navHome.
   ///
   /// In en, this message translates to:
-  /// **'Today'**
+  /// **'Home'**
   String get navHome;
 
   /// No description provided for @navExplore.
@@ -217,6 +217,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile'**
   String get navProfile;
+
+  /// No description provided for @navMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get navMore;
+
+  /// No description provided for @moreDarkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark mode'**
+  String get moreDarkMode;
 
   /// No description provided for @notifications.
   ///

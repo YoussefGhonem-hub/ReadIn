@@ -8,22 +8,30 @@ import '../core/theme/theme_x.dart';
 import '../core/theme/tokens.g.dart';
 import '../shared/widgets/readin_mark.dart';
 
-/// The main tabs' bottom bar: Explore · Write · (ReadIn mark) · Saved · Profile.
+/// The main tabs' bottom bar, icons only: Explore · Write · (ReadIn mark) · Saved · More.
 ///
 /// Home has no tab of its own: the ReadIn mark is the Home button. It rises out of a soft, curved notch in the middle
-/// of the bar, and an amber ring goes round it while Home is open. The other tabs keep their names; the open one is
-/// filled in the brand green with a short amber tick on the bar's top edge (amber, like the "ر" of the mark, says
-/// "you are here"). The page above keeps its full height: the mark is drawn over its last few pixels.
+/// of the bar, and an amber ring goes round it while Home is open. The open tab's icon is filled, in the brand green,
+/// with a short amber tick on the bar's top edge (amber, like the "ر" of the mark, says "you are here"). Each icon
+/// still has its name for screen readers, and shows it on a long press. More opens the More sheet; it counts as open
+/// on the Profile tab, which is reached from there. The page above keeps its full height: the mark is drawn over its
+/// last few pixels.
 class MainNavBar extends StatelessWidget {
-  const MainNavBar({super.key, required this.currentIndex, required this.onSelect});
+  const MainNavBar({super.key, required this.currentIndex, required this.onSelect, required this.onMore});
 
   /// The branch that is open: 0 Home, 1 Explore, 2 Write, 3 Saved, 4 Profile.
   final int currentIndex;
 
-  /// A tab or the mark was pressed, with its branch.
+  /// The mark or a tab was pressed, with its branch.
   final ValueChanged<int> onSelect;
 
+  /// More was pressed.
+  final VoidCallback onMore;
+
   static const int homeBranch = 0;
+
+  /// The Profile branch: no icon of its own, it opens from the More sheet.
+  static const int profileBranch = 4;
 
   /// The bar's own height, above the system's bottom inset.
   static const double barHeight = ReadInLayout.bottomNavHeight;
@@ -41,54 +49,59 @@ class MainNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final inset = MediaQuery.paddingOf(context).bottom;
-    Widget tab(int branch, IconData icon, IconData selectedIcon, String label) => Expanded(
-      child: _Tab(
-        icon: icon,
-        selectedIcon: selectedIcon,
-        label: label,
-        selected: currentIndex == branch,
-        onTap: () => onSelect(branch),
-      ),
+    Widget tab(
+      IconData icon,
+      IconData selectedIcon,
+      String label, {
+      required bool selected,
+      required VoidCallback onTap,
+    }) => Expanded(
+      child: _Tab(icon: icon, selectedIcon: selectedIcon, label: label, selected: selected, onTap: onTap),
     );
-    return MediaQuery.withClampedTextScaling(
-      maxScaleFactor: 1.3,
-      child: _Rise(
-        rise: rise,
-        child: SizedBox(
-          height: rise + barHeight + inset,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              const Positioned.fill(child: _BarBackground(top: rise)),
-              Positioned(
-                top: rise,
-                left: 0,
-                right: 0,
-                height: barHeight,
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      tab(1, Icons.explore_outlined, Icons.explore, l10n.navExplore),
-                      tab(2, Icons.edit_outlined, Icons.edit, l10n.navWrite),
-                      const SizedBox(width: _BarShape.notchWidth),
-                      tab(3, Icons.bookmark_border, Icons.bookmark, l10n.navSaved),
-                      tab(4, Icons.person_outline, Icons.person, l10n.navProfile),
-                    ],
-                  ),
+    Widget branch(int index, IconData icon, IconData selectedIcon, String label) =>
+        tab(icon, selectedIcon, label, selected: currentIndex == index, onTap: () => onSelect(index));
+    return _Rise(
+      rise: rise,
+      child: SizedBox(
+        height: rise + barHeight + inset,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            const Positioned.fill(child: _BarBackground(top: rise)),
+            Positioned(
+              top: rise,
+              left: 0,
+              right: 0,
+              height: barHeight,
+              child: Material(
+                type: MaterialType.transparency,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    branch(1, Icons.explore_outlined, Icons.explore, l10n.navExplore),
+                    branch(2, Icons.draw_outlined, Icons.draw, l10n.navWrite),
+                    const SizedBox(width: _BarShape.notchWidth),
+                    branch(3, Icons.bookmarks_outlined, Icons.bookmarks, l10n.navSaved),
+                    tab(
+                      Icons.grid_view_outlined,
+                      Icons.grid_view_rounded,
+                      l10n.navMore,
+                      selected: currentIndex == profileBranch,
+                      onTap: onMore,
+                    ),
+                  ],
                 ),
               ),
-              Align(
-                alignment: Alignment.topCenter,
-                child: _HomeMark(
-                  label: l10n.navHome,
-                  selected: currentIndex == homeBranch,
-                  onTap: () => onSelect(homeBranch),
-                ),
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: _HomeMark(
+                label: l10n.navHome,
+                selected: currentIndex == homeBranch,
+                onTap: () => onSelect(homeBranch),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -190,7 +203,8 @@ class _BarPainter extends CustomPainter {
       old.top != top || old.fill != fill || old.border != border || old.shadow != shadow;
 }
 
-/// A tab: its icon over its name. The open one is filled, in green, with an amber tick on the bar's top edge.
+/// A tab: an icon alone (its name is for screen readers and a long press). The open one is filled, in green, a little
+/// larger, with an amber tick on the bar's top edge.
 class _Tab extends StatelessWidget {
   const _Tab({
     required this.icon,
@@ -209,57 +223,56 @@ class _Tab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final color = selected ? colors.primary : colors.textSecondary;
     return Semantics(
       container: true,
       button: true,
       selected: selected,
-      child: InkResponse(
-        onTap: onTap,
-        containedInkWell: false,
-        highlightShape: BoxShape.circle,
-        radius: 30,
-        child: Stack(
-          fit: StackFit.expand,
-          alignment: Alignment.center,
-          children: [
-            Positioned(
-              top: 0,
-              child: AnimatedContainer(
-                duration: ReadInMotion.base,
-                curve: Curves.easeOutBack,
-                width: selected ? 22 : 0,
-                height: 3,
-                decoration: BoxDecoration(
-                  color: colors.accent,
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(3)),
+      label: label,
+      child: Tooltip(
+        message: label,
+        excludeFromSemantics: true,
+        child: InkResponse(
+          onTap: onTap,
+          containedInkWell: false,
+          highlightShape: BoxShape.circle,
+          radius: 28,
+          child: Stack(
+            fit: StackFit.expand,
+            alignment: Alignment.center,
+            children: [
+              Positioned(
+                top: 0,
+                child: AnimatedContainer(
+                  duration: ReadInMotion.base,
+                  curve: Curves.easeOutCubic,
+                  width: selected ? 22 : 0,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: colors.accent,
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(3)),
+                  ),
                 ),
               ),
-            ),
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedSwitcher(
+              Center(
+                child: AnimatedScale(
+                  scale: selected ? 1.08 : 1,
+                  duration: ReadInMotion.base,
+                  curve: Curves.easeOutBack,
+                  child: AnimatedSwitcher(
                     duration: ReadInMotion.base,
                     switchInCurve: Curves.easeOutBack,
                     transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-                    child: Icon(selected ? selectedIcon : icon, key: ValueKey(selected), size: 24, color: color),
-                  ),
-                  const SizedBox(height: 4),
-                  AnimatedDefaultTextStyle(
-                    duration: ReadInMotion.base,
-                    style: (context.textTheme.labelSmall ?? const TextStyle()).copyWith(
-                      fontSize: 12,
-                      color: color,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    child: Icon(
+                      selected ? selectedIcon : icon,
+                      key: ValueKey(selected),
+                      size: 26,
+                      color: selected ? colors.primary : colors.textSecondary,
                     ),
-                    child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

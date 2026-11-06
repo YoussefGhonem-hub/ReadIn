@@ -55,7 +55,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get emptyTitle => 'مفيش حاجة هنا لسه';
 
   @override
-  String get navHome => 'النهارده';
+  String get navHome => 'الرئيسية';
 
   @override
   String get navExplore => 'استكشف';
@@ -68,6 +68,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get navProfile => 'حسابي';
+
+  @override
+  String get navMore => 'المزيد';
+
+  @override
+  String get moreDarkMode => 'الوضع الداكن';
 
   @override
   String get notifications => 'الإشعارات';
