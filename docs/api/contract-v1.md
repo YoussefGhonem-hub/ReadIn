@@ -782,7 +782,6 @@ hidden when `null`). `isFollowingAuthor` says whether you follow the comment's a
 row uses `PUT /users/{id}/follow` and the shared follow store, so every row, card and profile of that writer updates.
 Seed the store from `isFollowingAuthor` like cards do.
 
-Who sees what: readers get visible comments; a comment hidden by a moderator is shown in full only to its author and to
 **Replies in pages (F11).** The list's first 2 replies are kept, but a thread shows only the first until "show N more
 replies". Each tap shows up to 5 more: first the ones already loaded, then `GET /comments/{id}/replies?limit=5&cursor=…`.
 The first call has no cursor, so dedupe the 2 the list gave. N = `replyCount` minus the replies shown. "Hide replies"
@@ -793,6 +792,7 @@ folds the thread back to its first reply without dropping what was loaded.
 `stats.followers`, `stats.articles`, `isFollowing` and `isMe`. Clients cache it briefly per viewer. There is no new
 endpoint.
 
+Who sees what: readers get visible comments; a comment hidden by a moderator is shown in full only to its author and to
 moderators (`isHidden: true`). A deleted, or hidden-for-you, top-level comment that still has replies is a placeholder
 (`isDeleted` or `isHidden`, `body` and `author` null) so its replies keep their thread; otherwise it's left out. When an
 account is deleted, its comments stay with `author: null` ("Deleted user"), as the public account-deletion page promises.
