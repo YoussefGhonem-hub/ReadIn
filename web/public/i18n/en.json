@@ -639,7 +639,7 @@
       "title": "Last step",
       "subtitle": "Tune your experience. You can change this later in Settings.",
       "articleLanguage": "Article language",
-      "arEG": "مصري + English",
+      "arEG": "العربية + English",
       "en": "English only",
       "reminder": "When should today's article arrive?",
       "reminderHint": "In your local time.",
@@ -778,7 +778,7 @@
       "xl": "XL"
     },
     "languages": {
-      "arEG": "مصري + EN",
+      "arEG": "العربية + EN",
       "en": "EN"
     },
     "languageToggle": "Article language",
