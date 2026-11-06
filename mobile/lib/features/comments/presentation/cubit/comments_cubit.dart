@@ -33,11 +33,16 @@ class ComposerTarget extends Equatable {
   List<Object?> get props => [intent, comment];
 }
 
-/// A top-level comment and the replies loaded so far (one level, oldest first; the viewer's pending replies last).
+/// A top-level comment and its replies (one level), paged like Facebook and LinkedIn: at first only the oldest reply
+/// shows; "show N more replies" reveals up to [GetComments.repliesPageSize] more a tap (the loaded ones first, then
+/// pages of `/comments/{id}/replies`); "Hide replies" goes back to the first one. New replies (the viewer's own and
+/// live ones) always show, at the end of the thread.
 class CommentThread extends Equatable {
   const CommentThread({
     required this.comment,
     this.replies = const [],
+    this.shownCount = 1,
+    this.alwaysShown = const {},
     this.repliesCursor,
     this.repliesFetched = false,
     this.loadingReplies = false,
@@ -49,7 +54,16 @@ class CommentThread extends Equatable {
       CommentThread(comment: comment.copyWith(replies: const []), replies: comment.replies);
 
   final Comment comment;
+
+  /// Every reply loaded so far, shown or not: oldest first, the viewer's pending ones last.
   final List<Comment> replies;
+
+  /// How many of the older replies (all but [alwaysShown]) show, oldest first. More than are loaded is fine: the next
+  /// ones loaded then show.
+  final int shownCount;
+
+  /// Replies that show whatever [shownCount] says: the viewer's new replies and replies that arrived live.
+  final Set<String> alwaysShown;
 
   /// The next page of `/comments/{id}/replies`, once it was fetched.
   final String? repliesCursor;
@@ -59,17 +73,43 @@ class CommentThread extends Equatable {
 
   String get id => comment.id;
 
-  /// "Show N more replies" applies.
-  bool get hasMoreReplies => repliesFetched ? repliesCursor != null : comment.replyCount > replies.length;
+  /// The replies on screen, in order.
+  List<Comment> get visibleReplies {
+    final visible = <Comment>[];
+    var older = 0;
+    for (final reply in replies) {
+      if (alwaysShown.contains(reply.id)) {
+        visible.add(reply);
+      } else if (older < shownCount) {
+        visible.add(reply);
+        older++;
+      }
+    }
+    return visible;
+  }
 
-  /// The N of "show N more replies" (0 when the count isn't known).
-  int get moreReplies => math.max(0, comment.replyCount - replies.length);
+  /// Loaded replies that are hidden: "show more" reveals these before fetching.
+  int get hiddenLoaded => replies.length - visibleReplies.length;
+
+  /// The API has replies that aren't loaded yet.
+  bool get hasUnloadedReplies => repliesFetched ? repliesCursor != null : comment.replyCount > replies.length;
+
+  /// "Show N more replies" applies.
+  bool get hasMoreReplies => hiddenLoaded > 0 || hasUnloadedReplies;
+
+  /// The N of "show N more replies": the replies not on screen, loaded or not (0 when the count isn't known).
+  int get moreReplies => math.max(0, math.max(comment.replyCount, replies.length) - visibleReplies.length);
+
+  /// "Hide replies" applies: more than the first reply shows.
+  bool get canHideReplies => visibleReplies.length > 1;
 
   bool get hasReplies => replies.isNotEmpty || comment.replyCount > 0;
 
   CommentThread copyWith({
     Comment? comment,
     List<Comment>? replies,
+    int? shownCount,
+    Set<String>? alwaysShown,
     String? Function()? repliesCursor,
     bool? repliesFetched,
     bool? loadingReplies,
@@ -78,6 +118,8 @@ class CommentThread extends Equatable {
       CommentThread(
         comment: comment ?? this.comment,
         replies: replies ?? this.replies,
+        shownCount: shownCount ?? this.shownCount,
+        alwaysShown: alwaysShown ?? this.alwaysShown,
         repliesCursor: repliesCursor != null ? repliesCursor() : this.repliesCursor,
         repliesFetched: repliesFetched ?? this.repliesFetched,
         loadingReplies: loadingReplies ?? this.loadingReplies,
@@ -85,7 +127,8 @@ class CommentThread extends Equatable {
       );
 
   @override
-  List<Object?> get props => [comment, replies, repliesCursor, repliesFetched, loadingReplies, repliesFailure];
+  List<Object?> get props =>
+      [comment, replies, shownCount, alwaysShown, repliesCursor, repliesFetched, loadingReplies, repliesFailure];
 }
 
 class CommentsState extends Equatable {
@@ -321,26 +364,51 @@ class CommentsCubit extends Cubit<CommentsState> {
     );
   }
 
-  /// "Show N more replies": the next page of the thread's replies, merged with the ones shown.
+  /// "Show N more replies" (and its retry): up to [GetComments.repliesPageSize] more replies show. Hidden replies
+  /// already loaded show first, at once; when they are fewer, the next page of the thread is fetched (the first page
+  /// has no cursor and repeats the replies the list included: they are deduped) and its new replies make up the rest.
   Future<void> loadMoreReplies(String threadId) async {
     final thread = _thread(threadId);
     if (thread == null || thread.loadingReplies || !thread.hasMoreReplies) return;
-    _updateThread(threadId, (t) => t.copyWith(loadingReplies: true, repliesFailure: () => null));
+    const step = GetComments.repliesPageSize;
+    final fromMemory = math.min(step, thread.hiddenLoaded);
+    final fetch = fromMemory < step && thread.hasUnloadedReplies;
+    _updateThread(
+      threadId,
+      (t) => t.copyWith(shownCount: _olderShown(t) + fromMemory, loadingReplies: fetch, repliesFailure: () => null),
+    );
+    if (!fetch) return;
     final result = await _get.replies(threadId, cursor: thread.repliesFetched ? thread.repliesCursor : null);
     if (isClosed) return;
     result.fold(
       (failure) => _updateThread(threadId, (t) => t.copyWith(loadingReplies: false, repliesFailure: () => failure)),
-      (page) => _updateThread(
-        threadId,
-        (t) => t.copyWith(
+      (page) => _updateThread(threadId, (t) {
+        final merged = t.copyWith(
           replies: _mergeReplies(t.replies, page.items),
           repliesCursor: () => page.nextCursor,
           repliesFetched: true,
           loadingReplies: false,
-        ),
-      ),
+        );
+        return merged.copyWith(shownCount: _olderShown(merged) + math.min(step - fromMemory, merged.hiddenLoaded));
+      }),
     );
   }
+
+  /// "Hide replies": the thread goes back to its first reply (the viewer's replies on their way stay). Loaded replies
+  /// stay loaded, so "show more" reveals them again before fetching.
+  void hideReplies(String threadId) {
+    final thread = _thread(threadId);
+    if (thread == null || thread.loadingReplies) return;
+    _updateThread(
+      threadId,
+      (t) => t.copyWith(shownCount: 1, alwaysShown: t.alwaysShown.intersection(state.pendingIds), repliesFailure: () => null),
+    );
+  }
+
+  /// How many older replies (not [CommentThread.alwaysShown]) [thread] shows now: its [CommentThread.shownCount],
+  /// unless fewer are loaded.
+  static int _olderShown(CommentThread thread) =>
+      thread.visibleReplies.where((r) => !thread.alwaysShown.contains(r.id)).length;
 
   // ── Composer ─────────────────────────────────────────────────────
 
@@ -673,13 +741,15 @@ class CommentsCubit extends Cubit<CommentsState> {
     return [...threads.take(at), for (final c in comments) CommentThread.of(c), ...threads.skip(at)];
   }
 
-  /// [reply] added to its thread (counted in its `replyCount`), unless the thread already shows it.
+  /// A new [reply] (the viewer's, or one that arrived live) added to its thread (counted in its `replyCount`), unless
+  /// the thread already has it. It shows at once, even while older replies are hidden.
   List<CommentThread> _withReply(List<CommentThread> threads, Comment reply) => [
         for (final t in threads)
           if (t.id == reply.parentId && t.replies.every((r) => r.id != reply.id))
             t.copyWith(
               comment: t.comment.copyWith(replyCount: t.comment.replyCount + 1),
               replies: _mergeReplies(t.replies, [reply]),
+              alwaysShown: {...t.alwaysShown, reply.id},
             )
           else
             t,
@@ -724,6 +794,7 @@ class CommentsCubit extends Cubit<CommentsState> {
             t.copyWith(
               comment: t.comment.copyWith(replyCount: math.max(0, t.comment.replyCount - 1)),
               replies: [for (final r in t.replies) if (r.id != comment.id) r],
+              alwaysShown: t.alwaysShown.difference({comment.id}),
             )
           else
             t,
@@ -747,7 +818,13 @@ class CommentsCubit extends Cubit<CommentsState> {
   /// just goes, and when the pending one is gone (the list reloaded) it's added.
   List<CommentThread> _confirm(List<CommentThread> threads, Comment pending, Comment comment) {
     final shown = _knownIds(includeIncoming: false).contains(comment.id);
-    if (shown) return _without(threads, pending);
+    if (shown) {
+      // A reply page fetched meanwhile already had it: the viewer's reply still shows.
+      final rest = _without(threads, pending);
+      return !comment.isReply
+          ? rest
+          : [for (final t in rest) t.id == comment.parentId ? t.copyWith(alwaysShown: {...t.alwaysShown, comment.id}) : t];
+    }
     final hasPending = threads.any((t) => t.id == pending.id || t.replies.any((r) => r.id == pending.id));
     if (!hasPending) return comment.isReply ? _withReply(threads, comment) : _insertTop(threads, [comment]);
     if (!comment.isReply) {
@@ -756,7 +833,10 @@ class CommentsCubit extends Cubit<CommentsState> {
     return [
       for (final t in threads)
         if (t.replies.any((r) => r.id == pending.id))
-          t.copyWith(replies: [for (final r in t.replies) r.id == pending.id ? comment.copyWith(replies: const []) : r])
+          t.copyWith(
+            replies: [for (final r in t.replies) r.id == pending.id ? comment.copyWith(replies: const []) : r],
+            alwaysShown: {...t.alwaysShown.difference({pending.id}), comment.id},
+          )
         else
           t,
     ];

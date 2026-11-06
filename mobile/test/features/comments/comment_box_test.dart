@@ -264,7 +264,9 @@ void main() {
   group('the comment row', () {
     final callbacks = CommentCallbacks(onLike: (_) {}, onReply: (_) {}, onMenu: (_, _) {}, onMoreReplies: (_) {});
 
-    testWidgets("the writer's title under the name instead of @username; like, reply and the time in one row", (tester) async {
+    testWidgets(
+        "the writer's title under the name instead of @username; the time at the end of the name's line; like and reply "
+        'in one row under the bubble', (tester) async {
       await pump(tester, CommentTile(comment: comment('c1', author: omarTitled, likeCount: 3), callbacks: callbacks), cubit: comments(const CommentsState()));
 
       expect(find.text(omarTitled.headline!), findsOneWidget);
@@ -274,12 +276,22 @@ void main() {
       expect(find.textContaining('@omar_k'), findsNothing);
       expect(tester.getRect(find.text(omarTitled.headline!)).top, greaterThanOrEqualTo(tester.getRect(find.text('Omar Khaled')).bottom - 1));
 
+      final name = tester.getCenter(find.text('Omar Khaled'));
+      final time = tester.getCenter(find.text('30 min ago'));
+      expect((name.dy - time.dy).abs(), lessThan(2), reason: "the time is on the name's line");
+      expect(time.dx, greaterThan(name.dx));
+      final menu = tester.getCenter(find.byTooltip('Comment options'));
+      expect(menu.dx, greaterThan(tester.getRect(find.text('30 min ago')).right), reason: '"⋯" after the time');
+      expect((menu.dy - time.dy).abs(), lessThan(4));
+
       final like = tester.getCenter(find.byType(CommentLikeButton));
       final reply = tester.getCenter(find.text('Reply'));
-      final time = tester.getCenter(find.text('30 min ago'));
       expect((like.dy - reply.dy).abs(), lessThan(2));
-      expect((reply.dy - time.dy).abs(), lessThan(2));
-      expect(like.dx < reply.dx && reply.dx < time.dx, isTrue);
+      expect(like.dx, lessThan(reply.dx));
+      expect(like.dy, greaterThan(tester.getRect(find.text('تعليق')).bottom), reason: 'under the text');
+      expect(find.text('Like'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget, reason: '♥ 3 after Like');
+      expect(tester.getSize(find.byType(CommentLikeButton)).height, greaterThanOrEqualTo(32));
 
       await pump(tester, CommentTile(comment: comment('c2', author: omar), callbacks: callbacks), cubit: comments(const CommentsState()));
       expect(find.textContaining('@omar_k'), findsNothing, reason: 'no title: nothing in its place');
@@ -308,6 +320,31 @@ void main() {
       await tester.pump();
       verify(() => followRepository.follow('w-2')).called(1);
       expect(find.text('Following'), findsNWidgets(2), reason: 'every row of that writer');
+    });
+
+    testWidgets('when the name line wraps, "· Follow" moves with the item before it: no line starts with the dot', (tester) async {
+      await pump(
+        tester,
+        Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 300,
+            child: CommentTile(comment: comment('c1', author: monaTitled, isArticleAuthor: true, isPinned: true), callbacks: callbacks),
+          ),
+        ),
+        cubit: comments(const CommentsState()),
+      );
+
+      final dot = find.descendant(
+        of: find.ancestor(of: find.byType(FollowButton), matching: find.byType(Row)).first,
+        matching: find.text('·'),
+      );
+      expect(dot, findsOneWidget);
+      final pinned = tester.getRect(find.text('Pinned'));
+      final name = tester.getRect(find.textContaining('عبد الله'));
+      expect(pinned.top, greaterThan(name.bottom), reason: 'the line wrapped');
+      expect((tester.getCenter(dot).dy - pinned.center.dy).abs(), lessThan(2), reason: 'on the line of the item before it');
+      expect(tester.getRect(dot).left, greaterThan(pinned.right), reason: 'after it, not at the start of a line');
     });
 
     testWidgets('guests see Follow and get the sign-in prompt', (tester) async {

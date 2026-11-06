@@ -2331,6 +2331,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commentsMoreRepliesAny => 'Show more replies';
 
   @override
+  String get commentsHideReplies => 'Hide replies';
+
+  @override
+  String get commentsRepliesFailed => 'Couldn\'t load the replies.';
+
+  @override
   String commentsNewPill(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

@@ -665,6 +665,8 @@
   "commentsReply": "رد",
   "commentsMoreReplies": "{count, plural, =1{اعرض رد كمان} =2{اعرض ردين كمان} few{اعرض {count} ردود كمان} many{اعرض {count} رد كمان} other{اعرض {count} رد كمان}}",
   "commentsMoreRepliesAny": "اعرض ردود أكتر",
+  "commentsHideReplies": "إخفاء الردود",
+  "commentsRepliesFailed": "مقدرناش نحمّل الردود.",
   "commentsNewPill": "{count, plural, =1{تعليق جديد} =2{تعليقين جداد} few{{count} تعليقات جديدة} many{{count} تعليق جديد} other{{count} تعليق جديد}}",
   "commentsSending": "بيتبعت…",
   "commentsTimeNow": "دلوقتي",

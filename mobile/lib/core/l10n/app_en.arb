@@ -737,6 +737,8 @@
   "commentsMoreReplies": "{count, plural, =1{Show 1 more reply} other{Show {count} more replies}}",
   "@commentsMoreReplies": { "placeholders": { "count": { "type": "int" } } },
   "commentsMoreRepliesAny": "Show more replies",
+  "commentsHideReplies": "Hide replies",
+  "commentsRepliesFailed": "Couldn't load the replies.",
   "commentsNewPill": "{count, plural, =1{1 new comment} other{{count} new comments}}",
   "@commentsNewPill": { "placeholders": { "count": { "type": "int" } } },
   "commentsSending": "Sending…",

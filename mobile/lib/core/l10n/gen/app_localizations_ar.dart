@@ -2354,6 +2354,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commentsMoreRepliesAny => 'اعرض ردود أكتر';
 
   @override
+  String get commentsHideReplies => 'إخفاء الردود';
+
+  @override
+  String get commentsRepliesFailed => 'مقدرناش نحمّل الردود.';
+
+  @override
   String commentsNewPill(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

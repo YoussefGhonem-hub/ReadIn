@@ -15,8 +15,9 @@ class GetComments {
 
   static const pageSize = 20;
 
-  /// "Show N more replies" loads the rest of a thread, up to the API's page maximum at a time.
-  static const repliesPageSize = 50;
+  /// "Show N more replies" reveals up to this many replies a tap, and fetches a thread's replies in pages this size
+  /// (Facebook and LinkedIn style).
+  static const repliesPageSize = 5;
 
   Future<Result<CommentPage>> call(String articleId, {CommentSort sort = CommentSort.top, String? cursor}) =>
       _repository.getComments(articleId, sort: sort, cursor: cursor, limit: pageSize);

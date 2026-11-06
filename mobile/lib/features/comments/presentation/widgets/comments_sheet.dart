@@ -74,6 +74,7 @@ class _CommentsViewState extends State<CommentsView> {
     onReply: _reply,
     onMenu: (comment, action) => unawaited(_menu(comment, action)),
     onMoreReplies: (threadId) => unawaited(_cubit.loadMoreReplies(threadId)),
+    onHideReplies: _cubit.hideReplies,
   );
 
   /// Comments whose author's follow state already went to the follow store.
@@ -427,7 +428,7 @@ class CommentsSkeleton extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SkeletonBox(width: CommentTile.avatarSize, height: CommentTile.avatarSize, radius: CommentTile.avatarSize / 2),
-                    const SizedBox(width: ReadInSpace.s3),
+                    const SizedBox(width: CommentTile.avatarGap),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

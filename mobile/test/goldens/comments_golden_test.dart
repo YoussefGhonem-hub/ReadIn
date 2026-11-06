@@ -5,6 +5,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:readin/core/theme/theme_x.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
@@ -23,9 +24,10 @@ import '../helpers/fixtures.dart';
 import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
 
-/// Comments (F11) in ar/en × light/dark (SPEC §8.2): every comment state (rows with the writer's title, "Follow" and
-/// "⋯"), the comment box (empty, a reply with its @mention and ✕, near its limit, the emoji picker), the empty sheet,
-/// and the sheet with the "N new comments" pill as a guest sees it.
+/// Comments (F11) in ar/light and en/dark (SPEC §27): every comment state (compact bubbles with the writer's title,
+/// "· Follow", the time and "⋯"; replies paged with "show N more replies" and "Hide replies"), the comment box (empty,
+/// a reply with its @mention and ✕, near its limit, the emoji picker), the empty sheet, and the sheet with the
+/// "N new comments" pill as a guest sees it.
 void main() {
   setUp(() {
     CommentClock.now = () => commentsNow;
@@ -125,7 +127,8 @@ void main() {
       )),
       const <String>{},
     ),
-    // With replies: two shown (one just arrived, highlighted), "show 2 more replies".
+    // With replies: the first one, and one that just arrived (highlighted, shown although older ones are hidden);
+    // "show 2 more replies" and "Hide replies".
     (
       CommentThread.of(comment(
         'c3',
@@ -139,7 +142,7 @@ void main() {
           comment('r1', parentId: 'c3', author: omar, body: '@sara_net أيوه، شغال تمام.', mentions: const [saraMention], minutesAgo: 240),
           comment('r2', parentId: 'c3', author: mona, isArticleAuthor: true, body: 'Yes, with AddDbContext it is Scoped by default.', minutesAgo: 3),
         ],
-      )),
+      )).copyWith(alwaysShown: const {'r2'}),
       const {'r2'},
     ),
     // A deleted comment kept for its replies.
@@ -168,12 +171,18 @@ void main() {
         tester,
         variant,
         Scaffold(
-          body: ListView(
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              for (final (thread, highlighted) in states)
-                CommentThreadView(thread: thread, callbacks: noop, highlighted: highlighted, pendingIds: const {'c8'}),
-            ],
+          // On the comments sheet's surface, as in the app.
+          body: Builder(
+            builder: (context) => ColoredBox(
+              color: context.colors.surface,
+              child: ListView(
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  for (final (thread, highlighted) in states)
+                    CommentThreadView(thread: thread, callbacks: noop, highlighted: highlighted, pendingIds: const {'c8'}),
+                ],
+              ),
+            ),
           ),
         ),
         size: const Size(390, 1480),

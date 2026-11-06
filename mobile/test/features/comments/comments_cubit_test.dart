@@ -76,7 +76,8 @@ void main() {
             .having(ids, 'threads', ['c1', 'c2'])
             .having((s) => s.threads.first.replies, 'replies', [r1, r2])
             .having((s) => s.threads.first.comment.replies, 'replies moved to the thread', isEmpty)
-            .having((s) => s.threads.first.moreReplies, 'show 1 more reply', 1)
+            .having((s) => s.threads.first.visibleReplies, 'only the first reply shows', [r1])
+            .having((s) => s.threads.first.moreReplies, 'show 2 more replies: r2 and the one not loaded', 2)
             .having((s) => s.total, 'total', 7)
             .having((s) => s.hasMore, 'hasMore', isTrue),
       ],
@@ -152,7 +153,7 @@ void main() {
       stubPage([comment('c1', replyCount: 4, replies: [r1, r2])]);
       final r3 = comment('r3', parentId: 'c1', minutesAgo: 5);
       final r4 = comment('r4', parentId: 'c1', minutesAgo: 1);
-      when(() => repository.getReplies('c1', cursor: null, limit: 50))
+      when(() => repository.getReplies('c1', cursor: null, limit: 5))
           .thenAnswer((_) async => Ok(CursorPage(items: [r1, r2, r3, r4])));
       final cubit = build();
       addTearDown(cubit.close);
@@ -163,7 +164,173 @@ void main() {
 
       final thread = cubit.state.threads.single;
       expect(thread.replies, [r1, r2, r3, r4]);
+      expect(thread.visibleReplies, [r1, r2, r3, r4]);
       expect(thread.hasMoreReplies, isFalse);
+    });
+  });
+
+  group('reply paging (Facebook / LinkedIn style)', () {
+    late CommentsCubit cubit;
+
+    setUp(() => cubit = build());
+    tearDown(() => cubit.close());
+
+    /// Reply [n] of thread c1, oldest first.
+    Comment reply(int n) => comment('r$n', parentId: 'c1', minutesAgo: 100 - n);
+    List<String> visible() => [for (final r in cubit.state.threads.single.visibleReplies) r.id];
+    CommentThread thread() => cubit.state.threads.single;
+
+    void stubReplies(String? cursor, List<int> numbers, {String? next}) => when(() => repository.getReplies('c1', cursor: cursor, limit: 5))
+        .thenAnswer((_) async => Ok(CursorPage(items: [for (final n in numbers) reply(n)], nextCursor: next)));
+
+    test('only the first reply shows; N counts every reply not on screen, loaded or not', () async {
+      stubPage([
+        comment('c1', replyCount: 4, replies: [reply(1), reply(2)]),
+        comment('c2', replyCount: 3),
+        comment('c3', replyCount: 1, replies: [comment('r9', parentId: 'c3')]),
+      ]);
+      await cubit.load('art-1');
+
+      final [withTwo, noneIncluded, single] = cubit.state.threads;
+      expect(withTwo.visibleReplies.map((r) => r.id), ['r1']);
+      expect(withTwo.moreReplies, 3);
+      expect(withTwo.hasMoreReplies, isTrue);
+      expect(withTwo.canHideReplies, isFalse);
+      expect(noneIncluded.visibleReplies, isEmpty, reason: 'replies but none included');
+      expect(noneIncluded.moreReplies, 3);
+      expect(noneIncluded.hasMoreReplies, isTrue, reason: 'the button shows straight away');
+      expect(single.visibleReplies.map((r) => r.id), ['r9']);
+      expect(single.hasMoreReplies, isFalse);
+      expect(single.moreReplies, 0);
+    });
+
+    test('a tap shows the included ones from memory without a request', () async {
+      stubPage([comment('c1', replyCount: 2, replies: [reply(1), reply(2)])]);
+      await cubit.load('art-1');
+
+      await cubit.loadMoreReplies('c1');
+
+      expect(visible(), ['r1', 'r2']);
+      expect(thread().hasMoreReplies, isFalse);
+      expect(thread().canHideReplies, isTrue);
+      verifyNever(() => repository.getReplies(any(), cursor: any(named: 'cursor'), limit: any(named: 'limit')));
+    });
+
+    test('each tap shows up to 5 more: memory first, then pages of 5 (the first without a cursor, its 2 included '
+        'replies deduped), until all show', () async {
+      stubPage([comment('c1', replyCount: 12, replies: [reply(1), reply(2)])]);
+      stubReplies(null, [1, 2, 3, 4, 5], next: 'p2');
+      stubReplies('p2', [6, 7, 8, 9, 10], next: 'p3');
+      stubReplies('p3', [11, 12]);
+      await cubit.load('art-1');
+
+      final first = cubit.loadMoreReplies('c1');
+      expect(visible(), ['r1', 'r2'], reason: 'the loaded one shows at once, while the page loads');
+      expect(thread().loadingReplies, isTrue);
+      await first;
+      expect(visible(), ['r1', 'r2', 'r3', 'r4', 'r5']);
+      expect(thread().replies.map((r) => r.id), ['r1', 'r2', 'r3', 'r4', 'r5'], reason: 'r1 and r2 once each');
+      expect(thread().moreReplies, 7);
+
+      await cubit.loadMoreReplies('c1');
+      expect(visible(), [for (var n = 1; n <= 10; n++) 'r$n']);
+      expect(thread().moreReplies, 2);
+
+      await cubit.loadMoreReplies('c1');
+      expect(visible(), [for (var n = 1; n <= 12; n++) 'r$n']);
+      expect(thread().moreReplies, 0);
+      expect(thread().hasMoreReplies, isFalse);
+
+      verify(() => repository.getReplies('c1', cursor: null, limit: 5)).called(1);
+      verify(() => repository.getReplies('c1', cursor: 'p2', limit: 5)).called(1);
+      verify(() => repository.getReplies('c1', cursor: 'p3', limit: 5)).called(1);
+    });
+
+    test('Hide replies goes back to the first one; loaded replies stay, and show again 5 at a time without a request',
+        () async {
+      stubPage([comment('c1', replyCount: 7, replies: [reply(1), reply(2)])]);
+      stubReplies(null, [1, 2, 3, 4, 5], next: 'p2');
+      stubReplies('p2', [6, 7]);
+      await cubit.load('art-1');
+      await cubit.loadMoreReplies('c1');
+      await cubit.loadMoreReplies('c1');
+      expect(visible(), hasLength(7));
+
+      cubit.hideReplies('c1');
+      expect(visible(), ['r1']);
+      expect(thread().replies, hasLength(7));
+      expect(thread().moreReplies, 6);
+      expect(thread().canHideReplies, isFalse);
+
+      await cubit.loadMoreReplies('c1');
+      expect(visible(), ['r1', 'r2', 'r3', 'r4', 'r5', 'r6']);
+      await cubit.loadMoreReplies('c1');
+      expect(visible(), hasLength(7));
+      verify(() => repository.getReplies('c1', cursor: null, limit: 5)).called(1);
+      verify(() => repository.getReplies('c1', cursor: 'p2', limit: 5)).called(1);
+    });
+
+    test('new replies show at once while the thread is collapsed, at its end; N never counts them', () async {
+      stubPage([comment('c1', replyCount: 4, replies: [reply(1), reply(2)])]);
+      final answer = Completer<Result<Comment>>();
+      when(() => repository.postReply('c1', 'رد جديد')).thenAnswer((_) => answer.future);
+      final mine = comment('r20', parentId: 'c1', body: 'رد جديد', author: viewer, own: true, minutesAgo: 2);
+      final live = comment('r21', parentId: 'c1', author: mona, minutesAgo: 1);
+      stubComment(live);
+      await cubit.load('art-1');
+      expect(thread().moreReplies, 3);
+
+      // The viewer's own reply: pending, then the API's.
+      cubit.startReply(thread().comment);
+      final done = cubit.submit('رد جديد', author: viewer);
+      final pendingId = cubit.state.pendingIds.single;
+      expect(visible(), ['r1', pendingId]);
+      expect(thread().moreReplies, 3, reason: 'r2 and the two not loaded; not the visible new reply');
+      answer.complete(Ok(mine));
+      await done;
+      expect(visible(), ['r1', 'r20']);
+      expect(thread().moreReplies, 3);
+
+      // A live reply.
+      events.add(event(CommentEventType.replyCreated, 'r21', parentId: 'c1'));
+      await settle();
+      expect(visible(), ['r1', 'r20', 'r21']);
+      expect(thread().comment.replyCount, 6);
+      expect(thread().moreReplies, 3);
+      expect(thread().canHideReplies, isTrue);
+
+      // Showing the rest puts them in order; the new ones already shown don't show twice.
+      when(() => repository.getReplies('c1', cursor: null, limit: 5)).thenAnswer(
+        (_) async => Ok(CursorPage(items: [reply(1), reply(2), reply(3), reply(4), mine])),
+      );
+      await cubit.loadMoreReplies('c1');
+      expect(visible(), ['r1', 'r2', 'r3', 'r4', 'r20', 'r21']);
+      expect(thread().moreReplies, 0);
+      expect(thread().hasMoreReplies, isFalse);
+
+      // Hide replies: back to the first one, the new ones too.
+      cubit.hideReplies('c1');
+      expect(visible(), ['r1']);
+      expect(thread().moreReplies, 5);
+    });
+
+    test('a failed page keeps what showed and says so; retry asks for the same page', () async {
+      stubPage([comment('c1', replyCount: 3)]);
+      var calls = 0;
+      when(() => repository.getReplies('c1', cursor: null, limit: 5)).thenAnswer((_) async {
+        calls++;
+        return calls == 1 ? const Err(Failure(FailureCodes.networkOffline)) : Ok(CursorPage(items: [reply(1), reply(2), reply(3)]));
+      });
+      await cubit.load('art-1');
+
+      await cubit.loadMoreReplies('c1');
+      expect(thread().repliesFailure?.code, FailureCodes.networkOffline);
+      expect(thread().loadingReplies, isFalse);
+      expect(visible(), isEmpty);
+
+      await cubit.loadMoreReplies('c1');
+      expect(thread().repliesFailure, isNull);
+      expect(visible(), ['r1', 'r2', 'r3']);
     });
   });
 

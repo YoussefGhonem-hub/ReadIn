@@ -27,6 +27,7 @@ import 'package:readin/features/moderation/domain/usecases/moderation_usecases.d
 import 'package:readin/features/moderation/presentation/cubit/report_cubit.dart';
 import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart';
 import 'package:readin/features/saved/domain/usecases/saved_usecases.dart';
+import 'package:readin/shared/widgets/badges.dart';
 
 import '../../helpers/comment_fixtures.dart';
 import '../../helpers/fixtures.dart';
@@ -438,19 +439,86 @@ void main() {
       verify(cubit.showIncoming).called(1);
     });
 
-    testWidgets('"show N more replies" asks for the thread', (tester) async {
+    testWidgets('"show N more replies" asks for the thread; only the first reply shows and N counts the rest', (tester) async {
       final cubit = await pumpSheet(
         tester,
         ready([
-          comment('c1', replyCount: 5, replies: [comment('r1', parentId: 'c1'), comment('r2', parentId: 'c1')]),
+          comment(
+            'c1',
+            replyCount: 5,
+            replies: [comment('r1', parentId: 'c1', body: 'First reply'), comment('r2', parentId: 'c1', body: 'Second reply')],
+          ),
         ]),
       );
       when(() => cubit.loadMoreReplies(any())).thenAnswer((_) async {});
 
-      await tester.tap(find.text('Show 3 more replies'));
+      expect(find.text('First reply'), findsOneWidget);
+      expect(find.text('Second reply'), findsNothing);
+      expect(find.text('Hide replies'), findsNothing, reason: 'one reply shows');
+      await tester.tap(find.text('Show 4 more replies'));
       await tester.pump();
 
       verify(() => cubit.loadMoreReplies('c1')).called(1);
+    });
+
+    testWidgets('"Hide replies" next to "show more" once more than one reply shows; it asks the cubit', (tester) async {
+      final thread = CommentThread.of(comment(
+        'c1',
+        replyCount: 5,
+        replies: [comment('r1', parentId: 'c1', body: 'First reply'), comment('r2', parentId: 'c1', body: 'Second reply')],
+      )).copyWith(shownCount: 2);
+      final cubit = await pumpSheet(tester, CommentsState(status: CommentsStatus.ready, threads: [thread], total: 6));
+
+      expect(find.text('First reply'), findsOneWidget);
+      expect(find.text('Second reply'), findsOneWidget);
+      expect(find.text('Show 3 more replies'), findsOneWidget);
+      final more = tester.getCenter(find.text('Show 3 more replies'));
+      final hide = tester.getCenter(find.text('Hide replies'));
+      expect((more.dy - hide.dy).abs(), lessThan(2), reason: 'side by side');
+      expect(more.dx, lessThan(hide.dx));
+      expect(more.dy, greaterThan(tester.getCenter(find.text('Second reply')).dy), reason: 'under the replies');
+
+      await tester.tap(find.text('Hide replies'));
+      await tester.pump();
+      verify(() => cubit.hideReplies('c1')).called(1);
+    });
+
+    testWidgets('a reply that just arrived shows while older ones are hidden, and replies are indented under the bubble',
+        (tester) async {
+      final thread = CommentThread(
+        comment: comment('c1', replyCount: 4, body: 'Top comment'),
+        replies: [comment('r1', parentId: 'c1', body: 'First reply'), comment('r9', parentId: 'c1', body: 'Just now', minutesAgo: 0)],
+        alwaysShown: const {'r9'},
+      );
+      await pumpSheet(tester, CommentsState(status: CommentsStatus.ready, threads: [thread], total: 5, highlighted: const {'r9'}));
+
+      expect(find.text('First reply'), findsOneWidget);
+      expect(find.text('Just now'), findsOneWidget);
+      expect(find.text('Show 2 more replies'), findsOneWidget, reason: 'N leaves out the replies on screen');
+      expect(find.text('Hide replies'), findsOneWidget);
+      // Replies are indented by the top-level avatar and its gap (40 px): they start where its bubble starts.
+      final avatars = find.byType(UserAvatar);
+      final top = tester.getTopLeft(avatars.at(0)).dx;
+      final reply = tester.getTopLeft(avatars.at(1)).dx;
+      expect(reply - top, 40);
+      expect(tester.getSize(avatars.at(0)).width, 32);
+      expect(tester.getSize(avatars.at(1)).width, 24);
+    });
+
+    testWidgets('replies the list left out: the button shows straight away; a failed page says so, with retry',
+        (tester) async {
+      final failed = CommentThread.of(comment('c2', replyCount: 2)).copyWith(repliesFailure: () => const Failure(FailureCodes.networkOffline));
+      final cubit = await pumpSheet(
+        tester,
+        CommentsState(status: CommentsStatus.ready, threads: [CommentThread.of(comment('c1', replyCount: 3)), failed], total: 7),
+      );
+      when(() => cubit.loadMoreReplies(any())).thenAnswer((_) async {});
+
+      expect(find.text('Show 3 more replies'), findsOneWidget);
+      expect(find.text("Couldn't load the replies."), findsOneWidget);
+      await tester.tap(find.text('Try again'));
+      await tester.pump();
+      verify(() => cubit.loadMoreReplies('c2')).called(1);
     });
 
     testWidgets("one comment count: the page's total reaches the action bar, live counts come back", (tester) async {

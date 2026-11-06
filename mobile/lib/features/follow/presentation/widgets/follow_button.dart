@@ -81,7 +81,8 @@ class FollowButtonView extends StatelessWidget {
   final String name;
   final bool dense;
 
-  /// "+ Follow" / "✓ Following" as a text button in the primary color (the post card's header, F34).
+  /// "+ Follow" / "✓ Following" as a text button in the primary color (the post card's header, F34). With [dense],
+  /// just the word, sized for a line of text (comment rows, F11).
   final bool text;
   final VoidCallback onPressed;
 
@@ -101,7 +102,22 @@ class FollowButtonView extends StatelessWidget {
       toggled: following,
       label: following ? l10n.unfollowName(name) : l10n.followName(name),
       excludeSemantics: true,
-      child: text
+      child: text && dense
+          // Inside a line of text (a comment's name line, F11): a bare word, 13 px, no taller than the line.
+          ? TextButton(
+              onPressed: onTap,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s1),
+                minimumSize: const Size(0, 24),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+                foregroundColor: following ? colors.textSecondary : colors.primary,
+                disabledForegroundColor: colors.textSecondary,
+                textStyle: context.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              child: label,
+            )
+          : text
           ? TextButton.icon(
               onPressed: onTap,
               icon: Icon(following ? Icons.check_rounded : Icons.add_rounded, size: 18),
