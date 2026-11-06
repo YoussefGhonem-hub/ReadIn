@@ -102,7 +102,7 @@ describe('TermSheet (F21 glossary)', () => {
     expect(definition.getAttribute('dir')).toBe('ltr');
     expect(definition.textContent!.trim()).toBe('A technique where an object receives the objects it depends on.');
     expect(explanation.compareDocumentPosition(definition) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(definition.parentElement!.textContent).toContain('بالإنجليزي');
+    expect(definition.parentElement!.textContent).toContain('بالإنجليزية');
   });
 
   it('en version: the English definition, plus the Arabic explanation only in the Arabic UI', async () => {
@@ -114,7 +114,7 @@ describe('TermSheet (F21 glossary)', () => {
     const explanation = root.querySelector('[data-term-explanation]')!;
     expect(definition.getAttribute('dir')).toBe('ltr');
     expect(definition.compareDocumentPosition(explanation) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(explanation.parentElement!.textContent).toContain('بالمصري');
+    expect(explanation.parentElement!.textContent).toContain('بالعربية');
 
     terms.close();
     await stable();
@@ -131,7 +131,7 @@ describe('TermSheet (F21 glossary)', () => {
     await stable();
 
     const section = root.querySelector('[data-term-articles]')!;
-    expect(section.textContent).toContain('مقالات فيها المصطلح ده');
+    expect(section.textContent).toContain('مقالات تستخدم هذا المصطلح');
     const rows = [...root.querySelectorAll<HTMLAnchorElement>('[data-term-article]')];
     // a2 is the article being read.
     expect(rows.map((r) => r.getAttribute('href'))).toEqual(['/ar/a/article-1', '/en/a/article-3', '/ar/a/article-4', '/ar/a/article-5', '/ar/a/article-6']);
@@ -140,7 +140,7 @@ describe('TermSheet (F21 glossary)', () => {
     expect(english.getAttribute('lang')).toBe('en');
     expect(rows[0].querySelector('[lang]')!.getAttribute('dir')).toBe('rtl');
     expect(rows[0].textContent).toContain('البرمجيات');
-    expect(rows[0].textContent).toContain('3 دقايق');
+    expect(rows[0].textContent).toContain('3 دقائق');
 
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     rows[1].click();
@@ -185,7 +185,7 @@ describe('TermSheet (F21 glossary)', () => {
 
     expect(root.querySelector('[data-term-sheet]')!.getAttribute('data-state')).toBe('missing');
     expect(root.querySelector('#term-sheet-title')!.textContent!.trim()).toBe('الـ zygote');
-    expect(root.querySelector('[data-term-missing]')!.textContent).toContain('المصطلح ده لسه مش في القاموس');
+    expect(root.querySelector('[data-term-missing]')!.textContent).toContain('لم يُضف هذا المصطلح إلى القاموس بعد');
 
     terms.close();
     await stable();
@@ -200,7 +200,7 @@ describe('TermSheet (F21 glossary)', () => {
     lookup().error(new ProgressEvent('error'));
     await stable();
     expect(root.querySelector('[data-term-sheet]')!.getAttribute('data-state')).toBe('error');
-    expect(root.querySelector('rd-error-state')!.textContent).toContain('معرفناش نحمّل التعريف.');
+    expect(root.querySelector('rd-error-state')!.textContent).toContain('تعذّر تحميل التعريف.');
 
     (root.querySelector('rd-error-state button') as HTMLButtonElement).click();
     await stable();

@@ -1345,6 +1345,14 @@ They are independent: an English UI user can read `ar-EG` articles and vice vers
 - Technical terms stay in **English** (`Dependency Injection`, not "حقن الاعتماديات"), optionally with a short Arabic explanation on first use.
 - The `ar-EG` version is a **natural adaptation** of the English source, not a literal translation.
 
+### 14.4 Interface Copy (Web)
+- The web interface's Arabic is **Modern Standard Arabic** (فصحى معاصرة), not Egyptian colloquial: standard, concise
+  wording like the Arabic interface of major apps (user decision, 2026-11-06). Article content keeps §14.3.
+- Buttons, menu items and tabs use verbal nouns (حفظ، حذف، مشاركة). Confirmation dialogs ask a question and offer
+  «إلغاء» / «موافق».
+- Brand and product names stay in Latin letters (ReadIn, Google, Apple, PDF).
+- The top bar has an Arabic/English switch for the interface language (the `lang` cookie, and the profile when signed in).
+
 ---
 
 ## 15. Design System & Dark Mode

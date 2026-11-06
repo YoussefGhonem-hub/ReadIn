@@ -148,7 +148,7 @@ describe('A comment row (F11)', () => {
     // The reply box looks the same: your avatar, the emoji and send icons inside the field.
     expect(box.querySelector('[data-composer-avatar]')).not.toBeNull();
     expect(box.querySelector('[data-comment-field] [data-comment-emoji]')).not.toBeNull();
-    expect(box.querySelector('[data-comment-field] [data-comment-send]')!.getAttribute('aria-label')).toBe('ابعت الرد');
+    expect(box.querySelector('[data-comment-field] [data-comment-send]')!.getAttribute('aria-label')).toBe('نشر الرد');
     const cancel = box.querySelector<HTMLButtonElement>('[data-comment-cancel]')!;
     expect(cancel.getAttribute('aria-label')).toBe('إلغاء الرد');
     expect(cancel.textContent!.trim()).toBe('');

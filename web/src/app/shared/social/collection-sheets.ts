@@ -164,7 +164,7 @@ export class CollectionNameSheet {
               @if (busy()) {
                 <svg lucideIcon="LoaderCircle" [size]="18" class="animate-spin" aria-hidden="true"></svg>
               }
-              {{ 'collections.delete' | transloco }}
+              {{ 'collections.deleteConfirm' | transloco }}
             </button>
           </div>
         </div>

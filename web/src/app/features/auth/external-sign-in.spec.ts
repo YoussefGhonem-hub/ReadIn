@@ -85,7 +85,7 @@ describe('Continue with Google / Apple (SPEC §9.2)', () => {
       expect(sheet.getAttribute('role')).toBe('dialog');
       expect(sheet.getAttribute('aria-modal')).toBe('true');
       expect(sheet.getAttribute('aria-labelledby')).toBe('not-linked-title');
-      expect(root.querySelector('#not-linked-title')!.textContent).toContain('مفيش حساب ReadIn مربوط بالحساب ده لسه');
+      expect(root.querySelector('#not-linked-title')!.textContent).toContain('لا يوجد حساب ReadIn مرتبط بهذا الحساب حتى الآن');
       expect(root.querySelector('[data-create]')).not.toBeNull();
       expect(root.querySelector('[data-have-account]')).not.toBeNull();
     });
@@ -122,7 +122,7 @@ describe('Continue with Google / Apple (SPEC §9.2)', () => {
       wrong.flush({ code: 'auth.external_conflict' }, { status: 409, statusText: 'Conflict' });
       await settle(10);
       fixture.detectChanges();
-      expect(root.querySelector('[data-sheet-error]')!.textContent).toContain('في حساب تاني من نفس النوع مربوط بالفعل');
+      expect(root.querySelector('[data-sheet-error]')!.textContent).toContain('يوجد حساب آخر من النوع نفسه مرتبط بالفعل');
 
       root.querySelector<HTMLFormElement>('[data-link-form]')!.dispatchEvent(new Event('submit'));
       await settle(10);
@@ -146,7 +146,7 @@ describe('Continue with Google / Apple (SPEC §9.2)', () => {
     request.flush({ code: 'auth.external_invalid' }, { status: 401, statusText: 'Unauthorized' });
     await settle(10);
     fixture.detectChanges();
-    expect(root.querySelector('[data-external-error]')!.textContent).toContain('مقدرناش نتأكد من الدخول بجوجل أو أبل');
+    expect(root.querySelector('[data-external-error]')!.textContent).toContain('تعذّر التحقق من تسجيل الدخول عبر Google أو Apple');
 
     sdks.google.callback?.({});
     await settle(10);

@@ -99,7 +99,7 @@ describe('CommentsSection (F11)', () => {
     expect(links.map((a) => [a.textContent, a.getAttribute('href')])).toEqual([['@user_x', '/@user_x']]);
     expect(body.textContent).toContain('@ghost'); // not resolved: plain text
 
-    expect(t.$('[data-comment="gone"] [data-comment-placeholder]')!.textContent).toContain('التعليق ده اتمسح');
+    expect(t.$('[data-comment="gone"] [data-comment-placeholder]')!.textContent).toContain('تم حذف هذا التعليق');
     const orphan = t.$('[data-comment="r1"]')!;
     expect(orphan.querySelector('[data-comment-author]')!.textContent!.trim()).toBe('مستخدم محذوف');
     expect(orphan.querySelector('[data-deleted-user-avatar]')).not.toBeNull();
@@ -107,7 +107,7 @@ describe('CommentsSection (F11)', () => {
 
     const own = t.$('[data-comment="mine"]')!;
     expect(own.querySelector('[data-hidden-notice]')).not.toBeNull();
-    expect(own.querySelector('[data-edited]')!.textContent).toBe('متعدّل');
+    expect(own.querySelector('[data-edited]')!.textContent).toBe('معدّل');
   });
 
   it('a comment by a writer you muted collapses until "عرض", here only; its replies stay (F28)', async () => {
@@ -163,7 +163,7 @@ describe('CommentsSection (F11)', () => {
   it('shows the empty state', async () => {
     const t = await render({ total: 0, items: [] });
     http = t.http;
-    expect(t.root.textContent).toContain('لسه مفيش تعليقات');
+    expect(t.root.textContent).toContain('لا توجد تعليقات بعد');
   });
 
   it('the composer: send is off while empty, the counter shows for the last 200 characters', async () => {
@@ -183,7 +183,7 @@ describe('CommentsSection (F11)', () => {
     expect(t.$('[data-comment-counter]')).toBeNull();
     type(field, 'x'.repeat(1850));
     await t.stable();
-    expect(t.$('[data-comment-counter]')!.textContent).toBe('فاضل 150 حرف');
+    expect(t.$('[data-comment-counter]')!.textContent).toBe('تبقّى 150 حرفًا');
     expect(send.disabled).toBe(false);
   });
 
@@ -202,7 +202,7 @@ describe('CommentsSection (F11)', () => {
     await t.stable();
     expect(t.$('[data-pending]')).toBeNull();
     expect(field.value).toBe('Nice one');
-    expect(t.$('[data-comment-error]')!.textContent).toBe('بتعلّق بسرعة أوي. استنى دقيقة وجرّب تاني.');
+    expect(t.$('[data-comment-error]')!.textContent).toBe('أنت تعلّق بسرعة كبيرة. انتظر دقيقة ثم حاول مرة أخرى.');
   });
 
   it('suggests people while typing an @handle and inserts the picked one from the keyboard', async () => {
@@ -323,7 +323,7 @@ describe('CommentsSection (F11)', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
     expect(t.$('[data-report-sheet]')).toBeNull();
-    expect(TestBed.inject(ToastService).toasts().map((toast) => toast.message)).toEqual(['شكرًا، هنراجع البلاغ']);
+    expect(TestBed.inject(ToastService).toasts().map((toast) => toast.message)).toEqual(['شكرًا، سنراجع البلاغ']);
   });
 
   describe('on a post card (F34)', () => {

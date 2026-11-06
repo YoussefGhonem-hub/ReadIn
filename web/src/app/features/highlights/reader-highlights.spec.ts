@@ -139,10 +139,10 @@ describe('Reader highlights (F30)', () => {
     await select(t.fixture, 'p2', 6, 34);
     const bar = toolbar(t.root)!;
     expect(bar.getAttribute('role')).toBe('toolbar');
-    expect(bar.getAttribute('aria-label')).toBe('خيارات الـ Highlight');
+    expect(bar.getAttribute('aria-label')).toBe('خيارات التمييز');
     expect(bar.querySelector('[data-highlight-count]')).toBeNull();
     const button = bar.querySelector<HTMLButtonElement>('[data-highlight-create]')!;
-    expect(button.textContent!.trim()).toBe('علّم');
+    expect(button.textContent!.trim()).toBe('تمييز');
     button.click();
     const req = t.http.expectOne((r) => r.url === URL && r.method === 'POST');
     expect(req.request.body).toEqual({ language: 'ar-EG', blockId: 'p2', startOffset: 6, endOffset: 34, text: '@youssef_dev على الشرح 👨‍💻' });
@@ -150,21 +150,21 @@ describe('Reader highlights (F30)', () => {
     await t.stable();
     expect(toolbar(t.root)).toBeNull();
     expect([...t.root.querySelectorAll('[data-hl-mine="h-new"]')].map((el) => el.textContent).join('')).toBe('@youssef_dev على الشرح 👨‍💻');
-    expect(t.root.querySelector('[data-highlights-status]')!.textContent).toBe('اتعلّمت.');
+    expect(t.root.querySelector('[data-highlights-status]')!.textContent).toBe('تم التمييز.');
   });
 
   it('inside a popular range the toolbar says how many readers marked it; inside yours it offers Remove', async () => {
     const t = await render();
     http = t.http;
     await select(t.fixture, 'p1', 15, 62);
-    expect(toolbar(t.root)!.querySelector('[data-highlight-count]')!.textContent!.trim()).toBe('12 قارئ علّموا الجملة دي');
+    expect(toolbar(t.root)!.querySelector('[data-highlight-count]')!.textContent!.trim()).toBe('ميّز 12 من القرّاء هذه الجملة');
     expect(toolbar(t.root)!.querySelector('[data-highlight-create]')).not.toBeNull();
     // The toolbar takes no focus: screen readers hear the count from the live region.
-    expect(t.root.querySelector('[data-highlights-status]')!.textContent).toBe('12 قارئ علّموا الجملة دي');
+    expect(t.root.querySelector('[data-highlights-status]')!.textContent).toBe('ميّز 12 من القرّاء هذه الجملة');
 
     await select(t.fixture, 'p3', 17, 25);
     const remove = toolbar(t.root)!.querySelector<HTMLButtonElement>('[data-highlight-remove]')!;
-    expect(remove.textContent!.trim()).toBe('شيل العلامة');
+    expect(remove.textContent!.trim()).toBe('إزالة التمييز');
     expect(toolbar(t.root)!.querySelector('[data-highlight-create]')).toBeNull();
     remove.click();
     t.http.expectOne(`${TEST_API}/highlights/h-p3`).flush(null, { status: 204, statusText: 'No Content' });
@@ -178,9 +178,9 @@ describe('Reader highlights (F30)', () => {
     (t.root.querySelector('[data-block-id="p1"] .rd-hl-popular') as HTMLElement).click();
     await t.stable();
     expect(toolbar(t.root)!.getAttribute('data-kind')).toBe('mark');
-    expect(toolbar(t.root)!.querySelector('[data-highlight-count]')!.textContent!.trim()).toBe('12 قارئ علّموا الجملة دي');
+    expect(toolbar(t.root)!.querySelector('[data-highlight-count]')!.textContent!.trim()).toBe('ميّز 12 من القرّاء هذه الجملة');
     expect(toolbar(t.root)!.querySelector('button')).toBeNull();
-    expect(t.root.querySelector('[data-highlights-status]')!.textContent).toBe('12 قارئ علّموا الجملة دي');
+    expect(t.root.querySelector('[data-highlights-status]')!.textContent).toBe('ميّز 12 من القرّاء هذه الجملة');
 
     (t.root.querySelector('[data-hl-mine="h-p3"]') as HTMLElement).click();
     await t.stable();
@@ -210,7 +210,7 @@ describe('Reader highlights (F30)', () => {
     const bar = toolbar(t.root)!;
     expect(bar.querySelector('[data-highlight-create]')).toBeNull();
     const remove = bar.querySelector<HTMLButtonElement>('[data-highlight-remove]')!;
-    expect(remove.textContent!.trim()).toBe('شيل العلامة');
+    expect(remove.textContent!.trim()).toBe('إزالة التمييز');
     remove.click();
     t.http.expectOne(`${TEST_API}/highlights/h-p3`).flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
@@ -248,7 +248,7 @@ describe('Reader highlights (F30)', () => {
     await t.stable();
     expect(t.root.querySelector('.rd-hl')).toBeNull();
     expect(TestBed.inject(SessionStore).me()!.showHighlights).toBe(false);
-    expect(t.root.querySelector('[data-highlights-status]')!.textContent).toBe('الـ Highlights اتخفت.');
+    expect(t.root.querySelector('[data-highlights-status]')!.textContent).toBe('تم إخفاء التمييزات.');
     // Hidden: selecting offers nothing.
     await select(t.fixture, 'p2', 6, 34);
     expect(toolbar(t.root)).toBeNull();
@@ -289,7 +289,7 @@ describe('Reader highlights: Share quote (F24)', () => {
     const t = await render({ quotes: true });
     http = t.http;
     await select(t.fixture, 'p2', 6, 34);
-    expect(buttons(t.root)).toEqual(['علّم', 'مشاركة اقتباس']);
+    expect(buttons(t.root)).toEqual(['تمييز', 'مشاركة اقتباس']);
     // Keyboard: Tab reaches Highlight first, as before.
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
     expect(document.activeElement).toBe(toolbar(t.root)!.querySelector('[data-highlight-create]'));
@@ -324,7 +324,7 @@ describe('Reader highlights: Share quote (F24)', () => {
     const guest = await render({ quotes: true, guest: true });
     http = guest.http;
     await select(guest.fixture, 'p2', 6, 34);
-    expect(buttons(guest.root)).toEqual(['علّم', 'مشاركة اقتباس']);
+    expect(buttons(guest.root)).toEqual(['تمييز', 'مشاركة اقتباس']);
     toolbar(guest.root)!.querySelector<HTMLButtonElement>('[data-quote-share-open]')!.click();
     await guest.stable();
     expect(TestBed.inject(AuthPromptService).isOpen()).toBe(false);
@@ -350,9 +350,9 @@ describe('Reader highlights: Share quote (F24)', () => {
     const t = await render({ quotes: true });
     http = t.http;
     await select(t.fixture, 'p3', 17, 25);
-    expect(buttons(t.root)).toEqual(['شيل العلامة', 'مشاركة اقتباس']);
+    expect(buttons(t.root)).toEqual(['إزالة التمييز', 'مشاركة اقتباس']);
     await select(t.fixture, 'p3', 20, 22);
-    expect(buttons(t.root)).toEqual(['شيل العلامة']);
+    expect(buttons(t.root)).toEqual(['إزالة التمييز']);
     await select(t.fixture, 'p1', 0, 2);
     expect(toolbar(t.root)).toBeNull();
     const code = t.root.querySelector('[data-block-id="k1"]')!;
@@ -369,7 +369,7 @@ describe('Reader highlights: Share quote (F24)', () => {
     (t.fixture.componentInstance as QuoteReaderHost).quote.set(null);
     await t.stable();
     await select(t.fixture, 'p2', 6, 34);
-    expect(buttons(t.root)).toEqual(['علّم']);
+    expect(buttons(t.root)).toEqual(['تمييز']);
   });
 
   it('while highlights are hidden nothing shows, Share quote included', async () => {
@@ -386,7 +386,7 @@ describe('Reader highlights: Share quote (F24)', () => {
     const t = await render({ quotes: true });
     http = t.http;
     await select(t.fixture, 'long1', 0, 401);
-    expect(buttons(t.root)).toEqual(['علّم', 'مشاركة اقتباس']);
+    expect(buttons(t.root)).toEqual(['تمييز', 'مشاركة اقتباس']);
     toolbar(t.root)!.querySelector<HTMLButtonElement>('[data-quote-share-open]')!.click();
     await t.stable();
     expect(TestBed.inject(ToastService).toasts().at(-1)).toMatchObject({ kind: 'error', message: 'يجب ألا يتجاوز الاقتباس 400 حرف. حدّد جزءًا أقصر.' });

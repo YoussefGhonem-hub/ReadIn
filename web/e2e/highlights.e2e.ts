@@ -151,9 +151,9 @@ for (const variant of VARIANTS) {
     // Select (the fixtures' range) → Highlight: saved with exactly those offsets, then drawn as yours.
     await selectText(page, c.create);
     await expect(toolbar(page)).toBeVisible();
-    await expect(toolbar(page)).toHaveAttribute('aria-label', t('خيارات الـ Highlight', 'Highlight options'));
+    await expect(toolbar(page)).toHaveAttribute('aria-label', t('خيارات التمييز', 'Highlight options'));
     const create = toolbar(page).locator('[data-highlight-create]');
-    await expect(create).toHaveText(t('علّم', 'Highlight'));
+    await expect(create).toHaveText(t('تمييز', 'Highlight'));
     const created = await createdId(page, () => create.click());
     expect(created.body).toEqual({ language: c.language, ...c.create });
     const mine = `[data-hl-mine="${created.id}"]`;
@@ -177,10 +177,10 @@ for (const variant of VARIANTS) {
     await page.evaluate(() => window.scrollBy(0, -120));
     await block(page, c.tapped.blockId).locator('.rd-hl-popular').first().click();
     await expect(toolbar(page)).toHaveAttribute('data-kind', 'mark');
-    await expect(toolbar(page).locator('[data-highlight-count]')).toHaveText(t(`${c.tapped.count} قارئ علّموا الجملة دي`, `${c.tapped.count} readers highlighted this`));
+    await expect(toolbar(page).locator('[data-highlight-count]')).toHaveText(t(`ميّز ${c.tapped.count} من القرّاء هذه الجملة`, `${c.tapped.count} readers highlighted this`));
     await expect(toolbar(page).locator('button')).toHaveCount(0);
     // The toolbar takes no focus: screen readers hear the count from the live region.
-    await expect(page.locator('[data-highlights-status]')).toHaveText(t(`${c.tapped.count} قارئ علّموا الجملة دي`, `${c.tapped.count} readers highlighted this`));
+    await expect(page.locator('[data-highlights-status]')).toHaveText(t(`ميّز ${c.tapped.count} من القرّاء هذه الجملة`, `${c.tapped.count} readers highlighted this`));
     await parkMouse(page);
     if (hasScreenshot(variant)) {
       // The marked blocks and the tapped one's toolbar (it floats over the page, so a viewport region, not an element).
@@ -200,10 +200,10 @@ for (const variant of VARIANTS) {
     // Selecting inside one of yours offers Remove, even fewer than 3 characters.
     const remove = toolbar(page).locator('[data-highlight-remove]');
     await selectText(page, { blockId: c.create.blockId, startOffset: c.create.startOffset + 3, endOffset: c.create.startOffset + 5 });
-    await expect(remove).toHaveText(t('شيل العلامة', 'Remove highlight'));
+    await expect(remove).toHaveText(t('إزالة التمييز', 'Remove highlight'));
     await expect(toolbar(page).locator('[data-highlight-create]')).toHaveCount(0);
     await selectText(page, { blockId: c.create.blockId, startOffset: c.create.startOffset + 1, endOffset: c.create.endOffset - 1 });
-    await expect(remove).toHaveText(t('شيل العلامة', 'Remove highlight'));
+    await expect(remove).toHaveText(t('إزالة التمييز', 'Remove highlight'));
     await expect(toolbar(page).locator('[data-highlight-create]')).toHaveCount(0);
     const deleted = page.waitForResponse((r) => r.request().method() === 'DELETE' && r.url().includes('/highlights/'));
     await remove.click();
@@ -283,7 +283,7 @@ for (const variant of VARIANTS) {
     const item = page.locator('[data-article-menu-panel] [data-menu-action="highlights"]');
     await menuButton.click();
     await expect(page.locator('[data-article-menu-panel] [data-menu-action]').nth(1)).toHaveAttribute('data-menu-action', 'highlights');
-    await expect(item).toHaveText(t('إخفاء الـ Highlights', 'Hide highlights'));
+    await expect(item).toHaveText(t('إخفاء التمييزات', 'Hide highlights'));
     await expect(item).toHaveAttribute('aria-keyshortcuts', 'Control+/');
     const hidden = page.waitForRequest((r) => r.method() === 'PUT' && r.url().endsWith('/me/preferences'));
     await item.click();
@@ -295,7 +295,7 @@ for (const variant of VARIANTS) {
     await page.evaluate(() => document.getSelection()!.removeAllRanges());
 
     await menuButton.click();
-    await expect(item).toHaveText(t('إظهار الـ Highlights', 'Show highlights'));
+    await expect(item).toHaveText(t('إظهار التمييزات', 'Show highlights'));
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page.locator('[data-article-menu-panel]')).toHaveScreenshot(`highlights-menu-${suffix}.png`);
     await page.keyboard.press('Escape');
@@ -319,7 +319,7 @@ for (const variant of VARIANTS) {
     await page.goto('/settings');
     const toggle = page.locator('[data-settings-highlights] [role="switch"]');
     await expect(toggle).toHaveAttribute('aria-checked', 'false', { timeout: FIRST_RENDER_MS });
-    await expect(page.locator('[data-settings-highlights]')).toContainText(t('إظهار الـ Highlights', 'Show highlights'));
+    await expect(page.locator('[data-settings-highlights]')).toContainText(t('إظهار التمييزات', 'Show highlights'));
     saved = page.waitForRequest((r) => r.method() === 'PUT' && r.url().endsWith('/me/preferences'));
     await toggle.click();
     expect((await saved).postDataJSON()).toMatchObject({ showHighlights: true });
@@ -383,13 +383,13 @@ for (const variant of VARIANTS) {
     await openProfile(page, '/@sara', { signedIn: true });
     await page.locator('[data-profile-tab="saved"]').click();
     const sections = page.locator('[data-saved-sections]');
-    await sections.getByRole('radio', { name: t('الـ Highlights', 'Highlights') }).click();
+    await sections.getByRole('radio', { name: t('التمييزات', 'Highlights') }).click();
     const list = page.locator('[data-saved-highlights]');
     const groups = list.locator('[data-highlight-group]');
     await expect(groups).toHaveCount(2, { timeout: FIRST_RENDER_MS });
     expect(await groups.evaluateAll((els) => els.map((el) => el.getAttribute('data-highlight-group')))).toEqual(['a-highlights-lab|ar-EG', 'a-highlights-lab|en']);
     await expect(groups.first().locator('[data-saved-highlight]')).toHaveText(['شغّل dotnet run', 'مُهِمّ جداً', 'ASP.NET Core، أكيد شفت الـ Dependency Injection']);
-    await expect(groups.first().locator('[data-group-meta]')).toContainText(t('النسخة العربي', 'Arabic version'));
+    await expect(groups.first().locator('[data-group-meta]')).toContainText(t('النسخة العربية', 'Arabic version'));
     await expect(groups.nth(1).locator('[data-saved-highlight]')).toHaveText(['Injection (الحقن) everywhere']);
     await expect(groups.first().locator('[data-saved-highlight]').first()).toHaveAttribute('href', '/ar/a/highlights-lab#b-o1');
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
@@ -411,7 +411,7 @@ for (const variant of VARIANTS) {
     await signInAsHighlighter(page, request, variant);
     await openProfile(page, '/@sara', { signedIn: true });
     await page.locator('[data-profile-tab="saved"]').click();
-    await page.locator('[data-saved-sections]').getByRole('radio', { name: t('الـ Highlights', 'Highlights') }).click();
-    await expect(page.locator('[data-highlights-empty]')).toContainText(t('لسه مفيش Highlights', 'No highlights yet'), { timeout: FIRST_RENDER_MS });
+    await page.locator('[data-saved-sections]').getByRole('radio', { name: t('التمييزات', 'Highlights') }).click();
+    await expect(page.locator('[data-highlights-empty]')).toContainText(t('لا توجد تمييزات بعد', 'No highlights yet'), { timeout: FIRST_RENDER_MS });
   });
 }

@@ -49,7 +49,7 @@ describe('Settings → Muted (F18, F28)', () => {
   it('lists the writers, fields and topics you muted, each with Unmute', async () => {
     const t = await render(MUTES);
     http = t.http;
-    expect(t.$('h1')!.textContent!.trim()).toBe('اللي كتمته');
+    expect(t.$('h1')!.textContent!.trim()).toBe('ما كتمته');
     expect(t.$$('[data-muted-list] h2').map((h) => h.textContent!.trim())).toEqual(['الكتّاب', 'المجالات', 'المواضيع']);
     const writer = t.$('[data-muted-user][data-muted-id="u-omar"]')!;
     expect(writer.querySelector('a[href="/@omar_dev"]:not([aria-hidden])')!.textContent).toContain('عمر سمير');
@@ -80,8 +80,8 @@ describe('Settings → Muted (F18, F28)', () => {
     req.flush({ isMuted: false, isFollowing: false, followerCount: 12, followRemoved: false });
     await t.stable();
     expect(t.$('[data-muted-user]')).toBeNull();
-    expect(t.$('[data-muted-empty]')!.textContent).toContain('مكتمتش حاجة لسه');
-    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['لغيت كتم \u2068عمر سمير\u2069.']);
+    expect(t.$('[data-muted-empty]')!.textContent).toContain('لم تكتم شيئًا بعد');
+    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['تم إلغاء كتم \u2068عمر سمير\u2069.']);
   });
 
   it('unmutes a field and a topic', async () => {
@@ -100,20 +100,20 @@ describe('Settings → Muted (F18, F28)', () => {
     t.http.expectOne(`${TEST_API}/me/mutes/topics/t-crypto`).flush({ fieldIds: [], topicIds: [] });
     await t.stable();
     expect(t.$('[data-muted-empty]')).not.toBeNull();
-    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['لغيت كتم \u2068الصحة\u2069.', 'لغيت كتم \u2068كريبتو\u2069.']);
+    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['تم إلغاء كتم \u2068الصحة\u2069.', 'تم إلغاء كتم \u2068كريبتو\u2069.']);
   });
 
   it('nothing muted: the empty state says where muting happens', async () => {
     const t = await render({ users: [], fields: [], topics: [] });
     http = t.http;
-    expect(t.$('[data-muted-empty]')!.textContent).toContain('من اختيارات أي مقال');
+    expect(t.$('[data-muted-empty]')!.textContent).toContain('من خيارات أي مقال');
     expect(t.$('[data-muted-list]')).toBeNull();
   });
 
   it('a failed load offers Retry', async () => {
     const t = await render('error');
     http = t.http;
-    expect(t.$('rd-error-state')!.textContent).toContain('معرفناش نجيب اللي كتمته');
+    expect(t.$('rd-error-state')!.textContent).toContain('تعذّر تحميل ما كتمته');
     t.$<HTMLButtonElement>('rd-error-state button')!.click();
     await t.stable();
     t.http.expectOne(`${TEST_API}/me/mutes`).flush(MUTES);

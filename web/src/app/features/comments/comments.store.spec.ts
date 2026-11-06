@@ -276,7 +276,7 @@ describe('CommentsStore (F11, F27)', () => {
       http.expectOne(`${comment('c1')}/like`).flush(problem(409, 'comment.not_available'), { status: 409, statusText: 'Conflict' });
       await done;
       expect(store.threads()[0].comment).toEqual(expect.objectContaining({ likedByMe: false, likeCount: 2 }));
-      expect(toasts.toasts().map((t) => t.message)).toEqual(['التعليق ده اتمسح أو اتخفى.']);
+      expect(toasts.toasts().map((t) => t.message)).toEqual(['تم حذف هذا التعليق أو إخفاؤه.']);
     });
 
     it('quick taps send one request at a time, then the latest wish', async () => {

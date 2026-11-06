@@ -53,9 +53,9 @@ describe('ReportSheet (F22)', () => {
     const t = await render();
     http = t.http;
     const expected: [ReportTarget['type'], string, string][] = [
-      ['article', 'الإبلاغ عن المقال', 'إيه المشكلة في المقال ده؟'],
-      ['comment', 'الإبلاغ عن التعليق', 'إيه المشكلة في التعليق ده؟'],
-      ['user', 'الإبلاغ عن المستخدم', 'إيه المشكلة في الحساب ده؟'],
+      ['article', 'الإبلاغ عن المقال', 'ما المشكلة في هذا المقال؟'],
+      ['comment', 'الإبلاغ عن التعليق', 'ما المشكلة في هذا التعليق؟'],
+      ['user', 'الإبلاغ عن المستخدم', 'ما المشكلة في هذا الحساب؟'],
     ];
     for (const [kind, title, body] of expected) {
       await t.open({ type: kind, id: `${kind}-1` });
@@ -101,7 +101,7 @@ describe('ReportSheet (F22)', () => {
     expect(t.$('[data-report-sheet]')).toBeNull();
     expect(t.host.reported).toEqual([{ type: 'article', id: 'a1' }]);
     expect(t.host.closedCount).toBe(1);
-    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['شكرًا، هنراجع البلاغ']);
+    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['شكرًا، سنراجع البلاغ']);
   });
 
   it('leaves out empty details', async () => {
@@ -129,19 +129,19 @@ describe('ReportSheet (F22)', () => {
     t.http.expectOne(`${TEST_API}/reports`).flush(problem(400, 'report.own_content'), { status: 400, statusText: 'Bad Request' });
     await t.stable();
     expect(t.$('[data-report-sheet]')).not.toBeNull();
-    expect(t.$('[data-report-error]')!.textContent!.trim()).toBe('مينفعش تبلّغ عن حاجة إنت كاتبها.');
+    expect(t.$('[data-report-error]')!.textContent!.trim()).toBe('لا يمكنك الإبلاغ عن محتواك.');
 
     t.$('[data-report-submit]')!.click();
     t.http.expectOne(`${TEST_API}/reports`).flush(problem(404, 'report.target_not_found'), { status: 404, statusText: 'Not Found' });
     await t.stable();
-    expect(t.$('[data-report-error]')!.textContent!.trim()).toBe('المحتوى ده مش موجود.');
+    expect(t.$('[data-report-error]')!.textContent!.trim()).toBe('المحتوى المُبلَّغ عنه غير موجود.');
 
     t.$('[data-report-submit]')!.click();
     t.http
       .expectOne(`${TEST_API}/reports`)
       .flush(problem(400, 'validation.failed', { reason: ['report.reason_invalid'] }), { status: 400, statusText: 'Bad Request' });
     await t.stable();
-    expect(t.$('[data-report-error]')!.textContent!.trim()).toBe('اختار سبب البلاغ.');
+    expect(t.$('[data-report-error]')!.textContent!.trim()).toBe('اختر سببًا للإبلاغ.');
     expect(t.toasts.toasts()).toEqual([]);
 
     // Picking another reason clears the error.

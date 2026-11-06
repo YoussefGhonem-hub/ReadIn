@@ -77,7 +77,7 @@ describe('InterestsPage (F12: following fields and topics after onboarding)', ()
     expect(root.textContent).toContain('مواضيع في البرمجيات');
     // AI isn't followed: its topics aren't listed (nor loaded).
     expect(topicChip('t-llm')).toBeNull();
-    expect(count()).toBe('متابع 3 اهتمامات');
+    expect(count()).toBe('تتابع 3 اهتمامات');
   });
 
   it('a tap is shown at once and saved; the session follows what the API answers', async () => {
@@ -87,7 +87,7 @@ describe('InterestsPage (F12: following fields and topics after onboarding)', ()
     // Shown before the API answers; the field's topics load.
     expect(pressed(fieldChip('f-ai'))).toBe('true');
     expect(fieldChip('f-ai').getAttribute('aria-busy')).toBe('true');
-    expect(count()).toBe('متابع 4 اهتمامات');
+    expect(count()).toBe('تتابع 4 اهتمامات');
     const put = call('PUT', 'fields/f-ai');
     http.expectOne(`${TEST_API}/fields/ai/topics`).flush(TOPICS['ai']);
     put.flush(saved({ fieldIds: ['f-software', 'f-ai'], topicIds: ['t-dotnet', 't-architecture'] }));
@@ -102,7 +102,7 @@ describe('InterestsPage (F12: following fields and topics after onboarding)', ()
     call('DELETE', 'topics/t-dotnet').flush(saved({ fieldIds: ['f-software', 'f-ai'], topicIds: ['t-architecture'] }));
     await stable();
     expect(session.me()!.interests).toEqual({ fieldIds: ['f-software', 'f-ai'], topicIds: ['t-architecture'] });
-    expect(count()).toBe('متابع 3 اهتمامات');
+    expect(count()).toBe('تتابع 3 اهتمامات');
   });
 
   it('keeps at least 3: the refusal undoes the tap and says so', async () => {
@@ -113,9 +113,9 @@ describe('InterestsPage (F12: following fields and topics after onboarding)', ()
     call('DELETE', 'topics/t-architecture').flush(problem(400, 'user.interests.min_three'), { status: 400, statusText: 'Bad Request' });
     await stable();
     expect(pressed(topicChip('t-architecture'))).toBe('true');
-    expect(count()).toBe('متابع 3 اهتمامات');
+    expect(count()).toBe('تتابع 3 اهتمامات');
     expect(session.me()!.interests.topicIds).toEqual(['t-dotnet', 't-architecture']);
-    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'خليك متابع 3 اهتمامات على الأقل' })]);
+    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'احتفظ بـ 3 اهتمامات على الأقل' })]);
     expect(TestBed.inject(TranslocoService).translate('settings.interests.minThree', {}, 'en')).toBe('Keep at least 3 interests');
   });
 
@@ -126,7 +126,7 @@ describe('InterestsPage (F12: following fields and topics after onboarding)', ()
     call('PUT', 'fields/f-medicine').flush(problem(404, 'field.not_found'), { status: 404, statusText: 'Not Found' });
     await stable();
     expect(pressed(fieldChip('f-medicine'))).toBe('false');
-    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'المجال ده مش موجود.' })]);
+    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'هذا المجال غير موجود.' })]);
   });
 
   it('a second tap on a chip being saved waits for the first', async () => {

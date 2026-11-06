@@ -72,11 +72,11 @@ for (const variant of VARIANTS) {
     await page.locator('[data-pdf-input]').setInputFiles({ name: 'Kubernetes_basics.pdf', mimeType: 'application/pdf', buffer: PDF_BYTES });
 
     await expect(page.locator('[data-doc-title]')).toHaveValue('Kubernetes basics'); // from the file name
-    // The file's size in the UI language ("1 كيلو"), its name as it is.
-    await expect(page.locator('[data-doc-size]')).toHaveText(lang === 'ar' ? /^Kubernetes_basics\.pdf · \d+ كيلو$/ : /^Kubernetes_basics\.pdf · \d+ KB$/);
+    // The file's size in the UI language ("1 ك.ب"), its name as it is.
+    await expect(page.locator('[data-doc-size]')).toHaveText(lang === 'ar' ? /^Kubernetes_basics\.pdf · \d+ ك\.ب$/ : /^Kubernetes_basics\.pdf · \d+ KB$/);
     // "Allow download" starts on (pre-production step G) and is sent with the upload; this writer turns it off.
     await expect(page.locator('[data-allow-download]')).toBeChecked();
-    await expect(page.locator('[data-processing]')).toHaveText(lang === 'ar' ? 'بنجهز الصفحات…' : 'Preparing pages…');
+    await expect(page.locator('[data-processing]')).toHaveText(lang === 'ar' ? 'جارٍ تجهيز الصفحات…' : 'Preparing pages…');
     await expect(page.locator('[data-publish]')).toBeDisabled();
     await expect(page.locator('[data-add-images]')).toBeDisabled(); // no mixing
     expect(uploadFields).toEqual({ title: 'Kubernetes basics', allowDownload: 'true' });
@@ -122,7 +122,7 @@ for (const variant of VARIANTS) {
     await expect(card.locator('[data-document-header]')).toContainText(lang === 'ar' ? '12 صفحة' : '12 pages');
     await expect(card.locator('[data-counter]')).toHaveText(`1 / ${PAGE_COUNT}`);
     await expect(card.locator('[data-slide]')).toHaveCount(11);
-    await expect(card.locator('[data-more]')).toHaveText(lang === 'ar' ? '+صفحتين، افتح الملف' : '+2 pages, open document');
+    await expect(card.locator('[data-more]')).toHaveText(lang === 'ar' ? '+صفحتان، فتح الملف' : '+2 pages, open document');
     // The owner's download icon in the title strip.
     await expect(card.locator('[data-document-header] [data-document-download]')).toBeVisible();
     await card.scrollIntoViewIfNeeded();

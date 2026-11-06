@@ -86,12 +86,12 @@ describe('Home → Continue reading and the learning path (F03, F09)', () => {
     const { $ } = await render({ continueReading: [testContinueReading('c1', 42), testContinueReading('c2', 10)] });
     const card = $<HTMLAnchorElement>('[data-continue-reading]')!;
     expect(card.getAttribute('href')).toBe('/ar/a/slug-c1');
-    expect(card.textContent).toContain('كمّل القراءة');
+    expect(card.textContent).toContain('متابعة القراءة');
     expect(card.textContent).toContain('Reading c1');
     expect(card.textContent).toContain('البرمجيات');
     const bar = card.querySelector('[role="progressbar"]')!;
     expect(bar.getAttribute('aria-valuenow')).toBe('42');
-    expect(bar.getAttribute('aria-label')).toBe('قريت 42%');
+    expect(bar.getAttribute('aria-label')).toBe('تمت قراءة 42%');
   });
 
   it("continue reading skips today's article (its post card shows it)", async () => {
@@ -99,7 +99,7 @@ describe('Home → Continue reading and the learning path (F03, F09)', () => {
       today: testCard({ id: 'c1', slug: 'slug-c1' }),
       continueReading: [testContinueReading('c1', 42), testContinueReading('c2', 10)],
     });
-    expect($('rd-post-card[data-today-card] [data-card-label]')!.textContent).toContain('مقال النهارده');
+    expect($('rd-post-card[data-today-card] [data-card-label]')!.textContent).toContain('مقال اليوم');
     expect($('[data-continue-reading]')!.getAttribute('href')).toBe('/ar/a/slug-c2');
   });
 
@@ -139,7 +139,7 @@ describe('Home → Continue reading and the learning path (F03, F09)', () => {
     const none = await render({ active: null });
     expect(none.$('[data-home-path]')).toBeNull();
     expect(none.$('[data-home-path-prompt]')!.getAttribute('href')).toBe('/paths');
-    expect(none.$('[data-home-path-prompt]')!.textContent).toContain('اتعلم خطوة بخطوة مع المسارات');
+    expect(none.$('[data-home-path-prompt]')!.textContent).toContain('تعلّم خطوة بخطوة مع المسارات التعليمية');
 
     const failed = await render({ active: 'error' });
     expect(failed.$('[data-home-path-prompt]')).not.toBeNull();

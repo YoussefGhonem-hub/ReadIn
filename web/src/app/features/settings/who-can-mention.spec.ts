@@ -24,10 +24,10 @@ describe('Settings → Privacy: who can mention me (F18)', () => {
   it('is a labelled radio group of three, with a hint, on "everyone" by default', () => {
     setupSocialTesting();
     const { root, group, radios, checked } = render();
-    expect(root.textContent).toContain('مين يقدر يعمل لك منشن');
-    expect(group.getAttribute('aria-label')).toBe('مين يقدر يعمل لك منشن');
-    expect(radios().map((r) => r.textContent!.trim())).toEqual(['أي حد', 'الناس اللي بتابعهم', 'محدش']);
-    expect(checked()).toBe('أي حد');
+    expect(root.textContent).toContain('من يمكنه الإشارة إليّ');
+    expect(group.getAttribute('aria-label')).toBe('من يمكنه الإشارة إليّ');
+    expect(radios().map((r) => r.textContent!.trim())).toEqual(['الجميع', 'الأشخاص الذين أتابعهم', 'لا أحد']);
+    expect(checked()).toBe('الجميع');
     const hint = root.querySelector(`#${group.getAttribute('aria-describedby')}`)!;
     expect(hint.textContent).toContain('في التعليقات والمقالات');
     expect(root.getAttribute('data-value')).toBe('everyone');
@@ -45,11 +45,11 @@ describe('Settings → Privacy: who can mention me (F18)', () => {
     const { http, session } = setupSocialTesting();
     session.patchMe({ privacy: { publicReadingStats: true, whoCanMention: 'nobody' } });
     const { root, radios, checked, stable } = render();
-    expect(checked()).toBe('محدش');
+    expect(checked()).toBe('لا أحد');
 
     radios()[1].click();
     await stable();
-    expect(checked()).toBe('الناس اللي بتابعهم');
+    expect(checked()).toBe('الأشخاص الذين أتابعهم');
     expect(radios().every((r) => r.disabled)).toBe(true);
     expect(root.getAttribute('aria-busy')).toBe('true');
     const req = http.expectOne({ method: 'PUT', url: `${TEST_API}/me/privacy` });
@@ -67,10 +67,10 @@ describe('Settings → Privacy: who can mention me (F18)', () => {
     const { radios, checked, stable } = render();
     radios()[2].click();
     await stable();
-    expect(checked()).toBe('محدش');
+    expect(checked()).toBe('لا أحد');
     http.expectOne(`${TEST_API}/me/privacy`).flush(problem(400, 'validation.failed'), { status: 400, statusText: 'Bad Request' });
     await stable();
-    expect(checked()).toBe('أي حد');
+    expect(checked()).toBe('الجميع');
     expect(toasts.toasts()).toEqual([expect.objectContaining({ kind: 'error' })]);
   });
 
@@ -88,6 +88,6 @@ describe('Settings → Privacy: who can mention me (F18)', () => {
     guest.detectChanges();
     const guestPrivacy = (guest.nativeElement as HTMLElement).querySelector('[data-settings-privacy]')!;
     expect(guestPrivacy.querySelector('[data-who-can-mention]')).toBeNull();
-    expect(guestPrivacy.textContent).toContain('سجل دخولك عشان تغيّر إعدادات الخصوصية.');
+    expect(guestPrivacy.textContent).toContain('سجّل الدخول لتغيير إعدادات الخصوصية.');
   });
 });

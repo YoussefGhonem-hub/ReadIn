@@ -67,14 +67,14 @@ test('links editor: reorder, Other with a name, the server’s errors by index, 
   await expect(rows.nth(0)).toHaveAttribute('data-platform', 'other');
   await expect(rows.nth(0).locator('[data-link-up]')).toBeDisabled();
   await expect(rows.nth(0).locator('[data-link-down]')).toBeFocused();
-  await expect(rows.nth(0).locator('[data-link-remove]')).toHaveAttribute('aria-label', 'شيل رابط البودكاست');
+  await expect(rows.nth(0).locator('[data-link-remove]')).toHaveAttribute('aria-label', 'إزالة رابط البودكاست');
 
   // A link on the wrong site and a name that's too short: each message under its own field, nothing is sent.
   await rows.nth(2).locator('[data-link-url]').fill('https://gitlab.com/sara');
   await rows.nth(0).locator('[data-link-label]').fill('ب');
   await form.locator('[data-submit]').click();
-  await expect(rows.nth(2).locator('[data-link-error="url"]')).toHaveText('الرابط ده مش على موقع المنصة اللي اخترتها.');
-  await expect(rows.nth(0).locator('[data-link-error="label"]')).toHaveText('اسم الرابط لازم يكون من 2 لـ 30 حرف في سطر واحد.');
+  await expect(rows.nth(2).locator('[data-link-error="url"]')).toHaveText('هذا الرابط لا ينتمي إلى المنصة التي اخترتها.');
+  await expect(rows.nth(0).locator('[data-link-error="label"]')).toHaveText('يجب أن يتكون اسم الرابط من 2 إلى 30 حرفًا في سطر واحد.');
   await expect(rows.nth(0).locator('[data-link-label]')).toBeFocused();
   await expect(rows.nth(1).locator('[data-link-error="url"]')).toHaveCount(0);
   expect(patches).toHaveLength(0);
@@ -89,7 +89,7 @@ test('links editor: reorder, Other with a name, the server’s errors by index, 
     return reply(route, 400, problem(400, 'validation.failed', { 'links[1].url': ['link.url_invalid'] }));
   });
   await form.locator('[data-submit]').click();
-  await expect(rows.nth(1).locator('[data-link-error="url"]')).toHaveText('الرابط ده مش صحيح.');
+  await expect(rows.nth(1).locator('[data-link-error="url"]')).toHaveText('هذا الرابط غير صالح.');
   await expect(rows.nth(1).locator('[data-link-url]')).toBeFocused();
   await expect(rows.nth(1).locator('[data-link-url]')).toHaveAttribute('aria-invalid', 'true');
   await expect(page.locator('[data-error]')).toHaveCount(0);

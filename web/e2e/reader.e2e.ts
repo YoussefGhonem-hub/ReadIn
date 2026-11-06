@@ -53,7 +53,7 @@ for (const variant of VARIANTS) {
     await expect(dialog.locator('#term-sheet-title')).toHaveText('Dependency Injection');
     await expect(dialog.locator('[data-term-explanation]')).toHaveAttribute('dir', 'rtl');
     await expect(dialog.locator('[data-term-definition]')).toHaveAttribute('dir', 'ltr');
-    await expect(dialog).toContainText(t('بالإنجليزي', 'In English'));
+    await expect(dialog).toContainText(t('بالإنجليزية', 'In English'));
     // The open article is left out of the articles that use the term.
     const rows = dialog.locator('[data-term-article]');
     await expect(rows).toHaveCount(3);
@@ -84,7 +84,7 @@ for (const variant of VARIANTS) {
     await page.locator('[data-term="service-locator"]').click();
     await expect(sheet).toHaveAttribute('data-state', 'missing');
     await expect(dialog.locator('#term-sheet-title')).toHaveText('Service Locator');
-    await expect(dialog.locator('[data-term-missing]')).toHaveText(t('المصطلح ده لسه مش في القاموس', "This term isn't in the glossary yet"));
+    await expect(dialog.locator('[data-term-missing]')).toHaveText(t('لم يُضف هذا المصطلح إلى القاموس بعد', "This term isn't in the glossary yet"));
     await page.keyboard.press('Escape');
 
     // An article from the list opens and the sheet closes.
@@ -128,7 +128,7 @@ for (const variant of VARIANTS) {
     // "How sleep turns reading into memory" is in Medicine, a sensitive field (`field.isSensitive`).
     await openAsGuest(page, '/en/a/sleep-and-memory');
     const notice = page.locator('[data-health-disclaimer]');
-    await expect(notice).toHaveText(t('المعلومات دي للتوعية ولا تغني عن استشارة الطبيب.', "This information is for awareness only and is not a substitute for a doctor's advice."));
+    await expect(notice).toHaveText(t('هذه المعلومات للتوعية فقط، ولا تُغني عن استشارة الطبيب.', "This information is for awareness only and is not a substitute for a doctor's advice."));
     await expect(notice).toHaveAttribute('role', 'note');
     // Below the trust row, above the content.
     const inOrder = await page.evaluate(() => {
@@ -193,7 +193,7 @@ for (const variant of VARIANTS) {
     });
 
     await openArticle(page, ARTICLE);
-    const toast = page.locator('rd-toast-host > div', { hasText: t('كمّلنا من مكان ما وقفت', 'Picked up where you left off') });
+    const toast = page.locator('rd-toast-host > div', { hasText: t('تم الاستئناف من حيث توقفت', 'Picked up where you left off') });
     await expect(toast).toBeVisible();
     expect(Math.abs((await scrollFraction(page)) - 0.5)).toBeLessThan(0.002);
     // The tracker starts once you are placed: its first report keeps your position instead of the top.

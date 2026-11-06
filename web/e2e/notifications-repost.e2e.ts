@@ -27,7 +27,7 @@ for (const variant of VARIANTS) {
     const group = page.locator('[data-notification="n-reposts"]');
     await expect(single).toBeVisible({ timeout: FIRST_RENDER_MS });
     await expect(single).toHaveAttribute('data-type', 'article_reposted');
-    await expect(single.locator('[data-notification-text]')).toHaveText(ar ? 'Karim Hassan أعاد نشر مقالك' : 'Karim Hassan reposted your article');
+    await expect(single.locator('[data-notification-text]')).toHaveText(ar ? 'أعاد Karim Hassan نشر مقالك' : 'Karim Hassan reposted your article');
     // The reposter's name is bold and isolated; the article's title in its own language and direction.
     await expect(single.locator('[data-notification-text] strong bdi')).toHaveText('Karim Hassan');
     await expect(single.locator('[data-notification-article]')).toHaveText('يعني إيه Dependency Injection في ASP.NET Core؟');
@@ -38,7 +38,7 @@ for (const variant of VARIANTS) {
     await expect(single.locator('svg[class*="repeat"]')).toBeVisible();
     await expect(single).toHaveAttribute('href', '/ar/a/dependency-injection-ar');
     await expect(group.locator('[data-notification-text]')).toHaveText(
-      ar ? 'سلمى إبراهيم و4 غيره أعادوا نشر مقالك' : 'سلمى إبراهيم and 4 others reposted your article',
+      ar ? 'أعاد سلمى إبراهيم و4 آخرون نشر مقالك' : 'سلمى إبراهيم and 4 others reposted your article',
     );
     await expect(group).toHaveAttribute('href', /\/a\/clean-architecture-whiteboard$/);
     await parkMouse(page);
@@ -54,7 +54,7 @@ for (const variant of VARIANTS) {
     await bell.click();
     const dropdown = page.locator('[data-notifications-dropdown]:visible');
     const inMenu = dropdown.locator('[data-notification="n-repost"]');
-    await expect(inMenu.locator('[data-notification-text]')).toHaveText(ar ? 'Karim Hassan أعاد نشر مقالك' : 'Karim Hassan reposted your article', {
+    await expect(inMenu.locator('[data-notification-text]')).toHaveText(ar ? 'أعاد Karim Hassan نشر مقالك' : 'Karim Hassan reposted your article', {
       timeout: FIRST_RENDER_MS,
     });
 
@@ -68,9 +68,9 @@ for (const variant of VARIANTS) {
     const type = page.locator('[data-notification-type="article_reposted"]');
     await expect(type).toHaveAttribute('data-mode', 'all', { timeout: FIRST_RENDER_MS });
     await expect(type).toContainText(ar ? 'إعادة النشر' : 'Reposts');
-    await expect(type).toContainText(ar ? 'لما حد يعيد نشر مقالك' : 'When someone reposts your article');
+    await expect(type).toContainText(ar ? 'عندما يعيد أحد نشر مقالك' : 'When someone reposts your article');
     await expect(page.locator('[data-notification-type]').last()).toHaveAttribute('data-notification-type', 'article_reposted');
-    await type.getByRole('radio', { name: ar ? 'مقفول' : 'Off' }).click();
+    await type.getByRole('radio', { name: ar ? 'إيقاف' : 'Off' }).click();
     await expect(type).toHaveAttribute('data-mode', 'off');
     await expect
       .poll(async () => (await notificationsOf(request, me.id)).puts.at(-1))

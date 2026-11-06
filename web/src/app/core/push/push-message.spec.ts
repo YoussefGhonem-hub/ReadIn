@@ -25,7 +25,7 @@ describe('push messages', () => {
     it('opens the daily-article push in the article language the API sends (F07)', () => {
       // docs/api/contract-v1.md, "Push payloads". The service worker builds the same path for background pushes.
       const daily = {
-        notification: { title: 'مقال النهارده جاهز ☕', body: 'RAG ولا Fine-tuning؟' },
+        notification: { title: 'مقال اليوم جاهز ☕', body: 'RAG ولا Fine-tuning؟' },
         data: {
           type: 'daily_article',
           articleId: '0a1b2c3d-0000-0000-0000-000000000001',
@@ -36,7 +36,7 @@ describe('push messages', () => {
         },
       };
       expect(toPushMessage(daily, ORIGIN, 'ar')).toEqual({
-        title: 'مقال النهارده جاهز ☕',
+        title: 'مقال اليوم جاهز ☕',
         body: 'RAG ولا Fine-tuning؟',
         path: '/en/a/rag-vs-fine-tuning',
         notificationId: null,
@@ -58,11 +58,11 @@ describe('push messages', () => {
 
   it('carries the notification-center row behind the push (F17)', () => {
     const push = {
-      notification: { title: 'أحمد و9 غيره علّقوا على مقالك' },
+      notification: { title: 'علّق أحمد و9 آخرون على مقالك' },
       data: { type: 'article_comment', notificationId: '6f1c0000-0000-0000-0000-000000000009', link: 'readin://a/clean-code#comment-c9', lang: 'ar' },
     };
     expect(toPushMessage(push, ORIGIN, 'en')).toEqual({
-      title: 'أحمد و9 غيره علّقوا على مقالك',
+      title: 'علّق أحمد و9 آخرون على مقالك',
       body: '',
       path: '/ar/a/clean-code#comment-c9',
       notificationId: '6f1c0000-0000-0000-0000-000000000009',

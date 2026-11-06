@@ -46,7 +46,7 @@ for (const variant of VARIANTS) {
     // Settings → Writer verification, with where it stands.
     await page.goto('/settings');
     const row = page.locator('[data-settings-verification]');
-    await expect(row.locator('[data-verification-state]')).toHaveText(ar ? 'اطلبه' : 'Request it', { timeout: FIRST_RENDER_MS });
+    await expect(row.locator('[data-verification-state]')).toHaveText(ar ? 'طلب التوثيق' : 'Request it', { timeout: FIRST_RENDER_MS });
     await row.click();
     await page.waitForURL((url) => url.pathname === '/verification');
 
@@ -56,8 +56,8 @@ for (const variant of VARIANTS) {
 
     // The form's own checks first: nothing is sent.
     await form.locator('[data-verification-submit]').click();
-    await expect(form.locator('[data-error="fieldId"]')).toHaveText(ar ? 'اختار مجالك.' : 'Pick your field.');
-    await expect(form.locator('[data-error="proof"]')).toHaveText(ar ? 'ضيف لينك أو ملف كإثبات.' : 'Add a link or a file as proof.');
+    await expect(form.locator('[data-error="fieldId"]')).toHaveText(ar ? 'اختر مجالك.' : 'Pick your field.');
+    await expect(form.locator('[data-error="proof"]')).toHaveText(ar ? 'أضف رابطًا أو ملفًا كإثبات.' : 'Add a link or a file as proof.');
     await expect(form.locator('[data-verification-field]')).toBeFocused();
     expect((await requesterOf(request, me.id)).submissions).toHaveLength(0);
 
@@ -65,7 +65,7 @@ for (const variant of VARIANTS) {
     await form.locator('[data-verification-job-title]').fill(ar ? 'Backend engineer في Vodafone' : 'Backend engineer at Vodafone');
     // A file the API would refuse never gets in.
     await form.locator('[data-verification-file-input]').setInputFiles({ name: 'card.gif', mimeType: 'image/gif', buffer: Buffer.from('GIF89a') });
-    await expect(form.locator('[data-error="proof"]')).toHaveText(ar ? 'اختار ملف PDF أو JPEG أو PNG أو WebP.' : 'Pick a PDF, JPEG, PNG or WebP file.');
+    await expect(form.locator('[data-error="proof"]')).toHaveText(ar ? 'اختر ملف PDF أو JPEG أو PNG أو WebP.' : 'Pick a PDF, JPEG, PNG or WebP file.');
     await form.locator('[data-verification-file-input]').setInputFiles(await pngFile(request, 'syndicate-card.png', 120, 80));
     await expect(form.locator('[data-verification-file-name]')).toHaveText('syndicate-card.png');
     await expect(form.locator('[data-error]')).toHaveCount(0);
@@ -78,7 +78,7 @@ for (const variant of VARIANTS) {
     await form.locator('[data-verification-submit]').click();
     const pending = page.locator('[data-verification-status="pending"]');
     await expect(pending).toBeVisible();
-    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'اتبعت الطلب ✓' : 'Request sent ✓');
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'تم إرسال الطلب ✓' : 'Request sent ✓');
     const sent = (await requesterOf(request, me.id)).submissions.at(-1)!;
     expect(sent.fields).toEqual({
       fieldId: 'f-software',
@@ -94,17 +94,17 @@ for (const variant of VARIANTS) {
 
     // Settings says so too.
     await page.goBack();
-    await expect(page.locator('[data-settings-verification] [data-verification-state]')).toHaveText(ar ? 'بيتراجع' : 'Under review', { timeout: FIRST_RENDER_MS });
+    await expect(page.locator('[data-settings-verification] [data-verification-state]')).toHaveText(ar ? 'قيد المراجعة' : 'Under review', { timeout: FIRST_RENDER_MS });
     await page.locator('[data-settings-verification]').click();
     await expect(pending).toBeVisible({ timeout: FIRST_RENDER_MS });
 
     // Withdraw: asked first; then the form again.
     await pending.locator('[data-verification-withdraw]').click();
     const sheet = page.locator('[data-withdraw-sheet]');
-    await expect(sheet).toContainText(ar ? 'تسحب طلبك؟' : 'Withdraw your request?');
+    await expect(sheet).toContainText(ar ? 'هل تريد سحب طلبك؟' : 'Withdraw your request?');
     await sheet.locator('[data-withdraw-confirm]').click();
     await expect(page.locator('[data-verification-form]')).toBeVisible();
-    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'اتسحب الطلب' : 'Request withdrawn');
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'تم سحب الطلب' : 'Request withdrawn');
     await expect.poll(async () => (await requesterOf(request, me.id)).requests).toEqual([]);
   });
 
@@ -116,7 +116,7 @@ for (const variant of VARIANTS) {
 
     const rejected = page.locator('[data-verification-status="rejected"]');
     await expect(rejected).toBeVisible({ timeout: FIRST_RENDER_MS });
-    await expect(rejected).toContainText(ar ? 'طلبك ماتقبلش' : "Your request wasn't approved");
+    await expect(rejected).toContainText(ar ? 'لم تتم الموافقة على طلبك' : "Your request wasn't approved");
     const reason = rejected.locator('[data-verification-reason]');
     await expect(reason).toHaveText('The GitHub profile has no public projects yet. Add a certificate or a LinkedIn profile that shows your job.');
     await expect(reason).toHaveAttribute('dir', 'ltr');
@@ -135,7 +135,7 @@ for (const variant of VARIANTS) {
     await form.locator('[data-verification-proof-url]').fill('http://www.linkedin.com/in/sara-hassan');
     await form.locator('[data-verification-submit]').click();
     await expect(form.locator('[data-error="proofUrl"]')).toHaveText(
-      ar ? 'اكتب لينك كامل بيبدأ بـ https:// (لحد 500 حرف).' : 'Write a full link that starts with https:// (up to 500 characters).',
+      ar ? 'اكتب رابطًا كاملًا يبدأ بـ https:// (بحد أقصى 500 حرف).' : 'Write a full link that starts with https:// (up to 500 characters).',
     );
     await expect(form.locator('[data-verification-proof-url]')).toHaveAttribute('aria-invalid', 'true');
 
@@ -159,7 +159,7 @@ for (const variant of VARIANTS) {
     await page.goto('/verification');
     const verified = page.locator('[data-verification-status="verified"]');
     await expect(verified).toBeVisible({ timeout: FIRST_RENDER_MS });
-    await expect(verified).toContainText(ar ? 'إنت كاتب موثّق ✓' : "You're a verified writer ✓");
+    await expect(verified).toContainText(ar ? 'أنت كاتب موثّق ✓' : "You're a verified writer ✓");
     await expect.poll(() => calls.me).toBe(1);
     expect(calls.status).toBe(1);
     // The badge, not a role (SPEC §10): the account stays a Member.
@@ -222,7 +222,7 @@ for (const variant of VARIANTS) {
     const sheet = page.locator('[data-decision-sheet]');
     await expect(sheet).toHaveAttribute('data-decision', 'approve');
     await sheet.locator('[data-decision-confirm]').click();
-    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'بقى كاتب موثّق ✓' : 'is now a verified writer ✓');
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'كاتبًا موثّقًا ✓' : 'is now a verified writer ✓');
     await expect(rows).toHaveCount(1);
     await expect.poll(async () => (await reviewOf(request, admin.id))['vr-salma'].status).toBe('approved');
 
@@ -253,7 +253,7 @@ for (const variant of VARIANTS) {
       return reply(route, 500, problem(500, 'server.error'));
     });
     await sheet.locator('[data-decision-confirm]').click();
-    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'السيرفر واجه مشكلة. حاول كمان شوية.' : 'The server ran into a problem. Please try again shortly.');
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'واجه الخادم مشكلة. حاول مرة أخرى بعد قليل.' : 'The server ran into a problem. Please try again shortly.');
     await expect(rows).toHaveCount(1);
     expect(refused).toBe(true);
     await expect(page).toHaveURL(/id=vr-omar/);
@@ -261,8 +261,8 @@ for (const variant of VARIANTS) {
     await page.locator('[data-verification-detail="vr-omar"] [data-detail-reject]').click();
     await sheet.locator('[data-decision-reason]').fill(ar ? 'الكارنيه مش باين فيه الاسم.' : 'The card does not show your name.');
     await sheet.locator('[data-decision-confirm]').click();
-    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'الطلب اترفض' : 'Request rejected');
-    await expect(page.locator('[data-verification-empty]')).toContainText(ar ? 'مفيش طلبات تتراجع' : 'No requests to review');
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'تم رفض الطلب' : 'Request rejected');
+    await expect(page.locator('[data-verification-empty]')).toContainText(ar ? 'لا توجد طلبات للمراجعة' : 'No requests to review');
     expect((await reviewOf(request, admin.id))['vr-omar']).toEqual({ status: 'rejected', rejectionReason: ar ? 'الكارنيه مش باين فيه الاسم.' : 'The card does not show your name.' });
 
     // The Rejected tab: who decided and why; the file is gone.
@@ -296,7 +296,7 @@ for (const variant of VARIANTS) {
     await expect(page).toHaveURL(/status=approved&id=vr-karim$/);
     const detail = page.locator('[data-verification-detail="vr-karim"]');
     const remove = detail.locator('[data-detail-remove-badge]');
-    await expect(remove).toHaveText(ar ? 'شيل التوثيق' : 'Remove badge');
+    await expect(remove).toHaveText(ar ? 'إزالة التوثيق' : 'Remove badge');
     await fontsReady(page);
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page.locator('rd-admin-verification-page')).toHaveScreenshot(`admin-verification-approved-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
@@ -306,7 +306,7 @@ for (const variant of VARIANTS) {
     await page.keyboard.press('Enter');
     const sheet = page.locator('[data-decision-sheet]');
     await expect(sheet).toHaveAttribute('data-decision', 'removeBadge');
-    await expect(sheet.locator('#decision-title')).toContainText(ar ? 'تشيل التوثيق من' : 'Remove');
+    await expect(sheet.locator('#decision-title')).toContainText(ar ? 'هل تريد إزالة توثيق' : 'Remove');
     await expect(sheet.locator('#decision-title')).toContainText('Karim Hassan');
     await expect(page.locator('section[role="alertdialog"]')).toHaveAttribute('aria-describedby', 'decision-body');
     const cancel = sheet.getByRole('button', { name: ar ? 'إلغاء' : 'Cancel' });
@@ -319,9 +319,9 @@ for (const variant of VARIANTS) {
     // Confirmed: the action goes at once, the request stays approved, and the toast says so.
     await page.keyboard.press('Enter');
     await sheet.locator('[data-decision-confirm]').click();
-    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'مبقاش موثّق' : "isn't verified anymore");
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'لم يعد' : "isn't verified anymore");
     await expect(remove).toHaveCount(0);
-    await expect(detail.locator('[data-detail-badge-removed]')).toHaveText(ar ? 'مبقاش معاه علامة التوثيق.' : "They don't have the Verified badge anymore.");
+    await expect(detail.locator('[data-detail-badge-removed]')).toHaveText(ar ? 'لم تعد لديه علامة التوثيق.' : "They don't have the Verified badge anymore.");
     await expect(detail.locator('[data-detail-decision]')).toBeFocused();
     await expect(row.locator('svg[aria-label]')).toHaveCount(0);
     await expect.poll(async () => (await badgesOf(request, admin.id))['u-karim']).toBe(false);
@@ -330,7 +330,7 @@ for (const variant of VARIANTS) {
     // The stale tab: the API says the user isn't verified (409), so the action goes there too.
     await stale.locator('[data-detail-remove-badge]').click();
     await stale.locator('[data-decision-confirm]').click();
-    await expect(stale.locator('rd-toast-host')).toContainText(ar ? 'المستخدم ده مش موثّق.' : "This user isn't verified.");
+    await expect(stale.locator('rd-toast-host')).toContainText(ar ? 'هذا المستخدم غير موثّق.' : "This user isn't verified.");
     await expect(stale.locator('[data-detail-remove-badge]')).toHaveCount(0);
     await expect(stale.locator('[data-verification-detail="vr-karim"] [data-detail-badge-removed]')).toBeVisible();
     await stale.close();

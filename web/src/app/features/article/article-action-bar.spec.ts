@@ -48,7 +48,7 @@ describe('ArticleActionBar (F10, F13, F29)', () => {
     http = t.http;
     expect(t.$('[data-reaction-total]')!.textContent!.trim()).toBe('12');
     expect(t.$('[data-reactions-summary]')!.textContent).toContain('💡❤️🔥');
-    expect(t.$('[data-reactions-summary]')!.getAttribute('aria-label')).toBe('12 تفاعل، شوف مين اتفاعل');
+    expect(t.$('[data-reactions-summary]')!.getAttribute('aria-label')).toBe('12 تفاعلًا، عرض من تفاعل');
     expect(t.$('[data-comment-count]')!.textContent).toContain('3');
     expect(t.$('[data-react]')!.getAttribute('aria-label')).toBe('تفاعل');
     expect(t.$('[data-react]')!.getAttribute('aria-pressed')).toBe('false');
@@ -88,7 +88,7 @@ describe('ArticleActionBar (F10, F13, F29)', () => {
     expect(document.activeElement?.getAttribute('data-reaction')).toBe('insightful');
     // LinkedIn-style: no numbers or text in the bar; each reaction is named for screen readers.
     expect(picker.textContent!.replace(/s/g, '')).toBe('💡❤️🔥🤯');
-    expect([...picker.querySelectorAll('[role="menuitemradio"]')].map((b) => b.getAttribute('aria-label'))).toEqual(['مفيد', 'حبيته', 'نار', 'مبهر']);
+    expect([...picker.querySelectorAll('[role="menuitemradio"]')].map((b) => b.getAttribute('aria-label'))).toEqual(['مفيد', 'أحببته', 'نار', 'مبهر']);
     // They enter one after another.
     expect([...picker.querySelectorAll<HTMLElement>('[role="menuitemradio"]')].map((b) => b.style.animationDelay)).toEqual(['0ms', '50ms', '100ms', '150ms']);
 
@@ -179,7 +179,7 @@ describe('ArticleActionBar (F10, F13, F29)', () => {
     expect(t.$('[data-comment-count]')!.nextElementSibling).toBe(repost.closest('rd-repost-button'));
     expect(repost.getAttribute('aria-label')).toBe('إعادة نشر، 3');
     expect(t.$('[data-repost-count]')!.textContent!.trim()).toBe('3');
-    // A tap opens the Repost menu (a CDK overlay on the document); "أعد النشر" reposts at once.
+    // A tap opens the Repost menu (a CDK overlay on the document); "إعادة النشر" reposts at once.
     repost.click();
     await t.stable();
     document.querySelector<HTMLElement>('[data-repost-menu] [data-repost-action="repost"]')!.click();

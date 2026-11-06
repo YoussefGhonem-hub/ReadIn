@@ -52,7 +52,7 @@ describe('MeMenu', () => {
     const profile = root.querySelector<HTMLAnchorElement>('[data-me-item="profile"]')!;
     expect(profile.getAttribute('href')).toBe('/@mona');
     expect(profile.getAttribute('role')).toBe('menuitem');
-    expect(profile.textContent!.trim()).toBe('عرض البروفايل');
+    expect(profile.textContent!.trim()).toBe('عرض الملف الشخصي');
 
     expect(root.querySelector('[data-me-item="settings"]')!.getAttribute('href')).toBe('/settings');
     expect(root.querySelector('[data-me-item="myArticles"]')!.getAttribute('href')).toBe('/write');
@@ -93,7 +93,7 @@ describe('MeMenu', () => {
   it('Appearance: Light / Dark / System radios, the current one checked; picking one applies and saves it', () => {
     const { fixture, root, http } = render();
     const radios = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'));
-    expect(radios.map((r) => r.textContent!.trim())).toEqual(['زي الجهاز', 'فاتح', 'داكن']);
+    expect(radios.map((r) => r.textContent!.trim())).toEqual(['حسب الجهاز', 'فاتح', 'داكن']);
     expect(radios.map((r) => r.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false']);
     expect(root.querySelector('[data-me-appearance]')!.getAttribute('aria-labelledby')).toBe('rd-me-menu-appearance');
 

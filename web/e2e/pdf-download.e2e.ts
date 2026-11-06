@@ -52,7 +52,7 @@ for (const variant of VARIANTS) {
     const icon = strip.locator('[data-document-download]');
     await expect(icon).toBeVisible({ timeout: FIRST_RENDER_MS });
     // A named button: "Download {title}".
-    await expect(icon).toHaveAttribute('aria-label', new RegExp(`${ar ? 'تحميل' : 'Download'} .*ASP\\.NET Core cheat sheet`));
+    await expect(icon).toHaveAttribute('aria-label', new RegExp(`${ar ? 'تنزيل' : 'Download'} .*ASP\\.NET Core cheat sheet`));
     await card.scrollIntoViewIfNeeded();
     await parkMouse(page);
     await imagesLoaded(card);

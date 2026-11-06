@@ -189,7 +189,7 @@ describe('PushService', () => {
     const { client, toasts, notices } = await setup();
     client.worker!({
       type: 'push',
-      payload: { notification: { title: 'وصلك تحذير من فريق الإشراف' }, data: { type: 'moderation_notice', noticeId: 'n1', kind: 'warning' } },
+      payload: { notification: { title: 'تلقّيت تحذيرًا من فريق الإشراف' }, data: { type: 'moderation_notice', noticeId: 'n1', kind: 'warning' } },
     });
 
     expect(notices.reload).toHaveBeenCalledTimes(1);
@@ -204,13 +204,13 @@ describe('PushService', () => {
     Object.assign(meApi, { get: vi.fn(() => of(verified)) });
     client.worker!({
       type: 'push',
-      payload: { notification: { title: 'بقيت كاتب موثّق ✓' }, data: { type: 'verification_result', notificationId: 'n-5', link: 'readin://verification' } },
+      payload: { notification: { title: 'أصبحت الآن كاتبًا موثّقًا ✓' }, data: { type: 'verification_result', notificationId: 'n-5', link: 'readin://verification' } },
     });
     await flush();
 
     expect((meApi as unknown as { get: ReturnType<typeof vi.fn> }).get).toHaveBeenCalledWith({ silent: true });
     expect(session.me()?.isVerified).toBe(true);
-    expect(toasts.toasts()).toEqual([expect.objectContaining({ kind: 'info', message: 'بقيت كاتب موثّق ✓', link: '/verification' })]);
+    expect(toasts.toasts()).toEqual([expect.objectContaining({ kind: 'info', message: 'أصبحت الآن كاتبًا موثّقًا ✓', link: '/verification' })]);
   });
 
   it('a verification result for an account that signed out meanwhile changes nothing (F19)', async () => {

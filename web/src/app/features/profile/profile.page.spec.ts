@@ -72,7 +72,7 @@ describe('ProfilePage (F14)', () => {
     expect(header.querySelector('[data-profile-username]')!.getAttribute('dir')).toBe('ltr');
     expect(header.querySelector('[data-profile-username]')!.textContent).toBe('@karim');
     expect(header.querySelector('[data-profile-settings]')).toBeNull();
-    expect(header.querySelector('[data-follows-you]')!.textContent).toContain('بيتابعك');
+    expect(header.querySelector('[data-follows-you]')!.textContent).toContain('يتابعك');
     expect(header.querySelector('[data-profile-follow] [data-follow]')).not.toBeNull();
     expect(header.querySelector('[data-edit-profile]')).toBeNull();
     expect(header.querySelector('[data-profile-bio]')!.getAttribute('dir')).toBe('ltr');
@@ -82,7 +82,7 @@ describe('ProfilePage (F14)', () => {
     expect(links.map((a) => a.getAttribute('aria-label'))).toEqual(['GitHub', 'الموقع']);
     expect(links.every((a) => a.target === '_blank' && a.rel.split(' ').includes('noopener') && a.rel.split(' ').includes('me'))).toBe(true);
     expect(links[0].querySelector('rd-link-icon svg')!.getAttribute('aria-hidden')).toBe('true');
-    expect(header.querySelector('#' + links[0].getAttribute('aria-describedby'))!.textContent).toContain('بيفتح في تاب جديدة');
+    expect(header.querySelector('#' + links[0].getAttribute('aria-describedby'))!.textContent).toContain('يُفتح في علامة تبويب جديدة');
     expect(header.querySelector('[data-stat="followers"]')!.getAttribute('href')).toBe('/@karim/followers');
     expect(header.querySelector('[data-stat="following"]')!.getAttribute('href')).toBe('/@karim/following');
     expect(header.querySelector('[data-stat="reads"]')!.textContent).toContain('5.1');
@@ -110,26 +110,26 @@ describe('ProfilePage (F14)', () => {
     articles.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })); // RTL: the next tab
     await stable();
     expect(root.querySelector('[data-profile-tab="categories"]')!.getAttribute('aria-selected')).toBe('true');
-    // Categories (F31, its own deferred chunk): their public list, with "مقالات تانية" last.
+    // Categories (F31, its own deferred chunk): their public list, with "مقالات أخرى" last.
     await stable();
     http.expectOne(`${TEST_API}/users/karim/categories`).flush({ items: [{ id: 'c1', slug: 'angular', name: 'Angular', articleCount: 3, sortOrder: 1 }], uncategorizedCount: 2 });
     await stable();
     const cards = [...root.querySelectorAll('[data-profile-categories] [data-category-card]')];
     expect(cards.map((c) => c.getAttribute('data-category-card'))).toEqual(['angular', '_other']);
-    expect(cards[1].textContent).toContain('مقالات تانية');
+    expect(cards[1].textContent).toContain('مقالات أخرى');
 
     root.querySelector<HTMLElement>('[data-profile-tab="categories"]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     await settle();
     expect(root.querySelector('[data-profile-tab="reposts"]')!.getAttribute('aria-selected')).toBe('true');
     http.expectOne(isReposts('karim')).flush({ items: [], nextCursor: null });
     await stable();
-    expect(root.querySelector('[data-profile-reposts] [data-reposts-empty]')!.textContent).toContain('مفيش إعادة نشر لسه');
+    expect(root.querySelector('[data-profile-reposts] [data-reposts-empty]')!.textContent).toContain('لا توجد إعادات نشر بعد');
 
     root.querySelector<HTMLElement>('[data-profile-tab="reposts"]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     await stable();
     expect(root.querySelector('[data-profile-tab="paths"]')!.getAttribute('aria-selected')).toBe('true');
     // Private reading stats: their paths are private too (no request).
-    expect(root.querySelector('[data-profile-paths] [data-paths-private]')!.textContent).toContain('المسارات دي خاصة');
+    expect(root.querySelector('[data-profile-paths] [data-paths-private]')!.textContent).toContain('هذه المسارات خاصة');
     http.expectNone((r) => r.url.endsWith('/paths'));
 
     (root.querySelector('[data-profile-tab="about"]') as HTMLElement).click();
@@ -148,7 +148,7 @@ describe('ProfilePage (F14)', () => {
     expect(root.querySelector('[data-follows-you]')).toBeNull();
     expect(tabs()).toEqual(['articles', 'categories', 'reposts', 'saved', 'paths', 'about']);
     expect(root.querySelector('[data-profile-reading] [data-public-stats] [role="switch"]')).not.toBeNull();
-    expect(root.querySelector('[data-articles-empty]')!.textContent).toContain('لسه منشرتش مقالات');
+    expect(root.querySelector('[data-articles-empty]')!.textContent).toContain('لم تنشر أي مقالات بعد');
 
     (root.querySelector('[data-profile-tab="saved"]') as HTMLElement).click();
     await stable();
@@ -179,7 +179,7 @@ describe('ProfilePage (F14)', () => {
     await own.settle();
     http.expectOne(isReposts('mona')).flush({ items: [], nextCursor: null });
     await own.stable();
-    expect(own.root.querySelector('[data-reposts-empty]')!.textContent).toContain('لما تعيد نشر مقال عجبك، هيظهر هنا وعند متابعينك.');
+    expect(own.root.querySelector('[data-reposts-empty]')!.textContent).toContain('عندما تعيد نشر مقال أعجبك، سيظهر هنا ولدى متابعيك.');
   });
 
   it('a failed Reposts tab offers a retry', async () => {
@@ -217,7 +217,7 @@ describe('ProfilePage (F14)', () => {
 
   it('an unknown user is a not-found state', async () => {
     const { root } = await render({ status: 404, code: 'user.not_found' });
-    expect(root.querySelector('[data-profile-not-found]')!.textContent).toContain('المستخدم ده مش موجود');
+    expect(root.querySelector('[data-profile-not-found]')!.textContent).toContain('هذا المستخدم غير موجود');
   });
 
   it('Paths tab with public stats: their enrolled paths with progress and completion badges (F09)', async () => {
@@ -245,7 +245,7 @@ describe('ProfilePage (F14)', () => {
     await own.stable();
     http.expectOne(`${TEST_API}/users/mona/paths`).flush([]);
     await own.stable();
-    expect(own.root.querySelector('[data-paths-empty]')!.textContent).toContain('المسارات اللي هتبدأها هتظهر هنا.');
+    expect(own.root.querySelector('[data-paths-empty]')!.textContent).toContain('ستظهر هنا المسارات التي تبدؤها.');
     expect(own.root.querySelector('[data-browse-paths]')!.getAttribute('href')).toBe('/paths');
 
     const other = await render(testProfile({ readingStatsVisible: true }));

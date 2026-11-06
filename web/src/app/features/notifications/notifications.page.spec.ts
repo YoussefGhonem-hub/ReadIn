@@ -89,12 +89,12 @@ describe('NotificationsPage (F17)', () => {
     const earlier = root.querySelector('[data-section="earlier"]')!;
     expect([...today.querySelectorAll('[data-notification]')].map((e) => e.getAttribute('data-notification'))).toEqual(['n-comments', 'n-reply']);
     expect([...earlier.querySelectorAll('[data-notification]')].map((e) => e.getAttribute('data-notification'))).toEqual(['n-warning']);
-    expect(root.querySelector('#notifications-today')!.textContent!.trim()).toBe('النهارده');
-    expect(root.querySelector('#notifications-earlier')!.textContent!.trim()).toBe('قبل كده');
+    expect(root.querySelector('#notifications-today')!.textContent!.trim()).toBe('اليوم');
+    expect(root.querySelector('#notifications-earlier')!.textContent!.trim()).toBe('سابقًا');
 
     // "X and N others", the actor in bold; the article in its own direction; the comment excerpt.
     const comments = row('n-comments');
-    expect(comments.querySelector('[data-notification-text]')!.textContent).toBe('Ahmed Samir و9 غيره علّقوا على مقالك');
+    expect(comments.querySelector('[data-notification-text]')!.textContent).toBe('علّق Ahmed Samir و9 آخرون على مقالك');
     expect(comments.querySelector('[data-notification-text] strong bdi')!.textContent).toBe('Ahmed Samir');
     expect(comments.querySelector('[data-notification-article]')!.getAttribute('lang')).toBe('en');
     expect(comments.querySelector('[data-notification-article] rd-bdi-text')!.getAttribute('dir')).toBe('ltr');
@@ -105,7 +105,7 @@ describe('NotificationsPage (F17)', () => {
     expect(comments.className).toContain('bg-primary-container');
 
     const reply = row('n-reply');
-    expect(reply.querySelector('[data-notification-text]')!.textContent).toBe('مستخدم محذوف ردّ على تعليقك');
+    expect(reply.querySelector('[data-notification-text]')!.textContent).toBe('ردّ مستخدم محذوف على تعليقك');
     expect(reply.querySelector('[data-generic-avatar]')).not.toBeNull();
     expect(reply.querySelector('[data-notification-article]')!.getAttribute('dir')).toBe('rtl');
     expect(reply.querySelector('[data-notification-comment]')!.getAttribute('dir')).toBe('rtl');
@@ -178,7 +178,7 @@ describe('NotificationsPage (F17)', () => {
     more.flush(page([FIXTURES[2], testNotification({ id: 'n-old', updatedAt: '2026-10-20T09:00:00Z' })]));
     await stable();
     expect(root.querySelectorAll('[data-notification]')).toHaveLength(4);
-    expect(root.querySelector('[data-notifications-end]')!.textContent).toContain('دي كل الإشعارات');
+    expect(root.querySelector('[data-notifications-end]')!.textContent).toContain('هذه كل الإشعارات');
   });
 
   it('a failed next page offers a retry', async () => {
@@ -194,7 +194,7 @@ describe('NotificationsPage (F17)', () => {
 
   it('shows the empty state, and an error state with a retry', async () => {
     const empty = await render(page([]));
-    expect(empty.root.querySelector('[data-notifications-empty]')!.textContent).toContain('لسه مفيش إشعارات');
+    expect(empty.root.querySelector('[data-notifications-empty]')!.textContent).toContain('لا توجد إشعارات بعد');
     expect(empty.root.querySelector('[data-mark-all-read]')).toBeNull();
 
     TestBed.resetTestingModule();
@@ -205,7 +205,7 @@ describe('NotificationsPage (F17)', () => {
     await flushMicrotasks();
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
-    expect(root.querySelector('rd-error-state')!.textContent).toContain('معرفناش نحمّل الإشعارات');
+    expect(root.querySelector('rd-error-state')!.textContent).toContain('تعذّر تحميل الإشعارات');
     root.querySelector<HTMLButtonElement>('rd-error-state button')!.click();
     http.expectOne((r) => r.url === LIST).flush(page(FIXTURES));
     await flushMicrotasks();

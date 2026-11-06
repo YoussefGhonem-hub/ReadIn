@@ -50,8 +50,8 @@ describe('Writer categories on the profile (F31)', () => {
       expect(cards.map((c) => c.getAttribute('href'))).toEqual(['/@mona/c/asp-net-core', '/@mona/c/ideas', '/@mona/c/_other']);
       expect(cards[0].querySelector('[data-category-card-name]')!.getAttribute('dir')).toBe('auto');
       expect(cards[0].querySelector('[data-category-card-count]')!.textContent!.trim()).toBe('3 مقالات');
-      expect(cards[2].querySelector('[data-category-card-name]')!.textContent!.trim()).toBe('مقالات تانية');
-      expect(cards[2].querySelector('[data-category-card-count]')!.textContent!.trim()).toBe('مقالين');
+      expect(cards[2].querySelector('[data-category-card-name]')!.textContent!.trim()).toBe('مقالات أخرى');
+      expect(cards[2].querySelector('[data-category-card-count]')!.textContent!.trim()).toBe('مقالان');
     });
 
     it('nothing to show is an empty state; a failure offers Retry', async () => {
@@ -61,7 +61,7 @@ describe('Writer categories on the profile (F31)', () => {
       t.$<HTMLButtonElement>('rd-error-state button')!.click();
       http.expectOne(`${TEST_API}/users/mona/categories`).flush({ items: [], uncategorizedCount: 0 });
       await t.stable();
-      expect(t.$('[data-categories-empty]')!.textContent).toContain('لسه مفيش أقسام');
+      expect(t.$('[data-categories-empty]')!.textContent).toContain('لا توجد فئات بعد');
     });
 
     it('no category but articles: the empty state, without "مقالات تانية" alone (as on mobile)', async () => {
@@ -69,7 +69,7 @@ describe('Writer categories on the profile (F31)', () => {
       http.expectOne(`${TEST_API}/users/mona/categories`).flush({ items: [], uncategorizedCount: 4 });
       await t.stable();
       expect(t.$$('[data-category-card]')).toHaveLength(0);
-      expect(t.$('[data-categories-empty]')!.textContent).toContain('لما الكاتب ده يرتّب مقالاته في أقسام، هتلاقيها هنا.');
+      expect(t.$('[data-categories-empty]')!.textContent).toContain('عندما ينظّم هذا الكاتب مقالاته في فئات، ستجدها هنا.');
     });
   });
 
@@ -86,23 +86,23 @@ describe('Writer categories on the profile (F31)', () => {
       const t = await manage();
       expect(t.names()).toEqual(['ASP.NET Core', 'Clean Code بالعربي', 'أفكار جاية']);
       // An empty one says visitors don't see it, instead of "0 articles".
-      expect(t.$$('[data-category-row] [data-category-count]').map((n) => n.textContent!.trim())).toEqual(['3 مقالات', 'فاضي، والزوار مش شايفينه', 'مقال واحد']);
+      expect(t.$$('[data-category-row] [data-category-count]').map((n) => n.textContent!.trim())).toEqual(['3 مقالات', 'فارغة، ولا تظهر للزوار', 'مقال واحد']);
       expect(t.$$('[data-category-row] [data-category-empty]')).toHaveLength(1);
       expect(t.$('[data-category-row="c2"] [data-category-empty]')).not.toBeNull();
-      expect(t.$('[data-categories-hint]')!.textContent!.trim()).toBe('رتّب مقالاتك في أقسام. بروفايلك هيعرضها بالترتيب ده.');
+      expect(t.$('[data-categories-hint]')!.textContent!.trim()).toBe('نظّم مقالاتك في فئات. سيعرضها ملفك الشخصي بهذا الترتيب.');
       expect(t.$('[data-category-card="_other"]')).not.toBeNull();
       // The first can't move up, the last can't move down.
       const rows = t.$$('[data-category-row]');
       expect(rows[0].querySelector<HTMLButtonElement>('[data-move="up"]')!.disabled).toBe(true);
       expect(rows[2].querySelector<HTMLButtonElement>('[data-move="down"]')!.disabled).toBe(true);
-      expect(rows[0].querySelector('[data-move="down"]')!.getAttribute('aria-label')).toBe('نزّل «⁨ASP.NET Core⁩» لتحت');
+      expect(rows[0].querySelector('[data-move="down"]')!.getAttribute('aria-label')).toBe('نقل «⁨ASP.NET Core⁩» إلى أسفل');
     });
 
     it('no category yet: the "رتّب مقالاتك" empty view holds the create field; "مقالات تانية" waits for a category', async () => {
       const t = await manage({ items: [], uncategorizedCount: 3 });
       const empty = t.$('[data-categories-empty]')!;
-      expect(empty.textContent).toContain('رتّب مقالاتك');
-      expect(empty.textContent).toContain('اعمل أقسام زي «نصايح Backend»، وبعدين حط مقالاتك فيها من المحرر. القرّاء هيشوفوها في بروفايلك.');
+      expect(empty.textContent).toContain('نظّم مقالاتك');
+      expect(empty.textContent).toContain('أنشئ فئات مثل «نصائح Backend»، ثم أضف مقالاتك إليها من المحرر. سيراها القرّاء في ملفك الشخصي.');
       expect(t.$('[data-category-card="_other"]')).toBeNull();
       expect(t.$('[data-categories-hint]')).toBeNull();
 
@@ -128,12 +128,12 @@ describe('Writer categories on the profile (F31)', () => {
 
       type(input, '  asp.net CORE ');
       await t.stable();
-      expect(t.$('[data-category-create] [data-category-name-error]')!.textContent!.trim()).toBe('عندك قسم بنفس الاسم بالفعل.');
+      expect(t.$('[data-category-create] [data-category-name-error]')!.textContent!.trim()).toBe('لديك فئة بالاسم نفسه بالفعل.');
       expect(submit.disabled).toBe(true);
 
       type(input, 'x'.repeat(41));
       await t.stable();
-      expect(t.$('[data-category-create] [data-category-name-error]')!.textContent!.trim()).toBe('اسم القسم أقصاه 40 حرف.');
+      expect(t.$('[data-category-create] [data-category-name-error]')!.textContent!.trim()).toBe('يجب ألا يزيد عدد أحرف اسم الفئة على 40.');
 
       type(input, '  Docker   🐳 ');
       await t.stable();
@@ -155,7 +155,7 @@ describe('Writer categories on the profile (F31)', () => {
       t.$<HTMLButtonElement>('[data-category-create] [data-category-name-submit]')!.click();
       http.expectOne(MINE).flush(problem(400, 'category.limit'), { status: 400, statusText: 'Bad Request' });
       await t.stable();
-      expect(t.$('[data-category-create] [data-category-name-error]')!.textContent!.trim()).toBe('وصلت لأقصى عدد أقسام (50).');
+      expect(t.$('[data-category-create] [data-category-name-error]')!.textContent!.trim()).toBe('وصلت إلى الحد الأقصى لعدد الفئات (50).');
       type(input, 'Testing 2');
       await t.stable();
       expect(t.$('[data-category-create] [data-category-name-error]')!.textContent!.trim()).toBe('');
@@ -181,7 +181,7 @@ describe('Writer categories on the profile (F31)', () => {
       expect(save.disabled).toBe(false);
       type(input, 'أفكار جايه');
       await t.stable();
-      expect(t.$('[data-category-row="c1"] [data-category-name-error]')!.textContent!.trim()).toBe('عندك قسم بنفس الاسم بالفعل.');
+      expect(t.$('[data-category-row="c1"] [data-category-name-error]')!.textContent!.trim()).toBe('لديك فئة بالاسم نفسه بالفعل.');
       type(input, 'ASP.NET Core 10');
       await t.stable();
       save.click();
@@ -218,15 +218,15 @@ describe('Writer categories on the profile (F31)', () => {
       http.expectOne(`${MINE}/order`).flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
       await t.stable();
       expect(t.names()).toEqual(['Clean Code بالعربي', 'ASP.NET Core', 'أفكار جاية']);
-      expect(error).toHaveBeenCalledWith('معرفناش نحفظ الترتيب الجديد. جرّب تاني.');
+      expect(error).toHaveBeenCalledWith('تعذّر حفظ الترتيب الجديد. حاول مرة أخرى.');
     });
 
     it('delete asks first with the article count; its articles join "مقالات تانية"', async () => {
       const t = await manage();
       t.$('[data-category-row="c1"] [data-category-delete]')!.click();
       await t.stable();
-      expect(document.querySelector('#category-delete-title')!.textContent!.trim()).toBe('تمسح «⁨ASP.NET Core⁩»؟');
-      expect(document.querySelector('[data-category-delete-body]')!.textContent!.trim()).toBe('القسم ده فيه 3 مقالات، وهيفضلوا منشورين من غير قسم.');
+      expect(document.querySelector('#category-delete-title')!.textContent!.trim()).toBe('هل تريد حذف «⁨ASP.NET Core⁩»؟');
+      expect(document.querySelector('[data-category-delete-body]')!.textContent!.trim()).toBe('تحتوي هذه الفئة على 3 مقالات، وستظل منشورة دون فئة.');
       document.querySelector<HTMLButtonElement>('[data-category-delete-confirm]')!.click();
       const req = http.expectOne((r) => r.method === 'DELETE' && r.url === `${MINE}/c1`);
       req.flush(null, { status: 204, statusText: 'No Content' });
@@ -236,7 +236,7 @@ describe('Writer categories on the profile (F31)', () => {
 
       t.$('[data-category-row="c2"] [data-category-delete]')!.click();
       await t.stable();
-      expect(document.querySelector('[data-category-delete-body]')!.textContent!.trim()).toBe('القسم ده فاضي.');
+      expect(document.querySelector('[data-category-delete-body]')!.textContent!.trim()).toBe('هذه الفئة فارغة.');
     });
   });
 });

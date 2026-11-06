@@ -25,18 +25,18 @@ describe('notification view (F17)', () => {
     it('"X and N others" with the actor apart, so it can be bold and isolated', () => {
       const n = testNotification({ actorCount: 10 });
       expect(notificationText(n, transloco, 'en')).toEqual({ before: '', actor: 'Ahmed Samir', after: ' and 9 others commented on your article' });
-      expect(sentence(n, 'ar')).toBe('Ahmed Samir و9 غيره علّقوا على مقالك');
+      expect(sentence(n, 'ar')).toBe('علّق Ahmed Samir و9 آخرون على مقالك');
       expect(sentence(testNotification({ actorCount: 1 }), 'en')).toBe('Ahmed Samir commented on your article');
     });
 
     it('uses every Arabic plural form for the others', () => {
       const text = (actorCount: number) => sentence(testNotification({ type: 'new_follower', actorCount }), 'ar');
-      expect(text(1)).toBe('Ahmed Samir بدأ يتابعك');
-      expect(text(2)).toBe('Ahmed Samir وواحد غيره بدأوا يتابعوك');
-      expect(text(3)).toBe('Ahmed Samir واتنين غيره بدأوا يتابعوك');
-      expect(text(4)).toBe('Ahmed Samir و3 غيره بدأوا يتابعوك');
-      expect(text(12)).toBe('Ahmed Samir و11 غيره بدأوا يتابعوك');
-      expect(text(101)).toBe('Ahmed Samir و100 غيره بدأوا يتابعوك');
+      expect(text(1)).toBe('بدأ Ahmed Samir متابعتك');
+      expect(text(2)).toBe('بدأ Ahmed Samir وشخص آخر متابعتك');
+      expect(text(3)).toBe('بدأ Ahmed Samir وشخصان آخران متابعتك');
+      expect(text(4)).toBe('بدأ Ahmed Samir و3 آخرون متابعتك');
+      expect(text(12)).toBe('بدأ Ahmed Samir و11 آخرون متابعتك');
+      expect(text(101)).toBe('بدأ Ahmed Samir و100 آخرون متابعتك');
       expect(sentence(testNotification({ type: 'new_follower', actorCount: 2 }), 'en')).toBe('Ahmed Samir and 1 other started following you');
     });
 
@@ -47,9 +47,9 @@ describe('notification view (F17)', () => {
     });
 
     it.each([
-      ['mention', 'Ahmed Samir mentioned you in a comment', 'Ahmed Samir عمل لك منشن في تعليق'],
-      ['followed_writer_article', 'Ahmed Samir published a new article', 'Ahmed Samir نشر مقال جديد'],
-      ['daily_article', "Today's article is ready ☕", 'مقال النهارده جاهز ☕'],
+      ['mention', 'Ahmed Samir mentioned you in a comment', 'أشار إليك Ahmed Samir في تعليق'],
+      ['followed_writer_article', 'Ahmed Samir published a new article', 'نشر Ahmed Samir مقالًا جديدًا'],
+      ['daily_article', "Today's article is ready ☕", 'مقال اليوم جاهز ☕'],
     ] as const)('%s', (type, en, ar) => {
       const n = testNotification({ type });
       expect(sentence(n, 'en')).toBe(en);
@@ -67,10 +67,10 @@ describe('notification view (F17)', () => {
           link: 'readin://a/clean-code',
         });
       expect(notificationText(repost(1), transloco, 'en')).toEqual({ before: '', actor: 'Ahmed Samir', after: ' reposted your article' });
-      expect(sentence(repost(1), 'ar')).toBe('Ahmed Samir أعاد نشر مقالك');
-      expect(sentence(repost(2), 'ar')).toBe('Ahmed Samir وشخص تاني أعادوا نشر مقالك');
-      expect(sentence(repost(3), 'ar')).toBe('Ahmed Samir واتنين غيره أعادوا نشر مقالك');
-      expect(sentence(repost(5), 'ar')).toBe('Ahmed Samir و4 غيره أعادوا نشر مقالك');
+      expect(sentence(repost(1), 'ar')).toBe('أعاد Ahmed Samir نشر مقالك');
+      expect(sentence(repost(2), 'ar')).toBe('أعاد Ahmed Samir وشخص آخر نشر مقالك');
+      expect(sentence(repost(3), 'ar')).toBe('أعاد Ahmed Samir وشخصان آخران نشر مقالك');
+      expect(sentence(repost(5), 'ar')).toBe('أعاد Ahmed Samir و4 آخرون نشر مقالك');
       expect(sentence(repost(2), 'en')).toBe('Ahmed Samir and 1 other reposted your article');
       expect(sentence(repost(12), 'en')).toBe('Ahmed Samir and 11 others reposted your article');
       expect(notificationIcon(repost(1))).toBe('Repeat2');
@@ -83,11 +83,11 @@ describe('notification view (F17)', () => {
       const result = (approved?: boolean) =>
         testNotification({ type: 'verification_result', actor: null, actorCount: 0, article: null, comment: null, data: approved === undefined ? {} : { approved }, link: 'readin://verification' });
       expect(sentence(result(true), 'en')).toBe("You're now a verified writer ✓");
-      expect(sentence(result(true), 'ar')).toBe('بقيت كاتب موثّق ✓');
+      expect(sentence(result(true), 'ar')).toBe('أصبحت الآن كاتبًا موثّقًا ✓');
       expect(sentence(result(false), 'en')).toBe("Your verification request wasn't approved");
-      expect(sentence(result(false), 'ar')).toBe('طلب التوثيق بتاعك ماتقبلش');
+      expect(sentence(result(false), 'ar')).toBe('لم تتم الموافقة على طلب توثيقك');
       expect(sentence(result(), 'en')).toBe("There's an update on your writer verification request");
-      expect(sentence(result(), 'ar')).toBe('فيه جديد في طلب توثيقك ككاتب');
+      expect(sentence(result(), 'ar')).toBe('هناك تحديث بشأن طلب توثيقك ككاتب');
       expect(notificationIcon(result(true))).toBe('BadgeCheck');
       expect(notificationIcon(result(false))).toBe('BadgeX');
       expect(notificationIcon(result())).toBe('BadgeCheck');
@@ -106,7 +106,7 @@ describe('notification view (F17)', () => {
         link: 'readin://a/di',
       });
       expect(notificationText(n, transloco, 'en')).toEqual({ before: '', actor: 'Ahmed Samir', after: ' mentioned you in an article' });
-      expect(sentence(n, 'ar')).toBe('Ahmed Samir عمل لك منشن في مقال');
+      expect(sentence(n, 'ar')).toBe('أشار إليك Ahmed Samir في مقال');
       expect(notificationIcon(n)).toBe('AtSign');
       // No #comment: the article itself, in its own language.
       expect(notificationPath(n, 'en', ORIGIN)).toBe('/ar/a/di');
@@ -116,10 +116,10 @@ describe('notification view (F17)', () => {
 
     it('milestones and streaks count with plurals', () => {
       expect(sentence(testNotification({ type: 'reactions_milestone', actor: null, data: { threshold: 50 } }), 'en')).toBe('Your article reached 50 reactions 🎉');
-      expect(sentence(testNotification({ type: 'reactions_milestone', actor: null, data: { threshold: 10 } }), 'ar')).toBe('مقالك وصل لـ 10 تفاعلات 🎉');
-      expect(sentence(testNotification({ type: 'reactions_milestone', actor: null, data: { threshold: 100 } }), 'ar')).toBe('مقالك وصل لـ 100 تفاعل 🎉');
+      expect(sentence(testNotification({ type: 'reactions_milestone', actor: null, data: { threshold: 10 } }), 'ar')).toBe('بلغ مقالك 10 تفاعلات 🎉');
+      expect(sentence(testNotification({ type: 'reactions_milestone', actor: null, data: { threshold: 100 } }), 'ar')).toBe('بلغ مقالك 100 تفاعل 🎉');
       expect(sentence(testNotification({ type: 'streak_reminder', actor: null, data: { streakDays: 6 } }), 'ar')).toBe(
-        'سلسلتك 6 أيام. اقرا حاجة النهارده عشان متضيعش 🔥',
+        'سلسلة قراءتك: 6 أيام. اقرأ شيئًا اليوم للحفاظ عليها 🔥',
       );
       expect(sentence(testNotification({ type: 'streak_reminder', actor: null, data: { streakDays: 1 } }), 'en')).toBe(
         'Your streak is 1 day. Read something today to keep it 🔥',
@@ -136,7 +136,7 @@ describe('notification view (F17)', () => {
     });
 
     it('a moderation notice is a warning, or "your article was hidden" when it names one', () => {
-      expect(sentence(testNotification({ type: 'moderation_notice', actor: null, article: null }), 'ar')).toBe('وصلك تحذير من فريق الإشراف');
+      expect(sentence(testNotification({ type: 'moderation_notice', actor: null, article: null }), 'ar')).toBe('تلقّيت تحذيرًا من فريق الإشراف');
       expect(sentence(testNotification({ type: 'moderation_notice', actor: null }), 'en')).toBe('The moderators hid your article');
       expect(notificationIcon(testNotification({ type: 'moderation_notice', article: null }))).toBe('TriangleAlert');
     });

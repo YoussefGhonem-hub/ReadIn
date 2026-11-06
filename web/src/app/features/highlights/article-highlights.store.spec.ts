@@ -94,12 +94,12 @@ describe('ArticleHighlightsStore (F30)', () => {
     t.http.expectOne(URL).flush(problem(400, 'highlight.limit'), { status: 400, statusText: 'Bad Request' });
     expect(await limited).toBe(false);
     expect(t.store.mine().map((h) => h.id)).toEqual(['h-p1', 'h-p3']);
-    expect(toasts.toasts().at(-1)?.message).toBe('وصلت لأقصى عدد Highlights في المقال ده (100).');
+    expect(toasts.toasts().at(-1)?.message).toBe('وصلت إلى الحد الأقصى للتمييزات في هذا المقال (100).');
 
     const changed = t.store.create({ blockId: 'p2', startOffset: 0, endOffset: 5, text: 'شكراً' });
     t.http.expectOne(URL).flush(problem(400, 'highlight.text_mismatch'), { status: 400, statusText: 'Bad Request' });
     expect(await changed).toBe(false);
-    expect(toasts.toasts().at(-1)?.message).toBe('النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.');
+    expect(toasts.toasts().at(-1)?.message).toBe('تغيّر هذا النص في المقال. حدّث الصفحة وحاول مرة أخرى.');
     expect(t.reloads).toHaveLength(1);
     t.http.expectOne((r) => r.url === URL && r.method === 'GET').flush(answer({ mine: [] }));
     await t.stable();

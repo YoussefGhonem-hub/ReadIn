@@ -161,7 +161,7 @@ describe('NotificationBadge (F17)', () => {
     session.setGuest();
     const transloco = TestBed.inject(TranslocoService);
     expect(notificationsLabel(transloco, 'ar', 0)).toBe('الإشعارات');
-    expect(notificationsLabel(transloco, 'ar', 2)).toBe('الإشعارات، إشعارين جداد');
+    expect(notificationsLabel(transloco, 'ar', 2)).toBe('الإشعارات، إشعاران جديدان');
     expect(notificationsLabel(transloco, 'ar', 5)).toBe('الإشعارات، 5 إشعارات جديدة');
     expect(notificationsLabel(transloco, 'en', 1)).toBe('Notifications, 1 new');
     expect(notificationsLabel(transloco, 'en', 12)).toBe('Notifications, 12 new');

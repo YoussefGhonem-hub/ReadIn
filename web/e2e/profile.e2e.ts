@@ -74,7 +74,7 @@ for (const variant of VARIANTS) {
     const reading = page.locator('[data-profile-reading]');
     await readingStatsLoaded(page);
     await expect(reading.locator('[data-public-stats]')).toHaveCount(0);
-    await expect(reading.locator('rd-reading-stats-card')).toContainText(ar ? '12 يوم' : '12 days');
+    await expect(reading.locator('rd-reading-stats-card')).toContainText(ar ? '12 يومًا' : '12 days');
 
     // Articles / Categories / Reposts / Paths / About (Saved is only on your own profile).
     const tabs = page.locator('[data-profile-tab]');
@@ -105,7 +105,7 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-profile-categories] [data-category-card]')).toHaveCount(3, { timeout: FIRST_RENDER_MS });
     await page.keyboard.press(dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight');
     await expect(page.locator('[data-profile-tab="reposts"]')).toBeFocused();
-    await expect(page.locator('[data-profile-reposts] [data-reposts-empty]')).toContainText(ar ? 'مفيش إعادة نشر لسه' : 'No reposts yet');
+    await expect(page.locator('[data-profile-reposts] [data-reposts-empty]')).toContainText(ar ? 'لا توجد إعادات نشر بعد' : 'No reposts yet');
     await page.keyboard.press(dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight');
     await expect(page.locator('[data-profile-tab="paths"]')).toBeFocused();
     await expect(page.locator('[data-profile-tab="paths"]')).toHaveAttribute('aria-selected', 'true');
@@ -146,7 +146,7 @@ for (const variant of VARIANTS) {
     await readingStatsLoaded(page);
     const toggle = page.locator('[data-profile-reading] [data-public-stats] [role="switch"]');
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
-    await expect(page.locator('[data-profile-reading] rd-reading-stats-card')).toContainText(ar ? 'قريت النهارده' : 'You read today');
+    await expect(page.locator('[data-profile-reading] rd-reading-stats-card')).toContainText(ar ? 'قرأت اليوم' : 'You read today');
     await parkMouse(page);
     await page.evaluate(() => window.scrollTo(0, 0));
     if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`profile-own-${suffix}.png`, { fullPage: true, stylePath: HIDE_APP_CHROME });
@@ -178,12 +178,12 @@ for (const variant of VARIANTS) {
     await useVariant(context, baseURL!, variant);
     await signInWithLiveProfile(page, request, variant);
     const privacySaved = () => page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().endsWith('/me/privacy'));
-    const label = ar ? { everyone: 'أي حد', following: 'الناس اللي بتابعهم', nobody: 'محدش' } : { everyone: 'Everyone', following: 'People I follow', nobody: 'Nobody' };
+    const label = ar ? { everyone: 'الجميع', following: 'الأشخاص الذين أتابعهم', nobody: 'لا أحد' } : { everyone: 'Everyone', following: 'People I follow', nobody: 'Nobody' };
 
     await page.goto('/settings');
     const card = page.locator('[data-settings-privacy]');
     const mention = card.locator('[data-who-can-mention]');
-    const group = mention.getByRole('radiogroup', { name: ar ? 'مين يقدر يعمل لك منشن' : 'Who can mention me' });
+    const group = mention.getByRole('radiogroup', { name: ar ? 'من يمكنه الإشارة إليّ' : 'Who can mention me' });
     const choice = (policy: keyof typeof label) => group.getByRole('radio', { name: label[policy], exact: true });
     // Everyone by default, next to the public-stats switch.
     await expect(mention).toHaveAttribute('data-value', 'everyone', { timeout: FIRST_RENDER_MS });
@@ -218,7 +218,7 @@ for (const variant of VARIANTS) {
       return reply(route, 500, problem(500, 'server.error'));
     });
     await choice('nobody').click();
-    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'السيرفر واجه مشكلة. حاول كمان شوية.' : 'The server ran into a problem. Please try again shortly.');
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'واجه الخادم مشكلة. حاول مرة أخرى بعد قليل.' : 'The server ran into a problem. Please try again shortly.');
     await expect(choice('following')).toHaveAttribute('aria-checked', 'true');
     await expect(choice('nobody')).toHaveAttribute('aria-checked', 'false');
     await expect(mention).toHaveAttribute('data-value', 'following');
@@ -269,7 +269,7 @@ for (const variant of VARIANTS) {
     // The live username check, and a bio over 300 characters can't be saved.
     const username = form.locator('#edit-username');
     await username.fill('taken');
-    await expect(form.locator('[data-username-status]')).toHaveText(ar ? 'اسم المستخدم ده محجوز.' : 'That username is taken.');
+    await expect(form.locator('[data-username-status]')).toHaveText(ar ? 'اسم المستخدم هذا محجوز.' : 'That username is taken.');
     await username.fill('Sara Hassan!');
     await expect(username).toHaveValue('sarahassan');
     await expect(form.locator('[data-username-status]')).toHaveText(ar ? 'متاح ✓' : 'Available ✓');
@@ -301,7 +301,7 @@ for (const variant of VARIANTS) {
     await website.blur();
     await expect(linkedin).toHaveValue('https://linkedin.com/in/sara');
     await form.locator('[data-submit]').click();
-    await expect(form.locator('[data-link-row="2"] [data-link-error="url"]')).toHaveText(ar ? 'الرابط لازم يبدأ بـ https.' : 'The link must start with https.');
+    await expect(form.locator('[data-link-row="2"] [data-link-error="url"]')).toHaveText(ar ? 'يجب أن يبدأ الرابط بـ https.' : 'The link must start with https.');
     await expect(website).toBeFocused();
     await form.locator('[data-link-row="2"] [data-link-remove]').click();
     await expect(form.locator('[data-link-row]')).toHaveCount(2);
@@ -315,7 +315,7 @@ for (const variant of VARIANTS) {
     await username.fill('karim');
     await expect(form.locator('[data-username-status]')).toHaveText(ar ? 'متاح ✓' : 'Available ✓');
     await form.locator('[data-submit]').click();
-    await expect(form.locator('[data-username-status]')).toHaveText(ar ? 'اسم المستخدم ده محجوز.' : 'That username is taken.');
+    await expect(form.locator('[data-username-status]')).toHaveText(ar ? 'اسم المستخدم هذا محجوز.' : 'That username is taken.');
     expect(patches).toHaveLength(1);
 
     // Save: one PATCH with the new photo's asset id, then your new profile.
@@ -388,7 +388,7 @@ for (const variant of VARIANTS) {
     await page.locator('[data-people]').evaluate((el) => el.lastElementChild?.scrollIntoView());
     await secondPage;
     await expect(people).toHaveCount(30);
-    await expect(page.locator('[data-people]')).toContainText(ar ? 'دول كل الناس.' : 'That’s everyone.');
+    await expect(page.locator('[data-people]')).toContainText(ar ? 'هذا كل من في القائمة.' : 'That’s everyone.');
 
     // Search by @username (debounced), then something nobody matches.
     const handle = (await people.nth(4).locator('bdi[dir="ltr"]').textContent())!.trim().replace(/^@/, '');

@@ -54,18 +54,18 @@ describe('NotificationSettingsPage (F17)', () => {
     expect(typeRow('mention').getAttribute('data-mode')).toBe('off');
     expect(typeRow('daily_article').getAttribute('data-mode')).toBe('inApp');
     expect(typeRow('new_follower').getAttribute('data-mode')).toBe('all');
-    expect(typeRow('mention').textContent).toContain('المنشن');
+    expect(typeRow('mention').textContent).toContain('الإشارات');
     // Mentions cover comments and articles.
-    expect(typeRow('mention').textContent).toContain('لما حد يعمل لك منشن في تعليق أو مقال');
+    expect(typeRow('mention').textContent).toContain('عندما يشير إليك أحد في تعليق أو مقال');
     expect(TestBed.inject(TranslocoService).translate('settings.notifications.types.mention.hint', {}, 'en')).toBe('When someone mentions you in a comment or an article');
     // F29: reposts are the 9th configurable type, listed last.
     expect(CONFIGURABLE_TYPES).toHaveLength(9);
     expect(CONFIGURABLE_TYPES.at(-1)).toBe('article_reposted');
     expect(typeRow('article_reposted').getAttribute('data-mode')).toBe('all');
     expect(typeRow('article_reposted').textContent).toContain('إعادة النشر');
-    expect(typeRow('article_reposted').textContent).toContain('لما حد يعيد نشر مقالك');
+    expect(typeRow('article_reposted').textContent).toContain('عندما يعيد أحد نشر مقالك');
     expect(TestBed.inject(TranslocoService).translate('settings.notifications.types.article_reposted.label', {}, 'en')).toBe('Reposts');
-    expect(root.querySelector('[data-notification-types]')!.textContent).toContain('تنبيهات الأمان وإشعارات فريق الإشراف مش بتتقفل');
+    expect(root.querySelector('[data-notification-types]')!.textContent).toContain('لا يمكن إيقاف تنبيهات الأمان وإشعارات فريق الإشراف');
     expect(root.querySelector<HTMLInputElement>('#quiet-start')!.value).toBe('23:00');
     expect(root.querySelector<HTMLInputElement>('#quiet-end')!.value).toBe('07:00');
   });
@@ -85,7 +85,7 @@ describe('NotificationSettingsPage (F17)', () => {
     put().flush(problem(400, 'notification.mode_invalid'), { status: 400, statusText: 'Bad Request' });
     await stable();
     expect(typeRow('comment_reply').getAttribute('data-mode')).toBe('all');
-    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'اختار الكل أو جوه التطبيق أو مقفول.' })]);
+    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'اختر «الكل» أو «داخل التطبيق» أو «إيقاف».' })]);
   });
 
   it('choosing "All" asks for push permission in context when this browser was never asked', async () => {
@@ -128,7 +128,7 @@ describe('NotificationSettingsPage (F17)', () => {
     save().click();
     await stable();
     http.expectNone({ method: 'PUT', url: URL });
-    expect(root.querySelector('[data-quiet-error]')!.textContent).toBe('اختار وقت بداية ووقت نهاية (HH:mm) مختلفين.');
+    expect(root.querySelector('[data-quiet-error]')!.textContent).toBe('اختر وقتَي بداية ونهاية (HH:mm) مختلفين.');
     expect(start.getAttribute('aria-invalid')).toBe('true');
 
     start.value = '22:30';
@@ -160,7 +160,7 @@ describe('NotificationSettingsPage (F17)', () => {
     await flushMicrotasks();
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
-    expect(root.querySelector('rd-error-state')!.textContent).toContain('معرفناش نحمّل إعدادات الإشعارات');
+    expect(root.querySelector('rd-error-state')!.textContent).toContain('تعذّر تحميل إعدادات الإشعارات');
     root.querySelector<HTMLButtonElement>('rd-error-state button')!.click();
     http.expectOne(URL).flush(settings());
     await flushMicrotasks();

@@ -72,10 +72,10 @@ describe('Home → Following (F12)', () => {
     suggested.flush([writer('karim'), writer('salma', { isVerified: false, followsYou: true })]);
     await stable();
 
-    expect(root.querySelector('[data-following-empty]')!.textContent).toContain('لسه مفيش مقالات من اللي بتتابعهم');
+    expect(root.querySelector('[data-following-empty]')!.textContent).toContain('لا توجد مقالات ممن تتابعهم بعد');
     const rows = root.querySelectorAll('[data-suggested-writer]');
     expect(rows.length).toBe(2);
-    expect(rows[1].textContent).toContain('بيتابعك');
+    expect(rows[1].textContent).toContain('يتابعك');
     expect(root.querySelector('[data-following-refresh]')).toBeNull();
 
     (rows[0].querySelector('[data-follow]') as HTMLElement).click();

@@ -45,7 +45,7 @@ describe('FollowStore (F12)', () => {
     http.expectOne(URL).flush(problem(400, 'follow.self'), { status: 400, statusText: 'Bad Request' });
     await done;
     expect(store.isFollowing('writer-1', false)).toBe(false);
-    expect(toasts.toasts().map((t) => t.message)).toEqual(['مينفعش تتابع نفسك.']);
+    expect(toasts.toasts().map((t) => t.message)).toEqual(['لا يمكنك متابعة نفسك.']);
   });
 
   it('follow → unfollow while the first request runs ends unfollowed, one request at a time', async () => {

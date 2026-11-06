@@ -35,7 +35,7 @@ for (const variant of VARIANTS) {
     await page.locator('[data-my-tab="published"]').click();
     await expect(page).toHaveURL(/\/write\?tab=published$/);
     await expect(page.locator('[data-my-article]')).toHaveCount(2);
-    await expect(myArticle(page, ids.changed).locator('[data-unpublished-chip]')).toHaveText(ar ? 'تعديلات مش منشورة' : 'Unpublished changes');
+    await expect(myArticle(page, ids.changed).locator('[data-unpublished-chip]')).toHaveText(ar ? 'تعديلات غير منشورة' : 'Unpublished changes');
     await expect(myArticle(page, ids.published).locator('[data-unpublished-chip]')).toHaveCount(0);
     // Its counts read as words for screen readers, in the right plural form (4 reactions, 1 comment, 37 reads).
     await expect
@@ -152,7 +152,7 @@ for (const variant of VARIANTS) {
     await page.locator('[data-field]').selectOption('f-medicine');
     await page.locator('[data-preview-toggle]').click();
     await expect(preview.locator('[data-health-disclaimer]')).toHaveText(
-      ar ? 'المعلومات دي للتوعية ولا تغني عن استشارة الطبيب.' : "This information is for awareness only and is not a substitute for a doctor's advice.",
+      ar ? 'هذه المعلومات للتوعية فقط، ولا تُغني عن استشارة الطبيب.' : "This information is for awareness only and is not a substitute for a doctor's advice.",
     );
   });
 
@@ -206,7 +206,7 @@ for (const variant of VARIANTS) {
     await expect(bar.locator('[data-term-option]')).toHaveCount(1);
     await expect(bar.locator('[data-term-option="ioc-container"]')).toBeVisible();
     await bar.locator('input[type="search"]').fill('kubernetes');
-    await expect(bar.locator('[data-term-status]')).toHaveText(ar ? 'مفيش مصطلح زي كده في القاموس. جرّب المصطلح بالإنجليزي.' : 'No glossary term matches. Try the English term.');
+    await expect(bar.locator('[data-term-status]')).toHaveText(ar ? 'لا يوجد مصطلح مطابق في القاموس. جرّب المصطلح بالإنجليزية.' : 'No glossary term matches. Try the English term.');
     await bar.locator('input[type="search"]').fill('dependency');
     await bar.locator('[data-term-option="dependency-injection"]').click();
     await expect(bar).toHaveCount(0);

@@ -43,7 +43,7 @@ for (const variant of VARIANTS) {
 
     await expect(page.locator('[data-tag-name]')).toHaveText('#C#');
     await expect(page.locator('[data-tag-name]')).toHaveAttribute('dir', 'auto');
-    await expect(page.locator('[data-tag-count]')).toHaveText(t('23 مقال', '23 articles'));
+    await expect(page.locator('[data-tag-count]')).toHaveText(t('23 مقالًا', '23 articles'));
     // Newest first, from every writer; a hidden tag (`spam-links` on note 4) is left off its card.
     await expect(cards(page)).toHaveCount(20);
     await expect(cards(page).first()).toHaveAttribute('data-post-card', 'a-csharp-note-1');
@@ -55,7 +55,7 @@ for (const variant of VARIANTS) {
     // Near the end the next cursor page loads, then the list says that was all.
     await cards(page).last().scrollIntoViewIfNeeded();
     await expect(cards(page)).toHaveCount(23);
-    await expect(page.locator('[data-tag-end]')).toHaveText(t('كده شفت كل المقالات بالتاج ده.', "You've seen every article with this tag."));
+    await expect(page.locator('[data-tag-end]')).toHaveText(t('اطّلعت على كل المقالات التي تحمل هذا الوسم.', "You've seen every article with this tag."));
   });
 
   test(`tag links: a card's tag on Home and a tag in the reader open the tag page — ${suffix}`, async ({ page, context, baseURL }) => {
@@ -70,7 +70,7 @@ for (const variant of VARIANTS) {
     await di.locator('[data-card-tag="dotnet"]').click();
     await page.waitForURL((url) => url.pathname === '/tags/dotnet');
     await expect(page.locator('[data-tag-name]')).toHaveText('#dotnet');
-    await expect(page.locator('[data-tag-count]')).toHaveText(t('مقالين', '2 articles'));
+    await expect(page.locator('[data-tag-count]')).toHaveText(t('مقالان', '2 articles'));
     await expect(cards(page)).toHaveCount(2);
     expect(await cards(page).evaluateAll((list) => list.map((c) => c.getAttribute('data-post-card')))).toEqual(['a-dependency-injection-ar', 'a-csharp-note-1']);
     await expect(page).toHaveTitle('#dotnet — ReadIn');
@@ -96,13 +96,13 @@ for (const variant of VARIANTS) {
     expect(empty.status()).toBe(200);
     expect(await empty.text()).toMatch(/<meta name="robots" content="noindex"/);
     await expect(page.locator('[data-tag-count]')).toHaveText(t('0 مقال', '0 articles'));
-    await expect(page.locator('[data-tag-empty] h3')).toHaveText(t('لسه مفيش مقالات بالتاج ده', 'No articles with this tag yet'));
+    await expect(page.locator('[data-tag-empty] h3')).toHaveText(t('لا توجد مقالات تحمل هذا الوسم بعد', 'No articles with this tag yet'));
 
     for (const path of ['/tags/no-such-tag', '/tags/spam-links']) {
       const missing = await openTag(page, path);
       expect(missing.status(), path).toBe(404);
       expect(await missing.text()).toMatch(/<meta name="robots" content="noindex"/);
-      await expect(page.locator('[data-tag-not-found] h3')).toHaveText(t('التاج ده مش موجود', "This tag doesn't exist"));
+      await expect(page.locator('[data-tag-not-found] h3')).toHaveText(t('هذا الوسم غير موجود', "This tag doesn't exist"));
     }
   });
 
@@ -142,13 +142,13 @@ for (const variant of VARIANTS) {
 
     // A new name follows the rules, with the reason inline.
     await field.fill('a/b');
-    await expect(tags.locator('[data-tag-problem]')).toHaveText(t('التاج يقبل حروف وأرقام ومسافات و ⁦- _ . + #⁩ بس.', 'Use only letters, digits, spaces and - _ . + # in a tag.'));
+    await expect(tags.locator('[data-tag-problem]')).toHaveText(t('يقبل الوسم الحروف والأرقام والمسافات و ⁦- _ . + #⁩ فقط.', 'Use only letters, digits, spaces and - _ . + # in a tag.'));
     await expect(field).toHaveAttribute('aria-invalid', 'true');
 
     // No tag is "Clean Code" yet: the list offers to create it.
     await field.fill('#Clean   Code');
     await expect(create).toHaveAttribute('data-tag-create', 'Clean Code');
-    await expect(create).toContainText(t('إنشاء تاج جديد:', 'Create new tag:'));
+    await expect(create).toContainText(t('إنشاء وسم جديد:', 'Create new tag:'));
     await expect(tags.locator('[data-tag-problem]')).toHaveCount(0);
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page.locator('rd-metadata-panel')).toHaveScreenshot(`editor-tags-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
@@ -165,7 +165,7 @@ for (const variant of VARIANTS) {
     await field.press(',');
     await expect(chips).toHaveText(['#C#', '#CI/CD', '#Clean Code', '#spam-links', '#AI']);
     await expect(field).toBeDisabled();
-    await expect(tags.locator('[data-tags-hint]')).toContainText(t('كده 5 تاجات', "That's 5 tags"));
+    await expect(tags.locator('[data-tags-hint]')).toContainText(t('هذه 5 وسوم', "That's 5 tags"));
 
     await savedToServer(page);
     await expect.poll(() => problemCodes(page), { timeout: 15_000 }).toEqual(['tag.hidden']);

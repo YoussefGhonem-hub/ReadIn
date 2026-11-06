@@ -115,11 +115,11 @@ describe('SearchPage (F16)', () => {
 
     const rows = t.$$('[data-search-article]');
     expect(rows.map((r) => r.getAttribute('data-matched-in'))).toEqual(['attachment', 'title']);
-    expect(rows[0].querySelector('[data-in-attachment]')!.textContent!.trim()).toBe('لقيناها في ملف الـ PDF المرفق');
+    expect(rows[0].querySelector('[data-in-attachment]')!.textContent!.trim()).toBe('وُجدت في ملف PDF المرفق');
     expect(rows[1].querySelector('[data-in-attachment]')).toBeNull();
     expect(rows[0].querySelector('rd-article-attachments')).toBeNull();
     expect(rows[0].querySelector('img')!.getAttribute('src')).toBe('https://cdn/p1-thumb.png');
-    expect(t.$('[data-search-end]')!.textContent!.trim()).toBe('كده شفت كل النتايج.');
+    expect(t.$('[data-search-end]')!.textContent!.trim()).toBe('هذه كل النتائج.');
     expect(t.box().value).toBe('kestrel');
     expect(t.box().getAttribute('dir')).toBe('auto');
     // Articles is the chosen tab, with its filters.
@@ -132,15 +132,15 @@ describe('SearchPage (F16)', () => {
   it('nothing found says so with a tip; with filters it offers to clear them', async () => {
     const t = await render({ q: 'docker يعني' });
     await answer(t, { items: [], nextCursor: null });
-    expect(t.$('[data-search-empty] h3')!.textContent!.trim()).toBe('مفيش نتايج لـ «⁨docker يعني⁩»');
-    expect(t.$('[data-search-empty]')!.textContent).toContain('جرّب كلمة تانية أو أقصر');
+    expect(t.$('[data-search-empty] h3')!.textContent!.trim()).toBe('لا توجد نتائج لـ «⁨docker يعني⁩»');
+    expect(t.$('[data-search-empty]')!.textContent).toContain('جرّب كلمة أخرى أو كلمة أقصر');
 
     const f = await render({ q: 'docker', lang: 'en', time: 'long' });
     const req = http.expectOne(isSearch);
     expect(req.request.params.get('minMinutes')).toBe('11');
     req.flush({ items: [], nextCursor: null });
     await f.stable();
-    expect(f.$('[data-search-empty="filtered"] h3')!.textContent!.trim()).toBe('مفيش نتايج بالفلاتر دي');
+    expect(f.$('[data-search-empty="filtered"] h3')!.textContent!.trim()).toBe('لا توجد نتائج تطابق عوامل التصفية هذه');
     f.$<HTMLButtonElement>('[data-search-empty="filtered"] button')!.click();
     expect(f.lastParams()).toEqual({ q: 'docker', type: null, field: null, lang: null, time: null });
   });
@@ -150,7 +150,7 @@ describe('SearchPage (F16)', () => {
     await answer(users, { items: [MONA], nextCursor: null });
     const row = users.$('[data-search-user][data-user="mona"]')!;
     expect(row.textContent).toContain('Mona Adel');
-    expect(row.textContent).toContain('بيتابعك');
+    expect(row.textContent).toContain('يتابعك');
     expect(row.querySelector('[data-follow]')).not.toBeNull();
     expect(users.$('[data-search-filters]')).toBeNull();
 
@@ -159,7 +159,7 @@ describe('SearchPage (F16)', () => {
     const topic = topics.$<HTMLAnchorElement>('[data-search-topic]')!;
     expect(topic.getAttribute('href')).toBe('/f/software?topic=dotnet');
     expect(topic.textContent).toContain('موضوع في ⁨البرمجيات⁩');
-    expect(topic.textContent).toContain('12 مقال');
+    expect(topic.textContent).toContain('12 مقالًا');
 
     const tags = await render({ q: 'c#', type: 'tags' });
     await answer(tags, { items: [TAG], nextCursor: null });
@@ -173,7 +173,7 @@ describe('SearchPage (F16)', () => {
     const t = await render({ q: 'docker' });
     http.expectOne(isSearch).flush({ code: 'rate_limited', status: 429 }, { status: 429, statusText: 'Too Many Requests' });
     await t.stable();
-    expect(t.$('[data-search-error]')!.textContent).toContain('طلبات كتير، استنى شوية وجرّب تاني.');
+    expect(t.$('[data-search-error]')!.textContent).toContain('طلبات كثيرة جدًا. انتظر قليلًا ثم حاول مرة أخرى.');
     t.$<HTMLButtonElement>('[data-search-error] button')!.click();
     await answer(t, { items: [TITLE_HIT], nextCursor: null });
     expect(t.$$('[data-search-article]')).toHaveLength(1);
@@ -217,7 +217,7 @@ describe('SearchPage (F16)', () => {
     field.dispatchEvent(new Event('change'));
     expect(t.lastParams()).toMatchObject({ q: 'docker', field: 'software' });
     const time = t.$<HTMLSelectElement>('[data-filter="time"]')!;
-    expect([...time.options].map((o) => o.textContent!.trim())).toEqual(['أي مدة', 'لحد 5 دقايق', 'من 5 لـ 10 دقايق', 'أكتر من 10 دقايق']);
+    expect([...time.options].map((o) => o.textContent!.trim())).toEqual(['أي مدة', 'حتى 5 دقائق', 'من 5 إلى 10 دقائق', 'أكثر من 10 دقائق']);
     time.value = 'short';
     time.dispatchEvent(new Event('change'));
     expect(t.lastParams()).toMatchObject({ time: 'short' });
@@ -228,7 +228,7 @@ describe('SearchPage (F16)', () => {
     const t = await render();
     expect(t.$$('[data-recent]').map((r) => r.getAttribute('data-recent'))).toEqual(['kestrel', 'يعني إيه Transformer']);
     expect(t.$('[data-recent] bdi')!.getAttribute('dir')).toBe('auto');
-    expect(t.$('[data-recent-remove]')!.getAttribute('aria-label')).toBe('شيل «⁨kestrel⁩» من آخر حاجات دوّرت عليها');
+    expect(t.$('[data-recent-remove]')!.getAttribute('aria-label')).toBe('إزالة «⁨kestrel⁩» من عمليات البحث الأخيرة');
 
     t.$$('[data-recent-open]')[1].click();
     expect(t.lastParams()).toMatchObject({ q: 'يعني إيه Transformer' });
@@ -238,7 +238,7 @@ describe('SearchPage (F16)', () => {
     t.$<HTMLButtonElement>('[data-recent-clear]')!.click();
     await t.stable();
     expect(t.$('[data-recent-searches]')).toBeNull();
-    expect(t.$('[data-search-start] h2')!.textContent!.trim()).toBe('عايز تقرا عن إيه؟');
+    expect(t.$('[data-search-start] h2')!.textContent!.trim()).toBe('عمّ تريد أن تقرأ؟');
     expect(localStorage.getItem('readin.recentSearches')).toBeNull();
   });
 });

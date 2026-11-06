@@ -52,13 +52,13 @@ describe('PathsPage (F09)', () => {
   it('lists every path with its meta, your progress and the completion badge', async () => {
     const { root, cards } = await render();
     expect(cards()).toEqual(['aspnet-core-basics', 'ai', 'learn']);
-    expect(TestBed.inject(Title).getTitle()).toBe('المسارات — ReadIn');
+    expect(TestBed.inject(Title).getTitle()).toBe('المسارات التعليمية — ReadIn');
     const first = root.querySelector('[data-path-card="aspnet-core-basics"]')!;
     expect(first.getAttribute('href')).toBe('/paths/aspnet-core-basics');
     expect(first.querySelector('[data-path-meta]')!.textContent).toContain('4 مقالات · 22 دقيقة');
     expect(first.querySelector('[data-path-progress]')!.textContent).toContain('2/4');
     expect(first.querySelector('[data-path-completed]')).toBeNull();
-    expect(root.querySelector('[data-path-card="ai"] [data-path-completed]')!.textContent).toContain('✓ خلصت المسار');
+    expect(root.querySelector('[data-path-card="ai"] [data-path-completed]')!.textContent).toContain('✓ مكتمل');
     // Not enrolled and no progress (e.g. a guest): no bar.
     expect(root.querySelector('[data-path-card="learn"] [data-path-progress]')).toBeNull();
     expect(root.querySelector('[data-path-card="learn"] [data-path-meta]')!.textContent).toContain('3 مقالات · 13 دقيقة');
@@ -90,7 +90,7 @@ describe('PathsPage (F09)', () => {
     mine.flush([]);
     await stable();
     expect(root.querySelector('[data-paths-tab="mine"]')!.getAttribute('aria-selected')).toBe('true');
-    expect(root.querySelector('[data-paths-mine-empty]')!.textContent).toContain('لسه مبدأتش أي مسار');
+    expect(root.querySelector('[data-paths-mine-empty]')!.textContent).toContain('لم تبدأ أي مسار بعد');
     (root.querySelector('[data-paths-mine-empty] button') as HTMLElement).click();
     await stable();
     expect(cards()).toHaveLength(3);
@@ -158,7 +158,7 @@ describe('PathsPage (F09)', () => {
 
   it('an empty catalog and a failed load', async () => {
     const empty = await render({ all: [] });
-    expect(empty.$('[data-paths-empty]')!.textContent).toContain('لسه مفيش مسارات');
+    expect(empty.$('[data-paths-empty]')!.textContent).toContain('لا توجد مسارات بعد');
 
     TestBed.resetTestingModule();
     ({ http } = setupSocialTesting());
@@ -168,7 +168,7 @@ describe('PathsPage (F09)', () => {
     await flushMicrotasks();
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
-    expect(root.querySelector('rd-error-state')!.textContent).toContain('معرفناش نحمّل المسارات.');
+    expect(root.querySelector('rd-error-state')!.textContent).toContain('تعذّر تحميل المسارات.');
     (root.querySelector('rd-error-state button') as HTMLElement).click();
     http.expectOne(`${TEST_API}/paths`).flush(ALL);
     await flushMicrotasks();

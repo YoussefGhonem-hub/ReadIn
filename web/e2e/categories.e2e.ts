@@ -6,10 +6,10 @@ import { openProfile } from './support/profile';
 
 /**
  * F31 Writer categories end to end in ar/light and en/dark: a writer's Categories tab as a guest (non-empty categories
- * in the writer's order, then "مقالات تانية"), the category pages (server-rendered with their title and canonical, an
- * Arabic slug, `_other`, an empty one with noindex, a 404), the reader's "في قسم {name}" link, your own tab (create,
+ * in the writer's order, then "مقالات أخرى"), the category pages (server-rendered with their title and canonical, an
+ * Arabic slug, `_other`, an empty one with noindex, a 404), the reader's "في فئة {name}" link, your own tab (create,
  * the name rules, rename, reorder by keyboard and by dragging, delete with the article count), the editor's picker
- * (applied at once, "＋ قسم جديد", a new article saved first) and a moderator clearing an offensive name. The mock API
+ * (applied at once, "＋ فئة جديدة", a new article saved first) and a moderator clearing an offensive name. The mock API
  * (e2e/mock-api/categories.mjs) keeps each writer's categories, so every owner test signs in as its own writer.
  */
 test.describe.configure({ timeout: 120_000 });
@@ -52,15 +52,15 @@ for (const variant of VARIANTS) {
     await open(page, '/@mona', '[data-profile-header]');
     const tabs = page.locator('[data-profile-tab]');
     // Reposts (F29) sits between Categories and Paths.
-    await expect(tabs).toHaveText(t('المقالات|الأقسام|إعادة النشر|المسارات|نبذة', 'Articles|Categories|Reposts|Paths|About').split('|'));
+    await expect(tabs).toHaveText(t('المقالات|الفئات|إعادة النشر|المسارات|نبذة', 'Articles|Categories|Reposts|Paths|About').split('|'));
     await openCategoriesTab(page);
 
     const cards = page.locator('[data-profile-categories] [data-category-card]');
     await expect(cards).toHaveCount(3);
     // Mona's empty "أفكار جاية" is hers alone to see.
     expect(await cards.evaluateAll((list) => list.map((c) => c.getAttribute('data-category-card')))).toEqual(['asp-net-core', 'نصايح-البرمجة', '_other']);
-    await expect(cards.locator('[data-category-card-name]')).toHaveText(['ASP.NET Core', 'نصايح البرمجة', t('مقالات تانية', 'Other articles')]);
-    await expect(cards.locator('[data-category-card-count]')).toHaveText([t('مقالين', '2 articles'), t('مقال واحد', '1 article'), t('مقال واحد', '1 article')]);
+    await expect(cards.locator('[data-category-card-name]')).toHaveText(['ASP.NET Core', 'نصايح البرمجة', t('مقالات أخرى', 'Other articles')]);
+    await expect(cards.locator('[data-category-card-count]')).toHaveText([t('مقالان', '2 articles'), t('مقال واحد', '1 article'), t('مقال واحد', '1 article')]);
     await expect(cards.first().locator('[data-category-card-name]')).toHaveAttribute('dir', 'auto');
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page.locator('[data-profile-categories]')).toHaveScreenshot(`categories-tab-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
@@ -75,11 +75,11 @@ for (const variant of VARIANTS) {
     await page.locator('[data-category-author]').click();
     await page.waitForURL((url) => url.pathname === '/@mona');
 
-    // Karim has articles but no categories: the empty state, not "مقالات تانية" alone (it would repeat Articles).
+    // Karim has articles but no categories: the empty state, not "مقالات أخرى" alone (it would repeat Articles).
     await open(page, '/@karim', '[data-profile-header]');
     await openCategoriesTab(page);
     await expect(page.locator('[data-profile-categories] [data-categories-empty]')).toContainText(
-      t('لما الكاتب ده يرتّب مقالاته في أقسام، هتلاقيها هنا.', "When this writer groups their articles into categories, you'll find them here."),
+      t('عندما ينظّم هذا الكاتب مقالاته في فئات، ستجدها هنا.', "When this writer groups their articles into categories, you'll find them here."),
     );
     await expect(page.locator('[data-profile-categories] [data-category-card]')).toHaveCount(0);
   });
@@ -94,7 +94,7 @@ for (const variant of VARIANTS) {
     expect(html).toContain('data-post-card="a-dependency-injection-ar"');
 
     await expect(page.locator('[data-category-name]')).toHaveText('ASP.NET Core');
-    await expect(page.locator('[data-category-count]')).toHaveText(t('مقالين', '2 articles'));
+    await expect(page.locator('[data-category-count]')).toHaveText(t('مقالان', '2 articles'));
     await expect(page.locator('[data-category-author]')).toContainText('Mona Adel');
     const cards = page.locator('[data-category-articles] rd-post-card');
     await expect(cards).toHaveCount(2);
@@ -109,12 +109,12 @@ for (const variant of VARIANTS) {
     expect(upper.status).toBe(200);
     expect(upper.html).toMatch(/<link rel="canonical" href="[^"]*\/@mona\/c\/asp-net-core"/);
 
-    // "مقالات تانية": the articles without a category.
+    // "مقالات أخرى": the articles without a category.
     await open(page, '/@mona/c/_other', '[data-category-header]');
-    await expect(page.locator('[data-category-name]')).toHaveText(t('مقالات تانية', 'Other articles'));
+    await expect(page.locator('[data-category-name]')).toHaveText(t('مقالات أخرى', 'Other articles'));
     await expect(page.locator('[data-category-articles] rd-post-card')).toHaveCount(1);
     await expect(page.locator('[data-category-articles] rd-post-card')).toHaveAttribute('data-post-card', 'a-one-photo');
-    await expect(page).toHaveTitle(t('مقالات تانية · Mona Adel — ReadIn', 'Other articles · Mona Adel — ReadIn'));
+    await expect(page).toHaveTitle(t('مقالات أخرى · Mona Adel — ReadIn', 'Other articles · Mona Adel — ReadIn'));
 
     // An empty category answers (its owner links to it), with the empty state, and is not indexed.
     const empty = await open(page, `/@mona/c/${encodeURIComponent('أفكار-جاية')}`, '[data-category-empty]');
@@ -125,7 +125,7 @@ for (const variant of VARIANTS) {
     // A slug the writer doesn't have is a real 404.
     const missing = await open(page, '/@mona/c/no-such-category', '[data-category-not-found]');
     expect(missing.status).toBe(404);
-    await expect(page.locator('[data-category-not-found]')).toContainText(t('القسم ده مش موجود', "This category doesn't exist"));
+    await expect(page.locator('[data-category-not-found]')).toContainText(t('هذه الفئة غير موجودة', "This category doesn't exist"));
     await expect(page.locator('[data-category-not-found] a')).toHaveAttribute('href', '/@mona');
   });
 
@@ -133,7 +133,7 @@ for (const variant of VARIANTS) {
     await useVariant(context, baseURL!, variant);
     await open(page, '/ar/a/dependency-injection-ar', '[data-byline]');
     const link = page.locator('[data-byline] [data-article-category]');
-    await expect(link).toHaveText(t('في قسم ⁨ASP.NET Core⁩', 'In ⁨ASP.NET Core⁩'));
+    await expect(link).toHaveText(t('في فئة ⁨ASP.NET Core⁩', 'In ⁨ASP.NET Core⁩'));
     await expect(link).toHaveAttribute('href', '/@mona/c/asp-net-core');
     await link.click();
     await page.waitForURL((url) => url.pathname === '/@mona/c/asp-net-core');
@@ -155,8 +155,8 @@ for (const variant of VARIANTS) {
     const manage = page.locator('[data-manage-categories]');
     const rows = manage.locator('[data-category-row]');
     await expect(names(rows)).toHaveText(['ASP.NET Core', 'Clean Code بالعربي', 'أفكار جاية']);
-    // Empty ones too (the draft in "Clean Code بالعربي" doesn't count), marked as hidden from visitors, then "مقالات تانية".
-    const hidden = t('فاضي، والزوار مش شايفينه', "Empty: visitors don't see it");
+    // Empty ones too (the draft in "Clean Code بالعربي" doesn't count), marked as hidden from visitors, then "مقالات أخرى".
+    const hidden = t('فارغة، ولا تظهر للزوار', "Empty: visitors don't see it");
     await expect(rows.locator('[data-category-count]')).toHaveText([t('مقال واحد', '1 article'), hidden, hidden]);
     await expect(manage.locator('[data-category-card="_other"] [data-category-card-count]')).toHaveText(t('مقال واحد', '1 article'));
     await parkMouse(page);
@@ -166,10 +166,10 @@ for (const variant of VARIANTS) {
     const create = manage.locator('[data-category-create]');
     const field = create.locator('[data-category-name-input]');
     await field.fill('asp.net CORE');
-    await expect(create.locator('[data-category-name-error]')).toHaveText(t('عندك قسم بنفس الاسم بالفعل.', 'You already have a category with this name.'));
+    await expect(create.locator('[data-category-name-error]')).toHaveText(t('لديك فئة بالاسم نفسه بالفعل.', 'You already have a category with this name.'));
     await expect(create.locator('[data-category-name-submit]')).toBeDisabled();
     await field.fill('!!!');
-    await expect(create.locator('[data-category-name-error]')).toHaveText(t('اسم القسم لازم يكون فيه حرف أو رقم على الأقل.', 'A category name needs at least one letter or digit.'));
+    await expect(create.locator('[data-category-name-error]')).toHaveText(t('يجب أن يحتوي اسم الفئة على حرف أو رقم واحد على الأقل.', 'A category name needs at least one letter or digit.'));
     const posted = page.waitForRequest((r) => r.method() === 'POST' && r.url().endsWith('/me/categories'));
     await field.fill('  Docker   🐳 ');
     await field.press('Enter');
@@ -209,23 +209,23 @@ for (const variant of VARIANTS) {
     await page.mouse.up();
     await expect(names(rows)).toHaveText(['أفكار جاية', 'ASP.NET Core', 'Clean Code', 'Docker 🐳']);
 
-    // Delete asks first, with the article count; its article joins "مقالات تانية".
+    // Delete asks first, with the article count; its article joins "مقالات أخرى".
     await rows.nth(1).locator('[data-category-delete]').click();
     const sheet = page.locator('[data-category-delete-sheet]');
     await expect(sheet.locator('[data-category-delete-body]')).toHaveText(
-      t('القسم ده فيه مقال واحد، وهيفضل منشور من غير قسم.', 'This category has 1 article. It stays published, without a category.'),
+      t('تحتوي هذه الفئة على مقال واحد، وسيظل منشورًا دون فئة.', 'This category has 1 article. It stays published, without a category.'),
     );
     await sheet.locator('[data-category-delete-confirm]').click();
     await expect(sheet).toHaveCount(0);
     await expect(names(rows)).toHaveText(['أفكار جاية', 'Clean Code', 'Docker 🐳']);
-    await expect(manage.locator('[data-category-card="_other"] [data-category-card-count]')).toHaveText(t('مقالين', '2 articles'));
+    await expect(manage.locator('[data-category-card="_other"] [data-category-card-count]')).toHaveText(t('مقالان', '2 articles'));
 
     // The server kept all of it.
     await openProfile(page, '/@sara', { signedIn: true });
     await openCategoriesTab(page);
     await expect(names(page.locator('[data-manage-categories] [data-category-row]'))).toHaveText(['أفكار جاية', 'Clean Code', 'Docker 🐳']);
 
-    // With none left: the "رتّب مقالاتك" empty view holds the create field, and "مقالات تانية" waits for a category
+    // With none left: the "نظّم مقالاتك" empty view holds the create field, and "مقالات أخرى" waits for a category
     // (as visitors see it), though two articles have none.
     const left = page.locator('[data-manage-categories] [data-category-row]');
     for (let remaining = 3; remaining > 0; remaining--) {
@@ -235,7 +235,7 @@ for (const variant of VARIANTS) {
       await expect(left).toHaveCount(remaining - 1);
     }
     const empty = page.locator('[data-manage-categories] [data-categories-empty]');
-    await expect(empty).toContainText(t('رتّب مقالاتك', 'Organize your articles'));
+    await expect(empty).toContainText(t('نظّم مقالاتك', 'Organize your articles'));
     await expect(empty.locator('[data-category-create] [data-category-name-input]')).toBeVisible();
     await expect(page.locator('[data-manage-categories] [data-category-card="_other"]')).toHaveCount(0);
     await expect(page.locator('[data-manage-categories] [data-categories-hint]')).toHaveCount(0);
@@ -251,17 +251,17 @@ for (const variant of VARIANTS) {
     const picker = page.locator('[data-category-picker]');
     const select = picker.locator('[data-category-select]');
     await expect(select).toBeEnabled({ timeout: FIRST_RENDER_MS });
-    await expect(select.locator('option')).toHaveText([t('من غير قسم', 'No category'), 'ASP.NET Core', 'Clean Code بالعربي', 'أفكار جاية', t('＋ قسم جديد', '＋ New category')]);
+    await expect(select.locator('option')).toHaveText([t('دون فئة', 'No category'), 'ASP.NET Core', 'Clean Code بالعربي', 'أفكار جاية', t('＋ فئة جديدة', '＋ New category')]);
     await expect(select).toHaveValue('');
 
     // A pick is sent at once: no save, nothing to Update.
     const put = page.waitForRequest((r) => r.method() === 'PUT' && r.url().endsWith(`/articles/${published}/category`));
     await select.selectOption(`${me.id}-c1`);
     expect((await put).postDataJSON()).toEqual({ categoryId: `${me.id}-c1` });
-    await expect(picker.locator('[data-category-hint]')).toHaveText(t('اختياري: بيجمّع المقال مع مقالات زيه في بروفايلك. أي تغيير بيتطبق على طول.', 'Optional: groups the article with others on your profile. A change applies right away.'));
+    await expect(picker.locator('[data-category-hint]')).toHaveText(t('اختياري: تجمع المقال مع مقالات مشابهة في ملفك الشخصي. يُطبَّق أي تغيير فورًا.', 'Optional: groups the article with others on your profile. A change applies right away.'));
     await expect(page.locator('[data-publish]')).toBeDisabled();
 
-    // "＋ قسم جديد": name it right there; it is created, then picked.
+    // "＋ فئة جديدة": name it right there; it is created, then picked.
     await select.selectOption('__new');
     const create = picker.locator('[data-category-create]');
     const field = create.locator('[data-category-name-input]');
@@ -313,12 +313,12 @@ for (const variant of VARIANTS) {
     await sheet.locator('[data-moderation-confirm]').click();
     expect((await sent).postDataJSON()).toEqual({ action: 'clear_category', targetType: 'user', targetId: 'u-reader-21', categoryId: 'c-dina-rude' });
     await expect(sheet).toHaveCount(0);
-    await expect(page.locator('rd-toast-host')).toContainText(t('اسم القسم اتمسح', 'Category name cleared'));
+    await expect(page.locator('rd-toast-host')).toContainText(t('تمت إزالة اسم الفئة', 'Category name cleared'));
     await expect(section.locator('[data-case-category-name]')).toHaveText(['قسم 1', 'Notes']);
     // Logged with the old name; the case's reports are resolved.
     const entry = page.locator('[data-case-history] [data-log-entry]').first();
     await expect(entry).toHaveAttribute('data-log-action', 'user.clear_category');
     await expect(entry).toContainText('مقالات للأغبيا بس');
-    await expect(page.locator('[data-case-status]')).toHaveText(t('اتحل', 'Resolved'));
+    await expect(page.locator('[data-case-status]')).toHaveText(t('محلول', 'Resolved'));
   });
 }

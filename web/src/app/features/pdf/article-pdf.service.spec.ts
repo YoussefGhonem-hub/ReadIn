@@ -14,20 +14,20 @@ const URL_OF = (id: string) => `${TEST_API}/articles/${id}/pdf`;
 
 /** The contract's wording (docs/api/contract-v1.md → Article PDF → Errors), as mobile has it. */
 const CONTRACT_TEXTS: Record<string, [string, string]> = {
-  'errors.article.pdf_hidden': ['المشرفين خفّوا المقال ده، فمينفعش يتحمّل PDF.', "Moderators hid this article, so it can't be downloaded as a PDF."],
-  'errors.article.pdf_limit': ['حمّلت PDFs كتير الساعة دي. حاول تاني بعد شوية.', "You've downloaded many PDFs this hour. Try again later."],
-  'errors.article.pdf_busy': ['فيه PDFs كتير بتتجهز دلوقتي. حاول تاني كمان شوية.', 'Many PDFs are being prepared right now. Try again in a moment.'],
-  'errors.article.pdf_failed': ['معرفناش نجهّز الـ PDF. حاول تاني.', "We couldn't prepare the PDF. Try again."],
-  'pdf.offline': ['محتاج إنترنت عشان تحمّل الـ PDF.', 'You need an internet connection to download the PDF.'],
-  'pdf.building': ['بنجهز الـ PDF…', 'Preparing the PDF…'],
-  'pdf.download': ['تحميل PDF', 'Download PDF'],
-  'pdf.retry': ['حاول تاني', 'Try again'],
-  'pdf.chooseTitle': ['أنهي نسخة؟', 'Which version?'],
+  'errors.article.pdf_hidden': ['أخفى المشرفون هذا المقال، لذا لا يمكن تنزيله بصيغة PDF.', "Moderators hid this article, so it can't be downloaded as a PDF."],
+  'errors.article.pdf_limit': ['نزّلت ملفات PDF كثيرة خلال هذه الساعة. حاول مرة أخرى لاحقًا.', "You've downloaded many PDFs this hour. Try again later."],
+  'errors.article.pdf_busy': ['يجري الآن تجهيز ملفات PDF كثيرة. حاول مرة أخرى بعد قليل.', 'Many PDFs are being prepared right now. Try again in a moment.'],
+  'errors.article.pdf_failed': ['تعذّر تجهيز ملف PDF. حاول مرة أخرى.', "We couldn't prepare the PDF. Try again."],
+  'pdf.offline': ['تحتاج إلى اتصال بالإنترنت لتنزيل ملف PDF.', 'You need an internet connection to download the PDF.'],
+  'pdf.building': ['جارٍ تجهيز ملف PDF…', 'Preparing the PDF…'],
+  'pdf.download': ['تنزيل PDF', 'Download PDF'],
+  'pdf.retry': ['إعادة المحاولة', 'Try again'],
+  'pdf.chooseTitle': ['أي نسخة تريد؟', 'Which version?'],
   // One wording per string on web and mobile (mobile: errArticlePdfNotFound, pdfLanguageBody, articleVersionArabic/English).
-  'pdf.notFound': ['المقال مش موجود.', 'Article not found.'],
-  'pdf.chooseBody': ['المقال ده منشور بلغتين. اختار النسخة اللي عايز تحمّلها PDF.', 'This article is published in two languages. Choose the version to download as a PDF.'],
-  'pdf.languages.arEG': ['العربي', 'Arabic'],
-  'pdf.languages.en': ['الإنجليزي', 'English'],
+  'pdf.notFound': ['المقال غير موجود.', 'Article not found.'],
+  'pdf.chooseBody': ['هذا المقال منشور بلغتين. اختر النسخة التي تريد تنزيلها بصيغة PDF.', 'This article is published in two languages. Choose the version to download as a PDF.'],
+  'pdf.languages.arEG': ['العربية', 'Arabic'],
+  'pdf.languages.en': ['الإنجليزية', 'English'],
 };
 
 function lookup(source: unknown, key: string): unknown {
@@ -135,15 +135,15 @@ describe('ArticlePdfService (F33)', () => {
   });
 
   const cases: { code: string; status: number; message: string; retry: boolean }[] = [
-    { code: 'article.not_found', status: 404, message: 'المقال مش موجود.', retry: false },
-    { code: 'article.pdf_hidden', status: 409, message: 'المشرفين خفّوا المقال ده، فمينفعش يتحمّل PDF.', retry: false },
-    { code: 'article.pdf_limit', status: 429, message: 'حمّلت PDFs كتير الساعة دي. حاول تاني بعد شوية.', retry: true },
-    { code: 'article.pdf_busy', status: 503, message: 'فيه PDFs كتير بتتجهز دلوقتي. حاول تاني كمان شوية.', retry: true },
-    { code: 'article.pdf_failed', status: 500, message: 'معرفناش نجهّز الـ PDF. حاول تاني.', retry: true },
-    { code: 'server.error', status: 500, message: 'معرفناش نجهّز الـ PDF. حاول تاني.', retry: true },
-    { code: 'something.new', status: 400, message: 'معرفناش نجهّز الـ PDF. حاول تاني.', retry: true },
+    { code: 'article.not_found', status: 404, message: 'المقال غير موجود.', retry: false },
+    { code: 'article.pdf_hidden', status: 409, message: 'أخفى المشرفون هذا المقال، لذا لا يمكن تنزيله بصيغة PDF.', retry: false },
+    { code: 'article.pdf_limit', status: 429, message: 'نزّلت ملفات PDF كثيرة خلال هذه الساعة. حاول مرة أخرى لاحقًا.', retry: true },
+    { code: 'article.pdf_busy', status: 503, message: 'يجري الآن تجهيز ملفات PDF كثيرة. حاول مرة أخرى بعد قليل.', retry: true },
+    { code: 'article.pdf_failed', status: 500, message: 'تعذّر تجهيز ملف PDF. حاول مرة أخرى.', retry: true },
+    { code: 'server.error', status: 500, message: 'تعذّر تجهيز ملف PDF. حاول مرة أخرى.', retry: true },
+    { code: 'something.new', status: 400, message: 'تعذّر تجهيز ملف PDF. حاول مرة أخرى.', retry: true },
     // Another limiter's 429 keeps its usual message, as on mobile.
-    { code: 'rate_limited', status: 429, message: 'طلبات كتير، استنى شوية وجرّب تاني.', retry: false },
+    { code: 'rate_limited', status: 429, message: 'طلبات كثيرة جدًا. انتظر قليلًا ثم حاول مرة أخرى.', retry: false },
   ];
   for (const { code, status, message, retry } of cases) {
     it(`${status} ${code} → "${message}"${retry ? ' with حاول تاني' : ', no retry'}`, async () => {
@@ -153,7 +153,7 @@ describe('ArticlePdfService (F33)', () => {
       expect(pdf.isBuilding('a1')).toBe(false);
       expect(lastToast()?.kind).toBe('error');
       expect(lastToast()?.message).toBe(message);
-      expect(lastToast()?.action?.label ?? null).toBe(retry ? 'حاول تاني' : null);
+      expect(lastToast()?.action?.label ?? null).toBe(retry ? 'إعادة المحاولة' : null);
       expect(clicks).toEqual([]);
     });
   }
@@ -162,8 +162,8 @@ describe('ArticlePdfService (F33)', () => {
     const done = pdf.download('a1', 'en');
     expectPdf().flush(new Blob(['<html>Bad gateway</html>'], { type: 'text/html' }), { status: 502, statusText: 'Bad Gateway' });
     await done;
-    expect(lastToast()?.message).toBe('معرفناش نجهّز الـ PDF. حاول تاني.');
-    expect(lastToast()?.action?.label).toBe('حاول تاني');
+    expect(lastToast()?.message).toBe('تعذّر تجهيز ملف PDF. حاول مرة أخرى.');
+    expect(lastToast()?.action?.label).toBe('إعادة المحاولة');
   });
 
   it('other known codes keep their usual message (e.g. a suspended account), no retry', async () => {
@@ -192,8 +192,8 @@ describe('ArticlePdfService (F33)', () => {
     const done = pdf.download('a1', 'en');
     expectPdf().error(new ProgressEvent('error'));
     await done;
-    expect(lastToast()?.message).toBe('محتاج إنترنت عشان تحمّل الـ PDF.');
-    expect(lastToast()?.action?.label).toBe('حاول تاني');
+    expect(lastToast()?.message).toBe('تحتاج إلى اتصال بالإنترنت لتنزيل ملف PDF.');
+    expect(lastToast()?.action?.label).toBe('إعادة المحاولة');
   });
 
   it('offline before the call → the same message, and no request', async () => {
@@ -201,14 +201,14 @@ describe('ArticlePdfService (F33)', () => {
     expect(await pdf.download('a1', 'en')).toBe(false);
     http.expectNone(() => true);
     expect(pdf.isBuilding('a1')).toBe(false);
-    expect(lastToast()?.message).toBe('محتاج إنترنت عشان تحمّل الـ PDF.');
-    expect(lastToast()?.action?.label).toBe('حاول تاني');
+    expect(lastToast()?.message).toBe('تحتاج إلى اتصال بالإنترنت لتنزيل ملف PDF.');
+    expect(lastToast()?.action?.label).toBe('إعادة المحاولة');
   });
 
   it('a client timeout counts as a failed build', () => {
-    expect(pdf.failureOf(new TimeoutError())).toEqual({ message: 'معرفناش نجهّز الـ PDF. حاول تاني.', retry: true });
-    expect(pdf.failureOf(new Error('boom'))).toEqual({ message: 'معرفناش نجهّز الـ PDF. حاول تاني.', retry: true });
-    expect(pdf.failureOf(new ApiError(0, 'network', null))).toEqual({ message: 'محتاج إنترنت عشان تحمّل الـ PDF.', retry: true });
+    expect(pdf.failureOf(new TimeoutError())).toEqual({ message: 'تعذّر تجهيز ملف PDF. حاول مرة أخرى.', retry: true });
+    expect(pdf.failureOf(new Error('boom'))).toEqual({ message: 'تعذّر تجهيز ملف PDF. حاول مرة أخرى.', retry: true });
+    expect(pdf.failureOf(new ApiError(0, 'network', null))).toEqual({ message: 'تحتاج إلى اتصال بالإنترنت لتنزيل ملف PDF.', retry: true });
   });
 
   it('gives up after 120 s (the API may take 30 s + 60 s) and cancels the request', async () => {
@@ -220,7 +220,7 @@ describe('ArticlePdfService (F33)', () => {
     vi.advanceTimersByTime(20_000);
     expect(await done).toBe(false);
     expect(req.cancelled).toBe(true);
-    expect(lastToast()?.message).toBe('معرفناش نجهّز الـ PDF. حاول تاني.');
+    expect(lastToast()?.message).toBe('تعذّر تجهيز ملف PDF. حاول مرة أخرى.');
   });
 
   it('speaks English in the English UI', async () => {

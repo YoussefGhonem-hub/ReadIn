@@ -70,7 +70,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     http = t.http;
     expect(t.$('[data-article-menu]')!.getAttribute('aria-label')).toBe('خيارات المقال');
     expect(await t.openMenu()).toEqual(OTHERS);
-    expect(OTHERS.map(t.label)).toEqual(['قلّل من النوع ده', 'إخفاء الـ Highlights', 'تابع الكاتب', 'كتم الكاتب', 'كتم المواضيع', 'الإبلاغ عن المقال']);
+    expect(OTHERS.map(t.label)).toEqual(['عرض أقل من هذا النوع', 'إخفاء التمييزات', 'متابعة الكاتب', 'كتم الكاتب', 'كتم المواضيع', 'الإبلاغ عن المقال']);
     const report = document.querySelector('[data-menu-action="report"]')!;
     expect(report.classList).toContain('text-error');
     expect(document.querySelector('[data-menu-action="showLess"]')!.classList).not.toContain('text-error');
@@ -92,7 +92,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     http = t.http;
     const session = TestBed.inject(SessionStore);
     await t.openMenu();
-    expect(t.label('highlights')).toBe('إخفاء الـ Highlights');
+    expect(t.label('highlights')).toBe('إخفاء التمييزات');
     expect(document.querySelector('[data-menu-action="highlights"]')!.getAttribute('aria-keyshortcuts')).toBe('Control+/');
     await t.pick('highlights');
     const hide = t.http.expectOne(`${TEST_API}/me/preferences`);
@@ -103,7 +103,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     hide.flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
     await t.openMenu();
-    expect(t.label('highlights')).toBe('إظهار الـ Highlights');
+    expect(t.label('highlights')).toBe('إظهار التمييزات');
 
     await t.pick('highlights');
     const show = t.http.expectOne(`${TEST_API}/me/preferences`);
@@ -123,7 +123,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     expect(prompt.isOpen()).toBe(false);
     expect(localStorage.getItem('rd.highlights.hidden')).toBe('1');
     await t.openMenu();
-    expect(t.label('highlights')).toBe('إظهار الـ Highlights');
+    expect(t.label('highlights')).toBe('إظهار التمييزات');
     await t.pick('highlights');
     expect(localStorage.getItem('rd.highlights.hidden')).toBeNull();
   });
@@ -132,7 +132,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     const t = await render(testCard(), { myId: 'writer-1' });
     http = t.http;
     expect(await t.openMenu()).toEqual(['highlights', 'muteTopics', 'downloadPdf']);
-    expect(t.label('downloadPdf')).toBe('تحميل PDF');
+    expect(t.label('downloadPdf')).toBe('تنزيل PDF');
   });
 
   it('Download PDF prints the version on screen; while it is built the item says so and is disabled', async () => {
@@ -150,10 +150,10 @@ describe('Reader "⋯" menu (F22, F28)', () => {
       const req = t.http.expectOne((r) => r.url === `${TEST_API}/articles/a1/pdf`);
       expect(req.request.params.get('lang')).toBe('en');
 
-      // Open again while it builds: "بنجهز الـ PDF…", disabled, and a press asks for nothing more.
+      // Open again while it builds: "جارٍ تجهيز ملف PDF…", disabled, and a press asks for nothing more.
       expect(await t.openMenu()).toEqual(['highlights', 'muteTopics', 'downloadPdf']);
       const item = document.querySelector('[data-article-menu-panel] [data-menu-action="downloadPdf"]')!;
-      expect(t.label('downloadPdf')).toBe('بنجهز الـ PDF…');
+      expect(t.label('downloadPdf')).toBe('جارٍ تجهيز ملف PDF…');
       expect(item.getAttribute('aria-disabled')).toBe('true');
       expect(item.getAttribute('data-state')).toBe('building');
       await t.pick('downloadPdf');
@@ -165,7 +165,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
       await t.stable();
       expect(clicks).toEqual(['clean-architecture-en.pdf']);
       if (!document.querySelector('[data-article-menu-panel]')) await t.openMenu();
-      expect(t.label('downloadPdf')).toBe('تحميل PDF');
+      expect(t.label('downloadPdf')).toBe('تنزيل PDF');
     } finally {
       vi.restoreAllMocks();
     }
@@ -228,7 +228,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     put.flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
     const [toast] = t.toasts.toasts();
-    expect(toast.message).toBe('تمام، هتشوف مقالات أقل من النوع ده.');
+    expect(toast.message).toBe('حسنًا، سترى مقالات أقل من هذا النوع.');
     expect(toast.action!.label).toBe('تراجع');
 
     toast.action!.run();
@@ -257,12 +257,12 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     await t.stable();
     expect(follows.isFollowing('writer-1', true)).toBe(false);
     const [toast] = t.toasts.toasts();
-    expect(toast.message).toBe('كتمت \u2068Karim Hassan\u2069. مش هتشوف مقالاته ولا تعليقاته.');
+    expect(toast.message).toBe('تم كتم \u2068Karim Hassan\u2069. لن ترى مقالاته أو تعليقاته.');
 
     // The menu now offers to unmute, and to follow again.
     await t.openMenu();
     expect(t.label('muteAuthor')).toBe('إلغاء كتم الكاتب');
-    expect(t.label('follow')).toBe('تابع الكاتب');
+    expect(t.label('follow')).toBe('متابعة الكاتب');
     document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
 
     toast.action!.run();
@@ -298,7 +298,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     t.http.expectOne(`${TEST_API}/users/writer-1/mute`).flush(problem(400, 'mute.system_account'), { status: 400, statusText: 'Bad Request' });
     await t.stable();
     expect(mutes.hides(card, FEED)).toBe(false);
-    expect(t.toastList()).toEqual(['مينفعش تكتم حساب ReadIn الرسمي.']);
+    expect(t.toastList()).toEqual(['لا يمكن كتم حساب ReadIn الرسمي.']);
   });
 
   it('Unmute author from the menu of a muted writer\'s article', async () => {
@@ -310,14 +310,14 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     t.http.expectOne(`${TEST_API}/users/writer-1/mute`).flush({ isMuted: false, isFollowing: false, followerCount: 40, followRemoved: false });
     await t.stable();
     expect(TestBed.inject(MuteStore).isAuthorMuted('writer-1', true)).toBe(false);
-    expect(t.toastList()).toEqual(['لغيت كتم \u2068Karim Hassan\u2069.']);
+    expect(t.toastList()).toEqual(['تم إلغاء كتم \u2068Karim Hassan\u2069.']);
   });
 
   it('Follow author follows, and the item then offers to unfollow', async () => {
     const t = await render();
     http = t.http;
     await t.openMenu();
-    expect(t.label('follow')).toBe('تابع الكاتب');
+    expect(t.label('follow')).toBe('متابعة الكاتب');
     await t.pick('follow');
     const req = t.http.expectOne(`${TEST_API}/users/writer-1/follow`);
     expect(req.request.method).toBe('PUT');
@@ -417,7 +417,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     await t.pick('hide');
     const sheet = t.$('[data-moderation-sheet]')!;
     expect(sheet.getAttribute('data-moderation-action')).toBe('hide');
-    expect(t.$('#moderation-sheet-title')!.textContent!.trim()).toBe('تخفي المقال ده؟');
+    expect(t.$('#moderation-sheet-title')!.textContent!.trim()).toBe('هل تريد إخفاء هذا المقال؟');
     expect(t.$('label[for="moderation-note"]')!.textContent!.trim()).toBe('ملاحظة (اختياري)');
     const confirm = t.$<HTMLButtonElement>('[data-moderation-confirm]')!;
     expect(confirm.disabled).toBe(false); // the note is optional for hide
@@ -437,7 +437,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     expect(t.changes).toHaveLength(1);
     expect(t.changes[0]!.note).toBe('Copied from another site.');
     expect(Number.isNaN(Date.parse(t.changes[0]!.hiddenAt))).toBe(false);
-    expect(t.toastList()).toEqual(['اتخفى']);
+    expect(t.toastList()).toEqual(['تم الإخفاء']);
   });
 
   it('a hidden article offers Unhide, at once with a toast', async () => {
@@ -450,7 +450,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
     expect(t.changes).toEqual([null]);
-    expect(t.toastList()).toEqual(['رجع ظاهر']);
+    expect(t.toastList()).toEqual(['تمت إعادة الإظهار']);
   });
 
   it('a failed hide stays in the dialog with the reason', async () => {
@@ -461,7 +461,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     t.$('[data-moderation-confirm]')!.click();
     t.http.expectOne(`${TEST_API}/moderation/actions`).flush(problem(404, 'article.not_found'), { status: 404, statusText: 'Not Found' });
     await t.stable();
-    expect(t.$('[data-moderation-error]')!.textContent!.trim()).toBe('المقال ده مش موجود');
+    expect(t.$('[data-moderation-error]')!.textContent!.trim()).toBe('هذا المقال غير موجود');
     expect(t.changes).toEqual([]);
   });
 

@@ -144,8 +144,8 @@ describe('injectResumePosition', () => {
     expect(resume.pending()).toBe(false);
 
     const [toast] = toasts.toasts();
-    expect(toast.message).toBe('كمّلنا من مكان ما وقفت');
-    expect(toast.action?.label).toBe('من الأول');
+    expect(toast.message).toBe('تم الاستئناف من حيث توقفت');
+    expect(toast.action?.label).toBe('البدء من جديد');
     toast.action!.run();
     expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
   });

@@ -108,7 +108,7 @@ describe('Editor page (F05, /write/new and /write/:id)', () => {
     expect(api.create).toHaveBeenCalledTimes(1);
     expect(api.create.mock.calls[0][0].translations[0]).toMatchObject({ language: 'ar-EG', title: 'Clean Architecture' });
     expect(navigate).toHaveBeenCalledWith(['/write', 'a1'], { replaceUrl: true });
-    expect($('[data-save-status]')?.textContent).toContain('اتحفظ');
+    expect($('[data-save-status]')?.textContent).toContain('تم الحفظ');
 
     // The router puts the new id in: same editor, nothing reloaded.
     const editor = tiptap();
@@ -124,7 +124,7 @@ describe('Editor page (F05, /write/new and /write/:id)', () => {
     await settle(AUTOSAVE_MS);
     const problems = () => [...el().querySelectorAll('[data-problems] [data-problem]')].map((p) => p.getAttribute('data-problem'));
     expect(problems()).toEqual(['article.field_required', 'article.title_length', 'article.content_empty']);
-    expect($('[data-problems]')?.textContent).toContain('اختار المجال.');
+    expect($('[data-problems]')?.textContent).toContain('اختر المجال.');
     expect($('[data-title-count]')?.textContent).toContain('2/150');
     expect(publishButton().disabled).toBe(true);
 
@@ -159,9 +159,9 @@ describe('Editor page (F05, /write/new and /write/:id)', () => {
     api.revisionsList = [{ number: 1, createdAt: '2026-11-01T10:00:00Z', title: PUBLISHED_DOC.translations[0].title, languages: ['ar-EG'] }];
     await open('a1');
     expect(api.edit).toHaveBeenCalledWith('a1');
-    expect(publishButton().textContent).toContain('حدّث');
+    expect(publishButton().textContent).toContain('تحديث');
     expect(publishButton().disabled).toBe(true);
-    expect($('[data-publish-hint]')?.textContent).toContain('القراء شايفين النسخة دي بالفعل.');
+    expect($('[data-publish-hint]')?.textContent).toContain('يرى القراء هذه النسخة بالفعل.');
     expect($('[data-discard]')).toBeNull();
 
     typeInto('[data-title]', 'يعني إيه Dependency Injection في .NET 10؟');
@@ -226,7 +226,7 @@ describe('Editor page (F05, /write/new and /write/:id)', () => {
     expect(preview.textContent).toContain('كاتب موثّق');
     expect($('[data-edit-area]')?.hasAttribute('hidden')).toBe(true);
 
-    const dark = [...el().querySelectorAll<HTMLButtonElement>('[data-preview-theme] button')].find((b) => b.textContent?.includes('غامق'))!;
+    const dark = [...el().querySelectorAll<HTMLButtonElement>('[data-preview-theme] button')].find((b) => b.textContent?.includes('داكن'))!;
     dark.click();
     await settle();
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
@@ -308,6 +308,6 @@ describe('Editor page (F05, /write/new and /write/:id)', () => {
     const { throwError } = await import('rxjs');
     api.edit.mockReturnValueOnce(throwError(() => new ApiError(404, 'article.not_found', { code: 'article.not_found' })));
     await open('someone-else');
-    expect(el().textContent).toContain('المقال ده مش موجود');
+    expect(el().textContent).toContain('هذا المقال غير موجود');
   });
 });

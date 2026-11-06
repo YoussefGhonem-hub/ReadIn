@@ -18,12 +18,12 @@ describe('StartPostCard', () => {
   it('signed in: your avatar, "Start a post…" and Photo / PDF / Article, all opening the editor', () => {
     const { host } = render();
     const card = host.querySelector('[data-start-post]')!;
-    expect(card.getAttribute('aria-label')).toBe('ابدأ مقال جديد');
+    expect(card.getAttribute('aria-label')).toBe('إنشاء منشور جديد');
     expect(host.classList).toContain('block');
     expect(card.querySelector('rd-avatar')).not.toBeNull();
 
     const prompt = card.querySelector<HTMLAnchorElement>('[data-start-post-prompt]')!;
-    expect(prompt.textContent!.trim()).toBe('ابدأ مقال جديد…');
+    expect(prompt.textContent!.trim()).toBe('ابدأ منشورًا جديدًا…');
     expect(prompt.getAttribute('href')).toBe('/write/new');
 
     const actions = [...card.querySelectorAll<HTMLAnchorElement>('[data-start-post-action]')];

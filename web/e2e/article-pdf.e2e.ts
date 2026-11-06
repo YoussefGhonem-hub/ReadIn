@@ -7,26 +7,26 @@ import { openArticle, signInAsReader } from './support/social';
 /**
  * Download article PDF (F33) in My articles → Published, against the mock API (e2e/mock-api/pdf.mjs): only published
  * rows have it; one version downloads at once under the server's file name (`{slug}-{lang}.pdf`, RFC 5987, Arabic
- * too); two versions ask "أنهي نسخة؟" first; while the file is built the button says "بنجهز الـ PDF…" and is disabled;
- * each error has its message, with "حاول تاني" where trying again helps. In the reader, the "⋯" menu (F28) has the
+ * too); two versions ask "أي نسخة تريد؟" first; while the file is built the button says "جارٍ تجهيز ملف PDF…" and is disabled;
+ * each error has its message, with "إعادة المحاولة" where trying again helps. In the reader, the "⋯" menu (F28) has the
  * same action on your own article only, for the version on screen.
  */
 test.describe.configure({ timeout: 120_000 });
 
 const TEXTS = {
   ar: {
-    download: 'تحميل PDF',
-    building: 'بنجهز الـ PDF…',
-    question: 'أنهي نسخة؟',
-    versions: ['العربي', 'الإنجليزي'],
-    retry: 'حاول تاني',
+    download: 'تنزيل PDF',
+    building: 'جارٍ تجهيز ملف PDF…',
+    question: 'أي نسخة تريد؟',
+    versions: ['العربية', 'الإنجليزية'],
+    retry: 'إعادة المحاولة',
     close: 'إغلاق',
-    notFound: 'المقال مش موجود.',
-    hidden: 'المشرفين خفّوا المقال ده، فمينفعش يتحمّل PDF.',
-    limit: 'حمّلت PDFs كتير الساعة دي. حاول تاني بعد شوية.',
-    busy: 'فيه PDFs كتير بتتجهز دلوقتي. حاول تاني كمان شوية.',
-    failed: 'معرفناش نجهّز الـ PDF. حاول تاني.',
-    offline: 'محتاج إنترنت عشان تحمّل الـ PDF.',
+    notFound: 'المقال غير موجود.',
+    hidden: 'أخفى المشرفون هذا المقال، لذا لا يمكن تنزيله بصيغة PDF.',
+    limit: 'نزّلت ملفات PDF كثيرة خلال هذه الساعة. حاول مرة أخرى لاحقًا.',
+    busy: 'يجري الآن تجهيز ملفات PDF كثيرة. حاول مرة أخرى بعد قليل.',
+    failed: 'تعذّر تجهيز ملف PDF. حاول مرة أخرى.',
+    offline: 'تحتاج إلى اتصال بالإنترنت لتنزيل ملف PDF.',
   },
   en: {
     download: 'Download PDF',

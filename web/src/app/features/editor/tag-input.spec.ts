@@ -84,7 +84,7 @@ describe('TagInput (F32)', () => {
     await t.type('#Clean   Code');
     const create = t.$('[data-tag-create]')!;
     expect(create.getAttribute('data-tag-create')).toBe('Clean Code');
-    expect(create.textContent!.replace(/\s+/g, ' ').trim()).toBe('إنشاء تاج جديد: #Clean Code');
+    expect(create.textContent!.replace(/\s+/g, ' ').trim()).toBe('إنشاء وسم جديد: #Clean Code');
     create.click();
     await t.stable();
     expect(t.chips()).toEqual(['Clean Code']);
@@ -124,7 +124,7 @@ describe('TagInput (F32)', () => {
     await t.type('x');
     expect(t.$('[data-tag-problem]')).toBeNull();
     await t.key('Enter');
-    expect(t.$('[data-tag-problem]')!.textContent).toContain('التاج لازم يكون حرفين على الأقل.');
+    expect(t.$('[data-tag-problem]')!.textContent).toContain('يجب أن يتكون الوسم من حرفين على الأقل.');
     expect(t.field().value).toBe('x');
     expect(t.emitted).toEqual([]);
 
@@ -157,18 +157,18 @@ describe('TagInput (F32)', () => {
     await t.type('kotlin,', false);
     expect(t.chips()).toHaveLength(5);
     expect(t.field().disabled).toBe(true);
-    expect(t.$('[data-tags-hint]')!.textContent).toContain('كده 5 تاجات');
+    expect(t.$('[data-tags-hint]')!.textContent).toContain('هذه 5 وسوم');
 
     t.$$('[data-tag-remove]')[0].click();
     await t.stable();
     expect(t.chips()).toEqual(['AI', 'dotnet', 'flutter', 'kotlin']);
     expect(t.field().disabled).toBe(false);
-    expect(t.$('[data-tags-hint]')!.textContent).toContain('لحد 5');
+    expect(t.$('[data-tags-hint]')!.textContent).toContain('حتى 5');
   });
 
   it('Backspace in the empty input removes the last chip; every chip has a labelled remove button', async () => {
     const t = await render(['C#', 'AI']);
-    expect(t.$$('[data-tag-remove]').map((b) => b.getAttribute('aria-label'))).toEqual(['شيل التاج C#', 'شيل التاج AI']);
+    expect(t.$$('[data-tag-remove]').map((b) => b.getAttribute('aria-label'))).toEqual(['إزالة الوسم C#', 'إزالة الوسم AI']);
     await t.key('Backspace');
     expect(t.chips()).toEqual(['C#']);
   });
@@ -176,11 +176,11 @@ describe('TagInput (F32)', () => {
   it('marks the chips the last checks or save are about, and lists why a save was refused', async () => {
     const t = await render(['C#', 'spam-links'], { flagged: ['SPAM-links'], errors: [{ code: 'tag.invalid', tag: 'spam-links' }, { code: 'article.too_many_tags', tag: null }] });
     expect(t.$$('[data-flagged]').map((c) => c.getAttribute('data-tag'))).toEqual(['spam-links']);
-    expect(t.$('[data-flagged] [data-tag-remove]')!.getAttribute('aria-label')).toBe('شيل التاج spam-links (فيه مشكلة)');
+    expect(t.$('[data-flagged] [data-tag-remove]')!.getAttribute('aria-label')).toBe('إزالة الوسم spam-links (به مشكلة)');
     const errors = t.$$('[data-tag-error]');
     expect(errors.map((e) => e.getAttribute('data-tag-error'))).toEqual(['tag.invalid', 'article.too_many_tags']);
     expect(errors[0].textContent).toContain('#spam-links');
-    expect(errors[1].textContent).toContain('أقصى حاجة 5 تاجات للمقال.');
+    expect(errors[1].textContent).toContain('الحد الأقصى 5 وسوم للمقال الواحد.');
     expect(t.field().getAttribute('aria-describedby')).toContain('-errors');
   });
 });

@@ -47,9 +47,9 @@ describe('CommentErrors', () => {
 
   it('translates in the UI language and falls back to the API title for unknown codes', () => {
     const errors = TestBed.inject(CommentErrors);
-    expect(errors.message(apiError(409, 'comment.duplicate'))).toBe('لسه كاتب نفس التعليق ده.');
-    expect(errors.message(apiError(429, 'rate_limited'))).toBe('بتعلّق بسرعة أوي. استنى دقيقة وجرّب تاني.');
+    expect(errors.message(apiError(409, 'comment.duplicate'))).toBe('نشرت التعليق نفسه للتو.');
+    expect(errors.message(apiError(429, 'rate_limited'))).toBe('أنت تعلّق بسرعة كبيرة. انتظر دقيقة ثم حاول مرة أخرى.');
     expect(errors.message(apiError(400, 'comment.something_new'))).toBe('title of comment.something_new');
-    expect(errors.message(new Error('boom'))).toBe('حصلت مشكلة غير متوقعة. حاول تاني.');
+    expect(errors.message(new Error('boom'))).toBe('حدث خطأ غير متوقع. حاول مرة أخرى.');
   });
 });

@@ -36,7 +36,7 @@ import { CommentsStore } from './comments.store';
             @if (busy()) {
               <svg lucideIcon="LoaderCircle" [size]="18" class="animate-spin" aria-hidden="true"></svg>
             }
-            {{ 'comments.delete' | transloco }}
+            {{ 'comments.deleteConfirm' | transloco }}
           </button>
         </div>
       </div>

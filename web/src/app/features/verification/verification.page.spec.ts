@@ -69,7 +69,7 @@ describe('VerificationPage (F19)', () => {
 
   it('shows an error with a retry when the status cannot be read', async () => {
     const t = await render('error');
-    expect(t.$('rd-error-state')!.textContent).toContain('معرفناش نجيب حالة التوثيق بتاعتك.');
+    expect(t.$('rd-error-state')!.textContent).toContain('تعذّر تحميل حالة توثيقك.');
     t.$<HTMLButtonElement>('rd-error-state button')!.click();
     http.expectOne(STATUS).flush(status({ isVerified: true, canRequest: false }));
     await t.stable();
@@ -79,17 +79,17 @@ describe('VerificationPage (F19)', () => {
   it('nothing yet: the form checks everything before sending, then sends it as multipart and shows it under review', async () => {
     const t = await render();
     await t.answerFields();
-    expect(t.$('[data-verification-form]')!.textContent).toContain('اطلب التوثيق');
+    expect(t.$('[data-verification-form]')!.textContent).toContain('طلب التوثيق');
     const options = [...t.$<HTMLSelectElement>('[data-verification-field]')!.options].map((o) => o.textContent!.trim());
-    expect(options).toEqual(['اختار مجالك', 'البرمجيات', 'الطب']);
+    expect(options).toEqual(['اختر مجالك', 'البرمجيات', 'الطب']);
 
     // Nothing is shown until the first try; then every problem, and focus on the first.
     expect(t.root.querySelectorAll('[data-error]:not(:empty)').length).toBe(0);
     t.$<HTMLButtonElement>('[data-verification-submit]')!.click();
     await t.stable();
-    expect(t.$('[data-error="fieldId"]')!.textContent).toBe('اختار مجالك.');
-    expect(t.$('[data-error="jobTitle"]')!.textContent).toBe('اكتب مسمى وظيفي من 2 لـ 100 حرف.');
-    expect(t.$('[data-error="proof"]')!.textContent).toBe('ضيف لينك أو ملف كإثبات.');
+    expect(t.$('[data-error="fieldId"]')!.textContent).toBe('اختر مجالك.');
+    expect(t.$('[data-error="jobTitle"]')!.textContent).toBe('اكتب مسمى وظيفيًا من 2 إلى 100 حرف.');
+    expect(t.$('[data-error="proof"]')!.textContent).toBe('أضف رابطًا أو ملفًا كإثبات.');
     expect(t.$('[data-verification-field]')!.getAttribute('aria-invalid')).toBe('true');
     expect(document.activeElement).toBe(t.$('[data-verification-field]'));
     http.expectNone(SUBMIT);
@@ -100,7 +100,7 @@ describe('VerificationPage (F19)', () => {
     type(t.$<HTMLInputElement>('[data-verification-proof-url]')!, 'http://example.com');
     await t.stable();
     expect(t.$('[data-error="fieldId"]')).toBeNull();
-    expect(t.$('[data-error="proofUrl"]')!.textContent).toBe('اكتب لينك كامل بيبدأ بـ https:// (لحد 500 حرف).');
+    expect(t.$('[data-error="proofUrl"]')!.textContent).toBe('اكتب رابطًا كاملًا يبدأ بـ https:// (بحد أقصى 500 حرف).');
 
     // A file of the wrong type or size never gets in.
     const fileInput = t.$<HTMLInputElement>('[data-verification-file-input]')!;
@@ -108,12 +108,12 @@ describe('VerificationPage (F19)', () => {
     pick(fileInput, new File(['gif'], 'card.gif', { type: 'image/gif' }));
     await t.stable();
     expect(t.$('[data-verification-file]')).toBeNull();
-    expect(t.$('[data-error="proof"]')!.textContent).toBe('اختار ملف PDF أو JPEG أو PNG أو WebP.');
+    expect(t.$('[data-error="proof"]')!.textContent).toBe('اختر ملف PDF أو JPEG أو PNG أو WebP.');
     const big = new File(['x'], 'card.pdf', { type: 'application/pdf' });
     Object.defineProperty(big, 'size', { value: 10 * 1024 * 1024 + 1 });
     pick(fileInput, big);
     await t.stable();
-    expect(t.$('[data-error="proof"]')!.textContent).toBe('الملف أكبر من 10 ميجا.');
+    expect(t.$('[data-error="proof"]')!.textContent).toBe('حجم الملف أكبر من 10 م.ب.');
 
     const card = new File(['%PDF-1.4'], 'كارنيه النقابة.pdf', { type: 'application/pdf' });
     pick(fileInput, card);
@@ -142,9 +142,9 @@ describe('VerificationPage (F19)', () => {
     await t.stable();
 
     expect(t.$('[data-verification-status="pending"]')).not.toBeNull();
-    expect(t.$('[data-verification-submitted]')!.textContent).toContain('اتبعت يوم 2 نوفمبر 2026');
+    expect(t.$('[data-verification-submitted]')!.textContent).toContain('تم الإرسال في 2 نوفمبر 2026');
     expect(t.$('[data-summary-proof-file]')!.textContent).toBe('كارنيه النقابة.pdf');
-    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'success', message: 'اتبعت الطلب ✓' })]);
+    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'success', message: 'تم إرسال الطلب ✓' })]);
   });
 
   it("the API's refusals land on their inputs and stay until the input changes", async () => {
@@ -160,7 +160,7 @@ describe('VerificationPage (F19)', () => {
     await t.stable();
     http.expectOne(SUBMIT).flush(problem(400, 'verification.proof_invalid'), { status: 400, statusText: 'Bad Request' });
     await t.stable();
-    expect(t.$('[data-error="proof"]')!.textContent).toBe('ملف الإثبات لازم يكون PDF أو JPEG أو PNG أو WebP، ومايزيدش عن 10 ميجا.');
+    expect(t.$('[data-error="proof"]')!.textContent).toBe('يجب أن يكون ملف الإثبات بصيغة PDF أو JPEG أو PNG أو WebP، وألا يتجاوز حجمه 10 م.ب.');
     t.$<HTMLButtonElement>('[data-verification-file-remove]')!.click();
     type(t.$<HTMLInputElement>('[data-verification-proof-url]')!, 'https://github.com/mona');
     await t.stable();
@@ -170,7 +170,7 @@ describe('VerificationPage (F19)', () => {
     await t.stable();
     http.expectOne(SUBMIT).flush(problem(400, 'validation.failed', { JobTitle: ['validation.length'] }), { status: 400, statusText: 'Bad Request' });
     await t.stable();
-    expect(t.$('[data-error="jobTitle"]')!.textContent).toBe('اكتب مسمى وظيفي من 2 لـ 100 حرف.');
+    expect(t.$('[data-error="jobTitle"]')!.textContent).toBe('اكتب مسمى وظيفيًا من 2 إلى 100 حرف.');
     type(t.$<HTMLInputElement>('[data-verification-job-title]')!, 'Backend engineer at X');
     await t.stable();
     expect(t.$('[data-error="jobTitle"]')).toBeNull();
@@ -187,7 +187,7 @@ describe('VerificationPage (F19)', () => {
     await t.stable();
     http.expectOne(SUBMIT).flush(problem(409, 'verification.already_pending'), { status: 409, statusText: 'Conflict' });
     await t.stable();
-    expect(TestBed.inject(ToastService).toasts().at(-1)).toMatchObject({ kind: 'info', message: 'عندك طلب لسه بيتراجع.' });
+    expect(TestBed.inject(ToastService).toasts().at(-1)).toMatchObject({ kind: 'info', message: 'لديك طلب قيد المراجعة بالفعل.' });
     http.expectOne(STATUS).flush(status({ canRequest: false, request: testRequest() }));
     await t.stable();
     expect(t.$('[data-verification-status="pending"]')).not.toBeNull();
@@ -196,7 +196,7 @@ describe('VerificationPage (F19)', () => {
   it('under review: what was sent; withdrawing asks first, shows the form at once and puts it back when refused', async () => {
     const t = await render(status({ canRequest: false, request: testRequest({ note: 'رقم القيد 12345' }) }));
     const card = t.$('[data-verification-status="pending"]')!;
-    expect(card.textContent).toContain('طلبك بيتراجع');
+    expect(card.textContent).toContain('طلبك قيد المراجعة');
     // Short values sit next to their label in the page direction; the text itself is isolated in its own direction.
     expect(t.$('[data-summary-job-title]')!.getAttribute('dir')).toBeNull();
     expect(t.$('[data-summary-job-title] rd-bdi-text')!.getAttribute('dir')).toBe('ltr');
@@ -206,7 +206,7 @@ describe('VerificationPage (F19)', () => {
 
     t.$<HTMLButtonElement>('[data-verification-withdraw]')!.click();
     await t.stable();
-    expect(t.$('[data-withdraw-sheet]')!.textContent).toContain('تسحب طلبك؟');
+    expect(t.$('[data-withdraw-sheet]')!.textContent).toContain('هل تريد سحب طلبك؟');
     http.expectNone({ method: 'DELETE', url: STATUS });
     t.$<HTMLButtonElement>('[data-withdraw-confirm]')!.click();
     await t.stable();
@@ -225,20 +225,20 @@ describe('VerificationPage (F19)', () => {
     http.expectOne({ method: 'DELETE', url: STATUS }).flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
     expect(t.$('[data-verification-form]')).not.toBeNull();
-    expect(TestBed.inject(ToastService).toasts().at(-1)).toMatchObject({ kind: 'success', message: 'اتسحب الطلب' });
+    expect(TestBed.inject(ToastService).toasts().at(-1)).toMatchObject({ kind: 'success', message: 'تم سحب الطلب' });
   });
 
   it('not approved: the reason in its own direction, and "Request again" starts from the rejected request', async () => {
     const reason = 'The certificate does not show your name.';
     const t = await render(status({ request: testRequest({ status: 'rejected', decidedAt: '2026-11-03T12:00:00Z', rejectionReason: reason, proofFileName: null }) }));
-    expect(t.$('[data-verification-status="rejected"]')!.textContent).toContain('طلبك ماتقبلش');
+    expect(t.$('[data-verification-status="rejected"]')!.textContent).toContain('لم تتم الموافقة على طلبك');
     expect(t.$('[data-verification-reason]')!.textContent).toBe(reason);
     expect(t.$('[data-verification-reason]')!.getAttribute('dir')).toBe('ltr');
 
     t.$<HTMLButtonElement>('[data-verification-again]')!.click();
     await t.stable();
     await t.answerFields();
-    expect(t.$('[data-verification-form]')!.textContent).toContain('ابعت طلب جديد');
+    expect(t.$('[data-verification-form]')!.textContent).toContain('إرسال طلب جديد');
     expect(t.$<HTMLSelectElement>('[data-verification-field]')!.value).toBe('f-software');
     expect(t.$<HTMLInputElement>('[data-verification-job-title]')!.value).toBe('Backend engineer في Vodafone');
     expect(t.$<HTMLInputElement>('[data-verification-proof-url]')!.value).toBe('https://www.linkedin.com/in/mona');
@@ -250,8 +250,8 @@ describe('VerificationPage (F19)', () => {
 
   it('verified: says so, and reads `me` again when the session does not know it yet (the badge)', async () => {
     const t = await render(status({ isVerified: true, canRequest: false, request: testRequest({ status: 'approved', decidedAt: '2026-11-03T12:00:00Z', proofFileName: null }) }));
-    expect(t.$('[data-verification-status="verified"]')!.textContent).toContain('إنت كاتب موثّق ✓');
-    expect(t.$('[data-verification-status="verified"]')!.textContent).toContain('اتقبل يوم 3 نوفمبر 2026');
+    expect(t.$('[data-verification-status="verified"]')!.textContent).toContain('أنت كاتب موثّق ✓');
+    expect(t.$('[data-verification-status="verified"]')!.textContent).toContain('تمت الموافقة في 3 نوفمبر 2026');
     expect(auth.refreshMe).toHaveBeenCalledTimes(1);
   });
 
@@ -263,7 +263,7 @@ describe('VerificationPage (F19)', () => {
 
   it("can't ask now (e.g. suspended): says so, no form", async () => {
     const t = await render(status({ canRequest: false }));
-    expect(t.$('[data-verification-status="unavailable"]')!.textContent).toContain('مش هتقدر تطلب التوثيق دلوقتي');
+    expect(t.$('[data-verification-status="unavailable"]')!.textContent).toContain('لا يمكنك طلب التوثيق حاليًا');
     expect(t.$('[data-verification-form]')).toBeNull();
   });
 

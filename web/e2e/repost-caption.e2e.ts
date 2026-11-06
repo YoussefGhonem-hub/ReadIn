@@ -5,11 +5,11 @@ import { signInAsReader } from './support/social';
 
 /**
  * "Repost with your thoughts" (F29 caption) in ar/light and en/dark, desktop and phone:
- * - the Repost button's menu: "أعد النشر" / "أعد النشر مع رأيك" before you repost, "عدّل رأيك" / "إلغاء إعادة النشر"
+ * - the Repost button's menu: "إعادة النشر" / "إعادة النشر مع رأيك" before you repost, "تعديل رأيك" / "إلغاء إعادة النشر"
  *   after; keyboard, Escape and focus back on the button;
  * - the caption dialog (a centred dialog on desktop, a bottom sheet on phones): the article's preview, a field that
  *   grows and never scrolls inside itself, the counter (red over 500, which disables Repost), `PUT { caption }`, the
- *   toast; editing prefilled from `GET`, "احفظ"; then Undo;
+ *   toast; editing prefilled from `GET`, "حفظ"; then Undo;
  * - the reposter's thoughts on the Following feed's cards, under the label line: plain text in its own direction, line
  *   breaks kept, cut at 4 lines with "… اقرأ المزيد" (the mock's `u-reposts…` viewers follow Karim and ReadIn, whose
  *   reposts have captions, e2e/mock-api/reposts.mjs).
@@ -67,7 +67,7 @@ for (const variant of VARIANTS) {
     await repost.focus();
     await page.keyboard.press('Enter');
     await expect(menu).toBeVisible();
-    await expect(items).toHaveText([t('أعد النشر', 'Repost'), t('أعد النشر مع رأيك', 'Repost with your thoughts')]);
+    await expect(items).toHaveText([t('إعادة النشر', 'Repost'), t('إعادة النشر مع رأيك', 'Repost with your thoughts')]);
     await expect(items.first()).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(items.nth(1)).toBeFocused();
@@ -86,16 +86,16 @@ for (const variant of VARIANTS) {
     const dialog = page.locator('[data-repost-dialog]');
     await expect(dialog).toBeVisible({ timeout: FIRST_RENDER_MS });
     const sheet = page.locator('rd-repost-dialog section[role="dialog"]');
-    await expect(sheet).toHaveAccessibleName(t('أعد نشر المقال', 'Repost this article'));
+    await expect(sheet).toHaveAccessibleName(t('إعادة نشر المقال', 'Repost this article'));
     await expect(dialog.locator('[data-repost-preview-title]')).toHaveText('Clean Architecture on one whiteboard');
     await expect(dialog.locator('[data-repost-preview-author]')).toHaveText('Mona Adel');
     const field = dialog.locator('[data-repost-caption]');
     await expect(field).toBeFocused();
-    await expect(field).toHaveAttribute('placeholder', t('قول رأيك في المقال… (اختياري)', 'Add your thoughts… (optional)'));
+    await expect(field).toHaveAttribute('placeholder', t('اكتب رأيك في المقال… (اختياري)', 'Add your thoughts… (optional)'));
     await expect(field).toHaveAccessibleName(t('رأيك في المقال', 'Your thoughts on the article'));
     await expect(dialog.locator('[data-repost-count]')).toHaveText('0/500');
     const submit = dialog.locator('[data-repost-submit]');
-    await expect(submit).toHaveText(t('انشر', 'Repost'));
+    await expect(submit).toHaveText(t('نشر', 'Repost'));
     await expect(submit).toBeEnabled();
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
@@ -131,26 +131,26 @@ for (const variant of VARIANTS) {
     await submit.click();
     expect((await put).postDataJSON()).toEqual({ caption });
     await expect(dialog).toHaveCount(0);
-    await expect(page.locator('rd-toast-host')).toContainText(t('أعدت نشر المقال.', 'You reposted this article.'));
+    await expect(page.locator('rd-toast-host')).toContainText(t('تمت إعادة نشر المقال.', 'You reposted this article.'));
     await expect(repost).toHaveAttribute('aria-pressed', 'true');
     await expect(count).toHaveText('3');
 
     // Reposted: "Edit your thoughts" (prefilled from GET, "Save") and "Undo repost".
     await repost.click();
-    await expect(items).toHaveText([t('عدّل رأيك', 'Edit your thoughts'), t('إلغاء إعادة النشر', 'Undo repost')]);
+    await expect(items).toHaveText([t('تعديل رأيك', 'Edit your thoughts'), t('إلغاء إعادة النشر', 'Undo repost')]);
     const get = page.waitForResponse((r) => r.request().method() === 'GET' && r.url().endsWith(`/articles/${CLEAN}/repost`));
     await menu.locator('[data-repost-action="edit"]').click();
     expect((await get).status()).toBe(200);
     await expect(field).toHaveValue(caption);
     await expect(dialog).toHaveAttribute('data-mode', 'edit');
-    await expect(submit).toHaveText(t('احفظ', 'Save'));
+    await expect(submit).toHaveText(t('حفظ', 'Save'));
     const edited = t('رأيي اتغيّر شوية.', 'Changed my mind a little.');
     await field.fill(edited);
     const save = page.waitForRequest((r) => r.method() === 'PUT' && r.url().endsWith(`/articles/${CLEAN}/repost`));
     await submit.click();
     expect((await save).postDataJSON()).toEqual({ caption: edited });
     await expect(dialog).toHaveCount(0);
-    await expect(page.locator('rd-toast-host')).toContainText(t('اتحفظ رأيك.', 'Your thoughts were saved.'));
+    await expect(page.locator('rd-toast-host')).toContainText(t('تم حفظ رأيك.', 'Your thoughts were saved.'));
     await expect(count).toHaveText('3'); // editing doesn't count again
 
     // Undo: at once; the caption goes with the repost.
@@ -175,7 +175,7 @@ for (const variant of VARIANTS) {
     // Karim's thoughts in Arabic on two lines, under "Karim Hassan and 1 other reposted this" and above the header.
     const sleep = cards.nth(0);
     const thoughts = sleep.locator('[data-card-repost-caption]');
-    await expect(sleep.locator('[data-card-repost-label]')).toHaveText(t('Karim Hassan وشخص تاني أعادوا نشره', 'Karim Hassan and 1 other reposted this'));
+    await expect(sleep.locator('[data-card-repost-label]')).toHaveText(t('أعاد نشره Karim Hassan وشخص آخر', 'Karim Hassan and 1 other reposted this'));
     await expect(thoughts).toHaveText('أحسن مقال قريته عن النوم السنة دي.\nالجزء بتاع الـ REM sleep لوحده يستاهل القراية.', { useInnerText: true });
     await expect(thoughts).toHaveAttribute('dir', 'rtl');
     expect(await thoughts.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe('pre-line');
@@ -194,8 +194,8 @@ for (const variant of VARIANTS) {
     await expect(long).toHaveAttribute('dir', 'ltr');
     const more = rsc.locator('[data-card-caption-more]');
     await expect(more).toBeVisible();
-    await expect(more).toHaveText(t('… اقرأ المزيد', '… Read more'));
-    await expect(more).toHaveAccessibleName(t('اقرأ رأي ReadIn كله', "Read all of ReadIn's thoughts"));
+    await expect(more).toHaveText(t('… قراءة المزيد', '… Read more'));
+    await expect(more).toHaveAccessibleName(t('عرض رأي ReadIn كاملًا', "Read all of ReadIn's thoughts"));
     const lines = await long.evaluate((el) => Math.round(el.clientHeight / parseFloat(getComputedStyle(el).lineHeight)));
     expect(lines).toBe(4);
 

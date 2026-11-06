@@ -30,7 +30,7 @@ describe('MutedBanner (F28)', () => {
     http = t.http;
     const banner = t.root.querySelector('[data-muted-banner]')!;
     expect(banner.getAttribute('role')).toBe('status');
-    expect(banner.querySelector('h2')!.textContent!.trim()).toBe('انت كاتم الكاتب ده');
+    expect(banner.querySelector('h2')!.textContent!.trim()).toBe('لقد كتمت هذا الكاتب');
     const unmute = t.root.querySelector<HTMLButtonElement>('[data-muted-unmute]')!;
     expect(unmute.textContent!.trim()).toBe('إلغاء الكتم');
 
@@ -42,7 +42,7 @@ describe('MutedBanner (F28)', () => {
     req.flush({ isMuted: false, isFollowing: false, followerCount: 40, followRemoved: false });
     await t.stable();
     expect(TestBed.inject(MuteStore).isAuthorMuted('writer-1', true)).toBe(false);
-    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['لغيت كتم \u2068Karim Hassan\u2069.']);
+    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['تم إلغاء كتم \u2068Karim Hassan\u2069.']);
   });
 
   it('a failed unmute keeps the mute and says why', async () => {
@@ -53,6 +53,6 @@ describe('MutedBanner (F28)', () => {
     t.http.expectOne(`${TEST_API}/users/writer-1/mute`).flush(problem(404, 'user.not_found'), { status: 404, statusText: 'Not Found' });
     await t.stable();
     expect(TestBed.inject(MuteStore).isAuthorMuted('writer-1', true)).toBe(true);
-    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['المستخدم ده مش موجود.']);
+    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['هذا المستخدم غير موجود.']);
   });
 });

@@ -75,7 +75,7 @@ describe('PathPage (F09)', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     expect($('[data-path-progress]')!.textContent).toContain('1/4');
     expect($('[data-path-progress] [role="progressbar"]')!.getAttribute('aria-valuenow')).toBe('25');
-    expect($('[data-path-progress] [role="progressbar"]')!.getAttribute('aria-label')).toBe('قريت 1 من 4');
+    expect($('[data-path-progress] [role="progressbar"]')!.getAttribute('aria-label')).toBe('تمت قراءة 1 من 4');
 
     $('[data-path-start]')!.click();
     await stable();
@@ -95,7 +95,7 @@ describe('PathPage (F09)', () => {
     const { $, root } = await render(testPathDetails(testProgress(2, { enrolled: true }), 2));
     const cont = $<HTMLAnchorElement>('[data-path-continue]')!;
     expect(cont.getAttribute('href')).toBe('/en/a/article-3');
-    expect(cont.textContent).toContain('كمّل:');
+    expect(cont.textContent).toContain('متابعة القراءة:');
     expect(cont.textContent).toContain('Article 3');
     expect(root.querySelectorAll('[data-read-tick]')).toHaveLength(2);
     expect(root.querySelector('[data-next]')!.getAttribute('data-path-item')).toBe('3');
@@ -106,8 +106,8 @@ describe('PathPage (F09)', () => {
 
   it('all read: the completion badge, a celebration and Read again from the first article', async () => {
     const { $ } = await render(testPathDetails(testProgress(4, { completed: true }), 4));
-    expect($('[data-path-completed]')!.textContent).toContain('خلصت المسار');
-    expect($('[data-path-celebration]')!.textContent).toContain('خلصت المسار 🎉');
+    expect($('[data-path-completed]')!.textContent).toContain('مكتمل');
+    expect($('[data-path-celebration]')!.textContent).toContain('اكتمل المسار 🎉');
     expect($<HTMLAnchorElement>('[data-path-again]')!.getAttribute('href')).toBe('/en/a/article-1');
     expect($('[data-path-progress] rd-progress-bar span')!.className).toContain('bg-success');
   });
@@ -119,7 +119,7 @@ describe('PathPage (F09)', () => {
     (document.querySelector('[data-path-leave]') as HTMLElement).click();
     await stable();
     const sheet = document.querySelector('[data-leave-path]')!;
-    expect(sheet.textContent).toContain('تسيب «أساسيات ASP.NET Core»؟');
+    expect(sheet.textContent).toContain('هل تريد مغادرة «أساسيات ASP.NET Core»؟');
     (sheet.querySelector('[data-confirm-leave]') as HTMLElement).click();
     await stable();
     const req = http.expectOne(`${TEST_API}/me/paths/p1`);
@@ -130,7 +130,7 @@ describe('PathPage (F09)', () => {
     expect($('[data-path-start]')).not.toBeNull();
     expect($('[data-path-menu]')).toBeNull();
     expect($('[data-path-progress]')!.textContent).toContain('2/4');
-    expect(TestBed.inject(ToastService).toasts().map((t) => t.message)).toContain('سبت المسار');
+    expect(TestBed.inject(ToastService).toasts().map((t) => t.message)).toContain('غادرت المسار');
   });
 
   it('a failed enroll shows the error and stays', async () => {
@@ -139,15 +139,15 @@ describe('PathPage (F09)', () => {
     await stable();
     http.expectOne(`${TEST_API}/me/paths/p1`).flush(problem(404, 'path.not_found'), { status: 404, statusText: 'Not Found' });
     await stable();
-    expect(TestBed.inject(ToastService).toasts().map((t) => t.message)).toContain('المسار ده مش موجود.');
+    expect(TestBed.inject(ToastService).toasts().map((t) => t.message)).toContain('هذا المسار غير موجود.');
     expect(($('[data-path-start]') as HTMLButtonElement).disabled).toBe(false);
   });
 
   it('an unknown path is a not-found state', async () => {
     const { $ } = await render({ status: 404, code: 'path.not_found' });
-    expect($('[data-path-not-found]')!.textContent).toContain('المسار ده مش موجود');
+    expect($('[data-path-not-found]')!.textContent).toContain('هذا المسار غير موجود');
     expect($('[data-path-not-found] a')!.getAttribute('href')).toBe('/paths');
-    expect(TestBed.inject(Title).getTitle()).toBe('المسار ده مش موجود — ReadIn');
+    expect(TestBed.inject(Title).getTitle()).toBe('هذا المسار غير موجود — ReadIn');
   });
 
   it('a failed load offers a retry', async () => {

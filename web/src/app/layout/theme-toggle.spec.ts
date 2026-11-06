@@ -43,7 +43,7 @@ describe('ThemeToggle', () => {
   it('light: offers dark, and one click switches to dark and saves it to the profile', async () => {
     const { fixture, button, theme, http } = render({ theme: 'light' });
     expect(button.getAttribute('aria-pressed')).toBe('false');
-    expect(button.getAttribute('aria-label')).toBe('حوّل للوضع الداكن');
+    expect(button.getAttribute('aria-label')).toBe('التبديل إلى الوضع الداكن');
 
     button.click();
     expect(theme.preference()).toBe('dark');
@@ -55,7 +55,7 @@ describe('ThemeToggle', () => {
 
     fixture.detectChanges();
     expect(button.getAttribute('aria-pressed')).toBe('true');
-    expect(button.getAttribute('aria-label')).toBe('حوّل للوضع الفاتح');
+    expect(button.getAttribute('aria-label')).toBe('التبديل إلى الوضع الفاتح');
   });
 
   it('dark: one click switches to light', () => {
@@ -104,7 +104,7 @@ describe('ThemeToggle', () => {
   it('stacked: the label "Theme" under the icon, and a name that starts with it', () => {
     const { button } = render({ theme: 'light', variant: 'stacked' });
     expect(button.textContent!.trim()).toBe('المظهر');
-    expect(button.getAttribute('aria-label')).toBe('المظهر: حوّل للوضع الداكن');
+    expect(button.getAttribute('aria-label')).toBe('المظهر: التبديل إلى الوضع الداكن');
     expect(button.getAttribute('aria-pressed')).toBe('false');
   });
 });

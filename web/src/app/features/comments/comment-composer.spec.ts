@@ -65,10 +65,10 @@ describe('The comment box (F11)', () => {
     expect(box.querySelector('[data-composer-avatar]')!.getAttribute('aria-hidden')).toBe('true');
     const field = box.querySelector('[data-comment-field]')!;
     expect(field.classList).toContain('comment-field');
-    expect(field.querySelector('textarea')!.getAttribute('placeholder')).toBe('اكتب تعليق…');
-    expect(field.querySelector('[data-comment-emoji]')!.getAttribute('aria-label')).toBe('ضيف إيموجي');
+    expect(field.querySelector('textarea')!.getAttribute('placeholder')).toBe('اكتب تعليقًا…');
+    expect(field.querySelector('[data-comment-emoji]')!.getAttribute('aria-label')).toBe('إضافة رمز تعبيري');
     const send = field.querySelector<HTMLButtonElement>('[data-comment-send]')!;
-    expect(send.getAttribute('aria-label')).toBe('ابعت التعليق');
+    expect(send.getAttribute('aria-label')).toBe('نشر التعليق');
     // An icon, not a "نشر" text button; no cancel on a new comment.
     expect(send.textContent!.trim()).toBe('');
     expect(box.querySelector('[data-comment-cancel]')).toBeNull();
@@ -113,7 +113,7 @@ describe('The comment box (F11)', () => {
     const picker = await t.until('[data-emoji-picker]');
     expect(button.getAttribute('aria-expanded')).toBe('true');
     expect(picker.getAttribute('role')).toBe('dialog');
-    expect(picker.getAttribute('aria-label')).toBe('اختار إيموجي');
+    expect(picker.getAttribute('aria-label')).toBe('اختيار رمز تعبيري');
     expect(picker.querySelectorAll('[role="tab"]').length).toBe(9);
     // The first emoji takes the focus.
     await t.stable();

@@ -6,7 +6,7 @@ import { expectSignInPrompt, openArticle, signInAsReader } from './support/socia
 /**
  * F28 Article menu, mute and "Show less" end to end in ar/light and en/dark: the "⋯" menu in its order (someone else's
  * article, your own, guests), Show less and Mute author with Undo on Home (the cards fold away and come back in place),
- * the "كتم المواضيع" sheet, the "انت كاتم الكاتب ده" banner in the reader and on a profile, comments by a muted writer
+ * the "كتم المواضيع" sheet, the "لقد كتمت هذا الكاتب" banner in the reader and on a profile, comments by a muted writer
  * collapsed until "عرض", and Settings → Muted. The mock API keeps each reader's mutes (e2e/mock-api/mutes.mjs); the
  * flags a page loads with (`isAuthorMuted`, `ProfileDto.isMuted`, a card's `topic`) are routed here.
  */
@@ -66,8 +66,8 @@ for (const variant of VARIANTS) {
     const clean = cardOf(page, CLEAN);
     await openMenu(clean, page);
     await expect(actions(page)).toHaveText([
-      t('قلّل من النوع ده', 'Show less like this'),
-      t('تابع الكاتب', 'Follow author'),
+      t('عرض أقل من هذا النوع', 'Show less like this'),
+      t('متابعة الكاتب', 'Follow author'),
       t('كتم الكاتب', 'Mute author'),
       t('كتم المواضيع', 'Mute topics'),
       t('الإبلاغ عن المقال', 'Report article'),
@@ -82,7 +82,7 @@ for (const variant of VARIANTS) {
     const before = await order();
     await pick(page, 'showLess');
     await expect(clean).toBeHidden();
-    await expect(toast(page)).toContainText(t('تمام، هتشوف مقالات أقل من النوع ده', "Got it. You'll see fewer articles like this."));
+    await expect(toast(page)).toContainText(t('حسنًا، سترى مقالات أقل من هذا النوع', "Got it. You'll see fewer articles like this."));
     expect(await (await request.get(`${MOCK_ORIGIN}/__mock/show-less?viewer=${me.id}`)).json()).toEqual([CLEAN]);
     const undone = page.waitForResponse((r) => r.request().method() === 'DELETE' && r.url().endsWith(`/articles/${CLEAN}/show-less`));
     await toast(page).locator('[data-toast-action]').click();
@@ -94,7 +94,7 @@ for (const variant of VARIANTS) {
     await openMenu(cardOf(page, 'a-one-photo'), page);
     await pick(page, 'muteAuthor');
     for (const id of MONA) await expect(cardOf(page, id)).toBeHidden();
-    await expect(toast(page)).toContainText(t('كتمت', 'You muted'));
+    await expect(toast(page)).toContainText(t('تم كتم', 'You muted'));
     await expect(toast(page)).toContainText('Mona Adel');
     await toast(page).locator('[data-toast-action]').click();
     for (const id of MONA) await expect(cardOf(page, id)).toBeVisible();
@@ -123,7 +123,7 @@ for (const variant of VARIANTS) {
     await restoreSessionAs(page, writer);
     await openArticle(page, '/en/a/clean-architecture-whiteboard');
     await openMenu(bar, page);
-    await expect(actions(page)).toHaveText([t('إخفاء الـ Highlights', 'Hide highlights'), t('كتم المواضيع', 'Mute topics'), t('تحميل PDF', 'Download PDF')]);
+    await expect(actions(page)).toHaveText([t('إخفاء التمييزات', 'Hide highlights'), t('كتم المواضيع', 'Mute topics'), t('تنزيل PDF', 'Download PDF')]);
   });
 
   test(`reader: the topics sheet, the muted-writer banner and collapsed comments — ${suffix}`, async ({ page, context, baseURL, request }) => {
@@ -193,7 +193,7 @@ for (const variant of VARIANTS) {
     await openMenu(bar, page);
     await pick(page, 'muteAuthor');
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText(t('انت كاتم الكاتب ده', 'You muted this writer'));
+    await expect(banner).toContainText(t('لقد كتمت هذا الكاتب', 'You muted this writer'));
     await expect(toast(page)).toContainText('Mona Adel');
     await page.locator('rd-toast-host button').last().click(); // close the toast
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -252,10 +252,10 @@ for (const variant of VARIANTS) {
     await page.goto('/settings');
     const row = page.locator('[data-settings-muted]');
     await expect(row).toBeVisible({ timeout: FIRST_RENDER_MS });
-    await expect(row).toContainText(t('اللي كتمته', 'Muted'));
+    await expect(row).toContainText(t('ما كتمته', 'Muted'));
     await row.click();
     await page.waitForURL((url) => url.pathname === '/settings/muted');
-    await expect(page).toHaveTitle(t('اللي كتمته — ReadIn', 'Muted — ReadIn'));
+    await expect(page).toHaveTitle(t('ما كتمته — ReadIn', 'Muted — ReadIn'));
     const list = page.locator('[data-muted-list]');
     await expect(list).toBeVisible({ timeout: FIRST_RENDER_MS });
     await expect(list.locator('[data-muted-user]')).toHaveCount(2);
@@ -275,7 +275,7 @@ for (const variant of VARIANTS) {
     }
     const empty = page.locator('[data-muted-empty]');
     await expect(empty).toBeVisible();
-    await expect(empty).toContainText(t('مكتمتش حاجة لسه', "You haven't muted anything"));
+    await expect(empty).toContainText(t('لم تكتم شيئًا بعد', "You haven't muted anything"));
     const mutes = await (await request.get(`${API}/me/mutes`, { headers })).json();
     expect(mutes).toEqual({ users: [], fields: [], topics: [] });
     await parkMouse(page);

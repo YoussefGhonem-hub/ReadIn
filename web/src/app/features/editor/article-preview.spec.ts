@@ -35,7 +35,7 @@ describe('ArticlePreview health disclaimer (F05, SPEC F04)', () => {
 
     const root = render(medicine);
     const notice = root.querySelector('[data-health-disclaimer]')!;
-    expect(notice.textContent!.trim()).toBe('المعلومات دي للتوعية ولا تغني عن استشارة الطبيب.');
+    expect(notice.textContent!.trim()).toBe('هذه المعلومات للتوعية فقط، ولا تُغني عن استشارة الطبيب.');
     expect(!!(root.querySelector('[data-trust-row]')!.compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
     expect(!!(notice.compareDocumentPosition(root.querySelector('rd-rdoc')!) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
   });

@@ -70,7 +70,7 @@ describe('ExplorePage (F15)', () => {
     const tiles = [...root.querySelectorAll<HTMLAnchorElement>('[data-field-tile]')];
     expect(tiles.map((t) => t.getAttribute('href'))).toEqual(['/f/software', '/f/medicine', '/f/design']);
     expect(text(tiles[0].querySelector('rd-bdi-text'))).toBe('البرمجيات');
-    expect(text(tiles[0].querySelector('[data-field-count]'))).toBe('32 مقال');
+    expect(text(tiles[0].querySelector('[data-field-count]'))).toBe('32 مقالًا');
     // An empty field is listed too: its page says so.
     expect(text(tiles[2].querySelector('[data-field-count]'))).toBe('0 مقال');
 
@@ -79,7 +79,7 @@ describe('ExplorePage (F15)', () => {
     expect(root.querySelectorAll('[data-explore-most-saved] rd-article-card')).toHaveLength(3);
     expect($('[data-see-all="trending"]')!.getAttribute('href')).toBe('/explore/trending');
     expect($('[data-see-all="most-saved"]')!.getAttribute('href')).toBe('/explore/most-saved');
-    expect(text($('[data-see-all="trending"]'))).toBe('عرض الكل · الترند الأسبوع ده');
+    expect(text($('[data-see-all="trending"]'))).toBe('عرض الكل · الأكثر رواجًا هذا الأسبوع');
 
     // New writers with Follow (a guest sees it too: tapping asks to sign in).
     expect(root.querySelectorAll('[data-explore-new-writers] [data-writer]')).toHaveLength(2);
@@ -105,13 +105,13 @@ describe('ExplorePage (F15)', () => {
 
   it('says so when every section is empty', async () => {
     const { $ } = await render({ fields: [], trending: [], mostSaved: [], newWriters: [], featuredPaths: [] });
-    expect(text($('[data-explore-empty] h3'))).toBe('لسه مفيش حاجة تستكشفها');
+    expect(text($('[data-explore-empty] h3'))).toBe('لا يوجد ما تستكشفه بعد');
     expect($('[data-explore-fields]')).toBeNull();
   });
 
   it('a failure shows an error with Retry, which loads the page again', async () => {
     const { $, root, stable } = await render({ status: 503, code: 'server.error' });
-    expect(text($('rd-error-state'))).toContain('معرفناش نحمّل صفحة الاستكشاف.');
+    expect(text($('rd-error-state'))).toContain('تعذّر تحميل صفحة الاستكشاف.');
     $<HTMLButtonElement>('rd-error-state button')!.click();
     http.expectOne(`${TEST_API}/explore`).flush(EXPLORE);
     await stable();

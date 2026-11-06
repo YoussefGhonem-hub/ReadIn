@@ -157,29 +157,29 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
 
   it('first says what is deleted, what is kept and why, before asking anything', async () => {
     const page = await setup(WITH_PASSWORD);
-    expect(page.$('#delete-about-title')!.textContent).toContain('احذف حسابك');
-    expect(page.$('[data-lead]')!.textContent).toContain('ده بيحذف حسابك على ReadIn نهائيًا. مينفعش ترجع فيه، ومش هنقدر نرجّعه.');
+    expect(page.$('#delete-about-title')!.textContent).toContain('حذف حسابك');
+    expect(page.$('[data-lead]')!.textContent).toContain('سيؤدي هذا إلى حذف حسابك على ReadIn نهائيًا. لا يمكنك التراجع عن ذلك، ولن نتمكن من استعادته.');
     expect(page.root().querySelectorAll('[data-deleted] li')).toHaveLength(7);
-    expect(page.$('[data-deleted]')!.textContent).toContain('ربط حسابك بجوجل وأبل، وبنلغي صلاحية ReadIn عند أبل كمان.');
+    expect(page.$('[data-deleted]')!.textContent).toContain('ربط حسابك بـ Google وApple، كما نُلغي صلاحية وصول ReadIn لدى Apple.');
     // Drafts and unpublished articles go; published ones stay up as "Deleted user" (SPEC §9.6).
-    expect(page.$('[data-deleted]')!.textContent).toContain('المسودات وأي مقال مش منشور، بالصور وملفات الـ PDF اللي فيها، وأي صورة أو ملف تاني رفعته');
+    expect(page.$('[data-deleted]')!.textContent).toContain('المسودات وأي مقال غير منشور، بما فيها من صور وملفات PDF، وأي صورة أو ملف آخر رفعته');
     expect(page.$('[data-deleted]')!.textContent).not.toContain('مقالاتك والمسودات');
     // The title and the reposts (F14, F29) are deleted too (SPEC §9.6).
-    expect(page.$('[data-deleted]')!.textContent).toContain('بروفايلك: الاسم واسم المستخدم والصورة والمسمى والنبذة والروابط');
-    expect(page.$('[data-deleted]')!.textContent).toContain('وتفاعلاتك وإعادات نشرك والجمل اللي علّمتها (الـ Highlights) وإعجاباتك بالتعليقات');
+    expect(page.$('[data-deleted]')!.textContent).toContain('ملفك الشخصي: الاسم واسم المستخدم والصورة والمسمى والنبذة والروابط');
+    expect(page.$('[data-deleted]')!.textContent).toContain('وتفاعلاتك وإعادات نشرك والمقاطع التي ميّزتها وإعجاباتك بالتعليقات');
     const kept = page.root().querySelectorAll('[data-kept] li');
     expect(kept).toHaveLength(4);
     expect(kept[0].textContent!.trim()).toBe(
-      'مقالاتك المنشورة وتعليقاتك بتفضل موجودة باسم «مستخدم محذوف»، بالصور وملفات الـ PDF اللي فيها: من غير اسمك أو اسم المستخدم أو صورتك، ومن غير أي حاجة تربطها بيك. ده عشان الروابط والنقاشات اللي غيرك معتمد عليها تفضل شغالة. لو عايز تشيل مقال، احذفه قبل ما تحذف حسابك.',
+      'تبقى مقالاتك المنشورة وتعليقاتك ظاهرةً باسم «مستخدم محذوف»، بما فيها من صور وملفات PDF: دون اسمك أو اسم المستخدم أو صورتك، ودون أي شيء يربطها بك. يضمن ذلك استمرار عمل الروابط والنقاشات التي يعتمد عليها القرّاء الآخرون. إذا أردت إزالة مقال، فاحذفه قبل حذف حسابك.',
     );
-    expect(page.$('[data-kept]')!.textContent).toContain('لحد 14 يوم');
-    expect(page.$('[data-after]')!.textContent).toContain('وهيبدأ فاضي');
+    expect(page.$('[data-kept]')!.textContent).toContain('تصل إلى 14 يومًا');
+    expect(page.$('[data-after]')!.textContent).toContain('وسيبدأ فارغًا');
     expect(page.$<HTMLAnchorElement>('[data-delete-by-email]')!.href).toBe('https://readin-cca78.firebaseapp.com/delete-account');
     expect(page.$('#delete-account-password')).toBeNull();
     expect(page.$('[data-delete-submit]')).toBeNull();
 
     await toConfirm(page);
-    expect(page.$('#delete-confirm-title')!.textContent).toContain('أكّد إنه انت');
+    expect(page.$('#delete-confirm-title')!.textContent).toContain('تأكيد هويتك');
     expect(page.$('#delete-account-password')).not.toBeNull();
     noDeleteRequest(page);
   });
@@ -209,7 +209,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     await toConfirm(page);
     const button = () => page.$<HTMLButtonElement>('[data-delete-submit]')!;
     expect(button().disabled).toBe(true);
-    expect(button().textContent).toContain('احذف حسابي');
+    expect(button().textContent).toContain('حذف حسابي');
 
     typePassword(page);
     expect(button().disabled).toBe(true); // still needs the checkbox
@@ -221,9 +221,9 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     const dialog = page.$('[data-delete-dialog]')!.closest('section')!;
     expect(dialog.getAttribute('role')).toBe('alertdialog');
     expect(dialog.getAttribute('aria-labelledby')).toBe('delete-forever-title');
-    expect(page.$('#delete-forever-title')!.textContent).toContain('تحذف حسابك نهائيًا؟');
-    expect(page.$('#delete-forever-body')!.textContent).toContain('مينفعش ترجع في الخطوة دي.');
-    expect(page.$('[data-delete-forever]')!.textContent).toContain('احذف نهائيًا');
+    expect(page.$('#delete-forever-title')!.textContent).toContain('هل تريد حذف حسابك نهائيًا؟');
+    expect(page.$('#delete-forever-body')!.textContent).toContain('لا يمكن التراجع عن هذه الخطوة.');
+    expect(page.$('[data-delete-forever]')!.textContent).toContain('موافق');
     expect(document.activeElement).toBe(page.$('[data-delete-cancel]'));
     page.$<HTMLButtonElement>('[data-delete-cancel]')!.click();
     await page.render();
@@ -238,9 +238,9 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     // Progress: the form is disabled, the button says so and screen readers hear it.
     expect(button().disabled).toBe(true);
     expect(button().getAttribute('aria-busy')).toBe('true');
-    expect(button().textContent).toContain('بنحذف حسابك…');
+    expect(button().textContent).toContain('جارٍ حذف حسابك…');
     expect(page.$<HTMLFieldSetElement>('[data-delete-form] fieldset')!.disabled).toBe(true);
-    expect(page.$('[data-delete-status]')!.textContent).toContain('بنحذف حسابك…');
+    expect(page.$('[data-delete-status]')!.textContent).toContain('جارٍ حذف حسابك…');
     expect(page.session.isAuthenticated()).toBe(true); // nothing looks deleted before the API says so
 
     request.flush(null, { status: 204, statusText: 'No Content' });
@@ -255,12 +255,12 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     tickUnderstood(page);
     await submit(page);
     expect(page.$('[data-delete-dialog]')).toBeNull();
-    expect(page.$('#delete-account-password-error')!.textContent).toContain('الخانة دي مطلوبة.');
+    expect(page.$('#delete-account-password-error')!.textContent).toContain('هذا الحقل مطلوب.');
 
     typePassword(page, 'not-my-password');
     await deleteForever(page);
     await flushProblem(page, deleteRequest(page), 400, 'auth.wrong_password');
-    expect(page.$('#delete-account-password-error')!.textContent).toContain('كلمة السر الحالية غلط.');
+    expect(page.$('#delete-account-password-error')!.textContent).toContain('كلمة المرور الحالية غير صحيحة.');
     expect(page.$('[data-retry]')).toBeNull();
     expect(page.$('[data-delete-confirm]')).not.toBeNull();
     expect(page.session.isAuthenticated()).toBe(true);
@@ -280,7 +280,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     tickUnderstood(page);
     await submit(page); // not confirmed yet: no dialog
     expect(page.$('[data-delete-dialog]')).toBeNull();
-    expect(page.$('[data-confirm-first]')!.textContent).toContain('أكّد إنه انت الأول.');
+    expect(page.$('[data-confirm-first]')!.textContent).toContain('أكّد هويتك أولًا.');
 
     sdks.google.pick('google-token');
     await page.render();
@@ -309,7 +309,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     await settle(10);
     await flushProblem(page, deleteRequest(page), 401, 'auth.external_invalid');
 
-    expect(page.$('[data-delete-error]')!.textContent).toContain('مقدرناش نتأكد من الدخول بجوجل أو أبل');
+    expect(page.$('[data-delete-error]')!.textContent).toContain('تعذّر التحقق من تسجيل الدخول عبر Google أو Apple');
     expect(page.$('[data-confirmed]')).toBeNull(); // pick the account again
     expect(page.$('[data-delete-external] [data-fake-gis]')).not.toBeNull();
     expect(page.session.isAuthenticated()).toBe(true);
@@ -320,7 +320,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     const page = await setup(PASSWORD_AND_APPLE, { apple: true });
     await toConfirm(page);
     const apple = page.$<HTMLButtonElement>('[data-delete-external] [data-apple-button]')!;
-    expect(apple.textContent).toContain('أكّد بأبل');
+    expect(apple.textContent).toContain('التأكيد عبر Apple');
     expect(page.$('#delete-account-password')).not.toBeNull(); // the password stays possible too
 
     apple.click();
@@ -367,7 +367,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     await page.until(() => sdks.apple.signIn.mock.settledResults[0]?.type === 'rejected'); // the popup was closed
     await page.render();
     noDeleteRequest(page);
-    expect(page.$('[data-delete-error]')!.textContent).toContain('حسابك مربوط بأبل. أكّد بأبل عشان تحذفه.');
+    expect(page.$('[data-delete-error]')!.textContent).toContain('هذا الحساب مرتبط بـ Apple. أكّد هويتك عبر Apple لحذفه.');
 
     sdks.apple.next = { authorization: { id_token: 'apple-id-token', code: 'apple-auth-code' } };
     page.$<HTMLButtonElement>('[data-delete-external] [data-apple-button]')!.click();
@@ -386,7 +386,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
 
     const notice = page.$('[data-apple-unavailable]')!;
     expect(notice.getAttribute('role')).toBe('alert');
-    expect(notice.textContent).toContain('حسابك مربوط بأبل. أكّد بأبل من تطبيق ReadIn على الآيفون، أو ابعتلنا إيميل نحذفه.');
+    expect(notice.textContent).toContain('هذا الحساب مرتبط بـ Apple. أكّد هويتك عبر Apple من تطبيق ReadIn على iPhone، أو راسلنا عبر البريد الإلكتروني لحذفه.');
     expect(notice.querySelector<HTMLAnchorElement>('a')!.href).toContain('mailto:youssef.fcaih@gmail.com');
     expect(page.$('[data-retry]')).toBeNull();
     expect(sdks.apple.signIn).not.toHaveBeenCalled();
@@ -397,7 +397,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
   it('an Apple-only account on the web is told where it can delete', async () => {
     const page = await setup(APPLE_ONLY);
     await toConfirm(page);
-    expect(page.$('[data-no-confirm-here]')!.textContent).toContain('أكّد بأبل من تطبيق ReadIn على الآيفون');
+    expect(page.$('[data-no-confirm-here]')!.textContent).toContain('أكّد هويتك عبر Apple من تطبيق ReadIn على iPhone');
     tickUnderstood(page);
     await submit(page);
     expect(page.$('[data-delete-dialog]')).toBeNull();
@@ -414,7 +414,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
 
     const error = page.$('[data-delete-error]')!;
     expect(error.getAttribute('role')).toBe('alert');
-    expect(error.textContent).toContain('معرفناش نكمّل حذف حسابك، فمفيش حاجة اتحذفت.');
+    expect(error.textContent).toContain('تعذّر إكمال حذف حسابك، ولم يُحذف أي شيء.');
     expect(page.session.isAuthenticated()).toBe(true);
     expect(page.push.forgetDevice).not.toHaveBeenCalled();
     expect(page.$('[data-delete-status]')!.textContent!.trim()).toBe('');
@@ -437,7 +437,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
       tickUnderstood(page);
       await deleteForever(page);
       noDeleteRequest(page);
-      expect(page.$('[data-delete-error]')!.textContent).toContain('انت مش متصل بالإنترنت. اتصل الأول عشان تحذف حسابك.');
+      expect(page.$('[data-delete-error]')!.textContent).toContain('أنت غير متصل بالإنترنت. اتصل بالإنترنت أولًا لحذف حسابك.');
       expect(page.$('[data-retry]')).not.toBeNull();
       expect(page.session.isAuthenticated()).toBe(true);
 
@@ -453,7 +453,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
       expect(request.request.body).toEqual({ password: PASSWORD });
       request.error(new ProgressEvent('error'));
       await page.render();
-      expect(page.$('[data-delete-error]')!.textContent).toContain('انت مش متصل بالإنترنت');
+      expect(page.$('[data-delete-error]')!.textContent).toContain('أنت غير متصل بالإنترنت');
       expect(page.$('[data-retry]')).not.toBeNull();
       expect(page.session.isAuthenticated()).toBe(true);
       noDeleteRequest(page);
@@ -469,7 +469,7 @@ describe('Delete account (SPEC F01, immediate hard delete)', () => {
     tickUnderstood(page);
     await deleteForever(page);
     await flushProblem(page, deleteRequest(page), 429, 'rate_limited');
-    expect(page.$('[data-delete-error]')!.textContent).toContain('طلبات كتير');
+    expect(page.$('[data-delete-error]')!.textContent).toContain('طلبات كثيرة');
     expect(page.$('[data-retry]')).toBeNull();
     expect(page.$<HTMLButtonElement>('[data-delete-submit]')!.disabled).toBe(false);
   });

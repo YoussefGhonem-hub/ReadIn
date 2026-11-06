@@ -122,7 +122,7 @@ describe('Moderation notices (F22)', () => {
       // No close button, no dismissing: it has to be acknowledged.
       expect(dialog.querySelector('[aria-label="إغلاق"]')).toBeNull();
       expect(t.$('[data-moderation-notice]')!.getAttribute('data-notice-kind')).toBe('warning');
-      expect(t.$('[data-notice-title]')!.textContent!.trim()).toBe('وصلك تحذير من فريق الإشراف');
+      expect(t.$('[data-notice-title]')!.textContent!.trim()).toBe('تلقّيت تحذيرًا من فريق الإشراف');
       expect(t.$('[data-notice-note]')!.textContent).toContain('Please keep the comments respectful.');
       expect(t.$('[data-notice-ack]')!.textContent!.trim()).toBe('فهمت');
 
@@ -134,7 +134,7 @@ describe('Moderation notices (F22)', () => {
       await t.stable();
 
       expect(t.$('[data-moderation-notice]')!.getAttribute('data-notice-kind')).toBe('article_hidden');
-      expect(t.$('[data-notice-title]')!.textContent!.trim()).toBe('مقالك «⁨Clean Architecture on one whiteboard⁩» اتخفى');
+      expect(t.$('[data-notice-title]')!.textContent!.trim()).toBe('تم إخفاء مقالك «⁨Clean Architecture on one whiteboard⁩»');
       expect(t.$('[data-notice-note]')!.textContent).toContain('ضيف المصدر وكلّمنا.');
 
       t.$('[data-notice-ack]')!.click();
@@ -158,7 +158,7 @@ describe('Moderation notices (F22)', () => {
       t.http.expectOne(`${NOTICES}/n2/acknowledge`).flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
       await t.stable();
       expect(t.$('[data-moderation-notice]')!.getAttribute('data-notice-kind')).toBe('article_hidden');
-      expect(t.root.querySelector('[role="alert"]')!.textContent).toContain('السيرفر واجه مشكلة');
+      expect(t.root.querySelector('[role="alert"]')!.textContent).toContain('واجه الخادم مشكلة');
     });
   });
 });

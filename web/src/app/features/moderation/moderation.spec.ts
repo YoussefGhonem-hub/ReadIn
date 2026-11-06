@@ -131,8 +131,8 @@ describe('Moderation (F22)', () => {
       await t.stable();
 
       expect(t.$('[data-moderation-tab="open"]')!.getAttribute('aria-current')).toBe('page');
-      expect(t.$$('[data-moderation-tab]').map((tab) => tab.textContent!.trim())).toEqual(['مفتوحة', 'اتحلّت', 'اترفضت', 'السجل']);
-      expect(t.$$('[data-type-chip]').map((chip) => chip.textContent!.replace(/\s+/g, ' ').trim())).toEqual(['الكل 3', 'مقالات 1', 'تعليقات 1', 'مستخدمين 1']);
+      expect(t.$$('[data-moderation-tab]').map((tab) => tab.textContent!.trim())).toEqual(['مفتوحة', 'محلولة', 'مرفوضة', 'السجل']);
+      expect(t.$$('[data-type-chip]').map((chip) => chip.textContent!.replace(/\s+/g, ' ').trim())).toEqual(['الكل 3', 'مقالات 1', 'تعليقات 1', 'مستخدمون 1']);
       expect(t.$('[data-type-chip="all"]')!.getAttribute('aria-pressed')).toBe('true');
 
       const cards = t.$$('[data-case]');
@@ -140,12 +140,12 @@ describe('Moderation (F22)', () => {
       expect(cards[0].getAttribute('href')).toBe('/moderation/article/a1');
       expect(cards[0].querySelector('[data-target-title]')!.textContent).toContain('How sleep turns reading into memory');
       expect(cards[0].querySelector('[data-report-count]')!.textContent!.trim()).toBe('3 بلاغات');
-      expect([...cards[0].querySelectorAll('[data-reason-count]')].map((r) => r.textContent!.replace(/\s+/g, ' ').trim())).toEqual(['معلومات غلط 2', 'حاجة تانية 1']);
+      expect([...cards[0].querySelectorAll('[data-reason-count]')].map((r) => r.textContent!.replace(/\s+/g, ' ').trim())).toEqual(['معلومات خاطئة 2', 'أخرى 1']);
       expect(cards[0].textContent).toContain('آخر بلاغ');
       expect(cards[1].querySelector('[data-target-body]')!.textContent).toContain('Buy cheap courses');
-      expect(cards[1].querySelector('[data-report-count]')!.textContent!.trim()).toBe('بلاغين');
+      expect(cards[1].querySelector('[data-report-count]')!.textContent!.trim()).toBe('بلاغان');
       expect(cards[2].querySelector('[data-target-user]')!.textContent).toContain('Omar Fathy');
-      expect(cards[2].textContent).toContain('تحذيرين');
+      expect(cards[2].textContent).toContain('تحذيران');
     });
 
     it('a status tab and a type load their list; the closed time shows on closed lists', async () => {
@@ -159,8 +159,8 @@ describe('Moderation (F22)', () => {
       expect(t.$('[data-type-chip="comment"]')!.getAttribute('aria-pressed')).toBe('true');
       // Counts are for open reports only.
       expect(t.$('[data-type-chip="comment"]')!.textContent!.trim()).toBe('تعليقات');
-      expect(t.$('[data-case] [data-target-state="hidden"]')!.textContent!.trim()).toBe('متخفي');
-      expect(t.$('[data-case]')!.textContent).toContain('اتقفل');
+      expect(t.$('[data-case] [data-target-state="hidden"]')!.textContent!.trim()).toBe('مخفي');
+      expect(t.$('[data-case]')!.textContent).toContain('أُغلق');
 
       // Switching tabs keeps the type filter.
       expect(t.$('[data-moderation-tab="dismissed"]')!.getAttribute('href')).toBe('/moderation?status=dismissed&type=comment');
@@ -172,14 +172,14 @@ describe('Moderation (F22)', () => {
       await t.stable();
       t.expectQueue({ status: 'dismissed', limit: '20' }).flush({ items: [], nextCursor: null });
       await t.stable();
-      expect(t.$('[data-queue-empty]')!.textContent).toContain('مفيش بلاغات اترفضت');
+      expect(t.$('[data-queue-empty]')!.textContent).toContain('لا توجد بلاغات مرفوضة بعد');
     });
 
     it('the type chips change the URL (deep-linkable)', async () => {
       const t = await render();
       t.expectQueue({ status: 'open', limit: '20' }).flush({ items: [], nextCursor: null });
       await t.stable();
-      expect(t.$('[data-queue-empty]')!.textContent).toContain('مفيش بلاغات مفتوحة');
+      expect(t.$('[data-queue-empty]')!.textContent).toContain('لا توجد بلاغات مفتوحة');
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       t.$('[data-type-chip="user"]')!.click();
       expect(navigate).toHaveBeenCalledWith(['/moderation'], { queryParams: { status: null, type: 'user' }, replaceUrl: true });
@@ -190,12 +190,12 @@ describe('Moderation (F22)', () => {
       t.expectQueue({ status: 'open', limit: '20' }).flush({ items: [item('article', 'a1'), item('article', 'a2')], nextCursor: 'next-1' });
       await t.stable();
       const more = t.$<HTMLButtonElement>('[data-queue-more]')!;
-      expect(more.textContent!.trim()).toBe('اعرض أكتر');
+      expect(more.textContent!.trim()).toBe('عرض المزيد');
 
       more.click();
       t.expectQueue({ status: 'open', cursor: 'next-1', limit: '20' }).flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
       await t.stable();
-      expect(t.$('[data-queue-more]')!.textContent!.trim()).toBe('حاول تاني');
+      expect(t.$('[data-queue-more]')!.textContent!.trim()).toBe('إعادة المحاولة');
 
       t.$('[data-queue-more]')!.click();
       t.expectQueue({ status: 'open', cursor: 'next-1', limit: '20' }).flush({ items: [item('article', 'a2'), item('user', 'u3')], nextCursor: null });
@@ -208,7 +208,7 @@ describe('Moderation (F22)', () => {
       const t = await render();
       t.expectQueue({ status: 'open', limit: '20' }).flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
       await t.stable();
-      expect(t.root.querySelector('rd-error-state')!.textContent).toContain('معرفناش نحمّل البلاغات.');
+      expect(t.root.querySelector('rd-error-state')!.textContent).toContain('تعذّر تحميل البلاغات.');
       (t.root.querySelector('rd-error-state button') as HTMLElement).click();
       t.expectQueue({ status: 'open', limit: '20' }).flush({ items: [item('user', 'u1')], nextCursor: null });
       await t.stable();
@@ -249,15 +249,15 @@ describe('Moderation (F22)', () => {
       expect(t.$('h1')!.textContent!.trim()).toBe('بلاغ عن مقال');
       expect(t.$('[data-case-status]')!.textContent!.trim()).toBe('مفتوح');
       expect(t.$('[data-case-link]')!.getAttribute('href')).toBe('/en/a/sleep-and-memory');
-      expect(t.$('[data-case-link]')!.textContent).toContain('افتح المقال');
+      expect(t.$('[data-case-link]')!.textContent).toContain('فتح المقال');
       expect(t.$('[data-case-back]')!.getAttribute('href')).toBe('/moderation');
 
       const reports = t.$$('[data-report]');
       expect(reports).toHaveLength(2);
       expect(reports[0].textContent).toContain('Reader r1');
-      expect(reports[0].querySelector('[data-report-reason]')!.textContent!.trim()).toBe('معلومات غلط');
+      expect(reports[0].querySelector('[data-report-reason]')!.textContent!.trim()).toBe('معلومات خاطئة');
       expect(reports[0].querySelector('[data-report-details]')!.textContent).toContain('The study says the opposite.');
-      expect(t.$('[data-case-no-history]')!.textContent!.trim()).toBe('مفيش إجراءات لسه.');
+      expect(t.$('[data-case-no-history]')!.textContent!.trim()).toBe('لا توجد إجراءات بعد.');
 
       expect(t.actions()).toEqual(['hide', 'warnAuthor', 'suspendAuthor', 'dismiss']);
       expect(t.$$('[data-case-action]').map((a) => a.textContent!.trim())).toEqual(['إخفاء المقال', 'تحذير الكاتب', 'إيقاف حساب الكاتب', 'رفض البلاغات']);
@@ -285,12 +285,12 @@ describe('Moderation (F22)', () => {
       );
       answerSummary(http, 2);
       await t.stable();
-      expect(t.$('[data-case-status]')!.textContent!.trim()).toBe('اتحل');
+      expect(t.$('[data-case-status]')!.textContent!.trim()).toBe('محلول');
       expect(t.actions()).toEqual(['unhide', 'warnAuthor', 'suspendAuthor']);
       const history = t.$$('[data-case-history] [data-log-entry]');
       expect(history).toHaveLength(1);
       expect(history[0].textContent).toContain('Nour Fawzy');
-      expect(history[0].textContent).toContain('خفى مقال');
+      expect(history[0].textContent).toContain('أخفى مقالًا');
       expect(history[0].querySelector('[data-log-note]')!.textContent).toContain('Misleading health claims.');
       // On its own case the target isn't a link.
       expect(history[0].querySelector('[data-log-target]')).toBeNull();
@@ -332,7 +332,7 @@ describe('Moderation (F22)', () => {
 
       t.$('[data-case-action="dismiss"]')!.click();
       await t.stable();
-      expect(t.$('#moderation-sheet-title')!.textContent!.trim()).toBe('ترفض البلاغات دي؟');
+      expect(t.$('#moderation-sheet-title')!.textContent!.trim()).toBe('هل تريد رفض هذه البلاغات؟');
       t.$('[data-moderation-confirm]')!.click();
       const req = http.expectOne(ACTIONS);
       expect(req.request.body).toEqual({ action: 'dismiss', targetType: 'user', targetId: 'u9' });
@@ -343,7 +343,7 @@ describe('Moderation (F22)', () => {
       answerSummary(http);
       await t.stable();
       expect(t.actions()).toEqual(['warn', 'unsuspend']);
-      expect(t.$('[data-case-target]')!.textContent).toContain('موقوف لحد');
+      expect(t.$('[data-case-target]')!.textContent).toContain('موقوف حتى');
     });
 
     it('without users.suspend there is no suspend or unsuspend', async () => {
@@ -361,7 +361,7 @@ describe('Moderation (F22)', () => {
       expect(rows).toHaveLength(2);
       expect(rows[0].querySelector('[data-case-category-name]')!.getAttribute('dir')).toBe('auto');
       expect(rows[0].querySelector('a')!.getAttribute('href')).toBe('/@omar_dev/c/rude');
-      expect(rows[0].textContent).toContain('لسه مفيش مقالات');
+      expect(rows[0].textContent).toContain('لا توجد مقالات بعد');
       expect(rows[1].textContent).toContain('3 مقالات');
       // Not one of the case's own actions.
       expect(t.actions()).toEqual(['warn', 'suspend', 'dismiss']);
@@ -369,7 +369,7 @@ describe('Moderation (F22)', () => {
       rows[0].querySelector<HTMLElement>('[data-case-clear-category]')!.click();
       await t.stable();
       expect(t.$('[data-moderation-sheet]')!.getAttribute('data-moderation-action')).toBe('clear_category');
-      expect(t.$('#moderation-sheet-title')!.textContent!.trim()).toBe('تمسح اسم القسم «\u2068مقالات للأغبيا بس\u2069»؟');
+      expect(t.$('#moderation-sheet-title')!.textContent!.trim()).toBe('هل تريد إزالة اسم الفئة «\u2068مقالات للأغبيا بس\u2069»؟');
       t.$('[data-moderation-confirm]')!.click();
       const req = http.expectOne(ACTIONS);
       expect(req.request.body).toEqual({ action: 'clear_category', targetType: 'user', targetId: 'u9', categoryId: 'cat-1' });
@@ -385,7 +385,7 @@ describe('Moderation (F22)', () => {
       answerSummary(http);
       await t.stable();
       expect(t.$$('[data-case-category-name]').map((n) => n.textContent!.trim())).toEqual(['قسم 1', 'Notes']);
-      expect(t.$('[data-case-history]')!.textContent).toContain('مسح اسم قسم');
+      expect(t.$('[data-case-history]')!.textContent).toContain('أزال اسم فئة');
       expect(t.$('[data-case-history] [data-log-entry]')!.getAttribute('data-log-action')).toBe('user.clear_category');
     });
 
@@ -415,8 +415,8 @@ describe('Moderation (F22)', () => {
       section.querySelector<HTMLElement>('[data-case-clear-headline]')!.click();
       await t.stable();
       expect(t.$('[data-moderation-sheet]')!.getAttribute('data-moderation-action')).toBe('clear_headline');
-      expect(t.$('#moderation-sheet-title')!.textContent).toContain('تمسح مسمى');
-      expect(t.$('#moderation-sheet-body')!.textContent).toContain('مش هيوصله إشعار');
+      expect(t.$('#moderation-sheet-title')!.textContent).toContain('هل تريد إزالة مسمى');
+      expect(t.$('#moderation-sheet-body')!.textContent).toContain('لن يتلقى المستخدم إشعارًا');
       expect(t.$<HTMLButtonElement>('[data-moderation-confirm]')!.disabled).toBe(false); // the note is optional
       t.$('[data-moderation-confirm]')!.click();
       let req = http.expectOne(ACTIONS);
@@ -433,15 +433,15 @@ describe('Moderation (F22)', () => {
       );
       answerSummary(http);
       await t.stable();
-      expect(t.$('[data-case-no-headline]')!.textContent!.trim()).toBe('مفيش مسمى.');
+      expect(t.$('[data-case-no-headline]')!.textContent!.trim()).toBe('لا يوجد مسمى.');
       expect(t.$('[data-case-clear-headline]')).toBeNull();
-      expect(t.$('[data-case-history]')!.textContent).toContain('مسح مسمى مستخدم');
+      expect(t.$('[data-case-history]')!.textContent).toContain('أزال مسمى مستخدم');
 
       // Clear links, with a note.
       t.$('[data-case-clear-links]')!.click();
       await t.stable();
       expect(t.$('[data-moderation-sheet]')!.getAttribute('data-moderation-action')).toBe('clear_links');
-      expect(t.$('#moderation-sheet-title')!.textContent).toContain('تمسح كل روابط');
+      expect(t.$('#moderation-sheet-title')!.textContent).toContain('هل تريد إزالة كل روابط');
       const note = t.$<HTMLTextAreaElement>('[data-moderation-note]')!;
       note.value = 'روابط سبام';
       note.dispatchEvent(new Event('input'));
@@ -459,10 +459,10 @@ describe('Moderation (F22)', () => {
       );
       answerSummary(http);
       await t.stable();
-      expect(t.$('[data-case-no-links]')!.textContent!.trim()).toBe('مفيش روابط.');
+      expect(t.$('[data-case-no-links]')!.textContent!.trim()).toBe('لا توجد روابط.');
       expect(t.$('[data-case-clear-links]')).toBeNull();
       expect(t.$('[data-case-history] [data-log-entry]')!.getAttribute('data-log-action')).toBe('user.clear_links');
-      expect(t.$('[data-case-history]')!.textContent).toContain('مسح روابط مستخدم');
+      expect(t.$('[data-case-history]')!.textContent).toContain('أزال روابط مستخدم');
     });
 
     it('a user without a title or links (or an API older than F14): nothing to clear', async () => {
@@ -480,8 +480,8 @@ describe('Moderation (F22)', () => {
 
     it('a user without categories: the section says so (as on mobile)', async () => {
       const t = await render('user', 'u9', caseOf(item('user', 'u9'), { categories: [] }));
-      expect(t.$('#case-categories-title')!.textContent).toContain('أقسام الكاتب');
-      expect(t.$('[data-case-no-categories]')!.textContent!.trim()).toBe('مفيش أقسام.');
+      expect(t.$('#case-categories-title')!.textContent).toContain('فئات الكاتب');
+      expect(t.$('[data-case-no-categories]')!.textContent!.trim()).toBe('لا توجد فئات.');
       expect(t.$$('[data-case-category]')).toHaveLength(0);
     });
 
@@ -500,7 +500,7 @@ describe('Moderation (F22)', () => {
 
     it('not found: a 404 or an unknown type (without asking the API)', async () => {
       const missing = await render('article', 'gone', { status: 404, code: 'report.target_not_found' });
-      expect(missing.$('[data-case-not-found]')!.textContent).toContain('البلاغ ده مش موجود');
+      expect(missing.$('[data-case-not-found]')!.textContent).toContain('هذا البلاغ غير موجود');
       http.verify();
 
       TestBed.resetTestingModule();
@@ -511,7 +511,7 @@ describe('Moderation (F22)', () => {
 
     it('a load error can be retried', async () => {
       const t = await render('article', 'a1', { status: 500, code: 'server.error' });
-      expect(t.root.querySelector('rd-error-state')!.textContent).toContain('معرفناش نحمّل البلاغ ده.');
+      expect(t.root.querySelector('rd-error-state')!.textContent).toContain('تعذّر تحميل هذا البلاغ.');
       (t.root.querySelector('rd-error-state button') as HTMLElement).click();
       http.expectOne(`${TEST_API}/moderation/reports/article/a1`).flush(caseOf(item('article', 'a1')));
       await t.stable();
@@ -546,12 +546,12 @@ describe('Moderation (F22)', () => {
       const entries = [...root.querySelectorAll('[data-log-entry]')];
       expect(entries).toHaveLength(2);
       expect(entries[0].textContent).toContain('Nour Fawzy');
-      expect(entries[0].textContent).toContain('وقف حساب');
-      expect(entries[0].textContent).toContain('لحد');
-      expect(entries[0].textContent).toContain('قفل بلاغ واحد');
+      expect(entries[0].textContent).toContain('أوقف حسابًا');
+      expect(entries[0].textContent).toContain('حتى');
+      expect(entries[0].textContent).toContain('أغلق بلاغًا واحدًا');
       expect(entries[0].querySelector('[data-log-target]')!.getAttribute('href')).toBe('/moderation/user/u9');
       expect(entries[1].textContent).toContain('مشرف محذوف');
-      expect(entries[1].textContent).toContain('نهائي');
+      expect(entries[1].textContent).toContain('نهائيًا');
       expect(entries[1].querySelector('[data-log-note]')).toBeNull();
 
       (root.querySelector('[data-log-more]') as HTMLElement).click();
@@ -572,7 +572,7 @@ describe('Moderation (F22)', () => {
       http.expectOne((r) => r.url === ACTIONS).flush({ items: [], nextCursor: null });
       await flushMicrotasks();
       fixture.detectChanges();
-      expect((fixture.nativeElement as HTMLElement).querySelector('[data-log-empty]')!.textContent).toContain('السجل فاضي');
+      expect((fixture.nativeElement as HTMLElement).querySelector('[data-log-empty]')!.textContent).toContain('السجل فارغ');
     });
   });
 

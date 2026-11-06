@@ -51,14 +51,14 @@ for (const variant of VARIANTS) {
     const response = await open(page, '/explore', '[data-explore-fields]');
     expect(response.status()).toBe(200);
     const html = await response.text();
-    expect(html).toContain(`<title>${t('استكشف', 'Explore')} — ReadIn</title>`);
+    expect(html).toContain(`<title>${t('استكشاف', 'Explore')} — ReadIn</title>`);
     expect(html).toContain('data-field-tile="software"');
     expect(html).toContain('data-explore-trending');
 
     const tiles = page.locator('[data-field-tile]');
     await expect(tiles).toHaveCount(3);
     await expect(tiles.first()).toHaveAttribute('href', '/f/software');
-    await expect(page.locator('[data-field-tile="software"] [data-field-count]')).toHaveText(t('32 مقال', '32 articles'));
+    await expect(page.locator('[data-field-tile="software"] [data-field-count]')).toHaveText(t('32 مقالًا', '32 articles'));
     await expect(page.locator('[data-field-tile="design"] [data-field-count]')).toHaveText(t('0 مقال', '0 articles'));
     // The most engaging this week, then the most saved: three of each.
     expect(await titles(page.locator('[data-explore-trending] rd-article-card'))).toEqual([
@@ -85,13 +85,13 @@ for (const variant of VARIANTS) {
     // "See all": the whole ranking as post cards, best first, 20 at a time.
     await page.locator('[data-see-all="trending"]').click();
     await page.waitForURL((url) => url.pathname === '/explore/trending');
-    await expect(page.locator('h1')).toHaveText(t('الترند الأسبوع ده', 'Trending this week'));
-    await expect(page).toHaveTitle(t('الترند الأسبوع ده — ReadIn', 'Trending this week — ReadIn'));
+    await expect(page.locator('h1')).toHaveText(t('الأكثر رواجًا هذا الأسبوع', 'Trending this week'));
+    await expect(page).toHaveTitle(t('الأكثر رواجًا هذا الأسبوع — ReadIn', 'Trending this week — ReadIn'));
     await expect(cards(page)).toHaveCount(20, { timeout: FIRST_RENDER_MS });
     expect((await ids(cards(page))).slice(0, 3)).toEqual(['a-dependency-injection-ar', 'a-readin-streaks-ar', 'a-one-photo']);
     await cards(page).last().scrollIntoViewIfNeeded();
     await expect(cards(page)).toHaveCount(33);
-    await expect(page.locator('[data-list-end]')).toHaveText(t('كده شفت كل المقالات اللي عليها تفاعل الأسبوع ده.', "That's everything trending this week."));
+    await expect(page.locator('[data-list-end]')).toHaveText(t('هذه كل المقالات الرائجة هذا الأسبوع.', "That's everything trending this week."));
 
     // Back: Explore as it was (kept alive), without loading again.
     let reloaded = false;
@@ -101,7 +101,7 @@ for (const variant of VARIANTS) {
     await page.goBack();
     await page.waitForURL((url) => url.pathname === '/explore');
     await expect(page.locator('[data-explore-trending] rd-article-card')).toHaveCount(3);
-    await expect(page).toHaveTitle(t('استكشف — ReadIn', 'Explore — ReadIn'));
+    await expect(page).toHaveTitle(t('استكشاف — ReadIn', 'Explore — ReadIn'));
     expect(reloaded).toBe(false);
 
     // Most saved has its own page.
@@ -122,8 +122,8 @@ for (const variant of VARIANTS) {
 
     await expect(page.locator('[data-field-name]')).toHaveText(t('البرمجيات', 'Software'));
     await expect(page.locator('[data-field-name]')).toHaveAttribute('dir', 'auto');
-    await expect(page.locator('[data-field-count]')).toHaveText(t('32 مقال', '32 articles'));
-    await expect(page.locator('[data-field-followers]')).toHaveText(t('86 متابع', '86 followers'));
+    await expect(page.locator('[data-field-count]')).toHaveText(t('32 مقالًا', '32 articles'));
+    await expect(page.locator('[data-field-followers]')).toHaveText(t('86 متابعًا', '86 followers'));
     await expect(page.locator('[data-follow-field]')).toHaveAttribute('aria-pressed', 'false');
     expect(await page.locator('[data-topic-chip]').evaluateAll((chips) => chips.map((c) => c.getAttribute('data-topic-chip')))).toEqual(['', 'dotnet', 'architecture']);
     await expect(page.locator('[data-topic-chip=""]')).toHaveAttribute('aria-current', 'page');
@@ -137,7 +137,7 @@ for (const variant of VARIANTS) {
 
     await cards(page).last().scrollIntoViewIfNeeded();
     await expect(cards(page)).toHaveCount(32);
-    await expect(page.locator('[data-list-end]')).toHaveText(t('كده شفت كل مقالات المجال ده.', "You've seen every article in this field."));
+    await expect(page.locator('[data-list-end]')).toHaveText(t('اطّلعت على كل مقالات هذا المجال.', "You've seen every article in this field."));
 
     // A chip filters the articles; the topic can be followed from its bar.
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -146,7 +146,7 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-topic-chip="dotnet"]')).toHaveAttribute('aria-current', 'page');
     await expect(cards(page)).toHaveCount(2);
     expect(await ids(cards(page))).toEqual(['a-dependency-injection-ar', 'a-aspnet-core-cheatsheet']);
-    await expect(page.locator('[data-topic-bar]')).toContainText(t('مقالين', '2 articles'));
+    await expect(page.locator('[data-topic-bar]')).toContainText(t('مقالان', '2 articles'));
     await expect(page).toHaveTitle(t('.NET · البرمجيات — ReadIn', '.NET · Software — ReadIn'));
 
     // Search's link for a topic, opened directly: server-rendered with that topic.
@@ -176,20 +176,20 @@ for (const variant of VARIANTS) {
     const followers = page.locator('[data-field-followers]');
     await openFieldSignedIn(page, '/f/software');
     await expect(follow).toHaveAttribute('aria-pressed', 'true');
-    await expect(follow).toContainText(t('بتتابعه', 'Following'));
-    await expect(followers).toHaveText(t('87 متابع', '87 followers'));
+    await expect(follow).toContainText(t('تتابعه', 'Following'));
+    await expect(followers).toHaveText(t('87 متابعًا', '87 followers'));
     await follow.click();
-    await expect(page.locator('rd-toast-host')).toContainText(t('لازم تفضل متابع 3 اهتمامات على الأقل', 'Keep at least 3 interests'));
+    await expect(page.locator('rd-toast-host')).toContainText(t('يجب أن تتابع 3 اهتمامات على الأقل', 'Keep at least 3 interests'));
     await expect(follow).toHaveAttribute('aria-pressed', 'true');
-    await expect(followers).toHaveText(t('87 متابع', '87 followers'));
+    await expect(followers).toHaveText(t('87 متابعًا', '87 followers'));
 
     // Follow Medicine: at once, one more follower.
     await openFieldSignedIn(page, '/f/medicine');
     await expect(follow).toHaveAttribute('aria-pressed', 'false');
-    await expect(followers).toHaveText(t('12 متابع', '12 followers'));
+    await expect(followers).toHaveText(t('12 متابعًا', '12 followers'));
     await follow.click();
     await expect(follow).toHaveAttribute('aria-pressed', 'true');
-    await expect(followers).toHaveText(t('13 متابع', '13 followers'));
+    await expect(followers).toHaveText(t('13 متابعًا', '13 followers'));
     await expect(follow).not.toHaveAttribute('aria-busy', 'true');
 
     // A topic, from its bar: unfollow, follow again.
@@ -198,7 +198,7 @@ for (const variant of VARIANTS) {
     await expect(topic).toHaveAttribute('aria-pressed', 'true');
     await topic.click();
     await expect(topic).toHaveAttribute('aria-pressed', 'false');
-    await expect(topic).toContainText(t('تابع الموضوع', 'Follow topic'));
+    await expect(topic).toContainText(t('متابعة الموضوع', 'Follow topic'));
     await expect(topic).not.toHaveAttribute('aria-busy', 'true');
     await topic.click();
     await expect(topic).toHaveAttribute('aria-pressed', 'true');
@@ -207,11 +207,11 @@ for (const variant of VARIANTS) {
     // Now 4 interests: Software can go, one follower less; saved on the account.
     await follow.click();
     await expect(follow).toHaveAttribute('aria-pressed', 'false');
-    await expect(followers).toHaveText(t('86 متابع', '86 followers'));
+    await expect(followers).toHaveText(t('86 متابعًا', '86 followers'));
     await expect(follow).not.toHaveAttribute('aria-busy', 'true');
     await openFieldSignedIn(page, '/f/software');
     await expect(follow).toHaveAttribute('aria-pressed', 'false');
-    await expect(followers).toHaveText(t('86 متابع', '86 followers'));
+    await expect(followers).toHaveText(t('86 متابعًا', '86 followers'));
   });
 
   test(`an empty field is noindex; an unknown field or topic is a 404 — ${suffix}`, async ({ page, context, baseURL }) => {
@@ -220,19 +220,19 @@ for (const variant of VARIANTS) {
     expect(empty.status()).toBe(200);
     expect(await empty.text()).toMatch(/<meta name="robots" content="noindex"/);
     await expect(page.locator('[data-field-count]')).toHaveText(t('0 مقال', '0 articles'));
-    await expect(page.locator('[data-list-empty] h3')).toHaveText(t('لسه مفيش مقالات في المجال ده', 'No articles in this field yet'));
+    await expect(page.locator('[data-list-empty] h3')).toHaveText(t('لا توجد مقالات في هذا المجال بعد', 'No articles in this field yet'));
     await expect(page.locator('[data-field-topics]')).toHaveCount(0);
 
     const missing = await open(page, '/f/no-such-field', '[data-field-not-found]');
     expect(missing.status()).toBe(404);
     expect(await missing.text()).toMatch(/<meta name="robots" content="noindex"/);
-    await expect(page.locator('[data-field-not-found] h3')).toHaveText(t('المجال ده مش موجود', "This field doesn't exist"));
+    await expect(page.locator('[data-field-not-found] h3')).toHaveText(t('هذا المجال غير موجود', "This field doesn't exist"));
 
     const topic = await open(page, '/f/software?topic=cobol', '[data-topic-not-found]');
     expect(topic.status()).toBe(404);
     expect(await topic.text()).toMatch(/<meta name="robots" content="noindex"/);
     await expect(page.locator('[data-field-header]')).toBeVisible();
-    await expect(page.locator('[data-topic-not-found] h3')).toHaveText(t('الموضوع ده مش موجود', "This topic doesn't exist"));
+    await expect(page.locator('[data-topic-not-found] h3')).toHaveText(t('هذا الموضوع غير موجود', "This topic doesn't exist"));
     await page.locator('[data-topic-not-found] a').click();
     await page.waitForURL((url) => url.pathname === '/f/software' && !url.searchParams.has('topic'));
     await expect(cards(page)).toHaveCount(20);

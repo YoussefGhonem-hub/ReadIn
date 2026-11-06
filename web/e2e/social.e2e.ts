@@ -125,7 +125,7 @@ for (const variant of VARIANTS) {
     await expect(follow).toHaveAttribute('aria-pressed', 'false');
     await follow.click();
     await expect(follow).toHaveAttribute('aria-pressed', 'true');
-    await expect(follow).toContainText(lang === 'ar' ? 'بتتابعه' : 'Following');
+    await expect(follow).toContainText(lang === 'ar' ? 'تتابعه' : 'Following');
 
     // The server kept all of it: the sheet comes back ticked from ArticleDetailsDto.collectionIds.
     await openArticle(page, '/en/a/one-photo');
@@ -147,7 +147,7 @@ for (const variant of VARIANTS) {
     await openArticle(page, '/en/a/one-photo');
     await expect(follow).toHaveAttribute('aria-pressed', 'false');
     await page.locator('[data-add-to-collection]').click();
-    await expect(interview).toContainText(lang === 'ar' ? 'مقالين' : '2 articles');
+    await expect(interview).toContainText(lang === 'ar' ? 'مقالان' : '2 articles');
     await expect(interview.locator('input')).not.toBeChecked();
   });
 
@@ -164,7 +164,7 @@ for (const variant of VARIANTS) {
     const writers = panel.locator('[data-suggested-writer]');
     await expect(writers).toHaveCount(5);
     await expect(writers.first()).toHaveAttribute('data-user', 'u-readin'); // verified first, then by followers
-    await expect(panel.locator('[data-user="u-salma"]')).toContainText(lang === 'ar' ? 'بيتابعك' : 'Follows you');
+    await expect(panel.locator('[data-user="u-salma"]')).toContainText(lang === 'ar' ? 'يتابعك' : 'Follows you');
     await expect(panel.locator('[data-following-refresh]')).toHaveCount(0);
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(panel).toHaveScreenshot(`following-empty-${suffix}.png`, { stylePath: HIDE_APP_CHROME });

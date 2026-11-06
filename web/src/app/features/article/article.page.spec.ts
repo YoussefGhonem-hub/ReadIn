@@ -87,7 +87,7 @@ describe('ArticlePage byline', () => {
     expect(links.map((a) => a.textContent!.trim())).toEqual(['#C#', '#الذكاء الاصطناعي']);
     expect(links.map((a) => a.getAttribute('href'))).toEqual(['/tags/csharp', `/tags/${encodeURIComponent('الذكاء-الاصطناعي')}`]);
     expect(links.every((a) => a.getAttribute('dir') === 'auto')).toBe(true);
-    expect(t.root.querySelector('[data-article-tags]')!.getAttribute('aria-label')).toBe('التاجات');
+    expect(t.root.querySelector('[data-article-tags]')!.getAttribute('aria-label')).toBe('الوسوم');
     expect(t.jsonLd()['keywords']).toBe('C#, الذكاء الاصطناعي');
   });
 
@@ -96,7 +96,7 @@ describe('ArticlePage byline', () => {
     http = t.http;
     const link = t.byline.querySelector<HTMLAnchorElement>('[data-article-category]')!;
     // The name is isolated, so an English name keeps its direction in the Arabic sentence.
-    expect(link.textContent!.trim()).toBe('في قسم ⁨Angular tips⁩');
+    expect(link.textContent!.trim()).toBe('في فئة ⁨Angular tips⁩');
     expect(link.getAttribute('href')).toBe(`/@karim/c/${encodeURIComponent('نصايح-البرمجة')}`);
 
     TestBed.resetTestingModule();
@@ -147,7 +147,7 @@ describe('ArticlePage health disclaimer (SPEC F04, §20)', () => {
     http = t.http;
     const notice = t.root.querySelector('[data-health-disclaimer]')!;
     expect(notice.getAttribute('role')).toBe('note');
-    expect(notice.textContent!.trim()).toBe('المعلومات دي للتوعية ولا تغني عن استشارة الطبيب.');
+    expect(notice.textContent!.trim()).toBe('هذه المعلومات للتوعية فقط، ولا تُغني عن استشارة الطبيب.');
     expect(notice.querySelector('svg')!.getAttribute('aria-hidden')).toBe('true');
     const follows = (a: Element, b: Element) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
     expect(follows(t.root.querySelector('[data-trust-row]')!, notice)).toBe(true);

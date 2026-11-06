@@ -91,7 +91,7 @@ describe('PostCard (F34)', () => {
       const meta = t.$('[data-card-meta]')!;
       expect(meta.textContent).toContain('البرمجيات');
       expect(meta.querySelector('time')!.getAttribute('datetime')).toBe('2026-11-02T08:00:00Z');
-      expect(meta.textContent).toContain('4 دقايق قراءة');
+      expect(meta.textContent).toContain('4 دقائق للقراءة');
     });
 
     it('guests see Follow, which asks them to sign in and remembers the card to come back to', async () => {
@@ -137,7 +137,7 @@ describe('PostCard (F34)', () => {
     it('a label above the card: Home’s daily article', async () => {
       const t = await render(testCard(), { guest: true, label: 'feedCard.todayLabel' });
       http = t.http;
-      expect(t.$('[data-card-label]')!.textContent!.trim()).toBe('مقال النهارده');
+      expect(t.$('[data-card-label]')!.textContent!.trim()).toBe('مقال اليوم');
     });
 
     it('the writer’s title on one line under the name, in its own direction, above the meta line (F14)', async () => {
@@ -191,8 +191,8 @@ describe('PostCard (F34)', () => {
         t.http.verify();
         return text;
       };
-      expect(await label(1, 'ar')).toBe('Karim Hassan وشخص تاني أعادوا نشره');
-      expect(await label(3, 'ar')).toBe('Karim Hassan و3 غيره أعادوا نشره');
+      expect(await label(1, 'ar')).toBe('أعاد نشره Karim Hassan وشخص آخر');
+      expect(await label(3, 'ar')).toBe('أعاد نشره Karim Hassan و3 آخرون');
       expect(await label(1, 'en')).toBe('Karim Hassan and 1 other reposted this');
       expect(await label(4, 'en')).toBe('Karim Hassan and 4 others reposted this');
       expect(await label(0, 'en')).toBe('Karim Hassan reposted this');
@@ -268,8 +268,8 @@ describe('PostCard (F34)', () => {
         http = t.http;
         await t.stable();
         const more = t.$('[data-card-caption-more]')!;
-        expect(more.textContent!.trim()).toBe('… اقرأ المزيد');
-        expect(more.getAttribute('aria-label')).toBe('اقرأ رأي Karim Hassan كله');
+        expect(more.textContent!.trim()).toBe('… قراءة المزيد');
+        expect(more.getAttribute('aria-label')).toBe('عرض رأي Karim Hassan كاملًا');
         expect(more.getAttribute('aria-expanded')).toBe('false');
         expect(more.getAttribute('aria-controls')).toBe(t.$('[data-card-repost-caption]')!.id);
         more.click();
@@ -404,7 +404,7 @@ describe('PostCard (F34)', () => {
       await t.stable();
       const error = t.$('[data-card-preview-error]')!;
       expect(error.getAttribute('role')).toBe('alert');
-      expect(error.textContent).toContain('معرفناش نحمّل باقي المقال.');
+      expect(error.textContent).toContain('تعذّر تحميل بقية المقال.');
       expect(t.$('rd-card-preview')!.textContent).toContain('Four circles on a whiteboard');
 
       error.querySelector('button')!.click();
@@ -449,7 +449,7 @@ describe('PostCard (F34)', () => {
       const t = await render(testCard({ tags, tagCount: 5 }), { guest: true });
       http = t.http;
       const chips = t.$$('[data-card-tags] li');
-      expect(chips.map((c) => c.textContent!.trim())).toEqual(['#C#', '#.NET', '#الذكاء الاصطناعي', '+2تاجين كمان']);
+      expect(chips.map((c) => c.textContent!.trim())).toEqual(['#C#', '#.NET', '#الذكاء الاصطناعي', '+2وسمان آخران']);
       const links = t.$$('[data-card-tags] a');
       // The slug from the server, never one made from the name; an Arabic one is percent-encoded.
       expect(links.map((a) => a.getAttribute('href'))).toEqual(['/tags/csharp', '/tags/dotnet-2', `/tags/${encodeURIComponent('الذكاء-الاصطناعي')}`]);
@@ -463,7 +463,7 @@ describe('PostCard (F34)', () => {
       expect(t.$('[data-card-counts]')).toBeNull();
       const summary = t.$('[data-card-actions] [data-reactions-summary]')!;
       expect(summary.textContent!.replace(/\s/g, '')).toBe('💡❤️🔥');
-      expect(summary.getAttribute('aria-label')).toBe('12 تفاعل، شوف مين اتفاعل');
+      expect(summary.getAttribute('aria-label')).toBe('12 تفاعلًا، عرض من تفاعل');
       expect(summary.classList).toContain('ms-auto');
     });
 
@@ -532,7 +532,7 @@ describe('PostCard (F34)', () => {
       const t = await render(testCard({ repostCount: 2 }));
       http = t.http;
       const repost = t.$('[data-repost]')!;
-      /** A tap opens the Repost menu (a CDK overlay on the document): "أعد النشر", or "إلغاء إعادة النشر" once reposted. */
+      /** A tap opens the Repost menu (a CDK overlay on the document): "إعادة النشر", or "إلغاء إعادة النشر" once reposted. */
       const pick = async (action: 'repost' | 'undo') => {
         repost.click();
         await t.stable();
@@ -558,7 +558,7 @@ describe('PostCard (F34)', () => {
       await t.stable();
       expect(repost.getAttribute('aria-pressed')).toBe('true');
       expect(t.$('[data-repost-count]')!.textContent!.trim()).toBe('3');
-      expect(TestBed.inject(ToastService).toasts().at(-1)!.message).toBe('طلبات كتير، استنى شوية وجرّب تاني.');
+      expect(TestBed.inject(ToastService).toasts().at(-1)!.message).toBe('طلبات كثيرة جدًا. انتظر قليلًا ثم حاول مرة أخرى.');
     });
 
     it('on your own article Repost is disabled with the hint and never sends', async () => {
@@ -568,12 +568,12 @@ describe('PostCard (F34)', () => {
       const repost = t.$('[data-repost]')!;
       expect(repost.getAttribute('aria-disabled')).toBe('true');
       expect(repost.getAttribute('aria-pressed')).toBeNull();
-      expect(repost.getAttribute('title')).toBe('مينفعش تعيد نشر مقالك');
-      expect(t.$(`#${repost.getAttribute('aria-describedby')}`)!.textContent).toContain('مينفعش تعيد نشر مقالك');
+      expect(repost.getAttribute('title')).toBe('لا يمكنك إعادة نشر مقالك');
+      expect(t.$(`#${repost.getAttribute('aria-describedby')}`)!.textContent).toContain('لا يمكنك إعادة نشر مقالك');
       repost.click();
       await t.stable();
       t.http.expectNone(`${TEST_API}/articles/a1/repost`);
-      expect(TestBed.inject(ToastService).toasts().at(-1)!.message).toBe('مينفعش تعيد نشر مقالك');
+      expect(TestBed.inject(ToastService).toasts().at(-1)!.message).toBe('لا يمكنك إعادة نشر مقالك');
     });
 
     it('guests get the sign-in prompt for Repost and nothing is sent; the card is remembered', async () => {

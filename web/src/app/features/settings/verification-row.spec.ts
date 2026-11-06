@@ -32,14 +32,14 @@ describe('Settings → Writer verification (F19)', () => {
     let t = await render(testVerificationStatus());
     expect(t.link.getAttribute('href')).toBe('/verification');
     expect(t.link.textContent).toContain('توثيق الكاتب');
-    expect(t.state()).toBe('اطلبه');
+    expect(t.state()).toBe('طلب التوثيق');
 
     t = await render(testVerificationStatus({ canRequest: false, request: testVerificationRequest() }));
-    expect(t.state()).toBe('بيتراجع');
+    expect(t.state()).toBe('قيد المراجعة');
     expect(t.link.getAttribute('data-status')).toBe('pending');
 
     t = await render(testVerificationStatus({ request: testVerificationRequest({ status: 'rejected', rejectionReason: 'No.' }) }));
-    expect(t.state()).toBe('ماتقبلش');
+    expect(t.state()).toBe('لم تتم الموافقة');
   });
 
   it('a verified account needs no call; an unreadable status is left out', async () => {

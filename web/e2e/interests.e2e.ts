@@ -51,7 +51,7 @@ for (const variant of VARIANTS) {
     await expect(field('f-medicine')).toHaveAttribute('aria-pressed', 'false');
     await expect(topic('t-dotnet')).toHaveAttribute('aria-pressed', 'true');
     await expect(topic('t-architecture')).toHaveAttribute('aria-pressed', 'true');
-    await expect(count).toHaveText(t('متابع 3 اهتمامات', 'Following 3 interests'));
+    await expect(count).toHaveText(t('تتابع 3 اهتمامات', 'Following 3 interests'));
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page.locator('rd-interests-page')).toHaveScreenshot(`interests-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
@@ -59,19 +59,19 @@ for (const variant of VARIANTS) {
     // Follow a field, unfollow a topic: each saved at once.
     await field('f-medicine').click();
     await expect(field('f-medicine')).toHaveAttribute('aria-pressed', 'true');
-    await expect(count).toHaveText(t('متابع 4 اهتمامات', 'Following 4 interests'));
+    await expect(count).toHaveText(t('تتابع 4 اهتمامات', 'Following 4 interests'));
     await expect(field('f-medicine')).not.toHaveAttribute('aria-busy', 'true');
     await topic('t-dotnet').click();
     await expect(topic('t-dotnet')).toHaveAttribute('aria-pressed', 'false');
-    await expect(count).toHaveText(t('متابع 3 اهتمامات', 'Following 3 interests'));
+    await expect(count).toHaveText(t('تتابع 3 اهتمامات', 'Following 3 interests'));
     await expect(topic('t-dotnet')).not.toHaveAttribute('aria-busy', 'true');
     expect(saves).toEqual(['PUT fields/f-medicine', 'DELETE topics/t-dotnet']);
 
     // A fourth tap would leave 2: the API refuses, the chip comes back, and the page says why.
     await topic('t-architecture').click();
-    await expect(page.locator('rd-toast-host')).toContainText(t('خليك متابع 3 اهتمامات على الأقل', 'Keep at least 3 interests'));
+    await expect(page.locator('rd-toast-host')).toContainText(t('احتفظ بـ 3 اهتمامات على الأقل', 'Keep at least 3 interests'));
     await expect(topic('t-architecture')).toHaveAttribute('aria-pressed', 'true');
-    await expect(count).toHaveText(t('متابع 3 اهتمامات', 'Following 3 interests'));
+    await expect(count).toHaveText(t('تتابع 3 اهتمامات', 'Following 3 interests'));
 
     // Saved on the account: back to Settings and in again (a fresh GET /me), the page shows the same.
     await page.locator('[data-back-to-settings]').click();

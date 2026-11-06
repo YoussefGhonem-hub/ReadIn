@@ -37,7 +37,7 @@ for (const variant of VARIANTS) {
     expect(response!.status()).toBe(200);
     await page.waitForLoadState('networkidle'); // hydrated: the chips and tabs respond
     const html = await response!.text();
-    expect(html).toContain(ar ? '<title>المسارات — ReadIn</title>' : '<title>Learning paths — ReadIn</title>');
+    expect(html).toContain(ar ? '<title>المسارات التعليمية — ReadIn</title>' : '<title>Learning paths — ReadIn</title>');
     expect(html).toContain('data-path-card="web-foundations"');
     expect(html).toMatch(/<link rel="canonical" href="[^"]*\/paths"/);
 
@@ -124,7 +124,7 @@ for (const variant of VARIANTS) {
     await page.locator('[data-path-menu]').click();
     await page.locator('[data-path-leave]').click();
     const sheet = page.locator('[data-leave-path]');
-    await expect(sheet).toContainText(ar ? 'تسيب «أساسيات تطوير الويب»؟' : 'Leave “Web development foundations”?');
+    await expect(sheet).toContainText(ar ? 'هل تريد مغادرة «أساسيات تطوير الويب»؟' : 'Leave “Web development foundations”?');
     const left = page.waitForResponse((r) => r.request().method() === 'DELETE' && r.url().endsWith('/me/paths/p-web'));
     await sheet.locator('[data-confirm-leave]').click();
     expect((await left).status()).toBe(204);
@@ -146,7 +146,7 @@ for (const variant of VARIANTS) {
     await signInAsReader(page, request, variant);
     await openPaths(page, '/paths/ai-from-scratch', { signedIn: true });
     await expect(page.locator('[data-path-header] [data-path-completed]')).toBeVisible();
-    await expect(page.locator('[data-path-celebration]')).toContainText(ar ? 'خلصت المسار 🎉' : 'Path completed 🎉');
+    await expect(page.locator('[data-path-celebration]')).toContainText(ar ? 'اكتمل المسار 🎉' : 'Path completed 🎉');
     await expect(page.locator('[data-read-tick]')).toHaveCount(2);
     await expect(page.locator('[data-path-again]')).toHaveAttribute('href', '/ar/a/what-is-a-transformer-ar');
     await parkMouse(page);
@@ -195,7 +195,7 @@ for (const variant of VARIANTS) {
     await page.goto('/');
     await expect(page.locator('h1')).toContainText('Sara', { timeout: FIRST_RENDER_MS });
     const prompt = page.locator('[data-home-path-prompt]');
-    await expect(prompt).toContainText(ar ? 'اتعلم خطوة بخطوة مع المسارات' : 'Learn step by step with learning paths');
+    await expect(prompt).toContainText(ar ? 'تعلّم خطوة بخطوة مع المسارات التعليمية' : 'Learn step by step with learning paths');
     await expect(page.locator('[data-continue-reading]')).toHaveCount(0);
     await prompt.click();
     await page.waitForURL('**/paths');
@@ -229,7 +229,7 @@ for (const variant of VARIANTS) {
 
     // The last article of a finished path: no next card, and 🎉.
     await page.goto('/en/a/how-readin-picks-your-daily-article');
-    await expect(block.locator('[data-next-last]')).toContainText(ar ? 'ده آخر مقال في المسار' : 'This is the last article in the path', { timeout: FIRST_RENDER_MS });
+    await expect(block.locator('[data-next-last]')).toContainText(ar ? 'هذا آخر مقال في المسار' : 'This is the last article in the path', { timeout: FIRST_RENDER_MS });
     await expect(block.locator('[data-next-completed]')).toBeVisible();
 
     // A path you haven't joined: Join path, then your progress.

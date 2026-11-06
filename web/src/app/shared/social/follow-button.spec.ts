@@ -24,7 +24,7 @@ describe('FollowButton (F12)', () => {
     button()!.click();
     fixture.detectChanges();
     expect(button()!.getAttribute('aria-pressed')).toBe('true');
-    expect(button()!.textContent).toContain('بتتابعه');
+    expect(button()!.textContent).toContain('تتابعه');
     http.expectOne(`${TEST_API}/users/writer-1/follow`).flush({ isFollowing: true, followerCount: 861 });
     await flushMicrotasks();
     http.verify();
@@ -52,7 +52,7 @@ describe('FollowButton (F12)', () => {
 
     button()!.click();
     fixture.detectChanges();
-    expect(button()!.textContent).toContain('بتتابعه');
+    expect(button()!.textContent).toContain('تتابعه');
     expect(button()!.classList).toContain('bg-primary-container');
     expect(button()!.innerHTML).toMatch(/check/i);
     http.expectOne(`${TEST_API}/users/writer-1/follow`).flush({ isFollowing: true, followerCount: 861 });

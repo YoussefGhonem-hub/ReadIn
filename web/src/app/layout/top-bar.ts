@@ -24,6 +24,7 @@ import { Avatar } from '../shared/ui/avatar';
 import { Wordmark } from '../shared/ui/wordmark';
 import { MeMenuHost } from './me-menu-host';
 import { TOP_NAV, profilePath } from './nav-items';
+import { LanguageToggle } from './language-toggle';
 import { ThemeToggle } from './theme-toggle';
 
 /** From this width the header has the search box (F16) and the nav row; below it, the compact bar. Tailwind's `md`. */
@@ -33,14 +34,14 @@ type MeVariant = 'icon' | 'stacked';
 
 /**
  * The top bar. From `md`: the ReadIn mark, the search box, then the destinations as an icon above a small label
- * (labels from `lg`; the current one gets a bar under it), the theme toggle and "Me" (its menu: profile, links,
- * appearance, sign out) or "Sign in". Below `md`: the mark, the search icon, the bell, the theme toggle and the avatar
+ * (labels from `lg`; the current one gets a bar under it), the theme and language toggles and "Me" (its menu: profile, links,
+ * appearance, sign out) or "Sign in". Below `md`: the mark, the search icon, the bell, the theme and language toggles and the avatar
  * (the bottom nav has the destinations). The Me menu is its own chunk, loaded when the button is hovered, focused or
  * opened; the bell's dropdown too (features/notifications/notifications-menu.ts).
  */
 @Component({
   selector: 'rd-top-bar',
-  imports: [RouterLink, RouterLinkActive, TranslocoPipe, Wordmark, Avatar, LucideDynamicIcon, NgComponentOutlet, NgTemplateOutlet, NotificationsMenu, ThemeToggle],
+  imports: [RouterLink, RouterLinkActive, TranslocoPipe, Wordmark, Avatar, LucideDynamicIcon, NgComponentOutlet, NgTemplateOutlet, NotificationsMenu, ThemeToggle, LanguageToggle],
   providers: [{ provide: MeMenuHost, useExisting: TopBar }],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -121,6 +122,7 @@ type MeVariant = 'icon' | 'stacked';
         }
         <span class="mx-1 h-8 w-px self-center bg-border" aria-hidden="true"></span>
         <rd-theme-toggle variant="stacked" />
+        <rd-language-toggle variant="stacked" />
         @if (session.isAuthenticated()) {
           <div class="relative flex h-full">
             <button
@@ -166,6 +168,7 @@ type MeVariant = 'icon' | 'stacked';
         }
         <rd-notifications-menu />
         <rd-theme-toggle variant="icon" />
+        <rd-language-toggle variant="icon" />
         @if (session.isAuthenticated()) {
           <div class="relative flex">
             <button

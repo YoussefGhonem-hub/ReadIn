@@ -134,8 +134,8 @@ describe('LinksEditor (F14)', () => {
     await stable();
     const url = rowEls()[0].querySelector<HTMLInputElement>('[data-link-url]')!;
     expect(url.getAttribute('aria-invalid')).toBe('true');
-    expect(root.querySelector(`#${url.getAttribute('aria-describedby')}`)!.textContent).toContain('الرابط ده مش على موقع المنصة اللي اخترتها.');
-    expect(rowEls()[1].querySelector('[data-link-error="label"]')!.textContent).toContain('من 2 لـ 30 حرف');
+    expect(root.querySelector(`#${url.getAttribute('aria-describedby')}`)!.textContent).toContain('هذا الرابط لا ينتمي إلى المنصة التي اخترتها.');
+    expect(rowEls()[1].querySelector('[data-link-error="label"]')!.textContent).toContain('من 2 إلى 30 حرفًا');
     expect(rowEls()[1].querySelector('[data-link-error="url"]')).toBeNull();
     expect(root.querySelector('[data-link-error="list"]')!.textContent).toContain('8 روابط');
   });

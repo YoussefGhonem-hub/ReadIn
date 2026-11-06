@@ -64,7 +64,7 @@ for (const variant of VARIANTS) {
     if (hasScreenshot(variant)) await expect(page.locator('rd-report-sheet section[role="dialog"]')).toHaveScreenshot(`report-sheet-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
     await sheet.locator('[data-report-submit]').click();
     await expect(sheet).toHaveCount(0);
-    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'شكرًا، هنراجع البلاغ' : "Thanks, we'll review it");
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'شكرًا، سنراجع البلاغ' : "Thanks, we'll review it");
     expect(await reportOf(request, me.id, 'article', 'a-sleep-and-memory')).toEqual({ reason: 'misinformation', details: 'The study it cites found the opposite.' });
 
     // A comment, through the same sheet.
@@ -143,8 +143,8 @@ for (const variant of VARIANTS) {
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page.locator('rd-moderation-case-page')).toHaveScreenshot(`moderation-case-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
     await page.locator('[data-case-action="hide"]').click();
-    await confirmAction(page, 'Misleading health claims.', ar ? 'اتخفى' : 'Hidden');
-    await expect(page.locator('[data-case-status]')).toHaveText(ar ? 'اتحل' : 'Resolved');
+    await confirmAction(page, 'Misleading health claims.', ar ? 'تم الإخفاء' : 'Hidden');
+    await expect(page.locator('[data-case-status]')).toHaveText(ar ? 'محلول' : 'Resolved');
     await expect(page.locator('[data-case-target] [data-target-state="hidden"]')).toBeVisible();
     await expect(page.locator('[data-case-history] [data-log-entry]')).toHaveCount(1);
     await expect(page.locator('[data-case-history]')).toContainText('Misleading health claims.');
@@ -155,15 +155,15 @@ for (const variant of VARIANTS) {
     await openCase(page, 'comment:cm-spam');
     await page.locator('[data-case-action="warnAuthor"]').click();
     await expect(page.locator('[data-moderation-confirm]')).toBeDisabled();
-    await confirmAction(page, 'No ads in the comments, please.', ar ? 'التحذير اتبعت' : 'Warning sent');
-    await expect(page.locator('[data-case-status]')).toHaveText(ar ? 'اتحل' : 'Resolved');
+    await confirmAction(page, 'No ads in the comments, please.', ar ? 'تم إرسال التحذير' : 'Warning sent');
+    await expect(page.locator('[data-case-status]')).toHaveText(ar ? 'محلول' : 'Resolved');
 
     // A user case: suspend for 7 days.
     await page.locator('[data-case-back]').click();
     await openCase(page, 'user:u-reader-21');
     await page.locator('[data-case-action="suspend"]').click();
     await expect(page.locator('[data-duration="7"]')).toBeChecked();
-    await confirmAction(page, 'Insults other readers after a warning.', ar ? 'الحساب اتوقف' : 'Account suspended');
+    await confirmAction(page, 'Insults other readers after a warning.', ar ? 'تم إيقاف الحساب' : 'Account suspended');
     await expect(page.locator('[data-case-target] [data-target-state="suspended"]')).toBeVisible();
     await expect(page.locator('[data-case-action="unsuspend"]')).toBeVisible();
 
@@ -171,8 +171,8 @@ for (const variant of VARIANTS) {
     await page.locator('[data-case-back]').click();
     await openCase(page, 'article:a-readin-streaks-ar');
     await page.locator('[data-case-action="dismiss"]').click();
-    await confirmAction(page, null, ar ? 'البلاغات اترفضت' : 'Reports dismissed');
-    await expect(page.locator('[data-case-status]')).toHaveText(ar ? 'اترفض' : 'Dismissed');
+    await confirmAction(page, null, ar ? 'تم رفض البلاغات' : 'Reports dismissed');
+    await expect(page.locator('[data-case-status]')).toHaveText(ar ? 'مرفوض' : 'Dismissed');
 
     // Nothing open any more; the closed tabs and the log have them.
     await page.locator('[data-case-back]').click();
@@ -202,18 +202,18 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-article-menu-panel] [data-menu-action]')).toHaveCount(7);
     await expect(page.locator('[data-article-menu-panel] [data-menu-action]').last()).toHaveAttribute('data-menu-action', 'hide');
     await page.locator('[data-article-menu-panel] [data-menu-action="hide"]').click();
-    await confirmAction(page, 'Copied from another site without credit.', ar ? 'اتخفى' : 'Hidden');
+    await confirmAction(page, 'Copied from another site without credit.', ar ? 'تم الإخفاء' : 'Hidden');
     await expect(banner).toBeVisible();
     await expect(banner).toContainText('Copied from another site without credit.');
 
     // The server kept it: moderators (and the author) still open it, with the banner.
     await openArticle(page, '/ar/a/what-is-a-transformer-ar');
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText(ar ? 'المقال ده متخفي من فريق الإشراف' : 'Hidden by moderators');
+    await expect(banner).toContainText(ar ? 'أخفى المشرفون هذا المقال' : 'Hidden by moderators');
 
     await page.locator('rd-article-action-bar [data-article-menu]').click();
     await page.locator('[data-article-menu-panel] [data-menu-action="unhide"]').click();
-    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'رجع ظاهر' : 'Visible again');
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'تمت إعادة الإظهار' : 'Visible again');
     await expect(banner).toHaveCount(0);
   });
 
@@ -224,7 +224,7 @@ for (const variant of VARIANTS) {
 
     const notice = page.locator('[data-moderation-notice]');
     await expect(notice).toHaveAttribute('data-notice-kind', 'warning', { timeout: FIRST_RENDER_MS });
-    await expect(notice.locator('[data-notice-title]')).toHaveText(ar ? 'وصلك تحذير من فريق الإشراف' : "You've received a warning from the moderators");
+    await expect(notice.locator('[data-notice-title]')).toHaveText(ar ? 'تلقّيت تحذيرًا من فريق الإشراف' : "You've received a warning from the moderators");
     await expect(notice.locator('[data-notice-note]')).toContainText('Please keep the comments respectful');
     // It can't be closed without "Got it".
     await page.keyboard.press('Escape');
@@ -257,11 +257,11 @@ for (const variant of VARIANTS) {
     await page.locator('#sign-in-password').fill(MOCK_PASSWORD);
     await page.locator('form [data-submit]').click();
     const error = page.locator('[data-error]');
-    await expect(error).toContainText(ar ? 'الحساب ده موقوف لحد' : 'This account is suspended until', { timeout: FIRST_RENDER_MS });
+    await expect(error).toContainText(ar ? 'هذا الحساب موقوف حتى' : 'This account is suspended until', { timeout: FIRST_RENDER_MS });
     await expect(error).toContainText('2026');
     until = null;
     await page.locator('form [data-submit]').click();
-    await expect(error).toHaveText(ar ? 'الحساب ده موقوف نهائيًا. تواصل مع الدعم.' : 'This account is suspended permanently. Contact support.');
+    await expect(error).toHaveText(ar ? 'هذا الحساب موقوف نهائيًا. تواصل مع الدعم.' : 'This account is suspended permanently. Contact support.');
 
     // Suspended while signed in: the next call ends the session and opens Sign in with the message.
     await page.unrouteAll({ behavior: 'ignoreErrors' });
@@ -271,6 +271,6 @@ for (const variant of VARIANTS) {
     await page.locator('rd-article-action-bar [data-react]').click();
     // Sign in's chunk may still have to load: this page was opened straight on the article.
     await expect(page).toHaveURL(/\/auth\/sign-in\?returnUrl=%2Fen%2Fa%2Fsleep-and-memory/, { timeout: FIRST_RENDER_MS });
-    await expect(error).toContainText(ar ? 'الحساب ده موقوف لحد' : 'This account is suspended until');
+    await expect(error).toContainText(ar ? 'هذا الحساب موقوف حتى' : 'This account is suspended until');
   });
 }

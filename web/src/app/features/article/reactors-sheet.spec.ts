@@ -47,7 +47,7 @@ describe('ReactorsSheet (F10 who reacted)', () => {
     expect(tabs[0].textContent).toContain('25');
     expect(tabs[0].getAttribute('aria-selected')).toBe('true');
     expect(root.querySelectorAll('[data-reactor]').length).toBe(2);
-    expect(root.querySelector('[data-reactor] [role="img"]')!.getAttribute('aria-label')).toBe('حبيته');
+    expect(root.querySelector('[data-reactor] [role="img"]')!.getAttribute('aria-label')).toBe('أحببته');
     expect(root.querySelector('[data-reactors-more]')).toBeNull();
   });
 

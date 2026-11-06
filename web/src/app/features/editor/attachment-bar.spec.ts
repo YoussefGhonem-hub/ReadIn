@@ -207,7 +207,7 @@ describe('AttachmentBar + AttachmentDraft (F26 in the editor)', () => {
 
     respond(media.documentUploads[0], documentAsset('doc-1', 'processing', 0));
     await settle();
-    expect(el().querySelector('[data-processing]')?.textContent).toContain('بنجهز الصفحات…');
+    expect(el().querySelector('[data-processing]')?.textContent).toContain('جارٍ تجهيز الصفحات…');
     expect(el().querySelector<HTMLInputElement>('[data-allow-download]')!.checked).toBe(true);
     expect(draft().isBusy()).toBe(true);
     // The draft already names the PDF: the server reports it as not ready until the pages are done.
@@ -240,7 +240,7 @@ describe('AttachmentBar + AttachmentDraft (F26 in the editor)', () => {
     await settle();
     respond(media.documentUploads[0], { ...documentAsset('doc-1', 'failed', 0), failureReason: 'media.pdf_encrypted' });
     await settle();
-    expect(el().querySelector('[data-doc-error]')?.textContent).toContain('الملف ده عليه باسورد، ارفعه من غير باسورد.');
+    expect(el().querySelector('[data-doc-error]')?.textContent).toContain('هذا الملف محمي بكلمة مرور. ارفعه دون كلمة مرور.');
     expect(draft().hasProblem()).toBe(true);
 
     (el().querySelector('[data-document] [data-retry]') as HTMLButtonElement).click();
@@ -268,7 +268,7 @@ describe('AttachmentBar + AttachmentDraft (F26 in the editor)', () => {
     await addReadyImages(1);
     const pdfButton = el().querySelector('[data-add-pdf]') as HTMLButtonElement;
     expect(pdfButton.disabled).toBe(true);
-    expect(el().querySelector('[data-pdf-hint]')?.textContent).toContain('شيل الصور عشان تضيف ملف PDF.');
+    expect(el().querySelector('[data-pdf-hint]')?.textContent).toContain('أزل الصور لإضافة ملف PDF.');
     expect(draft().setDocument(pdf())).toBe('attachments.pdfDisabled');
     expect(draft().document()).toBeNull();
 
@@ -280,7 +280,7 @@ describe('AttachmentBar + AttachmentDraft (F26 in the editor)', () => {
     bar().addDocument(pdf());
     await settle();
     expect((el().querySelector('[data-add-images]') as HTMLButtonElement).disabled).toBe(true);
-    expect(el().querySelector('[data-images-hint]')?.textContent).toContain('شيل ملف الـ PDF عشان تضيف صور.');
+    expect(el().querySelector('[data-images-hint]')?.textContent).toContain('أزل ملف PDF لإضافة صور.');
     expect(draft().addImages([image('late.jpg')]).skipped).toBe(1);
     expect(draft().images()).toEqual([]);
   });

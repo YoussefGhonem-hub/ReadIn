@@ -108,7 +108,7 @@ for (const variant of VARIANTS) {
     await expect(di.locator('[data-card-author]')).toHaveAttribute('href', '/@mona');
     await expect(di.locator('[data-card-author]')).toContainText('Mona Adel');
     await expect(di.locator('[data-card-meta]')).toContainText(t('البرمجيات', 'Software'));
-    await expect(di.locator('[data-card-meta]')).toContainText(t('6 دقايق قراءة', '6 min read'));
+    await expect(di.locator('[data-card-meta]')).toContainText(t('6 دقائق للقراءة', '6 min read'));
     await expect(di.locator('[data-card-follow] [data-follow]')).toBeVisible(); // guests: the sign-in prompt
     await expect(di.locator('[data-card-title]')).toHaveAttribute('href', '/ar/a/dependency-injection-ar');
     const excerpt = di.locator('[data-card-excerpt]');
@@ -116,7 +116,7 @@ for (const variant of VARIANTS) {
     await expect(excerpt).toHaveAttribute('lang', 'ar-EG');
     const more = di.locator('[data-card-read-more]');
     await expect(more).toHaveAttribute('aria-expanded', 'false');
-    await expect(more).toHaveText(t('… اقرأ المزيد', '… Read more'));
+    await expect(more).toHaveText(t('… قراءة المزيد', '… Read more'));
     await expect(di.locator('[data-card-tags] li')).toHaveText(['#ASP.NET Core', '#DI', '#dotnet']);
     // Each tag opens its tag page (F32), by the slug the API gave it.
     expect(await di.locator('[data-card-tags] a').evaluateAll((links) => links.map((a) => a.getAttribute('href')))).toEqual([
@@ -135,7 +135,7 @@ for (const variant of VARIANTS) {
       t('تعليق، 3', 'Comment, 3'),
       t('إعادة نشر، 4', 'Repost, 4'),
       t('مشاركة', 'Share'),
-      t('12 تفاعل، شوف مين اتفاعل', '12 reactions, see who reacted'),
+      t('12 تفاعلًا، عرض من تفاعل', '12 reactions, see who reacted'),
     ]);
     // The label row comes from `repostedBy` (F29): For you has none.
     await expect(di.locator('[data-card-repost-label]')).toHaveCount(0);
@@ -146,7 +146,7 @@ for (const variant of VARIANTS) {
     await expect(photoTags).toHaveCount(4);
     await expect(photoTags.first()).toHaveText('#desk-setup');
     await expect(photoTags.last().locator('[aria-hidden="true"]')).toHaveText('+1');
-    await expect(photoTags.last().locator('.sr-only')).toHaveText(t('تاج كمان', '1 more tag'));
+    await expect(photoTags.last().locator('.sr-only')).toHaveText(t('وسم آخر', '1 more tag'));
     await expect(cardOf(page, 'a-aspnet-core-cheatsheet').locator('[data-card-read-more]')).toHaveCount(0);
     await di.scrollIntoViewIfNeeded();
     await parkMouse(page);
@@ -164,7 +164,7 @@ for (const variant of VARIANTS) {
     await expect(di.locator('[data-card-preview] h2').first()).toBeVisible();
     await expect(di.locator('[data-card-preview] [data-term="dependency-injection"]')).toBeVisible();
     await expect(di.locator('[data-card-read-full]')).toHaveAttribute('href', '/ar/a/dependency-injection-ar');
-    await expect(di.locator('[data-card-read-full]')).toHaveText(t('اقرأ المقال كله', 'Read the full article'));
+    await expect(di.locator('[data-card-read-full]')).toHaveText(t('قراءة المقال كاملًا', 'Read the full article'));
 
     // "Show less" from far below: the card's top comes back into view, focus goes back to "Read more".
     const less = di.locator('[data-card-show-less]');

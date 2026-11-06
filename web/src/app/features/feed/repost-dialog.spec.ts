@@ -83,9 +83,9 @@ describe('RepostDialog (F29: repost with your thoughts)', () => {
   it('in Arabic: the texts, and the field takes the UI direction until you type', async () => {
     const t = await render({ lang: 'ar' });
     http = t.http;
-    expect(t.$('h2')!.textContent!.trim()).toBe('أعد نشر المقال');
-    expect(t.field().getAttribute('placeholder')).toBe('قول رأيك في المقال… (اختياري)');
-    expect(t.submit().textContent!.trim()).toBe('انشر');
+    expect(t.$('h2')!.textContent!.trim()).toBe('إعادة نشر المقال');
+    expect(t.field().getAttribute('placeholder')).toBe('اكتب رأيك في المقال… (اختياري)');
+    expect(t.submit().textContent!.trim()).toBe('نشر');
     expect(t.$('[data-repost-cancel]')!.textContent!.trim()).toBe('إلغاء');
     expect(t.field().getAttribute('dir')).toBe('rtl');
     await t.type('Great read');
@@ -142,7 +142,7 @@ describe('RepostDialog (F29: repost with your thoughts)', () => {
       .flush(problem(400, 'validation.failed', { caption: ['repost.caption_too_long'] }), { status: 400, statusText: 'Bad Request' });
     await t.stable();
     expect(t.closed()).toBe(0);
-    expect(t.$('[data-repost-error]')!.textContent!.trim()).toBe('رأيك لازم يكون 500 حرف أو أقل.');
+    expect(t.$('[data-repost-error]')!.textContent!.trim()).toBe('يجب ألا يتجاوز رأيك 500 حرف.');
     expect(t.$('[data-repost-error]')!.getAttribute('role')).toBe('alert');
     expect(t.submit().disabled).toBe(false);
     expect(t.field().value).toBe('رأيي');
@@ -151,12 +151,12 @@ describe('RepostDialog (F29: repost with your thoughts)', () => {
     expect(t.$('[data-repost-error]')).toBeNull(); // a new try clears the old error
     t.http.expectOne(REPOST_URL).flush(problem(400, 'repost.own_article'), { status: 400, statusText: 'Bad Request' });
     await t.stable();
-    expect(t.$('[data-repost-error]')!.textContent!.trim()).toBe('مينفعش تعيد نشر مقالك.');
+    expect(t.$('[data-repost-error]')!.textContent!.trim()).toBe('لا يمكنك إعادة نشر مقالك.');
 
     await t.send();
     t.http.expectOne(REPOST_URL).flush(problem(429, 'rate_limited'), { status: 429, statusText: 'Too Many Requests' });
     await t.stable();
-    expect(t.$('[data-repost-error]')!.textContent!.trim()).toBe('طلبات كتير، استنى شوية وجرّب تاني.');
+    expect(t.$('[data-repost-error]')!.textContent!.trim()).toBe('طلبات كثيرة جدًا. انتظر قليلًا ثم حاول مرة أخرى.');
     expect(t.closed()).toBe(0);
     expect(t.toasts.toasts()).toEqual([]);
     // Nothing changed on the button.
@@ -200,7 +200,7 @@ describe('RepostDialog (F29: repost with your thoughts)', () => {
     t.http.expectOne(REPOST_URL).flush({ repostCount: 4, isReposted: false, caption: null });
     await t.stable();
     expect(t.$('[data-repost-dialog]')!.getAttribute('data-mode')).toBe('new');
-    expect(t.submit().textContent!.trim()).toBe('انشر');
+    expect(t.submit().textContent!.trim()).toBe('نشر');
     expect(t.field().value).toBe('');
     expect(t.store.state(article)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 4 }));
   });

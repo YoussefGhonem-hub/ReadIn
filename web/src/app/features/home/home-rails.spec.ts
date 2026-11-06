@@ -105,7 +105,7 @@ describe('Home columns', () => {
       expect(row('articles').querySelector('.rd-skeleton')).not.toBeNull();
       stats.set(STATS);
       await stable();
-      expect(row('articles').textContent).toContain('مقالات الأسبوع ده');
+      expect(row('articles').textContent).toContain('مقالات هذا الأسبوع');
       expect(row('articles').textContent).toContain('3');
       expect(row('minutes').textContent).toContain('27');
       expect(row('minutes').getAttribute('href')).toBe('/@mona');
@@ -134,7 +134,7 @@ describe('Home columns', () => {
       setup({ guest: true });
       const { root } = render(HomeStartRail);
       const guest = root.querySelector('[data-home-guest]')!;
-      expect(guest.textContent).toContain('اقرا كل يوم واتعلم أكتر');
+      expect(guest.textContent).toContain('اقرأ كل يوم وتعلّم المزيد');
       expect([...guest.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/auth/sign-in', '/auth/sign-up']);
       expect(root.querySelector('[data-home-profile-card]')).toBeNull();
       expect(refreshIfStale).not.toHaveBeenCalled();
@@ -206,7 +206,7 @@ describe('Home columns', () => {
       follow.click();
       await stable();
       expect(follow.getAttribute('aria-pressed')).toBe('true');
-      expect(follow.textContent).toContain('بتتابعه');
+      expect(follow.textContent).toContain('تتابعه');
       http.expectOne({ method: 'PUT', url: `${TEST_API}/users/2/follow` }).flush({ isFollowing: true, followerCount: 1 });
 
       // The path: the first one you haven't enrolled in.
@@ -220,7 +220,7 @@ describe('Home columns', () => {
       expect(path.getAttribute('href')).toBe('/paths/ai');
       expect(path.textContent).toContain('AI from scratch');
       expect(root.querySelector('[data-rail-path-meta]')!.textContent).toContain('6 مقالات · 40 دقيقة');
-      expect(path.textContent).toContain('ابدأ');
+      expect(path.textContent).toContain('البدء');
 
       const footer = [...root.querySelectorAll<HTMLAnchorElement>('[data-home-footer] a')];
       expect(footer.map((a) => a.textContent!.trim())).toEqual(['عن ReadIn', 'الخصوصية', 'الشروط', 'المساعدة والتواصل']);
@@ -292,7 +292,7 @@ describe('Home columns', () => {
     const { fixture, root, stable } = render(ColumnsHost);
     expect(root.querySelector('.home-main [data-centre]')).not.toBeNull();
     expect(root.querySelector('aside[data-home-start]')!.getAttribute('aria-label')).toBe('حسابك');
-    expect(root.querySelector('aside[data-home-end]')!.getAttribute('aria-label')).toBe('اقتراحات ليك');
+    expect(root.querySelector('aside[data-home-end]')!.getAttribute('aria-label')).toBe('اقتراحات لك');
     await fixture.whenStable();
     await stable();
     http.match(`${TEST_API}/paths`).forEach((r) => r.flush([]));

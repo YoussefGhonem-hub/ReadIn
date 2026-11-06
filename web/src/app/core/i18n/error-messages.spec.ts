@@ -25,17 +25,17 @@ describe('Error code translations (docs/api/contract-v1.md)', () => {
 describe('Tag errors (F32)', () => {
   // The API's wording (ErrorMessages.cs), as mobile has it; the symbols stay in order in Arabic (LRI … PDI).
   const expected: Record<string, [string, string]> = {
-    'tag.not_found': ['التاج ده مش موجود.', 'Tag not found.'],
+    'tag.not_found': ['هذا الوسم غير موجود.', 'Tag not found.'],
     'tag.invalid': [
-      'التاج لازم يكون من 2 لـ 30 حرف: حروف وأرقام ومسافات و \u2066- _ . + #\u2069 بس.',
+      'يجب أن يتكون الوسم من 2 إلى 30 حرفًا: حروف وأرقام ومسافات و \u2066- _ . + #\u2069 فقط.',
       'A tag has 2–30 characters: letters, digits, spaces and - _ . + # only.',
     ],
     'tag.limit': [
-      'عملت تاجات جديدة كتير النهارده. اختار من التاجات الموجودة، أو جرّب تاني بعدين.',
+      'أنشأت وسومًا جديدة كثيرة اليوم. اختر من الوسوم الموجودة، أو حاول مرة أخرى لاحقًا.',
       "You've created a lot of new tags today. Pick existing tags, or try again later.",
     ],
-    'tag.hidden': ['التاج ده مش متاح، اختار تاج تاني.', "This tag isn't available. Choose another one."],
-    'article.too_many_tags': ['أقصى حاجة 5 تاجات للمقال.', 'An article can have at most 5 tags.'],
+    'tag.hidden': ['هذا الوسم غير متاح. اختر وسمًا آخر.', "This tag isn't available. Choose another one."],
+    'article.too_many_tags': ['الحد الأقصى 5 وسوم للمقال الواحد.', 'An article can have at most 5 tags.'],
   };
 
   it('read like the API in both languages', () => {
@@ -56,12 +56,12 @@ describe('Tag errors (F32)', () => {
 describe('Writer category errors (F31)', () => {
   // The API's wording (ErrorMessages.cs), as mobile has it.
   const expected: Record<string, [string, string]> = {
-    'category.not_found': ['القسم ده مش موجود.', 'Category not found.'],
-    'category.not_owner': ['القسم ده مش بتاعك.', "This category isn't yours."],
-    'category.limit': ['وصلت لأقصى عدد أقسام (50).', 'You can have at most 50 categories.'],
-    'category.name_taken': ['عندك قسم بنفس الاسم بالفعل.', 'You already have a category with this name.'],
+    'category.not_found': ['هذه الفئة غير موجودة.', 'Category not found.'],
+    'category.not_owner': ['هذه الفئة ليست لك.', "This category isn't yours."],
+    'category.limit': ['وصلت إلى الحد الأقصى لعدد الفئات (50).', 'You can have at most 50 categories.'],
+    'category.name_taken': ['لديك فئة بالاسم نفسه بالفعل.', 'You already have a category with this name.'],
     'category.name_invalid': [
-      'اسم القسم لازم يكون من 1 لـ 40 حرف، وفيه حرف أو رقم على الأقل.',
+      'يجب أن يتكون اسم الفئة من 1 إلى 40 حرفًا، وأن يتضمن حرفًا أو رقمًا واحدًا على الأقل.',
       'A category name has 1–40 characters, with at least one letter or digit.',
     ],
   };
@@ -115,11 +115,11 @@ describe('Suspended account message (F22)', () => {
   it('says until when (date and time in the UI language), or that it is permanent', () => {
     const errors = setup('ar');
     const until = errors.forError(suspended('2026-11-10T14:30:00Z'));
-    expect(until).toMatch(/^الحساب ده موقوف لحد .*2026.*\.$/);
+    expect(until).toMatch(/^هذا الحساب موقوف حتى .*2026.*\.$/);
     expect(until).toContain('نوفمبر');
-    expect(errors.forError(suspended(null))).toBe('الحساب ده موقوف نهائيًا. تواصل مع الدعم.');
+    expect(errors.forError(suspended(null))).toBe('هذا الحساب موقوف نهائيًا. تواصل مع الدعم.');
     // An API that sends no end at all: the plain message.
-    expect(errors.forError(suspended())).toBe('الحساب ده موقوف. تواصل مع الدعم');
+    expect(errors.forError(suspended())).toBe('هذا الحساب موقوف. تواصل مع الدعم.');
 
     const english = setup('en');
     expect(english.forError(suspended('2026-11-10T14:30:00Z'))).toMatch(/^This account is suspended until November 10, 2026.*\.$/);

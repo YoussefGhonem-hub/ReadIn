@@ -239,7 +239,7 @@ export function pathAction(path: PathDetailsDto, signedIn: boolean): PathAction 
               @if (busy()) {
                 <svg lucideIcon="LoaderCircle" [size]="18" class="animate-spin" aria-hidden="true"></svg>
               }
-              {{ 'paths.detail.leave' | transloco }}
+              {{ 'paths.detail.leaveConfirm' | transloco }}
             </button>
           </div>
         </div>

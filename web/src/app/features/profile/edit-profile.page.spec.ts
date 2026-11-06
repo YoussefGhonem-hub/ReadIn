@@ -120,7 +120,7 @@ describe('EditProfilePage (F14)', () => {
     expect(root.querySelector('[data-expertise="software"]')!.getAttribute('aria-pressed')).toBe('true');
     expect(root.querySelector('[data-avatar-preview] img')!.getAttribute('src')).toBe('https://cdn.test/old_256.webp');
     // Your own handle is fine: no "available" success message for it.
-    expect(root.querySelector('[data-username-status]')!.textContent).toContain('من 3 لـ 30 حرف');
+    expect(root.querySelector('[data-username-status]')!.textContent).toContain('من 3 إلى 30 حرفًا');
   });
 
   it('saves without touching the photo: avatarAssetId left out, the title trimmed, the whole link list in order', async () => {
@@ -200,9 +200,9 @@ describe('EditProfilePage (F14)', () => {
     await type('[data-link-row="0"] [data-link-url]', 'https://gitlab.com/mona');
     await submit();
     expect(root.querySelector('[data-field-error="bio"]')!.textContent).toContain('300');
-    expect(root.querySelector('[data-field-error="headline"]')!.textContent).toContain('120 حرف أو أقل');
-    expect(root.querySelector('[data-link-row="0"] [data-link-error="url"]')!.textContent).toContain('الرابط ده مش على موقع المنصة اللي اخترتها.');
-    expect(root.querySelector('[data-link-row="1"] [data-link-error="url"]')!.textContent).toContain('الرابط لازم يبدأ بـ https.');
+    expect(root.querySelector('[data-field-error="headline"]')!.textContent).toContain('يجب ألا يتجاوز المسمى 120 حرفًا');
+    expect(root.querySelector('[data-link-row="0"] [data-link-error="url"]')!.textContent).toContain('هذا الرابط لا ينتمي إلى المنصة التي اخترتها.');
+    expect(root.querySelector('[data-link-row="1"] [data-link-error="url"]')!.textContent).toContain('يجب أن يبدأ الرابط بـ https.');
     http.expectNone((r) => r.method === 'PATCH');
   });
 
@@ -228,8 +228,8 @@ describe('EditProfilePage (F14)', () => {
     });
     await flushMicrotasks(10);
     TestBed.tick();
-    expect(root.querySelector('[data-link-row="0"] [data-link-error="url"]')!.textContent).toContain('الرابط ده مش على موقع المنصة اللي اخترتها.');
-    expect(root.querySelector('[data-field-error="headline"]')!.textContent).toContain('سطر واحد');
+    expect(root.querySelector('[data-link-row="0"] [data-link-error="url"]')!.textContent).toContain('هذا الرابط لا ينتمي إلى المنصة التي اخترتها.');
+    expect(root.querySelector('[data-field-error="headline"]')!.textContent).toContain('سطرًا واحدًا');
     expect(root.querySelector('[data-error]')).toBeNull(); // no general message
     expect(navigate).not.toHaveBeenCalled();
 
@@ -249,7 +249,7 @@ describe('EditProfilePage (F14)', () => {
     patch().flush(problem(409, 'user.username_taken'), { status: 409, statusText: 'Conflict' });
     await flushMicrotasks(10);
     TestBed.tick();
-    expect(root.querySelector('[data-username-status]')!.textContent).toContain('اسم المستخدم ده محجوز');
+    expect(root.querySelector('[data-username-status]')!.textContent).toContain('اسم المستخدم هذا محجوز');
     // It stays until the handle changes: submitting again sends nothing.
     await submit();
     http.expectNone((r) => r.method === 'PATCH');

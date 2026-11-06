@@ -95,7 +95,7 @@ describe('reading stats views', () => {
 
     it('speaks Egyptian Arabic plurals', async () => {
       const { root } = await render(ReadingStatsCard, { lang: 'ar' });
-      expect(text(root)).toContain('12 يوم');
+      expect(text(root)).toContain('12 يومًا');
       expect(text(root)).toContain('5 مقالات');
     });
 

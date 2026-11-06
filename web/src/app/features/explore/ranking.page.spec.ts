@@ -42,7 +42,7 @@ describe('RankingPage (F15 "See all")', () => {
 
   it('trending: the title, post cards best first, the next page near the end (no card twice), then the end', async () => {
     const { root, $, stable, fixture } = await render('trending', page(1, 20, '20'));
-    expect(text($('h1'))).toBe('الترند الأسبوع ده');
+    expect(text($('h1'))).toBe('الأكثر رواجًا هذا الأسبوع');
     expect(root.querySelectorAll('rd-post-card')).toHaveLength(20);
     expect($('[data-list-end]')).toBeNull();
 
@@ -53,18 +53,18 @@ describe('RankingPage (F15 "See all")', () => {
     await more;
     await stable();
     expect(root.querySelectorAll('rd-post-card')).toHaveLength(22);
-    expect(text($('[data-list-end]'))).toBe('كده شفت كل المقالات اللي عليها تفاعل الأسبوع ده.');
+    expect(text($('[data-list-end]'))).toBe('هذه كل المقالات الرائجة هذا الأسبوع.');
   });
 
   it('most saved: its own texts and its empty state', async () => {
     const { $ } = await render('most-saved', page(1, 0, null));
-    expect(text($('h1'))).toBe('الأكتر حفظًا');
-    expect(text($('[data-list-empty] h3'))).toBe('لسه محدش حفظ مقالات');
+    expect(text($('h1'))).toBe('الأكثر حفظًا');
+    expect(text($('[data-list-empty] h3'))).toBe('لا توجد مقالات محفوظة بعد');
   });
 
   it('a failure shows an error with Retry; a page that fails to load more offers Retry and keeps the cards', async () => {
     const { $, root, stable, fixture } = await render('trending', { status: 503, code: 'server.error' });
-    expect(text($('rd-error-state'))).toContain('معرفناش نحمّل المقالات دي.');
+    expect(text($('rd-error-state'))).toContain('تعذّر تحميل هذه المقالات.');
     $<HTMLButtonElement>('rd-error-state button')!.click();
     http.expectOne((r) => r.url === `${TEST_API}/explore/trending` && !r.params.has('cursor')).flush(page(1, 20, '20'));
     await stable();

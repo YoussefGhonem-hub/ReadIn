@@ -54,26 +54,26 @@ for (const variant of VARIANTS) {
 
     const row = (id: string) => page.locator(`[data-notification="${id}"]`);
     await expect(row('n-comments').locator('[data-notification-text]')).toHaveText(
-      ar ? 'Karim Hassan و9 غيره علّقوا على مقالك' : 'Karim Hassan and 9 others commented on your article',
+      ar ? 'علّق Karim Hassan و9 آخرون على مقالك' : 'Karim Hassan and 9 others commented on your article',
     );
     await expect(row('n-comments').locator('[data-notification-article]')).toHaveAttribute('lang', 'ar-EG');
     await expect(row('n-followers').locator('[data-notification-text]')).toHaveText(
-      ar ? 'Omar Fathy واتنين غيره بدأوا يتابعوك' : 'Omar Fathy and 2 others started following you',
+      ar ? 'بدأ Omar Fathy وشخصان آخران متابعتك' : 'Omar Fathy and 2 others started following you',
     );
-    await expect(row('n-reply').locator('[data-notification-text]')).toHaveText(ar ? 'مستخدم محذوف ردّ على تعليقك' : 'Deleted user replied to your comment');
+    await expect(row('n-reply').locator('[data-notification-text]')).toHaveText(ar ? 'ردّ مستخدم محذوف على تعليقك' : 'Deleted user replied to your comment');
     // A mention in a comment, with its excerpt; a mention in an article: the article's title, no excerpt, no #comment.
-    await expect(row('n-mention').locator('[data-notification-text]')).toHaveText(ar ? 'سلمى إبراهيم عمل لك منشن في تعليق' : 'سلمى إبراهيم mentioned you in a comment');
+    await expect(row('n-mention').locator('[data-notification-text]')).toHaveText(ar ? 'أشار إليك سلمى إبراهيم في تعليق' : 'سلمى إبراهيم mentioned you in a comment');
     await expect(row('n-mention').locator('[data-notification-comment]')).toHaveCount(1);
     const articleMention = row('n-article-mention');
-    await expect(articleMention.locator('[data-notification-text]')).toHaveText(ar ? 'سلمى إبراهيم عمل لك منشن في مقال' : 'سلمى إبراهيم mentioned you in an article');
+    await expect(articleMention.locator('[data-notification-text]')).toHaveText(ar ? 'أشار إليك سلمى إبراهيم في مقال' : 'سلمى إبراهيم mentioned you in an article');
     await expect(articleMention.locator('[data-notification-text] bdi')).toHaveText('سلمى إبراهيم');
     await expect(articleMention.locator('[data-notification-article]')).toHaveText('يعني إيه Transformer في الـ AI؟');
     await expect(articleMention.locator('[data-notification-article]')).toHaveAttribute('lang', 'ar-EG');
     await expect(articleMention.locator('[data-notification-comment]')).toHaveCount(0);
     await expect(articleMention).toHaveAttribute('href', '/ar/a/what-is-a-transformer-ar');
-    await expect(row('n-milestone').locator('[data-notification-text]')).toHaveText(ar ? 'مقالك وصل لـ 50 تفاعل 🎉' : 'Your article reached 50 reactions 🎉');
-    await expect(row('n-security')).toContainText(ar ? 'كلمة السر بتاعتك اتغيّرت' : 'Your password was changed');
-    await expect(row('n-warning')).toContainText(ar ? 'وصلك تحذير من فريق الإشراف' : 'You received a warning from the moderators');
+    await expect(row('n-milestone').locator('[data-notification-text]')).toHaveText(ar ? 'بلغ مقالك 50 تفاعلًا 🎉' : 'Your article reached 50 reactions 🎉');
+    await expect(row('n-security')).toContainText(ar ? 'تم تغيير كلمة مرورك' : 'Your password was changed');
+    await expect(row('n-warning')).toContainText(ar ? 'تلقّيت تحذيرًا من فريق الإشراف' : 'You received a warning from the moderators');
     await expect(row('n-followers')).toHaveAttribute('href', '/@sara/followers');
     await expect(row('n-streak')).toHaveAttribute('href', '/me/stats');
     await expect(row('n-security')).toHaveAttribute('href', '/settings#account');
@@ -104,7 +104,7 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-notifications-end]')).toHaveCount(0);
     await rows.last().scrollIntoViewIfNeeded();
     await expect(rows).toHaveCount(25);
-    await expect(page.locator('[data-notifications-end]')).toHaveText(ar ? 'دي كل الإشعارات ✓' : "You're all caught up ✓");
+    await expect(page.locator('[data-notifications-end]')).toHaveText(ar ? 'هذه كل الإشعارات ✓' : "You're all caught up ✓");
 
     // Mark all as read.
     await page.locator('[data-mark-all-read]').click();
@@ -132,18 +132,18 @@ for (const variant of VARIANTS) {
     const type = (name: string) => page.locator(`[data-notification-type="${name}"]`);
     await expect(type('mention')).toHaveAttribute('data-mode', 'all', { timeout: FIRST_RENDER_MS });
     // Mentions cover comments and articles.
-    await expect(type('mention')).toContainText(ar ? 'لما حد يعمل لك منشن في تعليق أو مقال' : 'When someone mentions you in a comment or an article');
+    await expect(type('mention')).toContainText(ar ? 'عندما يشير إليك أحد في تعليق أو مقال' : 'When someone mentions you in a comment or an article');
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page.locator('rd-notification-settings-page')).toHaveScreenshot(`notification-settings-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
 
     // A mode is saved at once, with only that type.
-    await type('mention').getByRole('radio', { name: ar ? 'مقفول' : 'Off' }).click();
+    await type('mention').getByRole('radio', { name: ar ? 'إيقاف' : 'Off' }).click();
     await expect(type('mention')).toHaveAttribute('data-mode', 'off');
     await expect
       .poll(async () => (await notificationsOf(request, me.id)).puts.at(-1))
       .toEqual({ quietHours: { enabled: true, start: '23:00', end: '07:00' }, types: { mention: 'off' } });
-    await type('daily_article').getByRole('radio', { name: ar ? 'جوه التطبيق' : 'In app' }).click();
+    await type('daily_article').getByRole('radio', { name: ar ? 'داخل التطبيق' : 'In app' }).click();
     await expect.poll(async () => (await notificationsOf(request, me.id)).settings.types['daily_article']).toBe('inApp');
     await page.reload();
     await expect(type('mention')).toHaveAttribute('data-mode', 'off', { timeout: FIRST_RENDER_MS });
@@ -155,7 +155,7 @@ for (const variant of VARIANTS) {
     await quiet.locator('#quiet-start').fill('07:00');
     await quiet.locator('[data-quiet-save]').click();
     const error = quiet.locator('[data-quiet-error]');
-    await expect(error).toHaveText(ar ? 'اختار وقت بداية ووقت نهاية (HH:mm) مختلفين.' : 'Pick a start and an end time (HH:mm) that are different.');
+    await expect(error).toHaveText(ar ? 'اختر وقتَي بداية ونهاية (HH:mm) مختلفين.' : 'Pick a start and an end time (HH:mm) that are different.');
     await expect(quiet.locator('#quiet-start')).toHaveAttribute('aria-invalid', 'true');
     expect((await notificationsOf(request, me.id)).puts).toHaveLength(putsBefore);
 
@@ -174,7 +174,7 @@ for (const variant of VARIANTS) {
 
     // Saved.
     await quiet.locator('[data-quiet-save]').click();
-    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'اتحفظت الإعدادات ✓' : 'Settings saved ✓');
+    await expect(page.locator('rd-toast-host')).toContainText(ar ? 'تم حفظ الإعدادات ✓' : 'Settings saved ✓');
     await expect(error).toHaveCount(0);
     await expect.poll(async () => (await notificationsOf(request, me.id)).settings.quietHours).toEqual({ enabled: true, start: '22:00', end: '07:00' });
 

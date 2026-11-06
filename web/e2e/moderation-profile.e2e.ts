@@ -5,7 +5,7 @@ import { signInAsModerator } from './support/moderation';
 /**
  * A reported user's title and social links (F14, pre-production step) on their moderation case, in ar/light and
  * en/dark: the case shows the title and every link (the whole address), and the SuperAdmin clears them with
- * "امسح المسمى" / "امسح الروابط" (`clear_headline`, `clear_links`), each confirmed in the sheet with an optional note;
+ * "إزالة المسمى" / "إزالة الروابط" (`clear_headline`, `clear_links`), each confirmed in the sheet with an optional note;
  * the open reports are resolved and the history logs it. The mock API (e2e/mock-api/moderation.mjs) gives u-reader-21
  * an abusive title and two spam links, per moderator.
  */
@@ -58,8 +58,8 @@ for (const variant of VARIANTS) {
     await section.locator('[data-case-clear-headline]').click();
     const sheet = page.locator('[data-moderation-sheet]');
     await expect(sheet).toHaveAttribute('data-moderation-action', 'clear_headline');
-    await expect(sheet.locator('#moderation-sheet-title')).toContainText(ar ? 'تمسح مسمى' : 'Clear');
-    await expect(sheet.locator('#moderation-sheet-body')).toContainText(ar ? 'مش هيوصله إشعار' : "isn't notified");
+    await expect(sheet.locator('#moderation-sheet-title')).toContainText(ar ? 'هل تريد إزالة مسمى' : 'Clear');
+    await expect(sheet.locator('#moderation-sheet-body')).toContainText(ar ? 'لن يتلقى المستخدم إشعارًا' : "isn't notified");
     // The note is optional.
     await expect(sheet.locator('[data-moderation-confirm]')).toBeEnabled();
     await sheet.getByRole('button', { name: ar ? 'إلغاء' : 'Cancel', exact: true }).click();
@@ -67,23 +67,23 @@ for (const variant of VARIANTS) {
     expect(actions).toHaveLength(0);
 
     await section.locator('[data-case-clear-headline]').click();
-    await confirm(page, null, ar ? 'المسمى اتمسح' : 'Title cleared');
+    await confirm(page, null, ar ? 'تمت إزالة المسمى' : 'Title cleared');
     expect(actions).toEqual([{ action: 'clear_headline', targetType: 'user', targetId: 'u-reader-21' }]);
-    await expect(section.locator('[data-case-no-headline]')).toHaveText(ar ? 'مفيش مسمى.' : 'No title.');
+    await expect(section.locator('[data-case-no-headline]')).toHaveText(ar ? 'لا يوجد مسمى.' : 'No title.');
     await expect(section.locator('[data-case-clear-headline]')).toHaveCount(0);
     // The user's open report is resolved, and the history says what was removed.
-    await expect(page.locator('[data-case-status]')).toHaveText(ar ? 'اتحل' : 'Resolved');
+    await expect(page.locator('[data-case-status]')).toHaveText(ar ? 'محلول' : 'Resolved');
     const history = page.locator('[data-case-history] [data-log-entry]');
     await expect(history.first()).toHaveAttribute('data-log-action', 'user.clear_headline');
-    await expect(history.first()).toContainText(ar ? 'مسح مسمى مستخدم' : "cleared a user's title");
+    await expect(history.first()).toContainText(ar ? 'أزال مسمى مستخدم' : "cleared a user's title");
     await expect(history.first()).toContainText('بيع متابعين ولايكات | كلمني واتساب');
 
     // Clear links, with a note.
     await section.locator('[data-case-clear-links]').click();
     await expect(page.locator('[data-moderation-sheet]')).toHaveAttribute('data-moderation-action', 'clear_links');
-    await confirm(page, 'Spam links', ar ? 'الروابط اتمسحت' : 'Links cleared');
+    await confirm(page, 'Spam links', ar ? 'تمت إزالة الروابط' : 'Links cleared');
     expect(actions.at(-1)).toEqual({ action: 'clear_links', targetType: 'user', targetId: 'u-reader-21', note: 'Spam links' });
-    await expect(section.locator('[data-case-no-links]')).toHaveText(ar ? 'مفيش روابط.' : 'No links.');
+    await expect(section.locator('[data-case-no-links]')).toHaveText(ar ? 'لا توجد روابط.' : 'No links.');
     await expect(section.locator('[data-case-clear-links]')).toHaveCount(0);
     await expect(history.first()).toHaveAttribute('data-log-action', 'user.clear_links');
     await expect(history.first()).toContainText('Spam links');

@@ -90,7 +90,7 @@ describe('ArticleSocialStore (F10, F13, F27, F29)', () => {
     await done;
 
     expect(store.state(article)).toEqual(expect.objectContaining({ myReaction: null, reactionCount: 12, reactions: { insightful: 6, love: 3, fire: 2, mindBlown: 1 } }));
-    expect(toasts.toasts().map((t) => t.message)).toEqual(['المقال ده مش موجود']);
+    expect(toasts.toasts().map((t) => t.message)).toEqual(['هذا المقال غير موجود']);
   });
 
   it('quick taps coalesce: one request at a time, then the latest wish', async () => {
@@ -226,7 +226,7 @@ describe('ArticleSocialStore (F10, F13, F27, F29)', () => {
       http.expectOne(REPOST_URL).flush(problem(400, 'repost.own_article'), { status: 400, statusText: 'Bad Request' });
       await done;
       expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 3 }));
-      expect(toasts.toasts().map((t) => t.message)).toEqual(['مينفعش تعيد نشر مقالك.']);
+      expect(toasts.toasts().map((t) => t.message)).toEqual(['لا يمكنك إعادة نشر مقالك.']);
     });
 
     it('quick taps coalesce into the latest wish: back where it started sends nothing more', async () => {

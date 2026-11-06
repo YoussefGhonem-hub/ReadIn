@@ -64,11 +64,11 @@ describe('TagPage (F32)', () => {
     const { $, root } = await render('csharp', CSHARP, page(1, 20, '20'));
     expect($('[data-tag-name]')!.textContent!.trim()).toBe('#C#');
     expect($('[data-tag-name]')!.getAttribute('dir')).toBe('auto');
-    expect($('[data-tag-count]')!.textContent!.trim()).toBe('23 مقال');
+    expect($('[data-tag-count]')!.textContent!.trim()).toBe('23 مقالًا');
     expect(root.querySelectorAll('rd-post-card')).toHaveLength(20);
     expect($('[data-tag-end]')).toBeNull(); // more to come
     expect(TestBed.inject(Title).getTitle()).toBe('#C# — ReadIn');
-    expect(TestBed.inject(Meta).getTag('name="description"')!.content).toBe('23 مقال بالتاج #C# على ReadIn.');
+    expect(TestBed.inject(Meta).getTag('name="description"')!.content).toBe('23 مقالًا بالوسم #C# على ReadIn.');
     expect(canonical()).toMatch(/\/tags\/csharp$/);
     expect(robots()).toBeNull();
     expect(response.status).toBeUndefined();
@@ -84,7 +84,7 @@ describe('TagPage (F32)', () => {
     await more;
     await stable();
     expect(root.querySelectorAll('rd-post-card')).toHaveLength(23);
-    expect($('[data-tag-end]')!.textContent).toContain('كده شفت كل المقالات بالتاج ده.');
+    expect($('[data-tag-end]')!.textContent).toContain('اطّلعت على كل المقالات التي تحمل هذا الوسم.');
     await store.loadMore(); // nothing left: no request
   });
 
@@ -106,20 +106,20 @@ describe('TagPage (F32)', () => {
     const { $, root } = await render('kotlin', { slug: 'kotlin', name: 'kotlin', articleCount: 0 }, page(1, 0, null));
     expect($('[data-tag-name]')!.textContent!.trim()).toBe('#kotlin');
     expect($('[data-tag-count]')!.textContent!.trim()).toBe('0 مقال');
-    expect($('[data-tag-empty]')!.textContent).toContain('لسه مفيش مقالات بالتاج ده');
+    expect($('[data-tag-empty]')!.textContent).toContain('لا توجد مقالات تحمل هذا الوسم بعد');
     expect(root.querySelectorAll('rd-post-card')).toHaveLength(0);
     expect(robots()).toBe('noindex');
-    expect(TestBed.inject(Meta).getTag('name="description"')!.content).toBe('لسه مفيش مقالات بالتاج #kotlin على ReadIn.');
+    expect(TestBed.inject(Meta).getTag('name="description"')!.content).toBe('لا توجد بعد مقالات تحمل الوسم #kotlin على ReadIn.');
   });
 
   it('an unknown or hidden tag is a 404 page, noindex', async () => {
     const notFound = { status: 404, code: 'tag.not_found' };
     const { $ } = await render('spam-links', notFound, notFound);
-    expect($('[data-tag-not-found]')!.textContent).toContain('التاج ده مش موجود');
+    expect($('[data-tag-not-found]')!.textContent).toContain('هذا الوسم غير موجود');
     expect($('[data-tag-header]')).toBeNull();
     expect(response.status).toBe(404);
     expect(robots()).toBe('noindex');
-    expect(TestBed.inject(Title).getTitle()).toBe('التاج ده مش موجود — ReadIn');
+    expect(TestBed.inject(Title).getTitle()).toBe('هذا الوسم غير موجود — ReadIn');
     expect(canonical()).toBeNull();
   });
 

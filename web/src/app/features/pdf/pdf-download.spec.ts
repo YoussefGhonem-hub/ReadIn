@@ -52,7 +52,7 @@ describe('PdfDownload (F33)', () => {
 
   it('one language: downloads it at once; "بنجهز الـ PDF…", disabled, while it is built', async () => {
     const t = render(['en']);
-    expect(t.button().textContent?.trim()).toBe('تحميل PDF');
+    expect(t.button().textContent?.trim()).toBe('تنزيل PDF');
     expect(t.button().getAttribute('aria-disabled')).toBeNull();
     expect(t.button().getAttribute('data-state')).toBe('idle');
 
@@ -61,11 +61,11 @@ describe('PdfDownload (F33)', () => {
     const [req] = pdfRequests();
     expect(req.request.params.get('lang')).toBe('en');
     expect(t.root.querySelector('[data-pdf-languages]')).toBeNull(); // no question
-    expect(t.button().textContent?.trim()).toBe('بنجهز الـ PDF…');
+    expect(t.button().textContent?.trim()).toBe('جارٍ تجهيز ملف PDF…');
     expect(t.button().getAttribute('aria-disabled')).toBe('true');
     expect(t.button().getAttribute('data-state')).toBe('building');
     expect(t.button().querySelector('svg.animate-spin')).not.toBeNull();
-    expect(t.root.querySelector('[role="status"]')?.textContent?.trim()).toBe('بنجهز الـ PDF…');
+    expect(t.root.querySelector('[role="status"]')?.textContent?.trim()).toBe('جارٍ تجهيز ملف PDF…');
 
     // A second press does nothing.
     t.button().click();
@@ -75,7 +75,7 @@ describe('PdfDownload (F33)', () => {
     req.flush(new Blob(['%PDF']), { headers: { 'Content-Disposition': "attachment; filename*=UTF-8''clean-code-en.pdf" } });
     await t.stable();
     expect(clicks).toEqual(['clean-code-en.pdf']);
-    expect(t.button().textContent?.trim()).toBe('تحميل PDF');
+    expect(t.button().textContent?.trim()).toBe('تنزيل PDF');
     expect(t.button().getAttribute('aria-disabled')).toBeNull();
   });
 
@@ -88,11 +88,11 @@ describe('PdfDownload (F33)', () => {
     expect(sheet).not.toBeNull();
     const dialog = sheet.closest('section')!;
     expect(dialog.getAttribute('role')).toBe('dialog');
-    expect(document.getElementById(dialog.getAttribute('aria-labelledby')!)?.textContent?.trim()).toBe('أنهي نسخة؟');
+    expect(document.getElementById(dialog.getAttribute('aria-labelledby')!)?.textContent?.trim()).toBe('أي نسخة تريد؟');
     const options = [...sheet.querySelectorAll<HTMLButtonElement>('[data-pdf-language]')];
     expect(options.map((o) => [o.dataset['pdfLanguage'], o.textContent?.trim()])).toEqual([
-      ['ar-EG', 'العربي'],
-      ['en', 'الإنجليزي'],
+      ['ar-EG', 'العربية'],
+      ['en', 'الإنجليزية'],
     ]);
     expect(options[0].hasAttribute('data-initial-focus')).toBe(true);
 

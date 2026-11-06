@@ -76,7 +76,7 @@ describe('AdminVerificationPage (F19)', () => {
   it('pending: one row per request (who, field, job title, when), oldest first; the tabs keep their URLs', async () => {
     const t = await render();
     expect(t.$('[data-verification-tab="pending"]')!.getAttribute('aria-current')).toBe('page');
-    expect(t.$$('[data-verification-tab]').map((tab) => tab.textContent!.trim())).toEqual(['مستنية', 'اتقبلت', 'اترفضت']);
+    expect(t.$$('[data-verification-tab]').map((tab) => tab.textContent!.trim())).toEqual(['قيد المراجعة', 'مقبولة', 'مرفوضة']);
     expect(t.$('[data-verification-tab="approved"]')!.getAttribute('href')).toBe('/admin/verification?status=approved');
     expect(t.$('[data-verification-tab="pending"]')!.getAttribute('href')).toBe('/admin/verification');
 
@@ -87,23 +87,23 @@ describe('AdminVerificationPage (F19)', () => {
     expect(rows[0].textContent).toContain('@salma');
     expect(rows[0].querySelector('[data-row-field]')!.textContent!.trim()).toBe('البرمجيات');
     expect(rows[0].querySelector('[data-row-job-title]')!.getAttribute('dir')).toBe('ltr');
-    expect(rows[0].querySelector('[data-row-time]')!.textContent).toContain('اتبعت');
-    expect(t.$('[data-verification-pick]')!.textContent).toContain('اختار طلب عشان تراجعه.');
+    expect(rows[0].querySelector('[data-row-time]')!.textContent).toContain('أُرسل');
+    expect(t.$('[data-verification-pick]')!.textContent).toContain('اختر طلبًا لمراجعته.');
   });
 
   it('a tab without requests says so; a failed list can be retried', async () => {
     const t = await render({ status: 'rejected' }, []);
-    expect(t.$('[data-verification-empty]')!.textContent).toContain('مفيش طلبات اترفضت');
+    expect(t.$('[data-verification-empty]')!.textContent).toContain('لا توجد طلبات مرفوضة');
 
     t.fixture.componentRef.setInput('status', 'approved');
     await t.stable();
     http.expectOne((r) => r.url === LIST && r.params.get('status') === 'approved').flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
     await t.stable();
-    expect(t.$('rd-error-state')!.textContent).toContain('معرفناش نجيب الطلبات.');
+    expect(t.$('rd-error-state')!.textContent).toContain('تعذّر تحميل الطلبات.');
     t.$<HTMLButtonElement>('rd-error-state button')!.click();
     http.expectOne((r) => r.url === LIST && r.params.get('status') === 'approved').flush({ items: [], nextCursor: null });
     await t.stable();
-    expect(t.$('[data-verification-empty]')!.textContent).toContain('لسه مفيش طلبات اتقبلت');
+    expect(t.$('[data-verification-empty]')!.textContent).toContain('لا توجد طلبات مقبولة بعد');
   });
 
   it('a request: the job title, note and proof link (new tab, no referrer); the image proof fetched with the session and shown inline', async () => {
@@ -111,7 +111,7 @@ describe('AdminVerificationPage (F19)', () => {
     await t.open('vr-salma');
     const detail = t.$('[data-verification-detail="vr-salma"]')!;
     expect(t.$('[data-verification-row="vr-salma"]')!.getAttribute('aria-current')).toBe('true');
-    expect(detail.querySelector('[data-detail-status]')!.textContent!.trim()).toBe('مستني');
+    expect(detail.querySelector('[data-detail-status]')!.textContent!.trim()).toBe('قيد المراجعة');
     expect(detail.querySelector('[data-detail-job-title]')!.textContent).toBe('ML engineer في Instabug');
     expect(detail.querySelector('[data-detail-note]')!.getAttribute('dir')).toBe('rtl');
     const link = detail.querySelector<HTMLAnchorElement>('[data-detail-proof-url]')!;
@@ -141,7 +141,7 @@ describe('AdminVerificationPage (F19)', () => {
     expect(pdf.querySelector('[data-proof-image]')).toBeNull();
     expect(pdf.querySelector('[data-proof-open]')!.getAttribute('href')).toBe('blob:http://localhost/proof-2');
     expect(pdf.querySelector('[data-proof-open]')!.getAttribute('target')).toBe('_blank');
-    expect(pdf.querySelector('[data-proof-open]')!.textContent).toContain('افتح الـ PDF');
+    expect(pdf.querySelector('[data-proof-open]')!.textContent).toContain('فتح ملف PDF');
     expect(pdf.querySelector('[data-proof-name]')!.textContent).toBe('syndicate-card.pdf');
     t.fixture.destroy();
     expect(revoked).toEqual(['blob:http://localhost/proof-1', 'blob:http://localhost/proof-2']);
@@ -155,7 +155,7 @@ describe('AdminVerificationPage (F19)', () => {
       statusText: 'Not Found',
     });
     await t.stable();
-    expect(t.$('[data-proof-gone]')!.textContent).toContain('الملف مبقاش موجود.');
+    expect(t.$('[data-proof-gone]')!.textContent).toContain('لم يعد الملف موجودًا.');
 
     await t.open('vr-omar');
     t.proof('vr-omar').flush(new Blob(['x']), { status: 500, statusText: 'Error' });
@@ -183,7 +183,7 @@ describe('AdminVerificationPage (F19)', () => {
     await t.stable();
     const sheet = t.$('[data-decision-sheet]')!;
     expect(sheet.getAttribute('data-decision')).toBe('approve');
-    expect(sheet.textContent).toContain('توافق على ⁨سلمى إبراهيم⁩؟');
+    expect(sheet.textContent).toContain('هل تريد الموافقة على طلب ⁨سلمى إبراهيم⁩؟');
     http.expectNone(`${LIST}/vr-salma/approve`);
     t.$<HTMLButtonElement>('[data-decision-confirm]')!.click();
     await t.stable();
@@ -194,7 +194,7 @@ describe('AdminVerificationPage (F19)', () => {
     expect(navigate).toHaveBeenCalledWith(['/admin/verification'], { queryParams: { status: null }, replaceUrl: true });
     http.expectOne({ method: 'POST', url: `${LIST}/vr-salma/approve` }).flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
-    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'success', message: '⁨سلمى إبراهيم⁩ بقى كاتب موثّق ✓' })]);
+    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'success', message: 'أصبح ⁨سلمى إبراهيم⁩ كاتبًا موثّقًا ✓' })]);
   });
 
   it('reject needs a reason of 5+ characters; a refusal brings the request back to its place', async () => {
@@ -244,7 +244,7 @@ describe('AdminVerificationPage (F19)', () => {
     http.expectOne((r) => r.url === LIST && r.params.get('status') === 'pending').flush({ items: [testAdminRequest()], nextCursor: null });
     await t.stable();
     expect(t.$$('[data-verification-row]').map((r) => r.getAttribute('data-verification-row'))).toEqual(['vr-salma']);
-    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'الطلب ده اتاخد فيه قرار خلاص.' })]);
+    expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'تم البتّ في هذا الطلب بالفعل.' })]);
   });
 
   it('a request that is not on the tab (a deep link) is loaded on its own; decided ones show who decided and why', async () => {
@@ -262,14 +262,14 @@ describe('AdminVerificationPage (F19)', () => {
     const detail = t.$('[data-verification-detail="vr-old"]')!;
     expect(detail.querySelector('[data-detail-actions]')).toBeNull();
     expect(detail.querySelector('[data-detail-remove-badge]')).toBeNull();
-    expect(detail.querySelector('[data-detail-decision]')!.textContent).toContain('رفضه ⁨@nour_admin⁩ يوم 25 أكتوبر 2026');
+    expect(detail.querySelector('[data-detail-decision]')!.textContent).toContain('رفضه ⁨@nour_admin⁩ في 25 أكتوبر 2026');
     expect(detail.querySelector('[data-detail-reason]')!.textContent).toBe('An Instagram page is not proof of a medical qualification.');
-    expect(detail.querySelector('[data-detail-no-file]')!.textContent).toContain('ملف الإثبات بيتمسح أول ما الطلب يتاخد فيه قرار.');
+    expect(detail.querySelector('[data-detail-no-file]')!.textContent).toContain('يُحذف ملف الإثبات فور البت في الطلب.');
 
     await t.open('vr-gone');
     http.expectOne(`${LIST}/vr-gone`).flush(problem(404, 'verification.not_found'), { status: 404, statusText: 'Not Found' });
     await t.stable();
-    expect(t.$('rd-error-state')!.textContent).toContain('الطلب ده مبقاش موجود.');
+    expect(t.$('rd-error-state')!.textContent).toContain('هذا الطلب لم يعد موجودًا.');
   });
 
   describe('Remove badge (roles change: Verified is a badge, the SuperAdmin can take it away)', () => {
@@ -294,16 +294,16 @@ describe('AdminVerificationPage (F19)', () => {
       expect(detail().getAttribute('data-status')).toBe('approved');
       const button = detail().querySelector<HTMLButtonElement>('[data-detail-remove-badge]')!;
       expect(button.type).toBe('button');
-      expect(button.textContent!.trim()).toBe('شيل التوثيق');
+      expect(button.textContent!.trim()).toBe('إزالة التوثيق');
       expect(t.$('[data-verification-row="vr-karim"] svg[aria-label="كاتب موثّق"]')).not.toBeNull();
 
       button.click();
       await t.stable();
       const sheet = t.$('[data-decision-sheet]')!;
       expect(sheet.getAttribute('data-decision')).toBe('removeBadge');
-      expect(sheet.querySelector('#decision-title')!.textContent).toBe('تشيل التوثيق من ⁨Karim Hassan⁩؟');
-      expect(sheet.querySelector('#decision-body')!.textContent).toContain('يقدر يطلب التوثيق تاني');
-      expect(t.$('[data-decision-confirm]')!.textContent!.trim()).toBe('شيل التوثيق');
+      expect(sheet.querySelector('#decision-title')!.textContent).toBe('هل تريد إزالة توثيق ⁨Karim Hassan⁩؟');
+      expect(sheet.querySelector('#decision-body')!.textContent).toContain('يمكنه طلب التوثيق مرة أخرى');
+      expect(t.$('[data-decision-confirm]')!.textContent!.trim()).toBe('إزالة التوثيق');
       expect(t.$('[data-decision-reason]')).toBeNull();
       http.expectNone(BADGE_URL);
       t.$<HTMLButtonElement>('[data-decision-confirm]')!.click();
@@ -311,7 +311,7 @@ describe('AdminVerificationPage (F19)', () => {
 
       expect(t.$('[data-decision-sheet]')).toBeNull();
       expect(detail().querySelector('[data-detail-remove-badge]')).toBeNull();
-      expect(detail().querySelector('[data-detail-badge-removed]')!.textContent).toContain('مبقاش معاه علامة التوثيق.');
+      expect(detail().querySelector('[data-detail-badge-removed]')!.textContent).toContain('لم تعد لديه علامة التوثيق.');
       expect(t.$('[data-verification-row="vr-karim"] svg[aria-label]')).toBeNull();
       // The focus stays in the request, on the decision that now says the badge is gone.
       expect(document.activeElement).toBe(detail().querySelector('[data-detail-decision]'));
@@ -319,7 +319,7 @@ describe('AdminVerificationPage (F19)', () => {
       expect(req.request.body).toBeNull();
       req.flush(null, { status: 204, statusText: 'No Content' });
       await t.stable();
-      expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'success', message: '⁨Karim Hassan⁩ مبقاش موثّق' })]);
+      expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'success', message: 'لم يعد ⁨Karim Hassan⁩ موثّقًا' })]);
       expect(t.$$('[data-verification-row]').map((r) => r.getAttribute('data-verification-row'))).toEqual(['vr-karim', 'vr-mona']);
       expect(detail().getAttribute('data-status')).toBe('approved');
 
@@ -348,7 +348,7 @@ describe('AdminVerificationPage (F19)', () => {
       await t.stable();
       expect(detail().querySelector('[data-detail-remove-badge]')).toBeNull();
       expect(detail().querySelector('[data-detail-badge-removed]')).not.toBeNull();
-      expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'المستخدم ده مش موثّق.' })]);
+      expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'هذا المستخدم غير موثّق.' })]);
     });
 
     it('a request opened by link: the same, and a refusal brings the action back with the error', async () => {
@@ -362,7 +362,7 @@ describe('AdminVerificationPage (F19)', () => {
       await t.stable();
       expect(detail().querySelector('[data-detail-remove-badge]')).not.toBeNull();
       expect(detail().querySelector('[data-detail-badge-removed]')).toBeNull();
-      expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'السيرفر واجه مشكلة. حاول كمان شوية.' })]);
+      expect(TestBed.inject(ToastService).toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'واجه الخادم مشكلة. حاول مرة أخرى بعد قليل.' })]);
     });
   });
 });

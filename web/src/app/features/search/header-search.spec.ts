@@ -76,7 +76,7 @@ describe('HeaderSearch (F16)', () => {
     await t.focus();
     expect(t.input().getAttribute('aria-expanded')).toBe('true');
     expect(t.options().map((o) => o.getAttribute('data-option'))).toEqual(['recent', 'recent']);
-    expect(t.root.querySelector('[role="listbox"]')!.getAttribute('aria-label')).toBe('آخر حاجات دوّرت عليها');
+    expect(t.root.querySelector('[role="listbox"]')!.getAttribute('aria-label')).toBe('عمليات البحث الأخيرة');
 
     await t.key('ArrowDown');
     await t.key('ArrowDown');
@@ -99,7 +99,7 @@ describe('HeaderSearch (F16)', () => {
     await t.type('mon');
     vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS - 1);
     http.expectNone(isSuggest);
-    expect(t.root.querySelector('[data-header-search-status]')!.textContent!.trim()).toBe('بندوّر…');
+    expect(t.root.querySelector('[data-header-search-status]')!.textContent!.trim()).toBe('جارٍ البحث…');
     vi.advanceTimersByTime(1);
     const req = http.expectOne(isSuggest);
     expect(req.request.params.get('q')).toBe('mon');
@@ -108,8 +108,8 @@ describe('HeaderSearch (F16)', () => {
 
     expect([...t.root.querySelectorAll('[data-group]')].map((g) => g.getAttribute('data-group'))).toEqual(['articles', 'users', 'topics', 'tags']);
     expect(t.options().map((o) => o.getAttribute('data-option'))).toEqual(['article', 'user', 'topic', 'tag', 'all']);
-    expect(t.options()[0].textContent).toContain('لقيناها في ملف الـ PDF المرفق');
-    expect(t.options()[4].textContent!.trim()).toBe('اعرض كل النتايج لـ «⁨mon⁩»');
+    expect(t.options()[0].textContent).toContain('وُجدت في ملف PDF المرفق');
+    expect(t.options()[4].textContent!.trim()).toBe('عرض كل نتائج «⁨mon⁩»');
 
     await t.key('ArrowDown');
     await t.key('ArrowDown');
@@ -153,7 +153,7 @@ describe('HeaderSearch (F16)', () => {
     vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
     http.expectOne(isSuggest).flush({ code: 'rate_limited' }, { status: 429, statusText: 'Too Many Requests' });
     await t.stable();
-    expect(t.root.querySelector('[data-header-search-status]')!.textContent!.trim()).toBe('مفيش اقتراحات لسه');
+    expect(t.root.querySelector('[data-header-search-status]')!.textContent!.trim()).toBe('لا توجد اقتراحات بعد');
     expect(t.options().map((o) => o.getAttribute('data-option'))).toEqual(['all']);
     await t.key('Enter');
     expect(t.navigate).toHaveBeenCalledWith(['/search'], { queryParams: { q: 'dock' } });

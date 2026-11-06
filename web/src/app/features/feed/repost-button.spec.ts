@@ -135,13 +135,13 @@ describe('RepostButton (F29)', () => {
   it('the menu in Arabic', async () => {
     const t = await render(testCard(), { lang: 'ar' });
     http = t.http;
-    expect((await t.openMenu()).map(([, label]) => label)).toEqual(['أعد النشر', 'أعد النشر مع رأيك']);
+    expect((await t.openMenu()).map(([, label]) => label)).toEqual(['إعادة النشر', 'إعادة النشر مع رأيك']);
     document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
 
     TestBed.resetTestingModule();
     const reposted = await render(testCard({ isReposted: true, repostCount: 1 }), { lang: 'ar' });
     http = reposted.http;
-    expect((await reposted.openMenu()).map(([, label]) => label)).toEqual(['عدّل رأيك', 'إلغاء إعادة النشر']);
+    expect((await reposted.openMenu()).map(([, label]) => label)).toEqual(['تعديل رأيك', 'إلغاء إعادة النشر']);
   });
 
   it('"Repost with your thoughts" opens the caption dialog; nothing is sent until you submit', async () => {

@@ -158,7 +158,7 @@ export class LinkProviderSheet {
               @if (busy()) {
                 <svg lucideIcon="LoaderCircle" [size]="18" class="animate-spin" aria-hidden="true"></svg>
               }
-              {{ 'account.linked.unlink' | transloco }}
+              {{ 'account.linked.unlinkConfirm' | transloco }}
             </button>
           }
           <button type="button" class="rd-btn rd-btn-outline flex-1" [disabled]="busy()" (click)="close()">

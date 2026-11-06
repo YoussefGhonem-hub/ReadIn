@@ -98,7 +98,7 @@ for (const variant of VARIANTS) {
     await expect(page.locator('html')).toHaveAttribute('dir', dir);
     await expect(page.locator('[data-welcome]')).toBeVisible({ timeout: FIRST_RENDER_MS });
     // Every auth screen has its own tab title, in the UI language.
-    await expect(page).toHaveTitle(lang === 'ar' ? 'أهلاً بيك — ReadIn' : 'Welcome — ReadIn');
+    await expect(page).toHaveTitle(lang === 'ar' ? 'مرحبًا بك — ReadIn' : 'Welcome — ReadIn');
     await snap(page, variant, `welcome-${suffix}.png`);
 
     // ── Sign in: the country picker, then one generic error for a wrong password ──
@@ -127,7 +127,7 @@ for (const variant of VARIANTS) {
     await page.locator('[data-forgot]').click();
     await page.waitForURL('**/auth/forgot-password');
     await expect(page.locator('#forgot-phone')).toHaveValue('10 01234567');
-    await expect(page).toHaveTitle(lang === 'ar' ? 'نسيت كلمة السر — ReadIn' : 'Forgot password — ReadIn');
+    await expect(page).toHaveTitle(lang === 'ar' ? 'نسيت كلمة المرور — ReadIn' : 'Forgot password — ReadIn');
     await page.locator('[data-forgot-pin]').click();
     await expect(page.locator('[data-support]')).toBeVisible();
     await snapViewport(page, variant, `contact-support-${suffix}.png`);
@@ -186,7 +186,7 @@ for (const variant of VARIANTS) {
 
     await page.goto('/auth/sign-up');
     await expect(page.locator('[data-step]')).toBeVisible({ timeout: FIRST_RENDER_MS });
-    await expect(page).toHaveTitle(lang === 'ar' ? 'حساب جديد — ReadIn' : 'Create an account — ReadIn');
+    await expect(page).toHaveTitle(lang === 'ar' ? 'إنشاء حساب — ReadIn' : 'Create an account — ReadIn');
 
     // Step 1: phone + password (strength meter, live rules) + confirm
     await page.locator('#sign-up-phone').fill('01001234567');
@@ -222,7 +222,7 @@ for (const variant of VARIANTS) {
     await dialog.locator('[data-confirm]').click();
 
     await page.waitForURL('**/auth/complete-profile');
-    await expect(page).toHaveTitle(lang === 'ar' ? 'كمّل بروفايلك — ReadIn' : 'Complete your profile — ReadIn');
+    await expect(page).toHaveTitle(lang === 'ar' ? 'إكمال الملف الشخصي — ReadIn' : 'Complete your profile — ReadIn');
     expect(registerBody).toMatchObject({ phoneNumber: '+201001234568', password: STRONG_PASSWORD, recoveryPin: GOOD_PIN, uiLanguage: lang });
     expect(typeof registerBody.timeZone).toBe('string');
 
@@ -239,14 +239,14 @@ for (const variant of VARIANTS) {
     await page.locator('#profile-headline').fill('x'.repeat(121));
     await page.locator('[data-complete-profile] [data-submit]').click();
     await expect(page.locator('[data-complete-profile] [data-field-error="headline"]')).toHaveText(
-      lang === 'ar' ? 'المسمى لازم يكون 120 حرف أو أقل.' : 'A title has at most 120 characters.',
+      lang === 'ar' ? 'يجب ألا يتجاوز المسمى 120 حرفًا.' : 'A title has at most 120 characters.',
     );
     expect(profileBody).toBeNull();
     await page.locator('#profile-headline').fill('  Backend engineer | .NET  ');
     await page.locator('[data-complete-profile] [data-submit]').click();
 
     await page.waitForURL('**/onboarding');
-    await expect(page).toHaveTitle(lang === 'ar' ? 'يلا نبدأ — ReadIn' : 'Get started — ReadIn');
+    await expect(page).toHaveTitle(lang === 'ar' ? 'لنبدأ — ReadIn' : 'Get started — ReadIn');
     expect(profileBody).toEqual({ displayName: lang === 'ar' ? 'منى عادل' : 'Mona Adel', username: 'mona_adel', avatarUrl: null, headline: 'Backend engineer | .NET' });
   });
 
@@ -271,7 +271,7 @@ for (const variant of VARIANTS) {
     // The guards send a reset account to "change password" first, wherever it was going.
     await page.goto('/settings');
     await page.waitForURL('**/auth/change-password?returnUrl=%2Fsettings');
-    await expect(page).toHaveTitle(lang === 'ar' ? 'غيّر كلمة السر — ReadIn' : 'Change your password — ReadIn');
+    await expect(page).toHaveTitle(lang === 'ar' ? 'تغيير كلمة المرور — ReadIn' : 'Change your password — ReadIn');
     await page.locator('#must-current').fill('Temp-Pass-9912');
     await page.locator('#must-new').fill(NEW_PASSWORD);
     await page.locator('#must-confirm').fill(NEW_PASSWORD);
@@ -280,7 +280,7 @@ for (const variant of VARIANTS) {
 
     // Then the PIN, which can't be skipped (the last digits of the number are refused).
     await page.waitForURL('**/auth/recovery-pin?returnUrl=%2Fsettings');
-    await expect(page).toHaveTitle(lang === 'ar' ? 'PIN الطوارئ — ReadIn' : 'Recovery PIN — ReadIn');
+    await expect(page).toHaveTitle(lang === 'ar' ? 'رمز الاسترداد (PIN) — ReadIn' : 'Recovery PIN — ReadIn');
     expect(passwordBody).toEqual({ currentPassword: 'Temp-Pass-9912', newPassword: NEW_PASSWORD });
     // A later step can't be opened first.
     await page.goto('/auth/complete-profile');

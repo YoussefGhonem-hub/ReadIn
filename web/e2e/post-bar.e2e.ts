@@ -24,7 +24,7 @@ import { expectSignInPrompt, openArticle, signInAsReader } from './support/socia
  *   side; the writer's title under the name;
  * - the floating reactions bar (LinkedIn-style): hover, keyboard, staggered entry, grow and lift, the pick animation,
  *   and all of it instant with "reduce motion";
- * - Repost: its menu's "أعد النشر" / "إلغاء إعادة النشر", optimistic, kept by the server, rollback with the error; your
+ * - Repost: its menu's "إعادة النشر" / "إلغاء إعادة النشر", optimistic, kept by the server, rollback with the error; your
  *   own article, guests; the Following feed's "أعاد نشره {name}" / "{name} و N غيره" labels (the mock's `u-reposts…`
  *   viewers follow writers who reposted, some with their thoughts under the label); the caption dialog is in
  *   repost-caption.e2e.ts;
@@ -163,7 +163,7 @@ for (const variant of VARIANTS) {
       t('تعليق، 3', 'Comment, 3'),
       t('إعادة نشر، 4', 'Repost, 4'),
       t('مشاركة', 'Share'),
-      t('12 تفاعل، شوف مين اتفاعل', '12 reactions, see who reacted'),
+      t('12 تفاعلًا، عرض من تفاعل', '12 reactions, see who reacted'),
     ]);
     // The old counts row ("3 تعليقات") is gone; a count of 0 shows no number.
     await expect(card.locator('[data-card-counts]')).toHaveCount(0);
@@ -208,7 +208,7 @@ for (const variant of VARIANTS) {
     expect(await reactions.evaluateAll((list) => list.map((b) => getComputedStyle(b).animationDelay))).toEqual(['0s', '0.05s', '0.1s', '0.15s']);
     expect(await reactions.first().evaluate((b) => getComputedStyle(b).animationName)).not.toBe('none');
     expect(await reactions.evaluateAll((list) => list.map((b) => b.getAttribute('aria-label')))).toEqual(
-      lang === 'ar' ? ['مفيد', 'حبيته', 'نار', 'مبهر'] : ['Insightful', 'Love', 'Fire', 'Mind-blown'],
+      lang === 'ar' ? ['مفيد', 'أحببته', 'نار', 'مبهر'] : ['Insightful', 'Love', 'Fire', 'Mind-blown'],
     );
 
     // The one under the pointer grows and lifts.
@@ -237,7 +237,7 @@ for (const variant of VARIANTS) {
     expect(await picksSeen(page)).toContain('love');
     await expect(react).toHaveAttribute('data-my-reaction', 'love');
     await expect(react).toHaveAttribute('aria-pressed', 'true');
-    await expect(react).toHaveAttribute('aria-label', t('تفاعلت: حبيته، 13', 'Reacted: Love, 13'));
+    await expect(react).toHaveAttribute('aria-label', t('تفاعلت: أحببته، 13', 'Reacted: Love, 13'));
     await expect(react.locator('[data-react-icon]')).toHaveText('❤️');
 
     // Keyboard: ArrowUp opens it on your reaction, arrows follow the reading direction, Enter picks, focus comes back.
@@ -300,7 +300,7 @@ for (const variant of VARIANTS) {
     await expect(count).toHaveText('2');
     await expect(repost).toHaveAttribute('aria-pressed', 'false');
 
-    // A tap opens the Repost menu; "أعد النشر" is optimistic: pressed and counted at once, then the server confirms
+    // A tap opens the Repost menu; "إعادة النشر" is optimistic: pressed and counted at once, then the server confirms
     // (the caption dialog has its own spec, repost-caption.e2e.ts).
     const put = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().endsWith(`/articles/${CLEAN}/repost`));
     await repost.click();
@@ -319,7 +319,7 @@ for (const variant of VARIANTS) {
     await onApi(page, 'DELETE', `/articles/${CLEAN}/repost`, (route) => reply(route, 429, problem(429, 'rate_limited')));
     await repost.click();
     await page.locator('[data-repost-menu] [data-repost-action="undo"]').click();
-    await expect(page.locator('rd-toast-host')).toContainText(t('طلبات كتير، استنى شوية وجرّب تاني.', 'Too many requests. Wait a little and try again.'));
+    await expect(page.locator('rd-toast-host')).toContainText(t('طلبات كثيرة جدًا. انتظر قليلًا ثم حاول مرة أخرى.', 'Too many requests. Wait a little and try again.'));
     await expect(repost).toHaveAttribute('aria-pressed', 'true');
     await expect(count).toHaveText('3');
 
@@ -348,14 +348,14 @@ for (const variant of VARIANTS) {
       if (r.url().includes('/repost')) sent.push(r.method());
     });
     await expect(repost).toHaveAttribute('aria-disabled', 'true');
-    await expect(repost).toHaveAttribute('title', t('مينفعش تعيد نشر مقالك', "You can't repost your own article"));
-    await expect(repost).toHaveAccessibleDescription(t('مينفعش تعيد نشر مقالك', "You can't repost your own article"));
+    await expect(repost).toHaveAttribute('title', t('لا يمكنك إعادة نشر مقالك', "You can't repost your own article"));
+    await expect(repost).toHaveAccessibleDescription(t('لا يمكنك إعادة نشر مقالك', "You can't repost your own article"));
     await expect(repost).toBeDisabled(); // aria-disabled, but it stays focusable and answers with the hint
     // From the keyboard (it stays focusable): Enter answers with the hint.
     await repost.focus();
     await expect(repost).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(page.locator('rd-toast-host')).toContainText(t('مينفعش تعيد نشر مقالك', "You can't repost your own article"));
+    await expect(page.locator('rd-toast-host')).toContainText(t('لا يمكنك إعادة نشر مقالك', "You can't repost your own article"));
     expect(sent).toEqual([]);
   });
 
@@ -376,7 +376,7 @@ for (const variant of VARIANTS) {
       'a-what-is-a-transformer-ar',
     ]);
     const sleep = cards.nth(0).locator('[data-card-repost-label]');
-    await expect(sleep).toHaveText(t('Karim Hassan وشخص تاني أعادوا نشره', 'Karim Hassan and 1 other reposted this'));
+    await expect(sleep).toHaveText(t('أعاد نشره Karim Hassan وشخص آخر', 'Karim Hassan and 1 other reposted this'));
     await expect(sleep.locator('[data-card-reposter]')).toHaveAttribute('href', '/@karim');
     await expect(sleep.locator('[data-card-reposter]')).toHaveAttribute('dir', 'auto');
     // Karim's own article, moved up by ReadIn's later repost: "أعاد نشره ReadIn".
@@ -452,10 +452,10 @@ for (const variant of VARIANTS) {
     const box = section.locator('[data-new-comment]');
     await expect(box.locator('[data-composer-avatar]')).toBeVisible();
     const field = box.locator('textarea');
-    await expect(field).toHaveAttribute('placeholder', t('اكتب تعليق…', 'Add a comment…'));
+    await expect(field).toHaveAttribute('placeholder', t('اكتب تعليقًا…', 'Add a comment…'));
     const send = box.locator('[data-comment-field] [data-comment-send]');
     await expect(send).toBeDisabled();
-    await expect(send).toHaveAttribute('aria-label', t('ابعت التعليق', 'Post comment'));
+    await expect(send).toHaveAttribute('aria-label', t('نشر التعليق', 'Post comment'));
     await expect(box.locator('input[type="file"]')).toHaveCount(0);
     expect(await box.locator('[data-comment-field]').evaluate((el) => parseFloat(getComputedStyle(el).borderTopLeftRadius))).toBeGreaterThan(16);
 

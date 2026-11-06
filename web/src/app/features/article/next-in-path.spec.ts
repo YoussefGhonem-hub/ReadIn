@@ -108,8 +108,8 @@ describe('NextInPath (F04, F09)', () => {
     FakeObserver.nearViewport();
     http.expectOne(isBlock('a2')).flush(testArticlePath({ position: 4, next: null, path: testPathCard({ ...testProgress(4, { completed: true }) }) }));
     await stable();
-    expect($('[data-next-last]')!.textContent).toContain('ده آخر مقال في المسار');
-    expect($('[data-next-completed]')!.textContent).toContain('🎉 خلصت المسار');
+    expect($('[data-next-last]')!.textContent).toContain('هذا آخر مقال في المسار');
+    expect($('[data-next-completed]')!.textContent).toContain('🎉 اكتمل المسار');
     expect($('[data-next-article]')).toBeNull();
   });
 
@@ -136,7 +136,7 @@ describe('NextInPath (F04, F09)', () => {
     http.expectOne(isBlock('a2')).flush(testArticlePath({ path: testPathCard({ ...testProgress(1, { enrolled: true }) }) }));
     await stable();
     expect($('[data-join-path]')).toBeNull();
-    expect(TestBed.inject(ToastService).toasts().map((t) => t.message)).toContain('انضميت للمسار ✓');
+    expect(TestBed.inject(ToastService).toasts().map((t) => t.message)).toContain('انضممت إلى المسار ✓');
   });
 
   it('a guest gets the sign-in prompt from Join path', async () => {

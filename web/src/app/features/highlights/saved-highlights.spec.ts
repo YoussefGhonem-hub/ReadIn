@@ -50,9 +50,9 @@ describe('Saved → Highlights (F14, F30)', () => {
     expect([...groups].map((g) => g.getAttribute('data-highlight-group'))).toEqual(['a-lab|ar-EG', 'a-lab|en']);
     expect(groups[0].querySelector('[data-group-title]')!.getAttribute('href')).toBe('/ar/a/lab');
     expect(groups[0].querySelector('[data-group-meta]')!.textContent).toContain('Mona Adel');
-    expect(groups[0].querySelector('[data-group-meta]')!.textContent).toContain('النسخة العربي');
+    expect(groups[0].querySelector('[data-group-meta]')!.textContent).toContain('النسخة العربية');
     expect(groups[1].querySelector('[data-group-meta]')!.textContent).toContain('مستخدم محذوف');
-    expect(groups[1].querySelector('[data-group-meta]')!.textContent).toContain('النسخة الإنجليزي');
+    expect(groups[1].querySelector('[data-group-meta]')!.textContent).toContain('النسخة الإنجليزية');
     const links = [...t.root.querySelectorAll<HTMLAnchorElement>('[data-saved-highlight]')];
     expect(links.map((a) => a.getAttribute('href'))).toEqual(['/ar/a/lab#b-p3', '/ar/a/lab#b-p1', '/en/a/lab#b-e1']);
     // The text keeps the version's direction, other-direction runs isolated.
@@ -77,6 +77,6 @@ describe('Saved → Highlights (F14, F30)', () => {
     http = t.http;
     t.http.expectOne((r) => r.url === `${TEST_API}/me/highlights`).flush({ items: [], nextCursor: null });
     await t.stable();
-    expect(t.root.querySelector('[data-highlights-empty]')!.textContent).toContain('لسه مفيش Highlights');
+    expect(t.root.querySelector('[data-highlights-empty]')!.textContent).toContain('لا توجد تمييزات بعد');
   });
 });

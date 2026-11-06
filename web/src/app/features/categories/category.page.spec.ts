@@ -66,13 +66,13 @@ describe('CategoryPage (F31)', () => {
     const { $, root } = await render('نصايح-البرمجة', TIPS, page(1, 20, '20'));
     expect($('[data-category-name]')!.textContent!.trim()).toBe('نصايح البرمجة');
     expect($('[data-category-name]')!.getAttribute('dir')).toBe('auto');
-    expect($('[data-category-count]')!.textContent!.trim()).toBe('23 مقال');
+    expect($('[data-category-count]')!.textContent!.trim()).toBe('23 مقالًا');
     expect($('[data-category-author]')!.getAttribute('href')).toBe('/@mona');
     expect($('[data-category-author]')!.textContent).toContain('Mona Adel');
     expect(root.querySelectorAll('rd-post-card')).toHaveLength(20);
     expect($('[data-category-end]')).toBeNull();
     expect(TestBed.inject(Title).getTitle()).toBe('نصايح البرمجة · Mona Adel — ReadIn');
-    expect(TestBed.inject(Meta).getTag('name="description"')!.content).toBe('23 مقال من Mona Adel في «نصايح البرمجة» على ReadIn.');
+    expect(TestBed.inject(Meta).getTag('name="description"')!.content).toBe('23 مقالًا بقلم Mona Adel في «نصايح البرمجة» على ReadIn.');
     // The slug is percent-encoded in the canonical URL.
     expect(canonical()).toMatch(/\/@mona\/c\/%D9%86%D8%B5%D8%A7%D9%8A%D8%AD-%D8%A7%D9%84%D8%A8%D8%B1%D9%85%D8%AC%D8%A9$/);
     expect(robots()).toBeNull();
@@ -95,36 +95,36 @@ describe('CategoryPage (F31)', () => {
   it('"مقالات تانية" (_other): the uncategorized list, with its own title', async () => {
     const other: WriterCategoryPageDto = { id: null, slug: '_other', name: null, articleCount: 1, author: MONA };
     const { $ } = await render('_other', other, page(1, 1, null));
-    expect($('[data-category-name]')!.textContent!.trim()).toBe('مقالات تانية');
-    expect($('[data-category-author]')!.textContent).toContain('من غير قسم');
-    expect(TestBed.inject(Title).getTitle()).toBe('مقالات تانية · Mona Adel — ReadIn');
+    expect($('[data-category-name]')!.textContent!.trim()).toBe('مقالات أخرى');
+    expect($('[data-category-author]')!.textContent).toContain('بلا فئة');
+    expect(TestBed.inject(Title).getTitle()).toBe('مقالات أخرى · Mona Adel — ReadIn');
     expect(canonical()).toMatch(/\/@mona\/c\/_other$/);
   });
 
   it('an empty category: the empty state, a way back to the profile, and noindex', async () => {
     const { $ } = await render('ideas', { ...TIPS, slug: 'ideas', name: 'أفكار جاية', articleCount: 0 }, page(1, 0, null));
-    expect($('[data-category-count]')!.textContent!.trim()).toBe('لسه مفيش مقالات');
-    expect($('[data-category-empty]')!.textContent).toContain('لسه مفيش مقالات في القسم ده');
-    expect($('[data-category-empty]')!.textContent).toContain('أول ما الكاتب يحط فيه مقالات، هتلاقيها هنا.');
+    expect($('[data-category-count]')!.textContent!.trim()).toBe('لا توجد مقالات بعد');
+    expect($('[data-category-empty]')!.textContent).toContain('لا توجد مقالات في هذه الفئة بعد');
+    expect($('[data-category-empty]')!.textContent).toContain('عندما يضيف الكاتب مقالات إلى هذه الفئة، ستجدها هنا.');
     expect($('[data-category-empty] a')!.getAttribute('href')).toBe('/@mona');
-    expect($('[data-category-empty] a')!.textContent!.trim()).toBe('روح لبروفايل الكاتب');
+    expect($('[data-category-empty] a')!.textContent!.trim()).toBe('عرض الملف الشخصي للكاتب');
     expect(robots()).toBe('noindex');
   });
 
-  it('an empty "مقالات تانية" doesn\'t call itself a category', async () => {
+  it('an empty "مقالات أخرى" doesn\'t call itself a category', async () => {
     const other: WriterCategoryPageDto = { id: null, slug: '_other', name: null, articleCount: 0, author: MONA };
     const { $ } = await render('_other', other, page(1, 0, null));
     const empty = $('[data-category-empty]')!.textContent!;
-    expect(empty).toContain('مفيش مقالات من غير قسم');
-    expect(empty).toContain('كل مقالات الكاتب ده في أقسام.');
-    expect(empty).not.toContain('القسم ده');
+    expect(empty).toContain('لا توجد مقالات دون فئة');
+    expect(empty).toContain('كل مقالات هذا الكاتب مصنّفة في فئات.');
+    expect(empty).not.toContain('هذه الفئة');
   });
 
   it('an unknown slug is a 404 that leads back to the writer; an unknown writer leads Home', async () => {
     const missing = await render('gone', { status: 404, code: 'category.not_found' }, { status: 404, code: 'category.not_found' });
-    expect(missing.$('[data-category-not-found]')!.textContent).toContain('القسم ده مش موجود');
+    expect(missing.$('[data-category-not-found]')!.textContent).toContain('هذه الفئة غير موجودة');
     // A rename keeps the slug, so the link broke because it was deleted (or cleared), or it is wrong.
-    expect(missing.$('[data-category-not-found]')!.textContent).toContain('ممكن يكون اتمسح، أو اللينك غلط.');
+    expect(missing.$('[data-category-not-found]')!.textContent).toContain('ربما حُذفت، أو أن الرابط غير صحيح.');
     expect(missing.$('[data-category-not-found] a')!.getAttribute('href')).toBe('/@mona');
     expect(response.status).toBe(404);
     expect(robots()).toBe('noindex');

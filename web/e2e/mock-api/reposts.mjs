@@ -131,7 +131,7 @@ export function createReposts({ articles, social, authorOf, problem }) {
     return [200, stateOf(article.id, viewer)];
   });
 
-  /** `GET`: your repost of it now, with its caption (prefills "عدّل رأيك"). */
+  /** `GET`: your repost of it now, with its caption (prefills "تعديل رأيك"). */
   const current = signedIn((viewer, _q, [, id]) => {
     const article = byId.get(decodeURIComponent(id));
     return article ? [200, stateOf(article.id, viewer)] : notFound();

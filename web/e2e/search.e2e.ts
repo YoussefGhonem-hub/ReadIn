@@ -84,10 +84,10 @@ for (const variant of VARIANTS) {
     const row = articleRows(page).first();
     await expect(row).toHaveAttribute('data-article', 'a-aspnet-core-cheatsheet');
     await expect(row).toHaveAttribute('data-matched-in', 'attachment');
-    await expect(row.locator('[data-in-attachment]')).toHaveText(t('لقيناها في ملف الـ PDF المرفق', 'Found in the attached PDF'));
+    await expect(row.locator('[data-in-attachment]')).toHaveText(t('وُجدت في ملف PDF المرفق', 'Found in the attached PDF'));
     // No full-width PDF pages in a search row: the first page is the thumbnail.
     await expect(row.locator('rd-article-attachments')).toHaveCount(0);
-    await expect(page.locator('[data-search-end]')).toHaveText(t('كده شفت كل النتايج.', "That's everything we found."));
+    await expect(page.locator('[data-search-end]')).toHaveText(t('هذه كل النتائج.', "That's everything we found."));
     await imagesLoaded(row);
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(page).toHaveScreenshot(`search-results-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
@@ -96,7 +96,7 @@ for (const variant of VARIANTS) {
     await tab(page, 'users').click();
     await urlHas(page, { q: 'kestrel', type: 'users' });
     await expect(tab(page, 'users')).toHaveAttribute('aria-selected', 'true');
-    await expect(page.locator('[data-search-empty] h3')).toHaveText(t('مفيش نتايج لـ «⁨kestrel⁩»', 'No results for “⁨kestrel⁩”'));
+    await expect(page.locator('[data-search-empty] h3')).toHaveText(t('لا توجد نتائج لـ «⁨kestrel⁩»', 'No results for “⁨kestrel⁩”'));
 
     // As you type (after a pause), on the tab you are on: a writer, with Follow (guests are asked to sign in).
     await box(page).fill('mona');
@@ -205,7 +205,7 @@ for (const variant of VARIANTS) {
 
     // Nothing that long in Arabic: the empty state offers to clear the filters.
     const empty = page.locator('[data-search-empty="filtered"]');
-    await expect(empty.locator('h3')).toHaveText(t('مفيش نتايج بالفلاتر دي', 'No results with these filters'));
+    await expect(empty.locator('h3')).toHaveText(t('لا توجد نتائج تطابق عوامل التصفية هذه', 'No results with these filters'));
     await empty.locator('button').click();
     await urlHas(page, { q: 'c', lang: null, time: null });
     await loaded(page);
@@ -216,15 +216,15 @@ for (const variant of VARIANTS) {
   test(`recent searches: newest first, one per query, remove one, clear all; empty results — ${suffix}`, async ({ page, context, baseURL }) => {
     await useVariant(context, baseURL!, variant);
     await openSearch(page);
-    await expect(page.locator('[data-search-start] h2')).toHaveText(t('عايز تقرا عن إيه؟', 'What do you want to read about?'));
+    await expect(page.locator('[data-search-start] h2')).toHaveText(t('عمّ تريد أن تقرأ؟', 'What do you want to read about?'));
 
     // A search with no results says so, with a tip.
     await box(page).fill('docker');
     await box(page).press('Enter');
     await urlHas(page, { q: 'docker' });
     const empty = page.locator('[data-search-empty]');
-    await expect(empty.locator('h3')).toHaveText(t('مفيش نتايج لـ «⁨docker⁩»', 'No results for “⁨docker⁩”'));
-    await expect(empty).toContainText(t('جرّب كلمة تانية أو أقصر، أو دوّر في تاب تاني.', 'Try another word or a shorter one, or look in another tab.'));
+    await expect(empty.locator('h3')).toHaveText(t('لا توجد نتائج لـ «⁨docker⁩»', 'No results for “⁨docker⁩”'));
+    await expect(empty).toContainText(t('جرّب كلمة أخرى أو كلمة أقصر، أو ابحث في تبويب آخر.', 'Try another word or a shorter one, or look in another tab.'));
 
     for (const q of ['Kestrel', 'يعني إيه Transformer']) {
       await box(page).fill(q);
@@ -274,7 +274,7 @@ for (const variant of VARIANTS) {
 
     await openSearch(page, '/search?q=mona&type=users');
     const error = page.locator('[data-search-error]');
-    await expect(error).toContainText(t('معرفناش ندوّر دلوقتي.', "We couldn't search right now."));
+    await expect(error).toContainText(t('تعذّر إجراء البحث الآن.', "We couldn't search right now."));
     await error.locator('button').click();
     await loaded(page);
     const mona = page.locator('[data-search-user][data-user="mona"]');
@@ -284,7 +284,7 @@ for (const variant of VARIANTS) {
     await follow.click();
     await followed;
     await expect(follow).toHaveAttribute('aria-pressed', 'true');
-    await expect(follow).toContainText(t('بتتابعه', 'Following'));
+    await expect(follow).toContainText(t('تتابعه', 'Following'));
   });
 
   test(`header: the search box with recent searches and suggestions (wide), the search icon (narrow) — ${suffix}`, async ({ page, context, baseURL }, testInfo) => {
@@ -318,7 +318,7 @@ for (const variant of VARIANTS) {
     await expect(popup.locator('[data-group="users"] [data-option="user"]')).toHaveCount(1);
     await expect(popup.locator('[data-group="users"]')).toContainText('Mona Adel');
     await expect(options.last()).toHaveAttribute('data-option', 'all');
-    await expect(options.last()).toContainText(t('اعرض كل النتايج لـ «⁨mona⁩»', 'See all results for “⁨mona⁩”'));
+    await expect(options.last()).toContainText(t('عرض كل نتائج «⁨mona⁩»', 'See all results for “⁨mona⁩”'));
     await expect(input).toHaveAttribute('aria-expanded', 'true');
     await parkMouse(page);
     if (hasScreenshot(variant)) {

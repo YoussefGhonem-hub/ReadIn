@@ -72,7 +72,7 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     expect(req.request.body).toEqual({ targetType: 'user', targetId: 'writer-1', reason: 'harassment' });
     req.flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
-    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['شكرًا، هنراجع البلاغ']);
+    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['شكرًا، سنراجع البلاغ']);
   });
 
   it('guests get the sign-in prompt', async () => {
@@ -105,7 +105,7 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     put.flush({ isMuted: true, isFollowing: false, followerCount: 40, followRemoved: true });
     await t.stable();
     const [toast] = t.toasts.toasts();
-    expect(toast.message.startsWith('كتمت ')).toBe(true);
+    expect(toast.message.startsWith('تم كتم ')).toBe(true);
     expect(toast.message).toContain('Karim Hassan');
     expect(toast.action!.label).toBe('تراجع');
 
@@ -135,7 +135,7 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     expect(TestBed.inject(MuteStore).isAuthorMuted('writer-1', true)).toBe(false);
     const messages = t.toasts.toasts().map((toast) => toast.message);
     expect(messages).toHaveLength(1);
-    expect(messages[0].startsWith('لغيت كتم ')).toBe(true);
+    expect(messages[0].startsWith('تم إلغاء كتم ')).toBe(true);
   });
 
   it("the official ReadIn account can't be muted: no Mute item", async () => {
@@ -151,7 +151,7 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     await t.pick('warn');
     expect(t.$('#moderation-sheet-title')!.textContent!.trim()).toBe('تحذير ⁨Karim Hassan⁩');
     expect(t.$('label[for="moderation-note"]')!.textContent!.trim()).toBe('ملاحظة');
-    expect(t.$('#moderation-note-hint')!.textContent).toContain('الملاحظة هتوصل لصاحب الحساب.');
+    expect(t.$('#moderation-note-hint')!.textContent).toContain('ستصل الملاحظة إلى صاحب الحساب.');
     const confirm = t.$<HTMLButtonElement>('[data-moderation-confirm]')!;
     expect(confirm.disabled).toBe(true);
     await t.note('   ');
@@ -164,7 +164,7 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
     expect(t.$('[data-moderation-sheet]')).toBeNull();
-    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['التحذير اتبعت']);
+    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['تم إرسال التحذير']);
   });
 
   it('with users.suspend: suspend for 1, 7, 30 days or permanently, with a note', async () => {
@@ -183,7 +183,7 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     expect(first.request.body).toEqual({ action: 'suspend', targetType: 'user', targetId: 'writer-1', note: 'Spam links after a warning.', durationDays: 30 });
     first.flush(problem(403, 'moderation.staff_target'), { status: 403, statusText: 'Forbidden' });
     await t.stable();
-    expect(t.$('[data-moderation-error]')!.textContent!.trim()).toBe('مينفعش تحذّر أو توقف حد من فريق الإشراف.');
+    expect(t.$('[data-moderation-error]')!.textContent!.trim()).toBe('لا يمكنك تحذير أحد أعضاء فريق الإشراف أو إيقافه.');
 
     t.$<HTMLInputElement>('[data-duration="permanent"]')!.click();
     await t.stable();
@@ -192,6 +192,6 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     expect(second.request.body).toEqual({ action: 'suspend', targetType: 'user', targetId: 'writer-1', note: 'Spam links after a warning.', durationDays: null });
     second.flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
-    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['الحساب اتوقف']);
+    expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['تم إيقاف الحساب']);
   });
 });

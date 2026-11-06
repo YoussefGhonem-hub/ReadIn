@@ -71,7 +71,7 @@ describe('collection sheets (F13)', () => {
       const input = root.querySelector<HTMLInputElement>('#new-collection-name')!;
       (root.querySelector('[data-create-collection]') as HTMLElement).click();
       await stable();
-      expect(root.querySelector('#new-collection-error')!.textContent).toBe('اكتب اسم للمجموعة.');
+      expect(root.querySelector('#new-collection-error')!.textContent).toBe('اكتب اسمًا للمجموعة.');
 
       input.value = 'Algorithms';
       input.dispatchEvent(new Event('input'));
@@ -97,7 +97,7 @@ describe('collection sheets (F13)', () => {
       http.expectOne(`${TEST_API}/me/collections`).flush(problem(409, 'collection.name_taken'), { status: 409, statusText: 'Conflict' });
       await flushMicrotasks();
       fixture.detectChanges();
-      expect(root.querySelector('#collection-name-error')!.textContent).toBe('عندك مجموعة بنفس الاسم.');
+      expect(root.querySelector('#collection-name-error')!.textContent).toBe('لديك مجموعة بالاسم نفسه بالفعل.');
       expect(input.getAttribute('aria-invalid')).toBe('true');
     });
 
@@ -115,7 +115,7 @@ describe('collection sheets (F13)', () => {
         .flush(problem(400, 'validation.failed', { name: ['validation.max_length'] }), { status: 400, statusText: 'Bad Request' });
       await flushMicrotasks();
       fixture.detectChanges();
-      expect(root.querySelector('#collection-name-error')!.textContent).toBe('اسم المجموعة 60 حرف بالكتير.');
+      expect(root.querySelector('#collection-name-error')!.textContent).toBe('يجب ألا يتجاوز اسم المجموعة 60 حرفًا.');
 
       input.value = 'Interview prep 2';
       input.dispatchEvent(new Event('input'));
@@ -125,7 +125,7 @@ describe('collection sheets (F13)', () => {
         .flush(problem(400, 'validation.failed', { name: ['validation.required'] }), { status: 400, statusText: 'Bad Request' });
       await flushMicrotasks();
       fixture.detectChanges();
-      expect(root.querySelector('#collection-name-error')!.textContent).toBe('اكتب اسم للمجموعة.');
+      expect(root.querySelector('#collection-name-error')!.textContent).toBe('اكتب اسمًا للمجموعة.');
     });
 
     it('renames with the new name', async () => {

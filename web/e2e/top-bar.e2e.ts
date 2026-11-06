@@ -2,9 +2,9 @@ import { Page, expect, test } from '@playwright/test';
 import { API, HIDE_APP_CHROME, VARIANTS, hasScreenshot, onApi, parkMouse, reply, signInAsWriter, useVariant } from './support/mock-api';
 
 /**
- * The LinkedIn-style top bar and Home's columns: from `md` the destinations as an icon above a label, the theme toggle
- * and Me (its menu); below it the compact bar. The toggle flips the theme you see and a reload keeps it (the cookie, so
- * the server renders it). Screenshots in ar/light and en/dark (SPEC §27).
+ * The LinkedIn-style top bar and Home's columns: from `md` the destinations as an icon above a label, the theme and
+ * language toggles and Me (its menu); below it the compact bar. The toggles flip the theme or the interface language
+ * (and direction) and a reload keeps them (the cookies, so the server renders them). Screenshots in ar/light and en/dark (SPEC §27).
  */
 const FIRST_RENDER_MS = 30_000;
 
@@ -75,7 +75,7 @@ for (const variant of VARIANTS) {
     const toggle = page.locator('rd-top-bar [data-theme-toggle]:visible');
     await expect(toggle).toHaveCount(1);
     await expect(toggle).toHaveAttribute('aria-pressed', String(theme === 'dark'));
-    const action = { ar: { dark: 'حوّل للوضع الداكن', light: 'حوّل للوضع الفاتح' }, en: { dark: 'Switch to dark mode', light: 'Switch to light mode' } }[lang];
+    const action = { ar: { dark: 'التبديل إلى الوضع الداكن', light: 'التبديل إلى الوضع الفاتح' }, en: { dark: 'Switch to dark mode', light: 'Switch to light mode' } }[lang];
     await expect(toggle).toHaveAttribute('aria-label', new RegExp(action[flipped]));
 
     // The bar itself: the nav row on wide screens, the compact bar on narrow ones.
@@ -100,6 +100,29 @@ for (const variant of VARIANTS) {
     await expect(html).toHaveAttribute('data-theme', flipped);
   });
 
+  test(`language toggle: one click switches the interface language and direction, and a reload keeps it — ${suffix}`, async ({ page, context, baseURL }) => {
+    await useVariant(context, baseURL!, variant);
+    await page.goto('/explore');
+    const html = page.locator('html');
+    const other = ar ? 'en' : 'ar';
+    const endonym = { ar: 'العربية', en: 'English' };
+    await expect(html).toHaveAttribute('lang', lang);
+
+    const toggle = page.locator('rd-top-bar [data-language-toggle]:visible');
+    await expect(toggle).toHaveCount(1);
+    await expect(toggle).toHaveAttribute('aria-label', new RegExp(endonym[other]));
+
+    await toggle.click();
+    await expect(html).toHaveAttribute('lang', other);
+    await expect(html).toHaveAttribute('dir', other === 'ar' ? 'rtl' : 'ltr');
+    await expect(page.locator('rd-top-bar a[data-home-mark]')).toHaveAttribute('aria-label', other === 'ar' ? 'الرئيسية' : 'Home');
+    await expect(toggle).toHaveAttribute('aria-label', new RegExp(endonym[lang]));
+
+    await page.reload();
+    await expect(html).toHaveAttribute('lang', other);
+    await expect(html).toHaveAttribute('dir', other === 'ar' ? 'rtl' : 'ltr');
+  });
+
   test(`Me menu: who you are, the links, Appearance; Escape gives the focus back — ${suffix}`, async ({ page, context, baseURL, request }, testInfo) => {
     await useVariant(context, baseURL!, variant);
     await signInAsWriter(page, request, variant, '/');
@@ -113,7 +136,7 @@ for (const variant of VARIANTS) {
     await expect(menu).toBeVisible({ timeout: FIRST_RENDER_MS });
     await expect(me).toHaveAttribute('aria-expanded', 'true');
     await expect(menu.locator('[data-me-item="profile"]')).toBeFocused();
-    await expect(menu.locator('[data-me-item="profile"]')).toHaveText(ar ? 'عرض البروفايل' : 'View profile');
+    await expect(menu.locator('[data-me-item="profile"]')).toHaveText(ar ? 'عرض الملف الشخصي' : 'View profile');
     await expect(menu.locator('[data-me-item="settings"]')).toHaveAttribute('href', '/settings');
     await expect(menu.locator('[data-me-item="myArticles"]')).toHaveAttribute('href', '/write');
     await expect(menu.locator('[data-me-item="myPaths"]')).toHaveAttribute('href', '/paths?tab=mine');
@@ -172,6 +195,6 @@ for (const variant of VARIANTS) {
     await expect(follow).toHaveAttribute('aria-pressed', 'false');
     await follow.click();
     await expect(follow).toHaveAttribute('aria-pressed', 'true');
-    await expect(follow).toContainText(ar ? 'بتتابعه' : 'Following');
+    await expect(follow).toContainText(ar ? 'تتابعه' : 'Following');
   });
 }

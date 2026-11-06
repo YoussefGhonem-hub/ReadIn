@@ -52,7 +52,7 @@ describe('ArticleAttachments: PDF title strip download (F26)', () => {
   it('shows a named download icon when the reader may download, and saves the file', async () => {
     const t = await render(doc());
     const button = t.button()!;
-    expect(button.getAttribute('aria-label')).toContain('تحميل');
+    expect(button.getAttribute('aria-label')).toContain('تنزيل');
     expect(button.getAttribute('aria-label')).toContain('Kubernetes basics');
     button.click();
     await t.stable();

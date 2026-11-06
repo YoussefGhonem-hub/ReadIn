@@ -132,7 +132,7 @@ describe('block stage (handle, menu, drag and drop)', () => {
       ['down', false],
       ['delete', false],
     ]);
-    expect(menuItems()[0].textContent).toContain('طلّعه لفوق');
+    expect(menuItems()[0].textContent).toContain('نقل لأعلى');
     expect(document.activeElement).toBe(menuItems()[1]); // the first item that can be used
     expect(el().querySelector('[data-block-id="p1"]')?.classList).toContain('rd-ed-handle-target');
 
@@ -157,7 +157,7 @@ describe('block stage (handle, menu, drag and drop)', () => {
     await settle(80);
     expect(ids()).toEqual(['p2', 'p1', 't1']);
     expect($('[data-block-menu]')).toBeNull();
-    expect($('[data-block-status]')!.textContent).toContain('البلوك اتنقل');
+    expect($('[data-block-status]')!.textContent).toContain('تم نقل العنصر');
 
     cursorIn(2); // the table
     editor.view.dispatch(closeHistory(editor.state.tr)); // its own undo step (the history joins quick changes)
@@ -168,7 +168,7 @@ describe('block stage (handle, menu, drag and drop)', () => {
     await settle(80);
     expect(ids()).toEqual(['p2', 'p1']);
     expect(editor.view.hasFocus()).toBe(true);
-    expect($('[data-block-status]')!.textContent).toContain('البلوك اتمسح');
+    expect($('[data-block-status]')!.textContent).toContain('تم حذف العنصر');
     editor.commands.undo();
     expect(ids()).toEqual(['p2', 'p1', 't1']);
   });
@@ -185,8 +185,8 @@ describe('block stage (handle, menu, drag and drop)', () => {
     expect(handle.classList).toContain('shown');
     expect(handle.dataset['for']).toBe('p2');
     expect(handle.style.left).toBe('602px'); // right of the column (RTL start), 2 px away
-    expect($('[data-block-grip]')!.getAttribute('aria-label')).toBe('أوامر البلوك');
-    expect($('[data-block-delete]')!.getAttribute('aria-label')).toBe('امسح البلوك');
+    expect($('[data-block-grip]')!.getAttribute('aria-label')).toBe('خيارات العنصر');
+    expect($('[data-block-delete]')!.getAttribute('aria-label')).toBe('حذف العنصر');
 
     $('[data-block-delete]')!.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
     await settle();

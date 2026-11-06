@@ -47,7 +47,7 @@ describe('PeoplePage (F12, F14)', () => {
     await stable();
     expect(rows()).toHaveLength(20);
     expect(rows()[0].querySelector('[data-follow]')).not.toBeNull();
-    expect(rows()[0].textContent).toContain('بيتابعك');
+    expect(rows()[0].textContent).toContain('يتابعك');
     expect(rows()[0].querySelector('a')!.getAttribute('href')).toBe('/@reader_0');
     expect(root.querySelector('[data-people-list="followers"]')!.getAttribute('aria-current')).toBe('page');
 
@@ -58,7 +58,7 @@ describe('PeoplePage (F12, F14)', () => {
     more.flush({ items: [person(19), person(20)], nextCursor: null });
     await stable();
     expect(rows()).toHaveLength(21); // the repeated row is dropped
-    expect(root.querySelector('[data-people]')!.textContent).toContain('دول كل الناس');
+    expect(root.querySelector('[data-people]')!.textContent).toContain('هذا كل من في القائمة');
   });
 
   it('searches after a pause in typing; nothing found says so', async () => {
@@ -90,8 +90,8 @@ describe('PeoplePage (F12, F14)', () => {
     const { root, stable } = await render('following');
     http.expectOne(isList('following')).flush({ items: [], nextCursor: null });
     await stable();
-    expect(root.querySelector('[data-people-empty]')!.textContent).toContain('لسه مش بيتابع حد');
-    expect(root.querySelector('h1')!.textContent).toContain('بيتابعهم');
+    expect(root.querySelector('[data-people-empty]')!.textContent).toContain('لا يتابع أحدًا بعد');
+    expect(root.querySelector('h1')!.textContent).toContain('المتابَعون');
   });
 
   it('a failed load offers a retry', async () => {

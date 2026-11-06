@@ -83,7 +83,7 @@ describe('PrivacyService and the public-stats switch (F14, F18)', () => {
     expect(await saved).toBe(false);
     expect(privacy.whoCanMention()).toBe('following');
     expect(session.me()!.privacy).toEqual({ publicReadingStats: false, whoCanMention: 'following' });
-    expect(toasts.toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'السيرفر واجه مشكلة. حاول كمان شوية.' })]);
+    expect(toasts.toasts()).toEqual([expect.objectContaining({ kind: 'error', message: 'واجه الخادم مشكلة. حاول مرة أخرى بعد قليل.' })]);
     expect(privacy.saving()).toBe(false);
   });
 
@@ -102,7 +102,7 @@ describe('PrivacyService and the public-stats switch (F14, F18)', () => {
     const button = root.querySelector<HTMLButtonElement>('[role="switch"]')!;
     expect(button.getAttribute('aria-checked')).toBe('false');
     const label = root.querySelector<HTMLLabelElement>(`label[for="${button.id}"]`)!;
-    expect(label.textContent).toContain('اعرضها في بروفايلي العام');
+    expect(label.textContent).toContain('إظهارها في ملفي الشخصي العام');
     expect(button.getAttribute('aria-describedby')).toBe(`${button.id}-hint`);
 
     label.click(); // the label toggles it too

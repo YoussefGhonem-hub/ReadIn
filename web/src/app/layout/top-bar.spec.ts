@@ -75,7 +75,7 @@ describe('TopBar', () => {
     const { fixture, root } = render();
     const placeholder = root.querySelector<HTMLAnchorElement>('[data-header-search-placeholder]')!;
     expect(placeholder.getAttribute('href')).toBe('/search');
-    expect(placeholder.textContent!.trim()).toBe('دوّر في ReadIn');
+    expect(placeholder.textContent!.trim()).toBe('ابحث في ReadIn');
     const icon = root.querySelector<HTMLAnchorElement>('[data-search-link]')!;
     expect(icon.getAttribute('href')).toBe('/search');
     expect(icon.getAttribute('aria-label')).toBe('بحث');
@@ -92,7 +92,7 @@ describe('TopBar', () => {
     expect(nav.getAttribute('aria-label')).toBe('التنقل الرئيسي');
     const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[data-nav]'));
     expect(links.map((a) => a.getAttribute('href'))).toEqual(['/', '/explore', '/paths', '/saved', '/write']);
-    expect(links.map((a) => a.textContent!.trim())).toEqual(['الرئيسية', 'استكشف', 'المسارات', 'المحفوظات', 'اكتب']);
+    expect(links.map((a) => a.textContent!.trim())).toEqual(['الرئيسية', 'استكشاف', 'المسارات', 'المحفوظات', 'كتابة']);
     // The bell sits between Saved and Write.
     const order = Array.from(nav.querySelectorAll('a[data-nav], rd-notifications-menu')).map((el) => el.getAttribute('data-nav') ?? 'notifications');
     expect(order).toEqual(['home', 'explore', 'paths', 'saved', 'notifications', 'write']);
@@ -106,9 +106,10 @@ describe('TopBar', () => {
     expect(nav.querySelector('a[data-nav="explore"]')!.classList).toContain('text-text-secondary');
   });
 
-  it('guests: the theme toggle and "Sign in", no Me', () => {
+  it('guests: the theme and language toggles and "Sign in", no Me', () => {
     const { root } = render({ guest: true });
     expect(root.querySelectorAll('[data-theme-toggle]').length).toBe(2);
+    expect(root.querySelectorAll('[data-language-toggle]').length).toBe(2);
     expect(root.querySelector('[data-me-trigger]')).toBeNull();
     const signIn = Array.from(root.querySelectorAll<HTMLAnchorElement>('a[href="/auth/sign-in"]'));
     expect(signIn.length).toBe(2);

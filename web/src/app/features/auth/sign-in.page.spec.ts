@@ -25,7 +25,7 @@ describe('Sign in: suspended accounts (F22)', () => {
 
   it('a session that ended because the account was suspended opens Sign in with until when', async () => {
     const t = await render(() => TestBed.inject(AuthFlowState).suspension.set({ suspendedUntil: '2026-11-10T14:30:00Z' }));
-    expect(t.error()).toMatch(/^الحساب ده موقوف لحد .*نوفمبر 2026.*\.$/);
+    expect(t.error()).toMatch(/^هذا الحساب موقوف حتى .*نوفمبر 2026.*\.$/);
     expect(TestBed.inject(AuthFlowState).suspension()).toBeNull(); // shown once
     t.http.verify();
   });
@@ -43,7 +43,7 @@ describe('Sign in: suspended accounts (F22)', () => {
       .flush({ code: 'user.suspended', status: 403, title: 'This account is suspended.', suspendedUntil: null }, { status: 403, statusText: 'Forbidden' });
     await done;
     t.fixture.detectChanges();
-    expect(t.error()).toBe('الحساب ده موقوف نهائيًا. تواصل مع الدعم.');
+    expect(t.error()).toBe('هذا الحساب موقوف نهائيًا. تواصل مع الدعم.');
 
     done = page.submit();
     await settle();
@@ -52,7 +52,7 @@ describe('Sign in: suspended accounts (F22)', () => {
       .flush({ code: 'user.suspended', status: 403, suspendedUntil: '2026-11-10T14:30:00Z' }, { status: 403, statusText: 'Forbidden' });
     await done;
     t.fixture.detectChanges();
-    expect(t.error()).toContain('الحساب ده موقوف لحد');
+    expect(t.error()).toContain('هذا الحساب موقوف حتى');
     t.http.verify();
   });
 });

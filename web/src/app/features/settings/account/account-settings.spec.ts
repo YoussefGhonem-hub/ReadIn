@@ -50,7 +50,7 @@ describe('Settings → Account (F18)', () => {
 
     const rows = [...root.querySelectorAll('[data-linked-accounts] [data-provider]')];
     expect(rows.map((r) => r.getAttribute('data-provider'))).toEqual(['google']); // Apple: no web Services ID yet
-    expect(rows[0].querySelector('[data-provider-status]')!.textContent).toContain('مش مربوط');
+    expect(rows[0].querySelector('[data-provider-status]')!.textContent).toContain('غير مرتبط');
     expect(rows[0].querySelector('[data-link]')).not.toBeNull();
   });
 
@@ -66,7 +66,7 @@ describe('Settings → Account (F18)', () => {
     const rows = [...root.querySelectorAll('[data-linked-accounts] [data-provider]')];
     expect(rows.map((r) => r.getAttribute('data-provider'))).toEqual(['google', 'apple']);
     expect(rows[0].querySelector('[data-provider-status] [dir="ltr"]')!.textContent).toBe('mona@gmail.com');
-    expect(rows[1].querySelector('[data-provider-status]')!.textContent).toContain('مربوط');
+    expect(rows[1].querySelector('[data-provider-status]')!.textContent).toContain('مرتبط');
     expect(rows.every((r) => r.querySelector('[data-unlink]'))).toBe(true);
   });
 
@@ -89,7 +89,7 @@ describe('Settings → Account (F18)', () => {
     request.flush({ code: 'auth.last_sign_in_method' }, { status: 400, statusText: 'Bad Request' });
     await settle(10);
     fixture.detectChanges();
-    expect(root.querySelector('[data-last-method]')!.textContent).toContain('مينفعش تشيل آخر طريقة تدخل بيها');
+    expect(root.querySelector('[data-last-method]')!.textContent).toContain('لا يمكنك إزالة طريقة تسجيل الدخول الوحيدة لديك');
     expect(root.querySelector('[data-unlink-confirm]')).toBeNull();
   });
 
@@ -128,13 +128,13 @@ describe('Settings → Account (F18)', () => {
       const row = root.querySelector<HTMLAnchorElement>('[data-delete-account]')!;
       expect(row.getAttribute('href')).toBe('/settings/delete-account');
       expect(row.className).toContain('text-error');
-      expect(row.textContent).toContain('احذف الحساب');
+      expect(row.textContent).toContain('حذف الحساب');
       // The last row of the Account card (the last section of Settings).
       const links = [...root.querySelectorAll('[data-account] a, [data-account] button')];
       expect(links.at(-2)).toBe(row);
       const byEmail = root.querySelector<HTMLAnchorElement>('[data-delete-by-email]')!;
       expect(byEmail.href).toBe('https://readin-cca78.firebaseapp.com/delete-account');
-      expect(byEmail.textContent).toContain('احذفه بالإيميل بدل كده');
+      expect(byEmail.textContent).toContain('الحذف عبر البريد الإلكتروني بدلًا من ذلك');
       http.expectNone((r) => r.url === `${TEST_API}/me` && r.method === 'DELETE');
     }
   });

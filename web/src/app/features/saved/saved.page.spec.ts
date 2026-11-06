@@ -106,6 +106,6 @@ describe('SavedPage (F13)', () => {
 
   it('an empty list invites you to save something', async () => {
     const { root } = await render([]);
-    expect(root.querySelector('[data-saved-empty]')!.textContent).toContain('لسه محفظتش حاجة');
+    expect(root.querySelector('[data-saved-empty]')!.textContent).toContain('لم تحفظ شيئًا بعد');
   });
 });
