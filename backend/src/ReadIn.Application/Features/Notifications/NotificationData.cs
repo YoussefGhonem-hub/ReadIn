@@ -6,8 +6,8 @@ namespace ReadIn.Application.Features.Notifications;
 
 /// <summary>
 /// What <c>Notifications.Data</c> holds, as JSON (SPEC F17). <see cref="Threshold"/>, <see cref="StreakDays"/>,
-/// <see cref="SecurityChange"/> and <see cref="Approved"/> reach clients (<see cref="NotificationDataDto"/>); the
-/// moderation notice's id and kind stay on the server for the push.
+/// <see cref="SecurityChange"/> and <see cref="Approved"/> reach clients (<see cref="NotificationDataDto"/>), and so does
+/// the number of <see cref="ArticleIds"/>; the moderation notice's id and kind stay on the server for the push.
 /// </summary>
 public sealed record NotificationData
 {
@@ -30,6 +30,12 @@ public sealed record NotificationData
     /// <summary><c>verification_result</c> (F19): the request was approved (true) or rejected (false).</summary>
     public bool? Approved { get; init; }
 
+    /// <summary>
+    /// The official account's day entry (<c>followed_writer_article</c>, <see cref="OfficialArticles"/>): the articles it
+    /// holds, each once. Clients get only their number (<c>articleCount</c>).
+    /// </summary>
+    public IReadOnlyList<Guid>? ArticleIds { get; init; }
+
     public string? Serialize() => this == Empty ? null : JsonSerializer.Serialize(this, Json);
 
     /// <summary>Unreadable or missing data is empty rather than an error: the entry still shows.</summary>
@@ -46,7 +52,7 @@ public sealed record NotificationData
         }
     }
 
-    public NotificationDataDto ToDto() => new(Threshold, StreakDays, SecurityChange, Approved);
+    public NotificationDataDto ToDto() => new(Threshold, StreakDays, SecurityChange, Approved, ArticleIds?.Count);
 
     /// <summary>The camelCase name clients get (<c>passwordChanged</c>), also used in dedupe keys.</summary>
     public static string Name(SecurityChange change) => JsonNamingPolicy.CamelCase.ConvertName(change.ToString());

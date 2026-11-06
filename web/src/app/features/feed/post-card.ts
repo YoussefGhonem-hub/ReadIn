@@ -56,6 +56,7 @@ import { FeedMemory } from './feed-memory';
 import { injectCardReading } from './card-reading';
 import { providePostBarIcons } from './post-bar-icons';
 import { RepostButton } from './repost-button';
+import { VerifiedBadge } from '../../shared/ui/verified-badge';
 
 /** Comments open in place under the card from this width; narrower screens get a bottom sheet (F34). */
 const WIDE_QUERY = '(min-width: 768px)';
@@ -109,6 +110,7 @@ function injectMediaQuery(query: string): Signal<boolean> {
     LucideDynamicIcon,
     BdiText,
     Avatar,
+    VerifiedBadge,
     FollowButton,
     ArticleMenu,
     ArticleAttachments,
@@ -227,7 +229,7 @@ function injectMediaQuery(query: string): Signal<boolean> {
           >
             <span class="truncate" dir="auto">{{ author.displayName }}</span>
             @if (author.isVerified) {
-              <svg lucideIcon="BadgeCheck" [size]="15" class="shrink-0 text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+              <rd-verified-badge [size]="15" />
             }
           </a>
         } @else {

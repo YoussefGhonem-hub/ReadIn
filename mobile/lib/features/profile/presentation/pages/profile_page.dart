@@ -141,6 +141,9 @@ class ProfileView extends StatelessWidget {
   /// The Profile tab (no back button) rather than a pushed `/u/{username}`.
   final bool isTab;
 
+  /// The back button of a profile opened with no page under it: it goes Home.
+  static const homeKey = ValueKey('profile-page-home');
+
   Future<void> _edit(BuildContext context, UserProfile profile) async {
     final saved = await context.push<bool>(ProfileRoutes.edit, extra: profile);
     if (saved == true && context.mounted) {
@@ -161,6 +164,16 @@ class ProfileView extends StatelessWidget {
             title: isTab || profile == null
                 ? Text(isTab ? l10n.navProfile : '')
                 : Text(Bidi.ltrIsolate('@${profile.username}'), maxLines: 1, overflow: TextOverflow.ellipsis),
+            // Opened with no page under it (a link, or Back from a category page that a link opened): back goes Home,
+            // like the reader and the tag page, so the user is never stuck here.
+            leading: isTab || Navigator.of(context).canPop()
+                ? null
+                : IconButton(
+                    key: homeKey,
+                    tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                    icon: const BackButtonIcon(),
+                    onPressed: () => GoRouter.maybeOf(context)?.go('/home'),
+                  ),
             automaticallyImplyLeading: !isTab,
             actions: [
               if (own)

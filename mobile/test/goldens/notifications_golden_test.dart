@@ -39,6 +39,21 @@ void main() {
       await expectLater(find.byType(NotificationsView), matchesVariantGolden(variant, 'goldens/notifications_center_${variant.name}.png'));
     });
 
+    // The official @readin account's articles, one entry a day (F17): 5 today (unread), 2 yesterday, then a day with one
+    // article, which reads like any writer's.
+    testWidgets('notification center, @readin day entries ${variant.name}', (tester) async {
+      usePhoneSurface(tester, size: const Size(390, 520));
+      final cubit = MockNotificationsCubit()
+        ..hold(NotificationsState(status: NotificationsStatus.ready, items: [
+          readinDay(5),
+          readinDay(2, id: 'n-readin-2', isRead: true, ago: const Duration(days: 1)),
+          readinDay(1, id: 'n-readin-1', isRead: true, ago: const Duration(days: 2)),
+        ]));
+      await tester.pumpWidget(testApp(BlocProvider<NotificationsCubit>.value(value: cubit, child: const NotificationsView()), variant: variant));
+      await tester.pump();
+      await expectLater(find.byType(NotificationsView), matchesVariantGolden(variant, 'goldens/notifications_readin_day_${variant.name}.png'));
+    });
+
     // "Mentions" carries a hint under its name: it covers comments and articles.
     testWidgets('notification settings ${variant.name}', (tester) async {
       usePhoneSurface(tester, size: const Size(390, 1040));

@@ -43,6 +43,14 @@ public static class ErrorMessages
         ["user.username_taken"] = ("اسم المستخدم ده محجوز.", "This username is already taken."),
         ["user.interests.min_three"] = ("اختار 3 اهتمامات على الأقل.", "Choose at least 3 interests."),
         ["user.interests.unknown"] = ("فيه مجالات أو مواضيع مش موجودة.", "Some fields or topics don't exist."),
+        // Codes that had no title before the leftovers step (Modern Standard Arabic, SPEC §14.4).
+        ["user.username_invalid"] = ("يجب أن يتكوّن اسم المستخدم من 3 إلى 30 حرفًا: a–z أو 0–9 أو _.", "Username must be 3–30 characters: a–z, 0–9 or _."),
+        ["user.language_invalid"] = ("هذه اللغة غير مدعومة.", "This language isn't supported."),
+        ["user.timezone_invalid"] = ("المنطقة الزمنية غير معروفة.", "Unknown time zone."),
+        ["user.reminder_time_invalid"] = ("وقت التذكير غير صالح، استخدم الصيغة HH:mm.", "The reminder time isn't valid. Use HH:mm."),
+        ["article.translation_exists"] = ("هذه النسخة اللغوية موجودة بالفعل.", "This language version already exists."),
+        ["article.translation_not_found"] = ("هذه النسخة اللغوية غير موجودة.", "This language version does not exist."),
+        ["reading.conflict"] = ("حُفظ تحديث آخر للقراءة في الوقت نفسه. حاول مرة أخرى.", "Another reading update was saved at the same time. Try again."),
         // Profile (F14, F18)
         ["profile.stats_private"] = ("إحصائيات القراية بتاعته مش ظاهرة للناس.", "This user's reading stats are private."),
         ["profile.avatar_invalid"] = ("الصورة دي مينفعش تبقى صورة بروفايل. ارفعها تاني.", "This image can't be used as your avatar. Upload it again."),

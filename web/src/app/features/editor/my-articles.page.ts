@@ -178,6 +178,10 @@ const TABS: readonly ArticleStatus[] = ['draft', 'published'];
                 <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
               </div>
             }
+            @if (store.hasMore()) {
+              <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
+              <div #sentinel class="h-px" aria-hidden="true"></div>
+            }
           }
           @default {
             @for (i of [1, 2, 3]; track i) {
@@ -185,7 +189,6 @@ const TABS: readonly ArticleStatus[] = ['draft', 'published'];
             }
           }
         }
-        <div #sentinel class="h-px" aria-hidden="true"></div>
       </section>
     </div>
 

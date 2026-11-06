@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  ViewEncapsulation,
   afterNextRender,
   computed,
   inject,
@@ -27,6 +28,9 @@ let nextId = 0;
   selector: 'rd-country-picker',
   imports: [TranslocoPipe, LucideDynamicIcon, CdkTrapFocus],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Its classes' rules (not in the global stylesheet, so they stay out of the initial bundle).
+  encapsulation: ViewEncapsulation.None,
+  styleUrl: './flag.css',
   host: {
     role: 'dialog',
     'aria-modal': 'true',

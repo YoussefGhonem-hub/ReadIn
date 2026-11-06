@@ -212,7 +212,8 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
             actor.Name, actor.Count, translation?.Title, comment is null ? null : NotificationExcerpt.Of(comment), data, notice?.Note,
             notice?.Label));
 
-        var link = NotificationLinks.For(entry.Type, actor.Count, actor.Username, user.Username, article?.Slug, entry.CommentId);
+        var link = NotificationLinks.For(
+            entry.Type, actor.Count, actor.Username, user.Username, article?.Slug, entry.CommentId, OfficialArticles.CountOf(data));
         var payload = new Dictionary<string, string>
         {
             ["type"] = entry.Type,

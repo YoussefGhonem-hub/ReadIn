@@ -65,6 +65,7 @@ internal sealed class UploadImageCommandHandler(
         var asset = MediaAsset.StartImage(userId, purpose.MediaPurpose, bytes.Length);
         asset.CompleteImage(set.Width, set.Height, set.BlurHash, variants);
         db.MediaAssets.Add(asset);
+        quota.RecordUpload(userId);
         await db.SaveChangesAsync(cancellationToken);
 
         return asset.ToDto(mapping, storage);

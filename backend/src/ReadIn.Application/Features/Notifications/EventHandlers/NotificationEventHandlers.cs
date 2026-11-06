@@ -160,6 +160,8 @@ internal sealed class ReactionMilestoneNotificationHandler(IAppDbContext db, Not
 /// <summary>
 /// <c>followed_writer_article</c> to every follower of the author. <see cref="Article.Publish"/> raises the event on the
 /// first publish only (an update of a published article raises none), and the dedupe key keeps it to one per article.
+/// The official @readin account (a system account) instead gives each follower one entry per day of their time zone that
+/// counts its articles (<see cref="OfficialArticles"/>); the article ids in the entry keep a retried event harmless.
 /// </summary>
 internal sealed class FollowedWriterArticleNotificationHandler(IAppDbContext db, NotificationWriter writer)
     : IDomainEventHandler<ArticlePublishedDomainEvent>
@@ -170,6 +172,7 @@ internal sealed class FollowedWriterArticleNotificationHandler(IAppDbContext db,
     {
         if (domainEvent.AuthorId is not { } authorId) return;
         if (!await db.Articles.AsNoTracking().Visible().AnyAsync(a => a.Id == domainEvent.ArticleId, cancellationToken)) return;
+        var official = await db.Users.AsNoTracking().AnyAsync(u => u.Id == authorId && u.IsSystemAccount, cancellationToken);
 
         var after = Guid.Empty;
         while (true)
@@ -177,21 +180,32 @@ internal sealed class FollowedWriterArticleNotificationHandler(IAppDbContext db,
             var followers = await db.UserFollows.AsNoTracking()
                 .Where(f => f.FolloweeId == authorId && f.FollowerId > after)
                 .OrderBy(f => f.FollowerId)
-                .Select(f => f.FollowerId)
+                .Select(f => new { f.FollowerId, TimeZone = db.Users.Where(u => u.Id == f.FollowerId).Select(u => u.TimeZone).FirstOrDefault() })
                 .Take(BatchSize)
                 .ToListAsync(cancellationToken);
             if (followers.Count == 0) return;
-            after = followers[^1];
+            after = followers[^1].FollowerId;
 
             await writer.WriteAsync(
                 [
-                    .. followers.Select(followerId => new NotificationRequest(followerId, NotificationTypes.FollowedWriterArticle)
-                    {
-                        ActorId = authorId,
-                        ActorAt = domainEvent.OccurredAt,
-                        ArticleId = domainEvent.ArticleId,
-                        DedupeKey = $"{NotificationTypes.FollowedWriterArticle}:{domainEvent.ArticleId}",
-                    }),
+                    .. followers.Select(follower => official
+                        ? new NotificationRequest(follower.FollowerId, NotificationTypes.FollowedWriterArticle)
+                        {
+                            ActorId = authorId,
+                            ActorAt = domainEvent.OccurredAt,
+                            ArticleId = domainEvent.ArticleId,
+                            // The follower's calendar day of the publish: stable across retries.
+                            GroupKey = OfficialArticles.GroupKey(authorId, DailySchedule.LocalDate(domainEvent.OccurredAt, follower.TimeZone)),
+                            GroupsArticles = true,
+                            PushDelay = OfficialArticles.PushDelay,
+                        }
+                        : new NotificationRequest(follower.FollowerId, NotificationTypes.FollowedWriterArticle)
+                        {
+                            ActorId = authorId,
+                            ActorAt = domainEvent.OccurredAt,
+                            ArticleId = domainEvent.ArticleId,
+                            DedupeKey = $"{NotificationTypes.FollowedWriterArticle}:{domainEvent.ArticleId}",
+                        }),
                 ],
                 cancellationToken);
             if (followers.Count < BatchSize) return;

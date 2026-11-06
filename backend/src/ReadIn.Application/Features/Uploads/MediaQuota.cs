@@ -7,8 +7,9 @@ using ReadIn.Domain.Media;
 namespace ReadIn.Application.Features.Uploads;
 
 /// <summary>
-/// Per-user upload quotas (ADR 0011): <see cref="MediaOptions.MaxUploadsPerDay"/> uploads in any rolling 24 hours and
-/// <see cref="MediaOptions.MaxStoredBytesPerUser"/> bytes kept. Both count the assets that still exist.
+/// Per-user upload quotas (ADR 0011, contract-v1 "Media"): <see cref="MediaOptions.MaxUploadsPerDay"/> uploads in any
+/// rolling 24 hours, counted from the upload log (<see cref="MediaUpload"/>), so an upload deleted since still counts;
+/// and <see cref="MediaOptions.MaxStoredBytesPerUser"/> bytes kept, counted from the assets that still exist.
 /// </summary>
 public interface IMediaQuota
 {
@@ -16,6 +17,12 @@ public interface IMediaQuota
     Task<Error?> CheckNewUploadAsync(Guid userId, long incomingBytes, CancellationToken cancellationToken);
 
     Task<Error?> CheckStorageAsync(Guid userId, long incomingBytes, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Logs an accepted upload for the daily quota. Call it where the asset is added, so both are saved together; the row
+    /// stays when the asset is deleted.
+    /// </summary>
+    void RecordUpload(Guid userId);
 }
 
 public sealed class MediaQuota(IAppDbContext db, IOptions<MediaOptions> options, TimeProvider clock) : IMediaQuota
@@ -24,7 +31,8 @@ public sealed class MediaQuota(IAppDbContext db, IOptions<MediaOptions> options,
     {
         var limits = options.Value;
         var since = clock.GetUtcNow().UtcDateTime.AddDays(-1);
-        var recent = await db.MediaAssets.CountAsync(m => m.OwnerId == userId && m.CreatedAt >= since, cancellationToken);
+        // Every accepted upload, deleted ones included: deleting doesn't give the upload back.
+        var recent = await db.MediaUploads.CountAsync(u => u.UserId == userId && u.CreatedAt >= since, cancellationToken);
         if (recent >= limits.MaxUploadsPerDay) return MediaErrors.QuotaDaily;
 
         return await CheckStorageAsync(userId, incomingBytes, cancellationToken);
@@ -35,6 +43,8 @@ public sealed class MediaQuota(IAppDbContext db, IOptions<MediaOptions> options,
         var stored = await db.MediaAssets.Where(m => m.OwnerId == userId).SumAsync(m => (long?)m.StoredBytes, cancellationToken) ?? 0;
         return stored + incomingBytes > options.Value.MaxStoredBytesPerUser ? MediaErrors.QuotaStorage : null;
     }
+
+    public void RecordUpload(Guid userId) => db.MediaUploads.Add(new MediaUpload(userId, clock.GetUtcNow().UtcDateTime));
 }
 
 /// <summary>Reads an upload into memory, stopping one byte past the limit: the declared length is never trusted.</summary>

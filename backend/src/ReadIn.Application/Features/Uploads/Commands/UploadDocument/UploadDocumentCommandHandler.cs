@@ -44,6 +44,7 @@ internal sealed class UploadDocumentCommandHandler(
 
         asset.StartProcessing(path.Original);
         db.MediaAssets.Add(asset);
+        quota.RecordUpload(userId);
         await db.SaveChangesAsync(cancellationToken);
 
         await jobs.EnqueueDocumentAsync(asset.Id, cancellationToken);

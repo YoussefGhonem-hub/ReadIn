@@ -1,0 +1,14 @@
+/* Country flags of the phone field and its country picker (shared/ui/phone). Loaded by the component (unencapsulated)
+   instead of the global stylesheet, so it stays out of the initial bundle; same layer as styles/base.css. */
+@layer components {
+  /* SVG flags from flag-icons (4:3). */
+  .rd-flag {
+    display: inline-block;
+    width: 22px;
+    height: 16.5px;
+    border-radius: 2px;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px var(--rd-color-border);
+    flex: 0 0 auto;
+  }
+}

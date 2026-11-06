@@ -108,6 +108,7 @@ internal sealed class GetNotificationsQueryHandler(IAppDbContext db, ICurrentUse
                         : null;
                     var article = p.ArticleId is { } articleId ? articles.GetValueOrDefault(articleId) : null;
                     var comment = p.CommentId is { } commentId ? comments.GetValueOrDefault(commentId) : null;
+                    var data = NotificationData.Parse(p.Data);
                     return new NotificationDto(
                         p.Id,
                         p.Type,
@@ -118,8 +119,9 @@ internal sealed class GetNotificationsQueryHandler(IAppDbContext db, ICurrentUse
                         p.ActorCount,
                         article,
                         comment,
-                        NotificationData.Parse(p.Data).ToDto(),
-                        NotificationLinks.For(p.Type, p.ActorCount, actor?.Username, viewer.Username, article?.Slug, p.CommentId));
+                        data.ToDto(),
+                        NotificationLinks.For(
+                            p.Type, p.ActorCount, actor?.Username, viewer.Username, article?.Slug, p.CommentId, OfficialArticles.CountOf(data)));
                 }),
             ],
             next);

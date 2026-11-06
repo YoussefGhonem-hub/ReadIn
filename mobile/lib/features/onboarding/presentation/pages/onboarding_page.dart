@@ -17,7 +17,8 @@ import '../../../settings/presentation/widgets/preference_tiles.dart';
 import '../cubit/onboarding_cubit.dart';
 
 /// Onboarding (F02) for new accounts, after Complete profile: interests (min 3) and preferences. The welcome step is
-/// the Welcome screen before sign up (SPEC §9.2), so the steps are counted from 2.
+/// the Welcome screen before sign up (SPEC §9.2), so this screen has two steps of its own and counts them "1 of 2",
+/// "2 of 2".
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
 
@@ -41,6 +42,9 @@ class OnboardingPage extends StatelessWidget {
 class OnboardingView extends StatelessWidget {
   const OnboardingView({super.key});
 
+  /// The steps this screen counts: interests, then preferences.
+  static const steps = 2;
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<OnboardingCubit, OnboardingState>(
@@ -50,7 +54,9 @@ class OnboardingView extends StatelessWidget {
         if (context.mounted) context.go('/home');
       },
       builder: (context, state) {
-        final index = state.step.index;
+        // Interests is step 1 and preferences step 2: the welcome step came before sign up.
+        final step = state.step.index;
+        const steps = OnboardingView.steps;
         // One white page, the bar too and with no line under it (its progress is its edge), as on Sign in.
         return Scaffold(
           backgroundColor: context.colors.surface,
@@ -66,13 +72,13 @@ class OnboardingView extends StatelessWidget {
                         )
                       : null,
                   automaticallyImplyLeading: false,
-                  title: Text(context.l10n.stepOf(index + 1, 3), style: context.textTheme.bodySmall),
+                  title: Text(context.l10n.stepOf(step, steps), style: context.textTheme.bodySmall),
                   bottom: PreferredSize(
                     preferredSize: const Size.fromHeight(4),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s5),
                       child: LinearProgressIndicator(
-                        value: (index + 1) / 3,
+                        value: step / steps,
                         minHeight: 4,
                         borderRadius: BorderRadius.circular(ReadInRadius.chip),
                       ),

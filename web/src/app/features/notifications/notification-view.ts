@@ -35,17 +35,21 @@ export function isActorType(type: NotificationType): boolean {
 /**
  * The notification's sentence in the UI language: "Ahmed and 9 others commented on your article" (CLDR plurals, so
  * Arabic gets its six forms), "Deleted user" when the actor's account is gone, a generic line for unknown types. A
- * mention without a comment is a mention in an article.
+ * mention without a comment is a mention in an article. The official @readin account's day of articles says how many
+ * ("نشر ReadIn 3 مقالات جديدة"), then the row shows the newest one's title.
  */
 export function notificationText(n: NotificationDto, transloco: TranslocoService, lang: UiLanguage): NotificationText {
   const key = `notifications.text.${n.type}`;
   if (ACTOR_TYPES.has(n.type)) {
     const name = n.actor?.displayName?.trim() || transloco.translate('common.deletedUser', {}, lang);
     const others = Math.max(0, Math.floor(n.actorCount) - 1);
+    const articles = n.type === 'followed_writer_article' ? (positive(n.data?.articleCount) ?? 1) : 1;
     const text =
       others > 0
         ? translatePlural(transloco, `${key}.group`, others, lang, { name: NAME_MARK })
-        : transloco.translate(`${key}.${singleKey(n)}`, { name: NAME_MARK }, lang);
+        : articles >= 2
+          ? translatePlural(transloco, `${key}.articles`, articles, lang, { name: NAME_MARK })
+          : transloco.translate(`${key}.${singleKey(n)}`, { name: NAME_MARK }, lang);
     const at = text.indexOf(NAME_MARK);
     return at < 0 ? { before: text, actor: null, after: '' } : { before: text.slice(0, at), actor: name ?? null, after: text.slice(at + NAME_MARK.length) };
   }

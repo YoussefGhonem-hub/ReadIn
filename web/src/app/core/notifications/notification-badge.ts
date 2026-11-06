@@ -6,7 +6,7 @@ import { translatePlural } from '../../shared/pipes/intl';
 import { NotificationsApi } from '../api/notifications.api';
 import { SessionStore } from '../auth/session.store';
 import type { UiLanguage } from '../i18n/language.service';
-import { RealtimeService } from '../realtime/realtime.service';
+import { UnreadLive } from '../realtime/unread-live';
 
 /** How often the REST fallback asks for the count while the tab is visible. */
 export const UNREAD_POLL_MS = 60_000;
@@ -20,7 +20,8 @@ export const UNREAD_POLL_MS = 60_000;
 @Injectable({ providedIn: 'root' })
 export class NotificationBadge {
   private readonly api = inject(NotificationsApi);
-  private readonly realtime = inject(RealtimeService);
+  /** The live count RealtimeService keeps (that service and the Firebase SDK load after the first page). */
+  private readonly live = inject(UnreadLive);
   private readonly session = inject(SessionStore);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
@@ -36,7 +37,7 @@ export class NotificationBadge {
   /** Notifications not seen yet: what the badge shows. 0 for guests. */
   readonly count = computed(() => {
     if (!this.userId()) return 0;
-    return this.realtime.unreadLive() ? this.realtime.unreadNotifications() : this.restCount();
+    return this.live.live() ? this.live.count() : this.restCount();
   });
 
   constructor() {
@@ -44,7 +45,7 @@ export class NotificationBadge {
     let lastUser: string | null = null;
     effect((onCleanup) => {
       const userId = this.userId();
-      const live = this.realtime.unreadLive();
+      const live = this.live.live();
       untracked(() => {
         if (userId !== lastUser) {
           lastUser = userId;
@@ -71,7 +72,7 @@ export class NotificationBadge {
   /** Asks the API for the count when the live value is unavailable. Never throws. */
   async refresh(): Promise<void> {
     const userId = this.userId();
-    if (!this.isBrowser || !userId || this.realtime.unreadLive()) return;
+    if (!this.isBrowser || !userId || this.live.live()) return;
     if (this.seen) await this.seen; // a count asked for before "seen" lands would bring the old number back
     const generation = this.generation;
     try {
@@ -87,7 +88,7 @@ export class NotificationBadge {
     if (!this.userId()) return;
     this.generation++;
     this.restCount.set(0);
-    this.realtime.clearUnreadNotifications();
+    this.live.count.set(0); // the live count too (RealtimeService.clearUnreadNotifications)
     // Failing is fine: the count comes back with the next refresh and nothing else depends on it.
     const seen = firstValueFrom(this.api.markSeen()).catch(() => undefined);
     this.seen = seen;

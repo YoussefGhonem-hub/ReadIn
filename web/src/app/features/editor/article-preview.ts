@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { ArticleAttachmentsDto, ArticleDraftDocument, ArticleLanguage, FieldDto, MediaAssetDto, TopicDto, UiLanguage } from '../../core/api/models';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { ArticleAttachments } from '../../shared/media/article-attachments';
@@ -10,6 +9,7 @@ import { tableOfContents } from '../../shared/rdoc/rdoc.utils';
 import { Avatar } from '../../shared/ui/avatar';
 import { ArticleCover, ArticleHeadline, ArticleHealthNotice, ArticleSources, ArticleTrustRow } from '../article/article-parts';
 import { ArticleToc } from '../article/article-toc';
+import { VerifiedBadge } from '../../shared/ui/verified-badge';
 
 export interface PreviewAuthor {
   displayName: string;
@@ -72,7 +72,6 @@ export function previewAttachments(document: ArticleDraftDocument, media: readon
   selector: 'rd-article-preview',
   imports: [
     TranslocoPipe,
-    LucideDynamicIcon,
     BdiText,
     Avatar,
     LocalizedDatePipe,
@@ -82,6 +81,7 @@ export function previewAttachments(document: ArticleDraftDocument, media: readon
     ArticleHeadline,
     ArticleTrustRow,
     ArticleHealthNotice,
+    VerifiedBadge,
     ArticleSources,
     ArticleToc,
   ],
@@ -109,7 +109,7 @@ export function previewAttachments(document: ArticleDraftDocument, media: readon
             <span class="inline-flex items-center gap-1 font-semibold">
               <rd-bdi-text [text]="author().displayName" />
               @if (author().isVerified) {
-                <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                <rd-verified-badge [size]="16" />
               }
             </span>
             <div class="text-xs text-text-secondary">

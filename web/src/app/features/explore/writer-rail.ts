@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { UserSummaryDto } from '../../core/api/models';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { FollowButton } from '../../shared/social/follow-button';
 import { Avatar } from '../../shared/ui/avatar';
+import { VerifiedBadge } from '../../shared/ui/verified-badge';
 
 /**
  * Writers in a row that scrolls sideways (F15: Explore's new writers, a field's top writers): photo, name, @handle and
@@ -14,7 +13,7 @@ import { Avatar } from '../../shared/ui/avatar';
  */
 @Component({
   selector: 'rd-writer-rail',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, Avatar, FollowButton],
+  imports: [RouterLink, BdiText, Avatar, FollowButton, VerifiedBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -28,7 +27,7 @@ import { Avatar } from '../../shared/ui/avatar';
               <span class="mt-1 flex w-full min-w-0 items-center justify-center gap-1 text-sm font-semibold text-text-primary">
                 <rd-bdi-text class="truncate" [text]="user.displayName" />
                 @if (user.isVerified) {
-                  <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                  <rd-verified-badge [size]="14" />
                 }
               </span>
               <span class="block w-full truncate text-xs text-text-secondary"><bdi dir="ltr">&#64;{{ user.username }}</bdi></span>

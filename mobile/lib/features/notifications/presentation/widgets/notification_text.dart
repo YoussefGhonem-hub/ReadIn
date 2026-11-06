@@ -27,7 +27,12 @@ String notificationMessage(AppLocalizations l10n, AppNotification notification, 
     // A mention without a comment is in an article: the author, once per article (its title follows).
     NotificationType.mention =>
       notification.comment == null ? l10n.notifMentionArticle(actor) : l10n.notifMention(actor, others),
-    NotificationType.followedWriterArticle => l10n.notifFollowedWriterArticle(actor),
+    // The official @readin account's day entry with 2 or more articles: "نشر ReadIn 3 مقالات جديدة"; the newest title
+    // follows, and the row opens its link (the account's profile).
+    NotificationType.followedWriterArticle => switch (notification.articleCount) {
+        final count? when count >= 2 => l10n.notifFollowedWriterArticles(actor, count),
+        _ => l10n.notifFollowedWriterArticle(actor),
+      },
     // "Ahmed reposted your article" / "Ahmed and 2 others reposted your article"; the title follows.
     NotificationType.articleReposted => l10n.notifArticleReposted(actor, others),
     NotificationType.reactionsMilestone => switch (notification.threshold) {

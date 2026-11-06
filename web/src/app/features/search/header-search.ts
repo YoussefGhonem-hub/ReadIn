@@ -14,6 +14,7 @@ import { articleLink } from '../../shared/ui/article-link';
 import { Avatar } from '../../shared/ui/avatar';
 import { FieldIcon } from '../../shared/ui/field-icon';
 import { tagLink } from '../../shared/ui/tag-link';
+import { VerifiedBadge } from '../../shared/ui/verified-badge';
 import { RecentSearches } from './recent-searches';
 import { provideSearchIcons } from './search-icons';
 import { INPUT_MAX_LENGTH, MIN_TYPED_LENGTH, SEARCH_DEBOUNCE_MS, cleanSearchQuery, fieldColorOf, isSearchable, topicRoute } from './search-query';
@@ -42,7 +43,7 @@ interface OptionGroup {
  */
 @Component({
   selector: 'rd-header-search',
-  imports: [NgTemplateOutlet, TranslocoPipe, LucideDynamicIcon, BdiText, PluralPipe, ReadingTimePipe, Avatar, FieldIcon],
+  imports: [NgTemplateOutlet, TranslocoPipe, LucideDynamicIcon, BdiText, PluralPipe, ReadingTimePipe, Avatar, FieldIcon, VerifiedBadge],
   providers: [provideSearchIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative block', 'data-header-search': '' },
@@ -186,7 +187,7 @@ interface OptionGroup {
               <span class="flex items-center gap-1 font-semibold">
                 <rd-bdi-text class="truncate" [text]="option.user.displayName" />
                 @if (option.user.isVerified) {
-                  <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" aria-hidden="true"></svg>
+                  <rd-verified-badge [size]="14" />
                 }
               </span>
               <span class="block text-xs text-text-secondary"><bdi dir="ltr">&#64;{{ option.user.username }}</bdi></span>

@@ -1,5 +1,5 @@
-import { Provider } from '@angular/core';
-import { lucideLegacyIconMap, provideLucideIcons } from '@lucide/angular';
+import { Injector, Provider } from '@angular/core';
+import { LUCIDE_ICONS, lucideLegacyIconMap, provideLucideIcons } from '@lucide/angular';
 import {
   ArrowLeft,
   ArrowRight,
@@ -111,6 +111,9 @@ import {
  * Icons used by the app (Lucide line icons, SPEC §15.4). Registered once and rendered through the single
  * `LucideDynamicIcon` component — `<svg lucideIcon="House" [size]="20"></svg>` — so every icon shares one compiled
  * template instead of one per icon component. Reference icons by their PascalCase name.
+ *
+ * A lazy chunk (shared/ui/app-icons.ts registers it before the first page renders); the app shell draws its own few
+ * icons with shared/ui/shell-icon.ts.
  */
 export const APP_ICONS = {
   ArrowLeft,
@@ -221,6 +224,16 @@ export const APP_ICONS = {
 
 export type AppIconName = keyof typeof APP_ICONS;
 
+/** The whole set as a provider: the server renders with it, and so do unit tests. */
 export function provideAppIcons(): Provider {
   return provideLucideIcons(...lucideLegacyIconMap(APP_ICONS));
+}
+
+/** Adds the whole set to the root registry (the `LUCIDE_ICONS` object every `lucideIcon` reads from). */
+export function registerAppIcons(injector: Injector): void {
+  const registry = injector.get(LUCIDE_ICONS);
+  for (const icon of lucideLegacyIconMap(APP_ICONS)) {
+    registry[icon.name] = icon;
+    for (const alias of icon.aliases ?? []) registry[alias] = icon;
+  }
 }

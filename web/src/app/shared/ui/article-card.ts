@@ -13,6 +13,7 @@ import { detectDir } from '../directives/bidi';
 import { ArticleAttachments } from '../media/article-attachments';
 import { CompactNumberPipe, ReadingTimePipe } from '../pipes/format.pipes';
 import { articleLink } from './article-link';
+import { VerifiedBadge } from './verified-badge';
 
 /**
  * Compact row, for lists people scan rather than read (F34: Saved, Next in path, Search; feeds use the post card): thumbnail,
@@ -21,7 +22,7 @@ import { articleLink } from './article-link';
  */
 @Component({
   selector: 'rd-article-card',
-  imports: [RouterLink, TranslocoPipe, BdiText, ReadingTimePipe, CompactNumberPipe, LucideDynamicIcon, ArticleAttachments],
+  imports: [RouterLink, TranslocoPipe, BdiText, ReadingTimePipe, CompactNumberPipe, LucideDynamicIcon, ArticleAttachments, VerifiedBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative block border-t border-border py-4 first:border-t-0' },
   styles: `
@@ -54,7 +55,7 @@ import { articleLink } from './article-link';
             <a [routerLink]="'/@' + author.username" class="author relative z-10 inline-flex items-center gap-1 text-text-primary no-underline hover:underline" data-card-author>
               {{ author.displayName }}
               @if (author.isVerified) {
-                <svg lucideIcon="BadgeCheck" [size]="14" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                <rd-verified-badge [size]="14" />
               }
             </a>
           } @else {

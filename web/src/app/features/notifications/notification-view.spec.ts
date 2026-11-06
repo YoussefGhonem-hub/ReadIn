@@ -79,6 +79,42 @@ describe('notification view (F17)', () => {
       expect(sentence(testNotification({ type: 'article_reposted', actor: null, actorCount: 1 }), 'en')).toBe('Deleted user reposted your article');
     });
 
+    it('the official @readin account, one entry per day: "نشر ReadIn N مقالات جديدة" with every Arabic plural, the profile link from 2 (leftovers 3)', () => {
+      const readin = { id: 'u-readin', displayName: 'ReadIn', username: 'readin', avatarUrl: null, isVerified: true };
+      const day = (articleCount?: number) =>
+        testNotification({
+          type: 'followed_writer_article',
+          actor: readin,
+          actorCount: 1,
+          comment: null,
+          data: articleCount === undefined ? {} : { articleCount },
+          article: { id: 'a7', slug: 'sleep-and-memory', title: 'النوم والذاكرة', language: 'ar-EG' },
+          link: articleCount && articleCount >= 2 ? 'readin://u/readin' : 'readin://a/sleep-and-memory',
+        });
+      // One article (or an API that doesn't send the count): the single-article line, as for every writer.
+      expect(sentence(day(1), 'ar')).toBe('نشر ReadIn مقالًا جديدًا');
+      expect(sentence(day(), 'ar')).toBe('نشر ReadIn مقالًا جديدًا');
+      expect(sentence(day(1), 'en')).toBe('ReadIn published a new article');
+      // Two or more: verb first, the count in its Arabic plural form, the name still apart (bold, isolated).
+      expect(notificationText(day(3), transloco, 'ar')).toEqual({ before: 'نشر ', actor: 'ReadIn', after: ' 3 مقالات جديدة' });
+      expect(sentence(day(2), 'ar')).toBe('نشر ReadIn مقالين جديدين');
+      expect(sentence(day(10), 'ar')).toBe('نشر ReadIn 10 مقالات جديدة');
+      expect(sentence(day(11), 'ar')).toBe('نشر ReadIn 11 مقالًا جديدًا');
+      expect(sentence(day(99), 'ar')).toBe('نشر ReadIn 99 مقالًا جديدًا');
+      expect(sentence(day(100), 'ar')).toBe('نشر ReadIn 100 مقال جديد');
+      expect(sentence(day(2), 'en')).toBe('ReadIn published 2 new articles');
+      expect(sentence(day(12), 'en')).toBe('ReadIn published 12 new articles');
+      // Nonsense counts read as one article.
+      expect(sentence(testNotification({ type: 'followed_writer_article', data: { articleCount: 0 } }), 'en')).toBe('Ahmed Samir published a new article');
+      expect(sentence(testNotification({ type: 'followed_writer_article', data: { articleCount: -4 } }), 'en')).toBe('Ahmed Samir published a new article');
+      // The count is only read on this type.
+      expect(sentence(testNotification({ type: 'mention', data: { articleCount: 3 } }), 'en')).toBe('Ahmed Samir mentioned you in a comment');
+      // Where a tap goes: the newest article for one, the account's profile for more.
+      expect(notificationPath(day(1), 'en', ORIGIN)).toBe('/ar/a/sleep-and-memory');
+      expect(notificationPath(day(3), 'en', ORIGIN)).toBe('/@readin');
+      expect(notificationIcon(day(3))).toBe('PenLine');
+    });
+
     it('a writer verification result says approved or not by data.approved; without it, the general line (F19)', () => {
       const result = (approved?: boolean) =>
         testNotification({ type: 'verification_result', actor: null, actorCount: 0, article: null, comment: null, data: approved === undefined ? {} : { approved }, link: 'readin://verification' });

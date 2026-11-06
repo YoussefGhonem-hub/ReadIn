@@ -14,6 +14,7 @@ import { CompactNumberPipe, LocalizedDatePipe, RelativeTimePipe } from '../../sh
 import { FollowButton } from '../../shared/social/follow-button';
 import { Avatar } from '../../shared/ui/avatar';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { VerifiedBadge } from '../../shared/ui/verified-badge';
 import { ProfileCardTrigger } from '../../shared/profile-card/profile-card.directive';
 import { CommentComposer } from './comment-composer';
 import { CommentErrors } from './comment-errors';
@@ -58,6 +59,7 @@ interface MenuItem {
     CommentComposer,
     FollowButton,
     ProfileCardTrigger,
+    VerifiedBadge,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -154,7 +156,7 @@ interface MenuItem {
                     >
                       <rd-bdi-text class="truncate" [text]="author.displayName" />
                       @if (author.isVerified) {
-                        <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                        <rd-verified-badge [size]="14" />
                       }
                     </a>
                   } @else {

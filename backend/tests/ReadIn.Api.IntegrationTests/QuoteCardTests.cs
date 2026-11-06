@@ -55,8 +55,9 @@ public sealed class QuoteCardTests(ApiFactory api)
             sourceLanguage = "ar-EG",
             translations = new[]
             {
-                new { language = "ar-EG", title = "مقال فيه اقتباسات", subtitle = (string?)null, content = Fixtures["documents"]!["ar"]!.DeepClone() },
-                new { language = "en", title = "An article worth quoting", subtitle = (string?)null, content = Fixtures["documents"]!["en"]!.DeepClone() },
+                // The fixture's term nodes stay (their text is part of the offsets), under a term the glossary doesn't have.
+                new { language = "ar-EG", title = "مقال فيه اقتباسات", subtitle = (string?)null, content = Fixtures["documents"]!["ar"]!.DeepClone().WithUnlistedTerms() },
+                new { language = "en", title = "An article worth quoting", subtitle = (string?)null, content = Fixtures["documents"]!["en"]!.DeepClone().WithUnlistedTerms() },
             },
             fieldId = await author.Client.FieldIdAsync("dotnet"),
             topicId = (Guid?)null,

@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { PreferencesService } from '../core/auth/preferences.service';
 import { ErrorMessages } from '../core/i18n/error-messages';
 import { LanguageService, UiLanguage } from '../core/i18n/language.service';
 import { ToastService } from '../shared/ui/toast/toast.service';
+import { ShellIcon } from '../shared/ui/shell-icon';
 
 /** Each language's name in itself: the switch offers the other one, so a reader who can't read this one still finds it. */
 const ENDONYMS: Record<UiLanguage, { name: string; short: string }> = {
@@ -20,7 +20,7 @@ const ENDONYMS: Record<UiLanguage, { name: string; short: string }> = {
  */
 @Component({
   selector: 'rd-language-toggle',
-  imports: [LucideDynamicIcon],
+  imports: [ShellIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
   template: `
@@ -36,7 +36,7 @@ const ENDONYMS: Record<UiLanguage, { name: string; short: string }> = {
       @if (variant() === 'icon') {
         <span [attr.lang]="target()" aria-hidden="true">{{ endonym().short }}</span>
       } @else {
-        <svg lucideIcon="Languages" [size]="22" class="shrink-0" aria-hidden="true"></svg>
+        <svg rdIcon="Languages" [size]="22" class="shrink-0" aria-hidden="true"></svg>
         <span class="sr-only max-w-full truncate text-xs leading-4 lg:not-sr-only" [attr.lang]="target()" aria-hidden="true">{{
           endonym().name
         }}</span>

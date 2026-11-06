@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL, SILENT_ERRORS, WITH_SESSION, isApiError } from '../api/api.config';
 import type { ModerationNoticeDto } from '../api/models';
 import { SessionStore } from '../auth/session.store';
+import { appIconsReady } from '../../shared/ui/app-icons';
 
 /**
  * Warnings and "your article was hidden" notices (F22) for the signed-in user. Once the session is restored (and the
@@ -73,7 +74,7 @@ export class ModerationNotices {
       if (this.loadedFor !== userId) return; // signed out or switched accounts meanwhile
       this._notices.set(items ?? []);
       if (items?.length && !this.dialog()) {
-        const { ModerationNoticeDialog } = await import('../../features/moderation/notice-dialog');
+        const [{ ModerationNoticeDialog }] = await Promise.all([import('../../features/moderation/notice-dialog'), appIconsReady()]);
         this.dialog.set(ModerationNoticeDialog);
       }
     } catch {

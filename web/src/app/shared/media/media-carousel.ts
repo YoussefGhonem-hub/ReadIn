@@ -5,6 +5,7 @@ import {
   ElementRef,
   Injector,
   PLATFORM_ID,
+  ViewEncapsulation,
   afterNextRender,
   computed,
   inject,
@@ -36,6 +37,9 @@ const PROGRAMMATIC_SCROLL_MS = 800;
   selector: 'rd-media-carousel',
   imports: [TranslocoPipe, LucideDynamicIcon, MediaImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Its classes' rules (not in the global stylesheet, so they stay out of the initial bundle).
+  encapsulation: ViewEncapsulation.None,
+  styleUrl: './media-carousel.css',
   host: { class: 'rd-carousel relative block' },
   template: `
     <div

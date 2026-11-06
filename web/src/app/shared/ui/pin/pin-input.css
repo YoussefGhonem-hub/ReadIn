@@ -1,0 +1,27 @@
+/* The recovery PIN boxes (shared/ui/pin/pin-input.ts). Loaded by the component (unencapsulated)
+   instead of the global stylesheet, so it stays out of the initial bundle; same layer as styles/base.css. */
+@layer components {
+  .rd-pin-box {
+    width: 48px;
+    height: 52px;
+    border: 1px solid var(--rd-color-border);
+    border-radius: var(--rd-radius-md);
+    background: var(--rd-color-surface);
+    color: var(--rd-color-text-primary);
+    font-family: var(--rd-font-latin);
+    font-size: 1.375rem;
+    font-weight: 600;
+    text-align: center;
+    caret-color: var(--rd-color-primary);
+  }
+
+  .rd-pin-box:focus {
+    outline: none;
+    border-color: var(--rd-color-primary);
+    box-shadow: 0 0 0 3px var(--rd-color-primary-container);
+  }
+
+  .rd-pin-box[aria-invalid='true'] {
+    border-color: var(--rd-color-error);
+  }
+}

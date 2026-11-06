@@ -1,4 +1,4 @@
-import { PLATFORM_ID, signal } from '@angular/core';
+import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -7,7 +7,7 @@ import { TEST_API, testMe } from '../../../testing/auth-testing';
 import { translocoTesting } from '../../../testing/transloco-testing';
 import { API_BASE_URL } from '../api/api.config';
 import { SessionStore } from '../auth/session.store';
-import { RealtimeService } from '../realtime/realtime.service';
+import { UnreadLive } from '../realtime/unread-live';
 import { NotificationBadge, UNREAD_POLL_MS, notificationsLabel } from './notification-badge';
 
 const COUNT = `${TEST_API}/me/notifications/unread-count`;
@@ -16,11 +16,6 @@ const flush = async () => {
 };
 
 function setup(platform = 'browser') {
-  const realtime = {
-    unreadLive: signal(false),
-    unreadNotifications: signal(0),
-    clearUnreadNotifications: vi.fn(() => realtime.unreadNotifications.set(0)),
-  };
   TestBed.configureTestingModule({
     imports: [translocoTesting()],
     providers: [
@@ -28,14 +23,14 @@ function setup(platform = 'browser') {
       provideHttpClientTesting(),
       { provide: API_BASE_URL, useValue: TEST_API },
       { provide: PLATFORM_ID, useValue: platform },
-      { provide: RealtimeService, useValue: realtime },
     ],
   });
   return {
     badge: TestBed.inject(NotificationBadge),
     session: TestBed.inject(SessionStore),
     http: TestBed.inject(HttpTestingController),
-    realtime,
+    // The live count RealtimeService writes (/live/users/{id}/unreadNotifications).
+    realtime: TestBed.inject(UnreadLive),
   };
 }
 
@@ -82,8 +77,8 @@ describe('NotificationBadge (F17)', () => {
     http.expectOne(COUNT).flush({ unread: 1 });
     await flush();
 
-    realtime.unreadNotifications.set(4);
-    realtime.unreadLive.set(true);
+    realtime.count.set(4);
+    realtime.live.set(true);
     TestBed.tick();
     expect(badge.count()).toBe(4);
     vi.advanceTimersByTime(UNREAD_POLL_MS * 3);
@@ -96,10 +91,11 @@ describe('NotificationBadge (F17)', () => {
     session.setMe(testMe());
     TestBed.tick();
     const stale = http.expectOne(COUNT);
+    realtime.count.set(2); // a live value that has not taken over yet
 
     const seen = badge.markSeen();
     expect(badge.count()).toBe(0);
-    expect(realtime.clearUnreadNotifications).toHaveBeenCalled();
+    expect(realtime.count()).toBe(0); // the live count is cleared too
     stale.flush({ unread: 3 }); // answered after the center opened
     http.expectOne({ method: 'POST', url: `${TEST_API}/me/notifications/seen` }).flush(null, { status: 204, statusText: 'No Content' });
     await seen;

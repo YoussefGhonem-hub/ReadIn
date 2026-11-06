@@ -3,7 +3,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   DOCUMENT,
-  DestroyRef,
   ElementRef,
   Injector,
   afterNextRender,
@@ -39,6 +38,7 @@ import { HomeColumns } from './home-columns';
 import { HomeStore } from './home.store';
 import { LearningPathCard } from './learning-path-card';
 import { StartPostCard } from './start-post-card';
+import { loadMoreNearEnd } from '../profile/infinite-scroll';
 
 type FeedTab = 'forYou' | 'following';
 
@@ -194,7 +194,10 @@ type FeedTab = 'forYou' | 'following';
                   <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
                 </div>
               }
-              @if (anyShown() && !store.nextCursor()) {
+              @if (store.nextCursor()) {
+                <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
+                <div #sentinel class="h-px" aria-hidden="true"></div>
+              } @else if (anyShown()) {
                 <p class="py-6 text-center text-sm text-text-secondary">{{ 'home.endOfFeed' | transloco }}</p>
               }
             }
@@ -206,7 +209,6 @@ type FeedTab = 'forYou' | 'following';
               </div>
             }
           }
-          <div #sentinel class="h-px" aria-hidden="true"></div>
         </section>
       }
     </div>
@@ -288,24 +290,13 @@ export class HomePage {
         if (e.urlAfterRedirects.split(/[?#]/)[0] === '/') applyTitle();
       });
 
-    const destroyRef = inject(DestroyRef);
+    // Infinite scroll: the next cursor page when the sentinel under the loaded list nears the viewport (it follows the
+    // sentinel across states and tabs).
+    loadMoreNearEnd(
+      () => this.sentinel()?.nativeElement,
+      () => void this.store.loadMore(),
+    );
     afterNextRender(() => {
-      // Infinite scroll: load the next cursor page when the sentinel approaches the viewport.
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((e) => e.isIntersecting)) void this.store.loadMore();
-        },
-        { rootMargin: '600px 0px' },
-      );
-      const observe = () => {
-        const el = this.sentinel()?.nativeElement;
-        observer.disconnect();
-        if (el) observer.observe(el);
-      };
-      observe();
-      this.reobserve = observe;
-      destroyRef.onDestroy(() => observer.disconnect());
-
       if (hydrating) {
         // SSR rendered the public feed (requests are anonymous while hydrating). Once the app is stable and the
         // user is signed in, reload it with their token so "For you" is personalized.
@@ -323,8 +314,6 @@ export class HomePage {
     });
   }
 
-  private reobserve: () => void = () => undefined;
-
   /** Arrow keys move between the tabs (mirrored in RTL). */
   protected onTabKey(event: KeyboardEvent): void {
     const rtl = this.language.dir() === 'rtl';
@@ -341,8 +330,6 @@ export class HomePage {
     if (tab === 'following' && !this.prompt.requireAuth()) return;
     this.activeTab.set(tab);
     if (tab === 'following') void this.store.openFollowing();
-    // The sentinel element is recreated when switching back to For you.
-    afterNextRender(() => this.reobserve(), { injector: this.injector });
   }
 
   protected showNewArticles(): void {

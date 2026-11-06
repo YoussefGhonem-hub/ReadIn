@@ -12,6 +12,7 @@ import { THEME_PREFERENCES, ThemePreference, ThemeService } from '../core/theme/
 import { BdiText } from '../shared/directives/bdi-text';
 import { translatePlural } from '../shared/pipes/intl';
 import { Avatar } from '../shared/ui/avatar';
+import { VerifiedBadge } from '../shared/ui/verified-badge';
 import { ToastService } from '../shared/ui/toast/toast.service';
 import { MeMenuHost } from './me-menu-host';
 import { ME_MENU, NavItem, profilePath } from './nav-items';
@@ -26,7 +27,7 @@ const THEME_ICONS: Record<ThemePreference, string> = { light: 'Sun', dark: 'Moon
  */
 @Component({
   selector: 'rd-me-menu',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, Avatar, BdiText],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, Avatar, BdiText, VerifiedBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     id: 'rd-me-menu',
@@ -45,7 +46,7 @@ const THEME_ICONS: Record<ThemePreference, string> = { light: 'Sun', dark: 'Moon
           <span class="flex items-center gap-1 text-[15px] font-semibold">
             <rd-bdi-text class="truncate" [text]="session.displayName() ?? ''" />
             @if (verified()) {
-              <svg lucideIcon="BadgeCheck" [size]="16" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+              <rd-verified-badge [size]="16" />
             }
           </span>
           <span class="block truncate text-[13px] text-text-secondary"><bdi dir="ltr">&#64;{{ session.username() }}</bdi></span>

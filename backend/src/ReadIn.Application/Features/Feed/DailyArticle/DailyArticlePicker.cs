@@ -94,7 +94,8 @@ public sealed class DailyArticlePicker(IAppDbContext db)
 
     /// <summary>
     /// F07 algorithm: any published article (ADR 0015), in interests, not read before, in the preferred article
-    /// language, 4–10 minutes, best <see cref="Article.QualityScore"/> first, never the same field 3 days in a row.
+    /// language, 4–10 minutes, best <see cref="Article.QualityScore"/> first (equal scores: a verified writer's first,
+    /// then the newest), never the same field 3 days in a row.
     /// Constraints relax in order when nothing matches (length, then interests); only when no unread article has the
     /// preferred language at all does the pick fall back to another language (served in its source language).
     /// Before all of that, "prefers the next item in the user's active learning path" (F09).
@@ -139,6 +140,8 @@ public sealed class DailyArticlePicker(IAppDbContext db)
         {
             var pick = await candidates
                 .OrderByDescending(a => a.QualityScore)
+                // SPEC §10.1: the Verified badge gives priority, here between equal scores (ADR 0020).
+                .ThenByDescending(a => a.Author != null && a.Author.IsVerified)
                 .ThenByDescending(a => a.PublishedAt)
                 .Select(a => (Guid?)a.Id)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -170,6 +173,7 @@ public sealed class DailyArticlePicker(IAppDbContext db)
 
         static Task<List<Guid>> TopAsync(IQueryable<Article> source, CancellationToken ct) => source
             .OrderByDescending(a => a.QualityScore)
+            .ThenByDescending(a => a.Author != null && a.Author.IsVerified)
             .ThenByDescending(a => a.PublishedAt)
             .Select(a => a.Id)
             .Take(GuestRotationSize)

@@ -23,6 +23,7 @@ internal sealed class GetForYouFeedQueryHandler(
     public async ValueTask<Result<CursorPage<ArticleCardDto>>> Handle(GetForYouFeedQuery query, CancellationToken ct)
     {
         var limit = Math.Clamp(query.Limit, 1, 50);
+        var now = clock.GetUtcNow().UtcDateTime;
         var articles = db.Articles.AsNoTracking()
             .Visible()
             .Where(a => a.PublishedAt != null);
@@ -33,9 +34,9 @@ internal sealed class GetForYouFeedQueryHandler(
             articles = articles.Where(a => a.Field.Slug == query.FieldSlug);
         }
 
-        // The feed is a list of tiers, each newest first. Signed in with interests and no field filter: the articles in
-        // your interests, then all the others. Everyone else: one tier, the latest articles. Signed in, what you muted or
-        // marked "show less" is left out, and the topics (or fields) you marked are lowered: a last tier (F28).
+        // The feed is a list of tiers, each ranked (FeedRanking). Signed in with interests and no field filter: the articles
+        // in your interests, then all the others. Everyone else: one tier. Signed in, what you muted or marked "show less"
+        // is left out, and the topics (or fields) you marked are lowered: a last tier (F28).
         IQueryable<Article>[] tiers = [articles];
         if (currentUser.UserId is { } userId)
         {
@@ -55,7 +56,7 @@ internal sealed class GetForYouFeedQueryHandler(
             articleLanguage = user?.ArticleLanguagePref ?? articleLanguage;
 
             // Lowered last, always the final tier, so a cursor's tier number keeps its meaning when marks come and go.
-            var (loweredTopics, loweredFields) = await db.LoweredAsync(userId, clock.GetUtcNow().UtcDateTime, ct);
+            var (loweredTopics, loweredFields) = await db.LoweredAsync(userId, now, ct);
             var kept = articles;
             IQueryable<Article>[] lowered = [];
             if (loweredTopics.Count + loweredFields.Count > 0)
@@ -75,10 +76,34 @@ internal sealed class GetForYouFeedQueryHandler(
             }
         }
 
-        // The cursor names the tier of the last card, so a page that crosses into the next tier never repeats or skips one.
-        // A tier the cursor names can be gone (an Undo removed the last "show less" mark while you paged in the lowered
-        // tier): then the last tier restarts from the top, so nothing is skipped; clients drop the ids they already show.
-        var cursor = TieredTimeCursor.Decode(query.Cursor);
+        using var _ = LocalizedProjection.Begin(query.UiLanguage, articleLanguage);
+
+        // A cursor from before the ranking (ADR 0020) finishes its scroll in the old order; every other one is ranked.
+        var (ids, next) = TieredTimeCursor.Decode(query.Cursor) is { } legacy
+            ? await NewestFirstAsync(tiers, legacy, limit, ct)
+            : await RankedAsync(tiers, RankedCursor.Decode(query.Cursor), now, limit, ct);
+        if (ids.Count == 0) return new CursorPage<ArticleCardDto>([], next);
+
+        var found = await db.Articles.AsNoTracking()
+            .Visible()
+            .Where(a => ids.Contains(a.Id))
+            .ProjectToType<ArticleCardDto>(mapping)
+            .ToDictionaryAsync(c => c.Id, ct);
+        // An article hidden or deleted between the two queries is simply not shown.
+        List<ArticleCardDto> page = [.. ids.Where(found.ContainsKey).Select(id => found[id])];
+        return new CursorPage<ArticleCardDto>(await cards.CompleteAsync(page, ct), next);
+    }
+
+    /// <summary>
+    /// The ranked page (ADR 0020): each tier best first against one snapshot time, the cursor's or now. The cursor names
+    /// the tier of the last card, so a page that crosses into the next tier never repeats or skips one. A tier the cursor
+    /// names can be gone (an Undo removed the last "show less" mark while you paged in the lowered tier): then the last
+    /// tier restarts from the top, so nothing is skipped; clients drop the ids they already show.
+    /// </summary>
+    private async Task<(List<Guid> Ids, string? Next)> RankedAsync(
+        IQueryable<Article>[] tiers, RankedCursor? cursor, DateTime now, int limit, CancellationToken ct)
+    {
+        var snapshot = cursor?.Snapshot ?? now;
         var startTier = cursor?.Tier ?? 0;
         if (startTier >= tiers.Length)
         {
@@ -86,9 +111,43 @@ internal sealed class GetForYouFeedQueryHandler(
             cursor = null;
         }
 
-        using var _ = LocalizedProjection.Begin(query.UiLanguage, articleLanguage);
+        var page = new List<(int Tier, RankedArticle Row)>(limit + 1);
+        for (var tier = startTier; tier < tiers.Length && page.Count <= limit; tier++)
+        {
+            var ranked = tiers[tier].RankedAt(db, snapshot);
+            if (tier == startTier && cursor is { } after) ranked = ranked.After(after.RankedAt, after.Timestamp, after.Id);
 
-        var page = new List<(int Tier, ArticleCardDto Card)>(limit + 1);
+            var rows = await ranked.Best().Take(limit + 1 - page.Count).ToListAsync(ct);
+            var current = tier;
+            page.AddRange(rows.Select(row => (current, row)));
+        }
+
+        string? next = null;
+        if (page.Count > limit)
+        {
+            page.RemoveAt(limit);
+            var (tier, last) = page[^1];
+            next = new RankedCursor(tier, snapshot, last.RankedAt, last.PublishedAt, last.Id).Encode();
+        }
+        return ([.. page.Select(p => p.Row.Id)], next);
+    }
+
+    /// <summary>
+    /// The order before the ranking: each tier newest first, for a scroll that started with an older API. Its cursors stay
+    /// old-style until it ends; the next first page is ranked.
+    /// </summary>
+    private static async Task<(List<Guid> Ids, string? Next)> NewestFirstAsync(
+        IQueryable<Article>[] tiers, TieredTimeCursor legacy, int limit, CancellationToken ct)
+    {
+        TieredTimeCursor? cursor = legacy;
+        var startTier = legacy.Tier;
+        if (startTier >= tiers.Length)
+        {
+            startTier = tiers.Length - 1;
+            cursor = null;
+        }
+
+        var page = new List<(int Tier, Guid Id, DateTime PublishedAt)>(limit + 1);
         for (var tier = startTier; tier < tiers.Length && page.Count <= limit; tier++)
         {
             var source = tiers[tier];
@@ -99,25 +158,24 @@ internal sealed class GetForYouFeedQueryHandler(
                     (a.PublishedAt == after.Timestamp && a.Id.CompareTo(after.Id) < 0));
             }
 
-            var found = await source
+            var rows = await source
                 .OrderByDescending(a => a.PublishedAt)
                 .ThenByDescending(a => a.Id)
                 .Take(limit + 1 - page.Count)
-                .ProjectToType<ArticleCardDto>(mapping)
+                .Select(a => new { a.Id, PublishedAt = a.PublishedAt!.Value })
                 .ToListAsync(ct);
             var current = tier;
-            page.AddRange(found.Select(card => (current, card)));
+            page.AddRange(rows.Select(row => (current, row.Id, row.PublishedAt)));
         }
 
         string? next = null;
         if (page.Count > limit)
         {
             page.RemoveAt(limit);
-            var (tier, last) = page[^1];
-            next = new TieredTimeCursor(tier, last.PublishedAt!.Value, last.Id).Encode();
+            var (tier, id, publishedAt) = page[^1];
+            next = new TieredTimeCursor(tier, publishedAt, id).Encode();
         }
-
-        return new CursorPage<ArticleCardDto>(await cards.CompleteAsync([.. page.Select(p => p.Card)], ct), next);
+        return ([.. page.Select(p => p.Id)], next);
     }
 
     private static Expression<Func<Article, bool>> Not(Expression<Func<Article, bool>> predicate) =>

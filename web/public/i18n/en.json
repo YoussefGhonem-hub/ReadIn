@@ -794,6 +794,12 @@
       "l": "L",
       "xl": "XL"
     },
+    "readingMode": {
+      "toggle": "Reading mode",
+      "exit": "Exit reading mode",
+      "on": "Reading mode is on.",
+      "off": "Reading mode is off."
+    },
     "languages": {
       "arEG": "العربية + EN",
       "en": "EN"
@@ -2410,6 +2416,10 @@
         "group": {
           "one": "{{name}} and 1 other published new articles",
           "other": "{{name}} and {{count}} others published new articles"
+        },
+        "articles": {
+          "one": "{{name}} published a new article",
+          "other": "{{name}} published {{count}} new articles"
         }
       },
       "article_reposted": {

@@ -1,5 +1,9 @@
+import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 import { VerificationStatusDto } from '../../core/api/models';
-import { PROOF_MAX_BYTES, VerificationDraft, draftErrors, fileError, fileSize, isProofUrl } from './verification-rules';
+import { formatFileSize } from '../../shared/pipes/format.pipes';
+import { translocoTesting } from '../../../testing/transloco-testing';
+import { PROOF_MAX_BYTES, VerificationDraft, draftErrors, fileError, isProofUrl } from './verification-rules';
 import { verificationView } from './verification-status';
 
 const draft = (patch: Partial<VerificationDraft> = {}): VerificationDraft => ({
@@ -53,10 +57,17 @@ describe('verification request rules (F19)', () => {
     expect(draftErrors(draft({ note: 'n'.repeat(500) }))).toEqual({});
   });
 
-  it('sizes read "830 KB" / "2.4 MB"', () => {
-    expect(fileSize(850_000)).toBe('830 KB');
-    expect(fileSize(2_500_000)).toBe('2.4 MB');
-    expect(fileSize(10)).toBe('1 KB');
+  // The form and the admin's proof preview use the app's formatter: no "KB/MB" literals in Arabic (6.6 leftover).
+  it('sizes read "830 ك.ب" / "2.4 م.ب" in Arabic and "830 KB" / "2.4 MB" in English', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [translocoTesting()] });
+    const transloco = TestBed.inject(TranslocoService);
+    expect(formatFileSize(transloco, 850_000, 'ar')).toBe('830 ك.ب');
+    expect(formatFileSize(transloco, 2_500_000, 'ar')).toBe('2.4 م.ب');
+    expect(formatFileSize(transloco, 10, 'ar')).toBe('1 ك.ب');
+    expect(formatFileSize(transloco, 850_000, 'en')).toBe('830 KB');
+    expect(formatFileSize(transloco, 2_500_000, 'en')).toBe('2.4 MB');
+    expect(formatFileSize(transloco, 10, 'en')).toBe('1 KB');
   });
 
   it('where a request stands', () => {

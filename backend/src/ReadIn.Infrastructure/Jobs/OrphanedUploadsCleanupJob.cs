@@ -2,13 +2,15 @@ using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ReadIn.Application.Common.Uploads;
+using ReadIn.Domain.Media;
 using ReadIn.Infrastructure.Persistence;
 using ReadIn.Infrastructure.Storage;
 
 namespace ReadIn.Infrastructure.Jobs;
 
 /// <summary>
-/// Daily: first deletes unused MediaAssets rows with their files, then uploads that are older than
+/// Daily: first deletes unused MediaAssets rows with their files and prunes the upload quota's log
+/// (<see cref="MediaUpload.KeepFor"/>), then uploads that are older than
 /// <see cref="UploadLimits.OrphanGracePeriod"/> and not referenced by any user, article, draft, revision or media asset
 /// (SPEC §24, ADR 0010, ADR 0011). Catches abandoned uploads and failed deletes. Only files named
 /// <c>{id}_{size}.webp</c> in a known purpose folder or inside a <c>documents/…/{id}/</c> folder are touched, plus stale
@@ -25,8 +27,11 @@ public sealed partial class OrphanedUploadsCleanupJob(
     [AutomaticRetry(Attempts = 1)]
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {
-        var cutoff = clock.GetUtcNow().UtcDateTime - UploadLimits.OrphanGracePeriod;
+        var now = clock.GetUtcNow().UtcDateTime;
+        var cutoff = now - UploadLimits.OrphanGracePeriod;
         await DeleteUnusedMediaAsync(cutoff, cancellationToken);
+        // The daily quota's log only needs the last day (contract-v1 "Media").
+        await db.MediaUploads.Where(u => u.CreatedAt < now - MediaUpload.KeepFor).ExecuteDeleteAsync(cancellationToken);
 
         var stale = storage.EnumerateFiles().Where(f => f.LastWriteUtc < cutoff).ToList();
         if (stale.Count == 0) return 0;

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -14,6 +14,7 @@ import { ArticleCardSkeleton } from '../../shared/ui/skeletons';
 import { ScrollRow } from '../../shared/ui/scroll-row';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { loadMoreNearEnd } from '../profile/infinite-scroll';
 import { SavedStore } from './saved.store';
 
 /** Wait this long after the last keystroke before searching. */
@@ -160,6 +161,10 @@ export const SEARCH_DEBOUNCE_MS = 300;
               <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
             </div>
           }
+          @if (store.nextCursor()) {
+            <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
+            <div #sentinel class="h-px" aria-hidden="true"></div>
+          }
         }
         @default {
           @for (i of [1, 2, 3]; track i) {
@@ -167,7 +172,6 @@ export const SEARCH_DEBOUNCE_MS = 300;
           }
         }
       }
-      <div #sentinel class="h-px" aria-hidden="true"></div>
     </section>
 
     <rd-collection-picker-sheet [open]="!!picking()" [article]="picking()" (closed)="picking.set(null)" />
@@ -181,7 +185,7 @@ export class SavedPage {
   private readonly toasts = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
   protected readonly lang = inject(LanguageService).lang;
-  private readonly sentinel = viewChild.required<ElementRef<HTMLElement>>('sentinel');
+  private readonly sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
 
   protected readonly searchText = signal('');
   /** The article whose collections are being edited. */
@@ -201,18 +205,13 @@ export class SavedPage {
     inject(Title).setTitle(`${this.transloco.translate('saved.title')} — ReadIn`);
     void this.store.init();
 
-    const destroyRef = inject(DestroyRef);
-    destroyRef.onDestroy(() => this.cancelSearch());
-    afterNextRender(() => {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((e) => e.isIntersecting)) void this.store.loadMore();
-        },
-        { rootMargin: '600px 0px' },
-      );
-      observer.observe(this.sentinel().nativeElement);
-      destroyRef.onDestroy(() => observer.disconnect());
-    });
+    inject(DestroyRef).onDestroy(() => this.cancelSearch());
+    // Infinite scroll: the next page when the sentinel under the loaded list nears the viewport (it follows the
+    // sentinel across searches, filters and collections).
+    loadMoreNearEnd(
+      () => this.sentinel()?.nativeElement,
+      () => void this.store.loadMore(),
+    );
   }
 
   /** How many collections the article is in (known from the list and this session's changes). */

@@ -9,6 +9,8 @@
  * are unseen (the badge) and 5 unread.
  * Viewers whose id starts with `u-notified-repost` also have two `article_reposted` entries (F29) on top: one reposter,
  * and one article five people reposted (aggregated); the other `u-notified` lists stay as they were.
+ * Viewers whose id starts with `u-notified-readin` also have the official @readin account's day entries (leftovers 3):
+ * today's with three articles (`data.articleCount: 3`, the profile link) and yesterday's with one.
  * Everyone else starts with none, so the badge of the other suites stays empty. State is per viewer, so parallel tests
  * never share it. The fixtures are relative to NOW (the tests fix the browser clock there): "today" is 2026-11-04 in
  * Africa/Cairo, the mock user's time zone.
@@ -120,6 +122,25 @@ export function createNotifications({ articles, writers, social, problem }) {
           actorCount: 5,
           slug: 'clean-architecture-whiteboard',
           link: 'readin://a/clean-architecture-whiteboard',
+        }),
+      );
+    }
+    // Leftovers 3: the official @readin account gives one entry per day, `data.articleCount` its new articles that day,
+    // `article` the newest, and with 2 or more the account's profile as `link` (only for that suite's readers).
+    if (viewer.startsWith('u-notified-readin')) {
+      list.unshift(
+        item('n-readin-day', 'followed_writer_article', minutesBefore(8), {
+          ...fresh,
+          actorId: 'u-readin',
+          slug: 'readin-streaks-ar',
+          data: { articleCount: 3 },
+          link: 'readin://u/readin',
+        }),
+        item('n-readin-one', 'followed_writer_article', '2026-11-03T16:00:00Z', {
+          actorId: 'u-readin',
+          slug: 'how-readin-picks-your-daily-article',
+          data: { articleCount: 1 },
+          link: 'readin://a/how-readin-picks-your-daily-article',
         }),
       );
     }

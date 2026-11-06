@@ -1593,8 +1593,12 @@ export interface NotificationDto {
   article: { id: string; slug: string; title: string; language: ArticleLanguage } | null;
   /** ≤ 140 characters of plain text. Null for a mention in an article (`mention` names the article only). */
   comment: { id: string; parentId: string | null; excerpt: string } | null;
-  /** `approved`: `verification_result` only (F19), left out by an API older than it. */
-  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange; approved?: boolean };
+  /**
+   * `approved`: `verification_result` only (F19), left out by an API older than it. `articleCount`: only on the official
+   * @readin account's `followed_writer_article`, one entry per day holding that many new articles (≥ 1; `article` is
+   * the newest; with 2 or more `link` is `readin://u/readin`).
+   */
+  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange; approved?: boolean; articleCount?: number };
   /** `readin://…`, the same deep links as pushes. */
   link: string;
 }

@@ -102,7 +102,8 @@ let nextEditorId = 0;
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: { class: 'block' },
-  styleUrl: './block-editor.css',
+  // The RDoc styles (not global: shared/rdoc/rdoc-renderer.ts loads them too), then the editor's own after them.
+  styleUrls: ['../../../../styles/rdoc.css', '../../../../styles/rdoc-blocks.css', './block-editor.css'],
   template: `
     <div class="rd-ed-toolbar" role="toolbar" [attr.aria-label]="'editor.toolbar.label' | transloco" [attr.aria-controls]="editorId" data-toolbar>
       <select

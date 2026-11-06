@@ -59,7 +59,8 @@ abstract class NotificationCommentModel with _$NotificationCommentModel {
 }
 
 /// `NotificationDto.data`. [securityChange] is read leniently: a value this app doesn't know shows the generic alert.
-/// [approved] is the decision a `verification_result` is about (F19).
+/// [approved] is the decision a `verification_result` is about (F19). [articleCount] is how many new articles the
+/// official @readin account's day entry holds (`followed_writer_article`, F17).
 @freezed
 abstract class NotificationDataModel with _$NotificationDataModel {
   const factory NotificationDataModel({
@@ -67,6 +68,7 @@ abstract class NotificationDataModel with _$NotificationDataModel {
     int? streakDays,
     Object? securityChange,
     bool? approved,
+    int? articleCount,
   }) = _NotificationDataModel;
 
   factory NotificationDataModel.fromJson(Map<String, dynamic> json) => _$NotificationDataModelFromJson(json);
@@ -107,6 +109,7 @@ abstract class NotificationModel with _$NotificationModel {
         streakDays: data?.streakDays,
         securityChange: SecurityChange.fromWire(data?.securityChange),
         approved: data?.approved,
+        articleCount: data?.articleCount,
         link: link,
       );
 }

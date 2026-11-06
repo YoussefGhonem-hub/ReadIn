@@ -4,6 +4,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ReadIn.Application.Common.Models;
+using ReadIn.Application.Features.Feed;
 using ReadIn.Infrastructure.Persistence;
 
 namespace ReadIn.Api.IntegrationTests;
@@ -107,10 +109,19 @@ public sealed class TaxonomyAndContentTests(ApiFactory api)
             .And.BeEquivalentTo(everything.Select(c => c.Id), "every published article is in For you, once");
         var tiers = feed.Select(c => interests.Contains(c.Field) ? 0 : 1).ToList();
         tiers.Should().Contain(0).And.Contain(1).And.BeInAscendingOrder("the articles in your interests come first");
+        // Each group is ranked (ADR 0020, ForYouRankingTests checks the formula): the order the ranking gives at the
+        // snapshot the scroll's cursors carry (small pages, so there are cursors).
+        var snapshots = new List<DateTime>();
+        (await ScanForYouAsync(reader.Client, 2, snapshots)).Select(c => c.Id).Should().Equal(feed.Select(c => c.Id));
+        snapshots.Should().NotBeEmpty().And.Subject.Distinct().Should().ContainSingle("every page of one scroll ranks against one snapshot");
         foreach (var tier in new[] { 0, 1 })
-            feed.Where((_, i) => tiers[i] == tier).Select(c => c.PublishedAt).Should().BeInDescendingOrder("each group is newest first");
+        {
+            var group = feed.Where((_, i) => tiers[i] == tier).Select(c => c.Id).ToList();
+            (await RankedAsync(group, snapshots[0])).Should().Equal(group, "each group is ranked");
+        }
         feed.FindIndex(c => c.Id == inside).Should().BeLessThan(feed.FindIndex(c => c.Id == outside));
-        everything.FindIndex(c => c.Id == outside).Should().BeLessThan(everything.FindIndex(c => c.Id == inside), "guests get the latest first");
+        everything.FindIndex(c => c.Id == outside).Should().BeLessThan(everything.FindIndex(c => c.Id == inside),
+            "for guests, neither has a boost, so the newer one ranks first");
 
         // Pages that end exactly where the interests end, pages that cross that boundary, and small pages.
         var interesting = tiers.Count(t => t == 0);
@@ -153,8 +164,8 @@ public sealed class TaxonomyAndContentTests(ApiFactory api)
 
     private sealed record FeedCard(Guid Id, string Field, DateTime PublishedAt);
 
-    /// <summary>Pages through For you to the end.</summary>
-    private static async Task<List<FeedCard>> ScanForYouAsync(HttpClient client, int limit)
+    /// <summary>Pages through For you to the end; <paramref name="snapshots"/> collects each cursor's snapshot time.</summary>
+    private static async Task<List<FeedCard>> ScanForYouAsync(HttpClient client, int limit, List<DateTime>? snapshots = null)
     {
         var cards = new List<FeedCard>();
         string? cursor = null;
@@ -165,9 +176,18 @@ public sealed class TaxonomyAndContentTests(ApiFactory api)
             cards.AddRange(page["items"]!.AsArray().Select(c => new FeedCard(
                 c!["id"]!.GetValue<Guid>(), c["field"]!["slug"]!.GetValue<string>(), c["publishedAt"]!.GetValue<DateTime>())));
             cursor = page["nextCursor"]?.GetValue<string>();
+            if (RankedCursor.Decode(cursor) is { } ranked) snapshots?.Add(ranked.Snapshot);
         }
         while (cursor is not null && cards.Count < 10_000);
         return cards;
+    }
+
+    /// <summary><paramref name="ids"/> in the order the For you ranking gives them at <paramref name="snapshot"/>.</summary>
+    private async Task<List<Guid>> RankedAsync(IReadOnlyList<Guid> ids, DateTime snapshot)
+    {
+        using var scope = api.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return await db.Articles.AsNoTracking().Where(a => ids.Contains(a.Id)).RankedAt(db, snapshot).Best().Select(r => r.Id).ToListAsync(Ct);
     }
 
     private async Task<Guid> SetFieldEnabledAsync(string slug, bool enabled)

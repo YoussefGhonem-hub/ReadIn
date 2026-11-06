@@ -17,11 +17,7 @@ interface RawPush {
   fcmOptions?: { link?: unknown };
 }
 
-/**
- * The query parameter the service worker adds when a tapped push opens a new tab, so the page can mark that
- * notification read (`POST /me/notifications/{id}/read`) once the session is restored. The page removes it at once.
- */
-export const NOTIFICATION_PARAM = 'notification';
+export { NOTIFICATION_PARAM } from './tapped-notification';
 
 /** Reads an FCM web-push payload (`notification` and/or `data`). Returns null when it has nothing to show. */
 export function toPushMessage(raw: unknown, origin: string, fallbackLang: 'ar' | 'en'): PushMessage | null {

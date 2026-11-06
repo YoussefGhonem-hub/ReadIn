@@ -16,11 +16,12 @@ import { NgComponentOutlet, NgTemplateOutlet, isPlatformBrowser } from '@angular
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, NavigationStart, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { filter, map } from 'rxjs';
 import { SessionStore } from '../../core/auth/session.store';
 import { LanguageService } from '../../core/i18n/language.service';
 import { NotificationBadge, notificationsLabel } from '../../core/notifications/notification-badge';
+import { appIconsReady } from '../../shared/ui/app-icons';
+import { ShellIcon } from '../../shared/ui/shell-icon';
 
 let nextId = 0;
 
@@ -36,7 +37,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'rd-notifications-menu',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, NgComponentOutlet, NgTemplateOutlet],
+  imports: [RouterLink, TranslocoPipe, ShellIcon, NgComponentOutlet, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'relative inline-flex',
@@ -50,7 +51,7 @@ let nextId = 0;
     <ng-template #bell>
       @if (variant() === 'stacked') {
         <span class="relative">
-          <svg lucideIcon="Bell" [size]="22" aria-hidden="true"></svg>
+          <svg rdIcon="Bell" [size]="22" aria-hidden="true"></svg>
           @if (badge.count() > 0) {
             <span class="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-surface" aria-hidden="true" data-unread-badge></span>
           }
@@ -60,7 +61,7 @@ let nextId = 0;
           <span class="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-text-primary" aria-hidden="true"></span>
         }
       } @else {
-        <svg lucideIcon="Bell" [size]="18" aria-hidden="true"></svg>
+        <svg rdIcon="Bell" [size]="18" aria-hidden="true"></svg>
         @if (badge.count() > 0) {
           <span class="absolute -end-1 -top-1 h-2.5 w-2.5 rounded-full bg-accent" aria-hidden="true" data-unread-badge></span>
         }
@@ -173,8 +174,8 @@ export class NotificationsMenu {
   private show(): void {
     this.open.set(true);
     if (!this.panelComponent() && this.isBrowser) {
-      import('./notifications-panel').then(
-        ({ NotificationsPanel }) => this.panelComponent.set(NotificationsPanel),
+      Promise.all([import('./notifications-panel'), appIconsReady()]).then(
+        ([{ NotificationsPanel }]) => this.panelComponent.set(NotificationsPanel),
         () => {
           // Offline before the panel's code arrived: the center still works.
           this.open.set(false);

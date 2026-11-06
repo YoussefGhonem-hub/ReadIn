@@ -1,0 +1,34 @@
+/* The media carousel's arrows (F26, shared/media/media-carousel.ts). Loaded by the component (unencapsulated)
+   instead of the global stylesheet, so it stays out of the initial bundle; same layer as styles/base.css. */
+@layer components {
+  /* Round arrows: only for hover-capable fine pointers, shown while the carousel is hovered or focused. */
+  .rd-carousel-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 10;
+    display: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-top: -18px;
+    border: 1px solid var(--rd-color-border);
+    border-radius: var(--rd-radius-chip);
+    background: var(--rd-color-surface-raised);
+    color: var(--rd-color-text-primary);
+    box-shadow: var(--rd-elevation-raised);
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity var(--rd-motion-fast);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rd-carousel-arrow {
+      display: grid;
+    }
+
+    .rd-carousel:hover .rd-carousel-arrow,
+    .rd-carousel:focus-within .rd-carousel-arrow {
+      opacity: 1;
+    }
+  }
+}

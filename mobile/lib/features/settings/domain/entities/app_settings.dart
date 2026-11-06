@@ -17,6 +17,7 @@ class AppSettings extends Equatable {
     this.fontSize = ArticleFontSize.m,
     this.welcomeSeen = false,
     this.showHighlights = true,
+    this.readingMode = false,
   });
 
   final ThemePreference theme;
@@ -37,6 +38,10 @@ class AppSettings extends Equatable {
   /// The reader draws highlights, yours and popular ones, and offers the Highlight toolbar (F30).
   final bool showHighlights;
 
+  /// The reader's reading mode (F04): the bars hide, the text and the reading progress stay. Kept on this device only
+  /// (not synced), like the font size.
+  final bool readingMode;
+
   AppSettings copyWith({
     ThemePreference? theme,
     String? uiLanguage,
@@ -45,6 +50,7 @@ class AppSettings extends Equatable {
     ArticleFontSize? fontSize,
     bool? welcomeSeen,
     bool? showHighlights,
+    bool? readingMode,
   }) =>
       AppSettings(
         theme: theme ?? this.theme,
@@ -54,6 +60,7 @@ class AppSettings extends Equatable {
         fontSize: fontSize ?? this.fontSize,
         welcomeSeen: welcomeSeen ?? this.welcomeSeen,
         showHighlights: showHighlights ?? this.showHighlights,
+        readingMode: readingMode ?? this.readingMode,
       );
 
   /// True when a field that lives on the server profile differs.
@@ -65,5 +72,6 @@ class AppSettings extends Equatable {
       showHighlights != other.showHighlights;
 
   @override
-  List<Object?> get props => [theme, uiLanguage, articleLanguage, reminderTime, fontSize, welcomeSeen, showHighlights];
+  List<Object?> get props =>
+      [theme, uiLanguage, articleLanguage, reminderTime, fontSize, welcomeSeen, showHighlights, readingMode];
 }

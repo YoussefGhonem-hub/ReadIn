@@ -121,6 +121,9 @@ describe('VerificationPage (F19)', () => {
     type(t.$<HTMLTextAreaElement>('[data-verification-note]')!, ' رقم القيد 12345 ');
     await t.stable();
     expect(t.$('[data-verification-file-name]')!.textContent).toBe('كارنيه النقابة.pdf');
+    // The size in the UI language, laid out in its direction (no "KB" literal, no forced LTR).
+    expect(t.$('[data-verification-file-size]')!.textContent).toBe('1 ك.ب');
+    expect(t.$('[data-verification-file-size]')!.hasAttribute('dir')).toBe(false);
     expect(t.$('[data-error="proof"]')).toBeNull();
     expect(t.root.textContent).toContain('17/500');
 

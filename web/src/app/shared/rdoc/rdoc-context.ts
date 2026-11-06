@@ -1,32 +1,11 @@
 import { Injectable, Signal, computed, inject, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { TextDir } from '../directives/bidi';
-import { RDoc, RDocLanguage } from './rdoc.models';
+import { RDoc } from './rdoc.models';
 import { languageDir } from './rdoc.utils';
+import { TermSheetService } from './term-sheet.service';
 
-export interface OpenTerm {
-  termId: string;
-  /** The text tapped in the article. */
-  text: string;
-  /** The version being read: the glossary answers in it (`?lang=`) and it picks which explanation comes first. */
-  language: RDocLanguage;
-  /** The article the term was tapped in, left out of "articles that use this term"; null outside an article. */
-  articleId: string | null;
-}
-
-/** App-wide glossary sheet state (F21). The sheet itself (term-sheet.ts) is mounted once, in app.ts. */
-@Injectable({ providedIn: 'root' })
-export class TermSheetService {
-  readonly openTerm = signal<OpenTerm | null>(null);
-
-  open(term: OpenTerm): void {
-    this.openTerm.set(term);
-  }
-
-  close(): void {
-    this.openTerm.set(null);
-  }
-}
+export { TermSheetService, type OpenTerm } from './term-sheet.service';
 
 /** Per-document context shared by the block components of one `<rd-rdoc>`. */
 @Injectable()

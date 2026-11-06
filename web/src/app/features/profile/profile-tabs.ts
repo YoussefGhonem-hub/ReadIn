@@ -77,7 +77,10 @@ import { profileLinks } from './profile-links';
             <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
           </div>
         }
-        @if (store.items().length > 0 && !store.nextCursor()) {
+        @if (store.nextCursor()) {
+          <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
+          <div #sentinel class="h-px" aria-hidden="true"></div>
+        } @else if (store.items().length > 0) {
           <p class="py-6 text-center text-sm text-text-secondary">{{ 'profile.articles.end' | transloco }}</p>
         }
       }
@@ -89,7 +92,6 @@ import { profileLinks } from './profile-links';
         </div>
       }
     }
-    <div #sentinel class="h-px" aria-hidden="true"></div>
   `,
 })
 export class ProfileArticles {
@@ -163,6 +165,10 @@ export class ProfileArticles {
                 <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
               </div>
             }
+            @if (store.nextCursor()) {
+              <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
+              <div #sentinel class="h-px" aria-hidden="true"></div>
+            }
           }
           @default {
             @for (i of [1, 2, 3]; track i) {
@@ -170,7 +176,6 @@ export class ProfileArticles {
             }
           }
         }
-        <div #sentinel class="h-px" aria-hidden="true"></div>
       </div>
     }
   `,

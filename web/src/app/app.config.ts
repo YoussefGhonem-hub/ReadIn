@@ -1,4 +1,5 @@
-import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, Injector, PLATFORM_ID, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay, withHttpTransferCacheOptions } from '@angular/platform-browser';
 import { RouteReuseStrategy, TitleStrategy, provideRouter, withComponentInputBinding, withInMemoryScrolling, withRouterConfig } from '@angular/router';
@@ -8,17 +9,17 @@ import { API_INTERCEPTORS } from './core/http/api-interceptors';
 import { PageTitleStrategy } from './core/i18n/page-title.strategy';
 import { provideI18n } from './core/i18n/transloco.providers';
 import { AppHistory } from './core/platform/app-history';
-import { PushService } from './core/push/push.service';
+import { TappedNotification } from './core/push/tapped-notification';
 import { FeedRouteReuse } from './features/feed/feed-route-reuse';
-import { RealtimeService } from './core/realtime/realtime.service';
 import { provideMediaViewerHistory } from './shared/media/viewer-history';
-import { provideAppIcons } from './shared/ui/icons';
+import { startAppIcons, withAppIcons } from './shared/ui/app-icons';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(
-      routes,
+      // Each lazy page also waits for the app's icons, which load in parallel (shared/ui/app-icons.ts).
+      withAppIcons(routes),
       withComponentInputBinding(),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
       withRouterConfig({ paramsInheritanceStrategy: 'always' }),
@@ -33,17 +34,21 @@ export const appConfig: ApplicationConfig = {
     // GETs made during SSR are replayed on hydration; requests carrying a user token always go to the network.
     provideClientHydration(withEventReplay(), withHttpTransferCacheOptions({ includeRequestsWithAuthHeaders: false })),
     ...provideI18n(),
-    provideAppIcons(),
     // Tracks the tab's history from the first navigation, for in-app Back buttons (the reader's, F04).
     provideAppInitializer(() => {
       inject(AppHistory);
     }),
     // Restore the session (POST /auth/refresh) in the browser without blocking bootstrap; a no-op during SSR.
     provideAppInitializer(() => inject(AuthService).init()),
-    // Live badge and web push follow the session; both are no-ops during SSR (SPEC §21).
+    // In the browser: the app's icons start loading at once; the live badge and web push (SPEC §21) follow the
+    // session from their own chunks, after the first page. A tapped push's `?notification=` leaves the address first.
     provideAppInitializer(() => {
-      inject(RealtimeService).init();
-      void inject(PushService).init();
+      if (!isPlatformBrowser(inject(PLATFORM_ID))) return;
+      const injector = inject(Injector);
+      startAppIcons(injector);
+      inject(TappedNotification).capture();
+      import('./core/realtime/realtime.service').then(({ RealtimeService }) => injector.get(RealtimeService).init()).catch(() => undefined);
+      import('./core/push/push.service').then(({ PushService }) => injector.get(PushService).init()).catch(() => undefined);
     }),
   ],
 };

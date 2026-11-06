@@ -188,6 +188,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontSizeXl => 'Extra large';
 
   @override
+  String get readingModeToggle => 'Reading mode';
+
+  @override
+  String get readingModeExit => 'Exit reading mode';
+
+  @override
+  String get readingModeOn => 'Reading mode is on.';
+
+  @override
+  String get readingModeOff => 'Reading mode is off.';
+
+  @override
   String get langToggleArEg => 'العربية + EN';
 
   @override
@@ -4024,6 +4036,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String notifFollowedWriterArticle(String name) {
     return '$name published a new article';
+  }
+
+  @override
+  String notifFollowedWriterArticles(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name published $count new articles',
+      one: '$name published a new article',
+    );
+    return '$_temp0';
   }
 
   @override

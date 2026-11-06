@@ -51,6 +51,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<ArticleRevision> ArticleRevisions => Set<ArticleRevision>();
 
     public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
+    public DbSet<MediaUpload> MediaUploads => Set<MediaUpload>();
 
     public DbSet<ReadingProgress> ReadingProgress => Set<ReadingProgress>();
     public DbSet<DailyPick> DailyPicks => Set<DailyPick>();

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, untracked, viewChild } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { FollowStore } from '../../core/social/follow.store';
 import { MUTE_SCOPE, MuteStore } from '../../core/social/mute.store';
@@ -7,6 +7,7 @@ import { UserRow } from '../../shared/social/user-row';
 import { PostCardSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { PostCard } from '../feed/post-card';
+import { loadMoreNearEnd } from '../profile/infinite-scroll';
 import { HomeStore } from './home.store';
 
 /** Writers to follow (F12): verified first, then by followers; each with a Follow button. */
@@ -97,7 +98,10 @@ export class SuggestedWriters {
             <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMoreFollowing()">{{ 'common.retry' | transloco }}</button>
           </div>
         }
-        @if (anyShown() && !store.followingCursor()) {
+        @if (store.followingCursor()) {
+          <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
+          <div #sentinel class="h-px" aria-hidden="true"></div>
+        } @else if (anyShown()) {
           <p class="py-6 text-center text-sm text-text-secondary">{{ 'home.endOfFeed' | transloco }}</p>
         }
       }
@@ -109,13 +113,12 @@ export class SuggestedWriters {
         </div>
       }
     }
-    <div #sentinel class="h-px" aria-hidden="true"></div>
   `,
 })
 export class FollowingFeed {
   protected readonly store = inject(HomeStore);
   private readonly follows = inject(FollowStore);
-  private readonly sentinel = viewChild.required<ElementRef<HTMLElement>>('sentinel');
+  private readonly sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
 
   /** True once you follow one of the suggested writers (optimistically). */
   protected readonly followedSomeone = computed(() => this.store.suggested().some((u) => this.follows.isFollowing(u.id, u.isFollowing)));
@@ -130,16 +133,9 @@ export class FollowingFeed {
       if (this.store.followingStatus() !== 'loaded' || this.anyShown() || this.store.followingCursor()) return;
       if (untracked(this.store.suggestedStatus) === 'idle') untracked(() => void this.store.loadSuggested());
     });
-    const destroyRef = inject(DestroyRef);
-    afterNextRender(() => {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((e) => e.isIntersecting)) void this.store.loadMoreFollowing();
-        },
-        { rootMargin: '600px 0px' },
-      );
-      observer.observe(this.sentinel().nativeElement);
-      destroyRef.onDestroy(() => observer.disconnect());
-    });
+    loadMoreNearEnd(
+      () => this.sentinel()?.nativeElement,
+      () => void this.store.loadMoreFollowing(),
+    );
   }
 }

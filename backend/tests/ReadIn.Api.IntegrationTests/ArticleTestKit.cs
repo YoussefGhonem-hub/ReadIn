@@ -102,6 +102,38 @@ internal static class ArticleTestKit
 
     public static IEnumerable<string> ProblemCodes(this JsonObject edit) =>
         edit["checks"]!["problems"]!.AsArray().Select(p => p!["code"]!.GetValue<string>());
+
+    /// <summary>A <c>termId</c> the glossary doesn't have: the article keeps the term node but joins no term's list.</summary>
+    public const string UnlistedTermId = "test-only-term";
+
+    /// <summary>
+    /// <paramref name="content"/> (an RDoc document) with every <c>term</c> node pointing at <see cref="UnlistedTermId"/>,
+    /// text and offsets unchanged. For throwaway articles built from shared fixtures (F30 highlights, F24 quote cards):
+    /// a glossary term lists at most 6 articles (F21) for the whole suite's shared database, so dozens of test articles
+    /// under a real term would push the seeded ones out of it and make GlossaryTests depend on the order classes run in.
+    /// </summary>
+    public static JsonNode WithUnlistedTerms(this JsonNode content)
+    {
+        var terms = new List<JsonObject>();
+        Collect(content);
+        foreach (var term in terms) term["termId"] = UnlistedTermId;
+        return content;
+
+        void Collect(JsonNode? node)
+        {
+            switch (node)
+            {
+                case JsonObject obj:
+                    if (obj["type"] is JsonValue type && type.TryGetValue<string>(out var name) && name == "term" && obj.ContainsKey("termId"))
+                        terms.Add(obj);
+                    foreach (var (_, child) in obj) Collect(child);
+                    break;
+                case JsonArray array:
+                    foreach (var child in array) Collect(child);
+                    break;
+            }
+        }
+    }
 }
 
 internal static class JsonSerializerHelper

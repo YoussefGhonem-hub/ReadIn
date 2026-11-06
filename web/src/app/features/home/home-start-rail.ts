@@ -14,6 +14,7 @@ import { profilePath } from '../../layout/nav-items';
 import { StreakStore } from '../reading/streak.store';
 import { HomeFooter } from './home-footer';
 import { HomeLayout } from './home-layout';
+import { VerifiedBadge } from '../../shared/ui/verified-badge';
 
 /** `unknown` until the browser knows who is signed in (always during SSR). */
 export type RailAudience = 'unknown' | 'guest' | 'member';
@@ -32,7 +33,7 @@ const ROW_LINK =
  */
 @Component({
   selector: 'rd-home-profile-card',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, Avatar, BdiText],
+  imports: [RouterLink, TranslocoPipe, Avatar, BdiText, VerifiedBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -45,7 +46,7 @@ const ROW_LINK =
         <span class="mt-1 flex items-center gap-1 text-base font-bold text-text-primary">
           <rd-bdi-text class="truncate" [text]="session.displayName() ?? ''" />
           @if (verified()) {
-            <svg lucideIcon="BadgeCheck" [size]="16" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+            <rd-verified-badge [size]="16" />
           }
         </span>
         <span class="block truncate text-sm text-text-secondary"><bdi dir="ltr">&#64;{{ session.username() }}</bdi></span>

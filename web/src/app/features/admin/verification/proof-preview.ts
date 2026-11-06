@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { Subscription } from 'rxjs';
 import { isApiError } from '../../../core/api/api.config';
 import { VerificationProofDto } from '../../../core/api/models';
 import { VerificationApi } from '../../../core/api/verification.api';
-import { fileSize } from '../../verification/verification-rules';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { FileSizePipe } from '../../../shared/pipes/format.pipes';
 
 type ProofState = 'loading' | 'ready' | 'error' | 'gone';
 
@@ -23,7 +24,7 @@ export function proofKind(contentType: string): 'image' | 'pdf' | 'other' {
  */
 @Component({
   selector: 'rd-proof-preview',
-  imports: [TranslocoPipe, LucideDynamicIcon],
+  imports: [TranslocoPipe, LucideDynamicIcon, FileSizePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block', '[attr.data-proof-state]': 'state()' },
   template: `
@@ -39,7 +40,8 @@ export function proofKind(contentType: string): 'image' | 'pdf' | 'other' {
           <svg [lucideIcon]="kind() === 'image' ? 'Images' : 'FileText'" [size]="20" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
           <span class="min-w-0 flex-1">
             <bdi dir="auto" class="block truncate text-sm" data-proof-name>{{ p.fileName }}</bdi>
-            <span class="block text-xs text-text-secondary" dir="ltr">{{ size() }}</span>
+            <!-- "178 ك.ب" / "178 KB": Western digits, the unit in the UI language (and its direction) -->
+            <span class="block text-xs text-text-secondary" data-proof-size>{{ p.sizeBytes | rdFileSize: lang() }}</span>
           </span>
           @if (url()) {
             <a [href]="url()" target="_blank" rel="noopener noreferrer" class="rd-btn rd-btn-outline min-h-10 shrink-0 gap-1.5 px-3 text-sm" data-proof-open>
@@ -78,7 +80,7 @@ export class ProofPreview {
   protected readonly url = signal<string | null>(null);
   /** From the type the file was served with: anything but an image or a PDF is never opened (an object URL runs as this origin). */
   protected readonly kind = signal<'image' | 'pdf' | 'other'>('other');
-  protected readonly size = computed(() => fileSize(this.proof().sizeBytes));
+  protected readonly lang = inject(LanguageService).lang;
   private subscription: Subscription | null = null;
 
   constructor() {

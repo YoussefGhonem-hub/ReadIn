@@ -1,70 +1,43 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   PLATFORM_ID,
   Type,
   afterNextRender,
-  computed,
+  effect,
   inject,
   input,
   signal,
-  viewChild,
 } from '@angular/core';
-import { NgComponentOutlet, NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationStart, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { NgComponentOutlet, isPlatformBrowser } from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
-import { filter } from 'rxjs';
 import { SessionStore } from '../core/auth/session.store';
-import { ModerationSummaryStore } from '../core/moderation/moderation-summary.store';
 import { NotificationsMenu } from '../features/notifications/notifications-menu';
-import { Avatar } from '../shared/ui/avatar';
+import { appIconsReady } from '../shared/ui/app-icons';
+import { ShellIcon } from '../shared/ui/shell-icon';
 import { Wordmark } from '../shared/ui/wordmark';
-import { MeMenuHost } from './me-menu-host';
-import { TOP_NAV, profilePath } from './nav-items';
+import { TOP_NAV } from './nav-items';
 import { LanguageToggle } from './language-toggle';
 import { ThemeToggle } from './theme-toggle';
 
 /** From this width the header has the search box (F16) and the nav row; below it, the compact bar. Tailwind's `md`. */
 const SEARCH_BOX_QUERY = '(min-width: 48rem)';
 
-type MeVariant = 'icon' | 'stacked';
-
 /**
  * The top bar. From `md`: the ReadIn mark, the search box, then the destinations as an icon above a small label
  * (labels from `lg`; the current one gets a bar under it), the theme and language toggles and "Me" (its menu: profile, links,
  * appearance, sign out) or "Sign in". Below `md`: the mark, the search icon, the bell, the theme and language toggles and the avatar
- * (the bottom nav has the destinations). The Me menu is its own chunk, loaded when the button is hovered, focused or
- * opened; the bell's dropdown too (features/notifications/notifications-menu.ts).
+ * (the bottom nav has the destinations). "Me" is its own chunk (layout/me-button.ts), loaded once the session is
+ * restored as a member's (the server renders every page signed out); its menu loads when the button is hovered, focused
+ * or opened; the bell's dropdown too (features/notifications/notifications-menu.ts).
  */
 @Component({
   selector: 'rd-top-bar',
-  imports: [RouterLink, RouterLinkActive, TranslocoPipe, Wordmark, Avatar, LucideDynamicIcon, NgComponentOutlet, NgTemplateOutlet, NotificationsMenu, ThemeToggle, LanguageToggle],
-  providers: [{ provide: MeMenuHost, useExisting: TopBar }],
+  imports: [RouterLink, RouterLinkActive, TranslocoPipe, Wordmark, ShellIcon, NgComponentOutlet, NotificationsMenu, ThemeToggle, LanguageToggle],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    class: 'sticky top-0 z-30 block border-b border-border bg-surface',
-    '(document:pointerdown)': 'onDocumentPointer($event)',
-    '(document:keydown.escape)': 'onEscape()',
-  },
+  host: { class: 'sticky top-0 z-30 block border-b border-border bg-surface' },
   template: `
-    <ng-template #meMenuPanel>
-      <div class="absolute end-0 top-full z-40 mt-2" data-me-menu-panel>
-        @if (meMenu(); as component) {
-          <ng-container *ngComponentOutlet="component" />
-        } @else {
-          <div class="rd-card w-72 p-4 shadow-raised" aria-hidden="true">
-            <div class="flex items-center gap-3">
-              <div class="rd-skeleton h-14 w-14 shrink-0 rounded-full"></div>
-              <div class="flex flex-1 flex-col gap-2"><div class="rd-skeleton h-4 w-3/4"></div><div class="rd-skeleton h-3 w-1/2"></div></div>
-            </div>
-          </div>
-        }
-      </div>
-    </ng-template>
-
     <div class="mx-auto flex h-16 max-w-[1128px] items-center gap-3 px-4">
       <a routerLink="/" class="flex shrink-0 items-center no-underline" [attr.aria-label]="'nav.home' | transloco" data-home-mark>
         <span class="inline-flex items-center" dir="ltr">
@@ -84,7 +57,7 @@ type MeVariant = 'icon' | 'stacked';
               class="rd-input flex h-10 min-h-10 items-center gap-2.5 ps-3 text-sm text-text-secondary no-underline"
               data-header-search-placeholder
             >
-              <svg lucideIcon="Search" [size]="18" class="shrink-0" aria-hidden="true"></svg>
+              <svg rdIcon="Search" [size]="18" class="shrink-0" aria-hidden="true"></svg>
               <span class="truncate">{{ 'search.headerPlaceholder' | transloco }}</span>
             </a>
           }
@@ -112,7 +85,7 @@ type MeVariant = 'icon' | 'stacked';
               [class.text-text-secondary]="!rla.isActive"
               [attr.data-nav]="item.id"
             >
-              <svg [lucideIcon]="item.icon" [size]="22" aria-hidden="true"></svg>
+              <svg [rdIcon]="item.icon" [size]="22" aria-hidden="true"></svg>
               <span class="sr-only max-w-full truncate text-xs leading-4 lg:not-sr-only">{{ item.labelKey | transloco }}</span>
               @if (rla.isActive) {
                 <span class="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-text-primary" aria-hidden="true"></span>
@@ -124,36 +97,9 @@ type MeVariant = 'icon' | 'stacked';
         <rd-theme-toggle variant="stacked" />
         <rd-language-toggle variant="stacked" />
         @if (session.isAuthenticated()) {
-          <div class="relative flex h-full">
-            <button
-              #meStacked
-              type="button"
-              class="relative flex h-full min-w-12 cursor-pointer flex-col items-center justify-center gap-0.5 px-2 text-text-secondary transition-colors hover:text-text-primary aria-expanded:text-text-primary lg:min-w-20"
-              aria-haspopup="menu"
-              [attr.aria-expanded]="meOpen() === 'stacked'"
-              [attr.aria-controls]="meOpen() === 'stacked' && meMenu() ? 'rd-me-menu' : null"
-              (click)="toggleMe('stacked')"
-              (pointerenter)="preloadMe()"
-              (focus)="preloadMe()"
-              data-me-trigger="stacked"
-            >
-              <span class="relative">
-                <rd-avatar [name]="session.displayName()" [src]="session.avatarUrl()" [size]="24" />
-                @if (attention()) {
-                  <span class="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-error ring-2 ring-surface" aria-hidden="true" data-me-attention></span>
-                }
-              </span>
-              <span class="sr-only items-center gap-0.5 text-xs leading-4 lg:not-sr-only lg:flex">
-                {{ 'nav.me' | transloco }}<svg lucideIcon="ChevronDown" [size]="14" aria-hidden="true"></svg>
-              </span>
-              @if (meOpen() === 'stacked') {
-                <span class="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-text-primary" aria-hidden="true"></span>
-              }
-            </button>
-            @if (meOpen() === 'stacked') {
-              <ng-container [ngTemplateOutlet]="meMenuPanel" />
-            }
-          </div>
+          @if (meButton(); as me) {
+            <ng-container *ngComponentOutlet="me; inputs: { variant: 'stacked' }" />
+          }
         } @else if (session.isGuest()) {
           <a routerLink="/auth/sign-in" class="rd-btn rd-btn-primary ms-2 min-h-10 self-center">{{ 'auth.signIn.submit' | transloco }}</a>
         }
@@ -163,35 +109,16 @@ type MeVariant = 'icon' | 'stacked';
       <div class="ms-auto flex items-center gap-2 md:hidden">
         @if (searchBox()) {
           <a routerLink="/search" class="rd-icon-btn" [attr.aria-label]="'nav.search' | transloco" data-search-link>
-            <svg lucideIcon="Search" [size]="18"></svg>
+            <svg rdIcon="Search" [size]="18"></svg>
           </a>
         }
         <rd-notifications-menu />
         <rd-theme-toggle variant="icon" />
         <rd-language-toggle variant="icon" />
         @if (session.isAuthenticated()) {
-          <div class="relative flex">
-            <button
-              #meIcon
-              type="button"
-              class="relative grid h-10 w-10 cursor-pointer place-items-center rounded-full"
-              aria-haspopup="menu"
-              [attr.aria-expanded]="meOpen() === 'icon'"
-              [attr.aria-controls]="meOpen() === 'icon' && meMenu() ? 'rd-me-menu' : null"
-              (click)="toggleMe('icon')"
-              (focus)="preloadMe()"
-              data-me-trigger="icon"
-            >
-              <rd-avatar [name]="session.displayName()" [src]="session.avatarUrl()" [size]="32" />
-              @if (attention()) {
-                <span class="absolute end-0 top-0 h-2.5 w-2.5 rounded-full bg-error ring-2 ring-surface" aria-hidden="true" data-me-attention></span>
-              }
-              <span class="sr-only">{{ 'nav.me' | transloco }}</span>
-            </button>
-            @if (meOpen() === 'icon') {
-              <ng-container [ngTemplateOutlet]="meMenuPanel" />
-            }
-          </div>
+          @if (meButton(); as me) {
+            <ng-container *ngComponentOutlet="me; inputs: { variant: 'icon' }" />
+          }
         } @else if (session.isGuest()) {
           <a routerLink="/auth/sign-in" class="rd-btn rd-btn-primary hidden min-h-10 sm:inline-flex">{{ 'auth.signIn.submit' | transloco }}</a>
         }
@@ -199,47 +126,47 @@ type MeVariant = 'icon' | 'stacked';
     </div>
   `,
 })
-export class TopBar implements MeMenuHost {
+export class TopBar {
   protected readonly session = inject(SessionStore);
-  /** Open reports (F22): a dot on Me for moderators; the count is in the menu. */
-  private readonly moderation = inject(ModerationSummaryStore);
-  private readonly router = inject(Router);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   protected readonly nav = TOP_NAV;
-  protected readonly attention = computed(() => this.moderation.canModerate() && this.moderation.total() > 0);
 
   /** The search box or icon; the search page has its own box. */
   readonly searchBox = input(true);
   /** The header's search box (features/search/header-search.ts): its own chunk, loaded once a wide screen is idle. */
   protected readonly headerSearch = signal<Type<unknown> | null>(null);
-
-  /** Which Me button's menu is open. */
-  protected readonly meOpen = signal<MeVariant | null>(null);
-  /** The Me menu (layout/me-menu.ts), once its chunk arrived. */
-  protected readonly meMenu = signal<Type<unknown> | null>(null);
-  private meLoading: Promise<boolean> | null = null;
-  private readonly meStacked = viewChild<ElementRef<HTMLElement>>('meStacked');
-  private readonly meIcon = viewChild<ElementRef<HTMLElement>>('meIcon');
+  /** "Me" (layout/me-button.ts), once a member is signed in and its chunk arrived. */
+  protected readonly meButton = signal<Type<unknown> | null>(null);
+  /** Bumped to load "Me" again after a failed attempt. */
+  private readonly retryMe = signal(0);
 
   constructor() {
-    // Leaving the page closes the Me menu (one of its links was opened).
-    this.router.events
-      .pipe(
-        filter((e) => e instanceof NavigationStart),
-        takeUntilDestroyed(),
-      )
-      .subscribe(() => this.meOpen.set(null));
-
     if (!this.isBrowser) return;
+
+    let meLoading = false;
+    effect(() => {
+      this.retryMe();
+      if (!this.session.isAuthenticated() || meLoading) return;
+      meLoading = true;
+      import('./me-button').then(
+        ({ MeButton }) => this.meButton.set(MeButton),
+        () => {
+          // Offline before it arrived: try again once the browser is back online.
+          meLoading = false;
+          addEventListener('online', () => this.retryMe.update((n) => n + 1), { once: true });
+        },
+      );
+    });
+
     afterNextRender(() => {
       if (typeof matchMedia === 'undefined') return;
       const wide = matchMedia(SEARCH_BOX_QUERY);
       const load = () => {
         wide.removeEventListener('change', onChange);
         const start = () =>
-          import('../features/search/header-search').then(
-            ({ HeaderSearch }) => this.headerSearch.set(HeaderSearch),
+          Promise.all([import('../features/search/header-search'), appIconsReady()]).then(
+            ([{ HeaderSearch }]) => this.headerSearch.set(HeaderSearch),
             () => undefined, // offline: the placeholder still opens the search page
           );
         if (typeof requestIdleCallback === 'function') requestIdleCallback(() => void start(), { timeout: 2000 });
@@ -251,56 +178,5 @@ export class TopBar implements MeMenuHost {
       if (wide.matches) load();
       else wide.addEventListener('change', onChange);
     });
-  }
-
-  /** Starts loading the Me menu's chunk (hover or focus on the button); resolves to false when it couldn't load. */
-  protected preloadMe(): Promise<boolean> {
-    if (!this.isBrowser) return Promise.resolve(false);
-    this.meLoading ??= import('./me-menu').then(
-      ({ MeMenu }) => {
-        this.meMenu.set(MeMenu);
-        return true;
-      },
-      () => {
-        this.meLoading = null; // offline: the next click tries again
-        return false;
-      },
-    );
-    return this.meLoading;
-  }
-
-  protected toggleMe(variant: MeVariant): void {
-    if (this.meOpen() === variant) {
-      this.closeMeMenu(true);
-      return;
-    }
-    this.meOpen.set(variant);
-    void this.preloadMe().then((loaded) => {
-      if (loaded) return;
-      // Offline before the menu's code arrived: the profile page has the same links.
-      this.meOpen.set(null);
-      void this.router.navigateByUrl(profilePath(this.session.username()));
-    });
-  }
-
-  closeMeMenu(refocus: boolean): void {
-    const open = this.meOpen();
-    if (!open) return;
-    this.meOpen.set(null);
-    if (refocus) (open === 'stacked' ? this.meStacked() : this.meIcon())?.nativeElement.focus();
-  }
-
-  /** A click outside the open Me button and its menu closes the menu. */
-  protected onDocumentPointer(event: PointerEvent): void {
-    const open = this.meOpen();
-    if (!open) return;
-    const trigger = (open === 'stacked' ? this.meStacked() : this.meIcon())?.nativeElement;
-    const wrapper = trigger?.parentElement;
-    if (!wrapper?.contains(event.target as Node | null)) this.meOpen.set(null);
-  }
-
-  /** Escape closes the Me menu and gives the focus back to its button (also while the menu's code is loading). */
-  protected onEscape(): void {
-    this.closeMeMenu(true);
   }
 }

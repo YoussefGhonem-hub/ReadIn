@@ -17,6 +17,15 @@ const settle = async (fixture: { whenStable(): Promise<unknown>; detectChanges()
   }
 };
 
+/** "Me" is its own chunk (layout/me-button.ts), loaded once the session is a member's. */
+async function meTrigger(fixture: { detectChanges(): void; nativeElement: HTMLElement }, variant: 'stacked' | 'icon'): Promise<HTMLButtonElement> {
+  await vi.waitFor(() => {
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector(`[data-me-trigger="${variant}"]`)).not.toBeNull();
+  });
+  return fixture.nativeElement.querySelector<HTMLButtonElement>(`[data-me-trigger="${variant}"]`)!;
+}
+
 describe('TopBar', () => {
   const count = signal(0);
   const moderationTotal = signal(0);
@@ -119,7 +128,7 @@ describe('TopBar', () => {
   it('signed in: Me opens its menu (loaded on demand), Escape closes it and gives the focus back', async () => {
     const { fixture, root } = render();
     expect(root.querySelector('a[href="/auth/sign-in"]')).toBeNull();
-    const me = root.querySelector<HTMLButtonElement>('[data-me-trigger="stacked"]')!;
+    const me = await meTrigger(fixture, 'stacked');
     expect(me.getAttribute('aria-haspopup')).toBe('menu');
     expect(me.getAttribute('aria-expanded')).toBe('false');
     expect(me.textContent).toContain('أنا');
@@ -144,7 +153,7 @@ describe('TopBar', () => {
 
   it('a click outside closes the Me menu; the narrow bar has its own Me button', async () => {
     const { fixture, root } = render();
-    const narrow = root.querySelector<HTMLButtonElement>('[data-me-trigger="icon"]')!;
+    const narrow = await meTrigger(fixture, 'icon');
     expect(narrow.querySelector('.sr-only')!.textContent!.trim()).toBe('أنا');
     narrow.click();
     fixture.detectChanges();
@@ -156,8 +165,9 @@ describe('TopBar', () => {
     expect(root.querySelector('[data-me-menu-panel]')).toBeNull();
   });
 
-  it('moderators see a dot on Me while reports are open (the count is in the menu)', () => {
+  it('moderators see a dot on Me while reports are open (the count is in the menu)', async () => {
     const { fixture, root } = render({ permissions: ['articles.read', 'moderation.manage'] });
+    await meTrigger(fixture, 'stacked');
     expect(root.querySelector('[data-me-attention]')).toBeNull();
     moderationTotal.set(4);
     fixture.detectChanges();

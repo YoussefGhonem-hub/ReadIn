@@ -134,6 +134,33 @@ public sealed class Notification : Entity
         return true;
     }
 
+    /// <summary>
+    /// Adds another article of the same actor to this aggregated entry (the official account's new articles of a day,
+    /// SPEC F17): it moves to the top as unseen and unread, shows the newest article (the latest <paramref name="actorAt"/>,
+    /// so an older event arriving late doesn't replace it), stores <paramref name="data"/> (the articles it holds) and its
+    /// push is armed again. The caller checks that the article isn't in it yet.
+    /// </summary>
+    public void AddArticle(Guid actorId, DateTime actorAt, Guid articleId, string? data, DateTime now, DateTime? pushAfter)
+    {
+        var actor = _actors.FirstOrDefault(a => a.ActorId == actorId);
+        if (actor is null)
+        {
+            _actors.Add(new NotificationActor(Id, actorId, actorAt));
+            ArticleId = articleId;
+        }
+        else if (actorAt > actor.At)
+        {
+            actor.MoveTo(actorAt);
+            ArticleId = articleId;
+        }
+
+        Data = data;
+        UpdatedAt = now;
+        SeenAt = null;
+        ReadAt = null;
+        ArmPush(pushAfter);
+    }
+
     /// <returns>false when it was seen already.</returns>
     public bool MarkSeen(DateTime now)
     {

@@ -197,6 +197,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fontSizeXl => 'كبير جدًا';
 
   @override
+  String get readingModeToggle => 'وضع القراءة';
+
+  @override
+  String get readingModeExit => 'الخروج من وضع القراءة';
+
+  @override
+  String get readingModeOn => 'تم تفعيل وضع القراءة.';
+
+  @override
+  String get readingModeOff => 'تم إيقاف وضع القراءة.';
+
+  @override
   String get langToggleArEg => 'العربية + EN';
 
   @override
@@ -4105,6 +4117,20 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String notifFollowedWriterArticle(String name) {
     return 'نشر $name مقالًا جديدًا';
+  }
+
+  @override
+  String notifFollowedWriterArticles(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'نشر $name $count مقال جديد',
+      many: 'نشر $name $count مقالًا جديدًا',
+      few: 'نشر $name $count مقالات جديدة',
+      two: 'نشر $name مقالين جديدين',
+      one: 'نشر $name مقالًا جديدًا',
+    );
+    return '$_temp0';
   }
 
   @override

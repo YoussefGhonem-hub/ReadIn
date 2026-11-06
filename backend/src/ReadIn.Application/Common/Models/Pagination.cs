@@ -63,6 +63,47 @@ public readonly record struct TieredTimeCursor(int Tier, DateTime Timestamp, Gui
 }
 
 /// <summary>
+/// Opaque keyset cursor over a ranked feed made of tiers (For you, ADR 0020): (tier ASC, ranked time DESC, timestamp
+/// DESC, id DESC), all ranked against <see cref="Snapshot"/>, the time the first page was served. Every page of one scroll
+/// ranks against the same snapshot, so the ranks don't move while the user pages. Starts with <c>r</c>, so it never
+/// decodes as a <see cref="TimeCursor"/> or <see cref="TieredTimeCursor"/>, and they never decode as this one.
+/// </summary>
+/// <param name="RankedAt">The last card's rank: an effective time (its publish time plus its boosts).</param>
+/// <param name="Timestamp">The last card's publish time, the first tie-break.</param>
+public readonly record struct RankedCursor(int Tier, DateTime Snapshot, DateTime RankedAt, DateTime Timestamp, Guid Id)
+{
+    private const string Prefix = "r";
+
+    public string Encode() => CursorText.Encode(string.Join(':',
+        Prefix,
+        Tier.ToString(CultureInfo.InvariantCulture),
+        Snapshot.Ticks.ToString(CultureInfo.InvariantCulture),
+        RankedAt.Ticks.ToString(CultureInfo.InvariantCulture),
+        Timestamp.Ticks.ToString(CultureInfo.InvariantCulture),
+        Id.ToString("N")));
+
+    public static RankedCursor? Decode(string? cursor)
+    {
+        if (CursorText.Decode(cursor) is not [Prefix, var tier, var snapshot, var rankedAt, var timestamp, var id]) return null;
+        try
+        {
+            return new RankedCursor(
+                int.Parse(tier, NumberStyles.None, CultureInfo.InvariantCulture),
+                Utc(snapshot),
+                Utc(rankedAt),
+                Utc(timestamp),
+                Guid.ParseExact(id, "N"));
+        }
+        catch (Exception e) when (e is FormatException or OverflowException or ArgumentOutOfRangeException)
+        {
+            return null;
+        }
+
+        static DateTime Utc(string ticks) => new(long.Parse(ticks, NumberStyles.None, CultureInfo.InvariantCulture), DateTimeKind.Utc);
+    }
+}
+
+/// <summary>
 /// Opaque cursor over a ranked list (search, F16): the position of the next item. A ranked list has no stable key to
 /// seek from, so the cursor counts; a cursor that doesn't decode is the first page.
 /// </summary>

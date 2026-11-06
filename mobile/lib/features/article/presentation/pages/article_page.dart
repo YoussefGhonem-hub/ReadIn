@@ -43,6 +43,7 @@ import '../widgets/article_toc.dart';
 import '../widgets/reader_action_bar.dart';
 import '../widgets/reader_resume.dart';
 import '../widgets/reader_widgets.dart';
+import '../widgets/reading_mode.dart';
 import '../widgets/related_articles_section.dart';
 
 /// Article reader (F04). Deep link: `readin.app/a/{slug}`.
@@ -242,8 +243,10 @@ class _ArticleViewState extends State<ArticleView> {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsCubit>();
     final fontSize = settings.state.fontSize;
+    // Reading mode (F04): the top bar and the action bar hide; the reading progress and the article stay.
+    final readingMode = settings.state.readingMode;
 
-    return MultiBlocListener(
+    return ReadingModeFrame(controller: _scroll, child: MultiBlocListener(
       listeners: [
         BlocListener<ArticleCubit, ArticleState>(
           listenWhen: (previous, current) => current.article != null && previous.article != current.article,
@@ -252,6 +255,9 @@ class _ArticleViewState extends State<ArticleView> {
         BlocListener<ArticleLiveCubit, LiveArticleCounts?>(listener: (_, counts) => _onLive(counts)),
       ],
       child: Scaffold(
+        // Reading mode's way out, at the bottom end corner (a snackbar pushes it up); it fades in by itself.
+        floatingActionButton: readingMode ? const ReadingModeExitButton() : null,
+        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
         // The status bar's inset belongs to the white bar at the top; the sides and the bottom stay safe.
         body: SafeArea(
           top: false,
@@ -268,12 +274,13 @@ class _ArticleViewState extends State<ArticleView> {
                       child: Column(
                         children: [
                           ReadingProgressBar(progress: _progress),
-                          _TopBar(
-                            article: article,
-                            switching: state.switchingLanguage,
-                            onLanguage: (lang) => context.read<ArticleCubit>().switchLanguage(lang),
-                            onFontSize: () => showFontSizeSheet(context, current: fontSize, onChanged: settings.setFontSize),
-                          ),
+                          if (!readingMode)
+                            _TopBar(
+                              article: article,
+                              switching: state.switchingLanguage,
+                              onLanguage: (lang) => context.read<ArticleCubit>().switchLanguage(lang),
+                              onFontSize: () => showFontSizeSheet(context, current: fontSize, onChanged: settings.setFontSize),
+                            ),
                         ],
                       ),
                     ),
@@ -336,7 +343,7 @@ class _ArticleViewState extends State<ArticleView> {
                         ),
                     },
                   ),
-                  if (state.status == ArticleStatus.ready)
+                  if (state.status == ArticleStatus.ready && !readingMode)
                     ReaderActionBar(
                       article: article!.card,
                       menu: ArticleMenuButton(article: article),
@@ -350,7 +357,7 @@ class _ArticleViewState extends State<ArticleView> {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -378,21 +385,33 @@ class _TopBar extends StatelessWidget {
               icon: const BackButtonIcon(),
               onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
             ),
-            const Spacer(),
-            if (a != null && a.hasBothLanguages)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: ReadInSpace.s1),
-                child: SegmentedButton<String>(
-                  style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                  showSelectedIcon: false,
-                  segments: [
-                    ButtonSegment(value: 'ar-EG', label: Text(l10n.langToggleArEg), tooltip: l10n.articleLangArEg),
-                    ButtonSegment(value: 'en', label: Text(l10n.langToggleEn), tooltip: l10n.articleLangEn),
-                  ],
-                  selected: {a.card.language},
-                  onSelectionChanged: switching ? null : (v) => onLanguage(v.first),
-                ),
-              ),
+            // The language toggle takes the room left, at the end; on a narrow phone it shrinks to fit rather than push
+            // the buttons off the bar.
+            Expanded(
+              child: a != null && a.hasBothLanguages
+                  ? Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: SegmentedButton<String>(
+                          style: const ButtonStyle(
+                            visualDensity: VisualDensity.compact,
+                            padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: ReadInSpace.s2)),
+                          ),
+                          showSelectedIcon: false,
+                          segments: [
+                            ButtonSegment(value: 'ar-EG', label: Text(l10n.langToggleArEg), tooltip: l10n.articleLangArEg),
+                            ButtonSegment(value: 'en', label: Text(l10n.langToggleEn), tooltip: l10n.articleLangEn),
+                          ],
+                          selected: {a.card.language},
+                          onSelectionChanged: switching ? null : (v) => onLanguage(v.first),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            // Reading mode (F04) next to the font size, as on the web.
+            const ReadingModeToggle(),
             IconButton(tooltip: l10n.fontSize, icon: const Icon(Icons.format_size_rounded), onPressed: onFontSize),
             ArticleShareButton(article: a?.card),
           ],

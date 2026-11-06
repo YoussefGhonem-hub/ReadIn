@@ -63,9 +63,10 @@ internal sealed class SavedArticleConfiguration : IEntityTypeConfiguration<Saved
         builder.HasIndex(s => new { s.UserId, s.ArticleId }).IsUnique();
         // The saved list, newest saved first.
         builder.HasIndex(s => new { s.UserId, s.SavedAt }).IsDescending(false, true);
+        // The save count and the For you ranking's saves in a time window (FeedRanking); also serves the FK.
+        builder.HasIndex(s => new { s.ArticleId, s.SavedAt });
 
         builder.HasOne<User>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
-        // Also indexes ArticleId (by convention), which the save count uses.
         builder.HasOne(s => s.Article).WithMany().HasForeignKey(s => s.ArticleId).OnDelete(DeleteBehavior.Cascade);
     }
 }

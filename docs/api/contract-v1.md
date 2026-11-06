@@ -381,7 +381,7 @@ Explore error codes: `field.not_found` (404), `topic.not_found` (404).
 | Method | Path | Response |
 |---|---|---|
 | GET | `/articles/{slug}?lang=` | `ArticleDetailsDto` |
-| GET | `/feed/for-you?field=&cursor=&limit=` | `CursorPage<ArticleCardDto>`. Signed in: the articles in the user's interests first, then all the other published articles, newest first within each group (the cursor remembers the group, so paging never repeats or skips an article). Guests, users without interests, and any `field` filter: latest published. Signed in, what you muted or marked "show less" is left out, and the topics (or fields) you marked "show less" in the last 90 days come last, in a tier of their own (F28, see Mute & feedback). `field` is a field slug. |
+| GET | `/feed/for-you?field=&cursor=&limit=` | `CursorPage<ArticleCardDto>`. Signed in: the articles in the user's interests first, then all the other published articles; guests, users without interests, and any `field` filter: one group of all published articles. Within each group the articles are **ranked by freshness + popularity, with priority for verified writers** (see "For you ranking" below; the cursor remembers the group and a snapshot time, so paging never repeats or skips an article). Signed in, what you muted or marked "show less" is left out, and the topics (or fields) you marked "show less" in the last 90 days come last, in a tier of their own (F28, see Mute & feedback). `field` is a field slug. |
 | GET | `/feed/today` | `ArticleCardDto` or `204` when no pick is available yet |
 | GET | `/feed/following?cursor=&limit=` | Bearer → `CursorPage<ArticleCardDto>`: the Home "Following" tab. Published articles by the writers you follow **and articles they reposted** (F29), each once, newest placement first, without your muted writers, fields and topics and "show less" articles (F28). A card a repost placed carries `repostedBy` (the label "أعاد نشره {name}"). Rules in Reposts → "The Following feed" |
 | GET | `/articles/{id}/related?lang=&limit=` | `ArticleCardDto[]`, 0–`limit` cards (1–10, default 4) for the end of the reader (F04). `lang` is the version being read; cards use it when they have it, else their source language. `404 article.not_found` when the article isn't published |
@@ -413,6 +413,37 @@ An article **hidden by a moderator** (F22) is left out of every list, feed, coun
 and what is done on it (comments, replies, likes, pins, reactions, saves, progress) answer `404 article.not_found` to
 everyone but its author and moderators; they get it with `moderation: { hiddenAt, note }` (the latest hide's note) for the
 "Hidden by moderators" banner. `moderation` is `null` otherwise.
+
+**For you ranking (leftovers step, SPEC F03 and §10.1, [ADR 0020](../adr/0020-for-you-ranking-and-snapshot-cursor.md)).**
+The groups stay as they are (your interests, then everything else, then what you marked "show less"; one group for
+guests, users without interests and a `field` filter). Inside each group the articles are ordered by an effective time,
+highest first, then the later `publishedAt`, then the id:
+
+```text
+rank = publishedAt + 4 days × popularity + 1 day × verified          (whole seconds)
+popularity = 1 − 1 / (1 + E / 20)                                       (0 … < 1; E = 20 gives 0.5)
+E = completed reads × 1 + reactions × 2 + comments × 4 + saves × 6 + reposts × 6
+```
+
+- `E` counts other people's activity only (never the author's own) in the **30 days before the snapshot time**; hidden
+  and deleted comments don't count. So engagement moves an article up by at most 4 days of freshness, and an old
+  article sinks however popular it once was.
+- `verified` is 1 when the author has the Verified badge (`isVerified`, SPEC §10.1 "the badge also gives priority in
+  feeds") and got it before the snapshot time; 0 otherwise (also for a deleted author). A verified writer's article
+  ranks as if it were a day newer. The badge counts the same way in every group.
+- **Stable pages.** The first page (no cursor) takes the current time as the snapshot; `nextCursor` carries that
+  snapshot, and every later page ranks against it: activity after it isn't counted, articles published after it don't
+  show (the "مقالات جديدة ↑" banner and a refresh bring them), and a badge given after it doesn't count. Scores only
+  use what existed at the snapshot, so they don't move while you page: nothing is skipped. An article whose score
+  dropped since (someone took back a reaction, a save or a comment) may come again further down; clients already drop
+  the ids they show (as for the "show less" Undo). The one exception is a moderator **un-hiding** a comment or an
+  article during a scroll: visibility is read when each page is asked for, so that article can rise above the cursor
+  (or come back above it) and be missed for the rest of that scroll. It is in the next first page.
+- **Cursors from before this change** (they carry the group and a publish time) still work: that scroll finishes in the
+  old order (newest first within each group, old-style cursors), and the next first page is ranked. Cursors stay
+  opaque; clients change nothing.
+- The Following feed stays chronological (newest placement first). Today's article (F07) keeps the quality score
+  first; between equal scores a verified writer's article wins, then the newest.
 
 ### Reactions (F10; writes: Bearer, permission `reactions.create`, rate limit `writes`)
 
@@ -946,7 +977,7 @@ accounts get nothing):
 | `comment_reply` | a reply to your comment | per thread | same |
 | `mention` | a comment @mentions you (also when an edit adds you), or a published article does (also when an "Update" adds you; once per article, ever): `comment: null`, `article` set | no | a comment: same; an article: `readin://a/{slug}` |
 | `reactions_milestone` | your article reaches 10, 50 or 100 reactions (each once, ever) | no | `readin://a/{slug}` |
-| `followed_writer_article` | a writer you follow publishes an article (first publish only) | no | `readin://a/{slug}` |
+| `followed_writer_article` | a writer you follow publishes an article (first publish only) | no; **the official @readin account: per day** (your time zone, see below) | `readin://a/{slug}`; @readin with `data.articleCount` ≥ 2: `readin://u/readin` |
 | `daily_article` | Today's article push (F07); also written when the push waits for quiet hours | no | `readin://a/{slug}` |
 | `streak_reminder` | 20:00 your time, your streak is ≥ 1 and you haven't read today | no | `readin://me/stats` |
 | `security_alert` | password, PIN or phone changed, password reset, recovery locked, Google/Apple linked or unlinked, phone sign in added | no | `readin://settings/account` |
@@ -972,6 +1003,31 @@ accounts get nothing):
   نشر مقالك" / "{name} and {n} others reposted your article"; then the article's title. It is a configurable type, so
   `GET /me/notification-settings` now returns **9** types; Settings label "إعادة النشر" / "Reposts", hint "لما حد يعيد
   نشر مقالك" / "When someone reposts your article". The entry stays in the list while its article is readable.
+- **The official @readin account's articles, grouped per day (leftovers step).** Every other writer still gives one
+  `followed_writer_article` per article. For the official account (the system account, `@readin`) each follower gets
+  **one entry per day** (the follower's time zone) instead: the type stays `followed_writer_article`, actor = the
+  account (`actorCount` 1), `article` = its **newest** article in the entry, and `data.articleCount` = how many of its
+  new articles the entry holds (≥ 1; the key is only on these entries). A new article that day joins the unread entry:
+  it moves to the top as unseen, shows the newest article, and its push is armed again; a read entry starts a new one
+  (counting from 1), as for every group. Each article counts once (a retried event changes nothing).
+  - `link`: one article → `readin://a/{slug}`; two or more → `readin://u/readin` (the account's profile, its articles
+    newest first).
+  - Row text (clients): `articleCount` 1 → as today ("نشر {name} مقالًا جديدًا" / "{name} published a new article",
+    then the title). `articleCount` ≥ 2 → "نشر {name} مقالين جديدين" (2), "نشر {name} {n} مقالات جديدة" (3–10),
+    "نشر {name} {n} مقالًا جديدًا" (11–99), "نشر {name} {n} مقال جديد" (100+), CLDR plural forms of `n`, verb first;
+    English "{name} published {n} new articles"; then the newest article's title. A client that doesn't read
+    `articleCount` shows the single-article text with the newest title and still opens `link`.
+  - Push: as every F17 push (the type's mode `all` / `inApp` / `off`, quiet hours; the official account can't be
+    muted, `mute.system_account`), but it waits
+    **10 minutes after the account's latest article** (so a batch of articles is one push), title as the row text,
+    body = the newest article's title, collapse key = the group (`followed_writer_article:{accountId}:{yyyy-MM-dd}`),
+    `data.link` as above (`data.lang` only with an article link).
+  - Settings: no new type; the `followed_writer_article` setting covers it (`GET /me/notification-settings` still
+    returns 9 types).
+  - Known limit: the entry hangs on its newest article. If a moderator hides that one or it is deleted (or its field
+    is turned off), the whole entry leaves the list (its push, if still pending, is skipped), like any entry whose
+    article isn't readable, even though its other articles are still there; and `articleCount` keeps counting
+    articles hidden or deleted since.
 - What the list (and the badge) leaves out: entries whose comment was deleted or hidden, whose article isn't readable
   any more (a moderation notice keeps its hidden article), and `new_follower` entries whose followers all deleted their
   accounts. A deleted actor is gone from `actor` / `actorCount`: an entry left with no actor shows "Deleted user"
@@ -1468,6 +1524,13 @@ moderators, or `allowDownload`) shows the download icon in the PDF's title strip
 viewer; it calls `downloadUrl` (`GET /documents/{assetId}/download` → `Content-Disposition: attachment`).
 
 Quotas: 50 uploads per user per day (`409 media.quota_daily`), 200 MB stored per user (`409 media.quota_storage`).
+
+- **Uploads per day (leftovers step):** every upload the API accepted (`201` / `202`) in the last 24 hours (rolling)
+  counts, **also the ones deleted since** (`DELETE /uploads/{id}`, the orphan cleanup, a deleted draft or article), so
+  deleting doesn't free the allowance. A rejected file (wrong type, too large, encrypted, a quota error) doesn't count.
+  Images and PDFs share the 50.
+- **Storage:** only what is still stored counts (original PDF, pages and image variants), so deleting frees space.
+- Both are checked before any work is done; the error texts are unchanged.
 
 Media error codes: `media.purpose_invalid`, `media.file_required`, `media.too_large`, `media.unsupported_type`, `media.dimensions_too_large`, `media.image_corrupted`, `media.pdf_encrypted`, `media.pdf_corrupted`, `media.pdf_too_many_pages`, `media.quota_daily`, `media.quota_storage`, `media.not_found`, `media.in_use`, `media.download_not_allowed`, `media.processing_failed`, `media.processing_timeout`, `attachments.mixed_kinds`, `attachments.too_many_images`, `attachments.single_document`, `attachments.alt_text_required`, `attachments.alt_text_too_long`, `attachments.caption_too_long`, `attachments.title_required`, `attachments.title_too_long`, `attachments.asset_not_found`, `attachments.asset_not_ready`, `attachments.duplicate_asset`.
 
@@ -2254,7 +2317,7 @@ interface NotificationDto {
   actorCount: number;            // distinct actors (≥ 1 when actor-based, 0 otherwise): "X and {actorCount - 1} others"
   article: { id: string; slug: string; title: string; language: ArticleLanguage } | null; // your article language, else the source
   comment: { id: string; parentId: string | null; excerpt: string } | null;              // excerpt ≤ 140 chars, plain text, one line; null for a mention in an article
-  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange; approved?: boolean }; // only the keys that apply; approved: verification_result
+  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange; approved?: boolean; articleCount?: number }; // only the keys that apply; approved: verification_result; articleCount: the official @readin account's day entry (followed_writer_article, ≥ 1)
   link: string;                  // readin://… (the same as the push's data.link)
 }
 // actor: also set for followed_writer_article (the writer); null for reactions_milestone, daily_article, streak_reminder,
@@ -2491,7 +2554,7 @@ an entry is written), for entries whose type is on `all`:
 | `comment_reply` | "{name} ردّ على تعليقك" / "{name} replied to your comment"; more: "… و{n} غيره ردّوا على تعليقك" / "… and {n} others replied to your comment" | the reply |
 | `mention` | in a comment: "{name} عمل لك منشن في تعليق" / "{name} mentioned you in a comment"; in an article (no comment): "{name} عمل لك منشن في مقال" / "{name} mentioned you in an article" | the comment; in an article: the article's title |
 | `reactions_milestone` | "مقالك وصل لـ {threshold} رياكشن 🎉" / "Your article reached {threshold} reactions 🎉" | the article's title |
-| `followed_writer_article` | "{name} نشر مقال جديد" / "{name} published a new article" | the article's title |
+| `followed_writer_article` | "نشر {name} مقالًا جديدًا" / "{name} published a new article"; the official @readin account's day entry with 2 or more articles: "نشر {name} مقالين جديدين" / "نشر {name} {n} مقالات جديدة" / "نشر {name} {n} مقالًا جديدًا" / "نشر {name} {n} مقال جديد" (Arabic plural forms of `n`) / "{name} published {n} new articles" | the article's title (@readin: the newest one). @readin: sent 10 minutes after its latest article, collapse key `followed_writer_article:{accountId}:{yyyy-MM-dd}`, `data.link` = `readin://u/readin` from 2 articles |
 | `streak_reminder` | "متضيّعش الـ streak بتاعك 🔥" / "Don't lose your streak 🔥" | "الـ streak بتاعك {n} يوم…" / "Your streak is {n} days. Read an article today to keep it going." |
 | `security_alert` | "تنبيه أمان" / "Security alert" | what changed, e.g. "Your password was changed. If this wasn't you, reset it now." |
 | `verification_result` | approved: "بقيت كاتب موثّق ✓" / "You're now a verified writer ✓"; rejected: "طلب التوثيق بتاعك ماتقبلش" / "Your verification request wasn't approved" | approved: empty; rejected: "افتحه عشان تعرف السبب" / "Open it to see why" (never the reason). `data.link` = `readin://verification`; collapse key `verification_result` |

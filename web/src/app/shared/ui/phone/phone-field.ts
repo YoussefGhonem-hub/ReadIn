@@ -6,6 +6,7 @@ import {
   ElementRef,
   Injector,
   PLATFORM_ID,
+  ViewEncapsulation,
   computed,
   forwardRef,
   inject,
@@ -46,6 +47,9 @@ const SHEET_QUERY = '(max-width: 639.98px)';
   selector: 'rd-phone-field',
   imports: [TranslocoPipe, LucideDynamicIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Its classes' rules (not in the global stylesheet, so they stay out of the initial bundle).
+  encapsulation: ViewEncapsulation.None,
+  styleUrl: './flag.css',
   providers: [
     { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => PhoneField), multi: true },
     { provide: NG_VALIDATORS, useExisting: forwardRef(() => PhoneField), multi: true },

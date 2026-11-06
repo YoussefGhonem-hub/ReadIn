@@ -17,6 +17,7 @@ class SettingsLocalDataSource {
   static const _fontSize = 'settings.fontSize';
   static const _welcomeSeen = 'settings.welcomeSeen';
   static const _showHighlights = 'settings.showHighlights';
+  static const _readingMode = 'settings.readingMode';
 
   /// The device-only daily-article switch of earlier versions; the server's `daily_article` mode replaced it (F17).
   static const legacyDailyNotificationsKey = 'settings.dailyNotifications';
@@ -33,6 +34,7 @@ class SettingsLocalDataSource {
       fontSize: byName(ArticleFontSize.values, _fontSize, d.fontSize),
       welcomeSeen: _store.read<bool>(_welcomeSeen) ?? d.welcomeSeen,
       showHighlights: _store.read<bool>(_showHighlights) ?? d.showHighlights,
+      readingMode: _store.read<bool>(_readingMode) ?? d.readingMode,
     );
   }
 
@@ -44,6 +46,7 @@ class SettingsLocalDataSource {
     await _store.write(_fontSize, s.fontSize.name);
     await _store.write(_welcomeSeen, s.welcomeSeen);
     await _store.write(_showHighlights, s.showHighlights);
+    await _store.write(_readingMode, s.readingMode);
   }
 
   bool? legacyDailyNotifications() => _store.read<bool>(legacyDailyNotificationsKey);

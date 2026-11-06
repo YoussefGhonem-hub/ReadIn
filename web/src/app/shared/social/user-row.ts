@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { BdiText } from '../directives/bdi-text';
 import { Avatar } from '../ui/avatar';
+import { VerifiedBadge } from '../ui/verified-badge';
 
 export interface UserRowData {
   displayName: string;
@@ -15,7 +14,7 @@ export interface UserRowData {
 /** A person in a list (who reacted, suggested writers): avatar, name, verified badge, @handle, optional bio, actions. */
 @Component({
   selector: 'rd-user-row',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, Avatar],
+  imports: [RouterLink, BdiText, Avatar, VerifiedBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex items-center gap-3 py-2' },
   template: `
@@ -25,7 +24,7 @@ export interface UserRowData {
         <span class="flex items-center gap-1 font-semibold text-text-primary">
           <rd-bdi-text class="truncate" [text]="user().displayName" />
           @if (user().isVerified) {
-            <svg lucideIcon="BadgeCheck" [size]="15" class="shrink-0 text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+            <rd-verified-badge [size]="15" />
           }
         </span>
         <span class="block text-xs text-text-secondary"

@@ -1,5 +1,4 @@
-import { computed } from '@angular/core';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { Injectable, computed, signal } from '@angular/core';
 import { MeDto } from '../api/models';
 import { nextSetupStep } from './account-setup';
 
@@ -17,40 +16,45 @@ const GUEST_PERMISSIONS: readonly string[] = ['articles.read'];
 /**
  * Who is signed in, as UI state. The access token itself never lives here (AuthService keeps it in a private field);
  * nothing about the session is ever written to localStorage or sessionStorage (SPEC §9.3).
+ *
+ * Plain signals (one state signal, updated as a whole, with computed slices), not an NgRx signal store: the store is in
+ * the initial bundle, and `@ngrx/signals` then stays in the chunks of the pages that use it.
  */
-export const SessionStore = signalStore(
-  { providedIn: 'root' },
-  withState<SessionState>({ status: 'unknown', me: null }),
-  withComputed(({ status, me }) => ({
-    isResolved: computed(() => status() !== 'unknown'),
-    isAuthenticated: computed(() => status() === 'authenticated'),
-    isGuest: computed(() => status() === 'guest'),
-    permissions: computed(() => new Set(status() === 'authenticated' ? (me()?.permissions ?? []) : GUEST_PERMISSIONS)),
-    displayName: computed(() => me()?.displayName ?? null),
-    username: computed(() => me()?.username ?? null),
-    avatarUrl: computed(() => me()?.avatarUrl ?? null),
-    phoneNumber: computed(() => me()?.phoneNumber ?? null),
-    /** The mandatory step this account has to finish first (SPEC §9.2), or null. */
-    setupStep: computed(() => {
-      const current = me();
-      return status() === 'authenticated' && current ? nextSetupStep(current) : null;
-    }),
-  })),
-  withMethods((store) => ({
-    setGuest(): void {
-      patchState(store, { status: 'guest', me: null });
-    },
-    setMe(me: MeDto): void {
-      patchState(store, { status: 'authenticated', me });
-    },
-    patchMe(partial: Partial<MeDto>): void {
-      const me = store.me();
-      if (me) patchState(store, { me: { ...me, ...partial } });
-    },
-    hasPermission(permission: string): boolean {
-      return store.permissions().has(permission);
-    },
-  })),
-);
+@Injectable({ providedIn: 'root' })
+export class SessionStore {
+  private readonly state = signal<SessionState>({ status: 'unknown', me: null });
 
-export type SessionStore = InstanceType<typeof SessionStore>;
+  readonly status = computed(() => this.state().status);
+  readonly me = computed(() => this.state().me);
+
+  readonly isResolved = computed(() => this.status() !== 'unknown');
+  readonly isAuthenticated = computed(() => this.status() === 'authenticated');
+  readonly isGuest = computed(() => this.status() === 'guest');
+  readonly permissions = computed(() => new Set(this.status() === 'authenticated' ? (this.me()?.permissions ?? []) : GUEST_PERMISSIONS));
+  readonly displayName = computed(() => this.me()?.displayName ?? null);
+  readonly username = computed(() => this.me()?.username ?? null);
+  readonly avatarUrl = computed(() => this.me()?.avatarUrl ?? null);
+  readonly phoneNumber = computed(() => this.me()?.phoneNumber ?? null);
+  /** The mandatory step this account has to finish first (SPEC §9.2), or null. */
+  readonly setupStep = computed(() => {
+    const current = this.me();
+    return this.status() === 'authenticated' && current ? nextSetupStep(current) : null;
+  });
+
+  setGuest(): void {
+    this.state.set({ status: 'guest', me: null });
+  }
+
+  setMe(me: MeDto): void {
+    this.state.set({ status: 'authenticated', me });
+  }
+
+  patchMe(partial: Partial<MeDto>): void {
+    const me = this.me();
+    if (me) this.state.update((state) => ({ ...state, me: { ...me, ...partial } }));
+  }
+
+  hasPermission(permission: string): boolean {
+    return this.permissions().has(permission);
+  }
+}

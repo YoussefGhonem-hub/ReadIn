@@ -33,6 +33,17 @@ public sealed record NotificationRequest(Guid UserId, string Type)
 
     /// <summary>The caller sends the push itself (the daily article): the push job leaves the entry alone.</summary>
     public bool PushedByCaller { get; init; }
+
+    /// <summary>
+    /// The entry of <see cref="GroupKey"/> counts the actor's articles instead of its actors (the official account's day
+    /// entry, <see cref="OfficialArticles"/>): <see cref="ArticleId"/> joins the unread entry once, in
+    /// <c>data.articleIds</c>, and the entry shows the newest article. An article already in an entry of the group changes
+    /// nothing, so a retried event is a no-op.
+    /// </summary>
+    public bool GroupsArticles { get; init; }
+
+    /// <summary>The push waits this long after the write, so a burst of activity is one push; quiet hours still apply.</summary>
+    public TimeSpan PushDelay { get; init; }
 }
 
 /// <summary>
@@ -116,6 +127,9 @@ public sealed class NotificationWriter(
                     .ToListAsync(ct))
                 .ToDictionary(n => (n.UserId, n.DedupeKey!), n => n.Id);
 
+        // Entries that count articles (the official account's day entries): every entry of their groups, in one query.
+        var articleGroups = await LoadArticleGroupsAsync(requests, ct);
+
         var touched = new List<Notification>();
         var created = new Dictionary<(Guid, string), Notification>();
         for (var i = 0; i < requests.Count; i++)
@@ -136,9 +150,45 @@ public sealed class NotificationWriter(
             }
 
             DateTime? pushAfter = mode == NotificationMode.All && !request.PushedByCaller
-                ? NotificationSchedule.PushAfter(request.Type, now, recipient.TimeZone,
+                ? NotificationSchedule.PushAfter(request.Type, now + request.PushDelay, recipient.TimeZone,
                     NotificationSchedule.QuietHoursOf(recipient.QuietEnabled, recipient.QuietStart, recipient.QuietEnd))
                 : null;
+
+            if (request is { GroupsArticles: true, GroupKey: { } articleGroup, ActorId: { } author, ArticleId: { } articleId })
+            {
+                var entries = articleGroups.TryGetValue((request.UserId, articleGroup), out var list) ? list : articleGroups[(request.UserId, articleGroup)] = [];
+                if (entries.FirstOrDefault(e => NotificationData.Parse(e.Data).ArticleIds?.Contains(articleId) == true) is { } holder)
+                {
+                    results[i] = holder.Id; // a retried event: the article is in the group already
+                    continue;
+                }
+
+                if (entries.Where(e => e.CanAggregate(now)).OrderByDescending(e => e.UpdatedAt).FirstOrDefault() is { } open)
+                {
+                    var data = NotificationData.Parse(open.Data);
+                    open.AddArticle(author, request.ActorAt ?? now, articleId,
+                        (data with { ArticleIds = [.. data.ArticleIds ?? [], articleId] }).Serialize(), now, pushAfter);
+                    if (!touched.Contains(open)) touched.Add(open);
+                    results[i] = open.Id;
+                    continue;
+                }
+
+                var first = Notification.Create(
+                    request.UserId,
+                    request.Type,
+                    now,
+                    pushAfter,
+                    articleGroup,
+                    articleId: articleId,
+                    data: (request.Data with { ArticleIds = [articleId] }).Serialize(),
+                    actorId: author,
+                    actorAt: request.ActorAt ?? now);
+                db.Notifications.Add(first);
+                touched.Add(first);
+                entries.Add(first);
+                results[i] = first.Id;
+                continue;
+            }
 
             if (request.GroupKey is { } group && request.ActorId is { } actorId
                 && await AggregateIntoAsync(request, group, actorId, now, pushAfter, ct) is { } joined)
@@ -169,6 +219,8 @@ public sealed class NotificationWriter(
             if (request.DedupeKey is { } newKey) created[(request.UserId, newKey)] = notification;
         }
 
+        // Entries loaded for an article group that didn't change: nothing to save, nothing stays tracked.
+        Forget(articleGroups.Values.SelectMany(entries => entries).Except(touched));
         if (touched.Count == 0) return results;
 
         try
@@ -187,6 +239,28 @@ public sealed class NotificationWriter(
         if (touched.Any(n => n.PushStatus == NotificationPushStatus.Pending && n.PushAfter <= now))
             await pushSignal.NotifyAsync(ct);
         return results;
+    }
+
+    /// <summary>
+    /// Every entry (read or not) of the groups that <see cref="NotificationRequest.GroupsArticles"/> requests write to, by
+    /// recipient and group, tracked with their actors. A group is one day of one account, so it holds a few entries at most.
+    /// </summary>
+    private async Task<Dictionary<(Guid UserId, string Group), List<Notification>>> LoadArticleGroupsAsync(
+        IReadOnlyList<NotificationRequest> requests, CancellationToken ct)
+    {
+        var grouped = requests.Where(r => r is { GroupsArticles: true, GroupKey: not null }).ToList();
+        if (grouped.Count == 0) return [];
+
+        var userIds = grouped.Select(r => r.UserId).Distinct().ToList();
+        var groups = grouped.Select(r => r.GroupKey!).Distinct().ToList();
+        var types = grouped.Select(r => r.Type).Distinct().ToList();
+        var entries = await db.Notifications
+            .Include(n => n.Actors)
+            .Where(n => userIds.Contains(n.UserId) && types.Contains(n.Type) && n.GroupKey != null && groups.Contains(n.GroupKey))
+            .ToListAsync(ct);
+        return entries
+            .GroupBy(n => (n.UserId, n.GroupKey!))
+            .ToDictionary(g => g.Key, g => g.ToList());
     }
 
     /// <summary>

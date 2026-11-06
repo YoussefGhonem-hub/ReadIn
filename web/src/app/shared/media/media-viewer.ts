@@ -6,6 +6,7 @@ import {
   Injector,
   PLATFORM_ID,
   Signal,
+  ViewEncapsulation,
   afterNextRender,
   computed,
   effect,
@@ -75,6 +76,9 @@ interface Gesture {
   selector: 'rd-media-viewer',
   imports: [TranslocoPipe, LucideDynamicIcon, MediaImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Its classes' rules (not in the global stylesheet, so they stay out of the initial bundle).
+  encapsulation: ViewEncapsulation.None,
+  styleUrl: './media-viewer.css',
   host: {
     class: 'rd-viewer relative flex h-full w-full flex-col bg-code-bg text-code-text',
     '[attr.dir]': 'dir()',

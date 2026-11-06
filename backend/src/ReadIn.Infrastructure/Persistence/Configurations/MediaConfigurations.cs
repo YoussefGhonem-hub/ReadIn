@@ -44,6 +44,19 @@ internal sealed class MediaAssetConfiguration : IEntityTypeConfiguration<MediaAs
     }
 }
 
+/// <summary>The daily upload quota's log: one row per accepted upload, deleted assets included (contract-v1 "Media").</summary>
+internal sealed class MediaUploadConfiguration : IEntityTypeConfiguration<MediaUpload>
+{
+    public void Configure(EntityTypeBuilder<MediaUpload> builder)
+    {
+        builder.ToTable("MediaUploads");
+        builder.HasKey(u => u.Id);
+        builder.HasOne<User>().WithMany().HasForeignKey(u => u.UserId).OnDelete(DeleteBehavior.Cascade);
+        // The quota: a user's uploads in the last 24 hours.
+        builder.HasIndex(u => new { u.UserId, u.CreatedAt });
+    }
+}
+
 internal sealed class MediaAssetPageConfiguration : IEntityTypeConfiguration<MediaAssetPage>
 {
     public void Configure(EntityTypeBuilder<MediaAssetPage> builder)

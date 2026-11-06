@@ -18,6 +18,21 @@ public sealed class ErrorMessagesTests
         ErrorMessages.Title(code, "en").Should().Be(english);
     }
 
+    /// <summary>The seven codes that had no server title before the leftovers step (PROGRESS 6.6), in Modern Standard Arabic.</summary>
+    [Theory]
+    [InlineData("article.translation_exists", "هذه النسخة اللغوية موجودة بالفعل.", "This language version already exists.")]
+    [InlineData("article.translation_not_found", "هذه النسخة اللغوية غير موجودة.", "This language version does not exist.")]
+    [InlineData("reading.conflict", "حُفظ تحديث آخر للقراءة في الوقت نفسه. حاول مرة أخرى.", "Another reading update was saved at the same time. Try again.")]
+    [InlineData("user.username_invalid", "يجب أن يتكوّن اسم المستخدم من 3 إلى 30 حرفًا: a–z أو 0–9 أو _.", "Username must be 3–30 characters: a–z, 0–9 or _.")]
+    [InlineData("user.language_invalid", "هذه اللغة غير مدعومة.", "This language isn't supported.")]
+    [InlineData("user.timezone_invalid", "المنطقة الزمنية غير معروفة.", "Unknown time zone.")]
+    [InlineData("user.reminder_time_invalid", "وقت التذكير غير صالح، استخدم الصيغة HH:mm.", "The reminder time isn't valid. Use HH:mm.")]
+    public void Codes_that_had_no_title_have_one_in_arabic_and_english(string code, string arabic, string english)
+    {
+        ErrorMessages.Title(code, "ar").Should().Be(arabic);
+        ErrorMessages.Title(code, "en").Should().Be(english);
+    }
+
     [Theory]
     [InlineData("concurrency.conflict")]
     [InlineData("topic.not_in_field")]

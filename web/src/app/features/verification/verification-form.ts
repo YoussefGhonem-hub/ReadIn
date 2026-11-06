@@ -7,6 +7,7 @@ import { FieldDto, MyVerificationRequestDto } from '../../core/api/models';
 import { TaxonomyApi } from '../../core/api/taxonomy.api';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService } from '../../core/i18n/language.service';
+import { FileSizePipe } from '../../shared/pipes/format.pipes';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import {
   DraftErrors,
@@ -18,7 +19,6 @@ import {
   VerificationDraft,
   draftErrors,
   fileError,
-  fileSize,
 } from './verification-rules';
 import { VerificationStore } from './verification.store';
 
@@ -43,7 +43,7 @@ interface ServerErrors {
  */
 @Component({
   selector: 'rd-verification-form',
-  imports: [TranslocoPipe, LucideDynamicIcon],
+  imports: [TranslocoPipe, LucideDynamicIcon, FileSizePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -136,7 +136,8 @@ interface ServerErrors {
               <svg [lucideIcon]="f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf') ? 'FileText' : 'Images'" [size]="20" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
               <span class="min-w-0 flex-1">
                 <bdi class="block truncate text-sm" dir="auto" data-verification-file-name>{{ f.name }}</bdi>
-                <span class="block text-xs text-text-secondary" dir="ltr">{{ size(f.size) }}</span>
+                <!-- "830 ك.ب" / "830 KB": Western digits, the unit in the UI language (and its direction) -->
+                <span class="block text-xs text-text-secondary" data-verification-file-size>{{ f.size | rdFileSize: lang() }}</span>
               </span>
               <button type="button" class="rd-icon-btn h-9 w-9" [attr.aria-label]="'verification.form.removeFile' | transloco" (click)="removeFile()" data-verification-file-remove>
                 <svg lucideIcon="X" [size]="18"></svg>
@@ -224,7 +225,6 @@ export class VerificationForm implements OnInit {
   protected readonly jobTitleMax = JOB_TITLE_MAX;
   protected readonly proofUrlMax = PROOF_URL_MAX;
   protected readonly noteMax = NOTE_MAX;
-  protected readonly size = fileSize;
 
   protected readonly fields = signal<FieldDto[]>([]);
   protected readonly fieldsFailed = signal(false);

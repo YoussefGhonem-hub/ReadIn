@@ -5,6 +5,7 @@ import { environment } from '../environments/environment';
 import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
 import { API_BASE_URL } from './core/api/api.config';
+import { provideAppIcons } from './shared/ui/icons';
 
 /**
  * During SSR the API can be reached over an internal address (e.g. `http://readin-api:8080/api/v1`) via
@@ -21,7 +22,8 @@ function internalApiProviders(): Provider[] {
 }
 
 const serverConfig: ApplicationConfig = {
-  providers: [provideServerRendering(withRoutes(serverRoutes)), ...internalApiProviders()],
+  // The server renders with every icon at hand; the browser loads them as a chunk of their own (shared/ui/app-icons.ts).
+  providers: [provideServerRendering(withRoutes(serverRoutes)), provideAppIcons(), ...internalApiProviders()],
 };
 
 export const config = mergeApplicationConfig(appConfig, serverConfig);

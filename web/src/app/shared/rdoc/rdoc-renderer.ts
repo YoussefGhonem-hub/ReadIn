@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewEncapsulation, computed, inject, input } from '@angular/core';
 import { RDocContext } from './rdoc-context';
 import { BlockMarks, RDocMarks } from './rdoc-marks';
 import { RDoc } from './rdoc.models';
@@ -25,6 +25,9 @@ import {
 /**
  * Renders an RDoc document (SPEC §13) — one component per block type. Unknown block types are skipped so an older
  * client never breaks on newer content. Font size is driven by the `--rd-article-size` CSS variable.
+ *
+ * The RDoc typography and block styles (`.rdoc`-scoped, unencapsulated) come with this component instead of the global
+ * stylesheet, so they stay out of the initial bundle; a server-rendered page carries them inline.
  */
 @Component({
   selector: 'rd-rdoc',
@@ -46,6 +49,8 @@ import {
   ],
   providers: [RDocContext, RDocMarks],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
+  styleUrls: ['../../../styles/rdoc.css', '../../../styles/rdoc-blocks.css'],
   host: { class: 'rdoc block', '[attr.lang]': 'doc()?.language', '[attr.dir]': 'dir()' },
   template: `
     @for (block of doc()?.blocks ?? []; track block.id) {

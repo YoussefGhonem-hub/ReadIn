@@ -130,7 +130,10 @@ const LISTS: readonly PeopleList[] = ['followers', 'following'];
                 <button type="button" class="rd-btn rd-btn-outline" (click)="store.loadMore()">{{ 'common.retry' | transloco }}</button>
               </div>
             }
-            @if (store.items().length > 0 && !store.nextCursor()) {
+            @if (store.nextCursor()) {
+              <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
+              <div #sentinel class="h-px" aria-hidden="true"></div>
+            } @else if (store.items().length > 0) {
               <p class="m-0 border-t border-border py-6 text-center text-sm text-text-secondary">{{ 'profile.people.end' | transloco }}</p>
             }
           }
@@ -146,7 +149,6 @@ const LISTS: readonly PeopleList[] = ['followers', 'following'];
             </div>
           }
         }
-        <div #sentinel class="h-px" aria-hidden="true"></div>
       </section>
     } @else if (notFound()) {
       <rd-empty-state class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" [title]="'profile.notFound.title' | transloco" [message]="'profile.notFound.body' | transloco" data-profile-not-found>

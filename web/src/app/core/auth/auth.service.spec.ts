@@ -163,9 +163,9 @@ describe('AuthService (SPEC §9.3, ADR 0007)', () => {
       await auth.whenReady();
 
       const signOut = auth.signOut();
-      await settle(10);
-      expect(push.unregisterDevice).toHaveBeenCalled();
-      const logout = http.expectOne(`${TEST_API}/auth/logout`);
+      // Web push is a chunk of its own (loaded after the first page): give it the time to arrive.
+      await vi.waitFor(() => expect(push.unregisterDevice).toHaveBeenCalled());
+      const logout = await vi.waitFor(() => http.expectOne(`${TEST_API}/auth/logout`));
       expect(logout.request.withCredentials).toBe(true);
       expect(logout.request.headers.has('Authorization')).toBe(false);
       logout.flush(null, { status: 204, statusText: 'No Content' });
@@ -180,8 +180,7 @@ describe('AuthService (SPEC §9.3, ADR 0007)', () => {
       http.expectOne(`${TEST_API}/auth/refresh`).flush(testSession('t1'));
       await auth.whenReady();
       const signOut = auth.signOut();
-      await settle(10);
-      http.expectOne(`${TEST_API}/auth/logout`).error(new ProgressEvent('error'));
+      (await vi.waitFor(() => http.expectOne(`${TEST_API}/auth/logout`))).error(new ProgressEvent('error'));
       await signOut;
       expect(session.isGuest()).toBe(true);
     });

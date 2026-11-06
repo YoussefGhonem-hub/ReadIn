@@ -51,6 +51,7 @@ import { Avatar } from '../../shared/ui/avatar';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { LinesSkeleton } from '../../shared/ui/skeletons';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
+import { VerifiedBadge } from '../../shared/ui/verified-badge';
 import { categoryLink } from '../categories/category-rules';
 import { ArticleHighlightsStore, ReaderArticle } from '../highlights/article-highlights.store';
 import { ReaderHighlights } from '../highlights/reader-highlights';
@@ -59,6 +60,7 @@ import { ArticleCover, ArticleHeadline, ArticleHealthNotice, ArticleSources, Art
 import { ArticleSeoService } from './article-seo.service';
 import { ArticleToc } from './article-toc';
 import { NextInPath } from './next-in-path';
+import { ReadingMode } from './reading-mode';
 import { injectReadingTracker } from './reading-tracker';
 import { RelatedArticles } from './related-articles';
 import { injectResumePosition } from './resume-position';
@@ -96,6 +98,8 @@ const TOC_MIN_HEADINGS = 3;
     RelatedArticles,
     MutedBanner,
     ReaderHighlights,
+    ReadingMode,
+    VerifiedBadge,
   ],
   providers: [ArticleHighlightsStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -110,13 +114,14 @@ const TOC_MIN_HEADINGS = 3;
          the comments, Next in path and Related articles. On phones the cards go edge to edge. The <article> itself stays
          the whole column, as the reading progress, the resume position and the reading tracker measure it. -->
     <article class="mx-auto flex max-w-[calc(var(--rd-layout-reading-width)_+_6rem_+_2px)] flex-col px-4 pb-28 pt-4" #articleEl>
-      <!-- Reader toolbar, on the canvas above the card -->
-      <div class="mb-2 flex items-center justify-between gap-2">
+      <!-- Reader toolbar, on the canvas above the card. Tighter on phones so 360 px keeps one row; at 320 px with the
+           language toggle the buttons wrap under Back, at the end. -->
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
         <!-- Back to the page you came from in the app, else Home (a plain link to Home without JavaScript) -->
         <a href="/" class="rd-icon-btn" [attr.aria-label]="'common.back' | transloco" data-reader-back (click)="goBack($event)">
           <svg lucideIcon="ArrowRight" [size]="18" class="ltr:rotate-180"></svg>
         </a>
-        <div class="flex items-center gap-2">
+        <div class="ms-auto flex items-center gap-1 sm:gap-2">
           @if (article(); as a) {
             @if (languageOptions().length > 1) {
               <rd-segmented
@@ -128,6 +133,8 @@ const TOC_MIN_HEADINGS = 3;
               />
             }
           }
+          <!-- Reading mode (F04): the chrome hides, the text and the reading progress stay -->
+          <rd-reading-mode />
           <button type="button" class="rd-icon-btn" [attr.aria-label]="'article.fontSize' | transloco" (click)="fontPanel.set(!fontPanel())" [attr.aria-expanded]="fontPanel()">
             <svg lucideIcon="TextCursorInput" [size]="18"></svg>
           </button>
@@ -200,7 +207,7 @@ const TOC_MIN_HEADINGS = 3;
                 <a [routerLink]="'/@' + author.username" class="inline-flex items-center gap-1 font-semibold text-text-primary no-underline">
                   {{ author.displayName }}
                   @if (author.isVerified) {
-                    <svg lucideIcon="BadgeCheck" [size]="16" class="text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                    <rd-verified-badge [size]="16" />
                   }
                 </a>
                 <!-- The writer's title (F14): one line with "…", on the UI's start side, laid out and cut in its own direction -->

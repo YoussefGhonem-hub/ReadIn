@@ -7,7 +7,7 @@ import { AuthApi } from '../api/auth.api';
 import { MeApi } from '../api/me.api';
 import { AccountConfirmation, ExternalCredential, ExternalSignInRequest, MeDto, RegisterRequest, SessionDto } from '../api/models';
 import { LanguageService } from '../i18n/language.service';
-import { PushService } from '../push/push.service';
+import type { PushService } from '../push/push.service';
 import { ThemeService } from '../theme/theme.service';
 import { AuthFlowState, SuspensionNotice } from './auth-flow';
 import { SessionStore } from './session.store';
@@ -37,7 +37,6 @@ export class AuthService {
   private readonly session = inject(SessionStore);
   private readonly language = inject(LanguageService);
   private readonly theme = inject(ThemeService);
-  private readonly push = inject(PushService);
   private readonly flow = inject(AuthFlowState);
   private readonly injector = inject(Injector);
 
@@ -133,7 +132,7 @@ export class AuthService {
    * clears the cookie), then forgets everything locally. The live app signs out of Firebase when the session ends.
    */
   async signOut(): Promise<void> {
-    if (this.accessToken) await this.push.unregisterDevice();
+    if (this.accessToken) await this.withPush((push) => push.unregisterDevice());
     try {
       await firstValueFrom(this.api.logout());
     } catch {
@@ -167,7 +166,7 @@ export class AuthService {
    */
   async deleteAccount(confirmation: AccountConfirmation): Promise<void> {
     await firstValueFrom(this.meApi.deleteAccount(confirmation));
-    await this.push.forgetDevice();
+    await this.withPush((push) => push.forgetDevice());
     this.flow.phone.set(null);
     this.endLocalSession();
   }
@@ -207,6 +206,20 @@ export class AuthService {
     const current = router.url;
     const returnUrl = current.startsWith('/auth') ? null : current;
     void router.navigate(['/auth/sign-in'], { queryParams: returnUrl && returnUrl !== '/' ? { returnUrl } : {} }).catch(() => undefined);
+  }
+
+  /**
+   * Web push (core/push) is a chunk of its own that the app loads after the first page. Had it not arrived yet (offline),
+   * this page has registered no token, so there is nothing to remove.
+   */
+  private async withPush(run: (push: PushService) => Promise<void>): Promise<void> {
+    let push: PushService;
+    try {
+      push = this.injector.get((await import('../push/push.service')).PushService);
+    } catch {
+      return;
+    }
+    await run(push);
   }
 
   private async restore(): Promise<void> {

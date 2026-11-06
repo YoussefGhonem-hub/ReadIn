@@ -392,6 +392,30 @@ abstract class AppLocalizations {
   /// **'Extra large'**
   String get fontSizeXl;
 
+  /// No description provided for @readingModeToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading mode'**
+  String get readingModeToggle;
+
+  /// No description provided for @readingModeExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit reading mode'**
+  String get readingModeExit;
+
+  /// No description provided for @readingModeOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading mode is on.'**
+  String get readingModeOn;
+
+  /// No description provided for @readingModeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading mode is off.'**
+  String get readingModeOff;
+
   /// No description provided for @langToggleArEg.
   ///
   /// In en, this message translates to:
@@ -6793,6 +6817,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} published a new article'**
   String notifFollowedWriterArticle(String name);
+
+  /// The official @readin account's day entry (data.articleCount, F17).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{name} published a new article} other{{name} published {count} new articles}}'**
+  String notifFollowedWriterArticles(String name, int count);
 
   /// No description provided for @notifReactionsMilestone.
   ///

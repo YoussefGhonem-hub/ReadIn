@@ -14,7 +14,7 @@ enum PushPermission { unsupported, notDetermined, granted, denied }
 
 /// A push as the app shows it, and what its tap carries.
 class PushPayload {
-  const PushPayload({this.title, this.body, this.link, this.notificationId});
+  const PushPayload({this.title, this.body, this.link, this.notificationId, this.tag});
 
   final String? title;
   final String? body;
@@ -24,6 +24,10 @@ class PushPayload {
 
   /// `data.notificationId` (F17): opening the push marks this notification read.
   final String? notificationId;
+
+  /// The push's collapse key (FCM's Android notification tag, e.g. the @readin day entry's group): a newer push with
+  /// the same tag replaces the older one in the tray, in the foreground as FCM does it in the background.
+  final String? tag;
 
   /// The payload of the local notification a foreground push becomes: its link and notification id.
   String toLocalPayload() => jsonEncode({'link': ?link, 'notificationId': ?notificationId});
@@ -90,6 +94,9 @@ class FirebasePushPlatform implements PushPlatform {
   final _local = FlutterLocalNotificationsPlugin();
   final _localTaps = StreamController<PushPayload>.broadcast();
   int _nextId = 0;
+
+  /// The id of every tagged foreground notification: Android replaces a shown notification with the same (tag, id).
+  static const _taggedId = 0;
 
   /// Also the default channel for background FCM notifications (AndroidManifest.xml).
   static const channel = AndroidNotificationChannel(
@@ -178,8 +185,10 @@ class FirebasePushPlatform implements PushPlatform {
   @override
   Future<void> show(PushPayload payload) async {
     if (defaultTargetPlatform == TargetPlatform.iOS) return;
+    // A tagged push replaces the shown one of its group (a re-armed @readin day entry), as in the background.
+    final tag = payload.tag;
     await _local.show(
-      id: _nextId++,
+      id: tag == null ? _nextId++ : _taggedId,
       title: payload.title,
       body: payload.body,
       notificationDetails: NotificationDetails(
@@ -189,6 +198,7 @@ class FirebasePushPlatform implements PushPlatform {
           channelDescription: channel.description,
           importance: Importance.high,
           priority: Priority.high,
+          tag: tag,
         ),
       ),
       payload: payload.toLocalPayload(),
@@ -208,7 +218,14 @@ class FirebasePushPlatform implements PushPlatform {
         body: message.notification?.body ?? message.data['body'] as String?,
         link: pushDataLink(message.data),
         notificationId: pushNotificationId(message.data),
+        tag: _tagOf(message),
       );
+
+  /// The API sends its collapse key as both the Android notification tag and the collapse key.
+  static String? _tagOf(RemoteMessage message) {
+    final tag = message.notification?.android?.tag ?? message.collapseKey;
+    return tag == null || tag.trim().isEmpty ? null : tag;
+  }
 }
 
 /// Merges broadcast streams without pulling in a stream library.

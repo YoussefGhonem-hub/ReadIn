@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  ViewEncapsulation,
   computed,
   effect,
   inject,
@@ -27,6 +28,9 @@ import { ThemeService } from '../../../core/theme/theme.service';
   selector: 'rd-external-buttons',
   imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Its classes' rules (not in the global stylesheet, so they stay out of the initial bundle).
+  encapsulation: ViewEncapsulation.None,
+  styleUrl: './external-buttons.css',
   host: { class: 'block' },
   template: `
     @if (shown().length) {

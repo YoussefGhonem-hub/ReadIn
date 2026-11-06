@@ -1,0 +1,43 @@
+/* The Sign in with Apple button (shared/ui/external/external-buttons.ts). Loaded by the component (unencapsulated)
+   instead of the global stylesheet, so it stays out of the initial bundle; same layer as styles/base.css. */
+@layer components {
+  /*
+   * Sign in with Apple: Apple's rules allow only a black or a white button, so these are the only literal colors outside
+   * the design tokens (black on light surfaces, white on dark).
+   */
+  .rd-apple-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--rd-space-2);
+    min-height: 44px;
+    padding: 0 var(--rd-space-4);
+    border: 1px solid black;
+    border-radius: var(--rd-radius-sm);
+    background: black;
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, var(--rd-font-ui);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .rd-apple-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  :root[data-theme='dark'] .rd-apple-btn {
+    border-color: white;
+    background: white;
+    color: black;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .rd-apple-btn {
+      border-color: white;
+      background: white;
+      color: black;
+    }
+  }
+}

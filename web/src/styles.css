@@ -3,7 +3,6 @@
 @import './styles/tokens.css';
 @import './styles/tokens.tailwind.css';
 @import './styles/base.css';
-@import './styles/rdoc.css';
 @import './styles/media.css';
 
 /* Tailwind v4 dark variant follows our data-theme / system resolution. */

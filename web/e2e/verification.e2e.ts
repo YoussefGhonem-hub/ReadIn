@@ -291,7 +291,8 @@ for (const variant of VARIANTS) {
     await page.goto('/admin/verification?status=approved');
     const row = page.locator('[data-verification-row="vr-karim"]');
     await expect(row).toBeVisible({ timeout: FIRST_RENDER_MS });
-    await expect(row.locator('svg[aria-label]')).toHaveAttribute('aria-label', ar ? 'كاتب موثّق' : 'Verified writer');
+    // The badge is an image screen readers announce (Lucide hid it with aria-hidden before; getByRole skips hidden ones).
+    await expect(row.getByRole('img', { name: ar ? 'كاتب موثّق' : 'Verified writer', exact: true })).toBeVisible();
     await row.click();
     await expect(page).toHaveURL(/status=approved&id=vr-karim$/);
     const detail = page.locator('[data-verification-detail="vr-karim"]');

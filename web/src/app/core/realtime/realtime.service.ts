@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { RealtimeApi } from '../api/realtime.api';
 import { SessionStore } from '../auth/session.store';
 import { LIVE_CONNECTOR, LiveConnection, Unsubscribe } from './live-connection';
+import { UnreadLive } from './unread-live';
 
 export type { Unsubscribe } from './live-connection';
 
@@ -74,8 +75,9 @@ export class RealtimeService {
   private readonly userId = computed(() => (this.session.isAuthenticated() ? (this.session.me()?.id ?? null) : null));
 
   private readonly _state = signal<RealtimeState>('disconnected');
-  private readonly _unreadNotifications = signal(0);
-  private readonly _unreadLive = signal(false);
+  /** The badge's live count, in a store of its own: the badge is in the initial bundle, this service isn't. */
+  private readonly _unreadNotifications = inject(UnreadLive).count;
+  private readonly _unreadLive = inject(UnreadLive).live;
   readonly state = this._state.asReadonly();
   /** `/live/users/{id}/unreadNotifications`; 0 for guests and until the first value arrives. */
   readonly unreadNotifications = this._unreadNotifications.asReadonly();

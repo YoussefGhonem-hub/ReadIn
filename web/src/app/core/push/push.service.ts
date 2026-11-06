@@ -9,7 +9,8 @@ import { ModerationNotices } from '../moderation/moderation-notices';
 import { NotificationBadge } from '../notifications/notification-badge';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { PUSH_CLIENT, PushPermission } from './push-client';
-import { NOTIFICATION_PARAM, pushLinkToPath, pushType, toPushMessage } from './push-message';
+import { pushLinkToPath, pushType, toPushMessage } from './push-message';
+import { TappedNotification } from './tapped-notification';
 
 /**
  * Web push through Firebase Cloud Messaging (SPEC §21.1). Once the user has granted permission, this browser's
@@ -30,6 +31,7 @@ export class PushService {
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
   private readonly badge = inject(NotificationBadge);
+  private readonly tapped = inject(TappedNotification);
 
   private readonly userId = computed(() => (this.session.isAuthenticated() ? (this.session.me()?.id ?? null) : null));
   /** The user and token last sent to the API from this page. */
@@ -152,15 +154,12 @@ export class PushService {
   }
 
   /**
-   * A tapped push opened this tab (the worker adds `?notification={id}`): the parameter leaves the address before the
-   * router reads it, and the notification is marked read once the session is restored (nothing to do for a guest).
+   * A tapped push opened this tab (the worker adds `?notification={id}`): the parameter left the address before the
+   * router read it (TappedNotification, at bootstrap), and the notification is marked read once the session is
+   * restored (nothing to do for a guest).
    */
   private takeTappedNotification(): void {
-    const url = new URL(location.href);
-    if (!url.searchParams.has(NOTIFICATION_PARAM)) return;
-    const id = url.searchParams.get(NOTIFICATION_PARAM)?.trim();
-    url.searchParams.delete(NOTIFICATION_PARAM);
-    history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    const id = this.tapped.take();
     if (!id) return;
     let done = false;
     const watcher = effect(

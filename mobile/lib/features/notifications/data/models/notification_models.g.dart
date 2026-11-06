@@ -67,6 +67,7 @@ _NotificationDataModel _$NotificationDataModelFromJson(
   streakDays: (json['streakDays'] as num?)?.toInt(),
   securityChange: json['securityChange'],
   approved: json['approved'] as bool?,
+  articleCount: (json['articleCount'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$NotificationDataModelToJson(
@@ -76,6 +77,7 @@ Map<String, dynamic> _$NotificationDataModelToJson(
   'streakDays': ?instance.streakDays,
   'securityChange': ?instance.securityChange,
   'approved': ?instance.approved,
+  'articleCount': ?instance.articleCount,
 };
 
 _NotificationModel _$NotificationModelFromJson(

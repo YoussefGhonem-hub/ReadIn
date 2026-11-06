@@ -66,8 +66,3 @@ export function draftErrors(draft: VerificationDraft): DraftErrors {
   if (draft.note.trim().length > NOTE_MAX) errors.note = 'noteTooLong';
   return errors;
 }
-
-/** "2.4 MB" / "830 KB" (Western digits in both languages, like the editor's attachments). */
-export function fileSize(bytes: number): string {
-  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}

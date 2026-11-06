@@ -1,0 +1,287 @@
+/* RDoc blocks (SPEC §13, §15.3): callouts, code, tables, steps, summary, images, embeds. Loaded with rdoc.css. */
+@layer components {
+  /* Callouts */
+  .rd-callout {
+    display: flex;
+    gap: var(--rd-space-3);
+    padding: var(--rd-space-3) var(--rd-space-4);
+    border-radius: var(--rd-radius-md);
+    border-inline-start: 4px solid;
+    font-size: 0.94em;
+    line-height: 1.75;
+  }
+
+  .rd-callout-tip {
+    background: var(--rd-color-callout-tip);
+    border-color: var(--rd-color-callout-tip-accent);
+  }
+
+  .rd-callout-tip .rd-callout-icon {
+    color: var(--rd-color-callout-tip-accent);
+  }
+
+  .rd-callout-info {
+    background: var(--rd-color-callout-info);
+    border-color: var(--rd-color-callout-info-accent);
+  }
+
+  .rd-callout-info .rd-callout-icon {
+    color: var(--rd-color-callout-info-accent);
+  }
+
+  .rd-callout-warning {
+    background: var(--rd-color-callout-warning);
+    border-color: var(--rd-color-callout-warning-accent);
+  }
+
+  .rd-callout-warning .rd-callout-icon {
+    color: var(--rd-color-callout-warning-accent);
+  }
+
+  .rd-callout-danger {
+    background: var(--rd-color-callout-danger);
+    border-color: var(--rd-color-callout-danger-accent);
+  }
+
+  .rd-callout-danger .rd-callout-icon {
+    color: var(--rd-color-callout-danger-accent);
+  }
+
+  /* Code: always LTR, dark in both modes (SPEC §14.2 rule 3, §15.2 code.bg) */
+  .rd-code {
+    direction: ltr;
+    text-align: left;
+    overflow: hidden;
+    border-radius: var(--rd-radius-md);
+    background: var(--rd-color-code-bg);
+    border: 1px solid var(--rd-color-code-border);
+    color: var(--rd-color-code-text);
+  }
+
+  .rd-code-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rd-space-2);
+    min-height: 40px;
+    padding: 0 var(--rd-space-2) 0 var(--rd-space-3);
+    border-bottom: 1px solid var(--rd-color-code-border);
+    font-family: var(--rd-font-latin);
+    font-size: var(--rd-text-caption-size);
+    color: var(--rd-color-code-text);
+    opacity: 0.85;
+  }
+
+  .rd-code-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: var(--rd-radius-sm);
+    background: transparent;
+    color: inherit;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .rd-code-copy:hover {
+    background: color-mix(in srgb, var(--rd-color-code-text) 12%, transparent);
+  }
+
+  .rd-code pre {
+    margin: 0;
+    padding: var(--rd-space-3) 0;
+    overflow-x: auto;
+    font-size: var(--rd-text-code-size);
+    line-height: var(--rd-text-code-line);
+    tab-size: 4;
+    background: transparent !important;
+  }
+
+  .rd-code pre code {
+    display: block;
+    min-width: max-content;
+  }
+
+  .rd-code .line {
+    display: block;
+    padding: 0 var(--rd-space-4);
+    min-height: 1lh;
+  }
+
+  .rd-code .line.highlighted {
+    background: color-mix(in srgb, var(--rd-color-accent) 16%, transparent);
+    box-shadow: inset 3px 0 0 var(--rd-color-accent);
+  }
+
+  /* Shiki dual themes: colors are CSS variables, switched with the app theme. */
+  .rd-code .shiki span {
+    color: var(--shiki-light);
+  }
+
+  :root[data-theme='dark'] .rd-code .shiki span {
+    color: var(--shiki-dark);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .rd-code .shiki span {
+      color: var(--shiki-dark);
+    }
+  }
+
+  .rd-code-tabs [role='tablist'] {
+    display: flex;
+    gap: 2px;
+    padding: 6px 6px 0;
+    border-bottom: 1px solid var(--rd-color-code-border);
+    overflow-x: auto;
+  }
+
+  .rd-code-tabs [role='tab'] {
+    padding: 6px 12px;
+    border: 0;
+    border-radius: var(--rd-radius-sm) var(--rd-radius-sm) 0 0;
+    background: transparent;
+    color: var(--rd-color-code-text);
+    opacity: 0.7;
+    font-family: var(--rd-font-latin);
+    font-size: var(--rd-text-meta-size);
+    cursor: pointer;
+  }
+
+  .rd-code-tabs [role='tab'][aria-selected='true'] {
+    opacity: 1;
+    box-shadow: inset 0 -2px 0 var(--rd-color-accent);
+  }
+
+  .rd-code-tabs .rd-code {
+    border: 0;
+    border-radius: 0;
+  }
+
+  /* Tables */
+  .rd-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--rd-color-border);
+    border-radius: var(--rd-radius-md);
+  }
+
+  .rd-table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    background: var(--rd-color-surface);
+  }
+
+  .rd-table-wrap th {
+    background: var(--rd-color-surface-variant);
+    color: var(--rd-color-primary);
+    font-weight: 700;
+  }
+
+  .rd-table-wrap th,
+  .rd-table-wrap td {
+    padding: 0.6em 0.8em;
+    text-align: start;
+    border-bottom: 1px solid var(--rd-color-border);
+    vertical-align: top;
+  }
+
+  .rd-table-wrap tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* Steps */
+  .rd-steps {
+    list-style: none !important;
+    padding: 0 !important;
+    counter-reset: rd-step;
+  }
+
+  .rd-steps > li {
+    position: relative;
+    counter-increment: rd-step;
+    padding-inline-start: 2.6em;
+    min-height: 2em;
+  }
+
+  .rd-steps > li + li {
+    margin-top: 0.9em;
+  }
+
+  .rd-steps > li::before {
+    content: counter(rd-step);
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0.1em;
+    display: grid;
+    place-items: center;
+    width: 1.8em;
+    height: 1.8em;
+    border-radius: 50%;
+    background: var(--rd-color-primary-container);
+    color: var(--rd-color-on-primary-container);
+    font-weight: 700;
+    font-size: 0.85em;
+    font-family: var(--rd-font-latin);
+  }
+
+  .rd-steps .rd-step-title {
+    display: block;
+    font-weight: 700;
+  }
+
+  /* Summary (TL;DR) */
+  .rd-summary {
+    padding: var(--rd-space-4);
+    border-radius: var(--rd-radius-card);
+    background: var(--rd-color-primary-container);
+    color: var(--rd-color-text-primary);
+    font-size: 0.95em;
+  }
+
+  .rd-summary-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: var(--rd-text-meta-size);
+    font-weight: 700;
+    color: var(--rd-color-on-primary-container);
+  }
+
+  /* Images */
+  .rd-figure {
+    margin: 0;
+  }
+
+  .rd-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--rd-radius-md);
+    background: var(--rd-color-surface-variant);
+  }
+
+  .rd-figure figcaption {
+    margin-top: var(--rd-space-2);
+    font-size: var(--rd-text-meta-size);
+    color: var(--rd-color-text-secondary);
+    text-align: center;
+  }
+
+  .rd-embed {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--rd-radius-md);
+    background: var(--rd-color-surface-variant);
+  }
+
+  .rd-embed iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+}

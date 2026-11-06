@@ -38,6 +38,7 @@ AppNotification notification(
   int? streakDays,
   SecurityChange? securityChange,
   bool? approved,
+  int? articleCount,
   String? link,
 }) {
   final at = notificationsNow.subtract(ago);
@@ -55,9 +56,27 @@ AppNotification notification(
     streakDays: streakDays,
     securityChange: securityChange,
     approved: approved,
+    articleCount: articleCount,
     link: link ?? (article == null ? '' : 'readin://a/${article.slug}'),
   );
 }
+
+/// The official @readin account (F17): its new articles of a day come in one entry.
+const readinActor = NotificationActor(id: 'u-readin', displayName: 'ReadIn', username: 'readin', isVerified: true);
+
+/// @readin's day entry with [count] articles, [diArticle] the newest: two or more open the account's profile.
+AppNotification readinDay(int count, {String id = 'n-readin', bool isRead = false, Duration ago = const Duration(minutes: 20)}) =>
+    notification(
+      id,
+      NotificationType.followedWriterArticle,
+      ago: ago,
+      isRead: isRead,
+      actor: readinActor,
+      actorCount: 1,
+      article: diArticle,
+      articleCount: count,
+      link: count >= 2 ? 'readin://u/readin' : 'readin://a/${diArticle.slug}',
+    );
 
 /// A mixed center: Today (an unread reply, ten commenters on an English article, three new followers) and Earlier (a
 /// mention in a comment by a deleted account, a mention in an English article, a milestone, today's article, a streak

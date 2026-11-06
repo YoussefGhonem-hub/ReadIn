@@ -754,3 +754,61 @@ then two fixers). Per part, what was built and **what was actually tried**:
   (the writer's calendar day, the picture size), the contract's wording, stale comments, the mock API's hidden
   articles, a unit test that didn't check its 409 message. Left: a mobile golden of the menu (after the mobile MSA
   rewrite). **The fixes were not tried with the tests** (user rule).
+
+### Leftovers step ✅ (user order item 5, 2026-11-06)
+- **Reading mode (F04), web + mobile:** a button next to the font size in the reader; on, the top bar, the reader's
+  action bar, the bottom bar and the web's following panel hide and the text and the progress bar stay; a small
+  "Exit reading mode" control (and Esc on web, system Back on mobile) turns it off; announced to screen readers, reduce
+  motion respected; remembered on the device (web: a `reading_mode` cookie read by the server, so no flash; mobile:
+  local settings).
+- **For you ranking (SPEC F03, §10.1):** inside each group (your interests, the rest, "show less") articles are
+  ranked by freshness + popularity (other people's reads, reactions, comments, saves and reposts in the last 30 days)
+  + a boost for verified writers; the cursor carries a snapshot time so pages don't repeat or skip (old cursors still
+  work); Today's article prefers the verified writer between equal scores. ADR 0020; two indexes for it
+  (migration `RankingEngagementIndexes`).
+- **The official @readin account:** one notification per follower per day for its new articles ("نشر ReadIn 3 مقالات
+  جديدة"), the push 10 minutes after the latest one; other writers unchanged. Known limit: the day's entry disappears
+  if its newest article is hidden or deleted (contract).
+- **Daily upload quota:** every accepted upload counts for its rolling day, deleted ones too (`MediaUploads`, migration
+  `MediaUploadLog` with a script-safe backfill); the 200 MB storage quota still counts what is stored.
+- **Web initial bundle under 500 kB:** 570.57 → about 495 kB raw (shell icons drawn by a small component and the full
+  icon set lazy, realtime/push after start-up, toasts/tooltip/sign-in prompt/Me button lazy, the article styles with
+  the article), with no feature removed and no screenshot changed; no hydration warnings.
+- **Small items:** server titles for the seven codes that had none; localized file sizes in the web verification form
+  and proof preview; the verified badge announced to screen readers on the web (one shared component); lists no
+  longer ask for page 2 the moment they open; the mobile profile opened from a link gets a Back button to Home; a
+  repeated grouped push replaces the shown one on Android; the order-dependent GlossaryTests failure fixed (test
+  articles no longer use a real glossary term); the privacy page's cookie line names the interface language and
+  reading mode (**public/ needs redeploying to Firebase Hosting**); SPEC F06: PDF status polling every 2 s stays.
+- **Tried for real:** reading mode, the @readin row and the lists in a real browser against the mock API
+  (Playwright), a cold load of home, an article and a profile for a guest and a member in both themes (no hydration
+  warnings, no missing icons), both migrations as full idempotent scripts on scratch databases. Not tried for real:
+  the grouped @readin push on a phone, the For you order with real traffic, reading mode on a phone (widget tests
+  only).
+- **Test round:** the tests ran once (backend 2524/2524, web unit 1476/1476, Playwright 336/342 on 23 specs, mobile
+  2441/2453; initial bundle 494.15 kB). The 6 Playwright failures fail the same way on a clean HEAD: the editor's tag
+  field (27a83536) and the collapsed comments in mutes (5f12febe) need new baselines from those commits. Fixed: 12
+  mobile profile goldens (the new Back button), the For you exception in the docs, the two indexes, the contract's
+  Arabic push title, two more lists' page-2 trigger, the search badge, the Android grouped push. **The fixes were not
+  tried with the tests** (user rule).
+
+### Final review: stopped by the user (2026-11-06)
+The user stopped the final SPEC review. Two of four read-only audits had finished (F01–F09 and F10–F21: no missing
+features). The differences they found are recorded here and **not fixed** (user decision):
+- **F02 onboarding:** the SPEC says 3 steps (welcome, interests, preferences). The web shows 3; mobile now says
+  "الخطوة 1 من 2" on interests (its Welcome screen isn't counted). Pick one and make the other match.
+- **§9.1:** iOS can show Google without Apple if `GET /auth/config` lists only `google` (App Store 4.8): set both
+  providers in production, or have the client hide Google on iOS without Apple.
+- **Error titles:** about 121 of the API's 192 Arabic fallback titles (`ErrorMessages.cs`) are still Egyptian; the web
+  shows 4 of them (`user.device_not_found`, `glossary.term_not_found`, `verification.status_invalid`,
+  `realtime.unavailable`) because it has no text of its own for them.
+- **Comment links on the web:** a notification link to a comment (`#comment-{id}`) opens the article at the top;
+  mobile scrolls to the comments.
+- **Mobile notification center wording** differs from the web and the push in a few rows (grouped "and N others", the
+  reactions milestone, the hidden-article notice, the streak reminder).
+- **Search suggestions** (`GET /search/suggest`, §22) are on the web only.
+- **Docs behind the code:** §17.2 endpoint rows (auth/external, me/phone-sign-in, external logins, continue reading,
+  paths enrollment, notifications), §16.2 table columns, §9.6 (`PathEnrollments`), F17's list of security alerts,
+  F07's relax order, "Archived" (no endpoint archives an article), and Egyptian quotes left in the SPEC and the
+  contract where the apps now say Modern Standard Arabic.
+- Not reviewed: F22–F34 and the cross-cutting sections (stopped).

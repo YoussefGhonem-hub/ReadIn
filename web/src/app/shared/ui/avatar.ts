@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { LucideDynamicIcon } from '@lucide/angular';
+import { ShellIcon } from './shell-icon';
 
 /**
  * User avatar: photo when available, otherwise the first letter on a soft primary background. `generic` shows a
@@ -7,7 +7,7 @@ import { LucideDynamicIcon } from '@lucide/angular';
  */
 @Component({
   selector: 'rd-avatar',
-  imports: [LucideDynamicIcon],
+  imports: [ShellIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'rd-photo inline-grid shrink-0 place-items-center overflow-hidden rounded-full font-bold',
@@ -22,7 +22,7 @@ import { LucideDynamicIcon } from '@lucide/angular';
   },
   template: `
     @if (generic()) {
-      <svg lucideIcon="UserRound" [size]="size() * 0.55" aria-hidden="true"></svg>
+      <svg rdIcon="UserRound" [size]="size() * 0.55" aria-hidden="true"></svg>
     } @else if (src()) {
       <img [src]="src()" alt="" class="h-full w-full object-cover" loading="lazy" referrerpolicy="no-referrer" />
     } @else {

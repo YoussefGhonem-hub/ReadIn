@@ -4,6 +4,7 @@ import {
   DestroyRef,
   ElementRef,
   PLATFORM_ID,
+  ViewEncapsulation,
   afterNextRender,
   effect,
   inject,
@@ -29,6 +30,9 @@ const PAGE_RATIO = 0.8;
   selector: 'rd-scroll-row',
   imports: [LucideDynamicIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Its classes' rules (not in the global stylesheet, so they stay out of the initial bundle).
+  encapsulation: ViewEncapsulation.None,
+  styleUrl: './scroll-row.css',
   host: { class: 'relative -mx-4 block' },
   template: `
     <div

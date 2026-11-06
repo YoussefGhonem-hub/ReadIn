@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { SessionStore } from '../core/auth/session.store';
 import { BOTTOM_NAV, NavItem, profilePath } from './nav-items';
+import { ShellIcon } from '../shared/ui/shell-icon';
 
 /** Mobile-web bottom navigation, matching the app (SPEC §7.2). The Write action is the raised center button. */
 @Component({
   selector: 'rd-bottom-nav',
-  imports: [RouterLink, RouterLinkActive, TranslocoPipe, LucideDynamicIcon],
+  imports: [RouterLink, RouterLinkActive, TranslocoPipe, ShellIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'fixed inset-x-0 bottom-0 z-30 block border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]',
@@ -26,10 +26,10 @@ import { BOTTOM_NAV, NavItem, profilePath } from './nav-items';
         >
           @if (item.id === 'write') {
             <span class="-mt-6 grid h-12 w-12 place-items-center rounded-card bg-primary text-on-primary shadow-raised">
-              <svg [lucideIcon]="item.icon" [size]="22"></svg>
+              <svg [rdIcon]="item.icon" [size]="22"></svg>
             </span>
           } @else {
-            <svg [lucideIcon]="item.icon" [size]="22"></svg>
+            <svg [rdIcon]="item.icon" [size]="22"></svg>
           }
           <span>{{ item.labelKey | transloco }}</span>
         </a>

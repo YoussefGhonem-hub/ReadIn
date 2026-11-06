@@ -813,7 +813,7 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ArticleId");
+                    b.HasIndex("ArticleId", "SavedAt");
 
                     b.HasIndex("UserId", "ArticleId")
                         .IsUnique();
@@ -1349,6 +1349,25 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("MediaAssetPages", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Media.MediaUpload", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("MediaUploads", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Moderation.ModerationAction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1673,7 +1692,7 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ArticleId");
+                    b.HasIndex("ArticleId", "CompletedAt");
 
                     b.HasIndex("UserId", "ArticleId")
                         .IsUnique();
@@ -2809,6 +2828,15 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasOne("ReadIn.Domain.Media.MediaAsset", null)
                         .WithMany("Pages")
                         .HasForeignKey("AssetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Media.MediaUpload", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

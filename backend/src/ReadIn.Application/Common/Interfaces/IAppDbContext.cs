@@ -40,6 +40,7 @@ public interface IAppDbContext
     DbSet<ArticleRevision> ArticleRevisions { get; }
 
     DbSet<MediaAsset> MediaAssets { get; }
+    DbSet<MediaUpload> MediaUploads { get; }
 
     DbSet<ReadingProgress> ReadingProgress { get; }
     DbSet<DailyPick> DailyPicks { get; }

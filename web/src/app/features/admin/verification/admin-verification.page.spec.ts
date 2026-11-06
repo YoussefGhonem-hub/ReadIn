@@ -143,6 +143,9 @@ describe('AdminVerificationPage (F19)', () => {
     expect(pdf.querySelector('[data-proof-open]')!.getAttribute('target')).toBe('_blank');
     expect(pdf.querySelector('[data-proof-open]')!.textContent).toContain('فتح ملف PDF');
     expect(pdf.querySelector('[data-proof-name]')!.textContent).toBe('syndicate-card.pdf');
+    // 182,400 bytes in the UI language (no "KB" literal, no forced LTR).
+    expect(pdf.querySelector('[data-proof-size]')!.textContent).toBe('178 ك.ب');
+    expect(pdf.querySelector('[data-proof-size]')!.hasAttribute('dir')).toBe(false);
     t.fixture.destroy();
     expect(revoked).toEqual(['blob:http://localhost/proof-1', 'blob:http://localhost/proof-2']);
   });

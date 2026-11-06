@@ -15,6 +15,7 @@ import { FieldIcon } from '../../../shared/ui/field-icon';
 import { EmptyState, ErrorState } from '../../../shared/ui/states';
 import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { fieldColorOf } from '../../search/search-query';
+import { VerifiedBadge } from '../../../shared/ui/verified-badge';
 
 type Status = 'loading' | 'loaded' | 'error';
 
@@ -26,7 +27,7 @@ type Status = 'loading' | 'loaded' | 'error';
  */
 @Component({
   selector: 'rd-muted-page',
-  imports: [NgTemplateOutlet, RouterLink, TranslocoPipe, LucideDynamicIcon, Avatar, FieldIcon, EmptyState, ErrorState],
+  imports: [NgTemplateOutlet, RouterLink, TranslocoPipe, LucideDynamicIcon, Avatar, FieldIcon, EmptyState, ErrorState, VerifiedBadge],
   providers: [provideMuteIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto flex max-w-[640px] flex-col gap-2 px-4 pb-16 pt-5 lg:pt-8' },
@@ -62,7 +63,7 @@ type Status = 'loading' | 'loaded' | 'error';
                         <a [routerLink]="'/@' + user.username" class="flex min-w-0 items-center gap-1 font-semibold text-text-primary no-underline hover:underline">
                           <span class="truncate" dir="auto">{{ user.displayName }}</span>
                           @if (user.isVerified) {
-                            <svg lucideIcon="BadgeCheck" [size]="15" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                            <rd-verified-badge [size]="15" />
                           }
                         </a>
                         <bdi dir="ltr" class="block truncate text-xs text-text-secondary">&#64;{{ user.username }}</bdi>

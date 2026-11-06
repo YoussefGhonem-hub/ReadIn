@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, forwardRef, input, signal, viewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, ViewEncapsulation, computed, forwardRef, input, signal, viewChildren } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
@@ -14,6 +14,9 @@ import { DEFAULT_PIN_LENGTH } from './pin-rules';
   selector: 'rd-pin-input',
   imports: [TranslocoPipe, LucideDynamicIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Its classes' rules (not in the global stylesheet, so they stay out of the initial bundle).
+  encapsulation: ViewEncapsulation.None,
+  styleUrl: './pin-input.css',
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => PinInput), multi: true }],
   host: { class: 'block' },
   template: `

@@ -33,6 +33,7 @@ import { isProofUrl } from '../../verification/verification-rules';
 import { AdminVerificationStore, VerificationDecision } from './admin-verification.store';
 import { DecisionDraft, DecisionSheet } from './decision-sheet';
 import { ProofPreview } from './proof-preview';
+import { VerifiedBadge } from '../../../shared/ui/verified-badge';
 
 const PATH = '/admin/verification';
 
@@ -50,7 +51,7 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
  */
 @Component({
   selector: 'rd-admin-verification-page',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, LocalizedDatePipe, RelativeTimePipe, Avatar, EmptyState, ErrorState, DecisionSheet, ProofPreview],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, LocalizedDatePipe, RelativeTimePipe, Avatar, EmptyState, ErrorState, DecisionSheet, ProofPreview, VerifiedBadge],
   providers: [AdminVerificationStore, provideVerificationIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[1100px] px-4 pb-10 pt-5 lg:pt-8' },
@@ -108,7 +109,7 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
                         <span class="flex min-w-0 items-center gap-1 text-sm font-semibold">
                           <rd-bdi-text class="truncate" [text]="item.user.displayName" />
                           @if (item.user.isVerified) {
-                            <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                            <rd-verified-badge [size]="14" />
                           }
                         </span>
                         <bdi dir="ltr" class="block truncate text-xs text-text-secondary">&#64;{{ item.user.username }}</bdi>
@@ -171,7 +172,7 @@ type Detail = { id: string; status: 'loading' } | { id: string; status: 'loaded'
                   <h2 class="m-0 flex items-center gap-1 text-lg font-semibold">
                     <rd-bdi-text class="truncate" [text]="r.user.displayName" />
                     @if (r.user.isVerified) {
-                      <svg lucideIcon="BadgeCheck" [size]="18" class="shrink-0 text-primary" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                      <rd-verified-badge [size]="18" />
                     }
                   </h2>
                   <a [routerLink]="'/@' + r.user.username" class="text-sm text-link no-underline hover:underline"><bdi dir="ltr">&#64;{{ r.user.username }}</bdi></a>

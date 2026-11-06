@@ -397,7 +397,8 @@ public sealed class MediaTests(ApiFactory api)
         using (var scope = api.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            for (var i = 0; i < 50; i++) db.MediaAssets.Add(ReadyImage(dailyId, bytes: 1));
+            // The daily quota counts the upload log (every accepted upload), the storage quota what is stored.
+            for (var i = 0; i < 50; i++) db.MediaUploads.Add(new MediaUpload(dailyId, DateTime.UtcNow.AddMinutes(-i)));
             db.MediaAssets.Add(ReadyImage(storageId, bytes: 200L * 1024 * 1024));
             await db.SaveChangesAsync(Ct);
         }
@@ -416,6 +417,78 @@ public sealed class MediaTests(ApiFactory api)
             asset.CompleteImage(10, 10, "00F=al", [new MediaVariant(10, 10, $"/uploads/images/2026/11/{Guid.NewGuid():N}_10.webp", bytes)]);
             return asset;
         }
+    }
+
+    [Fact]
+    public async Task Deleting_an_upload_does_not_give_back_the_days_allowance_but_frees_its_storage()
+    {
+        var (client, userId) = await SignedInAsync();
+        await SeedUploadLogAsync(userId, count: 48, age: TimeSpan.FromMinutes(5));
+
+        // The 49th and 50th uploads of the day go through; deleting them gives nothing back.
+        var image = await PostFileAsync(client, "images", Fixture("small.png"), "small.png");
+        image.StatusCode.Should().Be(HttpStatusCode.Created);
+        var imageId = (await image.Content.ReadFromJsonAsync<JsonObject>(Ct))!["id"]!.GetValue<Guid>();
+        var document = await PostFileAsync(client, "documents", Fixture("normal-12-pages.pdf"), "doc.pdf");
+        document.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var documentId = (await document.Content.ReadFromJsonAsync<JsonObject>(Ct))!["id"]!.GetValue<Guid>();
+        (await StoredBytesAsync(userId)).Should().BeGreaterThan(0);
+
+        (await client.DeleteAsync($"/api/v1/uploads/{imageId}", Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await client.DeleteAsync($"/api/v1/uploads/{documentId}", Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        (await StoredBytesAsync(userId)).Should().Be(0, "the storage quota counts only what is stored");
+        var again = await PostFileAsync(client, "images", Fixture("small.png"), "small.png");
+        again.StatusCode.Should().Be(HttpStatusCode.Conflict, "both deleted uploads still count for the day");
+        Code(await TaxonomyAndContentTests.Problem(again)).Should().Be("media.quota_daily");
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.MediaUploads.CountAsync(u => u.UserId == userId, Ct)).Should().Be(50, "a refused upload isn't logged");
+    }
+
+    [Fact]
+    public async Task Uploads_older_than_a_day_stop_counting_and_the_cleanup_prunes_the_log()
+    {
+        var (client, userId) = await SignedInAsync();
+        await SeedUploadLogAsync(userId, count: 50, age: TimeSpan.FromHours(25));
+        await SeedUploadLogAsync(userId, count: 3, age: TimeSpan.FromDays(3));
+
+        (await PostFileAsync(client, "images", Fixture("small.png"), "small.png")).StatusCode
+            .Should().Be(HttpStatusCode.Created, "the quota is a rolling 24 hours");
+
+        await using var scope = api.Services.CreateAsyncScope();
+        await scope.ServiceProvider.GetRequiredService<OrphanedUploadsCleanupJob>().RunAsync(Ct);
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.MediaUploads.CountAsync(u => u.UserId == userId, Ct)).Should().Be(51, "only rows older than two days go");
+    }
+
+    [Fact]
+    public async Task Deleting_the_account_deletes_its_upload_log()
+    {
+        var user = await api.SignUpAsync();
+        (await PostFileAsync(user.Client, "images", Fixture("small.png"), "small.png")).StatusCode.Should().Be(HttpStatusCode.Created);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.MediaUploads.CountAsync(u => u.UserId == user.Id, Ct)).Should().Be(1);
+        (await scope.ServiceProvider.GetRequiredService<IAccountEraser>().EraseAsync(user.Id, Ct)).Should().BeTrue();
+        (await db.MediaUploads.CountAsync(u => u.UserId == user.Id, Ct)).Should().Be(0, "the log cascades with the account (SPEC §9.6)");
+    }
+
+    private async Task SeedUploadLogAsync(Guid userId, int count, TimeSpan age)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        for (var i = 0; i < count; i++) db.MediaUploads.Add(new MediaUpload(userId, DateTime.UtcNow - age - TimeSpan.FromSeconds(i)));
+        await db.SaveChangesAsync(Ct);
+    }
+
+    private async Task<long> StoredBytesAsync(Guid userId)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return await db.MediaAssets.Where(m => m.OwnerId == userId).SumAsync(m => (long?)m.StoredBytes, Ct) ?? 0;
     }
 
     [Fact]

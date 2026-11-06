@@ -275,6 +275,16 @@ void main() {
       expect(PushPayload.fromLocalPayload('{not json').link, '{not json');
     });
 
+    test('the payload carries the collapse key as its tag, so a foreground push replaces its group\'s older one', () {
+      const day = RemoteMessage(
+        notification: RemoteNotification(title: 'ReadIn', android: AndroidNotification(tag: 'followed_writer_article:u-1:2026-11-06')),
+        collapseKey: 'followed_writer_article:u-1:2026-11-06',
+      );
+      expect(FirebasePushPlatform.payloadOf(day).tag, 'followed_writer_article:u-1:2026-11-06');
+      expect(FirebasePushPlatform.payloadOf(const RemoteMessage(collapseKey: 'daily_article')).tag, 'daily_article');
+      expect(FirebasePushPlatform.payloadOf(const RemoteMessage(data: {'type': 'comment_reply'})).tag, isNull);
+    });
+
     test('terminated: the launch tap waits for the restored session, then is marked read and opens the comment', () async {
       platform.launch = payload;
       final paths = <String>[];

@@ -17,6 +17,7 @@ import { HomeFooter } from './home-footer';
 import { HomeStore } from './home.store';
 import { HomeLayout } from './home-layout';
 import { railAudience } from './home-start-rail';
+import { VerifiedBadge } from '../../shared/ui/verified-badge';
 
 /** Writers the suggestions card shows (the store loads more, for the Following tab's empty state). */
 export const RAIL_SUGGESTIONS = 3;
@@ -28,7 +29,7 @@ export const RAIL_SUGGESTIONS = 3;
  */
 @Component({
   selector: 'rd-home-suggestions-card',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, Avatar, BdiText, FollowButton],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, Avatar, BdiText, FollowButton, VerifiedBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -47,7 +48,7 @@ export const RAIL_SUGGESTIONS = 3;
                     <a [routerLink]="'/@' + user.username" class="flex items-center gap-1 text-sm font-semibold text-text-primary no-underline hover:underline">
                       <rd-bdi-text class="truncate" [text]="user.displayName" />
                       @if (user.isVerified) {
-                        <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                        <rd-verified-badge [size]="14" />
                       }
                     </a>
                     <p class="m-0 truncate text-xs text-text-secondary" [attr.dir]="user.bio ? 'auto' : 'ltr'">

@@ -98,6 +98,25 @@ public static class ReactionMilestones
     public static string DedupeKey(Guid articleId, int threshold) => $"{NotificationTypes.ReactionsMilestone}:{articleId}:{threshold}";
 }
 
+/// <summary>
+/// The official @readin account's new articles (SPEC F17, contract-v1 "The official @readin account's articles, grouped per
+/// day"): instead of one <c>followed_writer_article</c> per article, each follower gets one entry per day of their time zone
+/// that counts the account's articles (<see cref="NotificationData.ArticleIds"/>), shows the newest, and opens the
+/// account's profile from two articles on. Other writers keep one entry per article.
+/// </summary>
+public static class OfficialArticles
+{
+    /// <summary>A batch of articles is one push: it goes out this long after the account's latest article.</summary>
+    public static readonly TimeSpan PushDelay = TimeSpan.FromMinutes(10);
+
+    /// <summary>Also the push's collapse key, so a newer push of the day replaces the older one.</summary>
+    public static string GroupKey(Guid accountId, DateOnly followerLocalDate) =>
+        $"{NotificationTypes.FollowedWriterArticle}:{accountId}:{followerLocalDate:yyyy-MM-dd}";
+
+    /// <summary>How many articles an entry holds: its <see cref="NotificationData.ArticleIds"/>, or 1 for any other entry.</summary>
+    public static int CountOf(NotificationData data) => data.ArticleIds is { Count: > 0 } ids ? ids.Count : 1;
+}
+
 /// <summary>The deep links of SPEC F17 (docs/api/contract-v1.md), the same in the list and in pushes.</summary>
 public static class NotificationLinks
 {
@@ -119,10 +138,14 @@ public static class NotificationLinks
     /// <param name="actorUsername">The latest actor's @username, when they still have an account.</param>
     /// <param name="myUsername">The recipient's @username.</param>
     /// <param name="articleSlug">The article's slug, when it is shown.</param>
-    public static string For(string type, int actorCount, string? actorUsername, string myUsername, string? articleSlug, Guid? commentId) =>
+    /// <param name="articleCount">The articles the entry holds (<see cref="OfficialArticles.CountOf"/>); 1 for most entries.</param>
+    public static string For(
+        string type, int actorCount, string? actorUsername, string myUsername, string? articleSlug, Guid? commentId, int articleCount = 1) =>
         type switch
         {
             NotificationTypes.NewFollower => actorCount == 1 && actorUsername is not null ? Profile(actorUsername) : Followers(myUsername),
+            // The official account's day entry with several articles opens its profile, where they are newest first.
+            NotificationTypes.FollowedWriterArticle when articleCount >= 2 && actorUsername is not null => Profile(actorUsername),
             NotificationTypes.ArticleComment or NotificationTypes.CommentReply or NotificationTypes.Mention =>
                 articleSlug is null ? Center : commentId is { } id ? Comment(articleSlug, id) : Article(articleSlug),
             NotificationTypes.ReactionsMilestone or NotificationTypes.FollowedWriterArticle or NotificationTypes.DailyArticle
@@ -195,6 +218,10 @@ public static class NotificationTexts
             NotificationTypes.ReactionsMilestone => (english
                 ? $"Your article reached {input.Data.Threshold} reactions 🎉"
                 : $"{ReactionsAr(input.Data.Threshold ?? 0)} 🎉", article),
+            // The official account's day entry with several articles (OfficialArticles); the body is the newest one's title.
+            NotificationTypes.FollowedWriterArticle when OfficialArticles.CountOf(input.Data) is var n and >= 2 => (english
+                ? $"{name} published {n} new articles"
+                : $"نشر {name} {ArabicCount(n, "مقالًا جديدًا", "مقالين جديدين", "مقالات جديدة", "مقالًا جديدًا", "مقال جديد")}", article),
             NotificationTypes.FollowedWriterArticle => (english ? $"{name} published a new article" : $"نشر {name} مقالًا جديدًا", article),
             NotificationTypes.ArticleReposted => (english
                 ? $"{name}{OthersEn(others)} reposted your article"

@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { PreferencesService } from '../core/auth/preferences.service';
 import { ErrorMessages } from '../core/i18n/error-messages';
 import { LanguageService } from '../core/i18n/language.service';
 import { ThemeService } from '../core/theme/theme.service';
 import { ToastService } from '../shared/ui/toast/toast.service';
+import { ShellIcon } from '../shared/ui/shell-icon';
 
 /**
  * The top bar's light/dark switch: one click flips the theme you see (System resolves first), saved like Settings
@@ -15,7 +15,7 @@ import { ToastService } from '../shared/ui/toast/toast.service';
  */
 @Component({
   selector: 'rd-theme-toggle',
-  imports: [TranslocoPipe, LucideDynamicIcon],
+  imports: [TranslocoPipe, ShellIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
   template: `
@@ -29,8 +29,8 @@ import { ToastService } from '../shared/ui/toast/toast.service';
       [attr.data-variant]="variant()"
       (click)="toggle()"
     >
-      <svg lucideIcon="Moon" [size]="variant() === 'icon' ? 18 : 22" class="rd-only-light shrink-0" aria-hidden="true"></svg>
-      <svg lucideIcon="Sun" [size]="variant() === 'icon' ? 18 : 22" class="rd-only-dark shrink-0" aria-hidden="true"></svg>
+      <svg rdIcon="Moon" [size]="variant() === 'icon' ? 18 : 22" class="rd-only-light shrink-0" aria-hidden="true"></svg>
+      <svg rdIcon="Sun" [size]="variant() === 'icon' ? 18 : 22" class="rd-only-dark shrink-0" aria-hidden="true"></svg>
       @if (variant() === 'stacked') {
         <span class="sr-only max-w-full truncate text-xs leading-4 lg:not-sr-only" aria-hidden="true">{{ 'topbar.theme.label' | transloco }}</span>
       }

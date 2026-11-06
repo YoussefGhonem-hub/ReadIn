@@ -13,6 +13,7 @@ import { FollowButton } from '../../shared/social/follow-button';
 import { LinkIcon } from './link-icon';
 import { ProfileMenu } from './profile-menu';
 import { profileLinks } from './profile-links';
+import { VerifiedBadge } from '../../shared/ui/verified-badge';
 
 /**
  * `src` + `srcset` for the profile photo (a 96 px box, 112 px on large screens; the 512 px variant is only used on this
@@ -40,7 +41,7 @@ export function profileAvatar(profile: Pick<ProfileDto, 'avatarUrl' | 'avatarVar
  */
 @Component({
   selector: 'rd-profile-header',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, CompactNumberPipe, FollowButton, ProfileMenu, LinkIcon],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, CompactNumberPipe, FollowButton, ProfileMenu, LinkIcon, VerifiedBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'rd-card block shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0', 'data-profile-header': '' },
   styles: `
@@ -83,7 +84,7 @@ export function profileAvatar(profile: Pick<ProfileDto, 'avatarUrl' | 'avatarVar
       <h1 class="m-0 mt-2 flex flex-wrap items-center gap-1.5 text-xl font-bold leading-tight lg:text-2xl" data-profile-name>
         <rd-bdi-text [text]="p.displayName" />
         @if (p.isVerified) {
-          <svg lucideIcon="BadgeCheck" [size]="20" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+          <rd-verified-badge [size]="20" />
         }
       </h1>
       @if (headline(); as title) {

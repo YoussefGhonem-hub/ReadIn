@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { ProfileDto } from '../../core/api/models';
 import { SessionStore } from '../../core/auth/session.store';
 import { LanguageService } from '../../core/i18n/language.service';
@@ -11,6 +10,7 @@ import { CompactNumberPipe, PluralPipe } from '../pipes/format.pipes';
 import { FollowButton } from '../social/follow-button';
 import { Avatar } from '../ui/avatar';
 import { ProfileCardCache } from './profile-card.cache';
+import { VerifiedBadge } from '../ui/verified-badge';
 
 type CardState = { status: 'loading' } | { status: 'loaded'; profile: ProfileDto } | { status: 'error' };
 
@@ -24,7 +24,7 @@ type CardState = { status: 'loading' } | { status: 'loaded'; profile: ProfileDto
  */
 @Component({
   selector: 'rd-profile-card',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, BdiText, CompactNumberPipe, PluralPipe, FollowButton, Avatar],
+  imports: [RouterLink, TranslocoPipe, BdiText, CompactNumberPipe, PluralPipe, FollowButton, Avatar, VerifiedBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     // The overlay pane is a flex box: the card fills its 320 px (at most the window less 16 px).
@@ -50,7 +50,7 @@ type CardState = { status: 'loading' } | { status: 'loaded'; profile: ProfileDto
           >
             <rd-bdi-text class="truncate" [text]="p.displayName" />
             @if (p.isVerified) {
-              <svg lucideIcon="BadgeCheck" [size]="16" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+              <rd-verified-badge [size]="16" />
             }
           </a>
           <p class="m-0 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-text-secondary">

@@ -11,6 +11,7 @@ import { PeopleStore } from '../features/profile/people.store';
 import { BdiText } from '../shared/directives/bdi-text';
 import { FollowButton } from '../shared/social/follow-button';
 import { Avatar } from '../shared/ui/avatar';
+import { VerifiedBadge } from '../shared/ui/verified-badge';
 
 /** Following fewer people than this (and no search), the panel adds writers you might like under them. */
 export const FEW_FOLLOWING = 5;
@@ -33,7 +34,7 @@ const LOAD_MORE_EDGE = 120;
  */
 @Component({
   selector: 'rd-following-dock',
-  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, Avatar, BdiText, FollowButton],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, Avatar, BdiText, FollowButton, VerifiedBadge],
   providers: [PeopleStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'fixed bottom-0 end-4 z-30 block w-72', '(keydown.escape)': 'escape()', 'data-following-dock': '' },
@@ -94,7 +95,7 @@ const LOAD_MORE_EDGE = 120;
                             <span class="flex items-center gap-1 text-sm font-semibold leading-5">
                               <rd-bdi-text class="truncate" [text]="user.displayName" />
                               @if (user.isVerified) {
-                                <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                                <rd-verified-badge [size]="14" />
                               }
                             </span>
                             <!-- The line keeps the page's direction; the bio runs in its own and is cut at its own end. -->
@@ -149,7 +150,7 @@ const LOAD_MORE_EDGE = 120;
                             <a [routerLink]="'/@' + user.username" class="flex items-center gap-1 text-sm font-semibold leading-5 text-text-primary no-underline hover:underline">
                               <rd-bdi-text class="truncate" [text]="user.displayName" />
                               @if (user.isVerified) {
-                                <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                                <rd-verified-badge [size]="14" />
                               }
                             </a>
                             <p class="m-0 text-xs leading-5 text-text-secondary">

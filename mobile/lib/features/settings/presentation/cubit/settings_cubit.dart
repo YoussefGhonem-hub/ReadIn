@@ -62,6 +62,9 @@ class SettingsCubit extends Cubit<AppSettings> {
 
   Future<Failure?> setFontSize(ArticleFontSize size) => _update(state.copyWith(fontSize: size));
 
+  /// The reader's reading mode (F04): on this device only, never sent to the account.
+  Future<Failure?> setReadingMode(bool on) => _update(state.copyWith(readingMode: on));
+
   /// "Hide highlights" / "Show highlights" (F30): the reader's "⋯" item and Settings. Saved to the account when signed in
   /// (going back to what the account has when that fails); a guest's choice stays on this device.
   Future<Failure?> setShowHighlights(bool show) {

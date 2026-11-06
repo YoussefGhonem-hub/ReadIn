@@ -89,6 +89,10 @@ const keyOf = (group: HighlightGroupDto) => `${group.article.id}|${group.article
             <button type="button" class="rd-btn rd-btn-outline" (click)="loadMore()">{{ 'common.retry' | transloco }}</button>
           </div>
         }
+        @if (nextCursor()) {
+          <!-- Only under a loaded list: one on screen beside the skeletons would load page 2 right away. -->
+          <div #sentinel class="h-px" aria-hidden="true"></div>
+        }
       }
       @default {
         <div class="flex flex-col gap-3" aria-busy="true">
@@ -98,7 +102,6 @@ const keyOf = (group: HighlightGroupDto) => `${group.article.id}|${group.article
         </div>
       }
     }
-    <div #sentinel class="h-px" aria-hidden="true"></div>
   `,
 })
 export class SavedHighlights {
@@ -109,7 +112,7 @@ export class SavedHighlights {
   protected readonly groups = signal<HighlightGroupDto[]>([]);
   protected readonly loadingMore = signal(false);
   protected readonly loadMoreFailed = signal(false);
-  private nextCursor: string | null = null;
+  protected readonly nextCursor = signal<string | null>(null);
   private generation = 0;
   protected readonly key = keyOf;
 
@@ -138,7 +141,7 @@ export class SavedHighlights {
       const page = await firstValueFrom(this.api.mine({ limit: PAGE_SIZE }));
       if (generation !== this.generation) return;
       this.groups.set(page.items);
-      this.nextCursor = page.nextCursor;
+      this.nextCursor.set(page.nextCursor);
       this.status.set('loaded');
     } catch {
       if (generation === this.generation) this.status.set('error');
@@ -146,7 +149,7 @@ export class SavedHighlights {
   }
 
   protected async loadMore(): Promise<void> {
-    const cursor = this.nextCursor;
+    const cursor = this.nextCursor();
     if (!cursor || this.loadingMore() || this.status() !== 'loaded') return;
     const generation = this.generation;
     this.loadingMore.set(true);
@@ -156,7 +159,7 @@ export class SavedHighlights {
       if (generation !== this.generation) return;
       const shown = new Set(this.groups().map(keyOf));
       this.groups.update((groups) => [...groups, ...page.items.filter((g) => !shown.has(keyOf(g)))]);
-      this.nextCursor = page.nextCursor;
+      this.nextCursor.set(page.nextCursor);
     } catch {
       if (generation === this.generation) this.loadMoreFailed.set(true);
     } finally {

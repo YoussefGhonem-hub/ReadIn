@@ -134,6 +134,7 @@ class AppNotification extends Equatable {
     this.streakDays,
     this.securityChange,
     this.approved,
+    this.articleCount,
     this.link = '',
   });
 
@@ -163,6 +164,10 @@ class AppNotification extends Equatable {
   /// `verification_result`: whether the request was approved. Null when the API doesn't say (generic text).
   final bool? approved;
 
+  /// `followed_writer_article` of the official @readin account: its new articles that day in one entry (≥ 1, with the
+  /// newest as [article]). Null for every other writer, one entry per article.
+  final int? articleCount;
+
   /// `readin://…`, the same link a push of this notification opens.
   final String link;
 
@@ -183,6 +188,7 @@ class AppNotification extends Equatable {
         streakDays: streakDays,
         securityChange: securityChange,
         approved: approved,
+        articleCount: articleCount,
         link: link,
       );
 
@@ -201,6 +207,7 @@ class AppNotification extends Equatable {
         streakDays,
         securityChange,
         approved,
+        articleCount,
         link,
       ];
 }
