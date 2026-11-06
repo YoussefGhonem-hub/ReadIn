@@ -4,7 +4,10 @@ import '../../../../core/bidi/bidi.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../../shared/rdoc/blocks/text_blocks.dart' show rdocBodyStyle;
+import '../../../../shared/rdoc/rdoc_scope.dart';
 import '../../../article/domain/entities/article.dart';
+import '../../../article/presentation/widgets/post_card_text.dart' show PostExcerpt;
 import '../../../profile/presentation/widgets/profile_link.dart';
 
 /// "أعاد نشره {name}" / "{name} و N غيره أعادوا نشره" over a post card that a repost placed (F29, the F34 label row).
@@ -49,6 +52,57 @@ class RepostLabelText extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The reposter's thoughts under the label (F29, "repost with your thoughts"): plain text, never markup, laid out in its
+/// own direction (its first strong character, SPEC §14.2) with its line breaks. Like the card's own text it is cut at
+/// [PostExcerpt.maxLines] lines with "… اقرأ المزيد" / "… Read more", and a tap shows it whole.
+class RepostCaptionText extends StatefulWidget {
+  const RepostCaptionText(this.caption, {super.key});
+
+  final String caption;
+
+  @override
+  State<RepostCaptionText> createState() => _RepostCaptionTextState();
+}
+
+class _RepostCaptionTextState extends State<RepostCaptionText> {
+  bool _expanded = false;
+
+  @override
+  void didUpdateWidget(RepostCaptionText old) {
+    super.didUpdateWidget(old);
+    if (old.caption != widget.caption) _expanded = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final caption = widget.caption;
+    final direction = Bidi.detect(caption) ?? Directionality.of(context);
+    // The card's text size and the font of the caption's own script. The style is also the default one here, so the
+    // text is drawn exactly as [PostExcerpt.fit] measures it (nothing such as the theme's letter spacing is inherited,
+    // which could push "Read more" past the last line).
+    return RDocScope(
+      baseDirection: direction,
+      bodyFontSize: ReadInArticleFontScale.s,
+      child: Builder(
+        builder: (context) {
+          final style = rdocBodyStyle(context, direction);
+          return DefaultTextStyle(
+            style: style,
+            child: _expanded
+                ? Text(Bidi.isolateOppositeRuns(caption, direction), textDirection: direction, style: style)
+                : PostExcerpt(
+                    text: caption,
+                    direction: direction,
+                    continues: false,
+                    onExpand: () => setState(() => _expanded = true),
+                  ),
+          );
+        },
       ),
     );
   }

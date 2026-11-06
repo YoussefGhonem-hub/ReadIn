@@ -6,8 +6,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/failure.dart';
+import '../../../../core/errors/result.dart';
 import '../../../../core/realtime/realtime_service.dart';
 import '../../../reactions/domain/usecases/reaction_usecases.dart';
+import '../../../reposts/domain/entities/repost_state.dart';
 import '../../../reposts/domain/usecases/repost_usecases.dart';
 import '../../../saved/domain/usecases/saved_usecases.dart';
 import '../../domain/entities/article.dart';
@@ -26,6 +28,8 @@ class ArticleEngagement extends Equatable {
     this.repostCount = 0,
     this.isReposted = false,
     this.reposting = false,
+    this.hasRepostCaption = false,
+    this.repostCaption,
   });
 
   factory ArticleEngagement.of(ArticleCard card) => ArticleEngagement(
@@ -56,6 +60,12 @@ class ArticleEngagement extends Equatable {
   /// A repost request is in flight.
   final bool reposting;
 
+  /// [repostCaption] is known: the API answered a repost request of the viewer's in this session (cards don't carry it).
+  final bool hasRepostCaption;
+
+  /// The caption of the viewer's own repost (null: none, or not reposted).
+  final String? repostCaption;
+
   /// [card] with these values.
   ArticleCard applyTo(ArticleCard card) => card.copyWithEngagement(
         reactions: reactions,
@@ -81,6 +91,8 @@ class ArticleEngagement extends Equatable {
         repostCount,
         isReposted,
         reposting,
+        hasRepostCaption,
+        repostCaption,
       ];
 }
 
@@ -100,6 +112,8 @@ class EngagementOverlay extends Equatable {
     this.repostCount,
     this.isReposted,
     this.reposting = false,
+    this.hasRepostCaption = false,
+    this.repostCaption,
   });
 
   /// Everything about [card], as just loaded from the API.
@@ -130,6 +144,10 @@ class EngagementOverlay extends Equatable {
   final bool? isReposted;
   final bool reposting;
 
+  /// [repostCaption] is known (null then means "none").
+  final bool hasRepostCaption;
+  final String? repostCaption;
+
   bool get pending => reacting || saving || reposting;
 
   ArticleEngagement resolve(ArticleCard card) => ArticleEngagement(
@@ -144,6 +162,8 @@ class EngagementOverlay extends Equatable {
         repostCount: repostCount ?? card.repostCount,
         isReposted: isReposted ?? card.isReposted,
         reposting: reposting,
+        hasRepostCaption: hasRepostCaption,
+        repostCaption: repostCaption,
       );
 
   /// Null arguments keep the current value.
@@ -159,6 +179,7 @@ class EngagementOverlay extends Equatable {
     int? repostCount,
     bool? isReposted,
     bool? reposting,
+    String? Function()? repostCaption,
   }) =>
       EngagementOverlay(
         reactions: reactions ?? this.reactions,
@@ -173,6 +194,8 @@ class EngagementOverlay extends Equatable {
         repostCount: repostCount ?? this.repostCount,
         isReposted: isReposted ?? this.isReposted,
         reposting: reposting ?? this.reposting,
+        hasRepostCaption: repostCaption != null || hasRepostCaption,
+        repostCaption: repostCaption != null ? repostCaption() : this.repostCaption,
       );
 
   /// This overlay with the reaction values of [before] (a rollback), keeping everything about saves and reposts.
@@ -188,6 +211,8 @@ class EngagementOverlay extends Equatable {
         repostCount: repostCount,
         isReposted: isReposted,
         reposting: reposting,
+        hasRepostCaption: hasRepostCaption,
+        repostCaption: repostCaption,
       );
 
   /// This overlay with the save values of [before] (a rollback), keeping everything about reactions and reposts.
@@ -203,6 +228,8 @@ class EngagementOverlay extends Equatable {
         repostCount: repostCount,
         isReposted: isReposted,
         reposting: reposting,
+        hasRepostCaption: hasRepostCaption,
+        repostCaption: repostCaption,
       );
 
   /// This overlay with the repost values of [before] (a rollback), keeping everything about reactions and saves.
@@ -218,6 +245,8 @@ class EngagementOverlay extends Equatable {
         saving: saving,
         repostCount: before?.repostCount,
         isReposted: before?.isReposted,
+        hasRepostCaption: before?.hasRepostCaption ?? false,
+        repostCaption: before?.repostCaption,
       );
 
   @override
@@ -234,6 +263,8 @@ class EngagementOverlay extends Equatable {
         repostCount,
         isReposted,
         reposting,
+        hasRepostCaption,
+        repostCaption,
       ];
 }
 
@@ -263,17 +294,18 @@ class SavedChange extends Equatable {
 /// reader, the feeds and the Saved tab always agree (F10, F13, F27, F29).
 ///
 /// Screens [seed] it with what they load. The viewer's own actions apply at once and roll back when the API refuses
-/// them; the API's answer then replaces the optimistic values. Live counters [applyLive] **replace** the numbers and
-/// never add to them, so the viewer's own reaction is never counted twice.
+/// them; the API's answer then replaces the optimistic values (a repost with a caption waits for it). Live counters
+/// [applyLive] **replace** the numbers and never add to them, so the viewer's own reaction is never counted twice.
 @lazySingleton
 class EngagementCubit extends Cubit<EngagementState> {
-  EngagementCubit(this._setReaction, this._setSaved, [this._setReposted]) : super(const EngagementState());
+  EngagementCubit(this._setReaction, this._setSaved, [this._setReposted, this._getRepost]) : super(const EngagementState());
 
   final SetReaction _setReaction;
   final SetSaved _setSaved;
 
-  /// Always set in the app; tests of screens without reposts may leave it out (a repost then fails and rolls back).
+  /// Always set in the app; tests of screens without reposts may leave them out (a repost then fails and rolls back).
   final SetReposted? _setReposted;
+  final GetRepost? _getRepost;
   final _savedChanges = StreamController<SavedChange>.broadcast();
 
   /// Saves and unsaves confirmed by the API (the Saved list and collections follow them).
@@ -421,14 +453,56 @@ class EngagementCubit extends Cubit<EngagementState> {
         return failure;
       },
       (repostState) {
-        _update(
-          card.id,
-          (overlay) => overlay.merge(isReposted: repostState.isReposted, repostCount: repostState.repostCount, reposting: false),
-        );
+        _applyRepost(card.id, repostState);
         return null;
       },
     );
   }
+
+  /// "Repost with your thoughts" and "Edit your thoughts" (F29): reposts [card] with [caption], or sets the caption of
+  /// the viewer's repost ("" clears it). Not optimistic: the state and count change once the API answers. Null on
+  /// success, else the failure (e.g. `repost.caption_too_long` inside `validation.failed`), with nothing changed.
+  /// Nothing is sent while another repost request of the viewer's is in flight.
+  Future<Failure?> repostWithCaption(ArticleCard card, String caption) async {
+    if (of(card).reposting) return null;
+    final setReposted = _setReposted;
+    if (setReposted == null) return Failure.unknown;
+    _update(card.id, (overlay) => overlay.merge(reposting: true));
+    final result = await setReposted(card.id, reposted: true, caption: caption);
+    if (isClosed) return null;
+    return result.fold(
+      (failure) {
+        _update(card.id, (overlay) => overlay.merge(reposting: false));
+        return failure;
+      },
+      (repostState) {
+        _applyRepost(card.id, repostState);
+        return null;
+      },
+    );
+  }
+
+  /// The viewer's repost of [card] now (`GET /articles/{id}/repost`), with its caption: "Edit your thoughts" starts from
+  /// it. Its state and count become the newest, unless a repost request is in flight.
+  Future<Result<RepostState>> loadRepost(ArticleCard card) async {
+    final getRepost = _getRepost;
+    if (getRepost == null) return const Err(Failure.unknown);
+    final result = await getRepost(card.id);
+    if (isClosed) return result;
+    if (result case Ok(:final value) when !of(card).reposting) _applyRepost(card.id, value);
+    return result;
+  }
+
+  /// The API's answer about the viewer's repost replaces what the overlay had.
+  void _applyRepost(String articleId, RepostState repostState) => _update(
+        articleId,
+        (overlay) => overlay.merge(
+          isReposted: repostState.isReposted,
+          repostCount: repostState.repostCount,
+          reposting: false,
+          repostCaption: () => repostState.caption,
+        ),
+      );
 
   /// Another account (or a guest) is using the app: nothing about the previous viewer stays.
   void reset() => emit(const EngagementState());

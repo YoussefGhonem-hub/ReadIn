@@ -183,6 +183,7 @@ abstract final class FailureCodes {
 
   // Repost (F29)
   static const repostOwnArticle = 'repost.own_article';
+  static const repostCaptionTooLong = 'repost.caption_too_long'; // validation code under `caption`
 
   // Highlights (F30)
   static const highlightTextMismatch = 'highlight.text_mismatch';

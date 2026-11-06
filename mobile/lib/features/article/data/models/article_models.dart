@@ -37,7 +37,7 @@ abstract class AuthorModel with _$AuthorModel {
       );
 }
 
-/// `RepostLabelDto` (F29): `{ user, othersCount, repostedAt }`.
+/// `RepostLabelDto` (F29): `{ user, othersCount, repostedAt, caption }`.
 @freezed
 abstract class RepostLabelModel with _$RepostLabelModel {
   const RepostLabelModel._();
@@ -46,11 +46,18 @@ abstract class RepostLabelModel with _$RepostLabelModel {
     required AuthorModel user,
     @Default(0) int othersCount,
     required DateTime repostedAt,
+    // `user`'s thoughts on it; missing, null or blank is none.
+    String? caption,
   }) = _RepostLabelModel;
 
   factory RepostLabelModel.fromJson(Map<String, dynamic> json) => _$RepostLabelModelFromJson(json);
 
-  RepostLabel toEntity() => RepostLabel(user: user.toEntity(), othersCount: math.max(0, othersCount), repostedAt: repostedAt);
+  RepostLabel toEntity() => RepostLabel(
+        user: user.toEntity(),
+        othersCount: math.max(0, othersCount),
+        repostedAt: repostedAt,
+        caption: caption == null || caption!.trim().isEmpty ? null : caption,
+      );
 }
 
 @freezed

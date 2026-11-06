@@ -44,8 +44,8 @@ import 'article_share_button.dart';
 import 'attachment_viewers.dart';
 import 'post_card_text.dart';
 
-/// An article in a list as a social post (SPEC F34): an optional label ("مقال النهارده", or "أعاد نشره {name}" when a
-/// repost placed it, F29), the writer with their title and then field, time and reading time (follow, save and "⋯" on
+/// An article in a list as a social post (SPEC F34): an optional label ("مقال النهارده", or "أعاد نشره {name}" and the
+/// reposter's thoughts when a repost placed it, F29), the writer with their title and then field, time and reading time (follow, save and "⋯" on
 /// the other side), the title, the beginning of the article with "Read more", the attachments or the cover, up to three
 /// tags and the action bar: icons with their counts (react, comment, repost, share) and up to three reaction emojis.
 ///
@@ -192,7 +192,7 @@ class _PostCardState extends State<PostCard> {
                   if (widget.label case final label?)
                     _PostLabel(label: label)
                   else if (article.repostedBy case final repost?)
-                    _RepostedLabel(label: repost),
+                    _RepostedLabel(article: article, label: repost),
                   _PostHeader(
                     article: article,
                     hidden: view.hidden,
@@ -271,27 +271,43 @@ class _PostLabel extends StatelessWidget {
   }
 }
 
-/// "🔁 أعاد نشره {name}" over the header, with a hairline under it (F29). The name opens the reposter's profile.
+/// "🔁 أعاد نشره {name}" over the header, then the reposter's thoughts when they wrote some, with a hairline under them
+/// (F29). The name opens the reposter's profile. On the viewer's own repost (their Reposts tab) the caption they just
+/// saved or cleared replaces the one the card was loaded with.
 class _RepostedLabel extends StatelessWidget {
-  const _RepostedLabel({required this.label});
+  const _RepostedLabel({required this.article, required this.label});
 
+  final ArticleCard article;
   final RepostLabel label;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(ReadInSpace.s3, ReadInSpace.s1, ReadInSpace.s3, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Align(alignment: AlignmentDirectional.centerStart, child: RepostLabelText(label: label)),
-            const SizedBox(height: ReadInSpace.s1),
+  Widget build(BuildContext context) {
+    final myId = context.select((SessionCubit c) => c.state.me?.id);
+    final (known, ownCaption) = context.select((EngagementCubit c) {
+      final engagement = c.state.of(article);
+      return (engagement.hasRepostCaption, engagement.repostCaption);
+    });
+    final caption = known && myId != null && label.user.id == myId ? ownCaption : label.caption;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(ReadInSpace.s3, ReadInSpace.s1, ReadInSpace.s3, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(alignment: AlignmentDirectional.centerStart, child: RepostLabelText(label: label)),
+          if (caption != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s1),
-              child: Divider(height: 1, color: context.colors.border),
+              padding: const EdgeInsets.fromLTRB(ReadInSpace.s1, 0, ReadInSpace.s1, ReadInSpace.s2),
+              child: RepostCaptionText(caption),
             ),
-          ],
-        ),
-      );
+          const SizedBox(height: ReadInSpace.s1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s1),
+            child: Divider(height: 1, color: context.colors.border),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Avatar and name (the profile), the writer's title on one line with "…" (hidden without one, F14), then field ·

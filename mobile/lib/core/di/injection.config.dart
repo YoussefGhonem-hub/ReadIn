@@ -735,6 +735,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i86.SetReposted>(
       () => _i86.SetReposted(gh<_i123.RepostsRepository>()),
     );
+    gh.factory<_i86.GetRepost>(
+      () => _i86.GetRepost(gh<_i123.RepostsRepository>()),
+    );
     gh.factory<_i83.GetTag>(() => _i83.GetTag(gh<_i1070.TagsRepository>()));
     gh.factory<_i83.GetTagArticles>(
       () => _i83.GetTagArticles(gh<_i1070.TagsRepository>()),
@@ -1111,6 +1114,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i772.ManageCategories>(),
       ),
     );
+    gh.lazySingleton<_i226.EngagementCubit>(
+      () => _i226.EngagementCubit(
+        gh<_i27.SetReaction>(),
+        gh<_i724.SetSaved>(),
+        gh<_i86.SetReposted>(),
+        gh<_i86.GetRepost>(),
+      ),
+    );
     gh.factory<_i894.NotificationSettingsCubit>(
       () => _i894.NotificationSettingsCubit(
         gh<_i864.GetNotificationSettings>(),
@@ -1122,13 +1133,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i655.TagSuggestionsCubit>(
       () => _i655.TagSuggestionsCubit(gh<_i866.SuggestTags>()),
-    );
-    gh.lazySingleton<_i226.EngagementCubit>(
-      () => _i226.EngagementCubit(
-        gh<_i27.SetReaction>(),
-        gh<_i724.SetSaved>(),
-        gh<_i86.SetReposted>(),
-      ),
     );
     gh.lazySingleton<_i1040.PushService>(
       () => _i1040.PushService(

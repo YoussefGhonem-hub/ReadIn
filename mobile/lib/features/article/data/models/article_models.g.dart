@@ -30,6 +30,7 @@ _RepostLabelModel _$RepostLabelModelFromJson(Map<String, dynamic> json) =>
       user: AuthorModel.fromJson(json['user'] as Map<String, dynamic>),
       othersCount: (json['othersCount'] as num?)?.toInt() ?? 0,
       repostedAt: DateTime.parse(json['repostedAt'] as String),
+      caption: json['caption'] as String?,
     );
 
 Map<String, dynamic> _$RepostLabelModelToJson(_RepostLabelModel instance) =>
@@ -37,6 +38,7 @@ Map<String, dynamic> _$RepostLabelModelToJson(_RepostLabelModel instance) =>
       'user': instance.user.toJson(),
       'othersCount': instance.othersCount,
       'repostedAt': instance.repostedAt.toIso8601String(),
+      'caption': ?instance.caption,
     };
 
 _FieldRefModel _$FieldRefModelFromJson(Map<String, dynamic> json) =>

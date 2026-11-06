@@ -183,6 +183,7 @@ String localizeErrorCode(AppLocalizations l10n, String code) => switch (code) {
       FailureCodes.muteSystemAccount => l10n.errMuteSystemAccount,
       FailureCodes.muteLimit => l10n.errMuteLimit,
       FailureCodes.muteOwnArticle => l10n.errMuteOwnArticle,
+      FailureCodes.repostCaptionTooLong => l10n.errRepostCaptionTooLong,
       FailureCodes.repostOwnArticle => l10n.errRepostOwnArticle,
       FailureCodes.highlightTextMismatch => l10n.errHighlightTextMismatch,
       FailureCodes.highlightBlockNotAllowed => l10n.errHighlightBlockNotAllowed,

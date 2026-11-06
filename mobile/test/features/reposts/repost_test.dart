@@ -160,7 +160,7 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('the count beside the icon (none at 0) and in its accessible name; a tap reposts', (tester) async {
+    testWidgets("the count beside the icon (none at 0) and in its accessible name; the menu's Repost reposts", (tester) async {
       final semantics = tester.ensureSemantics();
       when(() => reposts.repost(card.id)).thenAnswer((_) async => const Ok(RepostState(repostCount: 4, isReposted: true)));
       await pump(tester, RepostButton(article: card));
@@ -169,7 +169,9 @@ void main() {
       expect(tester.getSemantics(find.byType(RepostButton)), isSemantics(isButton: true, hasToggledState: true, isToggled: false));
 
       await tester.tap(find.byType(RepostButton));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('repost-menu-repost')));
+      await tester.pumpAndSettle();
       expect(find.text('4'), findsOneWidget);
       final colors = tester.element(find.byType(RepostButton)).colors;
       expect(tester.widget<Icon>(find.byIcon(Icons.repeat_rounded)).color, colors.primary, reason: 'drawn in the primary color once reposted');
@@ -193,8 +195,9 @@ void main() {
       when(() => reposts.repost(card.id)).thenAnswer((_) async => const Err(Failure(FailureCodes.networkOffline)));
       await pump(tester, RepostButton(article: card));
       await tester.tap(find.byType(RepostButton));
-      await tester.pump();
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('repost-menu-repost')));
+      await tester.pumpAndSettle();
       expect(find.text('3'), findsOneWidget);
       expect(find.text("You're offline. Check your connection."), findsOneWidget);
     });

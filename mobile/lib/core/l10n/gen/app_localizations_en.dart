@@ -3534,6 +3534,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errRepostOwnArticle => 'You can\'t repost your own article.';
 
   @override
+  String get errRepostCaptionTooLong =>
+      'Your thoughts must be 500 characters or fewer.';
+
+  @override
   String get profileMenu => 'More options';
 
   @override
@@ -4460,6 +4464,33 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get repostMenuRepost => 'Repost';
+
+  @override
+  String get repostMenuWithThoughts => 'Repost with your thoughts';
+
+  @override
+  String get repostMenuEdit => 'Edit your thoughts';
+
+  @override
+  String get repostMenuUndo => 'Undo repost';
+
+  @override
+  String get repostCaptionTitle => 'Repost this article';
+
+  @override
+  String get repostCaptionHint => 'Add your thoughts… (optional)';
+
+  @override
+  String get repostCaptionSubmit => 'Repost';
+
+  @override
+  String get repostCaptionReposted => 'You reposted this article.';
+
+  @override
+  String get repostCaptionSaved => 'Your thoughts were saved.';
 
   @override
   String get commentBoxHint => 'Add a comment…';

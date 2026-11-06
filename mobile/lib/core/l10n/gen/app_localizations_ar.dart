@@ -3562,6 +3562,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errRepostOwnArticle => 'مينفعش تعيد نشر مقالك.';
 
   @override
+  String get errRepostCaptionTooLong => 'رأيك لازم يكون 500 حرف أو أقل.';
+
+  @override
   String get profileMenu => 'اختيارات تانية';
 
   @override
@@ -4508,6 +4511,33 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get repostMenuRepost => 'أعد النشر';
+
+  @override
+  String get repostMenuWithThoughts => 'أعد النشر مع رأيك';
+
+  @override
+  String get repostMenuEdit => 'عدّل رأيك';
+
+  @override
+  String get repostMenuUndo => 'إلغاء إعادة النشر';
+
+  @override
+  String get repostCaptionTitle => 'أعد نشر المقال';
+
+  @override
+  String get repostCaptionHint => 'قول رأيك في المقال… (اختياري)';
+
+  @override
+  String get repostCaptionSubmit => 'انشر';
+
+  @override
+  String get repostCaptionReposted => 'أعدت نشر المقال.';
+
+  @override
+  String get repostCaptionSaved => 'اتحفظ رأيك.';
 
   @override
   String get commentBoxHint => 'اكتب تعليق…';

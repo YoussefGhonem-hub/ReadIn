@@ -295,7 +295,8 @@ as String?,
 /// @nodoc
 mixin _$RepostLabelModel {
 
- AuthorModel get user; int get othersCount; DateTime get repostedAt;
+ AuthorModel get user; int get othersCount; DateTime get repostedAt;// `user`'s thoughts on it; missing, null or blank is none.
+ String? get caption;
 /// Create a copy of RepostLabelModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -308,16 +309,16 @@ $RepostLabelModelCopyWith<RepostLabelModel> get copyWith => _$RepostLabelModelCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RepostLabelModel&&(identical(other.user, user) || other.user == user)&&(identical(other.othersCount, othersCount) || other.othersCount == othersCount)&&(identical(other.repostedAt, repostedAt) || other.repostedAt == repostedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RepostLabelModel&&(identical(other.user, user) || other.user == user)&&(identical(other.othersCount, othersCount) || other.othersCount == othersCount)&&(identical(other.repostedAt, repostedAt) || other.repostedAt == repostedAt)&&(identical(other.caption, caption) || other.caption == caption));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,user,othersCount,repostedAt);
+int get hashCode => Object.hash(runtimeType,user,othersCount,repostedAt,caption);
 
 @override
 String toString() {
-  return 'RepostLabelModel(user: $user, othersCount: $othersCount, repostedAt: $repostedAt)';
+  return 'RepostLabelModel(user: $user, othersCount: $othersCount, repostedAt: $repostedAt, caption: $caption)';
 }
 
 
@@ -328,7 +329,7 @@ abstract mixin class $RepostLabelModelCopyWith<$Res>  {
   factory $RepostLabelModelCopyWith(RepostLabelModel value, $Res Function(RepostLabelModel) _then) = _$RepostLabelModelCopyWithImpl;
 @useResult
 $Res call({
- AuthorModel user, int othersCount, DateTime repostedAt
+ AuthorModel user, int othersCount, DateTime repostedAt, String? caption
 });
 
 
@@ -345,12 +346,13 @@ class _$RepostLabelModelCopyWithImpl<$Res>
 
 /// Create a copy of RepostLabelModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? user = null,Object? othersCount = null,Object? repostedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? user = null,Object? othersCount = null,Object? repostedAt = null,Object? caption = freezed,}) {
   return _then(_self.copyWith(
 user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as AuthorModel,othersCount: null == othersCount ? _self.othersCount : othersCount // ignore: cast_nullable_to_non_nullable
 as int,repostedAt: null == repostedAt ? _self.repostedAt : repostedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,caption: freezed == caption ? _self.caption : caption // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 /// Create a copy of RepostLabelModel
@@ -444,10 +446,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthorModel user,  int othersCount,  DateTime repostedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthorModel user,  int othersCount,  DateTime repostedAt,  String? caption)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RepostLabelModel() when $default != null:
-return $default(_that.user,_that.othersCount,_that.repostedAt);case _:
+return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption);case _:
   return orElse();
 
 }
@@ -465,10 +467,10 @@ return $default(_that.user,_that.othersCount,_that.repostedAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthorModel user,  int othersCount,  DateTime repostedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthorModel user,  int othersCount,  DateTime repostedAt,  String? caption)  $default,) {final _that = this;
 switch (_that) {
 case _RepostLabelModel():
-return $default(_that.user,_that.othersCount,_that.repostedAt);case _:
+return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -485,10 +487,10 @@ return $default(_that.user,_that.othersCount,_that.repostedAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthorModel user,  int othersCount,  DateTime repostedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthorModel user,  int othersCount,  DateTime repostedAt,  String? caption)?  $default,) {final _that = this;
 switch (_that) {
 case _RepostLabelModel() when $default != null:
-return $default(_that.user,_that.othersCount,_that.repostedAt);case _:
+return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption);case _:
   return null;
 
 }
@@ -500,12 +502,14 @@ return $default(_that.user,_that.othersCount,_that.repostedAt);case _:
 @JsonSerializable()
 
 class _RepostLabelModel extends RepostLabelModel {
-  const _RepostLabelModel({required this.user, this.othersCount = 0, required this.repostedAt}): super._();
+  const _RepostLabelModel({required this.user, this.othersCount = 0, required this.repostedAt, this.caption}): super._();
   factory _RepostLabelModel.fromJson(Map<String, dynamic> json) => _$RepostLabelModelFromJson(json);
 
 @override final  AuthorModel user;
 @override@JsonKey() final  int othersCount;
 @override final  DateTime repostedAt;
+// `user`'s thoughts on it; missing, null or blank is none.
+@override final  String? caption;
 
 /// Create a copy of RepostLabelModel
 /// with the given fields replaced by the non-null parameter values.
@@ -520,16 +524,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RepostLabelModel&&(identical(other.user, user) || other.user == user)&&(identical(other.othersCount, othersCount) || other.othersCount == othersCount)&&(identical(other.repostedAt, repostedAt) || other.repostedAt == repostedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RepostLabelModel&&(identical(other.user, user) || other.user == user)&&(identical(other.othersCount, othersCount) || other.othersCount == othersCount)&&(identical(other.repostedAt, repostedAt) || other.repostedAt == repostedAt)&&(identical(other.caption, caption) || other.caption == caption));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,user,othersCount,repostedAt);
+int get hashCode => Object.hash(runtimeType,user,othersCount,repostedAt,caption);
 
 @override
 String toString() {
-  return 'RepostLabelModel(user: $user, othersCount: $othersCount, repostedAt: $repostedAt)';
+  return 'RepostLabelModel(user: $user, othersCount: $othersCount, repostedAt: $repostedAt, caption: $caption)';
 }
 
 
@@ -540,7 +544,7 @@ abstract mixin class _$RepostLabelModelCopyWith<$Res> implements $RepostLabelMod
   factory _$RepostLabelModelCopyWith(_RepostLabelModel value, $Res Function(_RepostLabelModel) _then) = __$RepostLabelModelCopyWithImpl;
 @override @useResult
 $Res call({
- AuthorModel user, int othersCount, DateTime repostedAt
+ AuthorModel user, int othersCount, DateTime repostedAt, String? caption
 });
 
 
@@ -557,12 +561,13 @@ class __$RepostLabelModelCopyWithImpl<$Res>
 
 /// Create a copy of RepostLabelModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? user = null,Object? othersCount = null,Object? repostedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? user = null,Object? othersCount = null,Object? repostedAt = null,Object? caption = freezed,}) {
   return _then(_RepostLabelModel(
 user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as AuthorModel,othersCount: null == othersCount ? _self.othersCount : othersCount // ignore: cast_nullable_to_non_nullable
 as int,repostedAt: null == repostedAt ? _self.repostedAt : repostedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,caption: freezed == caption ? _self.caption : caption // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

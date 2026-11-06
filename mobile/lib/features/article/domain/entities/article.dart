@@ -36,7 +36,7 @@ class Author extends Equatable {
 
 /// `RepostLabelDto` (F29): why a repost placed this card, for the label "أعاد نشره {name}" / "{name} و N غيره".
 class RepostLabel extends Equatable {
-  const RepostLabel({required this.user, this.othersCount = 0, required this.repostedAt});
+  const RepostLabel({required this.user, this.othersCount = 0, required this.repostedAt, this.caption});
 
   /// The newest reposter the viewer follows (or the profile's owner on its Reposts tab).
   final Author user;
@@ -45,8 +45,11 @@ class RepostLabel extends Equatable {
   final int othersCount;
   final DateTime repostedAt;
 
+  /// [user]'s thoughts on it (plain text, ≤ 500 characters, line breaks kept), shown under the label; null when none.
+  final String? caption;
+
   @override
-  List<Object?> get props => [user, othersCount, repostedAt];
+  List<Object?> get props => [user, othersCount, repostedAt, caption];
 }
 
 class FieldRef extends Equatable {

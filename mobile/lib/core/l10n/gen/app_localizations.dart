@@ -6044,6 +6044,12 @@ abstract class AppLocalizations {
   /// **'You can\'t repost your own article.'**
   String get errRepostOwnArticle;
 
+  /// No description provided for @errRepostCaptionTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Your thoughts must be 500 characters or fewer.'**
+  String get errRepostCaptionTooLong;
+
   /// No description provided for @profileMenu.
   ///
   /// In en, this message translates to:
@@ -7477,6 +7483,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{{name} and 1 other reposted this} other{{name} and {count} others reposted this}}'**
   String repostLabelMany(String name, int count);
+
+  /// No description provided for @repostMenuRepost.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost'**
+  String get repostMenuRepost;
+
+  /// No description provided for @repostMenuWithThoughts.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost with your thoughts'**
+  String get repostMenuWithThoughts;
+
+  /// No description provided for @repostMenuEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit your thoughts'**
+  String get repostMenuEdit;
+
+  /// No description provided for @repostMenuUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo repost'**
+  String get repostMenuUndo;
+
+  /// No description provided for @repostCaptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost this article'**
+  String get repostCaptionTitle;
+
+  /// No description provided for @repostCaptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your thoughts… (optional)'**
+  String get repostCaptionHint;
+
+  /// No description provided for @repostCaptionSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost'**
+  String get repostCaptionSubmit;
+
+  /// No description provided for @repostCaptionReposted.
+  ///
+  /// In en, this message translates to:
+  /// **'You reposted this article.'**
+  String get repostCaptionReposted;
+
+  /// No description provided for @repostCaptionSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your thoughts were saved.'**
+  String get repostCaptionSaved;
 
   /// No description provided for @commentBoxHint.
   ///

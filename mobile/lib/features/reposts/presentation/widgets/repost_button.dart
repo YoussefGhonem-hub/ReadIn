@@ -11,11 +11,14 @@ import '../../../article/presentation/cubit/engagement_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
 import '../../../reactions/presentation/widgets/reaction_button.dart' show ActionBarItem;
+import 'repost_caption_sheet.dart';
+import 'repost_menu.dart';
 
-/// Repost (F29) with its count beside it (none at 0), on the post card's action bar and in the reader's. A tap
-/// reposts or undoes it at once and rolls back with a message when the API refuses. On the viewer's own article it is
-/// faded and a tap only says why ("You can't repost your own article"); guests get the sign-in prompt and nothing is
-/// sent.
+/// Repost (F29) with its count beside it (none at 0), on the post card's action bar and in the reader's. A tap opens a
+/// small menu: "Repost" (at once, rolled back with a message when the API refuses) and "Repost with your thoughts" (the
+/// caption sheet), or, once reposted, "Edit your thoughts" (the sheet, prefilled) and "Undo repost" (at once). On the
+/// viewer's own article it is faded and a tap only says why ("You can't repost your own article"); guests get the
+/// sign-in prompt and nothing is sent.
 class RepostButton extends StatelessWidget {
   const RepostButton({super.key, required this.article});
 
@@ -27,8 +30,19 @@ class RepostButton extends StatelessWidget {
       return;
     }
     if (!requireAccount(context)) return;
-    final failure = await context.read<EngagementCubit>().toggleRepost(article);
-    if (context.mounted) showActionFailure(context, failure);
+    final engagement = context.read<EngagementCubit>();
+    final current = engagement.of(article);
+    // A repost request of the viewer's is in flight: its answer comes first.
+    if (current.reposting) return;
+    final action = await showRepostMenu(context, reposted: current.isReposted);
+    if (action == null || !context.mounted) return;
+    switch (action) {
+      case RepostMenuAction.repost || RepostMenuAction.undo:
+        final failure = await engagement.setReposted(article, reposted: action == RepostMenuAction.repost);
+        if (context.mounted) showActionFailure(context, failure);
+      case RepostMenuAction.withThoughts || RepostMenuAction.editThoughts:
+        await showRepostCaptionSheet(context, article: article, editing: action == RepostMenuAction.editThoughts);
+    }
   }
 
   @override
