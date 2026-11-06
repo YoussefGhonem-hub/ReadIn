@@ -129,7 +129,7 @@ void main() {
   Future<void> highlightWordAt(WidgetTester tester, String blockId, int plain) async {
     await tester.longPressAt(at(tester, unit(blockId), plain));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('علّم'));
+    await tester.tap(find.text('تمييز'));
     await tester.pumpAndSettle();
   }
 
@@ -179,7 +179,7 @@ void main() {
       await pumpReader(tester);
       await tester.longPressAt(at(tester, unit('p1'), 24));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('شيل العلامة'));
+      await tester.tap(find.text('إزالة التمييز'));
       await tester.pumpAndSettle();
       expect(repository.removes, ['h-7']);
       expect(cubit.state.mine, isEmpty);
@@ -195,7 +195,7 @@ void main() {
       await tester.tapAt(at(tester, unit('p1'), 20));
       await tester.pumpAndSettle();
       expect(find.byType(HighlightCountBubble), findsOneWidget);
-      await tester.tap(find.text('شيل العلامة'));
+      await tester.tap(find.text('إزالة التمييز'));
       await tester.pumpAndSettle();
       expect(find.byType(HighlightCountBubble), findsNothing);
       expect(repository.removes, ['h-7']);
@@ -206,7 +206,7 @@ void main() {
       repository.createFailure = const Failure(FailureCodes.highlightTextMismatch);
       await pumpReader(tester);
       await highlightWordAt(tester, 'p1', 45);
-      expect(find.text('النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.'), findsOneWidget);
+      expect(find.text('تغيّر هذا النص في المقال. حدّث الصفحة وحاول مرة أخرى.'), findsOneWidget);
       expect(textChanged, 1);
       expect(repository.loads, hasLength(2));
       expect(cubit.state.mine, isEmpty);
@@ -218,11 +218,11 @@ void main() {
       final range = HighlightRange(blockId: 'p1', startOffset: 0, endOffset: 1001, text: 'x' * 1001);
       highlights.onHighlight(tester.element(find.byType(RDocHighlights)), HighlightSelection(HighlightSelectionStatus.tooLong, range));
       await tester.pump();
-      expect(find.text('الـ Highlight لازم يكون 1000 حرف أو أقل.'), findsOneWidget);
+      expect(find.text('يجب ألا يتجاوز التمييز 1000 حرف.'), findsOneWidget);
       expect(repository.creates, isEmpty);
     });
 
-    testWidgets('tapping a popular range shows "N قارئ علّموا الجملة دي"; a tap anywhere closes it', (tester) async {
+    testWidgets('tapping a popular range shows "ميّز N قرّاء هذه الجملة"; a tap anywhere closes it', (tester) async {
       repository.answer = (id, language) => ArticleHighlights(
             articleId: id,
             language: language,
@@ -231,10 +231,10 @@ void main() {
       await pumpReader(tester);
       await tester.tapAt(at(tester, unit('q1'), 28));
       await tester.pumpAndSettle();
-      expect(find.text('5 قارئ علّموا الجملة دي'), findsOneWidget);
+      expect(find.text('ميّز 5 قرّاء هذه الجملة'), findsOneWidget);
       await tester.tapAt(const Offset(20, 20));
       await tester.pumpAndSettle();
-      expect(find.text('5 قارئ علّموا الجملة دي'), findsNothing);
+      expect(find.text('ميّز 5 قرّاء هذه الجملة'), findsNothing);
     });
 
     testWidgets('hidden: no GET, no marks, no selection; shown again from the menu, it loads', (tester) async {

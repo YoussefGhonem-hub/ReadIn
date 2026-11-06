@@ -30,7 +30,7 @@ public sealed class FcmPushSenderTests
     {
         var message = FcmPushSender.ToMessage(Daily, "token-1");
 
-        message.Notification.Title.Should().Be("مقال النهارده جاهز ☕");
+        message.Notification.Title.Should().Be("مقال اليوم جاهز ☕");
         message.Notification.Body.Should().Be("RAG ولا Fine-tuning؟");
         message.Data["type"].Should().Be("daily_article");
         message.Data["link"].Should().Be("readin://a/rag-vs-fine-tuning");

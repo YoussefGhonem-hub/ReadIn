@@ -210,7 +210,7 @@ void main() {
       expect(empty, findsOneWidget);
       expect(find.text(l10nAr.searchNoResultsTitle('${String.fromCharCode(0x2068)}zzzz${String.fromCharCode(0x2069)}')), findsOneWidget);
       expect(find.text(l10nAr.searchNoResultsTip), findsOneWidget);
-      expect(l10nAr.searchNoResultsTitle('x'), 'مفيش نتايج لـ «x»');
+      expect(l10nAr.searchNoResultsTitle('x'), 'لا توجد نتائج لـ «x»');
     });
 
     testWidgets('an error offers retry, which searches again', (tester) async {

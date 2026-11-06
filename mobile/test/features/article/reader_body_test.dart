@@ -256,13 +256,13 @@ void main() {
       expect(find.byKey(const ValueKey('article-category-link')), findsNothing);
     });
 
-    testWidgets('Arabic says "في قسم {name}"', (tester) async {
+    testWidgets('Arabic says "في فئة {name}"', (tester) async {
       usePhoneSurface(tester);
       await tester.pumpWidget(testApp(
         Scaffold(body: ReaderBody(article: article(category: const WriterCategoryRef(slug: 'ef-core', name: 'EF Core')), bodyFontSize: 17)),
       ));
       await tester.pump();
-      expect(find.textContaining('في قسم'), findsOneWidget);
+      expect(find.textContaining('في فئة'), findsOneWidget);
       expect(find.textContaining('EF Core'), findsOneWidget);
     });
   });

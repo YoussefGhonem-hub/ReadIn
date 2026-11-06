@@ -57,7 +57,7 @@ const _writer = Me(
   permissions: [Permissions.articlesCreate],
 );
 
-/// Home ("النهارده") in the 4 mandatory variants: ar/en × light/dark (SPEC §8.2).
+/// Home ("اليوم") in the 4 mandatory variants: ar/en × light/dark (SPEC §8.2).
 void main() {
   setUpAll(FakeMedia.install);
   setUp(() {

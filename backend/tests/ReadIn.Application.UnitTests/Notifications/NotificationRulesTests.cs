@@ -152,18 +152,18 @@ public sealed class NotificationRulesTests
     public void Aggregated_texts_say_who_and_how_many_others()
     {
         NotificationTexts.For(NotificationTypes.ArticleComment, english: false, Input("أحمد", 10))
-            .Should().Be(("⁨أحمد⁩ و9 غيره علّقوا على مقالك", "تعليق قصير"));
+            .Should().Be(("علّق ⁨أحمد⁩ و9 آخرون على مقالك", "تعليق قصير"));
         NotificationTexts.For(NotificationTypes.ArticleComment, english: true, Input("Ahmed", 10)).Title
             .Should().Be("⁨Ahmed⁩ and 9 others commented on your article");
         NotificationTexts.For(NotificationTypes.ArticleComment, english: true, Input("Ahmed", 2)).Title
             .Should().Be("⁨Ahmed⁩ and 1 other commented on your article");
         NotificationTexts.For(NotificationTypes.ArticleComment, english: false, Input("Ahmed", 1)).Title
-            .Should().Be("⁨Ahmed⁩ علّق على مقالك");
+            .Should().Be("علّق ⁨Ahmed⁩ على مقالك");
         NotificationTexts.For(NotificationTypes.CommentReply, english: false, Input("Mona", 2)).Title
-            .Should().Be("⁨Mona⁩ وشخص تاني ردّوا على تعليقك");
+            .Should().Be("ردّ ⁨Mona⁩ وشخص آخر على تعليقك");
         NotificationTexts.For(NotificationTypes.NewFollower, english: true, Input("Sara", 3))
             .Should().Be(("⁨Sara⁩ and 2 others started following you", ""));
-        NotificationTexts.For(NotificationTypes.NewFollower, english: false, Input("سارة", 1)).Title.Should().Be("⁨سارة⁩ بدأ يتابعك");
+        NotificationTexts.For(NotificationTypes.NewFollower, english: false, Input("سارة", 1)).Title.Should().Be("بدأ ⁨سارة⁩ متابعتك");
     }
 
     [Fact]
@@ -172,7 +172,7 @@ public sealed class NotificationRulesTests
         NotificationTexts.For(NotificationTypes.Mention, english: true, Input(null, 0)).Title
             .Should().Be("⁨Deleted user⁩ mentioned you in a comment");
         NotificationTexts.For(NotificationTypes.Mention, english: false, Input(null, 0)).Title
-            .Should().Be("⁨مستخدم محذوف⁩ عمل لك منشن في تعليق");
+            .Should().Be("أشار إليك ⁨مستخدم محذوف⁩ في تعليق");
     }
 
     [Fact]
@@ -181,24 +181,43 @@ public sealed class NotificationRulesTests
         NotificationTexts.For(NotificationTypes.ReactionsMilestone, english: true, Input(null, 0, new NotificationData { Threshold = 50 }))
             .Should().Be(("Your article reached 50 reactions 🎉", "RAG vs fine-tuning"));
         NotificationTexts.For(NotificationTypes.ReactionsMilestone, english: false, Input(null, 0, new NotificationData { Threshold = 10 })).Title
-            .Should().Be("مقالك وصل لـ 10 رياكشن 🎉");
+            .Should().Be("بلغ مقالك 10 تفاعلات 🎉");
         NotificationTexts.For(NotificationTypes.FollowedWriterArticle, english: true, Input("Mona", 1))
             .Should().Be(("⁨Mona⁩ published a new article", "RAG vs fine-tuning"));
         NotificationTexts.For(NotificationTypes.DailyArticle, english: false, Input(null, 0)).Title.Should().Be(DailyArticlePush.TitleAr);
         NotificationTexts.For(NotificationTypes.StreakReminder, english: true, Input(null, 0, new NotificationData { StreakDays = 1 })).Body
             .Should().Be("Your streak is 1 day. Read an article today to keep it going.");
         NotificationTexts.For(NotificationTypes.StreakReminder, english: false, Input(null, 0, new NotificationData { StreakDays = 5 })).Body
-            .Should().Be("الـ streak بتاعك 5 أيام. اقرا مقال النهارده عشان تكمّل.");
+            .Should().Be("سلسلة قراءتك: 5 أيام. اقرأ مقال اليوم للحفاظ عليها.");
         NotificationTexts.For(NotificationTypes.StreakReminder, english: false, Input(null, 0, new NotificationData { StreakDays = 12 })).Body
-            .Should().StartWith("الـ streak بتاعك 12 يوم.");
+            .Should().StartWith("سلسلة قراءتك: 12 يومًا.");
         foreach (var change in Enum.GetValues<SecurityChange>())
         {
             var (title, body) = NotificationTexts.For(NotificationTypes.SecurityAlert, english: false,
                 Input(null, 0, new NotificationData { SecurityChange = change }));
-            title.Should().Be("تنبيه أمان");
-            body.Should().NotBeNullOrWhiteSpace().And.NotBe("حاجة اتغيّرت في أمان حسابك.", $"{change} has its own text");
+            title.Should().Be("تنبيه أمني");
+            body.Should().NotBeNullOrWhiteSpace().And.NotBe("حدث تغيير أمني في حسابك.", $"{change} has its own text");
         }
     }
+
+    [Theory]
+    [InlineData(1, "سلسلة قراءتك: يوم واحد.")]
+    [InlineData(2, "سلسلة قراءتك: يومان.")]
+    [InlineData(10, "سلسلة قراءتك: 10 أيام.")]
+    [InlineData(99, "سلسلة قراءتك: 99 يومًا.")]
+    [InlineData(100, "سلسلة قراءتك: 100 يوم.")]
+    [InlineData(103, "سلسلة قراءتك: 103 أيام.")]
+    public void Arabic_streak_days_take_the_plural_form_of_their_number(int days, string start) =>
+        NotificationTexts.For(NotificationTypes.StreakReminder, english: false, Input(null, 0, new NotificationData { StreakDays = days }))
+            .Body.Should().StartWith(start);
+
+    [Theory]
+    [InlineData(1, "تلقّى مقالك أول تفاعل 🎉")]
+    [InlineData(50, "بلغ مقالك 50 تفاعلًا 🎉")]
+    [InlineData(100, "بلغ مقالك 100 تفاعل 🎉")]
+    public void Arabic_milestones_take_the_plural_form_of_their_number(int threshold, string title) =>
+        NotificationTexts.For(NotificationTypes.ReactionsMilestone, english: false, Input(null, 0, new NotificationData { Threshold = threshold }))
+            .Title.Should().Be(title);
 
     [Fact]
     public void A_mention_in_an_article_says_so_with_the_title_as_the_body()
@@ -208,7 +227,7 @@ public sealed class NotificationRulesTests
         NotificationTexts.For(NotificationTypes.Mention, english: true, inArticle)
             .Should().Be(("⁨Mona⁩ mentioned you in an article", "RAG vs fine-tuning"));
         NotificationTexts.For(NotificationTypes.Mention, english: false, inArticle)
-            .Should().Be(("⁨Mona⁩ عمل لك منشن في مقال", "RAG vs fine-tuning"));
+            .Should().Be(("أشار إليك ⁨Mona⁩ في مقال", "RAG vs fine-tuning"));
         NotificationTexts.For(NotificationTypes.Mention, english: true, Input("Mona", 1))
             .Should().Be(("⁨Mona⁩ mentioned you in a comment", "تعليق قصير"), "a comment's mention keeps its text");
     }

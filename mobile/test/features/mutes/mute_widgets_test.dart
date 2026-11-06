@@ -46,7 +46,7 @@ import '../../helpers/test_app.dart';
 class MockRelatedArticlesCubit extends MockCubit<List<ArticleCard>> implements RelatedArticlesCubit {}
 
 /// F28 on screen: the "⋯" menu (others', own, a deleted author's, guests), Show less and Mute author with Undo, the
-/// "كتم المواضيع" sheet, the "انت كاتم الكاتب ده" banner, Mute on a profile's and a comment's "⋯", collapsed comments
+/// "كتم المواضيع" sheet, the "لقد كتمت هذا الكاتب" banner, Mute on a profile's and a comment's "⋯", collapsed comments
 /// and Settings → Muted.
 void main() {
   const en = Variant(AppLocales.en, Brightness.light);
@@ -148,7 +148,7 @@ void main() {
         ArticleMenuItem.report,
       ]);
       expect(articleMenuItems(own: true, moderator: true, hidden: true), [ArticleMenuItem.muteTopics, ArticleMenuItem.unhide]);
-      // The reader's menu (pdf) adds "تحميل PDF" on every article, before Report (F33, any member since 2026-11-06).
+      // The reader's menu (pdf) adds "تنزيل PDF" on every article, before Report (F33, any member since 2026-11-06).
       expect(articleMenuItems(own: true, moderator: false, hidden: false, pdf: true), [ArticleMenuItem.muteTopics, ArticleMenuItem.downloadPdf]);
       expect(articleMenuItems(own: false, moderator: false, hidden: false, pdf: true), [
         ArticleMenuItem.showLess,

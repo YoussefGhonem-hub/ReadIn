@@ -47,7 +47,7 @@ class LinkedAccountsSection extends StatelessWidget {
         content: Text(l10n.unlinkBody(provider.label)),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.unlinkAction)),
+          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.unlinkConfirm)),
         ],
       ),
     );

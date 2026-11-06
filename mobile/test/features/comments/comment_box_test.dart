@@ -227,8 +227,8 @@ void main() {
     testWidgets('Arabic: "اكتب تعليق…", "إيموجي" and "إلغاء الرد"', (tester) async {
       final top = comment('c1', author: omar);
       await pump(tester, box(), cubit: comments(const CommentsState()), variant: _ar);
-      expect(find.text('اكتب تعليق…'), findsOneWidget);
-      expect(find.byTooltip('إيموجي'), findsOneWidget);
+      expect(find.text('اكتب تعليقًا…'), findsOneWidget);
+      expect(find.byTooltip('الرموز التعبيرية'), findsOneWidget);
       await pump(
         tester,
         box(),

@@ -144,7 +144,7 @@ public sealed class DailyArticlePushTests
     private static readonly Guid ArticleId = Guid.Parse("0a1b2c3d-0000-0000-0000-000000000001");
 
     [Theory]
-    [InlineData(UiLanguages.Arabic, "مقال النهارده جاهز ☕")]
+    [InlineData(UiLanguages.Arabic, "مقال اليوم جاهز ☕")]
     [InlineData(UiLanguages.English, "Today's article is ready ☕")]
     public void The_title_is_in_the_ui_language_and_the_body_is_the_article_title(string ui, string title)
     {

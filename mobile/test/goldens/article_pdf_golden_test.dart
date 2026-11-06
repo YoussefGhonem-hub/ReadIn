@@ -27,7 +27,7 @@ class _MockArticleCubit extends MockCubit<ArticleState> implements ArticleCubit 
 
 /// "Download PDF" (SPEC F33), ar/light and en/dark: in My articles → Published, the language question for an article
 /// with two published versions and an article whose PDF is being prepared; in the reader, the "⋯" menu (F28) on your
-/// own article with "تحميل PDF".
+/// own article with "تنزيل PDF".
 void main() {
   setUpAll(() => registerFallbackValue(ArticleLifecycle.draft));
 

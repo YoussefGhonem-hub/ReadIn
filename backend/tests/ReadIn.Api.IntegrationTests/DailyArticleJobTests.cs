@@ -50,7 +50,7 @@ public sealed class DailyArticleJobTests(ApiFactory api)
         await RunAsync(TodayAt(12, 5));
 
         var push = _push.To(token).Should().ContainSingle("the push goes out once a day").Subject;
-        push.Title.Should().Be("مقال النهارده جاهز ☕");
+        push.Title.Should().Be("مقال اليوم جاهز ☕");
         push.Data["type"].Should().Be("daily_article");
         push.Data["articleId"].Should().Be(pick.ArticleId.ToString());
         (await PickAsync(user.Id))!.NotifiedAt.Should().Be(TodayAt(12, 0));

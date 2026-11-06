@@ -39,7 +39,7 @@ public sealed class NotificationPushJobTests(ApiFactory api)
 
         var sent = push.To(token).Should().ContainSingle().Subject;
         var entry = await EntryAsync(author.Id, NotificationTypes.ArticleComment);
-        sent.Title.Should().Be("⁨Ahmed⁩ علّق على مقالك");
+        sent.Title.Should().Be("علّق ⁨Ahmed⁩ على مقالك");
         sent.Body.Should().Be("First comment, pushed");
         sent.CollapseKey.Should().Be($"article_comment:{articleId}", "a newer push of the same group replaces the older one");
         sent.Data.Should().BeEquivalentTo(new Dictionary<string, string>
@@ -59,7 +59,7 @@ public sealed class NotificationPushJobTests(ApiFactory api)
         await CommentAsync(second, articleId, "Second comment, aggregated");
         await PushAsync(push, DateTime.UtcNow.AddSeconds(1));
         var aggregated = push.To(token).Should().HaveCount(2).And.Subject.Last();
-        aggregated.Title.Should().Be("⁨Mona⁩ وشخص تاني علّقوا على مقالك");
+        aggregated.Title.Should().Be("علّق ⁨Mona⁩ وشخص آخر على مقالك");
         aggregated.Data["notificationId"].Should().Be(entry.Id.ToString());
         aggregated.CollapseKey.Should().Be(sent.CollapseKey);
     }
@@ -159,7 +159,7 @@ public sealed class NotificationPushJobTests(ApiFactory api)
         var sent = push.To(token).Should().ContainSingle().Subject;
         var entry = await EntryAsync(mentioned.Id, NotificationTypes.Mention);
         entry.CommentId.Should().BeNull();
-        sent.Title.Should().Be("⁨Mona⁩ عمل لك منشن في مقال");
+        sent.Title.Should().Be("أشار إليك ⁨Mona⁩ في مقال");
         sent.Body.Should().Be("Mentions get pushed", "the article's title");
         sent.CollapseKey.Should().Be("mention");
         sent.Data.Should().BeEquivalentTo(new Dictionary<string, string>

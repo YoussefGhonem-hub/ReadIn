@@ -42,7 +42,7 @@ void main() {
       'https://readin.app/f/dotnet?topic=..%2Fsettings': '/f/dotnet',
       '/f/ai-fundamentals': '/f/ai-fundamentals',
       // A writer's category pages (F31): the app's readin://u/{username}/c/{slug} and the web's /@{username}/c/{slug};
-      // "مقالات تانية" is _other. Slugs are matched ignoring case.
+      // "مقالات أخرى" is _other. Slugs are matched ignoring case.
       'readin://u/mona_dev/c/ef-core': '/u/mona_dev/c/ef-core',
       'https://readin.app/@Mona_Dev/c/EF-Core': '/u/mona_dev/c/ef-core',
       'https://readin.app/@mona_dev/c/_other': '/u/mona_dev/c/_other',

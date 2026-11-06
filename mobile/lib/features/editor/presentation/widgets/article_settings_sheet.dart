@@ -143,7 +143,7 @@ class _LanguagesSection extends StatelessWidget {
                       final name = articleLanguageName(l10n, other);
                       final ok = await confirmDialog(
                         context,
-                        title: l10n.removeTranslation(name),
+                        title: l10n.removeTranslationTitle(name),
                         body: l10n.removeTranslationBody,
                         confirm: l10n.removeAction,
                         destructive: true,

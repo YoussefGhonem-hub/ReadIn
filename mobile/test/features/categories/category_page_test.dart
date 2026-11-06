@@ -19,7 +19,7 @@ import '../../helpers/post_card_fixtures.dart';
 import '../../helpers/profile_fakes.dart';
 import '../../helpers/test_app.dart';
 
-/// A writer's category page (F31): its header with the writer, the post cards with infinite scroll, "مقالات تانية",
+/// A writer's category page (F31): its header with the writer, the post cards with infinite scroll, "مقالات أخرى",
 /// the empty state, "not found" with the way to the profile, and retry.
 void main() {
   const en = Variant(AppLocales.en, Brightness.light);

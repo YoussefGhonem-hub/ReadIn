@@ -38,11 +38,11 @@ class _AccountSectionState extends State<AccountSection> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.signOutEverywhere),
+        title: Text(l10n.signOutEverywhereTitle),
         content: Text(l10n.signOutEverywhereBody),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.signOutEverywhere)),
+          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.signOutEverywhereConfirm)),
         ],
       ),
     );

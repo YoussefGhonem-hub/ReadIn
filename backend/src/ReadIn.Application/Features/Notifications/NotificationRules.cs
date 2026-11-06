@@ -139,20 +139,21 @@ public static class NotificationLinks
 }
 
 /// <summary>
-/// Push titles and bodies in the user's UI language (SPEC F17, §21.1): Egyptian Arabic with English technical terms, or
-/// English. Names are wrapped in Unicode isolates so a Latin name keeps its place in an Arabic sentence.
+/// Push titles and bodies in the user's UI language (SPEC F17, §21.1, §14.4): Modern Standard Arabic, worded as the
+/// clients' notification center words them, or English. Names are wrapped in Unicode isolates so a Latin name keeps its
+/// place in an Arabic sentence.
 /// </summary>
 public static class NotificationTexts
 {
-    public const string ModerationWarningTitleAr = "وصلك تحذير من فريق الإشراف";
+    public const string ModerationWarningTitleAr = "تلقّيت تحذيرًا من فريق الإشراف";
     public const string ModerationWarningTitleEn = "You received a warning from the moderators";
-    public const string ArticleHiddenTitleAr = "فريق الإشراف خفى مقالك";
+    public const string ArticleHiddenTitleAr = "أخفى فريق الإشراف مقالك";
     public const string ArticleHiddenTitleEn = "The moderators hid your article";
-    public const string VerificationApprovedTitleAr = "بقيت كاتب موثّق ✓";
+    public const string VerificationApprovedTitleAr = "أصبحت الآن كاتبًا موثّقًا ✓";
     public const string VerificationApprovedTitleEn = "You're now a verified writer ✓";
-    public const string VerificationRejectedTitleAr = "طلب التوثيق بتاعك ماتقبلش";
+    public const string VerificationRejectedTitleAr = "لم تتم الموافقة على طلب توثيقك";
     public const string VerificationRejectedTitleEn = "Your verification request wasn't approved";
-    public const string VerificationRejectedBodyAr = "افتحه عشان تعرف السبب";
+    public const string VerificationRejectedBodyAr = "افتحه لمعرفة السبب";
     public const string VerificationRejectedBodyEn = "Open it to see why";
 
     /// <param name="ActorName">The latest actor's display name; null when they deleted their account.</param>
@@ -181,26 +182,26 @@ public static class NotificationTexts
         {
             NotificationTypes.NewFollower => (english
                 ? $"{name}{OthersEn(others)} started following you"
-                : others == 0 ? $"{name} بدأ يتابعك" : $"{name}{OthersAr(others)} بدأوا يتابعوك", string.Empty),
+                : $"بدأ {name}{OthersAr(others)} متابعتك", string.Empty),
             NotificationTypes.ArticleComment => (english
                 ? $"{name}{OthersEn(others)} commented on your article"
-                : others == 0 ? $"{name} علّق على مقالك" : $"{name}{OthersAr(others)} علّقوا على مقالك", comment),
+                : $"علّق {name}{OthersAr(others)} على مقالك", comment),
             NotificationTypes.CommentReply => (english
                 ? $"{name}{OthersEn(others)} replied to your comment"
-                : others == 0 ? $"{name} ردّ على تعليقك" : $"{name}{OthersAr(others)} ردّوا على تعليقك", comment),
+                : $"ردّ {name}{OthersAr(others)} على تعليقك", comment),
             NotificationTypes.Mention when input.CommentExcerpt is null =>
-                (english ? $"{name} mentioned you in an article" : $"{name} عمل لك منشن في مقال", article),
-            NotificationTypes.Mention => (english ? $"{name} mentioned you in a comment" : $"{name} عمل لك منشن في تعليق", comment),
+                (english ? $"{name} mentioned you in an article" : $"أشار إليك {name} في مقال", article),
+            NotificationTypes.Mention => (english ? $"{name} mentioned you in a comment" : $"أشار إليك {name} في تعليق", comment),
             NotificationTypes.ReactionsMilestone => (english
                 ? $"Your article reached {input.Data.Threshold} reactions 🎉"
-                : $"مقالك وصل لـ {input.Data.Threshold} رياكشن 🎉", article),
-            NotificationTypes.FollowedWriterArticle => (english ? $"{name} published a new article" : $"{name} نشر مقال جديد", article),
+                : $"{ReactionsAr(input.Data.Threshold ?? 0)} 🎉", article),
+            NotificationTypes.FollowedWriterArticle => (english ? $"{name} published a new article" : $"نشر {name} مقالًا جديدًا", article),
             NotificationTypes.ArticleReposted => (english
                 ? $"{name}{OthersEn(others)} reposted your article"
-                : others == 0 ? $"{name} أعاد نشر مقالك" : $"{name}{OthersAr(others)} أعادوا نشر مقالك", article),
+                : $"أعاد {name}{OthersAr(others)} نشر مقالك", article),
             NotificationTypes.DailyArticle => (english ? DailyArticlePush.TitleEn : DailyArticlePush.TitleAr, article),
             NotificationTypes.StreakReminder => StreakReminder(english, input.Data.StreakDays ?? 1),
-            NotificationTypes.SecurityAlert => (english ? "Security alert" : "تنبيه أمان", SecurityBody(english, input.Data)),
+            NotificationTypes.SecurityAlert => (english ? "Security alert" : "تنبيه أمني", SecurityBody(english, input.Data)),
             NotificationTypes.ModerationNotice => input.Data.NoticeKind == NoticeKinds.ArticleHidden
                 ? (english ? ArticleHiddenTitleEn : ArticleHiddenTitleAr, input.NoticeLabel ?? input.NoticeNote ?? article)
                 : (english ? ModerationWarningTitleEn : ModerationWarningTitleAr, input.NoticeNote ?? string.Empty),
@@ -211,13 +212,13 @@ public static class NotificationTexts
                 false => english
                     ? (VerificationRejectedTitleEn, VerificationRejectedBodyEn)
                     : (VerificationRejectedTitleAr, VerificationRejectedBodyAr),
-                null => (english ? "Your verification request has an answer" : "طلب التوثيق بتاعك اترد عليه", string.Empty),
+                null => (english ? "Your verification request has an answer" : "تم الرد على طلب توثيقك", string.Empty),
             },
             _ => ("ReadIn", string.Empty),
         };
     }
 
-    /// <summary>"Ahmed and 9 others" / "أحمد و9 غيره" (SPEC §21.1).</summary>
+    /// <summary>"Ahmed and 9 others" / "أحمد و9 آخرون" (SPEC §21.1).</summary>
     private static string OthersEn(int others) => others switch
     {
         0 => string.Empty,
@@ -225,39 +226,61 @@ public static class NotificationTexts
         _ => $" and {others} others",
     };
 
-    private static string OthersAr(int others) => others == 1 ? " وشخص تاني" : $" و{others} غيره";
+    /// <summary>The verb comes first in the Arabic sentence, so it stays singular: «علّق أحمد و9 آخرون على مقالك».</summary>
+    private static string OthersAr(int others) => others switch
+    {
+        0 => string.Empty,
+        1 => " وشخص آخر",
+        2 => " وشخصان آخران",
+        _ => $" و{others} آخرون",
+    };
+
+    /// <summary>Arabic plural categories (CLDR): 1, 2, few = n % 100 in 3..10, many = n % 100 in 11..99, other.</summary>
+    private static string ArabicCount(int n, string one, string two, string few, string many, string other) => n switch
+    {
+        1 => one,
+        2 => two,
+        _ when n % 100 is >= 3 and <= 10 => $"{n} {few}",
+        _ when n % 100 is >= 11 and <= 99 => $"{n} {many}",
+        _ => $"{n} {other}",
+    };
+
+    private static string ReactionsAr(int n) => n == 1
+        ? "تلقّى مقالك أول تفاعل"
+        : $"بلغ مقالك {ArabicCount(n, "تفاعلًا واحدًا", "تفاعلين", "تفاعلات", "تفاعلًا", "تفاعل")}";
 
     private static (string, string) StreakReminder(bool english, int days) => english
         ? ("Don't lose your streak 🔥", $"Your streak is {days} {(days == 1 ? "day" : "days")}. Read an article today to keep it going.")
-        : ("متضيّعش الـ streak بتاعك 🔥", $"الـ streak بتاعك {days} {(days is >= 3 and <= 10 ? "أيام" : "يوم")}. اقرا مقال النهارده عشان تكمّل.");
+        : ("حافظ على سلسلة قراءتك 🔥",
+            $"سلسلة قراءتك: {ArabicCount(days, "يوم واحد", "يومان", "أيام", "يومًا", "يوم")}. اقرأ مقال اليوم للحفاظ عليها.");
 
     private static string SecurityBody(bool english, NotificationData data) => data.SecurityChange switch
     {
         Domain.Users.SecurityChange.PasswordChanged => english
             ? "Your password was changed. If this wasn't you, reset it now."
-            : "كلمة السر بتاعتك اتغيّرت. لو مش إنت، غيّرها فورًا.",
+            : "تم تغيير كلمة مرورك. إذا لم تقم بذلك، فأعد تعيينها الآن.",
         Domain.Users.SecurityChange.PasswordReset => english
             ? "Your password was reset with your recovery PIN. If this wasn't you, contact support."
-            : "كلمة السر بتاعتك اتغيّرت بالـ PIN بتاع الاسترجاع. لو مش إنت، كلّم الدعم.",
+            : "تمت إعادة تعيين كلمة مرورك باستخدام رمز الاسترداد (PIN). إذا لم تقم بذلك، فتواصل مع الدعم.",
         Domain.Users.SecurityChange.RecoveryPinChanged => english
             ? "Your recovery PIN was changed. If this wasn't you, change your password."
-            : "الـ PIN بتاع الاسترجاع اتغيّر. لو مش إنت، غيّر كلمة السر.",
+            : "تم تغيير رمز الاسترداد (PIN). إذا لم تقم بذلك، فغيّر كلمة المرور.",
         Domain.Users.SecurityChange.PhoneNumberChanged => english
             ? "Your account's phone number was changed. If this wasn't you, contact support."
-            : "رقم التليفون بتاع حسابك اتغيّر. لو مش إنت، كلّم الدعم.",
+            : "تم تغيير رقم هاتف حسابك. إذا لم تقم بذلك، فتواصل مع الدعم.",
         Domain.Users.SecurityChange.RecoveryLockedOut => english
             ? "Someone entered a wrong recovery PIN too many times, so recovery is locked for an hour."
-            : "حد دخّل PIN استرجاع غلط كذا مرة، فوقفنا الاسترجاع لمدة ساعة.",
+            : "أدخل شخص ما رمز استرداد خاطئًا عدة مرات، لذا أُوقف الاسترداد لمدة ساعة.",
         Domain.Users.SecurityChange.ExternalLoginLinked => english
             ? "A Google or Apple account was linked to your account."
-            : "اتربط حساب Google أو Apple بحسابك.",
+            : "تم ربط حساب Google أو Apple بحسابك.",
         Domain.Users.SecurityChange.ExternalLoginUnlinked => english
             ? "A Google or Apple account was unlinked from your account."
-            : "اتشال ربط حساب Google أو Apple من حسابك.",
+            : "تم إلغاء ربط حساب Google أو Apple بحسابك.",
         Domain.Users.SecurityChange.PhoneSignInAdded => english
             ? "Sign in with a phone number and password was added to your account."
-            : "اتضاف دخول برقم تليفون وكلمة سر لحسابك.",
-        _ => english ? "Something changed in your account's security." : "حاجة اتغيّرت في أمان حسابك.",
+            : "تمت إضافة تسجيل الدخول برقم الهاتف وكلمة المرور إلى حسابك.",
+        _ => english ? "Something changed in your account's security." : "حدث تغيير أمني في حسابك.",
     };
 
     /// <summary>First-strong isolate … pop: the name takes its own direction without moving the words around it.</summary>

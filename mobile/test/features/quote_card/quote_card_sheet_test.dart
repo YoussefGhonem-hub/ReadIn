@@ -215,7 +215,7 @@ void main() {
       final range = HighlightRange(blockId: 'p1', startOffset: 0, endOffset: 401, text: 'x' * 401);
       highlights.onShareQuote!(tester.element(find.byType(RDocHighlights)), HighlightSelection(HighlightSelectionStatus.ok, range));
       await tester.pump();
-      expect(find.text('الاقتباس لازم يكون 400 حرف أو أقل. اختار جزء أصغر.'), findsOneWidget);
+      expect(find.text('يجب ألا يتجاوز الاقتباس 400 حرف. حدّد جزءًا أقصر.'), findsOneWidget);
       expect(repository.requests, isEmpty);
       expect(find.byType(QuoteCardSheet), findsNothing);
 
@@ -234,7 +234,7 @@ void main() {
       final l10n = await selectWord(tester, const Variant(AppLocales.ar, Brightness.light));
       await tester.tap(find.text(l10n.quoteCardAction));
       await tester.pumpAndSettle();
-      expect(find.text('النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.'), findsOneWidget);
+      expect(find.text('تغيّر هذا النص في المقال. حدّث الصفحة وحاول مرة أخرى.'), findsOneWidget);
       expect(find.byKey(const ValueKey('quote-card-retry')), findsNothing);
       expect(changed, 1);
     });
@@ -376,9 +376,9 @@ void main() {
     testWidgets('offline: "you need an internet connection", with "Try again"', (tester) async {
       repository.answer = (_) => const Err(Failure(FailureCodes.networkOffline));
       await openSheet(tester, variant: const Variant(AppLocales.ar, Brightness.light));
-      expect(find.text('محتاج إنترنت عشان تعمل كارت اقتباس.'), findsOneWidget);
+      expect(find.text('يلزمك اتصال بالإنترنت لإنشاء بطاقة اقتباس.'), findsOneWidget);
       expect(find.byIcon(Icons.wifi_off_rounded), findsOneWidget);
-      expect(find.text('حاول تاني'), findsOneWidget);
+      expect(find.text('إعادة المحاولة'), findsOneWidget);
     });
 
     testWidgets('refusals without "Try again": hidden, not found', (tester) async {
@@ -429,7 +429,7 @@ void main() {
         await tester.pump();
         expect(copied, [AppLinks.article('article-1', language: 'en')]);
         expect(find.text(l10n.quoteCardLinkCopied), findsOneWidget);
-        expect(l10n.quoteCardLinkCopied, variant.locale.languageCode == 'ar' ? 'اتنسخ اللينك' : 'Link copied');
+        expect(l10n.quoteCardLinkCopied, variant.locale.languageCode == 'ar' ? 'تم نسخ الرابط' : 'Link copied');
         expect(repository.requests, hasLength(1), reason: 'copying asks the API nothing');
 
         repository.gate!.complete();

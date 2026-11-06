@@ -52,7 +52,7 @@ const writerMe = Me(
 WriterCategoryPage categoryPageOf(WriterCategory category, {Author author = categoryWriter}) =>
     WriterCategoryPage(id: category.id, slug: category.slug, name: category.name, articleCount: category.articleCount, author: author);
 
-/// "مقالات تانية": `_other`, no id and no name.
+/// "مقالات أخرى": `_other`, no id and no name.
 WriterCategoryPage otherPage({int count = 4, Author author = categoryWriter}) =>
     WriterCategoryPage(slug: '_other', articleCount: count, author: author);
 

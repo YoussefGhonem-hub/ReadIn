@@ -225,8 +225,8 @@ void main() {
     await pump(tester, variant: const Variant(AppLocales.ar, Brightness.light));
     await tester.tap(pdfButton('p2'));
     await tester.pumpAndSettle();
-    expect(find.text('محتاج إنترنت عشان تحمّل الـ PDF.'), findsOneWidget);
-    expect(find.widgetWithText(SnackBarAction, 'حاول تاني'), findsOneWidget);
+    expect(find.text('تحتاج إلى اتصال بالإنترنت لتنزيل ملف PDF.'), findsOneWidget);
+    expect(find.widgetWithText(SnackBarAction, 'إعادة المحاولة'), findsOneWidget);
   });
 
   group('the reader\'s "⋯" menu (F28)', () {

@@ -104,10 +104,10 @@ void main() {
     answer(() async => const Ok(diTerm), language: 'en');
     await pumpView(tester, language: 'en', variant: _ar);
 
-    expect(find.text('بالعربي'), findsOneWidget);
-    expect(find.text('بالإنجليزي'), findsNothing);
-    expect(top(tester, find.textContaining('A technique')), lessThan(top(tester, find.text('بالعربي'))));
-    expect(top(tester, find.text('بالعربي')), lessThan(top(tester, find.textContaining('ما يعملش'))));
+    expect(find.text('بالعربية'), findsOneWidget);
+    expect(find.text('بالإنجليزية'), findsNothing);
+    expect(top(tester, find.textContaining('A technique')), lessThan(top(tester, find.text('بالعربية'))));
+    expect(top(tester, find.text('بالعربية')), lessThan(top(tester, find.textContaining('ما يعملش'))));
   });
 
   testWidgets("the term's articles leave out the open one and show at most 5, titles in their own direction", (tester) async {
@@ -186,7 +186,7 @@ void main() {
     await pumpView(tester, variant: _ar);
 
     expect(tester.takeException(), isNull);
-    expect(find.text('بالإنجليزي'), findsOneWidget);
+    expect(find.text('بالإنجليزية'), findsOneWidget);
   });
 
   testWidgets('the sheet loads the term for the version being read; a picked article closes it with its slug', (tester) async {

@@ -393,7 +393,7 @@ class _ArticleEditorViewState extends State<ArticleEditorView> {
       context,
       title: l10n.deleteArticleTitle,
       body: state.isPublished ? l10n.deletePublishedBody : l10n.deleteDraftBody,
-      confirm: l10n.deleteAction,
+      confirm: l10n.deleteConfirm,
       destructive: true,
     );
     if (ok && mounted) await _cubit.delete();

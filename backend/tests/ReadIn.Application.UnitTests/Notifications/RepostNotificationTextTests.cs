@@ -15,7 +15,7 @@ public sealed class RepostNotificationTextTests
     public void One_reposter_is_named_and_the_body_is_the_article_title()
     {
         NotificationTexts.For(NotificationTypes.ArticleReposted, english: false, Input("أحمد", 1))
-            .Should().Be(($"{Isolated("أحمد")} أعاد نشر مقالك", "RAG vs fine-tuning"));
+            .Should().Be(($"أعاد {Isolated("أحمد")} نشر مقالك", "RAG vs fine-tuning"));
         NotificationTexts.For(NotificationTypes.ArticleReposted, english: true, Input("Ahmed", 1))
             .Should().Be(($"{Isolated("Ahmed")} reposted your article", "RAG vs fine-tuning"));
     }
@@ -24,9 +24,9 @@ public sealed class RepostNotificationTextTests
     public void Several_reposters_are_aggregated()
     {
         NotificationTexts.For(NotificationTypes.ArticleReposted, english: false, Input("Mona", 2)).Title
-            .Should().Be($"{Isolated("Mona")} وشخص تاني أعادوا نشر مقالك");
+            .Should().Be($"أعاد {Isolated("Mona")} وشخص آخر نشر مقالك");
         NotificationTexts.For(NotificationTypes.ArticleReposted, english: false, Input("Mona", 6)).Title
-            .Should().Be($"{Isolated("Mona")} و5 غيره أعادوا نشر مقالك");
+            .Should().Be($"أعاد {Isolated("Mona")} و5 آخرون نشر مقالك");
         NotificationTexts.For(NotificationTypes.ArticleReposted, english: true, Input("Mona", 2)).Title
             .Should().Be($"{Isolated("Mona")} and 1 other reposted your article");
         NotificationTexts.For(NotificationTypes.ArticleReposted, english: true, Input("Mona", 4)).Title

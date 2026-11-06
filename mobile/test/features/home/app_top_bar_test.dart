@@ -152,7 +152,7 @@ void main() {
       ));
       await tester.pump();
 
-      expect(find.byTooltip('حوّل للوضع الفاتح'), findsOneWidget);
+      expect(find.byTooltip('التبديل إلى الوضع الفاتح'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('theme-toggle')));
       await tester.pump();
       verify(() => settings.setTheme(ThemePreference.light)).called(1);

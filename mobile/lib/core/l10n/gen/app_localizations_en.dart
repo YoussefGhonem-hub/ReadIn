@@ -188,7 +188,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontSizeXl => 'Extra large';
 
   @override
-  String get langToggleArEg => 'مصري + EN';
+  String get langToggleArEg => 'العربية + EN';
 
   @override
   String get langToggleEn => 'EN';
@@ -1397,6 +1397,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOutEverywhere => 'Sign out of all devices';
 
   @override
+  String get signOutEverywhereTitle => 'Sign out of all devices?';
+
+  @override
+  String get signOutEverywhereConfirm => 'Sign out of all devices';
+
+  @override
   String get signOutEverywhereBody =>
       'Every other device will be signed out. You stay signed in on this one.';
 
@@ -1677,6 +1683,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unlinkAction => 'Unlink';
+
+  @override
+  String get unlinkConfirm => 'Unlink';
 
   @override
   String get notLinked => 'Not linked';
@@ -2085,6 +2094,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAction => 'Delete';
+
+  @override
+  String get deleteConfirm => 'Delete';
 
   @override
   String deleteCollectionTitle(String name) {
@@ -2781,6 +2793,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String removeTranslationTitle(String language) {
+    return 'Remove the $language version?';
+  }
+
+  @override
   String get removeTranslationBody => 'Its title and text will be deleted.';
 
   @override
@@ -3260,6 +3277,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pathLeave => 'Leave path';
+
+  @override
+  String get pathLeaveConfirm => 'Leave path';
 
   @override
   String get pathLeaveTitle => 'Leave this path?';

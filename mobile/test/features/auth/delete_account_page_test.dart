@@ -191,13 +191,13 @@ void main() {
       await pumpReview(tester, const Variant(AppLocales.ar, Brightness.light));
 
       // textContaining: "PDF" is isolated inside the Arabic sentences.
-      expect(find.textContaining('المسودات وأي مقال مش منشور'), findsOneWidget);
-      expect(find.textContaining('وأي صورة أو ملف تاني رفعته'), findsOneWidget);
+      expect(find.textContaining('المسودات وأي مقال غير منشور'), findsOneWidget);
+      expect(find.textContaining('وأي صورة أو ملف آخر رفعته'), findsOneWidget);
       expect(find.textContaining('مقالاتك والمسودات'), findsNothing);
-      const kept = 'مقالاتك المنشورة وتعليقاتك بتفضل موجودة باسم «مستخدم محذوف»';
+      const kept = 'تبقى مقالاتك المنشورة وتعليقاتك ظاهرةً باسم «مستخدم محذوف»';
       expect(find.textContaining(kept), findsOneWidget);
-      expect(find.textContaining('لو عايز تشيل مقال، احذفه قبل ما تحذف حسابك.'), findsOneWidget);
-      expect(top(tester, kept), lessThan(top(tester, 'سجل إن الحساب ده اتحذف')));
+      expect(find.textContaining('إذا أردت إزالة مقال، فاحذفه قبل حذف حسابك.'), findsOneWidget);
+      expect(top(tester, kept), lessThan(top(tester, 'سجلّ بحذف هذا الحساب')));
     });
   });
 

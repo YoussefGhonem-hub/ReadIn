@@ -16,7 +16,7 @@ import '../../helpers/fixtures.dart' show sampleMe;
 import '../../helpers/path_fakes.dart' show pumpRouted;
 import '../../helpers/test_app.dart';
 
-/// A profile's Categories tab (F31): someone else's cards (non-empty, in order, then "مقالات تانية") and the own
+/// A profile's Categories tab (F31): someone else's cards (non-empty, in order, then "مقالات أخرى") and the own
 /// manage list (empty ones too, create, rename, reorder, delete with the article count).
 void main() {
   late AppLocalizations l10n;

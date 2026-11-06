@@ -108,8 +108,8 @@ void main() {
 
     test('Arabic, with Western digits', () {
       final ar = lookupAppLocalizations(AppLocales.ar);
-      expect(commentTimeLabel(ar, now.subtract(const Duration(minutes: 2)), now: now, languageCode: 'ar'), 'من دقيقتين');
-      expect(commentTimeLabel(ar, now.subtract(const Duration(hours: 5)), now: now, languageCode: 'ar'), 'من 5 ساعات');
+      expect(commentTimeLabel(ar, now.subtract(const Duration(minutes: 2)), now: now, languageCode: 'ar'), 'منذ دقيقتين');
+      expect(commentTimeLabel(ar, now.subtract(const Duration(hours: 5)), now: now, languageCode: 'ar'), 'منذ 5 ساعات');
     });
   });
 

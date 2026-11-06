@@ -227,14 +227,14 @@ void main() {
     testWidgets('Arabic: "أعد النشر" and "أعد النشر مع رأيك"', (tester) async {
       await pump(tester, RepostButton(article: card), variant: const Variant(AppLocales.ar, Brightness.light));
       await openMenu(tester);
-      expect(find.text('أعد النشر'), findsOneWidget);
-      expect(find.text('أعد النشر مع رأيك'), findsOneWidget);
+      expect(find.text('إعادة النشر'), findsOneWidget);
+      expect(find.text('إعادة النشر مع رأيك'), findsOneWidget);
     });
 
     testWidgets('Arabic, reposted: "عدّل رأيك" and "إلغاء إعادة النشر"', (tester) async {
       await pump(tester, RepostButton(article: reposted), variant: const Variant(AppLocales.ar, Brightness.light));
       await openMenu(tester);
-      expect(find.text('عدّل رأيك'), findsOneWidget);
+      expect(find.text('تعديل رأيك'), findsOneWidget);
       expect(find.text('إلغاء إعادة النشر'), findsOneWidget);
     });
 
@@ -329,15 +329,15 @@ void main() {
       when(() => reposts.repost(card.id, caption: '')).thenAnswer((_) async => const Ok(RepostState(repostCount: 4, isReposted: true)));
       await pump(tester, RepostButton(article: card), variant: const Variant(AppLocales.ar, Brightness.light));
       await openMenu(tester);
-      await tester.tap(find.text('أعد النشر مع رأيك'));
+      await tester.tap(find.text('إعادة النشر مع رأيك'));
       await tester.pumpAndSettle();
-      expect(find.text('أعد نشر المقال'), findsOneWidget);
-      expect(find.text('قول رأيك في المقال… (اختياري)'), findsOneWidget);
+      expect(find.text('إعادة نشر المقال'), findsOneWidget);
+      expect(find.text('اكتب رأيك في المقال… (اختياري)'), findsOneWidget);
       expect(find.text('إلغاء'), findsOneWidget);
 
-      await tester.tap(find.text('انشر'));
+      await tester.tap(find.text('نشر'));
       await tester.pumpAndSettle();
-      expect(find.text('أعدت نشر المقال.'), findsOneWidget);
+      expect(find.text('تمت إعادة نشر المقال.'), findsOneWidget);
     });
 
     testWidgets('over 500 characters: the counter turns red, the message shows and Repost is disabled', (tester) async {

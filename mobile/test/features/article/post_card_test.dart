@@ -397,7 +397,7 @@ void main() {
       await pump(tester, postCard(1, language: 'en', repostedBy: RepostLabel(user: omar, othersCount: 1, repostedAt: DateTime.utc(2026, 11, 2))));
       expect(find.textContaining('and 1 other reposted this'), findsOneWidget);
 
-      // "مقال النهارده" wins over a repost label; without either there is no label row.
+      // "مقال اليوم" wins over a repost label; without either there is no label row.
       await pump(tester, postCard(1, language: 'en', repostedBy: reposter), label: "Today's article");
       expect(find.byType(RepostLabelText), findsNothing);
       await pump(tester, postCard(1, language: 'en'));
@@ -448,8 +448,8 @@ void main() {
           .replaceAll(Bidi.fsi, '')
           .replaceAll(Bidi.pdi, '');
       expect(text(0), 'أعاد نشره Omar');
-      expect(text(1), 'Omar وشخص تاني أعادوا نشره');
-      expect(text(2), 'Omar و2 غيره أعادوا نشره');
+      expect(text(1), 'أعاد نشره Omar وشخص آخر');
+      expect(text(2), 'أعاد نشره Omar و2 آخرون');
     });
 
     testWidgets('no Follow for a writer you follow, your own article or a deleted user', (tester) async {

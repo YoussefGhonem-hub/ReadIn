@@ -137,10 +137,10 @@ void main() {
     final ar = await AppLocalizations.delegate.load(AppLocales.ar);
     final en = await AppLocalizations.delegate.load(AppLocales.en);
     const expected = {
-      FailureCodes.muteSelf: ('مينفعش تكتم نفسك.', "You can't mute yourself."),
-      FailureCodes.muteSystemAccount: ('مينفعش تكتم حساب ReadIn الرسمي.', "The official ReadIn account can't be muted."),
-      FailureCodes.muteLimit: ('وصلت لأقصى عدد كتّاب تكتمهم (500).', 'You can mute at most 500 writers.'),
-      FailureCodes.muteOwnArticle: ('مينفعش تعمل كده على مقالك.', "You can't do this on your own article."),
+      FailureCodes.muteSelf: ('لا يمكنك كتم نفسك.', "You can't mute yourself."),
+      FailureCodes.muteSystemAccount: ('لا يمكن كتم حساب ReadIn الرسمي.', "The official ReadIn account can't be muted."),
+      FailureCodes.muteLimit: ('وصلت إلى الحد الأقصى لعدد الكتّاب المكتومين (500).', 'You can mute at most 500 writers.'),
+      FailureCodes.muteOwnArticle: ('لا يمكنك تنفيذ هذا الإجراء على مقالك.', "You can't do this on your own article."),
     };
     for (final MapEntry(key: code, value: (arabic, english)) in expected.entries) {
       expect(localizeErrorCode(ar, code), arabic, reason: code);

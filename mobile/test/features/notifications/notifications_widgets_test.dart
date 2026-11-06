@@ -91,41 +91,41 @@ void main() {
     test('aggregated rows say "X and N others"', () {
       final comments = row(NotificationType.articleComment, actorCount: 10);
       expect(notificationMessage(en, comments), 'Ahmed Samir and 9 others commented on your article');
-      expect(notificationMessage(ar, comments, name: 'أحمد'), 'أحمد و9 غيره علّقوا على مقالك');
+      expect(notificationMessage(ar, comments, name: 'أحمد'), 'علّق أحمد و9 أشخاص آخرين على مقالك');
       expect(notificationMessage(en, row(NotificationType.articleComment)), 'Ahmed Samir commented on your article');
       expect(notificationMessage(en, row(NotificationType.articleComment, actorCount: 2)), 'Ahmed Samir and 1 other commented on your article');
-      expect(notificationMessage(ar, row(NotificationType.articleComment, actorCount: 3), name: 'أحمد'), 'أحمد واتنين غيره علّقوا على مقالك');
-      expect(notificationMessage(ar, row(NotificationType.articleComment, actorCount: 30), name: 'أحمد'), 'أحمد و29 غيره علّقوا على مقالك');
+      expect(notificationMessage(ar, row(NotificationType.articleComment, actorCount: 3), name: 'أحمد'), 'علّق أحمد وشخصان آخران على مقالك');
+      expect(notificationMessage(ar, row(NotificationType.articleComment, actorCount: 30), name: 'أحمد'), 'علّق أحمد و29 شخصًا آخر على مقالك');
 
       expect(notificationMessage(en, row(NotificationType.newFollower, actorCount: 3)), 'Ahmed Samir and 2 others started following you');
-      expect(notificationMessage(ar, row(NotificationType.newFollower), name: 'أحمد'), 'أحمد بدأ يتابعك');
+      expect(notificationMessage(ar, row(NotificationType.newFollower), name: 'أحمد'), 'بدأ أحمد متابعتك');
       expect(notificationMessage(en, row(NotificationType.commentReply, actorCount: 2)), 'Ahmed Samir and 1 other replied to your comment');
-      expect(notificationMessage(ar, row(NotificationType.commentReply, actorCount: 4), name: 'منى'), 'منى و3 غيره ردّوا على تعليقك');
+      expect(notificationMessage(ar, row(NotificationType.commentReply, actorCount: 4), name: 'منى'), 'ردّ منى و3 أشخاص آخرين على تعليقك');
     });
 
     test('a deleted actor is "Deleted user"', () {
       final mention = row(NotificationType.mention, actor: null, article: diArticle, comment: mentionComment);
       expect(notificationMessage(en, mention), 'Deleted user mentioned you in a comment');
-      expect(notificationMessage(ar, mention), 'مستخدم محذوف عمل لك منشن في تعليق');
+      expect(notificationMessage(ar, mention), 'أشار إليك مستخدم محذوف في تعليق');
     });
 
     test('a mention in a comment says "in a comment"; one with no comment is in an article', () {
       final inComment = row(NotificationType.mention, article: diArticle, comment: mentionComment);
       expect(notificationMessage(en, inComment), 'Ahmed Samir mentioned you in a comment');
-      expect(notificationMessage(ar, inComment, name: 'أحمد'), 'أحمد عمل لك منشن في تعليق');
+      expect(notificationMessage(ar, inComment, name: 'أحمد'), 'أشار إليك أحمد في تعليق');
 
       final inArticle = row(NotificationType.mention, article: ragArticle);
       expect(notificationMessage(en, inArticle), 'Ahmed Samir mentioned you in an article');
-      expect(notificationMessage(ar, inArticle, name: 'أحمد'), 'أحمد عمل لك منشن في مقال');
+      expect(notificationMessage(ar, inArticle, name: 'أحمد'), 'أشار إليك أحمد في مقال');
       expect(notificationMessage(en, row(NotificationType.mention, actor: null, article: ragArticle)), 'Deleted user mentioned you in an article');
-      expect(notificationMessage(ar, row(NotificationType.mention, actor: null, article: ragArticle)), 'مستخدم محذوف عمل لك منشن في مقال');
+      expect(notificationMessage(ar, row(NotificationType.mention, actor: null, article: ragArticle)), 'أشار إليك مستخدم محذوف في مقال');
     });
 
     test('Settings: "Mentions" covers comments and articles', () {
       expect(notificationTypeLabel(en, NotificationType.mention), 'Mentions');
-      expect(notificationTypeLabel(ar, NotificationType.mention), 'المنشن');
+      expect(notificationTypeLabel(ar, NotificationType.mention), 'الإشارات');
       expect(notificationTypeHint(en, NotificationType.mention), 'When someone mentions you in a comment or an article');
-      expect(notificationTypeHint(ar, NotificationType.mention), 'لما حد يعمل لك منشن في تعليق أو مقال');
+      expect(notificationTypeHint(ar, NotificationType.mention), 'عندما يشير إليك أحد في تعليق أو مقال');
       // Reposts (F29) say what they cover too, as the contract asks.
       for (final type in NotificationType.configurable.where((type) => type != NotificationType.mention && type != NotificationType.articleReposted)) {
         expect(notificationTypeHint(en, type), isNull, reason: '${type.wire}: the name says it all');
@@ -135,12 +135,12 @@ void main() {
     test('article_reposted (F29): who reposted your article, aggregated; its Settings row', () {
       final one = row(NotificationType.articleReposted, article: diArticle);
       expect(notificationMessage(en, one), 'Ahmed Samir reposted your article');
-      expect(notificationMessage(ar, one, name: 'أحمد'), 'أحمد أعاد نشر مقالك');
+      expect(notificationMessage(ar, one, name: 'أحمد'), 'أعاد أحمد نشر مقالك');
       final three = row(NotificationType.articleReposted, actorCount: 3, article: diArticle);
       expect(notificationMessage(en, three), 'Ahmed Samir and 2 others reposted your article');
-      expect(notificationMessage(ar, three, name: 'أحمد'), 'أحمد واتنين غيره أعادوا نشر مقالك');
-      expect(notificationMessage(ar, row(NotificationType.articleReposted, actorCount: 2), name: 'أحمد'), 'أحمد وشخص تاني أعادوا نشر مقالك');
-      expect(notificationMessage(ar, row(NotificationType.articleReposted, actorCount: 12), name: 'أحمد'), 'أحمد و11 غيره أعادوا نشر مقالك');
+      expect(notificationMessage(ar, three, name: 'أحمد'), 'أعاد أحمد وشخصان آخران نشر مقالك');
+      expect(notificationMessage(ar, row(NotificationType.articleReposted, actorCount: 2), name: 'أحمد'), 'أعاد أحمد وشخص آخر نشر مقالك');
+      expect(notificationMessage(ar, row(NotificationType.articleReposted, actorCount: 12), name: 'أحمد'), 'أعاد أحمد و11 شخصًا آخر نشر مقالك');
       expect(notificationMessage(en, row(NotificationType.articleReposted, actor: null)), 'Deleted user reposted your article');
       expect(isActorNotification(NotificationType.articleReposted), isTrue);
 
@@ -150,7 +150,7 @@ void main() {
       expect(notificationTypeLabel(en, NotificationType.articleReposted), 'Reposts');
       expect(notificationTypeLabel(ar, NotificationType.articleReposted), 'إعادة النشر');
       expect(notificationTypeHint(en, NotificationType.articleReposted), 'When someone reposts your article');
-      expect(notificationTypeHint(ar, NotificationType.articleReposted), 'لما حد يعيد نشر مقالك');
+      expect(notificationTypeHint(ar, NotificationType.articleReposted), 'عندما يعيد أحد نشر مقالك');
       // Its push opens the article, like the row.
       expect(pushLinkToPath(one.link), '/a/di-dotnet');
     });
@@ -158,11 +158,11 @@ void main() {
     test('the other types', () {
       expect(notificationMessage(en, row(NotificationType.followedWriterArticle)), 'Ahmed Samir published a new article');
       expect(notificationMessage(en, notification('n', NotificationType.reactionsMilestone, threshold: 50)), 'Your article reached 50 reactions 🎉');
-      expect(notificationMessage(ar, notification('n', NotificationType.reactionsMilestone, threshold: 10)), 'مقالك وصل لـ 10 تفاعلات 🎉');
-      expect(notificationMessage(ar, notification('n', NotificationType.reactionsMilestone, threshold: 100)), 'مقالك وصل لـ 100 تفاعل 🎉');
+      expect(notificationMessage(ar, notification('n', NotificationType.reactionsMilestone, threshold: 10)), 'وصل مقالك إلى 10 تفاعلات 🎉');
+      expect(notificationMessage(ar, notification('n', NotificationType.reactionsMilestone, threshold: 100)), 'وصل مقالك إلى 100 تفاعل 🎉');
       expect(notificationMessage(en, notification('n', NotificationType.reactionsMilestone)), 'Readers are reacting to your article 🎉');
       expect(notificationMessage(en, notification('n', NotificationType.dailyArticle)), "Today's article is ready ☕");
-      expect(notificationMessage(ar, notification('n', NotificationType.dailyArticle)), 'مقال النهارده جاهز ☕');
+      expect(notificationMessage(ar, notification('n', NotificationType.dailyArticle)), 'مقال اليوم جاهز ☕');
       expect(notificationMessage(en, notification('n', NotificationType.streakReminder, streakDays: 12)), 'Read an article today to keep your 12-day streak 🔥');
       expect(notificationMessage(en, notification('n', NotificationType.streakReminder)), 'Read an article today to keep your streak 🔥');
       expect(
@@ -170,16 +170,16 @@ void main() {
         'Your phone number was changed',
       );
       expect(notificationMessage(ar, notification('n', NotificationType.securityAlert, securityChange: SecurityChange.passwordChanged)),
-          'كلمة السر بتاعتك اتغيّرت');
+          'تم تغيير كلمة مرورك');
       expect(notificationMessage(en, notification('n', NotificationType.securityAlert, securityChange: SecurityChange.other)),
           'There was a security change on your account');
       expect(notificationMessage(en, notification('n', NotificationType.verificationResult)), "There's an update on your verification request");
       // F19: approved or not, by data.approved.
       expect(notificationMessage(en, notification('n', NotificationType.verificationResult, approved: true)), "You're now a verified writer ✓");
-      expect(notificationMessage(ar, notification('n', NotificationType.verificationResult, approved: true)), 'بقيت كاتب موثّق ✓');
+      expect(notificationMessage(ar, notification('n', NotificationType.verificationResult, approved: true)), 'أصبحت الآن كاتبًا موثّقًا ✓');
       expect(notificationMessage(en, notification('n', NotificationType.verificationResult, approved: false)),
           "Your verification request wasn't approved");
-      expect(notificationMessage(ar, notification('n', NotificationType.verificationResult, approved: false)), 'طلب التوثيق بتاعك ماتقبلش');
+      expect(notificationMessage(ar, notification('n', NotificationType.verificationResult, approved: false)), 'لم تتم الموافقة على طلب توثيقك');
       expect(notificationMessage(en, notification('n', NotificationType.moderationNotice)), 'You received a warning from the moderation team');
       expect(notificationMessage(en, notification('n', NotificationType.moderationNotice, article: diArticle)), 'The moderators hid your article');
       expect(notificationMessage(en, notification('n', NotificationType.unknown)), 'You have a new notification');
@@ -244,7 +244,10 @@ void main() {
 
         expect(find.byType(UserAvatar), findsOneWidget);
         expect(find.byIcon(Icons.repeat_rounded), findsOneWidget);
-        expect(find.textContaining(notificationMessage(l10n, reposted, name: '').trim(), findRichText: true), findsOneWidget);
+        // The name can sit anywhere in the sentence (Arabic puts the verb first): every part around it is shown.
+        for (final part in _around((name) => notificationMessage(l10n, reposted, name: name))) {
+          expect(find.textContaining(part, findRichText: true), findsOneWidget);
+        }
         expect(find.textContaining(mona.displayName, findRichText: true), findsOneWidget);
         // The English title in its own direction, also inside the Arabic screen.
         expect(find.text(ragArticle.title), findsOneWidget);
@@ -262,10 +265,12 @@ void main() {
         ));
         await tester.pump();
 
-        final sentence = find.textContaining(l10n.notifMentionArticle('').trim(), findRichText: true);
-        expect(sentence, findsOneWidget);
+        for (final part in _around(l10n.notifMentionArticle)) {
+          expect(find.textContaining(part, findRichText: true), findsOneWidget);
+        }
         expect(find.textContaining(ahmed.displayName, findRichText: true), findsOneWidget);
-        expect(find.textContaining(l10n.notifMention('', 0).trim(), findRichText: true), findsNothing, reason: 'not "in a comment"');
+        expect(find.textContaining(_around((name) => l10n.notifMention(name, 0)).last, findRichText: true), findsNothing,
+            reason: 'not "in a comment"');
         expect(find.text(ragArticle.title), findsOneWidget);
         expect(
           tester.widget<Directionality>(find.ancestor(of: find.text(ragArticle.title), matching: find.byType(Directionality)).first).textDirection,
@@ -706,4 +711,10 @@ void main() {
       expect(tester.state<ScrollableState>(find.byType(Scrollable).first).position.pixels, greaterThan(0));
     });
   });
+}
+
+/// The parts of a sentence around its actor's name, wherever the name sits (Arabic puts the verb first).
+List<String> _around(String Function(String name) sentence) {
+  const marker = '\u{E001}';
+  return sentence(marker).split(marker).map((part) => part.trim()).where((part) => part.isNotEmpty).toList();
 }

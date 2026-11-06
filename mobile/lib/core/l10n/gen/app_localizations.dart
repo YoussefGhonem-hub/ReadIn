@@ -395,7 +395,7 @@ abstract class AppLocalizations {
   /// No description provided for @langToggleArEg.
   ///
   /// In en, this message translates to:
-  /// **'مصري + EN'**
+  /// **'العربية + EN'**
   String get langToggleArEg;
 
   /// No description provided for @langToggleEn.
@@ -2504,6 +2504,18 @@ abstract class AppLocalizations {
   /// **'Sign out of all devices'**
   String get signOutEverywhere;
 
+  /// No description provided for @signOutEverywhereTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of all devices?'**
+  String get signOutEverywhereTitle;
+
+  /// No description provided for @signOutEverywhereConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of all devices'**
+  String get signOutEverywhereConfirm;
+
   /// No description provided for @signOutEverywhereBody.
   ///
   /// In en, this message translates to:
@@ -3007,6 +3019,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlink'**
   String get unlinkAction;
+
+  /// No description provided for @unlinkConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink'**
+  String get unlinkConfirm;
 
   /// No description provided for @notLinked.
   ///
@@ -3565,6 +3583,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get deleteAction;
+
+  /// No description provided for @deleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteConfirm;
 
   /// No description provided for @deleteCollectionTitle.
   ///
@@ -4700,6 +4724,12 @@ abstract class AppLocalizations {
   /// **'Remove the {language} version'**
   String removeTranslation(String language);
 
+  /// No description provided for @removeTranslationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the {language} version?'**
+  String removeTranslationTitle(String language);
+
   /// No description provided for @removeTranslationBody.
   ///
   /// In en, this message translates to:
@@ -5563,6 +5593,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave path'**
   String get pathLeave;
+
+  /// No description provided for @pathLeaveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave path'**
+  String get pathLeaveConfirm;
 
   /// No description provided for @pathLeaveTitle.
   ///

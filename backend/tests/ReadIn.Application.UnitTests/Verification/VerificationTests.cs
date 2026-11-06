@@ -139,11 +139,11 @@ public sealed class VerificationNotificationTests
     public void Approved_and_rejected_have_their_own_texts_and_never_the_reason()
     {
         NotificationTexts.For(NotificationTypes.VerificationResult, english: true, Input(true)).Should().Be(("You're now a verified writer ✓", ""));
-        NotificationTexts.For(NotificationTypes.VerificationResult, english: false, Input(true)).Should().Be(("بقيت كاتب موثّق ✓", ""));
+        NotificationTexts.For(NotificationTypes.VerificationResult, english: false, Input(true)).Should().Be(("أصبحت الآن كاتبًا موثّقًا ✓", ""));
         NotificationTexts.For(NotificationTypes.VerificationResult, english: true, Input(false))
             .Should().Be(("Your verification request wasn't approved", "Open it to see why"));
         NotificationTexts.For(NotificationTypes.VerificationResult, english: false, Input(false))
-            .Should().Be(("طلب التوثيق بتاعك ماتقبلش", "افتحه عشان تعرف السبب"));
+            .Should().Be(("لم تتم الموافقة على طلب توثيقك", "افتحه لمعرفة السبب"));
         NotificationTexts.For(NotificationTypes.VerificationResult, english: true, Input(null)).Title
             .Should().Be("Your verification request has an answer", "an entry without data keeps the generic text");
     }

@@ -76,8 +76,8 @@ void main() {
     expect(find.textContaining('ReadIn Editorial'), findsOneWidget); // isolated in the Arabic UI
     expect(find.text('مستخدم محذوف'), findsOneWidget);
     // Which version each group is, worded as on the web.
-    expect(find.text('النسخة العربي'), findsOneWidget);
-    expect(find.text('النسخة الإنجليزي'), findsOneWidget);
+    expect(find.text('النسخة العربية'), findsOneWidget);
+    expect(find.text('النسخة الإنجليزية'), findsOneWidget);
     expect(find.byType(SavedHighlightTile), findsNWidgets(3));
     // The highlight's text in the article's own direction.
     final en = tester.widget<Directionality>(

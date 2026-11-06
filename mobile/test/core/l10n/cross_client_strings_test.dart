@@ -17,38 +17,38 @@ void main() {
 
   test('the editor codes the API added read the same as on the web', () {
     const expected = {
-      FailureCodes.articleNoContent: ('المقال فاضي، اكتب حاجة الأول.', 'The article is empty. Write something first.'),
+      FailureCodes.articleNoContent: ('المقال فارغ. اكتب شيئًا أولًا.', 'The article is empty. Write something first.'),
       FailureCodes.articleInvalidTransition: (
-        'مينفعش تعمل كده والمقال في حالته دي.',
+        'لا يمكن تنفيذ هذا الإجراء والمقال في حالته الحالية.',
         "You can't do that while the article is in this state.",
       ),
-      FailureCodes.articleSlugTaken: ('الرابط ده مستخدم لمقال تاني.', 'That link is already used by another article.'),
-      // F32: "التاجات" everywhere; the old code keeps its message.
-      FailureCodes.articleTagsMaxFive: ('أقصى حاجة 5 تاجات للمقال.', 'An article can have at most 5 tags.'),
-      FailureCodes.articleTooManyTags: ('أقصى حاجة 5 تاجات للمقال.', 'An article can have at most 5 tags.'),
-      FailureCodes.tagNotFound: ('التاج ده مش موجود.', 'Tag not found.'),
+      FailureCodes.articleSlugTaken: ('هذا الرابط مستخدم لمقال آخر.', 'That link is already used by another article.'),
+      // F32: "الوسوم" everywhere; the old code keeps its message.
+      FailureCodes.articleTagsMaxFive: ('الحد الأقصى 5 وسوم للمقال الواحد.', 'An article can have at most 5 tags.'),
+      FailureCodes.articleTooManyTags: ('الحد الأقصى 5 وسوم للمقال الواحد.', 'An article can have at most 5 tags.'),
+      FailureCodes.tagNotFound: ('هذا الوسم غير موجود.', 'Tag not found.'),
       // The symbols in an LTR isolate, so they keep their order in Arabic (SPEC §14).
       FailureCodes.tagInvalid: (
-        'التاج لازم يكون من 2 لـ 30 حرف: حروف وأرقام ومسافات و \u2066- _ . + #\u2069 بس.',
+        'يجب أن يتكون الوسم من 2 إلى 30 حرفًا: حروف وأرقام ومسافات و \u2066- _ . + #\u2069 فقط.',
         'A tag has 2–30 characters: letters, digits, spaces and - _ . + # only.',
       ),
       FailureCodes.tagLimit: (
-        'عملت تاجات جديدة كتير النهارده. اختار من التاجات الموجودة، أو جرّب تاني بعدين.',
+        'أنشأت وسومًا جديدة كثيرة اليوم. اختر من الوسوم الموجودة، أو حاول مرة أخرى لاحقًا.',
         "You've created a lot of new tags today. Pick existing tags, or try again later.",
       ),
-      FailureCodes.tagHidden: ('التاج ده مش متاح، اختار تاج تاني.', "This tag isn't available. Choose another one."),
+      FailureCodes.tagHidden: ('هذا الوسم غير متاح. اختر وسمًا آخر.', "This tag isn't available. Choose another one."),
       // F31: writer categories.
-      FailureCodes.categoryNotFound: ('القسم ده مش موجود.', 'Category not found.'),
-      FailureCodes.categoryNotOwner: ('القسم ده مش بتاعك.', "This category isn't yours."),
-      FailureCodes.categoryLimit: ('وصلت لأقصى عدد أقسام (50).', 'You can have at most 50 categories.'),
-      FailureCodes.categoryNameTaken: ('عندك قسم بنفس الاسم بالفعل.', 'You already have a category with this name.'),
+      FailureCodes.categoryNotFound: ('هذه الفئة غير موجودة.', 'Category not found.'),
+      FailureCodes.categoryNotOwner: ('هذه الفئة ليست لك.', "This category isn't yours."),
+      FailureCodes.categoryLimit: ('وصلت إلى الحد الأقصى لعدد الفئات (50).', 'You can have at most 50 categories.'),
+      FailureCodes.categoryNameTaken: ('لديك فئة بالاسم نفسه بالفعل.', 'You already have a category with this name.'),
       FailureCodes.categoryNameInvalid: (
-        'اسم القسم لازم يكون من 1 لـ 40 حرف، وفيه حرف أو رقم على الأقل.',
+        'يجب أن يتكون اسم الفئة من 1 إلى 40 حرفًا، وأن يتضمن حرفًا أو رقمًا واحدًا على الأقل.',
         'A category name has 1–40 characters, with at least one letter or digit.',
       ),
-      FailureCodes.articleLanguageInvalid: ('لغة المقال دي مش مدعومة.', "That article language isn't supported."),
+      FailureCodes.articleLanguageInvalid: ('لغة المقال هذه غير مدعومة.', "That article language isn't supported."),
       FailureCodes.articleContentLanguageMismatch: (
-        'لغة المحتوى مش زي لغة المقال.',
+        'لغة المحتوى لا تطابق لغة المقال.',
         "The content's language doesn't match the article's language.",
       ),
     };
@@ -83,7 +83,7 @@ void main() {
   // The roles change (SPEC §10): removing a Verified badge the user doesn't have (`DELETE /admin/users/{id}/verification`).
   test('verification.not_verified reads the same as on the web', () {
     expect(FailureCodes.verificationNotVerified, 'verification.not_verified');
-    expect(localizeErrorCode(ar, FailureCodes.verificationNotVerified), 'المستخدم ده مش موثّق.');
+    expect(localizeErrorCode(ar, FailureCodes.verificationNotVerified), 'هذا المستخدم غير موثّق.');
     expect(localizeErrorCode(en, FailureCodes.verificationNotVerified), "This user isn't verified.");
     expect(localizeFailure(en, const Failure(FailureCodes.verificationNotVerified, statusCode: 409)), "This user isn't verified.");
   });
@@ -91,24 +91,24 @@ void main() {
   // ... and the official @readin account keeps its badge.
   test('verification.system_account reads the same as on the web', () {
     expect(FailureCodes.verificationSystemAccount, 'verification.system_account');
-    expect(localizeErrorCode(ar, FailureCodes.verificationSystemAccount), 'ده حساب ReadIn الرسمي، والتوثيق بتاعه ثابت.');
+    expect(localizeErrorCode(ar, FailureCodes.verificationSystemAccount), 'هذا هو حساب ReadIn الرسمي، وشارة توثيقه ثابتة.');
     expect(localizeErrorCode(en, FailureCodes.verificationSystemAccount), "This is ReadIn's official account; its badge stays.");
   });
 
   test('day counts are plurals', () {
     expect(en.streakSemantics(1), 'Reading streak: 1 day');
     expect(en.streakSemantics(4), 'Reading streak: 4 days');
-    expect(ar.streakSemantics(1), 'الـ streak بتاعك: يوم واحد');
-    expect(ar.streakSemantics(3), 'الـ streak بتاعك: 3 أيام');
-    expect(ar.streakSemantics(12), 'الـ streak بتاعك: 12 يوم');
-    expect(ar.readingMilestoneTitle(5), '5 أيام ورا بعض!');
-    expect(ar.readingMilestoneTitle(50), '50 يوم ورا بعض!');
+    expect(ar.streakSemantics(1), 'سلسلة القراءة: يوم واحد');
+    expect(ar.streakSemantics(3), 'سلسلة القراءة: 3 أيام');
+    expect(ar.streakSemantics(12), 'سلسلة القراءة: 12 يومًا');
+    expect(ar.readingMilestoneTitle(5), '5 أيام على التوالي!');
+    expect(ar.readingMilestoneTitle(50), '50 يومًا على التوالي!');
     expect(en.readingStreakNotReadTodaySemantics(1), startsWith('Reading streak: 1 day.'));
   });
 
-  test('the article language toggle says مصري + EN, as on the web', () {
-    expect(en.langToggleArEg, 'مصري + EN');
-    expect(ar.langToggleArEg, 'مصري + EN');
+  test('the article language toggle says العربية + EN, as on the web', () {
+    expect(en.langToggleArEg, 'العربية + EN');
+    expect(ar.langToggleArEg, 'العربية + EN');
   });
 
   test('the greeting says good morning from 5 AM until noon, as on the web', () {

@@ -36,7 +36,7 @@ import '../helpers/social_fakes.dart';
 import '../helpers/test_app.dart';
 
 /// F28 in ar/light and en/dark (SPEC §27): the "⋯" menu on someone else's article and on your own, the confirmation
-/// with Undo after muting a writer, the "كتم المواضيع" sheet, the "انت كاتم الكاتب ده" banner (alone, and on a muted
+/// with Undo after muting a writer, the "كتم المواضيع" sheet, the "لقد كتمت هذا الكاتب" banner (alone, and on a muted
 /// writer's profile with its "⋯" open), a comment's "⋯", a collapsed comment, and Settings → Muted with its empty
 /// state.
 void main() {

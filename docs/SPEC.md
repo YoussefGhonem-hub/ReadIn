@@ -1,6 +1,6 @@
 # ReadIn — Product & Technical Specification
 
-> **ReadIn — مقال كل يوم يفرق معاك**
+> **ReadIn — مقال كل يوم يُحدث فرقًا**
 > *Read daily. Grow daily.*
 
 | | |
@@ -756,7 +756,7 @@ Draft ──► Published ──► Archived
 - Picked per user daily by a Hangfire job at the user's local time minus 30 minutes.
 - **Algorithm:** any published article (written by anyone, never the reader's own), in user's interests, not read before, matches language preference, reading time 4–10 minutes, ranked by the quality score (engagement, read completion, freshness; formula in [ADR 0015](adr/0015-open-publishing-and-the-editor.md)), not from the same field 3 days in a row, prefers the next item in the user's active learning path.
 - **Fallback:** constraints relax in order when nothing matches (length, then interests).
-- Push notification at the chosen time: *"مقال النهارده جاهز ☕ — {title}"*.
+- Push notification at the chosen time: *"مقال اليوم جاهز ☕ — {title}"*.
 - If the user doesn't open it, it stays as the hero card for the day.
 - **Job details:** runs every 5 minutes, for users with at least one push device (others get the pick on demand from `GET /feed/today`; both store the same one pick per local date). Times are wall-clock in the user's time zone, so DST never moves a reminder. The push is sent once per day (`DailyPicks.NotifiedAt`), skipped when the user already read the article, and at most 2 hours late after a missed run; "read" is `ReadingProgress.CompletedAt` (F04), and "3 days in a row" means the picks of the two previous days. Payload: [`contract-v1.md`](api/contract-v1.md#push-payloads-fcm).
 
@@ -1360,13 +1360,20 @@ They are independent: an English UI user can read `ar-EG` articles and vice vers
 - Technical terms stay in **English** (`Dependency Injection`, not "حقن الاعتماديات"), optionally with a short Arabic explanation on first use.
 - The `ar-EG` version is a **natural adaptation** of the English source, not a literal translation.
 
-### 14.4 Interface Copy (Web)
-- The web interface's Arabic is **Modern Standard Arabic** (فصحى معاصرة), not Egyptian colloquial: standard, concise
-  wording like the Arabic interface of major apps (user decision, 2026-11-06). Article content keeps §14.3.
+### 14.4 Interface Copy (Web, Mobile, Push)
+- The Arabic of the web and mobile interfaces, and of push notifications, is **Modern Standard Arabic** (فصحى معاصرة),
+  not Egyptian colloquial: standard, concise wording like the Arabic interface of major apps (user decisions,
+  2026-11-06: the website, then the mobile app). Article content keeps §14.3.
 - Buttons, menu items and tabs use verbal nouns (حفظ، حذف، مشاركة). Confirmation dialogs ask a question and offer
-  «إلغاء» / «موافق».
-- Brand and product names stay in Latin letters (ReadIn, Google, Apple, PDF).
-- The top bar has an Arabic/English switch for the interface language (the `lang` cookie, and the profile when signed in).
+  «إلغاء» / «موافق». The dialog's confirm button has its own key, so a page button with the same action keeps its verb.
+- Errors read «تعذّر …»; progress «جارٍ …»; done «تم …». Counts take the Arabic plural form of their number (يوم واحد،
+  يومان، 3 أيام، 11 يومًا، 100 يوم). Grouped notifications put the verb first: «علّق أحمد و9 آخرون على مقالك».
+- Glossary: كلمة المرور، رمز الاسترداد (PIN)، الملف الشخصي، سلسلة القراءة، وسم (tag)، فئة (writer category)، تمييز
+  (highlight)، رابط. The article language is «العربية» (the toggle reads «العربية + EN»).
+- Brand and product names stay in Latin letters (ReadIn, Google, Apple, PDF). A language picker shows each language in
+  its own script (العربية / English).
+- The web top bar has an Arabic/English switch for the interface language (the `lang` cookie, and the profile when signed
+  in); the app has it in the More sheet and in Settings.
 
 ---
 
@@ -1374,7 +1381,7 @@ They are independent: an English UI user can read `ar-EG` articles and vice vers
 
 ### 15.1 Brand
 - **Name:** ReadIn (always written in English, also in the Arabic UI).
-- **Taglines:** "ReadIn — مقال كل يوم يفرق معاك" / "Read daily. Grow daily."
+- **Taglines:** "ReadIn — مقال كل يوم يُحدث فرقًا" / "Read daily. Grow daily."
 - **Logo:** approved logo in `docs/design/`. Must not resemble LinkedIn (no LinkedIn blue, no identical "in" box).
 - **Mood:** calm, premium, editorial. "Medium meets Duolingo". Lists feel like a social feed of posts ([F34](#f34--post-style-feed-card-كارت-البوست)), and the reader stays calm and editorial.
 
@@ -1660,7 +1667,7 @@ Seed content lives in `content/articles/{field}/{topic}/{slug}/` so it is versio
 - Every push also has a `Notifications` row (written first; the push carries its id), and `/live/users/{id}` gets the new unread count.
 - Device tokens: registered on sign-in/app start, refreshed when FCM rotates them, deleted on sign out, and removed when FCM reports them as invalid.
 - Daily article and streak reminders are scheduled per user's **time zone** via Hangfire.
-- Message language = the user's UI language. Aggregation: "أحمد و9 غيره علّقوا على مقالك" instead of 10 pushes.
+- Message language = the user's UI language, worded as in the notification center (§14.4). Aggregation: "علّق أحمد و9 آخرون على مقالك" instead of 10 pushes.
 - Quiet hours respected (default 23:00 – 07:00); security alerts ignore quiet hours.
 - Payloads carry a deep link (`readin://a/{slug}#comment-{id}`). Taps open the right screen from terminated, background and foreground states.
 - Web: `firebase-messaging-sw.js` + VAPID key, foreground messages as an in-app toast. Mobile: `firebase_messaging` + `flutter_local_notifications`, Android 13+ `POST_NOTIFICATIONS`, iOS APNs.

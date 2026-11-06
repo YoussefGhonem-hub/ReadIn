@@ -70,7 +70,7 @@ class PathView extends StatelessWidget {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: dialogContext.colors.error, foregroundColor: dialogContext.colors.onError),
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.pathLeave),
+            child: Text(l10n.pathLeaveConfirm),
           ),
         ],
       ),

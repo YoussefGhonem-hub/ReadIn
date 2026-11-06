@@ -191,40 +191,40 @@ void main() {
 
     test('every quote code, with "Try again" only where it can help', () {
       final expected = {
-        FailureCodes.articleNotFound: ('المقال مش موجود.', 'Article not found.', false),
+        FailureCodes.articleNotFound: ('المقال غير موجود.', 'Article not found.', false),
         FailureCodes.quoteHidden: (
-          'المشرفين خفّوا المقال ده، فمينفعش تشارك منه اقتباس.',
+          'أخفى المشرفون هذا المقال، لذا لا يمكن مشاركة اقتباسات منه.',
           "Moderators hid this article, so its quotes can't be shared.",
           false,
         ),
         FailureCodes.quoteTextMismatch: (
-          'النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.',
+          'تغيّر هذا النص في المقال. حدّث الصفحة وحاول مرة أخرى.',
           'This text has changed in the article. Reload and try again.',
           false,
         ),
-        FailureCodes.quoteBlockNotAllowed: ('مينفعش تشارك الجزء ده كاقتباس.', "This part can't be shared as a quote.", false),
-        FailureCodes.quoteTooShort: ('اختار 3 حروف على الأقل.', 'Select at least 3 characters.', false),
+        FailureCodes.quoteBlockNotAllowed: ('لا يمكن مشاركة هذا الجزء كاقتباس.', "This part can't be shared as a quote.", false),
+        FailureCodes.quoteTooShort: ('حدّد 3 أحرف على الأقل.', 'Select at least 3 characters.', false),
         FailureCodes.quoteTooLong: (
-          'الاقتباس لازم يكون 400 حرف أو أقل. اختار جزء أصغر.',
+          'يجب ألا يتجاوز الاقتباس 400 حرف. حدّد جزءًا أقصر.',
           'A quote can be at most 400 characters. Select less text.',
           false,
         ),
         FailureCodes.quoteLimit: (
-          'عملت كروت اقتباس كتير الساعة دي. حاول تاني بعد شوية.',
+          'أنشأت بطاقات اقتباس كثيرة خلال هذه الساعة. حاول مرة أخرى لاحقًا.',
           "You've made many quote cards this hour. Try again later.",
           true,
         ),
         FailureCodes.quoteBusy: (
-          'فيه كروت كتير بتتجهز دلوقتي. حاول تاني كمان شوية.',
+          'يجري تجهيز بطاقات كثيرة حاليًا. حاول مرة أخرى بعد قليل.',
           'Many cards are being prepared right now. Try again in a moment.',
           true,
         ),
-        FailureCodes.quoteFailed: ('معرفناش نجهّز كارت الاقتباس. حاول تاني.', "We couldn't prepare the quote card. Try again.", true),
-        FailureCodes.serverError: ('معرفناش نجهّز كارت الاقتباس. حاول تاني.', "We couldn't prepare the quote card. Try again.", true),
-        FailureCodes.networkTimeout: ('معرفناش نجهّز كارت الاقتباس. حاول تاني.', "We couldn't prepare the quote card. Try again.", true),
-        'something.new': ('معرفناش نجهّز كارت الاقتباس. حاول تاني.', "We couldn't prepare the quote card. Try again.", true),
+        FailureCodes.quoteFailed: ('تعذّر تجهيز بطاقة الاقتباس. حاول مرة أخرى.', "We couldn't prepare the quote card. Try again.", true),
+        FailureCodes.serverError: ('تعذّر تجهيز بطاقة الاقتباس. حاول مرة أخرى.', "We couldn't prepare the quote card. Try again.", true),
+        FailureCodes.networkTimeout: ('تعذّر تجهيز بطاقة الاقتباس. حاول مرة أخرى.', "We couldn't prepare the quote card. Try again.", true),
+        'something.new': ('تعذّر تجهيز بطاقة الاقتباس. حاول مرة أخرى.', "We couldn't prepare the quote card. Try again.", true),
         FailureCodes.networkOffline: (
-          'محتاج إنترنت عشان تعمل كارت اقتباس.',
+          'يلزمك اتصال بالإنترنت لإنشاء بطاقة اقتباس.',
           'You need an internet connection to make a quote card.',
           true,
         ),

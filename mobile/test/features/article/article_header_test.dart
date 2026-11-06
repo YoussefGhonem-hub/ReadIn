@@ -146,11 +146,11 @@ void main() {
     // Today's article is a post card under its label since F34 (it was the hero card).
     testWidgets("today's article says it too, with the neutral avatar and no follow", (tester) async {
       await tester.pumpWidget(testApp(
-        withCardStores(Scaffold(body: ListView(children: [PostCard(article: postCard(0, authorDeleted: true), label: 'مقال النهارده')]))),
+        withCardStores(Scaffold(body: ListView(children: [PostCard(article: postCard(0, authorDeleted: true), label: 'مقال اليوم')]))),
         variant: ar,
       ));
 
-      expect(find.text('مقال النهارده'), findsOneWidget);
+      expect(find.text('مقال اليوم'), findsOneWidget);
       expect(find.text('مستخدم محذوف'), findsOneWidget);
       expect(find.byType(GenericAvatar), findsOneWidget);
       expect(find.byType(FollowButton), findsNothing);

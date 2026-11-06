@@ -207,7 +207,7 @@ void main() {
     testWidgets('inside an isolated English run of an Arabic paragraph, the isolates are not counted', (tester) async {
       await pump(tester, 'ar');
       await longPress(tester, unitText('ar', 'p1'), 45); // "Dependency" (plain 42–52)
-      await tester.tap(find.text('علّم'));
+      await tester.tap(find.text('تمييز'));
       await tester.pumpAndSettle();
       expect(highlighted.single.range, const HighlightRange(blockId: 'p1', startOffset: 42, endOffset: 52, text: 'Dependency'));
     });
@@ -215,7 +215,7 @@ void main() {
     testWidgets('an Arabic word with tashkeel keeps every combining mark', (tester) async {
       await pump(tester, 'ar');
       await longPress(tester, unitText('ar', 'p3'), 18); // "مُهِمّ" (plain 16–22: 3 letters, 3 marks)
-      await tester.tap(find.text('علّم'));
+      await tester.tap(find.text('تمييز'));
       await tester.pumpAndSettle();
       expect(highlighted.single.range, const HighlightRange(blockId: 'p3', startOffset: 16, endOffset: 22, text: 'مُهِمّ'));
     });
@@ -246,7 +246,7 @@ void main() {
       final menu = await tester.startGesture(at(tester, unitText('ar', 'c1'), 2), kind: PointerDeviceKind.mouse, buttons: kSecondaryMouseButton);
       await menu.up();
       await tester.pumpAndSettle();
-      await tester.tap(find.text('علّم'));
+      await tester.tap(find.text('تمييز'));
       await tester.pumpAndSettle();
       final range = highlighted.single.range!;
       expect(range.blockId, 'c1');
@@ -260,7 +260,7 @@ void main() {
       await longPress(tester, unitText('ar', 'p1'), 0); // "لو"
       final material = MaterialLocalizations.of(tester.element(find.byType(Scaffold)));
       expect(find.text(material.copyButtonLabel), findsOneWidget);
-      expect(find.text('علّم'), findsNothing);
+      expect(find.text('تمييز'), findsNothing);
     });
 
     testWidgets('inside one of your highlights: Remove, which sends its id', (tester) async {
@@ -268,8 +268,8 @@ void main() {
         'p1': [RHighlightMark(start: 15, end: 27, mine: true, id: 'h-asp')],
       });
       await longPress(tester, unitText('ar', 'p1'), 24); // "Core"
-      expect(find.text('علّم'), findsNothing);
-      await tester.tap(find.text('شيل العلامة'));
+      expect(find.text('تمييز'), findsNothing);
+      await tester.tap(find.text('إزالة التمييز'));
       await tester.pumpAndSettle();
       expect(removed, ['h-asp']);
       expect(highlighted, isEmpty);
@@ -280,9 +280,9 @@ void main() {
         'p1': [RHighlightMark(start: 15, end: 27, mine: true)],
       });
       await longPress(tester, unitText('ar', 'p1'), 24);
-      expect(find.text('شيل العلامة'), findsNothing);
+      expect(find.text('إزالة التمييز'), findsNothing);
       // The server joins it: Highlight is still offered.
-      expect(find.text('علّم'), findsOneWidget);
+      expect(find.text('تمييز'), findsOneWidget);
     });
 
     testWidgets('without the permission there is no Highlight button, nor Remove', (tester) async {
@@ -290,11 +290,11 @@ void main() {
         'p1': [RHighlightMark(start: 15, end: 27, mine: true, id: 'h-asp')],
       });
       await longPress(tester, unitText('ar', 'p1'), 45);
-      expect(find.text('علّم'), findsNothing);
+      expect(find.text('تمييز'), findsNothing);
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
       await longPress(tester, unitText('ar', 'p1'), 24);
-      expect(find.text('شيل العلامة'), findsNothing);
+      expect(find.text('إزالة التمييز'), findsNothing);
     });
 
     testWidgets('code, table and steps blocks never select', (tester) async {

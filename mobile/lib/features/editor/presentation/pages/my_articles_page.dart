@@ -181,7 +181,7 @@ class _ArticlesTab extends StatelessWidget {
       context,
       title: l10n.deleteArticleTitle,
       body: article.isPublished ? l10n.deletePublishedBody : l10n.deleteDraftBody,
-      confirm: l10n.deleteAction,
+      confirm: l10n.deleteConfirm,
       destructive: true,
     );
     if (!ok) return;

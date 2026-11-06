@@ -196,7 +196,7 @@ void main() {
   group('daily-article push (F07)', () {
     // As FCM delivers it (docs/api/contract-v1.md, "Push payloads").
     const daily = RemoteMessage(
-      notification: RemoteNotification(title: 'مقال النهارده جاهز ☕', body: 'RAG ولا Fine-tuning؟'),
+      notification: RemoteNotification(title: 'مقال اليوم جاهز ☕', body: 'RAG ولا Fine-tuning؟'),
       data: {
         'type': 'daily_article',
         'articleId': '0a1b2c3d-0000-0000-0000-000000000001',
@@ -208,7 +208,7 @@ void main() {
     final payload = FirebasePushPlatform.payloadOf(daily);
 
     test('is read the same way in every app state', () {
-      expect(payload.title, 'مقال النهارده جاهز ☕');
+      expect(payload.title, 'مقال اليوم جاهز ☕');
       expect(payload.body, 'RAG ولا Fine-tuning؟');
       expect(payload.link, 'readin://a/rag-vs-fine-tuning');
       expect(payload.notificationId, isNull);
@@ -243,7 +243,7 @@ void main() {
 
       platform.foreground.add(payload);
       await settle();
-      expect(platform.shown.single.title, 'مقال النهارده جاهز ☕');
+      expect(platform.shown.single.title, 'مقال اليوم جاهز ☕');
       expect(paths, isEmpty, reason: 'showing it opens nothing by itself');
 
       platform.opened.add(PushPayload.fromLocalPayload(platform.shown.single.toLocalPayload())); // the local tap

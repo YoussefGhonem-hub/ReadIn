@@ -164,14 +164,14 @@ void main() {
     final en = await AppLocalizations.delegate.load(AppLocales.en);
     const expected = {
       FailureCodes.highlightTextMismatch: (
-        'النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.',
+        'تغيّر هذا النص في المقال. حدّث الصفحة وحاول مرة أخرى.',
         'This text has changed in the article. Reload and try again.',
       ),
-      FailureCodes.highlightBlockNotAllowed: ('مينفعش تعمل Highlight للجزء ده.', "This part can't be highlighted."),
-      FailureCodes.highlightTooShort: ('اختار 3 حروف على الأقل.', 'Select at least 3 characters.'),
-      FailureCodes.highlightTooLong: ('الـ Highlight لازم يكون 1000 حرف أو أقل.', 'A highlight can be at most 1,000 characters.'),
-      FailureCodes.highlightLimit: ('وصلت لأقصى عدد Highlights في المقال ده (100).', 'You can have at most 100 highlights in one article.'),
-      FailureCodes.highlightNotFound: ('الـ Highlight ده مش موجود.', 'Highlight not found.'),
+      FailureCodes.highlightBlockNotAllowed: ('لا يمكن تمييز هذا الجزء.', "This part can't be highlighted."),
+      FailureCodes.highlightTooShort: ('حدّد 3 أحرف على الأقل.', 'Select at least 3 characters.'),
+      FailureCodes.highlightTooLong: ('يجب ألا يتجاوز التمييز 1000 حرف.', 'A highlight can be at most 1,000 characters.'),
+      FailureCodes.highlightLimit: ('وصلت إلى الحد الأقصى للتمييزات في هذا المقال (100).', 'You can have at most 100 highlights in one article.'),
+      FailureCodes.highlightNotFound: ('هذا التمييز غير موجود.', 'Highlight not found.'),
     };
     for (final MapEntry(key: code, value: (arabic, english)) in expected.entries) {
       expect(localizeErrorCode(ar, code), arabic, reason: code);
