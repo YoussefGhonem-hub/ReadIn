@@ -7,6 +7,7 @@ import {
   Injector,
   PLATFORM_ID,
   Signal,
+  WritableSignal,
   afterNextRender,
   computed,
   effect,
@@ -81,7 +82,8 @@ function injectMediaQuery(query: string): Signal<boolean> {
 
 /**
  * An article as a social post (F34), in Home's feeds, profile Articles and Related articles. Top to bottom: an optional
- * label ("مقال النهارده", or "أعاد نشره {name}" / "{name} و N غيره" from `repostedBy`, F29), the writer (avatar, name,
+ * label ("مقال النهارده", or "أعاد نشره {name}" / "{name} و N غيره" from `repostedBy`, F29, with the reposter's
+ * thoughts under it, cut at 4 lines with "… اقرأ المزيد"), the writer (avatar, name,
  * verified badge; their title (F14) on one line; field · time since publishing · reading time), Follow / Save / "⋯",
  * the title (≤ 3 lines, opens the reader), the excerpt cut at 4 lines with "… اقرأ المزيد" at the end of its last line,
  * the attachments (F26) or else the cover (16:9), up to 3 tags + "+N", and the action bar: icons only, each with its
@@ -133,8 +135,9 @@ function injectMediaQuery(query: string): Signal<boolean> {
     '(click)': 'onCardClick($event)',
   },
   styles: `
-    /* The excerpt is cut at 4 lines. "… Read more" floats at the end of the last line, beside the text instead of over
-       it: the flex parent makes the text box's height definite, so the 0-wide spacer can fill all but its last line. */
+    /* The excerpt (and a repost's caption, F29) is cut at 4 lines. "… Read more" floats at the end of the last line,
+       beside the text instead of over it: the flex parent makes the text box's height definite, so the 0-wide spacer
+       can fill all but its last line. */
     .excerpt-box {
       display: flex;
     }
@@ -164,20 +167,49 @@ function injectMediaQuery(query: string): Signal<boolean> {
           {{ labelKey | transloco }}
         </div>
       } @else if (repostLabel(); as repost) {
-        <!-- F29: a repost placed it (Home → Following) or it is on a profile's Reposts tab; the name opens the profile -->
-        <div
-          class="flex items-center gap-1.5 border-b border-border px-4 py-2 text-xs font-semibold text-text-secondary"
-          data-card-label
-          data-card-repost-label
-        >
-          <svg lucideIcon="Repeat2" [size]="14" class="shrink-0" aria-hidden="true"></svg>
-          <span class="min-w-0 truncate"
-            >{{ repost.before
-            }}<a [routerLink]="'/@' + repost.user.username" class="text-text-primary no-underline hover:underline" dir="auto" data-card-reposter>{{
-              repost.user.displayName
-            }}</a
-            >{{ repost.after }}</span
-          >
+        <!-- F29: a repost placed it (Home → Following) or it is on a profile's Reposts tab; the name opens the profile.
+             The reposter's thoughts follow the label line, above the card's own header (LinkedIn's "repost with your
+             thoughts"): plain text in its own direction, cut at 4 lines with "… اقرأ المزيد". -->
+        <div class="border-b border-border" data-card-repost>
+          <div class="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-text-secondary" data-card-label data-card-repost-label>
+            <svg lucideIcon="Repeat2" [size]="14" class="shrink-0" aria-hidden="true"></svg>
+            <span class="min-w-0 truncate"
+              >{{ repost.before
+              }}<a [routerLink]="'/@' + repost.user.username" class="text-text-primary no-underline hover:underline" dir="auto" data-card-reposter>{{
+                repost.user.displayName
+              }}</a
+              >{{ repost.after }}</span
+            >
+          </div>
+          @if (repostCaption(); as caption) {
+            <div class="excerpt-box px-4 pb-3">
+              <div
+                #captionEl
+                [id]="captionId"
+                class="rd-card-text outline-none"
+                [class.excerpt]="!captionExpanded()"
+                [attr.tabindex]="captionExpanded() ? -1 : null"
+                [attr.dir]="captionDir()"
+                data-card-repost-caption
+                [attr.data-expanded]="captionExpanded() ? true : null"
+              >
+                @if (!captionExpanded() && captionOverflows()) {
+                  <button
+                    type="button"
+                    class="read-more min-h-6 font-semibold text-text-secondary hover:text-primary hover:underline"
+                    [attr.aria-expanded]="false"
+                    [attr.aria-controls]="captionId"
+                    [attr.aria-label]="'repostLabel.captionMore' | transloco: { name: repost.user.displayName }"
+                    data-card-caption-more
+                    (click)="expandCaption()"
+                  >
+                    <bdi [attr.dir]="uiDir()">… {{ 'feedCard.readMore' | transloco }}</bdi>
+                  </button>
+                }
+                <rd-bdi-text [text]="caption" />
+              </div>
+            </div>
+          }
         </div>
       }
 
@@ -469,6 +501,7 @@ export class PostCard {
   protected readonly textId = `card-text-${this.uid}`;
   protected readonly commentsId = `card-comments-${this.uid}`;
   protected readonly commentsTitleId = `card-comments-title-${this.uid}`;
+  protected readonly captionId = `card-caption-${this.uid}`;
 
   protected readonly link = computed(() => articleLink(this.article()));
   protected readonly titleDir = computed(() => detectDir(this.article().title) ?? 'auto');
@@ -493,6 +526,23 @@ export class PostCard {
     const [before, after = ''] = text.split(NAME_MARK);
     return { before, after, user: by.user };
   });
+
+  /**
+   * F29: the reposter's thoughts under the label (`repostedBy.caption`), plain text; none when empty. On your own
+   * Reposts tab, thoughts you just edited or cleared here show at once (ArticleSocialStore).
+   */
+  protected readonly repostCaption = computed(() => {
+    const by = this.article().repostedBy;
+    if (!by) return null;
+    const me = this.session.isAuthenticated() ? this.session.me()?.id : null;
+    const mine = me && by.user.id === me ? this.social.myCaption(this.article().id) : undefined;
+    return (mine === undefined ? by.caption : mine)?.trim() || null;
+  });
+  protected readonly captionDir = computed(() => detectDir(this.repostCaption()) ?? 'auto');
+  /** "… اقرأ المزيد" shows the whole caption; new thoughts start cut again. */
+  protected readonly captionExpanded = linkedSignal({ source: this.repostCaption, computation: () => false });
+  /** The caption is longer than 4 lines (measured in the browser). */
+  protected readonly captionOverflows = signal(false);
 
   /** The feed values with your actions and the live counters on top. */
   protected readonly state = computed(() => this.social.state(this.article()));
@@ -551,6 +601,7 @@ export class PostCard {
 
   private readonly textRegion = viewChild.required<ElementRef<HTMLElement>>('textRegion');
   private readonly excerptEl = viewChild<ElementRef<HTMLElement>>('excerptEl');
+  private readonly captionEl = viewChild<ElementRef<HTMLElement>>('captionEl');
   /** Set by the Comment action just before the sign-in prompt opens, read by the card's click handler. */
   private commentIntent = false;
 
@@ -568,7 +619,8 @@ export class PostCard {
       inView,
     );
 
-    this.measureExcerpt();
+    this.measureClamp(this.excerptEl, this.overflows);
+    this.measureClamp(this.captionEl, this.captionOverflows);
     this.foldWhenMuted();
 
     // A guest who signed in from this card comes back to it (with its comments open, if that's what they pressed).
@@ -705,16 +757,25 @@ export class PostCard {
     );
   }
 
-  /** Whether the excerpt is cut at 4 lines, kept up to date as the card resizes (fonts, width). Browser only. */
-  private measureExcerpt(): void {
+  /** The reposter's whole thoughts (F29), with focus on them as "… اقرأ المزيد" goes away. */
+  protected expandCaption(): void {
+    this.captionExpanded.set(true);
+    afterNextRender(() => this.captionEl()?.nativeElement.focus({ preventScroll: true }), { injector: this.injector });
+  }
+
+  /**
+   * Whether the excerpt (or the repost's caption) is cut at 4 lines, kept up to date as the card resizes (fonts,
+   * width). Browser only.
+   */
+  private measureClamp(target: Signal<ElementRef<HTMLElement> | undefined>, overflows: WritableSignal<boolean>): void {
     if (!isPlatformBrowser(inject(PLATFORM_ID)) || typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(() => {
-      const el = this.excerptEl()?.nativeElement;
-      if (el) this.overflows.set(el.scrollHeight > el.clientHeight + 1);
+      const el = target()?.nativeElement;
+      if (el) overflows.set(el.scrollHeight > el.clientHeight + 1);
     });
     let observed: HTMLElement | null = null;
     effect(() => {
-      const el = this.excerptEl()?.nativeElement ?? null;
+      const el = target()?.nativeElement ?? null;
       if (el === observed) return;
       if (observed) observer.unobserve(observed);
       observed = el;

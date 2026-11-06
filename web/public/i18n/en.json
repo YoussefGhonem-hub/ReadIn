@@ -253,7 +253,8 @@
       "own_article": "You can't do this on your own article."
     },
     "repost": {
-      "own_article": "You can't repost your own article."
+      "own_article": "You can't repost your own article.",
+      "caption_too_long": "Your thoughts must be 500 characters or fewer."
     },
     "highlight": {
       "text_mismatch": "This text has changed in the article. Reload and try again.",
@@ -2582,6 +2583,10 @@
     "repost": "Repost",
     "repostCount": "Repost, {{count}}",
     "repostOwn": "You can't repost your own article",
+    "repostNow": "Repost",
+    "repostWithThoughts": "Repost with your thoughts",
+    "editThoughts": "Edit your thoughts",
+    "undoRepost": "Undo repost",
     "share": "Share"
   },
   "repostLabel": {
@@ -2589,7 +2594,18 @@
     "others": {
       "one": "{{name}} and 1 other reposted this",
       "other": "{{name}} and {{count}} others reposted this"
-    }
+    },
+    "captionMore": "Read all of {{name}}'s thoughts"
+  },
+  "repostDialog": {
+    "title": "Repost this article",
+    "fieldLabel": "Your thoughts on the article",
+    "placeholder": "Add your thoughts… (optional)",
+    "submit": "Repost",
+    "save": "Save",
+    "loading": "Loading your thoughts…",
+    "reposted": "You reposted this article.",
+    "saved": "Your thoughts were saved."
   },
   "commentBox": {
     "placeholder": "Add a comment…",

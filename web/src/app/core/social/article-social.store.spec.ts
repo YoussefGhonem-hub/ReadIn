@@ -253,6 +253,53 @@ describe('ArticleSocialStore (F10, F13, F27, F29)', () => {
       expect(store.state(reposts)).toEqual(expect.objectContaining({ repostCount: 9, isReposted: true }));
     });
 
+    it('repost with your thoughts: not optimistic; the answer sets the state, the count and your caption', async () => {
+      const done = store.repostWithCaption(reposts, 'Worth a read.');
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 3 }));
+      expect(store.myCaption('a1')).toBeUndefined();
+      const req = http.expectOne(REPOST_URL);
+      expect(req.request.method).toBe('PUT');
+      expect(req.request.body).toEqual({ caption: 'Worth a read.' });
+      req.flush({ repostCount: 4, isReposted: true, caption: 'Worth a read.' });
+      expect(await done).toEqual({ repostCount: 4, isReposted: true, caption: 'Worth a read.' });
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: true, repostCount: 4 }));
+      expect(store.myCaption('a1')).toBe('Worth a read.');
+
+      // Undo takes the caption with it.
+      const undo = store.toggleRepost(reposts);
+      http.expectOne(REPOST_URL).flush({ repostCount: 3, isReposted: false, caption: null });
+      await undo;
+      expect(store.myCaption('a1')).toBeNull();
+    });
+
+    it('a refused caption rethrows (the dialog shows it) without a toast or a change', async () => {
+      const done = store.repostWithCaption(reposts, 'x');
+      http.expectOne(REPOST_URL).flush(problem(400, 'validation.failed', { caption: ['repost.caption_too_long'] }), { status: 400, statusText: 'Bad Request' });
+      await expect(done).rejects.toMatchObject({ code: 'validation.failed' });
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 3 }));
+      expect(toasts.toasts()).toEqual([]);
+    });
+
+    it('your repost as GET answers it replaces the state, but a toggle on its way keeps its wish', async () => {
+      store.applyRepost(reposts, { repostCount: 7, isReposted: true, caption: 'Hi' });
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: true, repostCount: 7 }));
+      expect(store.myCaption('a1')).toBe('Hi');
+
+      const undo = store.toggleRepost(reposts);
+      store.applyRepost(reposts, { repostCount: 7, isReposted: true, caption: 'Hi' });
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 6 }));
+      http.expectOne(REPOST_URL).flush({ repostCount: 6, isReposted: false, caption: null });
+      await undo;
+      expect(store.state(reposts)).toEqual(expect.objectContaining({ isReposted: false, repostCount: 6 }));
+    });
+
+    it('your captions belong to your account', () => {
+      store.applyRepost(reposts, { repostCount: 4, isReposted: true, caption: 'Mine' });
+      TestBed.inject(SessionStore).setMe(testMe({ id: 'user-2' }));
+      TestBed.tick();
+      expect(store.myCaption('a1')).toBeUndefined();
+    });
+
     it('cards from an API older than F29 count 0 and are not reposted', () => {
       const old = testCard();
       delete old.repostCount;

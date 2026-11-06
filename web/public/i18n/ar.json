@@ -256,7 +256,8 @@
       "own_article": "مينفعش تعمل كده على مقالك."
     },
     "repost": {
-      "own_article": "مينفعش تعيد نشر مقالك."
+      "own_article": "مينفعش تعيد نشر مقالك.",
+      "caption_too_long": "رأيك لازم يكون 500 حرف أو أقل."
     },
     "highlight": {
       "text_mismatch": "النص ده اتغيّر في المقال. حدّث الصفحة وجرّب تاني.",
@@ -2703,6 +2704,10 @@
     "repost": "إعادة نشر",
     "repostCount": "إعادة نشر، {{count}}",
     "repostOwn": "مينفعش تعيد نشر مقالك",
+    "repostNow": "أعد النشر",
+    "repostWithThoughts": "أعد النشر مع رأيك",
+    "editThoughts": "عدّل رأيك",
+    "undoRepost": "إلغاء إعادة النشر",
     "share": "مشاركة"
   },
   "repostLabel": {
@@ -2713,7 +2718,18 @@
       "few": "{{name}} و{{count}} غيره أعادوا نشره",
       "many": "{{name}} و{{count}} غيره أعادوا نشره",
       "other": "{{name}} و{{count}} غيره أعادوا نشره"
-    }
+    },
+    "captionMore": "اقرأ رأي {{name}} كله"
+  },
+  "repostDialog": {
+    "title": "أعد نشر المقال",
+    "fieldLabel": "رأيك في المقال",
+    "placeholder": "قول رأيك في المقال… (اختياري)",
+    "submit": "انشر",
+    "save": "احفظ",
+    "loading": "بنجيب رأيك…",
+    "reposted": "أعدت نشر المقال.",
+    "saved": "اتحفظ رأيك."
   },
   "commentBox": {
     "placeholder": "اكتب تعليق…",

@@ -18,17 +18,30 @@ describe('RepostsApi', () => {
     const req = http.expectOne((r) => r.urlWithParams === url);
     expect(req.request.method).toBe(method);
     req.flush({});
+    return req.request;
   }
 
   it('repost, undo and a profile’s Reposts tab', () => {
     const api = TestBed.inject(RepostsApi);
     api.repost('a 1').subscribe();
-    expectCall('PUT', `${TEST_API}/articles/a%201/repost`);
+    expect(expectCall('PUT', `${TEST_API}/articles/a%201/repost`).body).toBeNull();
     api.unrepost('a1').subscribe();
     expectCall('DELETE', `${TEST_API}/articles/a1/repost`);
     api.userReposts('karim', { cursor: 'c2', limit: 10 }).subscribe();
     expectCall('GET', `${TEST_API}/users/karim/reposts?limit=10&cursor=c2`);
     api.userReposts('karim').subscribe();
     expectCall('GET', `${TEST_API}/users/karim/reposts?limit=20`);
+  });
+
+  it('repost with your thoughts sends { caption } ("" clears them); GET is your repost now', () => {
+    const api = TestBed.inject(RepostsApi);
+    api.repost('a1', 'فكرة حلوة\nجدًا').subscribe();
+    expect(expectCall('PUT', `${TEST_API}/articles/a1/repost`).body).toEqual({ caption: 'فكرة حلوة\nجدًا' });
+    api.repost('a1', '').subscribe();
+    expect(expectCall('PUT', `${TEST_API}/articles/a1/repost`).body).toEqual({ caption: '' });
+    api.repost('a1', null).subscribe();
+    expect(expectCall('PUT', `${TEST_API}/articles/a1/repost`).body).toEqual({ caption: null });
+    api.state('a 1').subscribe();
+    expectCall('GET', `${TEST_API}/articles/a%201/repost`);
   });
 });

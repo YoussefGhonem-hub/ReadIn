@@ -4,6 +4,7 @@ import { TEST_API, flushMicrotasks, setupSocialTesting, testCard } from '../../.
 import { ArticleCardDto, ArticlePreviewDto } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { LanguageService } from '../../core/i18n/language.service';
+import { ArticleSocialStore } from '../../core/social/article-social.store';
 import { FollowStore } from '../../core/social/follow.store';
 import { MuteStore, keepMutedContent } from '../../core/social/mute.store';
 import { ToastService } from '../../shared/ui/toast/toast.service';
@@ -75,6 +76,7 @@ describe('PostCard (F34)', () => {
     http?.verify();
     http = null;
     vi.unstubAllGlobals();
+    document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
   });
 
   describe('header', () => {
@@ -202,6 +204,106 @@ describe('PostCard (F34)', () => {
       http = t.http;
       expect(t.$('[data-card-repost-label]')).toBeNull();
       expect(t.$$('[data-card-label]')).toHaveLength(1);
+    });
+
+    describe('the reposter’s thoughts (F29 caption)', () => {
+      const reposter = { id: 'u-karim', displayName: 'Karim Hassan', username: 'karim', avatarUrl: null, isVerified: true };
+      const labeled = (caption: string | null | undefined, user = reposter) =>
+        testCard({ repostedBy: { user, othersCount: 0, repostedAt: '2026-11-03T12:00:00Z', ...(caption === undefined ? {} : { caption }) } });
+
+      it('under the label line and above the card’s header: plain text, never HTML, in its own direction, line breaks kept', async () => {
+        const caption = 'أحسن مقال قريته عن الـ Clean Architecture.\n<b>مش HTML</b> <img src=x onerror=alert(1)>';
+        const t = await render(labeled(caption), { guest: true });
+        http = t.http;
+        const box = t.$('[data-card-repost]')!;
+        const text = t.$('[data-card-repost-caption]')!;
+        expect(box.contains(t.$('[data-card-repost-label]'))).toBe(true);
+        expect(box.contains(text)).toBe(true);
+        expect(t.$('[data-card-repost-label]')!.compareDocumentPosition(text) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(text.compareDocumentPosition(t.$('header')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        // The label keeps its own text; the thoughts are their own block.
+        expect(t.$('[data-card-repost-label]')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('أعاد نشره Karim Hassan');
+        expect(text.textContent!.trim()).toBe(caption);
+        expect(text.querySelector('b, img')).toBeNull();
+        expect(text.getAttribute('dir')).toBe('rtl');
+        expect(text.classList).toContain('rd-card-text'); // white-space: pre-line
+        expect(text.classList).toContain('excerpt'); // cut at 4 lines
+        expect(t.$('[data-card-caption-more]')).toBeNull(); // short enough
+      });
+
+      it('an English caption reads left to right in the Arabic UI', async () => {
+        const t = await render(labeled('Worth a read before your next project.'), { guest: true });
+        http = t.http;
+        expect(t.$('[data-card-repost-caption]')!.getAttribute('dir')).toBe('ltr');
+      });
+
+      it('no thoughts (null, missing or only spaces): the label line alone', async () => {
+        for (const caption of [null, undefined, '   ']) {
+          TestBed.resetTestingModule();
+          const t = await render(labeled(caption), { guest: true });
+          expect(t.$('[data-card-repost-label]')).not.toBeNull();
+          expect(t.$('[data-card-repost-caption]')).toBeNull();
+          t.http.verify();
+        }
+      });
+
+      it('longer than 4 lines: "… اقرأ المزيد" at the end, which shows them all', async () => {
+        // jsdom lays nothing out: the caption says it is taller than its box.
+        vi.stubGlobal(
+          'ResizeObserver',
+          class {
+            constructor(private readonly callback: () => void) {}
+            observe(el: HTMLElement) {
+              if (el.hasAttribute('data-card-repost-caption')) {
+                Object.defineProperty(el, 'scrollHeight', { configurable: true, get: () => (el.classList.contains('excerpt') ? 300 : 108) });
+                Object.defineProperty(el, 'clientHeight', { configurable: true, value: 108 });
+              }
+              queueMicrotask(() => this.callback());
+            }
+            unobserve = () => undefined;
+            disconnect = () => undefined;
+          },
+        );
+        const t = await render(labeled('سطر\n'.repeat(8).trim()), { guest: true });
+        http = t.http;
+        await t.stable();
+        const more = t.$('[data-card-caption-more]')!;
+        expect(more.textContent!.trim()).toBe('… اقرأ المزيد');
+        expect(more.getAttribute('aria-label')).toBe('اقرأ رأي Karim Hassan كله');
+        expect(more.getAttribute('aria-expanded')).toBe('false');
+        expect(more.getAttribute('aria-controls')).toBe(t.$('[data-card-repost-caption]')!.id);
+        more.click();
+        await t.stable();
+        const text = t.$('[data-card-repost-caption]')!;
+        expect(text.classList).not.toContain('excerpt');
+        expect(text.hasAttribute('data-expanded')).toBe(true);
+        expect(t.$('[data-card-caption-more]')).toBeNull();
+        expect(document.activeElement).toBe(text);
+      });
+
+      it('your own Reposts tab: thoughts you edit or clear here show at once', async () => {
+        const me = { id: 'user-1', displayName: 'Mona Adel', username: 'mona', avatarUrl: null, isVerified: false };
+        const article = labeled('Old thoughts', me);
+        const t = await render(article);
+        http = t.http;
+        expect(t.$('[data-card-repost-caption]')!.textContent!.trim()).toBe('Old thoughts');
+        const store = TestBed.inject(ArticleSocialStore);
+        store.applyRepost(article, { repostCount: 1, isReposted: true, caption: 'New thoughts' });
+        await t.stable();
+        expect(t.$('[data-card-repost-caption]')!.textContent!.trim()).toBe('New thoughts');
+        store.applyRepost(article, { repostCount: 1, isReposted: true, caption: null });
+        await t.stable();
+        expect(t.$('[data-card-repost-caption]')).toBeNull();
+      });
+
+      it('someone else’s thoughts never take yours', async () => {
+        const article = labeled('Karim’s thoughts');
+        const t = await render(article);
+        http = t.http;
+        TestBed.inject(ArticleSocialStore).applyRepost(article, { repostCount: 1, isReposted: true, caption: 'Mine' });
+        await t.stable();
+        expect(t.$('[data-card-repost-caption]')!.textContent!.trim()).toBe('Karim’s thoughts');
+      });
     });
   });
 
@@ -430,9 +532,15 @@ describe('PostCard (F34)', () => {
       const t = await render(testCard({ repostCount: 2 }));
       http = t.http;
       const repost = t.$('[data-repost]')!;
+      /** A tap opens the Repost menu (a CDK overlay on the document): "أعد النشر", or "إلغاء إعادة النشر" once reposted. */
+      const pick = async (action: 'repost' | 'undo') => {
+        repost.click();
+        await t.stable();
+        document.querySelector<HTMLElement>(`[data-repost-menu] [data-repost-action="${action}"]`)!.click();
+        await t.stable();
+      };
       expect(repost.getAttribute('aria-pressed')).toBe('false');
-      repost.click();
-      await t.stable();
+      await pick('repost');
       expect(repost.getAttribute('aria-pressed')).toBe('true');
       expect(t.$('[data-repost-count]')!.textContent!.trim()).toBe('3');
       const put = t.http.expectOne(`${TEST_API}/articles/a1/repost`);
@@ -441,8 +549,7 @@ describe('PostCard (F34)', () => {
       await t.stable();
 
       // Undo, refused: back to reposted, with the translated error.
-      repost.click();
-      await t.stable();
+      await pick('undo');
       expect(repost.getAttribute('aria-pressed')).toBe('false');
       expect(t.$('[data-repost-count]')!.textContent!.trim()).toBe('2');
       const del = t.http.expectOne(`${TEST_API}/articles/a1/repost`);

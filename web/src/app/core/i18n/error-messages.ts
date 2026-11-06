@@ -145,8 +145,9 @@ export const CONTRACT_ERROR_CODES = [
   'mute.system_account',
   'mute.limit',
   'mute.own_article',
-  // Reposts (F29)
+  // Reposts (F29): repost.caption_too_long comes in a validation failure's `errors.caption`
   'repost.own_article',
+  'repost.caption_too_long',
   // Highlights (F30)
   'highlight.text_mismatch',
   'highlight.block_not_allowed',

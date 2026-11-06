@@ -88,6 +88,8 @@ export class ArticleSocialStore {
   private readonly session = inject(SessionStore);
 
   private readonly entries = signal<ReadonlyMap<string, Entry>>(new Map());
+  /** Your repost's caption per article, as the server last answered it (F29); absent when not known here. */
+  private readonly captions = signal<ReadonlyMap<string, string | null>>(new Map());
   private readonly inFlight = new Set<string>();
   private readonly unsavedSubject = new Subject<string>();
 
@@ -100,7 +102,12 @@ export class ArticleSocialStore {
     let previous: string | null | undefined;
     effect(() => {
       const current = userId();
-      if (previous !== undefined && previous !== current) untracked(() => this.entries.set(new Map()));
+      if (previous !== undefined && previous !== current) {
+        untracked(() => {
+          this.entries.set(new Map());
+          this.captions.set(new Map());
+        });
+      }
       previous = current;
     });
   }
@@ -108,6 +115,15 @@ export class ArticleSocialStore {
   /** The state to show for `article`: its DTO values, with the user's actions and live counters on top. */
   state(article: ArticleCardDto): ArticleSocialState {
     return this.entries().get(article.id)?.view ?? socialStateOf(article);
+  }
+
+  /**
+   * Your repost's caption (F29) as the server last answered it in this session (a repost, an edit, an undo or the
+   * dialog's `GET`): `null` for none, `undefined` when nothing here knows it yet.
+   */
+  myCaption(articleId: string): string | null | undefined {
+    const captions = this.captions();
+    return captions.has(articleId) ? (captions.get(articleId) ?? null) : undefined;
   }
 
   /** Fresh copies from the API replace local state, except while one of the user's actions is still on its way. */
@@ -161,6 +177,30 @@ export class ArticleSocialStore {
     if (view.isReposted === isReposted) return Promise.resolve();
     this.patch(article.id, (entry) => ({ ...entry, view: { ...view, isReposted, repostCount: Math.max(0, view.repostCount + (isReposted ? 1 : -1)) } }));
     return this.syncRepost(article.id);
+  }
+
+  /**
+   * The caption dialog (F29): reposts with your thoughts, or only sets them when you already reposted (`""` clears
+   * them). Not optimistic: the dialog waits for the answer and stays open on an error, which this rethrows (no toast);
+   * once the server confirms, the new state and count show everywhere.
+   */
+  async repostWithCaption(article: ArticleCardDto, caption: string): Promise<RepostStateDto> {
+    this.ensure(article);
+    const result = await firstValueFrom(this.repostsApi.repost(article.id, caption));
+    this.applyRepost(article, result);
+    return result;
+  }
+
+  /** Your repost as the server answered it (the dialog's `GET`, or saved thoughts): its state, count and caption. */
+  applyRepost(article: ArticleCardDto, result: RepostStateDto): void {
+    this.ensure(article);
+    // A toggle still on its way keeps its wish on screen; its own answer settles the rest.
+    const toggling = this.busy(article.id, 'repost');
+    this.patch(article.id, (entry) => {
+      const server = { ...entry.server, isReposted: result.isReposted, repostCount: result.repostCount };
+      return { server, view: toggling ? entry.view : { ...entry.view, isReposted: server.isReposted, repostCount: server.repostCount } };
+    });
+    this.rememberCaption(article.id, result);
   }
 
   /** Adding to a collection saves the article first if needed (server side). */
@@ -314,6 +354,13 @@ export class ArticleSocialStore {
       const pending = isReposted === server.isReposted ? 0 : isReposted ? 1 : -1;
       return { server, view: { ...entry.view, isReposted, repostCount: Math.max(0, server.repostCount + pending) } };
     });
+    this.rememberCaption(id, result);
+  }
+
+  /** An answer from an API older than repost captions has none: what was known stays. */
+  private rememberCaption(id: string, result: RepostStateDto): void {
+    if (result.caption === undefined) return;
+    this.captions.update((map) => new Map(map).set(id, result.caption ?? null));
   }
 
   private ensure(article: ArticleCardDto): Entry {

@@ -40,6 +40,7 @@ describe('ArticleActionBar (F10, F13, F29)', () => {
   afterEach(() => {
     http?.verify();
     vi.unstubAllGlobals();
+    document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
   });
 
   it('shows the total, the top reactions and the comment count', async () => {
@@ -178,7 +179,10 @@ describe('ArticleActionBar (F10, F13, F29)', () => {
     expect(t.$('[data-comment-count]')!.nextElementSibling).toBe(repost.closest('rd-repost-button'));
     expect(repost.getAttribute('aria-label')).toBe('إعادة نشر، 3');
     expect(t.$('[data-repost-count]')!.textContent!.trim()).toBe('3');
+    // A tap opens the Repost menu (a CDK overlay on the document); "أعد النشر" reposts at once.
     repost.click();
+    await t.stable();
+    document.querySelector<HTMLElement>('[data-repost-menu] [data-repost-action="repost"]')!.click();
     await t.stable();
     expect(repost.getAttribute('aria-pressed')).toBe('true');
     expect(t.$('[data-repost-count]')!.textContent!.trim()).toBe('4');

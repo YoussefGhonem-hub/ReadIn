@@ -303,10 +303,20 @@ export interface AuthorDto {
 
 // ── Reposts (F29) ───────────────────────────────────────────
 
-/** `PUT` / `DELETE /articles/{id}/repost` (both idempotent). */
+/**
+ * `PUT /articles/{id}/repost`'s optional body. Missing or `null` `caption`: no caption on a new repost, the caption
+ * unchanged on an existing one; a string sets it (plain text, ≤ 500 characters after trimming); `""` clears it.
+ */
+export interface RepostRequest {
+  caption?: string | null;
+}
+
+/** `GET` / `PUT` / `DELETE /articles/{id}/repost` (`PUT` and `DELETE` are idempotent). */
 export interface RepostStateDto {
   repostCount: number;
   isReposted: boolean;
+  /** Your repost's thoughts ("رأيك"); `null` when it has none or you haven't reposted. */
+  caption: string | null;
 }
 
 /** Why a card is in the list: a repost placed it (Home → Following) or it is on a profile's Reposts tab. */
@@ -316,6 +326,11 @@ export interface RepostLabelDto {
   /** Other writers you follow who reposted it ("{name} و N غيره"); always 0 on the Reposts tab. */
   othersCount: number;
   repostedAt: string;
+  /**
+   * `user`'s thoughts on it (plain text, ≤ 500 characters, line breaks kept), shown under the label; `null` when none.
+   * Missing from an API older than repost captions.
+   */
+  caption?: string | null;
 }
 
 export interface FieldRefDto {

@@ -24,8 +24,10 @@ import { expectSignInPrompt, openArticle, signInAsReader } from './support/socia
  *   side; the writer's title under the name;
  * - the floating reactions bar (LinkedIn-style): hover, keyboard, staggered entry, grow and lift, the pick animation,
  *   and all of it instant with "reduce motion";
- * - Repost: optimistic toggle the server keeps, rollback with the error, your own article, guests; the Following feed's
- *   "أعاد نشره {name}" / "{name} و N غيره" labels (the mock's `u-reposts…` viewers follow writers who reposted);
+ * - Repost: its menu's "أعد النشر" / "إلغاء إعادة النشر", optimistic, kept by the server, rollback with the error; your
+ *   own article, guests; the Following feed's "أعاد نشره {name}" / "{name} و N غيره" labels (the mock's `u-reposts…`
+ *   viewers follow writers who reposted, some with their thoughts under the label); the caption dialog is in
+ *   repost-caption.e2e.ts;
  * - the reader: the title in the author row, Repost in the bar;
  * - comments: the box (avatar, rounded field, emoji picker, send icon), the rows (title, Follow, ⋯) and Reply's mention.
  */
@@ -298,9 +300,11 @@ for (const variant of VARIANTS) {
     await expect(count).toHaveText('2');
     await expect(repost).toHaveAttribute('aria-pressed', 'false');
 
-    // Optimistic: pressed and counted at once, then the server confirms.
+    // A tap opens the Repost menu; "أعد النشر" is optimistic: pressed and counted at once, then the server confirms
+    // (the caption dialog has its own spec, repost-caption.e2e.ts).
     const put = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().endsWith(`/articles/${CLEAN}/repost`));
     await repost.click();
+    await page.locator('[data-repost-menu] [data-repost-action="repost"]').click();
     await expect(repost).toHaveAttribute('aria-pressed', 'true');
     await expect(count).toHaveText('3');
     await expect(repost).toHaveAttribute('aria-label', t('إعادة نشر، 3', 'Repost, 3'));
@@ -314,6 +318,7 @@ for (const variant of VARIANTS) {
     // Undo refused (rate limit): back to reposted, with the translated error.
     await onApi(page, 'DELETE', `/articles/${CLEAN}/repost`, (route) => reply(route, 429, problem(429, 'rate_limited')));
     await repost.click();
+    await page.locator('[data-repost-menu] [data-repost-action="undo"]').click();
     await expect(page.locator('rd-toast-host')).toContainText(t('طلبات كتير، استنى شوية وجرّب تاني.', 'Too many requests. Wait a little and try again.'));
     await expect(repost).toHaveAttribute('aria-pressed', 'true');
     await expect(count).toHaveText('3');
@@ -404,7 +409,11 @@ for (const variant of VARIANTS) {
     const repost = bar.locator('[data-repost]');
     await expect(repost).toHaveAttribute('aria-label', t('إعادة نشر', 'Repost'));
     await expect(bar.locator('[data-repost-count]')).toHaveCount(0);
+    // The bar's Repost opens the same menu as the card's, placed inside the screen above the bar.
     await repost.click();
+    const repostNow = page.locator('[data-repost-menu] [data-repost-action="repost"]');
+    await expect(repostNow).toBeInViewport({ ratio: 1 });
+    await repostNow.click();
     await expect(repost).toHaveAttribute('aria-pressed', 'true');
     await expect(bar.locator('[data-repost-count]')).toHaveText('1');
     await parkMouse(page);

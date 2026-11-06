@@ -2,11 +2,12 @@ import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, SILENT_ERRORS } from './api.config';
-import { ArticleCardDto, CursorPage, RepostStateDto } from './models';
+import { ArticleCardDto, CursorPage, RepostRequest, RepostStateDto } from './models';
 
 /**
- * Reposts (F29, permission `reposts.create` for writes). Silent: the UI rolls its optimistic change back and shows its
- * own translated error (`repost.own_article`, `article.not_found`, `rate_limited`).
+ * Reposts (F29, permission `reposts.create` for writes). Silent: the UI rolls its optimistic change back, or the caption
+ * dialog stays open, and shows its own translated error (`repost.own_article`, `repost.caption_too_long`,
+ * `article.not_found`, `rate_limited`).
  */
 @Injectable({ providedIn: 'root' })
 export class RepostsApi {
@@ -18,12 +19,22 @@ export class RepostsApi {
     return `${this.base}/articles/${encodeURIComponent(articleId)}/repost`;
   }
 
-  /** `PUT /articles/{id}/repost` (idempotent). */
-  repost(articleId: string): Observable<RepostStateDto> {
-    return this.http.put<RepostStateDto>(this.url(articleId), null, { context: this.silent() });
+  /**
+   * `PUT /articles/{id}/repost` (idempotent). Without `caption` there is no body: a new repost has no caption and an
+   * existing one keeps its own. With one (`{ caption }`) it reposts with your thoughts, or only sets them when you
+   * already reposted (the repost keeps its time and count); `""` clears them.
+   */
+  repost(articleId: string, caption?: string | null): Observable<RepostStateDto> {
+    const body: RepostRequest | null = caption === undefined ? null : { caption };
+    return this.http.put<RepostStateDto>(this.url(articleId), body, { context: this.silent() });
   }
 
-  /** `DELETE /articles/{id}/repost` (idempotent). */
+  /** `GET /articles/{id}/repost`: your repost of it now, with its caption (prefills "عدّل رأيك"). */
+  state(articleId: string): Observable<RepostStateDto> {
+    return this.http.get<RepostStateDto>(this.url(articleId), { context: this.silent() });
+  }
+
+  /** `DELETE /articles/{id}/repost` (idempotent); the caption goes with the repost. */
   unrepost(articleId: string): Observable<RepostStateDto> {
     return this.http.delete<RepostStateDto>(this.url(articleId), { context: this.silent() });
   }
