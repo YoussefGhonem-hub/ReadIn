@@ -1,7 +1,7 @@
-Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 182 articles are done.
+Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 202 articles are done.
 
 PART 1: AUTOMATIC SEEDING ON ANY NEW DATABASE
-Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 182 new ones.
+Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 202 new ones.
 
 1. Make Database:MigrateOnStartup and Seed:RunOnStartup true by default in every environment. Keep the manual `seed [--force]` command.
 2. Include the content/ folder in `dotnet publish` and in the container image, and make Content:RootPath default to it, so Production doesn't need the repo.
@@ -20,7 +20,7 @@ Goal: when the API starts against any new, empty database, in any environment in
 7. Update docs/setup/deployment.md, including the settings I must provide (such as Seed:SuperAdminPhone and Seed:SuperAdminPassword) and the health check allowance for a slow first start.
 
 PART 2: WRITE THE ARTICLES
-Write one article for every topic in docs/advanced-article-topics.md (182 topics).
+Write one article for every topic in docs/advanced-article-topics.md (202 topics).
 
 Two versions of every article:
 1. English (en.json): written entirely in English.
@@ -37,13 +37,14 @@ Article rules:
 - Use 2 to 5 official or primary sources per article. Don't state a number or behavior that isn't in a source. Name the version the article applies to.
 - Don't repeat an existing article in content/articles. If a topic overlaps one, link to it.
 - Security topics: explain the flaw and how to defend against it, with no ready-to-use attack steps against real systems.
+- Psychology topics: add a `psychology` topic under the `science` field and use peer-reviewed sources. Say plainly when the evidence is weak, disputed or failed to replicate. Give no diagnosis or treatment advice, and tell readers with a real problem to see a specialist.
 
 Images:
 - Don't create custom images, diagrams or SVGs. They would take too long.
 - Use only the standard cover from `node tools/content-covers/render.mjs --slug <slug>`, because validation requires cover.webp.
 
 Process:
-- Write all 182 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
+- Write all 202 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
 - For each article, run compose, validate and render.mjs. An article isn't done until validate passes, including the code and link checks.
 - Update any test or SPEC text that depends on the number 300 to the new total.
 
@@ -74,7 +75,8 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 | [Data Analysis](#data-analysis) | 16 |
 | [Security](#security) | 16 |
 | [System Design](#system-design) | 39 |
-| **Total** | **182** |
+| [Psychology](#psychology) | 20 |
+| **Total** | **202** |
 
 ## Databases
 
@@ -304,3 +306,26 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 37. **Ticket booking:** preventing double booking during a rush.
 38. **Metrics system:** time-series storage and downsampling.
 39. **Web crawler:** politeness and deduplication at scale.
+
+## Psychology
+
+1. **The replication crisis:** what failed to replicate, why effect sizes shrink, preregistration, and how to read a psychology study.
+2. **Dual-process theory:** System 1 and System 2, and why many researchers think the split is too simple.
+3. **Prospect theory:** reference points, loss aversion, and the debate over how large the effect really is.
+4. **Working memory:** Baddeley's model, Cowan's capacity limit, and why "7 ± 2" is out of date.
+5. **Cognitive load theory:** intrinsic and extraneous load, and the expertise reversal effect.
+6. **Retrieval practice and spacing:** the testing effect, the forgetting curve, and desirable difficulties.
+7. **Predictive processing:** the brain as a prediction machine, and what the evidence doesn't show yet.
+8. **Dopamine and reward prediction error:** variable rewards, and what "dopamine detox" gets wrong.
+9. **Habit formation:** context cues, habitual vs goal-directed behavior, and why "21 days" is a myth.
+10. **Ego depletion:** how the willpower-as-a-resource idea failed large replications.
+11. **Self-determination theory:** autonomy, competence, relatedness, and when rewards reduce motivation.
+12. **Adult attachment:** what the research supports and what the popular version gets wrong.
+13. **Stress physiology:** the HPA axis, allostatic load, and the limits of the Yerkes-Dodson curve.
+14. **False memories:** reconsolidation, Loftus's experiments, and why memory isn't a recording.
+15. **Conformity and obedience:** Asch, new readings of Milgram, and the critiques of the Stanford Prison Experiment.
+16. **Implicit bias and the IAT:** reliability, and what the test can and can't predict.
+17. **Personality science:** the Big Five and HEXACO, how stable traits are, and why MBTI is weak science.
+18. **Task switching:** the real cost of interruptions, attention residue, and the myth of multitasking.
+19. **Burnout:** Maslach's model, its overlap with depression, and why the causes are often in the workplace.
+20. **The Dunning-Kruger effect:** the original finding, and the argument that much of it is a statistical artifact.
