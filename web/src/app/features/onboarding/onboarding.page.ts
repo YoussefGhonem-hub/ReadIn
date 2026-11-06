@@ -116,18 +116,21 @@ const MIN_INTERESTS = 3;
                 <p class="mt-1 text-xs text-text-secondary">{{ 'onboarding.prefs.reminderHint' | transloco }}</p>
               </div>
 
-              <div class="mt-5 rd-card flex items-center gap-3 p-4 shadow-none">
-                <svg lucideIcon="Bell" [size]="20" class="shrink-0 text-primary" aria-hidden="true"></svg>
-                <div class="flex-1 text-sm">
-                  <div class="font-semibold">{{ 'onboarding.prefs.notifications' | transloco }}</div>
-                  <div class="text-text-secondary">{{ 'onboarding.prefs.notificationsState.' + notificationState() | transloco }}</div>
+              <!-- Only where this browser can get notifications: a build without web push, or a browser without it, has nothing to offer. -->
+              @if (notificationState() !== 'unsupported') {
+                <div class="mt-5 rd-card flex items-center gap-3 p-4 shadow-none" data-onboarding-notifications>
+                  <svg lucideIcon="Bell" [size]="20" class="shrink-0 text-primary" aria-hidden="true"></svg>
+                  <div class="flex-1 text-sm">
+                    <div class="font-semibold">{{ 'onboarding.prefs.notifications' | transloco }}</div>
+                    <div class="text-text-secondary">{{ 'onboarding.prefs.notificationsState.' + notificationState() | transloco }}</div>
+                  </div>
+                  @if (notificationState() === 'default') {
+                    <button type="button" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" (click)="enableNotifications()">
+                      {{ 'onboarding.prefs.enableNotifications' | transloco }}
+                    </button>
+                  }
                 </div>
-                @if (notificationState() === 'default') {
-                  <button type="button" class="rd-btn rd-btn-outline min-h-9 px-3 text-sm" (click)="enableNotifications()">
-                    {{ 'onboarding.prefs.enableNotifications' | transloco }}
-                  </button>
-                }
-              </div>
+              }
 
               @if (error()) {
                 <p class="mt-4 rounded-md bg-callout-danger p-3 text-sm" role="alert">{{ error() }}</p>
