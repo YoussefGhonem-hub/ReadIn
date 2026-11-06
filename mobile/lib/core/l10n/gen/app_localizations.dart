@@ -3980,6 +3980,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load the replies.'**
   String get commentsRepliesFailed;
 
+  /// No description provided for @commentsShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more comments'**
+  String get commentsShowMore;
+
   /// No description provided for @commentsNewPill.
   ///
   /// In en, this message translates to:

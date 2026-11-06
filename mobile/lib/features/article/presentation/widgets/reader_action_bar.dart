@@ -13,15 +13,19 @@ import '../../domain/entities/article.dart';
 import '../cubit/engagement_cubit.dart';
 
 /// The reader's action bar (F04): reaction (tap 💡, long press for the floating reactions bar), per-type counts that
-/// open "who reacted", the comment count that opens the comments (F11), repost with its count (F29), save and "add to
-/// collection". Counts follow
+/// open "who reacted", the comment count that goes to the comments (F11), repost with its count (F29), save and "add
+/// to collection". Counts follow
 /// [EngagementCubit], so the viewer's actions and live counters (F27) show at once. The reader adds its "⋯" [menu]
 /// last (F22, F28).
 class ReaderActionBar extends StatelessWidget {
-  const ReaderActionBar({super.key, required this.article, this.menu});
+  const ReaderActionBar({super.key, required this.article, this.menu, this.onComments});
 
   final ArticleCard article;
   final Widget? menu;
+
+  /// What the comment count does: the reader scrolls down to the comments under the article. Without it the comments
+  /// open in a sheet (a device copy, which has no comments section).
+  final VoidCallback? onComments;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +58,10 @@ class ReaderActionBar extends StatelessWidget {
                   ),
                 ),
               ),
-              CommentCount(count: engagement.commentCount, onTap: () => showCommentsSheet(context, article: article)),
+              CommentCount(
+                count: engagement.commentCount,
+                onTap: onComments ?? () => showCommentsSheet(context, article: article),
+              ),
               RepostButton(article: article),
               SaveToggleButton(article: article),
               AddToCollectionButton(article: article),
@@ -67,7 +74,7 @@ class ReaderActionBar extends StatelessWidget {
   }
 }
 
-/// 💬 n; a tap opens the comments (F11).
+/// 💬 n; a tap goes to the comments (F11).
 class CommentCount extends StatelessWidget {
   const CommentCount({super.key, required this.count, this.onTap});
 

@@ -13,14 +13,24 @@ class GetComments {
 
   final CommentsRepository _repository;
 
-  static const pageSize = 20;
+  /// The first page of top-level comments: what the reader's comments section shows under the article (F11), as on
+  /// the web.
+  static const firstPageSize = 5;
+
+  /// Every later page ("Show more comments", and the sheet's infinite scroll). A cursor works with any limit.
+  static const pageSize = 10;
 
   /// "Show N more replies" reveals up to this many replies a tap, and fetches a thread's replies in pages this size
   /// (Facebook and LinkedIn style).
   static const repliesPageSize = 5;
 
-  Future<Result<CommentPage>> call(String articleId, {CommentSort sort = CommentSort.top, String? cursor}) =>
-      _repository.getComments(articleId, sort: sort, cursor: cursor, limit: pageSize);
+  Future<Result<CommentPage>> call(
+    String articleId, {
+    CommentSort sort = CommentSort.top,
+    String? cursor,
+    int limit = pageSize,
+  }) =>
+      _repository.getComments(articleId, sort: sort, cursor: cursor, limit: limit);
 
   Future<Result<CursorPage<Comment>>> replies(String commentId, {String? cursor}) =>
       _repository.getReplies(commentId, cursor: cursor, limit: repliesPageSize);

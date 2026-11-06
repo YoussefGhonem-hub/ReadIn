@@ -72,7 +72,7 @@ void main() {
     final repository = MockCommentsRepository();
     final realtime = MockRealtimeService();
     when(() => realtime.commentEvents('art-1')).thenAnswer((_) => const Stream<CommentEvent>.empty());
-    when(() => repository.getComments('art-1', sort: CommentSort.top, cursor: null, limit: 20))
+    when(() => repository.getComments('art-1', sort: CommentSort.top, cursor: null, limit: 5))
         .thenAnswer((_) async => const Ok(CommentPage(items: [], total: 0)));
     CommentsCubit build() => CommentsCubit(
           GetComments(repository),

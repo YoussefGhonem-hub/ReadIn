@@ -721,7 +721,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 - Attachments (image carousel or PDF page carousel) with a full-screen viewer ([F26](#f26--post-attachments--media)).
 - Floating action bar: reactions, comments, repost ([F29](#f29--repost)), save, share, and a "⋯" menu ([F28](#f28--article-menu-mute--show-less)). Reaction and comment counts update live ([F27](#f27--real-time-updates)).
 - Remembers the last scroll position: on open, the reader goes back to where you left off (unless you finished the article or the link points at a block) and offers "Start over". Marks the article as "read" when ≥ 70% scrolled **and** ≥ 30 seconds spent.
-- Related articles + "Next in path" at the end. Related ranks the same topic first, then the same field, then shared tags and glossary terms; it skips your own articles, puts the ones you've read last, and leaves the article's path neighbours to "Next in path". Related articles are post cards ([F34](#f34--post-style-feed-card-كارت-البوست)).
+- After the article and its sources, in this order: the comments ([F11](#f11--comments--replies)), "Next in path", then Related articles. Related ranks the same topic first, then the same field, then shared tags and glossary terms; it skips your own articles, puts the ones you've read last, and leaves the article's path neighbours to "Next in path". Related articles are post cards ([F34](#f34--post-style-feed-card-كارت-البوست)).
 - Report article (from the "⋯" menu).
 - Download PDF for signed-in members (from the "⋯" menu, [F33](#f33--download-article-pdf-تحميل-المقال-pdf)).
 - Highlights: mark sentences, see popular ones, hide them ([F30](#f30--highlights)).
@@ -788,6 +788,7 @@ Draft ──► Published ──► Archived
   - "عرض المزيد من الردود" (show N more replies) shows up to 5 more at a time, and "إخفاء الردود" (Hide replies) folds the thread back to its first reply.
   - Your own new reply, and replies that arrive live, show at once at the end of the thread.
 - Sort: **Top** / **Newest**.
+- **In the reader (web and app):** the comments are a section right under the article, after its sources and before "Next in path" and Related articles. It shows the comment box and the first 5 comments, and "عرض مزيد من التعليقات" (Show more comments) adds 10 more at a time until there are none left. The comment icon in the reader's action bar scrolls to this section.
 - **Comment box:** your avatar, then a rounded field with "اكتب تعليق…" (Add a comment…) an emoji button that opens an emoji picker, and a send icon, disabled until there is text, with no text button like "نشر". Reply boxes look the same. The same box is used in the reader and on feed cards, on web and mobile.
 - **Text and emoji only:** comments and replies have no images, GIFs or attachments, and there is no button or API field for them.
 - **Each comment shows:** the avatar, name and verified badge, the writer's title (F14) on one line under the name (not their `@username`), the time, "متابعة" (Follow) when you don't follow them and it isn't you, and "⋯". Tapping the avatar or name opens the profile.

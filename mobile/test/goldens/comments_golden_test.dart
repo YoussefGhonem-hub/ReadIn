@@ -5,6 +5,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:readin/core/theme/theme_x.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
@@ -12,6 +13,7 @@ import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/comments/domain/entities/comment.dart';
 import 'package:readin/features/comments/presentation/cubit/comments_cubit.dart';
 import 'package:readin/features/comments/presentation/cubit/mention_suggestions_cubit.dart';
+import 'package:readin/features/comments/presentation/widgets/article_comments_section.dart';
 import 'package:readin/features/comments/presentation/widgets/comment_body.dart';
 import 'package:readin/features/comments/presentation/widgets/comment_composer.dart';
 import 'package:readin/features/comments/presentation/widgets/comment_tile.dart';
@@ -26,8 +28,9 @@ import '../helpers/test_app.dart';
 
 /// Comments (F11) in ar/light and en/dark (SPEC §27): every comment state (compact bubbles with the writer's title,
 /// "· Follow", the time and "⋯"; replies paged with "show N more replies" and "Hide replies"), the comment box (empty,
-/// a reply with its @mention and ✕, near its limit, the emoji picker), the empty sheet, and the sheet with the
-/// "N new comments" pill as a guest sees it.
+/// a reply with its @mention and ✕, near its limit, the emoji picker), the empty sheet, the sheet with the
+/// "N new comments" pill as a guest sees it, and the comments under the article in the reader (with threads; empty,
+/// as a guest).
 void main() {
   setUp(() {
     CommentClock.now = () => commentsNow;
@@ -56,6 +59,7 @@ void main() {
   MockCommentsCubit comments(CommentsState state) {
     final cubit = MockCommentsCubit();
     whenListen(cubit, const Stream<CommentsState>.empty(), initialState: state);
+    when(() => cubit.load(any())).thenAnswer((_) async {});
     return cubit;
   }
 
@@ -263,6 +267,48 @@ void main() {
         size: const Size(390, 844),
       );
       await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/comments_sheet_${variant.name}.png'));
+    });
+
+    // The comments under the article in the reader: its own block on the canvas, the heading with Top / Newest, the
+    // composer at the top, "N new comments" where they go, the first threads, then "Show more comments".
+    testWidgets('article comments section ${variant.name}', (tester) async {
+      final state = CommentsState(
+        status: CommentsStatus.ready,
+        threads: [states[1].$1, states[0].$1, states[2].$1],
+        nextCursor: 'p2',
+        total: 23,
+        highlighted: states[2].$2,
+        incoming: [comment('c9', minutesAgo: 0)],
+      );
+      await pump(
+        tester,
+        variant,
+        Scaffold(
+          body: CustomScrollView(
+            slivers: [ArticleCommentsSection(article: engagedCard(1), comments: () => comments(state), mentions: mentions)],
+          ),
+        ),
+        size: const Size(390, 1110),
+      );
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/article_comments_${variant.name}.png'));
+    });
+
+    // A guest on an article nobody commented on yet: the sign-in invitation in place of the composer, the short empty
+    // state.
+    testWidgets('article comments section empty ${variant.name}', (tester) async {
+      const state = CommentsState(status: CommentsStatus.ready, total: 0);
+      await pump(
+        tester,
+        variant,
+        Scaffold(
+          body: CustomScrollView(
+            slivers: [ArticleCommentsSection(article: engagedCard(1), comments: () => comments(state), mentions: mentions)],
+          ),
+        ),
+        signedIn: false,
+        size: const Size(390, 400),
+      );
+      await expectLater(find.byType(Scaffold), matchesVariantGolden(variant, 'goldens/article_comments_empty_${variant.name}.png'));
     });
   }
 }

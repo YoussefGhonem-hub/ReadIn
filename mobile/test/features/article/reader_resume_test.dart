@@ -18,13 +18,15 @@ import 'package:readin/features/article/presentation/cubit/article_live_cubit.da
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/article/presentation/cubit/related_articles_cubit.dart';
 import 'package:readin/features/article/presentation/pages/article_page.dart';
+import 'package:readin/features/article/presentation/widgets/reader_action_bar.dart';
 import 'package:readin/features/article/presentation/widgets/reader_resume.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/comments/presentation/cubit/comments_cubit.dart';
-import 'package:readin/features/comments/presentation/cubit/mention_suggestions_cubit.dart';
+import 'package:readin/features/comments/presentation/widgets/article_comments_section.dart';
 import 'package:readin/features/comments/presentation/widgets/comments_sheet.dart';
 import 'package:readin/features/follow/domain/usecases/follow_usecases.dart';
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
+import 'package:readin/features/paths/presentation/cubit/article_path_cubit.dart';
 import 'package:readin/features/reactions/domain/usecases/reaction_usecases.dart';
 import 'package:readin/features/reading/domain/entities/reading.dart';
 import 'package:readin/features/reading/domain/repositories/reading_repository.dart';
@@ -39,6 +41,7 @@ import 'package:readin/shared/rdoc/rdoc_view.dart';
 
 import '../../helpers/comment_fixtures.dart';
 import '../../helpers/fixtures.dart';
+import '../../helpers/path_fakes.dart';
 import '../../helpers/social_fakes.dart';
 import '../../helpers/test_app.dart';
 
@@ -300,8 +303,13 @@ void main() {
 
     const leftOff = MyProgress(language: 'en', percent: 45, lastPosition: '0.4523');
 
-    /// [aboveApp] puts the stores above the app, as ReadInApp does, so routes over the reader (sheets) see them too.
+    /// The comments under the article (F11) are loading unless the test registered its own ([registerReaderComments]),
+    /// and the article is in no learning path ("Next in path" renders nothing, F09). [aboveApp] puts the stores above
+    /// the app, as ReadInApp does, so routes over the reader (sheets) see them too.
     Future<void> pumpReader(WidgetTester tester, ArticleDetails details, {String? anchor, bool aboveApp = false}) async {
+      registerReaderComments();
+      getIt.registerFactory<ArticlePathCubit>(noPathCubit);
+      addTearDown(() => getIt.unregister<ArticlePathCubit>());
       usePhoneSurface(tester);
       final articleCubit = MockArticleCubit();
       final settings = MockSettingsCubit();
@@ -386,29 +394,68 @@ void main() {
       });
     }
 
-    testWidgets('a link to a comment (a reply or mention notification, F17) opens the comments over it, once', (tester) async {
-      final comments = MockCommentsCubit();
-      whenListen(comments, const Stream<CommentsState>.empty(), initialState: const CommentsState(status: CommentsStatus.ready));
-      when(() => comments.load(any())).thenAnswer((_) async {});
-      final mentions = MockMentionSuggestionsCubit();
-      whenListen(mentions, const Stream<List<Author>>.empty(), initialState: const <Author>[]);
-      getIt
-        ..registerFactory<CommentsCubit>(() => comments)
-        ..registerFactory<MentionSuggestionsCubit>(() => mentions);
-      addTearDown(() => getIt
-        ..unregister<CommentsCubit>()
-        ..unregister<MentionSuggestionsCubit>());
+    // The comments under the article (F11), on a long article: a first page of threads, "Comments (12)", enough to
+    // fill the screen under their heading.
+    CommentsState firstPage() => CommentsState(
+          status: CommentsStatus.ready,
+          threads: [
+            CommentThread.of(comment('c-7', body: 'The linked comment')),
+            for (var i = 1; i < 5; i++) CommentThread.of(comment('c$i', body: 'Scoped services live for one request. ' * 3)),
+          ],
+          nextCursor: 'p2',
+          total: 12,
+        );
+
+    /// The comments' heading sits at the top of the reader (its 16 px padding above the text, give or take).
+    void expectCommentsAtTop(WidgetTester tester) {
+      final heading = find.text('Comments (12)');
+      expect(heading, findsOneWidget, reason: 'on screen');
+      final top = tester.getTopLeft(find.byType(CustomScrollView).first).dy;
+      expect(tester.getTopLeft(heading).dy - top, inInclusiveRange(0, 40));
+    }
+
+    testWidgets('a link to a comment (a reply or mention notification, F17) scrolls down to the comments, never resumes',
+        (tester) async {
+      final comments = registerReaderComments(firstPage());
 
       final details = article(progress: leftOff);
-      await pumpReader(tester, details, anchor: 'comment-c-7', aboveApp: true);
-      expect(find.byType(CommentsView), findsOneWidget);
+      await pumpReader(tester, details, anchor: 'comment-c-7');
       verify(() => comments.load(details.card.id)).called(1);
-      expect(find.text('Picked up where you left off'), findsNothing);
+      expect(find.byType(CommentsView), findsNothing, reason: 'no sheet over the reader');
+      expect(find.text('Picked up where you left off'), findsNothing, reason: 'a comment link never resumes');
+      expectCommentsAtTop(tester);
+      expect(find.text('The linked comment'), findsOneWidget);
+    });
 
-      Navigator.of(tester.element(find.byType(CommentsView))).pop();
+    testWidgets("the action bar's comment count scrolls down to the comments under the article (F11)", (tester) async {
+      registerReaderComments(firstPage());
+      await pumpReader(tester, article());
+      expect(reader(tester).pixels, 0);
+      expect(find.text('Comments (12)'), findsNothing, reason: 'far below the top of a long article');
+
+      await tester.tap(find.byType(CommentCount));
       await tester.pumpAndSettle();
-      expect(find.byType(CommentsView), findsNothing);
-      expect(reader(tester).pixels, 0, reason: 'a comment link never resumes');
+
+      expect(find.byType(CommentsView), findsNothing, reason: 'no sheet any more');
+      expectCommentsAtTop(tester);
+      expect(reader(tester).pixels, lessThan(reader(tester).maxScrollExtent), reason: 'the comments continue below');
+    });
+
+    testWidgets('a device copy (offline) has no comments section; its comment count opens them in a sheet', (tester) async {
+      // All of them: the sheet's spinner for the next page would never settle.
+      registerReaderComments(firstPage().copyWith(nextCursor: () => null));
+      final offline = ArticleDetails(
+        card: engagedCard(1, language: 'en'),
+        availableLanguages: const ['en'],
+        content: unevenDocument(20),
+        isOfflineCopy: true,
+      );
+      await pumpReader(tester, offline, aboveApp: true);
+      expect(find.byType(ArticleCommentsSection), findsNothing);
+
+      await tester.tap(find.byType(CommentCount));
+      await tester.pumpAndSettle();
+      expect(find.byType(CommentsView), findsOneWidget);
     });
   });
 }

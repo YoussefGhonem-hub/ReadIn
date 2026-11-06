@@ -18,7 +18,7 @@ import '../../../../shared/widgets/state_views.dart';
 import '../../../article_pdf/presentation/cubit/article_pdf_cubit.dart';
 import '../../../article_pdf/presentation/widgets/article_pdf_widgets.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
-import '../../../comments/presentation/widgets/comments_sheet.dart';
+import '../../../comments/presentation/widgets/article_comments_section.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../glossary/presentation/widgets/glossary_sheet.dart';
@@ -105,8 +105,11 @@ class _ArticleViewState extends State<ArticleView> {
   bool _resumeTried = false;
   ReaderResume? _resume;
 
-  // A link to a comment opens the comments once (F17).
-  bool _commentsOpened = false;
+  // The comments under the article (F11): the action bar's count and a link to a comment scroll to them.
+  final _comments = GlobalKey<ArticleCommentsSectionState>();
+
+  // A link to a comment scrolls to the comments once (F17).
+  bool _commentsShown = false;
 
   /// The block the link points at (`#{blockId}`), if it isn't a comment's anchor.
   String? get _blockAnchor {
@@ -144,17 +147,23 @@ class _ArticleViewState extends State<ArticleView> {
     }
     context.read<ArticleLiveCubit>().watch(article.card.id);
     _maybeResume(article);
-    _maybeOpenComments(article);
+    _maybeShowComments(article);
   }
 
-  /// A link to a comment (`#comment-{id}`: a reply, a mention or a comment on your article, F17) opens the article's
-  /// comments over it, once. A device copy (offline) has no comments to show.
-  void _maybeOpenComments(ArticleDetails article) {
-    if (_commentsOpened || article.isOfflineCopy || !(widget.anchor?.startsWith('comment-') ?? false)) return;
-    _commentsOpened = true;
+  /// A link to a comment (`#comment-{id}`: a reply, a mention or a comment on your article, F17) scrolls down to the
+  /// article's comments once they are built, once. A device copy (offline) has no comments to show.
+  void _maybeShowComments(ArticleDetails article) {
+    if (_commentsShown || article.isOfflineCopy || !(widget.anchor?.startsWith('comment-') ?? false)) return;
+    _commentsShown = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(showCommentsSheet(context, article: article.card));
+      if (mounted) _showComments();
     });
+  }
+
+  /// Scrolls down to the comments under the article (F11); the resume stops, as for a heading of the contents.
+  void _showComments() {
+    _resume?.cancel();
+    unawaited(_comments.currentState?.reveal());
   }
 
   /// Scrolls back to where the reader left this version, once the first article is laid out (F04 resume). Another
@@ -307,6 +316,8 @@ class _ArticleViewState extends State<ArticleView> {
                                 null => null,
                               },
                               trailing: [
+                                // The comments right under the article, as on the web; a device copy has none.
+                                if (!article.isOfflineCopy) ArticleCommentsSection(key: _comments, article: article.card),
                                 NextInPathSliver(articleId: article.card.id),
                                 RelatedArticlesSection(article: article.card),
                               ],
@@ -326,7 +337,13 @@ class _ArticleViewState extends State<ArticleView> {
                     },
                   ),
                   if (state.status == ArticleStatus.ready)
-                    ReaderActionBar(article: article!.card, menu: ArticleMenuButton(article: article)),
+                    ReaderActionBar(
+                      article: article!.card,
+                      menu: ArticleMenuButton(article: article),
+                      // The comment count scrolls down to the comments; a device copy has no section, so its count
+                      // opens them in a sheet.
+                      onComments: article.isOfflineCopy ? null : _showComments,
+                    ),
                 ],
               );
             },
@@ -440,7 +457,8 @@ class ReaderBody extends StatefulWidget {
   /// Above the header (the editor preview shows the feed card there).
   final Widget? leading;
 
-  /// Slivers after the sources: the reader's end-of-article sections (related articles). The editor preview has none.
+  /// Slivers after the sources: the reader's end-of-article sections (comments, next in path, related articles). The
+  /// editor preview has none.
   final List<Widget> trailing;
 
   /// Runs before a heading of the table of contents scrolls the reader (the reader stops resuming).

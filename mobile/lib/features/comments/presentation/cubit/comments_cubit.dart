@@ -226,8 +226,8 @@ class CommentsState extends Equatable {
       ];
 }
 
-/// One article's comments (F11) while the comments sheet is open: Top / Newest pages, threads with "show N more
-/// replies", the viewer's own actions and live events (F27).
+/// One article's comments (F11) while the comments sheet is open, or the reader shows them under the article: Top /
+/// Newest pages, threads with "show N more replies", the viewer's own actions and live events (F27).
 ///
 /// The viewer's actions apply at once (a new comment shows as pending, a like counts at once) and roll back when the
 /// API refuses them. Live events carry no content: the comment is fetched and inserted or replaced in place, deduped
@@ -281,7 +281,7 @@ class CommentsCubit extends Cubit<CommentsState> {
 
   String? get articleId => _articleId;
 
-  /// Loads the first page and follows the article's comment events until [close].
+  /// Loads the first page ([GetComments.firstPageSize] threads) and follows the article's comment events until [close].
   Future<void> load(String articleId) async {
     _articleId = articleId;
     _events ??= _realtime.commentEvents(articleId).listen(
@@ -308,7 +308,7 @@ class CommentsCubit extends Cubit<CommentsState> {
     emit(refresh
         ? state.copyWith(refreshing: true)
         : CommentsState(sort: sort, total: state.total, target: state.target, pendingIds: state.pendingIds));
-    final result = await _get(articleId, sort: sort);
+    final result = await _get(articleId, sort: sort, limit: GetComments.firstPageSize);
     if (isClosed || generation != _generation) return null;
     return result.fold(
       (failure) {
@@ -341,7 +341,8 @@ class CommentsCubit extends Cubit<CommentsState> {
     );
   }
 
-  /// The next page of top-level comments (comments already shown, e.g. ones that arrived live, are skipped).
+  /// The next page of top-level comments, [GetComments.pageSize] of them (comments already shown, e.g. ones that
+  /// arrived live, are skipped).
   Future<void> loadMore() async {
     final articleId = _articleId;
     if (articleId == null || state.status != CommentsStatus.ready || state.loadingMore || state.refreshing || !state.hasMore) {
@@ -349,7 +350,7 @@ class CommentsCubit extends Cubit<CommentsState> {
     }
     final generation = _generation;
     emit(state.copyWith(loadingMore: true, loadMoreFailure: () => null));
-    final result = await _get(articleId, sort: state.sort, cursor: state.nextCursor);
+    final result = await _get(articleId, sort: state.sort, cursor: state.nextCursor, limit: GetComments.pageSize);
     if (isClosed || generation != _generation) return;
     result.fold(
       (failure) => emit(state.copyWith(loadingMore: false, loadMoreFailure: () => failure)),
@@ -603,7 +604,8 @@ class CommentsCubit extends Cubit<CommentsState> {
 
   // ── Live (F27) ───────────────────────────────────────────────────
 
-  /// The list is scrolled to (near) its top: in "Newest", new comments then go straight to the top.
+  /// The list is scrolled to (near) its top (the sheet), or its top is on screen (the reader's section): in "Newest",
+  /// new comments then go straight to the top.
   void setNearTop(bool nearTop) => _nearTop = nearTop;
 
   /// The "N new comments" pill: they go to the top, highlighted.

@@ -32,6 +32,7 @@ import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/shared/rdoc/rdoc_document.dart';
 
+import '../helpers/comment_fixtures.dart';
 import '../helpers/moderation_fakes.dart';
 import '../helpers/path_fakes.dart';
 import '../helpers/profile_fakes.dart';
@@ -177,8 +178,10 @@ void main() {
       final settings = MockSettingsCubit()..hold(const AppSettings());
       final collections = MockCollectionsCubit()..hold(const CollectionsState());
       when(() => collections.load(force: any(named: 'force'))).thenAnswer((_) async {});
-      // The reader's trailing sections find nothing here: related articles (F04) and Next in path (F09).
+      // The reader's trailing sections find nothing here: related articles (F04) and Next in path (F09); the comments
+      // (F11) are loading.
       registerNoRelatedArticles();
+      registerReaderComments();
       getIt.registerFactory<ArticlePathCubit>(noPathCubit);
       addTearDown(() => getIt.unregister<ArticlePathCubit>());
 

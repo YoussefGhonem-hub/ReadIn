@@ -40,6 +40,8 @@ void main() {
 
   tearDown(() => events.close());
 
+  /// A page of top-level comments: the first one (no [cursor]) is asked for with [GetComments.firstPageSize], the next
+  /// ones with [GetComments.pageSize].
   void stubPage(
     List<Comment> items, {
     CommentSort sort = CommentSort.top,
@@ -47,7 +49,7 @@ void main() {
     String? next,
     int total = 10,
   }) =>
-      when(() => repository.getComments('art-1', sort: sort, cursor: cursor, limit: 20))
+      when(() => repository.getComments('art-1', sort: sort, cursor: cursor, limit: cursor == null ? 5 : 10))
           .thenAnswer((_) async => Ok(CommentPage(items: items, nextCursor: next, total: total)));
 
   void stubComment(Comment comment) => when(() => repository.getComment(comment.id)).thenAnswer((_) async => Ok(comment));
@@ -99,9 +101,43 @@ void main() {
       verify: (cubit) {
         expect(ids(cubit.state), ['c1', 'c2', 'c3']);
         expect(cubit.state.hasMore, isFalse);
-        verify(() => repository.getComments('art-1', sort: CommentSort.top, cursor: 'p2', limit: 20)).called(1);
+        verify(() => repository.getComments('art-1', sort: CommentSort.top, cursor: 'p2', limit: 10)).called(1);
       },
     );
+
+    test('page sizes, as on the web: the first page asks for 5 threads, "show more" for 10 more', () async {
+      expect((GetComments.firstPageSize, GetComments.pageSize), (5, 10));
+      // Any limit works with the cursor (the next index): a page holds as many threads as were asked for.
+      for (final sort in CommentSort.values) {
+        when(() => repository.getComments('art-1', sort: sort, cursor: any(named: 'cursor'), limit: any(named: 'limit')))
+            .thenAnswer((invocation) async {
+          final cursor = invocation.namedArguments[#cursor] as String?;
+          final limit = invocation.namedArguments[#limit] as int;
+          final start = cursor == null ? 0 : int.parse(cursor);
+          return Ok(CommentPage(
+            items: [for (var i = start; i < start + limit; i++) comment('c$i')],
+            nextCursor: '${start + limit}',
+            total: 40,
+          ));
+        });
+      }
+      final cubit = build();
+      addTearDown(cubit.close);
+
+      await cubit.load('art-1');
+      expect(cubit.state.threads, hasLength(5));
+      await cubit.loadMore();
+      expect(ids(cubit.state), [for (var i = 0; i < 15; i++) 'c$i']);
+      await cubit.changeSort(CommentSort.newest);
+      await cubit.refresh();
+
+      verifyInOrder([
+        () => repository.getComments('art-1', sort: CommentSort.top, cursor: null, limit: 5),
+        () => repository.getComments('art-1', sort: CommentSort.top, cursor: '5', limit: 10),
+        () => repository.getComments('art-1', sort: CommentSort.newest, cursor: null, limit: 5),
+        () => repository.getComments('art-1', sort: CommentSort.newest, cursor: null, limit: 5),
+      ]);
+    });
 
     blocTest<CommentsCubit, CommentsState>(
       'Top / Newest: switching reloads with sort=new; the same sort again does nothing',
@@ -129,7 +165,7 @@ void main() {
       'a failed first page, then a retry',
       setUp: () {
         var calls = 0;
-        when(() => repository.getComments('art-1', sort: CommentSort.top, cursor: null, limit: 20)).thenAnswer((_) async {
+        when(() => repository.getComments('art-1', sort: CommentSort.top, cursor: null, limit: 5)).thenAnswer((_) async {
           calls++;
           return calls == 1 ? const Err(Failure(FailureCodes.networkOffline)) : Ok(CommentPage(items: [comment('c1')], total: 1));
         });

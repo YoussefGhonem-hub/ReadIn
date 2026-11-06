@@ -2391,6 +2391,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commentsRepliesFailed => 'تعذّر تحميل الردود.';
 
   @override
+  String get commentsShowMore => 'عرض مزيد من التعليقات';
+
+  @override
   String commentsNewPill(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

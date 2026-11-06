@@ -671,6 +671,7 @@
   "commentsMoreRepliesAny": "عرض المزيد من الردود",
   "commentsHideReplies": "إخفاء الردود",
   "commentsRepliesFailed": "تعذّر تحميل الردود.",
+  "commentsShowMore": "عرض مزيد من التعليقات",
   "commentsNewPill": "{count, plural, =1{تعليق جديد} =2{تعليقان جديدان} few{{count} تعليقات جديدة} many{{count} تعليقًا جديدًا} other{{count} تعليق جديد}}",
   "commentsSending": "جارٍ الإرسال…",
   "commentsTimeNow": "الآن",

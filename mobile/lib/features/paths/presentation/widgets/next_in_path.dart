@@ -17,8 +17,8 @@ import '../cubit/article_path_cubit.dart';
 import '../path_routes.dart';
 import 'path_widgets.dart';
 
-/// "Next in path" at the end of the reader (F04, F09), as a sliver for the reader's scroll view: after the sources,
-/// before related articles and comments. The block is built (and `GET /articles/{id}/path` sent) only once the sliver
+/// "Next in path" at the end of the reader (F04, F09), as a sliver for the reader's scroll view: after the comments,
+/// before related articles. The block is built (and `GET /articles/{id}/path` sent) only once the sliver
 /// is laid out within the viewport's cache extent, i.e. as the reader nears the end; it then stays. An article in no
 /// path, or a failed call, renders nothing.
 class NextInPathSliver extends StatefulWidget {

@@ -40,6 +40,7 @@ import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/shared/rdoc/rdoc_document.dart';
 
+import '../helpers/comment_fixtures.dart';
 import '../helpers/fixtures.dart';
 import '../helpers/path_fakes.dart';
 import '../helpers/post_card_fixtures.dart';
@@ -334,6 +335,8 @@ void main() {
 
     Future<void> pumpReader(WidgetTester tester, ArticleCard card) async {
       registerNoRelatedArticles();
+      // The comments under the article (F11) are loading.
+      registerReaderComments();
       final article = ArticleDetails(
         card: card,
         availableLanguages: [language],

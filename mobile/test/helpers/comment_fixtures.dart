@@ -1,5 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:readin/core/di/injection.dart';
 import 'package:readin/features/article/domain/entities/article.dart';
 import 'package:readin/features/comments/domain/entities/comment.dart';
 import 'package:readin/features/comments/domain/repositories/comments_repository.dart';
@@ -108,3 +110,31 @@ Comment placeholder(String id, {bool deleted = true, int replyCount = 0, List<Co
 /// Silences [MockRealtimeService.commentEvents] for tests that don't use live events.
 void stubNoCommentEvents(MockRealtimeService realtime) =>
     when(() => realtime.commentEvents(any())).thenAnswer((_) => const Stream.empty());
+
+/// The reader builds its comments section (F11) with `getIt<CommentsCubit>()` and `getIt<MentionSuggestionsCubit>()`:
+/// unless the test registered its own, registers ones that hold [state] (loading, by default) for the current test.
+/// Returns the comments cubit.
+MockCommentsCubit registerReaderComments([CommentsState state = const CommentsState()]) {
+  final comments = MockCommentsCubit();
+  whenListen(comments, const Stream<CommentsState>.empty(), initialState: state);
+  when(() => comments.load(any())).thenAnswer((_) async {});
+  when(comments.loadMore).thenAnswer((_) async {});
+  when(comments.retry).thenAnswer((_) async {});
+  if (!getIt.isRegistered<CommentsCubit>()) {
+    getIt.registerFactory<CommentsCubit>(() => comments);
+    addTearDown(() {
+      if (getIt.isRegistered<CommentsCubit>()) getIt.unregister<CommentsCubit>();
+    });
+  }
+  if (!getIt.isRegistered<MentionSuggestionsCubit>()) {
+    getIt.registerFactory<MentionSuggestionsCubit>(() {
+      final mentions = MockMentionSuggestionsCubit();
+      whenListen(mentions, const Stream<List<Author>>.empty(), initialState: const <Author>[]);
+      return mentions;
+    });
+    addTearDown(() {
+      if (getIt.isRegistered<MentionSuggestionsCubit>()) getIt.unregister<MentionSuggestionsCubit>();
+    });
+  }
+  return comments;
+}

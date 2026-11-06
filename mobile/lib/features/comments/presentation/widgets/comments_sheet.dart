@@ -62,11 +62,16 @@ class CommentsView extends StatefulWidget {
   State<CommentsView> createState() => _CommentsViewState();
 }
 
-class _CommentsViewState extends State<CommentsView> {
-  final _scroll = ScrollController();
+/// What the comments sheet and the reader's comments section (F11, `ArticleCommentsSection`) share once
+/// [CommentsCubit] is provided above them ([SessionCubit] and [EngagementCubit] come from the app): what each comment's
+/// buttons do ([commentCallbacks]: like, reply, the menu's actions, replies paging), the follow states handed to the
+/// follow store, and one comment count with the action bar ([commentListeners]).
+mixin CommentActions<T extends StatefulWidget> on State<T> {
+  /// The article whose comments these are.
+  ArticleCard get commentsArticle;
 
-  /// Within this distance of the top, new comments in "Newest" go straight to the top instead of the pill.
-  static const _nearTop = 120.0;
+  /// Test seam for the report sheet; the app takes the cubit from DI.
+  ReportCubit Function()? get reportCubit;
 
   late final CommentsCubit _cubit = context.read<CommentsCubit>();
   late final CommentCallbacks _callbacks = CommentCallbacks(
@@ -77,13 +82,15 @@ class _CommentsViewState extends State<CommentsView> {
     onHideReplies: _cubit.hideReplies,
   );
 
+  /// What each comment's buttons do.
+  CommentCallbacks get commentCallbacks => _callbacks;
+
   /// Comments whose author's follow state already went to the follow store.
   final _seeded = <String>{};
 
   @override
   void initState() {
     super.initState();
-    _scroll.addListener(_onScroll);
     _seedFollows(_cubit.state);
   }
 
@@ -107,18 +114,6 @@ class _CommentsViewState extends State<CommentsView> {
     final myId = context.read<SessionCubit>().state.me?.id;
     fresh.remove(myId);
     if (fresh.isNotEmpty) follows.seed(fresh);
-  }
-
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    final position = _scroll.position;
-    _cubit.setNearTop(position.pixels <= _nearTop);
-    if (position.extentAfter < 400) unawaited(_cubit.loadMore());
   }
 
   void _showFailure(Failure? failure) {
@@ -154,7 +149,7 @@ class _CommentsViewState extends State<CommentsView> {
         await MuteActions.toggleUser(context, userId: author.id, name: author.displayName, fallback: comment.isAuthorMuted);
       case CommentMenuAction.report:
         // The shared report sheet (F22): the sign-in prompt for guests, then "thanks" once sent.
-        await showReportSheet(context, target: ModerationTargetRef.comment(comment.id), cubit: widget.reportCubit);
+        await showReportSheet(context, target: ModerationTargetRef.comment(comment.id), cubit: reportCubit);
       case CommentMenuAction.hide:
       case CommentMenuAction.unhide:
         final hide = action == CommentMenuAction.hide;
@@ -199,22 +194,13 @@ class _CommentsViewState extends State<CommentsView> {
     return (confirmed ?? false) && mounted;
   }
 
-  Future<void> _refresh() async => _showFailure(await _cubit.refresh());
-
-  void _showIncoming() {
-    _cubit.showIncoming();
-    if (_scroll.hasClients) {
-      unawaited(_scroll.animateTo(0, duration: ReadInMotion.base, curve: Curves.easeOut));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final article = widget.article;
-    final signedIn = context.select((SessionCubit c) => c.state.isAuthenticated);
+  /// [child] with the comments' listeners: the follow store gets each new comment's author, and one comment count holds
+  /// for the comments and the action bar.
+  Widget commentListeners({required Widget child}) {
+    final article = commentsArticle;
     return MultiBlocListener(
       listeners: [
-        // One comment count for the sheet and the action bar: the page's total and the viewer's own changes go to
+        // One comment count for the comments and the action bar: the page's total and the viewer's own changes go to
         // the engagement store; live counters come back from it (they replace, never add).
         BlocListener<CommentsCubit, CommentsState>(
           listenWhen: (a, b) => a.total != b.total && b.total != null,
@@ -229,6 +215,64 @@ class _CommentsViewState extends State<CommentsView> {
           listener: (_, state) => _seedFollows(state),
         ),
       ],
+      child: child,
+    );
+  }
+}
+
+class _CommentsViewState extends State<CommentsView> with CommentActions<CommentsView> {
+  final _scroll = ScrollController();
+
+  /// Within this distance of the top, new comments in "Newest" go straight to the top instead of the pill.
+  static const _nearTop = 120.0;
+
+  @override
+  ArticleCard get commentsArticle => widget.article;
+
+  @override
+  ReportCubit Function()? get reportCubit => widget.reportCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final position = _scroll.position;
+    _cubit.setNearTop(position.pixels <= _nearTop);
+    if (position.extentAfter < 400) unawaited(_cubit.loadMore());
+  }
+
+  /// A page that leaves the list too short to scroll (the first one has 5 threads) loads the next one, without waiting
+  /// for a scroll.
+  bool _onMetrics(ScrollMetricsNotification notification) {
+    if (notification.depth == 0 && _cubit.state.hasMore && notification.metrics.extentAfter < 400) {
+      unawaited(_cubit.loadMore());
+    }
+    return false;
+  }
+
+  Future<void> _refresh() async => _showFailure(await _cubit.refresh());
+
+  void _showIncoming() {
+    _cubit.showIncoming();
+    if (_scroll.hasClients) {
+      unawaited(_scroll.animateTo(0, duration: ReadInMotion.base, curve: Curves.easeOut));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final article = widget.article;
+    final signedIn = context.select((SessionCubit c) => c.state.isAuthenticated);
+    return commentListeners(
       child: Material(
         color: context.colors.surface,
         child: Column(
@@ -242,7 +286,10 @@ class _CommentsViewState extends State<CommentsView> {
                 children: [
                   RefreshIndicator(
                     onRefresh: _refresh,
-                    child: _CommentsList(controller: _scroll, callbacks: _callbacks),
+                    child: NotificationListener<ScrollMetricsNotification>(
+                      onNotification: _onMetrics,
+                      child: _CommentsList(controller: _scroll, callbacks: _callbacks),
+                    ),
                   ),
                   _NewCommentsPill(onTap: _showIncoming),
                 ],

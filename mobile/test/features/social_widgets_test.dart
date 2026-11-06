@@ -40,6 +40,7 @@ import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart'
 import 'package:readin/shared/rdoc/rdoc_document.dart';
 import 'package:readin/shared/widgets/badges.dart';
 
+import '../helpers/comment_fixtures.dart';
 import '../helpers/fixtures.dart';
 import '../helpers/path_fakes.dart';
 import '../helpers/social_fakes.dart';
@@ -367,6 +368,8 @@ void main() {
 
   group('reader (F04, F25, F27)', () {
     setUp(registerNoRelatedArticles);
+    // The comments under the article (F11) stay loading.
+    setUp(registerReaderComments);
 
     Future<StreamController<LiveArticleCounts?>> pumpReader(
       WidgetTester tester, {
