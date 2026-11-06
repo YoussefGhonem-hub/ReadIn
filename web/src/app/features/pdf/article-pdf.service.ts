@@ -8,7 +8,7 @@ import { ArticleLanguage, MyArticleDto } from '../../core/api/models';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 
-/** Answers whose message offers "حاول تاني": the hourly limit, no build slot, a failed build (contract → Article PDF). */
+/** Answers whose toast offers "Try again" (`pdf.retry`): the hourly limit, no build slot, a failed build (contract → Article PDF). */
 const RETRYABLE = new Set(['article.pdf_limit', 'article.pdf_busy', 'article.pdf_failed']);
 
 /** The object URL lives a little after the click, so every browser has started the download from it. */
@@ -17,7 +17,7 @@ const REVOKE_AFTER_MS = 10_000;
 /** A failed download as the user sees it. */
 export interface PdfFailure {
   message: string;
-  /** Shows "حاول تاني" / "Try again", which asks again for the same article and language. */
+  /** Shows "Try again" (`pdf.retry`), which asks again for the same article and language. */
   retry: boolean;
 }
 
@@ -30,11 +30,12 @@ export function pdfLanguages(article: MyArticleDto): readonly ArticleLanguage[] 
 }
 
 /**
- * Download article PDF (F33): your own article's published version in one language, built by the API
+ * Download article PDF (F33): the published version in one language of any article you can open, built by the API
  * (`GET /articles/{id}/pdf`). Web saves it as a normal browser download under the server's file name
  * (`{slug}-{lang}.pdf`). While an article's file is being built, {@link isBuilding} is true for it (the action shows
- * "بنجهز الـ PDF…" and is disabled) and another download of it does nothing. Failures show a toast, with "حاول تاني"
- * when trying again can help. App-wide, so the reader's "⋯" menu (F28) and My articles share the building state.
+ * "Preparing the PDF…", `pdf.building`, and is disabled) and another download of it does nothing. Failures show a
+ * toast, with "Try again" when trying again can help. App-wide, so the reader's "⋯" menu (F28) and My articles share
+ * the building state.
  */
 @Injectable({ providedIn: 'root' })
 export class ArticlePdfService {
@@ -76,10 +77,11 @@ export class ArticlePdfService {
   }
 
   /**
-   * What a failure says (contract → Article PDF → Errors, the same texts as mobile): `article.pdf_limit` / `pdf_busy` /
-   * `pdf_failed` with "حاول تاني"; `article.not_found` → the contract's "المقال مش موجود."; `article.pdf_hidden` and any
-   * other known code (a generic `rate_limited` too) with its usual message and no retry; no connection → "محتاج إنترنت…"
-   * with retry; `server.error`, a timeout or anything unexpected → "معرفناش نجهّز الـ PDF" with retry.
+   * What a failure says (contract → Article PDF → Errors: the same messages as mobile, in Modern Standard Arabic here,
+   * SPEC §14.4): `article.pdf_limit` / `pdf_busy` / `pdf_failed` with "Try again"; `article.not_found` → `pdf.notFound`
+   * ("Article not found."); `article.pdf_hidden` (your own hidden article) and any other known code (a generic
+   * `rate_limited` too) with its usual message and no retry; no connection → `pdf.offline` with retry; `server.error`, a
+   * timeout or anything unexpected → `errors.article.pdf_failed` ("We couldn't prepare the PDF.") with retry.
    */
   failureOf(error: unknown): PdfFailure {
     if (error instanceof TimeoutError || !isApiError(error)) return this.failed();

@@ -44,9 +44,10 @@ public sealed class ArticlePdfImages(IAppDbContext db, IFileStorage storage)
 
     /// <summary>
     /// The widest variant up to <paramref name="targetWidth"/> of the upload <paramref name="stored"/> names, or null when
-    /// it isn't one of our uploads or its file is gone.
+    /// it isn't one of our uploads or its file is gone. <paramref name="ownerId"/> is the article's writer, whoever asks
+    /// for the file; null for a deleted account's kept article, whose kept uploads have no owner either (SPEC §9.6).
     /// </summary>
-    public async Task<ArticlePdfImage?> LoadAsync(Guid ownerId, string? stored, int targetWidth, CancellationToken cancellationToken)
+    public async Task<ArticlePdfImage?> LoadAsync(Guid? ownerId, string? stored, int targetWidth, CancellationToken cancellationToken)
     {
         if (ToUploadPath(stored) is not { } path) return null;
 

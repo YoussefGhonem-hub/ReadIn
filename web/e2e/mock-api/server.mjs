@@ -817,7 +817,14 @@ const routes = [
   ...highlights.routes,
   ...categories.routes,
   ...editor.routes,
-  ...createPdf({ problem, viewerOf: social.viewerOf, editor, articles: () => [...DETAILS.values()], pdf: PDF }).routes,
+  ...createPdf({
+    problem,
+    viewerOf: social.viewerOf,
+    editor,
+    articles: () => [...DETAILS.values()],
+    hiddenFor: (article, viewer) => !!moderation.decorateArticle({ id: article.id }, viewer).moderation,
+    pdf: PDF,
+  }).routes,
   // Quote cards (F24): the reader's articles and the Highlights lab; hidden ones as moderators see them (moderation.mjs).
   ...createQuoteCards({
     problem,

@@ -17,8 +17,9 @@ using UglyToad.PdfPig.Tokens;
 namespace ReadIn.Api.IntegrationTests;
 
 /// <summary>
-/// <c>GET /articles/{id}/pdf</c> (SPEC F33): your own published or archived article, its published version, one language
-/// per file, with safe download headers and the limits of the spec. Printed by the real headless Chromium.
+/// <c>GET /articles/{id}/pdf</c> (SPEC F33): any published article a member can open, and the author's own archived one,
+/// its published version, one language per file, with safe download headers and the limits of the spec. Printed by the
+/// real headless Chromium.
 /// </summary>
 [Collection(ApiCollection.Name)]
 public sealed class ArticlePdfTests(ApiFactory api)
@@ -58,6 +59,20 @@ public sealed class ArticlePdfTests(ApiFactory api)
     {
         await using var scope = api.Services.CreateAsyncScope();
         await work(scope.ServiceProvider.GetRequiredService<AppDbContext>());
+    }
+
+    /// <summary>A SuperAdmin (staff with every permission, moderation included) who isn't the author.</summary>
+    private async Task<SignedInUser> SuperAdminAsync()
+    {
+        var admin = await api.UserAsync("PDF Moderator");
+        await InDbAsync(async db =>
+        {
+            (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == admin.Id, Ct)).GrantRole(RoleIds.SuperAdmin);
+            await db.SaveChangesAsync(Ct);
+        });
+        await using (var scope = api.Services.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<IUserAccessService>().InvalidateAsync(admin.Id, Ct);
+        return admin;
     }
 
     [Fact]
@@ -107,21 +122,25 @@ public sealed class ArticlePdfTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task Only_the_author_gets_a_pdf_everyone_else_gets_not_found()
+    public async Task Any_member_downloads_a_published_article_guests_must_sign_in()
     {
-        var (_, id, _) = await PublishedAsync();
+        var (_, id, slug) = await PublishedAsync();
         var reader = await api.UserAsync("Reader");
-        var moderator = await api.UserAsync("PDF Moderator");
-        await InDbAsync(async db =>
-        {
-            (await db.Users.Include(u => u.Roles).SingleAsync(u => u.Id == moderator.Id, Ct)).GrantRole(RoleIds.SuperAdmin); // staff, not the author
-            await db.SaveChangesAsync(Ct);
-        });
-        await using (var scope = api.Services.CreateAsyncScope())
-            await scope.ServiceProvider.GetRequiredService<IUserAccessService>().InvalidateAsync(moderator.Id, Ct);
+        var moderator = await SuperAdminAsync();
 
-        await PdfAsync(reader.Client, id).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
-        await PdfAsync(moderator.Client, id).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
+        // The same file as the author's: the writer's name, not the reader's, and the same safe headers and file name.
+        var response = await PdfAsync(reader.Client, id);
+        using (var pdf = await OpenAsync(response))
+        {
+            pdf.Information.Author.Should().Be("PDF Writer");
+            string.Concat(pdf.GetPages().Select(p => p.Text)).Should().Contain("The published words.");
+        }
+        response.Headers.CacheControl!.Private.Should().BeTrue();
+        response.Headers.CacheControl.NoStore.Should().BeTrue();
+        response.Headers.GetValues("X-Content-Type-Options").Should().Equal("nosniff");
+        FileName(response).Should().Be($"{slug}-en.pdf");
+
+        using (var staff = await OpenAsync(await PdfAsync(moderator.Client, id))) staff.NumberOfPages.Should().BePositive();
         await PdfAsync(reader.Client, Guid.NewGuid()).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
         await PdfAsync(api.GuestClient(), id).ProblemAsync(HttpStatusCode.Unauthorized, "auth.unauthorized");
     }
@@ -130,16 +149,72 @@ public sealed class ArticlePdfTests(ApiFactory api)
     public async Task Drafts_and_deleted_articles_have_no_pdf_but_archived_ones_do()
     {
         var (writer, id, _) = await PublishedAsync();
+        var reader = await api.UserAsync("Reader");
         var field = await writer.Client.FieldIdAsync("dotnet");
         var draft = await writer.Client.CreateDraftAsync(ArticleTestKit.Document(field, "Never published"));
 
         await PdfAsync(writer.Client, draft["id"]!.GetValue<Guid>()).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
+        await PdfAsync(reader.Client, draft["id"]!.GetValue<Guid>()).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
 
         await InDbAsync(db => db.Articles.Where(a => a.Id == id).ExecuteUpdateAsync(s => s.SetProperty(a => a.Status, ArticleStatus.Archived), Ct));
         using (var archived = await OpenAsync(await PdfAsync(writer.Client, id))) archived.NumberOfPages.Should().BePositive();
 
         (await writer.Client.DeleteAsync($"/api/v1/articles/{id}", Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         await PdfAsync(writer.Client, id).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
+        await PdfAsync(reader.Client, id).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
+    }
+
+    [Fact]
+    public async Task An_archived_article_is_only_the_authors_everyone_else_gets_not_found()
+    {
+        var (writer, id, _) = await PublishedAsync();
+        var reader = await api.UserAsync("Reader");
+        var moderator = await SuperAdminAsync();
+        await InDbAsync(db => db.Articles.Where(a => a.Id == id).ExecuteUpdateAsync(s => s.SetProperty(a => a.Status, ArticleStatus.Archived), Ct));
+
+        await PdfAsync(reader.Client, id).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
+        await PdfAsync(moderator.Client, id).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
+        using var mine = await OpenAsync(await PdfAsync(writer.Client, id));
+        mine.Information.Author.Should().Be("PDF Writer");
+    }
+
+    [Fact]
+    public async Task A_deleted_accounts_kept_article_prints_deleted_user()
+    {
+        var (writer, id, slug) = await PublishedAsync();
+        var reader = await api.UserAsync("Reader");
+        using (var request = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/me") { Content = JsonContent.Create(new { password = ApiFactory.TestPassword }) })
+            (await writer.Client.SendAsync(request, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var response = await PdfAsync(reader.Client, id);
+
+        using var pdf = await OpenAsync(response);
+        pdf.Information.Author.Should().Be("Deleted user");
+        var text = string.Concat(pdf.GetPages().Select(p => p.Text));
+        text.Should().Contain("Deleted user").And.Contain("The published words.").And.NotContain("PDF Writer");
+        FileName(response).Should().Be($"{slug}-en.pdf");
+    }
+
+    [Fact]
+    public async Task The_file_has_the_writers_calendar_day_not_the_downloaders()
+    {
+        var (writer, id, _) = await PublishedAsync();
+        var reader = await api.UserAsync("Reader");
+        // 20:00 UTC on 15 January 2026 is already the 16th in Tokyo (UTC+9) and still the 15th in Honolulu (UTC−10).
+        // Neither zone has summer time.
+        await InDbAsync(async db =>
+        {
+            await db.Articles.Where(a => a.Id == id)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.PublishedAt, new DateTime(2026, 1, 15, 20, 0, 0, DateTimeKind.Utc)), Ct);
+            await db.Users.Where(u => u.Id == writer.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.TimeZone, "Asia/Tokyo"), Ct);
+            await db.Users.Where(u => u.Id == reader.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.TimeZone, "Pacific/Honolulu"), Ct);
+        });
+
+        using var pdf = await OpenAsync(await PdfAsync(reader.Client, id));
+
+        string.Concat(pdf.GetPages().Select(p => p.Text))
+            .Should().Contain("January 16, 2026", "the date is the writer's day in Tokyo")
+            .And.NotContain("January 15, 2026", "not the reader's day in Honolulu, nor the UTC one");
     }
 
     [Fact]
@@ -151,11 +226,17 @@ public sealed class ArticlePdfTests(ApiFactory api)
         await writer.Client.SaveDraftAsync(id, edit["version"]!.GetValue<int>(),
             ArticleTestKit.Document(field, "A title nobody has seen", blocks: [ArticleTestKit.Paragraph("Unpublished words.")])).OkJsonAsync();
 
-        using var pdf = await OpenAsync(await PdfAsync(writer.Client, id));
+        var reader = await api.UserAsync("Reader");
 
-        pdf.Information.Title.Should().Be("The published title");
-        var text = string.Concat(pdf.GetPages().Select(p => p.Text));
-        text.Should().Contain("The published words.").And.NotContain("Unpublished words.");
+        // The author and every other member: never the working copy.
+        foreach (var client in new[] { writer.Client, reader.Client })
+        {
+            using var pdf = await OpenAsync(await PdfAsync(client, id));
+
+            pdf.Information.Title.Should().Be("The published title");
+            var text = string.Concat(pdf.GetPages().Select(p => p.Text));
+            text.Should().Contain("The published words.").And.NotContain("Unpublished words.").And.NotContain("A title nobody has seen");
+        }
     }
 
     [Fact]
@@ -221,6 +302,20 @@ public sealed class ArticlePdfTests(ApiFactory api)
     }
 
     [Fact]
+    public async Task A_hidden_article_is_not_found_for_everyone_but_its_author_moderators_included()
+    {
+        var (writer, id, _) = await PublishedAsync();
+        var reader = await api.UserAsync("Reader");
+        var moderator = await SuperAdminAsync();
+        using (var before = await OpenAsync(await PdfAsync(reader.Client, id))) before.NumberOfPages.Should().BePositive();
+        await InDbAsync(db => db.Articles.Where(a => a.Id == id).ExecuteUpdateAsync(s => s.SetProperty(a => a.HiddenAt, DateTime.UtcNow), Ct));
+
+        await PdfAsync(reader.Client, id).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
+        await PdfAsync(moderator.Client, id).ProblemAsync(HttpStatusCode.NotFound, "article.not_found");
+        await PdfAsync(writer.Client, id).ProblemAsync(HttpStatusCode.Conflict, "article.pdf_hidden");
+    }
+
+    [Fact]
     public async Task Ten_requests_an_hour_per_user_then_429()
     {
         var writer = await api.SignUpAsync("ar");
@@ -264,11 +359,65 @@ public sealed class ArticlePdfTests(ApiFactory api)
             ],
             coverUrl: cover));
 
-        using var pdf = await OpenAsync(await PdfAsync(writer.Client, id));
+        var reader = await api.UserAsync("Reader");
 
-        pdf.GetPages().SelectMany(p => p.GetImages()).Count(i => i.BoundingBox.Width > 100)
-            .Should().BeGreaterThanOrEqualTo(2, "the cover and the image block, read from disk and inlined");
-        string.Concat(pdf.GetPages().Select(p => p.Text)).Should().Contain("PictureCaption under it");
+        // The writer's uploads, whoever downloads the file.
+        foreach (var client in new[] { writer.Client, reader.Client })
+        {
+            using var pdf = await OpenAsync(await PdfAsync(client, id));
+
+            pdf.GetPages().SelectMany(p => p.GetImages()).Count(i => i.BoundingBox.Width > 100)
+                .Should().BeGreaterThanOrEqualTo(2, "the cover and the image block, read from disk and inlined");
+            string.Concat(pdf.GetPages().Select(p => p.Text)).Should().Contain("PictureCaption under it");
+        }
+    }
+
+    [Fact]
+    public async Task A_members_file_has_the_writers_widest_picture_variants_not_the_stored_one()
+    {
+        var writer = await api.UserAsync("Picture Writer");
+        var field = await writer.Client.FieldIdAsync("dotnet");
+        var image = await UploadVariantsAsync(writer.Client, "image");
+        var cover = await UploadVariantsAsync(writer.Client, "cover");
+        // The article stores each upload's smallest variant. The file has the widest one up to 1600 px (content) and
+        // up to 1200 px (cover), which only the writer's asset row knows. Reading the stored path is the fallback.
+        var (id, _) = await writer.Client.WriteAndPublishAsync(ArticleTestKit.Document(field, "Sharp pictures in a PDF",
+            blocks:
+            [
+                ArticleTestKit.Paragraph("Before the picture."),
+                new { id = "img", type = "image", src = Url(image[0]), alt = "A test picture", caption = "Under the picture" },
+            ],
+            coverUrl: Url(cover[0])));
+        var imageBytes = await WidestUpToAsync(image, ArticlePdfImages.ContentWidth);
+        var coverBytes = await WidestUpToAsync(cover, ArticlePdfImages.CoverWidth);
+
+        var renderer = new CapturingRenderer();
+        await using var host = api.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.Replace(ServiceDescriptor.Singleton<IArticlePdfRenderer>(renderer))));
+        var reader = await api.UserAsync("Reader");
+
+        foreach (var user in new[] { reader, writer })
+        {
+            var client = host.CreateClient();
+            client.DefaultRequestHeaders.Authorization = user.Client.DefaultRequestHeaders.Authorization;
+
+            (await PdfAsync(client, id)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var document = renderer.Last!;
+            document.Images.Values.Should().ContainSingle()
+                .Which.Bytes.SequenceEqual(imageBytes).Should().BeTrue("the image block prints the writer's 1600 variant");
+            document.Cover!.Bytes.SequenceEqual(coverBytes).Should().BeTrue("the cover prints the writer's 1200 variant");
+        }
+
+        static string Url(JsonNode? variant) => variant!["url"]!.GetValue<string>();
+
+        async Task<byte[]> WidestUpToAsync(JsonArray variants, int width)
+        {
+            var widest = variants.Where(v => v!["width"]!.GetValue<int>() <= width).MaxBy(v => v!["width"]!.GetValue<int>())!;
+            widest["width"]!.GetValue<int>().Should().BeGreaterThan(variants[0]!["width"]!.GetValue<int>(),
+                "otherwise the stored variant would pass for the chosen one");
+            return await api.GuestClient().GetByteArrayAsync(new Uri(Url(widest)).PathAndQuery, Ct);
+        }
     }
 
     [Fact]
@@ -293,7 +442,11 @@ public sealed class ArticlePdfTests(ApiFactory api)
         get.ToJsonString().Should().Contain("application/pdf").And.Contain("\"name\":\"lang\"");
     }
 
-    private static async Task<string> UploadAsync(HttpClient client, string purpose)
+    private static async Task<string> UploadAsync(HttpClient client, string purpose) =>
+        (await UploadVariantsAsync(client, purpose))[0]!["url"]!.GetValue<string>();
+
+    /// <summary>The variants of an uploaded test picture, smallest first.</summary>
+    private static async Task<JsonArray> UploadVariantsAsync(HttpClient client, string purpose)
     {
         using var form = new MultipartFormDataContent { { new StringContent(purpose), "purpose" } };
         var file = new ByteArrayContent(await File.ReadAllBytesAsync(Path.Combine(AppContext.BaseDirectory, "fixtures", "media", "medium.webp"), Ct));
@@ -302,12 +455,24 @@ public sealed class ArticlePdfTests(ApiFactory api)
         var response = await client.PostAsync("/api/v1/uploads/images", form, Ct);
         var body = await response.Content.ReadFromJsonAsync<JsonObject>(Ct);
         response.StatusCode.Should().Be(HttpStatusCode.Created, body?.ToJsonString());
-        return body!["variants"]!.AsArray()[0]!["url"]!.GetValue<string>();
+        return body!["variants"]!.AsArray();
     }
 
     private sealed class FailingRenderer(Error error) : IArticlePdfRenderer
     {
         public Task<Result<byte[]>> RenderAsync(ArticlePdfDocument document, CancellationToken cancellationToken) =>
             Task.FromResult<Result<byte[]>>(error);
+    }
+
+    /// <summary>Keeps the last document it was given, so a test sees exactly which bytes the handler chose.</summary>
+    private sealed class CapturingRenderer : IArticlePdfRenderer
+    {
+        public ArticlePdfDocument? Last { get; private set; }
+
+        public Task<Result<byte[]>> RenderAsync(ArticlePdfDocument document, CancellationToken cancellationToken)
+        {
+            Last = document;
+            return Task.FromResult<Result<byte[]>>("%PDF-1.4\n%%EOF\n"u8.ToArray());
+        }
     }
 }

@@ -66,7 +66,7 @@ class ArticlePage extends StatelessWidget {
         BlocProvider(create: (_) => getIt<ArticleLiveCubit>()),
         // Created when a moderator hides or unhides from the menu (F22).
         BlocProvider(create: (_) => getIt<ModerationActionCubit>()),
-        // "تحميل PDF" in the "⋯" menu on your own article (F33); its failures show here, with "حاول تاني".
+        // "تحميل PDF" in the "⋯" menu, on every article (F33); its failures show here, with "حاول تاني".
         BlocProvider(create: (_) => getIt<ArticlePdfCubit>()),
         // Highlights (F30): yours and the popular ones for the version on screen, loaded once they are shown.
         BlocProvider(create: (_) => getIt<ArticleHighlightsCubit>()),

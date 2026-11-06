@@ -35,9 +35,9 @@ export interface ArticleMenuContext {
   following: boolean;
   /** You muted the writer (false for guests). */
   authorMuted: boolean;
-  /** The menu offers "تحميل PDF" on your own article: the reader's menu, not a post card's (F33). */
+  /** The menu offers Download PDF (`pdf.download`, F33): the reader's menu, not a post card's. */
   pdf: boolean;
-  /** That article's PDF is being built (F33): the item says "بنجهز الـ PDF…", disabled, with a spinner. */
+  /** That article's PDF is being built (F33): "Preparing the PDF…" (`pdf.building`), disabled, with a spinner. */
   pdfBuilding: boolean;
   /** The reader's menu: highlights are shown or hidden (F30). Absent on a post card's menu. */
   highlights?: 'shown' | 'hidden' | null;
@@ -81,9 +81,9 @@ const hasOtherAuthor = (c: ArticleMenuContext) => !c.isOwn && !!c.article.author
  * The "⋯" menu, in the SPEC F28 order: the one list every item comes from (the reader's action bar and the post card's
  * header). Report ends the reader's items; the moderators' Hide/Unhide come last, after a divider (the same order on
  * mobile). A later feature adds its entry here and a case in {@link ArticleMenu.run}. The reader's "إخفاء الـ
- * Highlights" (F30) comes after Show less, also on your own article. On your own article Mute topics stays, and the
- * reader adds "تحميل PDF" (F33) before Report (and Hide for moderators); Follow and Mute author need a writer (not a
- * deleted account).
+ * Highlights" (F30) comes after Show less, also on your own article. On your own article Mute topics stays. The reader
+ * has Download PDF (`pdf.download`, F33) before Report for everyone, except on someone else's hidden article; guests
+ * get the sign-in prompt. Follow and Mute author need a writer (not a deleted account).
  */
 export const ARTICLE_MENU: readonly ArticleMenuEntry[] = [
   { id: 'showLess', visible: (c) => !c.isOwn, labelKey: 'mute.menu.showLess', icon: MUTE_ICON.ThumbsDown },
@@ -108,10 +108,11 @@ export const ARTICLE_MENU: readonly ArticleMenuEntry[] = [
     icon: (c) => (c.authorMuted ? MUTE_ICON.Volume2 : MUTE_ICON.VolumeX),
   },
   { id: 'muteTopics', labelKey: 'mute.menu.muteTopics', icon: MUTE_ICON.ListX },
-  // F33: your own article's published version on screen, in the reader.
+  // F33: the published version on screen, in the reader, for every member (guests sign in first). A hidden article (F22)
+  // has no PDF: a moderator reading someone else's gets no item; its author keeps it and is told why (409).
   {
     id: 'downloadPdf',
-    visible: (c) => c.isOwn && c.pdf,
+    visible: (c) => c.pdf && (c.isOwn || !c.article.moderation),
     labelKey: (c) => (c.pdfBuilding ? 'pdf.building' : 'pdf.download'),
     icon: (c) => (c.pdfBuilding ? 'LoaderCircle' : 'Download'),
     busy: (c) => c.pdfBuilding,
@@ -143,8 +144,9 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
  * screen (MuteStore, PostCard); in the reader, a muted writer's article shows the "انت كاتم الكاتب ده" banner instead.
  * Mute topics opens a sheet with the field and topic toggles (its own lazy chunk). Moderators also Hide (with a note
  * dialog) or Unhide the article; the new moderation state goes up through `moderationChange`, so the reader shows or
- * drops the "hidden" banner at once. In the reader (`pdf`), your own article also has "تحميل PDF" (F33): a normal
- * download of the version on screen, "بنجهز الـ PDF…" and disabled while it is built ({@link ArticlePdfService}).
+ * drops the "hidden" banner at once. In the reader (`pdf`), every article but someone else's hidden one also has
+ * Download PDF (F33): a normal download of the version on screen, "Preparing the PDF…" (`pdf.building`) and disabled
+ * while it is built ({@link ArticlePdfService}).
  */
 @Component({
   selector: 'rd-article-menu',
@@ -213,7 +215,7 @@ export class ArticleMenu {
   private readonly highlightPrefs = inject(HighlightsPrefs);
 
   readonly article = input.required<MenuArticle>();
-  /** The reader's menu: your own article also has "تحميل PDF" (F33). A post card's menu doesn't. */
+  /** The reader's menu: Download PDF (F33), but not on someone else's hidden article. A post card's menu has none. */
   readonly pdf = input(false);
   /** The reader's menu: "إخفاء الـ Highlights" / "إظهار الـ Highlights" (F30). A post card's menu doesn't have it. */
   readonly highlights = input(false);

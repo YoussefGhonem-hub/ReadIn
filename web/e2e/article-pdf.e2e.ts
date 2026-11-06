@@ -9,7 +9,8 @@ import { openArticle, signInAsReader } from './support/social';
  * rows have it; one version downloads at once under the server's file name (`{slug}-{lang}.pdf`, RFC 5987, Arabic
  * too); two versions ask "أي نسخة تريد؟" first; while the file is built the button says "جارٍ تجهيز ملف PDF…" and is disabled;
  * each error has its message, with "إعادة المحاولة" where trying again helps. In the reader, the "⋯" menu (F28) has the
- * same action on your own article only, for the version on screen.
+ * same action for the version on screen, on your own article and on everyone else's (F33, every member since
+ * 2026-11-06; more in e2e/article-pdf-members.e2e.ts).
  */
 test.describe.configure({ timeout: 120_000 });
 
@@ -259,7 +260,7 @@ for (const variant of VARIANTS) {
     expect(requests()).toBe(1);
   });
 
-  test(`Reader: "⋯" → Download PDF on your own article only, for the version on screen — ${lang}/${theme}`, async ({ page, context, baseURL, request }) => {
+  test(`Reader: "⋯" → Download PDF on your own article and on someone else's, for the version on screen — ${lang}/${theme}`, async ({ page, context, baseURL, request }) => {
     await useVariant(context, baseURL!, variant);
     // The writer of the reader fixture (the mock's /me), on their own article.
     await restoreSessionAs(page, await writerMe(request, variant));
@@ -295,12 +296,13 @@ for (const variant of VARIANTS) {
     expect(requests()).toBe(1);
     await page.unroute(PDF_URL);
 
-    // Someone else reading it: no Download PDF.
+    // Someone else reading it has Download PDF too, right before Report (F33, every member since 2026-11-06).
     await signInAsReader(page, request, variant);
     await openArticle(page, '/en/a/clean-architecture-whiteboard');
     await menuButton.click();
     await expect(panel.locator('[data-menu-action="report"]')).toBeVisible();
-    await expect(item).toHaveCount(0);
+    await expect(item).toBeVisible();
+    await expect(item).toHaveText(t.download);
   });
 }
 

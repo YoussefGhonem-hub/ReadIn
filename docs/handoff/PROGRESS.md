@@ -467,6 +467,11 @@ Later decisions (user, 2026-11-05):
   says to start it** (its contract draft is ready, nothing built). The order is now: F24 quote card → the F33 change →
   the small leftovers → the final review (F23 and F25 not counted as gaps). The web's Arabic UI is Modern Standard
   Arabic (SPEC §14.4); mobile keeps its Egyptian Arabic.
+- **Blocked, needs the user (2026-11-06):** GitHub Actions stopped starting jobs from 5fd40c08 (F24) on: "The job was
+  not started because recent account payments have failed or your spending limit needs to be increased" (GitHub →
+  Settings → Billing & plans). The last runs that did start (f6551dee) passed. Until billing is fixed, CI can't check
+  the pushes; the local gates (build, lint, analyze, and the per-feature test run) still run before each push, and the
+  CI runs will need re-running (`gh run rerun <id>`) once it is fixed.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked
@@ -588,7 +593,7 @@ again next run; `Retry-After` is honoured up to 30 s. Dead links still fail. SPE
   digits, the AI-assisted label, page-break CSS for rule 4, tables measured with the real fonts so words never split.
   Tests for every No-bug rule (PdfPig: fonts embedded, text order, links, metadata, bookmarks, no blank pages, size;
   two page baselines, one Arabic and one English).
-- **Web and mobile:** "تحميل PDF" in the reader's "⋯" (own article only, before Report) and on every published row in
+- **Web and mobile:** "تحميل PDF" in the reader's "⋯" (own article only at first; since 2026-11-06 every member, see "F33 change" below; before Report) and on every published row in
   My articles (two languages ask which first); "بنجهز الـ PDF…" while building; errors per the contract with "حاول
   تاني" where it helps; web downloads with the server's file name, mobile saves to a temp file and opens the share
   sheet. The item is on the reader's menu only, not on feed post cards.
@@ -726,3 +731,26 @@ then two fixers). Per part, what was built and **what was actually tried**:
   article when the dialog closes, a changed text reloads the article on web, the SPEC line, the same wording on both
   clients, Copy link and a quote-aware preview label on mobile, two missing tests. **The fixes were not tried with the
   tests** (user rule).
+
+### F33 change: every member downloads the PDF ✅ (user decision, 2026-11-06)
+- **Backend:** `GET /articles/{id}/pdf` gives any signed-in member the PDF of a published article they can open; an
+  archived article only to its writer (404 for others); an article hidden by moderators gives its writer
+  `409 article.pdf_hidden` and everyone else, the SuperAdmin included, `404`; guests 401. The limits stay (10 per
+  hour per user, 2 builds at a time). The file always shows the published version and the writer's name, date and
+  pictures (not the downloader's), and a deleted writer's kept article says "Deleted user". The permission
+  `articles.export_pdf` keeps its name and roles.
+- **Web and mobile:** "Download PDF" in the reader's "⋯" for every member, before Report; guests get the sign-in
+  prompt with no request; nothing on someone else's hidden article; the writer of a hidden article gets the 409
+  message. My articles unchanged.
+- **Tried for real** (demo reader3, not the writer): the real API on the local database downloaded two @readin
+  articles (644,036 and 544,039 bytes, `%PDF-1.4` … `%%EOF`, the right file names); in a real browser against
+  that API the guest got the sign-in prompt and reader3's "⋯" → Download PDF saved the same file (7 pages, author
+  ReadIn); a throwaway article by writer1, hidden by the SuperAdmin, gave writer1 409 and reader3 and the SuperAdmin
+  404; on mobile the app's real PDF data source downloaded a 544,039-byte PDF as reader3 (the emulator wasn't used:
+  adb isn't on PATH). Not tried for real: an archived article (no endpoint archives one; an integration test covers
+  it), and the mobile share sheet on a device.
+- **Test round:** the tests ran once (backend 2463/2463, web unit 1452/1452, Playwright 124/124 on the touched specs,
+  mobile 2383/2383 on a clean HEAD + change copy). No functional bugs; fixed: two tests that would miss a regression
+  (the writer's calendar day, the picture size), the contract's wording, stale comments, the mock API's hidden
+  articles, a unit test that didn't check its 409 message. Left: a mobile golden of the menu (after the mobile MSA
+  rewrite). **The fixes were not tried with the tests** (user rule).

@@ -36,7 +36,7 @@ enum ArticleMenuItem {
   muteAuthor,
   muteTopics,
 
-  /// "تحميل PDF" (F33): your own article, in the reader.
+  /// "تحميل PDF" (F33): in the reader, on every article (guests get the sign-in prompt).
   downloadPdf,
   report,
   hide,
@@ -48,9 +48,10 @@ enum ArticleMenuItem {
 
 /// What an article's menu offers the viewer, in the SPEC F28 order. Someone else's article: Show less, Follow author,
 /// Mute author, Mute topics and Report (follow and mute need an author: a deleted account has none, [hasAuthor]).
-/// Your own article: Mute topics, and in the reader ([pdf]) "تحميل PDF" (F33). Moderators can also hide or unhide it
-/// (F22). Guests see the reader's items and get the sign-in prompt for every one of them, except Hide highlights. The
-/// reader ([highlights]) has "إخفاء الـ Highlights" right after Show less (F30), on your own article too.
+/// Your own article: Mute topics. The reader ([pdf]) has "تحميل PDF" (F33) on every article, before Report; not on
+/// someone else's hidden article (a moderator reading it), which the API never prints for them. Moderators can also
+/// hide or unhide it (F22). Guests see the reader's items and get the sign-in prompt for every one of them, except Hide
+/// highlights. The reader ([highlights]) has "إخفاء الـ Highlights" right after Show less (F30), on your own article too.
 List<ArticleMenuItem> articleMenuItems({
   required bool own,
   required bool moderator,
@@ -64,13 +65,13 @@ List<ArticleMenuItem> articleMenuItems({
       if (highlights) ArticleMenuItem.highlights,
       if (!own && hasAuthor) ...[ArticleMenuItem.follow, ArticleMenuItem.muteAuthor],
       ArticleMenuItem.muteTopics,
-      if (own && pdf) ArticleMenuItem.downloadPdf,
+      if (pdf && (own || !hidden)) ArticleMenuItem.downloadPdf,
       if (!own) ArticleMenuItem.report,
       if (moderator) hidden ? ArticleMenuItem.unhide : ArticleMenuItem.hide,
     ];
 
 /// The reader action bar's "⋯" (F22, F28). Hiding needs an [ModerationActionCubit] and the [ArticleCubit] above, and
-/// "تحميل PDF" on your own article an [ArticlePdfCubit] (F33; the reader provides them all).
+/// "تحميل PDF" an [ArticlePdfCubit] (F33; the reader provides them all).
 class ArticleMenuButton extends StatelessWidget {
   const ArticleMenuButton({super.key, required this.article});
 
@@ -88,8 +89,8 @@ class ArticleMenuButton extends StatelessWidget {
 /// "⋯" for one article: the reader's ([ArticleMenuButton]) and the post card's header (F34), the same menu (F28).
 /// Show less and Mute author confirm with Undo ([MuteActions]); Mute topics opens its sheet; Follow author uses
 /// [FollowsCubit]. Hiding and unhiding need an [ModerationActionCubit] above; [onModerated] then gets the article's new
-/// moderation (null once visible again). With an [ArticlePdfCubit] above (the reader, not a post card), your own
-/// article also has "تحميل PDF" (F33): the version on screen, "بنجهز الـ PDF…" and disabled while it is built.
+/// moderation (null once visible again). With an [ArticlePdfCubit] above (the reader, not a post card), every article
+/// also has "تحميل PDF" (F33): the version on screen, "بنجهز الـ PDF…" and disabled while it is built.
 class ArticleMenuView extends StatelessWidget {
   const ArticleMenuView({super.key, required this.card, required this.hidden, required this.onModerated});
 

@@ -711,13 +711,13 @@ of the day (unmuting doesn't bring the first back); `204` only when nothing elig
 and picked topic. Cards now carry `topic` (it was on `ArticleDetailsDto` only).
 
 **The "⋯" menu** (reader action bar and post-card header, F04/F34), in this order: Show less, Hide highlights (the
-reader only, F30), Follow author, Mute author, Mute topics, Report (error color), then the moderator's Hide/Unhide after
-a divider. On your own article only Hide highlights and Mute topics stay (and Download PDF, F33). Guests get the sign-in
-prompt for every item except Hide highlights, which a guest's device keeps locally (F30). Mute/Unmute
-is also on a profile's "⋯" (not your own, not the official account) and a comment's "⋯" (the commenter; not your own
-comments), with the same Undo. After Mute author, remove every card by that writer from the list
-on screen; after Show less, that card; after a field or topic toggle, the cards in it (animated unless reduce motion is
-on). Undo puts them back in place. In the reader, Mute author shows the banner instead of leaving the page.
+reader only, F30), Follow author, Mute author, Mute topics, Download PDF (the reader only, F33), Report (error color),
+then the moderator's Hide/Unhide after a divider. On your own article only Hide highlights, Mute topics and Download PDF
+stay. Guests get the sign-in prompt for every item except Hide highlights, which a guest's device keeps locally (F30).
+Mute/Unmute is also on a profile's "⋯" (not your own, not the official account) and a comment's "⋯" (the commenter; not
+your own comments), with the same Undo. After Mute author, remove every card by that writer from the list on screen;
+after Show less, that card; after a field or topic toggle, the cards in it (animated unless reduce motion is on). Undo
+puts them back in place. In the reader, Mute author shows the banner instead of leaving the page.
 
 **Comments (F11).** `isAuthorMuted: true` → show "تعليق من شخص كتمته" with "عرض", which expands it locally (the body is
 in the DTO). Replies under it render as usual; counts don't change. The same in feed-card comments (F34).
@@ -1240,7 +1240,11 @@ URLs. Publishing re-runs the checks and fails while any problem remains.
 
 ### Article PDF (F33) — SPEC F33
 
-Bearer, permission `articles.export_pdf` (every account, SPEC §10.2), and only on your own article.
+Bearer, permission `articles.export_pdf` (every account, SPEC §10.2), on any article you can open (user decision
+2026-11-06: not only the writer).
+
+The Arabic client texts quoted in this section are the mobile app's (Egyptian). The web shows them in Modern Standard
+Arabic (SPEC §14.4): see the table after "Errors and what clients show". The file's own texts are the same for both.
 
 | Method | Path | Response |
 |---|---|---|
@@ -1248,19 +1252,27 @@ Bearer, permission `articles.export_pdf` (every account, SPEC §10.2), and only 
 
 **Who, which article, which version**
 - `{id}` is the article id (`ArticleDetailsDto.id`, `MyArticleDto.id`).
-- Only the author. Anyone else (moderators too), an unknown or deleted article and a draft (never published) get
-  `404 article.not_found`. Published and archived articles have a PDF.
-- Clients show "تحميل PDF" / "Download PDF" only on your own article: in the reader's "⋯" menu (F28) when
-  `ArticleDetailsDto.author?.id` is your id, and in My articles on each article of the **Published** tab
+- **Any signed-in member**, for any **published** article the reader opens for them (published, in an enabled field,
+  not deleted, not hidden), whoever wrote it. Every member gets the same file: the writer's name, never the caller's.
+  A deleted account's kept article prints "مستخدم محذوف" / "Deleted user" with no profile link.
+- **Archived:** the author only. Anyone else gets `404 article.not_found`.
+- **Hidden by moderators (F22):** the author gets `409 article.pdf_hidden` (below); **everyone else**, moderators and
+  SuperAdmin included, gets `404 article.not_found`.
+- An unknown or deleted article and a draft (never published) are `404 article.not_found` for everyone. Guests (no
+  token) get `401 auth.unauthorized`.
+- Clients show "Download PDF" (web "تنزيل PDF", mobile "تحميل PDF") in the reader's "⋯" menu (F28) on **every**
+  article, your own included, and to guests too, who get the usual sign-in prompt instead of a request. A moderator
+  reading someone else's hidden article (`ArticleDetailsDto.moderation` set, not your article) gets no item, since the
+  answer would be `404`. My articles keeps the action on each article of the **Published** tab
   (`MyArticleDto.status === 'published'`), never on drafts.
 - The file is always the **published** version, even while the working copy has unpublished changes
-  (`hasUnpublishedChanges`).
+  (`hasUnpublishedChanges`); a member who isn't the writer never gets anything of the working copy.
 - `lang` (`ar-EG` | `en`) is the version to print. **Reader:** `ArticleDetailsDto.language`, the version on screen.
   **My articles:** `MyArticleDto.publishedLanguages` (added in F33), the published versions with the source language
   first: one entry → send it without asking; two → ask which first ("أنهي نسخة؟"), in that order. A missing, unknown or
   unpublished `lang` prints the source language, as on the other article endpoints; the file name says which one.
-- Hidden by moderators (F22): `409 article.pdf_hidden`, because the file carries the ReadIn logo. Clients still show
-  the item (My articles doesn't know it's hidden); the message explains.
+- Hidden by moderators (F22), to its author: `409 article.pdf_hidden`, because the file carries the ReadIn logo.
+  Clients still show the item to the author (My articles doesn't know it's hidden); the message explains.
 
 **The 200 response**
 - `Content-Type: application/pdf`, `Content-Length`, `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`
@@ -1292,12 +1304,26 @@ Bearer, permission `articles.export_pdf` (every account, SPEC §10.2), and only 
 | Status and code | When | Clients show (ar / en) | "حاول تاني" / "Try again" |
 |---|---|---|---|
 | `401 auth.unauthorized` | not signed in, token expired | the usual refresh, then sign-in flow | — |
-| `404 article.not_found` | not your article, unknown, deleted, a draft | "المقال مش موجود." / "Article not found." | no |
-| `409 article.pdf_hidden` | hidden by moderators | "المشرفين خفّوا المقال ده، فمينفعش يتحمّل PDF." / "Moderators hid this article, so it can't be downloaded as a PDF." | no |
+| `404 article.not_found` | unknown, deleted, a draft; someone else's archived or hidden article | "المقال مش موجود." / "Article not found." | no |
+| `409 article.pdf_hidden` | your own article, hidden by moderators | "المشرفين خفّوا المقال ده، فمينفعش يتحمّل PDF." / "Moderators hid this article, so it can't be downloaded as a PDF." | no |
 | `429 article.pdf_limit` | more than 10 in the hour | "حمّلت PDFs كتير الساعة دي. حاول تاني بعد شوية." / "You've downloaded many PDFs this hour. Try again later." | yes |
 | `503 article.pdf_busy` | no build slot within 30 s | "فيه PDFs كتير بتتجهز دلوقتي. حاول تاني كمان شوية." / "Many PDFs are being prepared right now. Try again in a moment." | yes |
 | `500 article.pdf_failed` (and `server.error`, a client timeout, any other failure) | the build failed or took too long | "معرفناش نجهّز الـ PDF. حاول تاني." / "We couldn't prepare the PDF. Try again." | yes |
 | no connection (client side) | offline before or during the call | "محتاج إنترنت عشان تحمّل الـ PDF." / "You need an internet connection to download the PDF." | yes |
+
+The Arabic in the table is the mobile app's (Egyptian). The web shows the same texts in Modern Standard Arabic
+(SPEC §14.4), with the same English:
+
+| Where | Web (ar) |
+|---|---|
+| the item; while it builds; the retry button | "تنزيل PDF"; "جارٍ تجهيز ملف PDF…"; "إعادة المحاولة" |
+| My articles, two published versions | "أي نسخة تريد؟" |
+| `404 article.not_found` | "المقال غير موجود." |
+| `409 article.pdf_hidden` | "أخفى المشرفون هذا المقال، لذا لا يمكن تنزيله بصيغة PDF." |
+| `429 article.pdf_limit` | "نزّلت ملفات PDF كثيرة خلال هذه الساعة. حاول مرة أخرى لاحقًا." |
+| `503 article.pdf_busy` | "يجري الآن تجهيز ملفات PDF كثيرة. حاول مرة أخرى بعد قليل." |
+| `500 article.pdf_failed` and any other failure | "تعذّر تجهيز ملف PDF. حاول مرة أخرى." |
+| no connection | "تحتاج إلى اتصال بالإنترنت لتنزيل ملف PDF." |
 
 **What the file holds** (the full layout is SPEC F33): A4 portrait, always light; direction from the article language
 (`ar-EG` RTL, `en` LTR), not the app's; the logo at the top of page 1 and in every page's footer with `readin.app` and
@@ -2417,7 +2443,8 @@ Validation codes (in `errors`) for this area: `reaction.invalid` (`type`), `vali
 // ── Article PDF (F33) ───────────────────────────────────────────────
 // GET /articles/{id}/pdf answers the file itself (application/pdf, see Article PDF), never JSON; its errors are
 // ProblemDetails. F33 adds no DTO of its own. Clients read:
-//   reader:      ArticleDetailsDto.id, .language (the version on screen, sent as `lang`), .author?.id (your id → your article)
+//   reader:      ArticleDetailsDto.id, .language (the version on screen, sent as `lang`); every article has the item, except
+//                someone else's hidden one (.moderation set, .author?.id not your id); guests get the sign-in prompt
 //   My articles: MyArticleDto.id, .status === 'published', .publishedLanguages (added in F33; two entries → ask which)
 //   file name:   Content-Disposition filename* (RFC 5987) → "{slug}-{lang}.pdf"; fallback filename "readin-article.pdf"
 ```

@@ -10,9 +10,9 @@ using ReadIn.Domain.Media;
 namespace ReadIn.Application.Features.Articles.Pdf;
 
 /// <summary>
-/// <c>GET /articles/{id}/pdf?lang=</c> (SPEC F33): the author's own published or archived article, its published version
-/// in <paramref name="Language"/> (a missing or unknown one gives the source language), as a PDF built in the request
-/// and never stored.
+/// <c>GET /articles/{id}/pdf?lang=</c> (SPEC F33): any article the member can open in the reader (published, visible),
+/// and the author's own archived one, its published version in <paramref name="Language"/> (a missing or unknown one
+/// gives the source language), as a PDF built in the request and never stored.
 /// </summary>
 [Authenticated]
 [RequirePermission(Permissions.Articles.ExportPdf)]
@@ -35,19 +35,26 @@ internal sealed class GetArticlePdfQueryHandler(
     {
         var userId = currentUser.RequireUserId();
 
-        // Anyone but the author, a draft, and a deleted article (query filter) are all "not found".
+        // Every member gets what the reader opens: published, in an enabled field, not hidden (SPEC F22). The author also
+        // gets their archived article and their hidden one (answered below). Anything else, a draft and a deleted article
+        // (query filter) are "not found"; moderators included, since the file carries the ReadIn logo.
         var article = await db.Articles.AsNoTracking()
-            .Where(a => a.Id == query.ArticleId && a.AuthorId == userId && a.PublishedAt != null
-                        && (a.Status == ArticleStatus.Published || a.Status == ArticleStatus.Archived))
+            .Where(a => a.Id == query.ArticleId && a.PublishedAt != null)
+            .Where(a => (a.AuthorId == userId && (a.Status == ArticleStatus.Published || a.Status == ArticleStatus.Archived))
+                        || (a.Status == ArticleStatus.Published && a.Field.IsEnabled && a.HiddenAt == null))
             .Select(a => new
             {
                 a.Id,
                 a.Slug,
+                a.AuthorId,
                 a.SourceLanguage,
                 a.HiddenAt,
                 a.CoverUrl,
                 a.IsAiAssisted,
                 PublishedAt = a.PublishedAt!.Value,
+                Author = a.Author == null
+                    ? null
+                    : new { a.Author.DisplayName, a.Author.Username, a.Author.TimeZone, a.Author.IsVerified },
                 FieldNameAr = a.Field.NameAr,
                 FieldNameEn = a.Field.NameEn,
                 a.Field.IsSensitive,
@@ -58,7 +65,7 @@ internal sealed class GetArticlePdfQueryHandler(
             .FirstOrDefaultAsync(cancellationToken);
         if (article is null) return ArticleErrors.NotFound;
 
-        // The file carries the ReadIn logo, so a hidden article has none (SPEC F22).
+        // The file carries the ReadIn logo, so a hidden article has none (SPEC F22). Only its author gets this far.
         if (article.HiddenAt is not null) return ArticlePdfErrors.Hidden;
 
         var language = query.Language is { } requested && article.Languages.Contains(requested) ? requested : article.SourceLanguage;
@@ -67,17 +74,6 @@ internal sealed class GetArticlePdfQueryHandler(
             .Select(t => new { t.Title, t.Subtitle, t.ContentJson, t.ReadingTimeMinutes })
             .FirstOrDefaultAsync(cancellationToken);
         if (translation is null) return ArticleErrors.NotFound;
-
-        var author = await db.Users.AsNoTracking()
-            .Where(u => u.Id == userId)
-            .Select(u => new
-            {
-                u.DisplayName,
-                u.Username,
-                u.TimeZone,
-                IsVerified = u.IsVerified,
-            })
-            .FirstAsync(cancellationToken);
 
         var tags = await db.Articles.AsNoTracking()
             .Where(a => a.Id == article.Id)
@@ -104,7 +100,7 @@ internal sealed class GetArticlePdfQueryHandler(
         var contentImages = new Dictionary<string, ArticlePdfImage>(StringComparer.Ordinal);
         foreach (var src in ArticlePdfImages.UploadSources(content.RootElement))
         {
-            if (await images.LoadAsync(userId, src, ArticlePdfImages.ContentWidth, cancellationToken) is { } image)
+            if (await images.LoadAsync(article.AuthorId, src, ArticlePdfImages.ContentWidth, cancellationToken) is { } image)
                 contentImages[src] = image;
         }
 
@@ -129,15 +125,19 @@ internal sealed class GetArticlePdfQueryHandler(
             Slug = article.Slug,
             Title = translation.Title,
             Subtitle = translation.Subtitle,
-            Author = new ArticlePdfAuthor(author.DisplayName, author.Username, author.IsVerified),
-            PublishedOn = LocalDate(article.PublishedAt, author.TimeZone),
+            // The same file for every member: the writer's name and their calendar day. A deleted account's kept article
+            // prints "Deleted user" with no profile link (SPEC §9.6).
+            Author = article.Author is { } author
+                ? new ArticlePdfAuthor(author.DisplayName, author.Username, author.IsVerified)
+                : ArticlePdfAuthor.Deleted(language),
+            PublishedOn = LocalDate(article.PublishedAt, article.Author?.TimeZone),
             ReadingTimeMinutes = translation.ReadingTimeMinutes,
             FieldName = arabic ? article.FieldNameAr : article.FieldNameEn,
             TopicName = arabic ? article.TopicNameAr : article.TopicNameEn,
             Tags = tags,
             ShowHealthDisclaimer = article.IsSensitive,
             IsAiAssisted = article.IsAiAssisted,
-            Cover = await images.LoadAsync(userId, article.CoverUrl, ArticlePdfImages.CoverWidth, cancellationToken),
+            Cover = await images.LoadAsync(article.AuthorId, article.CoverUrl, ArticlePdfImages.CoverWidth, cancellationToken),
             Content = content.RootElement.Clone(),
             Images = contentImages,
             Sources = sources,
@@ -150,9 +150,10 @@ internal sealed class GetArticlePdfQueryHandler(
             : result.Error;
     }
 
-    /// <summary>The publish date as the writer saw it; UTC when their time zone is unknown here.</summary>
-    private static DateOnly LocalDate(DateTime utc, string timeZone)
+    /// <summary>The publish date as the writer saw it; UTC when their time zone is unknown here or the account is gone.</summary>
+    private static DateOnly LocalDate(DateTime utc, string? timeZone)
     {
+        if (timeZone is null) return DateOnly.FromDateTime(utc);
         try
         {
             return DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), TimeZoneInfo.FindSystemTimeZoneById(timeZone)));

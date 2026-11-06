@@ -53,8 +53,16 @@ public sealed record ArticlePdfDocument
     public ArticlePdfDocumentAttachment? DocumentAttachment { get; init; }
 }
 
-/// <param name="Username">Links the name to the profile.</param>
-public sealed record ArticlePdfAuthor(string DisplayName, string Username, bool IsVerified);
+/// <param name="Username">Links the name to the profile; null for a deleted account (no link).</param>
+public sealed record ArticlePdfAuthor(string DisplayName, string? Username, bool IsVerified)
+{
+    /// <summary>
+    /// A deleted account's kept article (SPEC §9.6): "Deleted user" in the article's language, as the apps show it, with
+    /// no profile link.
+    /// </summary>
+    public static ArticlePdfAuthor Deleted(string language) =>
+        new(language == "en" ? "Deleted user" : "مستخدم محذوف", Username: null, IsVerified: false);
+}
 
 /// <summary>An image read from the uploads folder (WebP), inlined into the PDF; never fetched.</summary>
 public sealed record ArticlePdfImage(byte[] Bytes, string MediaType);

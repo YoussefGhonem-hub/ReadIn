@@ -57,6 +57,18 @@ public sealed partial class ArticlePdfHtmlTests
     }
 
     [Theory]
+    [InlineData("ar-EG", "مستخدم محذوف")]
+    [InlineData("en", "Deleted user")]
+    public void A_deleted_accounts_article_names_deleted_user_with_no_profile_link(string language, string name)
+    {
+        var html = Html(ArticlePdfFixtures.Document(language) with { Author = ArticlePdfAuthor.Deleted(language) });
+
+        html.Should().Contain($"<p class=\"byline\"><bdi>{name}</bdi></p>");
+        html.Should().Contain($"<meta name=\"author\" content=\"{name}\">");
+        html.Should().NotContain("<p class=\"byline\"><a");
+    }
+
+    [Theory]
     [InlineData("ar-EG")]
     [InlineData("en")]
     public void The_page_has_no_script_and_loads_nothing_but_data_urls(string language)

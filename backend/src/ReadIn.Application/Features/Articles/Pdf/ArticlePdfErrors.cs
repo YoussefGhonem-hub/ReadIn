@@ -3,12 +3,15 @@ using ReadIn.Domain.Common;
 namespace ReadIn.Application.Features.Articles.Pdf;
 
 /// <summary>
-/// Error codes of <c>GET /articles/{id}/pdf</c> (SPEC F33); clients translate them. Anyone but the author, and a draft,
-/// get <see cref="Domain.Articles.ArticleErrors.NotFound"/> instead.
+/// Error codes of <c>GET /articles/{id}/pdf</c> (SPEC F33); clients translate them. An article the member can't open (a
+/// draft; an archived or hidden one that isn't theirs) gets <see cref="Domain.Articles.ArticleErrors.NotFound"/> instead.
 /// </summary>
 public static class ArticlePdfErrors
 {
-    /// <summary>Hidden by moderators (F22): the file carries the ReadIn logo, so it isn't built.</summary>
+    /// <summary>
+    /// Hidden by moderators (F22): the file carries the ReadIn logo, so it isn't built. Only the author gets this code;
+    /// everyone else, moderators included, gets <c>article.not_found</c>.
+    /// </summary>
     public static readonly Error Hidden = Error.Conflict("article.pdf_hidden", "Moderators hid this article, so it can't be downloaded as a PDF.");
 
     /// <summary>Both build slots stayed taken for 30 seconds.</summary>

@@ -148,13 +148,20 @@ void main() {
         ArticleMenuItem.report,
       ]);
       expect(articleMenuItems(own: true, moderator: true, hidden: true), [ArticleMenuItem.muteTopics, ArticleMenuItem.unhide]);
-      // The reader's menu (pdf) adds "تحميل PDF" on your own article only, before Report (F33).
+      // The reader's menu (pdf) adds "تحميل PDF" on every article, before Report (F33, any member since 2026-11-06).
       expect(articleMenuItems(own: true, moderator: false, hidden: false, pdf: true), [ArticleMenuItem.muteTopics, ArticleMenuItem.downloadPdf]);
       expect(articleMenuItems(own: false, moderator: false, hidden: false, pdf: true), [
         ArticleMenuItem.showLess,
         ArticleMenuItem.follow,
         ArticleMenuItem.muteAuthor,
         ArticleMenuItem.muteTopics,
+        ArticleMenuItem.downloadPdf,
+        ArticleMenuItem.report,
+      ]);
+      expect(articleMenuItems(own: false, moderator: false, hidden: false, hasAuthor: false, pdf: true), [
+        ArticleMenuItem.showLess,
+        ArticleMenuItem.muteTopics,
+        ArticleMenuItem.downloadPdf,
         ArticleMenuItem.report,
       ]);
     });

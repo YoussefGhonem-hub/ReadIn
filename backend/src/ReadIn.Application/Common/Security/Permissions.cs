@@ -8,7 +8,10 @@ public static class Permissions
         public const string Read = "articles.read";
         public const string Create = "articles.create";
 
-        /// <summary>Download your own article as a PDF (SPEC F33); ownership is checked by the query.</summary>
+        /// <summary>
+        /// Download an article you can open as a PDF (SPEC F33); the query checks the article: published and visible for
+        /// every member, archived or hidden ones for their author only.
+        /// </summary>
         public const string ExportPdf = "articles.export_pdf";
         public const string Feature = "articles.feature";
     }
@@ -86,7 +89,7 @@ public static class Permissions
     {
         [Articles.Read] = "Read published articles",
         [Articles.Create] = "Write and publish own articles",
-        [Articles.ExportPdf] = "Download own articles as PDF",
+        [Articles.ExportPdf] = "Download articles as PDF",
         [Articles.Feature] = "Feature articles",
         [Comments.Create] = "Comment and reply",
         [Reactions.Create] = "React to articles",

@@ -229,7 +229,13 @@ void main() {
         articleMenuItems(own: true, moderator: true, hidden: true, pdf: true),
         [ArticleMenuItem.muteTopics, ArticleMenuItem.downloadPdf, ArticleMenuItem.unhide],
       );
-      expect(articleMenuItems(own: false, moderator: true, hidden: false, pdf: true), [...readerItems, ArticleMenuItem.report, ArticleMenuItem.hide]);
+      // Every article has it for every member (F33, 2026-11-06), before Report; someone else's hidden article doesn't
+      // (the API answers 404 to everyone but its writer, moderators included).
+      expect(
+        articleMenuItems(own: false, moderator: true, hidden: false, pdf: true),
+        [...readerItems, ArticleMenuItem.downloadPdf, ArticleMenuItem.report, ArticleMenuItem.hide],
+      );
+      expect(articleMenuItems(own: false, moderator: true, hidden: true, pdf: true), [...readerItems, ArticleMenuItem.report, ArticleMenuItem.unhide]);
     });
 
     testWidgets('a reader can report, in the error color; nothing else', (tester) async {

@@ -21,8 +21,8 @@ export interface ArticlePdfFile {
 }
 
 /**
- * Article PDF (F33, permission `articles.export_pdf`, your own article only). The API builds the file in the request
- * and never stores it. Silent: the download action shows its own messages.
+ * Article PDF (F33, permission `articles.export_pdf`): any published article you can open, and your own archived one.
+ * The API builds the file in the request and never stores it. Silent: the download action shows its own messages.
  */
 @Injectable({ providedIn: 'root' })
 export class ArticlePdfApi {

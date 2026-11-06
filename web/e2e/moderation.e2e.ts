@@ -44,10 +44,11 @@ for (const variant of VARIANTS) {
     const me = await signInAsReader(page, request, variant);
     await openArticle(page, '/en/a/sleep-and-memory');
 
-    // The "⋯" menu on someone else's article: the F28 items (and F30 Hide highlights), then Report last, in the error color.
+    // The "⋯" menu on someone else's article: the F28 items (and F30 Hide highlights, F33 Download PDF), then Report last,
+    // in the error color.
     await page.locator('rd-article-action-bar [data-article-menu]').click();
     const menu = page.locator('[data-article-menu-panel]');
-    await expect(menu.locator('[data-menu-action]')).toHaveCount(6);
+    await expect(menu.locator('[data-menu-action]')).toHaveCount(7);
     const report = menu.locator('[data-menu-action]').last();
     await expect(report).toHaveAttribute('data-menu-action', 'report');
     await expect(report).toHaveText(ar ? 'الإبلاغ عن المقال' : 'Report article');
@@ -198,8 +199,8 @@ for (const variant of VARIANTS) {
     await expect(banner).toHaveCount(0);
 
     await page.locator('rd-article-action-bar [data-article-menu]').click();
-    // The F28 items (and F30 Hide highlights) and Report, then Hide after a divider.
-    await expect(page.locator('[data-article-menu-panel] [data-menu-action]')).toHaveCount(7);
+    // The F28 items (and F30 Hide highlights, F33 Download PDF) and Report, then Hide after a divider.
+    await expect(page.locator('[data-article-menu-panel] [data-menu-action]')).toHaveCount(8);
     await expect(page.locator('[data-article-menu-panel] [data-menu-action]').last()).toHaveAttribute('data-menu-action', 'hide');
     await page.locator('[data-article-menu-panel] [data-menu-action="hide"]').click();
     await confirmAction(page, 'Copied from another site without credit.', ar ? 'تم الإخفاء' : 'Hidden');

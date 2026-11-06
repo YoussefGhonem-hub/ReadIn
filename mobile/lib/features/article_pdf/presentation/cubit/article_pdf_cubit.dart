@@ -40,7 +40,7 @@ class ArticlePdfState extends Equatable {
   List<Object?> get props => [building, failure, failed, failureSeq];
 }
 
-/// "Download PDF" (SPEC F33) for the writer's own articles, in the reader's "⋯" menu and in My articles: the API builds
+/// "Download PDF" (SPEC F33) in the reader's "⋯" menu (any article, for every member) and in My articles: the API builds
 /// the file (up to about 90 s), the app saves it to a temporary file and opens the system share sheet to save or send
 /// it. A second tap while it builds does nothing.
 @injectable

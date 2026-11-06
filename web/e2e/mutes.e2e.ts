@@ -18,8 +18,8 @@ const CLEAN = 'a-clean-architecture-whiteboard';
 /** Mona's articles: the whole For you feed of the mock. */
 const MONA = [CLEAN, 'a-dependency-injection-ar', 'a-aspnet-core-cheatsheet', 'a-one-photo'];
 const OTHERS = ['showLess', 'follow', 'muteAuthor', 'muteTopics', 'report'];
-/** The reader's menu adds Hide highlights (F30) after Show less; a post card's doesn't. */
-const READER = ['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'report'];
+/** The reader's menu adds Hide highlights (F30) after Show less and Download PDF (F33) before Report; a post card's doesn't. */
+const READER = ['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'downloadPdf', 'report'];
 const ARCHITECTURE = { id: 't-architecture', slug: 'architecture', name: 'Architecture', nameAr: 'المعمارية', nameEn: 'Architecture', isSensitive: false };
 
 const cardOf = (page: Page, id: string): Locator => page.locator(`rd-post-card[data-post-card="${id}"]`).first();

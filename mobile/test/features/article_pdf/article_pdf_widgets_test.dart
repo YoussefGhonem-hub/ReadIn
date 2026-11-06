@@ -26,6 +26,7 @@ import 'package:readin/shared/rdoc/rdoc_document.dart';
 
 import '../../helpers/editor_fixtures.dart';
 import '../../helpers/fixtures.dart';
+import '../../helpers/moderation_fakes.dart';
 import '../../helpers/social_fakes.dart';
 import '../../helpers/test_app.dart';
 
@@ -54,7 +55,8 @@ class _RecordingShare extends ShareService {
 const _en = Variant(AppLocales.en, Brightness.light);
 
 /// "Download PDF" in My articles → Published (SPEC F05, F33): one version goes straight on, two ask which, the item
-/// shows "Preparing the PDF…" while the API builds it, and failures explain themselves with "Try again".
+/// shows "Preparing the PDF…" while the API builds it, and failures explain themselves with "Try again". In the
+/// reader's "⋯" menu, every member has it on every article they can open; guests get the sign-in prompt.
 void main() {
   late _FakeRepository repository;
   late _RecordingShare share;
@@ -233,16 +235,21 @@ void main() {
     final article = ArticleDetails(card: sampleCard(1, language: 'en'), availableLanguages: const ['en'], content: RDocDocument.empty);
 
     /// The reader's menu with the page's cubits ([ArticlePdfCubit] and its feedback, as ArticlePage provides them), or
-    /// a post card's menu without them ([reader] false).
-    Future<void> pumpMenu(WidgetTester tester, {required Me me, bool reader = true}) async {
+    /// a post card's menu without them ([reader] false). A null [me] is a guest; [shown] replaces the article on screen.
+    Future<void> pumpMenu(WidgetTester tester, {required Me? me, bool reader = true, ArticleDetails? shown}) async {
       usePhoneSurface(tester);
+      final onScreen = shown ?? article;
       final session = MockSessionCubit();
-      whenListen(session, const Stream<SessionState>.empty(), initialState: SessionState(status: SessionStatus.authenticated, me: me));
+      whenListen(
+        session,
+        const Stream<SessionState>.empty(),
+        initialState: me == null ? const SessionState(status: SessionStatus.guest) : SessionState(status: SessionStatus.authenticated, me: me),
+      );
       final articleCubit = _MockArticleCubit();
-      whenListen(articleCubit, const Stream<ArticleState>.empty(), initialState: ArticleState(status: ArticleStatus.ready, article: article));
+      whenListen(articleCubit, const Stream<ArticleState>.empty(), initialState: ArticleState(status: ArticleStatus.ready, article: onScreen));
       final Widget menu = reader
-          ? ArticleMenuButton(article: article)
-          : ArticleMenuView(card: article.card, hidden: false, onModerated: (_) {});
+          ? ArticleMenuButton(article: onScreen)
+          : ArticleMenuView(card: onScreen.card, hidden: false, onModerated: (_) {});
       await tester.pumpWidget(testApp(
         MultiBlocProvider(
           providers: [
@@ -313,11 +320,61 @@ void main() {
       expect(find.widgetWithText(SnackBarAction, 'Try again'), findsOneWidget);
     });
 
-    testWidgets("someone else's article has no \"Download PDF\"", (tester) async {
+    // Any member downloads any article they can open (F33, user decision 2026-11-06).
+    testWidgets("someone else's article: \"Download PDF\" right before Report; it shares the version on screen", (tester) async {
       await pumpMenu(tester, me: sampleMe);
       await openMenu(tester);
-      expect(find.text('Report article'), findsOneWidget);
+      expect(find.text('Download PDF'), findsOneWidget);
+      expect(tester.getTopLeft(find.text('Mute topics')).dy, lessThan(tester.getTopLeft(find.text('Download PDF')).dy));
+      expect(tester.getTopLeft(find.text('Download PDF')).dy, lessThan(tester.getTopLeft(find.text('Report article')).dy));
+
+      await tester.tap(find.text('Download PDF'));
+      await tester.pumpAndSettle();
+      expect(repository.calls, [('art-1', 'en')]);
+      expect(share.files.single, (path: '/tmp/article-pdf/di-in-dotnet-en.pdf', fileName: 'di-in-dotnet-en.pdf'));
+    });
+
+    testWidgets("someone else's Arabic version on screen asks for the Arabic file", (tester) async {
+      await pumpMenu(
+        tester,
+        me: sampleMe,
+        shown: ArticleDetails(card: sampleCard(1, language: 'ar-EG'), availableLanguages: const ['ar-EG', 'en'], content: RDocDocument.empty),
+      );
+      await openMenu(tester);
+      await tester.tap(find.text('Download PDF'));
+      await tester.pumpAndSettle();
+      expect(find.text('Which version?'), findsNothing);
+      expect(repository.calls, [('art-1', 'ar-EG')]);
+    });
+
+    testWidgets('a guest sees "Download PDF" and gets the sign-in prompt, with no request', (tester) async {
+      await pumpMenu(tester, me: null);
+      await openMenu(tester);
+      expect(find.text('Download PDF'), findsOneWidget);
+
+      await tester.tap(find.text('Download PDF'));
+      await tester.pumpAndSettle();
+      final l10n = tester.element(find.byType(Scaffold).first).l10n;
+      expect(find.text(l10n.signInPromptTitle), findsOneWidget);
+      expect(repository.calls, isEmpty);
+      expect(share.files, isEmpty);
+    });
+
+    testWidgets("a moderator reading someone else's hidden article gets no \"Download PDF\" (the API answers 404)", (tester) async {
+      await pumpMenu(tester, me: moderatorMe(), shown: article.withModeration(ArticleModeration(hiddenAt: DateTime.utc(2026, 11, 3))));
+      await openMenu(tester);
+      expect(find.text('Unhide article'), findsOneWidget);
       expect(find.text('Download PDF'), findsNothing);
+    });
+
+    testWidgets('your own hidden article keeps "Download PDF": the moderators\' message says why there is no file', (tester) async {
+      repository.answer = const Err(Failure(FailureCodes.articlePdfHidden, statusCode: 409));
+      await pumpMenu(tester, me: writer, shown: article.withModeration(ArticleModeration(hiddenAt: DateTime.utc(2026, 11, 3))));
+      await openMenu(tester);
+      await tester.tap(find.text('Download PDF'));
+      await tester.pumpAndSettle();
+      expect(find.text("Moderators hid this article, so it can't be downloaded as a PDF."), findsOneWidget);
+      expect(find.byType(SnackBarAction), findsNothing);
     });
 
     testWidgets('a post card\'s menu has none, even on your own article', (tester) async {

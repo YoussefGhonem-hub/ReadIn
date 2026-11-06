@@ -11,8 +11,8 @@ import { ArticleActionBar } from './article-action-bar';
 import { ArticleMenu, MenuArticle } from './article-menu';
 
 const MODERATOR = ['articles.read', 'reports.create', 'moderation.manage', 'users.suspend'];
-// The reader's menu: Hide highlights (F30) right after Show less.
-const OTHERS = ['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'report'];
+// The reader's menu: Hide highlights (F30) right after Show less; Download PDF (F33, every member) right before Report.
+const OTHERS = ['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'downloadPdf', 'report'];
 const DOTNET: FieldRefDto = { id: 't1', slug: 'dotnet', name: '.NET', nameAr: 'دوت نت', nameEn: '.NET' };
 const FEED = { applies: true } as const;
 
@@ -65,12 +65,12 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
   });
 
-  it("someone else's article: Show less, Follow, Mute author, Mute topics, then Report in the error color", async () => {
+  it("someone else's article: Show less, Follow, Mute author, Mute topics, Download PDF, then Report in the error color", async () => {
     const t = await render();
     http = t.http;
     expect(t.$('[data-article-menu]')!.getAttribute('aria-label')).toBe('خيارات المقال');
     expect(await t.openMenu()).toEqual(OTHERS);
-    expect(OTHERS.map(t.label)).toEqual(['عرض أقل من هذا النوع', 'إخفاء التمييزات', 'متابعة الكاتب', 'كتم الكاتب', 'كتم المواضيع', 'الإبلاغ عن المقال']);
+    expect(OTHERS.map(t.label)).toEqual(['عرض أقل من هذا النوع', 'إخفاء التمييزات', 'متابعة الكاتب', 'كتم الكاتب', 'كتم المواضيع', 'تنزيل PDF', 'الإبلاغ عن المقال']);
     const report = document.querySelector('[data-menu-action="report"]')!;
     expect(report.classList).toContain('text-error');
     expect(document.querySelector('[data-menu-action="showLess"]')!.classList).not.toContain('text-error');
@@ -171,10 +171,11 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     }
   });
 
-  it("someone else's article has no Download PDF", async () => {
+  // Any member downloads any article they can open (F33, user decision 2026-11-06); more in article-menu-pdf.spec.ts.
+  it("someone else's article has Download PDF too", async () => {
     const t = await render(testCard());
     http = t.http;
-    expect(await t.openMenu()).not.toContain('downloadPdf');
+    expect(await t.openMenu()).toContain('downloadPdf');
   });
 
   it("a post card's menu has no Download PDF, even on your own article (the reader's menu has it)", async () => {
@@ -196,7 +197,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
   it("a deleted author's article: no Follow and no Mute author", async () => {
     const t = await render(testCard({ author: null }));
     http = t.http;
-    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'muteTopics', 'report']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'muteTopics', 'downloadPdf', 'report']);
   });
 
   it('guests see every item and get the sign-in prompt for each but Hide highlights, without a request', async () => {
@@ -407,7 +408,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     const t = await render(testCard(), { permissions: MODERATOR });
     http = t.http;
     // Report ends the reader's items; the moderator's item comes last, after a divider (as on mobile).
-    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'report', 'hide']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'downloadPdf', 'report', 'hide']);
     expect(document.querySelector('[data-menu-action="hide"]')!.textContent!.trim()).toBe('إخفاء المقال');
     const dividers = document.querySelectorAll('[data-article-menu-panel] [data-menu-divider]');
     expect(dividers).toHaveLength(1);

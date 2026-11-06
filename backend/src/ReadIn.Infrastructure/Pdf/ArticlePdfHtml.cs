@@ -179,8 +179,16 @@ internal static partial class ArticlePdfHtml
                 _html.Append("</p>");
             }
 
-            _html.Append("<p class=\"byline\"><a href=\"").Append(Attr(ProfileUrl(document.Author.Username))).Append("\"><bdi>")
-                .Append(Text(document.Author.DisplayName)).Append("</bdi></a>");
+            // A deleted account has no profile to link to (SPEC §9.6).
+            if (document.Author.Username is { } username)
+            {
+                _html.Append("<p class=\"byline\"><a href=\"").Append(Attr(ProfileUrl(username))).Append("\"><bdi>")
+                    .Append(Text(document.Author.DisplayName)).Append("</bdi></a>");
+            }
+            else
+            {
+                _html.Append("<p class=\"byline\"><bdi>").Append(Text(document.Author.DisplayName)).Append("</bdi>");
+            }
             if (document.Author.IsVerified)
             {
                 _html.Append("<span class=\"verified\" role=\"img\" aria-label=\"").Append(Attr(_labels.Verified)).Append("\" title=\"")

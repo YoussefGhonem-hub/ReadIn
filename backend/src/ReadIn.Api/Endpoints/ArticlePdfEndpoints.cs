@@ -8,7 +8,7 @@ using ReadIn.Application.Features.Articles.Pdf;
 
 namespace ReadIn.Api.Endpoints;
 
-/// <summary><c>GET /articles/{id}/pdf</c> (SPEC F33, §24): your own article as a PDF, built in the request.</summary>
+/// <summary><c>GET /articles/{id}/pdf</c> (SPEC F33, §24): an article you can open as a PDF, built in the request.</summary>
 internal sealed class ArticlePdfEndpoints : IEndpointGroup
 {
     public void Map(RouteGroupBuilder api)
@@ -27,7 +27,7 @@ internal sealed class ArticlePdfEndpoints : IEndpointGroup
             .RequireAuthorization()
             .RequireRateLimiting(ArticlePdfRateLimitPolicy.Name)
             .WithTags("Articles")
-            .WithSummary("Your own published or archived article as a PDF (F33); ?lang=ar-EG|en picks the version (falls back to the source language)")
+            .WithSummary("A published article you can open, or your own archived one, as a PDF (F33); ?lang=ar-EG|en picks the version (falls back to the source language)")
             .Produces<Stream>(StatusCodes.Status200OK, "application/pdf")
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict)
