@@ -12,7 +12,10 @@ import { CommentErrors } from './comment-errors';
 import { isPlaceholder } from './comment-text';
 
 export const COMMENTS_PAGE_SIZE = 20;
-export const REPLIES_PAGE_SIZE = 50;
+/** "Show N more replies" shows up to this many more replies per tap, and fetches pages of this size. */
+export const REPLIES_PAGE_SIZE = 5;
+/** A thread shows this many replies (the oldest) until "show N more replies", and again after "Hide replies". */
+export const REPLIES_COLLAPSED = 1;
 /** How long a comment that just arrived live stays highlighted. */
 export const HIGHLIGHT_MS = 2500;
 
@@ -24,15 +27,24 @@ export interface CommentView extends Omit<CommentDto, 'replies'> {
   pending?: boolean;
 }
 
-/** A top-level comment with its replies (one indented level, SPEC F11). */
+/**
+ * A top-level comment with its replies (one indented level, SPEC F11), in pages like Facebook and LinkedIn: the first
+ * reply shows, "show N more replies" shows up to 5 more per tap (the loaded ones first, then the next page), and "Hide
+ * replies" folds the thread back to its first reply without dropping what was loaded. New replies (yours or live ones)
+ * always show at once at the end, even while older ones are hidden.
+ */
 export interface CommentThread {
   comment: CommentView;
   /** Loaded replies, oldest first, without gaps: the 2 the list included, then the pages of "show more". */
   replies: CommentView[];
-  /** Replies added here (yours or live ones) while older replies are still unloaded; shown after "show more". */
+  /** How many of `replies` show, from the oldest; the rest wait in memory for "show more". */
+  shown: number;
+  /** Replies added here (yours or live ones) that aren't among the shown `replies`: shown at the end of the thread. */
   tail: CommentView[];
+  /** New replies that "Hide replies" folded while older ones were still unloaded: hidden until the pages reach them. */
+  folded: CommentView[];
   repliesCursor: string | null;
-  /** Every reply is in `replies`. */
+  /** Every reply is loaded (in `replies`, or still shown in `tail`). */
   repliesComplete: boolean;
   repliesLoading: boolean;
   repliesFailed: boolean;
@@ -49,9 +61,67 @@ export interface CommentDialog {
   comment: CommentView;
 }
 
-/** Replies of a thread that "show N more replies" would load. */
+/** The replies a thread shows, in order: the first `shown` loaded ones, then the new ones. */
+export function visibleReplies(thread: CommentThread): CommentView[] {
+  return thread.shown >= thread.replies.length ? [...thread.replies, ...thread.tail] : [...thread.replies.slice(0, thread.shown), ...thread.tail];
+}
+
+/** Replies of a thread that "show N more replies" would still show: N never counts a reply that shows. */
 export function hiddenReplies(thread: CommentThread): number {
-  return thread.repliesComplete ? 0 : Math.max(0, thread.comment.replyCount - thread.replies.length - thread.tail.length);
+  if (thread.repliesComplete) return Math.max(0, thread.replies.length - thread.shown);
+  return Math.max(0, thread.comment.replyCount - thread.shown - thread.tail.length);
+}
+
+/** Every reply the thread holds, shown or not. */
+function allReplies(thread: CommentThread): CommentView[] {
+  return [...thread.replies, ...thread.tail, ...thread.folded];
+}
+
+/** `update` on every reply of the thread, wherever it is kept. */
+function mapReplies(thread: CommentThread, update: (reply: CommentView) => CommentView): CommentThread {
+  return { ...thread, replies: thread.replies.map(update), tail: thread.tail.map(update), folded: thread.folded.map(update) };
+}
+
+/**
+ * The thread without one reply. A shown one leaves room, so a hidden one doesn't appear in its place, but a folded
+ * thread still shows its (new) first reply.
+ */
+function withoutReply(thread: CommentThread, matches: (reply: CommentView) => boolean): CommentThread {
+  const index = thread.replies.findIndex(matches);
+  const replies = thread.replies.filter((r) => !matches(r));
+  const shown = index >= 0 && index < thread.shown ? thread.shown - 1 : thread.shown;
+  return settle({
+    ...thread,
+    replies,
+    shown: Math.max(shown, Math.min(REPLIES_COLLAPSED, replies.length)),
+    tail: thread.tail.filter((r) => !matches(r)),
+    folded: thread.folded.filter((r) => !matches(r)),
+  });
+}
+
+/**
+ * Keeps a thread's lists in order. Once every reply is loaded, folded replies take their place at the end of `replies`
+ * (hidden), and when every loaded reply shows, the new ones at the end join `replies` too.
+ */
+function settle(thread: CommentThread): CommentThread {
+  let { replies, shown, tail, folded } = thread;
+  if (thread.repliesComplete) {
+    if (folded.length) {
+      const ids = new Set(replies.map((r) => r.id));
+      replies = [...replies, ...folded.filter((r) => !ids.has(r.id))];
+      folded = [];
+    }
+    if (shown >= replies.length && tail.length) {
+      const ids = new Set(replies.map((r) => r.id));
+      replies = [...replies, ...tail.filter((r) => !ids.has(r.id))];
+      shown = replies.length;
+      tail = [];
+    }
+  }
+  shown = Math.max(0, Math.min(shown, replies.length));
+  return replies === thread.replies && shown === thread.shown && tail === thread.tail && folded === thread.folded
+    ? thread
+    : { ...thread, replies, shown, tail, folded };
 }
 
 /** A server copy as the list shows it (replies live in the thread). */
@@ -66,7 +136,9 @@ function toThread(dto: CommentDto, key?: string): CommentThread {
   return {
     comment: toView(dto, key),
     replies,
+    shown: Math.min(REPLIES_COLLAPSED, replies.length),
     tail: [],
+    folded: [],
     repliesCursor: null,
     repliesComplete: dto.replyCount <= replies.length,
     repliesLoading: false,
@@ -75,7 +147,17 @@ function toThread(dto: CommentDto, key?: string): CommentThread {
 }
 
 function pendingThread(comment: CommentView): CommentThread {
-  return { comment, replies: [], tail: [], repliesCursor: null, repliesComplete: true, repliesLoading: false, repliesFailed: false };
+  return {
+    comment,
+    replies: [],
+    shown: 0,
+    tail: [],
+    folded: [],
+    repliesCursor: null,
+    repliesComplete: true,
+    repliesLoading: false,
+    repliesFailed: false,
+  };
 }
 
 /** New top-level comments go to the top, under the pinned one. */
@@ -108,7 +190,8 @@ function placeholderOf(comment: CommentView): CommentView {
 /**
  * Comments of one article (F11) and their live updates (F27), provided by the comments section.
  *
- * - Pages: `top` or `new`, cursor pages merged without duplicates; replies of a thread load on demand.
+ * - Pages: `top` or `new`, cursor pages merged without duplicates. A thread shows its first reply; "show N more
+ *   replies" shows up to 5 more per tap (loaded ones first, then pages of 5) and "Hide replies" folds it back.
  * - Your actions: a new comment or reply shows at once (pending) and the server's copy replaces it; likes are
  *   optimistic (one request at a time per comment, the latest wish wins) and roll back with a translated toast.
  * - Live events carry no content: new comments are fetched (`GET /comments/{id}`) and either inserted at the top
@@ -243,29 +326,80 @@ export class CommentsStore {
     }
   }
 
-  /** "Show N more replies": the next replies page of a thread, oldest first. */
+  /**
+   * "Show N more replies": up to {@link REPLIES_PAGE_SIZE} more replies of a thread, oldest first. The ones already
+   * loaded show at once; when they aren't enough, the next page is fetched (`limit=5`; the first call has no cursor, so
+   * the 2 the list gave are deduped). A failure keeps what showed and offers to try again.
+   */
   async loadReplies(threadId: string): Promise<void> {
     const thread = this.thread(threadId);
-    if (!thread || thread.repliesLoading || thread.repliesComplete) return;
+    if (!thread || thread.repliesLoading) return;
+    const target = thread.shown + REPLIES_PAGE_SIZE;
+    // First the replies already in memory.
+    this.patchThread(threadId, (t) => settle({ ...t, shown: Math.min(target, t.replies.length), repliesFailed: false }));
+    const revealed = this.thread(threadId)!;
+    if (revealed.shown >= target || revealed.repliesComplete) return;
+
     const generation = this.generation;
-    this.patchThread(threadId, (t) => ({ ...t, repliesLoading: true, repliesFailed: false }));
+    this.patchThread(threadId, (t) => ({ ...t, repliesLoading: true }));
     try {
-      const page = await firstValueFrom(this.api.replies(threadId, { cursor: thread.repliesCursor, limit: REPLIES_PAGE_SIZE }));
+      const page = await firstValueFrom(this.api.replies(threadId, { cursor: revealed.repliesCursor, limit: REPLIES_PAGE_SIZE }));
       if (generation !== this.generation) return;
       this.patchThread(threadId, (t) => {
         const seen = new Set(t.replies.map((r) => r.id));
-        let replies = [...t.replies, ...page.items.filter((r) => !seen.has(r.id) && !!seen.add(r.id)).map((r) => toView(r))];
-        let tail = t.tail.filter((r) => !seen.has(r.id));
-        const complete = page.nextCursor === null;
-        if (complete) {
-          replies = [...replies, ...tail];
-          tail = [];
-        }
-        return { ...t, replies, tail, repliesCursor: page.nextCursor, repliesComplete: complete, repliesLoading: false };
+        // A new reply already shown at the end stays there; a folded one takes its place (and keeps its row).
+        const shownAtEnd = new Set(t.tail.map((r) => r.id));
+        const folded = new Map(t.folded.map((r) => [r.id, r]));
+        const fresh = page.items
+          .filter((r) => !seen.has(r.id) && !shownAtEnd.has(r.id) && !!seen.add(r.id))
+          .map((r) => toView(r, folded.get(r.id)?.key));
+        const replies = [...t.replies, ...fresh];
+        // "Hide replies" pressed meanwhile: the thread stays folded.
+        const shown = t.shown < revealed.shown ? t.shown : Math.max(t.shown, Math.min(target, replies.length));
+        return settle({
+          ...t,
+          replies,
+          shown,
+          folded: t.folded.filter((r) => !seen.has(r.id)),
+          repliesCursor: page.nextCursor,
+          repliesComplete: page.nextCursor === null,
+          repliesLoading: false,
+        });
       });
     } catch {
       if (generation === this.generation) this.patchThread(threadId, (t) => ({ ...t, repliesLoading: false, repliesFailed: true }));
     }
+  }
+
+  /**
+   * "Hide replies": the thread folds back to its first reply. What was loaded stays in memory, so "show more" shows it
+   * again before fetching; new replies shown at the end fold too.
+   */
+  hideReplies(threadId: string): void {
+    this.patchThread(threadId, (t) => {
+      const first = Math.min(REPLIES_COLLAPSED, t.replies.length);
+      if (t.repliesComplete) {
+        const ids = new Set(t.replies.map((r) => r.id));
+        return settle({ ...t, replies: [...t.replies, ...t.tail.filter((r) => !ids.has(r.id))], tail: [], shown: first });
+      }
+      return settle({ ...t, tail: [], folded: [...t.folded, ...t.tail], shown: first });
+    });
+  }
+
+  /**
+   * Shows a reply that "show more" hasn't shown yet, with the ones before it (anything aimed at a hidden reply reveals
+   * it: a live highlight, a link to it). Does nothing for a comment that shows or isn't loaded.
+   */
+  reveal(commentId: string): void {
+    const thread = this._threads().find((t) => allReplies(t).some((r) => r.id === commentId));
+    if (!thread) return;
+    this.patchThread(thread.comment.id, (t) => {
+      const index = t.replies.findIndex((r) => r.id === commentId);
+      if (index >= t.shown) return settle({ ...t, shown: index + 1 });
+      const folded = t.folded.find((r) => r.id === commentId);
+      if (folded) return settle({ ...t, folded: t.folded.filter((r) => r !== folded), tail: [...t.tail, folded] });
+      return t;
+    });
   }
 
   // ── Your comments ──
@@ -316,22 +450,19 @@ export class CommentsStore {
       const created = await firstValueFrom(this.api.reply(targetId, text));
       this.createdSeen.add(created.id);
       this.patchThread(threadId, (t) => {
-        const duplicate = [...t.replies, ...t.tail].some((r) => r.id === created.id);
-        const swap = (list: CommentView[]) =>
-          list.filter((r) => r.id !== created.id).map((r) => (r.key === pending.key ? toView(created, pending.key) : r));
+        const duplicate = allReplies(t).some((r) => r.id === created.id); // a live copy that came first
+        const swapped = mapReplies(duplicate ? withoutReply(t, (r) => r.id === created.id) : t, (r) =>
+          r.key === pending.key ? toView(created, pending.key) : r,
+        );
         return {
-          ...t,
-          replies: swap(t.replies),
-          tail: swap(t.tail),
+          ...swapped,
           comment: duplicate ? { ...t.comment, replyCount: Math.max(0, t.comment.replyCount - 1) } : t.comment,
         };
       });
       this.adjustTotal(before, 1);
     } catch (error) {
       this.patchThread(threadId, (t) => ({
-        ...t,
-        replies: t.replies.filter((r) => r.key !== pending.key),
-        tail: t.tail.filter((r) => r.key !== pending.key),
+        ...withoutReply(t, (r) => r.key === pending.key),
         comment: { ...t.comment, replyCount: Math.max(0, t.comment.replyCount - 1) },
       }));
       throw error;
@@ -557,17 +688,11 @@ export class CommentsStore {
       return;
     }
     this.patchThread(dto.parentId, (t) => {
-      if (![...t.replies, ...t.tail].some((r) => r.id === dto.id)) return t;
+      if (!allReplies(t).some((r) => r.id === dto.id)) return t;
       if (isPlaceholder(dto)) {
-        return {
-          ...t,
-          replies: t.replies.filter((r) => r.id !== dto.id),
-          tail: t.tail.filter((r) => r.id !== dto.id),
-          comment: { ...t.comment, replyCount: Math.max(0, t.comment.replyCount - 1) },
-        };
+        return { ...withoutReply(t, (r) => r.id === dto.id), comment: { ...t.comment, replyCount: Math.max(0, t.comment.replyCount - 1) } };
       }
-      const swap = (list: CommentView[]) => list.map((r) => (r.id === dto.id ? toView(dto, r.key) : r));
-      return { ...t, replies: swap(t.replies), tail: swap(t.tail) };
+      return mapReplies(t, (r) => (r.id === dto.id ? toView(dto, r.key) : r));
     });
   }
 
@@ -586,13 +711,9 @@ export class CommentsStore {
     this.replace({ ...placeholderOf(comment), parentId: comment.parentId });
   }
 
+  /** A new reply (yours or a live one) shows at once at the end of its thread, even while older ones are hidden. */
   private addReply(threadId: string, reply: CommentView): void {
-    this.patchThread(threadId, (t) => ({
-      ...t,
-      replies: t.repliesComplete ? [...t.replies, reply] : t.replies,
-      tail: t.repliesComplete ? t.tail : [...t.tail, reply],
-      comment: { ...t.comment, replyCount: t.comment.replyCount + 1 },
-    }));
+    this.patchThread(threadId, (t) => settle({ ...t, tail: [...t.tail, reply], comment: { ...t.comment, replyCount: t.comment.replyCount + 1 } }));
   }
 
   private pendingComment(article: ArticleCardDto, parentId: string | null, body: string, me: AuthorDto): CommentView {
@@ -652,6 +773,7 @@ export class CommentsStore {
   }
 
   private highlight(commentId: string): void {
+    this.reveal(commentId);
     this._highlighted.update((set) => new Set(set).add(commentId));
     const timer = setTimeout(() => {
       this.timers.delete(timer);
@@ -686,7 +808,7 @@ export class CommentsStore {
   private find(commentId: string): CommentView | null {
     for (const t of this._threads()) {
       if (t.comment.id === commentId) return t.comment;
-      const reply = t.replies.find((r) => r.id === commentId) ?? t.tail.find((r) => r.id === commentId);
+      const reply = allReplies(t).find((r) => r.id === commentId);
       if (reply) return reply;
     }
     const incoming = this._incoming().find((c) => c.id === commentId);
@@ -694,13 +816,10 @@ export class CommentsStore {
   }
 
   private patchComment(commentId: string, update: (comment: CommentView) => CommentView): void {
-    const apply = (list: CommentView[]) => (list.some((r) => r.id === commentId) ? list.map((r) => (r.id === commentId ? update(r) : r)) : list);
     this._threads.update((list) =>
       list.map((t) => {
         if (t.comment.id === commentId) return { ...t, comment: update(t.comment) };
-        const replies = apply(t.replies);
-        const tail = apply(t.tail);
-        return replies === t.replies && tail === t.tail ? t : { ...t, replies, tail };
+        return allReplies(t).some((r) => r.id === commentId) ? mapReplies(t, (r) => (r.id === commentId ? update(r) : r)) : t;
       }),
     );
   }
@@ -713,8 +832,7 @@ export class CommentsStore {
     const ids = new Set<string>();
     for (const t of this._threads()) {
       ids.add(t.comment.id);
-      for (const r of t.replies) ids.add(r.id);
-      for (const r of t.tail) ids.add(r.id);
+      for (const r of allReplies(t)) ids.add(r.id);
     }
     for (const c of this._incoming()) ids.add(c.id);
     return ids;

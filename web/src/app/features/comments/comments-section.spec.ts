@@ -326,6 +326,120 @@ describe('CommentsSection (F11)', () => {
     expect(TestBed.inject(ToastService).toasts().map((toast) => toast.message)).toEqual(['شكرًا، سنراجع البلاغ']);
   });
 
+  describe('replies in pages (like Facebook and LinkedIn)', () => {
+    const replies = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => dto(`r${from + i}`, { parentId: 'c1' }));
+    const shownIds = (t: { $$: (selector: string) => HTMLElement[] }) => t.$$('[data-replies] [data-comment]').map((el) => el.getAttribute('data-comment'));
+
+    it('the first reply shows; "show N more replies" shows up to 5 more per tap; "Hide replies" folds back', async () => {
+      const t = await render({ total: 9, items: [dto('c1', { replyCount: 8, replies: replies(1, 2) })] });
+      http = t.http;
+      expect(shownIds(t)).toEqual(['r1']);
+      const more = t.$<HTMLButtonElement>('[data-more-replies]')!;
+      expect(more.textContent!.trim()).toBe('عرض 7 ردود إضافية');
+      expect(t.$('[data-hide-replies]')).toBeNull(); // one reply shows
+
+      more.focus();
+      more.click();
+      await t.stable();
+      expect(shownIds(t)).toEqual(['r1', 'r2']); // the loaded one at once
+      expect(more.getAttribute('aria-busy')).toBe('true');
+      const req = t.http.expectOne((r) => r.url === `${TEST_API}/comments/c1/replies`);
+      expect(req.request.params.get('limit')).toBe('5');
+      expect(req.request.params.get('cursor')).toBeNull();
+      req.flush({ items: replies(1, 5), nextCursor: 'p2' });
+      await t.stable();
+      expect(shownIds(t)).toEqual(['r1', 'r2', 'r3', 'r4', 'r5']);
+      expect(t.$('[data-more-replies]')!.textContent!.trim()).toBe('عرض 3 ردود إضافية');
+      const hide = t.$<HTMLButtonElement>('[data-hide-replies]')!;
+      expect(hide.textContent!.trim()).toBe('إخفاء الردود');
+
+      t.$('[data-more-replies]')!.click();
+      await t.stable();
+      t.http.expectOne((r) => r.url === `${TEST_API}/comments/c1/replies` && r.params.get('cursor') === 'p2').flush({ items: replies(6, 8), nextCursor: null });
+      await t.stable();
+      await t.stable();
+      expect(shownIds(t)).toHaveLength(8);
+      expect(t.$('[data-more-replies]')).toBeNull();
+      expect(document.activeElement).toBe(t.$('[data-hide-replies]')); // the pressed button is gone: focus moves on
+
+      t.$('[data-hide-replies]')!.click();
+      await t.stable();
+      await t.stable();
+      expect(shownIds(t)).toEqual(['r1']);
+      expect(t.$('[data-more-replies]')!.textContent!.trim()).toBe('عرض 7 ردود إضافية');
+      expect(t.$('[data-hide-replies]')).toBeNull();
+      expect(document.activeElement).toBe(t.$('[data-more-replies]'));
+
+      // From memory: no request.
+      t.$('[data-more-replies]')!.click();
+      await t.stable();
+      expect(shownIds(t)).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r6']);
+    });
+
+    it('a live reply shows at once at the end while older ones are hidden, highlighted on its bubble', async () => {
+      const t = await render({ total: 4, items: [dto('c1', { replyCount: 3, replies: replies(1, 2) })] });
+      http = t.http;
+      t.emit({ id: 'e1', type: 'reply.created', commentId: 'r9', parentId: 'c1', at: 1 });
+      t.http.expectOne(`${TEST_API}/comments/r9`).flush(dto('r9', { parentId: 'c1' }));
+      await t.stable();
+      expect(shownIds(t)).toEqual(['r1', 'r9']);
+      // The pager sits between the replies that show and the new one, and never counts a reply that shows.
+      const children = [...t.$('[data-replies]')!.children].map((el) => el.getAttribute('data-comment') ?? (el.hasAttribute('data-replies-pager') ? 'pager' : el.tagName));
+      expect(children).toEqual(['r1', 'pager', 'r9']);
+      expect(t.$('[data-more-replies]')!.textContent!.trim()).toBe('عرض ردّين إضافيين');
+      expect(t.$('[data-hide-replies]')).not.toBeNull();
+      const bubble = t.$('[data-comment="r9"] [data-comment-bubble]')!;
+      expect(bubble.classList).toContain('bg-highlight');
+      expect(bubble.classList).not.toContain('bg-surface-variant');
+      expect(t.$('[data-comment="r9"]')!.classList).not.toContain('bg-highlight');
+    });
+
+    it('your reply shows at once at the end of a folded thread; replying keeps the thread as it is', async () => {
+      const t = await render({ total: 6, items: [dto('c1', { replyCount: 5, replies: replies(1, 2) })] });
+      http = t.http;
+      t.$('[data-comment="r1"] [data-reply]')!.click();
+      await t.stable();
+      const field = t.$<HTMLTextAreaElement>('[data-reply-composer] textarea')!;
+      type(field, '@user_r1 agreed');
+      await t.stable();
+      t.$('[data-reply-composer] [data-comment-send]')!.click();
+      await t.stable();
+      t.http.expectOne(`${TEST_API}/comments/r1/replies`).flush(dto('m1', { parentId: 'c1', author: MINE, body: '@user_r1 agreed' }));
+      await t.stable();
+      expect(shownIds(t)).toEqual(['r1', 'm1']);
+      expect(t.$('[data-more-replies]')!.textContent!.trim()).toBe('عرض 4 ردود إضافية');
+    });
+
+    it('a thread with replies but none included offers them straight away', async () => {
+      const t = await render({ total: 3, items: [dto('c1', { replyCount: 2 })] });
+      http = t.http;
+      expect(shownIds(t)).toEqual([]);
+      expect(t.$('[data-more-replies]')!.textContent!.trim()).toBe('عرض ردّين إضافيين');
+      t.$('[data-more-replies]')!.click();
+      await t.stable();
+      t.http.expectOne((r) => r.url === `${TEST_API}/comments/c1/replies`).flush({ items: replies(1, 2), nextCursor: null });
+      await t.stable();
+      expect(shownIds(t)).toEqual(['r1', 'r2']);
+    });
+
+    it('replies that fail to load say so and try again', async () => {
+      const t = await render({ total: 7, items: [dto('c1', { replyCount: 6, replies: replies(1, 2) })] });
+      http = t.http;
+      t.$('[data-more-replies]')!.click();
+      await t.stable();
+      t.http.expectOne((r) => r.url === `${TEST_API}/comments/c1/replies`).flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
+      await t.stable();
+      const retry = t.$('[data-more-replies]')!;
+      expect(retry.textContent!.trim()).toBe('تعذّر تحميل الردود. حاول مرة أخرى');
+      retry.click();
+      await t.stable();
+      t.http.expectOne((r) => r.url === `${TEST_API}/comments/c1/replies`).flush({ items: replies(1, 5), nextCursor: 'p2' });
+      await t.stable();
+      expect(shownIds(t)).toHaveLength(5);
+      expect(t.$('[data-more-replies]')!.textContent!.trim()).toBe('عرض رد إضافي');
+    });
+  });
+
   describe('on a post card (F34)', () => {
     async function renderOnCard(variant: 'card' | 'sheet', page: Partial<CommentPageDto>) {
       const realtime = { watchCommentEvents: () => () => undefined };

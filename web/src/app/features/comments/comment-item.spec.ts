@@ -89,17 +89,103 @@ describe('A comment row (F11)', () => {
     expect(t.$('[data-comment="c1"] [data-comment-headline]')).toBeNull();
   });
 
-  it('the actions in one tidy row: Like and Reply; "متابعة" and "⋯" on the other side of the name', async () => {
+  it('the actions in one tidy row under the bubble: Like and Reply; "· متابعة" after the name, the time and "⋯" at the end', async () => {
     const t = await render({ total: 1, items: [dto('c1')] });
     http = t.http;
     const row = t.$('[data-comment="c1"]')!;
     const actions = row.querySelector('[data-comment-actions]')!;
     expect([...actions.querySelectorAll('button')].map((b) => b.hasAttribute('data-like') || b.hasAttribute('data-reply'))).toEqual([true, true]);
-    const follow = row.querySelector('[data-comment-follow] [data-follow]')!;
+    expect(row.querySelector('[data-comment-bubble] [data-comment-actions]')).toBeNull(); // under the bubble, not in it
+    // "· متابعة" as text right after the name and its badges, in the header's start group.
+    const follow = row.querySelector<HTMLElement>('[data-comment-follow] [data-follow]')!;
     expect(follow.textContent).toContain('متابعة');
-    // Follow and the menu side by side, at the end of the name's line.
-    expect(row.querySelector('[data-comment-follow]')!.parentElement!.querySelector(':scope > [data-comment-menu]')).not.toBeNull();
+    expect(follow.querySelector('svg')).toBeNull();
+    expect(follow.classList).toContain('text-primary');
+    const start = row.querySelector('[data-comment-author]')!.parentElement!;
+    expect(start.querySelector(':scope > [data-comment-follow]')).not.toBeNull();
+    expect(row.querySelector('[data-comment-follow]')!.previousElementSibling!.textContent!.trim()).toBe('·');
+    // The time and "⋯" at the end of the header.
+    const meta = row.querySelector('[data-comment-meta]')!;
+    expect(meta.querySelector('time')).not.toBeNull();
+    expect(meta.querySelector(':scope > [data-comment-menu]')).not.toBeNull();
     expect(row.querySelector('[data-comment-menu]')!.getAttribute('aria-label')).toBe('خيارات التعليق');
+  });
+
+  it('a compact row: the avatar, then a bubble with the header, the title and the text; text actions under it', async () => {
+    const t = await render({
+      total: 2,
+      items: [dto('c1', { replyCount: 1, replies: [dto('r1', { parentId: 'c1', author: { ...NOUR, id: 'u-ali', username: 'ali', headline: null }, likeCount: 0, likedByMe: false })] })],
+    });
+    http = t.http;
+    const row = t.$('[data-comment="c1"]')!;
+    // 32 px for a comment, 24 px for a reply.
+    expect(row.querySelector<HTMLElement>('rd-avatar')!.style.width).toBe('32px');
+    expect(t.$<HTMLElement>('[data-comment="r1"] rd-avatar')!.style.width).toBe('24px');
+
+    const bubble = row.querySelector<HTMLElement>('[data-comment-bubble]')!;
+    expect(bubble.classList).toContain('bubble');
+    expect(bubble.classList).toContain('bg-surface-variant');
+    for (const part of ['[data-comment-author]', '[data-comment-headline]', '[data-comment-body]', '[data-comment-menu]']) {
+      expect(bubble.querySelector(part)).not.toBeNull();
+    }
+    expect(bubble.querySelector('[data-comment-body]')!.classList).toContain('text-sm');
+
+    // Like as text, with a heart and the count when there are likes; Reply as text.
+    const like = row.querySelector<HTMLButtonElement>('[data-like]')!;
+    expect(like.textContent).toContain('إعجاب');
+    expect(like.getAttribute('aria-pressed')).toBe('false');
+    expect(like.querySelector('[data-like-count]')!.textContent!.trim()).toBe('2');
+    expect(like.querySelector('[data-like-count] svg')).not.toBeNull();
+    expect(row.querySelector('[data-reply]')!.textContent!.trim()).toBe('رد');
+    // No likes, no heart.
+    expect(t.$('[data-comment="r1"] [data-like-count]')).toBeNull();
+
+    like.click();
+    await t.stable();
+    expect(like.getAttribute('aria-pressed')).toBe('true');
+    expect(like.classList).toContain('text-primary');
+    t.http.expectOne(`${TEST_API}/comments/c1/like`).flush({ likeCount: 3, liked: true });
+    await t.stable();
+    expect(like.querySelector('[data-like-count]')!.textContent!.trim()).toBe('3');
+  });
+
+  it('while it posts, "جارٍ النشر…" stands in for the actions', async () => {
+    const t = await render({ total: 0, items: [] });
+    http = t.http;
+    const field = t.$<HTMLTextAreaElement>('[data-new-comment] textarea')!;
+    field.value = 'Nice one';
+    field.dispatchEvent(new Event('input'));
+    await t.stable();
+    t.$('[data-new-comment] [data-comment-send]')!.click();
+    await t.stable();
+    const pending = t.$('[data-pending]')!;
+    expect(pending.querySelector('[data-comment-actions]')!.textContent!.trim()).toBe('جارٍ النشر…');
+    expect(pending.querySelector('[data-like]')).toBeNull();
+    expect(pending.querySelector('[data-reply]')).toBeNull();
+    expect(pending.querySelector('[data-comment-menu]')).toBeNull();
+    expect(pending.querySelector('time')).toBeNull();
+    t.http.expectOne((r) => r.url === `${TEST_API}/articles/a1/comments` && r.method === 'POST').flush(dto('m1', { author: MINE, body: 'Nice one', likeCount: 0 }));
+    await t.stable();
+    expect(t.$('[data-pending]')).toBeNull();
+    expect(t.$('[data-comment="m1"] [data-like]')).not.toBeNull();
+  });
+
+  it('deleted and hidden-for-you comments are one italic line in a compact bubble', async () => {
+    const t = await render({
+      total: 2,
+      items: [
+        dto('gone', { isDeleted: true, body: null, author: null, replyCount: 1, replies: [dto('r1', { parentId: 'gone' })] }),
+        dto('hid', { isHidden: true, body: null, author: null, replyCount: 1, replies: [dto('r2', { parentId: 'hid' })] }),
+      ],
+    });
+    http = t.http;
+    const gone = t.$('[data-comment="gone"] [data-comment-placeholder]')!;
+    const line = gone.querySelector('p')!;
+    expect(line.textContent!.trim()).toBe('تم حذف هذا التعليق');
+    expect(line.classList).toContain('italic');
+    expect(line.classList).toContain('bubble');
+    expect(gone.querySelector<HTMLElement>('[aria-hidden="true"]')!.style.width).toBe('32px');
+    expect(t.$('[data-comment="hid"] [data-comment-placeholder] p')!.textContent!.trim()).toBe('أخفى المشرفون هذا التعليق');
   });
 
   it('Follow shows only when you don’t follow them and it isn’t you', async () => {

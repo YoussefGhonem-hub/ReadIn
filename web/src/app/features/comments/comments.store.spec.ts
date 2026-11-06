@@ -5,7 +5,7 @@ import { CommentDto, CommentPageDto } from '../../core/api/models';
 import { CommentEvent, CommentEventType } from '../../core/realtime/realtime.service';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
 import { ToastService } from '../../shared/ui/toast/toast.service';
-import { CommentThread, CommentsStore, hiddenReplies } from './comments.store';
+import { CommentThread, CommentsStore, hiddenReplies, visibleReplies } from './comments.store';
 
 const LIST = `${TEST_API}/articles/a1/comments`;
 const comment = (id: string) => `${TEST_API}/comments/${id}`;
@@ -137,17 +137,219 @@ describe('CommentsStore (F11, F27)', () => {
 
     it('loads the rest of a thread\'s replies after the 2 included ones', async () => {
       await load({ items: [dto('c1', { replyCount: 4, replies: [dto('r1', { parentId: 'c1' }), dto('r2', { parentId: 'c1' })] })], total: 5 });
-      expect(hiddenReplies(store.threads()[0])).toBe(2);
+      // Only the first reply shows: the second one is loaded but hidden, so "show N more" counts it.
+      expect(hiddenReplies(store.threads()[0])).toBe(3);
 
       const done = store.loadReplies('c1');
       const req = http.expectOne((r) => r.url === `${comment('c1')}/replies`);
       expect(req.request.params.get('cursor')).toBeNull();
+      expect(req.request.params.get('limit')).toBe('5');
       req.flush({ items: [dto('r1', { parentId: 'c1' }), dto('r2', { parentId: 'c1' }), dto('r3', { parentId: 'c1' }), dto('r4', { parentId: 'c1' })], nextCursor: null });
       await done;
       const thread = store.threads()[0];
       expect(thread.replies.map((r) => r.id)).toEqual(['r1', 'r2', 'r3', 'r4']);
       expect(thread.repliesComplete).toBe(true);
       expect(hiddenReplies(thread)).toBe(0);
+    });
+  });
+
+  describe('replies in pages (like Facebook and LinkedIn)', () => {
+    const reply = (n: number, patch: Partial<CommentDto> = {}) => dto(`r${n}`, { parentId: 'c1', ...patch });
+    const replies = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => reply(from + i));
+    const shownIds = () => visibleReplies(store.threads()[0]).map((r) => r.id);
+    const repliesReq = (cursor: string | null) =>
+      http.expectOne((r) => r.url === `${comment('c1')}/replies` && r.params.get('cursor') === cursor && r.params.get('limit') === '5');
+
+    it('a thread shows its first reply; each tap shows up to 5 more, the loaded ones first, until all show', async () => {
+      await load({ items: [dto('c1', { replyCount: 12, replies: replies(1, 2) })], total: 13 });
+      expect(shownIds()).toEqual(['r1']);
+      expect(hiddenReplies(store.threads()[0])).toBe(11);
+
+      // r2 is in memory: it shows at once, while the first page (no cursor) is on its way.
+      let done = store.loadReplies('c1');
+      expect(shownIds()).toEqual(['r1', 'r2']);
+      expect(store.threads()[0].repliesLoading).toBe(true);
+      repliesReq(null).flush({ items: replies(1, 5), nextCursor: 'p2' }); // the 2 the list gave are deduped
+      await done;
+      expect(store.threads()[0].replies.map((r) => r.id)).toEqual(['r1', 'r2', 'r3', 'r4', 'r5']);
+      expect(shownIds()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5']);
+      expect(hiddenReplies(store.threads()[0])).toBe(7);
+
+      done = store.loadReplies('c1');
+      repliesReq('p2').flush({ items: replies(6, 10), nextCursor: 'p3' });
+      await done;
+      expect(shownIds()).toHaveLength(10);
+      expect(hiddenReplies(store.threads()[0])).toBe(2);
+
+      done = store.loadReplies('c1');
+      repliesReq('p3').flush({ items: replies(11, 12), nextCursor: null });
+      await done;
+      expect(shownIds()).toEqual(replies(1, 12).map((r) => r.id));
+      expect(store.threads()[0].repliesComplete).toBe(true);
+      expect(hiddenReplies(store.threads()[0])).toBe(0);
+    });
+
+    it('a second reply the list already gave shows without a request', async () => {
+      await load({ items: [dto('c1', { replyCount: 2, replies: replies(1, 2) })], total: 3 });
+      expect(hiddenReplies(store.threads()[0])).toBe(1);
+      await store.loadReplies('c1');
+      expect(shownIds()).toEqual(['r1', 'r2']);
+      expect(hiddenReplies(store.threads()[0])).toBe(0);
+    });
+
+    it('a thread with replies but none included offers them straight away', async () => {
+      await load({ items: [dto('c1', { replyCount: 3 })], total: 4 });
+      expect(shownIds()).toEqual([]);
+      expect(hiddenReplies(store.threads()[0])).toBe(3);
+      const done = store.loadReplies('c1');
+      repliesReq(null).flush({ items: replies(1, 3), nextCursor: null });
+      await done;
+      expect(shownIds()).toEqual(['r1', 'r2', 'r3']);
+    });
+
+    it('"Hide replies" folds back to the first reply and keeps what was loaded: "show more" shows it again without fetching', async () => {
+      await load({ items: [dto('c1', { replyCount: 7, replies: replies(1, 2) })], total: 8 });
+      let done = store.loadReplies('c1');
+      repliesReq(null).flush({ items: replies(1, 5), nextCursor: 'p2' });
+      await done;
+      done = store.loadReplies('c1');
+      repliesReq('p2').flush({ items: replies(6, 7), nextCursor: null });
+      await done;
+      expect(shownIds()).toHaveLength(7);
+
+      store.hideReplies('c1');
+      expect(shownIds()).toEqual(['r1']);
+      expect(hiddenReplies(store.threads()[0])).toBe(6);
+      expect(store.threads()[0].replies).toHaveLength(7); // still in memory
+
+      await store.loadReplies('c1');
+      expect(shownIds()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r6']);
+      await store.loadReplies('c1');
+      expect(shownIds()).toHaveLength(7);
+      // afterEach: no request went out
+    });
+
+    it('"Hide replies" while older ones are unloaded: what is in memory shows first, then the next page', async () => {
+      await load({ items: [dto('c1', { replyCount: 12, replies: replies(1, 2) })], total: 13 });
+      const done = store.loadReplies('c1');
+      repliesReq(null).flush({ items: replies(1, 5), nextCursor: 'p2' });
+      await done;
+      store.hideReplies('c1');
+      expect(shownIds()).toEqual(['r1']);
+
+      // 4 loaded ones show at once, then the next page fills the tap up to 5.
+      const more = store.loadReplies('c1');
+      expect(shownIds()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5']);
+      repliesReq('p2').flush({ items: replies(6, 10), nextCursor: 'p3' });
+      await more;
+      expect(shownIds()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r6']);
+      expect(hiddenReplies(store.threads()[0])).toBe(6);
+    });
+
+    it('"Hide replies" pressed while a page is on its way keeps the thread folded', async () => {
+      await load({ items: [dto('c1', { replyCount: 6, replies: replies(1, 2) })], total: 7 });
+      const done = store.loadReplies('c1');
+      store.hideReplies('c1');
+      repliesReq(null).flush({ items: replies(1, 5), nextCursor: 'p2' });
+      await done;
+      expect(shownIds()).toEqual(['r1']);
+      expect(store.threads()[0].replies).toHaveLength(5);
+    });
+
+    it('new replies show at once at the end while older ones are hidden, and the pages put them in order', async () => {
+      await load({ items: [dto('c1', { replyCount: 8, replies: replies(1, 2) })], total: 9 });
+      // Yours…
+      const posting = store.reply('c1', 'c1', 'mine');
+      expect(shownIds()).toEqual(['r1', 'pending-1']);
+      http.expectOne(`${comment('c1')}/replies`).flush(mine('r9', { parentId: 'c1', body: 'mine' }));
+      await posting;
+      // …and a live one.
+      const live = store.applyEvent(event('reply.created', 'r10', 'c1'));
+      http.expectOne(comment('r10')).flush(reply(10));
+      await live;
+      expect(shownIds()).toEqual(['r1', 'r9', 'r10']);
+      expect(hiddenReplies(store.threads()[0])).toBe(7); // r2–r8: N never counts a reply that shows
+
+      let done = store.loadReplies('c1');
+      repliesReq(null).flush({ items: replies(1, 5), nextCursor: 'p2' });
+      await done;
+      expect(shownIds()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r9', 'r10']);
+      expect(hiddenReplies(store.threads()[0])).toBe(3);
+
+      done = store.loadReplies('c1');
+      repliesReq('p2').flush({ items: [reply(6), reply(7), reply(8), mine('r9', { parentId: 'c1', body: 'mine' }), reply(10)], nextCursor: null });
+      await done;
+      const thread = store.threads()[0];
+      expect(shownIds()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10']);
+      expect(thread.replies.map((r) => r.id)).toEqual(shownIds()); // all in place, nothing left at the end
+      expect(thread.tail).toEqual([]);
+      expect(thread.replies[8].key).toBe('pending-1'); // your reply keeps its row
+      expect(hiddenReplies(thread)).toBe(0);
+    });
+
+    it('"Hide replies" folds the new replies too; they come back in their place', async () => {
+      await load({ items: [dto('c1', { replyCount: 4, replies: replies(1, 2) })], total: 5 });
+      const posting = store.reply('c1', 'r1', 'mine');
+      http.expectOne(`${comment('r1')}/replies`).flush(mine('r5', { parentId: 'c1', body: 'mine' }));
+      await posting;
+      expect(shownIds()).toEqual(['r1', 'r5']);
+
+      store.hideReplies('c1');
+      expect(shownIds()).toEqual(['r1']);
+      expect(hiddenReplies(store.threads()[0])).toBe(4);
+
+      const done = store.loadReplies('c1');
+      repliesReq(null).flush({ items: [...replies(1, 4), mine('r5', { parentId: 'c1', body: 'mine' })], nextCursor: null });
+      await done;
+      expect(shownIds()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5']);
+      expect(store.threads()[0].replies[4].key).toBe('pending-1');
+    });
+
+    it('in a thread whose replies are all loaded, new replies join the end and fold with the rest', async () => {
+      await load({ items: [dto('c1', { replyCount: 2, replies: replies(1, 2) })], total: 3 });
+      const live = store.applyEvent(event('reply.created', 'r3', 'c1'));
+      http.expectOne(comment('r3')).flush(reply(3));
+      await live;
+      expect(shownIds()).toEqual(['r1', 'r3']); // r2 stays hidden, r3 shows at once
+      expect(hiddenReplies(store.threads()[0])).toBe(1);
+
+      store.hideReplies('c1');
+      expect(shownIds()).toEqual(['r1']);
+      expect(store.threads()[0].replies.map((r) => r.id)).toEqual(['r1', 'r2', 'r3']);
+      await store.loadReplies('c1');
+      expect(shownIds()).toEqual(['r1', 'r2', 'r3']);
+    });
+
+    it('anything aimed at a hidden reply reveals it, with the ones before it', async () => {
+      await load({ items: [dto('c1', { replyCount: 2, replies: replies(1, 2) })], total: 3 });
+      store.reveal('r2');
+      expect(shownIds()).toEqual(['r1', 'r2']);
+      store.reveal('unknown'); // nothing to do
+      expect(shownIds()).toEqual(['r1', 'r2']);
+    });
+
+    it('a deleted reply that showed leaves no gap for a hidden one, and a folded thread still shows its first reply', async () => {
+      await load({ items: [dto('c1', { replyCount: 2, replies: replies(1, 2) })], total: 3 });
+      const done = store.applyEvent(event('comment.deleted', 'r1', 'c1'));
+      http.expectOne(comment('r1')).flush(reply(1, { isDeleted: true, body: null, author: null }));
+      await done;
+      expect(shownIds()).toEqual(['r2']);
+      expect(hiddenReplies(store.threads()[0])).toBe(0);
+    });
+
+    it('replies that fail to load keep what showed and can be tried again', async () => {
+      await load({ items: [dto('c1', { replyCount: 6, replies: replies(1, 2) })], total: 7 });
+      let done = store.loadReplies('c1');
+      repliesReq(null).flush(problem(500, 'server.error'), { status: 500, statusText: 'Error' });
+      await done;
+      expect(store.threads()[0].repliesFailed).toBe(true);
+      expect(shownIds()).toEqual(['r1', 'r2']);
+
+      done = store.loadReplies('c1');
+      expect(store.threads()[0].repliesFailed).toBe(false);
+      repliesReq(null).flush({ items: replies(1, 5), nextCursor: 'p2' });
+      await done;
+      expect(shownIds()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5']);
     });
   });
 
@@ -353,7 +555,8 @@ describe('CommentsStore (F11, F27)', () => {
       await done;
       const thread = store.threads()[0];
       expect(thread.tail.map((r) => r.id)).toEqual(['r9']);
-      expect(hiddenReplies(thread)).toBe(1);
+      expect(visibleReplies(thread).map((r) => r.id)).toEqual(['r1', 'r9']); // shown at once, at the end
+      expect(hiddenReplies(thread)).toBe(2); // r2 (loaded, hidden) and r3 (not loaded); never r9
     });
 
     it('edits, likes and pins refetch the comment and replace it in place, keeping its replies', async () => {

@@ -14,6 +14,7 @@ import { CompactNumberPipe, LocalizedDatePipe, RelativeTimePipe } from '../../sh
 import { FollowButton } from '../../shared/social/follow-button';
 import { Avatar } from '../../shared/ui/avatar';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { ProfileCardTrigger } from '../../shared/profile-card/profile-card.directive';
 import { CommentComposer } from './comment-composer';
 import { CommentErrors } from './comment-errors';
 import { commentDir, commentSegments, isPlaceholder } from './comment-text';
@@ -29,13 +30,16 @@ interface MenuItem {
 }
 
 /**
- * One comment or reply (F11): the avatar, the name with the verified and "الكاتب" badges, the pinned label, the relative
- * time and "edited"; on the other side "متابعة" (when you don't follow them and it isn't you; guests get the sign-in
- * prompt) and "⋯" with what the viewer may do (`can*`). Under the name, the writer's title (F14) on one line with "…"
- * instead of the @username. Then the text with its own direction and only the resolved @mentions as links, and one row
- * of actions: Like and Reply. The avatar and the name open the profile. Deleted or hidden-for-you comments are
- * placeholders; a deleted account shows as "Deleted user" without a profile link. A comment by a writer you muted
- * collapses to "تعليق من شخص كتمته" with "عرض", which shows it here only (F28); replies under it stay.
+ * One comment or reply (F11), compact like LinkedIn and Facebook: the avatar at the start (32 px, 24 for replies), then a
+ * bubble with the full remaining width. Its header has the name with the verified and "الكاتب" badges and the pinned
+ * label, then "· متابعة" as text (when you don't follow them and it isn't you; guests get the sign-in prompt); at its
+ * end the relative time, "· edited" and "⋯" with what the viewer may do (`can*`). Under the name, the writer's title
+ * (F14) on one line with "…" (never the @username). Then the text with its own direction and only the resolved
+ * @mentions as links. Under the bubble one row of text actions: Like (with a heart and the count when there are likes)
+ * and Reply, or "Sending…" while it posts. The avatar and the name open the profile, and a pointer resting on them (or
+ * on a mention) opens the person's card. A comment that just arrived highlights its bubble. Deleted or hidden-for-you
+ * comments are compact placeholders; a deleted account shows as "Deleted user" without a profile link. A comment by a
+ * writer you muted collapses to "تعليق من شخص كتمته" with "عرض", which shows it here only (F28); replies under it stay.
  */
 @Component({
   selector: 'rd-comment-item',
@@ -53,16 +57,21 @@ interface MenuItem {
     RelativeTimePipe,
     CommentComposer,
     FollowButton,
+    ProfileCardTrigger,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'block rounded-md transition-colors',
-    '[class.bg-highlight]': 'highlighted()',
+    class: 'block',
     '[attr.data-comment]': 'comment().id',
     '[attr.data-pending]': 'comment().pending ? true : null',
   },
-  // Line breaks are kept; long words and URLs wrap instead of widening the page.
+  // A bubble: radius 12 with the top-start corner 4. Line breaks are kept; long words and URLs wrap instead of widening
+  // the page.
   styles: `
+    .bubble {
+      border-radius: 12px;
+      border-start-start-radius: 4px;
+    }
     .comment-body {
       white-space: pre-wrap;
       overflow-wrap: anywhere;
@@ -71,101 +80,121 @@ interface MenuItem {
   template: `
     @let c = comment();
     @if (placeholder()) {
-      <div class="flex items-center gap-3 py-3 text-sm text-text-secondary" data-comment-placeholder>
-        <span class="grid shrink-0 place-items-center rounded-full bg-surface-variant" [style.width.px]="avatarSize()" [style.height.px]="avatarSize()" aria-hidden="true">
-          <svg lucideIcon="MessageCircle" [size]="16"></svg>
+      <div class="flex items-start gap-2 py-1.5" data-comment-placeholder>
+        <span
+          class="grid shrink-0 place-items-center rounded-full bg-surface-variant text-text-secondary"
+          [style.width.px]="avatarSize()"
+          [style.height.px]="avatarSize()"
+          aria-hidden="true"
+        >
+          <svg lucideIcon="MessageCircle" [size]="iconSize()"></svg>
         </span>
-        <span class="italic">{{ (c.isDeleted ? 'comments.deleted' : 'comments.hidden') | transloco }}</span>
+        <p class="bubble m-0 min-w-0 flex-1 bg-surface-variant px-3 py-2 text-sm italic text-text-secondary">
+          {{ (c.isDeleted ? 'comments.deleted' : 'comments.hidden') | transloco }}
+        </p>
       </div>
     } @else if (mutedCollapsed()) {
-      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 py-3 text-sm text-text-secondary" data-comment-muted>
-        <span class="grid shrink-0 place-items-center rounded-full bg-surface-variant" [style.width.px]="avatarSize()" [style.height.px]="avatarSize()" aria-hidden="true">
-          <svg lucideIcon="MessageCircle" [size]="16"></svg>
-        </span>
-        <span class="italic">{{ 'mute.comment.collapsed' | transloco }}</span>
-        <button
-          type="button"
-          class="-ms-1 inline-flex min-h-9 items-center rounded-md px-2 font-semibold text-primary hover:bg-surface-variant"
-          data-comment-reveal
-          (click)="reveal()"
+      <div class="flex items-start gap-2 py-1.5" data-comment-muted>
+        <span
+          class="grid shrink-0 place-items-center rounded-full bg-surface-variant text-text-secondary"
+          [style.width.px]="avatarSize()"
+          [style.height.px]="avatarSize()"
+          aria-hidden="true"
         >
-          {{ 'mute.comment.show' | transloco }}
-        </button>
+          <svg lucideIcon="MessageCircle" [size]="iconSize()"></svg>
+        </span>
+        <div class="bubble flex min-w-0 flex-1 flex-wrap items-center gap-x-2 bg-surface-variant px-3 py-2 text-sm text-text-secondary">
+          <span class="italic">{{ 'mute.comment.collapsed' | transloco }}</span>
+          <button
+            type="button"
+            class="-my-1.5 -ms-1 inline-flex min-h-8 items-center rounded-md px-1 font-semibold text-primary hover:underline"
+            data-comment-reveal
+            (click)="reveal()"
+          >
+            {{ 'mute.comment.show' | transloco }}
+          </button>
+        </div>
       </div>
     } @else {
-      <div class="flex gap-3 py-3" [class.opacity-70]="c.pending">
+      <div class="flex items-start gap-2 py-1.5" [class.opacity-70]="c.pending">
         @if (c.author; as author) {
-          <a [routerLink]="'/@' + author.username" class="shrink-0 self-start rounded-full" tabindex="-1" aria-hidden="true">
+          <a [routerLink]="'/@' + author.username" [rdProfileCard]="author.username" class="shrink-0 rounded-full" tabindex="-1" aria-hidden="true">
             <rd-avatar [name]="author.displayName" [src]="author.avatarUrl" [size]="avatarSize()" />
           </a>
         } @else {
           <span
-            class="grid shrink-0 place-items-center self-start rounded-full bg-surface-variant text-text-secondary"
+            class="grid shrink-0 place-items-center rounded-full bg-surface-variant text-text-secondary"
             [style.width.px]="avatarSize()"
             [style.height.px]="avatarSize()"
             aria-hidden="true"
             data-deleted-user-avatar
           >
-            <svg lucideIcon="UserRound" [size]="avatarSize() * 0.5"></svg>
+            <svg lucideIcon="UserRound" [size]="iconSize()"></svg>
           </span>
         }
 
         <div class="min-w-0 flex-1">
-          <div class="flex items-start gap-2">
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
-                @if (c.author; as author) {
-                  <a
-                    [routerLink]="'/@' + author.username"
-                    class="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-text-primary no-underline hover:underline"
-                    data-comment-author
-                  >
-                    <rd-bdi-text class="truncate" [text]="author.displayName" />
-                    @if (author.isVerified) {
-                      <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
-                    }
-                  </a>
-                } @else {
-                  <span class="font-semibold text-text-secondary" data-comment-author>{{ 'comments.deletedUser' | transloco }}</span>
-                }
-                @if (c.isArticleAuthor) {
-                  <span class="rd-tag" data-writer-badge>{{ 'comments.writer' | transloco }}</span>
-                }
-                @if (c.isPinned) {
-                  <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-primary" data-pinned>
-                    <svg lucideIcon="Pin" [size]="12" aria-hidden="true"></svg>{{ 'comments.pinned' | transloco }}
-                  </span>
-                }
-                <span class="text-xs text-text-secondary">
-                  ·
-                  @if (c.pending) {
-                    <span data-sending>{{ 'comments.sending' | transloco }}</span>
+          <div
+            class="bubble px-3 py-2 transition-colors duration-500"
+            [class.bg-surface-variant]="!highlighted()"
+            [class.bg-highlight]="highlighted()"
+            [attr.data-highlighted]="highlighted() || null"
+            data-comment-bubble
+          >
+            <div class="flex items-start gap-2">
+              <!-- The name and its badges, and under them the writer's title; the time and "⋯" stand beside both -->
+              <div class="min-w-0 flex-1" data-comment-heading>
+                <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
+                  @if (c.author; as author) {
+                    <a
+                      [routerLink]="'/@' + author.username"
+                      [rdProfileCard]="author.username"
+                      class="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-text-primary no-underline hover:underline"
+                      data-comment-author
+                    >
+                      <rd-bdi-text class="truncate" [text]="author.displayName" />
+                      @if (author.isVerified) {
+                        <svg lucideIcon="BadgeCheck" [size]="14" class="shrink-0 text-primary" role="img" [attr.aria-label]="'article.verifiedWriter' | transloco"></svg>
+                      }
+                    </a>
                   } @else {
-                    <time [attr.datetime]="c.createdAt" [title]="c.createdAt | rdDate: lang() : 'long'">{{ c.createdAt | rdRelativeTime: lang() }}</time>
+                    <span class="font-semibold text-text-secondary" data-comment-author>{{ 'comments.deletedUser' | transloco }}</span>
                   }
-                  @if (c.editedAt) {
-                    · <span data-edited>{{ 'comments.edited' | transloco }}</span>
+                  @if (c.isArticleAuthor) {
+                    <span class="rd-tag" data-writer-badge>{{ 'comments.writer' | transloco }}</span>
                   }
-                </span>
-              </div>
-              <!-- The writer's title (F14) on one line with "…", in place of the @username: on the UI's start side, laid out
-                   and cut in its own direction -->
-              @if (headline(); as headline) {
-                <p class="m-0 flex text-xs leading-snug text-text-secondary" [attr.title]="headline" data-comment-headline>
-                  <bdi dir="auto" class="min-w-0 truncate">{{ headline }}</bdi>
-                </p>
-              }
-            </div>
-            @if (!c.pending && (showFollow() || menuItems().length)) {
-              <!-- 44 px targets that don't make the name's row taller -->
-              <div class="-my-2.5 -me-2 flex shrink-0 items-center">
-                @if (showFollow() && c.author; as author) {
-                  <span class="contents" data-comment-follow><rd-follow-button [user]="author" [initial]="c.isFollowingAuthor ?? false" [compact]="true" /></span>
+                  @if (c.isPinned) {
+                    <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-primary" data-pinned>
+                      <svg lucideIcon="Pin" [size]="12" aria-hidden="true"></svg>{{ 'comments.pinned' | transloco }}
+                    </span>
+                  }
+                  @if (showFollow() && c.author; as author) {
+                    <span class="text-text-secondary" aria-hidden="true">·</span>
+                    <span class="contents" data-comment-follow><rd-follow-button [user]="author" [initial]="c.isFollowingAuthor ?? false" [inline]="true" /></span>
+                  }
+                </div>
+                <!-- The writer's title (F14) on one line with "…", never the @username: on the UI's start side, laid out and
+                     cut in its own direction -->
+                @if (headline(); as headline) {
+                  <p class="m-0 flex text-xs leading-snug text-text-secondary" [attr.title]="headline" data-comment-headline>
+                    <bdi dir="auto" class="min-w-0 truncate">{{ headline }}</bdi>
+                  </p>
                 }
-                @if (menuItems().length) {
+              </div>
+              <!-- The time, "edited" and "⋯" at the end; the 32 px menu button sits in the bubble's top-end corner without
+                   making the row taller -->
+              <div class="flex shrink-0 items-center gap-1 text-xs leading-5 text-text-secondary" data-comment-meta>
+                @if (!c.pending) {
+                  <time [attr.datetime]="c.createdAt" [title]="c.createdAt | rdDate: lang() : 'long'">{{ c.createdAt | rdRelativeTime: lang() }}</time>
+                }
+                @if (c.editedAt) {
+                  <span aria-hidden="true">·</span>
+                  <span data-edited>{{ 'comments.edited' | transloco }}</span>
+                }
+                @if (!c.pending && menuItems().length) {
                   <button
                     type="button"
-                    class="grid h-11 w-9 place-items-center rounded-md text-text-secondary hover:bg-surface-variant"
+                    class="-my-1.5 -me-2 grid h-8 w-8 place-items-center rounded-md text-text-secondary hover:bg-surface hover:text-text-primary"
                     [cdkMenuTriggerFor]="menu"
                     [attr.aria-label]="'comments.actions' | transloco"
                     data-comment-menu
@@ -174,65 +203,80 @@ interface MenuItem {
                   </button>
                 }
               </div>
+            </div>
+
+            @if (c.isHidden) {
+              <p class="m-0 mt-1.5 inline-flex items-center gap-1 rounded-sm bg-callout-warning px-2 py-1 text-xs" data-hidden-notice>
+                <svg lucideIcon="EyeOff" [size]="13" aria-hidden="true"></svg>{{ 'comments.hiddenNotice' | transloco }}
+              </p>
+            }
+
+            @if (editing()) {
+              <rd-comment-composer
+                class="mt-2"
+                [(text)]="draft"
+                [label]="'comments.composer.editLabel' | transloco"
+                [submitLabel]="'comments.composer.save' | transloco"
+                [error]="editError()"
+                [busy]="saving()"
+                [cancelable]="true"
+                [cancelLabel]="'commentBox.cancelEdit' | transloco"
+                [showAvatar]="false"
+                [autofocus]="true"
+                (submitted)="saveEdit($event)"
+                (cancelled)="store.closeComposer()"
+              />
+            } @else {
+              <p class="comment-body m-0 mt-1 text-sm leading-relaxed" [attr.dir]="bodyDir()" data-comment-body>
+                @for (segment of segments(); track $index) {
+                  @if (segment.kind === 'mention') {
+                    <a
+                      [routerLink]="'/@' + segment.username"
+                      [rdProfileCard]="segment.username"
+                      class="font-semibold text-link no-underline hover:underline"
+                      dir="ltr"
+                      data-mention
+                      >{{ segment.text }}</a
+                    >
+                  } @else {
+                    <rd-bdi-text [text]="segment.text" [baseDir]="bodyDir()" />
+                  }
+                }
+              </p>
             }
           </div>
 
-          @if (c.isHidden) {
-            <p class="m-0 mt-1 inline-flex items-center gap-1 rounded-sm bg-callout-warning px-2 py-1 text-xs" data-hidden-notice>
-              <svg lucideIcon="EyeOff" [size]="13" aria-hidden="true"></svg>{{ 'comments.hiddenNotice' | transloco }}
+          @if (c.pending) {
+            <p class="m-0 ps-1 text-xs leading-8 text-text-secondary" data-comment-actions>
+              <span data-sending>{{ 'comments.sending' | transloco }}</span>
             </p>
-          }
-
-          @if (editing()) {
-            <rd-comment-composer
-              class="mt-2"
-              [(text)]="draft"
-              [label]="'comments.composer.editLabel' | transloco"
-              [submitLabel]="'comments.composer.save' | transloco"
-              [error]="editError()"
-              [busy]="saving()"
-              [cancelable]="true"
-              [cancelLabel]="'commentBox.cancelEdit' | transloco"
-              [showAvatar]="false"
-              [autofocus]="true"
-              (submitted)="saveEdit($event)"
-              (cancelled)="store.closeComposer()"
-            />
-          } @else {
-            <p class="comment-body m-0 mt-1 text-[15px] leading-relaxed" [attr.dir]="bodyDir()" data-comment-body>
-              @for (segment of segments(); track $index) {
-                @if (segment.kind === 'mention') {
-                  <a [routerLink]="'/@' + segment.username" class="font-semibold text-link no-underline hover:underline" dir="ltr" data-mention>{{ segment.text }}</a>
-                } @else {
-                  <rd-bdi-text [text]="segment.text" [baseDir]="bodyDir()" />
+          } @else if (!editing()) {
+            <!-- Text actions under the bubble, from its start: Like (♥ and the count when liked by anyone) · Reply -->
+            <div class="flex items-center gap-0.5 text-[13px] font-semibold text-text-secondary" data-comment-actions>
+              <button
+                type="button"
+                class="inline-flex min-h-8 items-center gap-1.5 rounded-md px-1 hover:bg-surface-variant"
+                [class.text-primary]="c.likedByMe"
+                [attr.aria-pressed]="c.likedByMe"
+                data-like
+                (click)="like()"
+              >
+                {{ 'comments.like' | transloco }}
+                @if (c.likeCount > 0) {
+                  <span class="inline-flex items-center gap-0.5 font-normal text-text-secondary" data-like-count>
+                    <svg lucideIcon="Heart" [size]="12" class="fill-current text-primary" aria-hidden="true"></svg>{{
+                      c.likeCount | rdCompactNumber: lang()
+                    }}
+                  </span>
                 }
-              }
-            </p>
-
-            @if (!c.pending) {
-              <div class="-ms-2 mt-0.5 flex items-center gap-1 text-xs text-text-secondary" data-comment-actions>
-                <button
-                  type="button"
-                  class="inline-flex min-h-9 items-center justify-center gap-1 rounded-md px-2 hover:bg-surface-variant"
-                  [class.text-primary]="c.likedByMe"
-                  [attr.aria-pressed]="c.likedByMe"
-                  data-like
-                  (click)="like()"
-                >
-                  <svg lucideIcon="Heart" [size]="16" [class.fill-current]="c.likedByMe" aria-hidden="true"></svg>
-                  <span class="sr-only">{{ 'comments.like' | transloco }}</span>
-                  @if (c.likeCount > 0) {
-                    <span data-like-count>{{ c.likeCount | rdCompactNumber: lang() }}</span>
-                  }
+              </button>
+              @if (!c.isHidden) {
+                <span aria-hidden="true">·</span>
+                <button type="button" class="inline-flex min-h-8 items-center rounded-md px-1 hover:bg-surface-variant hover:text-text-primary" data-reply (click)="reply()">
+                  {{ 'comments.reply' | transloco }}
                 </button>
-                @if (!c.isHidden) {
-                  <button type="button" class="inline-flex min-h-9 items-center gap-1 rounded-md px-2 font-semibold hover:bg-surface-variant" data-reply (click)="reply()">
-                    <svg lucideIcon="CornerDownLeft" [size]="15" class="rd-flip-rtl" aria-hidden="true"></svg>
-                    {{ 'comments.reply' | transloco }}
-                  </button>
-                }
-              </div>
-            }
+              }
+            </div>
           }
         </div>
       </div>
@@ -294,7 +338,10 @@ export class CommentItem {
     const c = this.comment();
     return !!c.author && this.session.isAuthenticated() && this.mutes.isAuthorMuted(c.author.id, c.isAuthorMuted ?? false);
   });
-  protected readonly avatarSize = computed(() => (this.comment().parentId ? 28 : 36));
+  /** 32 px for a top-level comment, 24 for a reply. */
+  protected readonly avatarSize = computed(() => (this.comment().parentId ? 24 : 32));
+  /** The icon inside an avatar-sized circle (placeholders, a deleted account). */
+  protected readonly iconSize = computed(() => Math.round(this.avatarSize() * 0.5));
   /** The writer's title (F14), hidden when empty. */
   protected readonly headline = computed(() => this.comment().author?.headline?.trim() || null);
   /** Who wrote it and who is looking: Follow is decided again only when one of them changes. */

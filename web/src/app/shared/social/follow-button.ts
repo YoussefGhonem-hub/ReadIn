@@ -23,7 +23,9 @@ import { FollowStore } from '../../core/social/follow.store';
         [attr.aria-pressed]="following()"
         (click)="toggle()"
       >
-        <svg [lucideIcon]="icon()" [size]="16" aria-hidden="true"></svg>
+        @if (!inline()) {
+          <svg [lucideIcon]="icon()" [size]="16" aria-hidden="true"></svg>
+        }
         {{ (following() ? 'article.following' : 'article.follow') | transloco }}
         <span class="sr-only">{{ user().displayName }}</span>
       </button>
@@ -42,6 +44,13 @@ export class FollowButton {
   readonly compact = input(false);
   /** An outlined pill ("+ متابعة", then "✓ بتتابعه"), for Home's suggestions card. */
   readonly pill = input(false);
+  /**
+   * Text only, no icon ("متابعة" in the primary color, then "تتابعه"), for a comment's header after the name: 13 px and
+   * no taller than the name's line, with a 28 px target.
+   */
+  readonly inline = input(false);
+  /** A full-width filled button, for the profile card that opens on a name or a mention. */
+  readonly wide = input(false);
 
   protected readonly isSelf = computed(() => this.session.isAuthenticated() && this.session.me()?.id === this.user().id);
   protected readonly following = computed(() => this.session.isAuthenticated() && this.follows.isFollowing(this.user().id, this.initial()));
@@ -52,6 +61,13 @@ export class FollowButton {
   });
 
   protected readonly classes = computed(() => {
+    if (this.inline()) {
+      const base = '-my-1 inline-flex min-h-7 shrink-0 items-center rounded-sm px-1 text-[13px] font-semibold hover:underline ';
+      return base + (this.following() ? 'text-text-secondary' : 'text-primary');
+    }
+    if (this.wide()) {
+      return 'rd-btn w-full gap-1.5 text-sm ' +(this.following() ? 'bg-primary-container text-on-primary-container' : 'rd-btn-primary');
+    }
     if (this.pill()) {
       const base = 'inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1 rounded-chip border px-4 text-sm font-semibold transition-colors ';
       return base + (this.following() ? 'border-transparent bg-primary-container text-on-primary-container' : 'border-text-secondary bg-transparent text-text-secondary hover:border-text-primary hover:bg-surface-variant hover:text-text-primary');

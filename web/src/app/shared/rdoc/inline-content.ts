@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BidiSegment, TextDir, segmentBidi } from '../directives/bidi';
+import { ProfileCardTrigger } from '../profile-card/profile-card.directive';
 import { InlineContent, Mark } from './rdoc.models';
 import { RDocContext } from './rdoc-context';
 import { safeHttpUrl } from './rdoc.utils';
@@ -22,10 +23,12 @@ type InlineVm =
  *
  * Highlights (F30, `marks`) are drawn as plain `<span>`s inside each run, `<bdi>` and inline code: a run is never split
  * or reordered, and the spans set no direction, so they can't change how mixed Arabic/English text is laid out.
+ *
+ * An @mention opens the person's profile; a pointer resting on it opens their profile card (web, F11/F14).
  */
 @Component({
   selector: 'rd-inline',
-  imports: [NgTemplateOutlet, RouterLink],
+  imports: [NgTemplateOutlet, RouterLink, ProfileCardTrigger],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     /* A highlight is cut into one span per BiDi run: "skip-spaces: none" keeps the underline under a space at a span's
@@ -71,7 +74,7 @@ type InlineVm =
           </button>
         }
         @case ('mention') {
-          <a class="rd-mention" [routerLink]="'/@' + node.handle"
+          <a class="rd-mention" [routerLink]="'/@' + node.handle" [rdProfileCard]="node.handle"
             ><bdi>@if (node.pieces) {<ng-container *ngTemplateOutlet="pieces; context: { pieces: node.pieces }" />} @else {{{ node.text }}}</bdi></a
           >
         }

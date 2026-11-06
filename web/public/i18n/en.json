@@ -1993,6 +1993,7 @@
       "other": "Show {{count}} more replies"
     },
     "repliesError": "We couldn't load the replies. Try again",
+    "hideReplies": "Hide replies",
     "newComments": {
       "one": "1 new comment",
       "other": "{{count}} new comments"
@@ -2668,6 +2669,16 @@
       "emptyTitle": "No highlights yet",
       "emptyBody": "Select a sentence in an article and tap Highlight. It shows up here, grouped by article.",
       "loadError": "Your highlights didn't load."
+    }
+  },
+  "profileCard": {
+    "followers": {
+      "one": "{{count}} follower",
+      "other": "{{count}} followers"
+    },
+    "articles": {
+      "one": "{{count}} article",
+      "other": "{{count}} articles"
     }
   },
   "quoteCard": {

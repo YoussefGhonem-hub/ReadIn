@@ -140,9 +140,10 @@ const NEAR_TOP_SLACK_PX = 160;
           }
           @case ('loaded') {
             @if (store.threads().length) {
-              <ol class="m-0 list-none p-0">
+              <!-- Compact threads, 8 px apart (each row keeps 6 px above and below its bubble) -->
+              <ol class="m-0 flex list-none flex-col gap-2 p-0">
                 @for (thread of visibleThreads(); track thread.comment.key) {
-                  <li class="border-t border-border first:border-t-0"><rd-comment-thread [thread]="thread" /></li>
+                  <li><rd-comment-thread [thread]="thread" /></li>
                 }
               </ol>
               @if (collapsed()) {
@@ -170,14 +171,14 @@ const NEAR_TOP_SLACK_PX = 160;
             }
           }
           @default {
-            <div class="flex flex-col gap-5 py-3" aria-busy="true" data-comments-loading>
+            <div class="flex flex-col gap-4 py-2" aria-busy="true" data-comments-loading>
               @for (i of skeletonRows; track i) {
-                <div class="flex gap-3" aria-hidden="true">
-                  <div class="rd-skeleton h-9 w-9 shrink-0 rounded-full"></div>
+                <div class="flex gap-2" aria-hidden="true">
+                  <div class="rd-skeleton h-8 w-8 shrink-0 rounded-full"></div>
                   <div class="flex flex-1 flex-col gap-2 pt-1">
                     <div class="rd-skeleton h-3 w-1/3"></div>
-                    <div class="rd-skeleton h-4 w-full"></div>
-                    <div class="rd-skeleton h-4 w-2/3"></div>
+                    <div class="rd-skeleton h-3.5 w-full"></div>
+                    <div class="rd-skeleton h-3.5 w-2/3"></div>
                   </div>
                 </div>
               }
