@@ -34,7 +34,7 @@ import { CommentThreadView } from './comment-thread';
 import { CommentsStore } from './comments.store';
 import { FeedMemory } from '../feed/feed-memory';
 
-/** Where the section is shown: the end of the reader, a post card's inline section (F34) or its bottom sheet. */
+/** Where the section is shown: the reader, right under the article, a post card's inline section (F34) or its bottom sheet. */
 export type CommentsVariant = 'reader' | 'card' | 'sheet';
 
 /** A post card's inline section shows this many threads until "Show all comments" (F34). */
@@ -44,11 +44,11 @@ export const CARD_PREVIEW_THREADS = 2;
 const NEAR_TOP_SLACK_PX = 160;
 
 /**
- * Comments at the end of the reader (F11): "التعليقات (N)" with the live total, Top / Newest, the composer (or a
- * sign-in prompt for guests), threads, "more comments", and empty / loading / error states. Created lazily by the
- * reader (`@defer`, never during SSR); it loads on creation and again when the account changes. Live comment events
- * (F27) are followed from then until the reader closes; new comments that arrive while you are away from the top of
- * the list wait behind the "N تعليقات جديدة" pill.
+ * Comments in the reader, right under the article (F11): "التعليقات (N)" with the live total, Top / Newest, the
+ * composer (or a sign-in prompt for guests), the first 5 threads, "Show more comments" (10 more a tap), and empty /
+ * loading / error states. Created lazily by the reader (`@defer`, never during SSR); it loads on creation and again
+ * when the account changes. Live comment events (F27) are followed from then until the reader closes; new comments
+ * that arrive while you are away from the top of the list wait behind the "N تعليقات جديدة" pill.
  *
  * A post card (F34) shows it too, while its comments are open: `card` is the inline section of wide screens (the
  * composer and the top 2 threads, then "Show all comments" lists the rest in place), `sheet` the full section in a

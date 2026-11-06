@@ -1987,7 +1987,7 @@
       "body": "Start the discussion with the first comment."
     },
     "loadError": "We couldn't load the comments.",
-    "more": "More comments",
+    "more": "Show more comments",
     "moreReplies": {
       "one": "Show 1 more reply",
       "other": "Show {{count}} more replies"

@@ -110,6 +110,26 @@ describe('CommentsSection (F11)', () => {
     expect(own.querySelector('[data-edited]')!.textContent).toBe('معدّل');
   });
 
+  it('shows the first 5 comments, then "عرض مزيد من التعليقات" adds 10 a tap until there are no more', async () => {
+    const first = ['c1', 'c2', 'c3', 'c4', 'c5'];
+    const t = await render({ total: 40, items: first.map((id) => dto(id)), nextCursor: 'o5' });
+    http = t.http;
+    expect(t.$$('[data-comment]').map((el) => el.dataset['comment'])).toEqual(first);
+
+    const more = t.$<HTMLButtonElement>('[data-more-comments]')!;
+    expect(more.textContent!.trim()).toBe('عرض مزيد من التعليقات');
+    more.click();
+    await t.stable();
+    expect(more.disabled).toBe(true); // one page at a time
+    const next = t.http.expectOne((r) => r.url === LIST && r.params.get('cursor') === 'o5');
+    expect(next.request.params.get('limit')).toBe('10');
+    const second = Array.from({ length: 10 }, (_, i) => `c${i + 6}`);
+    next.flush({ items: second.map((id) => dto(id)), nextCursor: null, total: 40 });
+    await t.stable();
+    expect(t.$$('[data-comment]').map((el) => el.dataset['comment'])).toEqual([...first, ...second]);
+    expect(t.$('[data-more-comments]')).toBeNull(); // the last page
+  });
+
   it('a comment by a writer you muted collapses until "عرض", here only; its replies stay (F28)', async () => {
     const t = await render({
       total: 3,

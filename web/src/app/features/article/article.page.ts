@@ -107,7 +107,7 @@ const TOC_MIN_HEADINGS = 3;
     </div>
 
     <!-- A stack of cards on the canvas, 8px apart: the article (the text keeps the reading width inside the card's padding),
-         Next in path, Related articles and the comments. On phones the cards go edge to edge. The <article> itself stays
+         the comments, Next in path and Related articles. On phones the cards go edge to edge. The <article> itself stays
          the whole column, as the reading progress, the resume position and the reading tracker measure it. -->
     <article class="mx-auto flex max-w-[calc(var(--rd-layout-reading-width)_+_6rem_+_2px)] flex-col px-4 pb-28 pt-4" #articleEl>
       <!-- Reader toolbar, on the canvas above the card -->
@@ -279,12 +279,8 @@ const TOC_MIN_HEADINGS = 3;
           class="rd-card rounded-t-none border-t-0 px-4 pb-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8"
           [sources]="a.sources"
         />
-        <rd-next-in-path [articleId]="a.id" />
-
-        <rd-related-articles [article]="a" />
-
-        <!-- Comments (F11), in their own card: their code and data load when they near the viewport or the comment button is
-             pressed -->
+        <!-- Comments (F11), in their own card right under the article: the first 5, then "Show more comments". Their code
+             and data load when they near the viewport or the comment button is pressed. -->
         <section
           #commentsAnchor
           id="comments"
@@ -300,6 +296,10 @@ const TOC_MIN_HEADINGS = 3;
             </div>
           }
         </section>
+
+        <rd-next-in-path [articleId]="a.id" />
+
+        <rd-related-articles [article]="a" />
       } @else {
         <!-- Loading, not found and errors in the article card's place, so the page doesn't jump -->
         <div class="rd-card p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:p-6 lg:p-8">

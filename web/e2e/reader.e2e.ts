@@ -106,16 +106,17 @@ for (const variant of VARIANTS) {
     await openAsGuest(page);
     expect(related).toEqual([]); // nothing until the end of the article nears the viewport
 
-    await page.locator('#sources-title').scrollIntoViewIfNeeded();
+    // Below the comments now (F11): bring the (still empty) host to the viewport.
+    await page.locator('rd-related-articles').evaluate((el) => el.scrollIntoView({ block: 'center' }));
     const section = page.locator('[data-related]');
     await expect(section).toBeVisible();
     expect(related).toEqual(['/api/v1/articles/a-dependency-injection-ar/related?lang=ar-EG&limit=4']);
     await expect(section.locator('#related-title')).toHaveText(t('مقالات ذات صلة', 'Related articles'));
     // Post cards (F34), as in the feed.
     await expect(section.locator('rd-post-card')).toHaveCount(4);
-    // After the sources, before the comments.
+    // After the sources and the comments, which sit right under the article.
     expect(await section.evaluate((el) => !!(document.querySelector('#sources-title')!.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
-    expect(await section.evaluate((el) => !!(el.compareDocumentPosition(document.querySelector('#comments')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+    expect(await section.evaluate((el) => !!(document.querySelector('#comments')!.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(section).toHaveScreenshot(`related-articles-${suffix}.png`, { stylePath: [HIDE_APP_CHROME, HIDE_READER_BAR] });
 
@@ -160,8 +161,8 @@ for (const variant of VARIANTS) {
     await expect(back).toHaveAttribute('href', '/');
     await expect(back).toHaveAttribute('aria-label', t('رجوع', 'Back'));
 
-    // A related article, opened from this one: Back returns here.
-    await page.locator('#sources-title').scrollIntoViewIfNeeded();
+    // A related article, opened from this one: Back returns here. (Related articles sit below the comments, F11.)
+    await page.locator('rd-related-articles').evaluate((el) => el.scrollIntoView({ block: 'center' }));
     await page.locator('[data-related] rd-post-card').first().locator('[data-card-title]').click();
     await page.waitForURL((url) => url.pathname === '/ar/a/what-is-a-transformer-ar');
     await expect(page.locator('rd-article-page h1')).toContainText('Transformer');

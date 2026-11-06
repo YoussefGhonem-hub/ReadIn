@@ -24,6 +24,11 @@ async function openPaths(page: Page, path: string, options: { signedIn?: boolean
   await expect(page.locator(path === '/paths' ? '[data-path-card]' : '[data-path-header]').first()).toBeVisible({ timeout: FIRST_RENDER_MS });
 }
 
+/** Next in path loads as it nears the viewport; it sits below the comments, which come right under the article (F11). */
+async function nearNextInPath(page: Page): Promise<void> {
+  await page.locator('rd-next-in-path').evaluate((el) => el.scrollIntoView({ block: 'center' }), undefined, { timeout: FIRST_RENDER_MS });
+}
+
 for (const variant of VARIANTS) {
   const { lang, theme } = variant;
   const suffix = `${lang}-${theme}`;
@@ -209,6 +214,7 @@ for (const variant of VARIANTS) {
     // First of three: the path, "1 of 3" with your progress and the next article's card.
     const loaded = page.waitForResponse((r) => r.url().endsWith('/articles/a-clean-architecture-whiteboard/path') && !!r.request().headers()['authorization']);
     await page.goto('/en/a/clean-architecture-whiteboard');
+    await nearNextInPath(page);
     await loaded;
     const block = page.locator('[data-next-in-path-block]');
     await expect(block).toBeVisible({ timeout: FIRST_RENDER_MS });
@@ -217,23 +223,25 @@ for (const variant of VARIANTS) {
     await expect(block.locator('[data-next-progress]')).toContainText('2/3');
     await expect(block.locator('[data-next-article]')).toContainText('Dependency Injection');
     await expect(block.locator('[data-join-path]')).toHaveCount(0);
-    // After the sources, before the comments.
+    // After the sources and the comments, which sit right under the article (F11).
     expect(await page.evaluate(() => {
       const sources = document.getElementById('sources-title')!.closest('rd-article-sources')!;
       const next = document.querySelector('rd-next-in-path')!;
       const comments = document.getElementById('comments')!;
-      return sources.nextElementSibling === next && !!(next.compareDocumentPosition(comments) & Node.DOCUMENT_POSITION_FOLLOWING);
+      return sources.nextElementSibling === comments && comments.nextElementSibling === next;
     })).toBe(true);
     await parkMouse(page);
     if (hasScreenshot(variant)) await expect(block).toHaveScreenshot(`next-in-path-${suffix}.png`, { stylePath: [HIDE_APP_CHROME, HIDE_COMMENTS] });
 
     // The last article of a finished path: no next card, and 🎉.
     await page.goto('/en/a/how-readin-picks-your-daily-article');
+    await nearNextInPath(page);
     await expect(block.locator('[data-next-last]')).toContainText(ar ? 'هذا آخر مقال في المسار' : 'This is the last article in the path', { timeout: FIRST_RENDER_MS });
     await expect(block.locator('[data-next-completed]')).toBeVisible();
 
     // A path you haven't joined: Join path, then your progress.
     await page.goto('/en/a/sleep-and-memory');
+    await nearNextInPath(page);
     const join = block.locator('[data-join-path]');
     await expect(join).toBeVisible({ timeout: FIRST_RENDER_MS });
     await expect(block.locator('[data-next-progress]')).toContainText('0/3');
@@ -246,8 +254,8 @@ for (const variant of VARIANTS) {
     await useVariant(context, baseURL!, variant);
     await page.goto('/ar/a/dependency-injection-ar');
     await page.waitForLoadState('networkidle');
-    // The block loads as the end of the article nears the viewport.
-    await page.locator('#sources-title').scrollIntoViewIfNeeded();
+    // The block loads as it nears the viewport (below the comments, F11).
+    await nearNextInPath(page);
     const block = page.locator('[data-next-in-path-block]');
     await expect(block).toBeVisible({ timeout: FIRST_RENDER_MS });
     await expect(block.locator('[data-next-position]')).toContainText(ar ? '2 من 3' : '2 of 3');

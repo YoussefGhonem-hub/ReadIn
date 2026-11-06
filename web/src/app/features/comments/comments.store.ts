@@ -11,7 +11,10 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
 import { CommentErrors } from './comment-errors';
 import { isPlaceholder } from './comment-text';
 
-export const COMMENTS_PAGE_SIZE = 20;
+/** The first page of top-level comments: the reader shows these under the article, then "Show more comments". */
+export const COMMENTS_FIRST_PAGE = 5;
+/** Each "Show more comments" adds this many top-level comments. */
+export const COMMENTS_PAGE_SIZE = 10;
 /** "Show N more replies" shows up to this many more replies per tap, and fetches pages of this size. */
 export const REPLIES_PAGE_SIZE = 5;
 /** A thread shows this many replies (the oldest) until "show N more replies", and again after "Hide replies". */
@@ -190,8 +193,10 @@ function placeholderOf(comment: CommentView): CommentView {
 /**
  * Comments of one article (F11) and their live updates (F27), provided by the comments section.
  *
- * - Pages: `top` or `new`, cursor pages merged without duplicates. A thread shows its first reply; "show N more
- *   replies" shows up to 5 more per tap (loaded ones first, then pages of 5) and "Hide replies" folds it back.
+ * - Pages: `top` or `new`, the first 5 then 10 per "Show more comments", cursor pages merged without duplicates (the
+ *   "top" cursor is an offset that counts what was asked for, so the sizes can differ). A thread shows its first
+ *   reply; "show N more replies" shows up to 5 more per tap (loaded ones first, then pages of 5) and "Hide replies"
+ *   folds it back.
  * - Your actions: a new comment or reply shows at once (pending) and the server's copy replaces it; likes are
  *   optimistic (one request at a time per comment, the latest wish wins) and roll back with a translated toast.
  * - Live events carry no content: new comments are fetched (`GET /comments/{id}`) and either inserted at the top
@@ -290,7 +295,7 @@ export class CommentsStore {
     this._dialog.set(null);
     this.createdSeen.clear();
     try {
-      const page = await firstValueFrom(this.api.list(article.id, { sort: this._sort(), limit: COMMENTS_PAGE_SIZE }));
+      const page = await firstValueFrom(this.api.list(article.id, { sort: this._sort(), limit: COMMENTS_FIRST_PAGE }));
       if (generation !== this.generation) return;
       const seen = new Set<string>();
       this._threads.set(page.items.filter((c) => !seen.has(c.id) && !!seen.add(c.id)).map((c) => toThread(c)));

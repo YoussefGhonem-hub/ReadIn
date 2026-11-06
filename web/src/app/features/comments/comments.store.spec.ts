@@ -5,7 +5,7 @@ import { CommentDto, CommentPageDto } from '../../core/api/models';
 import { CommentEvent, CommentEventType } from '../../core/realtime/realtime.service';
 import { ArticleSocialStore } from '../../core/social/article-social.store';
 import { ToastService } from '../../shared/ui/toast/toast.service';
-import { CommentThread, CommentsStore, hiddenReplies, visibleReplies } from './comments.store';
+import { COMMENTS_FIRST_PAGE, COMMENTS_PAGE_SIZE, CommentThread, CommentsStore, hiddenReplies, visibleReplies } from './comments.store';
 
 const LIST = `${TEST_API}/articles/a1/comments`;
 const comment = (id: string) => `${TEST_API}/comments/${id}`;
@@ -108,6 +108,23 @@ describe('CommentsStore (F11, F27)', () => {
       expect(ids(store.threads())).toEqual(['c1', 'c2', 'c3']);
       expect(store.threads()[1].comment.likeCount).toBe(0); // the copy already shown stays
       expect(store.nextCursor()).toBeNull();
+    });
+
+    it('asks for 5 top-level comments first, then 10 per "Show more comments"', async () => {
+      const done = store.load();
+      const first = expectList('top');
+      expect(first.request.params.get('limit')).toBe(String(COMMENTS_FIRST_PAGE));
+      expect(COMMENTS_FIRST_PAGE).toBe(5);
+      first.flush({ items: [dto('c1'), dto('c2'), dto('c3'), dto('c4'), dto('c5')], nextCursor: 'n5', total: 30 });
+      await done;
+      const more = store.loadMore();
+      const next = expectList('top', 'n5');
+      expect(next.request.params.get('limit')).toBe(String(COMMENTS_PAGE_SIZE));
+      expect(COMMENTS_PAGE_SIZE).toBe(10);
+      next.flush({ items: [dto('c6')], nextCursor: 'n15', total: 30 });
+      await more;
+      expect(ids(store.threads())).toEqual(['c1', 'c2', 'c3', 'c4', 'c5', 'c6']);
+      expect(store.nextCursor()).toBe('n15');
     });
 
     it('a failed next page keeps the cursor to try again', async () => {
