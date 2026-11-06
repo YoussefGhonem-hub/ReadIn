@@ -481,6 +481,23 @@
         "linkHint": "Sign in with your phone number and password once; after that {{provider}} signs you in too.",
         "linkSubmit": "Link and sign in"
       }
+    },
+    "showcase": {
+      "daily": "A new article every morning",
+      "field": "Technology",
+      "minutes": "5 min read",
+      "article": "How do language models actually learn?",
+      "author": "Salma Ibrahim",
+      "streak": "days in a row",
+      "quote": "A little reading every day adds up to a lot.",
+      "highlighted": "You highlighted this",
+      "learn": "Learn something new every day in",
+      "topics": {
+        "tech": "technology",
+        "medicine": "medicine",
+        "business": "business",
+        "mind": "psychology"
+      }
     }
   },
   "password": {

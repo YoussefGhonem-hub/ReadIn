@@ -1,41 +1,31 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { isApiError } from '../../core/api/api.config';
-import { LanguageService } from '../../core/i18n/language.service';
-import { LanguageSwitch } from '../../shared/ui/language-switch';
-import { Wordmark } from '../../shared/ui/wordmark';
+import { AuthFrame } from './auth-frame';
 
-/** Centered card frame shared by the auth screens, with the UI language switcher. */
+/** The auth screens' form, in the shared frame (auth-frame.ts): a card on phones, open on the page beside the showcase on wide screens. */
 @Component({
   selector: 'rd-auth-card',
-  imports: [RouterLink, TranslocoPipe, Wordmark, LanguageSwitch],
+  imports: [AuthFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'relative flex min-h-dvh flex-col items-center justify-center px-4 pb-10 pt-16' },
+  host: { class: 'block' },
   template: `
-    <div class="absolute end-3 top-3"><rd-language-switch /></div>
-    <a routerLink="/" class="mb-6 no-underline" [attr.aria-label]="'nav.home' | transloco"><rd-wordmark [size]="30" [withIcon]="true" /></a>
-    <main class="rd-card w-full max-w-[440px] p-6 sm:p-8">
-      <ng-content select="[rdAuthCardTop]" />
-      <h1 class="m-0 text-2xl font-semibold">{{ title() }}</h1>
-      @if (subtitle()) {
-        <p class="m-0 mt-1 text-sm text-text-secondary">{{ subtitle() }}</p>
-      }
-      <div class="mt-6"><ng-content /></div>
-    </main>
-    <p class="mt-6 text-center text-xs text-text-secondary">
-      {{ 'app.tagline' | transloco }}
-      @if (lang() === 'ar') {
-        · <span dir="ltr">Read daily. Grow daily.</span>
-      }
-    </p>
+    <rd-auth-frame>
+      <main class="rd-card rd-auth-pop w-full max-w-[440px] p-6 sm:p-8 lg:max-w-[420px] lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none">
+        <ng-content select="[rdAuthCardTop]" />
+        <h1 class="rd-auth-rise m-0 text-2xl font-semibold lg:text-[28px] lg:font-bold lg:tracking-tight" style="--d: 60ms">{{ title() }}</h1>
+        @if (subtitle()) {
+          <p class="rd-auth-rise m-0 mt-1 text-sm text-text-secondary" style="--d: 120ms">{{ subtitle() }}</p>
+        }
+        <div class="rd-auth-body mt-6"><ng-content /></div>
+      </main>
+    </rd-auth-frame>
   `,
 })
 export class AuthCard {
   readonly title = input.required<string>();
   readonly subtitle = input<string | null>(null);
-  protected readonly lang = inject(LanguageService).lang;
 }
 
 /** "Step 1 of 3" with a three-part progress bar (Create account, SPEC §9.2). */
@@ -48,7 +38,7 @@ export class AuthCard {
     <p class="m-0 mb-2 text-xs font-semibold text-primary" data-step>{{ 'auth.signUp.step' | transloco: { current: current(), total: total() } }}</p>
     <div class="flex gap-1.5" dir="ltr" aria-hidden="true">
       @for (step of steps(); track step) {
-        <span class="h-1.5 flex-1 rounded-chip" [class]="step <= current() ? 'bg-primary' : 'bg-border'"></span>
+        <span class="h-1.5 flex-1 rounded-chip bg-border"><span class="block h-full rounded-chip bg-primary" [class.rd-auth-step-on]="step <= current()" [class.invisible]="step > current()"></span></span>
       }
     </div>
   `,

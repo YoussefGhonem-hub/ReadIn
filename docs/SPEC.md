@@ -520,6 +520,8 @@ Sign in ─► Forgot password ─► (phone + PIN) ─► New password ─► S
 
 **Welcome:** logo + tagline, "اعمل حساب جديد" (Create account), "عندي حساب، سجل دخول" (Sign in), "كمّل بجوجل" / "كمّل بأبل" (Continue with Google / Apple), "تصفح كزائر" (Browse as guest), UI language switcher.
 
+**Look (web):** the auth screens share one frame: the wordmark (to Home) and the language switch on top, the tagline at the bottom. On wide screens a brand panel fills the other half: sample cards (today's article being read, a reading streak, a highlighted line) float over the brand green, lean toward the mouse, and a headline cycles through topics. It is decorative and hidden from screen readers. On phones the forms sit in a card and Welcome shows a small version of the cards above its title. Content rises in when a screen opens, an error shakes once and the main button shines on hover; with reduce motion nothing moves ([§26](#26-accessibility)).
+
 **Sign in:**
 - Phone field, password field, "نسيت كلمة السر؟" link, "سجل دخول" button, "معندكش حساب؟ اعمل حساب" link, then "أو" and the Google / Apple buttons.
 - Wrong credentials → one generic error: "رقم التليفون أو كلمة السر غلط" (never reveals whether the number exists).

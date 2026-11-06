@@ -99,12 +99,18 @@ for (const variant of VARIANTS) {
     await expect(page.locator('[data-welcome]')).toBeVisible({ timeout: FIRST_RENDER_MS });
     // Every auth screen has its own tab title, in the UI language.
     await expect(page).toHaveTitle(lang === 'ar' ? 'مرحبًا بك — ReadIn' : 'Welcome — ReadIn');
+    // The brand showcase, hidden from screen readers: beside Welcome on wide screens, its cards above the title on phones.
+    const showcase = page.locator('[data-auth-showcase]:visible');
+    await expect(showcase).toHaveCount(1);
+    await expect(showcase).toHaveAttribute('aria-hidden', 'true');
     await snap(page, variant, `welcome-${suffix}.png`);
 
     // ── Sign in: the country picker, then one generic error for a wrong password ──
     await page.locator('[data-sign-in]').click();
     await page.waitForURL('**/auth/sign-in');
     await expect(page).toHaveTitle(lang === 'ar' ? 'تسجيل الدخول — ReadIn' : 'Sign in — ReadIn');
+    // The forms show it only on wide screens.
+    await expect(showcase).toHaveCount(page.viewportSize()!.width >= 1024 ? 1 : 0);
     await page.locator('rd-phone-field [aria-haspopup="dialog"]').click();
     const picker = page.locator('rd-country-picker');
     await expect(picker).toBeVisible();
@@ -157,6 +163,17 @@ for (const variant of VARIANTS) {
     await page.locator('form [data-submit]').click();
     await page.waitForURL((url) => url.pathname === '/');
     expect(loginBodies[1]).toEqual({ phoneNumber: MOCK_PHONE, password: NEW_PASSWORD });
+  });
+
+  test(`reduce motion: the auth screens hold still — ${suffix}`, async ({ page, context, baseURL }) => {
+    await prepare(page, context, baseURL!, variant);
+    const moving = () =>
+      page.evaluate(() => document.getAnimations().filter((a) => !!(a.effect as KeyframeEffect | null)?.target?.closest('rd-auth-frame')).length);
+    await page.goto('/auth');
+    await expect(page.locator('[data-welcome]')).toBeVisible({ timeout: FIRST_RENDER_MS });
+    expect(await moving()).toBeGreaterThan(0); // the drifting light, the content rising in, the floating cards
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect.poll(moving).toBe(0);
   });
 
   test(`create account (3 steps) → complete profile → onboarding — ${suffix}`, async ({ page, context, baseURL, request }) => {
