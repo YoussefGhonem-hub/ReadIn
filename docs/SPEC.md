@@ -994,8 +994,14 @@ Mute author (كتم / إلغاء الكتم) is also on a profile's "⋯" (not o
 **Settings → Muted (F18):** one list of muted writers, fields and topics, each with an unmute action.
 
 ### F29 — Repost
-- Action bar: a repost button with a count, next to comments. Tap to repost, tap again to undo (optimistic, with rollback on failure). Requires sign-in.
+- Action bar: a repost button with a count, next to comments. Requires sign-in.
+  - Tap it to open a small menu: **Repost** (right away, optimistic, with rollback on failure) or **Repost with your thoughts** (a dialog with an optional caption).
+  - Once you've reposted, the same button opens **Edit your thoughts** and **Undo repost**.
 - One repost per user per article. You can't repost your own article (`repost.own_article`).
+- **Caption** (optional, plain text, at most 500 characters after trimming, line breaks kept; `repost.caption_too_long`): your thoughts on the article.
+  - It shows under the "أعاد نشره {name}" label, above the article, wherever that label shows (Following feed, Reposts tab).
+  - Editing it keeps the repost's time and sends no new notification; an empty caption clears it.
+  - Undoing the repost deletes the caption with it.
 - **Following feed:** an article a followed writer reposted appears at the time of the repost, labeled "أعاد نشره {name}". If several people you follow reposted it, it appears once, at the newest repost, labeled "{name} و N غيره". Articles you already got from a writer you follow aren't repeated.
 - **Profile:** a **Reposts** tab, newest first.
 - **Notification:** the author gets `article_reposted` (aggregated, respects preferences and mutes).

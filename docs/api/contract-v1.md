@@ -27,7 +27,7 @@ This is the hand-written contract for the endpoints built in **Phase 0 / early P
 }
 ```
 
-Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). Writer categories: `category.not_found`, `category.not_owner`, `category.limit`, `category.name_taken`, `category.name_invalid` (see Writer categories). Profile links and title (pre-production step): the validation codes `link.*` and `profile.headline_*` (see Profile). Reposts (F29): `repost.own_article` (see Reposts). Highlights (F30): `highlight.text_mismatch`, `highlight.block_not_allowed`, `highlight.too_short`, `highlight.too_long`, `highlight.limit`, `highlight.not_found` (see Highlights). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
+Clients translate `code` (and each validation error code) with their own `ar`/`en` strings, and use `title` only as a fallback. Stable codes: `validation.failed`, `auth.unauthorized`, `auth.forbidden`, `user.suspended`, `user.not_found`, `user.username_taken`, `user.interests.min_three`, `field.not_found`, `topic.not_found`, `article.not_found`, `rate_limited`, `server.error`, plus the auth, social, profile, path, editor, media, notification and verification codes below. Editor: `article.not_found`, `article.not_owner`, `article.draft_conflict`, `article.not_published`, `article.revision_not_found`, `article.status_invalid`, `field.not_found`, `topic.not_in_field`, `article.no_content`, `article.invalid_transition`, `article.slug_taken`, `article.content_language_mismatch`, the validation codes `article.language_invalid`, `article.too_many_tags` and `tag.invalid`, and the problem codes listed with `DraftProblemDto`. Tags: `tag.not_found`, `tag.invalid`, `article.too_many_tags`, `tag.hidden`, `tag.limit` (see Tags). Search: `search.query_invalid`, `search.type_invalid`, `search.filter_invalid` (see Search). Writer categories: `category.not_found`, `category.not_owner`, `category.limit`, `category.name_taken`, `category.name_invalid` (see Writer categories). Profile links and title (pre-production step): the validation codes `link.*` and `profile.headline_*` (see Profile). Reposts (F29): `repost.own_article` and the validation code `repost.caption_too_long` (see Reposts). Highlights (F30): `highlight.text_mismatch`, `highlight.block_not_allowed`, `highlight.too_short`, `highlight.too_long`, `highlight.limit`, `highlight.not_found` (see Highlights). `article.too_many_tags` replaced `article.tags.max_five` in F32; the server no longer sends the old code, and clients may keep translating it.
 
 `403 user.suspended` (every Bearer call of a suspended account, and sign in, refresh and Google/Apple sign in) also carries
 `suspendedUntil`: when the suspension ends (ISO UTC), or `null` for a permanent one (F22). Clients show "موقوف لحد {date}" /
@@ -432,18 +432,51 @@ Writes: Bearer, permission **`reposts.create`** (every member, SPEC §10.2; new 
 
 | Method | Path | Body → Response |
 |---|---|---|
-| PUT | `/articles/{id}/repost` | → `200 RepostStateDto` (idempotent: reposting again changes nothing). `400 repost.own_article` (your own article), `404 article.not_found` (unknown, unpublished, deleted; a hidden article for anyone but its author and moderators, as `GET /articles/{slug}`) |
-| DELETE | `/articles/{id}/repost` | → `200 RepostStateDto` (idempotent; on your own article it answers `isReposted: false`). `404 article.not_found` as above |
+| PUT | `/articles/{id}/repost` | `RepostRequest` (optional body) → `200 RepostStateDto`. Reposts, or, when you already reposted it, only sets the caption (the repost keeps its first time, the count doesn't move and no new notification goes out). No body, or a missing or `null` `caption`, means no caption on a new repost and the caption unchanged on an existing one; a string sets it, and an empty one clears it. `400 repost.own_article` (your own article), `400 validation.failed` with `caption: ["repost.caption_too_long"]` (more than 500 characters after trimming), `404 article.not_found` (unknown, unpublished, deleted; a hidden article for anyone but its author and moderators, as `GET /articles/{slug}`) |
+| GET | `/articles/{id}/repost` | Bearer → `200 RepostStateDto`: your repost of it now, with its caption (prefills "Edit your thoughts"). `404 article.not_found` as above |
+| DELETE | `/articles/{id}/repost` | → `200 RepostStateDto` (idempotent; on your own article it answers `isReposted: false`). The caption goes with the repost. `404 article.not_found` as above |
 | GET | `/users/{username}/reposts?cursor=&limit=` | 🌐 (Bearer optional) → `CursorPage<ArticleCardDto>`: the profile's **Reposts** tab, newest repost first. Each card's `repostedBy` is this user (`othersCount: 0`, `repostedAt` = their repost). Articles readers can't open (hidden, deleted, unpublished) are left out. Like the other profile tabs it keeps what the caller muted (cards carry `isAuthorMuted`). `limit` 1–50, default 20. `404 user.not_found` (unknown, deleted or suspended, as in Profile) |
 
-`RepostStateDto` is `{ repostCount, isReposted }`, counted from the rows right after your change. One repost per user
-per article (unique `Reposts(UserId, ArticleId)`); a repost keeps its first time. Cards and details carry
-`repostCount` (the denormalized `Articles.RepostCount`, recomputed by the outbox right after the commit) and the
-caller's `isReposted`.
+`RepostStateDto` is `{ repostCount, isReposted, caption }`, counted from the rows right after your change; `caption`
+is your repost's caption (`null` when it has none or you haven't reposted). One repost per user per article (unique
+`Reposts(UserId, ArticleId)`); a repost keeps its first time.
+
+**Caption.** `Reposts.Caption` is optional plain text: trimmed, an empty or all-space caption is stored as `null`, at
+most 500 characters after trimming, line breaks kept (`\r\n` and a lone `\r` become `\n`). A too-long caption is
+rejected (`validation.failed`) before the article is looked up, so it wins over `404` and `repost.own_article`.
+`GET /articles/{id}/repost` needs only a token (no permission, no rate limit). It is not RDoc: no mentions, links or
+formatting. Clients render it as plain text (`white-space: pre-line`, direction from its first strong character) and
+never as HTML.
+- `RepostLabelDto.caption` carries the caption of the label's `user`:
+  - on the Following feed, the newest followed reposter's caption (the others' captions aren't shown);
+  - on the Reposts tab, the profile owner's caption.
+- Clients show the caption under the label line and above the card's own header (LinkedIn's "repost with your
+  thoughts").
+- The `article_reposted` notification doesn't carry it.
+
+Cards and details carry `repostCount` (the denormalized `Articles.RepostCount`, recomputed by the outbox right after
+the commit) and the caller's `isReposted`.
 
 **Clients.** The Repost icon sits between Comment and Share on the post card's action bar and next to comments in the
 reader's bar, with its count beside it (no number at 0); accessible name "إعادة نشر، 3" / "Repost, 3" (with the count
-when > 0). A tap toggles optimistically (`PUT` / `DELETE`), and on a failure rolls back and shows the error. On your own
+when > 0).
+
+A tap opens a small menu:
+- **Not reposted yet:**
+  - "أعد النشر" / "Repost" reposts at once, optimistically (`PUT` with no body); on a failure it rolls back and shows
+    the error.
+  - "أعد النشر مع رأيك" / "Repost with your thoughts" opens the caption dialog.
+- **Reposted:**
+  - "عدّل رأيك" / "Edit your thoughts" opens the dialog prefilled from `GET /articles/{id}/repost`.
+  - "إلغاء إعادة النشر" / "Undo repost" sends `DELETE`, optimistically.
+
+**The caption dialog:**
+- The title "أعد نشر المقال" / "Repost this article".
+- A compact preview of the article: title and author.
+- A multi-line field (placeholder "قول رأيك في المقال… (اختياري)" / "Add your thoughts… (optional)").
+- A counter "n/500", turning red over the limit.
+- "انشر" / "Repost", or "احفظ" / "Save" when editing, plus "إلغاء" / "Cancel".
+- Submitting sends `PUT` with `{ caption }`. The dialog stays open on an error and shows it. On your own
 article (`author.id` = your id) the button is disabled with the hint "مينفعش تعيد نشر مقالك" / "You can't repost your
 own article" (the API answers `repost.own_article` anyway). Live `repostCount` replaces the number (see Live counters).
 
@@ -482,11 +515,12 @@ articles it had reposted is recomputed right after (and republished live). Repos
 articles; other people's reposts of its kept published articles stay. It disappears as an actor of `article_reposted`
 entries like any deleted actor.
 
-Repost error code: `repost.own_article` (400):
+Repost error codes: `repost.own_article` (400) and the validation code `repost.caption_too_long`:
 
 | Code | Arabic | English |
 |---|---|---|
 | `400 repost.own_article` | "مينفعش تعيد نشر مقالك." | "You can't repost your own article." |
+| `repost.caption_too_long` (in `validation.failed` → `caption`) | "رأيك لازم يكون 500 حرف أو أقل." | "Your thoughts must be 500 characters or fewer." |
 
 ### Highlights (F30) — SPEC F30
 
@@ -1586,12 +1620,14 @@ interface SavedArticleDto { savedAt: string; collectionIds: string[]; article: A
 interface CollectionDto { id: string; name: string; articleCount: number; createdAt: string } // articleCount: openable articles
 
 // ── Reposts (F29) ─────────────────────────────────────────────────
-interface RepostStateDto { repostCount: number; isReposted: boolean } // PUT / DELETE /articles/{id}/repost
+interface RepostRequest { caption?: string | null }  // PUT /articles/{id}/repost (optional body): missing/null = keep (none on a new repost); "" clears; ≤ 500 chars after trim
+interface RepostStateDto { repostCount: number; isReposted: boolean; caption: string | null } // GET / PUT / DELETE /articles/{id}/repost
 /** The card's label "أعاد نشره {name}" / "{name} و{n} غيره أعادوا نشره". */
 interface RepostLabelDto {
   user: AuthorDto;               // the newest reposter you follow (Following feed), or the profile's owner (Reposts tab); name links to /@{username}
   othersCount: number;           // other writers you follow who reposted it; always 0 on the Reposts tab
   repostedAt: string;            // that repost's time: where the item is placed
+  caption: string | null;        // `user`'s thoughts on it (plain text, ≤ 500 chars), shown under the label
 }
 
 // ── Highlights (F30) ──────────────────────────────────────────────
