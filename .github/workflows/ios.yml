@@ -1,14 +1,17 @@
 name: ios-testflight
 
 # On demand only. A build starts on:
-#   - a push to `uat` (with the API and web deploy in uat.yml; user decision, 2026-11-07);
-#   - a tag that starts with `ios-` (works from dev): git tag ios-<n> && git push origin ios-<n>
+#   - a push to `uat` that changes something under mobile/ (with the API and web deploy in uat.yml; user decision,
+#     2026-11-07: no TestFlight build, and no build number spent, when the app didn't change);
+#   - a tag that starts with `ios-` (works from dev): git tag ios-<n> && git push origin ios-<n>. GitHub doesn't apply
+#     `paths` to tag pushes, so a tag always builds.
 # "Run workflow" in the Actions tab also works once this file exists on the default branch (main).
 # Setup (App Store Connect app record, API key, repository secrets): docs/setup/ios.md
 on:
   push:
     branches: [uat]
     tags: ["ios-*"]
+    paths: ["mobile/**"]
   workflow_dispatch:
 
 concurrency:

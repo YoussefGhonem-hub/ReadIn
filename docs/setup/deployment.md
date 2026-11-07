@@ -531,7 +531,9 @@ started by `deploy/web/start.mjs`.
 
 **Deploy:** move `uat` to a `dev` commit that passed its gates: `git push origin dev:uat`. That push runs
 `.github/workflows/uat.yml` (builds the API self-contained win-x64 and the web, syncs both over Web Deploy with
-`app_offline`, then checks `/health` and the home page) and `ios.yml` (a TestFlight build). Nobody commits on `uat`.
+`app_offline`, then checks `/health` and the home page), and `ios.yml` (a TestFlight build) only when the push changes
+something under `mobile/`, so an unchanged app spends no build number. An `ios-*` tag still builds on demand. Nobody
+commits on `uat`.
 
 **What the deploy never touches:** each server's `web.config`, which holds the settings and secrets as environment
 variables (connection string, JWT key, PIN pepper, Firebase key, CORS origins, `Database__MigrateOnStartup=true` so the

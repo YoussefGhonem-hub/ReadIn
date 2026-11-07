@@ -7,8 +7,9 @@ and what is next is in [docs/handoff/PROGRESS.md](docs/handoff/PROGRESS.md).
 - All work happens directly on `dev` in `D:\freelancer\ReadIn`. Don't create branches or worktrees. Agents work there
   too: never start an agent with worktree isolation.
 - `main` is production: never commit or push to it. Never push `ios-*` tags. Never force-push.
-- `uat` is the deploy branch (user, 2026-11-07): a push deploys the API and the web to SmarterASP and starts a
-  TestFlight build (`.github/workflows/uat.yml`, `ios.yml`). Nobody commits on it; it only moves forward to a `dev`
+- `uat` is the deploy branch (user, 2026-11-07): a push deploys the API and the web to SmarterASP, and starts a
+  TestFlight build only when it changes something under `mobile/` (`.github/workflows/uat.yml`, `ios.yml`; don't spend
+  iOS build numbers on unchanged apps). Nobody commits on it; it only moves forward to a `dev`
   commit that passed its gates, with `git push origin dev:uat`, and only when the user asks.
 - Another session may be working in the same folder, so never run `git stash`, `git reset`, `git rebase`,
   `git checkout <branch>`, `git switch` or `git clean`. They change or discard other people's work.

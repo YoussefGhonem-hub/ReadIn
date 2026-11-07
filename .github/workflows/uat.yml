@@ -2,7 +2,7 @@ name: uat-deploy
 
 # A push to `uat` builds the API and the web and deploys both to SmarterASP over Web Deploy:
 #   API → ghyoussef-002-site4 (https://api.readin.online), web → ghyoussef-002-site3 (https://readin.online).
-# The same push starts the TestFlight build (ios.yml).
+# The same push starts a TestFlight build (ios.yml) only when it changes something under mobile/.
 # The servers keep their own web.config (connection string, keys, Firebase key): this workflow never sends or changes
 # it, so the only secret here is the Web Deploy password (environment `uat`, secret WEBDEPLOY_PASSWORD).
 # The API applies new migrations itself when it starts (Database__MigrateOnStartup on the server).
