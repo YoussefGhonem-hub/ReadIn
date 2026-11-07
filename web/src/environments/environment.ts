@@ -7,9 +7,9 @@ import { AppEnvironment } from './environment.model';
  */
 export const environment: AppEnvironment = {
   production: true,
-  siteUrl: 'https://readin.app',
-  apiBaseUrl: 'https://api.readin.app/api/v1',
-  assetsBaseUrl: 'https://api.readin.app',
+  siteUrl: 'https://readin.online',
+  apiBaseUrl: 'https://api.readin.online/api/v1',
+  assetsBaseUrl: 'https://api.readin.online',
   firebase: {
     apiKey: 'AIzaSyDBpEBFi3QewssqF-jftxgjd3G-5BqfnXs',
     authDomain: 'readin-cca78.firebaseapp.com',

@@ -485,6 +485,13 @@ Later decisions (user, 2026-11-05):
   public; nothing was removed from history. The user asked for this build: `ios-4` failed because `google_sign_in_ios`
   6.3.8 and `firebase-ios-sdk` 13.1.1 need different `gtm-session-fetcher` majors, so `ios.yml` now widens the plugin's
   GoogleSignIn range to what 6.4.0 allows (same native code; 6.4.0 itself needs Flutter 3.47). Next build: `ios-5`.
+- **The web on `readin.online` (user, 2026-11-07):** the user bought `readin.online` (GoDaddy); `readin.app` was never
+  owned. The web's production build now uses `https://readin.online` and `https://api.readin.online` (the refresh cookie
+  is `SameSite=Strict`, so the API must share the site's domain), and SSR allows those hosts. The web runs on the
+  SmarterASP site `ghyoussef-002-site3` as Node 24 behind IIS (ASP.NET Core Module, out of process). The deploy kit is
+  outside git in `D:\tmp\readin-web-deploy`. Still on `readin.app`: `mobile/config/prod.json` (`WEB_ORIGIN`; the API
+  moves to `api.readin.online` once its DNS and SSL work), the app links (Android intent filters, iOS associated
+  domains), the API's `Jwt:Issuer` default, the public legal pages, and the SPEC.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked
