@@ -1,7 +1,7 @@
-Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 352 articles are done.
+Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 392 articles are done, starting with the 40 Learning Roadmaps.
 
 PART 1: AUTOMATIC SEEDING ON ANY NEW DATABASE
-Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 352 new ones.
+Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 392 new ones.
 
 1. Make Database:MigrateOnStartup and Seed:RunOnStartup true by default in every environment. Keep the manual `seed [--force]` command.
 2. Include the content/ folder in `dotnet publish` and in the container image, and make Content:RootPath default to it, so Production doesn't need the repo.
@@ -20,7 +20,7 @@ Goal: when the API starts against any new, empty database, in any environment in
 7. Update docs/setup/deployment.md, including the settings I must provide (such as Seed:SuperAdminPhone and Seed:SuperAdminPassword) and the health check allowance for a slow first start.
 
 PART 2: WRITE THE ARTICLES
-Write one article for every topic in docs/advanced-article-topics.md (352 topics).
+Write one article for every topic in docs/advanced-article-topics.md (392 topics). The Learning Roadmaps section comes first (see Process).
 
 Two versions of every article:
 1. English (en.json): written entirely in English.
@@ -43,13 +43,20 @@ Article rules:
 - Everyday Health topics: these are the exception to "level": "advanced" and to skipping the basics. Use `public-health`, "level": "intermediate", and practical language for general readers, with the Public Health rules above. Give no medicine or supplement doses, and send readers to a doctor or pharmacist for those. Don't promise cures, and call out popular claims the evidence doesn't support.
 - Business and Commerce topics: these are also an exception to "level": "advanced". Use the `business` field with one topic per section below, "level": "intermediate", and practical language for students and new graduates. Use the Egyptian context where it fits, naming the law or standard and its year, because laws, tax rates and prices change. Give no personal investment, tax or legal advice, promise no profits, and tell readers to ask a qualified accountant or lawyer about their own case.
 - Engineering topics: use the `engineering` field, with one topic for each engineering branch below. Explain the principles and name the relevant standards where you can. Give no step-by-step instructions for dangerous work, such as high voltage, pressure vessels or chemical reactions, and say when a licensed engineer is required.
+- Learning Roadmaps topics: each one takes a reader from zero to senior in one track. They are the third exception to "level": "advanced": use "level": "beginner", because the reader may start from nothing.
+  - Field: put each roadmap in its track's field, under a new `roadmaps` topic ("خريطة التعلم" / "Learning Roadmaps"), for example `dotnet`, `frontend`, `mobile`, `devops-cloud`, `software-architecture`, `security`, `databases`, `machine-learning`, `ai-fundamentals` or `testing`. Tracks with no field of their own (Java, Node.js, Python, Go, PHP, embedded, data analysis and data engineering, and the two Start Here articles) go under `education` with the same topic. Tag every roadmap `roadmap`.
+  - Misconception: the most common wrong belief about learning that track, for example that you must finish every course before you build anything, or that knowing the framework is enough.
+  - Structure: what the job really involves; then the stages from zero to senior in one `:::steps` block. Each stage says what to learn and why, what to postpone, one project to build, and how to know you're ready for the next stage. Then a books table (title, authors, edition and year, the stage it fits, free or paid), the common mistakes, how to show your work, and a "next on ReadIn" part that links the ReadIn articles and learning paths for each stage.
+  - Books: name real books only. Check each title, author and edition on the publisher's page and link to that page, never to a pirated copy. Say when a book is old and which parts still hold, and point to the official free docs where a book has aged (for example angular.dev and react.dev). The books in each topic below are suggestions: drop one you can't verify, or replace it with a better or newer one. Book links don't count toward the 2–5 sources.
+  - Give durations only as ranges that depend on hours per week. No salary figures, no job promises and no affiliate links. Name each certification with its official page, and say that exam codes change.
 
 Images:
 - Don't create custom images, diagrams or SVGs. They would take too long.
 - Use only the standard cover from `node tools/content-covers/render.mjs --slug <slug>`, because validation requires cover.webp.
 
 Process:
-- Write all 352 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
+- Write all 392 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
+- Priority (user decision, 2026-11-07): write and seed the Learning Roadmaps section first, all 40, before any other section, starting with the full-stack .NET and Angular roadmap. They are the first four batches of 10: each batch is validated, committed, pushed and seeded before the next batch starts. If seeding is blocked, they still come first in the writing order.
 - For each article, run compose, validate and render.mjs. An article isn't done until validate passes, including the code and link checks.
 - Update any test or SPEC text that depends on the number 300 to the new total.
 
@@ -63,12 +70,13 @@ When everything is done, send me a final report in simple Egyptian Arabic: how m
 
 # Advanced Article Topics
 
-Topics for advanced ReadIn articles, written for readers who already have experience in the field. None of them repeats an existing article in `content/articles`.
+Topics for ReadIn articles. Most are advanced, written for readers who already have experience in the field; Learning Roadmaps, Everyday Health and Business and Commerce say otherwise. None of them repeats an existing article in `content/articles`.
 
 ## Contents
 
 | Section | Topics |
 |---|---:|
+| [Learning Roadmaps](#learning-roadmaps) (written and seeded first) | 40 |
 | [Databases](#databases) | 17 |
 | [Flutter and Dart](#flutter-and-dart) | 17 |
 | [DevOps](#devops) | 7 |
@@ -87,7 +95,81 @@ Topics for advanced ReadIn articles, written for readers who already have experi
 | [Everyday Health](#everyday-health) | 20 |
 | [Engineering](#engineering) | 30 |
 | [Business and Commerce](#business-and-commerce) | 40 |
-| **Total** | **352** |
+| **Total** | **392** |
+
+## Learning Roadmaps
+
+**Priority: these 40 are written and seeded before every other section, starting with number 3 (full-stack .NET and Angular), then 1, 2 and 4 to 40 in order.** Each one takes a reader from zero to senior in one track, stage by stage, with the books worth reading at each stage. The rules are under "Learning Roadmaps topics" at the top of this file.
+
+### Start Here
+
+1. **Where to start in software:** the computer science basics every track needs (how a computer runs a program, data structures and algorithms, operating systems, networking and Git), in what order, and what can wait. Books: *Code* (Charles Petzold), *Grokking Algorithms* (Aditya Bhargava), *Computer Systems: A Programmer's Perspective* (Randal E. Bryant, David R. O'Hallaron), *Operating Systems: Three Easy Pieces* (Remzi and Andrea Arpaci-Dusseau, free online), *Computer Networking: A Top-Down Approach* (James Kurose, Keith Ross).
+2. **Choosing your track:** what backend, frontend, full-stack, mobile, DevOps, security, data, AI, QA and embedded engineers really do all day, how to pick one, and when to switch. It links to every roadmap in this section. Books: *The Pragmatic Programmer* (David Thomas, Andrew Hunt), *The Software Engineer's Guidebook* (Gergely Orosz).
+
+### Full-Stack
+
+3. **Full-stack .NET and Angular (the first article):** C#, ASP.NET Core Web APIs, EF Core and SQL Server, and authentication; then TypeScript and Angular (signals, RxJS, routing, forms); testing on both sides, deploying both, and one complete project at the end. Books: Mark J. Price's *Modern Cross-Platform Development Fundamentals* (the newest C# and .NET edition), *ASP.NET Core in Action* (Andrew Lock), *Entity Framework Core in Action* (Jon P Smith), *Effective TypeScript* (Dan Vanderkam), *Learning Angular* (Aristeidis Bampakos, Pablo Deeleman).
+4. **Full-stack .NET and React:** the same .NET backend path, with React, routing or Next.js, and server data on the front. Books: *ASP.NET Core in Action*, *Entity Framework Core in Action*, *Effective TypeScript*, *Learning React* (Alex Banks, Eve Porcello) next to react.dev.
+5. **Full-stack JavaScript and TypeScript:** Node.js with NestJS or Express, PostgreSQL, and React with Next.js: one language from end to end, and where that hurts. Books: *Eloquent JavaScript* (Marijn Haverbeke, free online), *Effective TypeScript*, *Node.js Design Patterns* (Mario Casciaro, Luciano Mammino), *Fluent React* (Tejas Kumar).
+6. **Full-stack PHP with Laravel and Vue:** modern PHP, Laravel (Eloquent, queues and testing), MySQL, and Vue with Inertia or Livewire. Books: *PHP & MySQL: Server-side Web Development* (Jon Duckett), *Laravel: Up & Running* (Matt Stauffer), *PHP 8 Objects, Patterns, and Practice* (Matt Zandstra).
+
+### Backend
+
+7. **Backend fundamentals for any language:** HTTP and REST, SQL and data modeling, indexes, transactions, caching, queues, authentication, logging, testing and deployment: the part you keep when you change languages. Books: *Designing Data-Intensive Applications* (Martin Kleppmann; check for the second edition with Chris Riccomini), *Learning SQL* (Alan Beaulieu), *SQL Performance Explained* (Markus Winand), *Unit Testing Principles, Practices, and Patterns* (Vladimir Khorikov).
+8. **.NET backend from zero to senior:** C# and the CLR, ASP.NET Core (middleware, DI, minimal APIs vs controllers), EF Core and Dapper, background jobs, messaging, caching, observability, performance and memory, and clean architecture without overdoing it. Books: *C# in Depth* (Jon Skeet), *ASP.NET Core in Action*, *Dependency Injection Principles, Practices, and Patterns* (Steven van Deursen, Mark Seemann), *Concurrency in C# Cookbook* (Stephen Cleary), *Pro .NET Memory Management* (Konrad Kokosa), *CLR via C#* (Jeffrey Richter; old, read it for the runtime chapters).
+9. **Java backend with Spring Boot:** modern Java, Spring Boot, Spring Data JPA, Spring Security, testing, and the JVM. Books: *Head First Java* (Kathy Sierra, Bert Bates, Trisha Gee), *Effective Java* (Joshua Bloch), *Spring in Action* (Craig Walls), *Java Concurrency in Practice* (Brian Goetz and others).
+10. **Node.js backend:** the event loop, TypeScript, NestJS, databases with an ORM and with raw SQL, streams, worker threads, and scaling Node. Books: *Node.js Design Patterns*, *Distributed Systems with Node.js* (Thomas Hunter II), *Effective TypeScript*.
+11. **Python backend:** Python itself, Django vs FastAPI, the ORM, async, background jobs with Celery, testing and packaging. Books: *Python Crash Course* (Eric Matthes), *Fluent Python* (Luciano Ramalho), *Architecture Patterns with Python* (Harry Percival, Bob Gregory, free online), *Two Scoops of Django* (Daniel and Audrey Feldroy).
+12. **Go backend:** the language, goroutines and channels, `net/http`, databases, tooling, and when Go is the right choice. Books: *Learning Go* (Jon Bodner), *The Go Programming Language* (Alan Donovan, Brian Kernighan), *Concurrency in Go* (Katherine Cox-Buday), *100 Go Mistakes and How to Avoid Them* (Teiva Harsanyi).
+
+### Frontend
+
+13. **Frontend fundamentals:** semantic HTML, modern CSS layout, JavaScript in depth, how the browser works, accessibility and web performance, all before any framework. Books: *Eloquent JavaScript*, *CSS: The Definitive Guide* (Eric Meyer, Estelle Weyl), *You Don't Know JS Yet* (Kyle Simpson, free online), *High Performance Browser Networking* (Ilya Grigorik, free online).
+14. **Angular from zero to senior:** TypeScript, components and signals, RxJS, routing, forms, state, SSR, testing, performance and structuring a large app. Books: *Learning Angular*, *Effective TypeScript*, with angular.dev as the main source, since books age with every major version.
+15. **React and Next.js from zero to senior:** components and state, Effects, data fetching, routing, Next.js server components, testing and performance. Books: *Learning React*, *Fluent React*, with react.dev and nextjs.org as the main sources.
+
+### Mobile
+
+16. **Flutter from zero to senior:** Dart, widgets and layout, state management, navigation, networking and offline, testing, performance, platform channels, and publishing to both stores. Books: *Dart Apprentice* and *Flutter Apprentice* (Kodeco), with the official Flutter app architecture guide.
+17. **Native Android with Kotlin:** Kotlin, Jetpack Compose, coroutines and Flow, the architecture components, Room, testing and a Play Store release. Books: *Kotlin in Action* (Sebastian Aigner, Roman Elizarov, Svetlana Isakova, Dmitry Jemerov), *Kotlin Coroutines: Deep Dive* (Marcin Moskała), *Android Programming: The Big Nerd Ranch Guide*, and Google's free Android Basics with Compose course.
+18. **Native iOS with Swift:** Swift, SwiftUI then UIKit, Swift concurrency, persistence, testing and an App Store release. Books: *The Swift Programming Language* (Apple, free), *Thinking in SwiftUI* and *Advanced Swift* (objc.io), and Paul Hudson's free *100 Days of SwiftUI* course.
+19. **React Native:** React first, then React Native and Expo, native modules, performance and release, and when it beats Flutter or native and when it doesn't. Books: *Learning React*, *Effective TypeScript*, with reactnative.dev and the Expo docs as the main sources.
+20. **Senior mobile engineer, beyond the framework:** app architecture, offline sync, performance, security (OWASP MASVS), accessibility, CI/CD for apps, crash monitoring, store review rules and staged rollouts. Books: *Building Mobile Apps at Scale* (Gergely Orosz), the OWASP MASTG (free), *Clean Architecture* (Robert C. Martin; read it critically).
+
+### System Design and Architecture
+
+21. **System design from zero to senior:** growing one server step by step, then caches, queues, replication, partitioning, consistency and reliability, with a study plan for system design interviews. Books: *Designing Data-Intensive Applications*, *System Design Interview* volumes 1 and 2 (Alex Xu; volume 2 with Sahn Lam), *Understanding Distributed Systems* (Roberto Vitillo), *Release It!* (Michael Nygard), *Database Internals* (Alex Petrov).
+22. **Software design, from clean code to design patterns:** OOP done right, SOLID, the classic patterns and when they're overkill, refactoring, and working with legacy code. Books: *Head First Design Patterns* (Eric Freeman, Elisabeth Robson), *Design Patterns* (Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides), *Refactoring* (Martin Fowler), *A Philosophy of Software Design* (John Ousterhout), *Working Effectively with Legacy Code* (Michael Feathers).
+23. **Software architecture: DDD, modular monoliths and microservices:** architecture styles and their trade-offs, DDD, events and integration, and how to decide. Books: *Fundamentals of Software Architecture* (Mark Richards, Neal Ford), *Learning Domain-Driven Design* (Vlad Khononov), *Domain-Driven Design* (Eric Evans), *Building Microservices* (Sam Newman), *Software Architecture: The Hard Parts* (Neal Ford, Mark Richards, Pramod Sadalage, Zhamak Dehghani), *Enterprise Integration Patterns* (Gregor Hohpe, Bobby Woolf).
+
+### DevOps and Cloud
+
+24. **DevOps engineer from zero:** Linux, networking, scripting, Git, CI/CD, Docker, Kubernetes, infrastructure as code, monitoring, and the culture behind them. Books: *The Linux Command Line* (William Shotts, free online), *The Phoenix Project* (Gene Kim, Kevin Behr, George Spafford), *The DevOps Handbook* (Gene Kim, Jez Humble, Patrick Debois, John Willis, Nicole Forsgren), *Continuous Delivery* (Jez Humble, David Farley), *Accelerate* (Nicole Forsgren, Jez Humble, Gene Kim), *Terraform: Up & Running* (Yevgeniy Brikman).
+25. **Kubernetes and platform engineering:** containers in depth, Kubernetes for developers and then for operators, Helm, GitOps, and building an internal platform; the CKAD, CKA and CKS exams. Books: *Docker Deep Dive* (Nigel Poulton), *Kubernetes: Up and Running* (Brendan Burns, Joe Beda, Kelsey Hightower, Lachlan Evenson), *Kubernetes in Action* (Marko Lukša), *Production Kubernetes* (Josh Rosso, Rich Lander, Alex Brand, John Harris), *Platform Engineering* (Camille Fournier, Ian Nowland), *Team Topologies* (Matthew Skelton, Manuel Pais).
+26. **Site reliability engineering (SRE):** SLOs and error budgets, on-call, incident response, observability, capacity and performance. Books: *Site Reliability Engineering* and *The Site Reliability Workbook* (Google, free online), *Observability Engineering* (Charity Majors, Liz Fong-Jones, George Miranda), *Implementing Service Level Objectives* (Alex Hidalgo), *Systems Performance* (Brendan Gregg).
+27. **Azure cloud engineer:** core services, networking, identity, cost and the Well-Architected Framework, with the certification path (AZ-900, AZ-104, AZ-204, AZ-305, AZ-400) and which one fits which job. Sources: Microsoft Learn and the Azure Architecture Center. Cloud books age fast, so name only one whose edition matches the current exam.
+28. **AWS cloud engineer:** core services, networking, IAM, cost and the Well-Architected Framework, with the certification path (Cloud Practitioner, then the Associate and Professional exams) and which one fits which job. Sources: AWS Skill Builder and the AWS Well-Architected Framework. Same rule for books.
+
+### Security
+
+29. **Cybersecurity from zero:** the tracks (application security, penetration testing, SOC, cloud security and GRC), the networking and Linux base they all need, legal practice labs, and the entry certifications (CompTIA Security+, ISC2 CC). Books: *Computer Networking: A Top-Down Approach*, *Linux Basics for Hackers* (OccupyTheWeb), *Security Engineering* (Ross Anderson).
+30. **Application security for developers:** the OWASP Top 10 and ASVS, secure design, threat modeling, secure code review, and dependency and secret scanning. Books: *Alice and Bob Learn Application Security* (Tanya Janca), *Web Application Security* (Andrew Hoffman), *Threat Modeling: Designing for Security* (Adam Shostack), *API Security in Action* (Neil Madden), *Designing Secure Software* (Loren Kohnfelder).
+31. **Penetration testing and bug bounty, legally:** the methodology, web and network testing in legal labs and in-scope programs only, writing reports, and the eJPT and OSCP exams. Books: *Penetration Testing* (Georgia Weidman), *Real-World Bug Hunting* (Peter Yaworski), *Bug Bounty Bootcamp* (Vickie Li), *Black Hat Python* (Justin Seitz, Tim Arnold), and PortSwigger's free Web Security Academy.
+32. **SOC analyst and blue team:** logs and SIEM, detection, MITRE ATT&CK, incident response, threat hunting and basic malware analysis. Books: *Blue Team Handbook: SOC, SIEM, and Threat Hunting* (Don Murdoch), *The Practice of Network Security Monitoring* (Richard Bejtlich), *Practical Packet Analysis* (Chris Sanders), *Intelligence-Driven Incident Response* (Scott J. Roberts, Rebekah Brown), *Practical Malware Analysis* (Michael Sikorski, Andrew Honig).
+33. **Cloud security and DevSecOps:** identity and permissions in the cloud, container and Kubernetes security, securing CI/CD and the supply chain, and the certifications (CCSK, AZ-500, AWS Security Specialty, CKS). Books: *Practical Cloud Security* (Chris Dotson), *Container Security* (Liz Rice), *Hacking Kubernetes* (Andrew Martin, Michael Hausenblas), *Securing DevOps* (Julien Vehent).
+
+### Data and AI
+
+34. **Database engineer and DBA:** SQL in depth, data modeling, indexes and execution plans, transactions and locking, backup and recovery, and replication, in SQL Server and PostgreSQL. Books: *Learning SQL*, *SQL Performance Explained*, *SQL Antipatterns* (Bill Karwin), *Database Internals*, *SQL Server Execution Plans* (Grant Fritchey, free from Redgate), *PostgreSQL Internals* (Egor Rogov, free from Postgres Professional).
+35. **Data analyst:** Excel, SQL, statistics, Python or Power BI, dashboards, and telling a story with data; the PL-300 exam. Books: *SQL for Data Analysis* (Cathy Tanimura), *Practical Statistics for Data Scientists* (Peter Bruce, Andrew Bruce, Peter Gedeck), *Python for Data Analysis* (Wes McKinney, free online), *Storytelling with Data* (Cole Nussbaumer Knaflic).
+36. **Data engineer:** SQL and Python, data modeling and warehouses, ETL and ELT, orchestration, Spark, streaming with Kafka, and data quality. Books: *Fundamentals of Data Engineering* (Joe Reis, Matt Housley), *The Data Warehouse Toolkit* (Ralph Kimball, Margy Ross), *Designing Data-Intensive Applications*, *Streaming Systems* (Tyler Akidau, Slava Chernyak, Reuven Lax), *Kafka: The Definitive Guide* (Gwen Shapira, Todd Palino, Rajini Sivaram, Krit Petty).
+37. **Machine learning engineer:** the math you really need, classic ML, deep learning and evaluation, then MLOps and serving models in production. Books: *Mathematics for Machine Learning* (Marc Peter Deisenroth, A. Aldo Faisal, Cheng Soon Ong, free), *An Introduction to Statistical Learning* (Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani, Jonathan Taylor; free Python edition), *Hands-On Machine Learning* (Aurélien Géron), *Designing Machine Learning Systems* (Chip Huyen), *Understanding Deep Learning* (Simon J. D. Prince, free).
+38. **AI engineer, building LLM applications:** how LLMs work, prompting, RAG, tools and agents, evaluation, cost and safety, and shipping to production. Books: *AI Engineering* (Chip Huyen), *Hands-On Large Language Models* (Jay Alammar, Maarten Grootendorst), *Build a Large Language Model (From Scratch)* (Sebastian Raschka), *Prompt Engineering for LLMs* (John Berryman, Albert Ziegler).
+
+### Other Tracks
+
+39. **QA and test automation engineer:** testing fundamentals and exploratory testing, test design, API testing, UI automation with Playwright, performance testing, and where QA fits in CI; the ISTQB Foundation exam. Books: *Lessons Learned in Software Testing* (Cem Kaner, James Bach, Bret Pettichord), *Explore It!* (Elisabeth Hendrickson), *Agile Testing* (Lisa Crispin, Janet Gregory), *Unit Testing Principles, Practices, and Patterns*, *xUnit Test Patterns* (Gerard Meszaros).
+40. **Embedded systems engineer:** C in depth, digital electronics, ARM Cortex-M microcontrollers, peripherals and drivers, RTOS, hardware debugging, and the automotive standards (AUTOSAR, MISRA C). Books: *C Programming: A Modern Approach* (K. N. King), *Making Embedded Systems* (Elecia White), *The Definitive Guide to ARM Cortex-M3 and Cortex-M4 Processors* (Joseph Yiu), *Mastering the FreeRTOS Real Time Kernel* (Richard Barry, free), *Test Driven Development for Embedded C* (James Grenning).
 
 ## Databases
 
