@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:readin/core/theme/theme_x.dart';
+import 'package:readin/features/app_update/presentation/widgets/update_motion.dart';
 import 'package:readin/features/auth/presentation/widgets/auth_showcase.dart';
 import 'package:readin/shared/media/media_image.dart';
 import 'package:readin/shared/widgets/app_network_image.dart';
@@ -37,6 +38,8 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   // Sign in's showcase loops for as long as the screen is open, so `pumpAndSettle` would never settle: tests and goldens
   // see the screen at rest. test/features/auth/auth_motion_test.dart turns the motion on.
   AuthMotion.enabled = false;
+  // The same for "Update ReadIn" (test/features/app_update/update_motion_test.dart turns it on).
+  UpdateMotion.enabled = false;
   await testMain();
 }
 

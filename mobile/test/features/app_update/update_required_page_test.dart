@@ -15,6 +15,7 @@ import 'package:readin/features/app_update/domain/entities/update_policy.dart';
 import 'package:readin/features/app_update/presentation/cubit/app_update_cubit.dart';
 import 'package:readin/features/app_update/presentation/pages/update_required_page.dart';
 import 'package:readin/features/app_update/presentation/widgets/app_update_gate.dart';
+import 'package:readin/features/app_update/presentation/widgets/update_motion.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
@@ -62,7 +63,7 @@ void main() {
         ));
 
         expect(find.byType(AppLogo), findsOneWidget);
-        expect(find.byIcon(Icons.system_update_rounded), findsOneWidget);
+        expect(find.byType(UpdateHero), findsOneWidget);
         expect(find.text(l10n().updateRequiredTitle), findsOneWidget);
         expect(find.text(l10n().updateRequiredBody), findsOneWidget);
         await tester.tap(find.widgetWithText(FilledButton, l10n().updateRequiredAction));

@@ -496,6 +496,12 @@ When a release must replace older versions (user request, 2026-11-07), the app b
 - **When it checks:** at start, in parallel with the session restore, so the splash never waits; and when it comes back to the foreground, at most every 30 minutes.
 - **Offline:** a failed check never blocks. The last policy the app received is kept, so an app that was already told to update stays blocked when it starts offline.
 - **The block.** A full-screen page replaces the whole app, above the router, so links and push taps can't get past it, and Back doesn't close it. It shows the logo, "Update ReadIn" / «حدِّث ReadIn», why, and an **Update now** button that opens the store. Android falls back to the Play Store page of the app's package. iOS shows the button only when `storeUrl` is set (an App Store link needs the app's id).
+- **Motion (user request, 2026-11-07):**
+  - The picture pops in. Then it loops: an arrow drops into a phone, a bar in the phone and a ring around it fill, waves spread from the ring, and sparkles twinkle.
+  - Two soft lights drift behind the page.
+  - The title, the text and the button rise in one after another.
+  - A light sweeps over Update now every 4 seconds.
+  - With reduce motion, all of it rests in place.
 - **Releasing:** publish the new version in the stores first. When it is live, raise `minimumVersion`. Raising it earlier would block users from a version the store doesn't offer yet. The steps are in [`docs/setup/deployment.md`](setup/deployment.md).
 
 ---
