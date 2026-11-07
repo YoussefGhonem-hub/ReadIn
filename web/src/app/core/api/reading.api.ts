@@ -1,7 +1,7 @@
 import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, SILENT_ERRORS } from './api.config';
+import { API_BASE_URL, SILENT_ERRORS, WITH_SESSION } from './api.config';
 import { ReadingHeatmapDto, ReadingProgressRequest, ReadingProgressResultDto, ReadingStatsDto } from './models';
 
 /** Days of the reading heatmap (F08: the last 12 months). The API accepts 1–371. */
@@ -15,7 +15,8 @@ export const HEATMAP_DAYS = 365;
 export class ReadingApi {
   private readonly http = inject(HttpClient);
   private readonly base = inject(API_BASE_URL);
-  private readonly silent = () => new HttpContext().set(SILENT_ERRORS, true);
+  /** Every call here is the signed-in reader's own (progress, stats): the token goes out even while hydrating. */
+  private readonly silent = () => new HttpContext().set(SILENT_ERRORS, true).set(WITH_SESSION, true);
 
   /**
    * `PUT /articles/{id}/progress`. `keepalive` lets the last report of a closing tab finish. `404 article.not_found`,
