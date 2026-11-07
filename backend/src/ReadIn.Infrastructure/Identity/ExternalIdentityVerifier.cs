@@ -146,12 +146,15 @@ internal sealed class OidcExternalIdentityVerifier : IExternalIdentityVerifier
 
     /// <summary>
     /// The token must hold the SHA-256 (hex) of the raw nonce the client sends us. Accepting the raw value itself would let
-    /// anyone holding a leaked token copy the nonce out of its payload.
+    /// anyone holding a leaked token copy the nonce out of its payload. A provider that doesn't require a nonce (Google)
+    /// also accepts a token whose nonce the client didn't send: the iOS Google SDK (GoogleSignIn 9, through AppAuth)
+    /// puts its own random nonce in every token and never hands it to the app, so that token is no weaker than one
+    /// without a nonce (user, 2026-11-07: Google sign-in failed on every iPhone).
     /// </summary>
     internal static bool NonceMatches(bool required, string? inToken, string? raw)
     {
         if (inToken is null) return !required && string.IsNullOrEmpty(raw);
-        if (string.IsNullOrEmpty(raw)) return false;
+        if (string.IsNullOrEmpty(raw)) return !required;
 
         var expected = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
         return CryptographicOperations.FixedTimeEquals(

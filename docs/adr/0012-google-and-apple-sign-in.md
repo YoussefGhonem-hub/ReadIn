@@ -30,7 +30,10 @@ that doesn't verify anything Google or Apple don't already sign.
   A provider without client ids is turned off and isn't listed in `GET /auth/config` → `externalProviders`.
 - **Apple nonce:** the app makes a random nonce, gives Apple its SHA-256 (hex) and sends us the raw value. We accept the
   token only if its `nonce` is the SHA-256 of what we received. Accepting the raw value would let anyone holding a leaked
-  token copy the nonce out of its readable payload. Google tokens are checked the same way when they carry a nonce.
+  token copy the nonce out of its readable payload. Google tokens are checked the same way when the client sends a
+  nonce. A Google token that carries a nonce the client didn't send is accepted like one without a nonce: the iOS
+  Google SDK (GoogleSignIn 9, through AppAuth) adds its own random nonce to every token and never gives it to the app,
+  and Google never required one (user, 2026-11-07, after every iPhone Google sign-in was rejected).
 - Audiences: Google = the web client id (also the audience on Android, where the app passes it as `serverClientId`) and the
   iOS client id; Apple = the bundle id `app.readin.readin` (native iOS) and, once created, the web Services ID. Client ids are
   public identifiers and live in `appsettings.json`.

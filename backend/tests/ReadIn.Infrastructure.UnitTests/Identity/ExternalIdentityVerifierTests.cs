@@ -124,6 +124,26 @@ public sealed class ExternalIdentityVerifierTests
     }
 
     [Fact]
+    public async Task A_google_token_with_the_ios_sdks_own_nonce_is_accepted_but_a_nonce_the_app_sends_must_match()
+    {
+        var verifier = Verifier();
+        // GoogleSignIn 9 on iOS puts a random nonce of its own in the token and never gives it to the app.
+        var ios = Token(audience: "ios-client.apps.googleusercontent.com", claims: new Dictionary<string, object>
+        {
+            ["email"] = "mona@example.com",
+            ["email_verified"] = true,
+            ["nonce"] = "sdk-generated-random-value",
+        });
+
+        (await verifier.VerifyAsync(ExternalProviders.Google, ios, null, Ct)).IsSuccess.Should().BeTrue();
+        (await verifier.VerifyAsync(ExternalProviders.Google, ios, "some-other-raw-nonce", Ct))
+            .Error.Should().Be(CredentialErrors.ExternalInvalid, "a nonce the client sends must still match the token");
+
+        var hashed = Token(claims: new Dictionary<string, object> { ["nonce"] = Sha256("raw-nonce") });
+        (await verifier.VerifyAsync(ExternalProviders.Google, hashed, "raw-nonce", Ct)).IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task A_google_token_is_not_accepted_as_an_apple_token()
     {
         var result = await Verifier().VerifyAsync(ExternalProviders.Apple, Token(audience: AppleClient), "raw-nonce", Ct);
