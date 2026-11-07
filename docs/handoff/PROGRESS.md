@@ -489,9 +489,17 @@ Later decisions (user, 2026-11-05):
   owned. The web's production build now uses `https://readin.online` and `https://api.readin.online` (the refresh cookie
   is `SameSite=Strict`, so the API must share the site's domain), and SSR allows those hosts. The web runs on the
   SmarterASP site `ghyoussef-002-site3` as Node 24 behind IIS (ASP.NET Core Module, out of process). The deploy kit is
-  outside git in `D:\tmp\readin-web-deploy`. Still on `readin.app`: `mobile/config/prod.json` (`WEB_ORIGIN`; the API
-  moves to `api.readin.online` once its DNS and SSL work), the app links (Android intent filters, iOS associated
-  domains), the API's `Jwt:Issuer` default, the public legal pages, and the SPEC.
+  outside git in `D:\tmp\readin-web-deploy`. Live since 2026-11-07: `https://readin.online` (www and http redirect
+  there) and the API at `https://api.readin.online` (the `ftempurl` address still works). `mobile/config/prod.json` now
+  uses both, so the next TestFlight/Android build talks to `api.readin.online` and shares `readin.online` links.
+  Checked live with a browser: sign in, reload, session kept (refresh cookie on `api.readin.online`, `SameSite=Strict`).
+  SSL: the hosting plan's free-SSL quota is used up, so the certificates are Let's Encrypt ones issued by hand (kit in
+  `D:\tmp\readin-ssl`, outside git) and imported in the panel; they expire on 2027-02-05 and must be renewed and
+  re-imported in early January 2027. Open: Google sign-in on the web needs `https://readin.online` in the OAuth
+  client's JavaScript origins (user); `/.well-known/assetlinks.json` answers 404 until `ANDROID_APP_ID` and
+  `ANDROID_CERT_SHA256` are set on the web server, so Android opens `readin.online` links in the browser; live updates
+  and push need the Firebase service account (`realtime/token` answers 500). Still on `readin.app`: the API's
+  `Jwt:Issuer` default (a name only), the public legal pages, and the SPEC.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked

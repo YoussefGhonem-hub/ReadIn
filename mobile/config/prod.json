@@ -1,6 +1,6 @@
 {
   "FLAVOR": "prod",
-  "API_BASE_URL": "https://ghyoussef-002-site4.ftempurl.com/api/v1",
+  "API_BASE_URL": "https://api.readin.online/api/v1",
   "USE_FIREBASE_EMULATOR": false,
-  "WEB_ORIGIN": "https://readin.app"
+  "WEB_ORIGIN": "https://readin.online"
 }
