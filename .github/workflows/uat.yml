@@ -41,7 +41,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          global-json-file: global.json
+          global-json-file: backend/global.json
 
       - uses: actions/setup-node@v4
         with:
@@ -56,7 +56,8 @@ jobs:
           test -f "$MSD" && echo "msdeploy: $MSD"
 
       - name: Build the API (self-contained win-x64)
-        run: dotnet publish backend/src/ReadIn.Api/ReadIn.Api.csproj -c Release -r win-x64 --self-contained true -o out/api -nologo
+        working-directory: backend
+        run: dotnet publish src/ReadIn.Api/ReadIn.Api.csproj -c Release -r win-x64 --self-contained true -o ../out/api -nologo
 
       - name: Build the web (Angular SSR)
         working-directory: web
