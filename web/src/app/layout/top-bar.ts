@@ -16,6 +16,7 @@ import { SessionStore } from '../core/auth/session.store';
 import { NotificationsMenu } from '../features/notifications/notifications-menu';
 import { appIconsReady } from '../shared/ui/app-icons';
 import { ShellIcon } from '../shared/ui/shell-icon';
+import { LogoMark } from '../shared/ui/logo-mark';
 import { Wordmark } from '../shared/ui/wordmark';
 import { TOP_NAV } from './nav-items';
 import { LanguageToggle } from './language-toggle';
@@ -25,8 +26,8 @@ import { ThemeToggle } from './theme-toggle';
 const SEARCH_BOX_QUERY = '(min-width: 48rem)';
 
 /**
- * The top bar. From `md`: the ReadIn mark, the search box, then the destinations as an icon above a small label
- * (labels from `lg`; the current one gets a bar under it), the theme and language toggles and "Me" (its menu: profile, links,
+ * The top bar. From `md`: the ReadIn logo mark (shared/ui/logo-mark.ts), the search box, then the destinations as an
+ * icon above a small label (labels from `lg`; the current one gets a bar under it), the theme and language toggles and "Me" (its menu: profile, links,
  * appearance, sign out) or "Sign in". Below `md`: the mark, the search icon, the bell, the theme and language toggles and the avatar
  * (the bottom nav has the destinations). "Me" is its own chunk (layout/me-button.ts), loaded once the session is
  * restored as a member's (the server renders every page signed out); its menu loads when the button is hovered, focused
@@ -34,14 +35,14 @@ const SEARCH_BOX_QUERY = '(min-width: 48rem)';
  */
 @Component({
   selector: 'rd-top-bar',
-  imports: [RouterLink, RouterLinkActive, TranslocoPipe, Wordmark, ShellIcon, NgComponentOutlet, NotificationsMenu, ThemeToggle, LanguageToggle],
+  imports: [RouterLink, RouterLinkActive, TranslocoPipe, LogoMark, Wordmark, ShellIcon, NgComponentOutlet, NotificationsMenu, ThemeToggle, LanguageToggle],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'sticky top-0 z-30 block border-b border-border bg-surface' },
   template: `
     <div class="mx-auto flex h-16 max-w-[1128px] items-center gap-3 px-4">
       <a routerLink="/" class="flex shrink-0 items-center no-underline" [attr.aria-label]="'nav.home' | transloco" data-home-mark>
         <span class="inline-flex items-center" dir="ltr">
-          <span class="inline-grid h-8 w-8 place-items-center rounded-md bg-primary font-latin text-[18px] font-bold text-on-primary" aria-hidden="true">R</span>
+          <rd-logo-mark [size]="32" />
           <!-- The full wordmark on narrow screens; the mark alone next to the search box and the nav row. -->
           <rd-wordmark class="ms-2 md:hidden" [size]="24" />
         </span>
