@@ -1663,10 +1663,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errPinDigitsOnly => 'أرقام فقط.';
 
   @override
-  String get errPinWeak =>
-      'رمز PIN هذا سهل التخمين. تجنّب الأرقام المكررة أو المتتالية، والسنوات، والأرقام الموجودة في رقم هاتفك أو كلمة المرور.';
-
-  @override
   String get errPinMismatch => 'رمزا PIN غير متطابقين.';
 
   @override

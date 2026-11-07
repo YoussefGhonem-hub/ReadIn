@@ -341,13 +341,15 @@ void main() {
                 const SignUpState(
                   step: SignUpStep.pin,
                   phone: '+201001234567',
-                  errors: {Fields.pin: CredentialCodes.pinWeak},
+                  errors: {Fields.confirmPin: CredentialCodes.pinMismatch},
                 ),
               ),
           ),
         ],
       );
-      await tester.enterText(find.byType(TextField).first, '1234');
+      final fields = find.byType(TextField);
+      await tester.enterText(fields.at(0), '1234');
+      await tester.enterText(fields.at(1), '1235');
       await tester.pump();
       await expectGolden(tester, 'auth_sign_up_pin', variant);
     });

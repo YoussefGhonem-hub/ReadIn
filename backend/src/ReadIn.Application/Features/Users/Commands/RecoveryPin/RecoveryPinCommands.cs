@@ -22,8 +22,7 @@ internal sealed class SetRecoveryPinCommandValidator : AbstractValidator<SetReco
 {
     public SetRecoveryPinCommandValidator(IOptions<RecoveryOptions> recovery)
     {
-        // The rule that needs the account's number runs in the handler.
-        RuleFor(c => c.Pin).RecoveryPin(recovery.Value.PinLength, _ => null, _ => null);
+        RuleFor(c => c.Pin).RecoveryPin(recovery.Value.PinLength);
     }
 }
 
@@ -32,6 +31,6 @@ internal sealed class ChangeRecoveryPinCommandValidator : AbstractValidator<Chan
     public ChangeRecoveryPinCommandValidator(IOptions<RecoveryOptions> recovery)
     {
         RuleFor(c => c.CurrentPassword).NotEmpty().MaximumLength(PasswordRules.MaxLength);
-        RuleFor(c => c.NewPin).RecoveryPin(recovery.Value.PinLength, _ => null, c => c.CurrentPassword);
+        RuleFor(c => c.NewPin).RecoveryPin(recovery.Value.PinLength);
     }
 }

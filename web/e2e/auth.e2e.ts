@@ -29,6 +29,8 @@ test.describe.configure({ timeout: 90_000 });
 const STRONG_PASSWORD = 'Nile river 2026';
 const NEW_PASSWORD = 'Cairo Tower 1961!';
 const GOOD_PIN = '4829';
+/** Once refused as weak; any digits of the configured length pass now (SPEC §9.4). */
+const EASY_PIN = '1234';
 /** Auth screens render in the browser only; the first one may wait for the dev server to compile its chunk. */
 const FIRST_RENDER_MS = 30_000;
 
@@ -213,13 +215,16 @@ for (const variant of VARIANTS) {
     await snap(page, variant, `sign-up-account-${suffix}.png`);
     await page.locator('[data-step-1] [data-submit]').click();
 
-    // Step 2: the recovery PIN; a weak one is refused live
+    // Step 2: the recovery PIN. Any digits of the right length pass (1234 too); a confirmation that doesn't match is
+    // refused live.
     await expect(page.locator('[data-step-2]')).toBeVisible();
-    await typePin(page, 'sign-up-pin', '1234');
-    await expect(page.locator('#sign-up-pin-error')).toBeVisible();
-    await page.locator('#sign-up-pin-0').click();
-    await page.keyboard.type(GOOD_PIN);
+    await typePin(page, 'sign-up-pin', EASY_PIN);
+    await expect(page.locator('#sign-up-pin-error')).toHaveCount(0);
+    await expect(page.locator('#sign-up-pin-hint')).toBeVisible();
     await typePin(page, 'sign-up-pin-confirm', GOOD_PIN);
+    await expect(page.locator('#sign-up-pin-confirm-error')).toBeVisible();
+    await typePin(page, 'sign-up-pin-confirm', EASY_PIN);
+    await expect(page.locator('#sign-up-pin-confirm-error')).toHaveCount(0);
     await expect(page.locator('#sign-up-pin-error')).toHaveCount(0);
     await snap(page, variant, `sign-up-pin-${suffix}.png`);
     await page.locator('[data-step-2] [data-submit]').click();
@@ -240,7 +245,7 @@ for (const variant of VARIANTS) {
 
     await page.waitForURL('**/auth/complete-profile');
     await expect(page).toHaveTitle(lang === 'ar' ? 'إكمال الملف الشخصي — ReadIn' : 'Complete your profile — ReadIn');
-    expect(registerBody).toMatchObject({ phoneNumber: '+201001234568', password: STRONG_PASSWORD, recoveryPin: GOOD_PIN, uiLanguage: lang });
+    expect(registerBody).toMatchObject({ phoneNumber: '+201001234568', password: STRONG_PASSWORD, recoveryPin: EASY_PIN, uiLanguage: lang });
     expect(typeof registerBody.timeZone).toBe('string');
 
     // Complete profile: name + live @username check
@@ -295,22 +300,26 @@ for (const variant of VARIANTS) {
     await snap(page, variant, `must-change-password-${suffix}.png`);
     await page.locator('[data-change-password] [data-submit]').click();
 
-    // Then the PIN, which can't be skipped (the last digits of the number are refused).
+    // Then the PIN, which can't be skipped. Any digits of the right length pass, the last digits of the number too; a
+    // confirmation that doesn't match is refused.
     await page.waitForURL('**/auth/recovery-pin?returnUrl=%2Fsettings');
     await expect(page).toHaveTitle(lang === 'ar' ? 'رمز الاسترداد (PIN) — ReadIn' : 'Recovery PIN — ReadIn');
     expect(passwordBody).toEqual({ currentPassword: 'Temp-Pass-9912', newPassword: NEW_PASSWORD });
     // A later step can't be opened first.
     await page.goto('/auth/complete-profile');
     await page.waitForURL((url) => url.pathname === '/auth/recovery-pin');
-    await typePin(page, 'set-pin', '4567');
-    await expect(page.locator('#set-pin-error')).toBeVisible();
-    await snap(page, variant, `set-pin-${suffix}.png`);
-    await page.locator('#set-pin-0').click();
-    await page.keyboard.type(GOOD_PIN);
+    const phoneTail = MOCK_PHONE.slice(-4); // 4567
+    await typePin(page, 'set-pin', phoneTail);
+    await expect(page.locator('#set-pin-error')).toHaveCount(0);
+    await expect(page.locator('#set-pin-hint')).toBeVisible();
     await typePin(page, 'set-pin-confirm', GOOD_PIN);
+    await expect(page.locator('#set-pin-confirm-error')).toBeVisible();
+    await snap(page, variant, `set-pin-${suffix}.png`);
+    await typePin(page, 'set-pin-confirm', phoneTail);
+    await expect(page.locator('#set-pin-confirm-error')).toHaveCount(0);
     await page.locator('[data-set-pin] [data-submit]').click();
     await page.waitForURL((url) => url.pathname === '/');
-    expect(pinBody).toEqual({ pin: GOOD_PIN });
+    expect(pinBody).toEqual({ pin: phoneTail });
   });
 
   test(`settings → account: change number, change PIN, sign out — ${suffix}`, async ({ page, context, baseURL, request }) => {

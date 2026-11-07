@@ -10,7 +10,7 @@
 //
 // Mobile outputs (never edit them by hand):
 //   mobile/lib/core/phone/country_list.g.dart        the country list, pinned order and default country
-//   mobile/lib/core/security/common_secrets.g.dart   shared/security/common-pins.txt + common-passwords.txt
+//   mobile/lib/core/security/common_secrets.g.dart   shared/security/common-passwords.txt
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,7 +18,6 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../..');
 const output = resolve(repoRoot, 'shared/countries/countries.json');
-const pinsFile = resolve(repoRoot, 'shared/security/common-pins.txt');
 const passwordsFile = resolve(repoRoot, 'shared/security/common-passwords.txt');
 const mobileCountries = resolve(repoRoot, 'mobile/lib/core/phone/country_list.g.dart');
 const mobileSecrets = resolve(repoRoot, 'mobile/lib/core/security/common_secrets.g.dart');
@@ -103,13 +102,8 @@ ${rows.join('\n')}
 function mobileSecretsDart() {
   const set = (lines) => lines.map((l) => `  ${dart(l)},`).join('\n');
   return `${HEADER}
-// Source: shared/security/common-pins.txt and common-passwords.txt (SecLists, MIT).
+// Source: shared/security/common-passwords.txt (SecLists, MIT).
 part of 'credential_rules.dart';
-
-/// The 100 most common 4-digit PINs.
-const Set<String> _commonPins = {
-${set(readLines(pinsFile))}
-};
 
 /// Common passwords that would otherwise pass the rules, lower-cased.
 const Set<String> _commonPasswords = {

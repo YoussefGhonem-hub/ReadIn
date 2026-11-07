@@ -164,9 +164,9 @@ internal sealed partial class DemoUsersSeeder(
             LogNoPin(logger);
             return (passwords.Hash(password), null);
         }
-        if (RecoveryPinRules.Check(pin, recovery.Value.PinLength, phoneNumberE164: null, password).Count > 0)
+        if (RecoveryPinRules.Check(pin, recovery.Value.PinLength).Count > 0)
         {
-            LogWeakPin(logger, recovery.Value.PinLength);
+            LogInvalidPin(logger, recovery.Value.PinLength);
             return (passwords.Hash(password), null);
         }
         return (passwords.Hash(password), pin);
@@ -228,8 +228,8 @@ internal sealed partial class DemoUsersSeeder(
     [LoggerMessage(Level = LogLevel.Warning, Message = "Seed:DemoPin is not set; demo users must set a recovery PIN on sign in. Set it with: dotnet user-secrets set \"Seed:DemoPin\" \"<pin>\" --project backend/src/ReadIn.Api")]
     private static partial void LogNoPin(ILogger logger);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Seed:DemoPin is not a valid {Length}-digit PIN or is too weak (SPEC §9.4); demo users must set a recovery PIN on sign in")]
-    private static partial void LogWeakPin(ILogger logger, int length);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Seed:DemoPin is not {Length} digits (SPEC §9.4); demo users must set a recovery PIN on sign in")]
+    private static partial void LogInvalidPin(ILogger logger, int length);
 }
 
 /// <summary>Demo avatars: a gradient with a mirrored 5 × 5 pattern derived from the handle. No text, so no font is needed.</summary>

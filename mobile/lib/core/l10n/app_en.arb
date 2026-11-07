@@ -534,7 +534,6 @@
   "errPasswordMismatch": "The passwords don't match.",
   "errPinLength": "Enter all the digits.",
   "errPinDigitsOnly": "Digits only.",
-  "errPinWeak": "This PIN is easy to guess. Avoid repeated or consecutive digits, years and digits from your number or password.",
   "errPinMismatch": "The PINs don't match.",
   "errTooShort": "Too short.",
   "errTooLong": "Too long.",

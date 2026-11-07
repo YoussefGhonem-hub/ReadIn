@@ -55,7 +55,7 @@ void main() {
   });
 
   group('RecoveryPinRules', () {
-    test('accepts a non-guessable PIN of the configured length', () {
+    test('accepts any digits of the configured length', () {
       expect(RecoveryPinRules.check('4831'), isEmpty);
       expect(RecoveryPinRules.check('483192', length: 6), isEmpty);
     });
@@ -67,24 +67,31 @@ void main() {
       expect(RecoveryPinRules.normalize(' ٤٨٣١ '), '4831');
     });
 
-    test('rejects weak PINs (SPEC §9.4)', () {
-      for (final pin in ['1111', '0000', '1234', '6789', '9876', '3210', '1989', '2024', '1950', '2030', '6969']) {
-        expect(RecoveryPinRules.isWeak(pin), isTrue, reason: pin);
+    test('accepts the PINs once rejected as weak (user decision, 2026-11-07)', () {
+      // Repeated digits, ascending/descending runs, years 1950–2030 and once-"common" PINs all pass.
+      for (final pin in ['1111', '0000', '1234', '6789', '9876', '3210', '1989', '2024', '1950', '2030', '6969', '2580', '5566']) {
+        expect(RecoveryPinRules.check(pin), isEmpty, reason: pin);
       }
-      expect(RecoveryPinRules.isWeak('4567', phoneE164: '+201001234567'), isTrue); // ascending run
-      expect(RecoveryPinRules.isWeak('8264', phoneE164: '+201001238264'), isTrue); // last digits of the number
-      expect(RecoveryPinRules.isWeak('7391', password: 'abc7391xyz'), isTrue); // first digits of the password
-      expect(RecoveryPinRules.isWeak('7391', password: 'abc17391'), isFalse);
-      expect(RecoveryPinRules.isWeak('1949'), isFalse);
-      expect(RecoveryPinRules.isWeak('2031'), isFalse);
-      expect(RecoveryPinRules.isWeak('4831'), isFalse);
-      expect(RecoveryPinRules.check('2580'), [CredentialCodes.pinWeak]); // common-pins.txt
+      // The last digits of the phone number and the first digits of the password are no longer checked.
+      expect(RecoveryPinRules.check('4567'), isEmpty); // ends +201001234567
+      expect(RecoveryPinRules.check('8264'), isEmpty); // ends +201001238264
+      expect(RecoveryPinRules.check('7391'), isEmpty); // starts the digits of 'abc7391xyz'
+      expect(RecoveryPinRules.check('1949'), isEmpty);
+      expect(RecoveryPinRules.check('2031'), isEmpty);
     });
 
-    test('years and the common list only apply to 4-digit PINs', () {
-      expect(RecoveryPinRules.isWeak('198906'), isFalse);
-      expect(RecoveryPinRules.isWeak('111111'), isTrue);
-      expect(RecoveryPinRules.isWeak('123456'), isTrue);
+    test('longer PINs: any digits of the configured length, still digits only', () {
+      expect(RecoveryPinRules.check('198906', length: 6), isEmpty);
+      expect(RecoveryPinRules.check('111111', length: 6), isEmpty);
+      expect(RecoveryPinRules.check('123456', length: 6), isEmpty);
+      expect(RecoveryPinRules.check('1234', length: 6), [CredentialCodes.pinLength]);
+      expect(RecoveryPinRules.check('12345a', length: 6), [CredentialCodes.pinDigitsOnly]);
+    });
+
+    test('Arabic-Indic and Persian digits pass once normalized', () {
+      expect(RecoveryPinRules.check(RecoveryPinRules.normalize('١١١١')), isEmpty);
+      expect(RecoveryPinRules.check(RecoveryPinRules.normalize('۱۲۳۴')), isEmpty);
+      expect(RecoveryPinRules.check(RecoveryPinRules.normalize('١٢٣')), [CredentialCodes.pinLength]);
     });
   });
 }

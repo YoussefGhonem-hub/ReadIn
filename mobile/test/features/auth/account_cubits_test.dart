@@ -74,18 +74,22 @@ void main() {
     setUp(() => setPin = MockSetRecoveryPin());
 
     blocTest<SetRecoveryPinCubit, AccountFormState>(
-      'rejects the last digits of the phone number, then saves a good PIN',
-      setUp: () => when(() => setPin('4831')).thenAnswer((_) async => const Ok(sampleMe)),
+      'accepts the last digits of the phone number live and saves them; only non-digits are flagged',
+      setUp: () => when(() => setPin('4567')).thenAnswer((_) async => const Ok(sampleMe)),
       build: () => SetRecoveryPinCubit(config, setPin),
       act: (cubit) async {
-        cubit.pinChanged('4567', phoneE164: phone);
-        await cubit.submit(pin: '4831', confirmPin: '4831', phoneE164: phone);
+        cubit
+          ..pinChanged('45a7')
+          ..pinChanged('4567'); // the last digits of +201001234567
+        await cubit.submit(pin: '4567', confirmPin: '4567');
       },
       expect: () => const [
-        AccountFormState(errors: {Fields.pin: CredentialCodes.pinWeak}),
+        AccountFormState(errors: {Fields.pin: CredentialCodes.pinDigitsOnly}),
+        AccountFormState(),
         AccountFormState(status: FormStatus.submitting),
         AccountFormState(status: FormStatus.success),
       ],
+      verify: (_) => verify(() => setPin('4567')).called(1),
     );
   });
 
@@ -94,17 +98,16 @@ void main() {
     setUp(() => changePin = MockChangeRecoveryPin());
 
     blocTest<ChangeRecoveryPinCubit, AccountFormState>(
-      'needs the current password; a wrong one is shown on that field',
-      setUp: () => when(() => changePin(currentPassword: 'nope', newPin: '4831')).thenAnswer((_) async => const Err(wrongPassword)),
+      'needs the current password; 1111 is accepted and sent; a wrong password is shown on that field',
+      setUp: () => when(() => changePin(currentPassword: 'nope', newPin: '1111')).thenAnswer((_) async => const Err(wrongPassword)),
       build: () => ChangeRecoveryPinCubit(config, changePin),
       act: (cubit) async {
         await cubit.submit(currentPassword: '', pin: '1111', confirmPin: '');
-        await cubit.submit(currentPassword: 'nope', pin: '4831', confirmPin: '4831');
+        await cubit.submit(currentPassword: 'nope', pin: '1111', confirmPin: '1111');
       },
       expect: () => const [
         AccountFormState(errors: {
           Fields.currentPassword: CredentialCodes.required,
-          Fields.pin: CredentialCodes.pinWeak,
           Fields.confirmPin: CredentialCodes.required,
         }),
         AccountFormState(status: FormStatus.submitting),
@@ -208,18 +211,27 @@ void main() {
         );
 
     blocTest<AddPhoneSignInCubit, AccountFormState>(
-      'checks the PIN, then asks to confirm the number',
+      'checks the PIN length and confirmation, then asks to confirm the number; 1234 is accepted and sent',
+      setUp: () {
+        when(() => confirmWith(googleOnly)).thenAnswer((_) async => const Ok(googleToken));
+        when(() => add(phoneNumber: phone, password: 'reading4life', recoveryPin: '1234', external: googleToken))
+            .thenAnswer((_) async => const Ok(sampleMe));
+      },
       build: () => AddPhoneSignInCubit(config, add, confirmWith, countries),
-      act: (cubit) {
+      act: (cubit) async {
+        review(cubit, pin: '123', confirmPin: '123');
+        review(cubit, pin: '1234', confirmPin: '1230');
         review(cubit, pin: '1234', confirmPin: '1234');
-        review(cubit, confirmPin: '4830');
-        review(cubit);
+        await cubit.confirm(googleOnly);
       },
       expect: () => const [
-        AccountFormState(errors: {Fields.pin: CredentialCodes.pinWeak}),
+        AccountFormState(errors: {Fields.pin: CredentialCodes.pinLength}),
         AccountFormState(errors: {Fields.confirmPin: CredentialCodes.pinMismatch}),
         AccountFormState(confirming: true),
+        AccountFormState(status: FormStatus.submitting),
+        AccountFormState(status: FormStatus.success),
       ],
+      verify: (_) => verify(() => add(phoneNumber: phone, password: 'reading4life', recoveryPin: '1234', external: googleToken)).called(1),
     );
 
     blocTest<AddPhoneSignInCubit, AccountFormState>(

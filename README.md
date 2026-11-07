@@ -54,7 +54,7 @@ firebase emulators:start --only auth,database
 
 # 3. Demo user password (never committed, SPEC §18.1). Without it demo users can't sign in.
 dotnet user-secrets set "Seed:DemoPassword" "<choose-a-password>" --project backend/src/ReadIn.Api
-#    Demo recovery PIN: 4 digits, not weak (no 1234, 1111, years…). Without it demo users must set a PIN after signing in.
+#    Demo recovery PIN: any 4 digits. Without it demo users must set a PIN after signing in.
 dotnet user-secrets set "Seed:DemoPin" "<4-digit-pin>" --project backend/src/ReadIn.Api
 
 # 4. API on http://localhost:5080. Applies migrations and runs all seeders in Development.

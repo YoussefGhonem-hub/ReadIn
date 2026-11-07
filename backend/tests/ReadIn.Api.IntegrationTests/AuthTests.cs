@@ -73,13 +73,32 @@ public sealed class AuthTests(ApiFactory api)
     public async Task Register_validates_phone_password_and_pin_with_codes()
     {
         var response = await api.GuestClient().PostAsJsonAsync("/api/v1/auth/register",
-            new { phoneNumber = "+20223456789", password = "qwerty123", recoveryPin = "1234" }, Ct);
+            new { phoneNumber = "+20223456789", password = "qwerty123", recoveryPin = "123" }, Ct);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var problem = await TaxonomyAndContentTests.Problem(response);
         ErrorsOf(problem, "phoneNumber").Should().Equal("phone.invalid");
         ErrorsOf(problem, "password").Should().Contain("password.too_common");
-        ErrorsOf(problem, "recoveryPin").Should().Equal("pin.weak");
+        ErrorsOf(problem, "recoveryPin").Should().Equal("pin.length");
+    }
+
+    /// <summary>Any digits of the configured length make a PIN (user decision, 2026-11-07): nothing is "too weak".</summary>
+    [Fact]
+    public async Task Sign_up_accepts_any_pin_of_the_right_length()
+    {
+        // A run, one repeated digit, pairs, a year that also starts the password, and the end of the phone number.
+        foreach (var pinFor in new Func<string, string>[] { _ => "1234", _ => "1111", _ => "5566", _ => "1990", number => number[^4..] })
+        {
+            var phone = ApiFactory.NewPhoneNumber();
+            var pin = pinFor(phone);
+
+            var session = await ApiFactory.ReadSessionAsync(await api.GuestClient().PostAsJsonAsync("/api/v1/auth/register",
+                new { phoneNumber = phone, password = "1990-Nile-river", recoveryPin = pin }, Ct));
+
+            session["user"]!["hasRecoveryPin"]!.GetValue<bool>().Should().BeTrue($"{pin} is a recovery PIN");
+            (await api.GuestClient().PostAsJsonAsync("/api/v1/auth/recovery/verify-pin", new { phoneNumber = phone, pin }, Ct))
+                .StatusCode.Should().Be(HttpStatusCode.OK, $"{pin} was stored as the recovery PIN");
+        }
     }
 
     [Fact]
@@ -441,20 +460,30 @@ public sealed class AuthTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task Change_pin_needs_the_password_and_rejects_weak_pins()
+    public async Task Change_pin_needs_the_password_and_accepts_any_digits()
     {
         var user = await api.SignUpAsync();
+        Task<HttpResponseMessage> VerifyAsync(string pin) =>
+            api.GuestClient().PostAsJsonAsync("/api/v1/auth/recovery/verify-pin", new { phoneNumber = user.PhoneNumber, pin }, Ct);
 
-        var weak = await user.Client.PutAsJsonAsync("/api/v1/me/recovery-pin", new { currentPassword = ApiFactory.TestPassword, newPin = "0000" }, Ct);
-        (await ErrorsOf(weak, "newPin")).Should().Equal("pin.weak");
+        var wrong = await user.Client.PutAsJsonAsync("/api/v1/me/recovery-pin", new { currentPassword = "Not-mine-12", newPin = "0000" }, Ct);
+        (await CodeOf(wrong)).Should().Be("auth.wrong_password");
+        var shortPin = await user.Client.PutAsJsonAsync("/api/v1/me/recovery-pin", new { currentPassword = ApiFactory.TestPassword, newPin = "000" }, Ct);
+        (await ErrorsOf(shortPin, "newPin")).Should().Equal("pin.length");
+        (await VerifyAsync(ApiFactory.TestPin)).StatusCode.Should().Be(HttpStatusCode.OK, "a refused change keeps the old PIN");
 
-        (await user.Client.PutAsJsonAsync("/api/v1/me/recovery-pin", new { currentPassword = ApiFactory.TestPassword, newPin = "6193" }, Ct))
-            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await user.Client.PutAsJsonAsync("/api/v1/me/recovery-pin", new { currentPassword = ApiFactory.TestPassword, newPin = "0000" }, Ct))
+            .StatusCode.Should().Be(HttpStatusCode.NoContent, "one repeated digit is a PIN like any other");
+        (await VerifyAsync("0000")).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var endOfNumber = user.PhoneNumber[^4..];
+        (await user.Client.PutAsJsonAsync("/api/v1/me/recovery-pin", new { currentPassword = ApiFactory.TestPassword, newPin = endOfNumber }, Ct))
+            .StatusCode.Should().Be(HttpStatusCode.NoContent, "the last digits of the phone number are allowed too");
+        (await VerifyAsync(endOfNumber)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await VerifyAsync("0000")).StatusCode.Should().Be(HttpStatusCode.Unauthorized, "the PIN was replaced");
 
         (await user.Client.PostAsJsonAsync("/api/v1/me/recovery-pin", new { pin = "5283" }, Ct)).StatusCode
             .Should().Be(HttpStatusCode.Conflict, "the first-PIN endpoint is only for accounts without one");
-        (await api.GuestClient().PostAsJsonAsync("/api/v1/auth/recovery/verify-pin", new { phoneNumber = user.PhoneNumber, pin = "6193" }, Ct))
-            .StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
@@ -464,12 +493,17 @@ public sealed class AuthTests(ApiFactory api)
         reader10["user"]!["mustSetRecoveryPin"]!.GetValue<bool>().Should().BeTrue();
         var client = api.ClientWithToken(reader10["accessToken"]!.GetValue<string>());
 
-        var weak = await client.PostAsJsonAsync("/api/v1/me/recovery-pin", new { pin = "0119" }, Ct);
-        (await ErrorsOf(weak, "pin")).Should().Equal(["pin.weak"], "the last digits of the phone number are weak");
+        var malformed = await client.PostAsJsonAsync("/api/v1/me/recovery-pin", new { pin = "01a9" }, Ct);
+        (await ErrorsOf(malformed, "pin")).Should().Equal("pin.digits_only");
 
-        var me = await (await client.PostAsJsonAsync("/api/v1/me/recovery-pin", new { pin = "5283" }, Ct)).Content.ReadFromJsonAsync<JsonObject>(Ct);
+        var endOfNumber = ApiFactory.Reader10Phone[^4..];
+        var set = await client.PostAsJsonAsync("/api/v1/me/recovery-pin", new { pin = endOfNumber }, Ct);
+        set.StatusCode.Should().Be(HttpStatusCode.OK, "the last digits of the phone number are a PIN like any other");
+        var me = await set.Content.ReadFromJsonAsync<JsonObject>(Ct);
         me!["mustSetRecoveryPin"]!.GetValue<bool>().Should().BeFalse();
         me["hasRecoveryPin"]!.GetValue<bool>().Should().BeTrue();
+        (await api.GuestClient().PostAsJsonAsync("/api/v1/auth/recovery/verify-pin", new { phoneNumber = ApiFactory.Reader10Phone, pin = endOfNumber }, Ct))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
 
         var seeded = await (await api.SeedUserClientAsync(ApiFactory.Reader1Phone)).GetFromJsonAsync<JsonObject>("/api/v1/me", Ct);
         seeded!["mustSetRecoveryPin"]!.GetValue<bool>().Should().BeFalse("readers 1–9 are seeded with the demo PIN");

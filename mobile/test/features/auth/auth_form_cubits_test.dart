@@ -118,28 +118,42 @@ void main() {
     );
 
     blocTest<SignUpCubit, SignUpState>(
-      'step 2 rejects weak and mismatched PINs, live and on submit',
+      'step 2 accepts any digits (1234 included), live and on submit, and rejects mismatched PINs',
       build: build,
       act: (cubit) => cubit
         ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life')
         ..pinChanged('12')
+        ..pinChanged('12a4')
         ..pinChanged('1234')
-        ..submitPin(pin: '4831', confirmPin: '4832'),
+        ..submitPin(pin: '1234', confirmPin: '1235')
+        ..submitPin(pin: '1234', confirmPin: '1234'),
       expect: () => const [
         SignUpState(step: SignUpStep.pin, phone: phone),
-        SignUpState(step: SignUpStep.pin, phone: phone, errors: {Fields.pin: CredentialCodes.pinWeak}),
+        SignUpState(step: SignUpStep.pin, phone: phone, errors: {Fields.pin: CredentialCodes.pinDigitsOnly}),
+        SignUpState(step: SignUpStep.pin, phone: phone),
         SignUpState(step: SignUpStep.pin, phone: phone, errors: {Fields.confirmPin: CredentialCodes.pinMismatch}),
+        SignUpState(step: SignUpStep.pin, phone: phone, confirming: true),
       ],
     );
 
     blocTest<SignUpCubit, SignUpState>(
-      'the PIN may not repeat the first digits of the password',
+      'the PIN may repeat the first digits of the password: it is registered as typed',
+      setUp: () => when(() => register(phoneNumber: phone, password: '7391reading', recoveryPin: '7391', uiLanguage: 'ar'))
+          .thenAnswer((_) async => const Ok(sampleMe)),
       build: build,
-      act: (cubit) => cubit
-        ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: '7391reading', confirmPassword: '7391reading')
-        ..submitPin(pin: '٧٣٩١', confirmPin: '7391'),
+      act: (cubit) async {
+        cubit
+          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: '7391reading', confirmPassword: '7391reading')
+          ..submitPin(pin: '٧٣٩١', confirmPin: '7391');
+        await cubit.register();
+      },
       skip: 1,
-      expect: () => const [SignUpState(step: SignUpStep.pin, phone: phone, errors: {Fields.pin: CredentialCodes.pinWeak})],
+      expect: () => const [
+        SignUpState(step: SignUpStep.pin, phone: phone, confirming: true),
+        SignUpState(step: SignUpStep.pin, phone: phone, status: FormStatus.submitting),
+        SignUpState(step: SignUpStep.pin, phone: phone, status: FormStatus.success),
+      ],
+      verify: (_) => verify(() => register(phoneNumber: phone, password: '7391reading', recoveryPin: '7391', uiLanguage: 'ar')).called(1),
     );
 
     blocTest<SignUpCubit, SignUpState>(
@@ -199,7 +213,7 @@ void main() {
             password: any(named: 'password'),
             recoveryPin: any(named: 'recoveryPin'),
             uiLanguage: any(named: 'uiLanguage'),
-          )).thenAnswer((_) async => Err(validation({'recoveryPin': ['pin.weak']}))),
+          )).thenAnswer((_) async => Err(validation({'recoveryPin': ['pin.length']}))),
       build: build,
       act: (cubit) async {
         cubit
@@ -208,7 +222,7 @@ void main() {
         await cubit.register();
       },
       skip: 3,
-      expect: () => const [SignUpState(step: SignUpStep.pin, phone: phone, errors: {Fields.pin: 'pin.weak'})],
+      expect: () => const [SignUpState(step: SignUpStep.pin, phone: phone, errors: {Fields.pin: CredentialCodes.pinLength})],
     );
 
     blocTest<SignUpCubit, SignUpState>(
@@ -244,7 +258,7 @@ void main() {
     ForgotPasswordCubit build() => ForgotPasswordCubit(verifyPin, reset, config);
 
     blocTest<ForgotPasswordCubit, ForgotPasswordState>(
-      'step 1 needs the number and every PIN digit (old PINs may be weak)',
+      'step 1 needs the number and every PIN digit; any digits are sent (1234 included)',
       setUp: () => when(() => verifyPin(phoneNumber: phone, pin: '1234')).thenAnswer((_) async => const Ok('token')),
       build: build,
       act: (cubit) async {

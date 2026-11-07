@@ -19,13 +19,11 @@ public static class CredentialValidators
             foreach (var code in PasswordRules.Check(password, e164)) context.AddFailure(Failure(context.PropertyPath, code));
         });
 
-    public static IRuleBuilderOptionsConditions<T, string> RecoveryPin<T>(
-        this IRuleBuilder<T, string> rule, int length, Func<T, string?> phoneNumber, Func<T, string?> password) =>
+    /// <param name="length"><c>Recovery:PinLength</c>: any digits of that length pass.</param>
+    public static IRuleBuilderOptionsConditions<T, string> RecoveryPin<T>(this IRuleBuilder<T, string> rule, int length) =>
         rule.Custom((pin, context) =>
         {
-            var instance = context.InstanceToValidate;
-            var e164 = PhoneNumberRules.TryNormalize(phoneNumber(instance), out var normalized) ? normalized : null;
-            foreach (var code in RecoveryPinRules.Check(RecoveryPinRules.Normalize(pin), length, e164, password(instance)))
+            foreach (var code in RecoveryPinRules.Check(RecoveryPinRules.Normalize(pin), length))
                 context.AddFailure(Failure(context.PropertyPath, code));
         });
 

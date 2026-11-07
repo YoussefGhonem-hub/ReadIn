@@ -49,12 +49,12 @@ abstract final class Validate {
   static String? confirmation(String value, String original, String mismatchCode) =>
       value.isEmpty ? CredentialCodes.required : (value != original ? mismatchCode : null);
 
-  static String? newPin(String pin, int length, {String? phoneE164, String? password}) {
-    final errors = RecoveryPinRules.check(RecoveryPinRules.normalize(pin), length: length, phoneE164: phoneE164, password: password);
+  static String? newPin(String pin, int length) {
+    final errors = RecoveryPinRules.check(RecoveryPinRules.normalize(pin), length: length);
     return errors.isEmpty ? null : errors.first;
   }
 
-  /// Length and digits only: a PIN being verified may predate the weak-PIN rules.
+  /// A PIN being verified: empty is "required", then digits only and the length.
   static String? existingPin(String pin, int length) {
     final value = RecoveryPinRules.normalize(pin);
     if (value.isEmpty) return CredentialCodes.required;
@@ -62,9 +62,8 @@ abstract final class Validate {
     return value.length == length ? null : CredentialCodes.pinLength;
   }
 
-  /// Live weak-PIN feedback once every box is filled; nothing while typing.
-  static String? livePin(String pin, int length, {String? phoneE164, String? password}) =>
-      RecoveryPinRules.normalize(pin).length < length ? null : newPin(pin, length, phoneE164: phoneE164, password: password);
+  /// Live PIN feedback once every box is filled; nothing while typing.
+  static String? livePin(String pin, int length) => RecoveryPinRules.normalize(pin).length < length ? null : newPin(pin, length);
 
   static Map<String, String> collect(Map<String, String?> checks) => {
         for (final MapEntry(:key, :value) in checks.entries) key: ?value,

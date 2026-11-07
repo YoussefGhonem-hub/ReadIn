@@ -41,68 +41,35 @@ public static class PasswordRules
 }
 
 /// <summary>
-/// Recovery PIN rules (SPEC §9.4): exactly <c>Recovery:PinLength</c> digits (default 4) and not weak: one repeated digit,
-/// an ascending/descending run, one of the 100 most common PINs, a year 1950–2030, the last digits of the phone number or
-/// the first digits of the password.
+/// Recovery PIN rules (SPEC §9.4): digits only and exactly <c>Recovery:PinLength</c> of them (default 4). Any digits
+/// pass: 1111, 1234, a year, the end of the phone number or the start of the password are all accepted (user decision,
+/// 2026-11-07).
 /// </summary>
 public static class RecoveryPinRules
 {
     public const string WrongLength = "pin.length";
     public const string DigitsOnly = "pin.digits_only";
-    public const string Weak = "pin.weak";
 
     /// <summary>Converts Arabic-Indic/Persian digits, like the PIN input on every client.</summary>
     public static string Normalize(string? pin) =>
         pin is null ? string.Empty : new string(pin.Trim().Select(PhoneNumberRules.ToAsciiDigit).ToArray());
 
     /// <param name="pin">Already <see cref="Normalize"/>d.</param>
-    /// <param name="password">Null when the password isn't part of the request (it's never readable afterwards).</param>
-    public static IReadOnlyList<string> Check(string pin, int length, string? phoneNumberE164, string? password)
+    /// <param name="length"><c>Recovery:PinLength</c>.</param>
+    public static IReadOnlyList<string> Check(string pin, int length)
     {
         if (!pin.All(char.IsAsciiDigit)) return [DigitsOnly];
-        if (pin.Length != length) return [WrongLength];
-        return IsWeak(pin, phoneNumberE164, password) ? [Weak] : [];
-    }
-
-    public static bool IsWeak(string pin, string? phoneNumberE164, string? password)
-    {
-        if (pin.Distinct().Count() == 1) return true;
-        if (IsRun(pin, +1) || IsRun(pin, -1)) return true;
-
-        if (pin.Length == 4)
-        {
-            if (CommonSecrets.Pins.Contains(pin)) return true;
-            var year = int.Parse(pin, System.Globalization.CultureInfo.InvariantCulture);
-            if (year is >= 1950 and <= 2030) return true;
-        }
-
-        if (phoneNumberE164 is not null && phoneNumberE164.EndsWith(pin, StringComparison.Ordinal)) return true;
-
-        if (password is not null)
-        {
-            var passwordDigits = new string(password.Select(PhoneNumberRules.ToAsciiDigit).Where(char.IsAsciiDigit).ToArray());
-            if (passwordDigits.Length >= pin.Length && passwordDigits.StartsWith(pin, StringComparison.Ordinal)) return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsRun(string pin, int step)
-    {
-        for (var i = 1; i < pin.Length; i++)
-            if (pin[i] - pin[i - 1] != step) return false;
-        return true;
+        return pin.Length == length ? [] : [WrongLength];
     }
 }
 
 /// <summary>
-/// The lists in <c>shared/security</c> (from SecLists, MIT): common passwords that would otherwise pass the rules, and
-/// the 100 most common 4-digit PINs. Embedded so the API never depends on files next to it.
+/// The list in <c>shared/security</c> (from SecLists, MIT) of common passwords that would otherwise pass the rules.
+/// Embedded so the API never depends on files next to it.
 /// </summary>
 internal static class CommonSecrets
 {
     public static readonly IReadOnlySet<string> Passwords = Load("ReadIn.common-passwords.txt");
-    public static readonly IReadOnlySet<string> Pins = Load("ReadIn.common-pins.txt");
 
     private static HashSet<string> Load(string resource)
     {

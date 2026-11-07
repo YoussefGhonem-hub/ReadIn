@@ -354,10 +354,9 @@ export class ChangePinSheet extends AccountSheet {
   });
   protected readonly pinError = computed(() => {
     if (this.serverPinError()) return this.serverPinError();
-    const { pin, password } = this.value();
-    const normalized = normalizePin(pin);
+    const normalized = normalizePin(this.value().pin);
     if (normalized.length !== this.pinLength() && !this.submitted()) return null;
-    const [code] = pinViolations(normalized, this.pinLength(), { phoneE164: this.session.phoneNumber(), password });
+    const [code] = pinViolations(normalized, this.pinLength());
     return code ? `errors.${code}` : null;
   });
   protected readonly confirmError = computed(() => {

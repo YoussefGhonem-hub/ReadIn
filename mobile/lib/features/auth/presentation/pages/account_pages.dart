@@ -61,9 +61,7 @@ class _SetRecoveryPinViewState extends State<SetRecoveryPinView> {
     super.dispose();
   }
 
-  String? get _phone => context.read<SessionCubit>().state.me?.phoneNumber;
-
-  void _submit() => context.read<SetRecoveryPinCubit>().submit(pin: _pin.text, confirmPin: _confirm.text, phoneE164: _phone);
+  void _submit() => context.read<SetRecoveryPinCubit>().submit(pin: _pin.text, confirmPin: _confirm.text);
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +87,7 @@ class _SetRecoveryPinViewState extends State<SetRecoveryPinView> {
                 length: state.config.pinLength,
                 enabled: !busy,
                 errorText: errorText(context, state.errors[Fields.pin]),
-                onChanged: (pin) => context.read<SetRecoveryPinCubit>().pinChanged(pin, phoneE164: _phone),
+                onChanged: context.read<SetRecoveryPinCubit>().pinChanged,
               ),
               const SizedBox(height: ReadInSpace.s5),
               PinInput(
@@ -246,13 +244,10 @@ class _ChangeRecoveryPinViewState extends State<ChangeRecoveryPinView> {
     super.dispose();
   }
 
-  String? get _phone => context.read<SessionCubit>().state.me?.phoneNumber;
-
   void _submit() => context.read<ChangeRecoveryPinCubit>().submit(
         currentPassword: _password.text,
         pin: _pin.text,
         confirmPin: _confirm.text,
-        phoneE164: _phone,
       );
 
   @override
@@ -284,7 +279,7 @@ class _ChangeRecoveryPinViewState extends State<ChangeRecoveryPinView> {
               length: state.config.pinLength,
               enabled: !busy,
               errorText: errorText(context, state.errors[Fields.pin]),
-              onChanged: (pin) => context.read<ChangeRecoveryPinCubit>().pinChanged(pin, phoneE164: _phone),
+              onChanged: context.read<ChangeRecoveryPinCubit>().pinChanged,
             ),
             const SizedBox(height: ReadInSpace.s5),
             PinInput(
@@ -509,9 +504,7 @@ class _AddPhoneSignInViewState extends State<AddPhoneSignInView> {
               length: state.config.pinLength,
               enabled: !busy,
               errorText: errorText(context, state.errors[Fields.pin]),
-              onChanged: (pin) => context
-                  .read<AddPhoneSignInCubit>()
-                  .pinChanged(pin, phoneE164: _phone.e164, password: _password.text),
+              onChanged: context.read<AddPhoneSignInCubit>().pinChanged,
             ),
             const SizedBox(height: ReadInSpace.s5),
             PinInput(

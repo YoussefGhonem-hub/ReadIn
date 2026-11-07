@@ -1,4 +1,7 @@
+using Microsoft.Extensions.Options;
 using ReadIn.Application.Common.Security;
+using ReadIn.Application.Features.Auth;
+using ReadIn.Application.Features.Auth.Commands.Register;
 
 namespace ReadIn.Application.UnitTests.Security;
 
@@ -53,11 +56,20 @@ public sealed class PasswordRulesTests
 
 public sealed class RecoveryPinRulesTests
 {
-    [Fact]
-    public void A_good_pin_passes() => RecoveryPinRules.Check("4826", 4, "+201001234567", "Nile-river-2026").Should().BeEmpty();
+    private const string Phone = "+201001234567";
 
+    /// <summary>The sign-up validator, which sees the phone number and the password next to the PIN.</summary>
+    private static IEnumerable<string> SignUpErrors(string password, string pin) =>
+        new RegisterCommandValidator(Options.Create(new RecoveryOptions()))
+            .Validate(new RegisterCommand(Phone, password, pin)).Errors.Select(e => $"{e.PropertyName}: {e.ErrorCode}");
+
+    [Fact]
+    public void A_good_pin_passes() => RecoveryPinRules.Check("4826", 4).Should().BeEmpty();
+
+    /// <summary>The PINs that were once rejected as weak (user decision, 2026-11-07: any digits of the right length).</summary>
     [Theory]
     [InlineData("1111")] // one digit
+    [InlineData("5566")] // pairs
     [InlineData("1234")] // ascending
     [InlineData("8765")] // descending
     [InlineData("2580")] // common (keypad column)
@@ -65,22 +77,37 @@ public sealed class RecoveryPinRulesTests
     [InlineData("2030")]
     [InlineData("4567")] // last digits of the phone number
     [InlineData("2026")] // first digits of the password (also a year)
-    public void Weak_pins_are_rejected(string pin) =>
-        RecoveryPinRules.Check(pin, 4, "+201001234567", "Nile-river-2026").Should().Equal(RecoveryPinRules.Weak);
+    public void Any_four_digits_pass_sign_up(string pin)
+    {
+        RecoveryPinRules.Check(pin, 4).Should().BeEmpty();
+        SignUpErrors("Nile-river-2026", pin).Should().BeEmpty();
+    }
 
     [Fact]
-    public void The_first_digits_of_the_password_are_weak() =>
-        RecoveryPinRules.Check("8264", 4, null, "my-pass-8264-x").Should().Equal(RecoveryPinRules.Weak);
+    public void The_first_digits_of_the_password_pass() => SignUpErrors("my-pass-8264-x", "8264").Should().BeEmpty();
 
     [Theory]
     [InlineData("482", RecoveryPinRules.WrongLength)]
     [InlineData("48261", RecoveryPinRules.WrongLength)]
     [InlineData("48a6", RecoveryPinRules.DigitsOnly)]
-    public void Malformed_pins_are_rejected(string pin, string code) => RecoveryPinRules.Check(pin, 4, null, null).Should().Equal(code);
+    public void Malformed_pins_are_rejected(string pin, string code)
+    {
+        RecoveryPinRules.Check(pin, 4).Should().Equal(code);
+        SignUpErrors("Nile-river-2026", pin).Should().Equal($"RecoveryPin: {code}");
+    }
 
     [Fact]
-    public void Arabic_indic_digits_are_converted() => RecoveryPinRules.Normalize(" ٤٨٢٦ ").Should().Be("4826");
+    public void Arabic_indic_digits_are_converted()
+    {
+        RecoveryPinRules.Normalize(" ٤٨٢٦ ").Should().Be("4826");
+        SignUpErrors("Nile-river-2026", "١١١١").Should().BeEmpty();
+    }
 
     [Fact]
-    public void Longer_pins_skip_the_four_digit_lists() => RecoveryPinRules.Check("482619", 6, null, null).Should().BeEmpty();
+    public void The_length_comes_from_the_setting()
+    {
+        RecoveryPinRules.Check("482619", 6).Should().BeEmpty();
+        RecoveryPinRules.Check("111111", 6).Should().BeEmpty();
+        RecoveryPinRules.Check("4826", 6).Should().Equal(RecoveryPinRules.WrongLength);
+    }
 }

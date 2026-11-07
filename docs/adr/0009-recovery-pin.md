@@ -18,9 +18,8 @@ passwords, and support-only resets don't scale.
 - **Hashing:** `PasswordHasher(HMACSHA256(pepper, userId + ":" + pin))`. The pepper (`Security:RecoveryPinPepper`, at least
   32 characters) lives only in secrets. A leaked database alone can't be used to try the 10,000 PINs offline, and the
   user id binds a hash to its account.
-- **Weak PINs are rejected** on every client and again in the API: one repeated digit, ascending or descending runs,
-  the 100 most common PINs, years 1950–2030, the last digits of the phone number and the first digits of the password.
-  The lists live in `shared/security/` (from SecLists, MIT).
+- **Any digits are accepted** (changed 2026-11-07, see the update below): every client and the API check only that the
+  PIN is digits and of the configured length.
 - **Limits:** 5 wrong PINs lock recovery for an hour; the third lockout within 7 days disables recovery until an Admin
   reset. Per number, 5 attempts an hour; per IP, 10 an hour. Every attempt is recorded in `RecoveryAttempts` with a keyed
   hash of the number, never the number itself.
@@ -36,3 +35,11 @@ passwords, and support-only resets don't scale.
   Changing the pepper invalidates every PIN (every user must set a new one).
 - Anyone who knows a user's number and PIN can reset the password. Owner notifications for password and PIN changes
   (F17) are the user's signal that this happened.
+
+## Update (2026-11-07): any PIN is accepted
+
+The user decided that people pick the PIN they will remember, so 1111, 1234, a year, the end of the phone number or
+digits from the password are all accepted. The weak-PIN checks (repeated digits, runs, the 100 most common PINs from
+SecLists, years 1950–2030, phone and password digits) were removed from the API, the web and the app, together with
+`shared/security/common-pins.txt` and the `pin.weak` error. A PIN is now only digits of `Recovery:PinLength`.
+The lockouts, rate limits and the pepper above still protect it.

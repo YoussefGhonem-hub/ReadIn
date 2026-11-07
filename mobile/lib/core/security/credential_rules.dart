@@ -54,7 +54,6 @@ abstract final class CredentialCodes {
   static const passwordContainsPhone = 'password.contains_phone';
   static const pinLength = 'pin.length';
   static const pinDigitsOnly = 'pin.digits_only';
-  static const pinWeak = 'pin.weak';
 
   // Client-only.
   static const required = 'field.required';
@@ -119,46 +118,17 @@ abstract final class PasswordRules {
   }
 }
 
-/// Same checks as the API's `RecoveryPinRules` (SPEC §9.4, ADR 0009).
+/// Same checks as the API's `RecoveryPinRules` (SPEC §9.4, ADR 0009): any digits of the configured length.
 abstract final class RecoveryPinRules {
   static const defaultLength = 4;
-
-  @visibleForTesting
-  static Set<String> get commonPins => _commonPins;
 
   /// Converts Arabic-Indic and Persian digits and trims, like the API.
   static String normalize(String pin) => toAsciiDigits(pin.trim());
 
-  /// [pin] already normalized. [password] only when it is part of the same form (sign up).
-  static List<String> check(String pin, {int length = defaultLength, String? phoneE164, String? password}) {
+  /// [pin] already normalized: digits only, then exactly [length] of them.
+  static List<String> check(String pin, {int length = defaultLength}) {
     if (!RegExp(r'^[0-9]*$').hasMatch(pin)) return const [CredentialCodes.pinDigitsOnly];
     if (pin.length != length) return const [CredentialCodes.pinLength];
-    return isWeak(pin, phoneE164: phoneE164, password: password) ? const [CredentialCodes.pinWeak] : const [];
-  }
-
-  /// One repeated digit, an ascending/descending run, a common PIN, a year 1950–2030, the last digits of the phone
-  /// number or the first digits of the password.
-  static bool isWeak(String pin, {String? phoneE164, String? password}) {
-    if (pin.isEmpty) return false;
-    if (pin.split('').toSet().length == 1) return true;
-    if (_isRun(pin, 1) || _isRun(pin, -1)) return true;
-    if (pin.length == 4) {
-      if (_commonPins.contains(pin)) return true;
-      final year = int.parse(pin);
-      if (year >= 1950 && year <= 2030) return true;
-    }
-    if (phoneE164 != null && phoneE164.endsWith(pin)) return true;
-    if (password != null) {
-      final digits = digitsOnly(password);
-      if (digits.length >= pin.length && digits.startsWith(pin)) return true;
-    }
-    return false;
-  }
-
-  static bool _isRun(String pin, int step) {
-    for (var i = 1; i < pin.length; i++) {
-      if (pin.codeUnitAt(i) - pin.codeUnitAt(i - 1) != step) return false;
-    }
-    return true;
+    return const [];
   }
 }

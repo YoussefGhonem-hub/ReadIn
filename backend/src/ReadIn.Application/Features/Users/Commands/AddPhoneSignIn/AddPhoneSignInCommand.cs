@@ -25,7 +25,7 @@ internal sealed class AddPhoneSignInCommandValidator : AbstractValidator<AddPhon
     {
         RuleFor(c => c.PhoneNumber).PhoneNumber();
         RuleFor(c => c.Password).Password(c => c.PhoneNumber);
-        RuleFor(c => c.RecoveryPin).RecoveryPin(recovery.Value.PinLength, c => c.PhoneNumber, c => c.Password);
+        RuleFor(c => c.RecoveryPin).RecoveryPin(recovery.Value.PinLength);
         RuleFor(c => c.External).NotNull().SetValidator(new ExternalCredentialValidator());
     }
 }

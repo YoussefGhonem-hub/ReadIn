@@ -102,9 +102,9 @@ class SignUpCubit extends Cubit<SignUpState> {
     emit(state.copyWith(step: SignUpStep.pin, phone: phoneE164, errors: const {}, failure: () => null));
   }
 
-  /// Live weak-PIN check while typing the PIN.
+  /// Live PIN check once every box is filled; clears the PIN error while typing.
   void pinChanged(String pin) {
-    final error = Validate.livePin(pin, state.config.pinLength, phoneE164: state.phone, password: _password);
+    final error = Validate.livePin(pin, state.config.pinLength);
     final errors = {...state.errors}..remove(Fields.pin);
     if (error != null) errors[Fields.pin] = error;
     emit(state.copyWith(errors: errors));
@@ -115,7 +115,7 @@ class SignUpCubit extends Cubit<SignUpState> {
     if (state.submitting) return;
     final normalized = RecoveryPinRules.normalize(pin);
     final errors = Validate.collect({
-      Fields.pin: Validate.newPin(normalized, state.config.pinLength, phoneE164: state.phone, password: _password),
+      Fields.pin: Validate.newPin(normalized, state.config.pinLength),
       Fields.confirmPin: Validate.confirmation(RecoveryPinRules.normalize(confirmPin), normalized, CredentialCodes.pinMismatch),
     });
     if (errors.isNotEmpty) return emit(state.copyWith(errors: errors, failure: () => null));

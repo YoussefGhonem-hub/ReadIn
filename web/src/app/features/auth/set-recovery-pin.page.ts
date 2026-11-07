@@ -10,7 +10,6 @@ import { MeApi } from '../../core/api/me.api';
 import { postAuthUrl } from '../../core/auth/account-setup';
 import { AuthConfigService } from '../../core/auth/auth-config.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { SessionStore } from '../../core/auth/session.store';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { PinInput } from '../../shared/ui/pin/pin-input';
 import { normalizePin, pinViolations } from '../../shared/ui/pin/pin-rules';
@@ -77,7 +76,6 @@ import { AuthCard, SubmitButton, fieldErrors } from './auth-shared';
 export class SetRecoveryPinPage {
   private readonly auth = inject(AuthService);
   private readonly meApi = inject(MeApi);
-  private readonly session = inject(SessionStore);
   private readonly router = inject(Router);
   private readonly errors = inject(ErrorMessages);
   private readonly config = inject(AuthConfigService);
@@ -98,7 +96,7 @@ export class SetRecoveryPinPage {
     if (this.serverPinError()) return this.serverPinError();
     const pin = normalizePin(this.value().pin);
     if (pin.length !== this.pinLength() && !this.submitted()) return null;
-    const [code] = pinViolations(pin, this.pinLength(), { phoneE164: this.session.phoneNumber() });
+    const [code] = pinViolations(pin, this.pinLength());
     return code ? `errors.${code}` : null;
   });
   protected readonly confirmError = computed(() => {

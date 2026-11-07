@@ -1,21 +1,18 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using ReadIn.Application.Common.Behaviors;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
-using ReadIn.Application.Features.Auth;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Identity;
 using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Users.Commands.RecoveryPin;
 
+/// <remarks>The validator has already checked the PIN: digits only, <c>Recovery:PinLength</c> of them.</remarks>
 internal sealed class SetRecoveryPinCommandHandler(
     IAppDbContext db,
     ICurrentUser currentUser,
     IRecoveryPinHasher pins,
-    IOptions<RecoveryOptions> recovery,
     IUserAccessService access,
     AuditTrail audit,
     MeReader meReader,
@@ -28,11 +25,7 @@ internal sealed class SetRecoveryPinCommandHandler(
         var user = await db.Users.FirstAsync(u => u.Id == userId, cancellationToken);
         if (user.HasRecoveryPin && !user.MustSetRecoveryPin) return CredentialErrors.PinAlreadySet;
 
-        var pin = RecoveryPinRules.Normalize(command.Pin);
-        var violations = RecoveryPinRules.Check(pin, recovery.Value.PinLength, user.PhoneNumber, password: null);
-        if (violations.Count > 0) return ValidationErrors.For(nameof(command.Pin), violations);
-
-        user.SetRecoveryPin(pins.Hash(userId, pin), clock.GetUtcNow().UtcDateTime);
+        user.SetRecoveryPin(pins.Hash(userId, RecoveryPinRules.Normalize(command.Pin)), clock.GetUtcNow().UtcDateTime);
         audit.Record(AuditActions.RecoveryPinSet, userId);
         await db.SaveChangesAsync(cancellationToken);
         await access.InvalidateAsync(userId, cancellationToken);
@@ -40,11 +33,11 @@ internal sealed class SetRecoveryPinCommandHandler(
     }
 }
 
+/// <remarks>The validator has already checked the new PIN: digits only, <c>Recovery:PinLength</c> of them.</remarks>
 internal sealed class ChangeRecoveryPinCommandHandler(
     IAppDbContext db,
     ICurrentUser currentUser,
     IRecoveryPinHasher pins,
-    IOptions<RecoveryOptions> recovery,
     PasswordConfirmation confirmation,
     AuditTrail audit,
     TimeProvider clock)
@@ -57,12 +50,8 @@ internal sealed class ChangeRecoveryPinCommandHandler(
 
         if (await confirmation.ConfirmAsync(user, command.CurrentPassword, cancellationToken) is { } error) return error;
 
-        var pin = RecoveryPinRules.Normalize(command.NewPin);
-        var violations = RecoveryPinRules.Check(pin, recovery.Value.PinLength, user.PhoneNumber, command.CurrentPassword);
-        if (violations.Count > 0) return ValidationErrors.For(nameof(command.NewPin), violations);
-
         user.RecordSuccessfulSignIn();
-        user.ChangeRecoveryPin(pins.Hash(userId, pin), clock.GetUtcNow().UtcDateTime);
+        user.ChangeRecoveryPin(pins.Hash(userId, RecoveryPinRules.Normalize(command.NewPin)), clock.GetUtcNow().UtcDateTime);
         audit.Record(AuditActions.RecoveryPinChanged, userId);
         await db.SaveChangesAsync(cancellationToken);
         return Result.Success();

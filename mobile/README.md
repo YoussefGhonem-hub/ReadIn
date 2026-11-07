@@ -62,7 +62,7 @@ Push needs `prod` (the emulator has no Cloud Messaging); live counters and the u
 | Design tokens | `node tools/tokens/build.mjs --only mobile` (repo root) | `lib/core/theme/tokens.g.dart` |
 | Translations | `flutter gen-l10n` (also runs on `flutter pub get`) | `lib/core/l10n/gen/` |
 | Models, API clients, DI | `dart run build_runner build` | `*.freezed.dart`, `*.g.dart`, `injection.config.dart` |
-| Countries, weak PINs and common passwords (copies of `shared/`) | `node tools/countries/build.mjs --mobile` (repo root; `--check` fails when stale) | `lib/core/phone/country_list.g.dart`, `lib/core/security/common_secrets.g.dart` |
+| Countries and common passwords (copies of `shared/`) | `node tools/countries/build.mjs --mobile` (repo root; `--check` fails when stale) | `lib/core/phone/country_list.g.dart`, `lib/core/security/common_secrets.g.dart` |
 
 Never hand-edit generated files. Every UI string lives in `lib/core/l10n/app_{ar,en}.arb`;
 every color comes from `ReadInColors` (`context.colors`).

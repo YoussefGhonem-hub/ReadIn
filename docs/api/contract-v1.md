@@ -1711,7 +1711,7 @@ interface ExternalSignInRequest extends ExternalCredential {
 interface RegisterRequest {
   phoneNumber: string;           // E.164, e.g. "+201001234567" (mobile numbers only)
   password: string;              // 8..128, a letter and a digit, not common, not containing the number
-  recoveryPin: string;           // pinLength digits, not weak (SPEC §9.4)
+  recoveryPin: string;           // pinLength digits, any digits (SPEC §9.4)
   uiLanguage?: UiLanguage;
   timeZone?: string;             // IANA, e.g. "Africa/Cairo"
 }
@@ -1732,7 +1732,7 @@ interface SessionDto {
 }
 
 // Validation codes (in `errors`): phone.invalid · password.too_short | too_long | letter_required | digit_required |
-// too_common | contains_phone · pin.length | digits_only | weak · provider.invalid
+// too_common | contains_phone · pin.length | digits_only · provider.invalid
 
 interface MeDto {
   id: string;
@@ -2680,4 +2680,4 @@ A warning links to the center; the app shows the notice itself from `GET /me/mod
 ## Local development
 
 - API: `http://localhost:5080` (Scalar UI: `/docs`, OpenAPI: `/openapi/v1.json`)
-- Seeded demo users (SPEC §18.3): `+12025550110` (reader1) … with the password from `Seed:DemoPassword` and the recovery PIN from `Seed:DemoPin`. Neither is committed; set them once with `dotnet user-secrets set "Seed:DemoPassword" "<password>" --project backend/src/ReadIn.Api` and `dotnet user-secrets set "Seed:DemoPin" "<4 digits, not weak>" --project backend/src/ReadIn.Api`. Without a password you can't sign in as them; without a PIN they must set one after signing in.
+- Seeded demo users (SPEC §18.3): `+12025550110` (reader1) … with the password from `Seed:DemoPassword` and the recovery PIN from `Seed:DemoPin`. Neither is committed; set them once with `dotnet user-secrets set "Seed:DemoPassword" "<password>" --project backend/src/ReadIn.Api` and `dotnet user-secrets set "Seed:DemoPin" "<4 digits>" --project backend/src/ReadIn.Api`. Without a password you can't sign in as them; without a PIN they must set one after signing in.

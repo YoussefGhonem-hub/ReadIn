@@ -27,9 +27,8 @@
   <ItemGroup>
     <!-- Single source of truth for the RDoc contract, shared with web + mobile (SPEC §13). -->
     <EmbeddedResource Include="..\..\..\shared\rdoc\rdoc.schema.json" LogicalName="ReadIn.rdoc.schema.json" Link="Common\Content\rdoc.schema.json" />
-    <!-- Common passwords and PINs rejected at sign up (SPEC §9.4); the clients use the same lists. -->
+    <!-- Common passwords rejected at sign up (SPEC §9.4); the clients use the same list. -->
     <EmbeddedResource Include="..\..\..\shared\security\common-passwords.txt" LogicalName="ReadIn.common-passwords.txt" Link="Common\Security\common-passwords.txt" />
-    <EmbeddedResource Include="..\..\..\shared\security\common-pins.txt" LogicalName="ReadIn.common-pins.txt" Link="Common\Security\common-pins.txt" />
   </ItemGroup>
 
   <ItemGroup>

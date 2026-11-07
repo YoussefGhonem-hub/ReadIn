@@ -11,7 +11,7 @@ public sealed class SeedOptions
     /// <summary>Password of every demo user (Development/Testing).</summary>
     public string? DemoPassword { get; set; }
 
-    /// <summary>Recovery PIN of the demo users that have one. Must pass the weak-PIN rules.</summary>
+    /// <summary>Recovery PIN of the demo users that have one: any <c>Recovery:PinLength</c> digits.</summary>
     public string? DemoPin { get; set; }
 
     /// <summary>

@@ -61,7 +61,6 @@ export const CONTRACT_ERROR_CODES = [
   'password.contains_phone',
   'pin.length',
   'pin.digits_only',
-  'pin.weak',
   'user.suspended',
   'user.not_found',
   'user.username_taken',

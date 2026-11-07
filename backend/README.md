@@ -42,7 +42,7 @@ dotnet run --project src/ReadIn.Api        # http://localhost:5080 — migrates 
   under `wwwroot`, never served; the API refuses to start if that folder overlaps the web root or the uploads folder.
   Locally the Development seeder puts demo proofs there. Servers: [deployment.md §8](../docs/setup/deployment.md#8-private-files-verification-proofs).
 - Secrets come from user-secrets locally: `dotnet user-secrets set "Seed:DemoPassword" "<password>" --project src/ReadIn.Api`
-  and `Seed:DemoPin` (a non-weak 4-digit PIN). `appsettings.Development.json` has a Development-only `Jwt:SigningKey` and
+  and `Seed:DemoPin` (any 4 digits). `appsettings.Development.json` has a Development-only `Jwt:SigningKey` and
   `Security:RecoveryPinPepper`; on servers both come from the secret store (at least 32 characters each, and the API refuses to
   start with the Development values). Sign in: phone + password, [ADR 0007](../docs/adr/0007-phone-password-authentication.md).
 

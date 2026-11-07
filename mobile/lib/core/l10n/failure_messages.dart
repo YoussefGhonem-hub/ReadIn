@@ -141,7 +141,6 @@ String localizeErrorCode(AppLocalizations l10n, String code) => switch (code) {
       CredentialCodes.passwordMismatch => l10n.errPasswordMismatch,
       CredentialCodes.pinLength => l10n.errPinLength,
       CredentialCodes.pinDigitsOnly => l10n.errPinDigitsOnly,
-      CredentialCodes.pinWeak => l10n.errPinWeak,
       CredentialCodes.pinMismatch => l10n.errPinMismatch,
       FailureCodes.mediaPurposeInvalid => l10n.errMediaPurposeInvalid,
       FailureCodes.mediaFileRequired => l10n.errMediaFileRequired,

@@ -23,12 +23,15 @@ void main() {
   List<String> lines(String path) =>
       File('../shared/$path').readAsLinesSync().map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
 
-  test('the weak-PIN list matches shared/security/common-pins.txt', () {
-    final pins = lines('security/common-pins.txt');
-    expect(pins, hasLength(100));
-    expect(RecoveryPinRules.commonPins, pins.toSet());
-    for (final pin in pins) {
-      expect(RecoveryPinRules.isWeak(pin), isTrue, reason: pin);
+  test('no weak-PIN list is compiled in, and every 4-digit PIN passes (user decision, 2026-11-07)', () {
+    final generated = File('lib/core/security/common_secrets.g.dart').readAsStringSync();
+    expect(generated, isNot(contains('common-pins')));
+    expect(generated, isNot(contains('_commonPins')));
+    expect(generated, contains('const Set<String> _commonPasswords = {'));
+    // Covers the once-"common" PINs (1234, 1111, 0000, 1212, 2580, 6969…) and every other 4-digit PIN.
+    for (var i = 0; i < 10000; i++) {
+      final pin = i.toString().padLeft(4, '0');
+      expect(RecoveryPinRules.check(pin), isEmpty, reason: pin);
     }
   });
 

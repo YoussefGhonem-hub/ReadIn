@@ -239,7 +239,7 @@ export class SignUpPage {
     const normalized = normalizePin(pin);
     const complete = normalized.length === this.pinLength();
     if (!complete && !this.recoverySubmitted()) return null;
-    const [code] = pinViolations(normalized, this.pinLength(), { phoneE164: this.phone(), password: this.accountValue().password });
+    const [code] = pinViolations(normalized, this.pinLength());
     return code ? `errors.${code}` : null;
   });
 

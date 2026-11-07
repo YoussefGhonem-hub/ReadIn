@@ -1660,10 +1660,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errPinDigitsOnly => 'Digits only.';
 
   @override
-  String get errPinWeak =>
-      'This PIN is easy to guess. Avoid repeated or consecutive digits, years and digits from your number or password.';
-
-  @override
   String get errPinMismatch => 'The PINs don\'t match.';
 
   @override

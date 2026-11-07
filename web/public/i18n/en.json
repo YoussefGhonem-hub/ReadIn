@@ -229,8 +229,7 @@
     },
     "pin": {
       "length": "Enter all the PIN digits.",
-      "digits_only": "Use digits only.",
-      "weak": "This PIN is too easy to guess. Avoid repeated or consecutive digits, years and the end of your number."
+      "digits_only": "Use digits only."
     },
     "provider": {
       "invalid": "This sign-in method is not supported."
@@ -409,7 +408,7 @@
     "temporaryPassword": "Temporary password",
     "pin": "Recovery PIN",
     "confirmPin": "Confirm the PIN",
-    "pinHint": "{{length}} digits you'll remember. Not your birth year or 1234.",
+    "pinHint": "{{length}} digits you'll remember.",
     "switchLanguage": "Switch the app language to {{language}}",
     "welcome": {
       "title": "One article a day that makes a difference",

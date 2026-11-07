@@ -239,8 +239,8 @@ ReadIn/
 │   ├── countries/
 │   │   ├── countries.json      # generated from libphonenumber (dial codes, ar/en names)
 │   │   └── phone-fixtures.json # shared phone parsing test cases
-│   └── auth/
-│       └── pin-fixtures.json   # shared weak-PIN test cases
+│   └── security/
+│       └── common-passwords.txt # passwords every client and the API reject
 ├── backend/
 │   ├── ReadIn.slnx
 │   ├── Directory.Build.props
@@ -547,7 +547,7 @@ Sign in ─► Forgot password ─► (phone + PIN) ─► New password ─► S
 
 **Create account (stepper "خطوة 1 من 3"):**
 1. **Phone & password:** phone field, password + strength meter, confirm password, live rules checklist (8+ characters, a letter, a digit). Number already registered → "الرقم ده عليه حساب بالفعل" + Sign in action.
-2. **Recovery PIN:** "اعمل PIN للطوارئ", explanation that it is needed if the password is forgotten, PIN input + confirm PIN. Errors for mismatch and weak PINs.
+2. **Recovery PIN:** "اعمل PIN للطوارئ", explanation that it is needed if the password is forgotten, PIN input + confirm PIN. Errors for a mismatch or missing digits.
 3. **Confirm your number** (dialog): the number in large LTR text with the warning "هتستخدم الرقم ده في تسجيل الدخول، ومش هتقدر تسترجع حسابك لو الرقم غلط." Buttons: "صح، اعمل الحساب" / "تعديل".
 
 Then **Complete profile** (display name, unique `@username` with live availability check, optional avatar, optional title) → **Onboarding** ([F02](#f02--onboarding-3-steps)).
@@ -594,7 +594,7 @@ Then **Complete profile** (display name, unique `@username` with live availabili
 
 **Password field:** show/hide toggle, always LTR, password-manager autofill hints. Rules: 8–128 characters, at least one letter and one digit, not in the 10,000 most common passwords, must not contain the phone number.
 
-**PIN input:** separate boxes (length from `GET /auth/config`, default **4**, configurable via `Recovery:PinLength`), always LTR, numeric keyboard, masked with a show/hide toggle, paste support, Arabic-Indic digits converted. **Weak PINs are rejected** (same digit repeated, ascending/descending sequences, the 100 most common PINs, years 1950–2030, the last 4 digits of the phone number, the first 4 digits of the password).
+**PIN input:** separate boxes (length from `GET /auth/config`, default **4**, configurable via `Recovery:PinLength`), always LTR, numeric keyboard, masked with a show/hide toggle, paste support, Arabic-Indic digits converted. **Any digits are accepted** (user decision, 2026-11-07): 1111, 1234 or a year are fine. The only rules are digits only and exactly the configured length.
 
 ### 9.5 Security Rules
 | Area | Rule |
@@ -1688,7 +1688,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 - Re-importing an article changes only its content and metadata, never its reactions, comments, saves or reads.
 - **Articles are real content in every environment.** Every seeded article belongs to the official `@readin` account and comes from `content/articles`: text, with images only when they are real and fit the article. There are no demo authors, demo PDFs or placeholder images, and demo accounts have no articles of any status. Demo accounts and their interactions stay local only.
 - Environment-gated: **demo users and demo interactions are seeded only into the local database** (`Development` and `Testing` environments), never into production.
-- Passwords and PINs are **never** committed. They come from configuration: `Seed:DemoPassword`, `Seed:DemoPin` (must pass the weak-PIN policy), `Seed:SuperAdminPhone`, `Seed:SuperAdminPassword` (user-secrets locally, secret store in production).
+- Passwords and PINs are **never** committed. They come from configuration: `Seed:DemoPassword`, `Seed:DemoPin` (digits only, of the PIN length), `Seed:SuperAdminPhone`, `Seed:SuperAdminPassword` (user-secrets locally, secret store in production).
 
 ### 18.2 Seeding Order
 | # | Seeder | Environments |
@@ -1965,7 +1965,7 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
 
 **Critical flows (E2E on both platforms):** sign up (phone + password + PIN) → complete profile → onboarding → read today's article → react → comment → reply → save → follow writer → switch theme → switch article language → sign out → forgot password (phone + PIN) → sign in with the new password.
 
-**Shared fixtures** used on all three platforms: mixed-text samples, `shared/countries/phone-fixtures.json`, `shared/auth/pin-fixtures.json`, and small test PDFs (normal, encrypted, corrupted, 101 pages).
+**Shared fixtures** used on all three platforms: mixed-text samples, `shared/countries/phone-fixtures.json`, and small test PDFs (normal, encrypted, corrupted, 101 pages).
 
 Coverage targets: Domain/Application ≥ 80%, clients ≥ 60%.
 

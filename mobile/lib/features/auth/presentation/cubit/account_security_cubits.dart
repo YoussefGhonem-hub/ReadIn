@@ -94,17 +94,18 @@ abstract class _AccountFormCubit extends Cubit<AccountFormState> {
     return credential;
   }
 
-  void _livePin(String pin, {String? phoneE164, String? password}) {
-    final error = Validate.livePin(pin, state.config.pinLength, phoneE164: phoneE164, password: password);
+  /// Live PIN check once every box is filled; clears the PIN error while typing.
+  void _livePin(String pin) {
+    final error = Validate.livePin(pin, state.config.pinLength);
     final errors = {...state.errors}..remove(Fields.pin);
     if (error != null) errors[Fields.pin] = error;
     emit(state.copyWith(errors: errors));
   }
 
-  Map<String, String> _pinErrors(String pin, String confirmPin, {String? phoneE164}) {
+  Map<String, String> _pinErrors(String pin, String confirmPin) {
     final normalized = RecoveryPinRules.normalize(pin);
     return Validate.collect({
-      Fields.pin: Validate.newPin(normalized, state.config.pinLength, phoneE164: phoneE164),
+      Fields.pin: Validate.newPin(normalized, state.config.pinLength),
       Fields.confirmPin: Validate.confirmation(RecoveryPinRules.normalize(confirmPin), normalized, CredentialCodes.pinMismatch),
     });
   }
@@ -117,11 +118,11 @@ class SetRecoveryPinCubit extends _AccountFormCubit {
 
   final SetRecoveryPin _setPin;
 
-  void pinChanged(String pin, {String? phoneE164}) => _livePin(pin, phoneE164: phoneE164);
+  void pinChanged(String pin) => _livePin(pin);
 
-  Future<void> submit({required String pin, required String confirmPin, String? phoneE164}) async {
+  Future<void> submit({required String pin, required String confirmPin}) async {
     if (state.submitting) return;
-    await _submit(_pinErrors(pin, confirmPin, phoneE164: phoneE164), () => _setPin(RecoveryPinRules.normalize(pin)));
+    await _submit(_pinErrors(pin, confirmPin), () => _setPin(RecoveryPinRules.normalize(pin)));
   }
 }
 
@@ -132,18 +133,17 @@ class ChangeRecoveryPinCubit extends _AccountFormCubit {
 
   final ChangeRecoveryPin _changePin;
 
-  void pinChanged(String pin, {String? phoneE164}) => _livePin(pin, phoneE164: phoneE164);
+  void pinChanged(String pin) => _livePin(pin);
 
   Future<void> submit({
     required String currentPassword,
     required String pin,
     required String confirmPin,
-    String? phoneE164,
   }) async {
     if (state.submitting) return;
     final errors = {
       ...Validate.collect({Fields.currentPassword: Validate.required(currentPassword)}),
-      ..._pinErrors(pin, confirmPin, phoneE164: phoneE164),
+      ..._pinErrors(pin, confirmPin),
     };
     await _submit(
       errors,
@@ -245,8 +245,7 @@ class AddPhoneSignInCubit extends _AccountFormCubit {
   String _password = '';
   String _pin = '';
 
-  void pinChanged(String pin, {String? phoneE164, String? password}) =>
-      _livePin(pin, phoneE164: phoneE164, password: password);
+  void pinChanged(String pin) => _livePin(pin);
 
   /// Validates, then opens the confirm-number dialog.
   void review({
@@ -263,7 +262,7 @@ class AddPhoneSignInCubit extends _AccountFormCubit {
       Fields.phone: Validate.phone(empty: phoneEmpty, e164: phoneE164),
       Fields.password: Validate.newPassword(password, state.config.password, phoneE164: phoneE164),
       Fields.confirmPassword: Validate.confirmation(confirmPassword, password, CredentialCodes.passwordMismatch),
-      Fields.pin: Validate.newPin(normalized, state.config.pinLength, phoneE164: phoneE164, password: password),
+      Fields.pin: Validate.newPin(normalized, state.config.pinLength),
       Fields.confirmPin: Validate.confirmation(RecoveryPinRules.normalize(confirmPin), normalized, CredentialCodes.pinMismatch),
     });
     if (errors.isNotEmpty) return emit(state.copyWith(errors: errors, failure: () => null));

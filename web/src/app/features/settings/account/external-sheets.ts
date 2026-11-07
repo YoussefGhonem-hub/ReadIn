@@ -353,10 +353,9 @@ export class AddPhoneSignInSheet {
   });
   protected readonly pinError = computed(() => {
     if (this.server().pin) return this.server().pin;
-    const { pin, phone, password } = this.value();
-    const normalized = normalizePin(pin);
+    const normalized = normalizePin(this.value().pin);
     if (normalized.length !== this.pinLength() && !this.submitted()) return null;
-    const [code] = pinViolations(normalized, this.pinLength(), { phoneE164: phone || null, password });
+    const [code] = pinViolations(normalized, this.pinLength());
     return code ? `errors.${code}` : null;
   });
   protected readonly confirmPinError = computed(() => {

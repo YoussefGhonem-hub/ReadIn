@@ -2978,12 +2978,6 @@ abstract class AppLocalizations {
   /// **'Digits only.'**
   String get errPinDigitsOnly;
 
-  /// No description provided for @errPinWeak.
-  ///
-  /// In en, this message translates to:
-  /// **'This PIN is easy to guess. Avoid repeated or consecutive digits, years and digits from your number or password.'**
-  String get errPinWeak;
-
   /// No description provided for @errPinMismatch.
   ///
   /// In en, this message translates to:
