@@ -552,6 +552,21 @@ class _ArticleEditorViewState extends State<ArticleEditorView> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         LanguageBar(state: state),
+        // Pinned under the language tabs, so the formatting stays in sight while the text scrolls and the keyboard is up.
+        EditorToolbar(
+          formatter: formatter,
+          focus: _focus,
+          history: content is UndoRedo ? content as UndoRedo : null,
+          enabled: enabled,
+          // A structured block's field in focus is where the writer is.
+          onAddBlock: () => showInsertBlockSheet(context, content, afterId: _focus.blockId),
+          onBlockOptions: () {
+            final id = _focus.blockId ?? content.focusedBlockId;
+            if (content is BlockStructureCommands && id != null) {
+              showBlockOptionsSheet(context, content as BlockStructureCommands, id);
+            }
+          },
+        ),
         Expanded(
           child: RDocScope(
             baseDirection: direction,
@@ -577,19 +592,11 @@ class _ArticleEditorViewState extends State<ArticleEditorView> {
           ),
         ),
         ChecksStrip(state: state, onOpen: _openChecks),
-        EditorToolbar(
+        // Mentions, the slash menu and the table tools follow the caret, just above the keyboard.
+        EditorAssistBar(
           formatter: formatter,
           focus: _focus,
-          history: content is UndoRedo ? content as UndoRedo : null,
           enabled: enabled,
-          // A structured block's field in focus is where the writer is.
-          onAddBlock: () => showInsertBlockSheet(context, content, afterId: _focus.blockId),
-          onBlockOptions: () {
-            final id = _focus.blockId ?? content.focusedBlockId;
-            if (content is BlockStructureCommands && id != null) {
-              showBlockOptionsSheet(context, content as BlockStructureCommands, id);
-            }
-          },
           onTableTool: content is StructuredBlockHost && content is BlockStructureCommands
               ? (tool) => applyTableTool(content as BlockStructureCommands, content as StructuredBlockHost, _focus, tool)
               : null,

@@ -17,7 +17,7 @@ import 'rdoc_appflowy_codec.dart';
 
 /// The article editor's surface (F05, SPEC §3.3): AppFlowy Editor, with RDoc's blocks (custom components where
 /// AppFlowy has none), marks, mentions and terms, per-block direction, markdown shortcuts and a mobile slash menu
-/// (in the page's toolbar).
+/// (above the keyboard).
 class AppFlowyBlockEditorSurface implements BlockEditorSurface {
   const AppFlowyBlockEditorSurface();
 

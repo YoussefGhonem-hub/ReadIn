@@ -91,6 +91,17 @@ void main() {
             baseDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
             child: Column(
               children: [
+                EditorToolbar(
+                  formatter: controller,
+                  focus: focus,
+                  history: controller,
+                  enabled: true,
+                  onAddBlock: () {},
+                  onBlockOptions: () {
+                    final id = focus.blockId ?? controller.focusedBlockId;
+                    if (id != null) showBlockOptionsSheet(tester.element(find.byType(Scaffold)), controller, id);
+                  },
+                ),
                 Expanded(
                   child: Builder(
                     builder: (context) => surface.build(
@@ -106,16 +117,10 @@ void main() {
                     ),
                   ),
                 ),
-                EditorToolbar(
+                EditorAssistBar(
                   formatter: controller,
                   focus: focus,
-                  history: controller,
                   enabled: true,
-                  onAddBlock: () {},
-                  onBlockOptions: () {
-                    final id = focus.blockId ?? controller.focusedBlockId;
-                    if (id != null) showBlockOptionsSheet(tester.element(find.byType(Scaffold)), controller, id);
-                  },
                   onTableTool: (tool) => applyTableTool(controller, controller, focus, tool),
                 ),
               ],
@@ -224,7 +229,7 @@ void main() {
     expect(blocks[3], isA<RCode>().having((c) => c.lang, 'lang', 'dart'));
   });
 
-  testWidgets('/ opens the slash menu in the toolbar; picking a block replaces the paragraph', (tester) async {
+  testWidgets('/ opens the slash menu above the keyboard; picking a block replaces the paragraph', (tester) async {
     final controller = await pumpEditor(tester, const [RParagraph('p', dir: 'auto', content: [RText('/cal')])]);
     await select(tester, controller, Selection.collapsed(Position(path: [0], offset: 4)));
     expect(controller.slashQuery, 'cal');

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -362,8 +363,8 @@ void main() {
     late FakeArticleEditorRepository repo;
     late ArticleEditorCubit cubit;
 
-    Future<void> pumpPage(WidgetTester tester) async {
-      usePhoneSurface(tester, size: const Size(390, 1400));
+    Future<void> pumpPage(WidgetTester tester, {Size size = const Size(390, 1400), Variant variant = _en}) async {
+      usePhoneSurface(tester, size: size);
       final attachments = MockAttachmentsCubit();
       whenListen(attachments, const Stream<AttachmentsState>.empty(), initialState: const AttachmentsState());
       final tags = MockTagSuggestionsCubit();
@@ -378,7 +379,7 @@ void main() {
           ],
           child: const ArticleEditorView(author: editorial),
         ),
-        variant: _en,
+        variant: variant,
       ));
       await tester.pump();
     }
@@ -406,6 +407,44 @@ void main() {
     });
 
     tearDown(() => cubit.close());
+
+    for (final variant in Variant.all) {
+      testWidgets('the toolbar is pinned under the language tabs and fits a small phone without scrolling ${variant.name}', (tester) async {
+        await tester.runAsync(() => cubit.open(articleId: 'art-1', language: 'ar-EG'));
+        const screen = Size(360, 740);
+        await pumpPage(tester, size: screen, variant: variant);
+        expect(tester.takeException(), isNull); // no overflow
+
+        final toolbar = find.byKey(const ValueKey('editor-toolbar'));
+        expect(find.descendant(of: toolbar, matching: find.byType(Scrollable)), findsNothing);
+        expect(tester.getRect(toolbar).top, greaterThanOrEqualTo(tester.getRect(find.byKey(const ValueKey('language-ar-EG'))).bottom));
+        expect(tester.getRect(toolbar).bottom, lessThanOrEqualTo(tester.getRect(find.byKey(const ValueKey('editor-title-ar-EG'))).top));
+
+        const tools = [
+          'format-bold', 'format-italic', 'format-strike', 'format-code', 'format-highlight', 'format-link', //
+          'format-mention', 'format-term', 'toolbar-add-block', 'toolbar-block-options', 'format-line-break',
+          'toolbar-undo', 'toolbar-redo',
+        ];
+        final page = Offset.zero & screen;
+        for (final key in tools) {
+          final rect = tester.getRect(find.byKey(ValueKey(key)));
+          expect(page.intersect(rect), rect, reason: '$key is cut off');
+          expect(rect.width, greaterThanOrEqualTo(36), reason: '$key is too small to tap');
+        }
+        // The formatting first, then the blocks; the add-a-block button says what it does.
+        expect(
+          tester.getRect(find.byKey(const ValueKey('format-bold'))).bottom,
+          lessThanOrEqualTo(tester.getRect(find.byKey(const ValueKey('toolbar-add-block'))).top),
+        );
+        final l10n = tester.element(toolbar).l10n;
+        final label = find.descendant(of: find.byKey(const ValueKey('toolbar-add-block')), matching: find.text(l10n.addBlock));
+        expect(label, findsOneWidget);
+        expect(tester.renderObject<RenderParagraph>(label).didExceedMaxLines, isFalse, reason: 'the label is cut off');
+        // Nothing follows the caret yet, so nothing shows above the keyboard.
+        expect(find.byKey(const ValueKey('editor-assist')), findsNothing);
+        await tester.runAsync(cubit.close);
+      });
+    }
 
     testWidgets('the title, the content and the language versions edit the document', (tester) async {
       await tester.runAsync(() => cubit.open(articleId: 'art-1', language: 'ar-EG'));

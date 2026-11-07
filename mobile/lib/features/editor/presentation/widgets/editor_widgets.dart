@@ -237,10 +237,12 @@ class ChecksList extends StatelessWidget {
 }
 
 
-/// The editor's toolbar above the keyboard: "Add a block", block options, undo and redo, formatting for the text the
-/// writer is in (a structured block's field in [focus] first, else [formatter]), the table tools while a table cell
-/// is in focus, and, while one is typed, the `@mention` suggestions or the slash menu's blocks. The glossary button
-/// (F21) marks the selected words as a term, or opens the term the caret touches again.
+/// The editor's toolbar, pinned at the top of the editor under the language tabs: it never scrolls away with the text
+/// and never scrolls sideways. The first row formats the text the writer is in (a structured block's field in [focus]
+/// first, else [formatter]), its buttons spread over the width; the second adds a block, opens the block's options,
+/// breaks the line, and undoes or redoes. The glossary button (F21) marks the selected words as a term, or opens the
+/// term the caret touches again. What follows the caret (mentions, the slash menu, the table tools) is in
+/// [EditorAssistBar], above the keyboard.
 class EditorToolbar extends StatelessWidget {
   const EditorToolbar({
     super.key,
@@ -250,7 +252,6 @@ class EditorToolbar extends StatelessWidget {
     required this.enabled,
     this.focus,
     this.history,
-    this.onTableTool,
   });
 
   final InlineFormatter? formatter;
@@ -263,198 +264,129 @@ class EditorToolbar extends StatelessWidget {
   /// The field of a structured block in focus (a table cell, a step's text).
   final EditorFocus? focus;
   final UndoRedo? history;
-  final ValueChanged<TableTool>? onTableTool;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
+    // A mark that is on gets a tint as well as the primary color, so it reads at a glance.
+    final toolStyle = ButtonStyle(
+      backgroundColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected) && !states.contains(WidgetState.disabled)
+            ? colors.primary.withValues(alpha: 0.12)
+            : null,
+      ),
+    );
     return ListenableBuilder(
       listenable: Listenable.merge([formatter, focus, history]),
       builder: (context, _) {
         final formatter = focus?.active ?? this.formatter;
         final canFormat = enabled && (formatter?.canFormat ?? false);
-        final mention = canFormat ? formatter!.activeMention : null;
-        final slash = canFormat ? formatter!.slashQuery : null;
         final term = canFormat ? formatter!.termSelection : null;
-        final cell = focus?.cell;
         final history = this.history;
-        final suggestions = context.watch<MentionSuggestionsCubit>().state;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) context.read<MentionSuggestionsCubit>().search(mention?.query);
-        });
-        final kinds = slash == null ? const <RBlockKind>[] : [for (final k in RBlockKind.values) if (k.matches(slash, l10n)) k];
 
-        Widget mark(RMarkType type, IconData icon, String tooltip) => IconButton(
-              key: ValueKey('format-${type.name}'),
+        Widget tool(
+          String key,
+          IconData icon,
+          String tooltip,
+          VoidCallback? onPressed, {
+          bool? selected,
+          IconData? selectedIcon,
+        }) =>
+            IconButton(
+              key: ValueKey(key),
               tooltip: tooltip,
-              isSelected: canFormat && formatter!.hasMark(type),
+              visualDensity: VisualDensity.compact,
+              style: toolStyle,
               color: colors.textSecondary,
-              selectedIcon: Icon(icon, color: colors.primary),
-              onPressed: canFormat ? () => formatter!.toggleMark(type) : null,
+              isSelected: selected,
+              selectedIcon: Icon(selectedIcon ?? icon, color: colors.primary),
+              onPressed: onPressed,
               icon: Icon(icon),
             );
 
-        Widget tableTool(TableTool tool, Widget icon, String tooltip, {Color? color}) => IconButton(
-              key: ValueKey('table-${tool.name}'),
-              tooltip: tooltip,
-              color: color ?? colors.textSecondary,
-              onPressed: enabled && onTableTool != null ? () => onTableTool!(tool) : null,
-              icon: icon,
+        Widget mark(RMarkType type, IconData icon, String tooltip) => tool(
+              'format-${type.name}',
+              icon,
+              tooltip,
+              canFormat ? () => formatter!.toggleMark(type) : null,
+              selected: canFormat && formatter!.hasMark(type),
             );
 
+        final format = [
+          mark(RMarkType.bold, Icons.format_bold_rounded, l10n.formatBold),
+          mark(RMarkType.italic, Icons.format_italic_rounded, l10n.formatItalic),
+          mark(RMarkType.strike, Icons.format_strikethrough_rounded, l10n.formatStrike),
+          mark(RMarkType.code, Icons.code_rounded, l10n.formatCode),
+          mark(RMarkType.highlight, Icons.border_color_outlined, l10n.formatHighlight),
+          tool(
+            'format-link',
+            Icons.link_rounded,
+            l10n.formatLink,
+            canFormat && formatter!.hasRange ? () => _editLink(context, formatter) : null,
+            selected: canFormat && formatter!.link != null,
+          ),
+          tool('format-mention', Icons.alternate_email_rounded, l10n.formatMention, canFormat ? formatter!.startMention : null),
+          tool(
+            'format-term',
+            Icons.menu_book_outlined,
+            l10n.formatTerm,
+            term != null ? () => _editTerm(context, formatter!, term) : null,
+            selected: term?.termId != null,
+            selectedIcon: Icons.menu_book_rounded,
+          ),
+        ];
+
         return Material(
+          key: const ValueKey('editor-toolbar'),
           color: colors.surface,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (mention != null && suggestions.isNotEmpty)
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 180),
-                  child: ListView(
-                    key: const ValueKey('mention-suggestions'),
-                    shrinkWrap: true,
-                    children: [
-                      for (final user in suggestions)
-                        ListTile(
-                          dense: true,
-                          leading: UserAvatar(name: user.displayName, url: user.avatarUrl, size: 28),
-                          title: BidiText(user.displayName),
-                          subtitle: Text('@${user.username}', textDirection: TextDirection.ltr),
-                          onTap: () {
-                            formatter!.insertMention(mention, userId: user.id, text: '@${user.username}');
-                            context.read<MentionSuggestionsCubit>().clear();
-                          },
-                        ),
-                    ],
-                  ),
+          child: Container(
+            decoration: BoxDecoration(border: Border.symmetric(horizontal: BorderSide(color: colors.border))),
+            padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2, vertical: ReadInSpace.s1),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  key: const ValueKey('toolbar-format-row'),
+                  children: [for (final button in format) Expanded(child: Center(child: button))],
                 ),
-              if (slash != null)
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 220),
-                  child: kinds.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.all(ReadInSpace.s4),
-                          child: Text(l10n.slashNoMatches, style: context.textTheme.bodySmall),
-                        )
-                      : ListView(
-                          key: const ValueKey('slash-menu'),
-                          shrinkWrap: true,
-                          children: [
-                            for (final kind in kinds)
-                              ListTile(
-                                key: ValueKey('slash-${kind.name}'),
-                                dense: true,
-                                leading: Icon(kind.icon, size: 20),
-                                title: Text(kind.label(l10n)),
-                                onTap: () => formatter!.applySlash(kind),
-                              ),
-                          ],
-                        ),
-                ),
-              if (cell != null)
-                DecoratedBox(
-                  key: const ValueKey('table-tools'),
-                  decoration: BoxDecoration(border: Border(top: BorderSide(color: colors.border))),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2),
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(start: ReadInSpace.s2, end: ReadInSpace.s1),
-                          child: Text(l10n.tableTools, style: context.textTheme.labelMedium?.copyWith(color: colors.textSecondary)),
-                        ),
-                        tableTool(TableTool.addRow, const _TableToolIcon(Icons.table_rows_outlined, add: true), l10n.tableAddRow),
-                        tableTool(TableTool.addColumn, const _TableToolIcon(Icons.view_column_outlined, add: true), l10n.tableAddColumn),
-                        tableTool(TableTool.deleteRow, const _TableToolIcon(Icons.table_rows_outlined, add: false), l10n.tableDeleteRow),
-                        tableTool(TableTool.deleteColumn, const _TableToolIcon(Icons.view_column_outlined, add: false), l10n.tableDeleteColumn),
-                        tableTool(TableTool.deleteTable, const Icon(Icons.delete_outline_rounded), l10n.tableDelete, color: colors.error),
-                      ],
+                Divider(height: ReadInSpace.s2, thickness: 1, color: colors.border),
+                Row(
+                  key: const ValueKey('toolbar-block-row'),
+                  children: [
+                    // The label takes the room it needs; only a very large text size shortens it.
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: TextButton.icon(
+                              key: const ValueKey('toolbar-add-block'),
+                              style: TextButton.styleFrom(visualDensity: VisualDensity.compact, foregroundColor: colors.primary),
+                              onPressed: enabled ? onAddBlock : null,
+                              icon: const Icon(Icons.add_box_outlined),
+                              label: Text(l10n.addBlock, maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ),
+                          ),
+                          tool('toolbar-block-options', Icons.tune_rounded, l10n.blockOptions, enabled ? onBlockOptions : null),
+                          tool(
+                            'format-line-break',
+                            Icons.keyboard_return_rounded,
+                            l10n.formatLineBreak,
+                            canFormat ? formatter!.insertHardBreak : null,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              DecoratedBox(
-                decoration: BoxDecoration(border: Border(top: BorderSide(color: colors.border))),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        key: const ValueKey('toolbar-add-block'),
-                        tooltip: l10n.addBlock,
-                        color: colors.primary,
-                        onPressed: enabled ? onAddBlock : null,
-                        icon: const Icon(Icons.add_box_outlined),
-                      ),
-                      IconButton(
-                        key: const ValueKey('toolbar-block-options'),
-                        tooltip: l10n.blockOptions,
-                        color: colors.textSecondary,
-                        onPressed: enabled ? onBlockOptions : null,
-                        icon: const Icon(Icons.tune_rounded),
-                      ),
-                      if (history != null) ...[
-                        // Both icons mirror in RTL (matchTextDirection).
-                        IconButton(
-                          key: const ValueKey('toolbar-undo'),
-                          tooltip: l10n.undo,
-                          color: colors.textSecondary,
-                          onPressed: enabled && history.canUndo ? history.undo : null,
-                          icon: const Icon(Icons.undo_rounded),
-                        ),
-                        IconButton(
-                          key: const ValueKey('toolbar-redo'),
-                          tooltip: l10n.redo,
-                          color: colors.textSecondary,
-                          onPressed: enabled && history.canRedo ? history.redo : null,
-                          icon: const Icon(Icons.redo_rounded),
-                        ),
-                      ],
-                      mark(RMarkType.bold, Icons.format_bold_rounded, l10n.formatBold),
-                      mark(RMarkType.italic, Icons.format_italic_rounded, l10n.formatItalic),
-                      mark(RMarkType.strike, Icons.format_strikethrough_rounded, l10n.formatStrike),
-                      mark(RMarkType.code, Icons.code_rounded, l10n.formatCode),
-                      mark(RMarkType.highlight, Icons.border_color_outlined, l10n.formatHighlight),
-                      IconButton(
-                        key: const ValueKey('format-link'),
-                        tooltip: l10n.formatLink,
-                        color: colors.textSecondary,
-                        isSelected: canFormat && formatter!.link != null,
-                        selectedIcon: Icon(Icons.link_rounded, color: colors.primary),
-                        onPressed: canFormat && formatter!.hasRange ? () => _editLink(context, formatter) : null,
-                        icon: const Icon(Icons.link_rounded),
-                      ),
-                      IconButton(
-                        key: const ValueKey('format-mention'),
-                        tooltip: l10n.formatMention,
-                        color: colors.textSecondary,
-                        onPressed: canFormat ? formatter!.startMention : null,
-                        icon: const Icon(Icons.alternate_email_rounded),
-                      ),
-                      IconButton(
-                        key: const ValueKey('format-term'),
-                        tooltip: l10n.formatTerm,
-                        color: colors.textSecondary,
-                        isSelected: term?.termId != null,
-                        selectedIcon: Icon(Icons.menu_book_rounded, color: colors.primary),
-                        onPressed: term != null ? () => _editTerm(context, formatter!, term) : null,
-                        icon: const Icon(Icons.menu_book_outlined),
-                      ),
-                      IconButton(
-                        key: const ValueKey('format-line-break'),
-                        tooltip: l10n.formatLineBreak,
-                        color: colors.textSecondary,
-                        onPressed: canFormat ? formatter!.insertHardBreak : null,
-                        icon: const Icon(Icons.keyboard_return_rounded),
-                      ),
+                    if (history != null) ...[
+                      // Both icons mirror in RTL (matchTextDirection).
+                      tool('toolbar-undo', Icons.undo_rounded, l10n.undo, enabled && history.canUndo ? history.undo : null),
+                      tool('toolbar-redo', Icons.redo_rounded, l10n.redo, enabled && history.canRedo ? history.redo : null),
                     ],
-                  ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -478,6 +410,134 @@ class EditorToolbar extends StatelessWidget {
       case null:
         break;
     }
+  }
+}
+
+/// What follows the caret, just above the keyboard: the `@mention` suggestions or the slash menu's blocks while one is
+/// typed, and the table tools while a table cell is in focus. Nothing otherwise.
+class EditorAssistBar extends StatelessWidget {
+  const EditorAssistBar({super.key, required this.formatter, required this.enabled, this.focus, this.onTableTool});
+
+  final InlineFormatter? formatter;
+  final bool enabled;
+
+  /// The field of a structured block in focus (a table cell, a step's text).
+  final EditorFocus? focus;
+  final ValueChanged<TableTool>? onTableTool;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    return ListenableBuilder(
+      listenable: Listenable.merge([formatter, focus]),
+      builder: (context, _) {
+        final formatter = focus?.active ?? this.formatter;
+        final canFormat = enabled && (formatter?.canFormat ?? false);
+        final mention = canFormat ? formatter!.activeMention : null;
+        final slash = canFormat ? formatter!.slashQuery : null;
+        final cell = focus?.cell;
+        final suggestions = context.watch<MentionSuggestionsCubit>().state;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) context.read<MentionSuggestionsCubit>().search(mention?.query);
+        });
+        final showMentions = mention != null && suggestions.isNotEmpty;
+        if (!showMentions && slash == null && cell == null) return const SizedBox.shrink();
+        final kinds = slash == null ? const <RBlockKind>[] : [for (final k in RBlockKind.values) if (k.matches(slash, l10n)) k];
+
+        Widget tableTool(TableTool tool, Widget icon, String tooltip, {Color? color}) => IconButton(
+              key: ValueKey('table-${tool.name}'),
+              tooltip: tooltip,
+              visualDensity: VisualDensity.compact,
+              color: color ?? colors.textSecondary,
+              onPressed: enabled && onTableTool != null ? () => onTableTool!(tool) : null,
+              icon: icon,
+            );
+
+        return Material(
+          key: const ValueKey('editor-assist'),
+          color: colors.surface,
+          child: DecoratedBox(
+            decoration: BoxDecoration(border: Border(top: BorderSide(color: colors.border))),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (showMentions)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 180),
+                    child: ListView(
+                      key: const ValueKey('mention-suggestions'),
+                      shrinkWrap: true,
+                      children: [
+                        for (final user in suggestions)
+                          ListTile(
+                            dense: true,
+                            leading: UserAvatar(name: user.displayName, url: user.avatarUrl, size: 28),
+                            title: BidiText(user.displayName),
+                            subtitle: Text('@${user.username}', textDirection: TextDirection.ltr),
+                            onTap: () {
+                              formatter!.insertMention(mention, userId: user.id, text: '@${user.username}');
+                              context.read<MentionSuggestionsCubit>().clear();
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                if (slash != null)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 220),
+                    child: kinds.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.all(ReadInSpace.s4),
+                            child: Text(l10n.slashNoMatches, style: context.textTheme.bodySmall),
+                          )
+                        : ListView(
+                            key: const ValueKey('slash-menu'),
+                            shrinkWrap: true,
+                            children: [
+                              for (final kind in kinds)
+                                ListTile(
+                                  key: ValueKey('slash-${kind.name}'),
+                                  dense: true,
+                                  leading: Icon(kind.icon, size: 20),
+                                  title: Text(kind.label(l10n)),
+                                  onTap: () => formatter!.applySlash(kind),
+                                ),
+                            ],
+                          ),
+                  ),
+                if (cell != null)
+                  Padding(
+                    key: const ValueKey('table-tools'),
+                    padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2, vertical: ReadInSpace.s1),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.only(start: ReadInSpace.s2, end: ReadInSpace.s1),
+                            child: Text(
+                              l10n.tableTools,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.textTheme.labelMedium?.copyWith(color: colors.textSecondary),
+                            ),
+                          ),
+                        ),
+                        tableTool(TableTool.addRow, const _TableToolIcon(Icons.table_rows_outlined, add: true), l10n.tableAddRow),
+                        tableTool(TableTool.addColumn, const _TableToolIcon(Icons.view_column_outlined, add: true), l10n.tableAddColumn),
+                        tableTool(TableTool.deleteRow, const _TableToolIcon(Icons.table_rows_outlined, add: false), l10n.tableDeleteRow),
+                        tableTool(TableTool.deleteColumn, const _TableToolIcon(Icons.view_column_outlined, add: false), l10n.tableDeleteColumn),
+                        tableTool(TableTool.deleteTable, const Icon(Icons.delete_outline_rounded), l10n.tableDelete, color: colors.error),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
