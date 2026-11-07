@@ -1629,6 +1629,30 @@ there (seeder #7); every admin write to one is `409 path.editorial`.
 
 Path error codes: `path.not_found` (404), `path.slug_taken` (409), `path.editorial` (409), `path.items_invalid` (400).
 
+### Sitemap (SPEC §23) 🌐
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/sitemap` | `200 SitemapDto`: every page a guest can open, for the web's `/sitemap.xml`. Cached 30 minutes; a publish, edit, hide or delete clears it |
+
+```ts
+interface SitemapDto {
+  /** One entry per language version of each article readers can open, newest first (at most 40,000 articles). */
+  articles: { slug: string; language: 'ar-EG' | 'en'; lastModified: string }[];
+  /** Writers with at least one such article who aren't suspended; lastModified = their newest article. */
+  writers: { username: string; lastModified: string }[];
+  /** Their categories (F31) with at least one such article. */
+  categories: { username: string; slug: string; lastModified: string }[];
+  fields: { slug: string; lastModified: null }[];             // enabled fields
+  tags: { slug: string; lastModified: string | null }[];      // not hidden, with at least one such article
+  paths: { slug: string; lastModified: string | null }[];     // published, with at least one such article
+}
+```
+
+The web's SSR server builds the URLs (`web/src/server/sitemap.ts`): `/sitemap.xml` is an index of `/sitemap-ar.xml`,
+`/sitemap-en.xml` (the article versions, `/{ar|en}/a/{slug}`) and `/sitemap-pages.xml` (home, Explore, `/paths`,
+`/@{username}`, `/@{username}/c/{slug}`, `/f/{slug}`, `/tags/{slug}`, `/paths/{slug}`); it also serves `/robots.txt`.
+
 ## DTOs (TypeScript notation)
 
 ```ts

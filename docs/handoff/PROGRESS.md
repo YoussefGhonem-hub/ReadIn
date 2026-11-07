@@ -502,6 +502,15 @@ Later decisions (user, 2026-11-05):
   `realtime/token` answers 200 and the web's live connection works; push to a real device is not tried yet, and iOS
   push also needs the APNs key uploaded in Firebase (user). Still on `readin.app`: the API's
   `Jwt:Issuer` default (a name only), the public legal pages, and the SPEC.
+- **UAT deploys (user, 2026-11-07):** `git push origin dev:uat` deploys the API and the web (`.github/workflows/uat.yml`)
+  and builds TestFlight only when `mobile/` changed (docs/setup/deployment.md §12). Sign in with Apple fails on iPhone
+  after Face ID with no request reaching the API (iOS returns "canceled"): it matches Apple's server-side registration
+  issue (Developer Forums thread 837986); the user is asking Apple Developer Support. Google on iPhone works since
+  54c84b36 (the iOS SDK's own nonce).
+- **SPEC §23 robots.txt + sitemap ✅ (user, 2026-11-07):** `GET /api/v1/sitemap` lists what a guest can open; the web's
+  SSR server serves `/robots.txt` and `/sitemap.xml` (index of `/sitemap-ar.xml`, `/sitemap-en.xml`,
+  `/sitemap-pages.xml`), built in `web/src/server/sitemap.ts`. The user verified `readin.online` in Google Search
+  Console (Domain property) and requested indexing of the home page; the sitemap is to be submitted there.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
 A source whose host still answers 429 after the retries (rfc-editor.org in CI) is a warning, never cached and checked

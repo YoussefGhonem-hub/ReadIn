@@ -6,7 +6,9 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { environment } from './environments/environment';
 import { appLinksConfig, appleAppSiteAssociation, assetLinks } from './server/app-links';
+import { SITEMAP_FILES, SitemapData, createSitemapSource, robotsTxt, sitemapIndexXml, sitemapXml } from './server/sitemap';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -29,6 +31,28 @@ const wellKnown = (body: unknown) => (_req: express.Request, res: express.Respon
 };
 app.get('/.well-known/assetlinks.json', wellKnown(assetLinks(appLinks)));
 app.get('/.well-known/apple-app-site-association', wellKnown(appleAppSiteAssociation(appLinks)));
+
+/**
+ * Search engines (SPEC §23, server/sitemap.ts): robots.txt and the sitemaps, built on this build's `siteUrl` from the
+ * API's list of public pages (cached here 15 minutes). 503 while the API has never answered.
+ */
+app.get('/robots.txt', (_req, res) => {
+  res.set('Cache-Control', 'public, max-age=3600').type('text/plain').send(robotsTxt(environment.siteUrl));
+});
+const sitemapData = createSitemapSource(environment.apiBaseUrl);
+const sitemap = (build: (data: SitemapData) => string) => async (_req: express.Request, res: express.Response) => {
+  try {
+    const xml = build(await sitemapData());
+    res.set('Cache-Control', 'public, max-age=900').type('application/xml').send(xml);
+  } catch (error) {
+    console.error('Sitemap: the API did not answer', error);
+    res.status(503).set('Retry-After', '600').end();
+  }
+};
+app.get(SITEMAP_FILES.index, sitemap((data) => sitemapIndexXml(environment.siteUrl, data)));
+app.get(SITEMAP_FILES.ar, sitemap((data) => sitemapXml(environment.siteUrl, 'ar', data)));
+app.get(SITEMAP_FILES.en, sitemap((data) => sitemapXml(environment.siteUrl, 'en', data)));
+app.get(SITEMAP_FILES.pages, sitemap((data) => sitemapXml(environment.siteUrl, 'pages', data)));
 
 /**
  * Serve static files from /browser
